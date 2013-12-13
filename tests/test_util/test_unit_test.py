@@ -18,6 +18,74 @@ class TestCaseTests(TestCase):
 
     For each test, includes an example of success and failure.
     """
+
+    def test_assertEqualItems(self):
+        """assertEqualItems should raise exception if items not equal"""
+        self.assertEqualItems('abc', 'abc')
+        self.assertEqualItems('abc', 'cba')
+        self.assertEqualItems('', '')
+        self.assertEqualItems('abc', ['a','b','c'])
+        self.assertEqualItems([0], [0.0])
+        
+        try:
+            self.assertEqualItems('abc', 'abcd')
+        except:
+            message = str(exc_info()[1])
+            self.assertEqual(message, 
+            'Observed and expected are different lengths: 3 and 4')
+        else:
+            raise AssertionError, \
+            "unit_test.assertEqualItems failed on input %s and %s" \
+            % (`first`, `second`)
+
+        try:
+            self.assertEqualItems('cab', 'acc')
+        except:
+            message = str(exc_info()[1])
+            self.assertEqual(message, 
+            'Observed b and expected c at sorted index 1')
+        else:
+            raise AssertionError, \
+            "unit_test.assertEqualItems failed on input %s and %s" \
+            % (`first`, `second`)
+        try:
+            self.assertEqualItems('cba', 'yzx')
+        except:
+            message = str(exc_info()[1])
+            self.assertEqual(message,
+            'Observed a and expected x at sorted index 0')
+        else:
+            raise AssertionError, \
+            "unit_test.assertEqualItems failed on input %s and %s" \
+            % (`first`, `second`)
+
+    def test_assertNotEqualItems(self):
+        """assertNotEqualItems should raise exception if all items equal"""
+        self.assertNotEqualItems('abc', '')
+        self.assertNotEqualItems('abc', 'cbad')
+        self.assertNotEqualItems([0], [0.01])
+        
+        try:
+            self.assertNotEqualItems('abc', 'abc')
+        except:
+            message = str(exc_info()[1])
+            self.assertEqual(message, 
+            "Observed 'abc' has same items as 'abc'")
+        else:
+            raise AssertionError, \
+            "unit_test.assertNotEqualItems failed on input %s and %s" \
+            % (`'abc'`, `'abc'`)
+
+        try:
+            self.assertNotEqualItems('', [])
+        except:
+            message = str(exc_info()[1])
+            self.assertEqual(message, "Observed '' has same items as []")
+        else:
+            raise AssertionError, \
+            "unit_test.assertNotEqualItems failed on input %s and %s" \
+            % (`''`, `[]`)
+
     def test_assertSimilarMeans_one_obs_true(self):
         """assertSimilarMeans should raise on a single obs"""
         obs = [5]
