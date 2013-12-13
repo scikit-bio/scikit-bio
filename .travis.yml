@@ -5,4 +5,4 @@ install:
   - pip install .
 script:
   - nosetests
-  - pep8 bipy/*.py tests/*.py *.py
+  - pep8 bipy tests *.py
