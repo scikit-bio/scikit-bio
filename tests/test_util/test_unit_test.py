@@ -8,8 +8,9 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-from bipy.util.unit_test import TestCase, main
 from numpy import array
+from sys import exc_info
+from bipy.util.unit_test import TestCase, main
 
 ### ROB, GAVIN??, DANIEL, SANDRA??
 
