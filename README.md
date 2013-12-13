@@ -1,6 +1,6 @@
 bipy
 ====
 
-[![Build Status](https://travis-ci.org/gregcaporaso/bipy.png?branch=master)](https://travis-ci.org/gregcaporaso/bipy)
+[![Build Status](https://magnum.travis-ci.com/gregcaporaso/bipy.png?token=cRee6r8tqQgg7M8jqmie&branch=master)](https://magnum.travis-ci.com/gregcaporaso/bipy)
 
 Core objects, functions and statistics for working with biological data in Python.
