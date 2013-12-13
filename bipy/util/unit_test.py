@@ -74,3 +74,29 @@ class TestCase(PyTestCase):
             raise self.failureException(msg or 'p-value %s, G-test p %s' % \
                                         (`pvalue`, `p`))
 
+    def assertEqualItems(self, observed, expected, msg=None):
+        """Fail if the two items contain unequal elements"""
+        obs_items = list(observed)
+        exp_items = list(expected)
+        if len(obs_items) != len(exp_items):
+            raise self.failureException, \
+            (msg or 'Observed and expected are different lengths: %s and %s' \
+            % (len(obs_items), len(exp_items)))
+            
+        obs_items.sort()
+        exp_items.sort()
+        for index, (obs, exp) in enumerate(zip(obs_items, exp_items)):
+            if obs != exp:
+                raise self.failureException, \
+                (msg or 'Observed %s and expected %s at sorted index %s' \
+                % (obs, exp, index))
+
+    def assertNotEqualItems(self, observed, expected, msg=None):
+        """Fail if the two items contain only equal elements when sorted"""
+        try:
+            self.assertEqualItems(observed, expected, msg)
+        except:
+            pass
+        else:
+            raise self.failureException, \
+            (msg or 'Observed %s has same items as %s'%(`observed`, `expected`))
