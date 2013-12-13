@@ -1,6 +1,13 @@
-#/usr/bin/env python
-"""Parsers for FASTA and related formats.
-"""
+#!/usr/bin/env python
+
+#-----------------------------------------------------------------------------
+# Copyright (c) 2013, The BiPy Developers.
+#
+# Distributed under the terms of the Modified BSD License.
+#
+# The full license is in the file COPYING.txt, distributed with this software.
+#-----------------------------------------------------------------------------
+
 from bipy.parse.record_finder import LabeledRecordFinder
 from bipy.parse.record import RecordError
 
