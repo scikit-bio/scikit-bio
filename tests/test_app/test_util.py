@@ -16,7 +16,7 @@ from bipy.util.unit_test import TestCase, main
 from bipy.app.util import (Application, CommandLineApplication, 
     CommandLineAppResult, ResultPath, ApplicationError, ParameterIterBase,
     ParameterCombinations, cmdline_generator, ApplicationNotFoundError,
-    get_tmp_filename, guess_input_handler)
+    get_tmp_filename, guess_input_handler, app_path)
 
 class ParameterCombinationsTests(TestCase):
     def setUp(self):

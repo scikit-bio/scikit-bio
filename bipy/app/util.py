@@ -9,9 +9,9 @@
 #-----------------------------------------------------------------------------
 
 from sys import platform
-from os import remove,system,mkdir,getcwd,close,sep
+from os import (remove, system,mkdir, getcwd, close, sep, environ)
+from os.path import isabs, exists, join
 from random import choice
-from os.path import isabs, exists
 from tempfile import gettempdir
 
 from numpy import zeros, array, nonzero, max
@@ -19,7 +19,6 @@ from numpy import zeros, array, nonzero, max
 from bipy.app.parameters import Parameter, FlagParameter, ValuedParameter,\
     MixedParameter,Parameters, _find_synonym, is_not_None, FilePath
 from bipy.util.transform import cartesian_product
-
  
 #the following are used to create temp file names       
 _chars = "abcdefghigklmnopqrstuvwxyz"
@@ -34,7 +33,7 @@ def app_path(app,env_variable='PATH'):
     """
     # strip off " characters, in case we got a FilePath object
     app = app.strip('"')
-    paths = getenv(env_variable).split(':')
+    paths = environ[env_variable].split(':')
     for path in paths:
         p = join(path,app)
         if exists(p):

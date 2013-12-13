@@ -10,7 +10,7 @@
 
 from copy import deepcopy
 
-from cogent.util.misc import MappedDict, FunctionWrapper
+from bipy.core.constrained_container import FunctionWrapper, MappedDict
 
 def is_not_None(x):
     """Returns True if x is not None"""
