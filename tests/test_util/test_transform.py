@@ -1,19 +1,30 @@
 #!/usr/bin/env python
+
+#-----------------------------------------------------------------------------
+# Copyright (c) 2013, The BiPy Developers.
+#
+# Distributed under the terms of the Modified BSD License.
+#
+# The full license is in the file COPYING.txt, distributed with this software.
+#-----------------------------------------------------------------------------
+
 """Tests of transformation and composition functions .
 """
-from cogent.util.unit_test import TestCase, main
-from cogent.util.misc import identity
-from cogent.util.transform import apply_each, bools, bool_each, \
-    conjoin, all, both,\
-    disjoin, any, either, negate, none, neither, compose, compose_many, \
-    per_shortest, per_longest, for_seq, \
-    has_field, extract_field, test_field, index, test_container, \
-    trans_except, trans_all, make_trans, find_any, find_no, find_all,\
-    keep_if_more, exclude_if_more, keep_if_more_other, exclude_if_more_other,\
-    keep_chars,exclude_chars, reorder, reorder_inplace, float_from_string,\
-    first, last, first_in_set, last_in_set, first_not_in_set, last_not_in_set,\
-    first_index, last_index, first_index_in_set, last_index_in_set, \
-    first_index_not_in_set, last_index_not_in_set, perm, comb, cross_comb, _increment_comb
+
+from bipy.util.transform import (apply_each, bools, bool_each,
+    conjoin, all, both,
+    disjoin, any, either, negate, none, neither, compose, compose_many,
+    per_shortest, per_longest, for_seq, 
+    has_field, extract_field, test_field, index, test_container, 
+    trans_except, trans_all, make_trans, find_any, find_no, find_all,
+    keep_chars,exclude_chars, reorder, reorder_inplace,
+    float_from_string, first, last, first_in_set, last_in_set, 
+    first_not_in_set, last_not_in_set, first_index, last_index, 
+    first_index_in_set, last_index_in_set, first_index_not_in_set,
+    last_index_not_in_set, perm, comb, cross_comb, _increment_comb, identity,
+    select)
+
+from bipy.util.unit_test import TestCase, main
 
 __author__ = "Sandra Smit"
 __copyright__ = "Copyright 2007-2012, The Cogent Project"
@@ -71,6 +82,41 @@ class metafunctionsTests(TestCase):
             first.isalpha() and second.isdigit()
         self.is_digit_alpha = lambda first, second: \
             first.isdigit() and second.isalpha()
+
+    def test_identity(self):
+        """should return same object"""
+        foo = [1,'a',lambda x: x]
+        exp = id(foo)
+        self.assertEqual(id(identity(foo)), exp)
+
+    def test_select_sequence(self):
+        """select should work on a sequence with a list of indices"""
+        chars = 'abcdefghij'
+        strings = list(chars)
+
+        tests = {   (0,):['a'],
+                    (-1,):['j'],
+                    (0, 2, 4): ['a', 'c', 'e'],
+                    (9,8,7,6,5,4,3,2,1,0):list('jihgfedcba'),
+                    (-8, 8): ['c', 'i'],
+                    ():[],
+                }
+        for test, result in tests.items():
+            self.assertEqual(select(test, chars), result)
+            self.assertEqual(select(test, strings), result)
+
+    def test_select_empty(self):
+        """select should raise error if indexing into empty sequence"""
+        self.assertRaises(IndexError, select, [1], [])
+
+    def test_select_mapping(self):
+        """select should return the values corresponding to a list of keys"""
+        values = {'a':5, 'b':2, 'c':4, 'd':6, 'e':7}
+        self.assertEqual(select('abc', values), [5,2,4])
+        self.assertEqual(select(['e','e','e'], values), [7,7,7])
+        self.assertEqual(select(('e', 'b', 'a'), values), [7, 2, 5])
+        #check that it raises KeyError on anything out of range
+        self.assertRaises(KeyError, select, 'abx', values)
 
     def test_apply_each(self):
         """apply_each should apply each function to args, kwargs"""
@@ -401,50 +447,50 @@ class SequenceFunctionsTests(TestCase):
 
         #test behavior with default aggregator and normalizer
         f = for_seq(is_eq)
-        self.assertFloatEqual(f(s1, s1), 1.0)
-        self.assertFloatEqual(f(s1, short), 1.0)
-        self.assertFloatEqual(f(short, s1), 1.0)
-        self.assertFloatEqual(f(short, s4), 0.0)
-        self.assertFloatEqual(f(s4, short), 0.0)
-        self.assertFloatEqual(f(s1,s2), 0.6)
+        self.assertAlmostEqual(f(s1, s1), 1.0)
+        self.assertAlmostEqual(f(s1, short), 1.0)
+        self.assertAlmostEqual(f(short, s1), 1.0)
+        self.assertAlmostEqual(f(short, s4), 0.0)
+        self.assertAlmostEqual(f(s4, short), 0.0)
+        self.assertAlmostEqual(f(s1,s2), 0.6)
         
         f = for_seq(is_ne)
-        self.assertFloatEqual(f(s1, s1), 0.0)
-        self.assertFloatEqual(f(s1, short), 0.0)
-        self.assertFloatEqual(f(short, s1), 0.0)
-        self.assertFloatEqual(f(short, s4), 1.0)
-        self.assertFloatEqual(f(s4, short), 1.0)
-        self.assertFloatEqual(f(s1, s2), 0.4)
+        self.assertAlmostEqual(f(s1, s1), 0.0)
+        self.assertAlmostEqual(f(s1, short), 0.0)
+        self.assertAlmostEqual(f(short, s1), 0.0)
+        self.assertAlmostEqual(f(short, s4), 1.0)
+        self.assertAlmostEqual(f(s4, short), 1.0)
+        self.assertAlmostEqual(f(s1, s2), 0.4)
          
         f = for_seq(lt_5)
-        self.assertFloatEqual(f(s3,s3), 1.0)
-        self.assertFloatEqual(f(s3,s4), 0.0)
-        self.assertFloatEqual(f(s2,s3), 0.6)
+        self.assertAlmostEqual(f(s3,s3), 1.0)
+        self.assertAlmostEqual(f(s3,s4), 0.0)
+        self.assertAlmostEqual(f(s2,s3), 0.6)
 
         f = for_seq(diff)
-        self.assertFloatEqual(f(s1,s1), 0.0)
-        self.assertFloatEqual(f(s4,s1), 2.0)
-        self.assertFloatEqual(f(s1,s4), -2.0)
+        self.assertAlmostEqual(f(s1,s1), 0.0)
+        self.assertAlmostEqual(f(s4,s1), 2.0)
+        self.assertAlmostEqual(f(s1,s4), -2.0)
 
         #test behavior with different aggregator
         f = for_seq(diff)
-        self.assertFloatEqual(f(s1,s5), 0)
+        self.assertAlmostEqual(f(s1,s5), 0)
         f = for_seq(diff, aggregator=sum)
-        self.assertFloatEqual(f(s1,s5), 0)
+        self.assertAlmostEqual(f(s1,s5), 0)
         f = for_seq(diff, aggregator=sumsq)
-        self.assertFloatEqual(f(s1,s5), 2.0)
+        self.assertAlmostEqual(f(s1,s5), 2.0)
 
         #test behavior with different normalizer
         f = for_seq(diff, aggregator=sumsq, normalizer=None)
-        self.assertFloatEqual(f(s1,s5), 10)
+        self.assertAlmostEqual(f(s1,s5), 10)
         f = for_seq(diff, aggregator=sumsq)
-        self.assertFloatEqual(f(s1,s5), 2.0)
+        self.assertAlmostEqual(f(s1,s5), 2.0)
         f = for_seq(diff, aggregator=sumsq, normalizer=times_two)
-        self.assertFloatEqual(f(s1,s5), 20)
+        self.assertAlmostEqual(f(s1,s5), 20)
         f = for_seq(diff, aggregator=sumsq)
-        self.assertFloatEqual(f(s5,short), 4)
+        self.assertAlmostEqual(f(s5,short), 4)
         f = for_seq(diff, aggregator=sumsq, normalizer=long_norm)
-        self.assertFloatEqual(f(s5,short), 0.8)
+        self.assertAlmostEqual(f(s5,short), 0.8)
         
 
 
@@ -553,123 +599,6 @@ class Filter_Criteria_Tests(TestCase):
         self.assertEqual(f("bar and foo"),1)
         
         # does NOT work on numbers
-        
-    def test_keep_if_more(self):
-        """keep_if_more should be True if #items in s > x"""
-        
-        self.assertRaises(ValueError, keep_if_more,'lksfj','ksfd') #not int
-        self.assertRaises(IndexError,keep_if_more,'ACGU',-3) #negative
-        
-        f = keep_if_more('a',0) #zero
-        self.assertEqual(f(''),0)
-        self.assertEqual(f('a'),1)
-        self.assertEqual(f('b'),0)
-        
-        # works on strings
-        f = keep_if_more('ACGU',5) #positive
-        self.assertEqual(f(''),0)
-        self.assertEqual(f('ACGUAGCUioooNNNNNA'),1)
-        self.assertEqual(f('NNNNNNN'),0)
-
-        # works on words
-        f = keep_if_more(['foo'],1)
-        self.assertEqual(f(''),0)
-        self.assertEqual(f(['foo', 'bar','foo']),1)
-        self.assertEqual(f(['joe']),0)
-
-        # works on numbers
-        f = keep_if_more([0,1],3)
-        self.assertEqual(f(''),0)
-        self.assertEqual(f([0,1,2,3,4,5]),0)
-        self.assertEqual(f([0,1,0,1]),1)
-
-    def test_exclude_if_more(self):
-        """exclude_if_more should be True if #items in s <= x"""
-
-        self.assertRaises(ValueError, exclude_if_more,'lksfj','ksfd') #not int
-        self.assertRaises(IndexError,exclude_if_more,'ACGU',-3) #negative
-        
-        f = exclude_if_more('a',0) #zero
-        self.assertEqual(f(''),1)
-        self.assertEqual(f('a'),0)
-        self.assertEqual(f('b'),1)
-        
-        # works on strings
-        f = exclude_if_more('ACGU',5) #positive
-        self.assertEqual(f(''),1)
-        self.assertEqual(f('ACGUAGCUioooNNNNNA'),0)
-        self.assertEqual(f('NNNNNNN'),1)
-
-        # works on words
-        f = exclude_if_more(['foo'],1)
-        self.assertEqual(f(''),1)
-        self.assertEqual(f(['foo', 'bar','foo']),0)
-        self.assertEqual(f(['joe']),1)
-
-        # works on numbers
-        f = exclude_if_more([0,1],3)
-        self.assertEqual(f(''),1)
-        self.assertEqual(f([0,1,2,3,4,5]),1)
-        self.assertEqual(f([0,1,0,1]),0)
-        
-    def test_keep_if_more_other(self):
-        """keep_if_more_other should be True if #other items > x"""
-
-        self.assertRaises(ValueError, keep_if_more_other,'lksfj','ks') #not int
-        self.assertRaises(IndexError,keep_if_more_other,'ACGU',-3) #negative
-        
-        f = keep_if_more_other('a',0) #zero
-        self.assertEqual(f(''),0)
-        self.assertEqual(f('a'),0)
-        self.assertEqual(f('b'),1)
-        
-        # works on strings
-        f = keep_if_more_other('ACGU',5) #positive
-        self.assertEqual(f(''),0)
-        self.assertEqual(f('ACGUNNNNN'),0)
-        self.assertEqual(f('ACGUAGCUioooNNNNNA'),1)
-        self.assertEqual(f('NNNNNNN'),1)
-
-        # works on words
-        f = keep_if_more_other(['foo'],1)
-        self.assertEqual(f(''),0)
-        self.assertEqual(f(['foo', 'bar','foo']),0)
-        self.assertEqual(f(['joe','oef']),1)
-
-        # works on numbers
-        f = keep_if_more_other([0,1],3)
-        self.assertEqual(f(''),0)
-        self.assertEqual(f([0,1,2,3,4,5]),1)
-        self.assertEqual(f([0,1,0,1]),0)
-        
-    def test_exclude_if_more_other(self):
-        """exclude_if_more_other should be True if #other items <= x"""
-        self.assertRaises(ValueError, exclude_if_more_other,'lks','ks') #not int
-        self.assertRaises(IndexError,exclude_if_more_other,'ACGU',-3) #negative
-        
-        f = exclude_if_more_other('a',0) #zero
-        self.assertEqual(f(''),1)
-        self.assertEqual(f('a'),1)
-        self.assertEqual(f('b'),0)
-        
-        # works on strings
-        f = exclude_if_more_other('ACGU',5) #positive
-        self.assertEqual(f(''),1)
-        self.assertEqual(f('ACGUNNNNN'),1)
-        self.assertEqual(f('ACGUAGCUioooNNNNNA'),0)
-        self.assertEqual(f('NNNNNNN'),0)
-
-        # works on words
-        f = exclude_if_more_other(['foo'],1)
-        self.assertEqual(f(''),1)
-        self.assertEqual(f(['foo', 'bar','foo']),1)
-        self.assertEqual(f(['joe','oef']),0)
-
-        # works on numbers
-        f = exclude_if_more_other([0,1],3)
-        self.assertEqual(f(''),1)
-        self.assertEqual(f([0,1,2,3,4,5]),0)
-        self.assertEqual(f([0,1,0,1]),1)
 
     def test_keep_chars(self):
         """keep_chars returns a string containing only chars in keep"""

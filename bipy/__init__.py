@@ -16,4 +16,5 @@ __credits__ = [("Greg Caporaso", "@gregcaporaso"),
                ("Antiono Gonzalez", "@antgonza"),
                ("Yoshiki Vazquez Baeza", "@ElDeveloper"),
                ("Emily TerAvest", "@teravest")]
+
 __version__ = "0.0.0-dev"

@@ -1,4 +1,13 @@
 #!/usr/bin/env python
+
+#-----------------------------------------------------------------------------
+# Copyright (c) 2013, The BiPy Developers.
+#
+# Distributed under the terms of the Modified BSD License.
+#
+# The full license is in the file COPYING.txt, distributed with this software.
+#-----------------------------------------------------------------------------
+
 """Provides transformations of functions and other objects.
 
 Includes:
@@ -16,17 +25,31 @@ from __future__ import division
 from operator import add, and_, or_
 from numpy import logical_and, logical_or, logical_not
 from string import maketrans
-from cogent.maths.stats.util import Freqs
-from cogent.util.misc import identity, select
 
-__author__ = "Sandra Smit"
-__copyright__ = "Copyright 2007-2012, The Cogent Project"
-__credits__ = ["Sandra Smit", "Rob Knight","Zongzhi Liu"]
-__license__ = "GPL"
-__version__ = "1.5.3-dev"
-__maintainer__ = "Sandra Smit"
-__email__ = "sandra.smit@colorado.edu"
-__status__ = "Production"
+# Transferred from PyCogent's cogent.util.misc,
+# I think these should be moved to a more intuitive location.
+# [GitHub #1](https://github.com/gregcaporaso/bipy/issues/1)
+def select(order, items):
+    """Returns the elements from items specified in order, a list of indices.
+
+    Builds up a list containing the ith element in items for each item in order,
+    which must be a list of valid keys into items.
+
+    Example: vowels = select([0, 4, 8], 'abcdefghijklm')
+
+    Can also be used to emulate Perl's hash slices.
+
+    Example: reverse_vowel_freqs = select('ea', {'a':1,'b':5,'c':2,'d':4,'e':6})
+
+    Return type is a list of whatever type the elements in items are.
+    """
+    return map(items.__getitem__, order)
+
+def identity(x):
+    """Identity function: useful for avoiding special handling for None."""
+    return x
+# end transferred from PyCogent's cogent.util.misc
+
 
 #standard combinatorial HOF's from Mertz
 def apply_each(functions, *args, **kwargs):
@@ -329,105 +352,6 @@ def find_all(words, case_sens=False):
                 return False
         return True
     return apply_to
-
-
-def keep_if_more(items,x,case_sens=False):
-    """Returns True if #items in s > x. False otherwise.
-    
-    This filter is case INsensitive by default.
-    """
-    
-    x = int(x)
-    if x < 0:
-        raise IndexError, "x should be >= 0"
-    
-    if not case_sens:
-        used_items = [str(item).lower() for item in items]
-    else:
-        used_items = items
-    
-    def find_more_good(s):
-        if s and not case_sens:
-            for i in s:
-                used_s = [str(item).lower() for item in s]
-        else:
-            used_s = s
-        fd = Freqs(used_s)
-        value_list = [fd[i] for i in fd if i in used_items]
-        if value_list:
-            count = reduce(add, value_list)
-            return count > x
-        else:
-            return False
-    return find_more_good
-
-def exclude_if_more(items,x,case_sens=False):
-    """Returns True if #items in s < x.
-    
-    This filter is case INsensitive by default.
-    """
-    f = keep_if_more(items,x,case_sens)
-    def apply_to(s):
-        return not f(s)
-    return apply_to
-
-def keep_if_more_other(items,x,case_sens=False):
-    """Returns True if #items in s other than those in items > x. 
-    
-    This filter is case INsensitive by default.
-    """
-    x = int(x)
-    if x < 0:
-        raise IndexError, "x should be >= 0"
-
-    if not case_sens:
-        used_items = [str(item).lower() for item in items]
-    else:
-        used_items = items
-        
-    def apply_to(s):
-        if s and not case_sens:
-            used_s = [str(item).lower() for item in s]
-        else:
-            used_s = s
-        fd = Freqs(used_s)
-        value_list = [fd[i] for i in fd if i not in used_items]
-        if value_list:
-            count = reduce(add, value_list)
-            return count > x
-        else:
-            return False
-    return apply_to
-
-def exclude_if_more_other(items,x,case_sens=False):
-    """Returns True if #items other than in items in s < x.
-    
-    This filter is case INsensitive by default.
-    """ 
-    f = keep_if_more_other(items,x,case_sens)
-    def apply_to(s):
-        return not f(s)
-    return apply_to
-
-'''
-def keep_chars(keep, case_sens=True):
-    """Returns a filter function f(s) that returns a filtered string.
-
-    Specifically, strips out everything in s that is not in keep.
-    This filter is case sensitive by default.
-    """
-    allchars = maketrans('', '')
-    if not case_sens:
-        low = keep.lower()
-        up = keep.upper()
-        keep = low + up
-    delchars = ''.join([c for c in allchars if c not in keep])
-    #make the filter function, capturing allchars and delchars in closure
-    def filter_function(s, a=allchars, d=delchars):
-        return s.translate(a, d)
-    #return the filter function
-    return filter_function
-'''
 
 class keep_chars(object):
     """Returns a filter object o(s): call to return a filtered string.
