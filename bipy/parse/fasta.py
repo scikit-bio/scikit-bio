@@ -4,16 +4,6 @@
 from bipy.parse.record_finder import LabeledRecordFinder
 from bipy.parse.record import RecordError
 
-__credits__ = [("Greg Caporaso", "@gregcaporaso"),
-               ("Rob Knight", "@rob-knight"),
-               ("Daniel McDonald", "@wasade"),
-               ("Jai Ram Rideout", "@jrrideout"),
-               ("Antiono Gonzalez", "@antgonza"),
-               ("Yoshiki Vazquez Baeza", "@ElDeveloper"),
-               ("Emily TerAvest", "@teravest")]
-__version__ = "0.0.0-dev"
-
-
 def is_fasta_label(x):
      """Checks if x looks like a FASTA label line."""
      return x.startswith('>')

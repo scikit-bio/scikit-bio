@@ -2,15 +2,6 @@
 """Provides support functions and classes for parsers.
 """
 from copy import deepcopy
-__credits__ = [("Greg Caporaso", "@gregcaporaso"),
-               ("Rob Knight", "@rob-knight"),
-               ("Daniel McDonald", "@wasade"),
-               ("Jai Ram Rideout", "@jrrideout"),
-               ("Antiono Gonzalez", "@antgonza"),
-               ("Yoshiki Vazquez Baeza", "@ElDeveloper"),
-               ("Emily TerAvest", "@teravest")]
-__version__ = "0.0.0-dev"
-
 
 class FileFormatError(Exception):
     """Exception raised when a file can not be parsed."""
