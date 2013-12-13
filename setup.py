@@ -49,7 +49,8 @@ setup(name='BiPy',
       maintainer_email=__email__,
       url='https://github.com/gregcaporaso/bipy', # will soon be replaced
       packages=['bipy'],
-      install_requires=['scipy'],
+      install_requires=['numpy >= 1.5.1, <=1.7.1', 'matplotlib >= 1.1.0',
+                        'scipy'],
       extras_require={'test':["nose >= 0.10.1", "tox >= 1.6.1"],
                       'doc':"Sphinx >= 0.3"
                      },
