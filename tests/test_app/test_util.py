@@ -1051,7 +1051,7 @@ class ConvenienceFunctionTests(TestCase):
     def test_app_path(self):
         """app_path should return correct paths"""
         self.assertEqual(app_path('ls'), '/bin/ls')
-        self.assertEqual(app_path('lsxxyyx'), False)
+        self.assertEqual(app_path('lsxxyyx'), False)    
         
 
 class RemoveTests(TestCase):

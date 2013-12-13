@@ -18,7 +18,7 @@ from numpy import zeros, array, nonzero, max
 
 from bipy.app.parameters import Parameter, FlagParameter, ValuedParameter,\
     MixedParameter,Parameters, _find_synonym, is_not_None, FilePath
-from cogent.util.transform import cartesian_product
+from bipy.util.transform import cartesian_product
 
  
 #the following are used to create temp file names       
