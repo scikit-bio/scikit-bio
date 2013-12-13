@@ -1047,8 +1047,11 @@ class ConvenienceFunctionTests(TestCase):
         obs = get_tmp_filename(result_constructor=str)
         self.assertEqual(type(obs),str)
         self.assertNotEqual(type(obs),FilePath)
-        
-        
+
+    def test_app_path(self):
+        """app_path should return correct paths"""
+        self.assertEqual(app_path('ls'), '/bin/ls')
+        self.assertEqual(app_path('lsxxyyx'), False)
         
 
 class RemoveTests(TestCase):

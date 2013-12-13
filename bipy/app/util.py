@@ -19,13 +19,27 @@ from numpy import zeros, array, nonzero, max
 from bipy.app.parameters import Parameter, FlagParameter, ValuedParameter,\
     MixedParameter,Parameters, _find_synonym, is_not_None, FilePath
 from cogent.util.transform import cartesian_product
-from cogent.util.misc import app_path
 
  
 #the following are used to create temp file names       
 _chars = "abcdefghigklmnopqrstuvwxyz"
 _all_chars = _chars + _chars.upper() + "0123456790"
 
+def app_path(app,env_variable='PATH'):
+    """Returns path to an app, or False if app does not exist in env_variable
+    
+     This functions in the same way as which in that it returns
+     the first path that contains the app.
+    
+    """
+    # strip off " characters, in case we got a FilePath object
+    app = app.strip('"')
+    paths = getenv(env_variable).split(':')
+    for path in paths:
+        p = join(path,app)
+        if exists(p):
+            return p
+    return False
 
 class ApplicationError(OSError):
     pass
