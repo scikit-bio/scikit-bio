@@ -8,19 +8,9 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-__author__ = "Greg Caporaso"
-__copyright__ = "Copyright 2013, The BiPy project"
-__credits__ = ["Greg Caporaso", "Rob Knight", "Daniel McDonald",
-               "Jai Ram Rideout", "Antiono Gonzalez", "Yoshiki Vazquez Baeza",
-               "Emily TerAvest"]
-__license__ = "BSD"
 __version__ = '0.0.0-dev'
-__maintainer__ = "Greg Caporaso"
-__email__ = "gregcaporaso@gmail.com"
 
 from setuptools import setup
-import sys
-
 from distutils.command.build_py import build_py
 
 classes = """
@@ -37,17 +27,17 @@ classifiers = [s.strip() for s in classes.split('\n') if s]
 
 long_description = """The BiPy Project"""
 
-setup(name='BiPy',
+setup(name='bipy',
       cmdclass={'build_py':build_py},
       version=__version__,
-      license=__license__,
-      description='BiPy',
+      license='BSD',
+      description='bipy',
       long_description=long_description,
-      author=__maintainer__,
-      author_email=__email__,
-      maintainer=__maintainer__,
-      maintainer_email=__email__,
-      url='https://github.com/gregcaporaso/bipy', # will soon be replaced
+      author="The BiPy Developers",
+      author_email="gregcaporaso@gmail.com",
+      maintainer="The BiPy Developers",
+      maintainer_email="gregcaporaso@gmail.com",
+      url='https://github.com/bipy/bipy', # will soon be replaced
       packages=['bipy'],
       install_requires=['numpy >= 1.5.1, <=1.7.1', 'matplotlib >= 1.1.0',
                         'scipy'],
