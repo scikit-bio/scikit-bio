@@ -8,9 +8,9 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-from unittest import main, PyTestCase
-from numpy import asarray, isfinte, zeros
-from scipy.stats.stats import ttest_ind
+from unittest import main, TestCase as PyTestCase
+from numpy import asarray, isfinite, zeros, ravel
+from scipy.stats.stats import ttest_ind, ttest_1samp
 from scipy.stats.contingency import chi2_contingency 
 
 class TestCase(PyTestCase):
@@ -30,9 +30,16 @@ class TestCase(PyTestCase):
             pvalue = self._suite_pvalue
 
         observed, expected = asarray(observed), asarray(expected)
-
-        t, p = ttest_ind(observed, expected)
-
+        
+        if observed.size == 1:
+            t, p = ttest_1samp(expected, observed)
+        elif expected.size == 1:
+            t, p = ttest_1samp(observed, expected)
+        elif observed.size == 1 and expected.size == 1:
+            t, p = ttest_1samp(expected, observed)
+        else:
+            t, p = ttest_ind(observed, expected)
+        
         if p > pvalue:
             return
         elif p is None or not isfinite(p): 
@@ -44,8 +51,8 @@ class TestCase(PyTestCase):
             if observed[0] == expected[0]:
                 return
         else:
-            raise self.failureException, \
-            (msg or 'p-value %s, t-test p %s' % (`pvalue`, `p`))
+            raise self.failureException(msg or 'p-value %s, t-test p %s' % \
+                                        (`pvalue`, `p`))
 
     def assertSimilarFreqs(self, observed, expected, pvalue=0.01, msg=None):
         """Fail if observed p is lower than pvalue"""
@@ -64,6 +71,6 @@ class TestCase(PyTestCase):
         if p > pvalue:
             return
         else:
-            raise self.failureException, \
-            (msg or 'p-value %s, G-test p %s' % (`pvalue`, `p`))
+            raise self.failureException(msg or 'p-value %s, G-test p %s' % \
+                                        (`pvalue`, `p`))
 
