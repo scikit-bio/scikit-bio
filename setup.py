@@ -40,8 +40,8 @@ setup(name='bipy',
       url='https://github.com/bipy/bipy',  # will soon be replaced
       packages=['bipy'],
       install_requires=['numpy >= 1.5.1, <=1.7.1', 'matplotlib >= 1.1.0',
-                        'scipy', 'pep8'],
-      extras_require={'test': ["nose >= 0.10.1", "tox >= 1.6.1"],
+                        'scipy'],
+      extras_require={'test': ["nose >= 0.10.1", "tox >= 1.6.1", "pep8"],
                       'doc': "Sphinx >= 0.3"},
       classifiers=classifiers
       )
