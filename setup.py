@@ -28,7 +28,7 @@ classifiers = [s.strip() for s in classes.split('\n') if s]
 long_description = """The BiPy Project"""
 
 setup(name='bipy',
-      cmdclass={'build_py':build_py},
+      cmdclass={'build_py': build_py},
       version=__version__,
       license='BSD',
       description='bipy',
@@ -37,12 +37,11 @@ setup(name='bipy',
       author_email="gregcaporaso@gmail.com",
       maintainer="The BiPy Developers",
       maintainer_email="gregcaporaso@gmail.com",
-      url='https://github.com/bipy/bipy', # will soon be replaced
+      url='https://github.com/bipy/bipy',  # will soon be replaced
       packages=['bipy'],
       install_requires=['numpy >= 1.5.1, <=1.7.1', 'matplotlib >= 1.1.0',
                         'scipy'],
-      extras_require={'test':["nose >= 0.10.1", "tox >= 1.6.1"],
-                      'doc':"Sphinx >= 0.3"
-                     },
+      extras_require={'test': ["nose >= 0.10.1", "tox >= 1.6.1", "pep8"],
+                      'doc': "Sphinx >= 0.3"},
       classifiers=classifiers
       )

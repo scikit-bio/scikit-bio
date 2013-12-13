@@ -9,12 +9,11 @@
 #-----------------------------------------------------------------------------
 
 # credits are (name, GitHub id) tuples
-__credits__ = [("Greg Caporaso", "@gregcaporaso"), 
-               ("Rob Knight", "@rob-knight"), 
+__credits__ = [("Greg Caporaso", "@gregcaporaso"),
+               ("Rob Knight", "@rob-knight"),
                ("Daniel McDonald", "@wasade"),
-               ("Jai Ram Rideout", "@jrrideout"), 
+               ("Jai Ram Rideout", "@jrrideout"),
                ("Antiono Gonzalez", "@antgonza"),
                ("Yoshiki Vazquez Baeza", "@ElDeveloper"),
                ("Emily TerAvest", "@teravest")]
 __version__ = "0.0.0-dev"
-
