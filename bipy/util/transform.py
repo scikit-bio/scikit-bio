@@ -218,17 +218,6 @@ def extract_field(field_name, constructor=None):
             return None
     return result
 
-def test_field(field_name, constructor=None):
-    """Returns True if obj.field_name is True. False otherwise.
-
-    If set, the constructor will be applied to the obj.field_name.
-    If accessing the field raises an exception, returns False.
-    """
-    extractor = extract_field(field_name, constructor)
-    def result(x):
-        return bool(extractor(x))
-    return result
-
 def index(constructor=None, overwrite=False):
     """Returns a function that constructs a dict mapping constructor to object.
    
@@ -254,18 +243,6 @@ def index(constructor=None, overwrite=False):
                     index[curr] = [i]
             return index
         return result
-
-def test_container(container):
-    """Returns function that tests safely if item in container.
-
-    Does not raise TypeError (e.g. for dict checks.)
-    """
-    def result(item):
-        try:
-            return item in container
-        except TypeError:
-            return False
-    return result
 
 allchars = maketrans('','')
 
