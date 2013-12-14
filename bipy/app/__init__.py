@@ -8,19 +8,6 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-
-__credits__ = ["Greg Caporaso",
-               "Sandra Smit",
-               "Jeremy Widmann",
-               "Catherine Lozuopone",
-               "Gavin Huttley",
-               "Rob Knight",
-               "Zongzhi Liu",
-               "Micah Hamady",
-               "Mike Robeson",
-               "Daniel McDonald", 
-               "Marcin Cieslik"]
-
 __all__ = ['blast',
            'carnac',
            'cd_hit',

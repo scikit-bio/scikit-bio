@@ -12,8 +12,6 @@ from numpy import array
 from sys import exc_info
 from bipy.util.unit_test import TestCase, main
 
-### ROB, GAVIN??, DANIEL, SANDRA??
-
 class TestCaseTests(TestCase):
     """Tests for extension of the built-in unittest framework.
 
