@@ -88,7 +88,7 @@ class TestCase(PyTestCase):
         """
         # don't change the eps interface that assertFloatEqual provides and
         # calculate the number of decimal digits that the values are compared to
-        assert_almost_equal(observed, expected, decimal=abs(log10(1e-6)))
+        assert_almost_equal(observed, expected, decimal=int(abs(log10(eps))))
 
     def assertFloatEqualRel(self, observed, expected, eps=1e-6):
         """Tests whether two floating point numbers/arrays are approx. equal.
