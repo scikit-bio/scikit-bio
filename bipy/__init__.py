@@ -8,15 +8,5 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-# credits are (name, GitHub id) tuples
-__credits__ = [("Greg Caporaso", "gregcaporaso"),
-               ("Rob Knight", "rob-knight"),
-               ("Daniel McDonald", "wasade"),
-               ("Jai Ram Rideout", "jrrideout"),
-               ("Antiono Gonzalez", "antgonza"),
-               ("Yoshiki Vazquez Baeza", "ElDeveloper"),
-               ("Emily TerAvest", "teravest"),
-               ("Sandra Smit",""),
-               ("Gavin Huttley","gavin-huttley")]
-
+__credits__ = "https://github.com/gregcaporaso/bipy/graphs/contributors"
 __version__ = "0.0.0-dev"
