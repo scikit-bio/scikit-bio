@@ -9,4 +9,4 @@ Core objects, functions and statistics for working with biological data in Pytho
 Credits
 -------
 
-BiPy code is derived from the PyCogent project, and the contributors and/or copyright holders have agreed to make the code they wrote for PyCogent available under the BSD license. The contributors to PyCogent modules that have been ported to BiPy are: Rob Knight, Gavin Huttley, Daniel McDonald, Micah Hamady, Antonio Gonzalez, Sandra Smit, Greg Caporaso, Jai Ram Rideout, Cathy Lozupone, Mike Robeson, Marcin Cieslik, Peter Maxwell, Jeremy Widmann, and Zongzhi Liu. 
+BiPy began from code derived from [PyCogent](http://www.pycogent.org), and the contributors and/or copyright holders have agreed to make the code they wrote for PyCogent available under the BSD license. The contributors to PyCogent modules that have been ported to BiPy are: Rob Knight (@rob-knight), Gavin Huttley (@gavin-huttley), Daniel McDonald (@wasade), Micah Hamady, Antonio Gonzalez (@antgonza), Sandra Smit, Greg Caporaso (@gregcaporaso), Jai Ram Rideout (@jrrideout), Cathy Lozupone (@clozupone), Mike Robeson (@mikerobeson), Marcin Cieslik, Peter Maxwell, Jeremy Widmann, and Zongzhi Liu. 
