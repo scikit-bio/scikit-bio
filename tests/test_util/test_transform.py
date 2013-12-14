@@ -15,7 +15,7 @@ from bipy.util.transform import (apply_each, bools, bool_each,
     conjoin, all, both,
     disjoin, any, either, negate, none, neither, compose, compose_many,
     per_shortest, per_longest, for_seq, 
-    has_field, extract_field, test_field, index, test_container, 
+    has_field, extract_field, index, 
     trans_except, trans_all, make_trans, find_any, find_no, find_all,
     keep_chars,exclude_chars, reorder, reorder_inplace,
     float_from_string, first, last, first_in_set, last_in_set, 
@@ -323,24 +323,6 @@ class metafunctionsTests(TestCase):
         self.assertEqual(int_extractor(alpha), None)
         self.assertEqual(int_extractor(y), None)
 
-    def test_test_field(self):
-        """test_field should return boolean result of applying constructor"""
-        num = has_x('5')
-        alpha = has_x('x')
-        zero = has_x(0)
-        y = has_y('5')
-        
-        tester = test_field('x')
-        self.assertEqual(tester(num), True)
-        self.assertEqual(tester(alpha), True)
-        self.assertEqual(tester(y), False)
-
-        int_tester = test_field('x', int)
-        self.assertEqual(int_tester(num), True)
-        self.assertEqual(int_tester(alpha), False)
-        self.assertEqual(int_tester(y), False)
-        self.assertEqual(int_tester(zero), False)
-
     def test_index(self):
         """index should index objects by specified field or identity"""
         num = has_x(5)
@@ -373,31 +355,6 @@ class metafunctionsTests(TestCase):
         overwriter = index(str, overwrite=True)
         i = overwriter(duplicates)
         self.assertEqual(i, {'5':let, '0':zer, 'None':non, '3':y})
-
-    def test_test_container(self):
-        """test_container should return True or False in a typesafe way."""
-        test_dict = test_container({'a':1})
-        test_list = test_container([1,2,3])
-        test_str = test_container('438hfanvr438')
-
-        for item in (1, 2, 3):
-            assert test_list(item)
-            assert not test_dict(item)
-            assert not test_str(item)
-
-        assert test_dict('a')
-        assert not test_list('a')
-        assert test_str('a')
-
-        for item in ('4', 'h', 'fan'):
-            assert not test_dict(item)
-            assert not test_list(item)
-            assert test_str(item)
-
-        for item in (['x','y'],{},{'a':3},'@#@',('a','b'),None,False):
-            assert not test_dict(item)
-            assert not test_list(item)
-            assert not test_str(item)
 
 class SequenceFunctionsTests(TestCase):
     """Tests of standalone functions for dealing with sequences."""
