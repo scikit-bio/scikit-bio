@@ -12,19 +12,10 @@ __credits__ = [("Greg Caporaso", "@gregcaporaso"),
 __version__ = "0.0.0-dev"
 
 
-from cogent.parse.record import RecordError
-from cogent.parse.record_finder import DelimitedRecordFinder, \
+from bipy.parse.record import RecordError
+from bipy.parse.record_finder import DelimitedRecordFinder, \
     LabeledRecordFinder, LineGrouper, TailedRecordFinder
-from cogent.util.unit_test import TestCase, main
-
-__author__ = "Rob Knight"
-__copyright__ = "Copyright 2007-2012, The Cogent Project"
-__credits__ = ["Rob Knight", "Zongzhi Liu"]
-__license__ = "GPL"
-__version__ = "1.5.3-dev"
-__maintainer__ = "Rob Knight"
-__email__ = "rob@spot.colorado.edu"
-__status__ = "Production"
+from bipy.util.unit_test import TestCase, main
 
 class TailedRecordFinderTests(TestCase):
     """Tests of the TailedRecordFinder factory function."""
