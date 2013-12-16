@@ -76,6 +76,19 @@ class TestCase(PyTestCase):
             raise self.failureException(msg or 'p-value %s, G-test p %s' % \
                                         (`pvalue`, `p`))
 
+    def assertIsProb(self, observed, msg=None):
+        """Fail is observed is not between 0.0 and 1.0"""
+        try:
+            if observed is None:
+                raise ValueError
+            if (asarray(observed) >= 0.0).all() and \
+               (asarray(observed) <= 1.0).all():
+                return
+        except:
+            pass
+        raise self.failureException(msg or 'Observed %s has elements that are '
+            'not probs' % (`observed`))
+
     def assertFloatEqual(self, observed, expected, eps=1e-6):
         """Tests whether two floating point numbers are approximately equal.
 
@@ -98,6 +111,18 @@ class TestCase(PyTestCase):
         the difference to be small relative to the magnitudes of the observed
         and expected values.
 
-        Conveniently wraps numpy.testing.assert_allclose
+        Conveniently wraps numpy.testing.assert_allclose with the rtol argument
         """
         assert_allclose(observed, expected, rtol=eps)
+
+    def assertFloatEqualAbs(self, observed, expected, eps=1e-6):
+        """
+        Tests whether two floating point numbers are approximately equal.
+
+        Checks whether the absolute value of (a - b) is within epsilon. Use
+        this method when you expect that one of the values should be very
+        small, and the other should be zero.
+
+        Conveniently wraps numpy.testing.assert_allclose with the atol argument
+        """
+        assert_allclose(observed, expected, atol=eps)
