@@ -15,7 +15,7 @@ Currently using tests against calculations in R, spreadsheets being unreliable.
 
 from bipy.util.unit_test import TestCase, main
 from bipy.maths.stats.distribution import (chi_high, z_high, zprob, f_high,
-                                           binomial_high, bdtrc)
+                                           binomial_high, bdtrc, stdtr)
 
 class DistributionsTests(TestCase):
     """Tests of particular statistical distributions."""
@@ -230,6 +230,43 @@ class DistributionsTests(TestCase):
                 for p in p_s:
                     self.assertFloatEqual(bdtrc(k,n,p), exp[index])
                     index += 1
+
+    def test_stdtr(self):
+        """stdtr should match cephes results"""
+        t = [-10, -3.1, -0.5, -0.01, 0, 1, 0.5, 10]
+        k = [2, 10, 100]
+        exp = [
+        0.00492622851166,
+        7.94776587798e-07,
+        4.9508444923e-17,
+        0.0451003650651,
+        0.00562532860804,
+        0.00125696358826,
+        0.333333333333,
+        0.313946802871,
+        0.309086782915,
+        0.496464554479,
+        0.496108987495,
+        0.496020605117,
+        0.5,
+        0.5,
+        0.5,
+        0.788675134595,
+        0.829553433849,
+        0.840137922108,
+        0.666666666667,
+        0.686053197129,
+        0.690913217085,
+        0.995073771488,
+        0.999999205223,
+        1.0,
+        ]
+        index = 0
+        for i in t:
+            for j in k:
+                self.assertFloatEqual(stdtr(j,i), exp[index])
+                index += 1
+
 
 
 if __name__ == "__main__":

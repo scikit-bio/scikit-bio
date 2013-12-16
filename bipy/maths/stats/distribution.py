@@ -13,8 +13,11 @@ which is (c) Stephen L. Moshier 1984, 1995.
 """
 from __future__ import division
 
+from math import atan, sqrt
+
 from bipy.maths.stats.special import (fix_rounding_error, expm1, log1p, betai,
-                                      igamc, erf, erfc, GB, SQRTH, LP, LQ, EQ)
+                                      igamc, erf, erfc, GB, SQRTH, LP, LQ, EQ,
+                                      MACHEP, PI)
 
 def chi_high(x, df):
     """Returns right-hand tail of chi-square distribution (x to infinity).
@@ -53,6 +56,38 @@ def z_high(x):
 def zprob(x):
     """Returns both tails of z distribution (-inf to -x, inf to x)."""
     return 2 * z_high(abs(x))
+
+def t_low(t, df):
+    """Returns left-hand tail of Student's t distribution (-infinity to x).
+    
+    df, the degrees of freedom, ranges from 1 to infinity.
+    Typically, df is (n-1) for a sample size of n.
+    
+    Result ranges from 0 to 1.
+    
+    See Cephes docs for details.
+    """
+    if df < 1:
+        raise ValueError, "t_low: df must be >= 1 (got %s)." % df
+    return stdtr(df, t)
+
+def t_high(t, df):
+    """Returns right-hand tail of Student's t distribution (x to infinity).
+    
+    df, the degrees of freedom, ranges from 1 to infinity.
+    Typically, df is (n-1) for a sample size of n.
+    
+    Result ranges from 0 to 1.
+    
+    See Cephes docs for details.
+    """
+    if df < 1:
+        raise ValueError, "t_high: df must be >= 1 (got %s)." % df
+    return stdtr(df, -t) #distribution is symmetric
+
+def tprob(t, df):
+    """Returns both tails of t distribution (-infinity to -x, infinity to x)"""
+    return 2 * t_high(abs(t), df)
 
 def f_high(df1, df2, x):
     """Returns right-hand tail of f distribution (x to infinity).
@@ -105,6 +140,59 @@ def bdtrc(k, n, p):
         dk = k + 1
         dk = betai(dk, dn, p)
     return dk
+
+def stdtr(k, t):
+    """Student's t distribution, -infinity to t.
+
+    See Cephes docs for details.
+    """
+    if k <= 0:
+        raise ValueError, 'stdtr: df must be > 0.'
+    if t == 0:
+        return 0.5
+    if t < -2:
+        rk = k
+        z = rk / (rk + t * t)
+        return 0.5 * betai(0.5 * rk, 0.5, z)
+    #compute integral from -t to + t
+    if t < 0:
+        x = -t
+    else:
+        x = t
+
+    rk = k  #degrees of freedom
+    z = 1 + (x * x)/rk
+    #test if k is odd or even
+    if (k & 1) != 0:
+        #odd k
+        xsqk = x/sqrt(rk)
+        p = atan(xsqk)
+        if k > 1:
+            f = 1
+            tz = 1
+            j = 3
+            while (j <= (k-2)) and ((tz/f) > MACHEP):
+                tz *= (j-1)/(z*j)
+                f += tz
+                j += 2
+            p += f * xsqk/z
+        p *= 2/PI
+    else:
+        #even k
+        f = 1
+        tz = 1
+        j = 2
+        while (j <= (k-2)) and ((tz/f) > MACHEP):
+            tz *= (j-1)/(z*j)
+            f += tz
+            j += 2
+        p = f * x/sqrt(z*rk)
+    #common exit
+    if t < 0:
+        p = -p  #note destruction of relative accuracy
+    p = 0.5 + 0.5 * p
+    return p
+
 
 def pseries(a, b, x):
     """Power series for incomplete beta integral.
