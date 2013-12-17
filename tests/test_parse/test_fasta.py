@@ -1,19 +1,16 @@
 #!/usr/bin/env python
-"""Unit tests for FASTA and related parsers.
-"""
+
+#-----------------------------------------------------------------------------
+# Copyright (c) 2013, The BiPy Developers.
+#
+# Distributed under the terms of the Modified BSD License.
+#
+# The full license is in the file COPYING.txt, distributed with this software.
+#-----------------------------------------------------------------------------
+
 from bipy.parse.fasta import MinimalFastaParser
 from bipy.parse.record import RecordError
 from bipy.util.unit_test import TestCase, main
-
-__credits__ = [("Greg Caporaso", "@gregcaporaso"),
-               ("Rob Knight", "@rob-knight"),
-               ("Daniel McDonald", "@wasade"),
-               ("Jai Ram Rideout", "@jrrideout"),
-               ("Antiono Gonzalez", "@antgonza"),
-               ("Yoshiki Vazquez Baeza", "@ElDeveloper"),
-               ("Emily TerAvest", "@teravest")]
-__version__ = "0.0.0-dev"
-
 
 class GenericFastaTest(TestCase):
     """Setup data for all the various FASTA parsers."""

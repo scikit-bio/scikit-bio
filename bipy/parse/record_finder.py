@@ -23,17 +23,9 @@ DelimitedRecordFinder except that it accept a is_tail function instead of a
 str.  Note that its default constuctor is rstrip instead of strip.
 """
 
-from bipy.parse.record import RecordError
 from string import strip, rstrip
 
-__credits__ = [("Greg Caporaso", "@gregcaporaso"),
-               ("Rob Knight", "@rob-knight"),
-               ("Daniel McDonald", "@wasade"),
-               ("Jai Ram Rideout", "@jrrideout"),
-               ("Antiono Gonzalez", "@antgonza"),
-               ("Yoshiki Vazquez Baeza", "@ElDeveloper"),
-               ("Emily TerAvest", "@teravest")]
-__version__ = "0.0.0-dev"
+from bipy.parse.record import RecordError
 
 def is_empty(line):
     """Returns True empty lines and lines consisting only of whitespace."""

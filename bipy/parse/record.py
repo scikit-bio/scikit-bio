@@ -1,16 +1,14 @@
 #!/usr/bin/env python
-"""Provides support functions and classes for parsers.
-"""
-from copy import deepcopy
-__credits__ = [("Greg Caporaso", "@gregcaporaso"),
-               ("Rob Knight", "@rob-knight"),
-               ("Daniel McDonald", "@wasade"),
-               ("Jai Ram Rideout", "@jrrideout"),
-               ("Antiono Gonzalez", "@antgonza"),
-               ("Yoshiki Vazquez Baeza", "@ElDeveloper"),
-               ("Emily TerAvest", "@teravest")]
-__version__ = "0.0.0-dev"
 
+#-----------------------------------------------------------------------------
+# Copyright (c) 2013, The BiPy Developers.
+#
+# Distributed under the terms of the Modified BSD License.
+#
+# The full license is in the file COPYING.txt, distributed with this software.
+#-----------------------------------------------------------------------------
+
+from copy import deepcopy
 
 class FileFormatError(Exception):
     """Exception raised when a file can not be parsed."""

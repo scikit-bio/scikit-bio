@@ -9,7 +9,9 @@
 #-----------------------------------------------------------------------------
 
 from unittest import main, TestCase as PyTestCase
+from math import log10
 from numpy import asarray, isfinite, zeros, ravel
+from numpy.testing import assert_almost_equal, assert_allclose
 from scipy.stats.stats import ttest_ind, ttest_1samp
 from scipy.stats.contingency import chi2_contingency 
 
@@ -74,3 +76,80 @@ class TestCase(PyTestCase):
             raise self.failureException(msg or 'p-value %s, G-test p %s' % \
                                         (`pvalue`, `p`))
 
+    def assertIsProb(self, observed, msg=None):
+        """Fail is observed is not between 0.0 and 1.0"""
+        try:
+            if observed is None:
+                raise ValueError
+            if (asarray(observed) >= 0.0).all() and \
+               (asarray(observed) <= 1.0).all():
+                return
+        except:
+            pass
+        raise self.failureException(msg or 'Observed %s has elements that are '
+            'not probs' % (`observed`))
+
+    def assertFloatEqual(self, observed, expected, eps=1e-6):
+        """Tests whether two floating point numbers are approximately equal.
+
+        If one of the arguments is zero, tests the absolute magnitude of the
+        difference; otherwise, tests the relative magnitude.
+
+        Use this method as a reasonable default.
+
+        Conveniently wraps numpy.testing.assert_almost_equal
+        """
+        # don't change the eps interface that assertFloatEqual provides and
+        # calculate the number of decimal digits that the values are compared to
+        assert_almost_equal(observed, expected, decimal=int(abs(log10(eps))))
+
+    def assertFloatEqualRel(self, observed, expected, eps=1e-6):
+        """Tests whether two floating point numbers/arrays are approx. equal.
+
+        Checks whether the distance is within epsilon relative to the value
+        of the sum of observed and expected. Use this method when you expect
+        the difference to be small relative to the magnitudes of the observed
+        and expected values.
+
+        Conveniently wraps numpy.testing.assert_allclose with the rtol argument
+        """
+        assert_allclose(observed, expected, rtol=eps)
+
+    def assertFloatEqualAbs(self, observed, expected, eps=1e-6):
+        """
+        Tests whether two floating point numbers are approximately equal.
+
+        Checks whether the absolute value of (a - b) is within epsilon. Use
+        this method when you expect that one of the values should be very
+        small, and the other should be zero.
+
+        Conveniently wraps numpy.testing.assert_allclose with the atol argument
+        """
+        assert_allclose(observed, expected, atol=eps)
+
+    def assertEqualItems(self, observed, expected, msg=None):
+        """Fail if the two items contain unequal elements"""
+        obs_items = list(observed)
+        exp_items = list(expected)
+        if len(obs_items) != len(exp_items):
+            raise self.failureException, \
+            (msg or 'Observed and expected are different lengths: %s and %s' \
+            % (len(obs_items), len(exp_items)))
+            
+        obs_items.sort()
+        exp_items.sort()
+        for index, (obs, exp) in enumerate(zip(obs_items, exp_items)):
+            if obs != exp:
+                raise self.failureException, \
+                (msg or 'Observed %s and expected %s at sorted index %s' \
+                % (obs, exp, index))
+
+    def assertNotEqualItems(self, observed, expected, msg=None):
+        """Fail if the two items contain only equal elements when sorted"""
+        try:
+            self.assertEqualItems(observed, expected, msg)
+        except:
+            pass
+        else:
+            raise self.failureException, \
+            (msg or 'Observed %s has same items as %s'%(`observed`, `expected`))
