@@ -2,9 +2,10 @@ language: python
 python:
   - "2.7"
 before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get install -qq libatlas-dev libatlas-base-dev liblapack-dev gfortran
+  - sudo apt-get -qq update
+  - sudo apt-get -qq install libatlas-dev libatlas-base-dev liblapack-dev gfortran
 install:
+  - pip install pep8 --use-mirrors
   - pip install .
 script:
   - nosetests
