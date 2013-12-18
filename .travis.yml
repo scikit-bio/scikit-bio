@@ -6,9 +6,9 @@ before_install:
   - sudo apt-get -qq install libatlas-dev libatlas-base-dev liblapack-dev gfortran
 install:
   - pip install -q pep8 --use-mirrors
-  - pip install -q numpy==1.7.1
-  - pip install -q scipy==0.13.0
-  - pip install -q matplotlib==1.1.0
+  - pip install -q numpy==1.7.1; echo "travis - wait for me!"
+  - pip install -q scipy==0.13.0; echo "travis - wait for me!"
+  - pip install -q matplotlib==1.1.0; echo "travis - wait for me!"
   - pip install -q .
 script:
   - nosetests
