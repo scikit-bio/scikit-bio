@@ -5,8 +5,8 @@ before_install:
   - sudo apt-get -qq update
   - sudo apt-get -qq install libatlas-dev libatlas-base-dev liblapack-dev gfortran
 install:
-  - pip install -q pep8 --use-mirrors
-  - pip install -q .
+  - pip install pep8 --use-mirrors
+  - pip install .
 script:
   - nosetests
   - pep8 bipy tests *.py
