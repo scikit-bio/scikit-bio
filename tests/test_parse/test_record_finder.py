@@ -1,20 +1,11 @@
 #!/usr/bin/env python
 """Unit tests for recordfinders: parsers that group the lines for a record.
 """
-# credits are (name, GitHub id) tuples
-__credits__ = [("Greg Caporaso", "@gregcaporaso"),
-               ("Rob Knight", "@rob-knight"),
-               ("Daniel McDonald", "@wasade"),
-               ("Jai Ram Rideout", "@jrrideout"),
-               ("Antiono Gonzalez", "@antgonza"),
-               ("Yoshiki Vazquez Baeza", "@ElDeveloper"),
-               ("Emily TerAvest", "@teravest")]
-__version__ = "0.0.0-dev"
 
 
 from bipy.parse.record import RecordError
-from bipy.parse.record_finder import DelimitedRecordFinder, \
-    LabeledRecordFinder, LineGrouper, TailedRecordFinder
+from bipy.parse.record_finder import (DelimitedRecordFinder, 
+                    LabeledRecordFinder, LineGrouper,TailedRecordFinder)
 from bipy.util.unit_test import TestCase, main
 
 class TailedRecordFinderTests(TestCase):

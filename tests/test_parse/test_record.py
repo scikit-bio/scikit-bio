@@ -1,33 +1,14 @@
 #!/usr/bin/env python
 """Unit tests for parser support libraries dealing with records.
 """
-# credits are (name, GitHub id) tuples
-__credits__ = [("Greg Caporaso", "@gregcaporaso"),
-               ("Rob Knight", "@rob-knight"),
-               ("Daniel McDonald", "@wasade"),
-               ("Jai Ram Rideout", "@jrrideout"),
-               ("Antiono Gonzalez", "@antgonza"),
-               ("Yoshiki Vazquez Baeza", "@ElDeveloper"),
-               ("Emily TerAvest", "@teravest")]
-__version__ = "0.0.0-dev"
 
-from bipy.parse.record import FieldError,  Grouper, \
-    DelimitedSplitter, GenericRecord, MappedRecord, \
-    TypeSetter, list_adder, dict_adder, \
-    LineOrientedConstructor, int_setter,  bool_setter, \
-    string_and_strip, FieldWrapper, StrictFieldWrapper, raise_unknown_field, \
-    FieldMorpher
+from bipy.parse.record import (FieldError,  Grouper, DelimitedSplitter, 
+                    GenericRecord, MappedRecord, TypeSetter, list_adder, 
+                    dict_adder, LineOrientedConstructor, int_setter,  
+                    bool_setter, string_and_strip, FieldWrapper, 
+                    StrictFieldWrapper, raise_unknown_field,FieldMorpher)
 
 from bipy.util.unit_test import TestCase, main
-
-__author__ = "Rob Knight"
-__copyright__ = "Copyright 2007-2012, The Cogent Project"
-__credits__ = ["Rob Knight"]
-__license__ = "GPL"
-__version__ = "1.5.3-dev"
-__maintainer__ = "Rob Knight"
-__email__ = "rob@spot.colorado.edu"
-__status__ = "Production"
 
 class recordsTests(TestCase):
     """Tests of top-level functionality in records."""
