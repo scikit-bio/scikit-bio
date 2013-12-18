@@ -23,9 +23,9 @@ DelimitedRecordFinder except that it accept a is_tail function instead of a
 str.  Note that its default constuctor is rstrip instead of strip.
 """
 
-from bipy.parse.record import RecordError
-
 from string import strip, rstrip
+
+from bipy.parse.record import RecordError
 
 def is_empty(line):
     """Returns True empty lines and lines consisting only of whitespace."""
