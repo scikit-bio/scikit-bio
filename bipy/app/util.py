@@ -16,8 +16,9 @@ from tempfile import gettempdir
 
 from numpy import zeros, array, nonzero, max
 
-from bipy.app.parameters import Parameter, FlagParameter, ValuedParameter,\
-    MixedParameter, Parameters, _find_synonym, is_not_None, FilePath
+from bipy.app.parameters import (Parameter, FlagParameter, ValuedParameter,
+                                 MixedParameter, Parameters, _find_synonym,
+                                 is_not_None, FilePath)
 from bipy.util.transform import cartesian_product
 
 # the following are used to create temp file names
@@ -258,9 +259,10 @@ class CommandLineApplication(Application):
         # Build up the command, consisting of a BaseCommand followed by
         # input and output (file) specifications
         command = self._command_delimiter.join(filter(None,
-                                                      [self.BaseCommand, str(
-                                                          input_arg), '>', str(outfile), '2>',
-                                                       str(errfile)]))
+                                                      [self.BaseCommand,
+                                                       str(input_arg),
+                                                       '>', str(outfile),
+                                                       '2>', str(errfile)]))
         if self.HaltExec:
             raise AssertionError("Halted exec with command:\n" + command)
         # The return value of system is a 16-bit number containing the signal
@@ -272,21 +274,11 @@ class CommandLineApplication(Application):
         # Determine if error should be raised due to exit status of
         # appliciation
         if not self._accept_exit_status(exit_status):
-            raise ApplicationError('Unacceptable application exit status: %s\n' % str(exit_status) +
-                                   'Command:\n%s\nStdOut:\n%s\nStdErr:\n%s\n' % (command,
-                                                                                 open(
-                                                                                     outfile).read(
-                                                                                 ),
-
-                                                                                 open(errfile).read()))
-        # bash returns 127 as the exit status if the command could not
-        # be found -- raise an ApplicationError on status == 127.
-        # elif exit_status == 127:
-        #     raise ApplicationError, \
-        #      "Could not execute %s. Is it installed? Is it in your path?"\
-        #      % self._command
-        # else:
-        #     pass
+            raise ApplicationError('Unacceptable application exit ' +
+                                   'status: %s\n' % str(exit_status) +
+                                   'Command:\n%s\n' % command +
+                                   'StdOut:\n%s\n' % open(outfile).read() +
+                                   'StdErr:\n%s\n' % open(errfile).read())
 
         # open the stdout and stderr if not being suppressed
         out = None
@@ -295,13 +287,16 @@ class CommandLineApplication(Application):
         err = None
         if not suppress_stderr:
             err = open(errfile, "r")
-
+        
+        result_paths = self._get_result_paths(data)
         try:
-            result = CommandLineAppResult(
-                out, err, exit_status, result_paths=self._get_result_paths(data))
+            result = \
+                CommandLineAppResult(out, err, exit_status,
+                                     result_paths=result_paths)
         except ApplicationError:
-            result = self._handle_app_result_build_failure(
-                out, err, exit_status, self._get_result_paths(data))
+            result = \
+                self._handle_app_result_build_failure(out, err, exit_status,
+                                                      result_paths)
 
         # Clean up the input file if one was created
         if remove_tmp:
@@ -317,10 +312,10 @@ class CommandLineApplication(Application):
             err,
             exit_status,
             result_paths):
-        """ Called when an ApplicationError is raised on building the CommandLineAppResult
+        """Called if ApplicationError raised on building CommandLineAppResult
 
-            This is useful for checking log files or other special handling in cases
-             when expected files aren't present.
+            This is useful for checking log files or other special handling 
+             in cases when expected files aren't present.
 
         """
         raise ApplicationError("Error constructing CommandLineAppResult.")
@@ -463,8 +458,10 @@ class CommandLineApplication(Application):
         """
         command = self._command
         if not (exists(command) or app_path(command)):
-            raise ApplicationNotFoundError("Cannot find %s. Is it installed? Is it in your path?"
-                                           % command)
+            raise ApplicationNotFoundError("Cannot find %s. " 
+                                           % command +
+                                           "Is it installed? "
+                                           "Is it in your path?")
 
     def _accept_exit_status(self, exit_status):
         """ Return False to raise an error due to exit_status of applciation
@@ -476,22 +473,22 @@ class CommandLineApplication(Application):
         return True
 
     def _get_result_paths(self, data):
-        """ Return a dict of ResultPath objects representing all possible output
+        """ Return dict of ResultPath objects representing all possible output
 
-            This method should be overwritten if the application creates output
-            other than stdout and stderr.  This dictionary will have keys based
-            on the name that you'd like to access the file by in the
-            CommandLineAppResult object that will be created, and the values
-            which are ResultPath objects. For an example of how this should be
-            written see the rnaview or vienna_package classes.
+            This method should be overwritten if the application creates
+            output other than stdout and stderr.  This dictionary will have
+            keys based on the name that you'd like to access the file by in
+            the CommandLineAppResult object that will be created, and the
+            values which are ResultPath objects. For an example of how this
+            should be written see the rnaview or vienna_package classes.
             WARNING: be sure that the path that you give a file is accurate
-                from any directory where the program could be running. For that
-                reason, absolute paths are very good. Relative paths can also be
-                used as long as you are careful. For cases where the application
-                leaves files in the current working directory, you should append
-                self.WorkingDir to the beginning of the file name.
-                It would be a very bad idea to just use a file name as the path,
-                in some cases that you might not be testing for.
+                from any directory where the program could be running. For
+                that reason, absolute paths are very good. Relative paths
+                can also be used as long as you are careful. For cases where
+                the application leaves files in the current working directory,
+                you should append self.WorkingDir to the beginning of the file
+                name. It would be a very bad idea to just use a file name as
+                the path, in some cases that you might not be testing for.
         """
         return {}
 
@@ -531,7 +528,8 @@ class CommandLineApplication(Application):
             # avoid the string-parsing overhead.
             class_id = str(self.__class__())
             prefix = ''.join([prefix,
-                              class_id[class_id.rindex('.') + 1:class_id.index(' ')]])
+                              class_id[class_id.rindex('.') + 1:
+                                       class_id.index(' ')]])
 
         try:
             mkdir(tmp_dir)
@@ -616,7 +614,8 @@ class ParameterIterBase:
         pass
 
     def _make_app_params(self, values):
-        """Returns an app's param dict with values set as described by values"""
+        """Returns app's param dict with values set as described by values
+        """
         app_params = self.AppParams.copy()
         for key, value in zip(self._keys, values):
             if value is False:
@@ -651,8 +650,9 @@ class ParameterCombinations(ParameterIterBase):
 
 
 def cmdline_generator(param_iter, PathToBin=None, PathToCmd=None,
-                      PathsToInputs=None, PathToOutput=None, PathToStderr='/dev/null',
-                      PathToStdout='/dev/null', UniqueOutputs=False, InputParam=None,
+                      PathsToInputs=None, PathToOutput=None, 
+                      PathToStderr='/dev/null', PathToStdout='/dev/null',
+                      UniqueOutputs=False, InputParam=None,
                       OutputParam=None):
     """Generates command lines that can be used in a cluster environment
 
@@ -745,7 +745,8 @@ def get_tmp_filename(tmp_dir=gettempdir(), prefix="tmp", suffix=".txt",
             process which is creating the temporary file. For example, if
             your temp file will be used to build a temporary blast database,
             you might pass prefix=TempBlastDB
-        suffix: the suffix to be appended to the temp filename (default '.txt')
+        suffix: the suffix to be appended to the temp filename 
+            (default '.txt')
         result_constructor: the constructor used to build the result filename
             (default: cogent.app.parameters.FilePath). Note that joining
             FilePath objects with one another or with strings, you must use
@@ -763,7 +764,8 @@ def get_tmp_filename(tmp_dir=gettempdir(), prefix="tmp", suffix=".txt",
     picks = chars + chars.upper() + "0123456790"
     return result_constructor(tmp_dir) + result_constructor(prefix) +\
         result_constructor("%s%s" %
-                           (''.join([choice(picks) for i in range(20)]), suffix))
+                           (''.join([choice(picks) for i in range(20)]),
+                            suffix))
 
 
 def guess_input_handler(seqs, add_seq_names=False):
@@ -773,8 +775,6 @@ def guess_input_handler(seqs, add_seq_names=False):
             return '_input_as_multiline_string'
         else:  # assume it was a filename
             return '_input_as_string'
-            # Uncommenting the next line causes errors in muscle tests - Micah?
-            # return '_input_as_path'
 
     if isinstance(seqs, list) and len(seqs) and isinstance(seqs[0], tuple):
         return '_input_as_seq_id_seq_pairs'

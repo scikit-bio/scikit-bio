@@ -131,7 +131,9 @@ class Parameter(object):
 
     def _get_id(self):
         """Construct and return the identifier"""
-        return ''.join(map(str, filter(is_not_None, [self.Prefix, self.Name])))
+        return ''.join(map(str, 
+                           filter(is_not_None, 
+                                  [self.Prefix, self.Name])))
 
     Id = property(_get_id)
 
@@ -176,7 +178,8 @@ class FlagParameter(Parameter):
             Parameter f is turned on. It will be used by the application.
         """
         super(FlagParameter, self).__init__(Name=Name, Prefix=Prefix,
-                                            Value=Value, Delimiter=None, Quote=None)
+                                            Value=Value, Delimiter=None, 
+                                            Quote=None)
 
     def __str__(self):
         """Return the parameter as a string.
@@ -257,7 +260,10 @@ class ValuedParameter(Parameter):
         if IsPath and Value:
             Value = FilePath(Value)
         super(ValuedParameter, self).__init__(Name=Name, Prefix=Prefix,
-                                              Value=Value, Delimiter=Delimiter, Quote=Quote, IsPath=IsPath)
+                                              Value=Value,
+                                              Delimiter=Delimiter,
+                                              Quote=Quote,
+                                              IsPath=IsPath)
         self._default = Value
 
     def __str__(self):
@@ -318,11 +324,12 @@ class ValuedParameter(Parameter):
         """Turns the ValuedParameter ON by setting its Value to val
 
         An attempt to turn the parameter on with value 'None' will result
-            in an error, since this is the same as turning the parameter off.
+         in an error, since this is the same as turning the parameter off.
         """
         if val is None:
-            raise ParameterError("Turning the ValuedParameter on with value None is the same as " +
-                                 "turning it off. Use another value.")
+            raise ParameterError("Turning the ValuedParameter on with value "
+                                 "None is the same as turning it off. "
+                                 "Use another value.")
         elif self.IsPath:
             self.Value = FilePath(val)
         else:
@@ -385,7 +392,8 @@ class MixedParameter(ValuedParameter):
         if IsPath and Value:
             Value = FilePath(Value)
         super(MixedParameter, self).__init__(Name=Name, Prefix=Prefix,
-                                             Value=Value, Delimiter=Delimiter, Quote=Quote, IsPath=IsPath)
+                                             Value=Value, Delimiter=Delimiter,
+                                             Quote=Quote, IsPath=IsPath)
 
     def __str__(self):
         """Return the parameter as a string
@@ -434,8 +442,9 @@ class MixedParameter(ValuedParameter):
             will let the parameter behave as a flag.
         """
         if val is False:
-            raise ParameterError("Turning the ValuedParameter on with value False is the same as " +
-                                 "turning it off. Use another value.")
+            raise ParameterError("Turning the ValuedParameter on with value "
+                                 "False is the same as turning it off. Use "
+                                 "another value.")
         elif self.IsPath:
             self.Value = FilePath(val)
         else:
