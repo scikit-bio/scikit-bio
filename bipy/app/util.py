@@ -9,7 +9,7 @@
 #-----------------------------------------------------------------------------
 
 from sys import platform
-from os import (remove, system,mkdir, getcwd, close, sep, environ)
+from os import (remove, system, mkdir, getcwd, close, sep, environ)
 from os.path import isabs, exists, join
 from random import choice
 from tempfile import gettempdir
@@ -17,39 +17,45 @@ from tempfile import gettempdir
 from numpy import zeros, array, nonzero, max
 
 from bipy.app.parameters import Parameter, FlagParameter, ValuedParameter,\
-    MixedParameter,Parameters, _find_synonym, is_not_None, FilePath
+    MixedParameter, Parameters, _find_synonym, is_not_None, FilePath
 from bipy.util.transform import cartesian_product
- 
-#the following are used to create temp file names       
+
+# the following are used to create temp file names
 _chars = "abcdefghigklmnopqrstuvwxyz"
 _all_chars = _chars + _chars.upper() + "0123456790"
 
-def app_path(app,env_variable='PATH'):
+
+def app_path(app, env_variable='PATH'):
     """Returns path to an app, or False if app does not exist in env_variable
-    
+
      This functions in the same way as which in that it returns
      the first path that contains the app.
-    
+
     """
     # strip off " characters, in case we got a FilePath object
     app = app.strip('"')
     paths = environ[env_variable].split(':')
     for path in paths:
-        p = join(path,app)
+        p = join(path, app)
         if exists(p):
             return p
     return False
 
+
 class ApplicationError(OSError):
     pass
-   
+
+
 class ApplicationNotFoundError(ApplicationError):
     pass
-   
+
+
 class ResultPath(object):
+
     """ Hold a file path a boolean value specifying whether file was written
     """
-    def __init__(self,Path,IsWritten=True):
+
+    def __init__(self, Path, IsWritten=True):
         """ Initialize the ResultPath object
 
             Path: a string representing the absolute or relative path where
@@ -60,41 +66,43 @@ class ResultPath(object):
         self.Path = FilePath(Path)
         self.IsWritten = IsWritten
 
+
 class CommandLineAppResult(dict):
+
     """ Class for holding the result of a CommandLineApplication run """
 
-    def __init__(self,out,err,exit_status,result_paths):
+    def __init__(self, out, err, exit_status, result_paths):
         """Initialization of CommandLineAppResult
 
         out: a file handler to the file containing the stdout
         err: a file handler to the file containing the stderr
         exit_status: the exit status of the program, 0 if run ok, 1 else.
-        result_paths: dictionary containing ResultPath objects for each 
+        result_paths: dictionary containing ResultPath objects for each
             output file that could be written
         """
-        
+
         self['StdOut'] = out
         self['StdErr'] = err
         self['ExitStatus'] = exit_status
-       
+
         self.file_keys = result_paths.keys()
-        for key,value in result_paths.items():
+        for key, value in result_paths.items():
             if value.IsWritten:
                 try:
                     self[key] = open(value.Path)
                 except IOError:
-                    raise ApplicationError, 'Could not open %s' %value.Path
+                    raise ApplicationError('Could not open %s' % value.Path)
             else:
                 self[key] = None
 
     def cleanUp(self):
         """ Delete files that are written by CommandLineApplication from disk
-            
-            WARNING: after cleanUp() you may still have access to part of 
+
+            WARNING: after cleanUp() you may still have access to part of
                 your result data, but you should be aware that if the file
-                size exceeds the size of the buffer you will only have part 
-                of the file. To be safe, you should not use cleanUp() until 
-                you are done with the file or have copied it to a different 
+                size exceeds the size of the buffer you will only have part
+                of the file. To be safe, you should not use cleanUp() until
+                you are done with the file or have copied it to a different
                 location.
         """
         file_keys = self.file_keys
@@ -104,41 +112,45 @@ class CommandLineAppResult(dict):
                 remove(self[item].name)
 
         # remove input handler temp files
-        if hasattr(self, "_input_filename"): 
+        if hasattr(self, "_input_filename"):
             remove(self._input_filename)
 
     def __del__(self):
-        """ Delete temporary files created by the CommandLineApplication 
+        """ Delete temporary files created by the CommandLineApplication
         """
         if self['StdOut'] is not None:
             remove(self['StdOut'].name)
         if self['StdErr'] is not None:
             remove(self['StdErr'].name)
 
+
 class Application(object):
+
     """ Generic Class for controlling an application """
 
     _command = None
     _command_delimiter = ' '
     _parameters = {}
     _synonyms = {}
-    
-    def __init__(self,params=None):
+
+    def __init__(self, params=None):
         """
-            params: a dict of parameters which should be turned on where the 
+            params: a dict of parameters which should be turned on where the
                 key is either the parameter id or a synonym for the parameter
                 and the value is either the value for the parameter or None
         """
         self.Parameters = Parameters(self._parameters, self._synonyms)
         if params:
-            for key,v in params.items():
+            for key, v in params.items():
                 try:
                     self.Parameters[key].on(v)
                 except TypeError:
                     self.Parameters[key].on()
 
+
 class CommandLineApplication(Application):
-    """ Generic class for controlling command line applications 
+
+    """ Generic class for controlling command line applications
     """
 
     _input_handler = '_input_as_string'
@@ -146,11 +158,11 @@ class CommandLineApplication(Application):
     _suppress_stdout = False
     _working_dir = None
 
-    def __init__(self,params=None,InputHandler=None,SuppressStderr=None,\
-        SuppressStdout=None,WorkingDir=None,TmpDir='/tmp', \
-        TmpNameLen=20, HALT_EXEC=False):
+    def __init__(self, params=None, InputHandler=None, SuppressStderr=None,
+                 SuppressStdout=None, WorkingDir=None, TmpDir='/tmp',
+                 TmpNameLen=20, HALT_EXEC=False):
         """ Initialize the CommandLineApplication object
-        
+
             params: a dictionary mapping the Parameter id or synonym to its
                 value (or None for FlagParameters or MixedParameters in flag
                 mode) for Parameters that should be turned on
@@ -163,22 +175,22 @@ class CommandLineApplication(Application):
             SuppressStdout: if set to True, will route standard out to
                 /dev/null, False by default
             WorkingDir: the directory where you want the application to run,
-                default is the current working directory, but is useful to 
+                default is the current working directory, but is useful to
                 change in cases where the program being run creates output
                 to its current working directory and you either don't want
-                it to end up where you are running the program, or the user 
-                running the script doesn't have write access to the current 
+                it to end up where you are running the program, or the user
+                running the script doesn't have write access to the current
                 working directory
                 WARNING: WorkingDir MUST be an absolute path!
             TmpDir: the directory where temp files will be created, /tmp
-                by default 
+                by default
             TmpNameLen: the length of the temp file name
             HALT_EXEC: if True, raises exception w/ command output just
             before execution, doesn't clean up temp files. Default False.
         """
         # Determine if the application is installed, and raise an error if not
         self._error_on_missing_application(params)
-        
+
         # set attributes to parameter that was passed in or class default
         if InputHandler is not None:
             self.InputHandler = InputHandler
@@ -201,26 +213,26 @@ class CommandLineApplication(Application):
         self.TmpNameLen = TmpNameLen
         self.HaltExec = HALT_EXEC
         #===========================
-        #try: 
+        # try:
         #    mkdir(self.WorkingDir)
-        #except OSError:
+        # except OSError:
             # Directory already exists
-        #    pass 
+        #    pass
         #===========================
         # create a variable to hold the name of the file being used as
-        # input to the application. this is important especially when 
+        # input to the application. this is important especially when
         # you are using an input handler which creates a temporary file
         # and the output filenames are based on the input filenames
         self._input_filename = None
-        
-        super(CommandLineApplication,self).__init__(params=params)
-    
-    def __call__(self,data=None, remove_tmp=True):
+
+        super(CommandLineApplication, self).__init__(params=params)
+
+    def __call__(self, data=None, remove_tmp=True):
         """Run the application with the specified kwargs on data
-        
+
             data: anything that can be cast into a string or written out to
-                a file. Usually either a list of things or a single string or 
-                number. input_handler will be called on this data before it 
+                a file. Usually either a list of things or a single string or
+                number. input_handler will be called on this data before it
                 is passed as part of the command-line argument, so by creating
                 your own input handlers you can customize what kind of data
                 you want your application to accept
@@ -241,29 +253,32 @@ class CommandLineApplication(Application):
         if data is None:
             input_arg = ''
         else:
-            input_arg = getattr(self,input_handler)(data)
+            input_arg = getattr(self, input_handler)(data)
 
         # Build up the command, consisting of a BaseCommand followed by
         # input and output (file) specifications
-        command = self._command_delimiter.join(filter(None,\
-            [self.BaseCommand,str(input_arg),'>',str(outfile),'2>',\
-                str(errfile)]))
-        if self.HaltExec: 
-            raise AssertionError, "Halted exec with command:\n" + command
-        # The return value of system is a 16-bit number containing the signal 
-        # number that killed the process, and then the exit status. 
-        # We only want to keep the exit status so do a right bitwise shift to 
+        command = self._command_delimiter.join(filter(None,
+                                                      [self.BaseCommand, str(
+                                                          input_arg), '>', str(outfile), '2>',
+                                                       str(errfile)]))
+        if self.HaltExec:
+            raise AssertionError("Halted exec with command:\n" + command)
+        # The return value of system is a 16-bit number containing the signal
+        # number that killed the process, and then the exit status.
+        # We only want to keep the exit status so do a right bitwise shift to
         # get rid of the signal number byte
         exit_status = system(command) >> 8
-        
-        # Determine if error should be raised due to exit status of 
+
+        # Determine if error should be raised due to exit status of
         # appliciation
         if not self._accept_exit_status(exit_status):
-            raise ApplicationError, \
-             'Unacceptable application exit status: %s\n' % str(exit_status) +\
-             'Command:\n%s\nStdOut:\n%s\nStdErr:\n%s\n' % (command, 
-                                                           open(outfile).read(), 
-                                                           open(errfile).read())
+            raise ApplicationError('Unacceptable application exit status: %s\n' % str(exit_status) +
+                                   'Command:\n%s\nStdOut:\n%s\nStdErr:\n%s\n' % (command,
+                                                                                 open(
+                                                                                     outfile).read(
+                                                                                 ),
+
+                                                                                 open(errfile).read()))
         # bash returns 127 as the exit status if the command could not
         # be found -- raise an ApplicationError on status == 127.
         # elif exit_status == 127:
@@ -272,21 +287,21 @@ class CommandLineApplication(Application):
         #      % self._command
         # else:
         #     pass
-        
+
         # open the stdout and stderr if not being suppressed
         out = None
         if not suppress_stdout:
-            out = open(outfile,"r")
-        err = None        
+            out = open(outfile, "r")
+        err = None
         if not suppress_stderr:
-            err = open(errfile,"r")
-            
+            err = open(errfile, "r")
+
         try:
-            result = CommandLineAppResult(\
-             out,err,exit_status,result_paths=self._get_result_paths(data))
+            result = CommandLineAppResult(
+                out, err, exit_status, result_paths=self._get_result_paths(data))
         except ApplicationError:
-            result = self._handle_app_result_build_failure(\
-             out,err,exit_status,self._get_result_paths(data))
+            result = self._handle_app_result_build_failure(
+                out, err, exit_status, self._get_result_paths(data))
 
         # Clean up the input file if one was created
         if remove_tmp:
@@ -295,18 +310,22 @@ class CommandLineApplication(Application):
                 self._input_filename = None
 
         return result
-   
-    def _handle_app_result_build_failure(self,out,err,exit_status,result_paths):
-        """ Called when an ApplicationError is raised on building the CommandLineAppResult 
-        
+
+    def _handle_app_result_build_failure(
+            self,
+            out,
+            err,
+            exit_status,
+            result_paths):
+        """ Called when an ApplicationError is raised on building the CommandLineAppResult
+
             This is useful for checking log files or other special handling in cases
              when expected files aren't present.
-        
+
         """
-        raise ApplicationError, "Error constructing CommandLineAppResult."
-   
-   
-    def _input_as_string(self,data):
+        raise ApplicationError("Error constructing CommandLineAppResult.")
+
+    def _input_as_string(self, data):
         """ Return data as a string """
         return str(data)
 
@@ -315,23 +334,23 @@ class CommandLineApplication(Application):
 
             data: a multiline string to be written to a file.
 
-           * Note: the result will be the filename as a FilePath object 
+           * Note: the result will be the filename as a FilePath object
             (which is a string subclass).
 
         """
         filename = self._input_filename = \
             FilePath(self.getTmpFilename(self.TmpDir))
-        data_file = open(filename,'w')
+        data_file = open(filename, 'w')
         data_file.write(data)
         data_file.close()
         return filename
-   
-    def _input_as_lines(self,data):
+
+    def _input_as_lines(self, data):
         """ Write a seq of lines to a temp file and return the filename string
-        
-            data: a sequence to be written to a file, each element of the 
+
+            data: a sequence to be written to a file, each element of the
                 sequence will compose a line in the file
-           * Note: the result will be the filename as a FilePath object 
+           * Note: the result will be the filename as a FilePath object
             (which is a string subclass).
 
            * Note: '\n' will be stripped off the end of each sequence element
@@ -341,34 +360,34 @@ class CommandLineApplication(Application):
         filename = self._input_filename = \
             FilePath(self.getTmpFilename(self.TmpDir))
         filename = FilePath(filename)
-        data_file = open(filename,'w')
+        data_file = open(filename, 'w')
         data_to_file = '\n'.join([str(d).strip('\n') for d in data])
         data_file.write(data_to_file)
         data_file.close()
         return filename
 
-    def _input_as_path(self,data):
+    def _input_as_path(self, data):
         """ Return data as string with the path wrapped in quotes
-            
+
             data: path or filename, most likely as a string
-           
-            * Note: the result will be the filename as a FilePath object 
+
+            * Note: the result will be the filename as a FilePath object
             (which is a string subclass).
 
         """
         return FilePath(data)
 
-    def _input_as_paths(self,data):
+    def _input_as_paths(self, data):
         """ Return data as a space delimited string with each path quoted
-            
-            data: paths or filenames, most likely as a list of 
+
+            data: paths or filenames, most likely as a list of
              strings
 
         """
-        return self._command_delimiter.join(\
-            map(str,map(self._input_as_path,data)))
+        return self._command_delimiter.join(
+            map(str, map(self._input_as_path, data)))
 
-    def _absolute(self,path):
+    def _absolute(self, path):
         """ Convert a filename to an absolute path """
         path = FilePath(path)
         if isabs(path):
@@ -376,44 +395,44 @@ class CommandLineApplication(Application):
         else:
             # these are both Path objects, so joining with + is acceptable
             return self.WorkingDir + path
- 
-    def _get_base_command(self):
-        """ Returns the full command string 
 
-            input_arg: the argument to the command which represents the input 
-                to the program, this will be a string, either 
+    def _get_base_command(self):
+        """ Returns the full command string
+
+            input_arg: the argument to the command which represents the input
+                to the program, this will be a string, either
                 representing input or a filename to get input from
          tI"""
         command_parts = []
-        # Append a change directory to the beginning of the command to change 
+        # Append a change directory to the beginning of the command to change
         # to self.WorkingDir before running the command
         # WorkingDir should be in quotes -- filenames might contain spaces
-        cd_command = ''.join(['cd ',str(self.WorkingDir),';'])
+        cd_command = ''.join(['cd ', str(self.WorkingDir), ';'])
         if self._command is None:
-            raise ApplicationError, '_command has not been set.'
+            raise ApplicationError('_command has not been set.')
         command = self._command
         parameters = self.Parameters
-        
+
         command_parts.append(cd_command)
         command_parts.append(command)
-        command_parts.append(self._command_delimiter.join(filter(\
-            None,(map(str,parameters.values())))))
-      
+        command_parts.append(self._command_delimiter.join(filter(
+            None, (map(str, parameters.values())))))
+
         return self._command_delimiter.join(command_parts).strip()
-    
+
     BaseCommand = property(_get_base_command)
-    
+
     def _get_WorkingDir(self):
         """Gets the working directory"""
         return self._curr_working_dir
 
-    def _set_WorkingDir(self,path):
+    def _set_WorkingDir(self, path):
         """Sets the working directory
-        
+
         Appends a slash to the end of path
         The reasoning behind this is that the user may or may not pass
         in a path with a '/' at the end. Since having multiple
-        '/' at the end doesn't hurt anything, it's convienient to 
+        '/' at the end doesn't hurt anything, it's convienient to
         be able to rely on it, and not have to check for it
         """
         self._curr_working_dir = FilePath(path) + '/'
@@ -421,49 +440,47 @@ class CommandLineApplication(Application):
             mkdir(self.WorkingDir)
         except OSError:
             # Directory already exists
-            pass 
+            pass
 
-    WorkingDir = property(_get_WorkingDir,_set_WorkingDir)
-    
-    def _error_on_missing_application(self,params):
+    WorkingDir = property(_get_WorkingDir, _set_WorkingDir)
+
+    def _error_on_missing_application(self, params):
         """ Raise an ApplicationNotFoundError if the app is not accessible
-        
+
             This method checks in the system path (usually $PATH) or for
             the existence of self._command. If self._command is not found
             in either place, an ApplicationNotFoundError is raised to
             inform the user that the application they are trying to access is
             not available.
-            
+
             This method should be overwritten when self._command does not
             represent the relevant executable (e.g., self._command = 'prog -a')
-            or in more complex cases where the file to be executed may be 
-            passed as a parameter (e.g., with java jar files, where the 
+            or in more complex cases where the file to be executed may be
+            passed as a parameter (e.g., with java jar files, where the
             jar file is passed to java via '-jar'). It can also be overwritten
-            to by-pass testing for application presence by never raising an 
+            to by-pass testing for application presence by never raising an
             error.
         """
         command = self._command
         if not (exists(command) or app_path(command)):
-            raise ApplicationNotFoundError,\
-             "Cannot find %s. Is it installed? Is it in your path?"\
-             % command
+            raise ApplicationNotFoundError("Cannot find %s. Is it installed? Is it in your path?"
+                                           % command)
 
-    
-    def _accept_exit_status(self,exit_status):
+    def _accept_exit_status(self, exit_status):
         """ Return False to raise an error due to exit_status of applciation
-        
+
             This method should be overwritten if you'd like to raise an error
             based on certain exit statuses of the application that was run. The
             default is that no value of exit_status will raise an error.
         """
         return True
 
-    def _get_result_paths(self,data):
+    def _get_result_paths(self, data):
         """ Return a dict of ResultPath objects representing all possible output
-            
+
             This method should be overwritten if the application creates output
             other than stdout and stderr.  This dictionary will have keys based
-            on the name that you'd like to access the file by in the 
+            on the name that you'd like to access the file by in the
             CommandLineAppResult object that will be created, and the values
             which are ResultPath objects. For an example of how this should be
             written see the rnaview or vienna_package classes.
@@ -478,25 +495,24 @@ class CommandLineApplication(Application):
         """
         return {}
 
-
-    def getTmpFilename(self, tmp_dir="/tmp",prefix='tmp',suffix='.txt',\
-        include_class_id=False,result_constructor=FilePath):
+    def getTmpFilename(self, tmp_dir="/tmp", prefix='tmp', suffix='.txt',
+                       include_class_id=False, result_constructor=FilePath):
         """ Return a temp filename
 
             tmp_dir: path for temp file
             prefix: text to append to start of file name
             suffix: text to append to end of file name
             include_class_id: if True, will append a class identifier (built
-             from the class name) to the filename following prefix. This is 
+             from the class name) to the filename following prefix. This is
              False by default b/c there is some string processing overhead
              in getting the class name. This will probably be most useful for
              testing: if temp files are being left behind by tests, you can
              turn this on in here (temporarily) to find out which tests are
              leaving the temp files.
             result_constructor: the constructor used to build the result
-             (default: cogent.app.parameters.FilePath). Note that joining 
+             (default: cogent.app.parameters.FilePath). Note that joining
              FilePath objects with one another or with strings, you must use
-             the + operator. If this causes trouble, you can pass str as the 
+             the + operator. If this causes trouble, you can pass str as the
              the result_constructor.
         """
 
@@ -508,31 +524,33 @@ class CommandLineApplication(Application):
             tmp_dir += "/"
 
         if include_class_id:
-            # Append the classname to the prefix from the class name 
-            # so any problematic temp files can be associated with 
-            # the class that created them. This should be especially 
+            # Append the classname to the prefix from the class name
+            # so any problematic temp files can be associated with
+            # the class that created them. This should be especially
             # useful for testing, but is turned off by default to
             # avoid the string-parsing overhead.
             class_id = str(self.__class__())
-            prefix = ''.join([prefix,\
-             class_id[class_id.rindex('.')+1:class_id.index(' ')]])
-        
+            prefix = ''.join([prefix,
+                              class_id[class_id.rindex('.') + 1:class_id.index(' ')]])
+
         try:
             mkdir(tmp_dir)
         except OSError:
             # Directory already exists
             pass
-        # note: it is OK to join FilePath objects with + 
+        # note: it is OK to join FilePath objects with +
         return result_constructor(tmp_dir) + result_constructor(prefix) + \
-            result_constructor(''.join([choice(_all_chars) \
-             for i in range(self.TmpNameLen)])) +\
+            result_constructor(''.join([choice(_all_chars)
+                                        for i in range(self.TmpNameLen)])) +\
             result_constructor(suffix)
 
+
 class ParameterIterBase:
+
     """Base class for parameter iteration objects
-    
+
     This class provides base functionality for parameter iteration objects.
-    A parameter iteration object acts like a generator and returns 
+    A parameter iteration object acts like a generator and returns
     parameter dicts of varying values. The specific keys and ranges of values
     can be specified. Subclasses of this object implement the way in which
     the parameter values are chosen."""
@@ -542,9 +560,9 @@ class ParameterIterBase:
 
         Application : A CommandLineApplication subclass
         Parameters  : A dict keyed by the application paramter, value by
-                      the range of parameters to enumerate over. For 
+                      the range of parameters to enumerate over. For
                       FlagParameters, unless specified in AlwaysOn, the value
-                      will cycle between True/False (on/off). For 
+                      will cycle between True/False (on/off). For
                       MixedParameters, include [None] specifically to utilize
                       flag functionality.
         AlwaysOn    : List of parameters that will always be on
@@ -560,27 +578,29 @@ class ParameterIterBase:
         then that parameter is implicitly always on.
         """
         self.AppParams = Application._parameters
-       
+
         # Validate Parameters
         param_set = set(Parameters.keys())
         app_param_set = set(self.AppParams.keys())
         if not param_set.issubset(app_param_set):
             not_present = str(param_set.difference(app_param_set))
-            raise ValueError, "Parameter(s) %s not present in app" % not_present
+            raise ValueError(
+                "Parameter(s) %s not present in app" %
+                not_present)
 
         # Validate AlwaysOn
         alwayson_set = set(AlwaysOn)
         if not alwayson_set.issubset(param_set):
             not_present = str(alwayson_set.difference(param_set))
-            raise ValueError, "AlwaysOn value(s) %s not in Parameters" % \
-                    not_present
+            raise ValueError("AlwaysOn value(s) %s not in Parameters" %
+                             not_present)
 
         # Make sure all values are lists
-        for k,v in Parameters.items():
+        for k, v in Parameters.items():
             if not isinstance(v, list):
                 Parameters[k] = [v]
         _my_params = Parameters
-        
+
         # Append "off states" to relevant parameters
         for k in param_set.difference(alwayson_set):
             _my_params[k].append(False)
@@ -616,21 +636,24 @@ class ParameterIterBase:
     def reset(self):
         self._generator = self._init_generator()
 
+
 class ParameterCombinations(ParameterIterBase):
+
     """Iterates over all combinations of parameters lexiographically"""
 
     def _init_generator(self):
         """Iterates over all possible combinations of parameters
-        
+
         This method iterates over the cartesian product of parameter values
         """
         for vals in cartesian_product(self._values):
             yield self._make_app_params(vals)
-   
-def cmdline_generator(param_iter, PathToBin=None, PathToCmd=None, \
-        PathsToInputs=None, PathToOutput=None, PathToStderr='/dev/null', \
-        PathToStdout='/dev/null', UniqueOutputs=False, InputParam=None, \
-        OutputParam=None):
+
+
+def cmdline_generator(param_iter, PathToBin=None, PathToCmd=None,
+                      PathsToInputs=None, PathToOutput=None, PathToStderr='/dev/null',
+                      PathToStdout='/dev/null', UniqueOutputs=False, InputParam=None,
+                      OutputParam=None):
     """Generates command lines that can be used in a cluster environment
 
     param_iter : ParameterIterBase subclass instance
@@ -643,14 +666,14 @@ def cmdline_generator(param_iter, PathToBin=None, PathToCmd=None, \
     UniqueOutputs : Generate unique tags for output files
     InputParam : Application input parameter (if not specified, assumes
         stdin is to be used)
-    OutputParam : Application output parameter (if not specified, assumes 
+    OutputParam : Application output parameter (if not specified, assumes
         stdout is to be used)
     """
     # Make sure we have input(s) and output
     if PathsToInputs is None:
-        raise ValueError, "No inputfile specified"
+        raise ValueError("No inputfile specified")
     if PathToOutput is None:
-        raise ValueError, "No outputfile specified"
+        raise ValueError("No outputfile specified")
 
     if not isinstance(PathsToInputs, list):
         PathsToInputs = [PathsToInputs]
@@ -686,46 +709,47 @@ def cmdline_generator(param_iter, PathToBin=None, PathToCmd=None, \
     for params in param_iter:
         # Support for multiple input files
         for inputfile in PathsToInputs:
-            cmdline = [base_command]    
+            cmdline = [base_command]
             cmdline.extend(sorted(filter(None, map(str, params.values()))))
 
             # Input can come from stdin or specified input argument
             if InputParam is None:
                 input = '< "%s"' % inputfile
             else:
-                input_param = params[InputParam]       
+                input_param = params[InputParam]
                 input_param.on('"%s"' % inputfile)
                 input = str(input_param)
                 input_param.off()
-    
+
             cmdline.append(input)
 
             if UniqueOutputs:
-                cmdline.append(''.join([output,str(output_count)]))
+                cmdline.append(''.join([output, str(output_count)]))
                 output_count += 1
             else:
                 cmdline.append(output)
 
             cmdline.append(stdout_)
             cmdline.append(stderr_)
-        
+
             yield ' '.join(cmdline)
-       
+
+
 def get_tmp_filename(tmp_dir=gettempdir(), prefix="tmp", suffix=".txt",
                      result_constructor=FilePath):
     """ Generate a temporary filename and return as a FilePath object
-    
+
         tmp_dir: the directory to house the tmp_filename (default: '/tmp')
         prefix: string to append to beginning of filename (default: 'tmp')
             Note: It is very useful to have prefix be descriptive of the
-            process which is creating the temporary file. For example, if 
-            your temp file will be used to build a temporary blast database, 
+            process which is creating the temporary file. For example, if
+            your temp file will be used to build a temporary blast database,
             you might pass prefix=TempBlastDB
         suffix: the suffix to be appended to the temp filename (default '.txt')
         result_constructor: the constructor used to build the result filename
-            (default: cogent.app.parameters.FilePath). Note that joining 
+            (default: cogent.app.parameters.FilePath). Note that joining
             FilePath objects with one another or with strings, you must use
-            the + operator. If this causes trouble, you can pass str as the 
+            the + operator. If this causes trouble, you can pass str as the
             the result_constructor.
     """
     # check not none
@@ -738,25 +762,24 @@ def get_tmp_filename(tmp_dir=gettempdir(), prefix="tmp", suffix=".txt",
     chars = "abcdefghigklmnopqrstuvwxyz"
     picks = chars + chars.upper() + "0123456790"
     return result_constructor(tmp_dir) + result_constructor(prefix) +\
-        result_constructor("%s%s" % \
-        (''.join([choice(picks) for i in range(20)]),suffix))
+        result_constructor("%s%s" %
+                           (''.join([choice(picks) for i in range(20)]), suffix))
+
 
 def guess_input_handler(seqs, add_seq_names=False):
     """Returns the name of the input handler for seqs."""
     if isinstance(seqs, str):
-        if '\n' in seqs:    #can't be a filename...
+        if '\n' in seqs:  # can't be a filename...
             return '_input_as_multiline_string'
-        else:               #assume it was a filename
+        else:  # assume it was a filename
             return '_input_as_string'
-            #Uncommenting the next line causes errors in muscle tests - Micah?
+            # Uncommenting the next line causes errors in muscle tests - Micah?
             # return '_input_as_path'
-    
-    if isinstance(seqs,list) and len(seqs) and isinstance(seqs[0],tuple):
+
+    if isinstance(seqs, list) and len(seqs) and isinstance(seqs[0], tuple):
         return '_input_as_seq_id_seq_pairs'
-    
+
     if add_seq_names:
         return '_input_as_seqs'
-    
+
     return '_input_as_lines'
-
-

@@ -12,38 +12,45 @@ from bipy.parse.fasta import MinimalFastaParser
 from bipy.parse.record import RecordError
 from bipy.util.unit_test import TestCase, main
 
+
 class GenericFastaTest(TestCase):
+
     """Setup data for all the various FASTA parsers."""
+
     def setUp(self):
         """standard files"""
         self.labels = '>abc\n>def\n>ghi\n'.split('\n')
         self.oneseq = '>abc\nUCAG\n'.split('\n')
         self.multiline = '>xyz\nUUUU\nCC\nAAAAA\nG'.split('\n')
-        self.threeseq='>123\na\n> \t abc  \t \ncag\ngac\n>456\nc\ng'.split('\n')
-        self.twogood='>123\n\n> \t abc  \t \ncag\ngac\n>456\nc\ng'.split('\n')
-        self.oneX='>123\nX\n> \t abc  \t \ncag\ngac\n>456\nc\ng'.split('\n')
+        self.threeseq = '>123\na\n> \t abc  \t \ncag\ngac\n>456\nc\ng'.split(
+            '\n')
+        self.twogood = '>123\n\n> \t abc  \t \ncag\ngac\n>456\nc\ng'.split(
+            '\n')
+        self.oneX = '>123\nX\n> \t abc  \t \ncag\ngac\n>456\nc\ng'.split('\n')
         self.nolabels = 'GJ>DSJGSJDF\nSFHKLDFS>jkfs\n'.split('\n')
         self.empty = []
- 
+
+
 class MinimalFastaParserTests(GenericFastaTest):
+
     """Tests of MinimalFastaParser: returns (label, seq) tuples."""
-       
+
     def test_empty(self):
         """MinimalFastaParser should return empty list from 'file' w/o labels"""
         self.assertEqual(list(MinimalFastaParser(self.empty)), [])
         self.assertEqual(list(MinimalFastaParser(self.nolabels, strict=False)),
-            [])
+                         [])
         self.assertRaises(RecordError, list, MinimalFastaParser(self.nolabels))
 
     def test_no_labels(self):
         """MinimalFastaParser should return empty list from file w/o seqs"""
-        #should fail if strict (the default)
-        self.assertRaises(RecordError, list, 
-            MinimalFastaParser(self.labels,strict=True))
-        #if not strict, should skip the records
-        self.assertEqual(list(MinimalFastaParser(self.labels, strict=False)), 
-            [])
-        
+        # should fail if strict (the default)
+        self.assertRaises(RecordError, list,
+                          MinimalFastaParser(self.labels, strict=True))
+        # if not strict, should skip the records
+        self.assertEqual(list(MinimalFastaParser(self.labels, strict=False)),
+                         [])
+
     def test_single(self):
         """MinimalFastaParser should read single record as (label, seq) tuple"""
         f = list(MinimalFastaParser(self.oneseq))
@@ -55,25 +62,26 @@ class MinimalFastaParserTests(GenericFastaTest):
         self.assertEqual(len(f), 1)
         a = f[0]
         self.assertEqual(a, ('xyz', 'UUUUCCAAAAAG'))
-    
+
     def test_gt_bracket_in_seq(self):
         """MinimalFastaParser handles alternate finder function
-            
+
             this test also illustrates how to use the MinimalFastaParser
             to handle "sequences" that start with a > symbol, which can
             happen when we abuse the MinimalFastaParser to parse
             fasta-like sequence quality files.
         """
         oneseq_w_gt = '>abc\n>CAG\n'.split('\n')
+
         def get_two_line_records(infile):
             line1 = None
             for line in infile:
-                if line1 == None:
+                if line1 is None:
                     line1 = line
                 else:
                     yield (line1, line)
                     line1 = None
-        f = list(MinimalFastaParser(oneseq_w_gt,finder=get_two_line_records))
+        f = list(MinimalFastaParser(oneseq_w_gt, finder=get_two_line_records))
         self.assertEqual(len(f), 1)
         a = f[0]
         self.assertEqual(a, ('abc', '>CAG'))
