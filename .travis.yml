@@ -9,4 +9,4 @@ install:
   - pip install .
 script:
   - nosetests
-  - pep8 bipy tests *.py
+  - pep8 --ignore=W bipy tests *.py
