@@ -13,6 +13,7 @@ def get_data_path(fn):
     data_path = os.path.join(path, 'data', fn)
     return data_path
 
+
 def normalize_signs(arr1, arr2):
     """Make sure that column and -column are modified so that they compare equal.
 
@@ -83,7 +84,6 @@ class TestRDAResults(object):
         Y = np.loadtxt(get_data_path('example2_Y'))
         X = np.loadtxt(get_data_path('example2_X')).reshape(-1, 4, order='F')
         self.ordination = RDA(Y, X)
-    
 
 
 class TestCCAErrors(object):
@@ -92,6 +92,7 @@ class TestCCAErrors(object):
         self.Y = np.loadtxt(get_data_path('example3_Y'))
         self.X = np.loadtxt(get_data_path('example3_X')).reshape(-1, 4,
                                                                  order='F')
+
     def test_shape(self):
         X, Y = self.X, self.Y
         npt.assert_raises(ValueError, CCA, Y, X[:-1])

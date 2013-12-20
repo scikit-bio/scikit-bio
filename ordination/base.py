@@ -567,6 +567,7 @@ class CCA(Ordination):
 if __name__ == '__main__':
     import os
     path = os.path.dirname(os.path.abspath(__file__))
+
     def get_path(fn):
         return os.path.join(path, 'test', 'data', fn)
 
@@ -584,8 +585,3 @@ if __name__ == '__main__':
     X = np.loadtxt(get_path('example3_X')).reshape(-1, 4, order='F')
     ordint = CCA(Y, X)
     ordint.biplot()
-
-
-
-
-
