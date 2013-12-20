@@ -17,7 +17,7 @@ from tempfile import gettempdir
 from numpy import zeros, array, nonzero, max
 
 from bipy.app.parameters import (Parameter, FlagParameter, ValuedParameter,
-                                 MixedParameter, Parameters, _find_synonym,
+                                 MixedParameter, Parameters,
                                  is_not_None, FilePath)
 from bipy.util.transform import cartesian_product
 

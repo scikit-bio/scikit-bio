@@ -468,8 +468,8 @@ class Parameters(Mapping):
         synonyms: a dictionary of synonyms. Keys are synonyms, values are
             parameter identifiers.
         """
-        self._parameters = parameters
-        self._synonyms = synonyms
+        self._parameters = deepcopy(parameters)
+        self._synonyms = deepcopy(synonyms)
 
     def __len__(self):
         return len(self._parameters)
