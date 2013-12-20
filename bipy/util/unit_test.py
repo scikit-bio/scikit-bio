@@ -135,15 +135,17 @@ class TestCase(PyTestCase):
         obs_items = list(observed)
         exp_items = list(expected)
         if len(obs_items) != len(exp_items):
-            raise self.failureException(msg or 'Observed and expected are different lengths: %s and %s'
-                                        % (len(obs_items), len(exp_items)))
+            raise self.failureException(
+                msg or 'Observed and expected are different lengths: %s and %s'
+                % (len(obs_items), len(exp_items)))
 
         obs_items.sort()
         exp_items.sort()
         for index, (obs, exp) in enumerate(zip(obs_items, exp_items)):
             if obs != exp:
-                raise self.failureException(msg or 'Observed %s and expected %s at sorted index %s'
-                                            % (obs, exp, index))
+                raise self.failureException(
+                    msg or 'Observed %s and expected %s at sorted index %s' %
+                    (obs, exp, index))
 
     def assertNotEqualItems(self, observed, expected, msg=None):
         """Fail if the two items contain only equal elements when sorted"""
