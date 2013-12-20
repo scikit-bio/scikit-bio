@@ -3,10 +3,12 @@
 """
 
 from bipy.parse.record import (FieldError, Grouper, DelimitedSplitter,
-                               GenericRecord, MappedRecord, TypeSetter, list_adder,
-                               dict_adder, LineOrientedConstructor, int_setter,
+                               GenericRecord, MappedRecord, TypeSetter,
+                               list_adder, dict_adder,
+                               LineOrientedConstructor, int_setter,
                                bool_setter, string_and_strip, FieldWrapper,
-                               StrictFieldWrapper, raise_unknown_field, FieldMorpher)
+                               StrictFieldWrapper, raise_unknown_field,
+                               FieldMorpher)
 
 from bipy.util.unit_test import TestCase, main
 
@@ -16,7 +18,8 @@ class recordsTests(TestCase):
     """Tests of top-level functionality in records."""
 
     def test_string_and_strip(self):
-        """string_and_strip should convert all items to strings and strip them"""
+        """string_and_strip should convert all items to strings and strip them
+        """
         self.assertEqual(string_and_strip(), [])
         self.assertEqual(string_and_strip('\t', ' ', '\n\t'), ['', '', ''])
         self.assertEqual(string_and_strip('\ta\tb', 3, '   cde   e', None),
@@ -124,7 +127,8 @@ class GenericRecordTests(TestCase):
         self.assertEqual(g['c'], {3: 4})
 
     def test_copy(self):
-        """GenericRecord copy should include attributes and set correct class"""
+        """GenericRecord copy should include attributes and set correct class
+        """
         g = self.gr()
         g['a'] = 'abc'
         g.X = 'y'
@@ -210,7 +214,8 @@ class MappedRecordTests(TestCase):
         self.assertEqual(s.b, 3)
 
     def test_delattr(self):
-        """MappedRecord delattr should work for 'normal' and other attributes"""
+        """MappedRecord delattr should work for 'normal' and other attributes
+        """
         s = self.single
         s.__dict__['x'] = 'y'
         assert 'x' not in s
@@ -305,7 +310,8 @@ class MappedRecordTests(TestCase):
         self.assertEqual(s.get([1, 2, 3], 'x'), 'x')
 
     def test_setdefault(self):
-        """MappedRecord setdefault should not be typesafe against unhashables"""
+        """MappedRecord setdefault should not be typesafe against unhashables
+        """
         s = self.single
         x = s.setdefault('X', 'xyz')
         self.assertEqual(x, 'xyz')
@@ -468,7 +474,8 @@ class LineOrientedConstructorTests(TestCase):
         result = loc_good()
         assert isinstance(result, rec)
         self.assertEqual(result,
-                         {'abc': ['def', 'xyz'], '3': 'n', 'fgh': False, 'x': 3})
+                         {'abc': ['def', 'xyz'], '3': 'n', 
+                          'fgh': False, 'x': 3})
 
 
 class fake_dict(dict):
