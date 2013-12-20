@@ -34,14 +34,15 @@ from string import maketrans
 def select(order, items):
     """Returns the elements from items specified in order, a list of indices.
 
-    Builds up a list containing the ith element in items for each item in order,
-    which must be a list of valid keys into items.
+    Builds up a list containing the ith element in items for each item in 
+    order, which must be a list of valid keys into items.
 
     Example: vowels = select([0, 4, 8], 'abcdefghijklm')
 
     Can also be used to emulate Perl's hash slices.
 
-    Example: reverse_vowel_freqs = select('ea', {'a':1,'b':5,'c':2,'d':4,'e':6})
+    Example: 
+     reverse_vowel_freqs = select('ea', {'a':1,'b':5,'c':2,'d':4,'e':6})
 
     Return type is a list of whatever type the elements in items are.
     """
@@ -80,13 +81,16 @@ def conjoin(functions, *args, **kwargs):
 
 def all(functions):
     """Returns function that returns True when all components return True."""
+
     def apply_to(*args, **kwargs):
         return conjoin(functions, *args, **kwargs)
     return apply_to
 
 
 def both(f, g):
-    """Returns function that returns True when functions f and g return True."""
+    """Returns function that returns True when functions f and g return True.
+    """
+    
     def apply_to(*args, **kwargs):
         # use operator.__and__ to make it compatible to numpy array operation
         # return logical_and(f(*args, **kwargs), g(*args, **kwargs))
@@ -104,6 +108,7 @@ def disjoin(functions, *args, **kwargs):
 
 def any(functions):
     """Returns a function that returns True if any component returns True."""
+    
     def apply_to(*args, **kwargs):
         return disjoin(functions, *args, **kwargs)
     return apply_to
@@ -111,6 +116,7 @@ def any(functions):
 
 def either(f, g):
     """Returns a function that returns True if either f or g returns True."""
+    
     def apply_to(*args, **kwargs):
         return f(*args, **kwargs) or g(*args, **kwargs)
     return apply_to
@@ -126,13 +132,16 @@ def negate(functions, *args, **kwargs):
 
 def none(functions):
     """Returns a function that returns True if all components return False."""
+    
     def apply_to(*args, **kwargs):
         return negate(functions, *args, **kwargs)
     return apply_to
 
 
 def neither(f, g):
-    """Returns a function that returns True if neither f not g returns True."""
+    """Returns a function that returns True if neither f not g returns True.
+    """
+    
     def apply_to(*args, **kwargs):
         return not(f(*args, **kwargs)) and not(g(*args, **kwargs))
     return apply_to
@@ -140,6 +149,7 @@ def neither(f, g):
 
 def compose(f, g):
     """Returns a function that returns the result of applying f to g(x)."""
+    
     def apply_to(*args, **kwargs):
         return f(g(*args, **kwargs))
     return apply_to
@@ -223,6 +233,7 @@ class for_seq(object):
 
 def has_field(field_name):
     """Returns a function that returns True if the obj has the field_name."""
+    
     def field_checker(obj):
         return hasattr(obj, field_name)
     return field_checker
@@ -255,10 +266,12 @@ def index(constructor=None, overwrite=False):
     """
     f = constructor or identity
     if overwrite:
+        
         def result(items):
             return dict([(f(i), i) for i in items])
         return result
     else:
+        
         def result(items):
             index = {}
             for i in items:
@@ -274,7 +287,8 @@ allchars = maketrans('', '')
 
 
 def trans_except(good_chars, default):
-    """Returns translation table mapping all but the 'good chars' to default."""
+    """Returns translation table mapping all but the 'good chars' to default.
+    """
     all_list = list(allchars)
     for i, char in enumerate(all_list):
         if char not in good_chars:
@@ -414,9 +428,10 @@ def reorder(order):
 
     Always returns a list.
 
-    Will raise the appropriate IndexError or KeyError if items does not contain
-    any position reqested by the order.
+    Will raise the appropriate IndexError or KeyError if items does not 
+    contain any position reqested by the order.
     """
+    
     def result(items):
         return select(order, items)
     return result
@@ -431,11 +446,13 @@ def reorder_inplace(order, attr=None):
     mutable sequences (e.g. lists, but not tuples or strings or dicts).
     """
     if attr:
+        
         def result(obj):
             curr = getattr(obj, attr)
             curr[:] = select(order, curr)
             return obj
     else:
+        
         def result(obj):
             obj[:] = select(order, obj)
             return obj
