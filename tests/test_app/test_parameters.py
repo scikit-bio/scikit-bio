@@ -10,7 +10,8 @@
 
 from bipy.util.unit_test import TestCase, main
 from bipy.app.parameters import (Parameter, FlagParameter, ValuedParameter,
-                                 MixedParameter, Parameters, _find_synonym, ParameterError, FilePath)
+                                 MixedParameter, Parameters, _find_synonym,
+                                 ParameterError, FilePath)
 
 
 class FlagParameterTests(TestCase):
@@ -218,7 +219,8 @@ class ValuedParameterTests(TestCase):
                     Delimiter=' '),
                 self.constructor(Name='d', Prefix='-', Value='evo/t.txt',
                                  Delimiter=' '),
-                self.constructor(Name='d', Prefix='-', Value='\'', Delimiter=' ')]
+                self.constructor(Name='d', Prefix='-', Value='\'', 
+                                 Delimiter=' ')]
 
         self.p_modified_quote =\
             [self.constructor(Name='d', Prefix='-', Value=42, Quote=''),
