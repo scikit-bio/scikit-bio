@@ -37,7 +37,8 @@ class FastaTests(TestCase):
         self.assertEqual(fasta_from_alignment(self.alignment_dict),
                          self.fasta_with_label)
         self.assertEqual(fasta_from_alignment(self.alignment_dict,
-                                              line_wrap=2), self.fasta_with_label_lw2)
+                                              line_wrap=2), 
+                         self.fasta_with_label_lw2)
 
 if __name__ == "__main__":
     main()
