@@ -5,7 +5,8 @@
 
 from bipy.parse.record import RecordError
 from bipy.parse.record_finder import (DelimitedRecordFinder,
-                                      LabeledRecordFinder, LineGrouper, TailedRecordFinder)
+                                      LabeledRecordFinder, LineGrouper,
+                                      TailedRecordFinder)
 from bipy.util.unit_test import TestCase, main
 
 
@@ -142,10 +143,10 @@ class DelimitedRecordFinderTests(TestCase):
                          [['>abc', '1', '$$'], ['>def', '#ignore', '2', '$$']])
         self.assertEqual(list(DelimitedRecordFinder('$$',
                                                     ignore=never)(lines)),
-                         [['>abc', '', '1', '$$'], ['>def', '#ignore', '2', '$$']])
-        self.assertEqual(list(DelimitedRecordFinder('$$',
-                                                    ignore=ignore_labels)(
-            lines)),
+                         [['>abc', '', '1', '$$'],
+                          ['>def', '#ignore', '2', '$$']])
+        self.assertEqual(
+            list(DelimitedRecordFinder('$$', ignore=ignore_labels)(lines)),
             [['>abc', '1', '$$'], ['>def', '2', '$$']])
 
 
@@ -178,7 +179,8 @@ class LabeledRecordFinderTests(TestCase):
                          [['>abc', 'def', '//'], ['>efg', '//']])
 
     def test_parsers_leftover(self):
-        """LabeledRecordFinder should not raise RecordError if last line label"""
+        """LabeledRecordFinder should not raise RecordError if last line label
+        """
         fl = self.FastaLike
         good = ['  \t   >abc  \n',
                 '\t   def\n',
