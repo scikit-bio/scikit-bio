@@ -103,7 +103,7 @@ def G_2_by_2(a, b, c, d, williams=1, directional=1):
         is_high = ((b == 0) or (d != 0 and (a / b > c / d)))
         p = tail(p, is_high)
         if not is_high:
-            G = -G
+            G = -1 * G
     return G, p
 
 
@@ -242,18 +242,22 @@ def t_two_sample(a, b, tails=None, exp_diff=0, none_on_zero_variance=True):
         # groups
         n1 = len(a)
         if n1 < 2:
-            return t_one_observation(sum(a), b, tails, exp_diff,
-                                     none_on_zero_variance=none_on_zero_variance)
+            t, prob = \
+             t_one_observation(sum(a), b, tails, exp_diff,
+                               none_on_zero_variance=none_on_zero_variance)
+            return t, prob
 
         n2 = len(b)
         if n2 < 2:
-            t, prob = t_one_observation(sum(b), a, reverse_tails(tails),
-                                        exp_diff, none_on_zero_variance=none_on_zero_variance)
+            t, prob = \
+             t_one_observation(sum(b), a, reverse_tails(tails),
+                               exp_diff,
+                               none_on_zero_variance=none_on_zero_variance)
 
             # Negate the t-statistic because we swapped the order of the inputs
             # in the t_one_observation call, as well as tails.
             if t != 0:
-                t = -t
+                t = -1 * t
 
             return (t, prob)
 
@@ -284,8 +288,8 @@ def t_two_sample(a, b, tails=None, exp_diff=0, none_on_zero_variance=True):
                 result = (t, prob)
     except (ZeroDivisionError, ValueError, AttributeError, TypeError,
             FloatingPointError) as e:
-        # invalidate if the sample sizes are wrong, the values aren't numeric or
-        # aren't present, etc.
+        # invalidate if the sample sizes are wrong, the values 
+        # aren't numeric or aren't present, etc.
         result = (None, None)
 
     return result
@@ -475,7 +479,8 @@ def pearson(x_items, y_items):
                          "coefficient.")
     if len(x_items) < 2:
         raise ValueError("The two vectors must both contain at least 2 "
-                         "elements. The vectors are of length %d." % len(x_items))
+                         "elements. The vectors are "
+                         "of length %d." % len(x_items))
 
     sum_x = sum(x_items)
     sum_y = sum(y_items)
@@ -488,7 +493,7 @@ def pearson(x_items, y_items):
         r = 1.0 * ((n * sum_xy) - (sum_x * sum_y)) / \
             (sqrt((n * sum_x_sq) - (sum_x * sum_x))
              * sqrt((n * sum_y_sq) - (sum_y * sum_y)))
-    except (ZeroDivisionError, ValueError, FloatingPointError):  # no variation
+    except (ZeroDivisionError, ValueError, FloatingPointError): # no variation
         r = 0.0
     # check we didn't get a naughty value for r due to rounding error
     if r > 1.0:
@@ -516,8 +521,9 @@ def spearman(x_items, y_items):
         raise ValueError("The length of the two vectors must be the same in "
                          "order to calculate Spearman's rho.")
     if len(x_items) < 2:
-        raise ValueError("The two vectors must both contain at least 2 "
-                         "elements. The vectors are of length %d." % len(x_items))
+        raise ValueError("The two vectors must both contain "
+                         "at least 2 elements. The vectors are of "
+                         "length %d." % len(x_items))
 
     # Rank the two input vectors.
     rank1, ties1 = _get_rank(x_items)
@@ -573,6 +579,7 @@ def _get_rank(data):
         i += dup_ranks
         ties += dup_ranks - 1
     return ranks, ties
+
 
 def correlation_t(x_items, y_items, method='pearson', tails=None,
                   permutations=999, confidence_level=0.95):
@@ -776,6 +783,7 @@ def _get_bootstrap_sample(x, y, num_reps):
         sampled_y = sampled[num_x:]
         yield sampled_x, sampled_y
 
+
 def mw_t(x, y):
     """computes the Mann-Whitney U statistic and the probability using the
     normal approximation"""
@@ -879,6 +887,7 @@ def mantel(m1, m2, n):
     mantel_t() for more control over how the test is performed.
     """
     return mantel_t(m1, m2, n)[0]
+
 
 def mantel_t(m1, m2, n, alt="two sided",
              suppress_symmetry_and_hollowness_check=False):
