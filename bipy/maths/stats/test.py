@@ -557,7 +557,7 @@ def _get_rank(data):
         ties += dup_ranks-1
     return ranks, ties
 
-def correlation_test(x_items, y_items, method='pearson', tails=None,
+def correlation_t(x_items, y_items, method='pearson', tails=None,
                      permutations=999, confidence_level=0.95):
     """Computes the correlation between two vectors and its significance.
 
@@ -754,7 +754,7 @@ def _get_bootstrap_sample(x, y, num_reps):
         sampled_y = sampled[num_x:]
         yield sampled_x, sampled_y
 
-def mw_test(x, y):
+def mw_t(x, y):
     """computes the Mann-Whitney U statistic and the probability using the
     normal approximation"""
     if len(x) > len(y):
@@ -821,12 +821,12 @@ def mw_boot(x, y, num_reps=1000):
     """
     tol = MACHEP * 100
     combined = array(list(x) + list(y))
-    observed_stat, obs_p = mw_test(x, y)
+    observed_stat, obs_p = mw_t(x, y)
     total_obs = len(combined)
     num_x = len(x)
     num_greater = 0
     for sampled_x, sampled_y in _get_bootstrap_sample(x, y, num_reps):
-        sample_stat, sample_p = mw_test(sampled_x, sampled_y)
+        sample_stat, sample_p = mw_t(sampled_x, sampled_y)
         if sample_stat >= (observed_stat - tol):
             num_greater += 1
     return observed_stat, num_greater / num_reps
@@ -849,11 +849,11 @@ def mantel(m1, m2, n):
     in the calculations (matching R's vegan::mantel function).
 
     This function is retained for backwards-compatibility. Please use
-    mantel_test() for more control over how the test is performed.
+    mantel_t() for more control over how the test is performed.
     """
-    return mantel_test(m1, m2, n)[0]
+    return mantel_t(m1, m2, n)[0]
 
-def mantel_test(m1, m2, n, alt="two sided",
+def mantel_t(m1, m2, n, alt="two sided",
                 suppress_symmetry_and_hollowness_check=False):
     """Runs a Mantel test on two distance matrices.
 
