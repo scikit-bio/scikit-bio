@@ -14,8 +14,9 @@ from os import remove, system, mkdir, rmdir, removedirs, getcwd, walk
 from bipy.app.parameters import *
 from bipy.util.unit_test import TestCase, main
 from bipy.app.util import (Application, CommandLineApplication,
-                           CommandLineAppResult, ResultPath, ApplicationError, ParameterIterBase,
-                           ParameterCombinations, cmdline_generator, ApplicationNotFoundError,
+                           CommandLineAppResult, ResultPath, ApplicationError,
+                           ParameterIterBase, ParameterCombinations,
+                           cmdline_generator, ApplicationNotFoundError,
                            get_tmp_filename, guess_input_handler, app_path)
 
 
@@ -170,18 +171,22 @@ class CommandLineGeneratorTests(TestCase):
         stdout = self.abs_path_to_stdout
         stderr = self.abs_path_to_stderr
 
-        exp = [' '.join([bin, cmd, '-default=42', '-delimaaachoice1', '-flag1',
-                        '-input="%s"' % inputfile, '-output="%s"' % outputfile,
+        exp = [' '.join([bin, cmd, '-default=42', '-delimaaachoice1',
+                         '-flag1',
+                         '-input="%s"' % inputfile, 
+                         '-output="%s"' % outputfile,
                          '> "%s"' % stdout, '2> "%s"' % stderr])]
         exp.append(' '.join([bin, cmd, '-default=42', '-delimaaachoice1',
-                             '-input="%s"' % inputfile, '-output="%s"' % outputfile,
+                             '-input="%s"' % inputfile,
+                             '-output="%s"' % outputfile,
                              '> "%s"' % stdout, '2> "%s"' % stderr]))
         exp.append(' '.join([bin, cmd, '-default=42', '-delimaaachoice2',
-                            '-flag1', '-input="%s"' % inputfile,
+                             '-flag1', '-input="%s"' % inputfile,
                              '-output="%s"' % outputfile, '> "%s"' % stdout,
                              '2> "%s"' % stderr]))
         exp.append(' '.join([bin, cmd, '-default=42', '-delimaaachoice2',
-                             '-input="%s"' % inputfile, '-output="%s"' % outputfile,
+                             '-input="%s"' % inputfile,
+                             '-output="%s"' % outputfile,
                              '> "%s"' % stdout, '2> "%s"' % stderr]))
 
         cmdlines = list(cmdgen)
@@ -210,8 +215,9 @@ class CommandLineGeneratorTests(TestCase):
         # output, the stdout_ param gets set to '' which results in an extra
         # space being generated on the cmdline. this should be benign
         # across operating systems
-        exp = [' '.join([bin, cmd, '-default=42', '-delimaaachoice1', '-flag1',
-                        '< "%s"' % inputfile, '> "%s"0' % outputfile, '',
+        exp = [' '.join([bin, cmd, '-default=42', '-delimaaachoice1', 
+                         '-flag1',
+                         '< "%s"' % inputfile, '> "%s"0' % outputfile, '',
                          '2> "%s"' % stderr])]
         exp.append(' '.join([bin, cmd, '-default=42', '-delimaaachoice1',
                             '< "%s"' % inputfile, '> "%s"1' % outputfile, '',
@@ -249,13 +255,15 @@ class CommandLineGeneratorTests(TestCase):
                         '-input="%s"' % inputfile, '-output="%s"' % outputfile,
                          '', ''])]
         exp.append(' '.join([bin, cmd, '-default=42', '-delimaaachoice1',
-                             '-input="%s"' % inputfile, '-output="%s"' % outputfile,
+                             '-input="%s"' % inputfile, 
+                             '-output="%s"' % outputfile,
                              '', '']))
         exp.append(' '.join([bin, cmd, '-default=42', '-delimaaachoice2',
                             '-flag1', '-input="%s"' % inputfile,
                              '-output="%s"' % outputfile, '', '']))
         exp.append(' '.join([bin, cmd, '-default=42', '-delimaaachoice2',
-                             '-input="%s"' % inputfile, '-output="%s"' % outputfile,
+                             '-input="%s"' % inputfile,
+                             '-output="%s"' % outputfile,
                              '', '']))
 
         cmdlines = list(cmdgen)
@@ -282,18 +290,21 @@ class CommandLineGeneratorTests(TestCase):
         stdout = self.abs_path_to_stdout
         stderr = self.abs_path_to_stderr
 
-        exp = [' '.join([bin, cmd, '-default=42', '-delimaaachoice1', '-flag1',
-                        '-input="%s"' % inputfile1, '-output="%s"' % outputfile,
+        exp = [' '.join([bin, cmd, '-default=42', '-delimaaachoice1',
+                         '-flag1', '-input="%s"' % inputfile1,
+                         '-output="%s"' % outputfile,
                          '> "%s"' % stdout, '2> "%s"' % stderr])]
         exp.append(' '.join([bin, cmd, '-default=42', '-delimaaachoice1',
                    '-flag1', '-input="%s"' % inputfile2,
                              '-output="%s"' % outputfile, '> "%s"' % stdout,
                              '2> "%s"' % stderr]))
         exp.append(' '.join([bin, cmd, '-default=42', '-delimaaachoice1',
-                             '-input="%s"' % inputfile1, '-output="%s"' % outputfile,
+                             '-input="%s"' % inputfile1,
+                             '-output="%s"' % outputfile,
                              '> "%s"' % stdout, '2> "%s"' % stderr]))
         exp.append(' '.join([bin, cmd, '-default=42', '-delimaaachoice1',
-                             '-input="%s"' % inputfile2, '-output="%s"' % outputfile,
+                             '-input="%s"' % inputfile2,
+                             '-output="%s"' % outputfile,
                              '> "%s"' % stdout, '2> "%s"' % stderr]))
         exp.append(' '.join([bin, cmd, '-default=42', '-delimaaachoice2',
                             '-flag1', '-input="%s"' % inputfile1,
@@ -304,10 +315,12 @@ class CommandLineGeneratorTests(TestCase):
                              '-output="%s"' % outputfile, '> "%s"' % stdout,
                              '2> "%s"' % stderr]))
         exp.append(' '.join([bin, cmd, '-default=42', '-delimaaachoice2',
-                             '-input="%s"' % inputfile1, '-output="%s"' % outputfile,
+                             '-input="%s"' % inputfile1,
+                             '-output="%s"' % outputfile,
                              '> "%s"' % stdout, '2> "%s"' % stderr]))
         exp.append(' '.join([bin, cmd, '-default=42', '-delimaaachoice2',
-                             '-input="%s"' % inputfile2, '-output="%s"' % outputfile,
+                             '-input="%s"' % inputfile2,
+                             '-output="%s"' % outputfile,
                              '> "%s"' % stdout, '2> "%s"' % stderr]))
 
         cmdlines = list(cmdgen)
@@ -334,18 +347,21 @@ class CommandLineGeneratorTests(TestCase):
         stdout = self.abs_path_to_stdout
         stderr = self.abs_path_to_stderr
 
-        exp = [' '.join([bin, cmd, '-default=42', '-delimaaachoice1', '-flag1',
-                        '< "%s"' % inputfile1, '-output="%s"' % outputfile,
+        exp = [' '.join([bin, cmd, '-default=42', '-delimaaachoice1',
+                         '-flag1', '< "%s"' % inputfile1,
+                         '-output="%s"' % outputfile,
                          '> "%s"' % stdout, '2> "%s"' % stderr])]
         exp.append(' '.join([bin, cmd, '-default=42', '-delimaaachoice1',
                    '-flag1', '< "%s"' % inputfile2,
                              '-output="%s"' % outputfile, '> "%s"' % stdout,
                              '2> "%s"' % stderr]))
         exp.append(' '.join([bin, cmd, '-default=42', '-delimaaachoice1',
-                             '< "%s"' % inputfile1, '-output="%s"' % outputfile,
+                             '< "%s"' % inputfile1,
+                             '-output="%s"' % outputfile,
                              '> "%s"' % stdout, '2> "%s"' % stderr]))
         exp.append(' '.join([bin, cmd, '-default=42', '-delimaaachoice1',
-                             '< "%s"' % inputfile2, '-output="%s"' % outputfile,
+                             '< "%s"' % inputfile2,
+                             '-output="%s"' % outputfile,
                              '> "%s"' % stdout, '2> "%s"' % stderr]))
         exp.append(' '.join([bin, cmd, '-default=42', '-delimaaachoice2',
                             '-flag1', '< "%s"' % inputfile1,
@@ -356,10 +372,12 @@ class CommandLineGeneratorTests(TestCase):
                              '-output="%s"' % outputfile, '> "%s"' % stdout,
                              '2> "%s"' % stderr]))
         exp.append(' '.join([bin, cmd, '-default=42', '-delimaaachoice2',
-                             '< "%s"' % inputfile1, '-output="%s"' % outputfile,
+                             '< "%s"' % inputfile1,
+                             '-output="%s"' % outputfile,
                              '> "%s"' % stdout, '2> "%s"' % stderr]))
         exp.append(' '.join([bin, cmd, '-default=42', '-delimaaachoice2',
-                             '< "%s"' % inputfile2, '-output="%s"' % outputfile,
+                             '< "%s"' % inputfile2,
+                             '-output="%s"' % outputfile,
                              '> "%s"' % stdout, '2> "%s"' % stderr]))
 
         cmdlines = list(cmdgen)
@@ -393,16 +411,19 @@ class CommandLineApplicationTests(TestCase):
                                                 SuppressStderr=True)
         self.app_params_no_stdout = CLAppTester({'-F': 'p_file.txt'},
                                                 SuppressStdout=True)
-        self.app_params_input_as_file = CLAppTester({'-F': 'p_file.txt'},
-                                                    InputHandler='_input_as_lines')
+        self.app_params_input_as_file = \
+            CLAppTester({'-F': 'p_file.txt'},
+                        InputHandler='_input_as_lines')
         self.app_params_WorkingDir = CLAppTester({'-F': 'p_file.txt'},
                                                  WorkingDir='/tmp/test')
-        self.app_params_WorkingDir_w_space = CLAppTester({'-F': 'p_file.txt'},
-                                                         WorkingDir='/tmp/test space')
+        self.app_params_WorkingDir_w_space = \
+            CLAppTester({'-F': 'p_file.txt'},
+                        WorkingDir='/tmp/test space')
         self.app_params_TmpDir = CLAppTester({'-F': 'p_file.txt'},
                                              TmpDir='/tmp/tmp2')
-        self.app_params_TmpDir_w_space = CLAppTester({'-F': 'p_file.txt'},
-                                                     TmpDir='/tmp/tmp space')
+        self.app_params_TmpDir_w_space = \
+            CLAppTester({'-F': 'p_file.txt'},
+                        TmpDir='/tmp/tmp space')
         self.data = 42
 
     def test_base_command(self):
@@ -432,7 +453,8 @@ class CommandLineApplicationTests(TestCase):
                         'cd "/tmp/"; /tmp/CLAppTester.py --duh -F "junk.txt"')
         # Space in _command
         app = CLAppTester_space_in_command()
-        self.assertEqual(app.BaseCommand, 'cd "/tmp/"; "/tmp/CLApp Tester.py"')
+        self.assertEqual(app.BaseCommand, 
+                         'cd "/tmp/"; "/tmp/CLApp Tester.py"')
 
     def test_getHelp(self):
         """CLAppTester: getHelp() functions as expected """
@@ -440,13 +462,14 @@ class CommandLineApplicationTests(TestCase):
         self.assertEqual(app.getHelp(), 'Duh')
 
     def test_handle_app_result_build_failure(self):
-        """_handle_app_result_build_failure called when CommandLineAppResult() fails
+        """_handle_app_result_build_failure on CommandLineAppResult() failure
         """
         app = CLAppTester_bad_fixed_file()
         self.assertRaises(ApplicationError, app)
 
         app = CLAppTester_bad_fixed_file_w_handler()
-        self.assertEqual(app(), "Called self._handle_app_result_build_failure")
+        self.assertEqual(app(),
+                         "Called self._handle_app_result_build_failure")
 
     def test_error_on_missing_executable(self):
         """CLAppTester: Useful error message on executable not found
@@ -523,7 +546,8 @@ class CommandLineApplicationTests(TestCase):
         result.cleanUp()
 
     def test_p_data_as_str_suppress_stderr(self):
-        """CLAppTester: parameters turned on, data as string, suppress stderr"""
+        """CLAppTester: parameters turned on, data as string, suppress stderr
+        """
         app = self.app_params_no_stderr
         # test_init
         assert app.Parameters['-F'].isOn()
@@ -545,7 +569,8 @@ class CommandLineApplicationTests(TestCase):
         result.cleanUp()
 
     def test_p_data_as_str_suppress_stdout(self):
-        """CLAppTester: parameters turned on, data as string, suppress stdout"""
+        """CLAppTester: parameters turned on, data as string, suppress stdout
+        """
         app = self.app_params_no_stdout
         # test_init
         assert app.Parameters['-F'].isOn()
@@ -666,7 +691,8 @@ class CommandLineApplicationTests(TestCase):
         self.assertEqual(app.WorkingDir, '/tmp/test/')
         # test_command
         self.assertEqual(app.BaseCommand,
-                         'cd "/tmp/test/"; /tmp/CLAppTester.py -F "p_file.txt"')
+                         ('cd "/tmp/test/"; /tmp/CLAppTester.py '
+                          '-F "p_file.txt"'))
         # test_result
         result = app()
         self.assertEqual(result['StdOut'].read(), '')
@@ -695,7 +721,8 @@ class CommandLineApplicationTests(TestCase):
         self.assertEqual(app.WorkingDir, '/tmp/test space/')
         # test_command
         self.assertEqual(app.BaseCommand,
-                         'cd "/tmp/test space/"; /tmp/CLAppTester.py -F "p_file.txt"')
+                         ('cd "/tmp/test space/"; /tmp/CLAppTester.py'
+                          ' -F "p_file.txt"'))
         # test_result
         result = app()
         self.assertEqual(result['StdOut'].read(), '')
@@ -949,8 +976,8 @@ class CommandLineApplicationTests(TestCase):
         """TmpFilename should return filename of correct length"""
         app = CLAppTester()
         obs = app.getTmpFilename(include_class_id=True)
-        # leaving the strings in this statement so it's clear where the expected
-        # length comes from
+        # leaving the strings in this statement so it's clear where the 
+        # expected length comes from
         self.assertEqual(len(obs), len(app.TmpDir) + len('/') + app.TmpNameLen
                          + len('tmp') + len('CLAppTester') + len('.txt'))
         assert obs.startswith(app.TmpDir)
@@ -958,8 +985,8 @@ class CommandLineApplicationTests(TestCase):
         assert len(chars) > 1
 
         obs = app.getTmpFilename(include_class_id=False)
-        # leaving the strings in this statement so it's clear where the expected
-        # length comes from
+        # leaving the strings in this statement so it's clear where the 
+        # expected length comes from
         self.assertEqual(len(obs), len(app.TmpDir) + len('/') + app.TmpNameLen
                          + len('tmp') + len('.txt'))
         assert obs.startswith(app.TmpDir)
@@ -1016,13 +1043,15 @@ class ConvenienceFunctionTests(TestCase):
     def test_get_tmp_filename(self):
         """get_tmp_filename should return filename of correct length
 
-            Adapted from the CommandLineApplication tests of the member function
+            Adapted from the CommandLineApplication tests of the member
+            function
 
         """
         obs = get_tmp_filename()
-        # leaving the strings in this statement so it's clear where the expected
-        # length comes from
-        self.assertEqual(len(obs), len(self.tmp_dir) + len('/') + self.tmp_name_len
+        # leaving the strings in this statement so it's clear where the 
+        # expected length comes from
+        self.assertEqual(len(obs), 
+                         len(self.tmp_dir) + len('/') + self.tmp_name_len
                          + len('tmp') + len('.txt'))
         self.assertTrue(obs.startswith(self.tmp_dir))
 
@@ -1030,16 +1059,18 @@ class ConvenienceFunctionTests(TestCase):
         self.assertNotEqual(get_tmp_filename(), get_tmp_filename())
 
         obs = get_tmp_filename()
-        # leaving the strings in this statement so it's clear where the expected
-        # length comes from
-        self.assertEqual(len(obs), len(self.tmp_dir) + len('/') + self.tmp_name_len
+        # leaving the strings in this statement so it's clear where the 
+        # expected length comes from
+        self.assertEqual(len(obs), 
+                         len(self.tmp_dir) + len('/') + self.tmp_name_len
                          + len('tmp') + len('.txt'))
         assert obs.startswith(self.tmp_dir)
 
     def test_get_tmp_filename_prefix_suffix_constructor(self):
         """get_tmp_filename: result has correct prefix, suffix, type
 
-            Adapted from the CommandLineApplication tests of the member function
+            Adapted from the CommandLineApplication tests of the member
+            function
         """
         obs = get_tmp_filename(prefix='blah')
         self.assertTrue(obs.startswith('%s/blah' % self.tmp_dir))
@@ -1175,8 +1206,9 @@ class CLAppTester(CommandLineApplication):
 
         result = {}
         result['fixed_file'] = ResultPath(Path='/tmp/fixed.txt')
-        result['parameterized_file'] = ResultPath(Path=param_path,
-                                                  IsWritten=self.Parameters['-F'].isOn())
+        result['parameterized_file'] = \
+            ResultPath(Path=param_path,
+                       IsWritten=self.Parameters['-F'].isOn())
         result['base_dep_1'] = ResultPath(Path=self._build_name(suffix='.1'))
         result['base_dep_2'] = ResultPath(Path=self._build_name(suffix='.2'))
         return result
@@ -1211,8 +1243,9 @@ class CLAppTester_bad_fixed_file(CLAppTester):
         result = {}
         result['fixed_file'] = ResultPath(Path='/tmp/fixed.txt')
         result['fixed_file_bad'] = ResultPath(Path='/tmp/i_dont_exist.txt')
-        result['parameterized_file'] = ResultPath(Path=param_path,
-                                                  IsWritten=self.Parameters['-F'].isOn())
+        result['parameterized_file'] = \
+            ResultPath(Path=param_path,
+                       IsWritten=self.Parameters['-F'].isOn())
         result['base_dep_1'] = ResultPath(Path=self._build_name(suffix='.1'))
         result['base_dep_2'] = ResultPath(Path=self._build_name(suffix='.2'))
         return result
