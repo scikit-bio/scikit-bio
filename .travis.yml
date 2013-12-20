@@ -12,4 +12,4 @@ install:
   - pip install -q .; echo "qiime install complete"
 script:
   - nosetests
-  - pep8 --ignore=W bipy tests *.py
+  - pep8 --ignore=W bipy tests setup.py
