@@ -37,7 +37,8 @@ class Grouper(object):
     """
 
     def __init__(self, NumItems=1):
-        """Returns new Grouper object: will return n items at a time from seq"""
+        """Returns new Grouper object: will return n items at a time from seq
+        """
         self.NumItems = NumItems
 
     def __call__(self, seq):
@@ -286,7 +287,8 @@ class MappedRecord(GenericRecord):
         return super(MappedRecord, self).__contains__(self.unalias(item))
 
     def get(self, item, default):
-        """Returns self[item] or default if not present. Silent when unhashable."""
+        """Returns self[item] or default if not present. Silent on unhashable.
+        """
         try:
             return super(MappedRecord, self).get(self.unalias(item), default)
         except TypeError:
@@ -341,7 +343,8 @@ def list_adder(obj, field, val):
 
 
 def dict_adder(obj, field, val):
-    """If val is a sequence, adds key/value pair in obj.field: else adds key."""
+    """If val is a sequence, adds key/value pair in obj.field: else adds key.
+    """
     try:
         key, value = val
     except (ValueError, TypeError):
