@@ -12,6 +12,7 @@ from copy import deepcopy
 
 from collections import Mapping
 
+
 def is_not_None(x):
     """Returns True if x is not None"""
     return x is not None
@@ -453,6 +454,7 @@ class MixedParameter(ValuedParameter):
         """Turns the MixedParameter OFF by setting its Value to False"""
         self.Value = False
 
+
 class Parameters(Mapping):
 
     """Parameters is a dictionary of Parameter objects.
@@ -477,7 +479,7 @@ class Parameters(Mapping):
     def __iter__(self):
         return iter(self._parameters)
 
-    def __getitem__(self,key):
+    def __getitem__(self, key):
         try:
             key = self._synonyms[key]
         except KeyError:
