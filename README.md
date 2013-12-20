@@ -30,3 +30,10 @@ Testing
 After installing the package and `nose`, run::
 
   $ nosetests --exe ordination
+
+Usage
+=====
+
+The easiest way to get pretty pictures is to run it as a module::
+
+  $ python -m ordination.base
