@@ -13,16 +13,22 @@
 
 from bipy.util.transform import (apply_each, bools, bool_each,
                                  conjoin, all, both,
-                                 disjoin, any, either, negate, none, neither, compose, compose_many,
+                                 disjoin, any, either, negate, none, neither,
+                                 compose, compose_many,
                                  per_shortest, per_longest, for_seq,
                                  has_field, extract_field, index,
-                                 trans_except, trans_all, make_trans, find_any, find_no, find_all,
-                                 keep_chars, exclude_chars, reorder, reorder_inplace,
-                                 float_from_string, first, last, first_in_set, last_in_set,
-                                 first_not_in_set, last_not_in_set, first_index, last_index,
-                                 first_index_in_set, last_index_in_set, first_index_not_in_set,
-                                 last_index_not_in_set, perm, comb, cross_comb, _increment_comb, identity,
-                                 select)
+                                 trans_except, trans_all, make_trans, 
+                                 find_any, find_no, find_all,
+                                 keep_chars, exclude_chars, reorder, 
+                                 reorder_inplace, float_from_string, first, 
+                                 last, first_in_set, last_in_set,
+                                 first_not_in_set, last_not_in_set, 
+                                 first_index, last_index,
+                                 first_index_in_set, last_index_in_set, 
+                                 first_index_not_in_set,
+                                 last_index_not_in_set, perm, comb, 
+                                 cross_comb, _increment_comb, identity, select
+                                 )
 
 from bipy.util.unit_test import TestCase, main
 
@@ -162,7 +168,8 @@ class metafunctionsTests(TestCase):
         self.assertEqual(bools(self.Numbers), [False] + [True] * 19)
 
     def test_bool_each(self):
-        """bool_each should return boolean version of applying each f to args"""
+        """bool_each should return boolean version of applying each f to args
+        """
         self.assertEqual(bool_each([self.double, self.minusone],
                                    self.SmallNumbers[0]), [False, True])
 
@@ -189,7 +196,8 @@ class metafunctionsTests(TestCase):
                           [self.is_odd_letter, self.fail], 'a')
 
     def test_all(self):
-        """all should return a function returning True if all components True"""
+        """all should return a function returning True if all components True
+        """
         odd_vowel = all([self.is_odd_letter, self.is_vowel, self.is_char])
         self.assertEqual(odd_vowel('a'), True)
         self.assertEqual(map(odd_vowel, 'abceu'),
@@ -240,7 +248,8 @@ class metafunctionsTests(TestCase):
                           'b')
 
     def test_either(self):
-        """either should return function returning True if either component True"""
+        """either should return fn returning True if either component True
+        """
         odd_vowel = either(self.is_odd_letter, self.is_vowel)
         self.assertEqual(map(odd_vowel, 'abcu'), [True, False, True, True])
         # should short-circuit
@@ -277,7 +286,8 @@ class metafunctionsTests(TestCase):
             'b')
 
     def test_neither(self):
-        """neither should return function returning True if each component False"""
+        """neither should return fn returning True if each component False
+        """
         odd_vowel = neither(self.is_odd_letter, self.is_vowel)
         self.assertEqual(map(odd_vowel, 'abcu'), [False, True, False, False])
         # should short-circuit
@@ -315,7 +325,8 @@ class metafunctionsTests(TestCase):
 
     def test_identity(self):
         """identity should return x"""
-        for i in ['a', 'abc', None, '', [], [1], 1, 2 ** 50, 0.3e-50, {'a': 3}]:
+        for i in ['a', 'abc', None, '', [], [1], 
+                  1, 2 ** 50, 0.3e-50, {'a': 3}]:
             assert identity(i) is i
 
     def test_has_field(self):
@@ -491,7 +502,8 @@ class Filter_Criteria_Tests(TestCase):
     """Tests of standalone functions used as filter criteria"""
 
     def test_trans_except(self):
-        """trans_except should return trans table mapping non-good chars to x"""
+        """trans_except should return trans table mapping non-good chars to x
+        """
         a = trans_except('Aa', '-')
         none = trans_except('', '*')
         some = trans_except('zxcvbnm,.zxcvbnm,.', 'V')
@@ -856,13 +868,15 @@ class Filter_Criteria_Tests(TestCase):
         self.assertEqual(list(comb(range(5), 1)),
                          [[0], [1], [2], [3], [4]])
         self.assertEqual(list(comb(range(5), 2)),
-                         [[0, 1], [0, 2], [0, 3], [0, 4], [1, 2], [1, 3], [1, 4], [2, 3],
-                          [2, 4], [3, 4]])
+                         [[0, 1], [0, 2], [0, 3], [0, 4], [1, 2], [1, 3],
+                          [1, 4], [2, 3], [2, 4], [3, 4]])
         self.assertEqual(list(comb(range(5), 3)),
-                         [[0, 1, 2], [0, 1, 3], [0, 1, 4], [0, 2, 3], [0, 2, 4], [0, 3, 4],
-                          [1, 2, 3], [1, 2, 4], [1, 3, 4], [2, 3, 4]])
+                         [[0, 1, 2], [0, 1, 3], [0, 1, 4], [0, 2, 3],
+                          [0, 2, 4], [0, 3, 4], [1, 2, 3], [1, 2, 4],
+                          [1, 3, 4], [2, 3, 4]])
         self.assertEqual(list(comb(range(5), 4)),
-                         [[0, 1, 2, 3], [0, 1, 2, 4], [0, 1, 3, 4], [0, 2, 3, 4], [1, 2, 3, 4]])
+                         [[0, 1, 2, 3], [0, 1, 2, 4], [0, 1, 3, 4], 
+                          [0, 2, 3, 4], [1, 2, 3, 4]])
         self.assertEqual(list(comb(range(5), 5)),
                          [[0, 1, 2, 3, 4]])
 
