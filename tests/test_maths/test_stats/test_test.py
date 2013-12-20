@@ -8,6 +8,9 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 from __future__ import division
+
+from warnings import filterwarnings
+
 from bipy.util.unit_test import TestCase, main
 from bipy.maths.stats.test import (G_2_by_2,G_fit, t_paired, t_one_sample,
                                    t_two_sample, mc_t_two_sample,
@@ -191,6 +194,9 @@ class StatTests(TestsHelper):
                 8.01, 7.72, 7.13, 7.68, 7.66,
                 8.11, 7.66, 7.20, 7.25, 7.79,
             ]
+
+        # silence warnings that will be raised by t_one_sample
+        filterwarnings('ignore', category=RuntimeWarning)
 
     def test_t_paired_2tailed(self):
         """t_paired should match values from Sokal & Rohlf p 353"""
@@ -554,6 +560,9 @@ class CorrelationTests(TestsHelper):
         # Ranked copies for testing spearman.
         self.b_ranked = [2, 7, 10, 1, 3, 6, 4, 8, 5, 9]
         self.c_ranked = [5, 1, 8, 7, 3, 9, 4, 10, 2, 6]
+
+        # silence the warnings that will tests for correlation_test
+        filterwarnings('ignore', category=RuntimeWarning)
 
     def test_mantel(self):
         """mantel should be significant for same matrix, not for random"""
