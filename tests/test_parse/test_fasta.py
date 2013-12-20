@@ -36,7 +36,8 @@ class MinimalFastaParserTests(GenericFastaTest):
     """Tests of MinimalFastaParser: returns (label, seq) tuples."""
 
     def test_empty(self):
-        """MinimalFastaParser should return empty list from 'file' w/o labels"""
+        """MinimalFastaParser should return empty list from 'file' w/o labels
+        """
         self.assertEqual(list(MinimalFastaParser(self.empty)), [])
         self.assertEqual(list(MinimalFastaParser(self.nolabels, strict=False)),
                          [])
@@ -52,7 +53,8 @@ class MinimalFastaParserTests(GenericFastaTest):
                          [])
 
     def test_single(self):
-        """MinimalFastaParser should read single record as (label, seq) tuple"""
+        """MinimalFastaParser should read single record as (label, seq) tuple
+        """
         f = list(MinimalFastaParser(self.oneseq))
         self.assertEqual(len(f), 1)
         a = f[0]
