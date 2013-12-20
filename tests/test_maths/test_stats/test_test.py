@@ -155,7 +155,8 @@ class GTests(TestCase):
         self.assertRaises(ValueError, G_fit, [-1, 2, 3], [1, 2, 3])
 
     def test_Gfit_nonpositive_expecteds(self):
-        """Gfit should raise ZeroExpectedError if expecteds are zero/negative"""
+        """Gfit should raise ZeroExpectedError if expecteds are zero/negative
+        """
         self.assertRaises(ZeroExpectedError, G_fit, [1, 2, 3], [0, 1, 2])
         self.assertRaises(ZeroExpectedError, G_fit, [1, 2, 3], [-1, 1, 2])
 
@@ -341,8 +342,8 @@ class StatTests(TestsHelper):
         """t_one_observation should match p. 228 of Sokal and Rohlf"""
         sample = array([4.02, 3.88, 3.34, 3.87, 3.18])
         x = 3.02
-        # note that this differs after the 3rd decimal place from what's in the
-        # book, because Sokal and Rohlf round their intermediate steps...
+        # note that this differs after the 3rd decimal place from what's in 
+        # the book, because Sokal and Rohlf round their intermediate steps...
         self.assertFloatEqual(t_one_observation(x, sample),
                               (-1.5637254, 0.1929248))
 
@@ -354,14 +355,18 @@ class StatTests(TestsHelper):
         # regardless of none_on_zero_variance.
         self.assertEqual(t_one_observation(1, sample), (None, None))
         self.assertEqual(t_one_observation(1, sample,
-                                           none_on_zero_variance=False), (None, None))
+                                           none_on_zero_variance=False),
+                         (None, None))
 
         # Test correct handling of none_on_zero_variance.
         self.assertEqual(t_one_observation(2, sample), (None, None))
         self.assertEqual(t_one_observation(2, sample,
-                                           none_on_zero_variance=False), (float('inf'), 0.0))
+                                           none_on_zero_variance=False),
+                         (float('inf'), 0.0))
         self.assertEqual(t_one_observation(2, sample,
-                                           none_on_zero_variance=False, tails='low'), (float('inf'), 1.0))
+                                           none_on_zero_variance=False,
+                                           tails='low'), 
+                         (float('inf'), 1.0))
 
     def test_mc_t_two_sample(self):
         """Test gives correct results with valid input data."""
@@ -399,14 +404,17 @@ class StatTests(TestsHelper):
         self.assertFloatEqual(obs[:2], exp)
         self.assertEqual(len(obs[2]), 99)
         self.assertCorrectPValue(0.4, 0.62, mc_t_two_sample, [I, II],
-                                 {'tails': 'high', 'permutations': 99}, p_val_idx=3)
+                                 {'tails': 'high', 'permutations': 99},
+                                 p_val_idx=3)
 
         exp = (-2.8855783649036986, 0.99315596652421401)
-        obs = mc_t_two_sample(I, II, tails='high', permutations=99, exp_diff=1)
+        obs = mc_t_two_sample(I, II, tails='high', 
+                              permutations=99, exp_diff=1)
         self.assertFloatEqual(obs[:2], exp)
         self.assertEqual(len(obs[2]), 99)
         self.assertCorrectPValue(0.55, 0.99, mc_t_two_sample, [I, II],
-                                 {'tails': 'high', 'permutations': 99, 'exp_diff': 1}, p_val_idx=3)
+                                 {'tails': 'high', 'permutations': 99, 
+                                  'exp_diff': 1}, p_val_idx=3)
 
     def test_mc_t_two_sample_unbalanced_obs(self):
         """Test gives correct results with unequal number of obs per sample."""
@@ -537,14 +545,16 @@ class StatTests(TestsHelper):
                               sorted(I + II))
 
     def test_reverse_tails(self):
-        """reverse_tails should return 'high' if tails was 'low' or vice versa"""
+        """reverse_tails should return 'high' if tails was 'low' or vice versa
+        """
         self.assertEqual(reverse_tails('high'), 'low')
         self.assertEqual(reverse_tails('low'), 'high')
         self.assertEqual(reverse_tails(None), None)
         self.assertEqual(reverse_tails(3), 3)
 
     def test_tail(self):
-        """tail should return prob/2 if test is true, or 1-(prob/2) if false"""
+        """tail should return prob/2 if test is true, or 1-(prob/2) if false
+        """
         self.assertFloatEqual(tail(0.25, True), 0.125)
         self.assertFloatEqual(tail(0.25, False), 0.875)
         self.assertFloatEqual(tail(1, True), 0.5)
@@ -608,13 +618,13 @@ class CorrelationTests(TestsHelper):
         self.assertEqual(len(perms), 999)
 
         self.assertCorrectPValue(0.09, 0.25, mantel_t, (m1, m1, 999),
-                                 {'alt':'greater'})
+                                 {'alt': 'greater'})
 
         p, stat, perms = mantel_t(m1, m2, 999, alt='greater')
         self.assertFloatEqual(stat, 0.755928946018)
         self.assertEqual(len(perms), 999)
         self.assertCorrectPValue(0.2, 0.5, mantel_t, (m1, m2, 999),
-                                 {'alt':'greater'})
+                                 {'alt': 'greater'})
 
     def test_mantel_test_one_sided_less(self):
         """Test one-sided mantel test (less)."""
@@ -633,13 +643,13 @@ class CorrelationTests(TestsHelper):
         self.assertFloatEqual(stat, 0.755928946018)
         self.assertEqual(len(perms), 999)
         self.assertCorrectPValue(0.6, 1.0, mantel_t, (m1, m2, 999),
-                                 {'alt':'less'})
+                                 {'alt': 'less'})
 
         p, stat, perms = mantel_t(m1, m3, 999, alt='less')
         self.assertFloatEqual(stat, -0.989743318611)
         self.assertEqual(len(perms), 999)
         self.assertCorrectPValue(0.1, 0.25, mantel_t, (m1, m3, 999),
-                                 {'alt':'less'})
+                                 {'alt': 'less'})
 
     def test_mantel_test_two_sided(self):
         """Test two-sided mantel test."""
@@ -653,19 +663,19 @@ class CorrelationTests(TestsHelper):
         self.assertFloatEqual(stat, 1.0)
         self.assertEqual(len(perms), 999)
         self.assertCorrectPValue(0.20, 0.45, mantel_t, (m1, m1, 999),
-                                 {'alt':'two sided'})
+                                 {'alt': 'two sided'})
 
         p, stat, perms = mantel_t(m1, m2, 999, alt='two sided')
         self.assertFloatEqual(stat, 0.755928946018)
         self.assertEqual(len(perms), 999)
         self.assertCorrectPValue(0.6, 0.75, mantel_t, (m1, m2, 999),
-                                 {'alt':'two sided'})
+                                 {'alt': 'two sided'})
 
         p, stat, perms = mantel_t(m1, m3, 999, alt='two sided')
         self.assertFloatEqual(stat, -0.989743318611)
         self.assertEqual(len(perms), 999)
         self.assertCorrectPValue(0.2, 0.45, mantel_t, (m1, m3, 999),
-                                 {'alt':'two sided'})
+                                 {'alt': 'two sided'})
 
     def test_mantel_test_invalid_distance_matrix(self):
         """Test mantel test with invalid distance matrix."""
@@ -702,10 +712,12 @@ class CorrelationTests(TestsHelper):
 
     def test_flatten_lower_triangle(self):
         """Test flattening various dms' lower triangulars."""
-        self.assertEqual(_flatten_lower_triangle(array([[8]])), [])
-        self.assertEqual(_flatten_lower_triangle(array([[1, 2], [3, 4]])), [3])
-        self.assertEqual(_flatten_lower_triangle(array([[1, 2, 3], [4, 5, 6],
-                                                        [7, 8, 9]])), [4, 7, 8])
+        self.assertEqual(_flatten_lower_triangle(
+            array([[8]])), [])
+        self.assertEqual(_flatten_lower_triangle(
+            array([[1, 2], [3, 4]])), [3])
+        self.assertEqual(_flatten_lower_triangle(
+            array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])), [4, 7, 8])
 
     def test_pearson(self):
         """Test pearson correlation method on valid data."""
@@ -823,33 +835,33 @@ class CorrelationTests(TestsHelper):
 
         # Test with non-default confidence level and permutations.
         obs = correlation_t(self.data1, self.data2, method='pearson',
-                               confidence_level=0.90, permutations=990)
+                            confidence_level=0.90, permutations=990)
         self.assertFloatEqual(obs[:2], (-0.03760147, 0.91786297277172868))
         self.assertEqual(len(obs[2]), 990)
         for r in obs[2]:
             self.assertTrue(r >= -1.0 and r <= 1.0)
         self.assertCorrectPValue(0.9, 0.93, correlation_t,
                                  (self.data1, self.data2),
-                                 {'method':'pearson', 
-                                  'confidence_level':0.90,
-                                  'permutations':990},
+                                 {'method': 'pearson', 
+                                  'confidence_level': 0.90,
+                                  'permutations': 990},
                                  p_val_idx=3)
         self.assertFloatEqual(obs[4], (-0.5779077, 0.5256224))
 
         # Test with non-default tail type.
         obs = correlation_t(self.data1, self.data2, method='pearson',
-                               confidence_level=0.90, permutations=990,
-                               tails='low')
+                            confidence_level=0.90, permutations=990,
+                            tails='low')
         self.assertFloatEqual(obs[:2], (-0.03760147, 0.45893148638586434))
         self.assertEqual(len(obs[2]), 990)
         for r in obs[2]:
             self.assertTrue(r >= -1.0 and r <= 1.0)
         self.assertCorrectPValue(0.41, 0.46, correlation_t,
                                  (self.data1, self.data2),
-                                 {'method':'pearson', 
-                                  'confidence_level':0.90,
-                                  'permutations':990, 
-                                  'tails':'low'}, 
+                                 {'method': 'pearson', 
+                                  'confidence_level': 0.90,
+                                  'permutations': 990, 
+                                  'tails': 'low'}, 
                                  p_val_idx=3)
         self.assertFloatEqual(obs[4], (-0.5779077, 0.5256224))
 
@@ -858,15 +870,15 @@ class CorrelationTests(TestsHelper):
         # This example taken from Wikipedia page:
         # http://en.wikipedia.org/wiki/Spearman's_rank_correlation_coefficient
         obs = correlation_t(self.data1, self.data2, method='spearman',
-                               tails='high')
+                            tails='high')
         self.assertFloatEqual(obs[:2], (-0.17575757575757578, 0.686405827612))
         self.assertEqual(len(obs[2]), 999)
         for rho in obs[2]:
             self.assertTrue(rho >= -1.0 and rho <= 1.0)
         self.assertCorrectPValue(0.67, 0.7, correlation_t,
                                  (self.data1, self.data2),
-                                 {'method':'spearman',
-                                  'tails':'high'},
+                                 {'method': 'spearman',
+                                  'tails': 'high'},
                                  p_val_idx=3)
         self.assertFloatEqual(obs[4],
                               (-0.7251388558041697, 0.51034422964834503))
@@ -877,7 +889,7 @@ class CorrelationTests(TestsHelper):
         # http://stats.stackexchange.com/questions/22816/calculating-p-value-
         #     for-spearmans-rank-correlation-coefficient-example-on-wikip
         obs = correlation_t(self.data1, self.data2, method='spearman',
-                               tails=None)
+                            tails=None)
         self.assertFloatEqual(obs[:2],
                               (-0.17575757575757578, 0.62718834477648433))
         self.assertEqual(len(obs[2]), 999)
@@ -885,7 +897,7 @@ class CorrelationTests(TestsHelper):
             self.assertTrue(rho >= -1.0 and rho <= 1.0)
         self.assertCorrectPValue(0.60, 0.64, correlation_t,
                                  (self.data1, self.data2),
-                                 {'method':'spearman', 'tails':None},
+                                 {'method': 'spearman', 'tails': None},
                                  p_val_idx=3)
         self.assertFloatEqual(obs[4],
                               (-0.7251388558041697, 0.51034422964834503))
@@ -957,7 +969,7 @@ class CorrelationTests(TestsHelper):
             self.assertTrue(r >= -1.0 and r <= 1.0)
         self.assertCorrectPValue(0.3, 0.4, correlation_t,
                                  ([1, 2, 3], [1, 2, 3]),
-                                 {'method':'spearman'}, p_val_idx=3)
+                                 {'method': 'spearman'}, p_val_idx=3)
         self.assertEqual(obs[4], (None, None))
 
 
