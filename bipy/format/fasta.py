@@ -7,6 +7,7 @@ class _fake_seq(str):
 
     """a holder for string sequences that allows provision of a seq.Label
     attribute, required by fasta formatting funcs."""
+    
     def __new__(cls, Label, Seq):
         new = str.__new__(cls, Seq)
         new.Label = Label
@@ -22,8 +23,8 @@ def fasta_from_sequences(seqs, make_seqlabel=None, line_wrap=None):
        attribute takes precedence over sequence.Name.
 
         - seqs can be a list of sequence objects or strings.
-        - make_seqlabel: callback function that takes the seq object and returns
-          a label str
+        - make_seqlabel: callback function that takes the seq object and 
+          returns a label str
         - line_wrap: a integer for maximum line width
     """
     fasta_list = []
@@ -58,8 +59,8 @@ def fasta_from_alignment(aln, make_seqlabel=None, line_wrap=None, sorted=True):
     """Returns a FASTA string given an alignment.
 
         - aln can be an Alignment object or dict.
-        - make_seqlabel: callback function that takes the seq object and returns
-          a label str
+        - make_seqlabel: callback function that takes the seq object and 
+          returns a label str
         - line_wrap: a integer for maximum line width
     """
     # get seq output order
