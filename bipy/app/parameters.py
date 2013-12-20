@@ -10,8 +10,7 @@
 
 from copy import deepcopy
 
-from bipy.core.constrained_container import FunctionWrapper, MappedDict
-
+from collections import Mapping
 
 def is_not_None(x):
     """Returns True if x is not None"""
@@ -454,20 +453,7 @@ class MixedParameter(ValuedParameter):
         """Turns the MixedParameter OFF by setting its Value to False"""
         self.Value = False
 
-
-def _find_synonym(synonyms):
-    """ Returns function to lookup a key in synonyms dictionary.
-
-        Inteded for use by the Parameters object.
-    """
-    def check_key(key):
-        if key in synonyms:
-            return synonyms[key]
-        return key
-    return check_key
-
-
-class Parameters(MappedDict):
+class Parameters(Mapping):
 
     """Parameters is a dictionary of Parameter objects.
 
@@ -482,17 +468,25 @@ class Parameters(MappedDict):
         synonyms: a dictionary of synonyms. Keys are synonyms, values are
             parameter identifiers.
         """
-        mask = FunctionWrapper(_find_synonym(synonyms))
-        super(Parameters, self).__init__(data=deepcopy(parameters), Mask=mask)
+        self._parameters = parameters
+        self._synonyms = synonyms
 
-        self.__setitem__ = self.setdefault = self.update =\
-            self.__delitem__ = self._raiseNotImplemented
+    def __len__(self):
+        return len(self._parameters)
+    
+    def __iter__(self):
+        return iter(self._parameters)
 
-    def _raiseNotImplemented(self, *args):
-        """Raises an error for an attempt to change a Parameters object"""
-        raise NotImplementedError('Parameters object is immutable')
+    def __getitem__(self,key):
+        try:
+            key = self._synonyms[key]
+        except KeyError:
+            # the key is not a synonym
+            pass
+        
+        return self._parameters[key]
 
     def all_off(self):
         """Turns all parameters in the dictionary off"""
-        for v in self.values():
+        for v in self._parameters.values():
             v.off()

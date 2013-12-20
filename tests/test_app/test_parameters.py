@@ -10,7 +10,7 @@
 
 from bipy.util.unit_test import TestCase, main
 from bipy.app.parameters import (Parameter, FlagParameter, ValuedParameter,
-                                 MixedParameter, Parameters, _find_synonym,
+                                 MixedParameter, Parameters,
                                  ParameterError, FilePath)
 
 
@@ -565,32 +565,35 @@ class ParametersTests(TestCase):
 
     def test_immutability(self):
         """Parameters: attempt to modify object raises error """
-        self.assertRaises(NotImplementedError, self.p2.__setitem__, 9)
-        self.assertRaises(NotImplementedError, self.p2.setdefault, 9)
-        self.assertRaises(NotImplementedError, self.p2.update, {9: 0})
-        self.assertRaises(NotImplementedError, self.p2.__delitem__, '-p')
+        try:
+            self.p2['-p'] = 42
+        except TypeError:
+            pass
+        else:
+            raise AttributeError("Parameters shouldn't support assignment.")
+            
+        try:
+            del self.p2['-p']
+        except TypeError:
+            pass
+        else:
+            raise AttributeError("Parameters shouldn't support deletion.")
 
     def test_all_off(self):
-        """Parameters: all_off() should turn all parametes off"""
+        """Parameters: all_off() should turn all parameters off"""
         p = self.p2
+        # turn everything on
         for v in p.values():
             try:
                 v.on(3)
             except TypeError:
                 v.on()
-            assert v.isOn()
+            self.assertTrue(v.isOn())
+            
+        # turn everything off
         p.all_off()
         for v in p.values():
-            assert v.isOff()
-
-
-def parametersTests(TestCase):
-    """Tests of top-level functions """
-
-    def test_find_synonym(self):
-        """_find_synonym() functions as expected """
-        f = _find_synonym({'a': '-a'})
-        self.assertEqual(f('a'), '-a')
+            self.assertTrue(v.isOff())
 
 
 class FilePathTests(TestCase):
