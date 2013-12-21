@@ -139,7 +139,7 @@ class CA(Ordination):
         self.U = Ut[:rank].T
 
     def scores(self, scaling):
-        """Compute site and species scores for different scalings.
+        r"""Compute site and species scores for different scalings.
 
         Parameters
         ----------
@@ -149,12 +149,12 @@ class CA(Ordination):
             Legendre & Legendre 1998, section 9.4.3. The notes that
             follow are quick recommendations.
 
-            Scaling type 1 maintains :math:`chi^2` distances between
+            Scaling type 1 maintains :math:`\chi^2` distances between
             rows (sites) and should be used when checking the ordination
             of sites. Rows (sites) that are near a column (species) have
             high contributions from it.
 
-            Scaling type 2 preserves :math:`chi^2` distances between
+            Scaling type 2 preserves :math:`\chi^2` distances between
             columns (species) and is best used when interested in the
             ordination of species. If a column (species) is next to a
             row (site) it means that it's more abundant there.
