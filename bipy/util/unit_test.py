@@ -13,10 +13,12 @@ from math import log10
 from numpy import asarray, isfinite, zeros, ravel
 from numpy.testing import assert_almost_equal, assert_allclose
 from scipy.stats.stats import ttest_ind, ttest_1samp
-from scipy.stats.contingency import chi2_contingency 
+from scipy.stats.contingency import chi2_contingency
+
 
 class TestCase(PyTestCase):
     _suite_pvalue = None
+
     def _set_suite_pvalue(self, pvalue):
         """Sets the test suite pvalue to be used in similarity tests
 
@@ -32,7 +34,7 @@ class TestCase(PyTestCase):
             pvalue = self._suite_pvalue
 
         observed, expected = asarray(observed), asarray(expected)
-        
+
         if observed.size == 1:
             t, p = ttest_1samp(expected, observed)
         elif expected.size == 1:
@@ -41,11 +43,11 @@ class TestCase(PyTestCase):
             t, p = ttest_1samp(expected, observed)
         else:
             t, p = ttest_ind(observed, expected)
-        
+
         if p > pvalue:
             return
-        elif p is None or not isfinite(p): 
-            #handle case where all elements were the same
+        elif p is None or not isfinite(p):
+            # handle case where all elements were the same
             if not observed.shape:
                 observed = observed.reshape((1,))
             if not expected.shape:
@@ -53,8 +55,8 @@ class TestCase(PyTestCase):
             if observed[0] == expected[0]:
                 return
         else:
-            raise self.failureException(msg or 'p-value %s, t-test p %s' % \
-                                        (`pvalue`, `p`))
+            raise self.failureException(msg or 'p-value %s, t-test p %s' %
+                                        (repr(pvalue), repr(p)))
 
     def assertSimilarFreqs(self, observed, expected, pvalue=0.01, msg=None):
         """Fail if observed p is lower than pvalue"""
@@ -64,17 +66,17 @@ class TestCase(PyTestCase):
         obs_ravel = ravel(asarray(observed))
         exp_ravel = ravel(asarray(expected))
 
-        m = zeros((2,len(obs_ravel)))
-        m[0,:] = obs_ravel
-        m[1,:] = exp_ravel
+        m = zeros((2, len(obs_ravel)))
+        m[0, :] = obs_ravel
+        m[1, :] = exp_ravel
 
-        G, p, _, _= chi2_contingency(m, lambda_="log-likelihood")
+        G, p, _, _ = chi2_contingency(m, lambda_="log-likelihood")
 
         if p > pvalue:
             return
         else:
-            raise self.failureException(msg or 'p-value %s, G-test p %s' % \
-                                        (`pvalue`, `p`))
+            raise self.failureException(msg or 'p-value %s, G-test p %s' %
+                                        (repr(pvalue), repr(p)))
 
     def assertIsProb(self, observed, msg=None):
         """Fail is observed is not between 0.0 and 1.0"""
@@ -87,7 +89,7 @@ class TestCase(PyTestCase):
         except:
             pass
         raise self.failureException(msg or 'Observed %s has elements that are '
-            'not probs' % (`observed`))
+                                    'not probs' % (repr(observed)))
 
     def assertFloatEqual(self, observed, expected, eps=1e-6):
         """Tests whether two floating point numbers are approximately equal.
@@ -100,7 +102,8 @@ class TestCase(PyTestCase):
         Conveniently wraps numpy.testing.assert_almost_equal
         """
         # don't change the eps interface that assertFloatEqual provides and
-        # calculate the number of decimal digits that the values are compared to
+        # calculate the number of decimal digits that the values are compared
+        # to
         assert_almost_equal(observed, expected, decimal=int(abs(log10(eps))))
 
     def assertFloatEqualRel(self, observed, expected, eps=1e-6):
@@ -132,17 +135,17 @@ class TestCase(PyTestCase):
         obs_items = list(observed)
         exp_items = list(expected)
         if len(obs_items) != len(exp_items):
-            raise self.failureException, \
-            (msg or 'Observed and expected are different lengths: %s and %s' \
-            % (len(obs_items), len(exp_items)))
-            
+            raise self.failureException(
+                msg or 'Observed and expected are different lengths: %s and %s'
+                % (len(obs_items), len(exp_items)))
+
         obs_items.sort()
         exp_items.sort()
         for index, (obs, exp) in enumerate(zip(obs_items, exp_items)):
             if obs != exp:
-                raise self.failureException, \
-                (msg or 'Observed %s and expected %s at sorted index %s' \
-                % (obs, exp, index))
+                raise self.failureException(
+                    msg or 'Observed %s and expected %s at sorted index %s' %
+                    (obs, exp, index))
 
     def assertNotEqualItems(self, observed, expected, msg=None):
         """Fail if the two items contain only equal elements when sorted"""
@@ -151,5 +154,6 @@ class TestCase(PyTestCase):
         except:
             pass
         else:
-            raise self.failureException, \
-            (msg or 'Observed %s has same items as %s'%(`observed`, `expected`))
+            raise self.failureException(
+                msg or 'Observed %s has same items as %s' %
+                (repr(observed), repr(expected)))

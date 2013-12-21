@@ -42,5 +42,3 @@ __all__ = ['blast',
            'unafold',
            'util',
            'vienna_package']
-           
-

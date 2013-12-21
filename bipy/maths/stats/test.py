@@ -19,26 +19,28 @@ from numpy.random import permutation, randint
 
 
 class ZeroExpectedError(ValueError):
+
     """Class for handling tests where an expected value was zero."""
     pass
-   
+
+
 def G_2_by_2(a, b, c, d, williams=1, directional=1):
     """G test for independence in a 2 x 2 table.
 
     Usage: G, prob = G_2_by_2(a, b, c, d, willliams, directional)
 
     Cells are in the order:
-    
+
         a b
         c d
-    
+
     a, b, c, and d can be int, float, or long.
     williams is a boolean stating whether to do the Williams correction.
     directional is a boolean stating whether the test is 1-tailed.
-    
+
     Briefly, computes sum(f ln f) for cells - sum(f ln f) for
     rows and columns + f ln f for the table.
-    
+
     Always has 1 degree of freedom
 
     To generalize the test to r x c, use the same protocol:
@@ -49,58 +51,61 @@ def G_2_by_2(a, b, c, d, williams=1, directional=1):
     as a separate procedure. Find the probability for the
     observed G, and then either halve or halve and subtract from
     one depending on whether the directional prediction was
-    upheld. 
-    
+    upheld.
+
     The default test is now one-tailed (Rob Knight 4/21/03).
 
     See Sokal & Rohlf (1995), ch. 17. Specifically, see box 17.6 (p731).
     """
     cells = [a, b, c, d]
     n = sum(cells)
-    #return 0 if table was empty
+    # return 0 if table was empty
     if not n:
         return (0, 1)
-    #raise error if any counts were negative
+    # raise error if any counts were negative
     if min(cells) < 0:
-        raise ValueError, \
-        "G_2_by_2 got negative cell counts(s): must all be >= 0."
-    
+        raise ValueError(
+            "G_2_by_2 got negative cell counts(s): must all be >= 0.")
+
     G = 0
-    #Add x ln x for items, adding zero for items whose counts are zero
+    # Add x ln x for items, adding zero for items whose counts are zero
     for i in filter(None, cells):
         G += i * log(i)
-    #Find totals for rows and cols
+    # Find totals for rows and cols
     ab = a + b
     cd = c + d
     ac = a + c
     bd = b + d
     rows_cols = [ab, cd, ac, bd]
-    #exit if we are missing a row or column entirely: result counts as
-    #never significant
+    # exit if we are missing a row or column entirely: result counts as
+    # never significant
     if min(rows_cols) == 0:
         return (0, 1)
-    #Subtract x ln x for rows and cols
+    # Subtract x ln x for rows and cols
     for i in filter(None, rows_cols):
         G -= i * log(i)
-    #Add x ln x for table
+    # Add x ln x for table
     G += n * log(n)
-    #Result needs to be multiplied by 2 
+    # Result needs to be multiplied by 2
     G *= 2
 
-    #apply Williams correction
+    # apply Williams correction
     if williams:
-        q = 1 + ((  ( (n/ab) + (n/cd) ) -1 ) * ( ( (n/ac) + (n/bd) ) -1))/(6*n)
+        q = 1 + \
+            ((((n / ab) + (n / cd)) - 1) * (((n / ac) + (n / bd)) - 1)) / \
+            (6 * n)
         G /= q
 
-    p = chi_high(max(G,0), 1)
-    
-    #find which tail we were in if the test was directional
+    p = chi_high(max(G, 0), 1)
+
+    # find which tail we were in if the test was directional
     if directional:
-        is_high =  ((b == 0) or (d != 0 and (a/b > c/d)))
+        is_high = ((b == 0) or (d != 0 and (a / b > c / d)))
         p = tail(p, is_high)
         if not is_high:
-            G = -G
+            G = -1 * G
     return G, p
+
 
 def safe_sum_p_log_p(a, base=None):
     """Calculates p * log(p) safely for an array that may contain zeros."""
@@ -111,51 +116,53 @@ def safe_sum_p_log_p(a, base=None):
         logs /= log(base)
     return sum(nz * logs, 0)
 
+
 def G_fit(obs, exp, williams=1):
     """G test for fit between two lists of counts.
 
     Usage: test, prob = G_fit(obs, exp, williams)
-    
+
     obs and exp are two lists of numbers.
     williams is a boolean stating whether to do the Williams correction.
-    
+
     SUM(2 f(obs)ln (f(obs)/f(exp)))
-    
+
     See Sokal and Rohlf chapter 17.
     """
     k = len(obs)
     if k != len(exp):
-        raise ValueError, "G_fit requires two lists of equal length."
+        raise ValueError("G_fit requires two lists of equal length.")
     G = 0
     n = 0
-    
+
     for o, e in zip(obs, exp):
         if o < 0:
-            raise ValueError, \
-            "G_fit requires all observed values to be positive."
+            raise ValueError(
+                "G_fit requires all observed values to be positive.")
         if e <= 0:
-            raise ZeroExpectedError, \
-            "G_fit requires all expected values to be positive."
-        if o:   #if o is zero, o * log(o/e) must be zero as well.
-            G += o * log(o/e)
+            raise ZeroExpectedError(
+                "G_fit requires all expected values to be positive.")
+        if o:  # if o is zero, o * log(o/e) must be zero as well.
+            G += o * log(o / e)
             n += o
-    
+
     G *= 2
     if williams:
-        q = 1 + (k + 1)/(6*n)
+        q = 1 + (k + 1) / (6 * n)
         G /= q
 
-    return G, chi_high(G, k - 1)    
+    return G, chi_high(G, k - 1)
 
-def t_paired (a,b, tails=None, exp_diff=0):
-    """Returns t and prob for TWO RELATED samples of scores a and b.  
-    
+
+def t_paired(a, b, tails=None, exp_diff=0):
+    """Returns t and prob for TWO RELATED samples of scores a and b.
+
     From Sokal and Rohlf (1995), p. 354.
     Calculates the vector of differences and compares it to exp_diff
     using the 1-sample t test.
 
     Usage:   t, prob = t_paired(a, b, tails, exp_diff)
-    
+
     t is a float; prob is a probability.
     a and b should be equal-length lists of paired observations (numbers).
     tails should be None (default), 'high', or 'low'.
@@ -163,16 +170,16 @@ def t_paired (a,b, tails=None, exp_diff=0):
     """
     n = len(a)
     if n != len(b):
-        raise ValueError, 'Unequal length lists in ttest_paired.'
+        raise ValueError('Unequal length lists in ttest_paired.')
     try:
         diffs = array(a) - array(b)
         return t_one_sample(diffs, popmean=exp_diff, tails=tails)
-    except (ZeroDivisionError, ValueError, AttributeError, TypeError, \
-        FloatingPointError):
+    except (ZeroDivisionError, ValueError, AttributeError, TypeError,
+            FloatingPointError):
         return (None, None)
-    
 
-def t_one_sample(a,popmean=0, tails=None):
+
+def t_one_sample(a, popmean=0, tails=None):
     """Returns t for ONE group of scores a, given a population mean.
 
     Usage:   t, prob = t_one_sample(a, popmean, tails)
@@ -184,21 +191,21 @@ def t_one_sample(a,popmean=0, tails=None):
     """
     try:
         n = len(a)
-        t = (mean(a) - popmean)/(std(a, ddof=1)/sqrt(n))
-    except (ZeroDivisionError, ValueError, AttributeError, TypeError, \
-        FloatingPointError):
+        t = (mean(a) - popmean) / (std(a, ddof=1) / sqrt(n))
+    except (ZeroDivisionError, ValueError, AttributeError, TypeError,
+            FloatingPointError):
         return None, None
     if isnan(t) or isinf(t):
         return None, None
 
-    prob = t_tailed_prob(t, n-1, tails)
+    prob = t_tailed_prob(t, n - 1, tails)
     return t, prob
 
 
 def t_two_sample(a, b, tails=None, exp_diff=0, none_on_zero_variance=True):
-    """Returns t, prob for two INDEPENDENT samples of scores a, and b.  
-    
-    From Sokal and Rohlf, p 223.  
+    """Returns t, prob for two INDEPENDENT samples of scores a, and b.
+
+    From Sokal and Rohlf, p 223.
 
     Usage:   t, prob = t_two_sample(a,b, tails, exp_diff)
 
@@ -231,26 +238,30 @@ def t_two_sample(a, b, tails=None, exp_diff=0, none_on_zero_variance=True):
                          "'high', or 'low'." % tails)
 
     try:
-        #see if we need to back off to the single-observation for single-item
-        #groups
+        # see if we need to back off to the single-observation for single-item
+        # groups
         n1 = len(a)
         if n1 < 2:
-            return t_one_observation(sum(a), b, tails, exp_diff,
-                    none_on_zero_variance=none_on_zero_variance)
+            t, prob = \
+                t_one_observation(sum(a), b, tails, exp_diff,
+                                  none_on_zero_variance=none_on_zero_variance)
+            return t, prob
 
         n2 = len(b)
         if n2 < 2:
-            t, prob = t_one_observation(sum(b), a, reverse_tails(tails),
-                    exp_diff, none_on_zero_variance=none_on_zero_variance)
+            t, prob = \
+                t_one_observation(sum(b), a, reverse_tails(tails),
+                                  exp_diff,
+                                  none_on_zero_variance=none_on_zero_variance)
 
             # Negate the t-statistic because we swapped the order of the inputs
             # in the t_one_observation call, as well as tails.
             if t != 0:
-                t = -t
+                t = -1 * t
 
             return (t, prob)
 
-        #otherwise, calculate things properly
+        # otherwise, calculate things properly
         x1 = mean(a)
         x2 = mean(b)
 
@@ -266,9 +277,9 @@ def t_two_sample(a, b, tails=None, exp_diff=0, none_on_zero_variance=True):
                 result = _t_test_no_variance(x1, x2, tails)
         else:
             # At least one list varies.
-            df = n1+n2-2
-            svar = ((n1-1)*var1 + (n2-1)*var2)/df
-            t = (x1-x2-exp_diff)/sqrt(svar*(1/n1 + 1/n2))
+            df = n1 + n2 - 2
+            svar = ((n1 - 1) * var1 + (n2 - 1) * var2) / df
+            t = (x1 - x2 - exp_diff) / sqrt(svar * (1 / n1 + 1 / n2))
 
             if isnan(t) or isinf(t):
                 result = (None, None)
@@ -276,12 +287,13 @@ def t_two_sample(a, b, tails=None, exp_diff=0, none_on_zero_variance=True):
                 prob = t_tailed_prob(t, df, tails)
                 result = (t, prob)
     except (ZeroDivisionError, ValueError, AttributeError, TypeError,
-            FloatingPointError), e:
-        #invalidate if the sample sizes are wrong, the values aren't numeric or
-        #aren't present, etc.
+            FloatingPointError) as e:
+        # invalidate if the sample sizes are wrong, the values 
+        # aren't numeric or aren't present, etc.
         result = (None, None)
 
     return result
+
 
 def _t_test_no_variance(mean1, mean2, tails):
     """Handles case where two distributions have no variance."""
@@ -307,6 +319,7 @@ def _t_test_no_variance(mean1, mean2, tails):
 
     return result
 
+
 def reverse_tails(tails):
     """Swaps high for low or vice versa, leaving other values alone."""
     if tails == 'high':
@@ -315,6 +328,7 @@ def reverse_tails(tails):
         return 'high'
     else:
         return tails
+
 
 def mc_t_two_sample(x_items, y_items, tails=None, permutations=999,
                     exp_diff=0):
@@ -352,8 +366,8 @@ def mc_t_two_sample(x_items, y_items, tails=None, permutations=999,
     if (len(x_items) == 1 and len(y_items) == 1) or \
        (len(x_items) < 1 or len(y_items) < 1):
         raise ValueError("At least one of the sequences of observations is "
-                "empty, or the sequences each contain only a single "
-                "observation. Cannot perform the t-test.")
+                         "empty, or the sequences each contain only a single "
+                         "observation. Cannot perform the t-test.")
 
     # Perform t-test using original observations.
     obs_t, param_p_val = t_two_sample(x_items, y_items, tails=tails,
@@ -385,6 +399,7 @@ def mc_t_two_sample(x_items, y_items, tails=None, permutations=999,
 
     return obs_t, param_p_val, perm_t_stats, nonparam_p_val
 
+
 def _permute_observations(x_items, y_items, permutations,
                           permute_f=permutation):
     """Returns permuted versions of the sequences of observations.
@@ -408,12 +423,13 @@ def _permute_observations(x_items, y_items, permutations,
     rand_ys = [combined_obs[perm[num_x:num_total_obs]] for perm in perms]
     return rand_xs, rand_ys
 
+
 def t_one_observation(x, sample, tails=None, exp_diff=0,
                       none_on_zero_variance=True):
     """Returns t-test for significance of single observation versus a sample.
-    
+
     Equation for 1-observation t (Sokal and Rohlf 1995 p 228):
-    t = obs - mean - exp_diff / (var * sqrt((n+1)/n)) 
+    t = obs - mean - exp_diff / (var * sqrt((n+1)/n))
     df = n - 1
 
     none_on_zero_variance: see t_two_sample for details. If sample has no
@@ -433,8 +449,8 @@ def t_one_observation(x, sample, tails=None, exp_diff=0,
         else:
             # The list varies.
             n = len(sample)
-            t = (x - sample_mean - exp_diff)/sample_std/sqrt((n+1)/n)
-            prob = t_tailed_prob(t, n-1, tails)
+            t = (x - sample_mean - exp_diff) / sample_std / sqrt((n + 1) / n)
+            prob = t_tailed_prob(t, n - 1, tails)
             result = (t, prob)
     except (ZeroDivisionError, ValueError, AttributeError, TypeError,
             FloatingPointError):
@@ -442,9 +458,10 @@ def t_one_observation(x, sample, tails=None, exp_diff=0,
 
     return result
 
+
 def pearson(x_items, y_items):
     """Returns Pearson's product moment correlation coefficient.
-    
+
     This will always be a value between -1.0 and +1.0. x_items and y_items must
     be the same length, and cannot have fewer than 2 elements each. If one or
     both of the input vectors do not have any variation, the return value will
@@ -462,26 +479,30 @@ def pearson(x_items, y_items):
                          "coefficient.")
     if len(x_items) < 2:
         raise ValueError("The two vectors must both contain at least 2 "
-                "elements. The vectors are of length %d." % len(x_items))
+                         "elements. The vectors are "
+                         "of length %d." % len(x_items))
 
     sum_x = sum(x_items)
     sum_y = sum(y_items)
-    sum_x_sq = sum(x_items*x_items)
-    sum_y_sq = sum(y_items*y_items)
-    sum_xy = sum(x_items*y_items)
+    sum_x_sq = sum(x_items * x_items)
+    sum_y_sq = sum(y_items * y_items)
+    sum_xy = sum(x_items * y_items)
     n = len(x_items)
 
     try:
         r = 1.0 * ((n * sum_xy) - (sum_x * sum_y)) / \
-           (sqrt((n * sum_x_sq)-(sum_x*sum_x))*sqrt((n*sum_y_sq)-(sum_y*sum_y)))
-    except (ZeroDivisionError, ValueError, FloatingPointError): #no variation
+            (sqrt((n * sum_x_sq) - (sum_x * sum_x))
+             * sqrt((n * sum_y_sq) - (sum_y * sum_y)))
+    except (ZeroDivisionError, ValueError, FloatingPointError):
+        # no variation
         r = 0.0
-    #check we didn't get a naughty value for r due to rounding error
+    # check we didn't get a naughty value for r due to rounding error
     if r > 1.0:
         r = 1.0
     elif r < -1.0:
         r = -1.0
     return r
+
 
 def spearman(x_items, y_items):
     """Returns Spearman's rho.
@@ -501,8 +522,9 @@ def spearman(x_items, y_items):
         raise ValueError("The length of the two vectors must be the same in "
                          "order to calculate Spearman's rho.")
     if len(x_items) < 2:
-        raise ValueError("The two vectors must both contain at least 2 "
-                "elements. The vectors are of length %d." % len(x_items))
+        raise ValueError("The two vectors must both contain "
+                         "at least 2 elements. The vectors are of "
+                         "length %d." % len(x_items))
 
     # Rank the two input vectors.
     rank1, ties1 = _get_rank(x_items)
@@ -510,32 +532,34 @@ def spearman(x_items, y_items):
 
     if ties1 == 0 and ties2 == 0:
         n = len(rank1)
-        sum_sqr = sum([(x-y)**2 for x,y in zip(rank1,rank2)])
-        rho = 1 - (6*sum_sqr/(n*(n**2 - 1)))
+        sum_sqr = sum([(x - y) ** 2 for x, y in zip(rank1, rank2)])
+        rho = 1 - (6 * sum_sqr / (n * (n ** 2 - 1)))
     else:
-        avg = lambda x: sum(x)/len(x)
+        avg = lambda x: sum(x) / len(x)
 
         x_bar = avg(rank1)
         y_bar = avg(rank2)
 
-        numerator = sum([(x-x_bar)*(y-y_bar) for x,y in zip(rank1, rank2)])
-        denominator = sqrt(sum([(x-x_bar)**2 for x in rank1])*
-                           sum([(y-y_bar)**2 for y in rank2]))
+        numerator = sum([(x - x_bar) * (y - y_bar)
+                        for x, y in zip(rank1, rank2)])
+        denominator = sqrt(sum([(x - x_bar) ** 2 for x in rank1]) *
+                           sum([(y - y_bar) ** 2 for y in rank2]))
 
         # Calculate rho. Handle the case when there is no variation in one or
         # both of the input vectors.
         if denominator == 0.0:
             rho = 0.0
         else:
-            rho = numerator/denominator
+            rho = numerator / denominator
     return rho
+
 
 def _get_rank(data):
     """Ranks the elements of a list. Used in Spearman correlation."""
     indices = range(len(data))
-    ranks = range(1,len(data)+1)
-    indices.sort(key=lambda index:data[index])
-    ranks.sort(key=lambda index:indices[index-1])
+    ranks = range(1, len(data) + 1)
+    indices.sort(key=lambda index: data[index])
+    ranks.sort(key=lambda index: indices[index - 1])
     data_len = len(data)
     i = 0
     ties = 0
@@ -550,15 +574,16 @@ def _get_rank(data):
         while j < data_len and data[indices[j]] == val:
             j += 1
         dup_ranks = j - i
-        val = float(ranks[indices[i]]) + (dup_ranks-1)/2.0
-        for k in range(i, i+dup_ranks):
+        val = float(ranks[indices[i]]) + (dup_ranks - 1) / 2.0
+        for k in range(i, i + dup_ranks):
             ranks[indices[k]] = val
         i += dup_ranks
-        ties += dup_ranks-1
+        ties += dup_ranks - 1
     return ranks, ties
 
+
 def correlation_t(x_items, y_items, method='pearson', tails=None,
-                     permutations=999, confidence_level=0.95):
+                  permutations=999, confidence_level=0.95):
     """Computes the correlation between two vectors and its significance.
 
     Computes a parametric p-value by using Student's t-distribution with df=n-2
@@ -683,6 +708,7 @@ def correlation_t(x_items, y_items, method='pearson', tails=None,
     return (corr_coeff, parametric_p_val, permuted_corr_coeffs,
             nonparametric_p_val, (ci_low, ci_high))
 
+
 def fisher(probs):
     """Uses Fisher's method to combine multiple tests of a hypothesis.
 
@@ -690,8 +716,9 @@ def fisher(probs):
     """
     try:
         return chi_high(-2 * sum(map(log, probs)), 2 * len(probs))
-    except OverflowError, e:
-        return 0.0 
+    except OverflowError as e:
+        return 0.0
+
 
 def ANOVA_one_way(a):
     """Performs a one way analysis of variance
@@ -706,17 +733,17 @@ def ANOVA_one_way(a):
     #a = array(a)
     group_means = []
     group_variances = []
-    num_cases = 0 # total observations in all groups
+    num_cases = 0  # total observations in all groups
     all_vals = []
     for i in a:
         num_cases += len(i)
         group_means.append(mean(i))
-        group_variances.append(i.var(ddof=1) * (len(i)-1))
+        group_variances.append(i.var(ddof=1) * (len(i) - 1))
         all_vals.extend(i)
 
     # Get within Group variances (denominator)
     dfd = num_cases - len(group_means)
-    # need to add a check -- if the sum of the group variances is zero it will 
+    # need to add a check -- if the sum of the group variances is zero it will
     # error, but only if the between_Groups value is not zero
     within_Groups = sum(group_variances) / dfd
     if within_Groups == 0.:
@@ -732,13 +759,16 @@ def ANOVA_one_way(a):
         between_Groups += x
 
     dfn = len(group_means) - 1
-    between_Groups = between_Groups/dfn
-    F = between_Groups/within_Groups
+    between_Groups = between_Groups / dfn
+    F = between_Groups / within_Groups
     return F, f_high(dfn, dfd, F)
 
+
 def _average_rank(start_rank, end_rank):
-    ave_rank = sum(range(start_rank, end_rank+1)) / (1+end_rank-start_rank)
+    ave_rank = sum(range(start_rank, end_rank + 1)) / \
+        (1 + end_rank - start_rank)
     return ave_rank
+
 
 def _get_bootstrap_sample(x, y, num_reps):
     """yields num_reps random samples drawn with replacement from x and y"""
@@ -754,18 +784,19 @@ def _get_bootstrap_sample(x, y, num_reps):
         sampled_y = sampled[num_x:]
         yield sampled_x, sampled_y
 
+
 def mw_t(x, y):
     """computes the Mann-Whitney U statistic and the probability using the
     normal approximation"""
     if len(x) > len(y):
         x, y = y, x
-    
+
     num_x = len(x)
     num_y = len(y)
-    
+
     x = zip(x, zeros(len(x), int), zeros(len(x), int))
     y = zip(y, ones(len(y), int), zeros(len(y), int))
-    combined = x+y
+    combined = x + y
     combined = array(combined, dtype=[('stat', float), ('sample', int),
                                       ('rank', float)])
     combined.sort(order='stat')
@@ -779,44 +810,47 @@ def mw_t(x, y):
         if value == prev and start is None:
             start = index
             continue
-        
+
         if value != prev and start is not None:
             ties = True
             ave_rank = _average_rank(start, index)
             num_tied = index - start + 1
-            T += (num_tied**3 - num_tied)
-            for i in range(start-1, index):
+            T += (num_tied ** 3 - num_tied)
+            for i in range(start - 1, index):
                 combined['rank'][i] = ave_rank
             start = None
-        combined['rank'][index] = index+1
+        combined['rank'][index] = index + 1
         prev = value
-    
+
     if start is not None:
         ave_rank = _average_rank(start, index)
         num_tied = index - start + 2
-        T += (num_tied**3 - num_tied)
-        for i in range(start-1, index+1):
+        T += (num_tied ** 3 - num_tied)
+        for i in range(start - 1, index + 1):
             combined['rank'][i] = ave_rank
-    
+
     total = combined.shape[0]
-    x_ranks_sum = sum(combined['rank'][i] for i in range(total) if combined['sample'][i] == 0)
+    x_ranks_sum = sum(combined['rank'][i]
+                      for i in range(total) if combined['sample'][i] == 0)
     prod = num_x * num_y
-    U1 = prod + (num_x * (num_x+1) / 2) - x_ranks_sum
+    U1 = prod + (num_x * (num_x + 1) / 2) - x_ranks_sum
     U2 = prod - U1
     U = max([U1, U2])
     numerator = U - prod / 2
-    denominator = sqrt((prod / (total * (total-1)))*((total**3 - total - T)/12))
-    z = (numerator/denominator)
+    denominator = sqrt((prod / (total * (total - 1)))
+                       * ((total ** 3 - total - T) / 12))
+    z = (numerator / denominator)
     p = zprob(z)
     return U, p
 
+
 def mw_boot(x, y, num_reps=1000):
     """Monte Carlo (bootstrap) variant of the Mann-Whitney test.
-    
+
     Arguments:
         - x, y: vectors of numbers
         - num_reps: number of replicates for the  bootstrap
-    
+
     Uses the same Monte-Carlo resampling code as kw_boot
     """
     tol = MACHEP * 100
@@ -831,17 +865,19 @@ def mw_boot(x, y, num_reps=1000):
             num_greater += 1
     return observed_stat, num_greater / num_reps
 
+
 def permute_2d(m, p):
     """Performs 2D permutation of matrix m according to p."""
     return m[p][:, p]
-    #unused below
+    # unused below
     m_t = transpose(m)
     r_t = take(m_t, p, axis=0)
     return take(transpose(r_t), p, axis=0)
 
+
 def mantel(m1, m2, n):
     """Compares two distance matrices. Reports P-value for correlation.
-    
+
     The p-value is based on a two-sided test.
 
     WARNING: The two distance matrices must be symmetric, hollow distance
@@ -853,8 +889,9 @@ def mantel(m1, m2, n):
     """
     return mantel_t(m1, m2, n)[0]
 
+
 def mantel_t(m1, m2, n, alt="two sided",
-                suppress_symmetry_and_hollowness_check=False):
+             suppress_symmetry_and_hollowness_check=False):
     """Runs a Mantel test on two distance matrices.
 
     Returns the p-value, Mantel correlation statistic, and a list of Mantel
@@ -915,10 +952,11 @@ def mantel_t(m1, m2, n, alt="two sided",
                 better += 1
         else:
             if ((alt == 'greater' and r >= orig_stat) or
-                (alt == 'less' and r <= orig_stat)):
+                    (alt == 'less' and r <= orig_stat)):
                 better += 1
         perm_stats.append(r)
     return (better + 1) / (n + 1), orig_stat, perm_stats
+
 
 def t_tailed_prob(t, df, tails):
     """Return appropriate p-value for given t and df, depending on tails."""
@@ -927,10 +965,12 @@ def t_tailed_prob(t, df, tails):
     elif tails == 'low':
         return t_low(t, df)
     else:
-        return tprob(t,df)
+        return tprob(t, df)
+
 
 def is_symmetric_and_hollow(matrix):
     return (matrix.T == matrix).all() and (trace(matrix) == 0)
+
 
 def _flatten_lower_triangle(matrix):
     """Returns a list containing the flattened lower triangle of the matrix.
@@ -948,6 +988,7 @@ def _flatten_lower_triangle(matrix):
             if col_num < row_num:
                     flattened.append(matrix[row_num][col_num])
     return flattened
+
 
 def tail(prob, test):
     """If test is true, returns prob/2. Otherwise returns 1-(prob/2).
