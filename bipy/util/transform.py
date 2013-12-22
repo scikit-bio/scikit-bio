@@ -28,7 +28,7 @@ from string import maketrans
 
 # Transferred from PyCogent's cogent.util.misc,
 # I think these should be moved to a more intuitive location.
-# [GitHub #1](https://github.com/gregcaporaso/bipy/issues/1)
+# [GitHub #1](https://github.com/biocore/bipy/issues/1)
 
 
 def select(order, items):
