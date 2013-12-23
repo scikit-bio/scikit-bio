@@ -37,7 +37,7 @@ setup(name='bipy',
       author_email="gregcaporaso@gmail.com",
       maintainer="The BiPy Developers",
       maintainer_email="gregcaporaso@gmail.com",
-      url='https://github.com/bipy/bipy',  # will soon be replaced
+      url='https://github.com/biocore/bipy',
       packages=['bipy'],
       install_requires=['numpy >= 1.5.1, <=1.7.1', 'matplotlib >= 1.1.0',
                         'scipy >=0.13.0'],

@@ -1,10 +1,16 @@
 bipy
 ====
 
-[![Build Status](https://magnum.travis-ci.com/gregcaporaso/bipy.png?token=cRee6r8tqQgg7M8jqmie&branch=master)](https://magnum.travis-ci.com/gregcaporaso/bipy)
+[![Build Status](https://travis-ci.org/biocore/bipy.png?branch=master)](https://travis-ci.org/biocore/bipy)
 
 Core objects, functions and statistics for working with biological data in Python.
 
+bipy development
+----------------
+
+If you're interested in getting involved in or learning about bipy development, see [CONTRIBUTING.md](https://github.com/biocore/bipy/blob/master/CONTRIBUTING.md), in this directory. 
+
+See the [list of all of bipy's contributors](https://github.com/biocore/bipy/graphs/contributors).
 
 The pre-history of bipy
 -----------------------

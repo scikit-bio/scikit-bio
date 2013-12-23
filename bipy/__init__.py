@@ -8,5 +8,5 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-__credits__ = "https://github.com/gregcaporaso/bipy/graphs/contributors"
+__credits__ = "https://github.com/biocore/bipy/graphs/contributors"
 __version__ = "0.0.0-dev"
