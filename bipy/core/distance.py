@@ -23,7 +23,7 @@ class DistanceMatrix(object):
     def from_file(cls, dm_f, delimiter='\t'):
         sample_ids = cls._extract_sample_ids(dm_f, delimiter)
         data = np.loadtxt(dm_f, delimiter=delimiter, skiprows=1,
-                          usecols=range(1, len(sample_ids) + 1))
+                          usecols=range(1, len(sample_ids) + 1), ndmin=2)
         return cls(data, sample_ids)
 
     def __init__(self, data, sample_ids):
@@ -63,6 +63,26 @@ class DistanceMatrix(object):
     def __str__(self):
         return '%dx%d distance matrix\nSample IDs: %s\n' % (self.shape[0],
                 self.shape[1], ', '.join(self.sample_ids)) + str(self.data)
+
+    def __eq__(self, other):
+        eq = True
+
+        # The order these checks are performed in is important to be as
+        # efficient as possible. The check for shape equality is not strictly
+        # necessary as it should be taken care of in np.array_equal, but I'd
+        # rather explicitly bail before comparing IDs or data. Use array_equal
+        # instead of (a == b).all() because of this issue:
+        #     http://stackoverflow.com/a/10582030
+        if not isinstance(other, self.__class__):
+            eq = False
+        elif self.shape != other.shape:
+            eq = False
+        elif self.sample_ids != other.sample_ids:
+            eq = False
+        elif not np.array_equal(self.data, other.data):
+            eq = False
+
+        return eq
 
     def _validate(self, data, sample_ids):
         pass
