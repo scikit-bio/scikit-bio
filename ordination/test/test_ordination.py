@@ -26,7 +26,7 @@ def normalize_signs(arr1, arr2):
 
 
 class TestCAResults(object):
-    def setUp(self):
+    def setup(self):
         """Data from table 9.11 in Legendre & Legendre 1998."""
         X = np.loadtxt(get_data_path('L&L_CA_data'))
         self.ordination = CA(X)
@@ -79,7 +79,7 @@ class TestRDAResults(object):
     #       Add ipynb with examples
     #       Test installation
     #       Upload to github
-    def setUp(self):
+    def setup(self):
         """Data from table 9.11 in Legendre & Legendre 1998."""
         Y = np.loadtxt(get_data_path('example2_Y'))
         X = np.loadtxt(get_data_path('example2_X')).reshape(-1, 4, order='F')
@@ -87,7 +87,7 @@ class TestRDAResults(object):
 
 
 class TestCCAErrors(object):
-    def setUp(self):
+    def setup(self):
         """Data from table 9.11 in Legendre & Legendre 1998."""
         self.Y = np.loadtxt(get_data_path('example3_Y'))
         self.X = np.loadtxt(get_data_path('example3_X')).reshape(-1, 4,
@@ -108,5 +108,5 @@ class TestCCAErrors(object):
 class TestCCAResults(object):
     # TODO: Either hardcode some results or call vegan? Hardcoding
     # them sounds better than requiring R and vegan to run tests.
-    def setUp(self):
+    def setup(self):
         pass
