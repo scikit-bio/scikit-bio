@@ -22,24 +22,28 @@ class DistanceMatrixTests(TestCase):
 
     def setUp(self):
         """Set up test data for use in distance matrix unit tests."""
+        dm_1x1_data = [[0.0]]
         self.dm_1x1_f = StringIO(DM_1x1_F)
-        self.dm_1x1 = DistanceMatrix([[0.0]], ['a'])
+        self.dm_1x1 = DistanceMatrix(dm_1x1_data, ['a'])
 
+        dm_2x2_data = [[0.0, 0.123], [0.123, 0.0]]
         self.dm_2x2_f = StringIO(DM_2x2_F)
-        self.dm_2x2 = DistanceMatrix([[0.0, 0.123], [0.123, 0.0]], ['a', 'b'])
+        self.dm_2x2 = DistanceMatrix(dm_2x2_data, ['a', 'b'])
 
+        dm_3x3_data = [[0.0, 0.01, 4.2], [0.01, 0.0, 12.0], [4.2, 12.0, 0.0]]
         self.dm_3x3_f = StringIO(DM_3x3_F)
-        self.dm_3x3 = DistanceMatrix([[0.0, 0.01, 4.2],
-                                      [0.01, 0.0, 12.0],
-                                      [4.2, 12.0, 0.0]], ['a', 'b', 'c'])
+        self.dm_3x3 = DistanceMatrix(dm_3x3_data, ['a', 'b', 'c'])
 
         self.dm_strs = [DM_1x1_F, DM_2x2_F, DM_3x3_F]
         self.dm_fs = [self.dm_1x1_f, self.dm_2x2_f, self.dm_3x3_f]
         self.dms = [self.dm_1x1, self.dm_2x2, self.dm_3x3]
         self.dm_shapes = [(1, 1), (2, 2), (3, 3)]
         self.dm_sizes = [1, 4, 9]
-        self.dm_condensed_data = [np.array([]), np.array([0.123]),
-                                  np.array([0.01, 4.2, 12.0])]
+        self.dm_condensed_forms = [np.array([]), np.array([0.123]),
+                                   np.array([0.01, 4.2, 12.0])]
+        self.dm_redundant_forms = [np.array(dm_1x1_data),
+                                   np.array(dm_2x2_data),
+                                   np.array(dm_3x3_data)]
 
     def test_round_trip_read_write(self):
         """Test reading, writing, and reading again works as expected."""
@@ -65,9 +69,9 @@ class DistanceMatrixTests(TestCase):
     def test_to_file(self):
         """Should serialize a DistanceMatrix to file."""
         for dm_str, dm in izip(self.dm_strs, self.dms):
-            for memory_efficient in True, False:
+            for conserve_memory in True, False:
                 obs_f = StringIO()
-                dm.to_file(obs_f, memory_efficient=memory_efficient)
+                dm.to_file(obs_f, conserve_memory=conserve_memory)
                 obs = obs_f.getvalue()
                 obs_f.close()
 
@@ -88,11 +92,17 @@ class DistanceMatrixTests(TestCase):
         for dm, size in izip(self.dms, self.dm_sizes):
             self.assertEqual(dm.size, size)
 
-    def test_condensed_data(self):
+    def test_condensed_form(self):
         """Test retrieving the data matrix in condensed form."""
-        for dm, condensed in izip(self.dms, self.dm_condensed_data):
-            obs = dm.condensed_data()
+        for dm, condensed in izip(self.dms, self.dm_condensed_forms):
+            obs = dm.condensed_form()
             self.assertTrue(np.array_equal(obs, condensed))
+
+    def test_redundant_form(self):
+        """Test retrieving the data matrix in redundant form."""
+        for dm, redundant in izip(self.dms, self.dm_redundant_forms):
+            obs = dm.redundant_form()
+            self.assertTrue(np.array_equal(obs, redundant))
 
 # 1x1:
 #     0.0

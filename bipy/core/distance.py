@@ -114,12 +114,16 @@ class DistanceMatrix(object):
     def size(self):
         return self.data.size
 
-    def condensed_data(self):
+    def condensed_form(self):
         return squareform(self.data, force='tovector')
 
+    def redundant_form(self):
+        return self.data
+
     def __str__(self):
-        return '%dx%d distance matrix\nSample IDs: %s\n' % (self.shape[0],
-                self.shape[1], ', '.join(self.sample_ids)) + str(self.data)
+        return '%dx%d distance matrix\nSample IDs:\n%s\nData:\n' % (
+                self.shape[0], self.shape[1],
+                self._pprint_sample_ids()) + str(self.data)
 
     def __eq__(self, other):
         eq = True
@@ -141,12 +145,12 @@ class DistanceMatrix(object):
 
         return eq
 
-    def to_file(self, out_f, delimiter='\t', memory_efficient=True):
+    def to_file(self, out_f, delimiter='\t', conserve_memory=False):
         formatted_sids = self._format_sample_ids(delimiter)
         out_f.write(formatted_sids)
         out_f.write('\n')
 
-        if memory_efficient:
+        if conserve_memory:
             for sid, vals in izip(self.sample_ids, self.data):
                 out_f.write(delimiter.join([sid] + map(str, vals)))
                 out_f.write('\n')
@@ -169,3 +173,13 @@ class DistanceMatrix(object):
 
     def _format_sample_ids(self, delimiter):
         return delimiter.join([''] + list(self.sample_ids))
+
+    def _pprint_sample_ids(self, max_chars=80, delimiter=', ', suffix='...',):
+        """Adapted from http://stackoverflow.com/a/250373"""
+        sids_str = delimiter.join(self.sample_ids)
+
+        if len(sids_str) > max_chars:
+            truncated = sids_str[:max_chars + 1].split(delimiter)[0:-1]
+            sids_str = delimiter.join(truncated) + delimiter + suffix
+
+        return sids_str
