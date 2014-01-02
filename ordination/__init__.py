@@ -6,4 +6,5 @@ __all__ = ['CA', 'RDA', 'CCA']
 #from numpy.testing import Tester
 #test = Tester().test
 
-__version__ = '0.1-dev'
+# Compatible with PEP386
+__version__ = '0.1.dev'
