@@ -43,12 +43,13 @@ class DistanceMatrixTests(TestCase):
 
     def test_to_file(self):
         """Should serialize a DistanceMatrix to file."""
-        obs_f = StringIO()
-        self.dm_1x1.to_file(obs_f)
-        obs = obs_f.getvalue()
-        obs_f.close()
+        for memory_efficient in True, False:
+            obs_f = StringIO()
+            self.dm_1x1.to_file(obs_f, memory_efficient=memory_efficient)
+            obs = obs_f.getvalue()
+            obs_f.close()
 
-        self.assertEqual(obs, DM_1x1_F)
+            self.assertEqual(obs, DM_1x1_F)
 
 DM_1x1_F = "\ta\na\t0.0\n"
 
