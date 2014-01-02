@@ -16,6 +16,15 @@ from StringIO import StringIO
 import numpy as np
 from scipy.spatial.distance import squareform
 
+class DistanceMatrixError(Exception):
+    pass
+
+class DistanceMatrixFormatError(Exception):
+    pass
+
+class SampleIDMismatchError(Exception):
+    pass
+
 class MissingHeaderError(Exception):
     pass
 
@@ -23,34 +32,46 @@ class DistanceMatrix(object):
 
     @classmethod
     def from_file(cls, dm_f, delimiter='\t'):
-        # We aren't using np.loadtxt because it uses *way* too much memory. See
+        sids = None
+
+        # We aren't using np.loadtxt because it uses *way* too much memory
+        # (e.g, a 2GB matrix eats up 10GB, which then isn't freed after parsing
+        # has finished). See:
         # http://mail.scipy.org/pipermail/numpy-tickets/2012-August/006749.html
-        #sample_ids = cls._extract_sample_ids(dm_f, delimiter)
-        #
-        #data = np.loadtxt(dm_f, delimiter=delimiter, skiprows=1,
-        #                  usecols=range(1, len(sample_ids) + 1), ndmin=2)
-        #return cls(data, sample_ids)
 
-        sids = cls._extract_sample_ids(dm_f, delimiter)
-        num_sids = len(sids)
-        data = np.empty((num_sids, num_sids))
-
+        # Strategy:
+        #     - find the header
+        #     - initialize an empty ndarray
+        #     - for each row of data in the input file:
+        #         - initialize a row vector of zeros
+        #         - fill in only lower-triangular values (exclude the diagonal)
+        #         - populate the corresponding row in the ndarray
+        #     - fill in the upper triangle based on the lower triangle
         for line_idx, line in enumerate(dm_f):
             tokens = map(lambda e: e.strip(), line.strip().split(delimiter))
 
-            if line_idx < num_sids:
-                if tokens[0] == sids[line_idx]:
-                    row_data = map(float, tokens[1:])
+            if line_idx == 0:
+                # We're at the header (sample IDs).
+                sids = tokens
+                num_sids = len(sids)
+                data = np.empty((num_sids, num_sids))
+            elif line_idx <= num_sids:
+                if len(tokens) != num_sids + 1:
+                    raise DistanceMatrixFormatError("The number of values in "
+                            "row number %d is not equal to the number of "
+                            "sample IDs in the header." % line_idx)
 
-                    if len(row_data) == num_sids:
-                        data[line_idx, :] = row_data
-                    else:
-                        raise InvalidDistanceMatrixFormatError("The number of "
-                                "values in row number %d doesn't match the "
-                                "number of sample IDs in the header." %
-                                line_idx + 1)
+                row_idx = line_idx - 1
+
+                if tokens[0] == sids[row_idx]:
+                    row_data = np.zeros(num_sids)
+
+                    for col_idx in range(row_idx):
+                        row_data[col_idx] = float(tokens[col_idx + 1])
+
+                    data[row_idx,:] = row_data
                 else:
-                    raise SampleIdMismatchError("Encountered mismatched "
+                    raise SampleIDMismatchError("Encountered mismatched "
                             "sample IDs while parsing the distance matrix "
                             "file. Please ensure the sample IDs match between "
                             "the distance matrix header (first row) and the "
@@ -62,6 +83,13 @@ class DistanceMatrix(object):
                     raise InvalidDistanceMatrixFormatError("Encountered extra "
                             "rows without corresponding sample IDs in the "
                             "header.")
+
+        if sids is None:
+            raise MissingHeaderError("Could not find a header line containing "
+                    "sample IDs in the distance matrix file. Is the file "
+                    "empty?")
+
+        data += data.T
 
         return cls(data, sids)
 
@@ -141,25 +169,3 @@ class DistanceMatrix(object):
 
     def _format_sample_ids(self, delimiter):
         return delimiter.join([''] + list(self.sample_ids))
-
-    @staticmethod
-    def _extract_sample_ids(dm_f, delimiter):
-        header_line = None
-
-        for line in dm_f:
-            line = line.strip()
-
-            if line and not line.startswith('#'):
-                header_line = line
-                break
-
-        #try:
-        #    dm_f.seek(0)
-        #except AttributeError:
-        #    pass
-
-        if header_line is None:
-            raise MissingHeaderError("Could not find a valid header line "
-                    "containing sample IDs in the distance matrix file.")
-        else:
-            return map(lambda e: e.strip(), header_line.split(delimiter))

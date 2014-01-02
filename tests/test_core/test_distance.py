@@ -28,12 +28,18 @@ class DistanceMatrixTests(TestCase):
         self.dm_2x2_f = StringIO(DM_2x2_F)
         self.dm_2x2 = DistanceMatrix([[0.0, 0.123], [0.123, 0.0]], ['a', 'b'])
 
-        self.dm_strs = [DM_1x1_F, DM_2x2_F]
-        self.dm_fs = [self.dm_1x1_f, self.dm_2x2_f]
-        self.dms = [self.dm_1x1, self.dm_2x2]
-        self.dm_shapes = [(1, 1), (2, 2)]
-        self.dm_sizes = [1, 4]
-        self.dm_condensed_data = [np.array([]), np.array([0.123])]
+        self.dm_3x3_f = StringIO(DM_3x3_F)
+        self.dm_3x3 = DistanceMatrix([[0.0, 0.01, 4.2],
+                                      [0.01, 0.0, 12.0],
+                                      [4.2, 12.0, 0.0]], ['a', 'b', 'c'])
+
+        self.dm_strs = [DM_1x1_F, DM_2x2_F, DM_3x3_F]
+        self.dm_fs = [self.dm_1x1_f, self.dm_2x2_f, self.dm_3x3_f]
+        self.dms = [self.dm_1x1, self.dm_2x2, self.dm_3x3]
+        self.dm_shapes = [(1, 1), (2, 2), (3, 3)]
+        self.dm_sizes = [1, 4, 9]
+        self.dm_condensed_data = [np.array([]), np.array([0.123]),
+                                  np.array([0.01, 4.2, 12.0])]
 
     def test_round_trip_read_write(self):
         """Test reading, writing, and reading again works as expected."""
@@ -93,9 +99,16 @@ class DistanceMatrixTests(TestCase):
 DM_1x1_F = "\ta\na\t0.0\n"
 
 # 2x2:
-#     0.0   0.123
-#     0.123 0.0
+#       0.0  0.123
+#     0.123    0.0
 DM_2x2_F = "\ta\tb\na\t0.0\t0.123\nb\t0.123\t0.0\n"
+
+# 3x3:
+#      0.0   0.01   4.2
+#     0.01    0.0  12.0
+#      4.2   12.0   0.0
+DM_3x3_F = ("\ta\tb\tc\na\t0.0\t0.01\t4.2\nb\t0.01\t0.0\t12.0\n"
+            "c\t4.2\t12.0\t0.0\n")
 
 if __name__ == '__main__':
     main()
