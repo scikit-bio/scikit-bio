@@ -1,5 +1,9 @@
+==========
 ordination
 ==========
+
+.. image:: https://travis-ci.org/Jorge-C/ordination.png?branch=master
+    :target: https://travis-ci.org/Jorge-C/ordination
 
 A Python package to perform ordination analysis. The techniques that
 are currently implemented are
