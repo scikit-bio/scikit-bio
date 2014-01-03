@@ -10,30 +10,39 @@ from __future__ import division
 #-----------------------------------------------------------------------------
 
 import csv
+from copy import deepcopy
 from itertools import izip
 from StringIO import StringIO
 
 import numpy as np
-from scipy.spatial.distance import squareform
+from scipy.spatial.distance import is_valid_dm, squareform
 
 class DistanceMatrixError(Exception):
+    pass
+
+class MissingSampleIDError(Exception):
     pass
 
 class DistanceMatrixFormatError(Exception):
     pass
 
 class SampleIDMismatchError(Exception):
-    pass
+    def __init__(self):
+        self.args = ("Encountered mismatched sample IDs while parsing the "
+                     "distance matrix file. Please ensure that the sample IDs "
+                     "match between the distance matrix header (first row) "
+                     "and the row labels (first column).",)
 
 class MissingHeaderError(Exception):
-    pass
+    def __init__(self):
+        self.args = ("Could not find a header line containing sample IDs in "
+                     "the distance matrix file. Please verify that the file "
+                     "is not empty.",)
 
 class DistanceMatrix(object):
 
     @classmethod
     def from_file(cls, dm_f, delimiter='\t'):
-        sids = None
-
         # We aren't using np.loadtxt because it uses *way* too much memory
         # (e.g, a 2GB matrix eats up 10GB, which then isn't freed after parsing
         # has finished). See:
@@ -47,6 +56,7 @@ class DistanceMatrix(object):
         #         - fill in only lower-triangular values (exclude the diagonal)
         #         - populate the corresponding row in the ndarray
         #     - fill in the upper triangle based on the lower triangle
+        sids = None
         for line_idx, line in enumerate(dm_f):
             tokens = map(lambda e: e.strip(), line.strip().split(delimiter))
 
@@ -71,36 +81,44 @@ class DistanceMatrix(object):
 
                     data[row_idx,:] = row_data
                 else:
-                    raise SampleIDMismatchError("Encountered mismatched "
-                            "sample IDs while parsing the distance matrix "
-                            "file. Please ensure the sample IDs match between "
-                            "the distance matrix header (first row) and the "
-                            "row labels (first column).")
+                    raise SampleIDMismatchError
             else:
                 if ''.join(tokens):
                     # If it isn't a blank line, raise an error because we
                     # shouldn't ignore extra data.
-                    raise InvalidDistanceMatrixFormatError("Encountered extra "
-                            "rows without corresponding sample IDs in the "
-                            "header.")
+                    raise DistanceMatrixFormatError("Encountered extra rows "
+                            "without corresponding sample IDs in the header.")
 
         if sids is None:
-            raise MissingHeaderError("Could not find a header line containing "
-                    "sample IDs in the distance matrix file. Is the file "
-                    "empty?")
+            raise MissingHeaderError
 
         data += data.T
 
         return cls(data, sids)
 
     def __init__(self, data, sample_ids):
-        data = np.asarray(data)
+        data = np.asarray(data, dtype='float')
         sample_ids = tuple(sample_ids)
         self._validate(data, sample_ids)
 
-        self.data = data
-        self.sample_ids = sample_ids
-        self._sample_index = self._index_list(self.sample_ids)
+        self._data = data
+        self._sample_ids = sample_ids
+        self._sample_index = self._index_list(self._sample_ids)
+
+    @property
+    def data(self):
+        return self._data
+
+    @property
+    def sample_ids(self):
+        return self._sample_ids
+
+    @sample_ids.setter
+    def sample_ids(self, sample_ids_):
+        sample_ids_ = tuple(sample_ids_)
+        self._validate(self.data, sample_ids_)
+        self._sample_ids = sample_ids_
+        self._sample_index = self._index_list(self._sample_ids)
 
     @property
     def dtype(self):
@@ -111,14 +129,31 @@ class DistanceMatrix(object):
         return self.data.shape
 
     @property
+    def num_samples(self):
+        """Returns the number of samples (i.e. number of rows or columns)."""
+        return len(self.sample_ids)
+
+    @property
     def size(self):
         return self.data.size
+
+    @property
+    def T(self):
+        return self.transpose()
+
+    def transpose(self):
+        return self
 
     def condensed_form(self):
         return squareform(self.data, force='tovector')
 
     def redundant_form(self):
         return self.data
+
+    def copy(self):
+        # We deepcopy sample IDs in case the tuple contains mutable objects at
+        # some point in the future.
+        return self.__class__(self.data.copy(), deepcopy(self.sample_ids))
 
     def __str__(self):
         return '%dx%d distance matrix\nSample IDs:\n%s\nData:\n' % (
@@ -145,6 +180,16 @@ class DistanceMatrix(object):
 
         return eq
 
+    def __ne__(self, other):
+        return not (self == other)
+
+    def __getitem__(self, sample_id):
+        if sample_id in self._sample_index:
+            return self.data[self._sample_index[sample_id]]
+        else:
+            raise MissingSampleIDError("The sample ID '%s' is not in the "
+                                       "distance matrix." % sample_id)
+
     def to_file(self, out_f, delimiter='\t', conserve_memory=False):
         formatted_sids = self._format_sample_ids(delimiter)
         out_f.write(formatted_sids)
@@ -166,7 +211,20 @@ class DistanceMatrix(object):
             temp_f.close()
 
     def _validate(self, data, sample_ids):
-        pass
+        # Accepts arguments instead of inspecting instance attributes because
+        # we don't want to create an invalid distance matrix before raising an
+        # error (because then it could be used after the exception is caught).
+        num_sids = len(sample_ids)
+
+        if num_sids != len(set(sample_ids)):
+            raise DistanceMatrixError("Sample IDs must be unique.")
+        elif not is_valid_dm(data):
+            raise DistanceMatrixError("Data must be an array that is "
+                    "2-dimensional, square, symmetric, hollow, and contains "
+                    "only floating point values.")
+        elif num_sids != data.shape[0]:
+            raise DistanceMatrixError("The number of sample IDs must match "
+                    "the number of rows/columns in the data.")
 
     def _index_list(self, l):
         return dict([(id_, idx) for idx, id_ in enumerate(l)])
