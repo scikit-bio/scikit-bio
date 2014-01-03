@@ -27,9 +27,15 @@ example by running `python setup.py install --user`.
 Testing
 =======
 
-After installing the package and `nose`, run::
+After installing the package, run::
 
   $ nosetests --exe ordination
+
+if you have `nose` installed or::
+
+  $ py.test --pyargs ordination
+
+if `py.test` is installed.
 
 Usage
 =====
