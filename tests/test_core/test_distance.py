@@ -120,13 +120,12 @@ class DistanceMatrixTests(TestCase):
     def test_to_file(self):
         """Should serialize a DistanceMatrix to file."""
         for dm_f_line, dm in izip(self.dm_f_lines, self.dms):
-            for conserve_memory in True, False:
-                obs_f = StringIO()
-                dm.to_file(obs_f, conserve_memory=conserve_memory)
-                obs = obs_f.getvalue()
-                obs_f.close()
+            obs_f = StringIO()
+            dm.to_file(obs_f)
+            obs = obs_f.getvalue()
+            obs_f.close()
 
-                self.assertEqual(obs, dm_f_line)
+            self.assertEqual(obs, dm_f_line)
 
     def test_init_invalid_input(self):
         """Raises error on invalid distance matrix data / sample IDs."""

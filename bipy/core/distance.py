@@ -189,25 +189,14 @@ class DistanceMatrix(object):
             raise MissingSampleIDError("The sample ID '%s' is not in the "
                                        "distance matrix." % sample_id)
 
-    def to_file(self, out_f, delimiter='\t', conserve_memory=False):
+    def to_file(self, out_f, delimiter='\t'):
         formatted_sids = self._format_sample_ids(delimiter)
         out_f.write(formatted_sids)
         out_f.write('\n')
 
-        if conserve_memory:
-            for sid, vals in izip(self.sample_ids, self.data):
-                out_f.write(delimiter.join([sid] + map(str, vals)))
-                out_f.write('\n')
-        else:
-            temp_f = StringIO()
-            np.savetxt(temp_f, self.data, delimiter=delimiter, fmt='%s')
-            temp_f.seek(0)
-
-            for sid, line in izip(self.sample_ids, temp_f):
-                out_f.write(sid)
-                out_f.write(delimiter)
-                out_f.write(line)
-            temp_f.close()
+        for sid, vals in izip(self.sample_ids, self.data):
+            out_f.write(delimiter.join([sid] + map(str, vals)))
+            out_f.write('\n')
 
     def _validate(self, data, sample_ids):
         # Accepts arguments instead of inspecting instance attributes because
