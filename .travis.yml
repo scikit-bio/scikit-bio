@@ -17,8 +17,9 @@ before_install:
   - sudo ln -s /run/shm /dev/shm
 # Install packages
 install:
-  - conda create --yes -n env_name python=$TRAVIS_PYTHON_VERSION pip numpy matplotlib nose pytest
+  - conda create --yes -n env_name python=$TRAVIS_PYTHON_VERSION pip numpy matplotlib nose
   - source activate env_name
+  - pip install pytest  # not yet available for py3 in anaconda 
   - python setup.py install
 
 # Run test
