@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+"""Unit tests for the bipy.core.distance module."""
 from __future__ import division
 
 #-----------------------------------------------------------------------------
@@ -248,7 +249,7 @@ class DistanceMatrixTests(TestCase):
         self.assertNotEqual(copy.sample_ids, self.dm_2x2.sample_ids)
 
         copy = self.dm_2x2.copy()
-        copy.data[0,1] = 0.0001
+        copy.data[0, 1] = 0.0001
         self.assertFalse(np.array_equal(copy.data, self.dm_2x2.data))
 
     def test_str(self):
@@ -287,7 +288,7 @@ class DistanceMatrixTests(TestCase):
 
         # Wrong data.
         other = self.dm_3x3.copy()
-        other.data[1,0] = 42.42
+        other.data[1, 0] = 42.42
         self.assertTrue(self.dm_3x3 != other)
 
         self.assertFalse(self.dm_2x2 != self.dm_2x2)
