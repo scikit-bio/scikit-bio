@@ -15,7 +15,8 @@ from StringIO import StringIO
 import numpy as np
 
 from bipy.core.distance import (DistanceMatrix, DistanceMatrixError,
-                                MissingSampleIDError)
+        DistanceMatrixFormatError, MissingDataError, MissingHeaderError,
+        MissingSampleIDError, SampleIDMismatchError)
 from bipy.util.unit_test import TestCase, main
 
 class DistanceMatrixTests(TestCase):
@@ -35,6 +36,8 @@ class DistanceMatrixTests(TestCase):
         self.dm_3x3_f = StringIO(DM_3x3_F)
         self.dm_3x3 = DistanceMatrix(dm_3x3_data, ['a', 'b', 'c'])
 
+        self.dm_3x3_whitespace_f = StringIO(DM_3x3_WHITESPACE_F)
+
         self.dm_f_lines = [DM_1x1_F, DM_2x2_F, DM_3x3_F]
         self.dm_fs = [self.dm_1x1_f, self.dm_2x2_f, self.dm_3x3_f]
         self.dms = [self.dm_1x1, self.dm_2x2, self.dm_3x3]
@@ -45,6 +48,14 @@ class DistanceMatrixTests(TestCase):
         self.dm_redundant_forms = [np.array(dm_1x1_data),
                                    np.array(dm_2x2_data),
                                    np.array(dm_3x3_data)]
+
+        self.bad_dm_f1 = StringIO(BAD_DM_F1)
+        self.bad_dm_f2 = StringIO(BAD_DM_F2)
+        self.bad_dm_f3 = StringIO(BAD_DM_F3)
+        self.bad_dm_f4 = StringIO(BAD_DM_F4)
+        self.bad_dm_f5 = StringIO(BAD_DM_F5)
+        self.bad_dm_f6 = StringIO(BAD_DM_F6)
+        self.bad_dm_f7 = StringIO(BAD_DM_F7)
 
     def test_round_trip_read_write(self):
         """Test reading, writing, and reading again works as expected."""
@@ -66,6 +77,45 @@ class DistanceMatrixTests(TestCase):
         for dm_f, dm in izip(self.dm_fs, self.dms):
             obs = DistanceMatrix.from_file(dm_f)
             self.assertEqual(obs, dm)
+
+        # Correctly parses file with extra empty (whitespace-only) lines at
+        # end.
+        obs = DistanceMatrix.from_file(self.dm_3x3_whitespace_f)
+        self.assertEqual(obs, self.dm_3x3)
+
+    def test_from_file_invalid_input(self):
+        """Raises error on ill-formatted distance matrix file."""
+        # Empty dm.
+        with self.assertRaises(MissingHeaderError):
+            _ = DistanceMatrix.from_file([])
+
+        # Number of values don't match number of sample IDs.
+        with self.assertRaises(DistanceMatrixFormatError):
+            _ = DistanceMatrix.from_file(self.bad_dm_f1)
+
+        # Mismatched sample IDs.
+        with self.assertRaises(SampleIDMismatchError):
+            _ = DistanceMatrix.from_file(self.bad_dm_f2)
+
+        # Extra data at end.
+        with self.assertRaises(DistanceMatrixFormatError):
+            _ = DistanceMatrix.from_file(self.bad_dm_f3)
+
+        # Missing data.
+        with self.assertRaises(MissingDataError):
+            _ = DistanceMatrix.from_file(self.bad_dm_f4)
+
+        # Header, but no data.
+        with self.assertRaises(MissingDataError):
+            _ = DistanceMatrix.from_file(self.bad_dm_f5)
+
+        # Nonsymmetric.
+        with self.assertRaises(DistanceMatrixError):
+            _ = DistanceMatrix.from_file(self.bad_dm_f6)
+
+        # Non-hollow.
+        with self.assertRaises(DistanceMatrixError):
+            _ = DistanceMatrix.from_file(self.bad_dm_f7)
 
     def test_to_file(self):
         """Should serialize a DistanceMatrix to file."""
@@ -292,6 +342,31 @@ DM_2x2_F = "\ta\tb\na\t0.0\t0.123\nb\t0.123\t0.0\n"
 #      4.2   12.0   0.0
 DM_3x3_F = ("\ta\tb\tc\na\t0.0\t0.01\t4.2\nb\t0.01\t0.0\t12.0\n"
             "c\t4.2\t12.0\t0.0\n")
+
+# Extra whitespace-only lines at end.
+DM_3x3_WHITESPACE_F = ("\ta\tb\tc\na\t0.0\t0.01\t4.2\nb\t0.01\t0.0\t12.0\n"
+                       "c\t4.2\t12.0\t0.0\n\n   \t \n\t\t\t\n ")
+
+# missing data
+BAD_DM_F1 = 'a\tb\na\t0\t1\nb\t1'
+
+# mismatched sample IDs
+BAD_DM_F2 = '\ta\tb\nb\t0\t1\na\t1\t0'
+
+# extra data lines
+BAD_DM_F3 = '\ta\tb\na\t0\t1\nb\t1\t0\nfoo'
+
+# missing data lines
+BAD_DM_F4 = '\ta\tb\na\t0\t1\n'
+
+# no data lines
+BAD_DM_F5 = '\ta\tb\n'
+
+# nonsymmetric
+BAD_DM_F6 = '\ta\tb\na\t0\t1\nb\t2\t0\n'
+
+# non-hollow
+BAD_DM_F7 = '\ta\tb\na\t0\t1\nb\t1\t0.1\n'
 
 if __name__ == '__main__':
     main()

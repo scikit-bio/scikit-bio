@@ -39,6 +39,11 @@ class MissingHeaderError(Exception):
                      "the distance matrix file. Please verify that the file "
                      "is not empty.",)
 
+class MissingDataError(Exception):
+    def __init__(self, actual, expected):
+        self.args = ("Expected %d row(s) of data, but found %d." % (expected,
+                                                                    actual),)
+
 class DistanceMatrix(object):
 
     @classmethod
@@ -52,11 +57,9 @@ class DistanceMatrix(object):
         #     - find the header
         #     - initialize an empty ndarray
         #     - for each row of data in the input file:
-        #         - initialize a row vector of zeros
-        #         - fill in only lower-triangular values (exclude the diagonal)
-        #         - populate the corresponding row in the ndarray
-        #     - fill in the upper triangle based on the lower triangle
+        #         - populate the corresponding row in the ndarray with floats
         sids = None
+        rows_processed = 0
         for line_idx, line in enumerate(dm_f):
             tokens = map(lambda e: e.strip(), line.strip().split(delimiter))
 
@@ -72,14 +75,10 @@ class DistanceMatrix(object):
                             "sample IDs in the header." % line_idx)
 
                 row_idx = line_idx - 1
+                rows_processed += 1
 
                 if tokens[0] == sids[row_idx]:
-                    row_data = np.zeros(num_sids)
-
-                    for col_idx in range(row_idx):
-                        row_data[col_idx] = float(tokens[col_idx + 1])
-
-                    data[row_idx,:] = row_data
+                    data[row_idx,:] = np.asarray(tokens[1:], dtype='float')
                 else:
                     raise SampleIDMismatchError
             else:
@@ -91,8 +90,8 @@ class DistanceMatrix(object):
 
         if sids is None:
             raise MissingHeaderError
-
-        data += data.T
+        elif rows_processed != num_sids:
+            raise MissingDataError(rows_processed, num_sids)
 
         return cls(data, sids)
 
