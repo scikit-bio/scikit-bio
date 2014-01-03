@@ -101,7 +101,7 @@ class DistanceMatrix(object):
         For example, a 2x2 distance matrix with samples ``'a'`` and ``'b'``
         would look like:
 
-        a<tab>b
+        <tab>a<tab>b
         a<tab>0.0<tab>1.0
         b<tab>1.0<tab>0.0
 
