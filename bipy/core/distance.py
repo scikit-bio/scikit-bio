@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+"""Core distance matrix API."""
 from __future__ import division
 
 #-----------------------------------------------------------------------------
@@ -9,10 +10,8 @@ from __future__ import division
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-import csv
 from copy import deepcopy
 from itertools import izip
-from StringIO import StringIO
 
 import numpy as np
 from scipy.spatial.distance import is_valid_dm, squareform
@@ -28,6 +27,7 @@ class DistanceMatrixFormatError(Exception):
 
 class SampleIDMismatchError(Exception):
     def __init__(self):
+        super(SampleIDMismatchError, self).__init__()
         self.args = ("Encountered mismatched sample IDs while parsing the "
                      "distance matrix file. Please ensure that the sample IDs "
                      "match between the distance matrix header (first row) "
@@ -35,12 +35,14 @@ class SampleIDMismatchError(Exception):
 
 class MissingHeaderError(Exception):
     def __init__(self):
+        super(MissingHeaderError, self).__init__()
         self.args = ("Could not find a header line containing sample IDs in "
                      "the distance matrix file. Please verify that the file "
                      "is not empty.",)
 
 class MissingDataError(Exception):
     def __init__(self, actual, expected):
+        super(MissingDataError, self).__init__()
         self.args = ("Expected %d row(s) of data, but found %d." % (expected,
                                                                     actual),)
 
@@ -61,7 +63,7 @@ class DistanceMatrix(object):
         sids = None
         rows_processed = 0
         for line_idx, line in enumerate(dm_f):
-            tokens = map(lambda e: e.strip(), line.strip().split(delimiter))
+            tokens = [e.strip() for e in line.strip().split(delimiter)]
 
             if line_idx == 0:
                 # We're at the header (sample IDs).
@@ -78,7 +80,7 @@ class DistanceMatrix(object):
                 rows_processed += 1
 
                 if tokens[0] == sids[row_idx]:
-                    data[row_idx,:] = np.asarray(tokens[1:], dtype='float')
+                    data[row_idx, :] = np.asarray(tokens[1:], dtype='float')
                 else:
                     raise SampleIDMismatchError
             else:
@@ -160,7 +162,7 @@ class DistanceMatrix(object):
                 self._pprint_sample_ids()) + str(self.data)
 
     def __eq__(self, other):
-        eq = True
+        equal = True
 
         # The order these checks are performed in is important to be as
         # efficient as possible. The check for shape equality is not strictly
@@ -169,18 +171,18 @@ class DistanceMatrix(object):
         # instead of (a == b).all() because of this issue:
         #     http://stackoverflow.com/a/10582030
         if not isinstance(other, self.__class__):
-            eq = False
+            equal = False
         elif self.shape != other.shape:
-            eq = False
+            equal = False
         elif self.sample_ids != other.sample_ids:
-            eq = False
+            equal = False
         elif not np.array_equal(self.data, other.data):
-            eq = False
+            equal = False
 
-        return eq
+        return equal
 
     def __ne__(self, other):
-        return not (self == other)
+        return not self == other
 
     def __getitem__(self, sample_id):
         if sample_id in self._sample_index:
@@ -195,7 +197,9 @@ class DistanceMatrix(object):
         out_f.write('\n')
 
         for sid, vals in izip(self.sample_ids, self.data):
-            out_f.write(delimiter.join([sid] + map(str, vals)))
+            out_f.write(sid)
+            out_f.write(delimiter)
+            out_f.write(delimiter.join([str(val) for val in vals]))
             out_f.write('\n')
 
     def _validate(self, data, sample_ids):
@@ -214,8 +218,8 @@ class DistanceMatrix(object):
             raise DistanceMatrixError("The number of sample IDs must match "
                     "the number of rows/columns in the data.")
 
-    def _index_list(self, l):
-        return dict([(id_, idx) for idx, id_ in enumerate(l)])
+    def _index_list(self, list_):
+        return dict([(id_, idx) for idx, id_ in enumerate(list_)])
 
     def _format_sample_ids(self, delimiter):
         return delimiter.join([''] + list(self.sample_ids))

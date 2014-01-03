@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+"""Core bipy classes and API."""
 
 #-----------------------------------------------------------------------------
 # Copyright (c) 2013, The BiPy Developers.

@@ -275,6 +275,7 @@ class DistanceMatrixTests(TestCase):
         """Test unequal dms are identified as such."""
         # Wrong class.
         self.assertTrue(self.dm_3x3 != 'foo')
+        self.assertTrue(self.dm_3x3 != False)
 
         # Wrong shape.
         self.assertTrue(self.dm_3x3 != self.dm_1x1)
