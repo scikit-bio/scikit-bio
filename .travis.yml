@@ -1,0 +1,27 @@
+# Modified from https://gist.github.com/dan-blanchard/7045057
+language: python
+python:
+  - "2.7"
+  - "3.3"
+
+# Setup anaconda
+before_install:
+  - if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then wget http://repo.continuum.io/miniconda/Miniconda-2.0.0-Linux-x86_64.sh -O miniconda.sh; else wget http://repo.continuum.io/miniconda/Miniconda3-2.0.0-Linux-x86_64.sh -O miniconda.sh; fi
+  - chmod +x miniconda.sh
+  - ./miniconda.sh -b
+  - export PATH=/home/travis/anaconda/bin:$PATH
+  # Update conda itself
+  - conda update conda
+  # The next couple lines fix a crash with multiprocessing on Travis and are not specific to using Miniconda
+  - sudo rm -rf /dev/shm
+  - sudo ln -s /run/shm /dev/shm
+# Install packages
+install:
+  - conda install --yes pip python=$TRAVIS_PYTHON_VERSION numpy matplotlib nose
+  - python setup.py install
+
+# Run test
+script:
+  - nosetests ordination
+  - py.test ordination
+
