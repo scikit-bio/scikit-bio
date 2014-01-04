@@ -420,8 +420,8 @@ class CCA(Ordination):
         - Canonical correlation analysis is a statistical tool that,
           given two vectors of random variables, finds linear
           combinations that have maximum correlation with each other. In
-          some sense, assumes linear responses of ``species'' to
-          ``environmental variables''. This is not implemented here.
+          some sense, assumes linear responses of *species* to
+          *environmental variables*. This is not implemented here.
 
         - Canonical (or constrained) correspondence analysis appeared in
           community ecology [1]_ and relates community composition to
@@ -434,18 +434,19 @@ class CCA(Ordination):
           unimodal response curves (habitat preferences are often
           unimodal functions of habitat variables [2]_).
 
-          References
-          ----------
+        References
+        ----------
 
-          .. [1] Cajo J. F. Ter Braak, "Canonical Correspondence
-                 Analysis: A New Eigenvector Technique for Multivariate
-                 Direct Gradient Analysis", Ecology 67.5 (1986),
-                 pp. 1167-1179.
+        .. [1] Cajo J. F. Ter Braak, "Canonical Correspondence
+            Analysis: A New Eigenvector Technique for Multivariate
+            Direct Gradient Analysis", Ecology 67.5 (1986),
+            pp. 1167-1179.
 
-          .. [2] Cajo J.F. Braak and Piet F.M. Verdonschot, "Canonical
-                 correspondence analysis and related multivariate
-                 methods in aquatic ecology", Aquatic Sciences 57.3
-                 (1995), pp. 255-289.
+        .. [2] Cajo J.F. Braak and Piet F.M. Verdonschot, "Canonical
+            correspondence analysis and related multivariate methods
+            in aquatic ecology", Aquatic Sciences 57.3 (1995),
+            pp. 255-289.
+
         """
 
         self.Y = np.asarray(Y, dtype=np.float64)

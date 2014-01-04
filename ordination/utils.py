@@ -29,7 +29,7 @@ def mean_and_std(a, axis=None, weights=None, with_mean=True, with_std=True,
     ddof : int, optional, defaults to 0
         Variance is calculated by dividing by `n - ddof` (where `n` is
         the number of elements). By default it computes the maximum
-        likelyhood stimator.
+        likelyhood estimator.
 
     Returns
     -------
@@ -130,7 +130,7 @@ def corr(x, y=None):
 
     Correlation is covariance of (columnwise) standardized matrices,
     so each matrix is first centered and scaled to have variance one,
-    and the their covariance is then computed.
+    and then their covariance is computed.
 
     Parameters
     ----------
