@@ -15,7 +15,7 @@ are currently implemented are
 Dependencies
 ============
 
-It depends on `numpy` and `matplotlib`, either on Python 2.7 (adding
+It depends on ``numpy`` and ``matplotlib``, either on Python 2.7 (adding
 compatibility with 2.6 would be easy) or 3.
 
 Installation
@@ -26,7 +26,7 @@ As usual, running::
   $ python setup.py install
 
 ought to work. You probably want to install it in some prefix, for
-example by running `python setup.py install --user`.
+example by running ``python setup.py install --user``.
 
 Testing
 =======
@@ -35,11 +35,11 @@ After installing the package, run::
 
   $ nosetests --exe ordination
 
-if you have `nose` installed or::
+if you have ``nose`` installed or::
 
   $ py.test --pyargs ordination
 
-if `py.test` is installed.
+if ``py.test`` is installed.
 
 Usage
 =====
