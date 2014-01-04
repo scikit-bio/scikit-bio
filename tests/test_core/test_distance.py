@@ -16,9 +16,11 @@ from StringIO import StringIO
 import numpy as np
 
 from bipy.core.distance import (DistanceMatrix, DistanceMatrixError,
-        DistanceMatrixFormatError, MissingDataError, MissingHeaderError,
-        MissingSampleIDError, SampleIDMismatchError)
+                                DistanceMatrixFormatError, MissingDataError,
+                                MissingHeaderError, MissingSampleIDError,
+                                SampleIDMismatchError)
 from bipy.util.unit_test import TestCase, main
+
 
 class DistanceMatrixTests(TestCase):
     """Tests for the DistanceMatrix class."""
@@ -276,7 +278,6 @@ class DistanceMatrixTests(TestCase):
         """Test unequal dms are identified as such."""
         # Wrong class.
         self.assertTrue(self.dm_3x3 != 'foo')
-        self.assertTrue(self.dm_3x3 != False)
 
         # Wrong shape.
         self.assertTrue(self.dm_3x3 != self.dm_1x1)
