@@ -371,7 +371,7 @@ class DistanceMatrix(object):
         for sid, vals in izip(self.sample_ids, self.data):
             out_f.write(sid)
             out_f.write(delimiter)
-            out_f.write(delimiter.join([str(val) for val in vals]))
+            out_f.write(delimiter.join(np.asarray(vals, dtype=np.str)))
             out_f.write('\n')
 
     @staticmethod

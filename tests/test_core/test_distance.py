@@ -305,6 +305,10 @@ class DistanceMatrixTests(TestCase):
         with self.assertRaises(MissingSampleIDError):
             _ = self.dm_2x2['c']
 
+    def test_parse_sample_ids(self):
+        """Empty stub: DistanceMatrix._parse_sample_ids tested elsewhere."""
+        pass
+
     def test_validate(self):
         """Empty stub: DistanceMatrix._validate already tested elsewhere."""
         pass
@@ -371,7 +375,7 @@ BAD_DM_F1 = 'a\tb\na\t0\t1\nb\t1'
 BAD_DM_F2 = '\ta\tb\nb\t0\t1\na\t1\t0'
 
 # extra data lines
-BAD_DM_F3 = '\ta\tb\na\t0\t1\nb\t1\t0\nfoo'
+BAD_DM_F3 = '\ta\tb\na\t0\t1\nb\t1\t0\n  \nfoo\n\n\n'
 
 # missing data lines
 BAD_DM_F4 = '\ta\tb\na\t0\t1\n  \n'
