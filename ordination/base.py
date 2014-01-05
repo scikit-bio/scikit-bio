@@ -346,7 +346,7 @@ class RDA(Ordination):
 
             Scaling type 1 produces a distance biplot. It focuses on the
             ordination of sites. Especially interesting when most
-            explanatory variables are binary. Not yet implemented.
+            explanatory variables are binary.
 
             Scaling type 2 produces a correlation biplot. It focuses
             on the relationships among explained variables (`Y`).
