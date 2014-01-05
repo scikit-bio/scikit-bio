@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+from __future__ import division
 # TODO: add svd_with_rank
 import numpy as np
 
