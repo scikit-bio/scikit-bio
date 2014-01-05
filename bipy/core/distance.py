@@ -380,11 +380,11 @@ class DistanceMatrix(object):
 
         for line in dm_f:
             line = line.strip()
- 
+
             if line and not line.startswith('#'):
                 header_line = line
                 break
- 
+
         if header_line is None:
             raise MissingHeaderError
         else:
