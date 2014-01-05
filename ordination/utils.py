@@ -40,6 +40,7 @@ def mean_and_std(a, axis=None, weights=None, with_mean=True, with_std=True,
     if not (with_mean or with_std):
         raise ValueError(
             "Either the mean or standard deviation need to be computed.")
+    a = np.asarray(a)
     if weights is None:
         avg = a.mean(axis=axis) if with_mean else None
         std = a.std(axis=axis, ddof=ddof) if with_std else None
