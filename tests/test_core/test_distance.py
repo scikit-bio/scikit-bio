@@ -81,8 +81,8 @@ class DistanceMatrixTests(TestCase):
             obs = DistanceMatrix.from_file(dm_f)
             self.assertEqual(obs, dm)
 
-        # Correctly parses file with extra empty (whitespace-only) lines at
-        # end.
+        # Correctly parses file with extra empty (whitespace-only) lines
+        # interspersed throughout the file.
         obs = DistanceMatrix.from_file(self.dm_3x3_whitespace_f)
         self.assertEqual(obs, self.dm_3x3)
 
@@ -345,9 +345,24 @@ DM_2x2_F = "\ta\tb\na\t0.0\t0.123\nb\t0.123\t0.0\n"
 DM_3x3_F = ("\ta\tb\tc\na\t0.0\t0.01\t4.2\nb\t0.01\t0.0\t12.0\n"
             "c\t4.2\t12.0\t0.0\n")
 
-# Extra whitespace-only lines at end.
-DM_3x3_WHITESPACE_F = ("\ta\tb\tc\na\t0.0\t0.01\t4.2\nb\t0.01\t0.0\t12.0\n"
-                       "c\t4.2\t12.0\t0.0\n\n   \t \n\t\t\t\n ")
+# Extra whitespace-only lines throughout. Also has comments before the header.
+DM_3x3_WHITESPACE_F = """# foo
+      \t \t 
+ #bar
+
+
+\ta\tb\tc
+a\t0.0\t0.01\t4.2
+     \t
+b\t0.01\t0.0\t12.0
+
+\t     \t
+
+c\t4.2\t12.0\t0.0
+
+   \t 
+\t\t\t
+ """
 
 # missing data
 BAD_DM_F1 = 'a\tb\na\t0\t1\nb\t1'
@@ -359,7 +374,7 @@ BAD_DM_F2 = '\ta\tb\nb\t0\t1\na\t1\t0'
 BAD_DM_F3 = '\ta\tb\na\t0\t1\nb\t1\t0\nfoo'
 
 # missing data lines
-BAD_DM_F4 = '\ta\tb\na\t0\t1\n'
+BAD_DM_F4 = '\ta\tb\na\t0\t1\n  \n'
 
 # no data lines
 BAD_DM_F5 = '\ta\tb\n'

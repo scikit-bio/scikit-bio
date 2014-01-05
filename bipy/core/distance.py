@@ -114,6 +114,10 @@ class DistanceMatrix(object):
 
         where ``<tab>`` is the delimiter between elements.
 
+        Whitespace-only lines can occur anywhere throughout the file and are
+        ignored. Lines starting with # are treated as comments and ignored.
+        These comments can only occur *before* the sample ID header.
+
         """
         # We aren't using np.loadtxt because it uses *way* too much memory
         # (e.g, a 2GB matrix eats up 10GB, which then isn't freed after parsing
@@ -125,44 +129,42 @@ class DistanceMatrix(object):
         #     - initialize an empty ndarray
         #     - for each row of data in the input file:
         #         - populate the corresponding row in the ndarray with floats
-        sids = None
-        rows_processed = 0
-        for line_idx, line in enumerate(dm_f):
-            tokens = [e.strip() for e in line.strip().split(delimiter)]
+        sids = cls._parse_sample_ids(dm_f, delimiter)
+        num_sids = len(sids)
+        data = np.empty((num_sids, num_sids), dtype='float')
 
-            if line_idx == 0:
-                # We're at the header (sample IDs).
-                sids = tokens
-                num_sids = len(sids)
-                data = np.empty((num_sids, num_sids))
-            elif line_idx <= num_sids:
-                if len(tokens) != num_sids + 1:
-                    raise DistanceMatrixFormatError("The number of values in "
-                                                    "row number %d is not "
-                                                    "equal to the number of "
-                                                    "sample IDs in the header."
-                                                    % line_idx)
+        curr_row_idx = 0
+        for line in dm_f:
+            line = line.strip()
 
-                row_idx = line_idx - 1
-                rows_processed += 1
+            if not line:
+                continue
+            elif curr_row_idx >= num_sids:
+                # We've hit a nonempty line after we already filled the data
+                # matrix. Raise an error because we shouldn't ignore extra
+                # data.
+                raise DistanceMatrixFormatError(
+                    "Encountered extra rows without corresponding sample IDs "
+                    "in the header.")
 
-                if tokens[0] == sids[row_idx]:
-                    data[row_idx, :] = np.asarray(tokens[1:], dtype='float')
-                else:
-                    raise SampleIDMismatchError
+            tokens = line.split(delimiter)
+
+            # +1 because the first column contains the sample ID.
+            if len(tokens) != num_sids + 1:
+                raise DistanceMatrixFormatError(
+                    "The number of values in row number %d is not equal to "
+                    "the number of sample IDs in the header."
+                    % (curr_row_idx + 1))
+
+            if tokens[0] == sids[curr_row_idx]:
+                data[curr_row_idx, :] = np.asarray(tokens[1:], dtype='float')
             else:
-                if ''.join(tokens):
-                    # If it isn't a blank line, raise an error because we
-                    # shouldn't ignore extra data.
-                    raise DistanceMatrixFormatError("Encountered extra rows "
-                                                    "without corresponding "
-                                                    "sample IDs in the "
-                                                    "header.")
+                raise SampleIDMismatchError
 
-        if sids is None:
-            raise MissingHeaderError
-        elif rows_processed != num_sids:
-            raise MissingDataError(rows_processed, num_sids)
+            curr_row_idx += 1
+
+        if curr_row_idx != num_sids:
+            raise MissingDataError(curr_row_idx, num_sids)
 
         return cls(data, sids)
 
@@ -301,9 +303,11 @@ class DistanceMatrix(object):
     def __eq__(self, other):
         """Return ``True`` if this distance matrix is equal to the other.
 
-        Two distance matrices are equal if they are of the same type, shape,
-        have the same sample IDs (in the same order!), and have data arrays
-        that are equal.
+        Two distance matrices are equal if they have the same shape, sample IDs
+        (in the same order!), and have data arrays that are equal.
+
+        Checks are *not* performed to ensure that ``other`` is a
+        ``DistanceMatrix`` instance.
 
         """
         equal = True
@@ -314,13 +318,14 @@ class DistanceMatrix(object):
         # rather explicitly bail before comparing IDs or data. Use array_equal
         # instead of (a == b).all() because of this issue:
         #     http://stackoverflow.com/a/10582030
-        if not isinstance(other, self.__class__):
-            equal = False
-        elif self.shape != other.shape:
-            equal = False
-        elif self.sample_ids != other.sample_ids:
-            equal = False
-        elif not np.array_equal(self.data, other.data):
+        try:
+            if self.shape != other.shape:
+                equal = False
+            elif self.sample_ids != other.sample_ids:
+                equal = False
+            elif not np.array_equal(self.data, other.data):
+                equal = False
+        except AttributeError:
             equal = False
 
         return equal
@@ -369,6 +374,22 @@ class DistanceMatrix(object):
             out_f.write(delimiter.join([str(val) for val in vals]))
             out_f.write('\n')
 
+    @staticmethod
+    def _parse_sample_ids(dm_f, delimiter):
+        header_line = None
+
+        for line in dm_f:
+            line = line.strip()
+ 
+            if line and not line.startswith('#'):
+                header_line = line
+                break
+ 
+        if header_line is None:
+            raise MissingHeaderError
+        else:
+            return header_line.split(delimiter)
+
     def _validate(self, data, sample_ids):
         # Accepts arguments instead of inspecting instance attributes because
         # we don't want to create an invalid distance matrix before raising an
@@ -388,7 +409,7 @@ class DistanceMatrix(object):
                                       "data.")
 
     def _index_list(self, list_):
-        return dict([(id_, idx) for idx, id_ in enumerate(list_)])
+        return {id_: idx for idx, id_ in enumerate(list_)}
 
     def _format_sample_ids(self, delimiter):
         return delimiter.join([''] + list(self.sample_ids))
