@@ -62,7 +62,7 @@ def mean_and_std(a, axis=None, weights=None, with_mean=True, with_std=True,
                 if axis is None:
                     variance *= a.size / (a.size - ddof)
                 else:
-                    variance *= a.shape[axis] / (a.shape[axis] - 1)
+                    variance *= a.shape[axis] / (a.shape[axis] - ddof)
             std = np.sqrt(variance)
         else:
             std = None
