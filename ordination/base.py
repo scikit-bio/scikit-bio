@@ -481,7 +481,7 @@ class CCA(Ordination):
 
         # Step 2. Standardize columns of Y with respect to site weights,
         # using the maximum likelyhood variance estimator (Legendre &
-        # Legendre 1998, p. 612)
+        # Legendre 1998, p. 595)
         X = scale(X, weights=row_marginals, ddof=0)
 
         # Step 3. Weighted multiple regression.
