@@ -345,7 +345,14 @@ class DistanceMatrixTests(TestCase):
 
         self.assertFalse(self.dm_2x2 != self.dm_2x2)
 
-    def test_getitem(self):
+    def test_getslice(self):
+        """Test that __getslice__ defers to __getitem__."""
+        # Slice of first dimension only.
+        obs = self.dm_2x2[1:]
+        self.assertTrue(np.array_equal(obs, np.array([[0.123, 0.0]])))
+        self.assertEqual(type(obs), np.ndarray)
+
+    def test_getitem_by_sample_id(self):
         """Test retrieving vectors by sample ID."""
         obs = self.dm_1x1['a']
         self.assertTrue(np.array_equal(obs, np.array([0.0])))
@@ -355,6 +362,29 @@ class DistanceMatrixTests(TestCase):
 
         with self.assertRaises(MissingSampleIDError):
             _ = self.dm_2x2['c']
+
+    def test_getitem_ndarray_indexing(self):
+        """Test __getitem__ delegates to underlying ndarray."""
+        # Single element access.
+        obs = self.dm_3x3[0, 1]
+        self.assertEqual(obs, 0.01)
+
+        # Single element access (via two __getitem__ calls).
+        obs = self.dm_3x3[0][1]
+        self.assertEqual(obs, 0.01)
+
+        # Row access.
+        obs = self.dm_3x3[1]
+        self.assertTrue(np.array_equal(obs, np.array([0.01, 0.0, 12.0])))
+        self.assertEqual(type(obs), np.ndarray)
+
+        # Grab all data.
+        obs = self.dm_3x3[0:, 0:]
+        self.assertTrue(np.array_equal(obs, self.dm_3x3.data))
+        self.assertEqual(type(obs), np.ndarray)
+
+        with self.assertRaises(IndexError):
+            _ = self.dm_3x3[:, 3]
 
     def test_parse_sample_ids(self):
         """Empty stub: DistanceMatrix._parse_sample_ids tested elsewhere."""

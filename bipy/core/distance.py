@@ -364,21 +364,46 @@ class DistanceMatrix(object):
         """
         return not self == other
 
-    def __getitem__(self, sample_id):
-        """Return a ``numpy.ndarray`` row vector for the given sample ID.
+    def __getslice__(self, start, stop):
+        """Support deprecated slicing method.
 
-        The lookup based on sample ID is quick. Will raise
-        ``MissingSampleIDError`` if the sample does not exist.
+        Taken from http://stackoverflow.com/a/14555197 (including docstring):
+
+        This solves a subtle bug, where __getitem__ is not called, and all the
+        dimensional checking not done, when a slice of only the first dimension
+        is taken, e.g. a[1:3]. From the Python docs:
+           Deprecated since version 2.0: Support slice objects as parameters to
+           the __getitem__() method. (However, built-in types in CPython
+           currently still implement __getslice__(). Therefore, you have to
+           override it in derived classes when implementing slicing.)
+        """
+        return self.__getitem__(slice(start, stop))
+
+    def __getitem__(self, index):
+        """Slice into the data by sample ID or numpy indexing.
+
+        If ``index`` is a string, it is assumed to be a sample ID and a
+        ``numpy.ndarray`` row vector is returned for the corresponding sample.
+        The lookup based on sample ID is quick. ``MissingSampleIDError`` is
+        raised if the sample does not exist.
+
+        Otherwise, ``index`` will be passed through to
+        ``DistanceMatrix.data.__getitem__``, allowing for standard indexing of
+        a numpy ``ndarray`` (e.g., slicing).
 
         Arguments:
-        sample_id -- the sample ID whose row of distances will be returned
+        index -- the sample ID whose row of distances will be returned, or the
+            index to be passed through to the underlying data matrix
 
         """
-        if sample_id in self._sample_index:
-            return self.data[self._sample_index[sample_id]]
+        if isinstance(index, basestring):
+            if index in self._sample_index:
+                return self.data[self._sample_index[index]]
+            else:
+                raise MissingSampleIDError("The sample ID '%s' is not in the "
+                                           "distance matrix." % index)
         else:
-            raise MissingSampleIDError("The sample ID '%s' is not in the "
-                                       "distance matrix." % sample_id)
+            return self.data.__getitem__(index)
 
     def to_file(self, out_f, delimiter='\t'):
         """Save the distance matrix to file in delimited text format.
