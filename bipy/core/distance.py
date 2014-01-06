@@ -17,6 +17,32 @@ import numpy as np
 from scipy.spatial.distance import is_valid_dm, squareform
 
 
+def random_distance_matrix(num_samples, sample_ids=None):
+    """Return a ``DistanceMatrix`` populated with random distances.
+
+    Distances are randomly drawn from a uniform distribution over ``[0, 1)``
+    (see ``numpy.random.rand`` for more details). The distance matrix is
+    guaranteed to be symmetric and hollow.
+
+    Arguments:
+    num_samples -- the number of samples in the resulting ``DistanceMatrix``.
+        For example, if ``num_samples`` is 3, a 3x3 ``DistanceMatrix`` will be
+        returned
+    sample_ids -- a sequence of strings to be used as sample IDs.
+        ``len(sample_ids)`` must be equal to ``num_samples``. If not provided,
+        sample IDs will be monotonically-increasing integers cast as strings
+        (numbering starts at 1). For example, ``('1', '2', '3')``
+
+    """
+    data = np.tril(np.random.rand(num_samples, num_samples), -1)
+    data += data.T
+
+    if not sample_ids:
+        sample_ids = map(str, range(1, num_samples + 1))
+
+    return DistanceMatrix(data, sample_ids)
+
+
 class DistanceMatrixError(Exception):
     """General error for distance matrix validation failures."""
     pass
@@ -396,7 +422,9 @@ class DistanceMatrix(object):
         # error (because then it could be used after the exception is caught).
         num_sids = len(sample_ids)
 
-        if num_sids != len(set(sample_ids)):
+        if 0 in data.shape:
+            raise DistanceMatrixError("Data must be at least 1x1 in size.")
+        elif num_sids != len(set(sample_ids)):
             raise DistanceMatrixError("Sample IDs must be unique.")
         elif not is_valid_dm(data):
             raise DistanceMatrixError("Data must be an array that is "

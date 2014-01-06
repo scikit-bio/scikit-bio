@@ -15,11 +15,58 @@ from StringIO import StringIO
 
 import numpy as np
 
-from bipy.core.distance import (DistanceMatrix, DistanceMatrixError,
-                                DistanceMatrixFormatError, MissingDataError,
-                                MissingHeaderError, MissingSampleIDError,
-                                SampleIDMismatchError)
+from bipy.core.distance import (random_distance_matrix, DistanceMatrix,
+                                DistanceMatrixError, DistanceMatrixFormatError,
+                                MissingDataError, MissingHeaderError,
+                                MissingSampleIDError, SampleIDMismatchError)
 from bipy.util.unit_test import TestCase, main
+
+
+class RandomDistanceMatrix(TestCase):
+    """Tests for bipy.core.distance.random_distance_matrix."""
+
+    def test_default_usage(self):
+        """Test generating random distance matrices."""
+        exp = DistanceMatrix(np.asarray([[0.0]]), ['1'])
+        obs = random_distance_matrix(1)
+        self.assertEqual(obs, exp)
+
+        obs = random_distance_matrix(2)
+        self.assertEqual(obs.shape, (2, 2))
+        self.assertEqual(obs.sample_ids, ('1', '2'))
+
+        obs1 = random_distance_matrix(5)
+        num_trials = 10
+        found_diff = False
+        for _ in range(num_trials):
+            obs2 = random_distance_matrix(5)
+
+            if obs1 != obs2:
+                found_diff = True
+                break
+
+        self.assertTrue(found_diff)
+
+    def test_sample_ids(self):
+        """Test generating random dist mats with specific sample IDs."""
+        sids = ['foo', 'bar', 'baz']
+        obs = random_distance_matrix(3, sample_ids=sids)
+        self.assertEqual(obs.shape, (3, 3))
+        self.assertEqual(obs.sample_ids, tuple(sids))
+
+    def test_invalid_input(self):
+        """Test error-handling upon invalid input."""
+        # Invalid dimensions.
+        with self.assertRaises(DistanceMatrixError):
+            _ = random_distance_matrix(0)
+
+        # Invalid dimensions.
+        with self.assertRaises(ValueError):
+            _ = random_distance_matrix(-1)
+
+        # Invalid number of sample IDs.
+        with self.assertRaises(DistanceMatrixError):
+            _ = random_distance_matrix(2, sample_ids=['foo'])
 
 
 class DistanceMatrixTests(TestCase):
@@ -135,6 +182,10 @@ class DistanceMatrixTests(TestCase):
         # Empty data.
         with self.assertRaises(DistanceMatrixError):
             _ = DistanceMatrix([], [])
+
+        # Another type of empty data.
+        with self.assertRaises(DistanceMatrixError):
+            _ = DistanceMatrix(np.empty((0, 0)), [])
 
         # Invalid number of dimensions.
         with self.assertRaises(DistanceMatrixError):
