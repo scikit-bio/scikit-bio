@@ -44,6 +44,7 @@ if ``py.test`` is installed.
 Usage
 =====
 
-The easiest way to get pretty pictures is to run it as a module::
+The easiest way to get some pretty pictures is to run one of the
+scripts in the examples folder::
 
-  $ python -m ordination.base
+  $ python simple.py
