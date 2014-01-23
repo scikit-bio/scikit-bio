@@ -17,7 +17,8 @@ class BiologicalSequence(Sequence):
     """ Base class for biological sequences """
     
     def __init__(self, sequence, identifier="", description=""):
-        self._sequence = sequence
+
+        self._sequence = ''.join(sequence)
         self._identifier = identifier
         self._description = description
     
@@ -38,6 +39,14 @@ class BiologicalSequence(Sequence):
 
     def __reversed__(self):
         return reversed(self._sequence)
+
+    @property
+    def Identifier(self):
+        return self._identifier
+
+    @property
+    def Description(self):
+        return self._description
 
     def toFasta(self, terminal_character="\n"):
         """ return the sequence as a fasta-formatted string
