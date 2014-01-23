@@ -17,10 +17,14 @@ from bipy.core.sequence import (
 class BiologicalSequenceTests(TestCase):
     """ Tests of the BiologicalSequence class """
 
-    def setup(self):
+    def setUp(self):
         """ Initialize values to be used in tests
         """
-        pass
+        self.b1 = BiologicalSequence('GATTACA')
+        self.b2 = BiologicalSequence(
+         'ACCGGTACC', identifier="test-seq-2", description="A test sequence")
+        self.b3 = BiologicalSequence(
+                'GREG', identifier="test-seq-3", description="A protein sequence")
 
     def test_init(self):
         """ Initialization functions as expected with varied input types
@@ -38,6 +42,10 @@ class BiologicalSequenceTests(TestCase):
         self.assertEqual(b.Identifier,"test-seq-1")
         self.assertEqual(b.Description,"The first test sequence")
 
+        # test init as a different string
+        b = BiologicalSequence('WRRTY')
+        self.assertEqual(str(b),'WRRTY') 
+
         # init as list
         b = BiologicalSequence(list('ACCGGXZY'))
         self.assertEqual(str(b),'ACCGGXZY') 
@@ -50,6 +58,20 @@ class BiologicalSequenceTests(TestCase):
         self.assertEqual(b.Identifier,"")
         self.assertEqual(b.Description,"")
 
+    def test_getitem(self):
+        """ getitem functions as expected
+        """
+        self.assertEqual(self.b1[0],'G')
+        self.assertEqual(self.b1[:],'GATTACA')
+        self.assertEqual(self.b1[::-1],'ACATTAG')
+
+    def test_len(self):
+        """ len functions as expected
+        """
+        self.assertEqual(len(self.b1),7)
+        self.assertEqual(len(self.b2),9)
+        self.assertEqual(len(self.b3),4)
+        
 
 if __name__ == "__main__":
     main()
