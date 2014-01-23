@@ -25,6 +25,10 @@ class BiologicalSequenceTests(TestCase):
          'ACCGGTACC', identifier="test-seq-2", description="A test sequence")
         self.b3 = BiologicalSequence(
          'GREG', identifier="test-seq-3", description="A protein sequence")
+        self.b4 = BiologicalSequence(
+         'PRTEIN', identifier="test-seq-4")
+        self.b5 = BiologicalSequence(
+         'LLPRTEIN', description="some description")
 
     def test_init(self):
         """ Initialization functions as expected with varied input types
@@ -123,8 +127,14 @@ class BiologicalSequenceTests(TestCase):
         """
         self.assertEqual(self.b1.toFasta(),">\nGATTACA\n")
         self.assertEqual(self.b1.toFasta(terminal_character=""),">\nGATTACA")
-        self.assertEqual(self.b2.toFasta(),">test-seq-2 A test sequence\nACCGGTACC\n")
-        self.assertEqual(self.b3.toFasta(),">test-seq-3 A protein sequence\nGREG\n")
+        self.assertEqual(self.b2.toFasta(),
+                         ">test-seq-2 A test sequence\nACCGGTACC\n")
+        self.assertEqual(self.b3.toFasta(),
+                         ">test-seq-3 A protein sequence\nGREG\n")
+        self.assertEqual(self.b4.toFasta(),
+                         ">test-seq-4\nPRTEIN\n")
+        self.assertEqual(self.b5.toFasta(),
+                         "> some description\nLLPRTEIN\n")
 
 class NucelotideSequenceTests(TestCase):
     """ Tests of the BiologicalSequence class """
