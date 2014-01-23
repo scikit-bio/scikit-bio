@@ -153,7 +153,7 @@ class NucelotideSequenceTests(TestCase):
         """
         self.b1 = NucleotideSequence('GATTACA')
         self.b2 = NucleotideSequence(
-         'ACCGGTACC', identifier="test-seq-2", description="A test sequence")
+         'ACCGGUACC', identifier="test-seq-2", description="A test sequence")
 
     def test_complement(self):
         """ complement fails (it's undefined for generic NucleotideSequence)
@@ -166,6 +166,27 @@ class NucelotideSequenceTests(TestCase):
         """
         self.assertRaises(BiologicalSequenceError,
                           self.b1.reverse_complement)
+
+class DNASequenceTests(TestCase):
+    """ Tests of the DNASequence class """
+
+    def setUp(self):
+        """ Initialize values to be used in tests
+        """
+        self.b1 = DNASequence('GATTACA')
+        self.b2 = DNASequence(
+         'ACCGGTACC', identifier="test-seq-2", description="A test sequence")
+
+    def test_complement(self):
+        """ complement functions as expected
+        """
+        self.assertEqual(self.b1.complement(),DNASequence("CTAATGT"))
+
+    def test_reverse_complement(self):
+        """ reverse complement functions as expected
+        """
+        self.assertEqual(self.b1.reverse_complement(),DNASequence("TGTAATC"))
+
 
 
 if __name__ == "__main__":
