@@ -120,17 +120,22 @@ class NucleotideSequence(BiologicalSequence):
         return self._complement(reversed(self))
 
 class DNASequence(NucleotideSequence):
-    
+ 
     _complement_map = {
-     'A':'T', 'T':'A', 'G':'C', 'C':'G', 'a':'t', 't':'a', 'g':'c', 'c':'g'} 
-
+     'A':'T', 'T':'A', 'G':'C', 'C':'G', 'Y':'R', 'R':'Y', 'S':'S',
+     'W':'W', 'K':'M', 'M':'K', 'B':'V', 'D':'H', 'H':'D', 'V':'B', 'N':'N',
+     'a':'t', 't':'a', 'g':'c', 'c':'g', 'y':'r', 'r':'y', 's':'s',
+     'w':'w', 'k':'m', 'm':'k', 'b':'v', 'd':'h', 'h':'d', 'v':'b', 'n':'n'}
 # class is accessible with alternative capitalization scheme for convenience  
 DnaSequence = DNASequence
 
 class RNASequence(NucleotideSequence):
-    
+  
     _complement_map = {
-     'A':'U', 'U':'A', 'G':'C', 'C':'G', 'a':'u', 'u':'a', 'g':'c', 'c':'g'} 
+     'A':'U', 'U':'A', 'G':'C', 'C':'G', 'Y':'R', 'R':'Y', 'S':'S',
+     'W':'W', 'K':'M', 'M':'K', 'B':'V', 'D':'H', 'H':'D', 'V':'B', 'N':'N',
+     'a':'u', 'u':'a', 'g':'c', 'c':'g', 'y':'r', 'r':'y', 's':'s',
+     'w':'w', 'k':'m', 'm':'k', 'b':'v', 'd':'h', 'h':'d', 'v':'b', 'n':'n'}
 
 # class is accessible with alternative capitalization scheme for convenience  
 RnaSequence = RNASequence
