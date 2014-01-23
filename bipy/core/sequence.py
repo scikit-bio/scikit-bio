@@ -53,21 +53,37 @@ class BiologicalSequence(Sequence):
 class NucleotideSequence(BiologicalSequence):
     """ Base class for nucleotide sequences """
 
-    def _complement(self, seq_iterator, complement_map):
+    _complement_map = {}
+
+    def _complement(self, seq_iterator):
         result = []
         for base in seq_iterator:
             try:
-                result.append(complement_map[base])
+                result.append(self._complement_map[base])
             except KeyError:
                 raise BiologicalSequenceError( 
                  "Don't know how to complement base %s. "
                  "Is it a known base in your nucleotide alphabet?" % base)
         return NucleotideSequence(result, self._identifier, self._description)
 
-    def complement(self, complement_map):
-        return self._complement(self, complement_map)
+    def complement(self):
+        return self._complement(self)
 
-    def reverse_complement(self, complement_map):
-        return self._complement(reversed(self), complement_map)
+    def reverse_complement(self):
+        return self._complement(reversed(self))
 
+class DNASequence(NucleotideSequence):
+    
+    _complement_map = {
+     'A':'T', 'T':'A', 'G':'C', 'C':'G', 'a':'t', 't':'a', 'g':'c', 'c':'g'} 
 
+# class is accessible with alternative capitalization scheme for convenience  
+DnaSequence = DNASequence
+
+class RNASequence(NucleotideSequence):
+    
+    _complement_map = {
+     'A':'U', 'U':'A', 'G':'C', 'C':'G', 'a':'u', 'u':'a', 'g':'c', 'c':'g'} 
+
+# class is accessible with alternative capitalization scheme for convenience  
+RnaSequence = RNASequence
