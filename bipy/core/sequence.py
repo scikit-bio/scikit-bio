@@ -10,6 +10,9 @@
 
 from collections import Sequence
 
+class BiologicalSequenceError(Exception):
+    pass
+
 class BiologicalSequence(Sequence):
     """ Base class for biological sequences """
     
@@ -33,6 +36,9 @@ class BiologicalSequence(Sequence):
     def __iter__(self):
         return iter(self._sequence)
 
+    def __reversed__(self):
+        return reversed(self._sequence)
+
     def toFasta(self, terminal_character="\n"):
         """ return the sequence as a fasta-formatted string
           
@@ -42,5 +48,26 @@ class BiologicalSequence(Sequence):
         """
         return '>%s %s\n%s%s' % (self._identifier, self._description, 
                                  self._sequence, terminal_character)
+
+
+class NucleotideSequence(BiologicalSequence):
+    """ Base class for nucleotide sequences """
+
+    def _complement(self, seq_iterator, complement_map):
+        result = []
+        for base in seq_iterator:
+            try:
+                result.append(complement_map[base])
+            except KeyError:
+                raise BiologicalSequenceError( 
+                 "Don't know how to complement base %s. "
+                 "Is it a known base in your nucleotide alphabet?" % base)
+        return NucleotideSequence(result, self._identifier, self._description)
+
+    def complement(self, complement_map):
+        return self._complement(self, complement_map)
+
+    def reverse_complement(self, complement_map):
+        return self._complement(reversed(self), complement_map)
 
 
