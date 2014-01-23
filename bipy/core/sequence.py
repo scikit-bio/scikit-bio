@@ -60,7 +60,7 @@ class BiologicalSequence(Sequence):
         return True
 
     def __ne__(self, other):
-        return not (self == other)
+        return not self.__eq__(other)
 
     @property
     def Identifier(self):
