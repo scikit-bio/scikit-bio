@@ -178,16 +178,49 @@ class DNASequenceTests(TestCase):
         self.b1 = DNASequence('GATTACA')
         self.b2 = DNASequence(
          'ACCGGTACC', identifier="test-seq-2", description="A test sequence")
+        self.b3 = DNASequence(
+         'ACCGGUACC', identifier="bad-seq-1", description="Not a DNA sequence")
 
     def test_complement(self):
         """ complement functions as expected
         """
         self.assertEqual(self.b1.complement(),DNASequence("CTAATGT"))
+        self.assertEqual(self.b2.complement(),DNASequence("TGGCCATGG"))
+        self.assertRaises(BiologicalSequenceError,self.b3.complement)
 
     def test_reverse_complement(self):
         """ reverse complement functions as expected
         """
         self.assertEqual(self.b1.reverse_complement(),DNASequence("TGTAATC"))
+        self.assertEqual(self.b2.reverse_complement(),DNASequence("GGTACCGGT"))
+        self.assertRaises(BiologicalSequenceError,self.b3.reverse_complement)
+
+class RNASequenceTests(TestCase):
+    """ Tests of the DNASequence class """
+
+    def setUp(self):
+        """ Initialize values to be used in tests
+        """
+        self.b1 = RNASequence('GAUUACA')
+        self.b2 = RNASequence(
+         'ACCGGUACC', identifier="test-seq-2", description="A test sequence")
+        self.b3 = RNASequence(
+         'ACCGGTACC', identifier="bad-seq-1", description="Not an RNA sequence")
+
+    def test_complement(self):
+        """ complement functions as expected
+        """
+        self.assertEqual(self.b1.complement(),RNASequence("CUAAUGU"))
+        self.assertEqual(self.b2.complement(),RNASequence("UGGCCAUGG"))
+        self.assertRaises(BiologicalSequenceError,self.b3.complement)
+
+    def test_reverse_complement(self):
+        """ reverse complement functions as expected
+        """
+        self.assertEqual(self.b1.reverse_complement(),RNASequence("UGUAAUC"))
+        self.assertEqual(self.b2.reverse_complement(),RNASequence("GGUACCGGU"))
+        self.assertRaises(BiologicalSequenceError,self.b3.reverse_complement)
+
 
 
 

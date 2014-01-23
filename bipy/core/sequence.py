@@ -55,9 +55,10 @@ class BiologicalSequence(Sequence):
         """
         if type(self) != type(other):
             return False
-        if self._sequence != other._sequence:
+        elif self._sequence != other._sequence:
             return False
-        return True
+        else:
+            return True
 
     def __ne__(self, other):
         return not self.__eq__(other)
