@@ -47,6 +47,21 @@ class BiologicalSequence(Sequence):
     def __reversed__(self):
         return reversed(self._sequence)
 
+    def __eq__(self, other):
+        """ define equality
+            
+            BiologicalSequences are equal if their sequence is the same and
+             they are the same type
+        """
+        if type(self) != type(other):
+            return False
+        if self._sequence != other._sequence:
+            return False
+        return True
+
+    def __ne__(self, other):
+        return not (self == other)
+
     @property
     def Identifier(self):
         return self._identifier
@@ -95,7 +110,7 @@ class NucleotideSequence(BiologicalSequence):
                 raise BiologicalSequenceError( 
                  "Don't know how to complement base %s. "
                  "Is it a known base in your nucleotide alphabet?" % base)
-        return NucleotideSequence(result, self._identifier, self._description)
+        return self.__class__(result, self._identifier, self._description)
 
     def complement(self):
         return self._complement(self)
