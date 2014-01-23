@@ -110,6 +110,36 @@ class BiologicalSequenceTests(TestCase):
 
         self.assertRaises(StopIteration,b1_reversed.next)
 
+    def test_eq(self):
+        """ equality functions as expected
+        """
+        self.assertTrue(self.b1 == self.b1)
+        self.assertTrue(self.b2 == self.b2)
+        self.assertTrue(self.b3 == self.b3)
+        
+        self.assertTrue(self.b1 != self.b3)
+        self.assertTrue(self.b1 != self.b2)
+        self.assertTrue(self.b2 != self.b3)
+
+        # identicial sequences of the same type are equal, even if they have
+        # different identifiers and/or descriptions
+        self.assertTrue(
+         BiologicalSequence('ACGT') == BiologicalSequence('ACGT'))
+        self.assertTrue(
+         BiologicalSequence('ACGT',identifier='a') == 
+         BiologicalSequence('ACGT',identifier='b'))
+        self.assertTrue(
+         BiologicalSequence('ACGT',description='c') == 
+         BiologicalSequence('ACGT',description='d'))
+        self.assertTrue(
+         BiologicalSequence('ACGT',identifier='a',description='c') == 
+         BiologicalSequence('ACGT',identifier='b',description='d'))
+        
+        # different type causes sequences to not be equal
+        self.assertFalse(
+         BiologicalSequence('ACGT') == NucleotideSequence('ACGT'))
+
+
     def test_Identifier(self):
         """ Identifier property functions as expected
         """
