@@ -32,7 +32,14 @@ class BiologicalSequence(Sequence):
         return str(self._sequence)
 
     def __repr__(self):
-        return str(self)
+        first_ten = self._sequence[:10]
+        cn = self.__class__.__name__
+        length = len(self)
+        if length > 10:
+            elipses = "..."
+        else:
+            elipses = ""
+        return '<%s: %s%s (length: %d)>' % (cn, first_ten, elipses, length) 
 
     def __iter__(self):
         return iter(self._sequence)
