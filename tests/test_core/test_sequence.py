@@ -29,6 +29,7 @@ class BiologicalSequenceTests(TestCase):
          'PRTEIN', identifier="test-seq-4")
         self.b5 = BiologicalSequence(
          'LLPRTEIN', description="some description")
+        self.b6 = BiologicalSequence('ACGTACGTACGT')
 
     def test_init(self):
         """ Initialization functions as expected with varied input types
@@ -86,9 +87,10 @@ class BiologicalSequenceTests(TestCase):
     def test_repr(self):
         """ repr functions as expected
         """
-        self.assertEqual(repr(self.b1),"GATTACA")
-        self.assertEqual(repr(self.b2),"ACCGGTACC")
-        self.assertEqual(repr(self.b3),"GREG")
+        self.assertEqual(repr(self.b1),
+                        "<BiologicalSequence: GATTACA (length: 7)>")
+        self.assertEqual(repr(self.b6),
+                        "<BiologicalSequence: ACGTACGTAC... (length: 12)>")
 
     def test_iter(self):
         """ iter functions as expected
