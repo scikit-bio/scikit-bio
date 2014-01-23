@@ -136,6 +136,15 @@ class BiologicalSequenceTests(TestCase):
         self.assertEqual(self.b5.toFasta(),
                          "> some description\nLLPRTEIN\n")
 
+        # alt parameters
+        self.assertEqual(self.b2.toFasta(field_delimiter=":"),
+                        ">test-seq-2:A test sequence\nACCGGTACC\n")
+        self.assertEqual(self.b2.toFasta(terminal_character="!"),
+                        ">test-seq-2 A test sequence\nACCGGTACC!")
+        self.assertEqual(
+         self.b2.toFasta(field_delimiter=":",terminal_character="!"),
+         ">test-seq-2:A test sequence\nACCGGTACC!")
+
 class NucelotideSequenceTests(TestCase):
     """ Tests of the BiologicalSequence class """
 
