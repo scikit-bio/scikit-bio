@@ -126,6 +126,27 @@ class BiologicalSequenceTests(TestCase):
         self.assertEqual(self.b2.toFasta(),">test-seq-2 A test sequence\nACCGGTACC\n")
         self.assertEqual(self.b3.toFasta(),">test-seq-3 A protein sequence\nGREG\n")
 
+class NucelotideSequenceTests(TestCase):
+    """ Tests of the BiologicalSequence class """
+
+    def setUp(self):
+        """ Initialize values to be used in tests
+        """
+        self.b1 = NucleotideSequence('GATTACA')
+        self.b2 = NucleotideSequence(
+         'ACCGGTACC', identifier="test-seq-2", description="A test sequence")
+
+    def test_complement(self):
+        """ complement fails (it's undefined for generic NucleotideSequence)
+        """
+        self.assertRaises(BiologicalSequenceError,
+                          self.b1.complement)
+
+    def test_reverse_complement(self):
+        """ rev comp fails (it's undefined for generic NucleotideSequence)
+        """
+        self.assertRaises(BiologicalSequenceError,
+                          self.b1.reverse_complement)
 
 
 if __name__ == "__main__":
