@@ -48,15 +48,30 @@ class BiologicalSequence(Sequence):
     def Description(self):
         return self._description
 
-    def toFasta(self, terminal_character="\n"):
+    def toFasta(self, field_delimiter = " ", terminal_character="\n"):
         """ return the sequence as a fasta-formatted string
           
             terminal_character: the last character to be included in the
              string (default: \n (i.e., newline); if you don't want a trailing
              newline in the string, you can pass terminal_character="")
         """
-        return '>%s %s\n%s%s' % (self._identifier, self._description, 
-                                 self._sequence, terminal_character)
+        if self._identifier != "" and self._description != "":
+            header_line = "%s%s%s" % (
+             self._identifier, field_delimiter, self._description)
+        elif self._identifier == "" and self._description == "":
+            header_line = ""
+        elif self._identifier:
+            header_line = self._identifier
+        elif self._description:
+            header_line = "%s%s" % (field_delimiter, self._description)
+        else:
+            # we've exhausted the possibilities - it shouldn't be 
+            # possible to get here, but just in case...
+            raise BiologicalSequenceError(
+             "Can't construct header line in BiologicalSequence.toFasta().")
+
+        return '>%s\n%s%s' % (
+         header_line, self._sequence, terminal_character)
 
 
 class NucleotideSequence(BiologicalSequence):

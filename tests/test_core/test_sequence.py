@@ -24,7 +24,7 @@ class BiologicalSequenceTests(TestCase):
         self.b2 = BiologicalSequence(
          'ACCGGTACC', identifier="test-seq-2", description="A test sequence")
         self.b3 = BiologicalSequence(
-                'GREG', identifier="test-seq-3", description="A protein sequence")
+         'GREG', identifier="test-seq-3", description="A protein sequence")
 
     def test_init(self):
         """ Initialization functions as expected with varied input types
@@ -71,7 +71,62 @@ class BiologicalSequenceTests(TestCase):
         self.assertEqual(len(self.b1),7)
         self.assertEqual(len(self.b2),9)
         self.assertEqual(len(self.b3),4)
-        
+
+    def test_str(self):
+        """ str functions as expected
+        """
+        self.assertEqual(str(self.b1),"GATTACA")
+        self.assertEqual(str(self.b2),"ACCGGTACC")
+        self.assertEqual(str(self.b3),"GREG")
+
+    def test_repr(self):
+        """ repr functions as expected
+        """
+        self.assertEqual(repr(self.b1),"GATTACA")
+        self.assertEqual(repr(self.b2),"ACCGGTACC")
+        self.assertEqual(repr(self.b3),"GREG")
+
+    def test_iter(self):
+        """ iter functions as expected
+        """
+        b1_iter = iter(self.b1)
+        for actual, expected in zip(b1_iter, "GATTACA"):
+            self.assertEqual(actual,expected)
+
+        self.assertRaises(StopIteration,b1_iter.next)
+
+    def test_reversed(self):
+        """ reversed functions as expected
+        """
+        b1_reversed = reversed(self.b1)
+        for actual, expected in zip(b1_reversed, "ACATTAG"):
+            self.assertEqual(actual,expected)
+
+        self.assertRaises(StopIteration,b1_reversed.next)
+
+    def test_Identifier(self):
+        """ Identifier property functions as expected
+        """
+        self.assertEqual(self.b1.Identifier,"")
+        self.assertEqual(self.b2.Identifier,"test-seq-2")
+        self.assertEqual(self.b3.Identifier,"test-seq-3")
+
+    def test_Description(self):
+        """ Description property functions as expected
+        """
+        self.assertEqual(self.b1.Description,"")
+        self.assertEqual(self.b2.Description,"A test sequence")
+        self.assertEqual(self.b3.Description,"A protein sequence")
+
+    def test_toFasta(self):
+        """ toFasta functions as expected
+        """
+        self.assertEqual(self.b1.toFasta(),">\nGATTACA\n")
+        self.assertEqual(self.b1.toFasta(terminal_character=""),">\nGATTACA")
+        self.assertEqual(self.b2.toFasta(),">test-seq-2 A test sequence\nACCGGTACC\n")
+        self.assertEqual(self.b3.toFasta(),">test-seq-3 A protein sequence\nGREG\n")
+
+
 
 if __name__ == "__main__":
     main()
