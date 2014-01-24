@@ -119,12 +119,12 @@ class BiologicalSequence(Sequence):
     def fractionSame(self,other):
         return 1. - self.fractionDiff(other)
 
-    def gapVector(self):
-        return [e in self._gap_alphabet for e in self._sequence]
-
     def gapMaps(self):
         raise LazyDeveloperError(
          "BiologicalSequence.gapMaps is not yet implemented.")
+
+    def gapVector(self):
+        return [e in self._gap_alphabet for e in self._sequence]
 
     def getUnsupportedCharacters(self):
         """ return set of unsupported characters present in the sequence
