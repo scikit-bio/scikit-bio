@@ -241,6 +241,24 @@ class DNASequenceTests(TestCase):
         self.assertEqual(self.b1.reverse_complement(),DNASequence("TGTAATC"))
         self.assertEqual(self.b2.reverse_complement(),DNASequence("GGTACCGGT"))
         self.assertRaises(BiologicalSequenceError,self.b3.reverse_complement)
+        self.assertEqual(self.b4.reverse_complement(),DNASequence("NVHDBMRSWYK"))
+
+    def test_getUnsupportedCharacters(self):
+        """ getUnsupportedCharacters functions as expected
+        """
+        self.assertEqual(self.b1.getUnsupportedCharacters(),set())
+        self.assertEqual(self.b2.getUnsupportedCharacters(),set())
+        self.assertEqual(self.b3.getUnsupportedCharacters(),set('U'))
+        self.assertEqual(self.b4.getUnsupportedCharacters(),set())
+
+    def test_hasUnsupportedCharacters(self):
+        """ hasUnsupportedCharacters functions as expected
+        """
+        self.assertFalse(self.b1.hasUnsupportedCharacters())
+        self.assertFalse(self.b2.hasUnsupportedCharacters())
+        self.assertTrue(self.b3.hasUnsupportedCharacters())
+        self.assertFalse(self.b4.hasUnsupportedCharacters())
+
 
 class RNASequenceTests(TestCase):
     """ Tests of the DNASequence class """
@@ -271,8 +289,24 @@ class RNASequenceTests(TestCase):
         self.assertEqual(self.b1.reverse_complement(),RNASequence("UGUAAUC"))
         self.assertEqual(self.b2.reverse_complement(),RNASequence("GGUACCGGU"))
         self.assertRaises(BiologicalSequenceError,self.b3.reverse_complement)
+        self.assertEqual(self.b4.reverse_complement(),
+                         RNASequence("NVHDBMRSWYK"))
 
+    def test_getUnsupportedCharacters(self):
+        """ getUnsupportedCharacters functions as expected
+        """
+        self.assertEqual(self.b1.getUnsupportedCharacters(),set())
+        self.assertEqual(self.b2.getUnsupportedCharacters(),set())
+        self.assertEqual(self.b3.getUnsupportedCharacters(),set('T'))
+        self.assertEqual(self.b4.getUnsupportedCharacters(),set())
 
+    def test_hasUnsupportedCharacters(self):
+        """ hasUnsupportedCharacters functions as expected
+        """
+        self.assertFalse(self.b1.hasUnsupportedCharacters())
+        self.assertFalse(self.b2.hasUnsupportedCharacters())
+        self.assertTrue(self.b3.hasUnsupportedCharacters())
+        self.assertFalse(self.b4.hasUnsupportedCharacters())
 
 
 if __name__ == "__main__":
