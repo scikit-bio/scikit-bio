@@ -25,10 +25,9 @@ class BiologicalSequence(Sequence):
 
             sequence: the biological sequence as a python Sequence
              (e.g., a string, list, or tuple)
-            identifier: the sequence identifier (e.g., an accession number;
-             default: "")
+            identifier: the sequence identifier (e.g., an accession number)
             description: a description or comment about the sequence (e.g.,
-             "green fluorescent protein"; default: "")
+             "green fluorescent protein")
 
             WARNING: No validation is performed on initialization for the sake 
              of efficiency. If you are concerned about invalid characters, you
@@ -259,8 +258,8 @@ class BiologicalSequence(Sequence):
         """ return the sequence as a fasta-formatted string
           
             terminal_character: the last character to be included in the
-             string (default: \n (i.e., newline); if you don't want a trailing
-             newline in the string, you can pass terminal_character="")
+             result (if you don't want a trailing newline or other character
+             in the result, you can pass terminal_character="")
         """
         if self._description:
             header_line = '%s%s%s' % (self._identifier, field_delimiter,
