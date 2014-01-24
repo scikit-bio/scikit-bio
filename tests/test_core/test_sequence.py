@@ -240,6 +240,31 @@ class BiologicalSequenceTests(TestCase):
                         [False,False,True,True,True,True,
                          True,True,False,False,False])
 
+    def test_getUnsupportedCharacters(self):
+        """ getUnsupportedCharacters functions as expected
+        """
+        self.assertEqual(self.b1.getUnsupportedCharacters(),set('GATC'))
+        self.assertEqual(self.b7.getUnsupportedCharacters(),set())
+
+    def test_hasUnsupportedCharacters(self):
+        """ hasUnsupportedCharacters functions as expected
+        """
+        self.assertTrue(self.b1.hasUnsupportedCharacters())
+        self.assertFalse(self.b7.hasUnsupportedCharacters())
+
+    def test_index(self):
+        """ index functions as expected """
+        self.assertEqual(self.b1.index('G'),0)
+        self.assertEqual(self.b1.index('A'),1)
+        self.assertRaises(ValueError,self.b1.index,'x')
+
+    def test_isGapped(self):
+        """ isGapped functions as expected """
+        self.assertFalse(self.b1.isGapped())
+        self.assertFalse(self.b2.isGapped())
+        self.assertTrue(self.b7.isGapped())
+        self.assertTrue(self.b8.isGapped())
+
     def test_toFasta(self):
         """ toFasta functions as expected
         """
@@ -262,18 +287,6 @@ class BiologicalSequenceTests(TestCase):
         self.assertEqual(
          self.b2.toFasta(field_delimiter=":",terminal_character="!"),
          ">test-seq-2:A test sequence\nACCGGTACC!")
-
-    def test_getUnsupportedCharacters(self):
-        """ getUnsupportedCharacters functions as expected
-        """
-        self.assertEqual(self.b1.getUnsupportedCharacters(),set('GATC'))
-        self.assertEqual(self.b7.getUnsupportedCharacters(),set())
-
-    def test_hasUnsupportedCharacters(self):
-        """ hasUnsupportedCharacters functions as expected
-        """
-        self.assertTrue(self.b1.hasUnsupportedCharacters())
-        self.assertFalse(self.b7.hasUnsupportedCharacters())
 
 class NucelotideSequenceTests(TestCase):
     """ Tests of the BiologicalSequence class """
