@@ -122,8 +122,30 @@ class BiologicalSequence(Sequence):
     def gapMaps(self):
         """ return tuples mapping positions bw gapped and ungapped seq
 
-            
+            two lists of integers are returned:
+             the first is the length of the ungapped sequence, and each entry 
+             is the position of that base in the gapped sequence. 
+             the second is the length of the gapped sequence, and each entry is
+             either None (if that position represents a gap) or the position of
+             that base in the ungapped sequence.
 
+            for example:
+             BiologicalSequence('-ACCGA-TA-').gapMaps() ==
+             ([1,2,3,4,5,7,8],[None,0,1,2,3,4,None,5,6,None])
+
+             because:
+             
+             0123456
+             ACCGATA
+              \\\\ \\
+             -ACCGA-TA-
+             0123456789
+
+             so... 
+             in the first list, position 0 maps to position 1, position 1
+             maps to position 2, position 5 maps to position 7, ...
+             and in the second list, position 0 doesn't map to anything (so
+             it's None), position 1 maps to position 0, ...
         """
         degapped_to_gapped = []
         gapped_to_degapped = []
@@ -138,6 +160,8 @@ class BiologicalSequence(Sequence):
         return degapped_to_gapped, gapped_to_degapped
 
     def gapVector(self):
+        """ return a list indicating positions containing gaps 
+        """
         return map(self.isGap, self._sequence)
 
     def getUnsupportedCharacters(self):

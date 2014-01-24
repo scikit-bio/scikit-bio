@@ -245,6 +245,10 @@ class BiologicalSequenceTests(TestCase):
                          ([0,1,8,9,10],
                           [0,1,None,None,None,None,None,None,2,3,4]))
 
+        # example from the gapMaps doc string
+        self.assertEqual(BiologicalSequence('-ACCGA-TA-').gapMaps(),
+                         ([1,2,3,4,5,7,8],[None,0,1,2,3,4,None,5,6,None]))
+
     def test_gapVector(self):
         """ gapVector functions as expected
         """
