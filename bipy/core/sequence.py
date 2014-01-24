@@ -52,7 +52,11 @@ class BiologicalSequence(Sequence):
             return True
 
     def __getitem__(self, i):
-        return self._sequence[i]
+        try:
+            return self._sequence[i]
+        except IndexError:
+            raise IndexError(
+                   "Position %d is out of range for %r." % (i, self))
  
     def __hash__(self):
         return hash(self._sequence)
@@ -218,7 +222,11 @@ class BiologicalSequence(Sequence):
     def index(self, subsequence):
         """ return the position where subsequence first occurs
         """
-        return self._sequence.index(subsequence)
+        try:
+            return self._sequence.index(subsequence)
+        except ValueError:
+            raise ValueError(
+                   "%s is not present in %r." % (subsequence, self))
 
     def isGap(self, char):
         """ return True if char is a gap character
