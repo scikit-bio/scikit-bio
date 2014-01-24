@@ -10,6 +10,8 @@
 
 from collections import Sequence
 
+LazyDeveloperError = NotImplementedError
+
 class BiologicalSequenceError(Exception):
     pass
 
@@ -24,32 +26,10 @@ class BiologicalSequence(Sequence):
         self._sequence = ''.join(sequence)
         self._identifier = identifier
         self._description = description
-    
-    def __getitem__(self, i):
-        return self._sequence[i]
-    
-    def __len__(self):
-        return len(self._sequence)
-
-    def __str__(self):
-        return str(self._sequence)
-
-    def __repr__(self):
-        first_ten = self._sequence[:10]
-        cn = self.__class__.__name__
-        length = len(self)
-        if length > 10:
-            elipses = "..."
-        else:
-            elipses = ""
-        return '<%s: %s%s (length: %d)>' % (cn, first_ten, elipses, length) 
-
-    def __iter__(self):
-        return iter(self._sequence)
-
-    def __reversed__(self):
-        return reversed(self._sequence)
-
+ 
+    def __contains__(self, other):
+        return other in self._sequence
+   
     def __eq__(self, other):
         """ define equality
             
@@ -63,8 +43,43 @@ class BiologicalSequence(Sequence):
         else:
             return True
 
+    def __getitem__(self, i):
+        return self._sequence[i]
+ 
+    def __hash__(self):
+        return hash(self._sequence)
+   
+    def __iter__(self):
+        return iter(self._sequence)
+
+    def __len__(self):
+        return len(self._sequence)
+
     def __ne__(self, other):
         return not self.__eq__(other)
+
+    def __repr__(self):
+        first_ten = self._sequence[:10]
+        cn = self.__class__.__name__
+        length = len(self)
+        if length > 10:
+            elipses = "..."
+        else:
+            elipses = ""
+        return '<%s: %s%s (length: %d)>' % (cn, first_ten, elipses, length) 
+
+    def __reversed__(self):
+        return reversed(self._sequence)
+
+    def __str__(self):
+        return str(self._sequence)
+
+    def _minimum_edit_distance(self,other):
+        distance = 0
+        for s, o in zip(self,other):
+            if s != o:
+                distance +=1
+        return distance
 
     @property
     def Identifier(self):
@@ -82,6 +97,34 @@ class BiologicalSequence(Sequence):
     def GapAlphabet(self):
         return self._gap_alphabet
 
+    def count(self, char):
+        return self._sequence.count(char)
+ 
+    def degap(self):
+        result = [e for e in self._sequence if e not in self._gap_alphabet]
+        return self.__class__(result, identifier=self._identifier,
+                              description=self._description)
+
+    def distance(self,other,distance_fn=_minimum_edit_distance):
+        """
+        """
+        return distance_fn(self,other)
+
+    def fractionDiff(self,other):
+        return 1. - self.fracSame(other)
+    
+    def fractionSame(self,other):
+        min_edit_dist = self._minimum_edit_distance(self,other)
+        len_shorter = min(len(self),len(other))
+        return min_edit_dist / len_shorter
+
+    def gapVector(self):
+        return [e in self._gap_alphabet for e in self._sequence]
+
+    def gapMaps(self):
+        raise LazyDeveloperError(
+         "BiologicalSequence.gapMaps is not yet implemented.")
+
     def getUnsupportedCharacters(self):
         """ return set of unsupported characters present in the sequence
         """
@@ -94,6 +137,15 @@ class BiologicalSequence(Sequence):
             in a BiologicalSequence's Alphabet
         """
         return len(self.getUnsupportedCharacters()) > 0
+
+    def index(self, char):
+        return self._sequence.index(char)
+
+    def isGapped(self):
+        for e in self:
+            if e in self._gap_alphabet:
+                return True
+        return False
 
     def toFasta(self, field_delimiter = " ", terminal_character="\n"):
         """ return the sequence as a fasta-formatted string
@@ -143,6 +195,9 @@ class NucleotideSequence(BiologicalSequence):
 
     def reverse_complement(self):
         return self._complement(reversed(self))
+    
+    def isReverseComplement(self,other):
+        return self == other.reverse_complement()
 
 class DNASequence(NucleotideSequence):
  
