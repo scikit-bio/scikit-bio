@@ -127,21 +127,37 @@ class BiologicalSequence(Sequence):
         return self._sequence.count(subsequence)
  
     def degap(self):
+        """ return a new BiologicalSequence with gaps characters removed
+
+            the type, identifier, and description of the result will be the 
+             same as self
+        """
         result = [e for e in self._sequence if e not in self._gap_alphabet]
         return self.__class__(result, identifier=self._identifier,
                               description=self._description)
 
     def distance(self,other,distance_fn=_hamming_distance):
-        """
+        """ return the distance to other using an arbitrary distance function
+
+            distance_fn must take two Sequence objects and is expected to
+            return a number (integer or float)
         """
         return distance_fn(self,other)
 
     def fractionDiff(self,other):
+        """ return fraction of positions that differ 
+        
+            based on self._hamming_distance between the sequences
+        """
         min_edit_dist = self._hamming_distance(other)
         len_shorter = min(len(self),len(other))
         return min_edit_dist / len_shorter
     
     def fractionSame(self,other):
+        """ return fraction of positions that are the same 
+        
+            based on self._hamming_distance between the sequences
+        """
         return 1. - self.fractionDiff(other)
 
     def gapMaps(self):
@@ -202,8 +218,10 @@ class BiologicalSequence(Sequence):
         """
         return len(self.getUnsupportedCharacters()) > 0
 
-    def index(self, char):
-        return self._sequence.index(char)
+    def index(self, subsequence):
+        """ return the position where subsequence first occurs
+        """
+        return self._sequence.index(subsequence)
 
     def isGap(self, char):
         return char in self._gap_alphabet

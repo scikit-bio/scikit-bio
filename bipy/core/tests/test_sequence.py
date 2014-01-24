@@ -277,6 +277,7 @@ class BiologicalSequenceTests(TestCase):
         """ index functions as expected """
         self.assertEqual(self.b1.index('G'),0)
         self.assertEqual(self.b1.index('A'),1)
+        self.assertEqual(self.b1.index('AC'),4)
         self.assertRaises(ValueError,self.b1.index,'x')
 
     def test_isGap(self):
