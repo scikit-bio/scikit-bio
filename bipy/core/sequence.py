@@ -224,9 +224,13 @@ class BiologicalSequence(Sequence):
         return self._sequence.index(subsequence)
 
     def isGap(self, char):
+        """ return True if char is a gap character
+        """
         return char in self._gap_alphabet
 
     def isGapped(self):
+        """ return True if any gap characters are in the BiologicalSequence
+        """
         for e in self:
             if e in self._gap_alphabet:
                 return True
@@ -272,17 +276,36 @@ class NucleotideSequence(BiologicalSequence):
             except KeyError:
                 raise BiologicalSequenceError( 
                  "Don't know how to complement base %s. "
-                 "Is it a known base in your nucleotide alphabet?" % base)
+                 "Is it in %s.ComplementMap?" % (base,self.__class__))
         return self.__class__(result, self._identifier, self._description)
 
-    def complement(self):
-        return self._complement(self)
+    @property
+    def ComplementMap(self):
+        return self._complement_map
 
-    def reverse_complement(self):
-        return self._complement(reversed(self))
+    def complement(self):
+        """ return the complement of the sequence
+
+            raises BiologicalSequence error if there is a character in the
+             BiologicalSequence that is not in NucleotideSequence.ComplementMap
+        """
+        return self._complement(self)
     
     def isReverseComplement(self,other):
+        """ return True if other is the complement of the BiologicalSequence
+            
+            raises BiologicalSequence error if there is a character in the
+             BiologicalSequence that is not in NucleotideSequence.ComplementMap
+        """
         return self == other.reverse_complement()
+
+    def reverse_complement(self):
+        """ return the reverse complement of the sequence
+
+            raises BiologicalSequence error if there is a character in the
+             BiologicalSequence that is not in NucleotideSequence.ComplementMap
+        """
+        return self._complement(reversed(self))
 
 class DNASequence(NucleotideSequence):
  
