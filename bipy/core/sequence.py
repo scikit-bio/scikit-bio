@@ -44,7 +44,7 @@ class BiologicalSequence(Sequence):
             BiologicalSequences are equal if their sequence is the same and
              they are the same type
         """
-        if type(self) != type(other):
+        if self.__class__ != other.__class__:
             return False
         elif self._sequence != other._sequence:
             return False
