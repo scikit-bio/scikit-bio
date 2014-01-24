@@ -27,7 +27,7 @@ class BiologicalSequence(Sequence):
             identifier: the sequence identifier (e.g., an accession number;
              default: "")
             description: a description or comment about the sequence (e.g.,
-            "green fluorescent protein"; default: "")
+             "green fluorescent protein"; default: "")
 
             WARNING: No validation is performed on initialization for the sake 
              of efficiency. If you are concerned about invalid characters, you
@@ -145,7 +145,8 @@ class BiologicalSequence(Sequence):
         """ return the distance to other using an arbitrary distance function
 
             distance_fn must take two Sequence objects and is expected to
-            return a number (integer or float)
+            return a number (integer or float). for example, see
+            BiologicalSequence._hamming_distance.
         """
         return distance_fn(self,other)
 
@@ -181,9 +182,9 @@ class BiologicalSequence(Sequence):
 
              because:
              
-             0123456
-             ACCGATA
-              \\\\ \\
+              01234 56 (spaces are for visual aid)
+              ACCGA TA
+              ||||| || 
              -ACCGA-TA-
              0123456789
 
@@ -207,6 +208,10 @@ class BiologicalSequence(Sequence):
 
     def gapVector(self):
         """ return a list indicating positions containing gaps 
+
+            for example:
+             BiologicalSequence('..ACG--TT-').gapVector() ==
+             [True, True, False, False, False, True, True, False, False, True]
         """
         return map(self.isGap, self._sequence)
 
@@ -221,7 +226,11 @@ class BiologicalSequence(Sequence):
             unsupported characters are defined as any characters that are not
             in a BiologicalSequence's Alphabet
         """
-        return len(self.getUnsupportedCharacters()) > 0
+        all_supported = self._alphabet | self._gap_alphabet
+        for e in self:
+            if not e in all_supported:
+                return True
+        return False
 
     def index(self, subsequence):
         """ return the position where subsequence first occurs
