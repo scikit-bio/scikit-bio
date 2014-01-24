@@ -17,8 +17,10 @@ from bipy.core.exception import BiologicalSequenceError
 def get_iupac_nucleotide_bases():
     return 'ACGTURYMKWSBDHVN'
 
+
 def get_iupac_dna_bases():
     return 'ACGTRYMKWSBDHVN'
+
 
 def get_iupac_rna_bases():
     return 'ACGURYMKWSBDHVN'
@@ -282,7 +284,7 @@ class BiologicalSequence(Sequence):
         """
         if self._description:
             header_line = '%s%s%s' % (self._identifier, field_delimiter,
-                self._description)
+                                      self._description)
         else:
             header_line = self._identifier
 
