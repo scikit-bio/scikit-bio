@@ -13,6 +13,7 @@ from collections import Sequence
 
 from bipy.core.exception import BiologicalSequenceError
 
+
 class BiologicalSequence(Sequence):
     """ Base class for biological sequences """
     
@@ -60,7 +61,7 @@ class BiologicalSequence(Sequence):
             return self._sequence[i]
         except IndexError:
             raise IndexError(
-                   "Position %d is out of range for %r." % (i, self))
+                "Position %d is out of range for %r." % (i, self))
  
     def __hash__(self):
         return hash(self._sequence)
@@ -90,16 +91,16 @@ class BiologicalSequence(Sequence):
     def __str__(self):
         return str(self._sequence)
 
-    def _hamming_distance(self,other):
+    def _hamming_distance(self, other):
         """ return the hamming distance to other based on the shorter sequence
 
             hamming distance is the number of substitutions to convert one
              sequence to the other
         """
         distance = 0
-        for s, o in zip(self,other):
+        for s, o in zip(self, other):
             if s != o:
-                distance +=1
+                distance += 1
         return distance
     
     @property
@@ -141,25 +142,25 @@ class BiologicalSequence(Sequence):
         return self.__class__(result, identifier=self._identifier,
                               description=self._description)
 
-    def distance(self,other,distance_fn=_hamming_distance):
+    def distance(self, other, distance_fn=_hamming_distance):
         """ return the distance to other using an arbitrary distance function
 
             distance_fn must take two Sequence objects and is expected to
             return a number (integer or float). for example, see
             BiologicalSequence._hamming_distance.
         """
-        return distance_fn(self,other)
+        return distance_fn(self, other)
 
-    def fractionDiff(self,other):
+    def fractionDiff(self, other):
         """ return fraction of positions that differ 
         
             based on self._hamming_distance between the sequences
         """
         min_edit_dist = self._hamming_distance(other)
-        len_shorter = min(len(self),len(other))
+        len_shorter = min(len(self), len(other))
         return min_edit_dist / len_shorter
     
-    def fractionSame(self,other):
+    def fractionSame(self, other):
         """ return fraction of positions that are the same 
         
             based on self._hamming_distance between the sequences
@@ -197,7 +198,7 @@ class BiologicalSequence(Sequence):
         degapped_to_gapped = []
         gapped_to_degapped = []
         non_gap_count = 0
-        for i,e in enumerate(self):
+        for i, e in enumerate(self):
             if self.isGap(e):
                 gapped_to_degapped.append(None)
             else:
@@ -239,7 +240,7 @@ class BiologicalSequence(Sequence):
             return self._sequence.index(subsequence)
         except ValueError:
             raise ValueError(
-                   "%s is not present in %r." % (subsequence, self))
+                "%s is not present in %r." % (subsequence, self))
 
     def isGap(self, char):
         """ return True if char is a gap character
@@ -254,7 +255,7 @@ class BiologicalSequence(Sequence):
                 return True
         return False
 
-    def toFasta(self, field_delimiter = " ", terminal_character="\n"):
+    def toFasta(self, field_delimiter=" ", terminal_character="\n"):
         """ return the sequence as a fasta-formatted string
           
             terminal_character: the last character to be included in the
@@ -263,7 +264,7 @@ class BiologicalSequence(Sequence):
         """
         if self._identifier != "" and self._description != "":
             header_line = "%s%s%s" % (
-             self._identifier, field_delimiter, self._description)
+                self._identifier, field_delimiter, self._description)
         elif self._identifier == "" and self._description == "":
             header_line = ""
         elif self._identifier:
@@ -274,10 +275,10 @@ class BiologicalSequence(Sequence):
             # we've exhausted the possibilities - it shouldn't be 
             # possible to get here, but just in case...
             raise BiologicalSequenceError(
-             "Can't construct header line in BiologicalSequence.toFasta.")
+                "Can't construct header line in BiologicalSequence.toFasta.")
 
         return '>%s\n%s%s' % (
-         header_line, self._sequence, terminal_character)
+            header_line, self._sequence, terminal_character)
 
 
 class NucleotideSequence(BiologicalSequence):
@@ -302,8 +303,8 @@ class NucleotideSequence(BiologicalSequence):
                 result.append(self._complement_map[base])
             except KeyError:
                 raise BiologicalSequenceError( 
-                 "Don't know how to complement base %s. "
-                 "Is it in %s.ComplementMap?" % (base,self.__class__.__name__))
+                    "Don't know how to complement base %s. Is it in "
+                    "%s.ComplementMap?" % (base, self.__class__.__name__))
         return self.__class__(result, self._identifier, self._description)
 
     @property
@@ -320,7 +321,7 @@ class NucleotideSequence(BiologicalSequence):
         """
         return self._complement(self)
     
-    def isReverseComplement(self,other):
+    def isReverseComplement(self, other):
         """ return True if other is the complement of the BiologicalSequence
             
             raises BiologicalSequence error if there is a character in the
@@ -337,6 +338,7 @@ class NucleotideSequence(BiologicalSequence):
         return self._complement(reversed(self))
     rc = reverse_complement
 
+
 class DNASequence(NucleotideSequence):
     """ class for representing DNA sequences
         
@@ -344,27 +346,29 @@ class DNASequence(NucleotideSequence):
     """
 
     _complement_map = {
-     'A':'T', 'T':'A', 'G':'C', 'C':'G', 'Y':'R', 'R':'Y', 'S':'S',
-     'W':'W', 'K':'M', 'M':'K', 'B':'V', 'D':'H', 'H':'D', 'V':'B', 'N':'N',
-     'a':'t', 't':'a', 'g':'c', 'c':'g', 'y':'r', 'r':'y', 's':'s',
-     'w':'w', 'k':'m', 'm':'k', 'b':'v', 'd':'h', 'h':'d', 'v':'b', 'n':'n'}
+        'A': 'T', 'T': 'A', 'G': 'C', 'C': 'G', 'Y': 'R', 'R': 'Y', 'S': 'S',
+        'W': 'W', 'K': 'M', 'M': 'K', 'B': 'V', 'D': 'H', 'H': 'D', 'V': 'B', 
+        'N': 'N', 'a': 't', 't': 'a', 'g': 'c', 'c': 'g', 'y': 'r', 'r': 'y', 
+        's': 's', 'w': 'w', 'k': 'm', 'm': 'k', 'b': 'v', 'd': 'h', 'h': 'd',
+        'v': 'b', 'n': 'n'}
     _alphabet = set('ACGTRYMKWSBDHVNacgtrymkwsbdhvn')
 
 # class is accessible with alternative names for convenience  
 DnaSequence = DNA = DNASequence
+
 
 class RNASequence(NucleotideSequence):
     """ class for representing DNA sequences
         
         all IUPAC RNA characters are supported
     """
-
  
     _complement_map = {
-     'A':'U', 'U':'A', 'G':'C', 'C':'G', 'Y':'R', 'R':'Y', 'S':'S',
-     'W':'W', 'K':'M', 'M':'K', 'B':'V', 'D':'H', 'H':'D', 'V':'B', 'N':'N',
-     'a':'u', 'u':'a', 'g':'c', 'c':'g', 'y':'r', 'r':'y', 's':'s',
-     'w':'w', 'k':'m', 'm':'k', 'b':'v', 'd':'h', 'h':'d', 'v':'b', 'n':'n'}
+        'A': 'U', 'U': 'A', 'G': 'C', 'C': 'G', 'Y': 'R', 'R': 'Y', 'S': 'S',
+        'W': 'W', 'K': 'M', 'M': 'K', 'B': 'V', 'D': 'H', 'H': 'D', 'V': 'B',
+        'N': 'N', 'a': 'u', 'u': 'a', 'g': 'c', 'c': 'g', 'y': 'r', 'r': 'y',
+        's': 's', 'w': 'w', 'k': 'm', 'm': 'k', 'b': 'v', 'd': 'h', 'h': 'd',
+        'v': 'b', 'n': 'n'}
     _alphabet = set('ACGURYMKWSBDHVNacgurymkwsbdhvn')
 
 # class is accessible with alternative names for convenience  
