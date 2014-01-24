@@ -120,8 +120,19 @@ class BiologicalSequence(Sequence):
         return 1. - self.fractionDiff(other)
 
     def gapMaps(self):
-        raise LazyDeveloperError(
-         "BiologicalSequence.gapMaps is not yet implemented.")
+        """
+        """
+        degapped_to_gapped = []
+        gapped_to_degapped = []
+        non_gap_count = 0
+        for i,e in enumerate(self):
+            if self.isGap(e):
+                gapped_to_degapped.append(None)
+            else:
+                gapped_to_degapped.append(non_gap_count)
+                degapped_to_gapped.append(i)
+                non_gap_count += 1
+        return degapped_to_gapped, gapped_to_degapped
 
     def gapVector(self):
         return [e in self._gap_alphabet for e in self._sequence]
@@ -141,6 +152,9 @@ class BiologicalSequence(Sequence):
 
     def index(self, char):
         return self._sequence.index(char)
+
+    def isGap(self, char):
+        return char in self._gap_alphabet
 
     def isGapped(self):
         for e in self:
