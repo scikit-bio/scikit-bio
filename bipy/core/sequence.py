@@ -281,12 +281,21 @@ class BiologicalSequence(Sequence):
 
 
 class NucleotideSequence(BiologicalSequence):
-    """ Base class for nucleotide sequences """
+    """ class for representing nucleotide sequences
+        
+        all IUPAC DNA/RNA characters are supported
+    """
 
+    # complement_map cannot be defined for a generic NucleotideSequence
+    # as the complement of 'A' is ambiguous. thanks, nature...
     _complement_map = {}
     _alphabet = set('ACGTURYMKWSBDHVNacgturymkwsbdhvn')
 
     def _complement(self, seq_iterator):
+        """ private method for complementing based on an iterator
+
+            this centralizes the logic for complement and reverse_complement
+        """
         result = []
         for base in seq_iterator:
             try:
@@ -299,6 +308,8 @@ class NucleotideSequence(BiologicalSequence):
 
     @property
     def ComplementMap(self):
+        """ return the mapping of characters to their complements
+        """
         return self._complement_map
 
     def complement(self):
@@ -327,7 +338,11 @@ class NucleotideSequence(BiologicalSequence):
     rc = reverse_complement
 
 class DNASequence(NucleotideSequence):
- 
+    """ class for representing DNA sequences
+        
+        all IUPAC DNA characters are supported
+    """
+
     _complement_map = {
      'A':'T', 'T':'A', 'G':'C', 'C':'G', 'Y':'R', 'R':'Y', 'S':'S',
      'W':'W', 'K':'M', 'M':'K', 'B':'V', 'D':'H', 'H':'D', 'V':'B', 'N':'N',
@@ -339,7 +354,12 @@ class DNASequence(NucleotideSequence):
 DnaSequence = DNA = DNASequence
 
 class RNASequence(NucleotideSequence):
-  
+    """ class for representing DNA sequences
+        
+        all IUPAC RNA characters are supported
+    """
+
+ 
     _complement_map = {
      'A':'U', 'U':'A', 'G':'C', 'C':'G', 'Y':'R', 'R':'Y', 'S':'S',
      'W':'W', 'K':'M', 'M':'K', 'B':'V', 'D':'H', 'H':'D', 'V':'B', 'N':'N',

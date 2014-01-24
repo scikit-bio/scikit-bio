@@ -128,9 +128,9 @@ class BiologicalSequenceTests(TestCase):
         """ repr functions as expected
         """
         self.assertEqual(repr(self.b1),
-                        "<BiologicalSequence: GATTACA (length: 7)>")
+                         "<BiologicalSequence: GATTACA (length: 7)>")
         self.assertEqual(repr(self.b6),
-                        "<BiologicalSequence: ACGTACGTAC... (length: 12)>")
+                         "<BiologicalSequence: ACGTACGTAC... (length: 12)>")
 
     def test_reversed(self):
         """ reversed functions as expected
@@ -259,8 +259,8 @@ class BiologicalSequenceTests(TestCase):
         self.assertEqual(self.b7.gapVector(),
                          [True] * len(self.b7))
         self.assertEqual(self.b8.gapVector(),
-                        [False,False,True,True,True,True,
-                         True,True,False,False,False])
+                         [False,False,True,True,True,True,
+                          True,True,False,False,False])
 
     def test_getUnsupportedCharacters(self):
         """ getUnsupportedCharacters functions as expected
