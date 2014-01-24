@@ -14,6 +14,16 @@ from collections import Sequence
 from bipy.core.exception import BiologicalSequenceError
 
 
+def get_iupac_nucleotide_bases():
+    return 'ACGTURYMKWSBDHVN'
+
+def get_iupac_dna_bases():
+    return 'ACGTRYMKWSBDHVN'
+
+def get_iupac_rna_bases():
+    return 'ACGURYMKWSBDHVN'
+
+
 class BiologicalSequence(Sequence):
     """ Base class for biological sequences """
     
@@ -289,7 +299,8 @@ class NucleotideSequence(BiologicalSequence):
     # complement_map cannot be defined for a generic NucleotideSequence
     # as the complement of 'A' is ambiguous. thanks, nature...
     _complement_map = {}
-    _alphabet = set('ACGTURYMKWSBDHVNacgturymkwsbdhvn')
+    _alphabet = set(get_iupac_nucleotide_bases() + 
+                    get_iupac_nucleotide_bases().lower())
 
     def _complement(self, seq_iterator):
         """ private method for complementing based on an iterator
@@ -350,7 +361,7 @@ class DNASequence(NucleotideSequence):
         'N': 'N', 'a': 't', 't': 'a', 'g': 'c', 'c': 'g', 'y': 'r', 'r': 'y', 
         's': 's', 'w': 'w', 'k': 'm', 'm': 'k', 'b': 'v', 'd': 'h', 'h': 'd',
         'v': 'b', 'n': 'n'}
-    _alphabet = set('ACGTRYMKWSBDHVNacgtrymkwsbdhvn')
+    _alphabet = set(get_iupac_dna_bases() + get_iupac_dna_bases().lower())
 
 # class is accessible with alternative names for convenience  
 DnaSequence = DNA = DNASequence
@@ -368,7 +379,7 @@ class RNASequence(NucleotideSequence):
         'N': 'N', 'a': 'u', 'u': 'a', 'g': 'c', 'c': 'g', 'y': 'r', 'r': 'y',
         's': 's', 'w': 'w', 'k': 'm', 'm': 'k', 'b': 'v', 'd': 'h', 'h': 'd',
         'v': 'b', 'n': 'n'}
-    _alphabet = set('ACGURYMKWSBDHVNacgurymkwsbdhvn')
+    _alphabet = set(get_iupac_rna_bases() + get_iupac_rna_bases().lower())
 
 # class is accessible with alternative names for convenience  
 RnaSequence = RNA = RNASequence
