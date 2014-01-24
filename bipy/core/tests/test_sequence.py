@@ -274,6 +274,15 @@ class BiologicalSequenceTests(TestCase):
         self.assertEqual(self.b1.index('A'),1)
         self.assertRaises(ValueError,self.b1.index,'x')
 
+    def test_isGap(self):
+        """ isGap functions as expected """
+        self.assertTrue(self.b1.isGap('.'))
+        self.assertTrue(self.b1.isGap('-'))
+        self.assertFalse(self.b1.isGap('A'))
+        self.assertFalse(self.b1.isGap('x'))
+        self.assertFalse(self.b1.isGap(' '))
+        self.assertFalse(self.b1.isGap(''))
+
     def test_isGapped(self):
         """ isGapped functions as expected """
         self.assertFalse(self.b1.isGapped())
