@@ -120,7 +120,10 @@ class BiologicalSequence(Sequence):
         return 1. - self.fractionDiff(other)
 
     def gapMaps(self):
-        """
+        """ return tuples mapping positions bw gapped and ungapped seq
+
+            
+
         """
         degapped_to_gapped = []
         gapped_to_degapped = []
@@ -135,7 +138,7 @@ class BiologicalSequence(Sequence):
         return degapped_to_gapped, gapped_to_degapped
 
     def gapVector(self):
-        return [e in self._gap_alphabet for e in self._sequence]
+        return map(self.isGap, self._sequence)
 
     def getUnsupportedCharacters(self):
         """ return set of unsupported characters present in the sequence
