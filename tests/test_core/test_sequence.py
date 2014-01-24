@@ -30,6 +30,7 @@ class BiologicalSequenceTests(TestCase):
         self.b5 = BiologicalSequence(
          'LLPRTEIN', description="some description")
         self.b6 = BiologicalSequence('ACGTACGTACGT')
+        self.b7 = BiologicalSequence('..--..')
 
     def test_init(self):
         """ Initialization functions as expected with varied input types
@@ -177,6 +178,18 @@ class BiologicalSequenceTests(TestCase):
          self.b2.toFasta(field_delimiter=":",terminal_character="!"),
          ">test-seq-2:A test sequence\nACCGGTACC!")
 
+    def test_getUnsupportedCharacters(self):
+        """ getUnsupportedCharacters functions as expected
+        """
+        self.assertEqual(self.b1.getUnsupportedCharacters(),set('GATC'))
+        self.assertEqual(self.b7.getUnsupportedCharacters(),set())
+
+    def test_hasUnsupportedCharacters(self):
+        """ hasUnsupportedCharacters functions as expected
+        """
+        self.assertTrue(self.b1.hasUnsupportedCharacters())
+        self.assertFalse(self.b7.hasUnsupportedCharacters())
+
 class NucelotideSequenceTests(TestCase):
     """ Tests of the BiologicalSequence class """
 
@@ -239,7 +252,7 @@ class RNASequenceTests(TestCase):
         self.b2 = RNASequence(
          'ACCGGUACC', identifier="test-seq-2", description="A test sequence")
         self.b3 = RNASequence(
-         'ACCGGTACC', identifier="bad-seq-1", description="Not an RNA sequence")
+         'ACCGGTACC', identifier="bad-seq-1", description="Not a RNA sequence")
         self.b4 = RNASequence(
          'MRWSYKVHDBN', identifier="degen", 
          description="All of the degenerate bases")

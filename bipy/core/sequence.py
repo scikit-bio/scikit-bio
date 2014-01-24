@@ -16,6 +16,9 @@ class BiologicalSequenceError(Exception):
 class BiologicalSequence(Sequence):
     """ Base class for biological sequences """
     
+    _alphabet = set()
+    _gap_alphabet = set('-.')
+
     def __init__(self, sequence, identifier="", description=""):
 
         self._sequence = ''.join(sequence)
@@ -70,6 +73,27 @@ class BiologicalSequence(Sequence):
     @property
     def Description(self):
         return self._description
+    
+    @property
+    def Alphabet(self):
+        return self._alphabet
+
+    @property
+    def GapAlphabet(self):
+        return self._gap_alphabet
+
+    def getUnsupportedCharacters(self):
+        """ return set of unsupported characters present in the sequence
+        """
+        return set(self) - self._alphabet - self._gap_alphabet
+
+    def hasUnsupportedCharacters(self):
+        """ return True if unsupported characters are present
+
+            unsupported characters are defined as any characters that are not
+            in a BiologicalSequence's Alphabet
+        """
+        return len(self.getUnsupportedCharacters()) > 0
 
     def toFasta(self, field_delimiter = " ", terminal_character="\n"):
         """ return the sequence as a fasta-formatted string
@@ -101,6 +125,7 @@ class NucleotideSequence(BiologicalSequence):
     """ Base class for nucleotide sequences """
 
     _complement_map = {}
+    _alphabet = set('ACGTURYMKWSBDHVNacgturymkwsbdhvn')
 
     def _complement(self, seq_iterator):
         result = []
@@ -126,6 +151,8 @@ class DNASequence(NucleotideSequence):
      'W':'W', 'K':'M', 'M':'K', 'B':'V', 'D':'H', 'H':'D', 'V':'B', 'N':'N',
      'a':'t', 't':'a', 'g':'c', 'c':'g', 'y':'r', 'r':'y', 's':'s',
      'w':'w', 'k':'m', 'm':'k', 'b':'v', 'd':'h', 'h':'d', 'v':'b', 'n':'n'}
+    _alphabet = set('ACGTRYMKWSBDHVNacgtrymkwsbdhvn')
+
 # class is accessible with alternative capitalization scheme for convenience  
 DnaSequence = DNASequence
 
@@ -136,6 +163,7 @@ class RNASequence(NucleotideSequence):
      'W':'W', 'K':'M', 'M':'K', 'B':'V', 'D':'H', 'H':'D', 'V':'B', 'N':'N',
      'a':'u', 'u':'a', 'g':'c', 'c':'g', 'y':'r', 'r':'y', 's':'s',
      'w':'w', 'k':'m', 'm':'k', 'b':'v', 'd':'h', 'h':'d', 'v':'b', 'n':'n'}
+    _alphabet = set('ACGURYMKWSBDHVNacgurymkwsbdhvn')
 
 # class is accessible with alternative capitalization scheme for convenience  
 RnaSequence = RNASequence
