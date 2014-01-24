@@ -357,7 +357,7 @@ DnaSequence = DNA = DNASequence
 
 
 class RNASequence(NucleotideSequence):
-    """ class for representing DNA sequences
+    """ class for representing RNA sequences
         
         all IUPAC RNA characters are supported
     """
