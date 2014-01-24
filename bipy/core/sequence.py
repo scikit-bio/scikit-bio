@@ -28,6 +28,10 @@ class BiologicalSequence(Sequence):
              default: "")
             description: a description or comment about the sequence (e.g.,
             "green fluorescent protein"; default: "")
+
+            WARNING: No validation is performed on initialization for the sake 
+             of efficiency. If you are concerned about invalid characters, you
+             should run BiologialSequence.isValid() after initialization. 
         """
         self._sequence = ''.join(sequence)
         self._identifier = identifier
