@@ -240,7 +240,8 @@ class BiologicalSequence(Sequence):
         except ValueError:
             raise ValueError(
                 "%s is not present in %r." % (subsequence, self))
-
+    
+    @classmethod
     def isGap(self, char):
         """ return True if char is a gap character
         """
@@ -250,7 +251,7 @@ class BiologicalSequence(Sequence):
         """ return True if any gap characters are in the BiologicalSequence
         """
         for e in self:
-            if e in self._gap_alphabet:
+            if self.isGap(e):
                 return True
         return False
 
