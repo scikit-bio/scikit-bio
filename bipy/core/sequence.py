@@ -99,22 +99,32 @@ class BiologicalSequence(Sequence):
     
     @property
     def Alphabet(self):
+        """ return the set of characters allowed in the BiologicalSequence
+        """
         return self._alphabet
 
     @property
     def Description(self):
+        """ return the description of the sequence
+        """
         return self._description
 
     @property
     def GapAlphabet(self):
+        """ return the set of gap characters allowed in the BiologicalSequence
+        """
         return self._gap_alphabet
 
     @property
     def Identifier(self):
+        """ return the identifier of the sequence
+        """
         return self._identifier
     
-    def count(self, char):
-        return self._sequence.count(char)
+    def count(self, subsequence):
+        """ return the number of occurences of subsequence
+        """
+        return self._sequence.count(subsequence)
  
     def degap(self):
         result = [e for e in self._sequence if e not in self._gap_alphabet]

@@ -193,6 +193,7 @@ class BiologicalSequenceTests(TestCase):
         """
         self.assertEqual(self.b1.count('A'),3)
         self.assertEqual(self.b1.count('T'),2)
+        self.assertEqual(self.b1.count('TT'),1)
 
     def test_degap(self):
         """ degap functions as expected
