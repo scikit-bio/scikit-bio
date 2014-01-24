@@ -229,6 +229,16 @@ class BiologicalSequenceTests(TestCase):
         self.assertAlmostEqual(
          self.b1.fractionSame(BiologicalSequence('GATTACC')),6./7.,5)
 
+    def test_gapVector(self):
+        """ gapVector functions as expected
+        """
+        self.assertEqual(self.b1.gapVector(),
+                         [False] * len(self.b1))
+        self.assertEqual(self.b7.gapVector(),
+                         [True] * len(self.b7))
+        self.assertEqual(self.b8.gapVector(),
+                        [False,False,True,True,True,True,
+                         True,True,False,False,False])
 
     def test_toFasta(self):
         """ toFasta functions as expected
