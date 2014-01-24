@@ -23,16 +23,26 @@ class BiologicalSequence(Sequence):
     _gap_alphabet = set('-.')
 
     def __init__(self, sequence, identifier="", description=""):
+        """ initialize a BiologicalSequence object
 
+            sequence: the biological sequence as a python Sequence
+             (e.g., a string, list, or tuple)
+            identifier: the sequence identifier (e.g., an accession number;
+             default: "")
+            description: a description or comment about the sequence (e.g.,
+            "green fluorescent protein"; default: "")
+        """
         self._sequence = ''.join(sequence)
         self._identifier = identifier
         self._description = description
  
     def __contains__(self, other):
+        """ return True if other is contained in the BiologicalSequence
+        """
         return other in self._sequence
    
     def __eq__(self, other):
-        """ define equality
+        """ equality (==) operator
             
             BiologicalSequences are equal if their sequence is the same and
              they are the same type
@@ -75,7 +85,12 @@ class BiologicalSequence(Sequence):
     def __str__(self):
         return str(self._sequence)
 
-    def _minimum_edit_distance(self,other):
+    def _hamming_distance(self,other):
+        """ return the hamming distance to other based on the shorter sequence
+
+            hamming distance is the number of substitutions to convert one
+             sequence to the other
+        """
         distance = 0
         for s, o in zip(self,other):
             if s != o:
@@ -106,13 +121,13 @@ class BiologicalSequence(Sequence):
         return self.__class__(result, identifier=self._identifier,
                               description=self._description)
 
-    def distance(self,other,distance_fn=_minimum_edit_distance):
+    def distance(self,other,distance_fn=_hamming_distance):
         """
         """
         return distance_fn(self,other)
 
     def fractionDiff(self,other):
-        min_edit_dist = self._minimum_edit_distance(other)
+        min_edit_dist = self._hamming_distance(other)
         len_shorter = min(len(self),len(other))
         return min_edit_dist / len_shorter
     

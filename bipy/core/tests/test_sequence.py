@@ -147,8 +147,8 @@ class BiologicalSequenceTests(TestCase):
         self.assertEqual(str(self.b2),"ACCGGTACC")
         self.assertEqual(str(self.b3),"GREG")
 
-    def test_minimum_edit_distance(self):
-        """ _minimum_edit_distance functions as expected
+    def test_hamming_distance(self):
+        """ _hamming_distance functions as expected
         """
         s1 = BiologicalSequence('AAAAA')
         s2 = BiologicalSequence('AAAAA')
@@ -157,12 +157,12 @@ class BiologicalSequenceTests(TestCase):
         s5 = BiologicalSequence('CCCCCCX')
         s6 = BiologicalSequence('CCCCCCC')
         
-        self.assertEqual(s1._minimum_edit_distance(s2),0)
-        self.assertEqual(s1._minimum_edit_distance(s3),0)
-        self.assertEqual(s1._minimum_edit_distance(s4),1)
-        self.assertEqual(s1._minimum_edit_distance(s5),5)
-        self.assertEqual(s4._minimum_edit_distance(s5),6)
-        self.assertEqual(s4._minimum_edit_distance(s6),6)
+        self.assertEqual(s1._hamming_distance(s2),0)
+        self.assertEqual(s1._hamming_distance(s3),0)
+        self.assertEqual(s1._hamming_distance(s4),1)
+        self.assertEqual(s1._hamming_distance(s5),5)
+        self.assertEqual(s4._hamming_distance(s5),6)
+        self.assertEqual(s4._hamming_distance(s6),6)
 
     def test_Alphabet(self):
         """ Alphabet property functions as expected
@@ -204,7 +204,7 @@ class BiologicalSequenceTests(TestCase):
     def test_distance(self):
         """ distance functions as expected
         """
-        # note that test_minimum_edit_distance covers default behavior more
+        # note that test_hamming_distance covers default behavior more
         # extensively
         self.assertEqual(self.b1.distance(self.b1),0)
         self.assertEqual(self.b1.distance(BiologicalSequence('GATTACC')),1)
