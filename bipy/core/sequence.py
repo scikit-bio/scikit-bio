@@ -274,7 +274,7 @@ class BiologicalSequence(Sequence):
             # we've exhausted the possibilities - it shouldn't be 
             # possible to get here, but just in case...
             raise BiologicalSequenceError(
-             "Can't construct header line in BiologicalSequence.toFasta().")
+             "Can't construct header line in BiologicalSequence.toFasta.")
 
         return '>%s\n%s%s' % (
          header_line, self._sequence, terminal_character)
@@ -324,6 +324,7 @@ class NucleotideSequence(BiologicalSequence):
              BiologicalSequence that is not in NucleotideSequence.ComplementMap
         """
         return self._complement(reversed(self))
+    rc = reverse_complement
 
 class DNASequence(NucleotideSequence):
  
