@@ -31,6 +31,7 @@ class BiologicalSequenceTests(TestCase):
          'LLPRTEIN', description="some description")
         self.b6 = BiologicalSequence('ACGTACGTACGT')
         self.b7 = BiologicalSequence('..--..')
+        self.b8 = BiologicalSequence('HE..--..LLO')
 
     def test_init(self):
         """ Initialization functions as expected with varied input types
@@ -163,12 +164,10 @@ class BiologicalSequenceTests(TestCase):
         self.assertEqual(s4._minimum_edit_distance(s5),6)
         self.assertEqual(s4._minimum_edit_distance(s6),6)
 
-    def test_Identifier(self):
-        """ Identifier property functions as expected
+    def test_Alphabet(self):
+        """ Alphabet property functions as expected
         """
-        self.assertEqual(self.b1.Identifier,"")
-        self.assertEqual(self.b2.Identifier,"test-seq-2")
-        self.assertEqual(self.b3.Identifier,"test-seq-3")
+        self.assertEqual(self.b1.Alphabet,set())
 
     def test_Description(self):
         """ Description property functions as expected
@@ -176,6 +175,44 @@ class BiologicalSequenceTests(TestCase):
         self.assertEqual(self.b1.Description,"")
         self.assertEqual(self.b2.Description,"A test sequence")
         self.assertEqual(self.b3.Description,"A protein sequence")
+
+    def test_GapAlphabet(self):
+        """ GapAlphabet property functions as expected
+        """
+        self.assertEqual(self.b1.GapAlphabet,set('-.'))
+
+    def test_Identifier(self):
+        """ Identifier property functions as expected
+        """
+        self.assertEqual(self.b1.Identifier,"")
+        self.assertEqual(self.b2.Identifier,"test-seq-2")
+        self.assertEqual(self.b3.Identifier,"test-seq-3")
+
+    def test_count(self):
+        """ count functions as expected
+        """
+        self.assertEqual(self.b1.count('A'),3)
+        self.assertEqual(self.b1.count('T'),2)
+
+    def test_degap(self):
+        """ degap functions as expected
+        """
+        self.assertEqual(self.b1.degap(),self.b1)
+        self.assertEqual(self.b7.degap(),BiologicalSequence(''))
+        self.assertEqual(self.b8.degap(),BiologicalSequence('HELLO'))
+
+    def test_distance(self):
+        """ distance functions as expected
+        """
+        # note that test_minimum_edit_distance covers default behavior more
+        # extensively
+        self.assertEqual(self.b1.distance(self.b1),0)
+        self.assertEqual(self.b1.distance(BiologicalSequence('GATTACC')),1)
+
+        def dumb_distance(x,y):
+            return 42
+
+        self.assertEqual(self.b1.distance(self.b1,distance_fn=dumb_distance),42)
 
     def test_toFasta(self):
         """ toFasta functions as expected
