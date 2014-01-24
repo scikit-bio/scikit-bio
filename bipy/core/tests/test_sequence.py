@@ -15,6 +15,7 @@ from bipy.core.sequence import (
     DnaSequence, RnaSequence, DNA, RNA)
 from bipy.core.exception import BiologicalSequenceError
 
+
 class BiologicalSequenceTests(TestCase):
     """ Tests of the BiologicalSequence class """
 
@@ -23,13 +24,14 @@ class BiologicalSequenceTests(TestCase):
         """
         self.b1 = BiologicalSequence('GATTACA')
         self.b2 = BiologicalSequence(
-         'ACCGGTACC', identifier="test-seq-2", description="A test sequence")
+            'ACCGGTACC', identifier="test-seq-2",
+            description="A test sequence")
         self.b3 = BiologicalSequence(
-         'GREG', identifier="test-seq-3", description="A protein sequence")
+            'GREG', identifier="test-seq-3", description="A protein sequence")
         self.b4 = BiologicalSequence(
-         'PRTEIN', identifier="test-seq-4")
+            'PRTEIN', identifier="test-seq-4")
         self.b5 = BiologicalSequence(
-         'LLPRTEIN', description="some description")
+            'LLPRTEIN', description="some description")
         self.b6 = BiologicalSequence('ACGTACGTACGT')
         self.b7 = BiologicalSequence('..--..')
         self.b8 = BiologicalSequence('HE..--..LLO')
@@ -39,32 +41,32 @@ class BiologicalSequenceTests(TestCase):
         """
         # init as string
         b = BiologicalSequence('ACCGGXZY')
-        self.assertEqual(str(b),'ACCGGXZY') 
-        self.assertEqual(b.Identifier,"")
-        self.assertEqual(b.Description,"")
+        self.assertEqual(str(b), 'ACCGGXZY') 
+        self.assertEqual(b.Identifier, "")
+        self.assertEqual(b.Description, "")
         
         # init as string with optional values
         b = BiologicalSequence(
-         'ACCGGXZY','test-seq-1','The first test sequence')
-        self.assertEqual(str(b),'ACCGGXZY') 
-        self.assertEqual(b.Identifier,"test-seq-1")
-        self.assertEqual(b.Description,"The first test sequence")
+            'ACCGGXZY', 'test-seq-1', 'The first test sequence')
+        self.assertEqual(str(b), 'ACCGGXZY') 
+        self.assertEqual(b.Identifier, "test-seq-1")
+        self.assertEqual(b.Description, "The first test sequence")
 
         # test init as a different string
         b = BiologicalSequence('WRRTY')
-        self.assertEqual(str(b),'WRRTY') 
+        self.assertEqual(str(b), 'WRRTY') 
 
         # init as list
         b = BiologicalSequence(list('ACCGGXZY'))
-        self.assertEqual(str(b),'ACCGGXZY') 
-        self.assertEqual(b.Identifier,"")
-        self.assertEqual(b.Description,"")
+        self.assertEqual(str(b), 'ACCGGXZY') 
+        self.assertEqual(b.Identifier, "")
+        self.assertEqual(b.Description, "")
         
         # init as tuple
         b = BiologicalSequence(tuple('ACCGGXZY'))
-        self.assertEqual(str(b),'ACCGGXZY') 
-        self.assertEqual(b.Identifier,"")
-        self.assertEqual(b.Description,"")
+        self.assertEqual(str(b), 'ACCGGXZY') 
+        self.assertEqual(b.Identifier, "")
+        self.assertEqual(b.Description, "")
 
     def test_contains(self):
         """ contains functions as expected
@@ -86,43 +88,43 @@ class BiologicalSequenceTests(TestCase):
         # identicial sequences of the same type are equal, even if they have
         # different identifiers and/or descriptions
         self.assertTrue(
-         BiologicalSequence('ACGT') == BiologicalSequence('ACGT'))
+            BiologicalSequence('ACGT') == BiologicalSequence('ACGT'))
         self.assertTrue(
-         BiologicalSequence('ACGT',identifier='a') == 
-         BiologicalSequence('ACGT',identifier='b'))
+            BiologicalSequence('ACGT', identifier='a') == 
+            BiologicalSequence('ACGT', identifier='b'))
         self.assertTrue(
-         BiologicalSequence('ACGT',description='c') == 
-         BiologicalSequence('ACGT',description='d'))
+            BiologicalSequence('ACGT', description='c') == 
+            BiologicalSequence('ACGT', description='d'))
         self.assertTrue(
-         BiologicalSequence('ACGT',identifier='a',description='c') == 
-         BiologicalSequence('ACGT',identifier='b',description='d'))
+            BiologicalSequence('ACGT', identifier='a', description='c') == 
+            BiologicalSequence('ACGT', identifier='b', description='d'))
         
         # different type causes sequences to not be equal
         self.assertFalse(
-         BiologicalSequence('ACGT') == NucleotideSequence('ACGT'))
+            BiologicalSequence('ACGT') == NucleotideSequence('ACGT'))
 
     def test_getitem(self):
         """ getitem functions as expected
         """
-        self.assertEqual(self.b1[0],'G')
-        self.assertEqual(self.b1[:],'GATTACA')
-        self.assertEqual(self.b1[::-1],'ACATTAG')
+        self.assertEqual(self.b1[0], 'G')
+        self.assertEqual(self.b1[:], 'GATTACA')
+        self.assertEqual(self.b1[::-1], 'ACATTAG')
 
     def test_iter(self):
         """ iter functions as expected
         """
         b1_iter = iter(self.b1)
         for actual, expected in zip(b1_iter, "GATTACA"):
-            self.assertEqual(actual,expected)
+            self.assertEqual(actual, expected)
 
-        self.assertRaises(StopIteration,b1_iter.next)
+        self.assertRaises(StopIteration, b1_iter.next)
 
     def test_len(self):
         """ len functions as expected
         """
-        self.assertEqual(len(self.b1),7)
-        self.assertEqual(len(self.b2),9)
-        self.assertEqual(len(self.b3),4)
+        self.assertEqual(len(self.b1), 7)
+        self.assertEqual(len(self.b2), 9)
+        self.assertEqual(len(self.b3), 4)
 
     def test_repr(self):
         """ repr functions as expected
@@ -137,16 +139,16 @@ class BiologicalSequenceTests(TestCase):
         """
         b1_reversed = reversed(self.b1)
         for actual, expected in zip(b1_reversed, "ACATTAG"):
-            self.assertEqual(actual,expected)
+            self.assertEqual(actual, expected)
 
-        self.assertRaises(StopIteration,b1_reversed.next)
+        self.assertRaises(StopIteration, b1_reversed.next)
 
     def test_str(self):
         """ str functions as expected
         """
-        self.assertEqual(str(self.b1),"GATTACA")
-        self.assertEqual(str(self.b2),"ACCGGTACC")
-        self.assertEqual(str(self.b3),"GREG")
+        self.assertEqual(str(self.b1), "GATTACA")
+        self.assertEqual(str(self.b2), "ACCGGTACC")
+        self.assertEqual(str(self.b3), "GREG")
 
     def test_hamming_distance(self):
         """ _hamming_distance functions as expected
@@ -158,98 +160,99 @@ class BiologicalSequenceTests(TestCase):
         s5 = BiologicalSequence('CCCCCCX')
         s6 = BiologicalSequence('CCCCCCC')
         
-        self.assertEqual(s1._hamming_distance(s2),0)
-        self.assertEqual(s1._hamming_distance(s3),0)
-        self.assertEqual(s1._hamming_distance(s4),1)
-        self.assertEqual(s1._hamming_distance(s5),5)
-        self.assertEqual(s4._hamming_distance(s5),6)
-        self.assertEqual(s4._hamming_distance(s6),6)
+        self.assertEqual(s1._hamming_distance(s2), 0)
+        self.assertEqual(s1._hamming_distance(s3), 0)
+        self.assertEqual(s1._hamming_distance(s4), 1)
+        self.assertEqual(s1._hamming_distance(s5), 5)
+        self.assertEqual(s4._hamming_distance(s5), 6)
+        self.assertEqual(s4._hamming_distance(s6), 6)
 
     def test_Alphabet(self):
         """ Alphabet property functions as expected
         """
-        self.assertEqual(self.b1.Alphabet,set())
+        self.assertEqual(self.b1.Alphabet, set())
 
     def test_Description(self):
         """ Description property functions as expected
         """
-        self.assertEqual(self.b1.Description,"")
-        self.assertEqual(self.b2.Description,"A test sequence")
-        self.assertEqual(self.b3.Description,"A protein sequence")
+        self.assertEqual(self.b1.Description, "")
+        self.assertEqual(self.b2.Description, "A test sequence")
+        self.assertEqual(self.b3.Description, "A protein sequence")
 
     def test_GapAlphabet(self):
         """ GapAlphabet property functions as expected
         """
-        self.assertEqual(self.b1.GapAlphabet,set('-.'))
+        self.assertEqual(self.b1.GapAlphabet, set('-.'))
 
     def test_Identifier(self):
         """ Identifier property functions as expected
         """
-        self.assertEqual(self.b1.Identifier,"")
-        self.assertEqual(self.b2.Identifier,"test-seq-2")
-        self.assertEqual(self.b3.Identifier,"test-seq-3")
+        self.assertEqual(self.b1.Identifier, "")
+        self.assertEqual(self.b2.Identifier, "test-seq-2")
+        self.assertEqual(self.b3.Identifier, "test-seq-3")
 
     def test_count(self):
         """ count functions as expected
         """
-        self.assertEqual(self.b1.count('A'),3)
-        self.assertEqual(self.b1.count('T'),2)
-        self.assertEqual(self.b1.count('TT'),1)
+        self.assertEqual(self.b1.count('A'), 3)
+        self.assertEqual(self.b1.count('T'), 2)
+        self.assertEqual(self.b1.count('TT'), 1)
 
     def test_degap(self):
         """ degap functions as expected
         """
-        self.assertEqual(self.b1.degap(),self.b1)
-        self.assertEqual(self.b7.degap(),BiologicalSequence(''))
-        self.assertEqual(self.b8.degap(),BiologicalSequence('HELLO'))
+        self.assertEqual(self.b1.degap(), self.b1)
+        self.assertEqual(self.b7.degap(), BiologicalSequence(''))
+        self.assertEqual(self.b8.degap(), BiologicalSequence('HELLO'))
 
     def test_distance(self):
         """ distance functions as expected
         """
         # note that test_hamming_distance covers default behavior more
         # extensively
-        self.assertEqual(self.b1.distance(self.b1),0)
-        self.assertEqual(self.b1.distance(BiologicalSequence('GATTACC')),1)
+        self.assertEqual(self.b1.distance(self.b1), 0)
+        self.assertEqual(self.b1.distance(BiologicalSequence('GATTACC')), 1)
 
-        def dumb_distance(x,y):
+        def dumb_distance(x, y):
             return 42
 
         self.assertEqual(
-         self.b1.distance(self.b1,distance_fn=dumb_distance),42)
+            self.b1.distance(self.b1, distance_fn=dumb_distance), 42)
 
     def test_fractionDiff(self):
         """ fractionDiff functions as expected
         """
-        self.assertEqual(self.b1.fractionDiff(self.b1),0.,5)
+        self.assertEqual(self.b1.fractionDiff(self.b1), 0., 5)
         self.assertEqual(
-         self.b1.fractionDiff(BiologicalSequence('GATTACC')),1./7.,5)
+            self.b1.fractionDiff(BiologicalSequence('GATTACC')), 1. / 7., 5)
 
     def test_fractionSame(self):
         """ fractionDiff functions as expected
         """
-        self.assertAlmostEqual(self.b1.fractionSame(self.b1),1.,5)
+        self.assertAlmostEqual(self.b1.fractionSame(self.b1), 1., 5)
         self.assertAlmostEqual(
-         self.b1.fractionSame(BiologicalSequence('GATTACC')),6./7.,5)
+            self.b1.fractionSame(BiologicalSequence('GATTACC')), 6. / 7., 5)
 
     def test_gapMaps(self):
         """ gapMaps functions as expected
         """
         # in sequence with no gaps, the gapMaps are identical
         self.assertEqual(self.b1.gapMaps(),
-                         ([0,1,2,3,4,5,6],[0,1,2,3,4,5,6]))
+                         ([0, 1, 2, 3, 4, 5, 6], [0, 1, 2, 3, 4, 5, 6]))
         # in sequence with all gaps, the map of degapped to gapped is the empty
         # list (bc its length is 0), and the map of gapped to degapped is all
         # None 
         self.assertEqual(self.b7.gapMaps(),
-                         ([],[None,None,None,None,None,None]))
+                         ([], [None, None, None, None, None, None]))
 
         self.assertEqual(self.b8.gapMaps(),
-                         ([0,1,8,9,10],
-                          [0,1,None,None,None,None,None,None,2,3,4]))
+                         ([0, 1, 8, 9, 10],
+                          [0, 1, None, None, None, None, None, None, 2, 3, 4]))
 
         # example from the gapMaps doc string
         self.assertEqual(BiologicalSequence('-ACCGA-TA-').gapMaps(),
-                         ([1,2,3,4,5,7,8],[None,0,1,2,3,4,None,5,6,None]))
+                         ([1, 2, 3, 4, 5, 7, 8],
+                          [None, 0, 1, 2, 3, 4, None, 5, 6, None]))
 
     def test_gapVector(self):
         """ gapVector functions as expected
@@ -259,14 +262,14 @@ class BiologicalSequenceTests(TestCase):
         self.assertEqual(self.b7.gapVector(),
                          [True] * len(self.b7))
         self.assertEqual(self.b8.gapVector(),
-                         [False,False,True,True,True,True,
-                          True,True,False,False,False])
+                         [False, False, True, True, True, True,
+                          True, True, False, False, False])
 
     def test_getUnsupportedCharacters(self):
         """ getUnsupportedCharacters functions as expected
         """
-        self.assertEqual(self.b1.getUnsupportedCharacters(),set('GATC'))
-        self.assertEqual(self.b7.getUnsupportedCharacters(),set())
+        self.assertEqual(self.b1.getUnsupportedCharacters(), set('GATC'))
+        self.assertEqual(self.b7.getUnsupportedCharacters(), set())
 
     def test_hasUnsupportedCharacters(self):
         """ hasUnsupportedCharacters functions as expected
@@ -276,10 +279,10 @@ class BiologicalSequenceTests(TestCase):
 
     def test_index(self):
         """ index functions as expected """
-        self.assertEqual(self.b1.index('G'),0)
-        self.assertEqual(self.b1.index('A'),1)
-        self.assertEqual(self.b1.index('AC'),4)
-        self.assertRaises(ValueError,self.b1.index,'x')
+        self.assertEqual(self.b1.index('G'), 0)
+        self.assertEqual(self.b1.index('A'), 1)
+        self.assertEqual(self.b1.index('AC'), 4)
+        self.assertRaises(ValueError, self.b1.index, 'x')
 
     def test_isGap(self):
         """ isGap functions as expected """
@@ -300,8 +303,8 @@ class BiologicalSequenceTests(TestCase):
     def test_toFasta(self):
         """ toFasta functions as expected
         """
-        self.assertEqual(self.b1.toFasta(),">\nGATTACA\n")
-        self.assertEqual(self.b1.toFasta(terminal_character=""),">\nGATTACA")
+        self.assertEqual(self.b1.toFasta(), ">\nGATTACA\n")
+        self.assertEqual(self.b1.toFasta(terminal_character=""), ">\nGATTACA")
         self.assertEqual(self.b2.toFasta(),
                          ">test-seq-2 A test sequence\nACCGGTACC\n")
         self.assertEqual(self.b3.toFasta(),
@@ -313,12 +316,13 @@ class BiologicalSequenceTests(TestCase):
 
         # alt parameters
         self.assertEqual(self.b2.toFasta(field_delimiter=":"),
-                        ">test-seq-2:A test sequence\nACCGGTACC\n")
+                         ">test-seq-2:A test sequence\nACCGGTACC\n")
         self.assertEqual(self.b2.toFasta(terminal_character="!"),
-                        ">test-seq-2 A test sequence\nACCGGTACC!")
+                         ">test-seq-2 A test sequence\nACCGGTACC!")
         self.assertEqual(
-         self.b2.toFasta(field_delimiter=":",terminal_character="!"),
-         ">test-seq-2:A test sequence\nACCGGTACC!")
+            self.b2.toFasta(field_delimiter=":", terminal_character="!"),
+            ">test-seq-2:A test sequence\nACCGGTACC!")
+
 
 class NucelotideSequenceTests(TestCase):
     """ Tests of the BiologicalSequence class """
@@ -328,7 +332,8 @@ class NucelotideSequenceTests(TestCase):
         """
         self.b1 = NucleotideSequence('GATTACA')
         self.b2 = NucleotideSequence(
-         'ACCGGUACC', identifier="test-seq-2", description="A test sequence")
+            'ACCGGUACC', identifier="test-seq-2",
+            description="A test sequence")
 
     def test_complement(self):
         """ complement fails (it's undefined for generic NucleotideSequence)
@@ -346,7 +351,8 @@ class NucelotideSequenceTests(TestCase):
         """ isReverseComplement fails (it's undefined)
         """
         self.assertRaises(BiologicalSequenceError,
-                          self.b1.isReverseComplement,self.b1)
+                          self.b1.isReverseComplement, self.b1)
+
 
 class DNASequenceTests(TestCase):
     """ Tests of the DNASequence class """
@@ -356,37 +362,40 @@ class DNASequenceTests(TestCase):
         """
         self.b1 = DNASequence('GATTACA')
         self.b2 = DNASequence(
-         'ACCGGTACC', identifier="test-seq-2", description="A test sequence")
+            'ACCGGTACC', identifier="test-seq-2",
+            description="A test sequence")
         self.b3 = DNASequence(
-         'ACCGGUACC', identifier="bad-seq-1", description="Not a DNA sequence")
+            'ACCGGUACC', identifier="bad-seq-1",
+            description="Not a DNA sequence")
         self.b4 = DNASequence(
-         'MRWSYKVHDBN', identifier="degen", 
-         description="All of the degenerate bases")
+            'MRWSYKVHDBN', identifier="degen", 
+            description="All of the degenerate bases")
 
     def test_complement(self):
         """ complement functions as expected
         """
-        self.assertEqual(self.b1.complement(),DNASequence("CTAATGT"))
-        self.assertEqual(self.b2.complement(),DNASequence("TGGCCATGG"))
-        self.assertRaises(BiologicalSequenceError,self.b3.complement)
-        self.assertEqual(self.b4.complement(),DNASequence("KYWSRMBDHVN"))
+        self.assertEqual(self.b1.complement(), DNASequence("CTAATGT"))
+        self.assertEqual(self.b2.complement(), DNASequence("TGGCCATGG"))
+        self.assertRaises(BiologicalSequenceError, self.b3.complement)
+        self.assertEqual(self.b4.complement(), DNASequence("KYWSRMBDHVN"))
 
     def test_reverse_complement(self):
         """ reverse complement functions as expected
         """
-        self.assertEqual(self.b1.reverse_complement(),DNASequence("TGTAATC"))
-        self.assertEqual(self.b2.reverse_complement(),DNASequence("GGTACCGGT"))
-        self.assertRaises(BiologicalSequenceError,self.b3.reverse_complement)
+        self.assertEqual(self.b1.reverse_complement(), DNASequence("TGTAATC"))
+        self.assertEqual(self.b2.reverse_complement(),
+                         DNASequence("GGTACCGGT"))
+        self.assertRaises(BiologicalSequenceError, self.b3.reverse_complement)
         self.assertEqual(self.b4.reverse_complement(),
                          DNASequence("NVHDBMRSWYK"))
 
     def test_getUnsupportedCharacters(self):
         """ getUnsupportedCharacters functions as expected
         """
-        self.assertEqual(self.b1.getUnsupportedCharacters(),set())
-        self.assertEqual(self.b2.getUnsupportedCharacters(),set())
-        self.assertEqual(self.b3.getUnsupportedCharacters(),set('U'))
-        self.assertEqual(self.b4.getUnsupportedCharacters(),set())
+        self.assertEqual(self.b1.getUnsupportedCharacters(), set())
+        self.assertEqual(self.b2.getUnsupportedCharacters(), set())
+        self.assertEqual(self.b3.getUnsupportedCharacters(), set('U'))
+        self.assertEqual(self.b4.getUnsupportedCharacters(), set())
 
     def test_hasUnsupportedCharacters(self):
         """ hasUnsupportedCharacters functions as expected
@@ -401,9 +410,10 @@ class DNASequenceTests(TestCase):
         """
         self.assertFalse(self.b1.isReverseComplement(self.b1))
         self.assertTrue(
-         self.b1.isReverseComplement(DNASequence('TGTAATC')))
+            self.b1.isReverseComplement(DNASequence('TGTAATC')))
         self.assertTrue(
-         self.b4.isReverseComplement(DNASequence('NVHDBMRSWYK')))
+            self.b4.isReverseComplement(DNASequence('NVHDBMRSWYK')))
+
 
 class RNASequenceTests(TestCase):
     """ Tests of the DNASequence class """
@@ -413,37 +423,40 @@ class RNASequenceTests(TestCase):
         """
         self.b1 = RNASequence('GAUUACA')
         self.b2 = RNASequence(
-         'ACCGGUACC', identifier="test-seq-2", description="A test sequence")
+            'ACCGGUACC', identifier="test-seq-2",
+            description="A test sequence")
         self.b3 = RNASequence(
-         'ACCGGTACC', identifier="bad-seq-1", description="Not a RNA sequence")
+            'ACCGGTACC', identifier="bad-seq-1",
+            description="Not a RNA sequence")
         self.b4 = RNASequence(
-         'MRWSYKVHDBN', identifier="degen", 
-         description="All of the degenerate bases")
+            'MRWSYKVHDBN', identifier="degen", 
+            description="All of the degenerate bases")
 
     def test_complement(self):
         """ complement functions as expected
         """
-        self.assertEqual(self.b1.complement(),RNASequence("CUAAUGU"))
-        self.assertEqual(self.b2.complement(),RNASequence("UGGCCAUGG"))
-        self.assertRaises(BiologicalSequenceError,self.b3.complement)
-        self.assertEqual(self.b4.complement(),RNASequence("KYWSRMBDHVN"))
+        self.assertEqual(self.b1.complement(), RNASequence("CUAAUGU"))
+        self.assertEqual(self.b2.complement(), RNASequence("UGGCCAUGG"))
+        self.assertRaises(BiologicalSequenceError, self.b3.complement)
+        self.assertEqual(self.b4.complement(), RNASequence("KYWSRMBDHVN"))
 
     def test_reverse_complement(self):
         """ reverse complement functions as expected
         """
-        self.assertEqual(self.b1.reverse_complement(),RNASequence("UGUAAUC"))
-        self.assertEqual(self.b2.reverse_complement(),RNASequence("GGUACCGGU"))
-        self.assertRaises(BiologicalSequenceError,self.b3.reverse_complement)
+        self.assertEqual(self.b1.reverse_complement(), RNASequence("UGUAAUC"))
+        self.assertEqual(self.b2.reverse_complement(),
+                         RNASequence("GGUACCGGU"))
+        self.assertRaises(BiologicalSequenceError, self.b3.reverse_complement)
         self.assertEqual(self.b4.reverse_complement(),
                          RNASequence("NVHDBMRSWYK"))
 
     def test_getUnsupportedCharacters(self):
         """ getUnsupportedCharacters functions as expected
         """
-        self.assertEqual(self.b1.getUnsupportedCharacters(),set())
-        self.assertEqual(self.b2.getUnsupportedCharacters(),set())
-        self.assertEqual(self.b3.getUnsupportedCharacters(),set('T'))
-        self.assertEqual(self.b4.getUnsupportedCharacters(),set())
+        self.assertEqual(self.b1.getUnsupportedCharacters(), set())
+        self.assertEqual(self.b2.getUnsupportedCharacters(), set())
+        self.assertEqual(self.b3.getUnsupportedCharacters(), set('T'))
+        self.assertEqual(self.b4.getUnsupportedCharacters(), set())
 
     def test_hasUnsupportedCharacters(self):
         """ hasUnsupportedCharacters functions as expected
@@ -458,11 +471,9 @@ class RNASequenceTests(TestCase):
         """
         self.assertFalse(self.b1.isReverseComplement(self.b1))
         self.assertTrue(
-         self.b1.isReverseComplement(RNASequence('UGUAAUC')))
+            self.b1.isReverseComplement(RNASequence('UGUAAUC')))
         self.assertTrue(
-         self.b4.isReverseComplement(RNASequence('NVHDBMRSWYK')))
-
-
+            self.b4.isReverseComplement(RNASequence('NVHDBMRSWYK')))
 
 if __name__ == "__main__":
     main()
