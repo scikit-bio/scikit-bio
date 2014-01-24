@@ -229,6 +229,22 @@ class BiologicalSequenceTests(TestCase):
         self.assertAlmostEqual(
          self.b1.fractionSame(BiologicalSequence('GATTACC')),6./7.,5)
 
+    def test_gapMaps(self):
+        """ gapMaps functions as expected
+        """
+        # in sequence with no gaps, the gapMaps are identical
+        self.assertEqual(self.b1.gapMaps(),
+                         ([0,1,2,3,4,5,6],[0,1,2,3,4,5,6]))
+        # in sequence with all gaps, the map of degapped to gapped is the empty
+        # list (bc its length is 0), and the map of gapped to degapped is all
+        # None 
+        self.assertEqual(self.b7.gapMaps(),
+                         ([],[None,None,None,None,None,None]))
+
+        self.assertEqual(self.b8.gapMaps(),
+                         ([0,1,8,9,10],
+                          [0,1,None,None,None,None,None,None,2,3,4]))
+
     def test_gapVector(self):
         """ gapVector functions as expected
         """
