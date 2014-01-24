@@ -28,8 +28,8 @@ class RDA(Ordination):
             dimensionally homogeneous (or you can set `scale_Y=True`).
         X : array_like
             :math:`n \times m, n \geq m` matrix of explanatory
-            variables. Its columns need not be standardize, but doing so
-            turns regression coefficients into standard regression
+            variables. Its columns need not be standardized, but doing
+            so turns regression coefficients into standard regression
             coefficients.
         scale_Y : bool, optional
             Controls whether the response matrix columns are scaled to
