@@ -310,6 +310,12 @@ class NucelotideSequenceTests(TestCase):
         self.assertRaises(BiologicalSequenceError,
                           self.b1.reverse_complement)
 
+    def test_isReverseComplement(self):
+        """ isReverseComplement fails (it's undefined)
+        """
+        self.assertRaises(BiologicalSequenceError,
+                          self.b1.isReverseComplement,self.b1)
+
 class DNASequenceTests(TestCase):
     """ Tests of the DNASequence class """
 
@@ -358,6 +364,14 @@ class DNASequenceTests(TestCase):
         self.assertTrue(self.b3.hasUnsupportedCharacters())
         self.assertFalse(self.b4.hasUnsupportedCharacters())
 
+    def test_isReverseComplement(self):
+        """ isReverseComplement functions as expected
+        """
+        self.assertFalse(self.b1.isReverseComplement(self.b1))
+        self.assertTrue(
+         self.b1.isReverseComplement(DNASequence('TGTAATC')))
+        self.assertTrue(
+         self.b4.isReverseComplement(DNASequence('NVHDBMRSWYK')))
 
 class RNASequenceTests(TestCase):
     """ Tests of the DNASequence class """
@@ -406,6 +420,16 @@ class RNASequenceTests(TestCase):
         self.assertFalse(self.b2.hasUnsupportedCharacters())
         self.assertTrue(self.b3.hasUnsupportedCharacters())
         self.assertFalse(self.b4.hasUnsupportedCharacters())
+
+    def test_isReverseComplement(self):
+        """ isReverseComplement functions as expected
+        """
+        self.assertFalse(self.b1.isReverseComplement(self.b1))
+        self.assertTrue(
+         self.b1.isReverseComplement(RNASequence('UGUAAUC')))
+        self.assertTrue(
+         self.b4.isReverseComplement(RNASequence('NVHDBMRSWYK')))
+
 
 
 if __name__ == "__main__":
