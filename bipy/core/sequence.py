@@ -80,23 +80,23 @@ class BiologicalSequence(Sequence):
             if s != o:
                 distance +=1
         return distance
-
-    @property
-    def Identifier(self):
-        return self._identifier
-
-    @property
-    def Description(self):
-        return self._description
     
     @property
     def Alphabet(self):
         return self._alphabet
 
     @property
+    def Description(self):
+        return self._description
+
+    @property
     def GapAlphabet(self):
         return self._gap_alphabet
 
+    @property
+    def Identifier(self):
+        return self._identifier
+    
     def count(self, char):
         return self._sequence.count(char)
  
