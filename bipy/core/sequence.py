@@ -335,8 +335,8 @@ class DNASequence(NucleotideSequence):
      'w':'w', 'k':'m', 'm':'k', 'b':'v', 'd':'h', 'h':'d', 'v':'b', 'n':'n'}
     _alphabet = set('ACGTRYMKWSBDHVNacgtrymkwsbdhvn')
 
-# class is accessible with alternative capitalization scheme for convenience  
-DnaSequence = DNASequence
+# class is accessible with alternative names for convenience  
+DnaSequence = DNA = DNASequence
 
 class RNASequence(NucleotideSequence):
   
@@ -347,5 +347,5 @@ class RNASequence(NucleotideSequence):
      'w':'w', 'k':'m', 'm':'k', 'b':'v', 'd':'h', 'h':'d', 'v':'b', 'n':'n'}
     _alphabet = set('ACGURYMKWSBDHVNacgurymkwsbdhvn')
 
-# class is accessible with alternative capitalization scheme for convenience  
-RnaSequence = RNASequence
+# class is accessible with alternative names for convenience  
+RnaSequence = RNA = RNASequence
