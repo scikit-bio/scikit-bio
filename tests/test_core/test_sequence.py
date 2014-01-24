@@ -64,52 +64,11 @@ class BiologicalSequenceTests(TestCase):
         self.assertEqual(b.Identifier,"")
         self.assertEqual(b.Description,"")
 
-    def test_getitem(self):
-        """ getitem functions as expected
+    def test_contains(self):
+        """ contains functions as expected
         """
-        self.assertEqual(self.b1[0],'G')
-        self.assertEqual(self.b1[:],'GATTACA')
-        self.assertEqual(self.b1[::-1],'ACATTAG')
-
-    def test_len(self):
-        """ len functions as expected
-        """
-        self.assertEqual(len(self.b1),7)
-        self.assertEqual(len(self.b2),9)
-        self.assertEqual(len(self.b3),4)
-
-    def test_str(self):
-        """ str functions as expected
-        """
-        self.assertEqual(str(self.b1),"GATTACA")
-        self.assertEqual(str(self.b2),"ACCGGTACC")
-        self.assertEqual(str(self.b3),"GREG")
-
-    def test_repr(self):
-        """ repr functions as expected
-        """
-        self.assertEqual(repr(self.b1),
-                        "<BiologicalSequence: GATTACA (length: 7)>")
-        self.assertEqual(repr(self.b6),
-                        "<BiologicalSequence: ACGTACGTAC... (length: 12)>")
-
-    def test_iter(self):
-        """ iter functions as expected
-        """
-        b1_iter = iter(self.b1)
-        for actual, expected in zip(b1_iter, "GATTACA"):
-            self.assertEqual(actual,expected)
-
-        self.assertRaises(StopIteration,b1_iter.next)
-
-    def test_reversed(self):
-        """ reversed functions as expected
-        """
-        b1_reversed = reversed(self.b1)
-        for actual, expected in zip(b1_reversed, "ACATTAG"):
-            self.assertEqual(actual,expected)
-
-        self.assertRaises(StopIteration,b1_reversed.next)
+        self.assertTrue('G' in self.b1)
+        self.assertFalse('g' in self.b1)
 
     def test_eq(self):
         """ equality functions as expected
@@ -140,6 +99,69 @@ class BiologicalSequenceTests(TestCase):
         self.assertFalse(
          BiologicalSequence('ACGT') == NucleotideSequence('ACGT'))
 
+    def test_getitem(self):
+        """ getitem functions as expected
+        """
+        self.assertEqual(self.b1[0],'G')
+        self.assertEqual(self.b1[:],'GATTACA')
+        self.assertEqual(self.b1[::-1],'ACATTAG')
+
+    def test_iter(self):
+        """ iter functions as expected
+        """
+        b1_iter = iter(self.b1)
+        for actual, expected in zip(b1_iter, "GATTACA"):
+            self.assertEqual(actual,expected)
+
+        self.assertRaises(StopIteration,b1_iter.next)
+
+    def test_len(self):
+        """ len functions as expected
+        """
+        self.assertEqual(len(self.b1),7)
+        self.assertEqual(len(self.b2),9)
+        self.assertEqual(len(self.b3),4)
+
+    def test_repr(self):
+        """ repr functions as expected
+        """
+        self.assertEqual(repr(self.b1),
+                        "<BiologicalSequence: GATTACA (length: 7)>")
+        self.assertEqual(repr(self.b6),
+                        "<BiologicalSequence: ACGTACGTAC... (length: 12)>")
+
+    def test_reversed(self):
+        """ reversed functions as expected
+        """
+        b1_reversed = reversed(self.b1)
+        for actual, expected in zip(b1_reversed, "ACATTAG"):
+            self.assertEqual(actual,expected)
+
+        self.assertRaises(StopIteration,b1_reversed.next)
+
+    def test_str(self):
+        """ str functions as expected
+        """
+        self.assertEqual(str(self.b1),"GATTACA")
+        self.assertEqual(str(self.b2),"ACCGGTACC")
+        self.assertEqual(str(self.b3),"GREG")
+
+    def test_minimum_edit_distance(self):
+        """ _minimum_edit_distance functions as expected
+        """
+        s1 = BiologicalSequence('AAAAA')
+        s2 = BiologicalSequence('AAAAA')
+        s3 = BiologicalSequence('AAAAAA')
+        s4 = BiologicalSequence('TAAAAA')
+        s5 = BiologicalSequence('CCCCCCX')
+        s6 = BiologicalSequence('CCCCCCC')
+        
+        self.assertEqual(s1._minimum_edit_distance(s2),0)
+        self.assertEqual(s1._minimum_edit_distance(s3),0)
+        self.assertEqual(s1._minimum_edit_distance(s4),1)
+        self.assertEqual(s1._minimum_edit_distance(s5),5)
+        self.assertEqual(s4._minimum_edit_distance(s5),6)
+        self.assertEqual(s4._minimum_edit_distance(s6),6)
 
     def test_Identifier(self):
         """ Identifier property functions as expected
@@ -241,7 +263,8 @@ class DNASequenceTests(TestCase):
         self.assertEqual(self.b1.reverse_complement(),DNASequence("TGTAATC"))
         self.assertEqual(self.b2.reverse_complement(),DNASequence("GGTACCGGT"))
         self.assertRaises(BiologicalSequenceError,self.b3.reverse_complement)
-        self.assertEqual(self.b4.reverse_complement(),DNASequence("NVHDBMRSWYK"))
+        self.assertEqual(self.b4.reverse_complement(),
+                         DNASequence("NVHDBMRSWYK"))
 
     def test_getUnsupportedCharacters(self):
         """ getUnsupportedCharacters functions as expected
