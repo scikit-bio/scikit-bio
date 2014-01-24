@@ -300,6 +300,12 @@ class BiologicalSequenceTests(TestCase):
         self.assertTrue(self.b7.isGapped())
         self.assertTrue(self.b8.isGapped())
 
+    def test_isValid(self):
+        """ isValid functions as expected
+        """
+        self.assertFalse(self.b1.isValid())
+        self.assertTrue(self.b7.isValid())
+
     def test_toFasta(self):
         """ toFasta functions as expected
         """

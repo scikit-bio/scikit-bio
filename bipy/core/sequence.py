@@ -254,6 +254,14 @@ class BiologicalSequence(Sequence):
                 return True
         return False
 
+    def isValid(self):
+        """ return True if the sequence is valid
+
+            validity is defined as not containing any characters outside of
+            Alphabet and GapAlphabet
+        """
+        return not self.hasUnsupportedCharacters()
+
     def toFasta(self, field_delimiter=" ", terminal_character="\n"):
         """ return the sequence as a fasta-formatted string
           
