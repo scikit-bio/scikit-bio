@@ -8,4 +8,4 @@ install:
   - pip install pep8 . --use-mirrors
 script:
   - nosetests
-  - pep8 --ignore=W bipy tests setup.py
+  - pep8 --ignore=W bipy setup.py
