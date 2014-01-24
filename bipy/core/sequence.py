@@ -11,10 +11,7 @@
 from __future__ import division
 from collections import Sequence
 
-LazyDeveloperError = NotImplementedError
-
-class BiologicalSequenceError(Exception):
-    pass
+from bipy.core.exception import BiologicalSequenceError
 
 class BiologicalSequence(Sequence):
     """ Base class for biological sequences """
