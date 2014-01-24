@@ -276,7 +276,7 @@ class NucleotideSequence(BiologicalSequence):
             except KeyError:
                 raise BiologicalSequenceError( 
                  "Don't know how to complement base %s. "
-                 "Is it in %s.ComplementMap?" % (base,self.__class__))
+                 "Is it in %s.ComplementMap?" % (base,self.__class__.__name__))
         return self.__class__(result, self._identifier, self._description)
 
     @property
