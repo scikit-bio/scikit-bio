@@ -8,6 +8,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
+from __future__ import division
 from collections import Sequence
 
 LazyDeveloperError = NotImplementedError
@@ -111,12 +112,12 @@ class BiologicalSequence(Sequence):
         return distance_fn(self,other)
 
     def fractionDiff(self,other):
-        return 1. - self.fracSame(other)
-    
-    def fractionSame(self,other):
-        min_edit_dist = self._minimum_edit_distance(self,other)
+        min_edit_dist = self._minimum_edit_distance(other)
         len_shorter = min(len(self),len(other))
         return min_edit_dist / len_shorter
+    
+    def fractionSame(self,other):
+        return 1. - self.fractionDiff(other)
 
     def gapVector(self):
         return [e in self._gap_alphabet for e in self._sequence]
