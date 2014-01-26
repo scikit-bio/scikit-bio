@@ -48,7 +48,6 @@ class BiologicalSequence(Sequence):
              should run BiologialSequence.isValid() after initialization. 
         """
         self._sequence = ''.join(sequence)
-        #self._sequence = array(list(sequence), dtype='|S1')
         self._identifier = identifier
         self._description = description
  
