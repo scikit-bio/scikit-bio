@@ -180,7 +180,7 @@ class BiologicalSequence(Sequence):
         """
         return 1. - self.fraction_diff(other)
 
-    def gapMaps(self):
+    def gap_maps(self):
         """ return tuples mapping positions bw gapped and ungapped seq
 
             two lists of integers are returned:
@@ -191,7 +191,7 @@ class BiologicalSequence(Sequence):
              that base in the ungapped sequence.
 
             for example:
-             BiologicalSequence('-ACCGA-TA-').gapMaps() ==
+             BiologicalSequence('-ACCGA-TA-').gap_maps() ==
              ([1,2,3,4,5,7,8],[None,0,1,2,3,4,None,5,6,None])
 
              because:
