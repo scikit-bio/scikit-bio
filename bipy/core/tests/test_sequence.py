@@ -226,12 +226,12 @@ class BiologicalSequenceTests(TestCase):
         self.assertEqual(
             self.b1.fraction_diff(BiologicalSequence('GATTACC')), 1. / 7., 5)
 
-    def test_fractionSame(self):
+    def test_fraction_same(self):
         """ fraction_same functions as expected
         """
-        self.assertAlmostEqual(self.b1.fractionSame(self.b1), 1., 5)
+        self.assertAlmostEqual(self.b1.fraction_same(self.b1), 1., 5)
         self.assertAlmostEqual(
-            self.b1.fractionSame(BiologicalSequence('GATTACC')), 6. / 7., 5)
+            self.b1.fraction_same(BiologicalSequence('GATTACC')), 6. / 7., 5)
 
     def test_gapMaps(self):
         """ gapMaps functions as expected

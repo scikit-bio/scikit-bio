@@ -173,7 +173,7 @@ class BiologicalSequence(Sequence):
         len_shorter = min(len(self), len(other))
         return min_edit_dist / len_shorter
     
-    def fractionSame(self, other):
+    def fraction_same(self, other):
         """ return fraction of positions that are the same 
         
             based on self._hamming_distance between the sequences
