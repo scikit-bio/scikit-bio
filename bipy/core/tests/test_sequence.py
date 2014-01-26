@@ -300,33 +300,33 @@ class BiologicalSequenceTests(TestCase):
         self.assertTrue(self.b7.is_gapped())
         self.assertTrue(self.b8.is_gapped())
 
-    def test_isValid(self):
-        """ isValid functions as expected
+    def test_is_valid(self):
+        """ is_valid functions as expected
         """
-        self.assertFalse(self.b1.isValid())
-        self.assertTrue(self.b7.isValid())
+        self.assertFalse(self.b1.is_valid())
+        self.assertTrue(self.b7.is_valid())
 
-    def test_toFasta(self):
-        """ toFasta functions as expected
+    def test_to_fasta(self):
+        """ to_fasta functions as expected
         """
-        self.assertEqual(self.b1.toFasta(), ">\nGATTACA\n")
-        self.assertEqual(self.b1.toFasta(terminal_character=""), ">\nGATTACA")
-        self.assertEqual(self.b2.toFasta(),
+        self.assertEqual(self.b1.to_fasta(), ">\nGATTACA\n")
+        self.assertEqual(self.b1.to_fasta(terminal_character=""), ">\nGATTACA")
+        self.assertEqual(self.b2.to_fasta(),
                          ">test-seq-2 A test sequence\nACCGGTACC\n")
-        self.assertEqual(self.b3.toFasta(),
+        self.assertEqual(self.b3.to_fasta(),
                          ">test-seq-3 A protein sequence\nGREG\n")
-        self.assertEqual(self.b4.toFasta(),
+        self.assertEqual(self.b4.to_fasta(),
                          ">test-seq-4\nPRTEIN\n")
-        self.assertEqual(self.b5.toFasta(),
+        self.assertEqual(self.b5.to_fasta(),
                          "> some description\nLLPRTEIN\n")
 
         # alt parameters
-        self.assertEqual(self.b2.toFasta(field_delimiter=":"),
+        self.assertEqual(self.b2.to_fasta(field_delimiter=":"),
                          ">test-seq-2:A test sequence\nACCGGTACC\n")
-        self.assertEqual(self.b2.toFasta(terminal_character="!"),
+        self.assertEqual(self.b2.to_fasta(terminal_character="!"),
                          ">test-seq-2 A test sequence\nACCGGTACC!")
         self.assertEqual(
-            self.b2.toFasta(field_delimiter=":", terminal_character="!"),
+            self.b2.to_fasta(field_delimiter=":", terminal_character="!"),
             ">test-seq-2:A test sequence\nACCGGTACC!")
 
 

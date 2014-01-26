@@ -45,7 +45,7 @@ class BiologicalSequence(Sequence):
 
             WARNING: No validation is performed on initialization for the sake 
              of efficiency. If you are concerned about invalid characters, you
-             should run BiologialSequence.isValid() after initialization. 
+             should run BiologialSequence.is_valid() after initialization. 
         """
         self._sequence = ''.join(sequence)
         self._identifier = identifier
@@ -269,7 +269,7 @@ class BiologicalSequence(Sequence):
                 return True
         return False
 
-    def isValid(self):
+    def is_valid(self):
         """ return True if the sequence is valid
 
             validity is defined as not containing any characters outside of
@@ -277,7 +277,7 @@ class BiologicalSequence(Sequence):
         """
         return not self.has_unsupported_characters()
 
-    def toFasta(self, field_delimiter=" ", terminal_character="\n"):
+    def to_fasta(self, field_delimiter=" ", terminal_character="\n"):
         """ return the sequence as a fasta-formatted string
           
             terminal_character: the last character to be included in the
