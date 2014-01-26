@@ -164,7 +164,7 @@ class BiologicalSequence(Sequence):
         """
         return distance_fn(self, other)
 
-    def fractionDiff(self, other):
+    def fraction_diff(self, other):
         """ return fraction of positions that differ 
         
             based on self._hamming_distance between the sequences
@@ -178,7 +178,7 @@ class BiologicalSequence(Sequence):
         
             based on self._hamming_distance between the sequences
         """
-        return 1. - self.fractionDiff(other)
+        return 1. - self.fraction_diff(other)
 
     def gapMaps(self):
         """ return tuples mapping positions bw gapped and ungapped seq

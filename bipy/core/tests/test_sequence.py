@@ -219,15 +219,15 @@ class BiologicalSequenceTests(TestCase):
         self.assertEqual(
             self.b1.distance(self.b1, distance_fn=dumb_distance), 42)
 
-    def test_fractionDiff(self):
-        """ fractionDiff functions as expected
+    def test_fraction_diff(self):
+        """ fraction_diff functions as expected
         """
-        self.assertEqual(self.b1.fractionDiff(self.b1), 0., 5)
+        self.assertEqual(self.b1.fraction_diff(self.b1), 0., 5)
         self.assertEqual(
-            self.b1.fractionDiff(BiologicalSequence('GATTACC')), 1. / 7., 5)
+            self.b1.fraction_diff(BiologicalSequence('GATTACC')), 1. / 7., 5)
 
     def test_fractionSame(self):
-        """ fractionDiff functions as expected
+        """ fraction_same functions as expected
         """
         self.assertAlmostEqual(self.b1.fractionSame(self.b1), 1., 5)
         self.assertAlmostEqual(
