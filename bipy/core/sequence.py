@@ -10,8 +10,7 @@
 
 from __future__ import division
 from collections import Sequence
-
-from numpy import array
+from itertools import izip
 
 from bipy.core.exception import BiologicalSequenceError
 
@@ -111,7 +110,7 @@ class BiologicalSequence(Sequence):
              sequence to the other
         """
         distance = 0
-        for s, o in zip(self, other):
+        for s, o in izip(self, other):
             if s != o:
                 distance += 1
         return distance
