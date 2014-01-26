@@ -129,7 +129,7 @@ class BiologicalSequence(Sequence):
         return self._description
 
     @property
-    def GapAlphabet(self):
+    def gap_alphabet(self):
         """ return the set of gap characters allowed in the BiologicalSequence
         """
         return self._gap_alphabet
@@ -273,7 +273,7 @@ class BiologicalSequence(Sequence):
         """ return True if the sequence is valid
 
             validity is defined as not containing any characters outside of
-            alphabet and GapAlphabet
+            alphabet and gap_alphabet
         """
         return not self.hasUnsupportedCharacters()
 
