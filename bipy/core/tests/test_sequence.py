@@ -43,14 +43,14 @@ class BiologicalSequenceTests(TestCase):
         b = BiologicalSequence('ACCGGXZY')
         self.assertEqual(str(b), 'ACCGGXZY') 
         self.assertEqual(b.Identifier, "")
-        self.assertEqual(b.Description, "")
+        self.assertEqual(b.description, "")
         
         # init as string with optional values
         b = BiologicalSequence(
             'ACCGGXZY', 'test-seq-1', 'The first test sequence')
         self.assertEqual(str(b), 'ACCGGXZY') 
         self.assertEqual(b.Identifier, "test-seq-1")
-        self.assertEqual(b.Description, "The first test sequence")
+        self.assertEqual(b.description, "The first test sequence")
 
         # test init as a different string
         b = BiologicalSequence('WRRTY')
@@ -60,13 +60,13 @@ class BiologicalSequenceTests(TestCase):
         b = BiologicalSequence(list('ACCGGXZY'))
         self.assertEqual(str(b), 'ACCGGXZY') 
         self.assertEqual(b.Identifier, "")
-        self.assertEqual(b.Description, "")
+        self.assertEqual(b.description, "")
         
         # init as tuple
         b = BiologicalSequence(tuple('ACCGGXZY'))
         self.assertEqual(str(b), 'ACCGGXZY') 
         self.assertEqual(b.Identifier, "")
-        self.assertEqual(b.Description, "")
+        self.assertEqual(b.description, "")
 
     def test_contains(self):
         """ contains functions as expected
@@ -172,12 +172,12 @@ class BiologicalSequenceTests(TestCase):
         """
         self.assertEqual(self.b1.alphabet, set())
 
-    def test_Description(self):
-        """ Description property functions as expected
+    def test_description(self):
+        """ description property functions as expected
         """
-        self.assertEqual(self.b1.Description, "")
-        self.assertEqual(self.b2.Description, "A test sequence")
-        self.assertEqual(self.b3.Description, "A protein sequence")
+        self.assertEqual(self.b1.description, "")
+        self.assertEqual(self.b2.description, "A test sequence")
+        self.assertEqual(self.b3.description, "A protein sequence")
 
     def test_GapAlphabet(self):
         """ GapAlphabet property functions as expected

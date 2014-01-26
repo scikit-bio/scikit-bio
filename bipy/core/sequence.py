@@ -123,7 +123,7 @@ class BiologicalSequence(Sequence):
         return self._alphabet
 
     @property
-    def Description(self):
+    def description(self):
         """ return the description of the sequence
         """
         return self._description
