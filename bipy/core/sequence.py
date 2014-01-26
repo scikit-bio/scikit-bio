@@ -229,7 +229,7 @@ class BiologicalSequence(Sequence):
         """
         return map(self.isGap, self._sequence)
 
-    def getUnsupportedCharacters(self):
+    def get_unsupported_characters(self):
         """ return set of unsupported characters present in the sequence
         """
         return set(self) - self._alphabet - self._gap_alphabet

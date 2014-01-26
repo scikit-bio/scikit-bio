@@ -265,11 +265,11 @@ class BiologicalSequenceTests(TestCase):
                          [False, False, True, True, True, True,
                           True, True, False, False, False])
 
-    def test_getUnsupportedCharacters(self):
-        """ getUnsupportedCharacters functions as expected
+    def test_get_unsupported_characters(self):
+        """ get_unsupported_characters functions as expected
         """
-        self.assertEqual(self.b1.getUnsupportedCharacters(), set('GATC'))
-        self.assertEqual(self.b7.getUnsupportedCharacters(), set())
+        self.assertEqual(self.b1.get_unsupported_characters(), set('GATC'))
+        self.assertEqual(self.b7.get_unsupported_characters(), set())
 
     def test_hasUnsupportedCharacters(self):
         """ hasUnsupportedCharacters functions as expected
@@ -395,13 +395,13 @@ class DNASequenceTests(TestCase):
         self.assertEqual(self.b4.reverse_complement(),
                          DNASequence("NVHDBMRSWYK"))
 
-    def test_getUnsupportedCharacters(self):
-        """ getUnsupportedCharacters functions as expected
+    def test_get_unsupported_characters(self):
+        """ get_unsupported_characters functions as expected
         """
-        self.assertEqual(self.b1.getUnsupportedCharacters(), set())
-        self.assertEqual(self.b2.getUnsupportedCharacters(), set())
-        self.assertEqual(self.b3.getUnsupportedCharacters(), set('U'))
-        self.assertEqual(self.b4.getUnsupportedCharacters(), set())
+        self.assertEqual(self.b1.get_unsupported_characters(), set())
+        self.assertEqual(self.b2.get_unsupported_characters(), set())
+        self.assertEqual(self.b3.get_unsupported_characters(), set('U'))
+        self.assertEqual(self.b4.get_unsupported_characters(), set())
 
     def test_hasUnsupportedCharacters(self):
         """ hasUnsupportedCharacters functions as expected
@@ -456,13 +456,13 @@ class RNASequenceTests(TestCase):
         self.assertEqual(self.b4.reverse_complement(),
                          RNASequence("NVHDBMRSWYK"))
 
-    def test_getUnsupportedCharacters(self):
-        """ getUnsupportedCharacters functions as expected
+    def test_get_unsupported_characters(self):
+        """ get_unsupported_characters functions as expected
         """
-        self.assertEqual(self.b1.getUnsupportedCharacters(), set())
-        self.assertEqual(self.b2.getUnsupportedCharacters(), set())
-        self.assertEqual(self.b3.getUnsupportedCharacters(), set('T'))
-        self.assertEqual(self.b4.getUnsupportedCharacters(), set())
+        self.assertEqual(self.b1.get_unsupported_characters(), set())
+        self.assertEqual(self.b2.get_unsupported_characters(), set())
+        self.assertEqual(self.b3.get_unsupported_characters(), set('T'))
+        self.assertEqual(self.b4.get_unsupported_characters(), set())
 
     def test_hasUnsupportedCharacters(self):
         """ hasUnsupportedCharacters functions as expected
