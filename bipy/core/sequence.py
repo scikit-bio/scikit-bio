@@ -212,7 +212,7 @@ class BiologicalSequence(Sequence):
         gapped_to_degapped = []
         non_gap_count = 0
         for i, e in enumerate(self):
-            if self.isGap(e):
+            if self.is_gap(e):
                 gapped_to_degapped.append(None)
             else:
                 gapped_to_degapped.append(non_gap_count)
@@ -227,7 +227,7 @@ class BiologicalSequence(Sequence):
              BiologicalSequence('..ACG--TT-').gap_vector() ==
              [True, True, False, False, False, True, True, False, False, True]
         """
-        return map(self.isGap, self._sequence)
+        return map(self.is_gap, self._sequence)
 
     def get_unsupported_characters(self):
         """ return set of unsupported characters present in the sequence
@@ -256,16 +256,16 @@ class BiologicalSequence(Sequence):
                 "%s is not present in %r." % (subsequence, self))
     
     @classmethod
-    def isGap(self, char):
+    def is_gap(self, char):
         """ return True if char is a gap character
         """
         return char in self._gap_alphabet
 
-    def isGapped(self):
+    def is_gapped(self):
         """ return True if any gap characters are in the BiologicalSequence
         """
         for e in self:
-            if self.isGap(e):
+            if self.is_gap(e):
                 return True
         return False
 
