@@ -135,7 +135,7 @@ class BiologicalSequence(Sequence):
         return self._gap_alphabet
 
     @property
-    def Identifier(self):
+    def identifier(self):
         """ return the identifier of the sequence
         """
         return self._identifier

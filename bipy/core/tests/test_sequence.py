@@ -42,14 +42,14 @@ class BiologicalSequenceTests(TestCase):
         # init as string
         b = BiologicalSequence('ACCGGXZY')
         self.assertEqual(str(b), 'ACCGGXZY') 
-        self.assertEqual(b.Identifier, "")
+        self.assertEqual(b.identifier, "")
         self.assertEqual(b.description, "")
         
         # init as string with optional values
         b = BiologicalSequence(
             'ACCGGXZY', 'test-seq-1', 'The first test sequence')
         self.assertEqual(str(b), 'ACCGGXZY') 
-        self.assertEqual(b.Identifier, "test-seq-1")
+        self.assertEqual(b.identifier, "test-seq-1")
         self.assertEqual(b.description, "The first test sequence")
 
         # test init as a different string
@@ -59,13 +59,13 @@ class BiologicalSequenceTests(TestCase):
         # init as list
         b = BiologicalSequence(list('ACCGGXZY'))
         self.assertEqual(str(b), 'ACCGGXZY') 
-        self.assertEqual(b.Identifier, "")
+        self.assertEqual(b.identifier, "")
         self.assertEqual(b.description, "")
         
         # init as tuple
         b = BiologicalSequence(tuple('ACCGGXZY'))
         self.assertEqual(str(b), 'ACCGGXZY') 
-        self.assertEqual(b.Identifier, "")
+        self.assertEqual(b.identifier, "")
         self.assertEqual(b.description, "")
 
     def test_contains(self):
@@ -184,12 +184,12 @@ class BiologicalSequenceTests(TestCase):
         """
         self.assertEqual(self.b1.gap_alphabet, set('-.'))
 
-    def test_Identifier(self):
-        """ Identifier property functions as expected
+    def test_identifier(self):
+        """ identifier property functions as expected
         """
-        self.assertEqual(self.b1.Identifier, "")
-        self.assertEqual(self.b2.Identifier, "test-seq-2")
-        self.assertEqual(self.b3.Identifier, "test-seq-3")
+        self.assertEqual(self.b1.identifier, "")
+        self.assertEqual(self.b2.identifier, "test-seq-2")
+        self.assertEqual(self.b3.identifier, "test-seq-3")
 
     def test_count(self):
         """ count functions as expected
