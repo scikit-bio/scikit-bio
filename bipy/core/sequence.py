@@ -318,11 +318,11 @@ class NucleotideSequence(BiologicalSequence):
             except KeyError:
                 raise BiologicalSequenceError( 
                     "Don't know how to complement base %s. Is it in "
-                    "%s.ComplementMap?" % (base, self.__class__.__name__))
+                    "%s.complement_map?" % (base, self.__class__.__name__))
         return self.__class__(result, self._identifier, self._description)
 
     @property
-    def ComplementMap(self):
+    def complement_map(self):
         """ return the mapping of characters to their complements
         """
         return self._complement_map
@@ -331,7 +331,7 @@ class NucleotideSequence(BiologicalSequence):
         """ return the complement of the sequence
 
             raises BiologicalSequence error if there is a character in the
-             BiologicalSequence that is not in NucleotideSequence.ComplementMap
+             BiologicalSequence that's not in NucleotideSequence.complement_map
         """
         return self._complement(self)
     
@@ -339,7 +339,7 @@ class NucleotideSequence(BiologicalSequence):
         """ return True if other is the complement of the BiologicalSequence
             
             raises BiologicalSequence error if there is a character in the
-             BiologicalSequence that is not in NucleotideSequence.ComplementMap
+             BiologicalSequence that's not in NucleotideSequence.complement_map
         """
         return self == other.reverse_complement()
 
@@ -347,7 +347,7 @@ class NucleotideSequence(BiologicalSequence):
         """ return the reverse complement of the sequence
 
             raises BiologicalSequence error if there is a character in the
-             BiologicalSequence that is not in NucleotideSequence.ComplementMap
+             BiologicalSequence that's not in NucleotideSequence.complement_map
         """
         return self._complement(reversed(self))
     rc = reverse_complement
