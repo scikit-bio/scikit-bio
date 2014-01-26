@@ -254,14 +254,14 @@ class BiologicalSequenceTests(TestCase):
                          ([1, 2, 3, 4, 5, 7, 8],
                           [None, 0, 1, 2, 3, 4, None, 5, 6, None]))
 
-    def test_gapVector(self):
-        """ gapVector functions as expected
+    def test_gap_vector(self):
+        """ gap_vector functions as expected
         """
-        self.assertEqual(self.b1.gapVector(),
+        self.assertEqual(self.b1.gap_vector(),
                          [False] * len(self.b1))
-        self.assertEqual(self.b7.gapVector(),
+        self.assertEqual(self.b7.gap_vector(),
                          [True] * len(self.b7))
-        self.assertEqual(self.b8.gapVector(),
+        self.assertEqual(self.b8.gap_vector(),
                          [False, False, True, True, True, True,
                           True, True, False, False, False])
 

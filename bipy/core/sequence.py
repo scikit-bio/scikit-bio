@@ -220,11 +220,11 @@ class BiologicalSequence(Sequence):
                 non_gap_count += 1
         return degapped_to_gapped, gapped_to_degapped
 
-    def gapVector(self):
+    def gap_vector(self):
         """ return a list indicating positions containing gaps 
 
             for example:
-             BiologicalSequence('..ACG--TT-').gapVector() ==
+             BiologicalSequence('..ACG--TT-').gap_vector() ==
              [True, True, False, False, False, True, True, False, False, True]
         """
         return map(self.isGap, self._sequence)
