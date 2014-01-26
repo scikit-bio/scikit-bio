@@ -12,7 +12,7 @@ from unittest import TestCase, main
 
 from bipy.core.sequence import (
     BiologicalSequence, NucleotideSequence, DNASequence, RNASequence,
-    DnaSequence, RnaSequence, DNA, RNA)
+    DNA, RNA)
 from bipy.core.exception import BiologicalSequenceError
 
 

@@ -368,8 +368,8 @@ class DNASequence(NucleotideSequence):
         'v': 'b', 'n': 'n'}
     _alphabet = set(get_iupac_dna_bases() + get_iupac_dna_bases().lower())
 
-# class is accessible with alternative names for convenience  
-DnaSequence = DNA = DNASequence
+# class is accessible with alternative name for convenience  
+DNA = DNASequence
 
 
 class RNASequence(NucleotideSequence):
@@ -386,5 +386,5 @@ class RNASequence(NucleotideSequence):
         'v': 'b', 'n': 'n'}
     _alphabet = set(get_iupac_rna_bases() + get_iupac_rna_bases().lower())
 
-# class is accessible with alternative names for convenience  
-RnaSequence = RNA = RNASequence
+# class is accessible with alternative name for convenience  
+RNA = RNASequence
