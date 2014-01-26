@@ -11,6 +11,8 @@
 from __future__ import division
 from collections import Sequence
 
+from numpy import array
+
 from bipy.core.exception import BiologicalSequenceError
 
 
@@ -46,6 +48,7 @@ class BiologicalSequence(Sequence):
              should run BiologialSequence.isValid() after initialization. 
         """
         self._sequence = ''.join(sequence)
+        #self._sequence = array(list(sequence), dtype='|S1')
         self._identifier = identifier
         self._description = description
  
@@ -87,7 +90,7 @@ class BiologicalSequence(Sequence):
         return not self.__eq__(other)
 
     def __repr__(self):
-        first_ten = self._sequence[:10]
+        first_ten = str(self)[:10]
         cn = self.__class__.__name__
         length = len(self)
         if length > 10:
@@ -100,7 +103,7 @@ class BiologicalSequence(Sequence):
         return reversed(self._sequence)
 
     def __str__(self):
-        return str(self._sequence)
+        return ''.join(self._sequence)
 
     def _hamming_distance(self, other):
         """ return the hamming distance to other based on the shorter sequence
@@ -289,7 +292,7 @@ class BiologicalSequence(Sequence):
             header_line = self._identifier
 
         return '>%s\n%s%s' % (
-            header_line, self._sequence, terminal_character)
+            header_line, str(self), terminal_character)
 
 
 class NucleotideSequence(BiologicalSequence):
