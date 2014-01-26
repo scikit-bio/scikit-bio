@@ -234,7 +234,7 @@ class BiologicalSequence(Sequence):
         """
         return set(self) - self._alphabet - self._gap_alphabet
 
-    def hasUnsupportedCharacters(self):
+    def has_unsupported_characters(self):
         """ return True if unsupported characters are present
 
             unsupported characters are defined as any characters that are not
@@ -275,7 +275,7 @@ class BiologicalSequence(Sequence):
             validity is defined as not containing any characters outside of
             alphabet and gap_alphabet
         """
-        return not self.hasUnsupportedCharacters()
+        return not self.has_unsupported_characters()
 
     def toFasta(self, field_delimiter=" ", terminal_character="\n"):
         """ return the sequence as a fasta-formatted string

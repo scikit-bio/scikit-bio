@@ -271,11 +271,11 @@ class BiologicalSequenceTests(TestCase):
         self.assertEqual(self.b1.get_unsupported_characters(), set('GATC'))
         self.assertEqual(self.b7.get_unsupported_characters(), set())
 
-    def test_hasUnsupportedCharacters(self):
-        """ hasUnsupportedCharacters functions as expected
+    def test_has_unsupported_characters(self):
+        """ has_unsupported_characters functions as expected
         """
-        self.assertTrue(self.b1.hasUnsupportedCharacters())
-        self.assertFalse(self.b7.hasUnsupportedCharacters())
+        self.assertTrue(self.b1.has_unsupported_characters())
+        self.assertFalse(self.b7.has_unsupported_characters())
 
     def test_index(self):
         """ index functions as expected """
@@ -403,13 +403,13 @@ class DNASequenceTests(TestCase):
         self.assertEqual(self.b3.get_unsupported_characters(), set('U'))
         self.assertEqual(self.b4.get_unsupported_characters(), set())
 
-    def test_hasUnsupportedCharacters(self):
-        """ hasUnsupportedCharacters functions as expected
+    def test_has_unsupported_characters(self):
+        """ has_unsupported_characters functions as expected
         """
-        self.assertFalse(self.b1.hasUnsupportedCharacters())
-        self.assertFalse(self.b2.hasUnsupportedCharacters())
-        self.assertTrue(self.b3.hasUnsupportedCharacters())
-        self.assertFalse(self.b4.hasUnsupportedCharacters())
+        self.assertFalse(self.b1.has_unsupported_characters())
+        self.assertFalse(self.b2.has_unsupported_characters())
+        self.assertTrue(self.b3.has_unsupported_characters())
+        self.assertFalse(self.b4.has_unsupported_characters())
 
     def test_isReverseComplement(self):
         """ isReverseComplement functions as expected
@@ -464,13 +464,13 @@ class RNASequenceTests(TestCase):
         self.assertEqual(self.b3.get_unsupported_characters(), set('T'))
         self.assertEqual(self.b4.get_unsupported_characters(), set())
 
-    def test_hasUnsupportedCharacters(self):
-        """ hasUnsupportedCharacters functions as expected
+    def test_has_unsupported_characters(self):
+        """ has_unsupported_characters functions as expected
         """
-        self.assertFalse(self.b1.hasUnsupportedCharacters())
-        self.assertFalse(self.b2.hasUnsupportedCharacters())
-        self.assertTrue(self.b3.hasUnsupportedCharacters())
-        self.assertFalse(self.b4.hasUnsupportedCharacters())
+        self.assertFalse(self.b1.has_unsupported_characters())
+        self.assertFalse(self.b2.has_unsupported_characters())
+        self.assertTrue(self.b3.has_unsupported_characters())
+        self.assertFalse(self.b4.has_unsupported_characters())
 
     def test_isReverseComplement(self):
         """ isReverseComplement functions as expected
