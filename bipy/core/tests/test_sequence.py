@@ -353,11 +353,11 @@ class NucelotideSequenceTests(TestCase):
         self.assertRaises(BiologicalSequenceError,
                           self.b1.reverse_complement)
 
-    def test_isReverseComplement(self):
-        """ isReverseComplement fails (it's undefined)
+    def test_is_reverse_complement(self):
+        """ is_reverse_complement fails (it's undefined)
         """
         self.assertRaises(BiologicalSequenceError,
-                          self.b1.isReverseComplement, self.b1)
+                          self.b1.is_reverse_complement, self.b1)
 
 
 class DNASequenceTests(TestCase):
@@ -411,14 +411,14 @@ class DNASequenceTests(TestCase):
         self.assertTrue(self.b3.has_unsupported_characters())
         self.assertFalse(self.b4.has_unsupported_characters())
 
-    def test_isReverseComplement(self):
-        """ isReverseComplement functions as expected
+    def test_is_reverse_complement(self):
+        """ is_reverse_complement functions as expected
         """
-        self.assertFalse(self.b1.isReverseComplement(self.b1))
+        self.assertFalse(self.b1.is_reverse_complement(self.b1))
         self.assertTrue(
-            self.b1.isReverseComplement(DNASequence('TGTAATC')))
+            self.b1.is_reverse_complement(DNASequence('TGTAATC')))
         self.assertTrue(
-            self.b4.isReverseComplement(DNASequence('NVHDBMRSWYK')))
+            self.b4.is_reverse_complement(DNASequence('NVHDBMRSWYK')))
 
 
 class RNASequenceTests(TestCase):
@@ -472,14 +472,14 @@ class RNASequenceTests(TestCase):
         self.assertTrue(self.b3.has_unsupported_characters())
         self.assertFalse(self.b4.has_unsupported_characters())
 
-    def test_isReverseComplement(self):
-        """ isReverseComplement functions as expected
+    def test_is_reverse_complement(self):
+        """ is_reverse_complement functions as expected
         """
-        self.assertFalse(self.b1.isReverseComplement(self.b1))
+        self.assertFalse(self.b1.is_reverse_complement(self.b1))
         self.assertTrue(
-            self.b1.isReverseComplement(RNASequence('UGUAAUC')))
+            self.b1.is_reverse_complement(RNASequence('UGUAAUC')))
         self.assertTrue(
-            self.b4.isReverseComplement(RNASequence('NVHDBMRSWYK')))
+            self.b4.is_reverse_complement(RNASequence('NVHDBMRSWYK')))
 
 if __name__ == "__main__":
     main()

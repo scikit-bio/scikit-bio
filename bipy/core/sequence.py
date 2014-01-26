@@ -335,7 +335,7 @@ class NucleotideSequence(BiologicalSequence):
         """
         return self._complement(self)
     
-    def isReverseComplement(self, other):
+    def is_reverse_complement(self, other):
         """ return True if other is the complement of the BiologicalSequence
             
             raises BiologicalSequence error if there is a character in the
