@@ -167,10 +167,10 @@ class BiologicalSequenceTests(TestCase):
         self.assertEqual(s4._hamming_distance(s5), 6)
         self.assertEqual(s4._hamming_distance(s6), 6)
 
-    def test_Alphabet(self):
-        """ Alphabet property functions as expected
+    def test_alphabet(self):
+        """ alphabet property functions as expected
         """
-        self.assertEqual(self.b1.Alphabet, set())
+        self.assertEqual(self.b1.alphabet, set())
 
     def test_Description(self):
         """ Description property functions as expected

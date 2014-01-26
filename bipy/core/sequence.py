@@ -117,7 +117,7 @@ class BiologicalSequence(Sequence):
         return distance
     
     @property
-    def Alphabet(self):
+    def alphabet(self):
         """ return the set of characters allowed in the BiologicalSequence
         """
         return self._alphabet
@@ -238,7 +238,7 @@ class BiologicalSequence(Sequence):
         """ return True if unsupported characters are present
 
             unsupported characters are defined as any characters that are not
-            in a BiologicalSequence's Alphabet
+            in a BiologicalSequence's alphabet
         """
         all_supported = self._alphabet | self._gap_alphabet
         for e in self:
@@ -273,7 +273,7 @@ class BiologicalSequence(Sequence):
         """ return True if the sequence is valid
 
             validity is defined as not containing any characters outside of
-            Alphabet and GapAlphabet
+            alphabet and GapAlphabet
         """
         return not self.hasUnsupportedCharacters()
 
