@@ -55,8 +55,9 @@ class BiologicalSequence(Sequence):
 
         if validate and not self.is_valid():
             unsupported_chars = self.unsupported_characters()
-            raise BiologicalSequenceError("Sequence contains invalid "
-                "characters: %s" % (" ".join(unsupported_chars)))
+            raise BiologicalSequenceError(
+                "Sequence contains invalid characters: %s" 
+                % (" ".join(unsupported_chars)))
  
     def __contains__(self, other):
         """ return True if other is contained in the BiologicalSequence
