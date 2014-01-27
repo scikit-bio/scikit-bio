@@ -44,7 +44,7 @@ class BiologicalSequence(Sequence):
         if validate and not self.is_valid():
             unsupported_chars = self.unsupported_characters()
             raise BiologicalSequenceError(
-                "Sequence contains invalid characters: %s" 
+                "Sequence contains unsupported characters: %s" 
                 % (" ".join(unsupported_chars)))
  
     def __contains__(self, other):
@@ -296,11 +296,11 @@ class NucleotideSequence(BiologicalSequence):
         all uppercase and lowercase IUPAC DNA/RNA characters are supported
     """
 
-    iupac_bases = "ACGTURYMKWSBDHVN"
+    iupac_characters = "ACGTURYMKWSBDHVN"
     # complement_map cannot be defined for a generic NucleotideSequence
     # as the complement of 'A' is ambiguous. thanks, nature...
     _complement_map = {}
-    _alphabet = set(iupac_bases + iupac_bases.lower())
+    _alphabet = set(iupac_characters + iupac_characters.lower())
 
     def _complement(self, seq_iterator):
         """ private method for complementing based on an iterator
@@ -355,14 +355,14 @@ class DNASequence(NucleotideSequence):
         all uppercase and lowercase IUPAC DNA/RNA characters are supported
     """
 
-    iupac_bases = "ACGTRYMKWSBDHVN"
+    iupac_characters = "ACGTRYMKWSBDHVN"
     _complement_map = {
         'A': 'T', 'T': 'A', 'G': 'C', 'C': 'G', 'Y': 'R', 'R': 'Y', 'S': 'S',
         'W': 'W', 'K': 'M', 'M': 'K', 'B': 'V', 'D': 'H', 'H': 'D', 'V': 'B', 
         'N': 'N', 'a': 't', 't': 'a', 'g': 'c', 'c': 'g', 'y': 'r', 'r': 'y', 
         's': 's', 'w': 'w', 'k': 'm', 'm': 'k', 'b': 'v', 'd': 'h', 'h': 'd',
         'v': 'b', 'n': 'n'}
-    _alphabet = set(iupac_bases + iupac_bases.lower())
+    _alphabet = set(iupac_characters + iupac_characters.lower())
 
 # class is accessible with alternative name for convenience  
 DNA = DNASequence
@@ -374,14 +374,14 @@ class RNASequence(NucleotideSequence):
         all uppercase and lowercase IUPAC DNA/RNA characters are supported
     """
  
-    iupac_bases = "ACGURYMKWSBDHVN"
+    iupac_characters = "ACGURYMKWSBDHVN"
     _complement_map = {
         'A': 'U', 'U': 'A', 'G': 'C', 'C': 'G', 'Y': 'R', 'R': 'Y', 'S': 'S',
         'W': 'W', 'K': 'M', 'M': 'K', 'B': 'V', 'D': 'H', 'H': 'D', 'V': 'B',
         'N': 'N', 'a': 'u', 'u': 'a', 'g': 'c', 'c': 'g', 'y': 'r', 'r': 'y',
         's': 's', 'w': 'w', 'k': 'm', 'm': 'k', 'b': 'v', 'd': 'h', 'h': 'd',
         'v': 'b', 'n': 'n'}
-    _alphabet = set(iupac_bases + iupac_bases.lower())
+    _alphabet = set(iupac_characters + iupac_characters.lower())
 
 # class is accessible with alternative name for convenience  
 RNA = RNASequence
