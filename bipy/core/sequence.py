@@ -37,6 +37,9 @@ class BiologicalSequence(Sequence):
                  validate=False):
         """ initialize a BiologicalSequence object
 
+            BiologicalSequence objects are intended to be immutable. Where 
+             applicable, methods return a new object of the same class.
+
             sequence: the biological sequence as a python Sequence
              (e.g., a string, list, or tuple)
             identifier: the sequence identifier (e.g., an accession number)
@@ -305,7 +308,7 @@ class BiologicalSequence(Sequence):
 class NucleotideSequence(BiologicalSequence):
     """ class for representing nucleotide sequences
         
-        all IUPAC DNA/RNA characters are supported
+        all uppercase and lowercase IUPAC DNA/RNA characters are supported
     """
 
     # complement_map cannot be defined for a generic NucleotideSequence
@@ -364,7 +367,7 @@ class NucleotideSequence(BiologicalSequence):
 class DNASequence(NucleotideSequence):
     """ class for representing DNA sequences
         
-        all IUPAC DNA characters are supported
+        all uppercase and lowercase IUPAC DNA/RNA characters are supported
     """
 
     _complement_map = {
@@ -382,7 +385,7 @@ DNA = DNASequence
 class RNASequence(NucleotideSequence):
     """ class for representing RNA sequences
         
-        all IUPAC RNA characters are supported
+        all uppercase and lowercase IUPAC DNA/RNA characters are supported
     """
  
     _complement_map = {
