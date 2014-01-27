@@ -1,11 +1,19 @@
+# Check on http://lint.travis-ci.org/ after modifying it!  Originally
+# modified from https://gist.github.com/dan-blanchard/7045057
 language: python
 python:
   - "2.7"
 before_install:
-  - sudo apt-get -qq update
-  - sudo apt-get -qq install libatlas-dev libatlas-base-dev liblapack-dev gfortran
+  - wget http://repo.continuum.io/miniconda/Miniconda-2.2.2-Linux-x86_64.sh -O miniconda.sh
+  - chmod +x miniconda.sh
+  - ./miniconda.sh -b
+  - export PATH=/home/travis/anaconda/bin:$PATH
+  # Update conda itself
+  - conda update --yes conda
 install:
-  - pip install pep8 . --use-mirrors
+  - conda create --yes -n env_name python=$TRAVIS_PYTHON_VERSION pip numpy scipy matplotlib nose pep8
+  - source activate env_name
+  - pip install .
 script:
   - nosetests
   - pep8 --ignore=W bipy setup.py
