@@ -255,10 +255,10 @@ class BiologicalSequence(Sequence):
                 "%s is not present in %r." % (subsequence, self))
     
     @classmethod
-    def is_gap(self, char):
+    def is_gap(cls, char):
         """ return True if char is a gap character
         """
-        return char in self._gap_alphabet
+        return char in cls._gap_alphabet
 
     def is_gapped(self):
         """ return True if any gap characters are in the BiologicalSequence
