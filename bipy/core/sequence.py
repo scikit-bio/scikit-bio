@@ -33,7 +33,8 @@ class BiologicalSequence(Sequence):
     _alphabet = set()
     _gap_alphabet = set('-.')
 
-    def __init__(self, sequence, identifier="", description=""):
+    def __init__(self, sequence, identifier="", description="", 
+                 validate=False):
         """ initialize a BiologicalSequence object
 
             sequence: the biological sequence as a python Sequence
@@ -41,6 +42,8 @@ class BiologicalSequence(Sequence):
             identifier: the sequence identifier (e.g., an accession number)
             description: a description or comment about the sequence (e.g.,
              "green fluorescent protein")
+            validate: if True, runs the is_valid method after construction
+             and raises BiologicalSequenceError if is_valid == False)
 
             WARNING: No validation is performed on initialization for the sake 
              of efficiency. If you are concerned about invalid characters, you
@@ -49,6 +52,11 @@ class BiologicalSequence(Sequence):
         self._sequence = ''.join(sequence)
         self._identifier = identifier
         self._description = description
+
+        if validate and not self.is_valid():
+            unsupported_chars = self.unsupported_characters()
+            raise BiologicalSequenceError("Sequence contains invalid "
+                "characters: %s" % (" ".join(unsupported_chars)))
  
     def __contains__(self, other):
         """ return True if other is contained in the BiologicalSequence
@@ -228,7 +236,7 @@ class BiologicalSequence(Sequence):
         """
         return map(self.is_gap, self._sequence)
 
-    def get_unsupported_characters(self):
+    def unsupported_characters(self):
         """ return set of unsupported characters present in the sequence
         """
         return set(self) - self._alphabet - self._gap_alphabet
