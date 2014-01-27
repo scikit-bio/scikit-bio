@@ -16,7 +16,11 @@ from bipy.core.exception import BiologicalSequenceError
 
 
 class BiologicalSequence(Sequence):
-    """ Base class for biological sequences """
+    """ Base class for biological sequences 
+        
+        BiologicalSequence objects are immutable. Where applicable, 
+         methods return a new object of the same class.
+    """
     
     _alphabet = set()
     _gap_alphabet = set('-.')
@@ -25,9 +29,6 @@ class BiologicalSequence(Sequence):
                  validate=False):
         """ initialize a BiologicalSequence object
 
-            BiologicalSequence objects are intended to be immutable. Where 
-             applicable, methods return a new object of the same class.
-
             sequence: the biological sequence as a python Sequence
              (e.g., a string, list, or tuple)
             identifier: the sequence identifier (e.g., an accession number)
@@ -35,7 +36,6 @@ class BiologicalSequence(Sequence):
              "green fluorescent protein")
             validate: if True, runs the is_valid method after construction
              and raises BiologicalSequenceError if is_valid == False
-
         """
         self._sequence = ''.join(sequence)
         self._identifier = identifier
