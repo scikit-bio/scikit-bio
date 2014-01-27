@@ -15,18 +15,6 @@ from itertools import izip
 from bipy.core.exception import BiologicalSequenceError
 
 
-def get_iupac_nucleotide_bases():
-    return 'ACGTURYMKWSBDHVN'
-
-
-def get_iupac_dna_bases():
-    return 'ACGTRYMKWSBDHVN'
-
-
-def get_iupac_rna_bases():
-    return 'ACGURYMKWSBDHVN'
-
-
 class BiologicalSequence(Sequence):
     """ Base class for biological sequences """
     
@@ -46,11 +34,8 @@ class BiologicalSequence(Sequence):
             description: a description or comment about the sequence (e.g.,
              "green fluorescent protein")
             validate: if True, runs the is_valid method after construction
-             and raises BiologicalSequenceError if is_valid == False)
+             and raises BiologicalSequenceError if is_valid == False
 
-            WARNING: No validation is performed on initialization for the sake 
-             of efficiency. If you are concerned about invalid characters, you
-             should run BiologialSequence.is_valid() after initialization. 
         """
         self._sequence = ''.join(sequence)
         self._identifier = identifier
@@ -311,11 +296,11 @@ class NucleotideSequence(BiologicalSequence):
         all uppercase and lowercase IUPAC DNA/RNA characters are supported
     """
 
+    iupac_bases = "ACGTURYMKWSBDHVN"
     # complement_map cannot be defined for a generic NucleotideSequence
     # as the complement of 'A' is ambiguous. thanks, nature...
     _complement_map = {}
-    _alphabet = set(get_iupac_nucleotide_bases() + 
-                    get_iupac_nucleotide_bases().lower())
+    _alphabet = set(iupac_bases + iupac_bases.lower())
 
     def _complement(self, seq_iterator):
         """ private method for complementing based on an iterator
@@ -370,13 +355,14 @@ class DNASequence(NucleotideSequence):
         all uppercase and lowercase IUPAC DNA/RNA characters are supported
     """
 
+    iupac_bases = "ACGTRYMKWSBDHVN"
     _complement_map = {
         'A': 'T', 'T': 'A', 'G': 'C', 'C': 'G', 'Y': 'R', 'R': 'Y', 'S': 'S',
         'W': 'W', 'K': 'M', 'M': 'K', 'B': 'V', 'D': 'H', 'H': 'D', 'V': 'B', 
         'N': 'N', 'a': 't', 't': 'a', 'g': 'c', 'c': 'g', 'y': 'r', 'r': 'y', 
         's': 's', 'w': 'w', 'k': 'm', 'm': 'k', 'b': 'v', 'd': 'h', 'h': 'd',
         'v': 'b', 'n': 'n'}
-    _alphabet = set(get_iupac_dna_bases() + get_iupac_dna_bases().lower())
+    _alphabet = set(iupac_bases + iupac_bases.lower())
 
 # class is accessible with alternative name for convenience  
 DNA = DNASequence
@@ -388,13 +374,14 @@ class RNASequence(NucleotideSequence):
         all uppercase and lowercase IUPAC DNA/RNA characters are supported
     """
  
+    iupac_bases = "ACGURYMKWSBDHVN"
     _complement_map = {
         'A': 'U', 'U': 'A', 'G': 'C', 'C': 'G', 'Y': 'R', 'R': 'Y', 'S': 'S',
         'W': 'W', 'K': 'M', 'M': 'K', 'B': 'V', 'D': 'H', 'H': 'D', 'V': 'B',
         'N': 'N', 'a': 'u', 'u': 'a', 'g': 'c', 'c': 'g', 'y': 'r', 'r': 'y',
         's': 's', 'w': 'w', 'k': 'm', 'm': 'k', 'b': 'v', 'd': 'h', 'h': 'd',
         'v': 'b', 'n': 'n'}
-    _alphabet = set(get_iupac_rna_bases() + get_iupac_rna_bases().lower())
+    _alphabet = set(iupac_bases + iupac_bases.lower())
 
 # class is accessible with alternative name for convenience  
 RNA = RNASequence
