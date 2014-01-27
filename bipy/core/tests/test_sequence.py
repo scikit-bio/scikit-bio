@@ -71,10 +71,10 @@ class BiologicalSequenceTests(TestCase):
     def test_init_validate(self):
         """ initialization with validation functions as expected
         """
-        self.assertRaises(BiologicalSequenceError,BiologicalSequence,"ACC",
-            validate=True)
+        self.assertRaises(BiologicalSequenceError, BiologicalSequence, "ACC",
+                          validate=True)
         # no error raised when only allow characters are passed
-        BiologicalSequence("..--..",validate=True)
+        BiologicalSequence("..--..", validate=True)
 
     def test_contains(self):
         """ contains functions as expected
