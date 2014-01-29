@@ -10,6 +10,7 @@
 
 from tempfile import gettempdir
 from os import remove, system, rmdir, getcwd, walk
+from copy import deepcopy
 
 from bipy.app.parameters import (FilePath, ValuedParameter, FlagParameter,
                                  MixedParameter)
@@ -44,10 +45,10 @@ class ParameterCombinationsTests(TestCase):
         always_on = ['-flag1', '-delim']
         param_iter = ParameterCombinations(self.mock_app, params, always_on)
 
-        exp = [self.mock_app._parameters.copy(),
-               self.mock_app._parameters.copy(),
-               self.mock_app._parameters.copy(),
-               self.mock_app._parameters.copy()]
+        exp = [deepcopy(self.mock_app._parameters),
+               deepcopy(self.mock_app._parameters),
+               deepcopy(self.mock_app._parameters),
+               deepcopy(self.mock_app._parameters)]
 
         # default is on in all these cases
         exp[0]['-flag1'].on()
