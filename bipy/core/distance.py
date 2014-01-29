@@ -364,21 +364,6 @@ class DistanceMatrix(object):
         """
         return not self == other
 
-    def __getslice__(self, start, stop):
-        """Support deprecated slicing method.
-
-        Taken from http://stackoverflow.com/a/14555197 (including docstring):
-
-        This solves a subtle bug, where __getitem__ is not called, and all the
-        dimensional checking not done, when a slice of only the first dimension
-        is taken, e.g. a[1:3]. From the Python docs:
-           Deprecated since version 2.0: Support slice objects as parameters to
-           the __getitem__() method. (However, built-in types in CPython
-           currently still implement __getslice__(). Therefore, you have to
-           override it in derived classes when implementing slicing.)
-        """
-        return self.__getitem__(slice(start, stop))
-
     def __getitem__(self, index):
         """Slice into the data by sample ID or numpy indexing.
 
