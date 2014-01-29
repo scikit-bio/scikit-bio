@@ -8,17 +8,12 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-from sys import platform
-from os import (remove, system, mkdir, getcwd, close, sep, environ)
+from os import remove, system, mkdir, getcwd, environ
 from os.path import isabs, exists, join
 from random import choice
 from tempfile import gettempdir
 
-from numpy import zeros, array, nonzero, max
-
-from bipy.app.parameters import (Parameter, FlagParameter, ValuedParameter,
-                                 MixedParameter, Parameters,
-                                 is_not_None, FilePath)
+from bipy.app.parameters import Parameters, FilePath
 from bipy.util.transform import cartesian_product
 
 # the following are used to create temp file names
