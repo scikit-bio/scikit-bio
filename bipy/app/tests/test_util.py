@@ -98,11 +98,10 @@ class ParameterIterBaseTests(TestCase):
                       '--value1': range(0, 5),
                       '-delim': range(0, 2) + [False],
                       '-mix1': [None, 0, 1, 2] + [False]}
-        exp_keys = exp_params.keys()
-        exp_values = exp_params.values()
 
-        self.assertEqual(sorted(self.param_base._keys), sorted(exp_keys))
-        self.assertEqual(sorted(self.param_base._values), sorted(exp_values))
+        self.assertEqual(exp_params,
+                         dict(zip(self.param_base._keys,
+                                  self.param_base._values)))
 
         self.params['asdasda'] = 5
         self.assertRaises(ValueError, ParameterIterBase, self.mock_app,
