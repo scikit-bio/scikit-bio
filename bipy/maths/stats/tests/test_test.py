@@ -51,6 +51,10 @@ class TestsHelper(TestCase):
         This is primarily used for testing the Mantel and correlation_test
         functions.
         """
+        # The function `fn` may be stochastic, so we seed numpy's
+        # random number generator in order to get reproducible
+        # results.
+        random.seed(10001)
         found_match = False
         for i in range(self.p_val_tests):
             if args is not None and kwargs is not None:
