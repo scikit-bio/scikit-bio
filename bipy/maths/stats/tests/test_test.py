@@ -23,19 +23,16 @@ from bipy.maths.stats.test import (G_2_by_2, G_fit, t_paired, t_one_sample,
                                    reverse_tails, tail)
 
 from numpy import (array, concatenate, fill_diagonal, reshape, arange, matrix,
-                   ones, testing, tril, cov, sqrt)
-import math
+                   ones, tril, random)
 
 
 class TestsHelper(TestCase):
 
     """Class with utility methods useful for other tests."""
 
-    def setUp(self):
-        """Sets up variables used in the tests."""
-        # How many times a p-value should be tested to fall in a given range
-        # before failing the test.
-        self.p_val_tests = 10
+    # How many times a p-value should be tested to fall in a given range
+    # before failing the test.
+    p_val_tests = 10
 
     def assertCorrectPValue(self, exp_min, exp_max, fn, args=None,
                             kwargs=None, p_val_idx=0):
@@ -54,6 +51,10 @@ class TestsHelper(TestCase):
         This is primarily used for testing the Mantel and correlation_test
         functions.
         """
+        # The function `fn` may be stochastic, so we seed numpy's
+        # random number generator in order to get reproducible
+        # results.
+        random.seed(10001)
         found_match = False
         for i in range(self.p_val_tests):
             if args is not None and kwargs is not None:
@@ -342,7 +343,7 @@ class StatTests(TestsHelper):
         """t_one_observation should match p. 228 of Sokal and Rohlf"""
         sample = array([4.02, 3.88, 3.34, 3.87, 3.18])
         x = 3.02
-        # note that this differs after the 3rd decimal place from what's in 
+        # note that this differs after the 3rd decimal place from what's in
         # the book, because Sokal and Rohlf round their intermediate steps...
         self.assertFloatEqual(t_one_observation(x, sample),
                               (-1.5637254, 0.1929248))
@@ -365,7 +366,7 @@ class StatTests(TestsHelper):
                          (float('inf'), 0.0))
         self.assertEqual(t_one_observation(2, sample,
                                            none_on_zero_variance=False,
-                                           tails='low'), 
+                                           tails='low'),
                          (float('inf'), 1.0))
 
     def test_mc_t_two_sample(self):
@@ -408,12 +409,12 @@ class StatTests(TestsHelper):
                                  p_val_idx=3)
 
         exp = (-2.8855783649036986, 0.99315596652421401)
-        obs = mc_t_two_sample(I, II, tails='high', 
+        obs = mc_t_two_sample(I, II, tails='high',
                               permutations=99, exp_diff=1)
         self.assertFloatEqual(obs[:2], exp)
         self.assertEqual(len(obs[2]), 99)
         self.assertCorrectPValue(0.55, 0.99, mc_t_two_sample, [I, II],
-                                 {'tails': 'high', 'permutations': 99, 
+                                 {'tails': 'high', 'permutations': 99,
                                   'exp_diff': 1}, p_val_idx=3)
 
     def test_mc_t_two_sample_unbalanced_obs(self):
@@ -842,7 +843,7 @@ class CorrelationTests(TestsHelper):
             self.assertTrue(r >= -1.0 and r <= 1.0)
         self.assertCorrectPValue(0.9, 0.93, correlation_t,
                                  (self.data1, self.data2),
-                                 {'method': 'pearson', 
+                                 {'method': 'pearson',
                                   'confidence_level': 0.90,
                                   'permutations': 990},
                                  p_val_idx=3)
@@ -858,10 +859,10 @@ class CorrelationTests(TestsHelper):
             self.assertTrue(r >= -1.0 and r <= 1.0)
         self.assertCorrectPValue(0.41, 0.46, correlation_t,
                                  (self.data1, self.data2),
-                                 {'method': 'pearson', 
+                                 {'method': 'pearson',
                                   'confidence_level': 0.90,
-                                  'permutations': 990, 
-                                  'tails': 'low'}, 
+                                  'permutations': 990,
+                                  'tails': 'low'},
                                  p_val_idx=3)
         self.assertFloatEqual(obs[4], (-0.5779077, 0.5256224))
 
@@ -945,7 +946,7 @@ class CorrelationTests(TestsHelper):
         for r in obs[2]:
             self.assertTrue(r >= -1.0 and r <= 1.0)
         self.assertCorrectPValue(0.06, 0.09, correlation_t,
-                                 ([1, 2, 3, 4], [1, 2, 3, 4]), 
+                                 ([1, 2, 3, 4], [1, 2, 3, 4]),
                                  p_val_idx=3)
         self.assertFloatEqual(obs[4], (0.99999999999998879, 1.0))
 
