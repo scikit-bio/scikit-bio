@@ -9,15 +9,16 @@
 #-----------------------------------------------------------------------------
 
 from tempfile import gettempdir
-from os import remove, system, mkdir, rmdir, removedirs, getcwd, walk
+from os import remove, system, rmdir, getcwd, walk
 
-from bipy.app.parameters import *
+from bipy.app.parameters import (FilePath, ValuedParameter, FlagParameter,
+                                 MixedParameter)
 from bipy.util.unit_test import TestCase, main
-from bipy.app.util import (Application, CommandLineApplication,
-                           CommandLineAppResult, ResultPath, ApplicationError,
-                           ParameterIterBase, ParameterCombinations,
-                           cmdline_generator, ApplicationNotFoundError,
-                           get_tmp_filename, guess_input_handler, app_path)
+from bipy.app.util import (CommandLineApplication, ResultPath,
+                           ApplicationError, ParameterIterBase,
+                           ParameterCombinations, cmdline_generator,
+                           ApplicationNotFoundError, get_tmp_filename,
+                           guess_input_handler, app_path)
 
 
 class ParameterCombinationsTests(TestCase):
@@ -173,7 +174,7 @@ class CommandLineGeneratorTests(TestCase):
 
         exp = [' '.join([bin, cmd, '-default=42', '-delimaaachoice1',
                          '-flag1',
-                         '-input="%s"' % inputfile, 
+                         '-input="%s"' % inputfile,
                          '-output="%s"' % outputfile,
                          '> "%s"' % stdout, '2> "%s"' % stderr])]
         exp.append(' '.join([bin, cmd, '-default=42', '-delimaaachoice1',
@@ -215,7 +216,7 @@ class CommandLineGeneratorTests(TestCase):
         # output, the stdout_ param gets set to '' which results in an extra
         # space being generated on the cmdline. this should be benign
         # across operating systems
-        exp = [' '.join([bin, cmd, '-default=42', '-delimaaachoice1', 
+        exp = [' '.join([bin, cmd, '-default=42', '-delimaaachoice1',
                          '-flag1',
                          '< "%s"' % inputfile, '> "%s"0' % outputfile, '',
                          '2> "%s"' % stderr])]
@@ -1048,9 +1049,9 @@ class ConvenienceFunctionTests(TestCase):
 
         """
         obs = get_tmp_filename()
-        # leaving the strings in this statement so it's clear where the 
+        # leaving the strings in this statement so it's clear where the
         # expected length comes from
-        self.assertEqual(len(obs), 
+        self.assertEqual(len(obs),
                          len(self.tmp_dir) + len('/') + self.tmp_name_len
                          + len('tmp') + len('.txt'))
         self.assertTrue(obs.startswith(self.tmp_dir))
@@ -1059,9 +1060,9 @@ class ConvenienceFunctionTests(TestCase):
         self.assertNotEqual(get_tmp_filename(), get_tmp_filename())
 
         obs = get_tmp_filename()
-        # leaving the strings in this statement so it's clear where the 
+        # leaving the strings in this statement so it's clear where the
         # expected length comes from
-        self.assertEqual(len(obs), 
+        self.assertEqual(len(obs),
                          len(self.tmp_dir) + len('/') + self.tmp_name_len
                          + len('tmp') + len('.txt'))
         assert obs.startswith(self.tmp_dir)
@@ -1093,26 +1094,23 @@ class ConvenienceFunctionTests(TestCase):
         self.assertEqual(app_path('lsxxyyx'), False)
 
 
-class RemoveTests(TestCase):
+def teardown_module():
+    """This will remove the test script."""
+    for dir, n, fnames in walk('/tmp/test/'):
+        for f in fnames:
+            try:
+                remove(dir + f)
+            except OSError:
+                pass
 
-    def test_remove(self):
-        """This will remove the test script. Not actually a test!"""
-
-        for dir, n, fnames in walk('/tmp/test/'):
-            for f in fnames:
-                try:
-                    remove(dir + f)
-                except OSError as e:
-                    pass
-
-        remove('/tmp/CLAppTester.py')
-        remove('/tmp/test space/CLAppTester.py')
-        remove('/tmp/CLApp Tester.py')
-        rmdir('/tmp/tmp space')
-        rmdir('/tmp/test')
-        rmdir('/tmp/test space')
-        rmdir('/tmp/tmp2')
-        rmdir('/tmp/blah')
+    remove('/tmp/CLAppTester.py')
+    remove('/tmp/test space/CLAppTester.py')
+    remove('/tmp/CLApp Tester.py')
+    rmdir('/tmp/tmp space')
+    rmdir('/tmp/test')
+    rmdir('/tmp/test space')
+    rmdir('/tmp/tmp2')
+    rmdir('/tmp/blah')
 
 
 #=====================END OF TESTS===================================
