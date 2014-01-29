@@ -116,7 +116,7 @@ class ParameterIterBaseTests(TestCase):
     def test_make_app_params(self):
         """Returns app parameters with expected values set"""
         values = [0, 0, True, None]
-        exp = self.mock_app._parameters.copy()
+        exp = deepcopy(self.mock_app._parameters)
         exp['-flag1'].on()
         exp['--value1'].on(0)
         exp['-delim'].on(0)
@@ -125,12 +125,12 @@ class ParameterIterBaseTests(TestCase):
         self.assertEqual(obs, exp)
 
         state = [4, False, False, False]
-        exp = self.mock_app._parameters.copy()
+        exp = deepcopy(self.mock_app._parameters)
         exp['-flag1'].off()
         exp['--value1'].on(4)
         exp['-delim'].off()
         exp['-mix1'].off()
-        obs = self.param_base._make_app_params(values)
+        obs = self.param_base._make_app_params(state)
         self.assertEqual(obs, exp)
 
 
