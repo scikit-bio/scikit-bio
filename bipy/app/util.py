@@ -17,8 +17,8 @@ from bipy.app.parameters import Parameters, FilePath
 from bipy.util.transform import cartesian_product
 
 # the following are used to create temp file names
-_chars = "abcdefghigklmnopqrstuvwxyz"
-_all_chars = _chars + _chars.upper() + "0123456790"
+from string import ascii_letters, digits
+_all_chars = ascii_letters + digits
 
 
 def app_path(app, env_variable='PATH'):
