@@ -12,6 +12,7 @@ from os import remove, system, mkdir, getcwd, environ
 from os.path import isabs, exists, join
 from random import choice
 from tempfile import gettempdir
+from copy import deepcopy
 
 from bipy.app.parameters import Parameters, FilePath
 from bipy.util.transform import cartesian_product
@@ -611,7 +612,9 @@ class ParameterIterBase:
     def _make_app_params(self, values):
         """Returns app's param dict with values set as described by values
         """
-        app_params = self.AppParams.copy()
+        # A deep copy is necessary. Otherwise the dict values refer to
+        # the same object.
+        app_params = deepcopy(self.AppParams)
         for key, value in zip(self._keys, values):
             if value is False:
                 app_params[key].off()
