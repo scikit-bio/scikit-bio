@@ -283,7 +283,7 @@ class CommandLineApplication(Application):
         err = None
         if not suppress_stderr:
             err = open(errfile, "r")
-        
+
         result_paths = self._get_result_paths(data)
         try:
             result = \
@@ -310,7 +310,7 @@ class CommandLineApplication(Application):
             result_paths):
         """Called if ApplicationError raised on building CommandLineAppResult
 
-            This is useful for checking log files or other special handling 
+            This is useful for checking log files or other special handling
              in cases when expected files aren't present.
 
         """
@@ -454,7 +454,7 @@ class CommandLineApplication(Application):
         """
         command = self._command
         if not (exists(command) or app_path(command)):
-            raise ApplicationNotFoundError("Cannot find %s. " 
+            raise ApplicationNotFoundError("Cannot find %s. "
                                            % command +
                                            "Is it installed? "
                                            "Is it in your path?")
@@ -648,7 +648,7 @@ class ParameterCombinations(ParameterIterBase):
 
 
 def cmdline_generator(param_iter, PathToBin=None, PathToCmd=None,
-                      PathsToInputs=None, PathToOutput=None, 
+                      PathsToInputs=None, PathToOutput=None,
                       PathToStderr='/dev/null', PathToStdout='/dev/null',
                       UniqueOutputs=False, InputParam=None,
                       OutputParam=None):
@@ -743,7 +743,7 @@ def get_tmp_filename(tmp_dir=gettempdir(), prefix="tmp", suffix=".txt",
             process which is creating the temporary file. For example, if
             your temp file will be used to build a temporary blast database,
             you might pass prefix=TempBlastDB
-        suffix: the suffix to be appended to the temp filename 
+        suffix: the suffix to be appended to the temp filename
             (default '.txt')
         result_constructor: the constructor used to build the result filename
             (default: cogent.app.parameters.FilePath). Note that joining
