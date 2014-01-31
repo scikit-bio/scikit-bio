@@ -13,9 +13,9 @@ from os.path import isabs, exists, join
 from random import choice
 from tempfile import gettempdir
 from copy import deepcopy
+from itertools import product
 
 from bipy.app.parameters import Parameters, FilePath
-from bipy.util.transform import cartesian_product
 
 # the following are used to create temp file names
 from string import ascii_letters, digits
@@ -643,7 +643,7 @@ class ParameterCombinations(ParameterIterBase):
 
         This method iterates over the cartesian product of parameter values
         """
-        for vals in cartesian_product(self._values):
+        for vals in product(*self._values):
             yield self._make_app_params(vals)
 
 
