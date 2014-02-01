@@ -33,7 +33,8 @@ def which(executable_name, env_var='PATH'):
     Note: this function will likely not work on Windows.
 
     Code taken and modified from:
-        http://www.velocityreviews.com/forums/t689526-python-library-call-equivalent-to-which-command.html
+        http://www.velocityreviews.com/forums/
+        t689526-python-library-call-equivalent-to-which-command.html
 
     """
     exec_fp = None
