@@ -8,6 +8,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
+import os
 from os import remove, system, mkdir, getcwd, environ
 from os.path import isabs, exists, join
 from random import choice
@@ -22,21 +23,32 @@ from string import ascii_letters, digits
 _all_chars = ascii_letters + digits
 
 
-def app_path(app, env_variable='PATH'):
-    """Returns path to an app, or False if app does not exist in env_variable
+def which(executable_name, env_var='PATH'):
+    """Equivalent to ``which executable_name`` in a *nix environment.
 
-     This functions in the same way as which in that it returns
-     the first path that contains the app.
+    Will return ``None`` if ``executable_name`` cannot be found in ``env_var``
+    or if ``env_var`` is not set. Otherwise will return the first match in
+    ``env_var``.
+
+    Note: this function will likely not work on Windows.
+
+    Code taken and modified from:
+        http://www.velocityreviews.com/forums/t689526-python-library-call-equivalent-to-which-command.html
 
     """
-    # strip off " characters, in case we got a FilePath object
-    app = app.strip('"')
-    paths = environ[env_variable].split(':')
-    for path in paths:
-        p = join(path, app)
-        if exists(p):
-            return p
-    return False
+    exec_fp = None
+
+    if env_var in os.environ:
+        paths = os.environ[env_var]
+
+        for path in paths.split(os.pathsep):
+            curr_exec_fp = os.path.join(path, executable_name)
+
+            if os.access(curr_exec_fp, os.X_OK):
+                exec_fp = curr_exec_fp
+                break
+
+    return exec_fp
 
 
 class ApplicationError(OSError):
@@ -453,11 +465,11 @@ class CommandLineApplication(Application):
             error.
         """
         command = self._command
-        if not (exists(command) or app_path(command)):
-            raise ApplicationNotFoundError("Cannot find %s. "
-                                           % command +
-                                           "Is it installed? "
-                                           "Is it in your path?")
+        # strip off " characters, in case we got a FilePath object
+        found_in_path = which(command.strip('"')) is not None
+        if not (exists(command) or found_in_path):
+            raise ApplicationNotFoundError("Cannot find %s. Is it installed? "
+                                           "Is it in your path?" % command)
 
     def _accept_exit_status(self, exit_status):
         """ Return False to raise an error due to exit_status of applciation
