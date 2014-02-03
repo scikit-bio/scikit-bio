@@ -10,7 +10,7 @@
 
 __version__ = '0.0.0-dev'
 
-from setuptools import setup
+from setuptools import find_packages, setup
 from distutils.command.build_py import build_py
 
 classes = """
@@ -38,7 +38,7 @@ setup(name='bipy',
       maintainer="The BiPy Developers",
       maintainer_email="gregcaporaso@gmail.com",
       url='https://github.com/biocore/bipy',
-      packages=['bipy'],
+      packages=find_packages(),
       install_requires=['numpy >= 1.5.1, <=1.7.1', 'matplotlib >= 1.1.0',
                         'scipy >=0.13.0'],
       extras_require={'test': ["nose >= 0.10.1", "tox >= 1.6.1", "pep8"],
