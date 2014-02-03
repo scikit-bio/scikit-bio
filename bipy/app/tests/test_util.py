@@ -10,6 +10,7 @@
 
 from tempfile import gettempdir
 from os import remove, system, rmdir, getcwd, walk
+from os.path import exists
 from copy import deepcopy
 
 from bipy.app.parameters import (FilePath, ValuedParameter, FlagParameter,
@@ -19,7 +20,7 @@ from bipy.app.util import (CommandLineApplication, ResultPath,
                            ApplicationError, ParameterIterBase,
                            ParameterCombinations, cmdline_generator,
                            ApplicationNotFoundError, get_tmp_filename,
-                           guess_input_handler, app_path)
+                           guess_input_handler, which)
 
 
 class ParameterCombinationsTests(TestCase):
@@ -1088,10 +1089,21 @@ class ConvenienceFunctionTests(TestCase):
         self.assertEqual(type(obs), str)
         self.assertNotEqual(type(obs), FilePath)
 
-    def test_app_path(self):
-        """app_path should return correct paths"""
-        self.assertEqual(app_path('ls'), '/bin/ls')
-        self.assertEqual(app_path('lsxxyyx'), False)
+    def test_which_found(self):
+        """Test finding filepath for executable that can be found."""
+        obs = which('ls')
+        self.assertTrue(obs is not None)
+        self.assertTrue(exists(obs))
+
+    def test_which_not_found(self):
+        """Test finding filepath for executable that cannot be found."""
+        obs = which('thiscommandhadbetternotexist')
+        self.assertTrue(obs is None)
+
+    def test_which_env_var(self):
+        """Test finding filepath using an env_var other than the default."""
+        obs = which('ls', env_var='THISENVVARHADBETTERNOTEXIST')
+        self.assertTrue(obs is None)
 
 
 def teardown_module():
