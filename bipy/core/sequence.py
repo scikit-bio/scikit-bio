@@ -301,7 +301,7 @@ class NucleotideSequence(BiologicalSequence):
                           "K": set("TUG"), "W": set("ATU"), "S": set("GC"), 
                           "B": set("CGTU"), "D": set("AGTU"), 
                           "H": set("ACTU"), "V": set("ACG"), "N": set("ACGTU")}
-    iupac_degenerate_characters = set(iupac_degeneracies.keys())
+    iupac_degenerate_characters = set(iupac_degeneracies)
     iupac_characters = iupac_standard_characters | iupac_degenerate_characters
     # complement_map cannot be defined for a generic NucleotideSequence
     # as the complement of 'A' is ambiguous. thanks, nature...
@@ -366,7 +366,7 @@ class DNASequence(NucleotideSequence):
                           "K": set("TG"), "W": set("AT"), "S": set("GC"), 
                           "B": set("CGT"), "D": set("AGT"), 
                           "H": set("ACT"), "V": set("ACG"), "N": set("ACGT")}
-    iupac_degenerate_characters = set(iupac_degeneracies.keys())
+    iupac_degenerate_characters = set(iupac_degeneracies)
     iupac_characters = iupac_standard_characters | iupac_degenerate_characters
     _complement_map = {
         'A': 'T', 'T': 'A', 'G': 'C', 'C': 'G', 'Y': 'R', 'R': 'Y', 'S': 'S',
@@ -391,7 +391,7 @@ class RNASequence(NucleotideSequence):
                           "K": set("UG"), "W": set("AU"), "S": set("GC"), 
                           "B": set("CGU"), "D": set("AGU"), 
                           "H": set("ACU"), "V": set("ACG"), "N": set("ACGU")}
-    iupac_degenerate_characters = set(iupac_degeneracies.keys())
+    iupac_degenerate_characters = set(iupac_degeneracies)
     iupac_characters = iupac_standard_characters | iupac_degenerate_characters
     _complement_map = {
         'A': 'U', 'U': 'A', 'G': 'C', 'C': 'G', 'Y': 'R', 'R': 'Y', 'S': 'S',
