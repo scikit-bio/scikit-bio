@@ -18,11 +18,12 @@ import numpy as np
 from bipy.core.distance import (random_distance_matrix, DistanceMatrix,
                                 DistanceMatrixError, DistanceMatrixFormatError,
                                 MissingDataError, MissingHeaderError,
-                                MissingSampleIDError, SampleIDMismatchError)
+                                MissingSampleIDError, SampleIDMismatchError,
+                                SymmetricDistanceMatrix)
 from bipy.util.unit_test import TestCase, main
 
 
-class RandomDistanceMatrix(TestCase):
+class RandomDistanceMatrixTests(TestCase):
     """Tests for bipy.core.distance.random_distance_matrix."""
 
     def test_default_usage(self):
@@ -69,35 +70,30 @@ class RandomDistanceMatrix(TestCase):
             _ = random_distance_matrix(2, sample_ids=['foo'])
 
 
-class DistanceMatrixTests(TestCase):
-    """Tests for the DistanceMatrix class."""
+class DistanceMatrixTestData(TestCase):
+    """Test data used in DistanceMatrix and subclass unit tests."""
 
     def setUp(self):
         """Set up test data for use in distance matrix unit tests."""
-        dm_1x1_data = [[0.0]]
+        self.dm_1x1_data = [[0.0]]
         self.dm_1x1_f = StringIO(DM_1x1_F)
-        self.dm_1x1 = DistanceMatrix(dm_1x1_data, ['a'])
 
-        dm_2x2_data = [[0.0, 0.123], [0.123, 0.0]]
+        self.dm_2x2_data = [[0.0, 0.123], [0.123, 0.0]]
         self.dm_2x2_f = StringIO(DM_2x2_F)
-        self.dm_2x2 = DistanceMatrix(dm_2x2_data, ['a', 'b'])
 
-        dm_3x3_data = [[0.0, 0.01, 4.2], [0.01, 0.0, 12.0], [4.2, 12.0, 0.0]]
+        self.dm_3x3_data = [[0.0, 0.01, 4.2], [0.01, 0.0, 12.0],
+                            [4.2, 12.0, 0.0]]
         self.dm_3x3_f = StringIO(DM_3x3_F)
-        self.dm_3x3 = DistanceMatrix(dm_3x3_data, ['a', 'b', 'c'])
 
         self.dm_3x3_whitespace_f = StringIO(DM_3x3_WHITESPACE_F)
 
         self.dm_f_lines = [DM_1x1_F, DM_2x2_F, DM_3x3_F]
         self.dm_fs = [self.dm_1x1_f, self.dm_2x2_f, self.dm_3x3_f]
-        self.dms = [self.dm_1x1, self.dm_2x2, self.dm_3x3]
         self.dm_shapes = [(1, 1), (2, 2), (3, 3)]
         self.dm_sizes = [1, 4, 9]
-        self.dm_condensed_forms = [np.array([]), np.array([0.123]),
-                                   np.array([0.01, 4.2, 12.0])]
-        self.dm_redundant_forms = [np.array(dm_1x1_data),
-                                   np.array(dm_2x2_data),
-                                   np.array(dm_3x3_data)]
+        self.dm_redundant_forms = [np.array(self.dm_1x1_data),
+                                   np.array(self.dm_2x2_data),
+                                   np.array(self.dm_3x3_data)]
 
         self.bad_dm_f1 = StringIO(BAD_DM_F1)
         self.bad_dm_f2 = StringIO(BAD_DM_F2)
@@ -106,6 +102,19 @@ class DistanceMatrixTests(TestCase):
         self.bad_dm_f5 = StringIO(BAD_DM_F5)
         self.bad_dm_f6 = StringIO(BAD_DM_F6)
         self.bad_dm_f7 = StringIO(BAD_DM_F7)
+
+
+class DistanceMatrixTests(DistanceMatrixTestData):
+    """Tests for the DistanceMatrix class."""
+
+    def setUp(self):
+        super(DistanceMatrixTests, self).setUp()
+
+        self.dm_1x1 = DistanceMatrix(self.dm_1x1_data, ['a'])
+        self.dm_2x2 = DistanceMatrix(self.dm_2x2_data, ['a', 'b'])
+        self.dm_3x3 = DistanceMatrix(self.dm_3x3_data, ['a', 'b', 'c'])
+
+        self.dms = [self.dm_1x1, self.dm_2x2, self.dm_3x3]
 
     def test_round_trip_read_write(self):
         """Test reading, writing, and reading again works as expected."""
@@ -159,10 +168,6 @@ class DistanceMatrixTests(TestCase):
         with self.assertRaises(MissingDataError):
             _ = DistanceMatrix.from_file(self.bad_dm_f5)
 
-        # Nonsymmetric.
-        with self.assertRaises(DistanceMatrixError):
-            _ = DistanceMatrix.from_file(self.bad_dm_f6)
-
         # Non-hollow.
         with self.assertRaises(DistanceMatrixError):
             _ = DistanceMatrix.from_file(self.bad_dm_f7)
@@ -207,11 +212,6 @@ class DistanceMatrixTests(TestCase):
 
         # Non-hollow.
         data = [[0.0, 1.0], [1.0, 0.01]]
-        with self.assertRaises(DistanceMatrixError):
-            _ = DistanceMatrix(data, ['a', 'b'])
-
-        # Nonsymmetric.
-        data = [[0.0, 2.0], [1.0, 0.0]]
         with self.assertRaises(DistanceMatrixError):
             _ = DistanceMatrix(data, ['a', 'b'])
 
@@ -274,13 +274,8 @@ class DistanceMatrixTests(TestCase):
         for dm in self.dms:
             self.assertEqual(dm.T, dm)
             self.assertEqual(dm.transpose(), dm)
-            self.assertTrue(dm.transpose() is dm)
-
-    def test_condensed_form(self):
-        """Test retrieving the data matrix in condensed form."""
-        for dm, condensed in izip(self.dms, self.dm_condensed_forms):
-            obs = dm.condensed_form()
-            self.assertTrue(np.array_equal(obs, condensed))
+            # We should get a reference to a different object back.
+            self.assertTrue(dm.transpose() is not dm)
 
     def test_redundant_form(self):
         """Test retrieving the data matrix in redundant form."""
@@ -413,6 +408,46 @@ class DistanceMatrixTests(TestCase):
         exp = 'a, b, ...'
         obs = self.dm_3x3._pprint_sample_ids(max_chars=5)
         self.assertEqual(obs, exp)
+
+
+class SymmetricDistanceMatrixTests(DistanceMatrixTestData):
+    """Tests for the SymmetricDistanceMatrix class."""
+
+    def setUp(self):
+        super(SymmetricDistanceMatrixTests, self).setUp()
+
+        self.dm_1x1 = SymmetricDistanceMatrix(self.dm_1x1_data, ['a'])
+        self.dm_2x2 = SymmetricDistanceMatrix(self.dm_2x2_data, ['a', 'b'])
+        self.dm_3x3 = SymmetricDistanceMatrix(self.dm_3x3_data,
+                                              ['a', 'b', 'c'])
+
+        self.dms = [self.dm_1x1, self.dm_2x2, self.dm_3x3]
+        self.dm_condensed_forms = [np.array([]), np.array([0.123]),
+                                   np.array([0.01, 4.2, 12.0])]
+
+    def test_from_file_invalid_input(self):
+        """Raises error on ill-formatted distance matrix file."""
+        # Nonsymmetric.
+        with self.assertRaises(DistanceMatrixError):
+            _ = SymmetricDistanceMatrix.from_file(self.bad_dm_f6)
+
+    def test_init_invalid_input(self):
+        """Raises error on invalid distance matrix data / sample IDs."""
+        # Nonsymmetric.
+        data = [[0.0, 2.0], [1.0, 0.0]]
+        with self.assertRaises(DistanceMatrixError):
+            _ = SymmetricDistanceMatrix(data, ['a', 'b'])
+
+    def test_condensed_form(self):
+        """Test retrieving the data matrix in condensed form."""
+        for dm, condensed in izip(self.dms, self.dm_condensed_forms):
+            obs = dm.condensed_form()
+            self.assertTrue(np.array_equal(obs, condensed))
+
+    def test_validate(self):
+        """Empty stub: SymmetricDistanceMatrix._validate tested elsewhere."""
+        pass
+
 
 # 1x1:
 #     0.0
