@@ -293,23 +293,29 @@ class BiologicalSequence(Sequence):
 def complement(seq_iterator, klass):
     return klass.comp(seq_iterator)
 
+
 def reverse_complement(seq_iterator, klass):
     return klass.rev_comp(seq_iterator)
 rc = reverse_complement
 
+
 def dna_complement(seq_iterator):
     return complement(seq_iterator, DNA)
+
 
 def dna_reverse_complement(seq_iterator):
     return reverse_complement(seq_iterator, DNA)
 dna_rc = dna_reverse_complement
 
+
 def rna_complement(seq_iterator):
     return complement(seq_iterator, RNA)
+
 
 def rna_reverse_complement(seq_iterator):
     return reverse_complement(seq_iterator, RNA)
 rna_rc = rna_reverse_complement
+
 
 class NucleotideSequence(BiologicalSequence):
     """ class for representing nucleotide sequences
