@@ -296,17 +296,17 @@ class NucleotideSequence(BiologicalSequence):
         all uppercase and lowercase IUPAC DNA/RNA characters are supported
     """
 
-    iupac_standard_characters = "ACGTU"
+    iupac_standard_characters = set("ACGTU")
     iupac_degeneracies = {"R": set("AG"), "Y": set("CTU"), "M": set("AC"), 
                           "K": set("TUG"), "W": set("ATU"), "S": set("GC"), 
                           "B": set("CGTU"), "D": set("AGTU"), 
                           "H": set("ACTU"), "V": set("ACG"), "N": set("ACGTU")}
-    iupac_degenerate_characters = "".join(iupac_degeneracies.keys())
-    iupac_characters = iupac_standard_characters + iupac_degenerate_characters
+    iupac_degenerate_characters = set(iupac_degeneracies.keys())
+    iupac_characters = iupac_standard_characters | iupac_degenerate_characters
     # complement_map cannot be defined for a generic NucleotideSequence
     # as the complement of 'A' is ambiguous. thanks, nature...
     _complement_map = {}
-    _alphabet = set(iupac_characters + iupac_characters.lower())
+    _alphabet = iupac_characters | set([c.lower() for c in iupac_characters])
 
     def _complement(self, seq_iterator):
         """ private method for complementing based on an iterator
@@ -361,20 +361,20 @@ class DNASequence(NucleotideSequence):
         all uppercase and lowercase IUPAC DNA characters are supported
     """
 
-    iupac_standard_characters = "ACGT"
+    iupac_standard_characters = set("ACGT")
     iupac_degeneracies = {"R": set("AG"), "Y": set("CT"), "M": set("AC"), 
                           "K": set("TG"), "W": set("AT"), "S": set("GC"), 
                           "B": set("CGT"), "D": set("AGT"), 
                           "H": set("ACT"), "V": set("ACG"), "N": set("ACGT")}
-    iupac_degenerate_characters = "".join(iupac_degeneracies.keys())
-    iupac_characters = iupac_standard_characters + iupac_degenerate_characters
+    iupac_degenerate_characters = set(iupac_degeneracies.keys())
+    iupac_characters = iupac_standard_characters | iupac_degenerate_characters
     _complement_map = {
         'A': 'T', 'T': 'A', 'G': 'C', 'C': 'G', 'Y': 'R', 'R': 'Y', 'S': 'S',
         'W': 'W', 'K': 'M', 'M': 'K', 'B': 'V', 'D': 'H', 'H': 'D', 'V': 'B', 
         'N': 'N', 'a': 't', 't': 'a', 'g': 'c', 'c': 'g', 'y': 'r', 'r': 'y', 
         's': 's', 'w': 'w', 'k': 'm', 'm': 'k', 'b': 'v', 'd': 'h', 'h': 'd',
         'v': 'b', 'n': 'n'}
-    _alphabet = set(iupac_characters + iupac_characters.lower())
+    _alphabet = iupac_characters | set([c.lower() for c in iupac_characters])
 
 # class is accessible with alternative name for convenience  
 DNA = DNASequence
@@ -386,20 +386,20 @@ class RNASequence(NucleotideSequence):
         all uppercase and lowercase IUPAC RNA characters are supported
     """
  
-    iupac_standard_characters = "ACGU"
+    iupac_standard_characters = set("ACGU")
     iupac_degeneracies = {"R": set("AG"), "Y": set("CU"), "M": set("AC"), 
                           "K": set("UG"), "W": set("AU"), "S": set("GC"), 
                           "B": set("CGU"), "D": set("AGU"), 
                           "H": set("ACU"), "V": set("ACG"), "N": set("ACGU")}
-    iupac_degenerate_characters = "".join(iupac_degeneracies.keys())
-    iupac_characters = iupac_standard_characters + iupac_degenerate_characters
+    iupac_degenerate_characters = set(iupac_degeneracies.keys())
+    iupac_characters = iupac_standard_characters | iupac_degenerate_characters
     _complement_map = {
         'A': 'U', 'U': 'A', 'G': 'C', 'C': 'G', 'Y': 'R', 'R': 'Y', 'S': 'S',
         'W': 'W', 'K': 'M', 'M': 'K', 'B': 'V', 'D': 'H', 'H': 'D', 'V': 'B',
         'N': 'N', 'a': 'u', 'u': 'a', 'g': 'c', 'c': 'g', 'y': 'r', 'r': 'y',
         's': 's', 'w': 'w', 'k': 'm', 'm': 'k', 'b': 'v', 'd': 'h', 'h': 'd',
         'v': 'b', 'n': 'n'}
-    _alphabet = set(iupac_characters + iupac_characters.lower())
+    _alphabet = iupac_characters | set([c.lower() for c in iupac_characters])
 
 # class is accessible with alternative name for convenience  
 RNA = RNASequence
