@@ -60,7 +60,6 @@ from collections import Iterable, defaultdict
 from types import MethodType
 
 # thank you Flask project...
-_missing = object()   # internal, represents a missing value
 _executed = object()  # internal, tag for an executed method
 not_none = object()   # external, for when a value can be anything except None
 
@@ -68,7 +67,7 @@ not_none = object()   # external, for when a value can be anything except None
 class Exists(object):
     def __contains__(self, item):
         return True
-option_exists = Exists()
+anything = Exists()  # external, for when a value can be anything
 
 
 def _debug_trace_wrapper(obj, f):
@@ -108,7 +107,7 @@ def no_requirements(f):
 
 class requires(object):
     """Decorator that executes a function if requirements are met"""
-    def __init__(self, IsValid=True, Option=None, Values=_missing,
+    def __init__(self, IsValid=True, Option=None, Values=anything,
                  ValidData=None):
         """
         IsValid : execute the function if self.Failed is False
@@ -124,8 +123,8 @@ class requires(object):
         self.Option = Option
         self.ValidData = ValidData
 
-        if Values is _missing:
-            self.Values = option_exists
+        if Values is anything:
+            self.Values = anything
         elif Values is not_none:
             self.Values = not_none
         elif not isinstance(Values, set):
