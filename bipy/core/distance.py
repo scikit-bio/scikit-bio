@@ -17,32 +17,6 @@ import numpy as np
 from scipy.spatial.distance import is_valid_dm, squareform
 
 
-def random_distance_matrix(num_samples, sample_ids=None):
-    """Return a ``DistanceMatrix`` populated with random distances.
-
-    Distances are randomly drawn from a uniform distribution over ``[0, 1)``
-    (see ``numpy.random.rand`` for more details). The distance matrix is
-    guaranteed to be symmetric and hollow.
-
-    Arguments:
-    num_samples -- the number of samples in the resulting ``DistanceMatrix``.
-        For example, if ``num_samples`` is 3, a 3x3 ``DistanceMatrix`` will be
-        returned
-    sample_ids -- a sequence of strings to be used as sample IDs.
-        ``len(sample_ids)`` must be equal to ``num_samples``. If not provided,
-        sample IDs will be monotonically-increasing integers cast as strings
-        (numbering starts at 1). For example, ``('1', '2', '3')``
-
-    """
-    data = np.tril(np.random.rand(num_samples, num_samples), -1)
-    data += data.T
-
-    if not sample_ids:
-        sample_ids = map(str, range(1, num_samples + 1))
-
-    return DistanceMatrix(data, sample_ids)
-
-
 class DistanceMatrixError(Exception):
     """General error for distance matrix validation failures."""
     pass
@@ -472,12 +446,17 @@ class DistanceMatrix(object):
 
 
 class SymmetricDistanceMatrix(DistanceMatrix):
-    """
+    """Represent a symmetric distance matrix.
 
-    The distances are stored in redundant (square-form) format. To facilitate
-    use with other scientific Python routines (e.g., scipy), the distances can
-    be retrieved in condensed (vector-form) format using ``condensed_form``.
-    For more details on redundant and condensed formats, see:
+    A ``SymmetricDistanceMatrix`` is a ``DistanceMatrix`` with the additional
+    requirement that the matrix data is symmetric. There are additional
+    operations made available that take advantage of this symmetry.
+
+    The distances are stored in redundant (square-form) format (same as
+    ``DistanceMatrix``). To facilitate use with other scientific Python
+    routines (e.g., scipy), the distances can be retrieved in condensed
+    (vector-form) format using ``condensed_form``. For more details on
+    redundant and condensed formats, see:
     http://docs.scipy.org/doc/scipy/reference/spatial.distance.html
 
     """
@@ -505,3 +484,33 @@ class SymmetricDistanceMatrix(DistanceMatrix):
 
         if (data.T != data).any():
             raise DistanceMatrixError("Data must be symmetric.")
+
+
+def random_distance_matrix(num_samples, sample_ids=None,
+                           constructor=DistanceMatrix):
+    """Return a distance matrix populated with random distances.
+
+    Distances are randomly drawn from a uniform distribution over ``[0, 1)``
+    (see ``numpy.random.rand`` for more details). The distance matrix is
+    guaranteed to be symmetric and hollow.
+
+    Arguments:
+    num_samples -- the number of samples in the resulting distance matrix. For
+        example, if ``num_samples`` is 3, a 3x3 distance matrix will be
+        returned
+    sample_ids -- a sequence of strings to be used as sample IDs.
+        ``len(sample_ids)`` must be equal to ``num_samples``. If not provided,
+        sample IDs will be monotonically-increasing integers cast as strings
+        (numbering starts at 1). For example, ``('1', '2', '3')``
+    constructor -- ``DistanceMatrix`` or subclass constructor to use when
+        creating the distance matrix. The returned distance matrix will be of
+        this type
+
+    """
+    data = np.tril(np.random.rand(num_samples, num_samples), -1)
+    data += data.T
+
+    if not sample_ids:
+        sample_ids = map(str, range(1, num_samples + 1))
+
+    return constructor(data, sample_ids)

@@ -23,53 +23,6 @@ from bipy.core.distance import (random_distance_matrix, DistanceMatrix,
 from bipy.util.unit_test import TestCase, main
 
 
-class RandomDistanceMatrixTests(TestCase):
-    """Tests for bipy.core.distance.random_distance_matrix."""
-
-    def test_default_usage(self):
-        """Test generating random distance matrices."""
-        exp = DistanceMatrix(np.asarray([[0.0]]), ['1'])
-        obs = random_distance_matrix(1)
-        self.assertEqual(obs, exp)
-
-        obs = random_distance_matrix(2)
-        self.assertEqual(obs.shape, (2, 2))
-        self.assertEqual(obs.sample_ids, ('1', '2'))
-
-        obs1 = random_distance_matrix(5)
-        num_trials = 10
-        found_diff = False
-        for _ in range(num_trials):
-            obs2 = random_distance_matrix(5)
-
-            if obs1 != obs2:
-                found_diff = True
-                break
-
-        self.assertTrue(found_diff)
-
-    def test_sample_ids(self):
-        """Test generating random dist mats with specific sample IDs."""
-        sids = ['foo', 'bar', 'baz']
-        obs = random_distance_matrix(3, sample_ids=sids)
-        self.assertEqual(obs.shape, (3, 3))
-        self.assertEqual(obs.sample_ids, tuple(sids))
-
-    def test_invalid_input(self):
-        """Test error-handling upon invalid input."""
-        # Invalid dimensions.
-        with self.assertRaises(DistanceMatrixError):
-            _ = random_distance_matrix(0)
-
-        # Invalid dimensions.
-        with self.assertRaises(ValueError):
-            _ = random_distance_matrix(-1)
-
-        # Invalid number of sample IDs.
-        with self.assertRaises(DistanceMatrixError):
-            _ = random_distance_matrix(2, sample_ids=['foo'])
-
-
 class DistanceMatrixTestData(TestCase):
     """Test data used in DistanceMatrix and subclass unit tests."""
 
@@ -81,19 +34,14 @@ class DistanceMatrixTestData(TestCase):
         self.dm_2x2_data = [[0.0, 0.123], [0.123, 0.0]]
         self.dm_2x2_f = StringIO(DM_2x2_F)
 
+        self.dm_2x2_asym_data = [[0.0, 1.0], [-2.0, 0.0]]
+        self.dm_2x2_asym_f = StringIO(DM_2x2_ASYM_F)
+
         self.dm_3x3_data = [[0.0, 0.01, 4.2], [0.01, 0.0, 12.0],
                             [4.2, 12.0, 0.0]]
         self.dm_3x3_f = StringIO(DM_3x3_F)
 
         self.dm_3x3_whitespace_f = StringIO(DM_3x3_WHITESPACE_F)
-
-        self.dm_f_lines = [DM_1x1_F, DM_2x2_F, DM_3x3_F]
-        self.dm_fs = [self.dm_1x1_f, self.dm_2x2_f, self.dm_3x3_f]
-        self.dm_shapes = [(1, 1), (2, 2), (3, 3)]
-        self.dm_sizes = [1, 4, 9]
-        self.dm_redundant_forms = [np.array(self.dm_1x1_data),
-                                   np.array(self.dm_2x2_data),
-                                   np.array(self.dm_3x3_data)]
 
         self.bad_dm_f1 = StringIO(BAD_DM_F1)
         self.bad_dm_f2 = StringIO(BAD_DM_F2)
@@ -101,20 +49,33 @@ class DistanceMatrixTestData(TestCase):
         self.bad_dm_f4 = StringIO(BAD_DM_F4)
         self.bad_dm_f5 = StringIO(BAD_DM_F5)
         self.bad_dm_f6 = StringIO(BAD_DM_F6)
-        self.bad_dm_f7 = StringIO(BAD_DM_F7)
 
 
 class DistanceMatrixTests(DistanceMatrixTestData):
     """Tests for the DistanceMatrix class."""
 
     def setUp(self):
+        """Create some DistanceMatrix instances for use in tests."""
         super(DistanceMatrixTests, self).setUp()
 
         self.dm_1x1 = DistanceMatrix(self.dm_1x1_data, ['a'])
         self.dm_2x2 = DistanceMatrix(self.dm_2x2_data, ['a', 'b'])
+        self.dm_2x2_asym = DistanceMatrix(self.dm_2x2_asym_data, ['a', 'b'])
         self.dm_3x3 = DistanceMatrix(self.dm_3x3_data, ['a', 'b', 'c'])
 
-        self.dms = [self.dm_1x1, self.dm_2x2, self.dm_3x3]
+        self.dms = [self.dm_1x1, self.dm_2x2, self.dm_2x2_asym, self.dm_3x3]
+        self.dm_f_lines = [DM_1x1_F, DM_2x2_F, DM_2x2_ASYM_F, DM_3x3_F]
+        self.dm_fs = [self.dm_1x1_f, self.dm_2x2_f, self.dm_2x2_asym_f,
+                      self.dm_3x3_f]
+        self.dm_shapes = [(1, 1), (2, 2), (2, 2), (3, 3)]
+        self.dm_sizes = [1, 4, 4, 9]
+        self.dm_transposes = [self.dm_1x1, self.dm_2x2,
+                              DistanceMatrix([[0, -2], [1, 0]], ['a', 'b']),
+                              self.dm_3x3]
+        self.dm_redundant_forms = [np.array(self.dm_1x1_data),
+                                   np.array(self.dm_2x2_data),
+                                   np.array(self.dm_2x2_asym_data),
+                                   np.array(self.dm_3x3_data)]
 
     def test_round_trip_read_write(self):
         """Test reading, writing, and reading again works as expected."""
@@ -170,7 +131,7 @@ class DistanceMatrixTests(DistanceMatrixTestData):
 
         # Non-hollow.
         with self.assertRaises(DistanceMatrixError):
-            _ = DistanceMatrix.from_file(self.bad_dm_f7)
+            _ = DistanceMatrix.from_file(self.bad_dm_f6)
 
     def test_to_file(self):
         """Should serialize a DistanceMatrix to file."""
@@ -271,10 +232,11 @@ class DistanceMatrixTests(DistanceMatrixTestData):
 
     def test_transpose(self):
         """Test retrieving transpose of distance matrix."""
-        for dm in self.dms:
-            self.assertEqual(dm.T, dm)
-            self.assertEqual(dm.transpose(), dm)
-            # We should get a reference to a different object back.
+        for dm, transpose in izip(self.dms, self.dm_transposes):
+            self.assertEqual(dm.T, transpose)
+            self.assertEqual(dm.transpose(), transpose)
+            # We should get a reference to a different object back, even if the
+            # transpose is the same as the original.
             self.assertTrue(dm.transpose() is not dm)
 
     def test_redundant_form(self):
@@ -348,9 +310,12 @@ class DistanceMatrixTests(DistanceMatrixTestData):
         self.assertEqual(type(obs), np.ndarray)
 
     def test_getitem_by_sample_id(self):
-        """Test retrieving vectors by sample ID."""
+        """Test retrieving row vectors by sample ID."""
         obs = self.dm_1x1['a']
         self.assertTrue(np.array_equal(obs, np.array([0.0])))
+
+        obs = self.dm_2x2_asym['b']
+        self.assertTrue(np.array_equal(obs, np.array([-2.0, 0.0])))
 
         obs = self.dm_3x3['c']
         self.assertTrue(np.array_equal(obs, np.array([4.2, 12.0, 0.0])))
@@ -414,6 +379,7 @@ class SymmetricDistanceMatrixTests(DistanceMatrixTestData):
     """Tests for the SymmetricDistanceMatrix class."""
 
     def setUp(self):
+        """Create some SymmetricDistanceMatrix instances for use in tests."""
         super(SymmetricDistanceMatrixTests, self).setUp()
 
         self.dm_1x1 = SymmetricDistanceMatrix(self.dm_1x1_data, ['a'])
@@ -426,17 +392,21 @@ class SymmetricDistanceMatrixTests(DistanceMatrixTestData):
                                    np.array([0.01, 4.2, 12.0])]
 
     def test_from_file_invalid_input(self):
-        """Raises error on ill-formatted distance matrix file."""
-        # Nonsymmetric.
+        """Raises error on invalid distance matrix file."""
+        # Asymmetric.
         with self.assertRaises(DistanceMatrixError):
-            _ = SymmetricDistanceMatrix.from_file(self.bad_dm_f6)
+            _ = SymmetricDistanceMatrix.from_file(self.dm_2x2_asym_f)
 
     def test_init_invalid_input(self):
         """Raises error on invalid distance matrix data / sample IDs."""
-        # Nonsymmetric.
+        # Asymmetric.
         data = [[0.0, 2.0], [1.0, 0.0]]
         with self.assertRaises(DistanceMatrixError):
             _ = SymmetricDistanceMatrix(data, ['a', 'b'])
+
+        # Ensure that the superclass validation is still being performed.
+        with self.assertRaises(DistanceMatrixError):
+            _ = SymmetricDistanceMatrix([[1, 2, 3]], ['a'])
 
     def test_condensed_form(self):
         """Test retrieving the data matrix in condensed form."""
@@ -444,9 +414,71 @@ class SymmetricDistanceMatrixTests(DistanceMatrixTestData):
             obs = dm.condensed_form()
             self.assertTrue(np.array_equal(obs, condensed))
 
+    def test_eq(self):
+        """Test data equality between different distance matrix types."""
+        # Compare SymmetricDistanceMatrix to DistanceMatrix, where both have
+        # the same data and sample IDs.
+        eq_dm = DistanceMatrix(self.dm_3x3_data, ['a', 'b', 'c'])
+        self.assertTrue(self.dm_3x3 == eq_dm)
+        self.assertTrue(eq_dm == self.dm_3x3)
+
     def test_validate(self):
         """Empty stub: SymmetricDistanceMatrix._validate tested elsewhere."""
         pass
+
+
+class RandomDistanceMatrixTests(TestCase):
+    """Tests for bipy.core.distance.random_distance_matrix."""
+
+    def test_default_usage(self):
+        """Test generating random distance matrices."""
+        exp = DistanceMatrix(np.asarray([[0.0]]), ['1'])
+        obs = random_distance_matrix(1)
+        self.assertEqual(obs, exp)
+
+        obs = random_distance_matrix(2)
+        self.assertEqual(obs.shape, (2, 2))
+        self.assertEqual(obs.sample_ids, ('1', '2'))
+
+        obs1 = random_distance_matrix(5)
+        num_trials = 10
+        found_diff = False
+        for _ in range(num_trials):
+            obs2 = random_distance_matrix(5)
+
+            if obs1 != obs2:
+                found_diff = True
+                break
+
+        self.assertTrue(found_diff)
+
+    def test_sample_ids(self):
+        """Test generating random dist mats with specific sample IDs."""
+        sids = ['foo', 'bar', 'baz']
+        obs = random_distance_matrix(3, sample_ids=sids)
+        self.assertEqual(obs.shape, (3, 3))
+        self.assertEqual(obs.sample_ids, tuple(sids))
+
+    def test_constructor(self):
+        """Test generating random dist mats with a specific constructor."""
+        exp = SymmetricDistanceMatrix(np.asarray([[0.0]]), ['1'])
+        obs = random_distance_matrix(1, constructor=SymmetricDistanceMatrix)
+        self.assertEqual(obs, exp)
+        self.assertTrue(isinstance(obs, SymmetricDistanceMatrix))
+
+    def test_invalid_input(self):
+        """Test error-handling upon invalid input."""
+        # Invalid dimensions.
+        with self.assertRaises(DistanceMatrixError):
+            _ = random_distance_matrix(0)
+
+        # Invalid dimensions.
+        with self.assertRaises(ValueError):
+            _ = random_distance_matrix(-1)
+
+        # Invalid number of sample IDs.
+        with self.assertRaises(DistanceMatrixError):
+            _ = random_distance_matrix(2, sample_ids=['foo'])
 
 
 # 1x1:
@@ -457,6 +489,11 @@ DM_1x1_F = "\ta\na\t0.0\n"
 #       0.0  0.123
 #     0.123    0.0
 DM_2x2_F = "\ta\tb\na\t0.0\t0.123\nb\t0.123\t0.0\n"
+
+# 2x2, asymmetric:
+#     0.0 1.0
+#    -2.0 0.0
+DM_2x2_ASYM_F = '\ta\tb\na\t0.0\t1.0\nb\t-2.0\t0.0\n'
 
 # 3x3:
 #      0.0   0.01   4.2
@@ -499,11 +536,8 @@ BAD_DM_F4 = '\ta\tb\na\t0\t1\n  \n'
 # no data lines
 BAD_DM_F5 = '\ta\tb\n'
 
-# nonsymmetric
-BAD_DM_F6 = '\ta\tb\na\t0\t1\nb\t2\t0\n'
-
 # non-hollow
-BAD_DM_F7 = '\ta\tb\na\t0\t1\nb\t1\t0.1\n'
+BAD_DM_F6 = '\ta\tb\na\t0\t1\nb\t1\t0.1\n'
 
 if __name__ == '__main__':
     main()
