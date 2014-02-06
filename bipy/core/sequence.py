@@ -290,6 +290,41 @@ class BiologicalSequence(Sequence):
             header_line, str(self), terminal_character)
 
 
+def complement(seq_iterator,klass):
+    result = []
+    for base in seq_iterator:
+        try:
+            # _complement_map would lose the leading _
+            result.append(klass._complement_map[base])
+        except KeyError:
+            raise BiologicalSequenceError( 
+                "Don't know how to complement base %s. Is it in "
+                "%s.complement_map?" % (base, klass.__name__))
+    return "".join(result)
+
+
+def reverse_complement(seq_iterator,klass):
+    return complement(reversed(seq_iterator),klass)
+rc = reverse_complement
+
+
+def dna_complement(seq_iterator):
+    return complement(seq_iterator, DNA)
+
+def dna_reverse_complement(seq_iterator):
+    return reverse_complement(seq_iterator, DNA)
+dna_rc = dna_reverse_complement
+
+
+def rna_complment(seq_iterator):
+    return complement(seq_iterator, RNA)
+
+
+def rna_reverse_complement(seq_iterator):
+    return reverse_complement(seq_iterator, RNA)
+rna_rc = rna_reverse_complement
+
+
 class NucleotideSequence(BiologicalSequence):
     """ class for representing nucleotide sequences
         
@@ -313,14 +348,7 @@ class NucleotideSequence(BiologicalSequence):
 
             this centralizes the logic for complement and reverse_complement
         """
-        result = []
-        for base in seq_iterator:
-            try:
-                result.append(self._complement_map[base])
-            except KeyError:
-                raise BiologicalSequenceError( 
-                    "Don't know how to complement base %s. Is it in "
-                    "%s.complement_map?" % (base, self.__class__.__name__))
+        result = complement(seq_iterator, self.__class__) 
         return self.__class__(result, self._identifier, self._description)
 
     @property
