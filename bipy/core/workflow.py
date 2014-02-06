@@ -54,29 +54,33 @@ from collections import Iterable, defaultdict
 from types import MethodType
 
 # thank you Flask project...
-_missing = object()  # internal, represents a missing value
-_executed = object() # internal, tag for an executed method
-not_none = object()  # external, for when a value can be anything except None
+_missing = object()   # internal, represents a missing value
+_executed = object()  # internal, tag for an executed method
+not_none = object()   # external, for when a value can be anything except None
+
 
 class Exists(object):
     def __contains__(self, item):
         return True
 option_exists = Exists()
 
+
 def _debug_trace_wrapper(obj, f):
     """Trace a function call"""
     def wrapped(self, *args, **kwargs):
         if not hasattr(obj, 'DebugTrace'):
-            raise AttributeError("%s does not have DebugTrace!" % obj.__class__)
+            raise AttributeError("%s doesn't have DebugTrace!" % obj.__class__)
 
         obj.DebugTrace.append(f.__name__)
         return f(self, *args, **kwargs)
 
     return update_wrapper(wrapped, f)
 
+
 def _tag_function(f):
     """Tag, you're it"""
     setattr(f, '__workflowtag__', None)
+
 
 class priority(object):
     """Sets a function priority"""
@@ -87,12 +91,14 @@ class priority(object):
         f.Priority = self.Priority
         return f
 
+
 def no_requirements(f):
     def decorated(self, *args, **kwargs):
         f(self, *args, **kwargs)
         return _executed
     _tag_function(decorated)
     return update_wrapper(decorated, f)
+
 
 class requires(object):
     """Decorator that executes a function if requirements are met"""
@@ -206,9 +212,9 @@ class Workflow(object):
         Options : runtime options, {'option':values}
         kwargs : Additional arguments will be added to self
 
-        All workflow methods (i.e., those starting with "wk_") must be decorated
-        by either "no_requirements" or "requires". This ensures that the methods
-        support the automatic workflow determination mechanism.
+        All workflow methods (i.e., those starting with "wk_") must be 
+        decorated by either "no_requirements" or "requires". This ensures that
+        the methods support the automatic workflow determination mechanism.
         """
         if Options is None:
             self.Options = {}
@@ -231,7 +237,7 @@ class Workflow(object):
 
         for f in self._all_wf_methods():
             if not hasattr(f, '__workflowtag__'):
-                raise AttributeError("%s isn't a workflow method!" % f.__name__)
+                raise AttributeError("%s isn't a wf method!" % f.__name__)
 
         self._allocate_final_state()
         self._sanity_check()
