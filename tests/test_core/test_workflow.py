@@ -10,7 +10,7 @@
 
 from itertools import izip
 from bipy.core.workflow import (Workflow, requires, priority,
-        no_requirements)
+        no_requirements, not_none)
 from unittest import TestCase, main
 
 def construct_iterator(**kwargs):
@@ -276,6 +276,15 @@ class MockWorkflowReqTest(Workflow):
         if item == 'fail %s' % name:
             self.Failed = True
         self.FinalState = (name, item)
+    
+    @priority(20)
+    @requires(Option='cannot_be_none', Values=not_none)
+    def wf_run_if_not_none(self, item):
+        name = 'run_if_not_none'
+        self.Stats[name] += 1
+        if item == 'fail %s' % name:
+            self.Failed = True
+        self.FinalState = (name, item)
 
 class RequiresTests(TestCase):
     def test_validdata(self):
@@ -283,12 +292,36 @@ class RequiresTests(TestCase):
         single_iter = construct_iterator(**{'iter_x':[1,2,3,4,5]})
         
         exp_stats = {'needs_data':2, 'always_run':5}
-        # C2 isn't executed as its requirements aren't met in the Options
         exp_result = [('needs_data',1), ('needs_data',2), ('always_run',3), 
                       ('always_run',4), ('always_run', 5)]
 
         obs_result = list(obj(single_iter))
 
+        self.assertEqual(obs_result, exp_result)
+        self.assertEqual(obj.Stats, exp_stats)
+
+    def test_not_none_avoid(self):
+        obj = MockWorkflowReqTest({'cannot_be_none':None})
+        single_iter = construct_iterator(**{'iter_x':[1,2,3,4,5]})
+        
+        exp_stats = {'needs_data':2, 'always_run':5}
+        exp_result = [('needs_data',1), ('needs_data',2), ('always_run',3), 
+                      ('always_run',4), ('always_run', 5)]
+
+        obs_result = list(obj(single_iter))
+
+        self.assertEqual(obs_result, exp_result)
+        self.assertEqual(obj.Stats, exp_stats)
+
+    def test_not_none_execute(self):
+        obj = MockWorkflowReqTest(Options={'cannot_be_none':True}, Debug=True)
+        single_iter = construct_iterator(**{'iter_x':[1,2,3,4,5]})
+        
+        exp_stats = {'needs_data':2, 'always_run':5, 'run_if_not_none':5}
+        exp_result = [('needs_data',1), ('needs_data',2), ('always_run',3), 
+                      ('always_run',4), ('always_run', 5)]
+
+        obs_result = list(obj(single_iter))
         self.assertEqual(obs_result, exp_result)
         self.assertEqual(obj.Stats, exp_stats)
 
