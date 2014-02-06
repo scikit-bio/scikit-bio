@@ -466,6 +466,19 @@ class RandomDistanceMatrixTests(TestCase):
         self.assertEqual(obs, exp)
         self.assertTrue(isinstance(obs, SymmetricDistanceMatrix))
 
+    def test_random_fn(self):
+        """Test passing a different random function than the default."""
+        def myrand(num_rows, num_cols):
+            # One dm to rule them all...
+            data = np.empty((num_rows, num_cols))
+            data.fill(42)
+            return data
+
+        exp = DistanceMatrix(np.asarray([[0, 42, 42], [42, 0, 42],
+                                         [42, 42, 0]]), ['1', '2', '3'])
+        obs = random_distance_matrix(3, random_fn=myrand)
+        self.assertEqual(obs, exp)
+
     def test_invalid_input(self):
         """Test error-handling upon invalid input."""
         # Invalid dimensions.

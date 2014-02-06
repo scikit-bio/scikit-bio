@@ -487,12 +487,16 @@ class SymmetricDistanceMatrix(DistanceMatrix):
 
 
 def random_distance_matrix(num_samples, sample_ids=None,
-                           constructor=DistanceMatrix):
+                           constructor=DistanceMatrix,
+                           random_fn=np.random.rand):
     """Return a distance matrix populated with random distances.
 
-    Distances are randomly drawn from a uniform distribution over ``[0, 1)``
-    (see ``numpy.random.rand`` for more details). The distance matrix is
-    guaranteed to be symmetric and hollow.
+    Using the default ``random_fn``, distances are randomly drawn from a
+    uniform distribution over ``[0, 1)`` (see ``numpy.random.rand`` for more
+    details).
+
+    Regardless of the ``random_fn`` that is used to populate the matrix, the
+    returned distance matrix is guaranteed to be symmetric and hollow.
 
     Arguments:
     num_samples -- the number of samples in the resulting distance matrix. For
@@ -505,9 +509,12 @@ def random_distance_matrix(num_samples, sample_ids=None,
     constructor -- ``DistanceMatrix`` or subclass constructor to use when
         creating the distance matrix. The returned distance matrix will be of
         this type
+    random_fn -- function to generate random values. Function must accept two
+        arguments (number of rows and number of columns) and return a 2D
+        ``numpy.ndarray`` of floats (or something that can be casted to float)
 
     """
-    data = np.tril(np.random.rand(num_samples, num_samples), -1)
+    data = np.tril(random_fn(num_samples, num_samples), -1)
     data += data.T
 
     if not sample_ids:
