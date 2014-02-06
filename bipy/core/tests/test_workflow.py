@@ -29,7 +29,7 @@ def construct_iterator(**kwargs):
 class MockWorkflow(Workflow):
     def _sanity_check(self):
         pass
-    
+
     def _allocate_final_state(self):
         self.FinalState = None
 
@@ -43,7 +43,7 @@ class MockWorkflow(Workflow):
     def wf_groupB(self, item):
         self.methodB1(item)
         self.methodB2(item)
-   
+
     @priority(10)
     @requires(Option='C', Values=True)
     def wf_groupC(self, item):
@@ -104,12 +104,11 @@ class MockWorkflow(Workflow):
 
 class WorkflowTests(TestCase):
     def setUp(self):
-        self.obj_short = MockWorkflow(Options={'A': True, 'C': True})
-        self.obj_debug = MockWorkflow(Debug=True, Options={'A': True, 'C': True})
-        self.obj_noshort = MockWorkflow(ShortCircuit=False, Options={
-                                        'A': True,
-                                        'C': True})
-   
+        opts = {'A': True, 'C': True}
+        self.obj_short = MockWorkflow(Options=opts)
+        self.obj_debug = MockWorkflow(Debug=True, Options=opts)
+        self.obj_noshort = MockWorkflow(ShortCircuit=False, Options=opts)
+
     def test_untagged_wf_method(self):
         class WFTest(Workflow):
             @no_requirements
@@ -123,21 +122,22 @@ class WorkflowTests(TestCase):
             _ = WFTest()
 
     def test_get_workflow_debug(self):
-        gen = construct_iterator(**{'iter_x':[1, 2, 3, 4, 5]})
-        exp_wf = [self.obj_debug.wf_SETUP_DEBUG_TRACE, self.obj_debug.wf_groupA,
+        gen = construct_iterator(**{'iter_x': [1, 2, 3, 4, 5]})
+        exp_wf = [self.obj_debug.wf_SETUP_DEBUG_TRACE,
+                  self.obj_debug.wf_groupA,
                   self.obj_debug.wf_groupC]
         obs_gen, obs_wf = self.obj_debug._get_workflow(gen)
 
         self.assertEqual(obs_wf, exp_wf)
         self.assertEqual(list(obs_gen), [1, 2, 3, 4, 5])
-        
+
         self.assertEqual(self.obj_debug.Stats, {})
         self.assertTrue(self.obj_debug.ShortCircuit)
-    
+
     def test_debug_trace(self):
-        gen = construct_iterator(**{'iter_x':[1, 2, 3, 4, 5]})
+        gen = construct_iterator(**{'iter_x': [1, 2, 3, 4, 5]})
         obj = self.obj_debug(gen)
-        
+
         exp = ('C1', 1)
         obs = obj.next()
         self.assertEqual(obs, exp)
@@ -150,9 +150,9 @@ class WorkflowTests(TestCase):
                'methodC2']
         obs = self.obj_debug.DebugTrace
         self.assertEqual(obs, exp)
-        
+
     def test_get_workflow(self):
-        gen = construct_iterator(**{'iter_x':[1, 2, 3, 4, 5]})
+        gen = construct_iterator(**{'iter_x': [1, 2, 3, 4, 5]})
         exp_wf = [self.obj_short.wf_groupA, self.obj_short.wf_groupC]
         obs_gen, obs_wf = self.obj_short._get_workflow(gen)
 
@@ -163,10 +163,10 @@ class WorkflowTests(TestCase):
         self.assertTrue(self.obj_short.ShortCircuit)
 
     def test_init(self):
-        self.assertEqual(self.obj_short.Options, {'A':True, 'C':True})
+        self.assertEqual(self.obj_short.Options, {'A': True, 'C': True})
         self.assertEqual(self.obj_short.Stats, {})
         self.assertTrue(self.obj_short.ShortCircuit)
-        self.assertEqual(self.obj_noshort.Options, {'A':True, 'C':True})
+        self.assertEqual(self.obj_noshort.Options, {'A': True, 'C': True})
         self.assertEqual(self.obj_noshort.Stats, {})
         self.assertFalse(self.obj_noshort.ShortCircuit)
 
@@ -178,28 +178,28 @@ class WorkflowTests(TestCase):
         self.assertEqual(obs, exp)
 
     def test_call_AC_no_fail(self):
-        single_iter = construct_iterator(**{'iter_x':[1, 2, 3, 4, 5]})
-        sf = lambda x: x.FinalState # success function
-        
-        exp_stats = {'A1':5, 'A2':5, 'C1':5}
-        # C2 isn't executed as its requirements aren't met in the Options
-        exp_result = [('C1', 1), ('C1', 2), ('C1', 3), ('C1', 4), ('C1',  5)]
+        iter_ = construct_iterator(**{'iter_x': [1, 2, 3, 4, 5]})
+        sf = lambda x: x.FinalState  # success function
 
-        obs_result = list(self.obj_short(single_iter, sf, None))
+        exp_stats = {'A1': 5, 'A2': 5, 'C1': 5}
+        # C2 isn't executed as its requirements aren't met in the Options
+        exp_result = [('C1', 1), ('C1', 2), ('C1', 3), ('C1', 4), ('C1', 5)]
+
+        obs_result = list(self.obj_short(iter_, sf, None))
 
         self.assertEqual(obs_result, exp_result)
         self.assertEqual(self.obj_short.Stats, exp_stats)
 
     def test_call_AC_fail(self):
-        single_iter = construct_iterator(**{'iter_x':[1, 2, 'fail A2', 4, 5]})
-        sf = lambda x: x.FinalState # success function
-        ff = lambda x: x.FinalState # failed function
+        iter_ = construct_iterator(**{'iter_x': [1, 2, 'fail A2', 4, 5]})
+        sf = lambda x: x.FinalState  # success function
+        ff = lambda x: x.FinalState  # failed function
 
-        exp_stats = {'A1':5, 'A2':5, 'C1':4, 'C2':4}
+        exp_stats = {'A1': 5, 'A2': 5, 'C1': 4, 'C2': 4}
 
         self.obj_short.Options['C2'] = 1
         # pass in a failed callback to capture the result, and pause execution
-        gen = self.obj_short(single_iter, sf, ff)
+        gen = self.obj_short(iter_, sf, ff)
 
         r1 = gen.next()
         self.assertEqual(r1, ('C2', 1))
@@ -225,14 +225,14 @@ class WorkflowTests(TestCase):
         self.assertEqual(self.obj_short.Stats, exp_stats)
 
     def test_call_AC_fail_noshort(self):
-        single_iter = construct_iterator(**{'iter_x':[1, 2, 'fail A2', 4, 5]})
-        sf = lambda x: x.FinalState # success function
-        ff = lambda x: x.FinalState # failed function
+        iter_ = construct_iterator(**{'iter_x': [1, 2, 'fail A2', 4, 5]})
+        sf = lambda x: x.FinalState  # success function
+        ff = lambda x: x.FinalState  # failed function
 
-        exp_stats = {'A1':5, 'A2':5, 'C1':5}
+        exp_stats = {'A1': 5, 'A2': 5, 'C1': 5}
 
         # pass in a failed callback to capture the result, and pause execution
-        gen = self.obj_noshort(single_iter, sf, ff)
+        gen = self.obj_noshort(iter_, sf, ff)
 
         r1 = gen.next()
         self.assertEqual(r1, ('C1', 1))
@@ -242,7 +242,7 @@ class WorkflowTests(TestCase):
         self.assertEqual(r2, ('C1', 2))
         self.assertFalse(self.obj_noshort.Failed)
 
-        r3 = gen.next()
+        _ = gen.next()
         self.assertEqual(self.obj_noshort.FinalState, ('C1', 'fail A2'))
         self.assertTrue(self.obj_noshort.Failed)
 
@@ -295,8 +295,8 @@ class MockWorkflowReqTest(Workflow):
 class RequiresTests(TestCase):
     def test_validdata(self):
         obj = MockWorkflowReqTest()
-        single_iter = construct_iterator(**{'iter_x':[1, 2, 3, 4, 5]})
-        
+        single_iter = construct_iterator(**{'iter_x': [1, 2, 3, 4, 5]})
+
         exp_stats = {'needs_data': 2, 'always_run': 5}
         exp_result = [('needs_data', 1), ('needs_data', 2), ('always_run', 3),
                       ('always_run', 4), ('always_run', 5)]
@@ -307,8 +307,8 @@ class RequiresTests(TestCase):
         self.assertEqual(obj.Stats, exp_stats)
 
     def test_not_none_avoid(self):
-        obj = MockWorkflowReqTest({'cannot_be_none':None})
-        single_iter = construct_iterator(**{'iter_x':[1, 2, 3, 4, 5]})
+        obj = MockWorkflowReqTest({'cannot_be_none': None})
+        single_iter = construct_iterator(**{'iter_x': [1, 2, 3, 4, 5]})
 
         exp_stats = {'needs_data': 2, 'always_run': 5}
         exp_result = [('needs_data', 1), ('needs_data', 2), ('always_run', 3),
@@ -320,8 +320,8 @@ class RequiresTests(TestCase):
         self.assertEqual(obj.Stats, exp_stats)
 
     def test_not_none_execute(self):
-        obj = MockWorkflowReqTest(Options={'cannot_be_none':True}, Debug=True)
-        single_iter = construct_iterator(**{'iter_x':[1,2,3,4,5]})
+        obj = MockWorkflowReqTest(Options={'cannot_be_none': True}, Debug=True)
+        single_iter = construct_iterator(**{'iter_x': [1, 2, 3, 4, 5]})
 
         exp_stats = {'needs_data': 2, 'always_run': 5, 'run_if_not_none': 5}
         exp_result = [('needs_data', 1), ('needs_data', 2), ('always_run', 3),
@@ -369,6 +369,7 @@ class RequiresTests(TestCase):
         obj.methodB2('test')
         self.assertEqual(obj.FinalState, None)
         self.assertEqual(obj.Stats, {})
+
 
 class PriorityTests(TestCase):
     def test_dec(self):

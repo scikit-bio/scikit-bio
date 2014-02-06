@@ -11,7 +11,7 @@ As an example:
 class MyWorkflow(Workflow):
     def _allocate_final_state(self):
         self.FinalState = None
-    
+
     def _sanity_check(self):
         pass
 
@@ -24,7 +24,7 @@ class MyWorkflow(Workflow):
     @requires(Option='add_value')
     def wf_add(self, item):
         self.FinalState += item
-    
+
     @requires(Option='sub_value', Values=[1,5,10])
     def wf_sub(self, item):
         self.FinalState -= item
@@ -108,16 +108,16 @@ def no_requirements(f):
 
 class requires(object):
     """Decorator that executes a function if requirements are met"""
-    def __init__(self, IsValid=True, Option=None, Values=_missing, 
+    def __init__(self, IsValid=True, Option=None, Values=_missing,
                  ValidData=None):
         """
         IsValid : execute the function if self.Failed is False
         Option : a required option
         Values : required values associated with an option
-        ValidData : data level requirements, this must be a function with the 
+        ValidData : data level requirements, this must be a function with the
             following signature: f(*args, **kwargs) returning True. NOTE: if
             ValidData returns False on the first item evaluated, the decorated
-            function will be removed from the remaining workflow. 
+            function will be removed from the remaining workflow.
         """
         # self here is the requires object
         self.IsValid = IsValid
@@ -149,7 +149,7 @@ class requires(object):
 
         f : the function to wrap
         """
-        ### not sure how I feel about having multiple functions in here. 
+        ### not sure how I feel about having multiple functions in here.
         ### also, the handling of Data is a bit dirty as it is now replicated
         ### over these functions. It is ideal to keep the functions slim, thus
         ### the multiple functions, but this could explode if not careful
@@ -172,12 +172,12 @@ class requires(object):
             if s_opt in ds_opts:
                 v = ds_opts[s_opt]
 
-                # if the value just needs to be not None 
+                # if the value just needs to be not None
                 if self.Values is not_none:
                     if v is not None:
                         f(dec_self, *args, **kwargs)
                         return _executed
-                
+
                 # otherwise make sure the value is acceptable
                 elif ds_opts[s_opt] in self.Values:
                     f(dec_self, *args, **kwargs)
@@ -188,7 +188,7 @@ class requires(object):
 
             dec_self : this is "self" for the decorated function
             """
-            if self.doShortCircuit(dec_self):    
+            if self.doShortCircuit(dec_self):
                 return
 
             if self.ValidData is not None:
@@ -219,7 +219,7 @@ class Workflow(object):
         Options : runtime options, {'option':values}
         kwargs : Additional arguments will be added to self
 
-        All workflow methods (i.e., those starting with "wk_") must be 
+        All workflow methods (i.e., those starting with "wk_") must be
         decorated by either "no_requirements" or "requires". This ensures that
         the methods support the automatic workflow determination mechanism.
         """
@@ -250,7 +250,7 @@ class Workflow(object):
         self._sanity_check()
         self._stage_state()
         self._setup_debug()
-   
+
     def _allocate_final_state(self):
         """Setup FinalState, must be implemented by subclasses"""
         raise NotImplementedError("Must implement this method")
@@ -259,10 +259,10 @@ class Workflow(object):
         """Wrap all methods with debug trace support"""
         if not self.Debug:
             return
-       
+
         _ignore = set(['_get_workflow', '_all_wf_methods', '_sanity_check',
                        '_stage_state'])
-        
+
         for attrname in dir(self):
             if attrname.startswith('__'):
                 continue
@@ -288,7 +288,7 @@ class Workflow(object):
 
     def _all_wf_methods(self, default_priority=0):
         """Get all workflow methods
-        
+
         Methods are sorted by priority
         """
         methods = [getattr(self, f) for f in dir(self) if f.startswith('wf_')]
@@ -302,10 +302,10 @@ class Workflow(object):
             raise AttributeError("Method %s has a higher priority than the "
                                  "debug trace method. Please set its priority "
                                  "below %d." % (name, debug_prio))
-        
+
         if not self.Debug:
             methods_sorted.pop(0)
-        
+
         return methods_sorted
 
     def _get_workflow(self, it):
@@ -334,7 +334,7 @@ class Workflow(object):
         """Operate on all the data
 
         it : an iterator
-        success_callback : method to call on a successful item prior to 
+        success_callback : method to call on a successful item prior to
             yielding
         fail_callback : method to call on a failed item prior to yielding
         """
@@ -342,14 +342,14 @@ class Workflow(object):
             success_callback = lambda x: x.FinalState
 
         it, workflow = self._get_workflow(it)
-        
+
         for item in it:
             self.Failed = False
 
             for f in workflow:
                 f(item)
 
-            if self.Failed: 
+            if self.Failed:
                 if fail_callback is not None:
                     yield fail_callback(self)
             else:
