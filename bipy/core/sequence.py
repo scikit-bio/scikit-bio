@@ -290,6 +290,33 @@ class BiologicalSequence(Sequence):
             header_line, str(self), terminal_character)
 
 
+def complement(seq_iterator, klass):
+    return klass.comp(seq_iterator)
+
+
+def reverse_complement(seq_iterator, klass):
+    return klass.rev_comp(seq_iterator)
+rc = reverse_complement
+
+
+def dna_complement(seq_iterator):
+    return complement(seq_iterator, DNA)
+
+
+def dna_reverse_complement(seq_iterator):
+    return reverse_complement(seq_iterator, DNA)
+dna_rc = dna_reverse_complement
+
+
+def rna_complement(seq_iterator):
+    return complement(seq_iterator, RNA)
+
+
+def rna_reverse_complement(seq_iterator):
+    return reverse_complement(seq_iterator, RNA)
+rna_rc = rna_reverse_complement
+
+
 class NucleotideSequence(BiologicalSequence):
     """ class for representing nucleotide sequences
         
@@ -308,20 +335,21 @@ class NucleotideSequence(BiologicalSequence):
     _complement_map = {}
     _alphabet = iupac_characters | set([c.lower() for c in iupac_characters])
 
-    def _complement(self, seq_iterator):
-        """ private method for complementing based on an iterator
+    @classmethod
+    def comp(cls, seq_iterator):
+        """ class method for complementing based on an iterator
 
             this centralizes the logic for complement and reverse_complement
         """
         result = []
         for base in seq_iterator:
             try:
-                result.append(self._complement_map[base])
+                result.append(cls._complement_map[base])
             except KeyError:
                 raise BiologicalSequenceError( 
                     "Don't know how to complement base %s. Is it in "
-                    "%s.complement_map?" % (base, self.__class__.__name__))
-        return self.__class__(result, self._identifier, self._description)
+                    "%s.complement_map?" % (base, cls.__name__))
+        return "".join(result)
 
     @property
     def complement_map(self):
@@ -335,7 +363,9 @@ class NucleotideSequence(BiologicalSequence):
             raises BiologicalSequence error if there is a character in the
              BiologicalSequence that's not in NucleotideSequence.complement_map
         """
-        return self._complement(self)
+        return self.__class__(self.__class__.comp(self),
+                              self._identifier,
+                              self._description)
     
     def is_reverse_complement(self, other):
         """ return True if NucleotideSequences are rev. comp. of one another
@@ -345,13 +375,19 @@ class NucleotideSequence(BiologicalSequence):
         """
         return self == other.reverse_complement()
 
+    @classmethod
+    def rev_comp(cls, seq_iterator):
+        return cls.comp(reversed(seq_iterator))
+
     def reverse_complement(self):
         """ return the reverse complement of the sequence
 
             raises BiologicalSequence error if there is a character in the
              BiologicalSequence that's not in NucleotideSequence.complement_map
         """
-        return self._complement(reversed(self))
+        return self.__class__(self.__class__.rev_comp(self),
+                              self._identifier,
+                              self._description)
     rc = reverse_complement
 
 
