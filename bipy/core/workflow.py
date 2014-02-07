@@ -88,7 +88,7 @@ def _tag_function(f):
 
 
 class priority(object):
-    """Sets a function priority"""
+    """Decorate a function priority"""
     def __init__(self, Priority):
         self.Priority = Priority
 
@@ -98,7 +98,9 @@ class priority(object):
 
 
 def no_requirements(f):
+    """Decorate a function to indicate there are no requirements"""
     def decorated(self, *args, **kwargs):
+        """Simply execute the function"""
         f(self, *args, **kwargs)
         return _executed
     _tag_function(decorated)
