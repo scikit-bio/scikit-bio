@@ -151,12 +151,12 @@ class DistanceMatrix(object):
 
             tokens = line.split(delimiter)
 
-            # +1 because the first column contains the sample ID.
-            if len(tokens) != num_sids + 1:
+            # -1 because the first column contains the sample ID.
+            if len(tokens) - 1 != num_sids:
                 raise DistanceMatrixFormatError(
-                    "The number of values in row number %d is not equal to "
-                    "the number of sample IDs in the header."
-                    % (curr_row_idx + 1))
+                    "There are %d values in row number %d, which is not equal "
+                    "to the number of sample IDs in the header (%d)."
+                    % (len(tokens) - 1, curr_row_idx + 1, num_sids))
 
             if tokens[0] == sids[curr_row_idx]:
                 data[curr_row_idx, :] = np.asarray(tokens[1:], dtype='float')
