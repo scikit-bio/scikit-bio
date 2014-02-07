@@ -120,20 +120,20 @@ def no_requirements(f):
 class requires(object):
     """Decorator that executes a function if requirements are met"""
     def __init__(self, is_valid=True, option=None, values=anything,
-                 ValidData=None):
+                 valid_data=None):
         """
         is_valid : execute the function if self.failed is False
         option : a required option
         values : required values associated with an option
-        ValidData : data level requirements, this must be a function with the
+        valid_data : data level requirements, this must be a function with the
             following signature: f(*args, **kwargs) returning True. NOTE: if
-            ValidData returns False on the first item evaluated, the decorated
+            valid_data returns False on the first item evaluated, the decorated
             function will be removed from the remaining workflow.
         """
         # self here is the requires object
         self.is_valid = is_valid
         self.option = option
-        self.ValidData = ValidData
+        self.valid_data = valid_data
 
         if values is anything:
             self.values = anything
@@ -169,8 +169,8 @@ class requires(object):
             if self.do_short_circuit(dec_self):
                 return
 
-            if self.ValidData is not None:
-                if not self.ValidData(*args, **kwargs):
+            if self.valid_data is not None:
+                if not self.valid_data(*args, **kwargs):
                     return
 
             s_opt = self.option
@@ -198,8 +198,8 @@ class requires(object):
             if self.do_short_circuit(dec_self):
                 return
 
-            if self.ValidData is not None:
-                if not self.ValidData(*args, **kwargs):
+            if self.valid_data is not None:
+                if not self.valid_data(*args, **kwargs):
                     return
 
             f(dec_self, *args, **kwargs)

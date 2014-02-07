@@ -265,7 +265,7 @@ class MockWorkflowReqTest(Workflow):
         self.final_state = None
 
     @priority(5)
-    @requires(ValidData=lambda x: x < 3)
+    @requires(valid_data=lambda x: x < 3)
     def wf_needs_data(self, item):
         name = 'needs_data'
         self.stats[name] += 1
