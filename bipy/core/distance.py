@@ -17,32 +17,6 @@ import numpy as np
 from scipy.spatial.distance import is_valid_dm, squareform
 
 
-def random_distance_matrix(num_samples, sample_ids=None):
-    """Return a ``DistanceMatrix`` populated with random distances.
-
-    Distances are randomly drawn from a uniform distribution over ``[0, 1)``
-    (see ``numpy.random.rand`` for more details). The distance matrix is
-    guaranteed to be symmetric and hollow.
-
-    Arguments:
-    num_samples -- the number of samples in the resulting ``DistanceMatrix``.
-        For example, if ``num_samples`` is 3, a 3x3 ``DistanceMatrix`` will be
-        returned
-    sample_ids -- a sequence of strings to be used as sample IDs.
-        ``len(sample_ids)`` must be equal to ``num_samples``. If not provided,
-        sample IDs will be monotonically-increasing integers cast as strings
-        (numbering starts at 1). For example, ``('1', '2', '3')``
-
-    """
-    data = np.tril(np.random.rand(num_samples, num_samples), -1)
-    data += data.T
-
-    if not sample_ids:
-        sample_ids = map(str, range(1, num_samples + 1))
-
-    return DistanceMatrix(data, sample_ids)
-
-
 class DistanceMatrixError(Exception):
     """General error for distance matrix validation failures."""
     pass
@@ -99,22 +73,24 @@ class MissingDataError(Exception):
 class DistanceMatrix(object):
     """Encapsulate a 2D array of distances (floats) and sample IDs (labels).
 
-    A ``DistanceMatrix`` instance contains a square, symmetric, and hollow 2D
-    numpy ``ndarray`` of distances (floats) between samples. A tuple of sample
-    IDs (typically strings) accompanies the raw distance data. Methods are
-    provided to load and save distance matrices, as well as perform common
-    operations such as extracting distances based on sample ID.
+    A ``DistanceMatrix`` instance contains a square, hollow 2D numpy
+    ``ndarray`` of distances (floats) between samples. A tuple of sample IDs
+    (typically strings) accompanies the raw distance data. Methods are provided
+    to load and save distance matrices, as well as perform common operations
+    such as extracting distances based on sample ID.
 
     The ``ndarray`` of distances can be accessed via the ``data`` property. The
     tuple of sample IDs can be accessed via the ``sample_ids`` property.
     ``sample_ids`` is also writeable, though the new sample IDs must match the
     number of samples in ``data``.
 
-    The distances are stored in redundant (square-form) format. To facilitate
-    use with other scientific Python routines (e.g., scipy), the distances can
-    be retrieved in condensed (vector-form) format using ``condensed_form``.
-    For more details on redundant and condensed formats, see:
+    The distances are stored in redundant (square-form) format. For more
+    details on redundant format, see:
     http://docs.scipy.org/doc/scipy/reference/spatial.distance.html
+
+    Note that the data is not checked for symmetry, nor guaranteed/assumed to
+    be symmetric. See the subclass ``SymmetricDistanceMatrix`` for validation
+    and operations that take advantage of matrix symmetry.
 
     """
 
@@ -122,8 +98,8 @@ class DistanceMatrix(object):
     def from_file(cls, dm_f, delimiter='\t'):
         """Load distance matrix from delimited text file.
 
-        Given an open file-like object ``dm_f``, a ``DistanceMatrix`` instance
-        is returned based on the parsed file contents.
+        Given an open file-like object ``dm_f``, an instance of this class is
+        returned based on the parsed file contents.
 
         The file must contain delimited text (controlled via ``delimiter``).
         The first line must contain all sample IDs, where each ID is separated
@@ -198,11 +174,11 @@ class DistanceMatrix(object):
         """Construct a ``DistanceMatrix`` instance.
 
         Arguments:
-        data -- a square, symmetric, and hollow 2D ``numpy.ndarray`` of
-            distances (floats), or a structure that can be converted to a
-            ``numpy.ndarray`` using ``numpy.asarray``. Data will be converted
-            to a float ``dtype`` if necessary. A copy will *not* be made if
-            already an ``ndarray`` with a float ``dtype``
+        data -- a square, hollow 2D ``numpy.ndarray`` of distances (floats), or
+            a structure that can be converted to a ``numpy.ndarray`` using
+            ``numpy.asarray``. Data will be converted to a float ``dtype`` if
+            necessary. A copy will *not* be made if already an ``ndarray`` with
+            a float ``dtype``
         sample_ids -- a sequence of strings to be used as sample labels. Must
             match the number of rows/cols in ``data``
 
@@ -276,24 +252,8 @@ class DistanceMatrix(object):
         return self.transpose()
 
     def transpose(self):
-        """Return the transpose of the distance matrix.
-
-        This is a no-op as the matrix is guaranteed to be symmetric.
-
-        """
-        return self
-
-    def condensed_form(self):
-        """Return a 1D ``numpy.ndarray`` vector of distances.
-
-        The conversion is not a constant-time operation, though it should be
-        relatively quick to perform.
-
-        For more details on redundant and condensed formats, see:
-        http://docs.scipy.org/doc/scipy/reference/spatial.distance.html
-
-        """
-        return squareform(self.data, force='tovector')
+        """Return the transpose of the distance matrix."""
+        return self.__class__(self.data.T.copy(), deepcopy(self.sample_ids))
 
     def redundant_form(self):
         """Return a 2D ``numpy.ndarray`` of distances.
@@ -369,6 +329,10 @@ class DistanceMatrix(object):
 
         If ``index`` is a string, it is assumed to be a sample ID and a
         ``numpy.ndarray`` row vector is returned for the corresponding sample.
+        Note that the sample's row of distances is returned, not its column. If
+        the matrix is symmetric, the two will be identical, but this makes a
+        difference if the matrix is asymmetric.
+
         The lookup based on sample ID is quick. ``MissingSampleIDError`` is
         raised if the sample does not exist.
 
@@ -427,20 +391,38 @@ class DistanceMatrix(object):
             return header_line.split(delimiter)
 
     def _validate(self, data, sample_ids):
-        # Accepts arguments instead of inspecting instance attributes because
-        # we don't want to create an invalid distance matrix before raising an
-        # error (because then it could be used after the exception is caught).
+        """Validate the data array and sample IDs.
+
+        Checks that the data is at least 1x1 in size, 2D, square, hollow, and
+        contains only floats. Also checks that sample IDs are unique and that
+        the number of sample IDs matches the number of rows/cols in the data
+        array.
+
+        Subclasses can override this method to perform different/more specific
+        validation (e.g., see ``SymmetricDistanceMatrix``).
+
+        Accepts arguments instead of inspecting instance attributes because we
+        don't want to create an invalid distance matrix before raising an error
+        (because then it could be used after the exception is caught).
+
+        """
         num_sids = len(sample_ids)
 
         if 0 in data.shape:
             raise DistanceMatrixError("Data must be at least 1x1 in size.")
+        elif len(data.shape) != 2:
+            raise DistanceMatrixError("Data must have exactly two dimensions.")
+        elif data.shape[0] != data.shape[1]:
+            raise DistanceMatrixError("Data must be square (i.e., have the "
+                                      "same number of rows and columns).")
+        elif data.dtype != np.double:
+            raise DistanceMatrixError("Data must contain only floating point "
+                                      "values.")
+        elif np.trace(data) != 0:
+            raise DistanceMatrixError("Data must be hollow (i.e., the "
+                                      "diagonal can only contain zeros.)")
         elif num_sids != len(set(sample_ids)):
             raise DistanceMatrixError("Sample IDs must be unique.")
-        elif not is_valid_dm(data):
-            raise DistanceMatrixError("Data must be an array that is "
-                                      "2-dimensional, square, symmetric, "
-                                      "hollow, and contains only floating "
-                                      "point values.")
         elif num_sids != data.shape[0]:
             raise DistanceMatrixError("The number of sample IDs must match "
                                       "the number of rows/columns in the "
@@ -461,3 +443,81 @@ class DistanceMatrix(object):
             sids_str = delimiter.join(truncated) + delimiter + suffix
 
         return sids_str
+
+
+class SymmetricDistanceMatrix(DistanceMatrix):
+    """Represent a symmetric distance matrix.
+
+    A ``SymmetricDistanceMatrix`` is a ``DistanceMatrix`` with the additional
+    requirement that the matrix data is symmetric. There are additional
+    operations made available that take advantage of this symmetry.
+
+    The distances are stored in redundant (square-form) format (same as
+    ``DistanceMatrix``). To facilitate use with other scientific Python
+    routines (e.g., scipy), the distances can be retrieved in condensed
+    (vector-form) format using ``condensed_form``. For more details on
+    redundant and condensed formats, see:
+    http://docs.scipy.org/doc/scipy/reference/spatial.distance.html
+
+    """
+
+    def condensed_form(self):
+        """Return a 1D ``numpy.ndarray`` vector of distances.
+
+        The conversion is not a constant-time operation, though it should be
+        relatively quick to perform.
+
+        For more details on redundant and condensed formats, see:
+        http://docs.scipy.org/doc/scipy/reference/spatial.distance.html
+
+        """
+        return squareform(self.data, force='tovector')
+
+    def _validate(self, data, sample_ids):
+        """Validate the data array and sample IDs.
+
+        Overrides the superclass ``_validate``. Performs a check for symmetry
+        in addition to the checks performed in the superclass.
+
+        """
+        super(SymmetricDistanceMatrix, self)._validate(data, sample_ids)
+
+        if (data.T != data).any():
+            raise DistanceMatrixError("Data must be symmetric.")
+
+
+def random_distance_matrix(num_samples, sample_ids=None,
+                           constructor=DistanceMatrix,
+                           random_fn=np.random.rand):
+    """Return a distance matrix populated with random distances.
+
+    Using the default ``random_fn``, distances are randomly drawn from a
+    uniform distribution over ``[0, 1)`` (see ``numpy.random.rand`` for more
+    details).
+
+    Regardless of the ``random_fn`` that is used to populate the matrix, the
+    returned distance matrix is guaranteed to be symmetric and hollow.
+
+    Arguments:
+    num_samples -- the number of samples in the resulting distance matrix. For
+        example, if ``num_samples`` is 3, a 3x3 distance matrix will be
+        returned
+    sample_ids -- a sequence of strings to be used as sample IDs.
+        ``len(sample_ids)`` must be equal to ``num_samples``. If not provided,
+        sample IDs will be monotonically-increasing integers cast as strings
+        (numbering starts at 1). For example, ``('1', '2', '3')``
+    constructor -- ``DistanceMatrix`` or subclass constructor to use when
+        creating the distance matrix. The returned distance matrix will be of
+        this type
+    random_fn -- function to generate random values. Function must accept two
+        arguments (number of rows and number of columns) and return a 2D
+        ``numpy.ndarray`` of floats (or something that can be casted to float)
+
+    """
+    data = np.tril(random_fn(num_samples, num_samples), -1)
+    data += data.T
+
+    if not sample_ids:
+        sample_ids = map(str, range(1, num_samples + 1))
+
+    return constructor(data, sample_ids)
