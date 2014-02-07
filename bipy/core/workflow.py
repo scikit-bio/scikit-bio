@@ -10,7 +10,7 @@ As an example:
 
 class MyWorkflow(Workflow):
     def _allocate_final_state(self):
-        self.FinalState = None
+        self.final_state = None
 
     def _sanity_check(self):
         pass
@@ -18,22 +18,22 @@ class MyWorkflow(Workflow):
     @priority(100)
     @no_requirements
     def wf_mul(self, item):
-        self.FinalState *= item
+        self.final_state *= item
 
     @priority(10)
     @requires(Option='add_value')
     def wf_add(self, item):
-        self.FinalState += item
+        self.final_state += item
 
     @requires(Option='sub_value', Values=[1,5,10])
     def wf_sub(self, item):
-        self.FinalState -= item
-        self.FinalState -= self.options['sub_value']
+        self.final_state -= item
+        self.final_state -= self.options['sub_value']
 
     @priority(1000)
     @requires(IsValid=False)
     def wf_init(self, item):
-        self.FinalState = item
+        self.final_state = item
 
 # (i * i) + i - i - 5
 wf = MyWorkflow(options={'add_value':None, 'sub_value':5})
@@ -260,7 +260,7 @@ class Workflow(object):
         self._setup_debug()
 
     def _allocate_final_state(self):
-        """Setup FinalState, must be implemented by subclasses"""
+        """Setup final_state, must be implemented by subclasses"""
         raise NotImplementedError("Must implement this method")
 
     def _setup_debug(self):
@@ -347,7 +347,7 @@ class Workflow(object):
         fail_callback : method to call on a failed item prior to yielding
         """
         if success_callback is None:
-            success_callback = lambda x: x.FinalState
+            success_callback = lambda x: x.final_state
 
         it, workflow = self._get_workflow(it)
 

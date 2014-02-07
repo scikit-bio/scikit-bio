@@ -31,7 +31,7 @@ class MockWorkflow(Workflow):
         pass
 
     def _allocate_final_state(self):
-        self.FinalState = None
+        self.final_state = None
 
     @priority(90)
     @requires(Option='A', Values=True)
@@ -56,14 +56,14 @@ class MockWorkflow(Workflow):
         self.stats[name] += 1
         if item == 'fail %s' % name:
             self.failed = True
-        self.FinalState = (name, item)
+        self.final_state = (name, item)
 
     def methodA2(self, item):
         name = 'A2'
         self.stats[name] += 1
         if item == 'fail %s' % name:
             self.failed = True
-        self.FinalState = (name, item)
+        self.final_state = (name, item)
 
     @requires(IsValid=False)
     def methodB1(self, item):
@@ -71,9 +71,9 @@ class MockWorkflow(Workflow):
         self.stats[name] += 1
         if item == 'fail %s' % name:
             self.failed = True
-            self.FinalState = 'failed'
+            self.final_state = 'failed'
         else:
-            self.FinalState = (name, item)
+            self.final_state = (name, item)
 
     @requires(Option='foo', Values=[1, 2, 3])
     def methodB2(self, item):
@@ -81,9 +81,9 @@ class MockWorkflow(Workflow):
         self.stats[name] += 1
         if item == 'fail %s' % name:
             self.failed = True
-            self.FinalState = 'failed'
+            self.final_state = 'failed'
         else:
-            self.FinalState = (name, item)
+            self.final_state = (name, item)
 
     @no_requirements
     def methodC1(self, item):
@@ -91,7 +91,7 @@ class MockWorkflow(Workflow):
         self.stats[name] += 1
         if item == 'fail %s' % name:
             self.failed = True
-        self.FinalState = (name, item)
+        self.final_state = (name, item)
 
     @requires(IsValid=True, Option='C2', Values=[1, 2, 3])
     def methodC2(self, item):
@@ -99,7 +99,7 @@ class MockWorkflow(Workflow):
         self.stats[name] += 1
         if item == 'fail %s' % name:
             self.failed = True
-        self.FinalState = (name, item)
+        self.final_state = (name, item)
 
 
 class WorkflowTests(TestCase):
@@ -179,7 +179,7 @@ class WorkflowTests(TestCase):
 
     def test_call_AC_no_fail(self):
         iter_ = construct_iterator(**{'iter_x': [1, 2, 3, 4, 5]})
-        sf = lambda x: x.FinalState  # success function
+        sf = lambda x: x.final_state  # success function
 
         exp_stats = {'A1': 5, 'A2': 5, 'C1': 5}
         # C2 isn't executed as its requirements aren't met in the options
@@ -192,8 +192,8 @@ class WorkflowTests(TestCase):
 
     def test_call_AC_fail(self):
         iter_ = construct_iterator(**{'iter_x': [1, 2, 'fail A2', 4, 5]})
-        sf = lambda x: x.FinalState  # success function
-        ff = lambda x: x.FinalState  # failed function
+        sf = lambda x: x.final_state  # success function
+        ff = lambda x: x.final_state  # failed function
 
         exp_stats = {'A1': 5, 'A2': 5, 'C1': 4, 'C2': 4}
 
@@ -210,7 +210,7 @@ class WorkflowTests(TestCase):
         self.assertFalse(self.obj_short.failed)
 
         r3 = gen.next()
-        self.assertEqual(self.obj_short.FinalState, ('A2', 'fail A2'))
+        self.assertEqual(self.obj_short.final_state, ('A2', 'fail A2'))
         self.assertTrue(self.obj_short.failed)
         self.assertEqual(r3, ('A2', 'fail A2'))
 
@@ -226,8 +226,8 @@ class WorkflowTests(TestCase):
 
     def test_call_AC_fail_noshort(self):
         iter_ = construct_iterator(**{'iter_x': [1, 2, 'fail A2', 4, 5]})
-        sf = lambda x: x.FinalState  # success function
-        ff = lambda x: x.FinalState  # failed function
+        sf = lambda x: x.final_state  # success function
+        ff = lambda x: x.final_state  # failed function
 
         exp_stats = {'A1': 5, 'A2': 5, 'C1': 5}
 
@@ -243,7 +243,7 @@ class WorkflowTests(TestCase):
         self.assertFalse(self.obj_noshort.failed)
 
         _ = gen.next()
-        self.assertEqual(self.obj_noshort.FinalState, ('C1', 'fail A2'))
+        self.assertEqual(self.obj_noshort.final_state, ('C1', 'fail A2'))
         self.assertTrue(self.obj_noshort.failed)
 
         r4 = gen.next()
@@ -262,7 +262,7 @@ class MockWorkflowReqTest(Workflow):
         pass
 
     def _allocate_final_state(self):
-        self.FinalState = None
+        self.final_state = None
 
     @priority(5)
     @requires(ValidData=lambda x: x < 3)
@@ -271,7 +271,7 @@ class MockWorkflowReqTest(Workflow):
         self.stats[name] += 1
         if item == 'fail %s' % name:
             self.failed = True
-        self.FinalState = (name, item)
+        self.final_state = (name, item)
 
     @priority(10)
     @no_requirements
@@ -280,7 +280,7 @@ class MockWorkflowReqTest(Workflow):
         self.stats[name] += 1
         if item == 'fail %s' % name:
             self.failed = True
-        self.FinalState = (name, item)
+        self.final_state = (name, item)
 
     @priority(20)
     @requires(Option='cannot_be_none', Values=not_none)
@@ -289,7 +289,7 @@ class MockWorkflowReqTest(Workflow):
         self.stats[name] += 1
         if item == 'fail %s' % name:
             self.failed = True
-        self.FinalState = (name, item)
+        self.final_state = (name, item)
 
 
 class RequiresTests(TestCase):
@@ -334,17 +334,17 @@ class RequiresTests(TestCase):
     def test_methodb1(self):
         obj = MockWorkflow()
         obj.methodB1('test')
-        self.assertEqual(obj.FinalState, ('B1', 'test'))
+        self.assertEqual(obj.final_state, ('B1', 'test'))
         self.assertFalse(obj.failed)
 
         # methodb1 executes regardless of if self.failed
         obj.failed = True
         obj.methodB1('test 2')
-        self.assertEqual(obj.FinalState, ('B1', 'test 2'))
+        self.assertEqual(obj.final_state, ('B1', 'test 2'))
 
         obj.failed = False
         obj.methodB1('fail B1')
-        self.assertEqual(obj.FinalState, 'failed')
+        self.assertEqual(obj.final_state, 'failed')
 
         self.assertEqual(obj.stats, {'B1': 3})
 
@@ -353,13 +353,13 @@ class RequiresTests(TestCase):
         # can execute
         obj = MockWorkflow(options={'foo': 1})
         obj.methodB2('test')
-        self.assertEqual(obj.FinalState, ('B2', 'test'))
+        self.assertEqual(obj.final_state, ('B2', 'test'))
         self.assertEqual(obj.stats, {'B2': 1})
 
         # methodb2 will not execute if self.failed
         obj.failed = True
         obj.methodB2('test 2')
-        self.assertEqual(obj.FinalState, ('B2', 'test'))
+        self.assertEqual(obj.final_state, ('B2', 'test'))
         self.assertEqual(obj.stats, {'B2': 1})
 
     def test_methodb2_ignore(self):
@@ -367,7 +367,7 @@ class RequiresTests(TestCase):
         # we do not execute
         obj = MockWorkflow(options={'foo': 'bar'})
         obj.methodB2('test')
-        self.assertEqual(obj.FinalState, None)
+        self.assertEqual(obj.final_state, None)
         self.assertEqual(obj.stats, {})
 
 
