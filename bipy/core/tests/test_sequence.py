@@ -41,30 +41,30 @@ class BiologicalSequenceTests(TestCase):
         """
         # init as string
         b = BiologicalSequence('ACCGGXZY')
-        self.assertEqual(str(b), 'ACCGGXZY') 
+        self.assertEqual(str(b), 'ACCGGXZY')
         self.assertEqual(b.identifier, "")
         self.assertEqual(b.description, "")
-        
+
         # init as string with optional values
         b = BiologicalSequence(
             'ACCGGXZY', 'test-seq-1', 'The first test sequence')
-        self.assertEqual(str(b), 'ACCGGXZY') 
+        self.assertEqual(str(b), 'ACCGGXZY')
         self.assertEqual(b.identifier, "test-seq-1")
         self.assertEqual(b.description, "The first test sequence")
 
         # test init as a different string
         b = BiologicalSequence('WRRTY')
-        self.assertEqual(str(b), 'WRRTY') 
+        self.assertEqual(str(b), 'WRRTY')
 
         # init as list
         b = BiologicalSequence(list('ACCGGXZY'))
-        self.assertEqual(str(b), 'ACCGGXZY') 
+        self.assertEqual(str(b), 'ACCGGXZY')
         self.assertEqual(b.identifier, "")
         self.assertEqual(b.description, "")
-        
+
         # init as tuple
         b = BiologicalSequence(tuple('ACCGGXZY'))
-        self.assertEqual(str(b), 'ACCGGXZY') 
+        self.assertEqual(str(b), 'ACCGGXZY')
         self.assertEqual(b.identifier, "")
         self.assertEqual(b.description, "")
 
@@ -88,7 +88,7 @@ class BiologicalSequenceTests(TestCase):
         self.assertTrue(self.b1 == self.b1)
         self.assertTrue(self.b2 == self.b2)
         self.assertTrue(self.b3 == self.b3)
-        
+
         self.assertTrue(self.b1 != self.b3)
         self.assertTrue(self.b1 != self.b2)
         self.assertTrue(self.b2 != self.b3)
@@ -98,15 +98,15 @@ class BiologicalSequenceTests(TestCase):
         self.assertTrue(
             BiologicalSequence('ACGT') == BiologicalSequence('ACGT'))
         self.assertTrue(
-            BiologicalSequence('ACGT', identifier='a') == 
+            BiologicalSequence('ACGT', identifier='a') ==
             BiologicalSequence('ACGT', identifier='b'))
         self.assertTrue(
-            BiologicalSequence('ACGT', description='c') == 
+            BiologicalSequence('ACGT', description='c') ==
             BiologicalSequence('ACGT', description='d'))
         self.assertTrue(
-            BiologicalSequence('ACGT', identifier='a', description='c') == 
+            BiologicalSequence('ACGT', identifier='a', description='c') ==
             BiologicalSequence('ACGT', identifier='b', description='d'))
-        
+
         # different type causes sequences to not be equal
         self.assertFalse(
             BiologicalSequence('ACGT') == NucleotideSequence('ACGT'))
@@ -167,7 +167,7 @@ class BiologicalSequenceTests(TestCase):
         s4 = BiologicalSequence('TAAAAA')
         s5 = BiologicalSequence('CCCCCCX')
         s6 = BiologicalSequence('CCCCCCC')
-        
+
         self.assertEqual(s1._hamming_distance(s2), 0)
         self.assertEqual(s1._hamming_distance(s3), 0)
         self.assertEqual(s1._hamming_distance(s4), 1)
@@ -249,7 +249,7 @@ class BiologicalSequenceTests(TestCase):
                          ([0, 1, 2, 3, 4, 5, 6], [0, 1, 2, 3, 4, 5, 6]))
         # in sequence with all gaps, the map of degapped to gapped is the empty
         # list (bc its length is 0), and the map of gapped to degapped is all
-        # None 
+        # None
         self.assertEqual(self.b7.gap_maps(),
                          ([], [None, None, None, None, None, None]))
 
@@ -382,7 +382,7 @@ class DNASequenceTests(TestCase):
             'ACCGGUACC', identifier="bad-seq-1",
             description="Not a DNA sequence")
         self.b4 = DNASequence(
-            'MRWSYKVHDBN', identifier="degen", 
+            'MRWSYKVHDBN', identifier="degen",
             description="All of the degenerate bases")
 
     def test_complement(self):
@@ -443,7 +443,7 @@ class RNASequenceTests(TestCase):
             'ACCGGTACC', identifier="bad-seq-1",
             description="Not a RNA sequence")
         self.b4 = RNASequence(
-            'MRWSYKVHDBN', identifier="degen", 
+            'MRWSYKVHDBN', identifier="degen",
             description="All of the degenerate bases")
 
     def test_complement(self):

@@ -16,16 +16,16 @@ from bipy.core.exception import BiologicalSequenceError
 
 
 class BiologicalSequence(Sequence):
-    """ Base class for biological sequences 
-        
-        BiologicalSequence objects are immutable. Where applicable, 
+    """ Base class for biological sequences
+
+        BiologicalSequence objects are immutable. Where applicable,
          methods return a new object of the same class.
     """
-    
+
     _alphabet = set()
     _gap_alphabet = set('-.')
 
-    def __init__(self, sequence, identifier="", description="", 
+    def __init__(self, sequence, identifier="", description="",
                  validate=False):
         """ initialize a BiologicalSequence object
 
@@ -44,17 +44,17 @@ class BiologicalSequence(Sequence):
         if validate and not self.is_valid():
             unsupported_chars = self.unsupported_characters()
             raise BiologicalSequenceError(
-                "Sequence contains unsupported characters: %s" 
+                "Sequence contains unsupported characters: %s"
                 % (" ".join(unsupported_chars)))
- 
+
     def __contains__(self, other):
         """ return True if other is contained in the BiologicalSequence
         """
         return other in self._sequence
-   
+
     def __eq__(self, other):
         """ equality (==) operator
-            
+
             BiologicalSequences are equal if their sequence is the same and
              they are the same type
         """
@@ -71,10 +71,10 @@ class BiologicalSequence(Sequence):
         except IndexError:
             raise IndexError(
                 "Position %d is out of range for %r." % (i, self))
- 
+
     def __hash__(self):
         return hash(self._sequence)
-   
+
     def __iter__(self):
         return iter(self._sequence)
 
@@ -92,7 +92,7 @@ class BiologicalSequence(Sequence):
             elipses = "..."
         else:
             elipses = ""
-        return '<%s: %s%s (length: %d)>' % (cn, first_ten, elipses, length) 
+        return '<%s: %s%s (length: %d)>' % (cn, first_ten, elipses, length)
 
     def __reversed__(self):
         return reversed(self._sequence)
@@ -111,7 +111,7 @@ class BiologicalSequence(Sequence):
             if s != o:
                 distance += 1
         return distance
-    
+
     @property
     def alphabet(self):
         """ return the set of characters allowed in the BiologicalSequence
@@ -135,16 +135,16 @@ class BiologicalSequence(Sequence):
         """ return the identifier of the sequence
         """
         return self._identifier
-    
+
     def count(self, subsequence):
         """ return the number of occurences of subsequence
         """
         return self._sequence.count(subsequence)
- 
+
     def degap(self):
         """ return a new BiologicalSequence with gaps characters removed
 
-            the type, identifier, and description of the result will be the 
+            the type, identifier, and description of the result will be the
              same as self
         """
         result = [e for e in self._sequence if e not in self._gap_alphabet]
@@ -161,17 +161,17 @@ class BiologicalSequence(Sequence):
         return distance_fn(self, other)
 
     def fraction_diff(self, other):
-        """ return fraction of positions that differ 
-        
+        """ return fraction of positions that differ
+
             based on self._hamming_distance between the sequences
         """
         min_edit_dist = self._hamming_distance(other)
         len_shorter = min(len(self), len(other))
         return min_edit_dist / len_shorter
-    
+
     def fraction_same(self, other):
-        """ return fraction of positions that are the same 
-        
+        """ return fraction of positions that are the same
+
             based on self._hamming_distance between the sequences
         """
         return 1. - self.fraction_diff(other)
@@ -180,8 +180,8 @@ class BiologicalSequence(Sequence):
         """ return tuples mapping positions bw gapped and ungapped seq
 
             two lists of integers are returned:
-             the first is the length of the ungapped sequence, and each entry 
-             is the position of that base in the gapped sequence. 
+             the first is the length of the ungapped sequence, and each entry
+             is the position of that base in the gapped sequence.
              the second is the length of the gapped sequence, and each entry is
              either None (if that position represents a gap) or the position of
              that base in the ungapped sequence.
@@ -191,14 +191,14 @@ class BiologicalSequence(Sequence):
              ([1,2,3,4,5,7,8],[None,0,1,2,3,4,None,5,6,None])
 
              because:
-             
+
               01234 56 (spaces are for visual aid)
               ACCGA TA
-              ||||| || 
+              ||||| ||
              -ACCGA-TA-
              0123456789
 
-             so... 
+             so...
              in the first list, position 0 maps to position 1, position 1
              maps to position 2, position 5 maps to position 7, ...
              and in the second list, position 0 doesn't map to anything (so
@@ -217,7 +217,7 @@ class BiologicalSequence(Sequence):
         return degapped_to_gapped, gapped_to_degapped
 
     def gap_vector(self):
-        """ return a list indicating positions containing gaps 
+        """ return a list indicating positions containing gaps
 
             for example:
              BiologicalSequence('..ACG--TT-').gap_vector() ==
@@ -250,7 +250,7 @@ class BiologicalSequence(Sequence):
         except ValueError:
             raise ValueError(
                 "%s is not present in %r." % (subsequence, self))
-    
+
     @classmethod
     def is_gap(cls, char):
         """ return True if char is a gap character
@@ -275,7 +275,7 @@ class BiologicalSequence(Sequence):
 
     def to_fasta(self, field_delimiter=" ", terminal_character="\n"):
         """ return the sequence as a fasta-formatted string
-          
+
             terminal_character: the last character to be included in the
              result (if you don't want a trailing newline or other character
              in the result, you can pass terminal_character="")
@@ -292,14 +292,14 @@ class BiologicalSequence(Sequence):
 
 class NucleotideSequence(BiologicalSequence):
     """ class for representing nucleotide sequences
-        
+
         all uppercase and lowercase IUPAC DNA/RNA characters are supported
     """
 
     iupac_standard_characters = set("ACGTU")
-    iupac_degeneracies = {"R": set("AG"), "Y": set("CTU"), "M": set("AC"), 
-                          "K": set("TUG"), "W": set("ATU"), "S": set("GC"), 
-                          "B": set("CGTU"), "D": set("AGTU"), 
+    iupac_degeneracies = {"R": set("AG"), "Y": set("CTU"), "M": set("AC"),
+                          "K": set("TUG"), "W": set("ATU"), "S": set("GC"),
+                          "B": set("CGTU"), "D": set("AGTU"),
                           "H": set("ACTU"), "V": set("ACG"), "N": set("ACGTU")}
     iupac_degenerate_characters = set(iupac_degeneracies)
     iupac_characters = iupac_standard_characters | iupac_degenerate_characters
@@ -318,7 +318,7 @@ class NucleotideSequence(BiologicalSequence):
             try:
                 result.append(self._complement_map[base])
             except KeyError:
-                raise BiologicalSequenceError( 
+                raise BiologicalSequenceError(
                     "Don't know how to complement base %s. Is it in "
                     "%s.complement_map?" % (base, self.__class__.__name__))
         return self.__class__(result, self._identifier, self._description)
@@ -336,10 +336,10 @@ class NucleotideSequence(BiologicalSequence):
              BiologicalSequence that's not in NucleotideSequence.complement_map
         """
         return self._complement(self)
-    
+
     def is_reverse_complement(self, other):
         """ return True if NucleotideSequences are rev. comp. of one another
-            
+
             raises BiologicalSequence error if there is a character in the
              BiologicalSequence that's not in NucleotideSequence.complement_map
         """
@@ -357,39 +357,39 @@ class NucleotideSequence(BiologicalSequence):
 
 class DNASequence(NucleotideSequence):
     """ class for representing DNA sequences
-        
+
         all uppercase and lowercase IUPAC DNA characters are supported
     """
 
     iupac_standard_characters = set("ACGT")
-    iupac_degeneracies = {"R": set("AG"), "Y": set("CT"), "M": set("AC"), 
-                          "K": set("TG"), "W": set("AT"), "S": set("GC"), 
-                          "B": set("CGT"), "D": set("AGT"), 
+    iupac_degeneracies = {"R": set("AG"), "Y": set("CT"), "M": set("AC"),
+                          "K": set("TG"), "W": set("AT"), "S": set("GC"),
+                          "B": set("CGT"), "D": set("AGT"),
                           "H": set("ACT"), "V": set("ACG"), "N": set("ACGT")}
     iupac_degenerate_characters = set(iupac_degeneracies)
     iupac_characters = iupac_standard_characters | iupac_degenerate_characters
     _complement_map = {
         'A': 'T', 'T': 'A', 'G': 'C', 'C': 'G', 'Y': 'R', 'R': 'Y', 'S': 'S',
-        'W': 'W', 'K': 'M', 'M': 'K', 'B': 'V', 'D': 'H', 'H': 'D', 'V': 'B', 
-        'N': 'N', 'a': 't', 't': 'a', 'g': 'c', 'c': 'g', 'y': 'r', 'r': 'y', 
+        'W': 'W', 'K': 'M', 'M': 'K', 'B': 'V', 'D': 'H', 'H': 'D', 'V': 'B',
+        'N': 'N', 'a': 't', 't': 'a', 'g': 'c', 'c': 'g', 'y': 'r', 'r': 'y',
         's': 's', 'w': 'w', 'k': 'm', 'm': 'k', 'b': 'v', 'd': 'h', 'h': 'd',
         'v': 'b', 'n': 'n'}
     _alphabet = iupac_characters | set([c.lower() for c in iupac_characters])
 
-# class is accessible with alternative name for convenience  
+# class is accessible with alternative name for convenience
 DNA = DNASequence
 
 
 class RNASequence(NucleotideSequence):
     """ class for representing RNA sequences
-        
+
         all uppercase and lowercase IUPAC RNA characters are supported
     """
- 
+
     iupac_standard_characters = set("ACGU")
-    iupac_degeneracies = {"R": set("AG"), "Y": set("CU"), "M": set("AC"), 
-                          "K": set("UG"), "W": set("AU"), "S": set("GC"), 
-                          "B": set("CGU"), "D": set("AGU"), 
+    iupac_degeneracies = {"R": set("AG"), "Y": set("CU"), "M": set("AC"),
+                          "K": set("UG"), "W": set("AU"), "S": set("GC"),
+                          "B": set("CGU"), "D": set("AGU"),
                           "H": set("ACU"), "V": set("ACG"), "N": set("ACGU")}
     iupac_degenerate_characters = set(iupac_degeneracies)
     iupac_characters = iupac_standard_characters | iupac_degenerate_characters
@@ -401,5 +401,5 @@ class RNASequence(NucleotideSequence):
         'v': 'b', 'n': 'n'}
     _alphabet = iupac_characters | set([c.lower() for c in iupac_characters])
 
-# class is accessible with alternative name for convenience  
+# class is accessible with alternative name for convenience
 RNA = RNASequence
