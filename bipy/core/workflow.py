@@ -31,7 +31,7 @@ class MyWorkflow(Workflow):
         self.final_state -= self.options['sub_value']
 
     @priority(1000)
-    @requires(IsValid=False)
+    @requires(is_valid=False)
     def wf_init(self, item):
         self.final_state = item
 
@@ -119,10 +119,10 @@ def no_requirements(f):
 
 class requires(object):
     """Decorator that executes a function if requirements are met"""
-    def __init__(self, IsValid=True, option=None, Values=anything,
+    def __init__(self, is_valid=True, option=None, Values=anything,
                  ValidData=None):
         """
-        IsValid : execute the function if self.failed is False
+        is_valid : execute the function if self.failed is False
         option : a required option
         Values : required values associated with an option
         ValidData : data level requirements, this must be a function with the
@@ -131,7 +131,7 @@ class requires(object):
             function will be removed from the remaining workflow.
         """
         # self here is the requires object
-        self.IsValid = IsValid
+        self.is_valid = is_valid
         self.option = option
         self.ValidData = ValidData
 
@@ -150,7 +150,7 @@ class requires(object):
             self.Values = Values
 
     def do_short_circuit(self, wrapped):
-        return self.IsValid and (wrapped.failed and wrapped.short_circuit)
+        return self.is_valid and (wrapped.failed and wrapped.short_circuit)
 
     def __call__(self, f):
         """Wrap a function
