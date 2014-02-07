@@ -122,7 +122,7 @@ class requires(object):
     def __init__(self, IsValid=True, Option=None, Values=anything,
                  ValidData=None):
         """
-        IsValid : execute the function if self.Failed is False
+        IsValid : execute the function if self.failed is False
         Option : a required option
         Values : required values associated with an option
         ValidData : data level requirements, this must be a function with the
@@ -150,7 +150,7 @@ class requires(object):
             self.Values = Values
 
     def do_short_circuit(self, wrapped):
-        return self.IsValid and (wrapped.Failed and wrapped.short_circuit)
+        return self.IsValid and (wrapped.failed and wrapped.short_circuit)
 
     def __call__(self, f):
         """Wrap a function
@@ -238,7 +238,7 @@ class Workflow(object):
         ### collections.Counter instead?
         self.stats = defaultdict(int)
         self.short_circuit = short_circuit
-        self.Failed = False
+        self.failed = False
         self.Debug = Debug
 
         if self.Debug:
@@ -351,12 +351,12 @@ class Workflow(object):
         it, workflow = self._get_workflow(it)
 
         for item in it:
-            self.Failed = False
+            self.failed = False
 
             for f in workflow:
                 f(item)
 
-            if self.Failed:
+            if self.failed:
                 if fail_callback is not None:
                     yield fail_callback(self)
             else:
