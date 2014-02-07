@@ -123,7 +123,7 @@ class WorkflowTests(TestCase):
 
     def test_get_workflow_debug(self):
         gen = construct_iterator(**{'iter_x': [1, 2, 3, 4, 5]})
-        exp_wf = [self.obj_debug.wf_SETUP_DEBUG_TRACE,
+        exp_wf = [self.obj_debug.wf_setup_debug_trace,
                   self.obj_debug.wf_groupA,
                   self.obj_debug.wf_groupC]
         obs_gen, obs_wf = self.obj_debug._get_workflow(gen)

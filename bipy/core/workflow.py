@@ -300,9 +300,9 @@ class Workflow(object):
         key = lambda x: getattr(x, 'Priority', default_priority)
         methods_sorted = sorted(methods, key=key, reverse=True)
 
-        if methods_sorted[0] != self.wf_SETUP_DEBUG_TRACE:
+        if methods_sorted[0] != self.wf_setup_debug_trace:
             name = methods_sorted[0].__name__
-            debug_prio = self.wf_SETUP_DEBUG_TRACE.Priority
+            debug_prio = self.wf_setup_debug_trace.Priority
 
             raise AttributeError("Method %s has a higher priority than the "
                                  "debug trace method. Please set its priority "
@@ -332,7 +332,7 @@ class Workflow(object):
 
     @priority(99999999)
     @no_requirements
-    def wf_SETUP_DEBUG_TRACE(self, item):
+    def wf_setup_debug_trace(self, item):
         self.debug_trace = []
 
     def __call__(self, it, success_callback=None, fail_callback=None):
