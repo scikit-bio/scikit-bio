@@ -28,7 +28,7 @@ class MyWorkflow(Workflow):
     @requires(Option='sub_value', Values=[1,5,10])
     def wf_sub(self, item):
         self.FinalState -= item
-        self.FinalState -= self.Options['sub_value']
+        self.FinalState -= self.options['sub_value']
 
     @priority(1000)
     @requires(IsValid=False)
@@ -36,13 +36,13 @@ class MyWorkflow(Workflow):
         self.FinalState = item
 
 # (i * i) + i - i - 5
-wf = MyWorkflow(Options={'add_value':None, 'sub_value':5})
+wf = MyWorkflow(options={'add_value':None, 'sub_value':5})
 gen = (i for i in range(10))
 for i in wf(gen):
     print i
 
 # (i * i) - i - 10
-wf = MyWorkflow(Options={'sub_value':10})
+wf = MyWorkflow(options={'sub_value':10})
 gen = (i for i in range(10))
 for i in wf(gen):
     print i
@@ -174,7 +174,7 @@ class requires(object):
                     return
 
             s_opt = self.Option
-            ds_opts = dec_self.Options
+            ds_opts = dec_self.options
 
             # if the option exists in the Workflow
             if s_opt in ds_opts:
@@ -217,24 +217,24 @@ class requires(object):
 class Workflow(object):
     """Arbitrary worflow support structure"""
 
-    def __init__(self, short_circuit=True, debug=False, Options=None,
+    def __init__(self, short_circuit=True, debug=False, options=None,
                  **kwargs):
         """Build thy self
 
         short_ciruit : if True, enables ignoring function groups when a given
             item has failed
         debug : Enable debug mode
-        Options : runtime options, {'option':values}
+        options : runtime options, {'option':values}
         kwargs : Additional arguments will be added to self
 
         All workflow methods (i.e., those starting with "wk_") must be
         decorated by either "no_requirements" or "requires". This ensures that
         the methods support the automatic workflow determination mechanism.
         """
-        if Options is None:
-            self.Options = {}
+        if options is None:
+            self.options = {}
         else:
-            self.Options = Options
+            self.options = options
 
         ### collections.Counter instead?
         self.stats = defaultdict(int)

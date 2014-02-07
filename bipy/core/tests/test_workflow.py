@@ -105,9 +105,9 @@ class MockWorkflow(Workflow):
 class WorkflowTests(TestCase):
     def setUp(self):
         opts = {'A': True, 'C': True}
-        self.obj_short = MockWorkflow(Options=opts)
-        self.obj_debug = MockWorkflow(debug=True, Options=opts)
-        self.obj_noshort = MockWorkflow(short_circuit=False, Options=opts)
+        self.obj_short = MockWorkflow(options=opts)
+        self.obj_debug = MockWorkflow(debug=True, options=opts)
+        self.obj_noshort = MockWorkflow(short_circuit=False, options=opts)
 
     def test_untagged_wf_method(self):
         class WFTest(Workflow):
@@ -163,10 +163,10 @@ class WorkflowTests(TestCase):
         self.assertTrue(self.obj_short.short_circuit)
 
     def test_init(self):
-        self.assertEqual(self.obj_short.Options, {'A': True, 'C': True})
+        self.assertEqual(self.obj_short.options, {'A': True, 'C': True})
         self.assertEqual(self.obj_short.stats, {})
         self.assertTrue(self.obj_short.short_circuit)
-        self.assertEqual(self.obj_noshort.Options, {'A': True, 'C': True})
+        self.assertEqual(self.obj_noshort.options, {'A': True, 'C': True})
         self.assertEqual(self.obj_noshort.stats, {})
         self.assertFalse(self.obj_noshort.short_circuit)
 
@@ -182,7 +182,7 @@ class WorkflowTests(TestCase):
         sf = lambda x: x.FinalState  # success function
 
         exp_stats = {'A1': 5, 'A2': 5, 'C1': 5}
-        # C2 isn't executed as its requirements aren't met in the Options
+        # C2 isn't executed as its requirements aren't met in the options
         exp_result = [('C1', 1), ('C1', 2), ('C1', 3), ('C1', 4), ('C1', 5)]
 
         obs_result = list(self.obj_short(iter_, sf, None))
@@ -197,7 +197,7 @@ class WorkflowTests(TestCase):
 
         exp_stats = {'A1': 5, 'A2': 5, 'C1': 4, 'C2': 4}
 
-        self.obj_short.Options['C2'] = 1
+        self.obj_short.options['C2'] = 1
         # pass in a failed callback to capture the result, and pause execution
         gen = self.obj_short(iter_, sf, ff)
 
@@ -320,7 +320,7 @@ class RequiresTests(TestCase):
         self.assertEqual(obj.stats, exp_stats)
 
     def test_not_none_execute(self):
-        obj = MockWorkflowReqTest(Options={'cannot_be_none': True}, debug=True)
+        obj = MockWorkflowReqTest(options={'cannot_be_none': True}, debug=True)
         single_iter = construct_iterator(**{'iter_x': [1, 2, 3, 4, 5]})
 
         exp_stats = {'needs_data': 2, 'always_run': 5, 'run_if_not_none': 5}
@@ -351,7 +351,7 @@ class RequiresTests(TestCase):
     def test_methodb2_accept(self):
         # methodb2 is setup to be valid when foo is in [1,2,3], make sure we
         # can execute
-        obj = MockWorkflow(Options={'foo': 1})
+        obj = MockWorkflow(options={'foo': 1})
         obj.methodB2('test')
         self.assertEqual(obj.FinalState, ('B2', 'test'))
         self.assertEqual(obj.stats, {'B2': 1})
@@ -365,7 +365,7 @@ class RequiresTests(TestCase):
     def test_methodb2_ignore(self):
         # methodb2 is setup to be valid when foo is in [1, 2, 3], make sure
         # we do not execute
-        obj = MockWorkflow(Options={'foo': 'bar'})
+        obj = MockWorkflow(options={'foo': 'bar'})
         obj.methodB2('test')
         self.assertEqual(obj.FinalState, None)
         self.assertEqual(obj.stats, {})
