@@ -16,4 +16,4 @@ install:
   - pip install .
 script:
   - nosetests
-  - pep8 --ignore=W bipy setup.py
+  - pep8 bipy setup.py
