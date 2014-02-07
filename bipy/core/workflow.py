@@ -148,10 +148,7 @@ class requires(object):
             self.Values = Values
 
     def doShortCircuit(self, wrapped):
-        if self.IsValid and (wrapped.Failed and wrapped.ShortCircuit):
-            return True
-        else:
-            return False
+        return self.IsValid and (wrapped.Failed and wrapped.ShortCircuit)
 
     def __call__(self, f):
         """Wrap a function
