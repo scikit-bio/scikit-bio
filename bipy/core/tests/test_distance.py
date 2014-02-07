@@ -516,23 +516,23 @@ DM_3x3_F = ("\ta\tb\tc\na\t0.0\t0.01\t4.2\nb\t0.01\t0.0\t12.0\n"
             "c\t4.2\t12.0\t0.0\n")
 
 # Extra whitespace-only lines throughout. Also has comments before the header.
-DM_3x3_WHITESPACE_F = """# foo
-      \t \t 
- #bar
-
-
-\ta\tb\tc
-a\t0.0\t0.01\t4.2
-     \t
-b\t0.01\t0.0\t12.0
-
-\t     \t
-
-c\t4.2\t12.0\t0.0
-
-   \t 
-\t\t\t
- """
+DM_3x3_WHITESPACE_F = '\n'.join(['# foo',
+                                 '      \t \t ',
+                                 ' #bar',
+                                 '',
+                                 '',
+                                 '\ta\tb\tc',
+                                 'a\t0.0\t0.01\t4.2',
+                                 '     \t',
+                                 'b\t0.01\t0.0\t12.0',
+                                 '',
+                                 '\t     \t',
+                                 '',
+                                 'c\t4.2\t12.0\t0.0',
+                                 '',
+                                 '   \t ',
+                                 '\t\t\t',
+                                 ' '])
 
 # missing data
 BAD_DM_F1 = 'a\tb\na\t0\t1\nb\t1'

@@ -219,7 +219,7 @@ class ValuedParameterTests(TestCase):
                     Delimiter=' '),
                 self.constructor(Name='d', Prefix='-', Value='evo/t.txt',
                                  Delimiter=' '),
-                self.constructor(Name='d', Prefix='-', Value='\'', 
+                self.constructor(Name='d', Prefix='-', Value='\'',
                                  Delimiter=' ')]
 
         self.p_modified_quote =\
@@ -571,7 +571,7 @@ class ParametersTests(TestCase):
             pass
         else:
             raise AttributeError("Parameters shouldn't support assignment.")
-            
+
         try:
             del self.p2['-p']
         except TypeError:
@@ -589,7 +589,7 @@ class ParametersTests(TestCase):
             except TypeError:
                 v.on()
             self.assertTrue(v.isOn())
-            
+
         # turn everything off
         p.all_off()
         for v in p.values():

@@ -474,7 +474,7 @@ class LineOrientedConstructorTests(TestCase):
         result = loc_good()
         assert isinstance(result, rec)
         self.assertEqual(result,
-                         {'abc': ['def', 'xyz'], '3': 'n', 
+                         {'abc': ['def', 'xyz'], '3': 'n',
                           'fgh': False, 'x': 3})
 
 
