@@ -62,6 +62,7 @@ for i in wf(gen):
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
+import sys
 from itertools import chain
 from functools import update_wrapper
 from collections import Iterable, defaultdict
@@ -97,6 +98,7 @@ def _tag_function(f):
 
 class priority(object):
     """Decorate a function priority"""
+    highest = sys.maxint
     def __init__(self, Priority):
         self.Priority = Priority
 
@@ -330,7 +332,7 @@ class Workflow(object):
 
         return generator_reset, executed
 
-    @priority(99999999)
+    @priority(priority.highest)
     @no_requirements
     def wf_setup_debug_trace(self, item):
         self.debug_trace = []
