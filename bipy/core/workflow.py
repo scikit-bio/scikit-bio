@@ -149,7 +149,7 @@ class requires(object):
         else:
             self.Values = Values
 
-    def doShortCircuit(self, wrapped):
+    def do_short_circuit(self, wrapped):
         return self.IsValid and (wrapped.Failed and wrapped.ShortCircuit)
 
     def __call__(self, f):
@@ -166,7 +166,7 @@ class requires(object):
 
             dec_self : this is "self" for the decorated function
             """
-            if self.doShortCircuit(dec_self):
+            if self.do_short_circuit(dec_self):
                 return
 
             if self.ValidData is not None:
@@ -195,7 +195,7 @@ class requires(object):
 
             dec_self : this is "self" for the decorated function
             """
-            if self.doShortCircuit(dec_self):
+            if self.do_short_circuit(dec_self):
                 return
 
             if self.ValidData is not None:
