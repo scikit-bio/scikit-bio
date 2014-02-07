@@ -3,7 +3,7 @@ import os
 import numpy as np
 import numpy.testing as npt
 
-from ordination import CA, RDA, CCA
+from bipy.maths.stats.ordination import CA, RDA, CCA
 
 
 def get_data_path(fn):
