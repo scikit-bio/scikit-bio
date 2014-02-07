@@ -92,7 +92,7 @@ def _debug_trace_wrapper(obj, f):
 
 def _tag_function(f):
     """Tag, you're it"""
-    setattr(f, '__workflowtag__', None)
+    setattr(f, '_workflow_tag', None)
 
 
 class priority(object):
@@ -249,7 +249,7 @@ class Workflow(object):
             setattr(self, k, v)
 
         for f in self._all_wf_methods():
-            if not hasattr(f, '__workflowtag__'):
+            if not hasattr(f, '_workflow_tag'):
                 raise AttributeError("%s isn't a wf method!" % f.__name__)
 
         self._allocate_final_state()
