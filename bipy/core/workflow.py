@@ -81,10 +81,10 @@ anything = Exists()  # external, for when a value can be anything
 def _debug_trace_wrapper(obj, f):
     """Trace a function call"""
     def wrapped(self, *args, **kwargs):
-        if not hasattr(obj, 'DebugTrace'):
-            raise AttributeError("%s doesn't have DebugTrace!" % obj.__class__)
+        if not hasattr(obj, 'debug_trace'):
+            raise AttributeError("%s doesn't have debug_trace!" % obj.__class__)
 
-        obj.DebugTrace.append(f.__name__)
+        obj.debug_trace.append(f.__name__)
         return f(self, *args, **kwargs)
 
     return update_wrapper(wrapped, f)
@@ -241,7 +241,7 @@ class Workflow(object):
         self.Debug = Debug
 
         if self.Debug:
-            self.DebugTrace = []
+            self.debug_trace = []
 
         for k, v in kwargs.iteritems():
             if hasattr(self, k):
@@ -334,7 +334,7 @@ class Workflow(object):
     @priority(99999999)
     @no_requirements
     def wf_SETUP_DEBUG_TRACE(self, item):
-        self.DebugTrace = []
+        self.debug_trace = []
 
     def __call__(self, it, success_callback=None, fail_callback=None):
         """Operate on all the data

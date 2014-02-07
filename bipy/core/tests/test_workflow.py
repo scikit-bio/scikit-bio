@@ -148,7 +148,7 @@ class WorkflowTests(TestCase):
                'wf_groupC',
                'methodC1',
                'methodC2']
-        obs = self.obj_debug.DebugTrace
+        obs = self.obj_debug.debug_trace
         self.assertEqual(obs, exp)
 
     def test_get_workflow(self):
