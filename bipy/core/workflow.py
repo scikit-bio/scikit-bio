@@ -21,11 +21,11 @@ class MyWorkflow(Workflow):
         self.final_state *= item
 
     @priority(10)
-    @requires(Option='add_value')
+    @requires(option='add_value')
     def wf_add(self, item):
         self.final_state += item
 
-    @requires(Option='sub_value', Values=[1,5,10])
+    @requires(option='sub_value', Values=[1,5,10])
     def wf_sub(self, item):
         self.final_state -= item
         self.final_state -= self.options['sub_value']
@@ -119,11 +119,11 @@ def no_requirements(f):
 
 class requires(object):
     """Decorator that executes a function if requirements are met"""
-    def __init__(self, IsValid=True, Option=None, Values=anything,
+    def __init__(self, IsValid=True, option=None, Values=anything,
                  ValidData=None):
         """
         IsValid : execute the function if self.failed is False
-        Option : a required option
+        option : a required option
         Values : required values associated with an option
         ValidData : data level requirements, this must be a function with the
             following signature: f(*args, **kwargs) returning True. NOTE: if
@@ -132,7 +132,7 @@ class requires(object):
         """
         # self here is the requires object
         self.IsValid = IsValid
-        self.Option = Option
+        self.option = option
         self.ValidData = ValidData
 
         if Values is anything:
@@ -173,7 +173,7 @@ class requires(object):
                 if not self.ValidData(*args, **kwargs):
                     return
 
-            s_opt = self.Option
+            s_opt = self.option
             ds_opts = dec_self.options
 
             # if the option exists in the Workflow
@@ -208,7 +208,7 @@ class requires(object):
         _tag_function(decorated_with_option)
         _tag_function(decorated_without_option)
 
-        if self.Option is None:
+        if self.option is None:
             return update_wrapper(decorated_without_option, f)
         else:
             return update_wrapper(decorated_with_option, f)
