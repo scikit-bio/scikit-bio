@@ -288,7 +288,7 @@ def t_two_sample(a, b, tails=None, exp_diff=0, none_on_zero_variance=True):
                 result = (t, prob)
     except (ZeroDivisionError, ValueError, AttributeError, TypeError,
             FloatingPointError) as e:
-        # invalidate if the sample sizes are wrong, the values 
+        # invalidate if the sample sizes are wrong, the values
         # aren't numeric or aren't present, etc.
         result = (None, None)
 
