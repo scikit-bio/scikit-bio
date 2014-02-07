@@ -106,7 +106,7 @@ class WorkflowTests(TestCase):
     def setUp(self):
         opts = {'A': True, 'C': True}
         self.obj_short = MockWorkflow(Options=opts)
-        self.obj_debug = MockWorkflow(Debug=True, Options=opts)
+        self.obj_debug = MockWorkflow(debug=True, Options=opts)
         self.obj_noshort = MockWorkflow(short_circuit=False, Options=opts)
 
     def test_untagged_wf_method(self):
@@ -320,7 +320,7 @@ class RequiresTests(TestCase):
         self.assertEqual(obj.stats, exp_stats)
 
     def test_not_none_execute(self):
-        obj = MockWorkflowReqTest(Options={'cannot_be_none': True}, Debug=True)
+        obj = MockWorkflowReqTest(Options={'cannot_be_none': True}, debug=True)
         single_iter = construct_iterator(**{'iter_x': [1, 2, 3, 4, 5]})
 
         exp_stats = {'needs_data': 2, 'always_run': 5, 'run_if_not_none': 5}

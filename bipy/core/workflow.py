@@ -217,12 +217,13 @@ class requires(object):
 class Workflow(object):
     """Arbitrary worflow support structure"""
 
-    def __init__(self, short_circuit=True, Debug=False, Options=None, **kwargs):
+    def __init__(self, short_circuit=True, debug=False, Options=None,
+                 **kwargs):
         """Build thy self
 
-        ShortCiruit : if True, enables ignoring function groups when a given
+        short_ciruit : if True, enables ignoring function groups when a given
             item has failed
-        Debug : Enable debug mode
+        debug : Enable debug mode
         Options : runtime options, {'option':values}
         kwargs : Additional arguments will be added to self
 
@@ -239,9 +240,9 @@ class Workflow(object):
         self.stats = defaultdict(int)
         self.short_circuit = short_circuit
         self.failed = False
-        self.Debug = Debug
+        self.debug = debug
 
-        if self.Debug:
+        if self.debug:
             self.debug_trace = []
 
         for k, v in kwargs.iteritems():
@@ -264,7 +265,7 @@ class Workflow(object):
 
     def _setup_debug(self):
         """Wrap all methods with debug trace support"""
-        if not self.Debug:
+        if not self.debug:
             return
 
         _ignore = set(['_get_workflow', '_all_wf_methods', '_sanity_check',
@@ -310,7 +311,7 @@ class Workflow(object):
                                  "debug trace method. Please set its priority "
                                  "below %d." % (name, debug_prio))
 
-        if not self.Debug:
+        if not self.debug:
             methods_sorted.pop(0)
 
         return methods_sorted
