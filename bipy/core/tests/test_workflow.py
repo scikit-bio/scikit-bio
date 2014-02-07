@@ -34,18 +34,18 @@ class MockWorkflow(Workflow):
         self.final_state = None
 
     @priority(90)
-    @requires(option='A', Values=True)
+    @requires(option='A', values=True)
     def wf_groupA(self, item):
         self.methodA1(item)
         self.methodA2(item)
 
-    @requires(option='B', Values=True)
+    @requires(option='B', values=True)
     def wf_groupB(self, item):
         self.methodB1(item)
         self.methodB2(item)
 
     @priority(10)
-    @requires(option='C', Values=True)
+    @requires(option='C', values=True)
     def wf_groupC(self, item):
         self.methodC1(item)
         self.methodC2(item)
@@ -75,7 +75,7 @@ class MockWorkflow(Workflow):
         else:
             self.final_state = (name, item)
 
-    @requires(option='foo', Values=[1, 2, 3])
+    @requires(option='foo', values=[1, 2, 3])
     def methodB2(self, item):
         name = 'B2'
         self.stats[name] += 1
@@ -93,7 +93,7 @@ class MockWorkflow(Workflow):
             self.failed = True
         self.final_state = (name, item)
 
-    @requires(is_valid=True, option='C2', Values=[1, 2, 3])
+    @requires(is_valid=True, option='C2', values=[1, 2, 3])
     def methodC2(self, item):
         name = 'C2'
         self.stats[name] += 1
@@ -283,7 +283,7 @@ class MockWorkflowReqTest(Workflow):
         self.final_state = (name, item)
 
     @priority(20)
-    @requires(option='cannot_be_none', Values=not_none)
+    @requires(option='cannot_be_none', values=not_none)
     def wf_run_if_not_none(self, item):
         name = 'run_if_not_none'
         self.stats[name] += 1

@@ -25,7 +25,7 @@ class MyWorkflow(Workflow):
     def wf_add(self, item):
         self.final_state += item
 
-    @requires(option='sub_value', Values=[1,5,10])
+    @requires(option='sub_value', values=[1,5,10])
     def wf_sub(self, item):
         self.final_state -= item
         self.final_state -= self.options['sub_value']
@@ -119,12 +119,12 @@ def no_requirements(f):
 
 class requires(object):
     """Decorator that executes a function if requirements are met"""
-    def __init__(self, is_valid=True, option=None, Values=anything,
+    def __init__(self, is_valid=True, option=None, values=anything,
                  ValidData=None):
         """
         is_valid : execute the function if self.failed is False
         option : a required option
-        Values : required values associated with an option
+        values : required values associated with an option
         ValidData : data level requirements, this must be a function with the
             following signature: f(*args, **kwargs) returning True. NOTE: if
             ValidData returns False on the first item evaluated, the decorated
@@ -135,19 +135,19 @@ class requires(object):
         self.option = option
         self.ValidData = ValidData
 
-        if Values is anything:
-            self.Values = anything
-        elif Values is not_none:
-            self.Values = not_none
-        elif not isinstance(Values, set):
-            if isinstance(Values, str):
-                self.Values = Values
-            elif isinstance(Values, Iterable):
-                self.Values = set(Values)
+        if values is anything:
+            self.values = anything
+        elif values is not_none:
+            self.values = not_none
+        elif not isinstance(values, set):
+            if isinstance(values, str):
+                self.values = values
+            elif isinstance(values, Iterable):
+                self.values = set(values)
             else:
-                self.Values = set([Values])
+                self.values = set([values])
         else:
-            self.Values = Values
+            self.values = values
 
     def do_short_circuit(self, wrapped):
         return self.is_valid and (wrapped.failed and wrapped.short_circuit)
@@ -181,12 +181,12 @@ class requires(object):
                 v = ds_opts[s_opt]
 
                 # if the value just needs to be not None
-                if self.Values is not_none and v is not None:
+                if self.values is not_none and v is not None:
                     f(dec_self, *args, **kwargs)
                     return _executed
 
                 # otherwise make sure the value is acceptable
-                elif v in self.Values:
+                elif v in self.values:
                     f(dec_self, *args, **kwargs)
                     return _executed
 
