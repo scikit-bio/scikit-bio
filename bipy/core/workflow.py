@@ -227,7 +227,7 @@ class Workflow(object):
         options : runtime options, {'option':values}
         kwargs : Additional arguments will be added to self
 
-        All workflow methods (i.e., those starting with "wk_") must be
+        All workflow methods (i.e., those starting with "wf_") must be
         decorated by either "no_requirements" or "requires". This ensures that
         the methods support the automatic workflow determination mechanism.
         """
