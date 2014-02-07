@@ -234,7 +234,7 @@ class Workflow(object):
             self.Options = Options
 
         ### collections.Counter instead?
-        self.Stats = defaultdict(int)
+        self.stats = defaultdict(int)
         self.ShortCircuit = ShortCircuit
         self.Failed = False
         self.Debug = Debug
@@ -318,14 +318,14 @@ class Workflow(object):
         # save state
         shortcircuit_state = self.ShortCircuit
         self.ShortCircuit = False
-        stats = self.Stats.copy()
+        stats = self.stats.copy()
 
         peek = it.next()
         executed = [f for f in self._all_wf_methods() if f(peek) is _executed]
 
         # restore state
         self.ShortCircuit = shortcircuit_state
-        self.Stats = stats
+        self.stats = stats
         generator_reset = chain([peek], it)
 
         return generator_reset, executed
