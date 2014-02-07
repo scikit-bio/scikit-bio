@@ -107,7 +107,7 @@ class WorkflowTests(TestCase):
         opts = {'A': True, 'C': True}
         self.obj_short = MockWorkflow(Options=opts)
         self.obj_debug = MockWorkflow(Debug=True, Options=opts)
-        self.obj_noshort = MockWorkflow(ShortCircuit=False, Options=opts)
+        self.obj_noshort = MockWorkflow(short_circuit=False, Options=opts)
 
     def test_untagged_wf_method(self):
         class WFTest(Workflow):
@@ -132,7 +132,7 @@ class WorkflowTests(TestCase):
         self.assertEqual(list(obs_gen), [1, 2, 3, 4, 5])
 
         self.assertEqual(self.obj_debug.stats, {})
-        self.assertTrue(self.obj_debug.ShortCircuit)
+        self.assertTrue(self.obj_debug.short_circuit)
 
     def test_debug_trace(self):
         gen = construct_iterator(**{'iter_x': [1, 2, 3, 4, 5]})
@@ -160,15 +160,15 @@ class WorkflowTests(TestCase):
         self.assertEqual(list(obs_gen), [1, 2, 3, 4, 5])
 
         self.assertEqual(self.obj_short.stats, {})
-        self.assertTrue(self.obj_short.ShortCircuit)
+        self.assertTrue(self.obj_short.short_circuit)
 
     def test_init(self):
         self.assertEqual(self.obj_short.Options, {'A': True, 'C': True})
         self.assertEqual(self.obj_short.stats, {})
-        self.assertTrue(self.obj_short.ShortCircuit)
+        self.assertTrue(self.obj_short.short_circuit)
         self.assertEqual(self.obj_noshort.Options, {'A': True, 'C': True})
         self.assertEqual(self.obj_noshort.stats, {})
-        self.assertFalse(self.obj_noshort.ShortCircuit)
+        self.assertFalse(self.obj_noshort.short_circuit)
 
     def test_all_wf_methods(self):
         # note on priority: groupA:90, groupC:10, groupB:0 (default)

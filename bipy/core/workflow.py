@@ -150,7 +150,7 @@ class requires(object):
             self.Values = Values
 
     def do_short_circuit(self, wrapped):
-        return self.IsValid and (wrapped.Failed and wrapped.ShortCircuit)
+        return self.IsValid and (wrapped.Failed and wrapped.short_circuit)
 
     def __call__(self, f):
         """Wrap a function
@@ -217,7 +217,7 @@ class requires(object):
 class Workflow(object):
     """Arbitrary worflow support structure"""
 
-    def __init__(self, ShortCircuit=True, Debug=False, Options=None, **kwargs):
+    def __init__(self, short_circuit=True, Debug=False, Options=None, **kwargs):
         """Build thy self
 
         ShortCiruit : if True, enables ignoring function groups when a given
@@ -237,7 +237,7 @@ class Workflow(object):
 
         ### collections.Counter instead?
         self.stats = defaultdict(int)
-        self.ShortCircuit = ShortCircuit
+        self.short_circuit = short_circuit
         self.Failed = False
         self.Debug = Debug
 
@@ -318,15 +318,15 @@ class Workflow(object):
     def _get_workflow(self, it):
         """Get the methods executed, sorted by priority"""
         # save state
-        shortcircuit_state = self.ShortCircuit
-        self.ShortCircuit = False
+        shortcircuit_state = self.short_circuit
+        self.short_circuit = False
         stats = self.stats.copy()
 
         peek = it.next()
         executed = [f for f in self._all_wf_methods() if f(peek) is _executed]
 
         # restore state
-        self.ShortCircuit = shortcircuit_state
+        self.short_circuit = shortcircuit_state
         self.stats = stats
         generator_reset = chain([peek], it)
 
