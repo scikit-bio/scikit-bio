@@ -257,7 +257,7 @@ class CommandLineGeneratorTests(TestCase):
                         '-input="%s"' % inputfile, '-output="%s"' % outputfile,
                          '', ''])]
         exp.append(' '.join([bin, cmd, '-default=42', '-delimaaachoice1',
-                             '-input="%s"' % inputfile, 
+                             '-input="%s"' % inputfile,
                              '-output="%s"' % outputfile,
                              '', '']))
         exp.append(' '.join([bin, cmd, '-default=42', '-delimaaachoice2',
@@ -455,7 +455,7 @@ class CommandLineApplicationTests(TestCase):
                         'cd "/tmp/"; /tmp/CLAppTester.py --duh -F "junk.txt"')
         # Space in _command
         app = CLAppTester_space_in_command()
-        self.assertEqual(app.BaseCommand, 
+        self.assertEqual(app.BaseCommand,
                          'cd "/tmp/"; "/tmp/CLApp Tester.py"')
 
     def test_getHelp(self):
@@ -978,7 +978,7 @@ class CommandLineApplicationTests(TestCase):
         """TmpFilename should return filename of correct length"""
         app = CLAppTester()
         obs = app.getTmpFilename(include_class_id=True)
-        # leaving the strings in this statement so it's clear where the 
+        # leaving the strings in this statement so it's clear where the
         # expected length comes from
         self.assertEqual(len(obs), len(app.TmpDir) + len('/') + app.TmpNameLen
                          + len('tmp') + len('CLAppTester') + len('.txt'))
@@ -987,7 +987,7 @@ class CommandLineApplicationTests(TestCase):
         assert len(chars) > 1
 
         obs = app.getTmpFilename(include_class_id=False)
-        # leaving the strings in this statement so it's clear where the 
+        # leaving the strings in this statement so it's clear where the
         # expected length comes from
         self.assertEqual(len(obs), len(app.TmpDir) + len('/') + app.TmpNameLen
                          + len('tmp') + len('.txt'))

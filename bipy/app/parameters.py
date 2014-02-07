@@ -131,8 +131,8 @@ class Parameter(object):
 
     def _get_id(self):
         """Construct and return the identifier"""
-        return ''.join(map(str, 
-                           filter(is_not_None, 
+        return ''.join(map(str,
+                           filter(is_not_None,
                                   [self.Prefix, self.Name])))
 
     Id = property(_get_id)
@@ -178,7 +178,7 @@ class FlagParameter(Parameter):
             Parameter f is turned on. It will be used by the application.
         """
         super(FlagParameter, self).__init__(Name=Name, Prefix=Prefix,
-                                            Value=Value, Delimiter=None, 
+                                            Value=Value, Delimiter=None,
                                             Quote=None)
 
     def __str__(self):
@@ -475,7 +475,7 @@ class Parameters(Mapping):
 
     def __len__(self):
         return len(self._parameters)
-    
+
     def __iter__(self):
         return iter(self._parameters)
 
@@ -485,7 +485,7 @@ class Parameters(Mapping):
         except KeyError:
             # the key is not a synonym
             pass
-        
+
         return self._parameters[key]
 
     def all_off(self):
