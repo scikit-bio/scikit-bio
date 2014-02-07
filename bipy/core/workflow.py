@@ -179,13 +179,12 @@ class requires(object):
                 v = ds_opts[s_opt]
 
                 # if the value just needs to be not None
-                if self.Values is not_none:
-                    if v is not None:
-                        f(dec_self, *args, **kwargs)
-                        return _executed
+                if self.Values is not_none and v is not None:
+                    f(dec_self, *args, **kwargs)
+                    return _executed
 
                 # otherwise make sure the value is acceptable
-                elif ds_opts[s_opt] in self.Values:
+                elif v in self.Values:
                     f(dec_self, *args, **kwargs)
                     return _executed
 
