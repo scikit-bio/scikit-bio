@@ -54,6 +54,14 @@ for i in wf(gen):
     print i
 """
 
+#-----------------------------------------------------------------------------
+# Copyright (c) 2013, The BiPy Developers.
+#
+# Distributed under the terms of the Modified BSD License.
+#
+# The full license is in the file COPYING.txt, distributed with this software.
+#-----------------------------------------------------------------------------
+
 from itertools import chain
 from functools import update_wrapper
 from collections import Iterable, defaultdict
