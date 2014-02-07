@@ -15,7 +15,7 @@ When considering submitting a new feature to BiPy, you should begin by posting a
 
 * For new features, you'll want to describe why the functionality that you are proposing to add is relevant. For it to be relevant, it should be demonstrably useful to BiPy users. This typically means that a new analytic method is implemented (you should describe why it's useful, ideally including a link to a paper that uses this method), or an existing method is enhanced (your implementation matches the performance of the pre-existing method while reducing runtime, memory consumption, etc, or it improves performance over the pre-existing method). We will request benchmark results comparing your method to the pre-existing methods (which would also be required for publication of your method) so pointing to a paper or other document containing benchmark results, or including benchmark results in your issue, will speed up the process.
 
-* For bug fixes, you should provide a detailed description of the bug so other developers can reproduce it. We take bugs in BiPy very seriously. Bugs can be related to errors in code, documentation, or tests. Errors in documentation or tests are usually updated in the next major release of BiPy. Errors in code that could result in incorrect results or inability to access certain functionality may result in a new minor release of BiPy. 
+* For bug fixes, you should provide a detailed description of the bug so other developers can reproduce it. We take bugs in BiPy very seriously. Bugs can be related to errors in code, documentation, or tests. Errors in documentation or tests are usually updated in the next major release of BiPy. Errors in code that could result in incorrect results or inability to access certain functionality may result in a new minor release of BiPy.
 
  You should include the following information in your bug report:
 
@@ -43,7 +43,7 @@ When you submit code to BiPy, it will be reviewed by one or more BiPy developers
 * Your code is sufficiently well-documented (see Coding Guidelines below).
 * Your code provides relevant changes or additions to BiPy (Type of Submissions above).
 
-This process is designed to ensure the quality of BiPy, and can be a very useful experience for new developers. 
+This process is designed to ensure the quality of BiPy, and can be a very useful experience for new developers.
 
 Particularly for big changes, if you'd like feedback on your code in the form of a code review as you work, you should request help in the issue that you created and one of the BiPy developers will work with you to perform regular code reviews. This can greatly reduce development time (and frustration) so we highly recommend that new developers take advantage of this rather than submitting a pull request with a massive amount of code in one chunk. That can lead to frustration when the developer thinks they are done, but the reviewer requests large amounts of changes, and it is also very hard to review.
 
@@ -51,7 +51,7 @@ Particularly for big changes, if you'd like feedback on your code in the form of
 Submitting code to BiPy
 ------------------------
 
-BiPy is hosted on [GitHub](http://www.github.com), and we use GitHub's [Pull Request](https://help.github.com/articles/using-pull-requests) mechanism for accepting submissions. You should go through the following steps to submit code to BiPy. 
+BiPy is hosted on [GitHub](http://www.github.com), and we use GitHub's [Pull Request](https://help.github.com/articles/using-pull-requests) mechanism for accepting submissions. You should go through the following steps to submit code to BiPy.
 
 1. Begin by [creating an issue](https://github.com/biocore/bipy/issues) describing your proposed change. This should include a description of your proposed change (is it a new feature, a bug fix, etc.), and note in the issue description that you want to work on it. If you'll be modifying existing BiPy file(s), you'll want to get input from the developer responsible for the relevant file(s) via a discussion on the issue tracker to let them know you what you'd like to do. The developer responsible for the code is named in the ``__maintainer__`` variable at the top of the file. Once you hear back that it is OK to make changes (i.e., they don't have local edits, they agree with the change you'd like to make, and they're comfortable with you editing their code), we will assign the issue to you on GitHub.
 
