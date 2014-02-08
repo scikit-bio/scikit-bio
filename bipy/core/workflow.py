@@ -83,7 +83,8 @@ def _debug_trace_wrapper(obj, f):
     """Trace a function call"""
     def wrapped(self, *args, **kwargs):
         if not hasattr(obj, 'debug_trace'):
-            raise AttributeError("%s doesn't have debug_trace!" % obj.__class__)
+            cls = obj.__class__
+            raise AttributeError("%s doesn't have debug_trace!" % cls)
 
         obj.debug_trace.append(f.__name__)
         return f(self, *args, **kwargs)
@@ -99,6 +100,7 @@ def _tag_function(f):
 class priority(object):
     """Decorate a function priority"""
     highest = sys.maxint
+
     def __init__(self, Priority):
         self.Priority = Priority
 
