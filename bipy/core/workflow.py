@@ -221,7 +221,7 @@ class Workflow(object):
                  **kwargs):
         """Build thy self
 
-        short_ciruit : if True, enables ignoring function groups when a given
+        short_circuit : if True, enables ignoring function groups when a given
             item has failed
         debug : Enable debug mode
         options : runtime options, {'option':values}
