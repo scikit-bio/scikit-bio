@@ -141,7 +141,7 @@ class DistanceMatrix(object):
         # there.
         try:
             data_f = dm_f[(header_idx + 1):]
-        except AttributeError:
+        except (AttributeError, TypeError):
             data_f = dm_f
 
         num_sids = len(sids)
