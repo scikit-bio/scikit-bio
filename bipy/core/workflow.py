@@ -101,11 +101,11 @@ class priority(object):
     """Decorate a function priority"""
     highest = sys.maxint
 
-    def __init__(self, Priority):
-        self.Priority = Priority
+    def __init__(self, priority):
+        self.priority = priority
 
     def __call__(self, f):
-        f.Priority = self.Priority
+        f.priority = self.priority
         return f
 
 
@@ -302,12 +302,12 @@ class Workflow(object):
         Methods are sorted by priority
         """
         methods = [getattr(self, f) for f in dir(self) if f.startswith('wf_')]
-        key = lambda x: getattr(x, 'Priority', default_priority)
+        key = lambda x: getattr(x, 'priority', default_priority)
         methods_sorted = sorted(methods, key=key, reverse=True)
 
         if methods_sorted[0] != self.wf_setup_debug_trace:
             name = methods_sorted[0].__name__
-            debug_prio = self.wf_setup_debug_trace.Priority
+            debug_prio = self.wf_setup_debug_trace.priority
 
             raise AttributeError("Method %s has a higher priority than the "
                                  "debug trace method. Please set its priority "

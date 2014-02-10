@@ -378,7 +378,7 @@ class PriorityTests(TestCase):
             """doc check"""
             return x + y + z
 
-        self.assertEqual(foo.Priority, 10)
+        self.assertEqual(foo.priority, 10)
         self.assertEqual(foo.__name__, 'foo')
         self.assertEqual(foo.__doc__, 'doc check')
 
