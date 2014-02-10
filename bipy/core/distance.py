@@ -438,7 +438,7 @@ class DistanceMatrix(object):
                                       "values.")
         elif np.trace(data) != 0:
             raise DistanceMatrixError("Data must be hollow (i.e., the "
-                                      "diagonal can only contain zeros.)")
+                                      "diagonal can only contain zeros).")
         elif num_sids != len(set(sample_ids)):
             raise DistanceMatrixError("Sample IDs must be unique.")
         elif num_sids != data.shape[0]:
