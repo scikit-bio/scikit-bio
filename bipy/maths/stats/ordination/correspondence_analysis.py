@@ -14,11 +14,14 @@ class CA(Ordination):
         r"""Compute correspondence analysis, a multivariate statistical
         technique for ordination.
 
-        In general, rows in the data table will correspond to sites and
-        columns to species, but the method is symmetric. In order to
-        measure the correspondence between rows and columns, the
+        In general, rows in the data table will correspond to sites
+        and columns to species, but the method is symmetric. In order
+        to measure the correspondence between rows and columns, the
         :math:`\chi^2` distance is used, and those distances are
-        preserved in the transformed space.
+        preserved in the transformed space. The :math:`\chi^2`
+        distance doesn't take double zeros into account, and so it is
+        expected to produce better ordination that PCA when the data
+        has lots of zero values.
 
         It is related to Principal Component Analysis (PCA) but it
         should be preferred in the case of steep or long gradients, that
@@ -27,8 +30,9 @@ class CA(Ordination):
         Parameters
         ----------
         X : array_like
-            Contingency table. Data must be non-negative and
-            dimensionally homogeneous.
+            Contingency table. It can be applied to different kinds of
+            data tables but data must be non-negative and
+            dimensionally homogeneous (quantitative or binary).
 
         Notes
         -----
