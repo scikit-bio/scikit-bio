@@ -11,7 +11,7 @@
 from itertools import izip
 from bipy.core.workflow import (Workflow, requires, priority,
                                 no_requirements, not_none)
-from unittest import TestCase, main
+from bipy.util.unit_test import TestCase, main
 
 
 def construct_iterator(**kwargs):
