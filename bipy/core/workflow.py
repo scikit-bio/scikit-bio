@@ -9,39 +9,34 @@ be independent.
 As an example:
 
 class MyWorkflow(Workflow):
-    def _allocate_final_state(self):
-        self.final_state = None
+    def _allocate_state(self):
+        self.state = 0
 
-    def _sanity_check(self):
-        pass
+    def initialize_state(self, item):
+        self.state = item
 
     @priority(100)
     @no_requirements
-    def wf_mul(self, item):
-        self.final_state *= item
+    def wf_mul(self):
+        self.state *= self.state
 
     @priority(10)
-    @requires(option='add_value')
-    def wf_add(self, item):
-        self.final_state += item
+    @requires(option='double')
+    def wf_double(self):
+        self.state += self.state
 
     @requires(option='sub_value', values=[1,5,10])
-    def wf_sub(self, item):
-        self.final_state -= item
-        self.final_state -= self.options['sub_value']
+    def wf_sub(self):
+        self.state -= self.options['sub_value']
 
-    @priority(1000)
-    @requires(valid_state=False)
-    def wf_init(self, item):
-        self.final_state = item
 
-# (i * i) + i - i - 5
-wf = MyWorkflow(options={'add_value':None, 'sub_value':5})
+# ((i * i) * 2) - 5
+wf = MyWorkflow(options={'double':None, 'sub_value':5})
 gen = (i for i in range(10))
 for i in wf(gen):
     print i
 
-# (i * i) - i - 10
+# (i * i) - 10
 wf = MyWorkflow(options={'sub_value':10})
 gen = (i for i in range(10))
 for i in wf(gen):
@@ -81,13 +76,13 @@ anything = Exists()  # external, for when a value can be anything
 
 def _debug_trace_wrapper(obj, f):
     """Trace a function call"""
-    def wrapped(self, *args, **kwargs):
+    def wrapped():
         if not hasattr(obj, 'debug_trace'):
             cls = obj.__class__
             raise AttributeError("%s doesn't have debug_trace!" % cls)
 
         obj.debug_trace.append(f.__name__)
-        return f(self, *args, **kwargs)
+        return f()
 
     return update_wrapper(wrapped, f)
 
@@ -106,9 +101,9 @@ class priority(object):
 
 def no_requirements(f):
     """Decorate a function to indicate there are no requirements"""
-    def decorated(self, *args, **kwargs):
+    def decorated(self):
         """Simply execute the function"""
-        f(self, *args, **kwargs)
+        f(self)
         return _executed
     return update_wrapper(decorated, f)
 
@@ -122,9 +117,10 @@ class requires(object):
         option : a required option
         values : required values associated with an option
         valid_data : data level requirements, this must be a function with the
-            following signature: f(*args, **kwargs) returning True. NOTE: if
-            valid_data returns False on the first item evaluated, the decorated
-            function will be removed from the remaining workflow.
+            following signature: f(x). The function will be passed
+            Workflow.state and should return True if the data are valid.
+            If valid_data returns False on the first item evaluated, the
+            decorated function may be removed from the remaining workflow
         """
         # self here is the requires object
         self.valid_state = valid_state
@@ -153,8 +149,8 @@ class requires(object):
 
         f : the function to wrap
         """
-        def decorated(dec_self, *args, **kwargs):
-            """A decorated function that has an option to validate
+        def decorated(dec_self):
+            """A decorated function that has requirements
 
             dec_self : this is "self" for the decorated function
             """
@@ -162,7 +158,7 @@ class requires(object):
                 return
 
             if self.valid_data is not None:
-                if not self.valid_data(*args, **kwargs):
+                if not self.valid_data(dec_self.state):
                     return
 
             s_opt = self.option
@@ -170,7 +166,7 @@ class requires(object):
 
             # if this is a function that does not have an option to validate
             if s_opt is None:
-                f(dec_self, *args, **kwargs)
+                f(dec_self)
                 return _executed
 
             # if the option exists in the Workflow
@@ -179,12 +175,12 @@ class requires(object):
 
                 # if the value just needs to be not None
                 if self.values is not_none and v is not None:
-                    f(dec_self, *args, **kwargs)
+                    f(dec_self)
                     return _executed
 
                 # otherwise make sure the value is acceptable
                 elif v in self.values:
-                    f(dec_self, *args, **kwargs)
+                    f(dec_self)
                     return _executed
 
         return update_wrapper(decorated, f)
@@ -226,11 +222,19 @@ class Workflow(object):
                 raise AttributeError("%s exists in self!" % k)
             setattr(self, k, v)
 
-        self._allocate_final_state()
+        self._allocate_state()
         self._setup_debug()
 
-    def _allocate_final_state(self):
-        """Setup final_state, must be implemented by subclasses"""
+    def initialize_state(self, item):
+        """Initialize state
+
+        This method is called first prior to any other defined workflow method
+        with the exception of _setup_debug_trace if self.debug is True
+        """
+        raise NotImplementedError("Must implement this method")
+
+    def _allocate_state(self):
+        """Setup state, must be implemented by subclasses"""
         raise NotImplementedError("Must implement this method")
 
     def _setup_debug(self):
@@ -272,7 +276,8 @@ class Workflow(object):
         stats = self.stats.copy()
 
         peek = it.next()
-        executed = [f for f in self._all_wf_methods() if f(peek) is _executed]
+        self.initialize_state(peek)
+        executed = [f for f in self._all_wf_methods() if f() is _executed]
 
         if self.debug:
             executed.insert(0, self._setup_debug_trace)
@@ -284,7 +289,7 @@ class Workflow(object):
 
         return generator_reset, executed
 
-    def _setup_debug_trace(self, item):
+    def _setup_debug_trace(self):
         self.debug_trace = []
 
     def __call__(self, it, success_callback=None, fail_callback=None):
@@ -296,15 +301,16 @@ class Workflow(object):
         fail_callback : method to call on a failed item prior to yielding
         """
         if success_callback is None:
-            success_callback = lambda x: x.final_state
+            success_callback = lambda x: x.state
 
         it, workflow = self._get_workflow(it)
 
         for item in it:
             self.failed = False
 
+            self.initialize_state(item)
             for f in workflow:
-                f(item)
+                f()
 
             if self.failed:
                 if fail_callback is not None:
