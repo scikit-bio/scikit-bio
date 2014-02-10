@@ -112,7 +112,7 @@ class PCoA(Ordination):
         # same thing about taking the absolute value
         coordinates = self.eigvecs * np.sqrt(np.abs(self.eigvals))
         # TODO: Improve OrdinationResults to better cope with PCoA
-        return OrdinationResults(eigvals=self.eigvals, site=coordinates)
+        return OrdinationResults(eigvals=self.eigvals, species=coordinates)
 
     @staticmethod
     def _E_matrix(distance_matrix):

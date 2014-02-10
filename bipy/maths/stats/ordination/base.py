@@ -20,7 +20,7 @@ class OrdinationResults(namedtuple('OrdinationResults',
     __slots__ = ()  # To avoid creating a dict, as a namedtuple
                     # doesn't have it
 
-    def __new__(cls, eigvals, species, site, biplot=None,
+    def __new__(cls, eigvals, species, site=None, biplot=None,
                 site_constraints=None):
         return super(OrdinationResults, cls).__new__(cls, eigvals, species,
                                                      site, biplot,
