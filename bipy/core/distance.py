@@ -131,12 +131,25 @@ class DistanceMatrix(object):
         #     - initialize an empty ndarray
         #     - for each row of data in the input file:
         #         - populate the corresponding row in the ndarray with floats
-        sids = cls._parse_sample_ids(dm_f, delimiter)
+        sids, header_idx = cls._parse_sample_ids(dm_f, delimiter)
+
+        # If we have a list of strings, we need to "seek" to the start of the
+        # data section. If we have a file-like object, we should already be
+        # there.
+        try:
+            data_f = dm_f[(header_idx + 1):]
+        except AttributeError:
+            data_f = dm_f
+
         num_sids = len(sids)
         data = np.empty((num_sids, num_sids), dtype='float')
 
+        # curr_row_idx keeps track of the row index within the data matrix.
+        # We're not using enumerate() because there may be
+        # empty/whitespace-only lines throughout the data matrix. We want to
+        # ignore those and only count the actual rows of data.
         curr_row_idx = 0
-        for line in dm_f:
+        for line in data_f:
             line = line.strip()
 
             if not line:
@@ -378,7 +391,7 @@ class DistanceMatrix(object):
     def _parse_sample_ids(dm_f, delimiter):
         header_line = None
 
-        for line in dm_f:
+        for idx, line in enumerate(dm_f):
             line = line.strip()
 
             if line and not line.startswith('#'):
@@ -388,7 +401,7 @@ class DistanceMatrix(object):
         if header_line is None:
             raise MissingHeaderError
         else:
-            return header_line.split(delimiter)
+            return header_line.split(delimiter), idx
 
     def _validate(self, data, sample_ids):
         """Validate the data array and sample IDs.
