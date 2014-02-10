@@ -31,7 +31,7 @@ class MyWorkflow(Workflow):
         self.final_state -= self.options['sub_value']
 
     @priority(1000)
-    @requires(is_valid=False)
+    @requires(valid_state=False)
     def wf_init(self, item):
         self.final_state = item
 
@@ -121,10 +121,10 @@ def no_requirements(f):
 
 class requires(object):
     """Decorator that executes a function if requirements are met"""
-    def __init__(self, is_valid=True, option=None, values=anything,
+    def __init__(self, valid_state=True, option=None, values=anything,
                  valid_data=None):
         """
-        is_valid : execute the function if self.failed is False
+        valid_state : execute the function if self.failed is False
         option : a required option
         values : required values associated with an option
         valid_data : data level requirements, this must be a function with the
@@ -133,7 +133,7 @@ class requires(object):
             function will be removed from the remaining workflow.
         """
         # self here is the requires object
-        self.is_valid = is_valid
+        self.valid_state = valid_state
         self.option = option
         self.valid_data = valid_data
 
@@ -152,7 +152,7 @@ class requires(object):
             self.values = values
 
     def do_short_circuit(self, wrapped):
-        return self.is_valid and (wrapped.failed and wrapped.short_circuit)
+        return self.valid_state and (wrapped.failed and wrapped.short_circuit)
 
     def __call__(self, f):
         """Wrap a function
@@ -257,8 +257,6 @@ class Workflow(object):
                 raise AttributeError("%s isn't a wf method!" % f.__name__)
 
         self._allocate_final_state()
-        self._sanity_check()
-        self._stage_state()
         self._setup_debug()
 
     def _allocate_final_state(self):
@@ -270,31 +268,20 @@ class Workflow(object):
         if not self.debug:
             return
 
-        _ignore = set(['_get_workflow', '_all_wf_methods', '_sanity_check',
-                       '_stage_state'])
+        # ignore all objects in the baseclass
+        ignore = set(dir(Workflow))
 
         for attrname in dir(self):
             if attrname.startswith('__'):
                 continue
 
-            if attrname in _ignore:
+            if attrname in ignore:
                 continue
 
             attr = getattr(self, attrname)
 
             if isinstance(attr, MethodType):
                 setattr(self, attrname, _debug_trace_wrapper(self, attr))
-
-    def _stage_state(self):
-        """Stage any additional data necessary for the workflow
-
-        This does not need to be overloaded
-        """
-        pass
-
-    def _sanity_check(self):
-        """Perform a sanity check on self"""
-        raise NotImplementedError("Must implement a sanity check!")
 
     def _all_wf_methods(self, default_priority=0):
         """Get all workflow methods
