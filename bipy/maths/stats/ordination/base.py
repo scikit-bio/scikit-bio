@@ -1,11 +1,4 @@
-#-----------------------------------------------------------------------------
-# Copyright (c) 2013, The BiPy Developers.
-#
-# Distributed under the terms of the Modified BSD License.
-#
-# The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
-
+#! /usr/bin/env python
 from __future__ import print_function, absolute_import
 from collections import namedtuple
 try:  # py2 compatibility
@@ -16,6 +9,10 @@ from itertools import count
 import numpy as np
 import matplotlib.pyplot as plt
 
+# Ordination results should maybe only have two compulsory fields:
+# eigvals and objects (aka rows, ?species?). Then, optional fields:
+# descriptors (aka columns, ?site?), biplot, site_constraints.
+
 
 class OrdinationResults(namedtuple('OrdinationResults',
                                    ('eigvals', 'species', 'site', 'biplot',
@@ -23,9 +20,23 @@ class OrdinationResults(namedtuple('OrdinationResults',
     __slots__ = ()  # To avoid creating a dict, as a namedtuple
                     # doesn't have it
 
-    def __new__(cls, eigvals, species, site, biplot=None, site_constraints=None):
-        return super(OrdinationResults, cls).__new__(cls, eigvals, species, site,
-                                                     biplot, site_constraints)
+    def __new__(cls, eigvals, species, site, biplot=None,
+                site_constraints=None):
+        return super(OrdinationResults, cls).__new__(cls, eigvals, species,
+                                                     site, biplot,
+                                                     site_constraints)
+
+
+class OrdinationResults2(namedtuple('OrdinationResults2',
+                                    ('eigvals', 'objects', 'descriptors',
+                                     'biplot', 'site_constraints'))):
+    __slots__ = ()
+
+    def __new__(cls, eigvals, objects, descriptors=None, biplot=None,
+                site_constraints=None):
+        return super(OrdinationResults2, cls).__new__(cls, eigvals, objects,
+                                                      descriptors, biplot,
+                                                      site_constraints)
 
 
 class Ordination(object):

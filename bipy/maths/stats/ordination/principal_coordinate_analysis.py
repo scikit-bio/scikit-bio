@@ -39,6 +39,12 @@ from .base import Ordination, OrdinationResults
 #   seem to be an accepted way to deal with them according to Legendre
 #   & Legendre (I don't have cogent's reference).
 
+# - The rest of the ordination files works from a data table (sites x
+#   species), but PCoA works from a distance matrix, so the ordination
+#   results from the former (i.e., site scores, species scores, etc)
+#   don't map very well to PCoA ordination results (i.e., "object"
+#   scores). See also base.py
+
 
 class PCoA(Ordination):
     short_method_name = 'PCoA'
