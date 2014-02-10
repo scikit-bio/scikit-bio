@@ -121,6 +121,8 @@ class DistanceMatrix(object):
         ignored. Lines starting with # are treated as comments and ignored.
         These comments can only occur *before* the sample ID header.
 
+        Sample IDs will have any leading/trailing whitespace removed.
+
         """
         # We aren't using np.loadtxt because it uses *way* too much memory
         # (e.g, a 2GB matrix eats up 10GB, which then isn't freed after parsing
@@ -172,7 +174,7 @@ class DistanceMatrix(object):
                     "to the number of sample IDs in the header (%d)."
                     % (len(tokens) - 1, curr_row_idx + 1, num_sids))
 
-            curr_sid = tokens[0]
+            curr_sid = tokens[0].strip()
             expected_sid = sids[curr_row_idx]
             if curr_sid == expected_sid:
                 data[curr_row_idx, :] = np.asarray(tokens[1:], dtype='float')
@@ -404,7 +406,7 @@ class DistanceMatrix(object):
         if header_line is None:
             raise MissingHeaderError
         else:
-            return header_line.split(delimiter), idx
+            return map(lambda e: e.strip(), header_line.split(delimiter)), idx
 
     def _validate(self, data, sample_ids):
         """Validate the data array and sample IDs.
