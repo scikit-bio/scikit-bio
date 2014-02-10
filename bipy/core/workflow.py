@@ -153,11 +153,7 @@ class requires(object):
 
         f : the function to wrap
         """
-        ### not sure how I feel about having multiple functions in here.
-        ### also, the handling of Data is a bit dirty as it is now replicated
-        ### over these functions. It is ideal to keep the functions slim, thus
-        ### the multiple functions, but this could explode if not careful
-        def decorated_with_option(dec_self, *args, **kwargs):
+        def decorated(dec_self, *args, **kwargs):
             """A decorated function that has an option to validate
 
             dec_self : this is "self" for the decorated function
@@ -172,8 +168,13 @@ class requires(object):
             s_opt = self.option
             ds_opts = dec_self.options
 
+            # if this is a function that does not have an option to validate
+            if s_opt is None:
+                f(dec_self, *args, **kwargs)
+                return _executed
+
             # if the option exists in the Workflow
-            if s_opt in ds_opts:
+            elif s_opt in ds_opts:
                 v = ds_opts[s_opt]
 
                 # if the value just needs to be not None
@@ -186,25 +187,7 @@ class requires(object):
                     f(dec_self, *args, **kwargs)
                     return _executed
 
-        def decorated_without_option(dec_self, *args, **kwargs):
-            """A decorated function that does not have an option to validate
-
-            dec_self : this is "self" for the decorated function
-            """
-            if self.do_short_circuit(dec_self):
-                return
-
-            if self.valid_data is not None:
-                if not self.valid_data(*args, **kwargs):
-                    return
-
-            f(dec_self, *args, **kwargs)
-            return _executed
-
-        if self.option is None:
-            return update_wrapper(decorated_without_option, f)
-        else:
-            return update_wrapper(decorated_with_option, f)
+        return update_wrapper(decorated, f)
 
 
 class Workflow(object):
