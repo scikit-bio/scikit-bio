@@ -305,14 +305,6 @@ class Workflow(object):
         key = lambda x: getattr(x, 'priority', default_priority)
         methods_sorted = sorted(methods, key=key, reverse=True)
 
-        if methods_sorted[0] != self.wf_setup_debug_trace:
-            name = methods_sorted[0].__name__
-            debug_prio = self.wf_setup_debug_trace.priority
-
-            raise AttributeError("Method %s has a higher priority than the "
-                                 "debug trace method. Please set its priority "
-                                 "below %d." % (name, debug_prio))
-
         if not self.debug:
             methods_sorted.pop(0)
 
