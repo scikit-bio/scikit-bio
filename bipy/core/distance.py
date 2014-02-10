@@ -43,12 +43,13 @@ class SampleIDMismatchError(Exception):
 
     """
 
-    def __init__(self):
+    def __init__(self, actual, expected):
         super(SampleIDMismatchError, self).__init__()
         self.args = ("Encountered mismatched sample IDs while parsing the "
-                     "distance matrix file. Please ensure that the sample IDs "
-                     "match between the distance matrix header (first row) "
-                     "and the row labels (first column).",)
+                     "distance matrix file. Found '%s' but expected '%s'. "
+                     "Please ensure that the sample IDs match between the "
+                     "distance matrix header (first row) and the row labels "
+                     "(first column)." % (actual, expected),)
 
 
 class MissingHeaderError(Exception):
@@ -171,10 +172,12 @@ class DistanceMatrix(object):
                     "to the number of sample IDs in the header (%d)."
                     % (len(tokens) - 1, curr_row_idx + 1, num_sids))
 
-            if tokens[0] == sids[curr_row_idx]:
+            curr_sid = tokens[0]
+            expected_sid = sids[curr_row_idx]
+            if curr_sid == expected_sid:
                 data[curr_row_idx, :] = np.asarray(tokens[1:], dtype='float')
             else:
-                raise SampleIDMismatchError
+                raise SampleIDMismatchError(curr_sid, expected_sid)
 
             curr_row_idx += 1
 
