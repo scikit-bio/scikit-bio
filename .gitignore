@@ -1,3 +1,7 @@
+# Temporary files
+*~
+\#*#
+
 *.py[cod]
 
 # C extensions
