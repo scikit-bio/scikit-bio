@@ -279,9 +279,6 @@ class Workflow(object):
         key = lambda x: getattr(x, 'priority', default_priority)
         methods_sorted = sorted(methods, key=key, reverse=True)
 
-        if not self.debug:
-            methods_sorted.pop(0)
-
         return methods_sorted
 
     def _get_workflow(self, it):
@@ -294,6 +291,9 @@ class Workflow(object):
         peek = it.next()
         executed = [f for f in self._all_wf_methods() if f(peek) is _executed]
 
+        if self.debug:
+            executed.insert(0, self._setup_debug_trace)
+
         # restore state
         self.short_circuit = shortcircuit_state
         self.stats = stats
@@ -301,9 +301,7 @@ class Workflow(object):
 
         return generator_reset, executed
 
-    @priority(priority.highest)
-    @no_requirements
-    def wf_setup_debug_trace(self, item):
+    def _setup_debug_trace(self, item):
         self.debug_trace = []
 
     def __call__(self, it, success_callback=None, fail_callback=None):
