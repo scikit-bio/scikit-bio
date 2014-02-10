@@ -110,22 +110,22 @@ def no_requirements(f):
 
 class requires(object):
     """Decorator that executes a function if requirements are met"""
-    def __init__(self, valid_state=True, option=None, values=anything,
-                 valid_data=None):
+    def __init__(self, is_valid=True, option=None, values=anything,
+                 state=None):
         """
-        valid_state : execute the function if self.failed is False
+        is_valid : execute the function if self.failed is False
         option : a required option
         values : required values associated with an option
-        valid_data : data level requirements, this must be a function with the
+        state : state level requirements, this must be a function with the
             following signature: f(x). The function will be passed
             Workflow.state and should return True if the data are valid.
-            If valid_data returns False on the first item evaluated, the
+            If state returns False on the first item evaluated, the
             decorated function may be removed from the remaining workflow
         """
         # self here is the requires object
-        self.valid_state = valid_state
+        self.is_valid = is_valid
         self.option = option
-        self.valid_data = valid_data
+        self.required_state = state
 
         if values is anything:
             self.values = anything
@@ -142,7 +142,7 @@ class requires(object):
             self.values = values
 
     def do_short_circuit(self, wrapped):
-        return self.valid_state and (wrapped.failed and wrapped.short_circuit)
+        return self.is_valid and (wrapped.failed and wrapped.short_circuit)
 
     def __call__(self, f):
         """Wrap a function
@@ -157,8 +157,8 @@ class requires(object):
             if self.do_short_circuit(dec_self):
                 return
 
-            if self.valid_data is not None:
-                if not self.valid_data(dec_self.state):
+            if self.required_state is not None:
+                if not self.required_state(dec_self.state):
                     return
 
             s_opt = self.option

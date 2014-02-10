@@ -51,7 +51,7 @@ class MockWorkflow(Workflow):
         self.methodC1()
         self.methodC2()
 
-    @requires(valid_state=False)  # always execute
+    @requires(is_valid=False)  # always execute
     def methodA1(self):
         name = 'A1'
         self.stats[name] += 1
@@ -66,7 +66,7 @@ class MockWorkflow(Workflow):
             self.failed = True
         self.state = [name, self.state[-1]]
 
-    @requires(valid_state=False)
+    @requires(is_valid=False)
     def methodB1(self):
         name = 'B1'
         self.stats[name] += 1
@@ -94,7 +94,7 @@ class MockWorkflow(Workflow):
             self.failed = True
         self.state = [name, self.state[-1]]
 
-    @requires(valid_state=True, option='C2', values=[1, 2, 3])
+    @requires(is_valid=True, option='C2', values=[1, 2, 3])
     def methodC2(self):
         name = 'C2'
         self.stats[name] += 1
@@ -253,7 +253,7 @@ class MockWorkflowReqTest(Workflow):
         self.state = [None, item]
 
     @priority(5)
-    @requires(valid_data=lambda x: x[-1] < 3)
+    @requires(state=lambda x: x[-1] < 3)
     def wf_needs_data(self):
         name = 'needs_data'
         self.stats[name] += 1
