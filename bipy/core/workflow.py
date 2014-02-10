@@ -268,7 +268,7 @@ class Workflow(object):
         if not self.debug:
             return
 
-        # ignore all objects in the baseclass
+        # ignore all members of the baseclass
         ignore = set(dir(Workflow))
 
         for attrname in dir(self):
