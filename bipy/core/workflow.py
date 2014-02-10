@@ -92,11 +92,6 @@ def _debug_trace_wrapper(obj, f):
     return update_wrapper(wrapped, f)
 
 
-def _tag_function(f):
-    """Tag, you're it"""
-    setattr(f, '_workflow_tag', None)
-
-
 class priority(object):
     """Decorate a function priority"""
     highest = sys.maxint
@@ -115,7 +110,6 @@ def no_requirements(f):
         """Simply execute the function"""
         f(self, *args, **kwargs)
         return _executed
-    _tag_function(decorated)
     return update_wrapper(decorated, f)
 
 
@@ -207,9 +201,6 @@ class requires(object):
             f(dec_self, *args, **kwargs)
             return _executed
 
-        _tag_function(decorated_with_option)
-        _tag_function(decorated_without_option)
-
         if self.option is None:
             return update_wrapper(decorated_without_option, f)
         else:
@@ -251,10 +242,6 @@ class Workflow(object):
             if hasattr(self, k):
                 raise AttributeError("%s exists in self!" % k)
             setattr(self, k, v)
-
-        for f in self._all_wf_methods():
-            if not hasattr(f, '_workflow_tag'):
-                raise AttributeError("%s isn't a wf method!" % f.__name__)
 
         self._allocate_final_state()
         self._setup_debug()

@@ -109,18 +109,6 @@ class WorkflowTests(TestCase):
         self.obj_debug = MockWorkflow(debug=True, options=opts)
         self.obj_noshort = MockWorkflow(short_circuit=False, options=opts)
 
-    def test_untagged_wf_method(self):
-        class WFTest(Workflow):
-            @no_requirements
-            def wf_1(self):
-                pass
-
-            def wf_2(self):
-                pass
-
-        with self.assertRaises(AttributeError):
-            _ = WFTest()
-
     def test_get_workflow_debug(self):
         gen = construct_iterator(**{'iter_x': [1, 2, 3, 4, 5]})
         exp_wf = [self.obj_debug.wf_setup_debug_trace,
