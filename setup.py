@@ -39,9 +39,9 @@ setup(name='bipy',
       maintainer_email="gregcaporaso@gmail.com",
       url='https://github.com/biocore/bipy',
       packages=find_packages(),
-      install_requires=['numpy >= 1.5.1, <=1.7.1', 'matplotlib >= 1.1.0',
+      install_requires=['numpy >= 1.7', 'matplotlib >= 1.1.0',
                         'scipy >=0.13.0'],
-      extras_require={'test': ["nose >= 0.10.1", "tox >= 1.6.1", "pep8"],
+      extras_require={'test': ["nose >= 0.10.1", "pep8"],
                       'doc': "Sphinx >= 0.3"},
       classifiers=classifiers
       )
