@@ -168,23 +168,31 @@ class CCA(Ordination):
         ## Scalings (p. 596 L&L 1998)
         # Species scores, scaling 1
         V = (self.column_marginals**-0.5)[:, None] * self.U
+
         # Site scores, scaling 2
         V_hat = (self.row_marginals**-0.5)[:, None] * self.U_hat
+
         # Site scores, scaling 1
         F = V_hat * self.s
+
         # Species scores, scaling 2
         F_hat = V * self.s
+
         # Site scores which are linear combinations of environmental
         # variables
-        Z_scaling1 = (self.row_marginals**-0.5)[:, None] * self.Y_hat.dot(self.U)
+        Z_scaling1 = ((self.row_marginals**-0.5)[:, None] *
+                      self.Y_hat.dot(self.U))
         Z_scaling2 = Z_scaling1 * self.s**-1
 
         # Species residual scores, scaling 1
         V_res = (self.column_marginals**-0.5)[:, None] * self.U_res
+
         # Site residual scores, scaling 2
         V_hat_res = (self.row_marginals**-0.5)[:, None] * self.U_hat_res
+
         # Site residual scores, scaling 1
         F_res = V_hat_res * self.s_res
+
         # Species residual scores, scaling 2
         F_hat_res = V_res * self.s_res
 
