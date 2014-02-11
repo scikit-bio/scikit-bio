@@ -143,11 +143,17 @@ class CCA(Ordination):
         U_res = vt_res.T
         U_hat_res = Q_bar.dot(U_res) * s_res**-1
 
-        self.column_marginals = column_marginals
-        self.row_marginals = row_marginals
-        self.U = U
-        # Storing values needed to compute scores (better way to do this?)
-        for val_name, val in (('column_marginals', column_marginals), ('row_marginals', row_marginals), ('U', U), ('U_res', U_res), ('U_hat', U_hat), ('U_hat_res', U_hat_res), ('u', u), ('Y_hat', Y_hat), ('s', s), ('s_res', s_res), ('X_weighted', X_weighted[:, :rank_lstsq])):
+        # Storing values needed to compute scores
+        iter_ = (('column_marginals', column_marginals),
+                 ('row_marginals', row_marginals),
+                 ('U', U),
+                 ('U_res', U_res),
+                 ('U_hat', U_hat),
+                 ('U_hat_res', U_hat_res),
+                 ('u', u), ('Y_hat', Y_hat),
+                 ('s', s), ('s_res', s_res),
+                 ('X_weighted', X_weighted[:, :rank_lstsq]))
+        for val_name, val in iter_:
             setattr(self, val_name, val)
 
         self.eigenvalues = np.r_[s, s_res]**2
