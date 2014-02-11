@@ -87,9 +87,9 @@ class CCA(Ordination):
         X, Y = self.X, self.Y
         if X.shape[0] != Y.shape[0]:
             raise ValueError("Contingency and environmental tables must have"
-                             " the same number of rows (sites). X has {xrows}"
-                             " rows but Y has {yrows}".format(X.shape[0],
-                                                              Y.shape[0]))
+                             " the same number of rows (sites). X has {0}"
+                             " rows but Y has {1}.".format(X.shape[0],
+                                                           Y.shape[0]))
         if Y.min() < 0:
             raise ValueError("Contingency table must be nonnegative")
         row_max = Y.max(axis=1)
