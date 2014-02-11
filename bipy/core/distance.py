@@ -43,12 +43,13 @@ class SampleIDMismatchError(Exception):
 
     """
 
-    def __init__(self):
+    def __init__(self, actual, expected):
         super(SampleIDMismatchError, self).__init__()
         self.args = ("Encountered mismatched sample IDs while parsing the "
-                     "distance matrix file. Please ensure that the sample IDs "
-                     "match between the distance matrix header (first row) "
-                     "and the row labels (first column).",)
+                     "distance matrix file. Found '%s' but expected '%s'. "
+                     "Please ensure that the sample IDs match between the "
+                     "distance matrix header (first row) and the row labels "
+                     "(first column)." % (actual, expected),)
 
 
 class MissingHeaderError(Exception):
@@ -98,10 +99,11 @@ class DistanceMatrix(object):
     def from_file(cls, dm_f, delimiter='\t'):
         """Load distance matrix from delimited text file.
 
-        Given an open file-like object ``dm_f``, an instance of this class is
-        returned based on the parsed file contents.
+        Given an iterable ``dm_f`` (e.g., open file handle, file-like object,
+        list of strings, etc.), an instance of this class is returned based on
+        the parsed contents of the "file".
 
-        The file must contain delimited text (controlled via ``delimiter``).
+        The "file" must contain delimited text (controlled via ``delimiter``).
         The first line must contain all sample IDs, where each ID is separated
         by ``delimiter``. The subsequent lines must contain a sample ID
         followed by each distance (float) between the sample and all other
@@ -116,9 +118,11 @@ class DistanceMatrix(object):
 
         where ``<tab>`` is the delimiter between elements.
 
-        Whitespace-only lines can occur anywhere throughout the file and are
+        Whitespace-only lines can occur anywhere throughout the "file" and are
         ignored. Lines starting with # are treated as comments and ignored.
         These comments can only occur *before* the sample ID header.
+
+        Sample IDs will have any leading/trailing whitespace removed.
 
         """
         # We aren't using np.loadtxt because it uses *way* too much memory
@@ -131,10 +135,19 @@ class DistanceMatrix(object):
         #     - initialize an empty ndarray
         #     - for each row of data in the input file:
         #         - populate the corresponding row in the ndarray with floats
+
+        # We use iter() as we want to take a single pass over the iterable and
+        # maintain our current position after finding the header (mainly
+        # necessary for something like a list of strings).
+        dm_f = iter(dm_f)
         sids = cls._parse_sample_ids(dm_f, delimiter)
         num_sids = len(sids)
         data = np.empty((num_sids, num_sids), dtype='float')
 
+        # curr_row_idx keeps track of the row index within the data matrix.
+        # We're not using enumerate() because there may be
+        # empty/whitespace-only lines throughout the data matrix. We want to
+        # ignore those and only count the actual rows of data.
         curr_row_idx = 0
         for line in dm_f:
             line = line.strip()
@@ -151,17 +164,19 @@ class DistanceMatrix(object):
 
             tokens = line.split(delimiter)
 
-            # +1 because the first column contains the sample ID.
-            if len(tokens) != num_sids + 1:
+            # -1 because the first column contains the sample ID.
+            if len(tokens) - 1 != num_sids:
                 raise DistanceMatrixFormatError(
-                    "The number of values in row number %d is not equal to "
-                    "the number of sample IDs in the header."
-                    % (curr_row_idx + 1))
+                    "There are %d values in row number %d, which is not equal "
+                    "to the number of sample IDs in the header (%d)."
+                    % (len(tokens) - 1, curr_row_idx + 1, num_sids))
 
-            if tokens[0] == sids[curr_row_idx]:
+            curr_sid = tokens[0].strip()
+            expected_sid = sids[curr_row_idx]
+            if curr_sid == expected_sid:
                 data[curr_row_idx, :] = np.asarray(tokens[1:], dtype='float')
             else:
-                raise SampleIDMismatchError
+                raise SampleIDMismatchError(curr_sid, expected_sid)
 
             curr_row_idx += 1
 
@@ -388,7 +403,7 @@ class DistanceMatrix(object):
         if header_line is None:
             raise MissingHeaderError
         else:
-            return header_line.split(delimiter)
+            return map(lambda e: e.strip(), header_line.split(delimiter))
 
     def _validate(self, data, sample_ids):
         """Validate the data array and sample IDs.
@@ -420,7 +435,7 @@ class DistanceMatrix(object):
                                       "values.")
         elif np.trace(data) != 0:
             raise DistanceMatrixError("Data must be hollow (i.e., the "
-                                      "diagonal can only contain zeros.)")
+                                      "diagonal can only contain zeros).")
         elif num_sids != len(set(sample_ids)):
             raise DistanceMatrixError("Sample IDs must be unique.")
         elif num_sids != data.shape[0]:

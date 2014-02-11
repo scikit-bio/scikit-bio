@@ -12,6 +12,7 @@ from __future__ import division
 
 from itertools import izip
 from StringIO import StringIO
+from tempfile import TemporaryFile
 
 import numpy as np
 
@@ -41,7 +42,10 @@ class DistanceMatrixTestData(TestCase):
                             [4.2, 12.0, 0.0]]
         self.dm_3x3_f = StringIO(DM_3x3_F)
 
-        self.dm_3x3_whitespace_f = StringIO(DM_3x3_WHITESPACE_F)
+        self.dm_3x3_whitespace_f = StringIO('\n'.join(DM_3x3_WHITESPACE_F))
+
+        self.tmp_f = TemporaryFile(prefix='bipy.core.tests.test_distance',
+                                   suffix='.txt')
 
         self.bad_dm_f1 = StringIO(BAD_DM_F1)
         self.bad_dm_f2 = StringIO(BAD_DM_F2)
@@ -49,6 +53,10 @@ class DistanceMatrixTestData(TestCase):
         self.bad_dm_f4 = StringIO(BAD_DM_F4)
         self.bad_dm_f5 = StringIO(BAD_DM_F5)
         self.bad_dm_f6 = StringIO(BAD_DM_F6)
+
+    def tearDown(self):
+        """Delete any temporary files."""
+        self.tmp_f.close()
 
 
 class DistanceMatrixTests(DistanceMatrixTestData):
@@ -98,9 +106,22 @@ class DistanceMatrixTests(DistanceMatrixTestData):
             obs = DistanceMatrix.from_file(dm_f)
             self.assertEqual(obs, dm)
 
-        # Correctly parses file with extra empty (whitespace-only) lines
-        # interspersed throughout the file.
+    def test_from_file_extra_junk(self):
+        """Should correctly parse a file with extra whitespace and comments."""
         obs = DistanceMatrix.from_file(self.dm_3x3_whitespace_f)
+        self.assertEqual(obs, self.dm_3x3)
+
+    def test_from_file_list_of_strings(self):
+        """Should correctly parse a list of strings."""
+        obs = DistanceMatrix.from_file(DM_3x3_WHITESPACE_F)
+        self.assertEqual(obs, self.dm_3x3)
+
+    def test_from_file_real_file(self):
+        """Should correctly parse a real on-disk file."""
+        self.tmp_f.write('\n'.join(DM_3x3_WHITESPACE_F))
+        self.tmp_f.seek(0)
+
+        obs = DistanceMatrix.from_file(self.tmp_f)
         self.assertEqual(obs, self.dm_3x3)
 
     def test_from_file_invalid_input(self):
@@ -516,23 +537,23 @@ DM_3x3_F = ("\ta\tb\tc\na\t0.0\t0.01\t4.2\nb\t0.01\t0.0\t12.0\n"
             "c\t4.2\t12.0\t0.0\n")
 
 # Extra whitespace-only lines throughout. Also has comments before the header.
-DM_3x3_WHITESPACE_F = '\n'.join(['# foo',
-                                 '      \t \t ',
-                                 ' #bar',
-                                 '',
-                                 '',
-                                 '\ta\tb\tc',
-                                 'a\t0.0\t0.01\t4.2',
-                                 '     \t',
-                                 'b\t0.01\t0.0\t12.0',
-                                 '',
-                                 '\t     \t',
-                                 '',
-                                 'c\t4.2\t12.0\t0.0',
-                                 '',
-                                 '   \t ',
-                                 '\t\t\t',
-                                 ' '])
+DM_3x3_WHITESPACE_F = ['# foo',
+                       '      \t \t ',
+                       ' #bar',
+                       '',
+                       '',
+                       '\ta\t b \tc',
+                       'a  \t0.0\t0.01\t4.2',
+                       '     \t',
+                       'b\t0.01\t0.0\t12.0',
+                       '',
+                       '\t     \t',
+                       '',
+                       'c\t4.2\t12.0\t0.0',
+                       '',
+                       '   \t ',
+                       '\t\t\t',
+                       ' ']
 
 # missing data
 BAD_DM_F1 = 'a\tb\na\t0\t1\nb\t1'
