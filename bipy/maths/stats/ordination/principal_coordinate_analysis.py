@@ -86,14 +86,17 @@ class PCoA(Ordination):
 
     def _pcoa(self):
         E_matrix = self._E_matrix(self.dm)
+
         # If the used distance was euclidean, pairwise distances
         # needn't be computed from the data table Y because F_matrix =
         # Y.dot(Y.T) (if Y has been centred).
         F_matrix = self._F_matrix(E_matrix)
+
         # If the eigendecomposition ever became a bottleneck, it could
         # be replaced with an iterative version that computes the
         # largest k eigenvectors.
         eigvals, eigvecs = np.linalg.eigh(F_matrix)
+
         # eigvals might not be ordered, so we order them (at least one
         # is zero). TODO: cogent took the abs value, but that doesn't
         # seem to be an approach accepted by L&L to deal with negative
@@ -111,6 +114,7 @@ class PCoA(Ordination):
         # needed to represent n points in an euclidean space. TODO:
         # same thing about taking the absolute value
         coordinates = self.eigvecs * np.sqrt(np.abs(self.eigvals))
+
         # TODO: Improve OrdinationResults to better cope with PCoA
         return OrdinationResults(eigvals=self.eigvals, species=coordinates)
 
