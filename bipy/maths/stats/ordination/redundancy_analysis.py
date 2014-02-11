@@ -132,8 +132,12 @@ class RDA(Ordination):
         F_res = Y_res.dot(U_res)  # Ordination in the space of residuals
 
         # Storing values needed to compute scores
-        for val_name, val in (('U', U), ('U_res', U_res), ('F', F),
-                              ('F_res', F_res), ('Z', Z), ('u', u[:, :rank])):
+        iter_ = (('U', U), ('U_res', U_res),
+                 ('F', F),
+                 ('F_res', F_res),
+                 ('Z', Z),
+                 ('u', u[:, :rank]))
+        for val_name, val in iter_:
             setattr(self, val_name, val)
 
         self.eigenvalues = np.r_[s[:rank], s_res[:rank_res]]
