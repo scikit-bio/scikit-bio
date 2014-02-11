@@ -24,7 +24,7 @@ def get_data_path(fn):
 
 
 def normalize_signs(arr1, arr2):
-    """Make sure that column and -column are modified so that they compare equal.
+    """Change column signs so that "column" and "-column" compare equal.
 
     This is needed because results of eigenproblmes can have signs
     flipped, but they're still right."""
