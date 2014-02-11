@@ -99,10 +99,11 @@ class DistanceMatrix(object):
     def from_file(cls, dm_f, delimiter='\t'):
         """Load distance matrix from delimited text file.
 
-        Given an open file-like object ``dm_f``, an instance of this class is
-        returned based on the parsed file contents.
+        Given an iterable ``dm_f`` (e.g., open file handle, file-like object,
+        list of strings, etc.), an instance of this class is returned based on
+        the parsed contents of the "file".
 
-        The file must contain delimited text (controlled via ``delimiter``).
+        The "file" must contain delimited text (controlled via ``delimiter``).
         The first line must contain all sample IDs, where each ID is separated
         by ``delimiter``. The subsequent lines must contain a sample ID
         followed by each distance (float) between the sample and all other
@@ -117,7 +118,7 @@ class DistanceMatrix(object):
 
         where ``<tab>`` is the delimiter between elements.
 
-        Whitespace-only lines can occur anywhere throughout the file and are
+        Whitespace-only lines can occur anywhere throughout the "file" and are
         ignored. Lines starting with # are treated as comments and ignored.
         These comments can only occur *before* the sample ID header.
 
@@ -134,16 +135,12 @@ class DistanceMatrix(object):
         #     - initialize an empty ndarray
         #     - for each row of data in the input file:
         #         - populate the corresponding row in the ndarray with floats
-        sids, header_idx = cls._parse_sample_ids(dm_f, delimiter)
 
-        # If we have a list of strings, we need to "seek" to the start of the
-        # data section. If we have a file-like object, we should already be
-        # there.
-        try:
-            data_f = dm_f[(header_idx + 1):]
-        except (AttributeError, TypeError):
-            data_f = dm_f
-
+        # We use iter() as we want to take a single pass over the iterable and
+        # maintain our current position after finding the header (mainly
+        # necessary for something like a list of strings).
+        dm_f = iter(dm_f)
+        sids = cls._parse_sample_ids(dm_f, delimiter)
         num_sids = len(sids)
         data = np.empty((num_sids, num_sids), dtype='float')
 
@@ -152,7 +149,7 @@ class DistanceMatrix(object):
         # empty/whitespace-only lines throughout the data matrix. We want to
         # ignore those and only count the actual rows of data.
         curr_row_idx = 0
-        for line in data_f:
+        for line in dm_f:
             line = line.strip()
 
             if not line:
@@ -396,7 +393,7 @@ class DistanceMatrix(object):
     def _parse_sample_ids(dm_f, delimiter):
         header_line = None
 
-        for idx, line in enumerate(dm_f):
+        for line in dm_f:
             line = line.strip()
 
             if line and not line.startswith('#'):
@@ -406,7 +403,7 @@ class DistanceMatrix(object):
         if header_line is None:
             raise MissingHeaderError
         else:
-            return map(lambda e: e.strip(), header_line.split(delimiter)), idx
+            return map(lambda e: e.strip(), header_line.split(delimiter))
 
     def _validate(self, data, sample_ids):
         """Validate the data array and sample IDs.
