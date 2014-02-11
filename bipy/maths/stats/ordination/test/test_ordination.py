@@ -51,7 +51,8 @@ class TestCAResults(object):
         V_hat = np.array([[-0.84896, -0.88276],
                           [-0.22046,  1.34482],
                           [ 1.66697, -0.47032]])
-        npt.assert_almost_equal(*normalize_signs(V_hat, scores.site), decimal=5)
+        npt.assert_almost_equal(*normalize_signs(V_hat, scores.site),
+                                decimal=5)
 
     def test_scaling1(self):
         scores = self.ordination.scores(scaling=1)
@@ -69,7 +70,8 @@ class TestCAResults(object):
 class TestCAErrors(object):
     def test_negative(self):
         X = np.array([[1, 2], [-0.1, -2]])
-        npt.assert_raises(ValueError, CA, X)
+        with npt.assert_raises(ValueError):
+            CA(X)
 
 
 class TestRDAErrors(object):
@@ -85,9 +87,6 @@ class TestRDAResults(object):
     # with vegan's (module multiplying by a constant). I can also
     # compute scaling 2, agreeing with vegan, but there no written
     # results in L&L.
-    #       Add ipynb with examples
-    #       Test installation
-    #       Upload to github
     def setup(self):
         """Data from table 9.11 in Legendre & Legendre 1998."""
         Y = np.loadtxt(get_data_path('example2_Y'))
@@ -104,14 +103,17 @@ class TestCCAErrors(object):
 
     def test_shape(self):
         X, Y = self.X, self.Y
-        npt.assert_raises(ValueError, CCA, Y, X[:-1])
+        with npt.assert_raises(ValueError):
+            CCA(Y, X[:-1])
 
     def test_Y_values(self):
         X, Y = self.X, self.Y
         Y[0, 0] = -1
-        npt.assert_raises(ValueError, CCA, Y, X)
+        with npt.assert_raises(ValueError):
+            CCA(Y, X)
         Y[0] = 0
-        npt.assert_raises(ValueError, CCA, Y, X)
+        with npt.assert_raises(ValueError):
+            CCA(Y, X)
 
 
 class TestCCAResults(object):
