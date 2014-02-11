@@ -3,6 +3,8 @@
 language: python
 python:
   - "2.7"
+env:
+  - NUMPY_VERSION=1.8
 before_install:
   - wget http://repo.continuum.io/miniconda/Miniconda-2.2.2-Linux-x86_64.sh -O miniconda.sh
   - chmod +x miniconda.sh
@@ -11,9 +13,9 @@ before_install:
   # Update conda itself
   - conda update --yes conda
 install:
-  - conda create --yes -n env_name python=$TRAVIS_PYTHON_VERSION pip numpy scipy matplotlib nose pep8
+  - conda create --yes -n env_name python=$TRAVIS_PYTHON_VERSION pip numpy=$NUMPY_VERSION scipy matplotlib nose pep8
   - source activate env_name
-  - pip install .
+  - pip install . --no-deps
 script:
   - nosetests
   - pep8 bipy setup.py
