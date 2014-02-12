@@ -12,16 +12,6 @@ import numpy as np
 
 from .base import Ordination, OrdinationResults
 
-# Questions:
-
-# - Is this supposed to work for non symmetric distance matrices? I
-#   think not, but if it is, the implementation in pycogent
-#   (cluster.metric_scaling.principal_coordinates_analysis) isn't
-#   right (the commented out code would do the right thing), the code
-#   that is run in make_F_matrix reshapes column_means and row_means
-#   in a way that E_matrix[i,j] gets subtracted the means of column i
-#   and row j instead of the row i and column j.
-
 # - This could be a bit more efficient by cluttering the code (i.e.,
 #   reusing memory instead of allocating new arrays, avoiding a bunch
 #   of sums). Do you feel that's necessary?
@@ -68,7 +58,7 @@ class PCoA(Ordination):
 
         Parameters
         ==========
-        distance_matrix : 2D array_like
+        distance_matrix : SymmetricDistanceMatrix
             A distance matrix.
 
         Notes
@@ -81,7 +71,7 @@ class PCoA(Ordination):
         there are different ways to deal with that problem (see
         Legendre & Legendre 1998, \S 9.2.3).
         """
-        self.dm = np.asarray(distance_matrix, dtype=np.float64)
+        self.dm = np.asarray(distance_matrix.data, dtype=np.float64)
         self._pcoa()
 
     def _pcoa(self):
