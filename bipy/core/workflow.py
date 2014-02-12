@@ -77,7 +77,7 @@ anything = Exists()  # external, for when a value can be anything
 
 
 class Workflow(object):
-    """Arbitrary worflow support structure"""
+    """Arbitrary workflow support structure"""
 
     def __init__(self, short_circuit=True, debug=False, options=None,
                  **kwargs):
