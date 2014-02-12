@@ -75,32 +75,6 @@ class Exists(object):
 anything = Exists()  # external, for when a value can be anything
 
 
-def _debug_trace_wrapper(obj, f):
-    """Trace a function call"""
-    def wrapped():
-        if not hasattr(obj, 'debug_trace'):
-            cls = obj.__class__
-            raise AttributeError("%s doesn't have debug_trace!" % cls)
-
-        exec_order = obj.debug_counter
-        name = f.__name__
-        key = (name, exec_order)
-        pre_state = deepcopy(obj.state)
-
-        obj.debug_trace.add(key)
-        obj.debug_counter += 1
-
-        start_time = time()
-        if f() is _not_executed:
-            obj.debug_trace.remove(key)
-        else:
-            obj.debug_runtime[key] = time() - start_time
-            obj.debug_pre_state[key] = pre_state
-            obj.debug_post_state[key] = deepcopy(obj.state)
-
-    return update_wrapper(wrapped, f)
-
-
 class workflow_method(object):
     """Decorate a function to indicate it is a workflow method"""
     highest_priority = sys.maxint
@@ -245,7 +219,32 @@ class Workflow(object):
             attr = getattr(self, attrname)
 
             if isinstance(attr, MethodType):
-                setattr(self, attrname, _debug_trace_wrapper(self, attr))
+                setattr(self, attrname, self._debug_trace_wrapper(attr))
+
+    def _debug_trace_wrapper(self, f):
+        """Trace a function call"""
+        def wrapped():
+            if not hasattr(self, 'debug_trace'):
+                cls = self.__class__
+                raise AttributeError("%s doesn't have debug_trace!" % cls)
+
+            exec_order = self.debug_counter
+            name = f.__name__
+            key = (name, exec_order)
+            pre_state = deepcopy(self.state)
+
+            self.debug_trace.add(key)
+            self.debug_counter += 1
+
+            start_time = time()
+            if f() is _not_executed:
+                self.debug_trace.remove(key)
+            else:
+                self.debug_runtime[key] = time() - start_time
+                self.debug_pre_state[key] = pre_state
+                self.debug_post_state[key] = deepcopy(self.state)
+
+        return update_wrapper(wrapped, f)
 
     def _all_wf_methods(self):
         """Get all workflow methods
