@@ -133,15 +133,15 @@ class requires(object):
             self.values = anything
         elif values is not_none:
             self.values = not_none
-        elif not isinstance(values, set):
+        elif isinstance(values, set):
+            self.values = values
+        else:
             if isinstance(values, str):
                 self.values = values
             elif isinstance(values, Iterable):
                 self.values = set(values)
             else:
                 self.values = set([values])
-        else:
-            self.values = values
 
     def __call__(self, f):
         """Wrap a function
