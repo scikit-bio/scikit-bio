@@ -93,7 +93,7 @@ def _debug_trace_wrapper(obj, f):
 
 class workflow_method(object):
     """Decorate a function to indicate it is a workflow method"""
-    highest = sys.maxint
+    highest_priority = sys.maxint
 
     def __init__(self, priority=0):
         self.priority = priority
