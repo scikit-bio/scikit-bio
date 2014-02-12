@@ -70,6 +70,7 @@ not_none = object()   # external, for when a value can be anything except None
 
 
 class Exists(object):
+    """Stub object to assist with Workflow.requires when a value exists"""
     def __contains__(self, item):
         return True
 anything = Exists()  # external, for when a value can be anything
@@ -214,15 +215,16 @@ class Workflow(object):
 
     ### Decorators ###
 
-    def _debug_trace_wrapper(self, f):
+    def _debug_trace_wrapper(self, func):
         """Trace a function call"""
         def wrapped():
+            """Track debug information about a method execution"""
             if not hasattr(self, 'debug_trace'):
                 cls = self.__class__
                 raise AttributeError("%s doesn't have debug_trace!" % cls)
 
             exec_order = self.debug_counter
-            name = f.__name__
+            name = func.__name__
             key = (name, exec_order)
             pre_state = deepcopy(self.state)
 
@@ -230,14 +232,14 @@ class Workflow(object):
             self.debug_counter += 1
 
             start_time = time()
-            if f() is _not_executed:
+            if func() is _not_executed:
                 self.debug_trace.remove(key)
             else:
                 self.debug_runtime[key] = time() - start_time
                 self.debug_pre_state[key] = pre_state
                 self.debug_post_state[key] = deepcopy(self.state)
 
-        return update_wrapper(wrapped, f)
+        return update_wrapper(wrapped, func)
 
     class method(object):
         """Decorate a function to indicate it is a workflow method"""
@@ -246,9 +248,9 @@ class Workflow(object):
         def __init__(self, priority=0):
             self.priority = priority
 
-        def __call__(self, f):
-            f.priority = self.priority
-            return f
+        def __call__(self, func):
+            func.priority = self.priority
+            return func
 
     class requires(object):
         """Decorator that executes a function if requirements are met"""
