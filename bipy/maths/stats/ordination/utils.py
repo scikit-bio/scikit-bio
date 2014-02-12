@@ -51,7 +51,6 @@ def mean_and_std(a, axis=None, weights=None, with_mean=True, with_std=True,
     if weights is None:
         avg = a.mean(axis=axis) if with_mean else None
         std = a.std(axis=axis, ddof=ddof) if with_std else None
-        return avg, std
     else:
         avg = np.average(a, axis=axis, weights=weights)
         if with_std:
@@ -73,7 +72,8 @@ def mean_and_std(a, axis=None, weights=None, with_mean=True, with_std=True,
             std = np.sqrt(variance)
         else:
             std = None
-    return avg if with_mean else None, std
+        avg = avg if with_mean else None
+    return avg, std
 
 
 def scale(a, weights=None, with_mean=True, with_std=True, ddof=0, copy=True):
