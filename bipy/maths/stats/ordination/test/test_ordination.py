@@ -28,11 +28,140 @@ def normalize_signs(arr1, arr2):
     """Change column signs so that "column" and "-column" compare equal.
 
     This is needed because results of eigenproblmes can have signs
-    flipped, but they're still right."""
-    sign_arr1 = np.sign(arr1[0])
-    sign_arr2 = np.sign(arr2[0])
-    differences = sign_arr1 / sign_arr2  # 1 -> equal signs, -1 -> diff signs
+    flipped, but they're still right.
+
+    Notes
+    =====
+
+    This function tries hard to make sure that, if you find "column"
+    and "-column" almost equal, calling a function like np.allclose to
+    compare them after calling `normalize_signs` succeeds.
+
+    To do so, it distinguishes two cases for every column:
+
+    - It can be all almost equal to 0 (this includes a column of
+      zeros).
+    - Otherwise, it has a value that isn't close to 0.
+
+    In the first case, no sign needs to be flipped. I.e., for
+    |epsilon| small, np.allclose(-epsilon, 0) is true if and only if
+    np.allclose(epsilon, 0) is.
+
+    In the second case, the function finds the number in the column
+    whose absolute value is largest. Then, it compares its sign with
+    the number found in the same index, but in the other array, and
+    flips the sign of the column as needed.
+    """
+    # Let's convert everyting to floating point numbers (it's
+    # reasonable to assume that eigenvectors will already be floating
+    # point numbers). This is necessary because np.array(1) /
+    # np.array(0) != np.array(1.) / np.array(0.)
+    arr1 = np.asarray(arr1, dtype=np.float64)
+    arr2 = np.asarray(arr2, dtype=np.float64)
+
+    if arr1.shape != arr2.shape:
+        raise ValueError(
+            "Arrays must have the same shape ({0} vs {1}).".format(arr1.shape,
+                                                                   arr2.shape)
+            )
+
+    # To avoid issues around zero, we'll compare signs of the values
+    # with highest absolute value
+    max_idx = np.abs(arr1).argmax(axis=0)
+    max_arr1 = arr1[max_idx, range(arr1.shape[1])]
+    max_arr2 = arr2[max_idx, range(arr2.shape[1])]
+
+    sign_arr1 = np.sign(max_arr1)
+    sign_arr2 = np.sign(max_arr2)
+
+    # Store current warnings, and ignore division by zero (like 1. /
+    # 0.) and invalid operations (like 0. / 0.)
+    warnings = np.seterr(invalid='ignore', divide='ignore')
+    differences = sign_arr1 / sign_arr2
+    # The values in `differences` can be:
+    #    1 -> equal signs
+    #   -1 -> diff signs
+    #   Or nan (0/0), inf (nonzero/0), 0 (0/nonzero)
+    np.seterr(**warnings)
+
+    # Now let's deal with cases where `differences != \pm 1`
+    special_cases = (~np.isfinite(differences)) | (differences == 0)
+    # In any of these cases, the sign of the column doesn't matter, so
+    # let's just keep it
+    differences[special_cases] = 1
+
     return arr1 * differences, arr2
+
+
+class TestNormalizeSigns(object):
+    def test_shapes_and_nonarray_input(self):
+        with npt.assert_raises(ValueError):
+            normalize_signs([[1, 2], [3, 5]], [[1, 2]])
+
+    def test_works_when_different(self):
+        """Taking abs value of everything would lead to false
+        positives."""
+        a = np.array([[1, -1],
+                      [2, 2]])
+        b = np.array([[-1, -1],
+                      [2, 2]])
+        with npt.assert_raises(AssertionError):
+            npt.assert_equal(*normalize_signs(a, b))
+
+    def test_easy_different(self):
+        a = np.array([[1, 2],
+                      [3, -1]])
+        b = np.array([[-1, 2],
+                      [-3, -1]])
+        npt.assert_equal(*normalize_signs(a, b))
+
+    def test_easy_already_equal(self):
+        a = np.array([[1, -2],
+                      [3, 1]])
+        b = a.copy()
+        npt.assert_equal(*normalize_signs(a, b))
+
+    def test_zeros(self):
+        a = np.array([[0, 3],
+                      [0, -1]])
+        b = np.array([[0, -3],
+                      [0, 1]])
+        npt.assert_equal(*normalize_signs(a, b))
+
+    def test_hard(self):
+        a = np.array([[0, 1],
+                      [1, 2]])
+        b = np.array([[0, 1],
+                      [-1, 2]])
+        npt.assert_equal(*normalize_signs(a, b))
+
+    def test_harder(self):
+        """We don't want a value that might be negative due to
+        floating point inaccuracies to make a call to allclose in the
+        result to be off."""
+        a = np.array([[-1e-15, 1],
+                      [5, 2]])
+        b = np.array([[1e-15, 1],
+                      [5, 2]])
+        # Clearly a and b would refer to the same "column
+        # eigenvectors" but a slopppy implementation of
+        # normalize_signs could change the sign of column 0 and make a
+        # comparison fail
+        npt.assert_almost_equal(*normalize_signs(a, b))
+
+    def test_column_zeros(self):
+        a = np.array([[0, 1],
+                      [0, 2]])
+        b = np.array([[0, -1],
+                      [0, -2]])
+        npt.assert_equal(*normalize_signs(a, b))
+
+    def test_column_almost_zero(self):
+        a = np.array([[1e-15, 3],
+                      [-2e-14, -6]])
+        b = np.array([[0, 3],
+                      [-1e-15, -6]])
+        npt.assert_almost_equal(*normalize_signs(a, b))
 
 
 class TestCAResults(object):
