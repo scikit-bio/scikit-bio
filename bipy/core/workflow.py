@@ -15,17 +15,17 @@ class MyWorkflow(Workflow):
     def initialize_state(self, item):
         self.state = item
 
-    @workflow_method(priority=100)
+    @Workflow.method(priority=100)
     def wf_mul(self):
         self.state *= self.state
 
-    @workflow_method(priority=10)
-    @requires(option='double')
+    @Workflow.method(priority=10)
+    @Workflow.requires(option='double')
     def wf_double(self):
         self.state += self.state
 
-    @workflow_method()
-    @requires(option='sub_value', values=[1,5,10])
+    @Workflow.method()
+    @Workflow.requires(option='sub_value', values=[1,5,10])
     def wf_sub(self):
         self.state -= self.options['sub_value']
 
@@ -75,90 +75,6 @@ class Exists(object):
 anything = Exists()  # external, for when a value can be anything
 
 
-class workflow_method(object):
-    """Decorate a function to indicate it is a workflow method"""
-    highest_priority = sys.maxint
-
-    def __init__(self, priority=0):
-        self.priority = priority
-
-    def __call__(self, f):
-        f.priority = self.priority
-        return f
-
-
-class requires(object):
-    """Decorator that executes a function if requirements are met"""
-    def __init__(self, option=None, values=anything, state=None):
-        """
-        option : a required option
-        values : required values associated with an option
-        state : state level requirements, this must be a function with the
-            following signature: f(x). The function will be passed
-            Workflow.state and should return True if the data are valid.
-            If state returns False on the first item evaluated, the
-            decorated function may be removed from the remaining workflow
-        """
-        # self here is the requires object
-        self.option = option
-        self.required_state = state
-
-        if values is anything:
-            self.values = anything
-        elif values is not_none:
-            self.values = not_none
-        elif isinstance(values, set):
-            self.values = values
-        else:
-            if isinstance(values, str):
-                self.values = values
-            elif isinstance(values, Iterable):
-                self.values = set(values)
-            else:
-                self.values = set([values])
-
-    def __call__(self, f):
-        """Wrap a function
-
-        f : the function to wrap
-        """
-        def decorated(dec_self):
-            """A decorated function that has requirements
-
-            dec_self : this is "self" for the decorated function
-            """
-            if self.required_state is not None:
-                if not self.required_state(dec_self.state):
-                    return _not_executed
-
-            s_opt = self.option
-            ds_opts = dec_self.options
-
-            # if this is a function that does not have an option to validate
-            if s_opt is None:
-                f(dec_self)
-
-            # if the option exists in the Workflow
-            elif s_opt in ds_opts:
-                v = ds_opts[s_opt]
-
-                # if the value just needs to be not None
-                if self.values is not_none and v is not None:
-                    f(dec_self)
-
-                # otherwise make sure the value is acceptable
-                elif v in self.values:
-                    f(dec_self)
-
-                else:
-                    return _not_executed
-
-            else:
-                return _not_executed
-
-        return update_wrapper(decorated, f)
-
-
 class Workflow(object):
     """Arbitrary worflow support structure"""
 
@@ -184,6 +100,7 @@ class Workflow(object):
         self.short_circuit = short_circuit
         self.failed = False
         self.debug = debug
+        self.state = None
 
         for k, v in kwargs.iteritems():
             if hasattr(self, k):
@@ -220,31 +137,6 @@ class Workflow(object):
 
             if isinstance(attr, MethodType):
                 setattr(self, attrname, self._debug_trace_wrapper(attr))
-
-    def _debug_trace_wrapper(self, f):
-        """Trace a function call"""
-        def wrapped():
-            if not hasattr(self, 'debug_trace'):
-                cls = self.__class__
-                raise AttributeError("%s doesn't have debug_trace!" % cls)
-
-            exec_order = self.debug_counter
-            name = f.__name__
-            key = (name, exec_order)
-            pre_state = deepcopy(self.state)
-
-            self.debug_trace.add(key)
-            self.debug_counter += 1
-
-            start_time = time()
-            if f() is _not_executed:
-                self.debug_trace.remove(key)
-            else:
-                self.debug_runtime[key] = time() - start_time
-                self.debug_pre_state[key] = pre_state
-                self.debug_post_state[key] = deepcopy(self.state)
-
-        return update_wrapper(wrapped, f)
 
     def _all_wf_methods(self):
         """Get all workflow methods
@@ -319,3 +211,112 @@ class Workflow(object):
                     yield fail_callback(self)
             else:
                 yield success_callback(self)
+
+    ### Decorators ###
+
+    def _debug_trace_wrapper(self, f):
+        """Trace a function call"""
+        def wrapped():
+            if not hasattr(self, 'debug_trace'):
+                cls = self.__class__
+                raise AttributeError("%s doesn't have debug_trace!" % cls)
+
+            exec_order = self.debug_counter
+            name = f.__name__
+            key = (name, exec_order)
+            pre_state = deepcopy(self.state)
+
+            self.debug_trace.add(key)
+            self.debug_counter += 1
+
+            start_time = time()
+            if f() is _not_executed:
+                self.debug_trace.remove(key)
+            else:
+                self.debug_runtime[key] = time() - start_time
+                self.debug_pre_state[key] = pre_state
+                self.debug_post_state[key] = deepcopy(self.state)
+
+        return update_wrapper(wrapped, f)
+
+    class method(object):
+        """Decorate a function to indicate it is a workflow method"""
+        highest_priority = sys.maxint
+
+        def __init__(self, priority=0):
+            self.priority = priority
+
+        def __call__(self, f):
+            f.priority = self.priority
+            return f
+
+    class requires(object):
+        """Decorator that executes a function if requirements are met"""
+        def __init__(self, option=None, values=anything, state=None):
+            """
+            option : a required option
+            values : required values associated with an option
+            state : state level requirements, this must be a function with the
+                following signature: f(x). The function will be passed
+                Workflow.state and should return True if the data are valid.
+                If state returns False on the first item evaluated, the
+                decorated function may be removed from the remaining workflow
+            """
+            # self here is the requires object
+            self.option = option
+            self.required_state = state
+
+            if values is anything:
+                self.values = anything
+            elif values is not_none:
+                self.values = not_none
+            elif isinstance(values, set):
+                self.values = values
+            else:
+                if isinstance(values, str):
+                    self.values = values
+                elif isinstance(values, Iterable):
+                    self.values = set(values)
+                else:
+                    self.values = set([values])
+
+        def __call__(self, f):
+            """Wrap a function
+
+            f : the function to wrap
+            """
+            def decorated(dec_self):
+                """A decorated function that has requirements
+
+                dec_self : this is "self" for the decorated function
+                """
+                if self.required_state is not None:
+                    if not self.required_state(dec_self.state):
+                        return _not_executed
+
+                s_opt = self.option
+                ds_opts = dec_self.options
+
+                # if this is a function that does not have an option to validate
+                if s_opt is None:
+                    f(dec_self)
+
+                # if the option exists in the Workflow
+                elif s_opt in ds_opts:
+                    v = ds_opts[s_opt]
+
+                    # if the value just needs to be not None
+                    if self.values is not_none and v is not None:
+                        f(dec_self)
+
+                    # otherwise make sure the value is acceptable
+                    elif v in self.values:
+                        f(dec_self)
+
+                    else:
+                        return _not_executed
+
+                else:
+                    return _not_executed
+
+            return update_wrapper(decorated, f)

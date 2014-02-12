@@ -10,7 +10,7 @@
 
 from itertools import izip
 from collections import defaultdict
-from bipy.core.workflow import Workflow, requires, workflow_method, not_none
+from bipy.core.workflow import Workflow, not_none
 from bipy.util.unit_test import TestCase, main
 
 def construct_iterator(**kwargs):
@@ -33,20 +33,20 @@ class MockWorkflow(Workflow):
         self.state[0] = None
         self.state[1] = item
 
-    @workflow_method(priority=90)
-    @requires(option='A', values=True)
+    @Workflow.method(priority=90)
+    @Workflow.requires(option='A', values=True)
     def wf_groupA(self):
         self.methodA1()
         self.methodA2()
 
-    @workflow_method()
-    @requires(option='B', values=True)
+    @Workflow.method()
+    @Workflow.requires(option='B', values=True)
     def wf_groupB(self):
         self.methodB1()
         self.methodB2()
 
-    @workflow_method(priority=10)
-    @requires(option='C', values=True)
+    @Workflow.method(priority=10)
+    @Workflow.requires(option='C', values=True)
     def wf_groupC(self):
         self.methodC1()
         self.methodC2()
@@ -74,7 +74,7 @@ class MockWorkflow(Workflow):
         else:
             self.state = [name, self.state[-1]]
 
-    @requires(option='foo', values=[1, 2, 3])
+    @Workflow.requires(option='foo', values=[1, 2, 3])
     def methodB2(self):
         name = 'B2'
         self.stats[name] += 1
@@ -91,7 +91,7 @@ class MockWorkflow(Workflow):
             self.failed = True
         self.state = [name, self.state[-1]]
 
-    @requires(option='C2', values=[1, 2, 3])
+    @Workflow.requires(option='C2', values=[1, 2, 3])
     def methodC2(self):
         name = 'C2'
         self.stats[name] += 1
@@ -245,8 +245,8 @@ class MockWorkflowReqTest(Workflow):
     def initialize_state(self, item):
         self.state = [None, item]
 
-    @workflow_method(priority=5)
-    @requires(state=lambda x: x[-1] < 3)
+    @Workflow.method(priority=5)
+    @Workflow.requires(state=lambda x: x[-1] < 3)
     def wf_needs_data(self):
         name = 'needs_data'
         self.stats[name] += 1
@@ -254,7 +254,7 @@ class MockWorkflowReqTest(Workflow):
             self.failed = True
         self.state = [name, self.state[-1]]
 
-    @workflow_method(priority=10)
+    @Workflow.method(priority=10)
     def wf_always_run(self):
         name = 'always_run'
         self.stats[name] += 1
@@ -262,8 +262,8 @@ class MockWorkflowReqTest(Workflow):
             self.failed = True
         self.state = [name, self.state[-1]]
 
-    @workflow_method(priority=20)
-    @requires(option='cannot_be_none', values=not_none)
+    @Workflow.method(priority=20)
+    @Workflow.requires(option='cannot_be_none', values=not_none)
     def wf_run_if_not_none(self):
         name = 'run_if_not_none'
         self.stats[name] += 1
@@ -352,7 +352,7 @@ class RequiresTests(TestCase):
 
 class PriorityTests(TestCase):
     def test_dec(self):
-        @workflow_method(priority=10)
+        @Workflow.method(priority=10)
         def foo(x, y, z):
             """doc check"""
             return x + y + z
