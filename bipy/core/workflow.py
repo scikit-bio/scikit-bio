@@ -216,8 +216,10 @@ class Workflow(object):
                 raise AttributeError("%s exists in self!" % k)
             setattr(self, k, v)
 
+        if self.debug:
+            self._setup_debug()
+
         self._allocate_state()
-        self._setup_debug()
 
     def initialize_state(self, item):
         """Initialize state
@@ -233,9 +235,6 @@ class Workflow(object):
 
     def _setup_debug(self):
         """Wrap all methods with debug trace support"""
-        if not self.debug:
-            return
-
         # ignore all members of the baseclass
         ignore = set(dir(Workflow))
 
