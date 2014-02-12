@@ -258,11 +258,9 @@ class Workflow(object):
             """
             option : a required option
             values : required values associated with an option
-            state : state level requirements, this must be a function with the
-                following signature: f(x). The function will be passed
-                Workflow.state and should return True if the data are valid.
-                If state returns False on the first item evaluated, the
-                decorated function may be removed from the remaining workflow
+            state : If state is not None and is a function, that function will
+                check if state(Workflow.state) is True, or valid, for each
+                item in the iterable operated on by Workflow.__call__.
             """
             # self here is the requires object
             self.option = option
