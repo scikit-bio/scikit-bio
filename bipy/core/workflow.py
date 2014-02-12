@@ -280,7 +280,7 @@ class Workflow(object):
                 else:
                     self.values = set([values])
 
-        def __call__(self, f):
+        def __call__(self, func):
             """Wrap a function
 
             f : the function to wrap
@@ -297,21 +297,21 @@ class Workflow(object):
                 s_opt = self.option
                 ds_opts = dec_self.options
 
-                # if this is a function that does not have an option to validate
+                # if this is a function that doesn't have an option to validate
                 if s_opt is None:
-                    f(dec_self)
+                    func(dec_self)
 
                 # if the option exists in the Workflow
                 elif s_opt in ds_opts:
-                    v = ds_opts[s_opt]
+                    val = ds_opts[s_opt]
 
                     # if the value just needs to be not None
-                    if self.values is not_none and v is not None:
-                        f(dec_self)
+                    if self.values is not_none and val is not None:
+                        func(dec_self)
 
                     # otherwise make sure the value is acceptable
-                    elif v in self.values:
-                        f(dec_self)
+                    elif val in self.values:
+                        func(dec_self)
 
                     else:
                         return _not_executed
@@ -319,4 +319,4 @@ class Workflow(object):
                 else:
                     return _not_executed
 
-            return update_wrapper(decorated, f)
+            return update_wrapper(decorated, func)
