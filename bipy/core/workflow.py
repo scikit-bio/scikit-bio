@@ -63,7 +63,6 @@ from collections import Iterable, defaultdict
 from types import MethodType
 
 # thank you Flask project...
-_executed = object()  # internal, for when a method has executed
 _not_executed = object()  # internal, for when a method has not executed
 not_none = object()   # external, for when a value can be anything except None
 
