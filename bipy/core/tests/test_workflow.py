@@ -9,8 +9,7 @@
 #-----------------------------------------------------------------------------
 
 from itertools import izip
-from bipy.core.workflow import (Workflow, requires, priority,
-                                no_requirements, not_none)
+from bipy.core.workflow import Workflow, requires, workflow_method, not_none
 from bipy.util.unit_test import TestCase, main
 
 
@@ -34,18 +33,19 @@ class MockWorkflow(Workflow):
         self.state[0] = None
         self.state[1] = item
 
-    @priority(90)
+    @workflow_method(priority=90)
     @requires(option='A', values=True)
     def wf_groupA(self):
         self.methodA1()
         self.methodA2()
 
+    @workflow_method()
     @requires(option='B', values=True)
     def wf_groupB(self):
         self.methodB1()
         self.methodB2()
 
-    @priority(10)
+    @workflow_method(priority=10)
     @requires(option='C', values=True)
     def wf_groupC(self):
         self.methodC1()
@@ -86,7 +86,6 @@ class MockWorkflow(Workflow):
         else:
             self.state = [name, self.state[-1]]
 
-    @no_requirements
     def methodC1(self):
         name = 'C1'
         self.stats[name] += 1
@@ -110,19 +109,6 @@ class WorkflowTests(TestCase):
         self.obj_debug = MockWorkflow(debug=True, options=opts)
         self.obj_noshort = MockWorkflow(short_circuit=False, options=opts)
 
-    def test_get_workflow_debug(self):
-        gen = construct_iterator(**{'iter_x': [1, 2, 3, 4, 5]})
-        exp_wf = [self.obj_debug._setup_debug_trace,
-                  self.obj_debug.wf_groupA,
-                  self.obj_debug.wf_groupC]
-        obs_gen, obs_wf = self.obj_debug._get_workflow(gen)
-
-        self.assertEqual(obs_wf, exp_wf)
-        self.assertEqual(list(obs_gen), [1, 2, 3, 4, 5])
-
-        self.assertEqual(self.obj_debug.stats, {})
-        self.assertTrue(self.obj_debug.short_circuit)
-
     def test_debug_trace(self):
         gen = construct_iterator(**{'iter_x': [1, 2, 3, 4, 5]})
         obj = self.obj_debug(gen)
@@ -131,24 +117,14 @@ class WorkflowTests(TestCase):
         obs = obj.next()
         self.assertEqual(obs, exp)
 
-        exp = ['wf_groupA',
-               'methodA1',
-               'methodA2',
-               'wf_groupC',
-               'methodC1',
-               'methodC2']
+        exp = set([('wf_groupA', 0),
+                   ('methodA1', 1),
+                   ('methodA2', 2),
+                   ('wf_groupC', 3),
+                   ('methodC1', 4)])
+
         obs = self.obj_debug.debug_trace
         self.assertEqual(obs, exp)
-
-    def test_get_workflow(self):
-        gen = construct_iterator(**{'iter_x': [1, 2, 3, 4, 5]})
-        exp_wf = [self.obj_short.wf_groupA, self.obj_short.wf_groupC]
-        obs_gen, obs_wf = self.obj_short._get_workflow(gen)
-        self.assertEqual(obs_wf, exp_wf)
-        self.assertEqual(list(obs_gen), [1, 2, 3, 4, 5])
-
-        self.assertEqual(self.obj_short.stats, {})
-        self.assertTrue(self.obj_short.short_circuit)
 
     def test_init(self):
         self.assertEqual(self.obj_short.options, {'A': True, 'C': True})
@@ -252,7 +228,7 @@ class MockWorkflowReqTest(Workflow):
     def initialize_state(self, item):
         self.state = [None, item]
 
-    @priority(5)
+    @workflow_method(priority=5)
     @requires(state=lambda x: x[-1] < 3)
     def wf_needs_data(self):
         name = 'needs_data'
@@ -261,8 +237,7 @@ class MockWorkflowReqTest(Workflow):
             self.failed = True
         self.state = [name, self.state[-1]]
 
-    @priority(10)
-    @no_requirements
+    @workflow_method(priority=10)
     def wf_always_run(self):
         name = 'always_run'
         self.stats[name] += 1
@@ -270,7 +245,7 @@ class MockWorkflowReqTest(Workflow):
             self.failed = True
         self.state = [name, self.state[-1]]
 
-    @priority(20)
+    @workflow_method(priority=20)
     @requires(option='cannot_be_none', values=not_none)
     def wf_run_if_not_none(self):
         name = 'run_if_not_none'
@@ -365,7 +340,7 @@ class RequiresTests(TestCase):
 
 class PriorityTests(TestCase):
     def test_dec(self):
-        @priority(10)
+        @workflow_method(priority=10)
         def foo(x, y, z):
             """doc check"""
             return x + y + z

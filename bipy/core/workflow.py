@@ -58,13 +58,13 @@ for i in wf(gen):
 #-----------------------------------------------------------------------------
 
 import sys
-from itertools import chain
 from functools import update_wrapper
 from collections import Iterable, defaultdict
 from types import MethodType
 
 # thank you Flask project...
-_executed = object()  # internal, tag for an executed method
+_executed = object()  # internal, for when a method has executed
+_not_executed = object()  # internal, for when a method has not executed
 not_none = object()   # external, for when a value can be anything except None
 
 
@@ -81,31 +81,27 @@ def _debug_trace_wrapper(obj, f):
             cls = obj.__class__
             raise AttributeError("%s doesn't have debug_trace!" % cls)
 
-        obj.debug_trace.append(f.__name__)
-        return f()
+        count = obj.debug_counter
+        name = f.__name__
+
+        obj.debug_trace.add((name, count))
+        obj.debug_counter += 1
+        if f() is _not_executed:
+            obj.debug_trace.remove((name, count))
 
     return update_wrapper(wrapped, f)
 
 
-class priority(object):
-    """Decorate a function priority"""
+class workflow_method(object):
+    """Decorate a function to indicate it is a workflow method"""
     highest = sys.maxint
 
-    def __init__(self, priority):
+    def __init__(self, priority=0):
         self.priority = priority
 
     def __call__(self, f):
         f.priority = self.priority
         return f
-
-
-def no_requirements(f):
-    """Decorate a function to indicate there are no requirements"""
-    def decorated(self):
-        """Simply execute the function"""
-        f(self)
-        return _executed
-    return update_wrapper(decorated, f)
 
 
 class requires(object):
@@ -155,11 +151,11 @@ class requires(object):
             dec_self : this is "self" for the decorated function
             """
             if self.do_short_circuit(dec_self):
-                return
+                return _not_executed
 
             if self.required_state is not None:
                 if not self.required_state(dec_self.state):
-                    return
+                    return _not_executed
 
             s_opt = self.option
             ds_opts = dec_self.options
@@ -167,7 +163,6 @@ class requires(object):
             # if this is a function that does not have an option to validate
             if s_opt is None:
                 f(dec_self)
-                return _executed
 
             # if the option exists in the Workflow
             elif s_opt in ds_opts:
@@ -176,12 +171,16 @@ class requires(object):
                 # if the value just needs to be not None
                 if self.values is not_none and v is not None:
                     f(dec_self)
-                    return _executed
 
                 # otherwise make sure the value is acceptable
                 elif v in self.values:
                     f(dec_self)
-                    return _executed
+
+                else:
+                    return _not_executed
+
+            else:
+                return _not_executed
 
         return update_wrapper(decorated, f)
 
@@ -213,9 +212,6 @@ class Workflow(object):
         self.short_circuit = short_circuit
         self.failed = False
         self.debug = debug
-
-        if self.debug:
-            self.debug_trace = []
 
         for k, v in kwargs.iteritems():
             if hasattr(self, k):
@@ -257,40 +253,28 @@ class Workflow(object):
             if isinstance(attr, MethodType):
                 setattr(self, attrname, _debug_trace_wrapper(self, attr))
 
-    def _all_wf_methods(self, default_priority=0):
+    def _all_wf_methods(self):
         """Get all workflow methods
 
         Methods are sorted by priority
         """
-        methods = [getattr(self, f) for f in dir(self) if f.startswith('wf_')]
-        key = lambda x: getattr(x, 'priority', default_priority)
+        methods = []
+        for item in dir(self):
+            obj = getattr(self, item)
+            if hasattr(obj, 'priority'):
+                methods.append(obj)
+
+        key = lambda x: getattr(x, 'priority')
         methods_sorted = sorted(methods, key=key, reverse=True)
+
+        if self.debug:
+            methods_sorted.insert(0, self._setup_debug_trace)
 
         return methods_sorted
 
-    def _get_workflow(self, it):
-        """Get the methods executed, sorted by priority"""
-        # save state
-        shortcircuit_state = self.short_circuit
-        self.short_circuit = False
-        stats = self.stats.copy()
-
-        peek = it.next()
-        self.initialize_state(peek)
-        executed = [f for f in self._all_wf_methods() if f() is _executed]
-
-        if self.debug:
-            executed.insert(0, self._setup_debug_trace)
-
-        # restore state
-        self.short_circuit = shortcircuit_state
-        self.stats = stats
-        generator_reset = chain([peek], it)
-
-        return generator_reset, executed
-
     def _setup_debug_trace(self):
-        self.debug_trace = []
+        self.debug_trace = set([])
+        self.debug_counter = 0
 
     def __call__(self, it, success_callback=None, fail_callback=None):
         """Operate on all the data
@@ -303,7 +287,7 @@ class Workflow(object):
         if success_callback is None:
             success_callback = lambda x: x.state
 
-        it, workflow = self._get_workflow(it)
+        workflow = self._all_wf_methods()
 
         for item in it:
             self.failed = False
