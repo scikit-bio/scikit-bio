@@ -13,6 +13,7 @@ from collections import defaultdict
 from bipy.core.workflow import Workflow, not_none
 from bipy.util.unit_test import TestCase, main
 
+
 def construct_iterator(**kwargs):
     """make an iterator for testing purposes"""
     to_gen = []
