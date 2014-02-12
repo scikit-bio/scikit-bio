@@ -134,8 +134,9 @@ class CA(Ordination):
         #           = D(p_i+)^{-1/2} D(p_i+)^{-1/2} Q D(p_+j)^{-1/2} U
         #           = D(p_i+)^{-1/2} Q_tilde U         (using 9.40)
         # It holds if we replace Q in 9.43b with Q after centering, ie
-        #assert np.allclose(F,
-        #                   (row_marginals**-1)[:, None] * (Q - expected).dot(V))
+        #assert np.allclose(
+        #    F,
+        #    (row_marginals**-1)[:, None] * (Q - expected).dot(V))
         # Comparing results with vegan and the examples in the book, 9.43a
         # is the right one. The same issue happens in 9.44, where also
         # 9.44a is the one that matches vegan's output.
