@@ -26,9 +26,6 @@ def construct_iterator(**kwargs):
 
 
 class MockWorkflow(Workflow):
-    def _allocate_state(self):
-        self.state = [None, None]
-
     def initialize_state(self, item):
         self.state[0] = None
         self.state[1] = item
@@ -103,10 +100,12 @@ class MockWorkflow(Workflow):
 class WorkflowTests(TestCase):
     def setUp(self):
         opts = {'A': True, 'C': True}
-        self.obj_short = MockWorkflow(options=opts, stats=defaultdict(int))
-        self.obj_debug = MockWorkflow(debug=True, options=opts,
+        self.obj_short = MockWorkflow([None, None], options=opts,
                                       stats=defaultdict(int))
-        self.obj_noshort = MockWorkflow(short_circuit=False, options=opts,
+        self.obj_debug = MockWorkflow([None, None], debug=True, options=opts,
+                                      stats=defaultdict(int))
+        self.obj_noshort = MockWorkflow([None, None], short_circuit=False,
+                                        options=opts,
                                         stats=defaultdict(int))
 
     def test_debug_trace(self):
@@ -274,7 +273,7 @@ class MockWorkflowReqTest(Workflow):
 
 class RequiresTests(TestCase):
     def test_validdata(self):
-        obj = MockWorkflowReqTest(stats=defaultdict(int))
+        obj = MockWorkflowReqTest([None, None], stats=defaultdict(int))
         single_iter = construct_iterator(**{'iter_x': [1, 2, 3, 4, 5]})
 
         exp_stats = {'needs_data': 2, 'always_run': 5}
@@ -286,7 +285,7 @@ class RequiresTests(TestCase):
         self.assertEqual(obj.stats, exp_stats)
 
     def test_not_none_avoid(self):
-        obj = MockWorkflowReqTest({'cannot_be_none': None},
+        obj = MockWorkflowReqTest([None, None], {'cannot_be_none': None},
                                   stats=defaultdict(int))
         single_iter = construct_iterator(**{'iter_x': [1, 2, 3, 4, 5]})
 
@@ -300,7 +299,8 @@ class RequiresTests(TestCase):
         self.assertEqual(obj.stats, exp_stats)
 
     def test_not_none_execute(self):
-        obj = MockWorkflowReqTest(options={'cannot_be_none': True}, debug=True,
+        obj = MockWorkflowReqTest([None, None],
+                                  options={'cannot_be_none': True}, debug=True,
                                   stats=defaultdict(int))
         single_iter = construct_iterator(**{'iter_x': [1, 2, 3, 4, 5]})
 
@@ -313,7 +313,7 @@ class RequiresTests(TestCase):
         self.assertEqual(obj.stats, exp_stats)
 
     def test_methodb1(self):
-        obj = MockWorkflow(stats=defaultdict(int))
+        obj = MockWorkflow([None, None], stats=defaultdict(int))
         obj.initialize_state('test')
         obj.methodB1()
         self.assertEqual(obj.state, ['B1', 'test'])
@@ -335,7 +335,8 @@ class RequiresTests(TestCase):
     def test_methodb2_accept(self):
         # methodb2 is setup to be valid when foo is in [1,2,3], make sure we
         # can execute
-        obj = MockWorkflow(options={'foo': 1}, stats=defaultdict(int))
+        obj = MockWorkflow([None, None], options={'foo': 1},
+                           stats=defaultdict(int))
         obj.initialize_state('test')
         obj.methodB2()
         self.assertEqual(obj.state, ['B2', 'test'])
@@ -344,7 +345,8 @@ class RequiresTests(TestCase):
     def test_methodb2_ignore(self):
         # methodb2 is setup to be valid when foo is in [1, 2, 3], make sure
         # we do not execute
-        obj = MockWorkflow(options={'foo': 'bar'}, stats=defaultdict(int))
+        obj = MockWorkflow([None, None], options={'foo': 'bar'},
+                           stats=defaultdict(int))
         obj.methodB2()
         self.assertEqual(obj.state, [None, None])
         self.assertEqual(obj.stats, {})

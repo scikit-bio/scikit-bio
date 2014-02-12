@@ -9,9 +9,6 @@ be independent.
 As an example:
 
 class MyWorkflow(Workflow):
-    def _allocate_state(self):
-        self.state = 0
-
     def initialize_state(self, item):
         self.state = item
 
@@ -31,19 +28,19 @@ class MyWorkflow(Workflow):
 
 
 # ((i * i) * 2) - 5
-wf = MyWorkflow(options={'double':None, 'sub_value':5})
+wf = MyWorkflow(0, options={'double':None, 'sub_value':5})
 gen = (i for i in range(10))
 for i in wf(gen):
     print i
 
 # (i * i) - 10
-wf = MyWorkflow(options={'sub_value':10})
+wf = MyWorkflow(0, options={'sub_value':10})
 gen = (i for i in range(10))
 for i in wf(gen):
     print i
 
 # (i * i)
-wf = MyWorkflow()
+wf = MyWorkflow(0)
 gen = (i for i in range(10))
 for i in wf(gen):
     print i
@@ -79,10 +76,11 @@ anything = Exists()  # external, for when a value can be anything
 class Workflow(object):
     """Arbitrary workflow support structure"""
 
-    def __init__(self, short_circuit=True, debug=False, options=None,
+    def __init__(self, state, short_circuit=True, debug=False, options=None,
                  **kwargs):
         """Build thy self
 
+        state : an allocated object to store state
         short_circuit : if True, enables ignoring function methods when a given
             item has failed
         debug : Enable debug mode
@@ -102,7 +100,7 @@ class Workflow(object):
         self.short_circuit = short_circuit
         self.failed = False
         self.debug = debug
-        self.state = None
+        self.state = state
 
         for k, v in kwargs.iteritems():
             if hasattr(self, k):
@@ -112,18 +110,12 @@ class Workflow(object):
         if self.debug:
             self._setup_debug()
 
-        self._allocate_state()
-
     def initialize_state(self, item):
         """Initialize state
 
         This method is called first prior to any other defined workflow method
         with the exception of _setup_debug_trace if self.debug is True
         """
-        raise NotImplementedError("Must implement this method")
-
-    def _allocate_state(self):
-        """Setup state, must be implemented by subclasses"""
         raise NotImplementedError("Must implement this method")
 
     def _setup_debug(self):
