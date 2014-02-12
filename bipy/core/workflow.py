@@ -87,10 +87,15 @@ class Workflow(object):
         options : runtime options, {'option':values}
         kwargs : Additional arguments will be added to self
 
-        All workflow methods (i.e., those decorated with Workflow.method) must
-        be decorated by either "no_requirements" or "requires". This ensures
-        that the methods support the automatic workflow determination
-        mechanism.
+        Methods that are considered to be directly part of the workflow must
+        be decorated with Workflow.method. The workflow methods offer a
+        mechanism to logically group functionality together, and are free to
+        make subsequent calls to other methods.
+
+        All methods of a subclass of Workflow (those with and without the
+        Workflow.method decoration) can take advantage of the Workflow.requires
+        decorator to specify any option or state requirements for the
+        decorated function.
         """
         if options is None:
             self.options = {}
