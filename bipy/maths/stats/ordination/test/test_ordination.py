@@ -13,7 +13,8 @@ import os
 import numpy as np
 import numpy.testing as npt
 
-from bipy.maths.stats.ordination import CA, RDA, CCA
+from bipy.maths.stats.ordination import CA, RDA, CCA, PCoA
+from bipy.core.distance import SymmetricDistanceMatrix
 
 
 def get_data_path(fn):
@@ -121,3 +122,71 @@ class TestCCAResults(object):
     # them sounds better than requiring R and vegan to run tests.
     def setup(self):
         pass
+
+
+class TestPCoAResults(object):
+    def setup(self):
+        """Sample data set from page 111 of W.J Krzanowski. Principles
+        of multivariate analysis, 2000, Oxford University Press."""
+        matrix = np.loadtxt(get_data_path('PCoA_sample_data'))
+        dist_matrix = SymmetricDistanceMatrix(matrix,
+                                              map(str, range(matrix.shape[0])))
+        self.ordination = PCoA(dist_matrix)
+
+    def test_values(self):
+        """Adapted from cogent's `test_principal_coordinate_analysis`:
+        "I took the example in the book (see intro info), and did the
+        principal coordinates analysis, plotted the data and it looked
+        right"."""
+        scores = self.ordination.scores()
+
+        # Note the absolute value because column can have signs swapped
+        npt.assert_almost_equal(np.abs(scores.species[0, 0]),
+                                0.24078813304509292)
+
+        # cogent returned the scores transposed
+        npt.assert_almost_equal(np.abs(scores.species[0, 1]),
+                                0.23367716219400031)
+
+
+class TestPCoAResultsExtensive(object):
+    def setup(self):
+        matrix = np.loadtxt(get_data_path('PCoA_sample_data_2'))
+        dist_matrix = SymmetricDistanceMatrix(matrix,
+                                              map(str, range(matrix.shape[0])))
+        self.ordination = PCoA(dist_matrix)
+
+    def test_values(self):
+        expected = np.array(
+            [[ -2.85970001e-02,   2.29038532e-01,   7.05527166e-02,
+                2.61635763e-01,   2.83986686e-01,  -6.25284356e-09],
+             [  3.74940557e-01,   2.23340550e-01,  -2.08929136e-01,
+                5.05739521e-02,  -1.87103662e-01,  -6.25284356e-09],
+             [ -3.35175925e-01,  -2.38559794e-01,  -3.09988697e-01,
+                1.15217868e-01,  -5.02155335e-02,  -6.25284356e-09],
+             [  2.54123944e-01,  -4.12346397e-01,   2.33436419e-01,
+                6.40316842e-02,  -4.82607521e-03,  -6.25284356e-09],
+             [ -2.82568441e-01,   1.86069108e-01,   2.88756308e-01,
+                -6.45563520e-02,  -2.11416317e-01,  -6.25284356e-09],
+             [  1.72768652e-02,   1.24580018e-02,  -7.38276099e-02,
+                -4.26902915e-01,   1.69574901e-01,  -6.25284356e-09]])
+        actual = self.ordination.scores().species
+        npt.assert_almost_equal(*normalize_signs(expected, actual))
+
+
+class TestPCoAPrivateMethods(object):
+    def setup(self):
+        self.matrix = np.arange(1, 7).reshape(2, 3)
+        self.matrix2 = np.arange(1, 10).reshape(3, 3)
+
+    def test_E_matrix(self):
+        E = PCoA._E_matrix(self.matrix)
+        expected_E = np.array([[ -0.5,  -2. ,  -4.5],
+                               [ -8. , -12.5, -18. ]])
+        npt.assert_almost_equal(E, expected_E)
+
+    def test_F_matrix(self):
+        F = PCoA._F_matrix(self.matrix2)
+        expected_F = np.zeros((3, 3))
+        # Note that `test_make_F_matrix` in cogent is wrong
+        npt.assert_almost_equal(F, expected_F)
