@@ -197,8 +197,6 @@ class Workflow(object):
         else:
             self.options = options
 
-        ### collections.Counter instead?
-        self.stats = defaultdict(int)
         self.short_circuit = short_circuit
         self.failed = False
         self.debug = debug
