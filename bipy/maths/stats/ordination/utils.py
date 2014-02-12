@@ -62,7 +62,6 @@ def mean_and_std(a, axis=None, weights=None, with_mean=True, with_std=True,
                 a_rolled = np.rollaxis(a, axis)
                 # Numpy doesn't have a weighted std implementation, but this is
                 # stable and fast
-                # (http://www.johndcook.com/blog/2008/09/26/comparing-three-methods-of-computing-standard-deviation/)
                 variance = np.average((a_rolled - avg)**2, axis=0,
                                       weights=weights)
             if ddof != 0:  # Don't waste time if variance doesn't need scaling
