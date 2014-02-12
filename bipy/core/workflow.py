@@ -83,15 +83,16 @@ class Workflow(object):
                  **kwargs):
         """Build thy self
 
-        short_circuit : if True, enables ignoring function groups when a given
+        short_circuit : if True, enables ignoring function methods when a given
             item has failed
         debug : Enable debug mode
         options : runtime options, {'option':values}
         kwargs : Additional arguments will be added to self
 
-        All workflow methods (i.e., those starting with "wf_") must be
-        decorated by either "no_requirements" or "requires". This ensures that
-        the methods support the automatic workflow determination mechanism.
+        All workflow methods (i.e., those decorated with Workflow.method) must
+        be decorated by either "no_requirements" or "requires". This ensures
+        that the methods support the automatic workflow determination
+        mechanism.
         """
         if options is None:
             self.options = {}
