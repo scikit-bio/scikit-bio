@@ -34,10 +34,10 @@ def mean_and_std(a, axis=None, weights=None, with_mean=True, with_std=True,
     with_std : bool, optional, defaults to True
         Compute standard deviation if True.
     ddof : int, optional, defaults to 0
-        Variance is calculated by dividing by `n - ddof` (where `n` is
-        the number of elements). By default it computes the maximum
-        likelyhood estimator.
-
+        It means delta degrees of freedom. Variance is calculated by
+        dividing by `n - ddof` (where `n` is the number of
+        elements). By default it computes the maximum likelyhood
+        estimator.
     Returns
     -------
     average, std
