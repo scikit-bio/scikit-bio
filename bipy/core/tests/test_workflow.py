@@ -51,7 +51,6 @@ class MockWorkflow(Workflow):
         self.methodC1()
         self.methodC2()
 
-    @requires(is_valid=False)  # always execute
     def methodA1(self):
         name = 'A1'
         self.stats[name] += 1
@@ -66,7 +65,6 @@ class MockWorkflow(Workflow):
             self.failed = True
         self.state = [name, self.state[-1]]
 
-    @requires(is_valid=False)
     def methodB1(self):
         name = 'B1'
         self.stats[name] += 1
@@ -93,7 +91,7 @@ class MockWorkflow(Workflow):
             self.failed = True
         self.state = [name, self.state[-1]]
 
-    @requires(is_valid=True, option='C2', values=[1, 2, 3])
+    @requires(option='C2', values=[1, 2, 3])
     def methodC2(self):
         name = 'C2'
         self.stats[name] += 1
@@ -320,13 +318,6 @@ class RequiresTests(TestCase):
         obj.initialize_state('test')
         obj.methodB2()
         self.assertEqual(obj.state, ['B2', 'test'])
-        self.assertEqual(obj.stats, {'B2': 1})
-
-        # methodb2 will not execute if self.failed
-        obj.failed = True
-        obj.initialize_state('test')
-        obj.methodB2()
-        self.assertEqual(obj.state, [None, 'test'])
         self.assertEqual(obj.stats, {'B2': 1})
 
     def test_methodb2_ignore(self):

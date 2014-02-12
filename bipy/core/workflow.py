@@ -15,16 +15,16 @@ class MyWorkflow(Workflow):
     def initialize_state(self, item):
         self.state = item
 
-    @priority(100)
-    @no_requirements
+    @workflow_method(priority=100)
     def wf_mul(self):
         self.state *= self.state
 
-    @priority(10)
+    @workflow_method(priority=10)
     @requires(option='double')
     def wf_double(self):
         self.state += self.state
 
+    @workflow_method()
     @requires(option='sub_value', values=[1,5,10])
     def wf_sub(self):
         self.state -= self.options['sub_value']
@@ -105,10 +105,8 @@ class workflow_method(object):
 
 class requires(object):
     """Decorator that executes a function if requirements are met"""
-    def __init__(self, is_valid=True, option=None, values=anything,
-                 state=None):
+    def __init__(self, option=None, values=anything, state=None):
         """
-        is_valid : execute the function if self.failed is False
         option : a required option
         values : required values associated with an option
         state : state level requirements, this must be a function with the
@@ -118,7 +116,6 @@ class requires(object):
             decorated function may be removed from the remaining workflow
         """
         # self here is the requires object
-        self.is_valid = is_valid
         self.option = option
         self.required_state = state
 
@@ -136,9 +133,6 @@ class requires(object):
         else:
             self.values = values
 
-    def do_short_circuit(self, wrapped):
-        return self.is_valid and (wrapped.failed and wrapped.short_circuit)
-
     def __call__(self, f):
         """Wrap a function
 
@@ -149,9 +143,6 @@ class requires(object):
 
             dec_self : this is "self" for the decorated function
             """
-            if self.do_short_circuit(dec_self):
-                return _not_executed
-
             if self.required_state is not None:
                 if not self.required_state(dec_self.state):
                     return _not_executed
@@ -272,10 +263,11 @@ class Workflow(object):
         return methods_sorted
 
     def _setup_debug_trace(self):
+        """Setup a trace"""
         self.debug_trace = set([])
         self.debug_counter = 0
 
-    def __call__(self, it, success_callback=None, fail_callback=None):
+    def __call__(self, iter_, success_callback=None, fail_callback=None):
         """Operate on all the data
 
         it : an iterator
@@ -288,12 +280,15 @@ class Workflow(object):
 
         workflow = self._all_wf_methods()
 
-        for item in it:
+        for item in iter_:
             self.failed = False
 
             self.initialize_state(item)
-            for f in workflow:
-                f()
+            for func in workflow:
+                if self.short_circuit and self.failed:
+                    break
+                else:
+                    func()
 
             if self.failed:
                 if fail_callback is not None:
