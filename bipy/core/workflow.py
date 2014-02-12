@@ -239,9 +239,6 @@ class Workflow(object):
         ignore = set(dir(Workflow))
 
         for attrname in dir(self):
-            if attrname.startswith('__'):
-                continue
-
             if attrname in ignore:
                 continue
 
