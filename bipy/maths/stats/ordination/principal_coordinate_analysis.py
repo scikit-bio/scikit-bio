@@ -11,6 +11,7 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 
 from .base import Ordination, OrdinationResults
+from bipy.core.distance import SymmetricDistanceMatrix
 
 # - This could be a bit more efficient by cluttering the code (i.e.,
 #   reusing memory instead of allocating new arrays, avoiding a bunch
@@ -71,7 +72,10 @@ class PCoA(Ordination):
         there are different ways to deal with that problem (see
         Legendre & Legendre 1998, \S 9.2.3).
         """
-        self.dm = np.asarray(distance_matrix.data, dtype=np.float64)
+        if isinstance(distance_matrix, SymmetricDistanceMatrix):
+            self.dm = np.asarray(distance_matrix.data, dtype=np.float64)
+        else:
+            raise TypeError("Input must be a SymmetricDistanceMatrix.")
         self._pcoa()
 
     def _pcoa(self):
