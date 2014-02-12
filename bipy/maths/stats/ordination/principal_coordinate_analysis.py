@@ -92,10 +92,20 @@ class PCoA(Ordination):
         eigvals, eigvecs = np.linalg.eigh(F_matrix)
 
         # eigvals might not be ordered, so we order them (at least one
-        # is zero). TODO: cogent took the abs value, but that doesn't
-        # seem to be an approach accepted by L&L to deal with negative
-        # eigen values...
-        idxs_descending = np.abs(eigvals).argsort()[::-1]
+        # is zero). cogent makes eigenvalues positive by taking the
+        # abs value, but that doesn't seem to be an approach accepted
+        # by L&L to deal with negative eigenvalues. We raise an error
+        # in that case.
+        EPS = 1e-10  # Arbitrary small number (so that eigenvalues ~0
+                     # don't make the method fail).
+        negative_close_to_zero = (-EPS < eigvals) & (eigvals < 0)
+        eigvals[negative_close_to_zero] = 0
+        if np.any(eigvals < 0):
+            raise ValueError(
+                "Negative eigenvalues ({0}) have appeared."
+                " See Notes section in docstring.".format(eigvals.min())
+                )
+        idxs_descending = eigvals.argsort()[::-1]
         self.eigvals = eigvals[idxs_descending]
         self.eigvecs = eigvecs[:, idxs_descending]
 
@@ -105,9 +115,8 @@ class PCoA(Ordination):
         # eigenvectors. Each row contains the coordinates of the
         # objects in the space of principal coordinates. Note that at
         # least one eigenvalue is zero because only n-1 axes are
-        # needed to represent n points in an euclidean space. TODO:
-        # same thing about taking the absolute value
-        coordinates = self.eigvecs * np.sqrt(np.abs(self.eigvals))
+        # needed to represent n points in an euclidean space.
+        coordinates = self.eigvecs * np.sqrt(self.eigvals)
 
         # TODO: Improve OrdinationResults to better cope with PCoA
         return OrdinationResults(eigvals=self.eigvals, species=coordinates)
