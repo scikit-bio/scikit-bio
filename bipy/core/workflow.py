@@ -58,6 +58,8 @@ for i in wf(gen):
 #-----------------------------------------------------------------------------
 
 import sys
+from copy import deepcopy
+from time import time
 from functools import update_wrapper
 from collections import Iterable, defaultdict
 from types import MethodType
@@ -80,13 +82,21 @@ def _debug_trace_wrapper(obj, f):
             cls = obj.__class__
             raise AttributeError("%s doesn't have debug_trace!" % cls)
 
-        count = obj.debug_counter
+        exec_order = obj.debug_counter
         name = f.__name__
+        key = (name, exec_order)
+        pre_state = deepcopy(obj.state)
 
-        obj.debug_trace.add((name, count))
+        obj.debug_trace.add(key)
         obj.debug_counter += 1
+
+        start_time = time()
         if f() is _not_executed:
-            obj.debug_trace.remove((name, count))
+            obj.debug_trace.remove(key)
+        else:
+            obj.debug_runtime[key] = time() - start_time
+            obj.debug_pre_state[key] = pre_state
+            obj.debug_post_state[key] = deepcopy(obj.state)
 
     return update_wrapper(wrapped, f)
 
@@ -261,9 +271,30 @@ class Workflow(object):
         return methods_sorted
 
     def _setup_debug_trace(self):
-        """Setup a trace"""
-        self.debug_trace = set([])
+        """Setup a trace
+
+        The trace is per item iterated over by the workflow. Information about
+        each method executed is tracked and keyed by:
+
+            (function name, order of execution)
+
+        Order of execution starts from zero. Multiple calls to the same
+        function are independent in the trace.
+
+        The following information is tracked:
+
+            debug_trace : set([key])
+            debug_runtime : {key: runtime}
+            debug_pre_state : {key: deepcopy(Workflow.state)}, state prior to
+                method execution
+            debug_post_state : {key: deepcopy(Workflow.state)}, state following
+                method execution
+        """
         self.debug_counter = 0
+        self.debug_trace = set([])
+        self.debug_runtime = {}
+        self.debug_pre_state = {}
+        self.debug_post_state = {}
 
     def __call__(self, iter_, success_callback=None, fail_callback=None):
         """Operate on all the data

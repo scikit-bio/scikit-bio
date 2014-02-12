@@ -117,14 +117,31 @@ class WorkflowTests(TestCase):
         obs = obj.next()
         self.assertEqual(obs, exp)
 
-        exp = set([('wf_groupA', 0),
-                   ('methodA1', 1),
-                   ('methodA2', 2),
-                   ('wf_groupC', 3),
-                   ('methodC1', 4)])
+        exp_trace = set([('wf_groupA', 0),
+                         ('methodA1', 1),
+                         ('methodA2', 2),
+                         ('wf_groupC', 3),
+                         ('methodC1', 4)])
 
-        obs = self.obj_debug.debug_trace
-        self.assertEqual(obs, exp)
+        exp_pre_state = {('wf_groupA', 0): [None, 1],
+                         ('methodA1', 1): [None, 1],
+                         ('methodA2', 2): ['A1', 1],
+                         ('wf_groupC', 3): ['A2', 1],
+                         ('methodC1', 4): ['A2', 1]}
+
+        exp_post_state = {('wf_groupA', 0): ['A2', 1],
+                          ('methodA1', 1): ['A1', 1],
+                          ('methodA2', 2): ['A2', 1],
+                          ('wf_groupC', 3): ['C1', 1],
+                          ('methodC1', 4): ['C1', 1]}
+
+        obs_trace = self.obj_debug.debug_trace
+        obs_pre_state = self.obj_debug.debug_pre_state
+        obs_post_state = self.obj_debug.debug_post_state
+
+        self.assertEqual(obs_trace, exp_trace)
+        self.assertEqual(obs_pre_state, exp_pre_state)
+        self.assertEqual(obs_post_state, exp_post_state)
 
     def test_init(self):
         self.assertEqual(self.obj_short.options, {'A': True, 'C': True})
