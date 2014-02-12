@@ -285,7 +285,7 @@ class Workflow(object):
         def __call__(self, func):
             """Wrap a function
 
-            f : the function to wrap
+            func : the function to wrap
             """
             def decorated(dec_self):
                 """A decorated function that has requirements
