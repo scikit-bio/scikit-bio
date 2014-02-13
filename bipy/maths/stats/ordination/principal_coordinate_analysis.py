@@ -8,14 +8,12 @@
 
 from __future__ import absolute_import, division, print_function
 
+import warnings
+
 import numpy as np
 
 from .base import Ordination, OrdinationResults
 from bipy.core.distance import SymmetricDistanceMatrix
-
-# - This could be a bit more efficient by cluttering the code (i.e.,
-#   reusing memory instead of allocating new arrays, avoiding a bunch
-#   of sums). Do you feel that's necessary?
 
 # - In cogent, after computing eigenvalues/vectors, the imaginary part
 #   is dropped, if any. We know for a fact that the eigenvalues are
@@ -24,11 +22,6 @@ from bipy.core.distance import SymmetricDistanceMatrix
 #   http://math.stackexchange.com/a/47807/109129 for details) and in
 #   that case dropping the imaginary part means they'd no longer be
 #   so, so I'm not doing that.
-
-# - In cogent, negative eigenvalues (this can happen with semimetrics)
-#   are made positive by taking their absolute value. This doesn't
-#   seem to be an accepted way to deal with them according to Legendre
-#   & Legendre (I don't have cogent's reference).
 
 # - The rest of the ordination files works from a data table (sites x
 #   species), but PCoA works from a distance matrix, so the ordination
@@ -94,16 +87,18 @@ class PCoA(Ordination):
         # eigvals might not be ordered, so we order them (at least one
         # is zero). cogent makes eigenvalues positive by taking the
         # abs value, but that doesn't seem to be an approach accepted
-        # by L&L to deal with negative eigenvalues. We raise an error
+        # by L&L to deal with negative eigenvalues. We raise a warning
         # in that case.
-        EPS = 1e-10  # Arbitrary small number (so that eigenvalues ~0
-                     # don't make the method fail).
-        negative_close_to_zero = (-EPS < eigvals) & (eigvals < 0)
-        eigvals[negative_close_to_zero] = 0
         if np.any(eigvals < 0):
-            raise ValueError(
-                "Negative eigenvalues ({0}) have appeared."
-                " See Notes section in docstring.".format(eigvals.min())
+            warnings.warn(
+                "The result contains negative eigenvalues."
+                " Please compare their magnitude with the magnitude of some"
+                " of the largest positive eigenvalues. If the negative ones"
+                " are smaller, it's probably safe to ignore them, but if they"
+                " are large in magnitude, the results won't be useful. See the"
+                " Notes section for more details. The smallest eigenvalue is"
+                " {0} and the largest is {1}.".format(eigvals.min(),
+                                                      eigvals.max())
                 )
         idxs_descending = eigvals.argsort()[::-1]
         self.eigvals = eigvals[idxs_descending]
