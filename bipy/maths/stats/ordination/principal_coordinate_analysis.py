@@ -60,10 +60,17 @@ class PCoA(Ordination):
         It is sometimes known as metric multidimensional scaling or
         classical scaling.
 
-        If the triangle inequality doesn't hold for the used "metric"
-        (i.e, it's a semimetric), negative eigenvalues appear, and
-        there are different ways to deal with that problem (see
-        Legendre & Legendre 1998, \S 9.2.3).
+        .. note::
+
+           If the distance is not euclidean (for example if it is a
+           semimetric and the triangle inequality doesn't hold),
+           negative eigenvalues can appear. There are different ways
+           to deal with that problem (see Legendre & Legendre 1998, \S
+           9.2.3), but none are currently implemented here.
+
+           However, a warning is raised whenever negative eigenvalues
+           appear, allowing the user to decide if they can be safely
+           ignored.
         """
         if isinstance(distance_matrix, SymmetricDistanceMatrix):
             self.dm = np.asarray(distance_matrix.data, dtype=np.float64)
