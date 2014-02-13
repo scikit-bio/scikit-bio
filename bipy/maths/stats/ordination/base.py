@@ -27,18 +27,6 @@ class OrdinationResults(namedtuple('OrdinationResults',
                                                      site_constraints)
 
 
-class OrdinationResults2(namedtuple('OrdinationResults2',
-                                    ('eigvals', 'objects', 'descriptors',
-                                     'biplot', 'site_constraints'))):
-    __slots__ = ()
-
-    def __new__(cls, eigvals, objects, descriptors=None, biplot=None,
-                site_constraints=None):
-        return super(OrdinationResults2, cls).__new__(cls, eigvals, objects,
-                                                      descriptors, biplot,
-                                                      site_constraints)
-
-
 class Ordination(object):
     short_method_name = 'Overwrite in subclass!'
     long_method_name = 'Overwrite in subclass!'
