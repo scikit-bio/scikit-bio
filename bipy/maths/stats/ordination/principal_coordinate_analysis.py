@@ -88,7 +88,9 @@ class PCoA(Ordination):
         # is zero). cogent makes eigenvalues positive by taking the
         # abs value, but that doesn't seem to be an approach accepted
         # by L&L to deal with negative eigenvalues. We raise a warning
-        # in that case.
+        # in that case. First, we make values close to 0 equal to 0.
+        negative_close_to_zero = np.isclose(eigvals, 0)
+        eigvals[negative_close_to_zero] = 0
         if np.any(eigvals < 0):
             warnings.warn(
                 "The result contains negative eigenvalues."
@@ -98,7 +100,8 @@ class PCoA(Ordination):
                 " are large in magnitude, the results won't be useful. See the"
                 " Notes section for more details. The smallest eigenvalue is"
                 " {0} and the largest is {1}.".format(eigvals.min(),
-                                                      eigvals.max())
+                                                      eigvals.max()),
+                RuntimeWarning
                 )
         idxs_descending = eigvals.argsort()[::-1]
         self.eigvals = eigvals[idxs_descending]
