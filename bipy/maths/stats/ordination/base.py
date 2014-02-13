@@ -31,8 +31,11 @@ class Ordination(object):
     short_method_name = 'Overwrite in subclass!'
     long_method_name = 'Overwrite in subclass!'
 
-    def biplot(self, scaling=2, choices=[0, 1]):
-        choices = list(choices)
+    def biplot(self, scaling=2, choices=None):
+        if choices is None:
+            choices = [1, 2]
+        else:
+            choices = list(choices)
 
         def scatter_with_names(ax, data, names, marker, color, label):
             """Helper to plot scatter points and their names."""
