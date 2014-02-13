@@ -10,6 +10,8 @@
 
 from __future__ import print_function
 import os
+import warnings
+
 import numpy as np
 import numpy.testing as npt
 
@@ -260,14 +262,19 @@ class TestPCoAResults(object):
         matrix = np.loadtxt(get_data_path('PCoA_sample_data'))
         dist_matrix = SymmetricDistanceMatrix(matrix,
                                               map(str, range(matrix.shape[0])))
-        self.ordination = PCoA(dist_matrix)
+        self.dist_matrix = dist_matrix
 
-    def test_values(self):
+    def test_negative_eigenvalue_warning(self):
+        """This data has some small negative eigenvalues."""
+        npt.assert_warns(RuntimeWarning, PCoA, self.dist_matrix)
+
+    def test_values_and_negative_eigenvalues(self):
         """Adapted from cogent's `test_principal_coordinate_analysis`:
         "I took the example in the book (see intro info), and did the
         principal coordinates analysis, plotted the data and it looked
         right"."""
-        scores = self.ordination.scores()
+        ordination = PCoA(self.dist_matrix)
+        scores = ordination.scores()
 
         # Note the absolute value because column can have signs swapped
         npt.assert_almost_equal(np.abs(scores.species[0, 0]),
