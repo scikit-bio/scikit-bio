@@ -114,7 +114,14 @@ class PCoA(Ordination):
         # objects in the space of principal coordinates. Note that at
         # least one eigenvalue is zero because only n-1 axes are
         # needed to represent n points in an euclidean space.
-        coordinates = self.eigvecs * np.sqrt(self.eigvals)
+
+        # We only return coordinates that make sense (i.e., that have
+        # a corresponding positive eigenvalue)
+        num_positive = (self.eigvals > 0).sum()
+        eigvecs = self.eigvecs[:, :num_positive]
+        eigvals = self.eigvals[:num_positive]
+
+        coordinates = eigvecs * np.sqrt(eigvals)
 
         # TODO: Improve OrdinationResults to better cope with PCoA
         return OrdinationResults(eigvals=self.eigvals, species=coordinates)
