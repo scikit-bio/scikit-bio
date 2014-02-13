@@ -268,12 +268,14 @@ class TestPCoAResults(object):
         """This data has some small negative eigenvalues."""
         npt.assert_warns(RuntimeWarning, PCoA, self.dist_matrix)
 
-    def test_values_and_negative_eigenvalues(self):
+    def test_values(self):
         """Adapted from cogent's `test_principal_coordinate_analysis`:
         "I took the example in the book (see intro info), and did the
         principal coordinates analysis, plotted the data and it looked
         right"."""
-        ordination = PCoA(self.dist_matrix)
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore', category=RuntimeWarning)
+            ordination = PCoA(self.dist_matrix)
         scores = ordination.scores()
 
         # Note the absolute value because column can have signs swapped
