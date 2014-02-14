@@ -241,7 +241,7 @@ class Workflow(object):
 
     class method(object):
         """Decorate a function to indicate it is a workflow method"""
-        highest_priority = sys.maxint
+        highest_priority = sys.maxsize
 
         def __init__(self, priority=0):
             self.priority = priority
