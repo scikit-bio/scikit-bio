@@ -78,13 +78,13 @@ def normalize_signs(arr1, arr2):
 
     # Store current warnings, and ignore division by zero (like 1. /
     # 0.) and invalid operations (like 0. / 0.)
-    warnings = np.seterr(invalid='ignore', divide='ignore')
+    wrn = np.seterr(invalid='ignore', divide='ignore')
     differences = sign_arr1 / sign_arr2
     # The values in `differences` can be:
     #    1 -> equal signs
     #   -1 -> diff signs
     #   Or nan (0/0), inf (nonzero/0), 0 (0/nonzero)
-    np.seterr(**warnings)
+    np.seterr(**wrn)
 
     # Now let's deal with cases where `differences != \pm 1`
     special_cases = (~np.isfinite(differences)) | (differences == 0)
