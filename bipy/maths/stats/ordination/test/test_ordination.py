@@ -263,8 +263,8 @@ class TestChiSquareDistance(object):
 class TestCAResults(object):
     def setup(self):
         """Data from table 9.11 in Legendre & Legendre 1998."""
-        X = np.loadtxt(get_data_path('L&L_CA_data'))
-        self.ordination = CA(X)
+        self.X = np.loadtxt(get_data_path('L&L_CA_data'))
+        self.ordination = CA(self.X)
 
     def test_scaling2(self):
         scores = self.ordination.scores(scaling=2)
@@ -291,6 +291,24 @@ class TestCAResults(object):
                       [-0.06835,  0.27211],
                       [0.51685, -0.09517]])
         npt.assert_almost_equal(*normalize_signs(F, scores.site), decimal=5)
+
+    def test_maintain_chi_square_distance_scaling1(self):
+        """In scaling 1, chi^2 distance among rows (sites) is equal to
+        euclidean distance between them in transformed space."""
+        frequencies = self.X / self.X.sum()
+        chi2_distances = chi_square_distance(frequencies)
+        transformed_sites = self.ordination.scores(1).site
+        euclidean_distances = pdist(transformed_sites, 'euclidean')
+        npt.assert_almost_equal(chi2_distances, euclidean_distances)
+
+    def test_maintain_chi_square_distance_scaling2(self):
+        """In scaling 2, chi^2 distance among columns (species) is
+        equal to euclidean distance between them in transformed space."""
+        frequencies = self.X / self.X.sum()
+        chi2_distances = chi_square_distance(frequencies, between_rows=False)
+        transformed_species = self.ordination.scores(2).species
+        euclidean_distances = pdist(transformed_species, 'euclidean')
+        npt.assert_almost_equal(chi2_distances, euclidean_distances)
 
 
 class TestCAErrors(object):
