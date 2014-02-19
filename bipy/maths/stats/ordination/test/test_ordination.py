@@ -439,3 +439,9 @@ class TestPCoAPrivateMethods(object):
         expected_F = np.zeros((3, 3))
         # Note that `test_make_F_matrix` in cogent is wrong
         npt.assert_almost_equal(F, expected_F)
+
+
+class TestPCoAErrors(object):
+    def test_input(self):
+        with npt.assert_raises(TypeError):
+            PCoA([[1, 2], [3, 4]])
