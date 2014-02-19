@@ -235,6 +235,7 @@ class TestChiSquareDistance(object):
             chi_square_distance(b)
 
     def test_results(self):
+        """Some random numbers."""
         a = np.array([[0.02808988764,  0.056179775281,  0.084269662921,
                        0.140449438202],
                       [0.01404494382,  0.196629213483,  0.109550561798,
@@ -245,6 +246,17 @@ class TestChiSquareDistance(object):
         expected = [0.91413919964333856,
                     0.33651110106124049,
                     0.75656884966269089]
+        npt.assert_almost_equal(dist, expected)
+
+    def test_results2(self):
+        """A tiny example from Legendre & Legendre 1998, p. 285."""
+        a = np.array([[0, 1, 1],
+                      [1, 0, 0],
+                      [0, 4, 4]])
+        dist = chi_square_distance(a / a.sum())
+        # Note L&L used a terrible calculator because they got a wrong
+        # number (says it's 3.477) :(
+        expected = [3.4785054261852175, 0, 3.4785054261852175]
         npt.assert_almost_equal(dist, expected)
 
 
