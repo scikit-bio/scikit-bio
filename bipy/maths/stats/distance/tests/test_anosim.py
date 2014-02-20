@@ -39,10 +39,20 @@ class ANOSIMTests(TestCase):
 
     def test_call_ties(self):
         # These results were verified with R.
+        exp_r_stat = 0.25
+        exp_p_val = 0.671
+
         np.random.seed(0)
         obs = self.anosim_ties()
-        self.assertFloatEqual(obs.r_statistic, 0.25)
-        self.assertFloatEqual(obs.p_value, 0.671)
+        self.assertFloatEqual(obs.r_statistic, exp_r_stat)
+        self.assertFloatEqual(obs.p_value, exp_p_val)
+
+        # Ensure we get the same results if we rerun the method on the same
+        # object.
+        np.random.seed(0)
+        obs = self.anosim_ties()
+        self.assertFloatEqual(obs.r_statistic, exp_r_stat)
+        self.assertFloatEqual(obs.p_value, exp_p_val)
 
     def test_call_no_ties(self):
         # These results were verified with R.
