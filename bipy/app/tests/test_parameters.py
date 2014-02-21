@@ -9,7 +9,7 @@
 #-----------------------------------------------------------------------------
 
 from bipy.util.unit_test import TestCase, main
-from bipy.app.parameters import (Parameter, FlagParameter, ValuedParameter,
+from bipy.app.parameters import (FlagParameter, ValuedParameter,
                                  MixedParameter, Parameters,
                                  ParameterError, FilePath)
 
