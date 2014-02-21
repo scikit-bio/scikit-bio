@@ -9,8 +9,8 @@
 #-----------------------------------------------------------------------------
 
 import os
-from os import remove, system, mkdir, getcwd, environ
-from os.path import isabs, exists, join
+from os import remove, system, mkdir, getcwd
+from os.path import isabs, exists
 from random import choice
 from tempfile import gettempdir
 from copy import deepcopy
