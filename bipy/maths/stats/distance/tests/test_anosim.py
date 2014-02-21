@@ -18,11 +18,13 @@ from bipy.util.unit_test import TestCase, main
 
 
 class ANOSIMTests(TestCase):
+    """All results were verified with R (vegan::anosim)."""
 
     def setUp(self):
-        # Define two small dms for easy testing. One has ties in the ranks.
+        # Distance matrices with and without ties in the ranks, with 2 groups
+        # of equal size.
         dm_sids = ['s1', 's2', 's3', 's4']
-        self.grouping = ['Control', 'Control', 'Fast', 'Fast']
+        grouping_equal = ['Control', 'Control', 'Fast', 'Fast']
 
         self.dm_ties = SymmetricDistanceMatrix([[0, 1, 1, 4],
                                                 [1, 0, 3, 2],
@@ -34,11 +36,25 @@ class ANOSIMTests(TestCase):
                                                    [5, 3, 0, 3],
                                                    [4, 2, 3, 0]], dm_sids)
 
-        self.anosim_ties = ANOSIM(self.dm_ties, self.grouping)
-        self.anosim_no_ties = ANOSIM(self.dm_no_ties, self.grouping)
+        # Test with 3 groups of unequal size. This data also generates a
+        # negative R statistic.
+        grouping_unequal = ['Control', 'Treatment1', 'Treatment2',
+                            'Treatment1', 'Control', 'Control']
+
+        self.dm_unequal = SymmetricDistanceMatrix(
+            [[0.0, 1.0, 0.1, 0.5678, 1.0, 1.0],
+             [1.0, 0.0, 0.002, 0.42, 0.998, 0.0],
+             [0.1, 0.002, 0.0, 1.0, 0.123, 1.0],
+             [0.5678, 0.42, 1.0, 0.0, 0.123, 0.43],
+             [1.0, 0.998, 0.123, 0.123, 0.0, 0.5],
+             [1.0, 0.0, 1.0, 0.43, 0.5, 0.0]],
+            ['s1', 's2', 's3', 's4', 's5', 's6'])
+
+        self.anosim_ties = ANOSIM(self.dm_ties, grouping_equal)
+        self.anosim_no_ties = ANOSIM(self.dm_no_ties, grouping_equal)
+        self.anosim_unequal = ANOSIM(self.dm_unequal, grouping_unequal)
 
     def test_call_ties(self):
-        # These results were verified with R.
         exp_r_stat = 0.25
         exp_p_val = 0.671
 
@@ -55,24 +71,21 @@ class ANOSIMTests(TestCase):
         self.assertFloatEqual(obs.p_value, exp_p_val)
 
     def test_call_no_ties(self):
-        # These results were verified with R.
-        np.random.seed(0)
-        obs = self.anosim_no_ties()
-        self.assertFloatEqual(obs.r_statistic, 0.625)
-        self.assertFloatEqual(obs.p_value, 0.332)
-
-    def test_call_no_ties(self):
-        # These results were verified with R.
         np.random.seed(0)
         obs = self.anosim_no_ties()
         self.assertFloatEqual(obs.r_statistic, 0.625)
         self.assertFloatEqual(obs.p_value, 0.332)
 
     def test_call_no_permutations(self):
-        # These results were verified with R.
         obs = self.anosim_no_ties(0)
         self.assertFloatEqual(obs.r_statistic, 0.625)
         self.assertEqual(obs.p_value, None)
+
+    def test_call_unequal_group_sizes(self):
+        np.random.seed(0)
+        obs = self.anosim_unequal()
+        self.assertFloatEqual(obs.r_statistic, -0.363636)
+        self.assertEqual(obs.p_value, 0.878)
 
 
 if __name__ == '__main__':

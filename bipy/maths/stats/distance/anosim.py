@@ -37,7 +37,11 @@ class ANOSIM(object):
 
         # TODO: test for uniqueness and single-value-only in grouping vector
         self._dm = distance_matrix
-        self._grouping = grouping
+        self._grouping = np.asarray(grouping)
+        self._groups = np.unique(self._grouping)
+        self._ranked_dists = rankdata(self._dm.condensed_form(),
+                                      method='average')
+        self._tri_idxs = np.triu_indices(self._dm.num_samples, k=1)
 
     def __call__(self, permutations=999):
         # TODO: test for invalid number of permutations
@@ -59,22 +63,24 @@ class ANOSIM(object):
     def _anosim(self, grouping):
         # Create grouping matrix, where a one means that the two samples are in
         # the same group (e.g. control) and a zero means that they aren't.
-        within_between = np.zeros(self._dm.shape, dtype=np.int32)
+        #within_between = np.identity(self._dm.num_samples, dtype=bool)
+        #for group in self._groups:
+        #    np.where(self._grouping == group)[0]
+
+        within_between = np.identity(self._dm.num_samples, dtype=bool)
         for i, i_value in enumerate(grouping):
-            for j, j_value in enumerate(grouping):
-                if i_value == j_value:
-                    within_between[i][j] = 1
+            for j in range(i):
+                if i_value == grouping[j]:
+                    within_between[i][j] = True
 
-        # Extract upper triangle from the distance and grouping matrices.
-        num_samples = self._dm.num_samples
-        ranked_distances = rankdata(self._dm.condensed_form(),
-                                    method='average')
-        grouping_upper = within_between[np.triu_indices(num_samples, k=1)]
+        # Extract triangle from the distance and grouping matrices. TODO: add
+        # note about importance of extraction order (must match condensed dm
+        # form).
+        grouping_tri = within_between.T[self._tri_idxs]
 
-        return self._compute_r_stat(ranked_distances, grouping_upper,
-                                    num_samples)
+        return self._compute_r_stat(grouping_tri)
 
-    def _compute_r_stat(self, ranked_distances, grouping_upper, num_samples):
+    def _compute_r_stat(self, grouping_upper):
         """Code that performs the actual math involved in solving ANOSIM.
 
         Returns the ANOSIM R value (between -1 and 1).
@@ -84,7 +90,8 @@ class ANOSIM(object):
             sorted_groups - list associating distances to groups
             num_samps: how many total samples
         """
-        r_W = np.mean(ranked_distances[grouping_upper == 1])
-        r_B = np.mean(ranked_distances[grouping_upper == 0])
+        r_W = np.mean(self._ranked_dists[grouping_upper])
+        r_B = np.mean(self._ranked_dists[np.invert(grouping_upper)])
+        num_samples = self._dm.num_samples
         divisor = num_samples * ((num_samples - 1) / 4)
         return (r_B - r_W) / divisor
