@@ -171,7 +171,7 @@ class CCA(Ordination):
         ----------
         scaling : int
             The same options as in `CA` are available, and the
-            interpretation is the sam.
+            interpretation is the same.
         """
         if scaling not in {1, 2}:
             raise NotImplementedError(
