@@ -122,11 +122,11 @@ def chi_square_distance(data_table, between_rows=True):
         computed and stored in `Y[(n choose 2) - (n - i choose 2) + (j
         - i - 1)]`.
 
-    See also
+    See Also
     --------
     `scipy.spatial.distance.squareform` for a routine that transforms
     condensed distance matrices to square-form distance matrices (and
-    vice-versa)
+    vice-versa).
 
     References
     ----------
