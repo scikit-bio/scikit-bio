@@ -85,7 +85,7 @@ class ANOSIMTests(TestCase):
         np.random.seed(0)
         obs = self.anosim_unequal()
         self.assertFloatEqual(obs.r_statistic, -0.363636)
-        self.assertEqual(obs.p_value, 0.878)
+        self.assertFloatEqual(obs.p_value, 0.878)
 
 
 if __name__ == '__main__':
