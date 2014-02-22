@@ -38,6 +38,7 @@ class ANOSIM(object):
 
         # TODO: test for uniqueness and single-value-only in grouping vector
         self._dm = distance_matrix
+        self._divisor = self._dm.num_samples * ((self._dm.num_samples - 1) / 4)
         self._grouping = np.asarray(grouping)
         self._groups = np.unique(self._grouping)
         self._ranked_dists = rankdata(self._dm.condensed_form(),
@@ -64,10 +65,10 @@ class ANOSIM(object):
     def _anosim(self, grouping):
         # Create grouping matrix, where a one means that the two samples are in
         # the same group (e.g. control) and a zero means that they aren't.
-        within_between = np.identity(self._dm.num_samples, dtype=bool)
+        within_between = np.zeros(self._dm.shape, dtype=bool)
         for group in self._groups:
-            combs = self.combs(np.where(grouping == group)[0], 2)
-            within_between[(combs[:, 0], combs[:, 1])] = True
+            combs = self._cartesian(np.where(grouping == group)[0])
+            within_between[combs] = True
 
         # Extract triangle from the distance and grouping matrices. TODO: add
         # note about importance of extraction order (must match condensed dm
@@ -76,17 +77,9 @@ class ANOSIM(object):
 
         return self._compute_r_stat(grouping_tri)
 
-    def combs(self, a, r):
-        """
-        Return successive r-length combinations of elements in the array a.
-        Should produce the same output as array(list(combinations(a, r))), but 
-        faster.
-
-        From http://stackoverflow.com/q/16003217
-        """
-        dt = np.dtype([('', a.dtype)]*r)
-        b = np.fromiter(combinations(a, r), dt)
-        return b.view(a.dtype).reshape(-1, r)
+    def _cartesian(self, a):
+        # Modified from http://stackoverflow.com/a/11144716
+        return np.tile(a, len(a)), np.repeat(a, len(a))
 
     def _compute_r_stat(self, grouping_upper):
         """Code that performs the actual math involved in solving ANOSIM.
@@ -100,6 +93,4 @@ class ANOSIM(object):
         """
         r_W = np.mean(self._ranked_dists[grouping_upper])
         r_B = np.mean(self._ranked_dists[np.invert(grouping_upper)])
-        num_samples = self._dm.num_samples
-        divisor = num_samples * ((num_samples - 1) / 4)
-        return (r_B - r_W) / divisor
+        return (r_B - r_W) / self._divisor
