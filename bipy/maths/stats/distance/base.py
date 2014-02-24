@@ -31,16 +31,17 @@ class CategoricalStatsResults(object):
         """Return a formatted summary of results as a string."""
         p_value_str = self._format_p_value()
 
-        with StringIO() as summary:
-            csv_writer = csv.writer(summary, delimiter=delimiter)
-            csv_writer.writerow(('Method name', 'Sample size',
-                                 'Number of groups', 'Test statistic',
-                                 'p-value', 'Number of permutations'))
-            csv_writer.writerow((self.short_method_name,
-                                 '%d' % self.sample_size,
-                                 '%d' % len(self.groups), self.statistic,
-                                 p_value_str, '%d' % self.permutations))
-            return summary.getvalue()
+        summary = StringIO()
+        csv_writer = csv.writer(summary, delimiter=delimiter)
+        csv_writer.writerow(('Method name', 'Sample size',
+                             'Number of groups', 'Test statistic',
+                             'p-value', 'Number of permutations'))
+        csv_writer.writerow((self.short_method_name,
+                             '%d' % self.sample_size,
+                             '%d' % len(self.groups), self.statistic,
+                             p_value_str, '%d' % self.permutations))
+
+        return summary.getvalue()
 
     def _format_p_value(self):
         """Format p-value as a string with the correct number of decimals.
