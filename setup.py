@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 #-----------------------------------------------------------------------------
-# Copyright (c) 2013, The BiPy Developers.
+# Copyright (c) 2013, The bipy Developers.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -25,7 +25,7 @@ classes = """
 """
 classifiers = [s.strip() for s in classes.split('\n') if s]
 
-long_description = """The BiPy Project"""
+long_description = """The bipy project"""
 
 setup(name='bipy',
       cmdclass={'build_py': build_py},
@@ -33,9 +33,9 @@ setup(name='bipy',
       license='BSD',
       description='bipy',
       long_description=long_description,
-      author="The BiPy Developers",
+      author="The bipy Developers",
       author_email="gregcaporaso@gmail.com",
-      maintainer="The BiPy Developers",
+      maintainer="The bipy Developers",
       maintainer_email="gregcaporaso@gmail.com",
       url='https://github.com/biocore/bipy',
       packages=find_packages(),
