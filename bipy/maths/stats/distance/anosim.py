@@ -1,14 +1,14 @@
 #! /usr/bin/env python
 
 #-----------------------------------------------------------------------------
-# Copyright (c) 2013, The BiPy Developers.
+# Copyright (c) 2013, The bipy Developers.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import, division
 from collections import namedtuple
 from itertools import combinations
 
@@ -36,17 +36,35 @@ class ANOSIM(object):
             raise ValueError("Grouping vector size must match the number of "
                              "sample IDs in the distance matrix.")
 
-        # TODO: test for uniqueness and single-value-only in grouping vector
+        grouping = np.asarray(grouping)
+        grouping_set = np.unique(grouping)
+
+        if len(grouping_set) == len(grouping):
+            raise ValueError("All values in the grouping vector are unique. "
+                             "ANOSIM cannot operate on a grouping vector with "
+                             "only unique values (e.g., there are no 'within' "
+                             "distances because each group of samples "
+                             "contains only a single sample).")
+        if len(grouping_set) == 1:
+            raise ValueError("All values in the grouping vector are the same. "
+                             "ANOSIM cannot operate on a grouping vector with "
+                             "only a single group of samples (e.g., there are "
+                             "no 'between' distances because there is only a "
+                             "single group).")
+
         self._dm = distance_matrix
         self._divisor = self._dm.num_samples * ((self._dm.num_samples - 1) / 4)
-        self._grouping = np.asarray(grouping)
-        self._groups = np.unique(self._grouping)
+        self._grouping = grouping
+        self._groups = grouping_set
         self._ranked_dists = rankdata(self._dm.condensed_form(),
                                       method='average')
         self._tri_idxs = np.triu_indices(self._dm.num_samples, k=1)
 
     def __call__(self, permutations=999):
-        # TODO: test for invalid number of permutations
+        if permutations < 0:
+            raise ValueError("Number of permutations must be greater than or "
+                             "equal to zero.")
+
         r_stat = self._anosim(self._grouping)
 
         p_value = None

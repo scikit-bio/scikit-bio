@@ -1,18 +1,18 @@
 #! /usr/bin/env python
 
 #-----------------------------------------------------------------------------
-# Copyright (c) 2013, The BiPy Developers.
+# Copyright (c) 2013, The bipy Developers.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-from __future__ import division, print_function
+from __future__ import division
 
 import numpy as np
 
-from bipy.core.distance import SymmetricDistanceMatrix
+from bipy.core.distance import DistanceMatrix, SymmetricDistanceMatrix
 from bipy.maths.stats.distance.anosim import ANOSIM
 from bipy.util.unit_test import TestCase, main
 
@@ -54,6 +54,23 @@ class ANOSIMTests(TestCase):
         self.anosim_no_ties = ANOSIM(self.dm_no_ties, grouping_equal)
         self.anosim_unequal = ANOSIM(self.dm_unequal, grouping_unequal)
 
+    def test_init_invalid_input(self):
+        # Requires a SymmetricDistanceMatrix.
+        with self.assertRaises(TypeError):
+            _ = ANOSIM(DistanceMatrix([[0, 2], [3, 0]], ['a', 'b']), [1, 2])
+
+        # Grouping vector length must match number of samples in dm.
+        with self.assertRaises(ValueError):
+            _ = ANOSIM(self.dm_ties, [1, 2])
+
+        # Grouping vector cannot have only unique values.
+        with self.assertRaises(ValueError):
+            _ = ANOSIM(self.dm_ties, [1, 2, 3, 4])
+
+        # Grouping vector cannot have only a single group.
+        with self.assertRaises(ValueError):
+            _ = ANOSIM(self.dm_ties, [1, 1, 1, 1])
+
     def test_call_ties(self):
         exp_r_stat = 0.25
         exp_p_val = 0.671
@@ -80,6 +97,10 @@ class ANOSIMTests(TestCase):
         obs = self.anosim_no_ties(0)
         self.assertFloatEqual(obs.r_statistic, 0.625)
         self.assertEqual(obs.p_value, None)
+
+    def test_call_invalid_permutations(self):
+        with self.assertRaises(ValueError):
+            _ = self.anosim_ties(-1)
 
     def test_call_unequal_group_sizes(self):
         np.random.seed(0)
