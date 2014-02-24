@@ -8,12 +8,14 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-from __future__ import print_function
+from __future__ import division
+
 import os
 import warnings
 
 import numpy as np
 import numpy.testing as npt
+from scipy.spatial.distance import pdist
 
 from bipy.maths.stats.ordination import CA, RDA, CCA, PCoA
 from bipy.core.distance import SymmetricDistanceMatrix
@@ -95,6 +97,61 @@ def normalize_signs(arr1, arr2):
     return arr1 * differences, arr2
 
 
+def chi_square_distance(data_table, between_rows=True):
+    """Computes the chi-square distance between two rows or columns of
+    input.
+
+    It is a measure that has no upper limit, and it excludes
+    double-zeros.
+
+    Parameters
+    ----------
+    data_table : 2D array_like
+        An array_like object of shape (n, p). The input must be a
+        frequency table (so that the sum of all cells equals 1, and
+        all values are non-negative).
+    between_rows : bool (defaults to True)
+        Indicates whether distance is computed between rows (default)
+        or columns.
+
+    Returns
+    -------
+    Y : ndarray
+        Returns a condensed distance matrix. For each i and j (where
+        i<j<n), the chi square distance between u=X[i] and v=X[j] is
+        computed and stored in `Y[(n choose 2) - (n - i choose 2) + (j
+        - i - 1)]`.
+
+    See Also
+    --------
+    `scipy.spatial.distance.squareform` for a routine that transforms
+    condensed distance matrices to square-form distance matrices (and
+    vice-versa).
+
+    References
+    ----------
+    This coefficient appears in Legendre and Legendre (1998) as
+    formula 7.54 (as D_{16}). Another source is
+    http://www.springerreference.com/docs/html/chapterdbid/60817.html
+    """
+    data_table = np.asarray(data_table, dtype=np.float64)
+    if not np.allclose(data_table.sum(), 1):
+        raise ValueError("Input is not a frequency table: if it is an"
+                         " abundance table you could scale it as"
+                         " `data_table / data_table.sum()`.")
+    if np.any(data_table < 0):
+        raise ValueError("A frequency table can't have negative values.")
+
+    # The distances are always computed between the rows of F
+    F = data_table if between_rows else data_table.T
+
+    row_sums = F.sum(axis=1, keepdims=True)
+    column_sums = F.sum(axis=0)
+    scaled_F = F / (row_sums * np.sqrt(column_sums))
+
+    return pdist(scaled_F, 'euclidean')
+
+
 class TestNormalizeSigns(object):
     def test_shapes_and_nonarray_input(self):
         with npt.assert_raises(ValueError):
@@ -166,11 +223,48 @@ class TestNormalizeSigns(object):
         npt.assert_almost_equal(*normalize_signs(a, b))
 
 
+class TestChiSquareDistance(object):
+    def test_errors(self):
+        a = np.array([[-0.5, 0],
+                      [1, 0.5]])
+        with npt.assert_raises(ValueError):
+            chi_square_distance(a)
+        b = np.array([[0.5, 0],
+                      [0.5, 0.1]])
+        with npt.assert_raises(ValueError):
+            chi_square_distance(b)
+
+    def test_results(self):
+        """Some random numbers."""
+        a = np.array([[0.02808988764,  0.056179775281,  0.084269662921,
+                       0.140449438202],
+                      [0.01404494382,  0.196629213483,  0.109550561798,
+                       0.033707865169],
+                      [0.02808988764,  0.112359550562,  0.056179775281,
+                       0.140449438202]])
+        dist = chi_square_distance(a)
+        expected = [0.91413919964333856,
+                    0.33651110106124049,
+                    0.75656884966269089]
+        npt.assert_almost_equal(dist, expected)
+
+    def test_results2(self):
+        """A tiny example from Legendre & Legendre 1998, p. 285."""
+        a = np.array([[0, 1, 1],
+                      [1, 0, 0],
+                      [0, 4, 4]])
+        dist = chi_square_distance(a / a.sum())
+        # Note L&L used a terrible calculator because they got a wrong
+        # number (says it's 3.477) :(
+        expected = [3.4785054261852175, 0, 3.4785054261852175]
+        npt.assert_almost_equal(dist, expected)
+
+
 class TestCAResults(object):
     def setup(self):
         """Data from table 9.11 in Legendre & Legendre 1998."""
-        X = np.loadtxt(get_data_path('L&L_CA_data'))
-        self.ordination = CA(X)
+        self.X = np.loadtxt(get_data_path('L&L_CA_data'))
+        self.ordination = CA(self.X)
 
     def test_scaling2(self):
         scores = self.ordination.scores(scaling=2)
@@ -197,6 +291,24 @@ class TestCAResults(object):
                       [-0.06835,  0.27211],
                       [0.51685, -0.09517]])
         npt.assert_almost_equal(*normalize_signs(F, scores.site), decimal=5)
+
+    def test_maintain_chi_square_distance_scaling1(self):
+        """In scaling 1, chi^2 distance among rows (sites) is equal to
+        euclidean distance between them in transformed space."""
+        frequencies = self.X / self.X.sum()
+        chi2_distances = chi_square_distance(frequencies)
+        transformed_sites = self.ordination.scores(1).site
+        euclidean_distances = pdist(transformed_sites, 'euclidean')
+        npt.assert_almost_equal(chi2_distances, euclidean_distances)
+
+    def test_maintain_chi_square_distance_scaling2(self):
+        """In scaling 2, chi^2 distance among columns (species) is
+        equal to euclidean distance between them in transformed space."""
+        frequencies = self.X / self.X.sum()
+        chi2_distances = chi_square_distance(frequencies, between_rows=False)
+        transformed_species = self.ordination.scores(2).species
+        euclidean_distances = pdist(transformed_species, 'euclidean')
+        npt.assert_almost_equal(chi2_distances, euclidean_distances)
 
 
 class TestCAErrors(object):
@@ -327,3 +439,9 @@ class TestPCoAPrivateMethods(object):
         expected_F = np.zeros((3, 3))
         # Note that `test_make_F_matrix` in cogent is wrong
         npt.assert_almost_equal(F, expected_F)
+
+
+class TestPCoAErrors(object):
+    def test_input(self):
+        with npt.assert_raises(TypeError):
+            PCoA([[1, 2], [3, 4]])

@@ -96,17 +96,24 @@ class CA(Ordination):
             follow are quick recommendations.
 
             Scaling type 1 maintains :math:`\chi^2` distances between
-            rows (sites) and should be used when checking the ordination
-            of sites. Rows (sites) that are near a column (species) have
-            high contributions from it.
+            rows (sites): in the transformed space, the euclidean
+            distances between rows are equal to the :math:`\chi^2`
+            distances between rows in the original space. It should be
+            used when studying the ordination of sites. Rows (sites)
+            that are near a column (species) have high contributions
+            from it.
 
             Scaling type 2 preserves :math:`\chi^2` distances between
-            columns (species) and is best used when interested in the
-            ordination of species. If a column (species) is next to a
-            row (site) it means that it's more abundant there.
+            columns (species), so euclidean distance between columns
+            after transformation is equal to :math:`\chi^2` distance
+            between columns in the original space. It is best used
+            when we are interested in the ordination of species. A
+            column (species) that is next to a row (site) means that
+            it is more abundant there.
 
-            Scaling type 3 is currently not implemented, as it's less
-            used by ecologists (Legendre & Legendre 1998, p. 456).
+            Other types of scalings are currently not implemented, as
+            they're less used by ecologists (Legendre & Legendre 1998,
+            p. 456).
 
             In general, species appearing far from the center of the
             biplot and far from its edges will probably exhibit better

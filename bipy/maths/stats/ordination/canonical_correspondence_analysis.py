@@ -23,14 +23,22 @@ class CCA(Ordination):
         analysis.
 
         Canonical (or constrained) correspondence analysis is a
-        multivariate ordination technique.
+        multivariate ordination technique. It appeared in community
+        ecology [1]_ and relates community composition to the
+        variation in the environment (or in other factors). It works
+        from data on abundances or counts of individuals and
+        environmental variables, and outputs ordination axes that
+        maximize niche separation among species.
 
-        In exploratory data analysis, ordination (or multivariate
-        gradient analysis) complements clustering by arranging objects
-        (species, samples...) along gradients so that similar ones are
-        closer and dissimilar ones are further. There's a good overview
-        of the available techniques in
-        http://ordination.okstate.edu/overview.htm.
+        It is better suited to extract the niches of taxa than linear
+        multivariate methods because it assumes unimodal response
+        curves (habitat preferences are often unimodal functions of
+        habitat variables [2]_).
+
+        As more environmental variables are added, the result gets
+        more similar to unconstrained ordination, so only the
+        variables that are deemed explanatory should be included in
+        the analysis.
 
         Parameters
         ----------
@@ -43,26 +51,24 @@ class CCA(Ordination):
 
         Notes
         -----
-        There are a couple of techniques to search for multivariate
-        relationships between two datasets with very similar names, so
-        this can get confusing:
+        Canonical *correspondence* analysis shouldn't be confused with
+        canonical *correlation* analysis (CCorA, but sometimes called
+        CCA), a different technique to search for multivariate
+        relationships between two datasets. Canonical correlation
+        analysis is a statistical tool that, given two vectors of
+        random variables, finds linear combinations that have maximum
+        correlation with each other. In some sense, it assumes linear
+        responses of "species" to "environmental variables" and is not
+        well suited to analyze ecological data.
 
-        - Canonical correlation analysis is a statistical tool that,
-          given two vectors of random variables, finds linear
-          combinations that have maximum correlation with each other. In
-          some sense, assumes linear responses of *species* to
-          *environmental variables*. This is not implemented here.
-
-        - Canonical (or constrained) correspondence analysis appeared in
-          community ecology [1]_ and relates community composition to
-          the variation in the environment (or in other factors). It
-          works from data on abundances or counts of individuals and
-          environmental variables, and outputs ordination axes that
-          maximize niche separation among species. It is better suited
-          to extract the niches of taxa than linear multivariate methods
-          like canonical correlation analysis because it assumes
-          unimodal response curves (habitat preferences are often
-          unimodal functions of habitat variables [2]_).
+        See Also
+        --------
+        In data analysis, ordination (or multivariate gradient
+        analysis) complements clustering by arranging objects
+        (species, samples...) along gradients so that similar ones are
+        closer and dissimilar ones are further. There's a good
+        overview of the available techniques in
+        http://ordination.okstate.edu/overview.htm.
 
         References
         ----------
@@ -159,6 +165,14 @@ class CCA(Ordination):
         self.eigenvalues = np.r_[s, s_res]**2
 
     def scores(self, scaling):
+        r"""Compute site and species scores for different scalings.
+
+        Parameters
+        ----------
+        scaling : int
+            The same options as in `CA` are available, and the
+            interpretation is the same.
+        """
         if scaling not in {1, 2}:
             raise NotImplementedError(
                 "Scaling {0} not implemented.".format(scaling))
