@@ -80,26 +80,28 @@ class PERMANOVA(object):
 
         # Number of samples in each group.
         unique_n = []
-        group_map = {}
 
         # Calculate number of groups and unique 'n's.
         # TODO: try SO post http://stackoverflow.com/a/21124789
         for i, i_string in enumerate(self._groups):
-            group_map[i_string] = i
             unique_n.append(list(grouping).count(i_string))
 
         # Create grouping matrix.
-        grouping_matrix = -1 * np.ones(self._dm.shape)
-        for i, grouping_i in enumerate(grouping):
-            for j, grouping_j in enumerate(grouping):
-                if grouping_i == grouping_j:
-                    grouping_matrix[i][j] = group_map[grouping_i]
+        grouping_matrix = -1 * np.ones(self._dm.shape, dtype=int)
+        for group_idx, group in enumerate(self._groups):
+            within_indices = self._index_combinations(
+                np.where(grouping == group)[0])
+            grouping_matrix[within_indices] = group_idx
 
         # Extract upper triangle.
         grouping_tri = grouping_matrix[self._tri_idxs]
 
         # Compute F value.
         return self._compute_f_stat(grouping_tri, unique_n)
+
+    def _index_combinations(self, indices):
+        # Modified from http://stackoverflow.com/a/11144716
+        return np.tile(indices, len(indices)), np.repeat(indices, len(indices))
 
     def _compute_f_stat(self, grouping_tri, unique_n):
         """Performs the calculations for the F value.
@@ -115,8 +117,7 @@ class PERMANOVA(object):
         # sizes.
         s_W = 0
         for i in range(a):
-            group_ix = grouping_tri == i
-            diffs = self._distances[group_ix]
+            diffs = self._distances[grouping_tri == i]
             s_W = s_W + sum(diffs ** 2) / unique_n[i]
 
         # Execute the formula.
