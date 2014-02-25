@@ -63,7 +63,7 @@ from types import MethodType
 
 # thank you Flask project...
 _not_executed = object()  # internal, for when a method has not executed
-not_none = object()   # external, for when a value can be anything except None
+#not_none = object()   # external, for when a value can be anything except None
 
 
 class Exists(object):
@@ -72,6 +72,13 @@ class Exists(object):
         return True
 anything = Exists()  # external, for when a value can be anything
 
+class NotNone(object):
+    def __contains__(self, item):
+        if item is None:
+            return False
+        else:
+            return True
+not_none = NotNone()
 
 class Workflow(object):
     """Arbitrary workflow support structure"""
