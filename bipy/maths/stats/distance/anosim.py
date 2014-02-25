@@ -77,34 +77,30 @@ class ANOSIM(object):
                                        r_stat, p_value, permutations)
 
     def _anosim(self, grouping):
-        # Create grouping matrix, where a one means that the two samples are in
-        # the same group (e.g. control) and a zero means that they aren't.
-        within_between = np.zeros(self._dm.shape, dtype=bool)
+        # Create grouping matrix, where True means that the two samples are in
+        # the same group.
+        grouping_matrix = np.zeros(self._dm.shape, dtype=bool)
         for group in self._groups:
-            combs = self._cartesian(np.where(grouping == group)[0])
-            within_between[combs] = True
+            within_indices = self._index_combinations(
+                np.where(grouping == group)[0])
+            grouping_matrix[within_indices] = True
 
-        # Extract triangle from the distance and grouping matrices. TODO: add
-        # note about importance of extraction order (must match condensed dm
-        # form).
-        grouping_tri = within_between[self._tri_idxs]
+        # Extract upper triangle from the grouping matrix. It is important to
+        # extract the values in the same order that the distances are extracted
+        # from the distance matrix (see self._ranked_dists). Extracting the
+        # upper triangle (excluding the diagonal) preserves this order.
+        grouping_tri = grouping_matrix[self._tri_idxs]
 
         return self._compute_r_stat(grouping_tri)
 
-    def _cartesian(self, a):
+    def _index_combinations(self, indices):
         # Modified from http://stackoverflow.com/a/11144716
-        return np.tile(a, len(a)), np.repeat(a, len(a))
+        return np.tile(indices, len(indices)), np.repeat(indices, len(indices))
 
-    def _compute_r_stat(self, grouping_upper):
-        """Code that performs the actual math involved in solving ANOSIM.
-
-        Returns the ANOSIM R value (between -1 and 1).
-
-        Arguments:
-            adjusted_ranks - list of the ranks, adjusted for ties
-            sorted_groups - list associating distances to groups
-            num_samps: how many total samples
-        """
-        r_W = np.mean(self._ranked_dists[grouping_upper])
-        r_B = np.mean(self._ranked_dists[np.invert(grouping_upper)])
+    def _compute_r_stat(self, grouping_tri):
+        """Return ANOSIM R statistic (between -1 and +1)."""
+        # within
+        r_W = np.mean(self._ranked_dists[grouping_tri])
+        # between
+        r_B = np.mean(self._ranked_dists[np.invert(grouping_tri)])
         return (r_B - r_W) / self._divisor
