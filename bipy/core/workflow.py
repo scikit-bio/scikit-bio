@@ -47,7 +47,7 @@ for i in wf(gen):
 """
 
 #-----------------------------------------------------------------------------
-# Copyright (c) 2013, The bipy Developers.
+# Copyright (c) 2013--, The bipy Developers.
 #
 # Distributed under the terms of the Modified BSD License.
 #
