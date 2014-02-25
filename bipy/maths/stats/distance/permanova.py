@@ -76,16 +76,6 @@ class PERMANOVA(object):
 
     def _permanova(self, grouping):
         """Compute PERMANOVA pseudo-F statistic."""
-        samples = self._dm.sample_ids
-
-        # Number of samples in each group.
-        unique_n = []
-
-        # Calculate number of groups and unique 'n's.
-        # TODO: try SO post http://stackoverflow.com/a/21124789
-        for i, i_string in enumerate(self._groups):
-            unique_n.append(list(grouping).count(i_string))
-
         # Create grouping matrix.
         grouping_matrix = -1 * np.ones(self._dm.shape, dtype=int)
         for group_idx, group in enumerate(self._groups):
@@ -95,6 +85,9 @@ class PERMANOVA(object):
 
         # Extract upper triangle.
         grouping_tri = grouping_matrix[self._tri_idxs]
+
+        # Calculate number of samples in each group.
+        unique_n = np.bincount(np.unique(grouping, return_inverse=True)[1])
 
         # Compute F value.
         return self._compute_f_stat(grouping_tri, unique_n)
@@ -113,13 +106,10 @@ class PERMANOVA(object):
         a = self._num_groups
         N = self._dm.num_samples
 
-        # Calculate s_W for each group, this accounts for different group
-        # sizes.
+        # Calculate s_W for each group, accounting for different group sizes.
         s_W = 0
         for i in range(a):
-            diffs = self._distances[grouping_tri == i]
-            s_W += (diffs ** 2).sum() / unique_n[i]
+            s_W += (self._distances[grouping_tri == i] ** 2).sum() / unique_n[i]
 
-        # Execute the formula.
         s_A = self._s_T - s_W
         return (s_A / (a - 1)) / (s_W / (N - a))
