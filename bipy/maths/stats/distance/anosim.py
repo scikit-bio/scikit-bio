@@ -16,13 +16,7 @@ import numpy as np
 from scipy.stats import rankdata
 
 from bipy.core.distance import SymmetricDistanceMatrix
-
-
-# TODO: store sample size and number of groups
-ANOSIMResults = namedtuple('ANOSIMResults', ('short_method_name',
-                                             'long_method_name',
-                                             'r_statistic', 'p_value',
-                                             'permutations'))
+from .base import CategoricalStatsResults
 
 
 class ANOSIM(object):
@@ -37,15 +31,15 @@ class ANOSIM(object):
                              "sample IDs in the distance matrix.")
 
         grouping = np.asarray(grouping)
-        grouping_set = np.unique(grouping)
+        groups = np.unique(grouping)
 
-        if len(grouping_set) == len(grouping):
+        if len(groups) == len(grouping):
             raise ValueError("All values in the grouping vector are unique. "
                              "ANOSIM cannot operate on a grouping vector with "
                              "only unique values (e.g., there are no 'within' "
                              "distances because each group of samples "
                              "contains only a single sample).")
-        if len(grouping_set) == 1:
+        if len(groups) == 1:
             raise ValueError("All values in the grouping vector are the same. "
                              "ANOSIM cannot operate on a grouping vector with "
                              "only a single group of samples (e.g., there are "
@@ -55,7 +49,7 @@ class ANOSIM(object):
         self._dm = distance_matrix
         self._divisor = self._dm.num_samples * ((self._dm.num_samples - 1) / 4)
         self._grouping = grouping
-        self._groups = grouping_set
+        self._groups = groups
         self._ranked_dists = rankdata(self._dm.condensed_form(),
                                       method='average')
         self._tri_idxs = np.triu_indices(self._dm.num_samples, k=1)
@@ -77,8 +71,10 @@ class ANOSIM(object):
 
             p_value = ((perm_stats >= r_stat).sum() + 1) / (permutations + 1)
 
-        return ANOSIMResults(self.short_method_name, self.long_method_name,
-                             r_stat, p_value, permutations)
+        return CategoricalStatsResults(self.short_method_name,
+                                       self.long_method_name,
+                                       self._dm.num_samples, self._groups,
+                                       r_stat, p_value, permutations)
 
     def _anosim(self, grouping):
         # Create grouping matrix, where a one means that the two samples are in

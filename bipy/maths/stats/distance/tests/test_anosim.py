@@ -77,25 +77,25 @@ class ANOSIMTests(TestCase):
 
         np.random.seed(0)
         obs = self.anosim_ties()
-        self.assertFloatEqual(obs.r_statistic, exp_r_stat)
+        self.assertFloatEqual(obs.statistic, exp_r_stat)
         self.assertFloatEqual(obs.p_value, exp_p_val)
 
         # Ensure we get the same results if we rerun the method on the same
         # object.
         np.random.seed(0)
         obs = self.anosim_ties()
-        self.assertFloatEqual(obs.r_statistic, exp_r_stat)
+        self.assertFloatEqual(obs.statistic, exp_r_stat)
         self.assertFloatEqual(obs.p_value, exp_p_val)
 
     def test_call_no_ties(self):
         np.random.seed(0)
         obs = self.anosim_no_ties()
-        self.assertFloatEqual(obs.r_statistic, 0.625)
+        self.assertFloatEqual(obs.statistic, 0.625)
         self.assertFloatEqual(obs.p_value, 0.332)
 
     def test_call_no_permutations(self):
         obs = self.anosim_no_ties(0)
-        self.assertFloatEqual(obs.r_statistic, 0.625)
+        self.assertFloatEqual(obs.statistic, 0.625)
         self.assertEqual(obs.p_value, None)
 
     def test_call_invalid_permutations(self):
@@ -105,7 +105,7 @@ class ANOSIMTests(TestCase):
     def test_call_unequal_group_sizes(self):
         np.random.seed(0)
         obs = self.anosim_unequal()
-        self.assertFloatEqual(obs.r_statistic, -0.363636)
+        self.assertFloatEqual(obs.statistic, -0.363636)
         self.assertFloatEqual(obs.p_value, 0.878)
 
 
