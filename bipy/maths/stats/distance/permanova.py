@@ -49,7 +49,7 @@ class PERMANOVA(object):
         self._groups = groups
         self._num_groups = len(self._groups)
         self._distances = self._dm.condensed_form()
-        self._s_T = sum(self._distances * self._distances) / self._dm.num_samples
+        self._s_T = (self._distances ** 2).sum() / self._dm.num_samples
         self._tri_idxs = np.triu_indices(self._dm.num_samples, k=1)
 
     def __call__(self, permutations=999):
@@ -118,7 +118,7 @@ class PERMANOVA(object):
         s_W = 0
         for i in range(a):
             diffs = self._distances[grouping_tri == i]
-            s_W = s_W + sum(diffs ** 2) / unique_n[i]
+            s_W += (diffs ** 2).sum() / unique_n[i]
 
         # Execute the formula.
         s_A = self._s_T - s_W
