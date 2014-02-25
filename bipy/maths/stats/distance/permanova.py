@@ -45,11 +45,11 @@ class PERMANOVA(object):
                              "single group).")
 
         self._dm = distance_matrix
-        self._divisor = self._dm.num_samples * ((self._dm.num_samples - 1) / 4)
         self._grouping = grouping
         self._groups = groups
-        self._ranked_dists = rankdata(self._dm.condensed_form(),
-                                      method='average')
+        self._num_groups = len(self._groups)
+        self._distances = self._dm.condensed_form()
+        self._s_T = sum(self._distances * self._distances) / self._dm.num_samples
         self._tri_idxs = np.triu_indices(self._dm.num_samples, k=1)
 
     def __call__(self, permutations=999):
@@ -84,7 +84,6 @@ class PERMANOVA(object):
 
         # Calculate number of groups and unique 'n's.
         # TODO: try SO post http://stackoverflow.com/a/21124789
-        num_groups = len(self._groups)
         for i, i_string in enumerate(self._groups):
             group_map[i_string] = i
             unique_n.append(list(grouping).count(i_string))
@@ -97,39 +96,29 @@ class PERMANOVA(object):
                     grouping_matrix[i][j] = group_map[grouping_i]
 
         # Extract upper triangle.
-        distances = self._dm.data[np.tri(self._dm.num_samples) == 0]
-        groups = grouping_matrix[np.tri(len(grouping_matrix)) == 0]
+        grouping_tri = grouping_matrix[self._tri_idxs]
 
         # Compute F value.
-        return self._compute_f_stat(distances, groups, self._dm.num_samples,
-                                    num_groups, unique_n)
+        return self._compute_f_stat(grouping_tri, unique_n)
 
-    def _compute_f_stat(self, distances, groupings, num_samples, num_groups,
-                        unique_n):
+    def _compute_f_stat(self, grouping_tri, unique_n):
         """Performs the calculations for the F value.
 
         Arguments:
-            distances - a list of the distances
-            groupings - a list associating the distances to their groups
-            num_samples - how many samples there are
-            num_groups - how many groups there are
-            unique_n - list containing how many samples are in each within
-                group
+            grouping_tri - a list associating the distances to their groups
+            unique_n - list containing how many samples are in each within group
         """
-        a = num_groups
-        N = num_samples
-
-        # Calculate s_T.
-        s_T = sum(distances * distances) / N
+        a = self._num_groups
+        N = self._dm.num_samples
 
         # Calculate s_W for each group, this accounts for different group
         # sizes.
         s_W = 0
-        for i in range(num_groups):
-            group_ix = groupings == i
-            diffs = distances[group_ix]
+        for i in range(a):
+            group_ix = grouping_tri == i
+            diffs = self._distances[group_ix]
             s_W = s_W + sum(diffs ** 2) / unique_n[i]
 
         # Execute the formula.
-        s_A = s_T - s_W
+        s_A = self._s_T - s_W
         return (s_A / (a - 1)) / (s_W / (N - a))

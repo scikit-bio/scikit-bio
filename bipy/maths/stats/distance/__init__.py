@@ -7,5 +7,6 @@
 #-----------------------------------------------------------------------------
 
 from .anosim import ANOSIM
+from .permanova import PERMANOVA
 
-__all__ = ['ANOSIM']
+__all__ = ['ANOSIM', 'PERMANOVA']
