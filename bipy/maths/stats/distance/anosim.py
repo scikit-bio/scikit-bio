@@ -83,6 +83,9 @@ class ANOSIM(object):
                 np.where(grouping == group)[0])
             grouping_matrix[within_indices] = True
 
+        # TODO try to get this to work by making grouping an integer vector
+        #grouping_matrix = np.equal.outer(grouping, grouping)
+
         # Extract upper triangle from the grouping matrix. It is important to
         # extract the values in the same order that the distances are extracted
         # from the distance matrix (see self._ranked_dists). Extracting the
