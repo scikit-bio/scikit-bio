@@ -89,7 +89,6 @@ class PERMANOVA(object):
         # Calculate number of samples in each group.
         unique_n = np.bincount(np.unique(grouping, return_inverse=True)[1])
 
-        # Compute F value.
         return self._compute_f_stat(grouping_tri, unique_n)
 
     def _index_combinations(self, indices):
@@ -97,12 +96,6 @@ class PERMANOVA(object):
         return np.tile(indices, len(indices)), np.repeat(indices, len(indices))
 
     def _compute_f_stat(self, grouping_tri, unique_n):
-        """Performs the calculations for the F value.
-
-        Arguments:
-            grouping_tri - a list associating the distances to their groups
-            unique_n - list containing how many samples are in each within group
-        """
         a = self._num_groups
         N = self._dm.num_samples
 
