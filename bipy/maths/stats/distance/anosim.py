@@ -9,8 +9,6 @@
 #-----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division
-from collections import namedtuple
-from itertools import combinations
 
 import numpy as np
 from scipy.stats import rankdata

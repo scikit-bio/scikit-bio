@@ -13,12 +13,12 @@ from __future__ import division
 import numpy as np
 
 from bipy.core.distance import DistanceMatrix, SymmetricDistanceMatrix
-from bipy.maths.stats.distance.anosim import ANOSIM
+from bipy.maths.stats.distance.permanova import PERMANOVA
 from bipy.util.unit_test import TestCase, main
 
 
-class ANOSIMTests(TestCase):
-    """All results were verified with R (vegan::anosim)."""
+class PERMANOVATests(TestCase):
+    """All results were verified with R (vegan::adonis)."""
 
     def setUp(self):
         # Distance matrices with and without ties in the ranks, with 2 groups
@@ -36,8 +36,7 @@ class ANOSIMTests(TestCase):
                                                    [5, 3, 0, 3],
                                                    [4, 2, 3, 0]], dm_sids)
 
-        # Test with 3 groups of unequal size. This data also generates a
-        # negative R statistic.
+        # Test with 3 groups of unequal size.
         grouping_unequal = ['Control', 'Treatment1', 'Treatment2',
                             'Treatment1', 'Control', 'Control']
 
@@ -50,65 +49,65 @@ class ANOSIMTests(TestCase):
              [1.0, 0.0, 1.0, 0.43, 0.5, 0.0]],
             ['s1', 's2', 's3', 's4', 's5', 's6'])
 
-        self.anosim_ties = ANOSIM(self.dm_ties, grouping_equal)
-        self.anosim_no_ties = ANOSIM(self.dm_no_ties, grouping_equal)
-        self.anosim_unequal = ANOSIM(self.dm_unequal, grouping_unequal)
+        self.permanova_ties = PERMANOVA(self.dm_ties, grouping_equal)
+        self.permanova_no_ties = PERMANOVA(self.dm_no_ties, grouping_equal)
+        self.permanova_unequal = PERMANOVA(self.dm_unequal, grouping_unequal)
 
     def test_init_invalid_input(self):
         # Requires a SymmetricDistanceMatrix.
         with self.assertRaises(TypeError):
-            _ = ANOSIM(DistanceMatrix([[0, 2], [3, 0]], ['a', 'b']), [1, 2])
+            _ = PERMANOVA(DistanceMatrix([[0, 2], [3, 0]], ['a', 'b']), [1, 2])
 
         # Grouping vector length must match number of samples in dm.
         with self.assertRaises(ValueError):
-            _ = ANOSIM(self.dm_ties, [1, 2])
+            _ = PERMANOVA(self.dm_ties, [1, 2])
 
         # Grouping vector cannot have only unique values.
         with self.assertRaises(ValueError):
-            _ = ANOSIM(self.dm_ties, [1, 2, 3, 4])
+            _ = PERMANOVA(self.dm_ties, [1, 2, 3, 4])
 
         # Grouping vector cannot have only a single group.
         with self.assertRaises(ValueError):
-            _ = ANOSIM(self.dm_ties, [1, 1, 1, 1])
+            _ = PERMANOVA(self.dm_ties, [1, 1, 1, 1])
 
     def test_call_ties(self):
         # TODO: update tests to use CategoricalStatsResults objects to store
         # expected results
-        exp_r_stat = 0.25
+        exp_f_stat = 2.0
         exp_p_val = 0.671
 
         np.random.seed(0)
-        obs = self.anosim_ties()
-        self.assertFloatEqual(obs.statistic, exp_r_stat)
+        obs = self.permanova_ties()
+        self.assertFloatEqual(obs.statistic, exp_f_stat)
         self.assertFloatEqual(obs.p_value, exp_p_val)
 
         # Ensure we get the same results if we rerun the method on the same
         # object.
         np.random.seed(0)
-        obs = self.anosim_ties()
-        self.assertFloatEqual(obs.statistic, exp_r_stat)
+        obs = self.permanova_ties()
+        self.assertFloatEqual(obs.statistic, exp_f_stat)
         self.assertFloatEqual(obs.p_value, exp_p_val)
 
     def test_call_no_ties(self):
         np.random.seed(0)
-        obs = self.anosim_no_ties()
-        self.assertFloatEqual(obs.statistic, 0.625)
+        obs = self.permanova_no_ties()
+        self.assertFloatEqual(obs.statistic, 4.4)
         self.assertFloatEqual(obs.p_value, 0.332)
 
     def test_call_no_permutations(self):
-        obs = self.anosim_no_ties(0)
-        self.assertFloatEqual(obs.statistic, 0.625)
+        obs = self.permanova_no_ties(0)
+        self.assertFloatEqual(obs.statistic, 4.4)
         self.assertEqual(obs.p_value, None)
 
     def test_call_invalid_permutations(self):
         with self.assertRaises(ValueError):
-            _ = self.anosim_ties(-1)
+            _ = self.permanova_ties(-1)
 
     def test_call_unequal_group_sizes(self):
         np.random.seed(0)
-        obs = self.anosim_unequal()
-        self.assertFloatEqual(obs.statistic, -0.363636)
-        self.assertFloatEqual(obs.p_value, 0.878)
+        obs = self.permanova_unequal()
+        self.assertFloatEqual(obs.statistic, 0.578848)
+        self.assertFloatEqual(obs.p_value, 0.645)
 
 
 if __name__ == '__main__':
