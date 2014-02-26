@@ -334,7 +334,7 @@ class TestRDAResults(object):
     def setup(self):
         """Data from table 9.11 in Legendre & Legendre 1998."""
         Y = np.loadtxt(get_data_path('example2_Y'))
-        X = np.loadtxt(get_data_path('example2_X')).reshape(-1, 4, order='F')
+        X = np.loadtxt(get_data_path('example2_X'))
         self.ordination = RDA(Y, X)
 
 
