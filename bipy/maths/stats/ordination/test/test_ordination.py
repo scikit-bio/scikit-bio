@@ -337,6 +337,17 @@ class TestRDAResults(object):
         X = np.loadtxt(get_data_path('example2_X'))
         self.ordination = RDA(Y, X)
 
+    def test_scaling1(self):
+        scores = self.ordination.scores(1)
+
+        # Load data as computed with vegan 2.0-8
+        vegan_species = np.loadtxt(get_data_path(
+            'example2_species_scaling1_from_vegan'))
+        npt.assert_almost_equal(scores.species, vegan_species, decimal=6)
+
+        vegan_site = np.loadtxt(get_data_path(
+            'example2_site_scaling1_from_vegan'))
+        npt.assert_almost_equal(scores.site, vegan_site, decimal=6)
 
 class TestCCAErrors(object):
     def setup(self):
