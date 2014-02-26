@@ -349,6 +349,19 @@ class TestRDAResults(object):
             'example2_site_scaling1_from_vegan'))
         npt.assert_almost_equal(scores.site, vegan_site, decimal=6)
 
+    def test_scaling2(self):
+        scores = self.ordination.scores(2)
+
+        # Load data as computed with vegan 2.0-8
+        vegan_species = np.loadtxt(get_data_path(
+            'example2_species_scaling2_from_vegan'))
+        npt.assert_almost_equal(scores.species, vegan_species, decimal=6)
+
+        vegan_site = np.loadtxt(get_data_path(
+            'example2_site_scaling2_from_vegan'))
+        npt.assert_almost_equal(scores.site, vegan_site, decimal=6)
+
+
 class TestCCAErrors(object):
     def setup(self):
         """Data from table 9.11 in Legendre & Legendre 1998."""
