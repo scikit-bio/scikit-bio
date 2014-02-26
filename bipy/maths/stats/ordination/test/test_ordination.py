@@ -329,7 +329,7 @@ class TestRDAErrors(object):
 class TestRDAResults(object):
     # STATUS: L&L only shows results with scaling 1, and they agree
     # with vegan's (module multiplying by a constant). I can also
-    # compute scaling 2, agreeing with vegan, but there no written
+    # compute scaling 2, agreeing with vegan, but there're no written
     # results in L&L.
     def setup(self):
         """Data from table 9.11 in Legendre & Legendre 1998."""
@@ -384,10 +384,19 @@ class TestCCAErrors(object):
 
 
 class TestCCAResults(object):
-    # TODO: Either hardcode some results or call vegan? Hardcoding
-    # them sounds better than requiring R and vegan to run tests.
     def setup(self):
-        pass
+        """Data from table 9.11 in Legendre & Legendre 1998. Loaded
+        results as computed with vegan 2.0-8"""
+        Y = np.loadtxt(get_data_path('example3_Y'))
+        X = np.loadtxt(get_data_path('example3_X'))
+        self.ordination = CCA(Y, X)
+
+    def test_scaling1_species(self):
+        scores = self.ordination.scores(1)
+
+        vegan_species = np.loadtxt(get_data_path(
+            'example3_species_scaling1_from_vegan'))
+        npt.assert_almost_equal(scores.species, vegan_species, decimal=6)
 
 
 class TestPCoAResults(object):
