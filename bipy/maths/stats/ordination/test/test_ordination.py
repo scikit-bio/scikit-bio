@@ -342,8 +342,7 @@ class TestCCAErrors(object):
     def setup(self):
         """Data from table 9.11 in Legendre & Legendre 1998."""
         self.Y = np.loadtxt(get_data_path('example3_Y'))
-        self.X = np.loadtxt(get_data_path('example3_X')).reshape(-1, 4,
-                                                                 order='F')
+        self.X = np.loadtxt(get_data_path('example3_X'))
 
     def test_shape(self):
         X, Y = self.X, self.Y
