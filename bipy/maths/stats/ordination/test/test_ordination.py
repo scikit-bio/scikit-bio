@@ -399,6 +399,13 @@ class TestCCAResults(object):
         npt.assert_almost_equal(scores.species, vegan_species, decimal=6)
 
 
+    def test_scaling2_species(self):
+        scores = self.ordination.scores(2)
+
+        vegan_species = np.loadtxt(get_data_path(
+            'example3_species_scaling2_from_vegan'))
+        npt.assert_almost_equal(scores.species, vegan_species, decimal=5)
+
 class TestPCoAResults(object):
     def setup(self):
         """Sample data set from page 111 of W.J Krzanowski. Principles
