@@ -398,6 +398,12 @@ class TestCCAResults(object):
             'example3_species_scaling1_from_vegan'))
         npt.assert_almost_equal(scores.species, vegan_species, decimal=6)
 
+    def test_scaling1_site(self):
+        scores = self.ordination.scores(1)
+
+        vegan_site = np.loadtxt(get_data_path(
+            'example3_site_scaling1_from_vegan'))
+        npt.assert_almost_equal(scores.site, vegan_site, decimal=4)
 
     def test_scaling2_species(self):
         scores = self.ordination.scores(2)
