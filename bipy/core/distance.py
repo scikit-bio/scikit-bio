@@ -14,7 +14,7 @@ from copy import deepcopy
 from itertools import izip
 
 import numpy as np
-from scipy.spatial.distance import is_valid_dm, squareform
+from scipy.spatial.distance import squareform
 
 
 class DistanceMatrixError(Exception):
