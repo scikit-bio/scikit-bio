@@ -418,8 +418,6 @@ class TestCCAResults(object):
         vegan_site = np.loadtxt(get_data_path(
             'example3_site_scaling2_from_vegan'))
         npt.assert_almost_equal(scores.site, vegan_site, decimal=4)
-        print scores.site
-        assert False
 
 
 class TestPCoAResults(object):
