@@ -147,7 +147,7 @@ class CCA(Ordination):
         vt_res = vt_res[:rank]
 
         U_res = vt_res.T
-        U_hat_res = Q_bar.dot(U_res) * s_res**-1
+        U_hat_res = Y_res.dot(U_res) * s_res**-1
 
         # Storing values needed to compute scores
         iter_ = (('column_marginals', column_marginals),
