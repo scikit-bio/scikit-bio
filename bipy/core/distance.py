@@ -22,8 +22,8 @@ class DistanceMatrixError(Exception):
     pass
 
 
-class MissingSampleIDError(Exception):
-    """Error for sample ID lookup that doesn't exist in the distance matrix."""
+class MissingIDError(Exception):
+    """Error for ID lookup that doesn't exist in the distance matrix."""
     pass
 
 
@@ -36,30 +36,30 @@ class DistanceMatrixFormatError(Exception):
     pass
 
 
-class SampleIDMismatchError(Exception):
-    """Error for reporting a mismatch between sample IDs.
+class IDMismatchError(Exception):
+    """Error for reporting a mismatch between IDs.
 
     Typically used during parsing.
 
     """
 
     def __init__(self, actual, expected):
-        super(SampleIDMismatchError, self).__init__()
-        self.args = ("Encountered mismatched sample IDs while parsing the "
-                     "distance matrix file. Found '%s' but expected '%s'. "
-                     "Please ensure that the sample IDs match between the "
-                     "distance matrix header (first row) and the row labels "
-                     "(first column)." % (actual, expected),)
+        super(IDMismatchError, self).__init__()
+        self.args = ("Encountered mismatched IDs while parsing the distance "
+                     "matrix file. Found '%s' but expected '%s'. Please "
+                     "ensure that the IDs match between the distance matrix "
+                     "header (first row) and the row labels (first column)." %
+                     (actual, expected),)
 
 
 class MissingHeaderError(Exception):
-    """Error for reporting a missing sample ID header line during parsing."""
+    """Error for reporting a missing ID header line during parsing."""
 
     def __init__(self):
         super(MissingHeaderError, self).__init__()
-        self.args = ("Could not find a header line containing sample IDs in "
-                     "the distance matrix file. Please verify that the file "
-                     "is not empty.",)
+        self.args = ("Could not find a header line containing IDs in the "
+                     "distance matrix file. Please verify that the file is "
+                     "not empty.",)
 
 
 class MissingDataError(Exception):
@@ -72,18 +72,18 @@ class MissingDataError(Exception):
 
 
 class DistanceMatrix(object):
-    """Encapsulate a 2D array of distances (floats) and sample IDs (labels).
+    """Encapsulate a 2D array of distances (floats) and IDs (labels).
 
     A ``DistanceMatrix`` instance contains a square, hollow 2D numpy
-    ``ndarray`` of distances (floats) between samples. A tuple of sample IDs
-    (typically strings) accompanies the raw distance data. Methods are provided
-    to load and save distance matrices, as well as perform common operations
-    such as extracting distances based on sample ID.
+    ``ndarray`` of distances (floats) between objects, where objects could be,
+    for example, samples or DNA sequences. A tuple of IDs (strings, one for
+    each object) accompanies the raw distance data. Methods are provided to
+    load and save distance matrices, as well as perform common operations such
+    as extracting distances based on ID.
 
     The ``ndarray`` of distances can be accessed via the ``data`` property. The
-    tuple of sample IDs can be accessed via the ``sample_ids`` property.
-    ``sample_ids`` is also writeable, though the new sample IDs must match the
-    number of samples in ``data``.
+    tuple of IDs can be accessed via the ``ids`` property. ``ids`` is also
+    writeable, though the new IDs must match the number of objects in ``data``.
 
     The distances are stored in redundant (square-form) format. For more
     details on redundant format, see:
@@ -104,13 +104,12 @@ class DistanceMatrix(object):
         the parsed contents of the "file".
 
         The "file" must contain delimited text (controlled via ``delimiter``).
-        The first line must contain all sample IDs, where each ID is separated
-        by ``delimiter``. The subsequent lines must contain a sample ID
-        followed by each distance (float) between the sample and all other
-        samples.
+        The first line must contain all IDs, where each ID is separated by
+        ``delimiter``. The subsequent lines must contain an ID followed by each
+        distance (float) between the object and all other objects.
 
-        For example, a 2x2 distance matrix with samples ``'a'`` and ``'b'``
-        would look like:
+        For example, a 2x2 distance matrix with IDs ``'a'`` and ``'b'`` would
+        look like:
 
         <tab>a<tab>b
         a<tab>0.0<tab>1.0
@@ -120,9 +119,9 @@ class DistanceMatrix(object):
 
         Whitespace-only lines can occur anywhere throughout the "file" and are
         ignored. Lines starting with # are treated as comments and ignored.
-        These comments can only occur *before* the sample ID header.
+        These comments can only occur *before* the ID header.
 
-        Sample IDs will have any leading/trailing whitespace removed.
+        IDs will have any leading/trailing whitespace removed.
 
         """
         # We aren't using np.loadtxt because it uses *way* too much memory
@@ -140,9 +139,9 @@ class DistanceMatrix(object):
         # maintain our current position after finding the header (mainly
         # necessary for something like a list of strings).
         dm_f = iter(dm_f)
-        sids = cls._parse_sample_ids(dm_f, delimiter)
-        num_sids = len(sids)
-        data = np.empty((num_sids, num_sids), dtype='float')
+        ids = cls._parse_ids(dm_f, delimiter)
+        num_ids = len(ids)
+        data = np.empty((num_ids, num_ids), dtype='float')
 
         # curr_row_idx keeps track of the row index within the data matrix.
         # We're not using enumerate() because there may be
@@ -154,38 +153,38 @@ class DistanceMatrix(object):
 
             if not line:
                 continue
-            elif curr_row_idx >= num_sids:
+            elif curr_row_idx >= num_ids:
                 # We've hit a nonempty line after we already filled the data
                 # matrix. Raise an error because we shouldn't ignore extra
                 # data.
                 raise DistanceMatrixFormatError(
-                    "Encountered extra rows without corresponding sample IDs "
-                    "in the header.")
+                    "Encountered extra rows without corresponding IDs in the "
+                    "header.")
 
             tokens = line.split(delimiter)
 
-            # -1 because the first column contains the sample ID.
-            if len(tokens) - 1 != num_sids:
+            # -1 because the first element contains the current ID.
+            if len(tokens) - 1 != num_ids:
                 raise DistanceMatrixFormatError(
                     "There are %d values in row number %d, which is not equal "
-                    "to the number of sample IDs in the header (%d)."
-                    % (len(tokens) - 1, curr_row_idx + 1, num_sids))
+                    "to the number of IDs in the header (%d)."
+                    % (len(tokens) - 1, curr_row_idx + 1, num_ids))
 
-            curr_sid = tokens[0].strip()
-            expected_sid = sids[curr_row_idx]
-            if curr_sid == expected_sid:
+            curr_id = tokens[0].strip()
+            expected_id = ids[curr_row_idx]
+            if curr_id == expected_id:
                 data[curr_row_idx, :] = np.asarray(tokens[1:], dtype='float')
             else:
-                raise SampleIDMismatchError(curr_sid, expected_sid)
+                raise IDMismatchError(curr_id, expected_id)
 
             curr_row_idx += 1
 
-        if curr_row_idx != num_sids:
-            raise MissingDataError(curr_row_idx, num_sids)
+        if curr_row_idx != num_ids:
+            raise MissingDataError(curr_row_idx, num_ids)
 
-        return cls(data, sids)
+        return cls(data, ids)
 
-    def __init__(self, data, sample_ids):
+    def __init__(self, data, ids):
         """Construct a ``DistanceMatrix`` instance.
 
         Arguments:
@@ -194,17 +193,17 @@ class DistanceMatrix(object):
             ``numpy.asarray``. Data will be converted to a float ``dtype`` if
             necessary. A copy will *not* be made if already an ``ndarray`` with
             a float ``dtype``
-        sample_ids -- a sequence of strings to be used as sample labels. Must
-            match the number of rows/cols in ``data``
+        ids -- a sequence of strings to be used as object labels. Must match
+            the number of rows/cols in ``data``
 
         """
         data = np.asarray(data, dtype='float')
-        sample_ids = tuple(sample_ids)
-        self._validate(data, sample_ids)
+        ids = tuple(ids)
+        self._validate(data, ids)
 
         self._data = data
-        self._sample_ids = sample_ids
-        self._sample_index = self._index_list(self._sample_ids)
+        self._ids = ids
+        self._id_index = self._index_list(self._ids)
 
     @property
     def data(self):
@@ -216,21 +215,21 @@ class DistanceMatrix(object):
         return self._data
 
     @property
-    def sample_ids(self):
-        """Return a tuple of sample IDs.
+    def ids(self):
+        """Return a tuple of IDs.
 
-        This property is writeable, but the number of new sample IDs must match
-        the number of samples in ``data``.
+        This property is writeable, but the number of new IDs must match the
+        number of objects in ``data``.
 
         """
-        return self._sample_ids
+        return self._ids
 
-    @sample_ids.setter
-    def sample_ids(self, sample_ids_):
-        sample_ids_ = tuple(sample_ids_)
-        self._validate(self.data, sample_ids_)
-        self._sample_ids = sample_ids_
-        self._sample_index = self._index_list(self._sample_ids)
+    @ids.setter
+    def ids(self, ids_):
+        ids_ = tuple(ids_)
+        self._validate(self.data, ids_)
+        self._ids = ids_
+        self._id_index = self._index_list(self._ids)
 
     @property
     def dtype(self):
@@ -248,11 +247,6 @@ class DistanceMatrix(object):
         return self.data.shape
 
     @property
-    def num_samples(self):
-        """Returns the number of samples (i.e. number of rows or columns)."""
-        return len(self.sample_ids)
-
-    @property
     def size(self):
         """Return the total number of elements in the distance matrix.
 
@@ -268,7 +262,7 @@ class DistanceMatrix(object):
 
     def transpose(self):
         """Return the transpose of the distance matrix."""
-        return self.__class__(self.data.T.copy(), deepcopy(self.sample_ids))
+        return self.__class__(self.data.T.copy(), deepcopy(self.ids))
 
     def redundant_form(self):
         """Return a 2D ``numpy.ndarray`` of distances.
@@ -286,26 +280,26 @@ class DistanceMatrix(object):
 
     def copy(self):
         """Return a deep copy of the distance matrix."""
-        # We deepcopy sample IDs in case the tuple contains mutable objects at
-        # some point in the future.
-        return self.__class__(self.data.copy(), deepcopy(self.sample_ids))
+        # We deepcopy IDs in case the tuple contains mutable objects at some
+        # point in the future.
+        return self.__class__(self.data.copy(), deepcopy(self.ids))
 
     def __str__(self):
         """Return a string representation of the distance matrix.
 
-        Summary includes matrix dimensions, a (truncated) list of sample IDs,
-        and (truncated) array of distances.
+        Summary includes matrix dimensions, a (truncated) list of IDs, and
+        (truncated) array of distances.
 
         """
-        return '%dx%d distance matrix\nSample IDs:\n%s\nData:\n' % (
+        return '%dx%d distance matrix\nIDs:\n%s\nData:\n' % (
             self.shape[0], self.shape[1],
-            self._pprint_sample_ids()) + str(self.data)
+            self._pprint_ids()) + str(self.data)
 
     def __eq__(self, other):
         """Return ``True`` if this distance matrix is equal to the other.
 
-        Two distance matrices are equal if they have the same shape, sample IDs
-        (in the same order!), and have data arrays that are equal.
+        Two distance matrices are equal if they have the same shape, IDs (in
+        the same order!), and have data arrays that are equal.
 
         Checks are *not* performed to ensure that ``other`` is a
         ``DistanceMatrix`` instance.
@@ -322,7 +316,7 @@ class DistanceMatrix(object):
         try:
             if self.shape != other.shape:
                 equal = False
-            elif self.sample_ids != other.sample_ids:
+            elif self.ids != other.ids:
                 equal = False
             elif not np.array_equal(self.data, other.data):
                 equal = False
@@ -340,32 +334,32 @@ class DistanceMatrix(object):
         return not self == other
 
     def __getitem__(self, index):
-        """Slice into the data by sample ID or numpy indexing.
+        """Slice into the data by ID or numpy indexing.
 
-        If ``index`` is a string, it is assumed to be a sample ID and a
-        ``numpy.ndarray`` row vector is returned for the corresponding sample.
-        Note that the sample's row of distances is returned, not its column. If
-        the matrix is symmetric, the two will be identical, but this makes a
+        If ``index`` is a string, it is assumed to be an ID and a
+        ``numpy.ndarray`` row vector is returned for the corresponding ID. Note
+        that the ID's row of distances is returned, not its column. If the
+        matrix is symmetric, the two will be identical, but this makes a
         difference if the matrix is asymmetric.
 
-        The lookup based on sample ID is quick. ``MissingSampleIDError`` is
-        raised if the sample does not exist.
+        The lookup based on ID is quick. ``MissingIDError`` is raised if the ID
+        does not exist.
 
         Otherwise, ``index`` will be passed through to
         ``DistanceMatrix.data.__getitem__``, allowing for standard indexing of
         a numpy ``ndarray`` (e.g., slicing).
 
         Arguments:
-        index -- the sample ID whose row of distances will be returned, or the
-            index to be passed through to the underlying data matrix
+        index -- the ID whose row of distances will be returned, or the index
+            to be passed through to the underlying data matrix
 
         """
         if isinstance(index, basestring):
-            if index in self._sample_index:
-                return self.data[self._sample_index[index]]
+            if index in self._id_index:
+                return self.data[self._id_index[index]]
             else:
-                raise MissingSampleIDError("The sample ID '%s' is not in the "
-                                           "distance matrix." % index)
+                raise MissingIDError("The ID '%s' is not in the distance "
+                                     "matrix." % index)
         else:
             return self.data.__getitem__(index)
 
@@ -379,18 +373,18 @@ class DistanceMatrix(object):
         delimiter -- delimiter used to separate elements in output format
 
         """
-        formatted_sids = self._format_sample_ids(delimiter)
-        out_f.write(formatted_sids)
+        formatted_ids = self._format_ids(delimiter)
+        out_f.write(formatted_ids)
         out_f.write('\n')
 
-        for sid, vals in izip(self.sample_ids, self.data):
-            out_f.write(sid)
+        for id_, vals in izip(self.ids, self.data):
+            out_f.write(id_)
             out_f.write(delimiter)
             out_f.write(delimiter.join(np.asarray(vals, dtype=np.str)))
             out_f.write('\n')
 
     @staticmethod
-    def _parse_sample_ids(dm_f, delimiter):
+    def _parse_ids(dm_f, delimiter):
         header_line = None
 
         for line in dm_f:
@@ -405,13 +399,12 @@ class DistanceMatrix(object):
         else:
             return map(lambda e: e.strip(), header_line.split(delimiter))
 
-    def _validate(self, data, sample_ids):
-        """Validate the data array and sample IDs.
+    def _validate(self, data, ids):
+        """Validate the data array and IDs.
 
         Checks that the data is at least 1x1 in size, 2D, square, hollow, and
-        contains only floats. Also checks that sample IDs are unique and that
-        the number of sample IDs matches the number of rows/cols in the data
-        array.
+        contains only floats. Also checks that IDs are unique and that the
+        number of IDs matches the number of rows/cols in the data array.
 
         Subclasses can override this method to perform different/more specific
         validation (e.g., see ``SymmetricDistanceMatrix``).
@@ -421,7 +414,7 @@ class DistanceMatrix(object):
         (because then it could be used after the exception is caught).
 
         """
-        num_sids = len(sample_ids)
+        num_ids = len(ids)
 
         if 0 in data.shape:
             raise DistanceMatrixError("Data must be at least 1x1 in size.")
@@ -436,28 +429,27 @@ class DistanceMatrix(object):
         elif np.trace(data) != 0:
             raise DistanceMatrixError("Data must be hollow (i.e., the "
                                       "diagonal can only contain zeros).")
-        elif num_sids != len(set(sample_ids)):
-            raise DistanceMatrixError("Sample IDs must be unique.")
-        elif num_sids != data.shape[0]:
-            raise DistanceMatrixError("The number of sample IDs must match "
-                                      "the number of rows/columns in the "
-                                      "data.")
+        elif num_ids != len(set(ids)):
+            raise DistanceMatrixError("IDs must be unique.")
+        elif num_ids != data.shape[0]:
+            raise DistanceMatrixError("The number of IDs must match the "
+                                      "number of rows/columns in the data.")
 
     def _index_list(self, list_):
         return {id_: idx for idx, id_ in enumerate(list_)}
 
-    def _format_sample_ids(self, delimiter):
-        return delimiter.join([''] + list(self.sample_ids))
+    def _format_ids(self, delimiter):
+        return delimiter.join([''] + list(self.ids))
 
-    def _pprint_sample_ids(self, max_chars=80, delimiter=', ', suffix='...',):
+    def _pprint_ids(self, max_chars=80, delimiter=', ', suffix='...',):
         """Adapted from http://stackoverflow.com/a/250373"""
-        sids_str = delimiter.join(self.sample_ids)
+        ids_str = delimiter.join(self.ids)
 
-        if len(sids_str) > max_chars:
-            truncated = sids_str[:max_chars + 1].split(delimiter)[0:-1]
-            sids_str = delimiter.join(truncated) + delimiter + suffix
+        if len(ids_str) > max_chars:
+            truncated = ids_str[:max_chars + 1].split(delimiter)[0:-1]
+            ids_str = delimiter.join(truncated) + delimiter + suffix
 
-        return sids_str
+        return ids_str
 
 
 class SymmetricDistanceMatrix(DistanceMatrix):
@@ -488,21 +480,20 @@ class SymmetricDistanceMatrix(DistanceMatrix):
         """
         return squareform(self.data, force='tovector')
 
-    def _validate(self, data, sample_ids):
-        """Validate the data array and sample IDs.
+    def _validate(self, data, ids):
+        """Validate the data array and IDs.
 
         Overrides the superclass ``_validate``. Performs a check for symmetry
         in addition to the checks performed in the superclass.
 
         """
-        super(SymmetricDistanceMatrix, self)._validate(data, sample_ids)
+        super(SymmetricDistanceMatrix, self)._validate(data, ids)
 
         if (data.T != data).any():
             raise DistanceMatrixError("Data must be symmetric.")
 
 
-def random_distance_matrix(num_samples, sample_ids=None,
-                           constructor=DistanceMatrix,
+def random_distance_matrix(num_objects, ids=None, constructor=DistanceMatrix,
                            random_fn=np.random.rand):
     """Return a distance matrix populated with random distances.
 
@@ -514,25 +505,25 @@ def random_distance_matrix(num_samples, sample_ids=None,
     returned distance matrix is guaranteed to be symmetric and hollow.
 
     Arguments:
-    num_samples -- the number of samples in the resulting distance matrix. For
-        example, if ``num_samples`` is 3, a 3x3 distance matrix will be
+    num_objects -- the number of objects in the resulting distance matrix. For
+        example, if ``num_objects`` is 3, a 3x3 distance matrix will be
         returned
-    sample_ids -- a sequence of strings to be used as sample IDs.
-        ``len(sample_ids)`` must be equal to ``num_samples``. If not provided,
-        sample IDs will be monotonically-increasing integers cast as strings
-        (numbering starts at 1). For example, ``('1', '2', '3')``
+    ids -- a sequence of strings to be used as IDs. ``len(ids)`` must be equal
+        to ``num_objects``. If not provided, IDs will be
+        monotonically-increasing integers cast as strings (numbering starts at
+        1). For example, ``('1', '2', '3')``
     constructor -- ``DistanceMatrix`` or subclass constructor to use when
         creating the distance matrix. The returned distance matrix will be of
         this type
     random_fn -- function to generate random values. Function must accept two
         arguments (number of rows and number of columns) and return a 2D
-        ``numpy.ndarray`` of floats (or something that can be casted to float)
+        ``numpy.ndarray`` of floats (or something that can be cast to float)
 
     """
-    data = np.tril(random_fn(num_samples, num_samples), -1)
+    data = np.tril(random_fn(num_objects, num_objects), -1)
     data += data.T
 
-    if not sample_ids:
-        sample_ids = map(str, range(1, num_samples + 1))
+    if not ids:
+        ids = map(str, range(1, num_objects + 1))
 
-    return constructor(data, sample_ids)
+    return constructor(data, ids)
