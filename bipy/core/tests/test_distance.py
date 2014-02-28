@@ -394,7 +394,7 @@ class DistanceMatrixTests(DistanceMatrixTestData):
         self.assertEqual(type(obs), np.ndarray)
 
         # Grab all data.
-        obs = self.dm_3x3[0:, 0:]
+        obs = self.dm_3x3[:, :]
         self.assertTrue(np.array_equal(obs, self.dm_3x3.data))
         self.assertEqual(type(obs), np.ndarray)
 

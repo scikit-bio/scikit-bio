@@ -29,6 +29,7 @@ class MissingIDError(Exception):
         super(MissingIDError, self).__init__()
         self.args = ("The ID '%s' is not in the distance matrix." % id_,)
 
+
 class DistanceMatrixFormatError(Exception):
     """Error for reporting issues in distance matrix file format.
 
