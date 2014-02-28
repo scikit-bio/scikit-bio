@@ -16,10 +16,20 @@ from bipy.core.exception import BiologicalSequenceError
 
 
 class BiologicalSequence(Sequence):
-    """ Base class for biological sequences
+    """
+    Base class for biological sequences.
+        
+    Attributes
+    ----------
+    alphabet
+    description
+    gap_alphabet
+    identifier
 
-        BiologicalSequence objects are immutable. Where applicable,
-         methods return a new object of the same class.
+    Notes
+    -----
+    BiologicalSequence objects are immutable. Where applicable,
+     methods return a new object of the same class.
     """
 
     _alphabet = set()
@@ -27,15 +37,38 @@ class BiologicalSequence(Sequence):
 
     def __init__(self, sequence, identifier="", description="",
                  validate=False):
-        """ initialize a BiologicalSequence object
+        """
+        Initialize a BiologicalSequence object.
+        
+        Parameters
+        ----------
+        sequence : python Sequence (e.g., string, list or tuple)
+            The biological sequence.
+        identifier : str, optional
+            The sequence identifier (e.g., an accession number).
+        description : str, optional
+            A description or comment about the sequence (e.g., "green 
+            fluorescent protein").
+        validate : bool, optional
+            If True, runs the is_valid method after construction and raises 
+            BiologicalSequenceError if is_valid == False.
 
-            sequence: the biological sequence as a python Sequence
-             (e.g., a string, list, or tuple)
-            identifier: the sequence identifier (e.g., an accession number)
-            description: a description or comment about the sequence (e.g.,
-             "green fluorescent protein")
-            validate: if True, runs the is_valid method after construction
-             and raises BiologicalSequenceError if is_valid == False
+        Raises
+        ------
+        BiologicalSequenceError
+          If validate == True and is_valid == False.
+
+        See Also
+        --------
+        NucleotideSequence : Base class for nucleotide sequences
+        DNASequence : Class for DNA sequences
+        RNASequence : Class for RNA sequences
+
+        Examples
+        --------
+        >>> s = BiologicalSequence('GGUCGUGAAGGA')
+        >>> t = BiologicalSequence('GGUCCUGAAGGU')
+
         """
         self._sequence = ''.join(sequence)
         self._identifier = identifier
@@ -48,15 +81,59 @@ class BiologicalSequence(Sequence):
                 % (" ".join(unsupported_chars)))
 
     def __contains__(self, other):
-        """ return True if other is contained in the BiologicalSequence
+        """ 
+        The in operator.
+        
+        Parameters
+        ----------
+        other : str
+            The putative subsequence.
+
+        Returns
+        -------
+        bool
+            Indicates whether other is contained in self.
+
+        Examples
+        --------
+        >>> s = BiologicalSequence('GGUCGUGAAGGA')
+        >>> 'GGU' in s
+        True
+        >>> 'CCC' in s
+        False
+        
         """
         return other in self._sequence
 
     def __eq__(self, other):
-        """ equality (==) operator
+        """
+        The equality operator.
 
-            BiologicalSequences are equal if their sequence is the same and
-             they are the same type
+        Parameters
+        ----------
+        other : BiologicalSequence
+            The sequence to test for equality against.
+
+        Returns
+        -------
+        bool
+            Indicates whether self and other are equal.
+
+        Notes
+        -----
+        BiologicalSequences are equal if their sequence is the same and
+        they are the same type.
+
+        Examples
+        --------
+        >>> s = BiologicalSequence('GGUCGUGAAGGA')
+        >>> t = BiologicalSequence('GGUCGUGAAGGA')
+        >>> s == t
+        True
+        >>> u = BiologicalSequence('GGUCGUGACCGA')
+        >>> u == t
+        False
+
         """
         if self.__class__ != other.__class__:
             return False
@@ -82,9 +159,65 @@ class BiologicalSequence(Sequence):
         return len(self._sequence)
 
     def __ne__(self, other):
+        """ 
+        The inequality operator.
+
+        Parameters
+        ----------
+        other : BiologicalSequence
+            The sequence to test for inequality against.
+
+        Returns
+        -------
+        bool
+            Indicates whether self and other are not equal.
+
+        Notes
+        -----
+        BiologicalSequences are not equal if their sequence is different or
+        they are not the same type.
+
+        Examples
+        --------
+        >>> s = BiologicalSequence('GGUCGUGAAGGA')
+        >>> t = BiologicalSequence('GGUCGUGAAGGA')
+        >>> s != t
+        False
+        >>> u = BiologicalSequence('GGUCGUGACCGA')
+        >>> u != t
+        True
+
+        """
         return not self.__eq__(other)
 
     def __repr__(self):
+        """
+        The repr method.
+        
+        Returns
+        -------
+        str
+            Returns a string representation of the object.
+
+        Notes
+        -----
+        String representation is contains the class name, the first ten
+        characters of the sequence followed by elipses (or the full sequence
+        and no elipses, if the sequence is less than 11 characters long,
+        followed by the sequecne length.
+
+        Examples
+        --------
+        >>> s = BiologicalSequence('GGUCGUGAAGGA')
+        >>> repr(s)
+        '<BiologicalSequence: GGUCGUGAAG... (length: 12)>'
+        >>> t = BiologicalSequence('ACGT')
+        >>> repr(t)
+        '<BiologicalSequence: ACGT (length: 4)>'
+        >>> t
+        '<BiologicalSequence: ACGT (length: 4)>'
+
+        """
         first_ten = str(self)[:10]
         cn = self.__class__.__name__
         length = len(self)
@@ -137,26 +270,62 @@ class BiologicalSequence(Sequence):
         return self._identifier
 
     def count(self, subsequence):
-        """ return the number of occurences of subsequence
+        """
+        Returns the number of occurences of subsequence.
+
+        Parameters
+        ----------
+        subsequence : str
+            The subsequence to count occurences of.
+
+        Returns
+        -------
+        int
+            The number of occurrences of substring in the ``BiologicalSequence``.
         """
         return self._sequence.count(subsequence)
 
     def degap(self):
-        """ return a new BiologicalSequence with gaps characters removed
+        """
+        Returns a new ``BiologicalSequence`` with gaps characters removed.
 
-            the type, identifier, and description of the result will be the
-             same as self
+        Returns
+        -------
+        A new ``BiologicalSequence`` with all characters from
+        ``self.gap_alphabet`` filtered from the sequence.
+
+        Notes
+        -----
+        The type, identifier, and description of the result will be the
+        same as ``self``.
         """
         result = [e for e in self._sequence if e not in self._gap_alphabet]
         return self.__class__(result, identifier=self._identifier,
                               description=self._description)
 
     def distance(self, other, distance_fn=_hamming_distance):
-        """ return the distance to other using an arbitrary distance function
+        """
+        Returns the distance to other
 
-            distance_fn must take two Sequence objects and is expected to
-            return a number (integer or float). for example, see
+        Parameters
+        ----------
+        other : ``BiologicalSequence``
+        distance_fn : function, optional
+            Function used to compute the distance between self and other. This
+            function must take two Sequence objects and is expected to return 
+            a number (integer or float). For an example, see
             BiologicalSequence._hamming_distance.
+
+        Returns
+        -------
+        int or float
+            The distance between the ``BiologicalSequences`` self and other.
+
+        See Also
+        --------
+        bipy.core.distance.DistanceMatrix : for storing distances between
+        collections of ``BiologicalSequences``.
+            
         """
         return distance_fn(self, other)
 
