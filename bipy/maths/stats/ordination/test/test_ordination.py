@@ -329,7 +329,7 @@ class TestRDAErrors(object):
 class TestRDAResults(object):
     # STATUS: L&L only shows results with scaling 1, and they agree
     # with vegan's (module multiplying by a constant). I can also
-    # compute scaling 2, agreeing with vegan, but there're no written
+    # compute scaling 2, agreeing with vegan, but there are no written
     # results in L&L.
     def setup(self):
         """Data from table 11.3 in Legendre & Legendre 1998."""
