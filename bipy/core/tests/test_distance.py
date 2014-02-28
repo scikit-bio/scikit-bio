@@ -164,6 +164,29 @@ class DistanceMatrixTests(DistanceMatrixTestData):
 
             self.assertEqual(obs, dm_f_line)
 
+    def test_init_from_dm(self):
+        """Constructs a dm from a dm."""
+        ids = ['foo', 'bar', 'baz']
+
+        # DistanceMatrix -> DistanceMatrix
+        exp = DistanceMatrix(self.dm_3x3_data, ids)
+        obs = DistanceMatrix(self.dm_3x3, ids)
+        self.assertEqual(obs, exp)
+        # Test that copy of data is not made.
+        self.assertTrue(obs.data is self.dm_3x3.data)
+        obs.data[0, 1] = 424242
+        self.assertTrue(np.array_equal(obs.data, self.dm_3x3.data))
+
+        # SymmetricDistanceMatrix -> DistanceMatrix
+        exp = DistanceMatrix(self.dm_3x3_data, ids)
+        obs = DistanceMatrix(SymmetricDistanceMatrix(self.dm_3x3_data,
+                                                     ('a', 'b', 'c')), ids)
+        self.assertEqual(obs, exp)
+
+        # DistanceMatrix -> SymmetricDistanceMatrix
+        with self.assertRaises(DistanceMatrixError):
+            _ = SymmetricDistanceMatrix(self.dm_2x2_asym, ['foo', 'bar'])
+
     def test_init_invalid_input(self):
         """Raises error on invalid distance matrix data / IDs."""
         # Empty data.

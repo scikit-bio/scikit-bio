@@ -190,14 +190,18 @@ class DistanceMatrix(object):
         Arguments:
         data -- a square, hollow 2D ``numpy.ndarray`` of distances (floats), or
             a structure that can be converted to a ``numpy.ndarray`` using
-            ``numpy.asarray``. Data will be converted to a float ``dtype`` if
-            necessary. A copy will *not* be made if already an ``ndarray`` with
-            a float ``dtype``
+            ``numpy.asarray``. Can also be a ``DistanceMatrix`` instance, in
+            which case the distance matrix's data will be used. Data will be
+            converted to a float ``dtype`` if necessary. A copy will *not* be
+            made if already an ``ndarray`` with a float ``dtype``
         ids -- a sequence of strings to be used as object labels. Must match
             the number of rows/cols in ``data``
 
         """
+        if isinstance(data, DistanceMatrix):
+            data = data.data
         data = np.asarray(data, dtype='float')
+
         ids = tuple(ids)
         self._validate(data, ids)
 
