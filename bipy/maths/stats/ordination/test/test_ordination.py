@@ -332,7 +332,7 @@ class TestRDAResults(object):
     # compute scaling 2, agreeing with vegan, but there're no written
     # results in L&L.
     def setup(self):
-        """Data from table 9.11 in Legendre & Legendre 1998."""
+        """Data from table 11.3 in Legendre & Legendre 1998."""
         Y = np.loadtxt(get_data_path('example2_Y'))
         X = np.loadtxt(get_data_path('example2_X'))
         self.ordination = RDA(Y, X)
@@ -364,7 +364,7 @@ class TestRDAResults(object):
 
 class TestCCAErrors(object):
     def setup(self):
-        """Data from table 9.11 in Legendre & Legendre 1998."""
+        """Data from table 11.3 in Legendre & Legendre 1998."""
         self.Y = np.loadtxt(get_data_path('example3_Y'))
         self.X = np.loadtxt(get_data_path('example3_X'))
 
@@ -385,8 +385,9 @@ class TestCCAErrors(object):
 
 class TestCCAResults(object):
     def setup(self):
-        """Data from table 9.11 in Legendre & Legendre 1998. Loaded
-        results as computed with vegan 2.0-8"""
+        """Data from table 11.3 in Legendre & Legendre 1998
+        (p. 590). Loaded results as computed with vegan 2.0-8 and
+        compared with table 11.5 if also there."""
         Y = np.loadtxt(get_data_path('example3_Y'))
         X = np.loadtxt(get_data_path('example3_X'))
         self.ordination = CCA(Y, X)
