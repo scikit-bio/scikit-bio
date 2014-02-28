@@ -24,8 +24,10 @@ class DistanceMatrixError(Exception):
 
 class MissingIDError(Exception):
     """Error for ID lookup that doesn't exist in the distance matrix."""
-    pass
 
+    def __init__(self, id_):
+        super(MissingIDError, self).__init__()
+        self.args = ("The ID '%s' is not in the distance matrix." % id_,)
 
 class DistanceMatrixFormatError(Exception):
     """Error for reporting issues in distance matrix file format.
@@ -346,8 +348,17 @@ class DistanceMatrix(object):
         matrix is symmetric, the two will be identical, but this makes a
         difference if the matrix is asymmetric.
 
-        The lookup based on ID is quick. ``MissingIDError`` is raised if the ID
-        does not exist.
+        If ``index`` is a two-tuple of strings, each string is assumed to be an
+        ID and the corresponding matrix element is returned that represents the
+        distance between the two IDs.
+
+        The order of lookup by ID matters if the matrix is asymmetric: the
+        first ID will be used to lookup the row, and the second ID will be used
+        to lookup the column. Thus, ``dm['a', 'b']`` may not be the same as
+        ``dm['b', 'a']`` if the matrix is asymmetric.
+
+        The lookup based on ID(s) is quick. ``MissingIDError`` is raised if the
+        ID(s) do not exist.
 
         Otherwise, ``index`` will be passed through to
         ``DistanceMatrix.data.__getitem__``, allowing for standard indexing of
@@ -362,8 +373,13 @@ class DistanceMatrix(object):
             if index in self._id_index:
                 return self.data[self._id_index[index]]
             else:
-                raise MissingIDError("The ID '%s' is not in the distance "
-                                     "matrix." % index)
+                raise MissingIDError(index)
+        elif self._is_id_pair(index):
+            for id_ in index:
+                if id_ not in self._id_index:
+                    raise MissingIDError(id_)
+            return self.data[self._id_index[index[0]],
+                             self._id_index[index[1]]]
         else:
             return self.data.__getitem__(index)
 
@@ -441,6 +457,11 @@ class DistanceMatrix(object):
 
     def _index_list(self, list_):
         return {id_: idx for idx, id_ in enumerate(list_)}
+
+    def _is_id_pair(self, index):
+        return (isinstance(index, tuple) and
+                len(index) == 2 and
+                all(map(lambda e: isinstance(e, basestring), index)))
 
     def _format_ids(self, delimiter):
         return delimiter.join([''] + list(self.ids))

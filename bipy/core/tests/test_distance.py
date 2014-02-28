@@ -362,6 +362,22 @@ class DistanceMatrixTests(DistanceMatrixTestData):
         with self.assertRaises(MissingIDError):
             _ = self.dm_2x2['c']
 
+    def test_getitem_by_id_pair(self):
+        """Test retrieving elements by ID pair."""
+        # Same object.
+        self.assertEqual(self.dm_1x1['a', 'a'], 0.0)
+
+        # Different objects (symmetric).
+        self.assertEqual(self.dm_3x3['b', 'c'], 12.0)
+        self.assertEqual(self.dm_3x3['c', 'b'], 12.0)
+
+        # Different objects (asymmetric).
+        self.assertEqual(self.dm_2x2_asym['a', 'b'], 1.0)
+        self.assertEqual(self.dm_2x2_asym['b', 'a'], -2.0)
+
+        with self.assertRaises(MissingIDError):
+            _ = self.dm_2x2['a', 'c']
+
     def test_getitem_ndarray_indexing(self):
         """Test __getitem__ delegates to underlying ndarray."""
         # Single element access.
@@ -395,6 +411,10 @@ class DistanceMatrixTests(DistanceMatrixTestData):
 
     def test_index_list(self):
         """Empty stub: DistanceMatrix._index_list already tested elsewhere."""
+        pass
+
+    def test_is_id_pair(self):
+        """Empty stub: DistanceMatrix._is_id_pair already tested elsewhere."""
         pass
 
     def test_format_ids(self):
