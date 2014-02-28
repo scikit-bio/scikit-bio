@@ -390,7 +390,7 @@ class TestCCAResults(object):
         compared with table 11.5 if also there."""
         Y = np.loadtxt(get_data_path('example3_Y'))
         X = np.loadtxt(get_data_path('example3_X'))
-        self.ordination = CCA(Y, X)
+        self.ordination = CCA(Y, X[:, :-1])
 
     def test_scaling1_species(self):
         scores = self.ordination.scores(1)
