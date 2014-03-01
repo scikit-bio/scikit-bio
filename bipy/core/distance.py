@@ -1,5 +1,64 @@
 #!/usr/bin/env python
-"""Classes for storing and manipulating distance matrices."""
+r"""Data structures for storing and manipulating distance matrices.
+
+This module provides classes and functions for serializing, deserializing, and
+manipulating distance matrices in memory. There are multiple distance matrix
+classes available, where the appropriate class to use depends on nature of the
+distances you wish to store.
+
+A distance matrix includes both the matrix of distances (floats) between
+objects, as well as the IDs (labels) identifying each object in the matrix.
+
+Examples
+--------
+Load a distance matrix from a delimited text file containing::
+
+    \ta\tb\tc
+    a\t0.0\t0.5\t1.0
+    b\t0.5\t0.0\t0.75
+    c\t1.0\t0.75\t0.0
+
+>>> from StringIO import StringIO
+>>> from bipy.core.distance import DistanceMatrix
+>>> dm_f = StringIO("\ta\tb\tc\n"
+...                 "a\t0.0\t0.5\t1.0\n"
+...                 "b\t0.5\t0.0\t0.75\n"
+...                 "c\t1.0\t0.75\t0.0\n")
+>>> dm = DistanceMatrix.from_file(dm_f)
+>>> print dm
+3x3 distance matrix
+IDs:
+a, b, c
+Data:
+[[ 0.    0.5   1.  ]
+ [ 0.5   0.    0.75]
+ [ 1.    0.75  0.  ]]
+
+Access the distance (scalar) between objects ``'a'`` and ``'c'``:
+
+>>> dm['a', 'c']
+1.0
+
+Get a row vector of distances between object ``'b'`` and all other objects:
+
+>>> dm['b']
+array([ 0.5 ,  0.  ,  0.75])
+
+numpy indexing/slicing also works as expected. Extract the third column:
+
+>>> dm[:, 2]
+array([ 1.  ,  0.75,  0.  ])
+
+Serialize the distance matrix to delimited text file:
+
+>>> out_f = StringIO()
+>>> dm.to_file(out_f)
+>>> out_f.getvalue()
+'\ta\tb\tc\na\t0.0\t0.5\t1.0\nb\t0.5\t0.0\t0.75\nc\t1.0\t0.75\t0.0\n'
+>>> out_f.getvalue() == dm_f.getvalue()
+True
+
+"""
 from __future__ import division
 
 #-----------------------------------------------------------------------------
@@ -18,12 +77,12 @@ from scipy.spatial.distance import squareform
 
 
 class DistanceMatrixError(Exception):
-    """General error for distance matrix validation failures."""
+    r"""General error for distance matrix validation failures."""
     pass
 
 
 class MissingIDError(Exception):
-    """Error for ID lookup that doesn't exist in the distance matrix."""
+    r"""Error for ID lookup that doesn't exist in the distance matrix."""
 
     def __init__(self, id_):
         super(MissingIDError, self).__init__()
@@ -31,7 +90,7 @@ class MissingIDError(Exception):
 
 
 class DistanceMatrixFormatError(Exception):
-    """Error for reporting issues in distance matrix file format.
+    r"""Error for reporting issues in distance matrix file format.
 
     Typically used during parsing.
 
@@ -40,7 +99,7 @@ class DistanceMatrixFormatError(Exception):
 
 
 class IDMismatchError(Exception):
-    """Error for reporting a mismatch between IDs.
+    r"""Error for reporting a mismatch between IDs.
 
     Typically used during parsing.
 
@@ -56,7 +115,7 @@ class IDMismatchError(Exception):
 
 
 class MissingHeaderError(Exception):
-    """Error for reporting a missing ID header line during parsing."""
+    r"""Error for reporting a missing ID header line during parsing."""
 
     def __init__(self):
         super(MissingHeaderError, self).__init__()
@@ -66,7 +125,7 @@ class MissingHeaderError(Exception):
 
 
 class MissingDataError(Exception):
-    """Error for reporting missing data lines during parsing."""
+    r"""Error for reporting missing data lines during parsing."""
 
     def __init__(self, actual, expected):
         super(MissingDataError, self).__init__()
@@ -75,7 +134,7 @@ class MissingDataError(Exception):
 
 
 class DistanceMatrix(object):
-    """Store distances between objects and object IDs.
+    r"""Store distances between objects and object IDs.
 
     A `DistanceMatrix` instance stores a square, hollow, two-dimensional matrix
     of distances between objects. Objects could be, for example, samples or DNA
@@ -125,7 +184,7 @@ class DistanceMatrix(object):
 
     @classmethod
     def from_file(cls, dm_f, delimiter='\t'):
-        """Load distance matrix from delimited text file.
+        r"""Load distance matrix from delimited text file.
 
         Creates a `DistanceMatrix` instance from a serialized distance
         matrix stored as delimited text.
@@ -242,7 +301,7 @@ class DistanceMatrix(object):
 
     @property
     def data(self):
-        """Array of distances.
+        r"""Array of distances.
 
         A square, hollow, two-dimensional ``numpy.ndarray`` of distances
         (floats). A copy is *not* returned.
@@ -256,7 +315,7 @@ class DistanceMatrix(object):
 
     @property
     def ids(self):
-        """Tuple of object IDs.
+        r"""Tuple of object IDs.
 
         A tuple of strings, one for each object in the distance matrix.
 
@@ -277,12 +336,12 @@ class DistanceMatrix(object):
 
     @property
     def dtype(self):
-        """Data type of the distances."""
+        r"""Data type of the distances."""
         return self.data.dtype
 
     @property
     def shape(self):
-        """Two-element tuple containing the distance matrix dimensions.
+        r"""Two-element tuple containing the distance matrix dimensions.
 
         Notes
         -----
@@ -294,7 +353,7 @@ class DistanceMatrix(object):
 
     @property
     def size(self):
-        """Total number of elements in the distance matrix.
+        r"""Total number of elements in the distance matrix.
 
         Notes
         -----
@@ -305,7 +364,7 @@ class DistanceMatrix(object):
 
     @property
     def T(self):
-        """Transpose of the distance matrix.
+        r"""Transpose of the distance matrix.
         
         See Also
         --------
@@ -315,7 +374,7 @@ class DistanceMatrix(object):
         return self.transpose()
 
     def transpose(self):
-        """Return the transpose of the distance matrix.
+        r"""Return the transpose of the distance matrix.
 
         Notes
         -----
@@ -330,7 +389,7 @@ class DistanceMatrix(object):
         return self.__class__(self.data.T.copy(), deepcopy(self.ids))
 
     def redundant_form(self):
-        """Return an array of distances in redundant format.
+        r"""Return an array of distances in redundant format.
 
         As this is the native format that the distances are stored in, this is
         simply an alias for `data`.
@@ -354,7 +413,7 @@ class DistanceMatrix(object):
         return self.data
 
     def copy(self):
-        """Return a deep copy of the distance matrix.
+        r"""Return a deep copy of the distance matrix.
 
         Returns
         -------
@@ -367,7 +426,7 @@ class DistanceMatrix(object):
         return self.__class__(self.data.copy(), deepcopy(self.ids))
 
     def __str__(self):
-        """Return a string representation of the distance matrix.
+        r"""Return a string representation of the distance matrix.
 
         Summary includes matrix dimensions, a (truncated) list of IDs, and
         (truncated) array of distances.
@@ -383,7 +442,7 @@ class DistanceMatrix(object):
             self._pprint_ids()) + str(self.data)
 
     def __eq__(self, other):
-        """Compare this distance matrix to another for equality.
+        r"""Compare this distance matrix to another for equality.
 
         Two distance matrices are equal if they have the same shape, IDs (in
         the same order!), and have data arrays that are equal.
@@ -423,7 +482,7 @@ class DistanceMatrix(object):
         return equal
 
     def __ne__(self, other):
-        """Determine whether two distance matrices are not equal.
+        r"""Determine whether two distance matrices are not equal.
 
         Parameters
         ----------
@@ -443,7 +502,7 @@ class DistanceMatrix(object):
         return not self == other
 
     def __getitem__(self, index):
-        """Slice into distance data by ID or numpy indexing.
+        r"""Slice into distance data by ID or numpy indexing.
 
         Extracts data from the distance matrix by ID, a pair of IDs, or numpy
         indexing/slicing.
@@ -503,7 +562,7 @@ class DistanceMatrix(object):
             return self.data.__getitem__(index)
 
     def to_file(self, out_f, delimiter='\t'):
-        """Save the distance matrix to file in delimited text format.
+        r"""Save the distance matrix to file in delimited text format.
 
         See Also
         --------
@@ -546,7 +605,7 @@ class DistanceMatrix(object):
             return map(lambda e: e.strip(), header_line.split(delimiter))
 
     def _validate(self, data, ids):
-        """Validate the data array and IDs.
+        r"""Validate the data array and IDs.
 
         Checks that the data is at least 1x1 in size, 2D, square, hollow, and
         contains only floats. Also checks that IDs are unique and that the
@@ -607,38 +666,56 @@ class DistanceMatrix(object):
 
 
 class SymmetricDistanceMatrix(DistanceMatrix):
-    """Represent a symmetric distance matrix.
+    r"""Represent a symmetric distance matrix.
 
-    A ``SymmetricDistanceMatrix`` is a ``DistanceMatrix`` with the additional
-    requirement that the matrix data is symmetric. There are additional
-    operations made available that take advantage of this symmetry.
+    A `SymmetricDistanceMatrix` is a `DistanceMatrix` with the additional
+    requirement that the matrix data is symmetric. There are additional methods
+    made available that take advantage of this symmetry.
 
-    The distances are stored in redundant (square-form) format (same as
-    ``DistanceMatrix``). To facilitate use with other scientific Python
-    routines (e.g., scipy), the distances can be retrieved in condensed
-    (vector-form) format using ``condensed_form``. For more details on
-    redundant and condensed formats, see:
-    http://docs.scipy.org/doc/scipy/reference/spatial.distance.html
+    See Also
+    --------
+    DistanceMatrix
+
+    Notes
+    -----
+    The distances are stored in redundant (square-form) format [1]_. To
+    facilitate use with other scientific Python routines (e.g., scipy), the
+    distances can be retrieved in condensed (vector-form) format using
+    `condensed_form`.
+
+    References
+    ----------
+    .. [1] http://docs.scipy.org/doc/scipy/reference/spatial.distance.html
 
     """
 
     def condensed_form(self):
-        """Return a 1D ``numpy.ndarray`` vector of distances.
+        r"""Return an array of distances in condensed format.
+
+        Returns
+        -------
+        ndarray
+            One-dimensional ``numpy.ndarray`` of distances in condensed format.
+
+        Notes
+        -----
+        Condensed format is described in [1]_.
 
         The conversion is not a constant-time operation, though it should be
         relatively quick to perform.
 
-        For more details on redundant and condensed formats, see:
-        http://docs.scipy.org/doc/scipy/reference/spatial.distance.html
+        References
+        ----------
+        .. [1] http://docs.scipy.org/doc/scipy/reference/spatial.distance.html
 
         """
         return squareform(self.data, force='tovector')
 
     def _validate(self, data, ids):
-        """Validate the data array and IDs.
+        r"""Validate the data array and IDs.
 
-        Overrides the superclass ``_validate``. Performs a check for symmetry
-        in addition to the checks performed in the superclass.
+        Overrides the superclass `_validate`. Performs a check for symmetry in
+        addition to the checks performed in the superclass.
 
         """
         super(SymmetricDistanceMatrix, self)._validate(data, ids)
@@ -649,29 +726,42 @@ class SymmetricDistanceMatrix(DistanceMatrix):
 
 def random_distance_matrix(num_objects, ids=None, constructor=DistanceMatrix,
                            random_fn=np.random.rand):
-    """Return a distance matrix populated with random distances.
+    r"""Generate a distance matrix populated with random distances.
 
-    Using the default ``random_fn``, distances are randomly drawn from a
-    uniform distribution over ``[0, 1)`` (see ``numpy.random.rand`` for more
-    details).
+    Using the default `random_fn`, distances are randomly drawn from a uniform
+    distribution over ``[0, 1)``.
 
-    Regardless of the ``random_fn`` that is used to populate the matrix, the
-    returned distance matrix is guaranteed to be symmetric and hollow.
+    Regardless of `random_fn`, the resulting distance matrix is guaranteed to
+    be symmetric and hollow.
 
-    Arguments:
-    num_objects -- the number of objects in the resulting distance matrix. For
-        example, if ``num_objects`` is 3, a 3x3 distance matrix will be
-        returned
-    ids -- a sequence of strings to be used as IDs. ``len(ids)`` must be equal
-        to ``num_objects``. If not provided, IDs will be
-        monotonically-increasing integers cast as strings (numbering starts at
-        1). For example, ``('1', '2', '3')``
-    constructor -- ``DistanceMatrix`` or subclass constructor to use when
-        creating the distance matrix. The returned distance matrix will be of
-        this type
-    random_fn -- function to generate random values. Function must accept two
+    Parameters
+    ----------
+    num_objects : int
+        The number of objects in the resulting distance matrix. For example, if
+        `num_objects` is 3, a 3x3 distance matrix will be returned.
+    ids : sequence of str or None, optional
+        A sequence of strings to be used as IDs. ``len(ids)`` must be equal to
+        `num_objects`. If not provided, IDs will be monotonically-increasing
+        integers cast as strings (numbering starts at 1). For example,
+        ``('1', '2', '3')``.
+    constructor : type, optional
+        `DistanceMatrix` or subclass constructor to use when creating the
+        random distance matrix. The returned distance matrix will be of this
+        type.
+    random_fn : function, optional
+        Function to generate random values. `random_fn` must accept two
         arguments (number of rows and number of columns) and return a 2D
-        ``numpy.ndarray`` of floats (or something that can be cast to float)
+        ``numpy.ndarray`` of floats (or something that can be cast to float).
+
+    Returns
+    -------
+    DistanceMatrix
+        `DistanceMatrix` (or subclass) instance of random distances. Type
+        depends on `constructor`.
+
+    See Also
+    --------
+    numpy.random.rand
 
     """
     data = np.tril(random_fn(num_objects, num_objects), -1)
