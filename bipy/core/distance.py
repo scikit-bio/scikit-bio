@@ -365,7 +365,7 @@ class DistanceMatrix(object):
     @property
     def T(self):
         r"""Transpose of the distance matrix.
-        
+
         See Also
         --------
         transpose
@@ -379,7 +379,7 @@ class DistanceMatrix(object):
         Notes
         -----
         A deep copy is returned.
-        
+
         Returns
         -------
         DistanceMatrix
