@@ -74,6 +74,9 @@ class CategoricalStats(object):
                                        self._dm.num_samples, self._groups,
                                        stat, p_value, permutations)
 
+    def _run(self, grouping):
+        raise NotImplementedError("Subclasses must implement _run().")
+
 
 class CategoricalStatsResults(object):
 
@@ -89,12 +92,13 @@ class CategoricalStatsResults(object):
         self.p_value = p_value
         self.permutations = permutations
 
-    def summary(delimiter='\t'):
+    def summary(self, delimiter='\t'):
         """Return a formatted summary of results as a string."""
-        p_value_str = self._format_p_value()
+        p_value_str = self._format_p_value(self.p_value, self.permutations)
 
         summary = StringIO()
-        csv_writer = csv.writer(summary, delimiter=delimiter)
+        csv_writer = csv.writer(summary, delimiter=delimiter,
+                                lineterminator='\n')
         csv_writer.writerow(('Method name', 'Sample size',
                              'Number of groups', self.test_statistic_name,
                              'p-value', 'Number of permutations'))
@@ -105,20 +109,20 @@ class CategoricalStatsResults(object):
 
         return summary.getvalue()
 
-    def _format_p_value(self):
+    def _format_p_value(self, p_value, permutations):
         """Format p-value as a string with the correct number of decimals.
 
         Number of decimals is determined by the number of permutations.
         """
-        if self.permutations < 10:
+        if permutations < 10:
             # This can be the last step of a long process, so we don't want to
             # fail.
             result = ('Too few permutations to compute p-value (permutations '
-                      '= %d)' % self.permutations)
-        elif self.p_value is None:
+                      '= %d)' % permutations)
+        elif p_value is None:
             result = 'N/A'
         else:
-            decimal_places = int(np.log10(self.permutations + 1))
-            result = ('%1.' + '%df' % decimal_places) % self.p_value
+            decimal_places = int(np.log10(permutations + 1))
+            result = ('%1.' + '%df' % decimal_places) % p_value
 
         return result
