@@ -3,8 +3,8 @@ r"""Data structures for storing and manipulating distance matrices.
 
 This module provides classes and functions for serializing, deserializing, and
 manipulating distance matrices in memory. There are multiple distance matrix
-classes available, where the appropriate class to use depends on nature of the
-distances you wish to store.
+classes available, where the appropriate class to use depends on the nature of
+the distances you wish to store.
 
 A distance matrix includes both the matrix of distances (floats) between
 objects, as well as the IDs (labels) identifying each object in the matrix.
