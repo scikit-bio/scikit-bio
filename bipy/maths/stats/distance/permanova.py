@@ -31,14 +31,17 @@ class PERMANOVA(CategoricalStats):
 
     def _run(self, grouping):
         """Compute PERMANOVA pseudo-F statistic."""
-        # Create grouping matrix.
+        # Create a matrix where samples in the same group are marked with the
+        # group index (e.g. 0, 1, 2, etc.). Samples that are not in the same
+        # are marked with -1.
         grouping_matrix = -1 * np.ones(self._dm.shape, dtype=int)
         for group_idx in range(len(self._groups)):
             within_indices = self._index_combinations(
                 np.where(grouping == group_idx)[0])
             grouping_matrix[within_indices] = group_idx
 
-        # Extract upper triangle.
+        # Extract upper triangle (in same order as distances were extracted
+        # from full distance matrix).
         grouping_tri = grouping_matrix[self._tri_idxs]
 
         return self._compute_f_stat(grouping_tri)

@@ -54,39 +54,47 @@ class PERMANOVATests(TestCase):
         self.permanova_unequal = PERMANOVA(self.dm_unequal, grouping_unequal)
 
     def test_call_ties(self):
-        # TODO: update tests to use CategoricalStatsResults objects to store
-        # expected results
-        exp_f_stat = 2.0
-        exp_p_val = 0.671
-
-        np.random.seed(0)
-        obs = self.permanova_ties()
-        self.assertFloatEqual(obs.statistic, exp_f_stat)
-        self.assertFloatEqual(obs.p_value, exp_p_val)
-
         # Ensure we get the same results if we rerun the method on the same
         # object.
-        np.random.seed(0)
-        obs = self.permanova_ties()
-        self.assertFloatEqual(obs.statistic, exp_f_stat)
-        self.assertFloatEqual(obs.p_value, exp_p_val)
+        for trial in range(2):
+            np.random.seed(0)
+            obs = self.permanova_ties()
+            self.assertEqual(obs.sample_size, 4)
+            self.assertTrue(np.array_equal(obs.groups,
+                                           np.asarray(['Control', 'Fast'])))
+            self.assertFloatEqual(obs.statistic, 2.0)
+            self.assertFloatEqual(obs.p_value, 0.671)
+            self.assertEqual(obs.permutations, 999)
 
     def test_call_no_ties(self):
         np.random.seed(0)
         obs = self.permanova_no_ties()
+        self.assertEqual(obs.sample_size, 4)
+        self.assertTrue(np.array_equal(obs.groups,
+                                       np.asarray(['Control', 'Fast'])))
         self.assertFloatEqual(obs.statistic, 4.4)
         self.assertFloatEqual(obs.p_value, 0.332)
+        self.assertEqual(obs.permutations, 999)
 
     def test_call_no_permutations(self):
         obs = self.permanova_no_ties(0)
+        self.assertEqual(obs.sample_size, 4)
+        self.assertTrue(np.array_equal(obs.groups,
+                                       np.asarray(['Control', 'Fast'])))
         self.assertFloatEqual(obs.statistic, 4.4)
         self.assertEqual(obs.p_value, None)
+        self.assertEqual(obs.permutations, 0)
 
     def test_call_unequal_group_sizes(self):
         np.random.seed(0)
         obs = self.permanova_unequal()
+        self.assertEqual(obs.sample_size, 6)
+        self.assertTrue(np.array_equal(obs.groups,
+                                       np.asarray(['Control', 'Treatment1',
+                                                   'Treatment2'])))
         self.assertFloatEqual(obs.statistic, 0.578848)
         self.assertFloatEqual(obs.p_value, 0.645)
+        self.assertEqual(obs.permutations, 999)
 
 
 if __name__ == '__main__':
