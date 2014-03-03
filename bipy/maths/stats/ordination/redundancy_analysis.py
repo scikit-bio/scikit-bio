@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------
-# Copyright (c) 2013, The BiPy Developers.
+# Copyright (c) 2013--, bipy development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -103,9 +103,7 @@ class RDA(Ordination):
         # the covariance matrix Y_hat.T.dot(Y_hat))
         # See 3) in p. 583 in L&L 1998
         rank = svd_rank(Y_hat.shape, s)
-        assert rank <= min(p, m, n - 1), (
-            "There are {} non-zero eigenvalues, but the maximum is {}.".format(
-                rank, min(p, m, n - 1)))
+        # Theoretically, there're at most min(p, m, n - 1) non-zero eigenvalues
 
         U = vt[:rank].T  # U as in Fig. 11.2
 
@@ -124,9 +122,7 @@ class RDA(Ordination):
         u_res, s_res, vt_res = np.linalg.svd(Y_res, full_matrices=False)
         # See 9) in p. 587 in L&L 1998
         rank_res = svd_rank(Y_res.shape, s_res)
-        assert rank_res <= min(p, n - 1), (
-            "There are {} non-zero eigenvalues, but the maximum is {}.".format(
-                rank_res, min(p, m, n - 1)))
+        # Theoretically, there're at most min(p, n - 1) non-zero eigenvaluesas
 
         U_res = vt_res[:rank_res].T
         F_res = Y_res.dot(U_res)  # Ordination in the space of residuals
@@ -151,12 +147,17 @@ class RDA(Ordination):
 
             TODO: improve explanation based on p. 403 L&L.
 
-            Scaling type 1 produces a distance biplot. It focuses on the
-            ordination of sites. Especially interesting when most
-            explanatory variables are binary.
+            Scaling type 1 produces a distance biplot. It focuses on
+            the ordination of rows (sites) because their transformed
+            distances approximate their original euclidean
+            distances. Especially interesting when most explanatory
+            variables are binary.
 
             Scaling type 2 produces a correlation biplot. It focuses
-            on the relationships among explained variables (`Y`).
+            on the relationships among explained variables (`Y`). It
+            is interpreted like scaling type 1, but taking into
+            account that distances between objects don't approximate
+            their euclidean distances.
         """
         if scaling not in {1, 2}:
             raise NotImplementedError("Only scalings 1, 2 available for RDA.")

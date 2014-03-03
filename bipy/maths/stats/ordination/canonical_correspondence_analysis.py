@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------
-# Copyright (c) 2013, The BiPy Developers.
+# Copyright (c) 2013--, bipy development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -23,14 +23,22 @@ class CCA(Ordination):
         analysis.
 
         Canonical (or constrained) correspondence analysis is a
-        multivariate ordination technique.
+        multivariate ordination technique. It appeared in community
+        ecology [1]_ and relates community composition to the
+        variation in the environment (or in other factors). It works
+        from data on abundances or counts of individuals and
+        environmental variables, and outputs ordination axes that
+        maximize niche separation among species.
 
-        In exploratory data analysis, ordination (or multivariate
-        gradient analysis) complements clustering by arranging objects
-        (species, samples...) along gradients so that similar ones are
-        closer and dissimilar ones are further. There's a good overview
-        of the available techniques in
-        http://ordination.okstate.edu/overview.htm.
+        It is better suited to extract the niches of taxa than linear
+        multivariate methods because it assumes unimodal response
+        curves (habitat preferences are often unimodal functions of
+        habitat variables [2]_).
+
+        As more environmental variables are added, the result gets
+        more similar to unconstrained ordination, so only the
+        variables that are deemed explanatory should be included in
+        the analysis.
 
         Parameters
         ----------
@@ -43,26 +51,24 @@ class CCA(Ordination):
 
         Notes
         -----
-        There are a couple of techniques to search for multivariate
-        relationships between two datasets with very similar names, so
-        this can get confusing:
+        Canonical *correspondence* analysis shouldn't be confused with
+        canonical *correlation* analysis (CCorA, but sometimes called
+        CCA), a different technique to search for multivariate
+        relationships between two datasets. Canonical correlation
+        analysis is a statistical tool that, given two vectors of
+        random variables, finds linear combinations that have maximum
+        correlation with each other. In some sense, it assumes linear
+        responses of "species" to "environmental variables" and is not
+        well suited to analyze ecological data.
 
-        - Canonical correlation analysis is a statistical tool that,
-          given two vectors of random variables, finds linear
-          combinations that have maximum correlation with each other. In
-          some sense, assumes linear responses of *species* to
-          *environmental variables*. This is not implemented here.
-
-        - Canonical (or constrained) correspondence analysis appeared in
-          community ecology [1]_ and relates community composition to
-          the variation in the environment (or in other factors). It
-          works from data on abundances or counts of individuals and
-          environmental variables, and outputs ordination axes that
-          maximize niche separation among species. It is better suited
-          to extract the niches of taxa than linear multivariate methods
-          like canonical correlation analysis because it assumes
-          unimodal response curves (habitat preferences are often
-          unimodal functions of habitat variables [2]_).
+        See Also
+        --------
+        In data analysis, ordination (or multivariate gradient
+        analysis) complements clustering by arranging objects
+        (species, samples...) along gradients so that similar ones are
+        closer and dissimilar ones are further. There's a good
+        overview of the available techniques in
+        http://ordination.okstate.edu/overview.htm.
 
         References
         ----------
@@ -141,7 +147,7 @@ class CCA(Ordination):
         vt_res = vt_res[:rank]
 
         U_res = vt_res.T
-        U_hat_res = Q_bar.dot(U_res) * s_res**-1
+        U_hat_res = Y_res.dot(U_res) * s_res**-1
 
         # Storing values needed to compute scores
         iter_ = (('column_marginals', column_marginals),
@@ -159,6 +165,14 @@ class CCA(Ordination):
         self.eigenvalues = np.r_[s, s_res]**2
 
     def scores(self, scaling):
+        r"""Compute site and species scores for different scalings.
+
+        Parameters
+        ----------
+        scaling : int
+            The same options as in `CA` are available, and the
+            interpretation is the same.
+        """
         if scaling not in {1, 2}:
             raise NotImplementedError(
                 "Scaling {0} not implemented.".format(scaling))
@@ -197,12 +211,15 @@ class CCA(Ordination):
         F_hat_res = V_res * self.s_res
 
         eigvals = self.eigenvalues
-        species_scores = np.hstack([(V, V_res),
-                                    (F_hat, F_hat_res)][scaling - 1])
-        site_scores = np.hstack([(F, F_res),
-                                 (V_hat, V_hat_res)][scaling - 1])
-        site_constraints = np.hstack([(Z_scaling1, F_res),
-                                      (Z_scaling2, V_hat_res)][scaling - 1])
+        if scaling == 1:
+            species_scores = np.hstack((V, V_res))
+            site_scores = np.hstack((F, F_res))
+            site_constraints = np.hstack((Z_scaling1, F_res))
+        elif scaling == 2:
+            species_scores = np.hstack((F_hat, F_hat_res))
+            site_scores = np.hstack((V_hat, V_hat_res))
+            site_constraints = np.hstack((Z_scaling2, V_hat_res))
+
         biplot_scores = corr(self.X_weighted, self.u)
         return OrdinationResults(eigvals=eigvals,
                                  species=species_scores,

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 #-----------------------------------------------------------------------------
-# Copyright (c) 2013, The BiPy Developers.
+# Copyright (c) 2013--, bipy development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -9,8 +9,8 @@
 #-----------------------------------------------------------------------------
 
 import os
-from os import remove, system, mkdir, getcwd, environ
-from os.path import isabs, exists, join
+from os import remove, system, mkdir, getcwd
+from os.path import isabs, exists
 from random import choice
 from tempfile import gettempdir
 from copy import deepcopy

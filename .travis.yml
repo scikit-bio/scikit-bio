@@ -17,5 +17,5 @@ install:
   - source activate env_name
   - pip install . --no-deps
 script:
-  - nosetests
+  - nosetests --with-doctest
   - pep8 bipy setup.py

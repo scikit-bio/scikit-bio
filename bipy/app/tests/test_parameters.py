@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 #-----------------------------------------------------------------------------
-# Copyright (c) 2013, The BiPy Developers.
+# Copyright (c) 2013--, bipy development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -9,7 +9,7 @@
 #-----------------------------------------------------------------------------
 
 from bipy.util.unit_test import TestCase, main
-from bipy.app.parameters import (Parameter, FlagParameter, ValuedParameter,
+from bipy.app.parameters import (FlagParameter, ValuedParameter,
                                  MixedParameter, Parameters,
                                  ParameterError, FilePath)
 
