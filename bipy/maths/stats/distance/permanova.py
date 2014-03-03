@@ -11,75 +11,25 @@
 from __future__ import absolute_import, division
 
 import numpy as np
-from scipy.stats import rankdata
 
-from bipy.core.distance import SymmetricDistanceMatrix
-from .base import CategoricalStatsResults
+from .base import CategoricalStats
 
 
-class PERMANOVA(object):
+class PERMANOVA(CategoricalStats):
     short_method_name = 'PERMANOVA'
     long_method_name = 'Permutational Multivariate Analysis of Variance'
+    test_statistic_name = 'pseudo-F statistic'
 
     def __init__(self, distance_matrix, grouping):
-        if not isinstance(distance_matrix, SymmetricDistanceMatrix):
-            raise TypeError("Input must be a SymmetricDistanceMatrix.")
-        if len(grouping) != distance_matrix.num_samples:
-            raise ValueError("Grouping vector size must match the number of "
-                             "sample IDs in the distance matrix.")
-
-        # Find the group labels and convert grouping to an integer vector
-        # (factor).
-        groups, grouping = np.unique(grouping, return_inverse=True)
-
-        if len(groups) == len(grouping):
-            raise ValueError("All values in the grouping vector are unique. "
-                             "PERMANOVA cannot operate on a grouping vector with "
-                             "only unique values (e.g., there are no 'within' "
-                             "distances because each group of samples "
-                             "contains only a single sample).")
-        if len(groups) == 1:
-            raise ValueError("All values in the grouping vector are the same. "
-                             "PERMANOVA cannot operate on a grouping vector with "
-                             "only a single group of samples (e.g., there are "
-                             "no 'between' distances because there is only a "
-                             "single group).")
-
-        self._dm = distance_matrix
-        self._grouping = grouping
-        self._groups = groups
-        self._num_groups = len(self._groups)
+        super(PERMANOVA, self).__init__(distance_matrix, grouping)
 
         # Calculate number of samples in each group.
-        self._unique_n = np.bincount(self._grouping)
-
+        self._group_sizes = np.bincount(self._grouping)
+        self._num_groups = len(self._groups)
         self._distances = self._dm.condensed_form()
         self._s_T = (self._distances ** 2).sum() / self._dm.num_samples
-        self._tri_idxs = np.triu_indices(self._dm.num_samples, k=1)
 
-    def __call__(self, permutations=999):
-        if permutations < 0:
-            raise ValueError("Number of permutations must be greater than or "
-                             "equal to zero.")
-
-        f_stat = self._permanova(self._grouping)
-
-        p_value = None
-        if permutations > 0:
-            perm_stats = np.empty(permutations, dtype=np.float64)
-
-            for i in range(permutations):
-                perm_grouping = np.random.permutation(self._grouping)
-                perm_stats[i] = self._permanova(perm_grouping)
-
-            p_value = ((perm_stats >= f_stat).sum() + 1) / (permutations + 1)
-
-        return CategoricalStatsResults(self.short_method_name,
-                                       self.long_method_name,
-                                       self._dm.num_samples, self._groups,
-                                       f_stat, p_value, permutations)
-
-    def _permanova(self, grouping):
+    def _run(self, grouping):
         """Compute PERMANOVA pseudo-F statistic."""
         # Create grouping matrix.
         grouping_matrix = -1 * np.ones(self._dm.shape, dtype=int)
@@ -104,7 +54,8 @@ class PERMANOVA(object):
         # Calculate s_W for each group, accounting for different group sizes.
         s_W = 0
         for i in range(a):
-            s_W += (self._distances[grouping_tri == i] ** 2).sum() / self._unique_n[i]
+            s_W += ((self._distances[grouping_tri == i] ** 2).sum() /
+                    self._group_sizes[i])
 
         s_A = self._s_T - s_W
         return (s_A / (a - 1)) / (s_W / (N - a))
