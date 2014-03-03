@@ -28,8 +28,9 @@ class ANOSIM(object):
             raise ValueError("Grouping vector size must match the number of "
                              "sample IDs in the distance matrix.")
 
-        grouping = np.asarray(grouping)
-        groups = np.unique(grouping)
+        # Find the group labels and convert grouping to an integer vector
+        # (factor).
+        groups, grouping = np.unique(grouping, return_inverse=True)
 
         if len(groups) == len(grouping):
             raise ValueError("All values in the grouping vector are unique. "
@@ -75,16 +76,10 @@ class ANOSIM(object):
                                        r_stat, p_value, permutations)
 
     def _anosim(self, grouping):
-        # Create grouping matrix, where True means that the two samples are in
-        # the same group.
-        grouping_matrix = np.zeros(self._dm.shape, dtype=bool)
-        for group in self._groups:
-            within_indices = self._index_combinations(
-                np.where(grouping == group)[0])
-            grouping_matrix[within_indices] = True
-
-        # TODO try to get this to work by making grouping an integer vector
-        #grouping_matrix = np.equal.outer(grouping, grouping)
+        # Create a matrix where True means that the two samples are in the same
+        # group. This ufunc requires that grouping is a numeric vector (e.g.,
+        # it won't work with a grouping vector of strings).
+        grouping_matrix = np.equal.outer(grouping, grouping)
 
         # Extract upper triangle from the grouping matrix. It is important to
         # extract the values in the same order that the distances are extracted
@@ -93,10 +88,6 @@ class ANOSIM(object):
         grouping_tri = grouping_matrix[self._tri_idxs]
 
         return self._compute_r_stat(grouping_tri)
-
-    def _index_combinations(self, indices):
-        # Modified from http://stackoverflow.com/a/11144716
-        return np.tile(indices, len(indices)), np.repeat(indices, len(indices))
 
     def _compute_r_stat(self, grouping_tri):
         """Return ANOSIM R statistic (between -1 and +1)."""
