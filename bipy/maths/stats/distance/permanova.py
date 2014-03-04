@@ -16,6 +16,29 @@ from .base import CategoricalStats
 
 
 class PERMANOVA(CategoricalStats):
+    """PERMANOVA statistical method executor.
+
+    Permutational Multivariate Analysis of Variance (PERMANOVA) is a
+    non-parametric method that tests whether two or more groups of samples are
+    significantly different based on a categorical factor. It is conceptually
+    similar to ANOVA except that it operates on a distance matrix, which allows
+    for multivariate analysis. PERMANOVA computes a pseudo-F statistic and
+    tests the significance through permutations.
+
+    Notes
+    -----
+    See [1]_ for the original PERMANOVA reference, as well as
+    ``vegan::adonis``, available in R's vegan package [2]_.
+
+    References
+    ----------
+    .. [1] Anderson, Marti J. "A new method for non-parametric multivariate
+       analysis of variance." Austral Ecology 26.1 (2001): 32-46.
+
+    .. [2] http://cran.r-project.org/web/packages/vegan/index.html
+
+    """
+
     short_method_name = 'PERMANOVA'
     long_method_name = 'Permutational Multivariate Analysis of Variance'
     test_statistic_name = 'pseudo-F statistic'

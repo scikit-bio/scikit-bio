@@ -18,6 +18,18 @@ from bipy.core.distance import SymmetricDistanceMatrix
 
 
 class CategoricalStats(object):
+    """Base class for categorical statistical methods.
+
+    Categorical statistical methods generally test for significant differences
+    between discrete groups of samples, as determined by a categorical variable
+    (grouping vector).
+
+    See Also
+    --------
+    ANOSIM, PERMANOVA
+
+    """
+
     short_method_name = ''
     long_method_name = ''
     test_statistic_name = ''
@@ -52,6 +64,21 @@ class CategoricalStats(object):
         self._tri_idxs = np.triu_indices(self._dm.num_samples, k=1)
 
     def __call__(self, permutations=999):
+        """Execute the statistical method.
+
+        Parameters
+        ----------
+        permutations : int, optional
+            Number of permutations to use when calculating statistical
+            significance. Must be >= 0. If 0, the resulting p-value will be
+            ``None``.
+
+        Returns
+        -------
+        CategoricalStatsResults
+            Results of the method, including test statistic and p-value.
+
+        """
         if permutations < 0:
             raise ValueError("Number of permutations must be greater than or "
                              "equal to zero.")
@@ -79,6 +106,18 @@ class CategoricalStats(object):
 
 
 class CategoricalStatsResults(object):
+    """Statistical method results container.
+
+    Stores the results of running a `CategoricalStats` method a single time,
+    and provides a way to format the results.
+
+    Notes
+    -----
+    Users will generally not directly instantiate objects of this class. The
+    various categorical statistical methods will return an object of this type
+    when they are run.
+
+    """
 
     def __init__(self, short_method_name, long_method_name,
                  test_statistic_name, sample_size, groups, statistic, p_value,
@@ -93,7 +132,11 @@ class CategoricalStatsResults(object):
         self.permutations = permutations
 
     def summary(self, delimiter='\t'):
-        """Return a formatted summary of results as a string."""
+        """Return a formatted summary of results as a string.
+
+        The string is formatted as delimited text.
+
+        """
         p_value_str = self._format_p_value(self.p_value, self.permutations)
 
         summary = StringIO()

@@ -17,6 +17,31 @@ from .base import CategoricalStats
 
 
 class ANOSIM(CategoricalStats):
+    """ANOSIM statistical method executor.
+
+    Analysis of Similarities (ANOSIM) is a non-parametric method that tests
+    whether two or more groups of samples are significantly different based on
+    a categorical factor. The ranks of the distances in the distance matrix are
+    used to calculate an R statistic, which ranges between -1 (anti-grouping)
+    to +1 (strong grouping of samples), with an R value of 0 indicating random
+    grouping.
+
+    Notes
+    -----
+    See [1]_ for the original ANOSIM reference. The general algorithm and
+    interface are similar to ``vegan::anosim``, available in R's vegan package
+    [2]_.
+
+    References
+    ----------
+    .. [1] Clarke, KR. "Non-parametric multivariate analyses of changes in
+       community structure." Australian journal of ecology 18.1 (1993):
+       117-143.
+
+    .. [2] http://cran.r-project.org/web/packages/vegan/index.html
+
+    """
+
     short_method_name = 'ANOSIM'
     long_method_name = 'Analysis of Similarities'
     test_statistic_name = 'R statistic'
