@@ -1,22 +1,45 @@
 #!/usr/bin/env python
-r"""Data structures for storing and manipulating distance matrices.
+r"""
+Distance matrices (:mod:`bipy.core.distance`)
+=============================================
 
-This module provides classes and functions for serializing, deserializing, and
+.. currentmodule:: bipy.core.distance
+
+This module provides functionality for serializing, deserializing, and
 manipulating distance matrices in memory. There are multiple distance matrix
 classes available, where the appropriate class to use depends on the nature of
 the distances you wish to store.
 
-A distance matrix includes both the matrix of distances (floats) between
-objects, as well as the IDs (labels) identifying each object in the matrix.
+A distance matrix includes both a matrix of distances (floats) between objects,
+as well as IDs (labels) identifying each object in the matrix.
+
+Classes
+-------
+
+.. autosummary::
+   :toctree: generated/
+
+   DistanceMatrix
+   SymmetricDistanceMatrix
+
+Functions
+---------
+
+.. autosummary::
+   :toctree: generated/
+
+   random_distance_matrix
 
 Examples
 --------
-Load a distance matrix from a delimited text file containing::
+Assume we have the following delimited text file::
 
     \ta\tb\tc
     a\t0.0\t0.5\t1.0
     b\t0.5\t0.0\t0.75
     c\t1.0\t0.75\t0.0
+
+Load a distance matrix from the file:
 
 >>> from StringIO import StringIO
 >>> from bipy.core.distance import DistanceMatrix
@@ -134,7 +157,7 @@ class MissingDataError(Exception):
 
 
 class DistanceMatrix(object):
-    r"""Store distances between objects and object IDs.
+    """Store distances between objects and object IDs.
 
     A `DistanceMatrix` instance stores a square, hollow, two-dimensional matrix
     of distances between objects. Objects could be, for example, samples or DNA
@@ -666,7 +689,7 @@ class DistanceMatrix(object):
 
 
 class SymmetricDistanceMatrix(DistanceMatrix):
-    r"""Represent a symmetric distance matrix.
+    r"""Store symmetric distance data.
 
     A `SymmetricDistanceMatrix` is a `DistanceMatrix` with the additional
     requirement that the matrix data is symmetric. There are additional methods
