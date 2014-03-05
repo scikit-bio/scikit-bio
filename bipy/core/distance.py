@@ -100,12 +100,12 @@ from scipy.spatial.distance import squareform
 
 
 class DistanceMatrixError(Exception):
-    r"""General error for distance matrix validation failures."""
+    """General error for distance matrix validation failures."""
     pass
 
 
 class MissingIDError(Exception):
-    r"""Error for ID lookup that doesn't exist in the distance matrix."""
+    """Error for ID lookup that doesn't exist in the distance matrix."""
 
     def __init__(self, id_):
         super(MissingIDError, self).__init__()
@@ -113,7 +113,7 @@ class MissingIDError(Exception):
 
 
 class DistanceMatrixFormatError(Exception):
-    r"""Error for reporting issues in distance matrix file format.
+    """Error for reporting issues in distance matrix file format.
 
     Typically used during parsing.
 
@@ -122,7 +122,7 @@ class DistanceMatrixFormatError(Exception):
 
 
 class IDMismatchError(Exception):
-    r"""Error for reporting a mismatch between IDs.
+    """Error for reporting a mismatch between IDs.
 
     Typically used during parsing.
 
@@ -138,7 +138,7 @@ class IDMismatchError(Exception):
 
 
 class MissingHeaderError(Exception):
-    r"""Error for reporting a missing ID header line during parsing."""
+    """Error for reporting a missing ID header line during parsing."""
 
     def __init__(self):
         super(MissingHeaderError, self).__init__()
@@ -148,7 +148,7 @@ class MissingHeaderError(Exception):
 
 
 class MissingDataError(Exception):
-    r"""Error for reporting missing data lines during parsing."""
+    """Error for reporting missing data lines during parsing."""
 
     def __init__(self, actual, expected):
         super(MissingDataError, self).__init__()
@@ -207,7 +207,7 @@ class DistanceMatrix(object):
 
     @classmethod
     def from_file(cls, dm_f, delimiter='\t'):
-        r"""Load distance matrix from delimited text file.
+        """Load distance matrix from delimited text file.
 
         Creates a `DistanceMatrix` instance from a serialized distance
         matrix stored as delimited text.
@@ -324,7 +324,7 @@ class DistanceMatrix(object):
 
     @property
     def data(self):
-        r"""Array of distances.
+        """Array of distances.
 
         A square, hollow, two-dimensional ``numpy.ndarray`` of distances
         (floats). A copy is *not* returned.
@@ -338,7 +338,7 @@ class DistanceMatrix(object):
 
     @property
     def ids(self):
-        r"""Tuple of object IDs.
+        """Tuple of object IDs.
 
         A tuple of strings, one for each object in the distance matrix.
 
@@ -359,12 +359,12 @@ class DistanceMatrix(object):
 
     @property
     def dtype(self):
-        r"""Data type of the distances."""
+        """Data type of the distances."""
         return self.data.dtype
 
     @property
     def shape(self):
-        r"""Two-element tuple containing the distance matrix dimensions.
+        """Two-element tuple containing the distance matrix dimensions.
 
         Notes
         -----
@@ -376,7 +376,7 @@ class DistanceMatrix(object):
 
     @property
     def size(self):
-        r"""Total number of elements in the distance matrix.
+        """Total number of elements in the distance matrix.
 
         Notes
         -----
@@ -387,7 +387,7 @@ class DistanceMatrix(object):
 
     @property
     def T(self):
-        r"""Transpose of the distance matrix.
+        """Transpose of the distance matrix.
 
         See Also
         --------
@@ -397,7 +397,7 @@ class DistanceMatrix(object):
         return self.transpose()
 
     def transpose(self):
-        r"""Return the transpose of the distance matrix.
+        """Return the transpose of the distance matrix.
 
         Notes
         -----
@@ -412,7 +412,7 @@ class DistanceMatrix(object):
         return self.__class__(self.data.T.copy(), deepcopy(self.ids))
 
     def redundant_form(self):
-        r"""Return an array of distances in redundant format.
+        """Return an array of distances in redundant format.
 
         As this is the native format that the distances are stored in, this is
         simply an alias for `data`.
@@ -436,7 +436,7 @@ class DistanceMatrix(object):
         return self.data
 
     def copy(self):
-        r"""Return a deep copy of the distance matrix.
+        """Return a deep copy of the distance matrix.
 
         Returns
         -------
@@ -449,7 +449,7 @@ class DistanceMatrix(object):
         return self.__class__(self.data.copy(), deepcopy(self.ids))
 
     def __str__(self):
-        r"""Return a string representation of the distance matrix.
+        """Return a string representation of the distance matrix.
 
         Summary includes matrix dimensions, a (truncated) list of IDs, and
         (truncated) array of distances.
@@ -465,7 +465,7 @@ class DistanceMatrix(object):
             self._pprint_ids()) + str(self.data)
 
     def __eq__(self, other):
-        r"""Compare this distance matrix to another for equality.
+        """Compare this distance matrix to another for equality.
 
         Two distance matrices are equal if they have the same shape, IDs (in
         the same order!), and have data arrays that are equal.
@@ -505,7 +505,7 @@ class DistanceMatrix(object):
         return equal
 
     def __ne__(self, other):
-        r"""Determine whether two distance matrices are not equal.
+        """Determine whether two distance matrices are not equal.
 
         Parameters
         ----------
@@ -525,7 +525,7 @@ class DistanceMatrix(object):
         return not self == other
 
     def __getitem__(self, index):
-        r"""Slice into distance data by ID or numpy indexing.
+        """Slice into distance data by ID or numpy indexing.
 
         Extracts data from the distance matrix by ID, a pair of IDs, or numpy
         indexing/slicing.
@@ -585,7 +585,7 @@ class DistanceMatrix(object):
             return self.data.__getitem__(index)
 
     def to_file(self, out_f, delimiter='\t'):
-        r"""Save the distance matrix to file in delimited text format.
+        """Save the distance matrix to file in delimited text format.
 
         See Also
         --------
@@ -628,7 +628,7 @@ class DistanceMatrix(object):
             return map(lambda e: e.strip(), header_line.split(delimiter))
 
     def _validate(self, data, ids):
-        r"""Validate the data array and IDs.
+        """Validate the data array and IDs.
 
         Checks that the data is at least 1x1 in size, 2D, square, hollow, and
         contains only floats. Also checks that IDs are unique and that the
@@ -689,7 +689,7 @@ class DistanceMatrix(object):
 
 
 class SymmetricDistanceMatrix(DistanceMatrix):
-    r"""Store symmetric distance data.
+    """Store symmetric distance data.
 
     A `SymmetricDistanceMatrix` is a `DistanceMatrix` with the additional
     requirement that the matrix data is symmetric. There are additional methods
@@ -713,7 +713,7 @@ class SymmetricDistanceMatrix(DistanceMatrix):
     """
 
     def condensed_form(self):
-        r"""Return an array of distances in condensed format.
+        """Return an array of distances in condensed format.
 
         Returns
         -------
@@ -735,7 +735,7 @@ class SymmetricDistanceMatrix(DistanceMatrix):
         return squareform(self.data, force='tovector')
 
     def _validate(self, data, ids):
-        r"""Validate the data array and IDs.
+        """Validate the data array and IDs.
 
         Overrides the superclass `_validate`. Performs a check for symmetry in
         addition to the checks performed in the superclass.
@@ -749,7 +749,7 @@ class SymmetricDistanceMatrix(DistanceMatrix):
 
 def random_distance_matrix(num_objects, ids=None, constructor=DistanceMatrix,
                            random_fn=np.random.rand):
-    r"""Generate a distance matrix populated with random distances.
+    """Generate a distance matrix populated with random distances.
 
     Using the default `random_fn`, distances are randomly drawn from a uniform
     distribution over ``[0, 1)``.
