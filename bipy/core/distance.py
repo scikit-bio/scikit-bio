@@ -30,6 +30,19 @@ Functions
 
    random_distance_matrix
 
+Exceptions
+----------
+
+.. autosummary::
+   :toctree: generated/
+
+   DistanceMatrixError
+   DistanceMatrixFormatError
+   IDMismatchError
+   MissingDataError
+   MissingHeaderError
+   MissingIDError
+
 Examples
 --------
 Assume we have the following delimited text file::
@@ -107,9 +120,10 @@ class DistanceMatrixError(Exception):
 class MissingIDError(Exception):
     """Error for ID lookup that doesn't exist in the distance matrix."""
 
-    def __init__(self, id_):
+    def __init__(self, missing_id):
         super(MissingIDError, self).__init__()
-        self.args = ("The ID '%s' is not in the distance matrix." % id_,)
+        self.args = ("The ID '%s' is not in the distance matrix." %
+                     missing_id,)
 
 
 class DistanceMatrixFormatError(Exception):
