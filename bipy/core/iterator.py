@@ -8,7 +8,6 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-import os.path
 from itertools import chain, izip
 from numpy import array
 
@@ -18,7 +17,6 @@ from bipy.parse.fasta import MinimalFastaParser
 from cogent.parse.fastq import MinimalFastqParser
 from qiime.parse import is_casava_v180_or_later, MinimalQualParser
 from qiime.quality import ascii_to_phred33, ascii_to_phred64
-from qiime.util import gzip_open
 ###
 
 from .workflow import Workflow, not_none
@@ -29,6 +27,7 @@ from .workflow import Workflow, not_none
 
 from collections import namedtuple
 
+#### should sequence record live in bipy.core.util?
 class SequenceRecord(namedtuple("SequenceRecord", ("SequenceID", "Sequence",
                                                    "QualID", "Qual"))):
     __slots__ = ()
@@ -38,21 +37,9 @@ class SequenceRecord(namedtuple("SequenceRecord", ("SequenceID", "Sequence",
                                                   QualID, Qual)
 
 
-### should these be member methods?
-def valid_ids(a, b):
-    """Check if a and b are equal"""
-    return a == b
-
-
-def valid_length(a, b):
-    """Check if a and b are equal length"""
-    return len(a) == len(b)
-
-
-def has_qual(item):
+def _has_qual(item):
     """Return True if it appears that there is qual data"""
     return (item['QualID'] is not None) and (item['Qual'] is not None)
-
 
 class SequenceIterator(Workflow):
     """Provide a standard API for interacting with sequence files
@@ -96,13 +83,12 @@ class SequenceIterator(Workflow):
         id(seq1) == id(seq2)   # False
         seq1 == seq2           # False
     """
-    def __init__(self, seq, qual=None, transform=None, check_fail=None,
-                 valid_id=True, valid_length=True):
+    def __init__(self, seq, qual=None, transform=None, valid_id=True,
+                 valid_length=True):
         self.seq = seq
         self.qual = qual
 
         self._transform = transform
-        self._check_fail = check_fail
 
         state = {'SequenceID': None,
                  'Sequence': None,
@@ -110,7 +96,6 @@ class SequenceIterator(Workflow):
                  'Qual': None}
 
         options = {'transform': self._transform,
-                   'check_fail': self._check_fail,
                    'valid_id': valid_id,
                    'valid_length': valid_length}
 
@@ -137,15 +122,14 @@ class SequenceIterator(Workflow):
         self.state['Qual'] = item.Qual
 
     @Workflow.method(priority=100)
-    @Workflow.requires(option='valid_id', values=True)
+    @Workflow.requires(option='valid_id', values=True, state=_has_qual)
     def validate_ids(self):
-        self.valid_qual_id()
+        self.failed = self.state['SequenceID'] != self.state['QualID']
 
     @Workflow.method(priority=90)
-    @Workflow.requires(option='valid_length', values=True, state=has_qual)
+    @Workflow.requires(option='valid_length', values=True, state=_has_qual)
     def valid_lengths(self):
-        self.failed = not valid_length(self.state['Sequence'],
-                                       self.state['Qual'])
+        self.failed = len(self.state['Sequence']) != len(self.state['Qual'])
 
     @Workflow.method(priority=80)
     @Workflow.requires(option='transform', values=not_none)
@@ -153,16 +137,6 @@ class SequenceIterator(Workflow):
         """Transform state if necessary"""
         self._transform(self.state)
 
-    ## not sure if necessary
-    @Workflow.method(priority=70)
-    @Workflow.requires(option='check_fail', values=True)
-    def check_fail(self):
-        self.failed = self._check_fail(self.state)
-
-    @Workflow.requires(state=has_qual)
-    def valid_qual_id(self):
-        self.failed = not valid_ids(self.state['SequenceID'],
-                                    self.state['QualID'])
 
 class FastaIterator(SequenceIterator):
     """Populate and yield records based on fasta sequence"""
@@ -209,7 +183,7 @@ class FastqIterator(SequenceIterator):
         fastq_gens = chain(*[MinimalFastqParser(f, False) for f in self.seq])
 
         # peek the first record to determine phred offset
-        first_item = fastq_gens.next()
+        first_item = next(fastq_gens)
         seqid, seq, qual = first_item
         fastq_gens = chain([first_item], fastq_gens)
 
@@ -284,104 +258,3 @@ class PairedShuffledSequenceIterator(object):
         if counter % 2 != 0:
             raise ValueError("Uneven number of sequences observed!")
 
-FILEEXT_MAP = {'fna': (FastaIterator, open),
-               'fna.gz': (FastaIterator, gzip_open),
-               'fasta': (FastaIterator, open),
-               'fasta.gz': (FastaIterator, gzip_open),
-               'qual': (FastaIterator, open),
-               'qual.gz': (FastaIterator, gzip_open),
-               'fastq': (FastqIterator, open),
-               'fastq.gz': (FastqIterator, gzip_open)}
-
-
-def _determine_types_and_openers(files):
-    """Attempt to determine the appropriate iterators and openers"""
-    if files is None:
-        return [], []
-
-    iters = []
-    openers = []
-    for fpath in files:
-        if fpath.endswith('.gz'):
-            ext = fpath.rsplit('.', 2)[-1]
-        else:
-            ext = fpath.rsplit('.', 1)[-1]
-
-        i, o = FILEEXT_MAP.get(ext, None)
-        if i is None:
-            raise IOError("Unknown filetype for %s" % fpath)
-
-        iters.append(i)
-        openers.append(o)
-
-    return iters, openers
-
-
-def _is_single_iterator_type(iters):
-    """Determine if there is a single or multiple type of iterator
-
-    If iters is [], this method returns True it considers the null case to be
-    a single iterator type.
-    """
-    if iters:
-        return len(set(iters)) == 1
-    else:
-        return True
-
-
-def _open_or_none(opener, f):
-    """Open a file or returns None"""
-    if not opener:
-        return None
-    else:
-        name = opener.__name__
-
-        if not os.path.exists(f):
-            raise IOError("%s does not appear to exist!" % f)
-
-        try:
-            opened = opener(f)
-        except IOError:
-            raise IOError("Could not open %s with %s!" % (f, name))
-
-        return opened
-
-
-def factory(seqs, qual=None, **kwargs):
-    """Construct the appropriate iterator for all your processing needs
-
-    This method will attempt to open all files correctly and to feed the
-    appropriate objects into the correct iterators.
-
-    seqs : list of sequence file paths
-    qual : list of qual file paths or None
-
-    kwargs are passed into the subsequent generators.
-
-    Seqs can list multiple types of files (e.g., FASTA and FASTQ), but if
-    multiple file types are specified, qual must be None
-    """
-    if not seqs:
-        raise ValueError("Must pass in sequences!")
-
-    # i -> iters, o -> openers
-    i_seqs, o_seqs = _determine_types_and_openers(seqs)
-    i_qual, o_qual = _determine_types_and_openers(qual)
-
-    seqs = [_open_or_none(f) for f in seqs]
-    qual = [_open_or_none(f) for f in qual] or None
-
-    if not _is_single_iterator_type(i_seqs) and qual is not None:
-        # chaining Fasta/Fastq for sequence is easy, but it gets nasty quick
-        # if seqs is a mix of fasta/fastq, with qual coming in as there aren't
-        # 1-1 mappings. This could be addressed if necessary, but seems like
-        # an unnecessary block of code right now
-        raise ValueError("Cannot resolve iterators!")
-
-    if _is_single_iterator_type(i_seqs):
-        seqs_constructor = i_seqs[0]
-        gen = seqs_constructor(seqs=seqs, qual=qual, **kwargs)
-    else:
-        gen = chain(*[c(seqs=fp, **kwargs) for c, fp in izip(i_seqs, seqs)])
-
-    return gen

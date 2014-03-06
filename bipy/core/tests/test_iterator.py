@@ -3,7 +3,7 @@
 from StringIO import StringIO
 from numpy import arange, array
 from bipy.util.unit_test import TestCase, main
-from bipy.core.sequence_iterators import (SequenceIterator, SequenceRecord,
+from bipy.core.iterator import (SequenceIterator, SequenceRecord,
         FastaIterator, FastqIterator)
 
 
