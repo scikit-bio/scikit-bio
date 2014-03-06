@@ -284,14 +284,15 @@ class PairedShuffledSequenceIterator(object):
         if counter % 2 != 0:
             raise ValueError("Uneven number of sequences observed!")
 
-FILEEXT_MAP = {'fna':(FastaIterator, open),
-               'fna.gz':(FastaIterator, gzip_open),
-               'fasta':(FastaIterator, open),
-               'fasta.gz':(FastaIterator, gzip_open),
-               'qual':(FastaIterator, open),
-               'qual.gz':(FastaIterator, gzip_open),
-               'fastq':(FastqIterator, open),
-               'fastq.gz':(FastqIterator, gzip_open)}
+FILEEXT_MAP = {'fna': (FastaIterator, open),
+               'fna.gz': (FastaIterator, gzip_open),
+               'fasta': (FastaIterator, open),
+               'fasta.gz': (FastaIterator, gzip_open),
+               'qual': (FastaIterator, open),
+               'qual.gz': (FastaIterator, gzip_open),
+               'fastq': (FastqIterator, open),
+               'fastq.gz': (FastqIterator, gzip_open)}
+
 
 def _determine_types_and_openers(files):
     """Attempt to determine the appropriate iterators and openers"""
@@ -315,6 +316,7 @@ def _determine_types_and_openers(files):
 
     return iters, openers
 
+
 def _is_single_iterator_type(iters):
     """Determine if there is a single or multiple type of iterator
 
@@ -326,118 +328,60 @@ def _is_single_iterator_type(iters):
     else:
         return True
 
-def _open_or_none(openers, files):
-    """Open all the files or return None"""
-    if not openers:
+
+def _open_or_none(opener, f):
+    """Open a file or returns None"""
+    if not opener:
         return None
     else:
-        opened = []
-        for o, f in zip(openers, files):
-            name = o.__name__
-            if not os.path.exists(f):
-                raise IOError("%s does not appear to exist!" % f)
+        name = opener.__name__
 
-            try:
-                opened.append(o(f))
-            except IOError as e:
-                raise IOError("Could not open %s with %s!" % (f, name))
+        if not os.path.exists(f):
+            raise IOError("%s does not appear to exist!" % f)
+
+        try:
+            opened = opener(f)
+        except IOError:
+            raise IOError("Could not open %s with %s!" % (f, name))
 
         return opened
 
-def iter_factory(seqs1=None, qual1=None, bc1=None,
-                 seqs2=None, qual2=None, bc2=None,
-                 paired_and_shuffled=False, r1_kw=None, r2_kw=None):
+
+def factory(seqs, qual=None, **kwargs):
     """Construct the appropriate iterator for all your processing needs
 
     This method will attempt to open all files correctly and to feed the
     appropriate objects into the correct iterators.
 
-    seqs1 : list of sequence file paths for unpaired data or the first read if
-        the data are paired
-    seqs2 : list of sequence file paths for the second read of paired data
-    qual1 : list of qual file paths for unpaired data or the first read if the
-        data are paired
-    qual2 : list of qual file paths for the second read of paired data
-    bc1   : list of barcode file paths for unpaired data or the first read if
-        the data are paired
-    bc2   : list of barcode file paths for the second read of paired data
-    paired_and_shuffled : if True, the factory will assume the data in seqs1,
-        qual1 (if present) and bc1 (if present) are paired and interleaved
-        internally
-    r1_kw : a dict of arguments for the read 1 iterator, including transforms
-        (e.g., reverse complement), validation (e.g., disable ID and length
-        checks), etc.
-    r2_kw : a dict of arguments for the read 2 iterator, including transforms
-        (e.g., reverse complement), validation (e.g., disable ID and length
-        checks), etc.
+    seqs : list of sequence file paths
+    qual : list of qual file paths or None
 
-    Currently, the iterators cannot handle having a file as fastq and a file as
-    fasta. In otherwords, the following will raise ValueError:
+    kwargs are passed into the subsequent generators.
 
-        x = iter_factory(seqs1=['foo.fasta', 'bar.fastq'])
-
-    It is valid on paired data though, where the first read can be entirely
-    fasta and the second can be entirely fastq:
-
-        x = iter_factory(seqs1=['foo1.fasta', 'bar1.fasta'],
-                         seqs2=['foo2.fastq', 'bar2.fastq'])
+    Seqs can list multiple types of files (e.g., FASTA and FASTQ), but if
+    multiple file types are specified, qual must be None
     """
-    if seqs1 is None:
+    if not seqs:
         raise ValueError("Must pass in sequences!")
 
-    if r1_kw is None:
-        r1_kw = {}
-
-    if r2_kw is None:
-        r2_kw = {}
-
     # i -> iters, o -> openers
-    i_seqs1, o_seqs1 = _determine_types_and_openers(seqs1)
-    i_seqs2, o_seqs2 = _determine_types_and_openers(seqs2)
-    i_qual1, o_qual1 = _determine_types_and_openers(qual1)
-    i_qual2, o_qual2 = _determine_types_and_openers(qual2)
-    i_bc1, o_bc1 = _determine_types_and_openers(bc1)
-    i_bc2, o_bc2 = _determine_types_and_openers(bc2)
+    i_seqs, o_seqs = _determine_types_and_openers(seqs)
+    i_qual, o_qual = _determine_types_and_openers(qual)
 
-    if seqs1 and not _is_single_iterator_type(i_seqs1):
-        raise ValueError("Cannot mix and match iterators!")
+    seqs = [_open_or_none(f) for f in seqs]
+    qual = [_open_or_none(f) for f in qual] or None
 
-    if seqs2 and not _is_single_iterator_type(i_seqs2):
-        raise ValueError("Cannot mix and match iterators!")
+    if not _is_single_iterator_type(i_seqs) and qual is not None:
+        # chaining Fasta/Fastq for sequence is easy, but it gets nasty quick
+        # if seqs is a mix of fasta/fastq, with qual coming in as there aren't
+        # 1-1 mappings. This could be addressed if necessary, but seems like
+        # an unnecessary block of code right now
+        raise ValueError("Cannot resolve iterators!")
 
-    if qual1 and not _is_single_iterator_type(i_qual1):
-        raise ValueError("Cannot mix and match iterators!")
-
-    if qual2 and not _is_single_iterator_type(i_qual2):
-        raise ValueError("Cannot mix and match iterators!")
-
-    if bc1 and not _is_single_iterator_type(i_bc1):
-        raise ValueError("Cannot mix and match iterators!")
-
-    if bc2 and not _is_single_iterator_type(i_bc2):
-        raise ValueError("Cannot mix and match iterators!")
-
-    # fetch the constructor, and open all the files
-    r1_seqs_constructor = i_seqs1[0]
-    r1_seqs = _open_or_none(seqs1, o_seqs1)
-    r1_qual = _open_or_none(qual1, o_qual1)
-    r1_bc = _open_or_none(bc1, o_bc1)
-
-    r2_seqs_constructor = i_seqs2[0] if i_seqs2 else None
-    r2_seqs = _open_or_none(seqs2, o_seqs2)
-    r2_qual = _open_or_none(qual2, o_qual2)
-    r2_bc = _open_or_none(bc2, o_bc2)
-
-    # build the read1 iterator
-    r1 = r1_seqs_constructor(seqs=r1_seqs, qual=r1_qual, bc=r1_bc, **r1_kw)
-
-    # handle paired reads if necessary
-    if r2_seqs_constructor is not None:
-        r2 = r2_seqs_constructor(seqs=r2_seqs, qual=r2_qual, bc=r2_bc, **r2_kw)
-        obj = PairedSequenceIterator(r1, r2)
-    elif paired_and_shuffled:
-        obj = PairedShuffledSequenceIterator(r1)
+    if _is_single_iterator_type(i_seqs):
+        seqs_constructor = i_seqs[0]
+        gen = seqs_constructor(seqs=seqs, qual=qual, **kwargs)
     else:
-        obj = r1
+        gen = chain(*[c(seqs=fp, **kwargs) for c, fp in izip(i_seqs, seqs)])
 
-    return obj
+    return gen
