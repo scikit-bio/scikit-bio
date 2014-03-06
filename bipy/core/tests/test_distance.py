@@ -16,11 +16,10 @@ from tempfile import TemporaryFile
 
 import numpy as np
 
-from bipy.core.distance import (random_distance_matrix, DistanceMatrix,
-                                DistanceMatrixError, DistanceMatrixFormatError,
-                                MissingDataError, MissingHeaderError,
-                                MissingIDError, IDMismatchError,
-                                SymmetricDistanceMatrix)
+from bipy.core.distance import (randdm, DistanceMatrix, DistanceMatrixError,
+                                DistanceMatrixFormatError, MissingDataError,
+                                MissingHeaderError, MissingIDError,
+                                IDMismatchError, SymmetricDistanceMatrix)
 from bipy.util.unit_test import TestCase, main
 
 
@@ -487,23 +486,23 @@ class SymmetricDistanceMatrixTests(DistanceMatrixTestData):
 
 
 class RandomDistanceMatrixTests(TestCase):
-    """Tests for bipy.core.distance.random_distance_matrix."""
+    """Tests for bipy.core.distance.randdm."""
 
     def test_default_usage(self):
         """Test generating random distance matrices."""
         exp = DistanceMatrix(np.asarray([[0.0]]), ['1'])
-        obs = random_distance_matrix(1)
+        obs = randdm(1)
         self.assertEqual(obs, exp)
 
-        obs = random_distance_matrix(2)
+        obs = randdm(2)
         self.assertEqual(obs.shape, (2, 2))
         self.assertEqual(obs.ids, ('1', '2'))
 
-        obs1 = random_distance_matrix(5)
+        obs1 = randdm(5)
         num_trials = 10
         found_diff = False
         for _ in range(num_trials):
-            obs2 = random_distance_matrix(5)
+            obs2 = randdm(5)
 
             if obs1 != obs2:
                 found_diff = True
@@ -514,14 +513,14 @@ class RandomDistanceMatrixTests(TestCase):
     def test_ids(self):
         """Test generating random dist mats with specific IDs."""
         ids = ['foo', 'bar', 'baz']
-        obs = random_distance_matrix(3, ids=ids)
+        obs = randdm(3, ids=ids)
         self.assertEqual(obs.shape, (3, 3))
         self.assertEqual(obs.ids, tuple(ids))
 
     def test_constructor(self):
         """Test generating random dist mats with a specific constructor."""
         exp = SymmetricDistanceMatrix(np.asarray([[0.0]]), ['1'])
-        obs = random_distance_matrix(1, constructor=SymmetricDistanceMatrix)
+        obs = randdm(1, constructor=SymmetricDistanceMatrix)
         self.assertEqual(obs, exp)
         self.assertTrue(isinstance(obs, SymmetricDistanceMatrix))
 
@@ -535,22 +534,22 @@ class RandomDistanceMatrixTests(TestCase):
 
         exp = DistanceMatrix(np.asarray([[0, 42, 42], [42, 0, 42],
                                          [42, 42, 0]]), ['1', '2', '3'])
-        obs = random_distance_matrix(3, random_fn=myrand)
+        obs = randdm(3, random_fn=myrand)
         self.assertEqual(obs, exp)
 
     def test_invalid_input(self):
         """Test error-handling upon invalid input."""
         # Invalid dimensions.
         with self.assertRaises(DistanceMatrixError):
-            _ = random_distance_matrix(0)
+            _ = randdm(0)
 
         # Invalid dimensions.
         with self.assertRaises(ValueError):
-            _ = random_distance_matrix(-1)
+            _ = randdm(-1)
 
         # Invalid number of IDs.
         with self.assertRaises(DistanceMatrixError):
-            _ = random_distance_matrix(2, ids=['foo'])
+            _ = randdm(2, ids=['foo'])
 
 
 # 1x1:

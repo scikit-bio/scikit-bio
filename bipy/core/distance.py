@@ -28,7 +28,7 @@ Functions
 .. autosummary::
    :toctree: generated/
 
-   random_distance_matrix
+   randdm
 
 Exceptions
 ----------
@@ -761,8 +761,7 @@ class SymmetricDistanceMatrix(DistanceMatrix):
             raise DistanceMatrixError("Data must be symmetric.")
 
 
-def random_distance_matrix(num_objects, ids=None, constructor=DistanceMatrix,
-                           random_fn=np.random.rand):
+def randdm(num_objects, ids=None, constructor=None, random_fn=None):
     """Generate a distance matrix populated with random distances.
 
     Using the default `random_fn`, distances are randomly drawn from a uniform
@@ -784,11 +783,13 @@ def random_distance_matrix(num_objects, ids=None, constructor=DistanceMatrix,
     constructor : type, optional
         `DistanceMatrix` or subclass constructor to use when creating the
         random distance matrix. The returned distance matrix will be of this
-        type.
+        type. If ``None`` (the default), a `DistanceMatrix` instance will be
+        returned.
     random_fn : function, optional
         Function to generate random values. `random_fn` must accept two
         arguments (number of rows and number of columns) and return a 2D
         ``numpy.ndarray`` of floats (or something that can be cast to float).
+        If ``None`` (the default), ``numpy.random.rand`` will be used.
 
     Returns
     -------
@@ -801,6 +802,11 @@ def random_distance_matrix(num_objects, ids=None, constructor=DistanceMatrix,
     numpy.random.rand
 
     """
+    if constructor is None:
+        constructor = DistanceMatrix
+    if random_fn is None:
+        random_fn = np.random.rand
+
     data = np.tril(random_fn(num_objects, num_objects), -1)
     data += data.T
 
