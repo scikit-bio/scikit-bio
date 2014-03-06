@@ -30,15 +30,12 @@ from .workflow import Workflow, not_none
 from collections import namedtuple
 
 class SequenceRecord(namedtuple("SequenceRecord", ("SequenceID", "Sequence",
-                                                   "QualID", "Qual",
-                                                   "BarcodeID", "Barcode"))):
+                                                   "QualID", "Qual"))):
     __slots__ = ()
 
-    def __new__(cls, SequenceID, Sequence, QualID=None, Qual=None,
-                BarcodeID=None, Barcode=None):
+    def __new__(cls, SequenceID, Sequence, QualID=None, Qual=None):
         return super(SequenceRecord, cls).__new__(cls, SequenceID, Sequence,
-                                                  QualID, Qual,
-                                                  BarcodeID, Barcode)
+                                                  QualID, Qual)
 
 
 ### should these be member methods?
@@ -57,27 +54,22 @@ def has_qual(item):
     return (item['QualID'] is not None) and (item['Qual'] is not None)
 
 
-def has_barcode(item):
-    """Return True if it appears that there is barcode data"""
-    return (item['BarcodeID'] is not None) and (item['Barcode'] is not None)
-
-
 class SequenceIterator(Workflow):
     """Provide a standard API for interacting with sequence files
 
     Provide a common interface for iterating over sequence files, including
-    support for quality scores, barcode sequences, and transforms on sequences,
-    quality and barcodes
+    support for quality scores and transforms.
 
-    A transform method is a function that takes a single argument and returns a
-    single value. For instance, to reverse sequences automatically, you could
-    pass in the following function:
+    A transform method is a function that takes the state dict and modifies it
+    in place. For instance, to reverse sequences, you could pass in the
+    following function:
 
-    reverse_sequence = lambda x: x[::-1]
+    def reverse(st):
+        st['Sequence']= st['Sequence'][::-1]
+        st['Qual'] = st['Qual'][::-1] if st['Qual'] is not None else None
 
-    as transform_seq. The primary intention is to support reverse complementing
-    of sequences and/or barcodes. Quality score transforms are provided in the
-    in case the need arises.
+    as transform. The primary intention is to support reverse complementing
+    of sequences.
 
     All subclasses of this object are expected to yield a dict that contains
     the following keys and types
@@ -86,8 +78,6 @@ class SequenceIterator(Workflow):
         Sequence   : str, the sequence itself
         QualID     : str or None, the quality ID (for completeness)
         Qual       : np.array or None, the quality scores
-        BarcodeID  : str or None, the barcode ID
-        Barcode    : str or None, the barcode sequence
 
     The yielded object is preallocated a single time, as such (assuming the
     first two sequences are in fact not identical)::
@@ -106,28 +96,20 @@ class SequenceIterator(Workflow):
         id(seq1) == id(seq2)   # False
         seq1 == seq2           # False
     """
-    def __init__(self, seq, qual=None, bc=None, transform_seq=None,
-                 transform_qual=None, transform_bc=None, check_fail=None,
+    def __init__(self, seq, qual=None, transform=None, check_fail=None,
                  valid_id=True, valid_length=True):
         self.seq = seq
         self.qual = qual
-        self.bc = bc
 
-        self._transform_seq = transform_seq
-        self._transform_qual = transform_qual
-        self._transform_bc = transform_bc
+        self._transform = transform
         self._check_fail = check_fail
 
         state = {'SequenceID': None,
                  'Sequence': None,
                  'QualID': None,
-                 'Qual': None,
-                 'BarcodeID': None,
-                 'Barcode': None}
+                 'Qual': None}
 
-        options = {'sequence_f': self._transform_seq,
-                   'qual_f': self._transform_qual,
-                   'barcode_f': self._transform_bc,
+        options = {'transform': self._transform,
                    'check_fail': self._check_fail,
                    'valid_id': valid_id,
                    'valid_length': valid_length}
@@ -153,14 +135,11 @@ class SequenceIterator(Workflow):
         self.state['Sequence'] = item.Sequence
         self.state['QualID'] = item.QualID
         self.state['Qual'] = item.Qual
-        self.state['BarcodeID'] = item.BarcodeID
-        self.state['Barcode'] = item.Barcode
 
     @Workflow.method(priority=100)
     @Workflow.requires(option='valid_id', values=True)
     def validate_ids(self):
         self.valid_qual_id()
-        self.valid_bc_id()
 
     @Workflow.method(priority=90)
     @Workflow.requires(option='valid_length', values=True, state=has_qual)
@@ -168,26 +147,14 @@ class SequenceIterator(Workflow):
         self.failed = not valid_length(self.state['Sequence'],
                                        self.state['Qual'])
 
-    @Workflow.method(priority=50)
-    @Workflow.requires(option='sequence_f', values=not_none)
-    def transform_seq(self):
-        """Transform a sequence if necessary"""
-        self.state['Sequence'] = self._transform_seq(self.state['Sequence'])
-
-    @Workflow.method(priority=40)
-    @Workflow.requires(option='qual_f', values=not_none, state=has_qual)
-    def transform_qual(self):
-        """Transform a qual if necessary"""
-        self.state['Qual'] = self._transform_qual(self.state['Qual'])
-
-    @Workflow.method(priority=30)
-    @Workflow.requires(option='barcode_f', values=not_none, state=has_barcode)
-    def transform_bc(self):
-        """Transform a barcode if necessary"""
-        self.state['Barcode'] = self._transform_bc(self.state['Barcode'])
+    @Workflow.method(priority=80)
+    @Workflow.requires(option='transform', values=not_none)
+    def transform(self):
+        """Transform state if necessary"""
+        self._transform(self.state)
 
     ## not sure if necessary
-    @Workflow.method(priority=20)
+    @Workflow.method(priority=70)
     @Workflow.requires(option='check_fail', values=True)
     def check_fail(self):
         self.failed = self._check_fail(self.state)
@@ -196,12 +163,6 @@ class SequenceIterator(Workflow):
     def valid_qual_id(self):
         self.failed = not valid_ids(self.state['SequenceID'],
                                     self.state['QualID'])
-
-    @Workflow.requires(state=has_barcode)
-    def valid_bc_id(self):
-        self.failed = not valid_ids(self.state['SequenceID'],
-                                    self.state['BarcodeID'])
-
 
 class FastaIterator(SequenceIterator):
     """Populate and yield records based on fasta sequence"""
@@ -216,21 +177,11 @@ class FastaIterator(SequenceIterator):
         else:
             qual_gens = None
 
-        # construct barcode generators if necesasry
-        if self.bc is not None:
-            bc_gens = chain(*[MinimalFastaParser(f) for f in self.bc])
-        else:
-            bc_gens = None
-
         # determine which specific generator to return
-        if qual_gens is None and bc_gens is None:
+        if qual_gens is None:
             gen = self._fasta_gen(fasta_gens)
-        elif bc_gens is None:
-            gen = self._fasta_qual_gen(fasta_gens, qual_gens)
-        elif qual_gens is None:
-            gen = self._fasta_bc_gen(fasta_gens, bc_gens)
         else:
-            gen = self._fasta_qual_bc_gen(fasta_gens, qual_gens, bc_gens)
+            gen = self._fasta_qual_gen(fasta_gens, qual_gens)
 
         return gen
 
@@ -245,18 +196,6 @@ class FastaIterator(SequenceIterator):
         _iter = izip(fasta_gen, qual_gen)
         for (seq_id, seq), (qual_id, qual) in _iter:
             yield SequenceRecord(seq_id, seq, qual_id, qual)
-
-    def _fasta_bc_gen(self, fasta_gen, bc_gen):
-        """Yield fasta and bc together"""
-        _iter = izip(fasta_gen, bc_gen)
-        for (seq_id, seq), (bc_id, bc) in _iter:
-            yield SequenceRecord(seq_id, seq, None, None, bc_id, bc)
-
-    def _fasta_qual_bc_gen(self, fasta_gen, qual_gen, bc_gen):
-        """Yield fasta, qual and bc together"""
-        _iter = izip(fasta_gen, qual_gen, bc_gen)
-        for (seq_id, seq), (qual_id, qual), (bc_id, bc) in _iter:
-            yield SequenceRecord(seq_id, seq, qual_id, qual, bc_id, bc)
 
 
 class FastqIterator(SequenceIterator):
@@ -280,12 +219,7 @@ class FastqIterator(SequenceIterator):
         else:
             ascii_to_phred_f = ascii_to_phred64
 
-        # determine the correct generator to return
-        if self.bc:
-            bc_gens = chain(*[MinimalFastqParser(f, False) for f in self.bc])
-            gen = self._fastq_bc_gen(fastq_gens, bc_gens, ascii_to_phred_f)
-        else:
-            gen = self._fastq_gen(fastq_gens, ascii_to_phred_f)
+        gen = self._fastq_gen(fastq_gens, ascii_to_phred_f)
 
         return gen
 
@@ -294,13 +228,6 @@ class FastqIterator(SequenceIterator):
         for (seq_id, seq, qual_str) in fastq_gens:
             qual = array([phred_f(q) for q in qual_str])
             yield SequenceRecord(seq_id, seq, seq_id, qual)
-
-    def _fastq_bc_gen(self, fastq_gens, barcode_gens, phred_f):
-        """Yield fastq and barcode data"""
-        _iter = izip(fastq_gens, barcode_gens)
-        for (seq_id, seq, qual_str), (bc_id, bc_seq, bc_qual) in _iter:
-            qual = array([phred_f(q) for q in qual_str])
-            yield SequenceRecord(seq_id, seq, seq_id, qual, bc_id, bc_seq)
 
 ##### UNTESTED STUBBED OUT CODE BELOW #####
 
