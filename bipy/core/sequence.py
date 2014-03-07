@@ -553,9 +553,10 @@ class BiologicalSequence(Sequence):
 
         See Also
         --------
-        bipy.core.distance.DistanceMatrix
         fraction_diff
         fraction_same
+        bipy.core.distance.DistanceMatrix
+        scipy.spatial.distance.hamming
 
         Examples
         --------
@@ -564,16 +565,17 @@ class BiologicalSequence(Sequence):
         >>> t = BiologicalSequence('AGUC')
         >>> s.distance(t)
         0.25
-        >>> def dumb_dist(s1, s2): return 42
+        >>> def dumb_dist(s1, s2): return 0.42
         >>> s.distance(t, dumb_dist)
-        42
+        0.42
 
         """
         if distance_fn is None:
             distance_fn = hamming
         if len(self) != len(other):
-            raise BiologicalSequenceError("Distance can only be computed "
-                "between BiologicalSequences of equal length.")
+            raise BiologicalSequenceError(
+                "Distance can only be computed between BiologicalSequences "
+                "of equal length.")
         return distance_fn(self, other)
 
     def fraction_diff(self, other):
@@ -603,8 +605,8 @@ class BiologicalSequence(Sequence):
         Notes
         -----
         Computed as the Hamming distance between `self` and `other`. This is
-        here in addition to `distance` incase the `distance` method is ever
-        updated to use something other than ``scipy.spatial.distance.hamming`
+        available in addition to `distance` in case the `distance` method is
+        updated to use something other than ``scipy.spatial.distance.hamming``
         as the default distance metric. So, if you specifically want the
         fraction of positions that differ, you should use this function instead
         of `distance` to ensure backward compatibility.
@@ -634,6 +636,11 @@ class BiologicalSequence(Sequence):
             The fraction of positions that are the same between `self` and 
             `other`.
 
+        Raises
+        ------
+        bipy.core.exception.BiologicalSequenceError
+            If ``len(self) != len(other)``.
+        
         See Also
         --------
         distance
