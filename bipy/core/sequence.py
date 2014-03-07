@@ -1,4 +1,68 @@
 #!/usr/bin/env python
+r"""
+Biological Sequences (:mod:`bipy.core.sequence`)
+=============================================
+
+.. currentmodule:: bipy.core.sequence
+
+This module provides functionality for working with biological sequences,
+including generic sequences, nucelotide sequences, DNA sequences, and RNA
+sequences. Class methods and attributes are also available to obtaining valid
+character sets and complement maps for different sequence types, and for
+obtaining degenerate character definitions.
+
+Classes
+-------
+
+.. autosummary::
+   :toctree: generated/
+
+   BiologicalSequence
+   NucelotideSequence
+   DNASequence
+   RNASequence
+
+Examples
+--------
+>>> from bipy.core.sequence import DNASequence, RNASequence
+>>> d1 = DNASequence('ACC--G-GGTA..',identifier="seq1")
+
+New sequences can be created from existing sequences, for example as their
+reverse complement or as its degapped (i.e., unaligned) version.
+
+>>> d2 = d1.degap()
+>>> d1
+<DNASequence: ACC--G-GGT... (length: 13)>
+>>> d2
+<DNASequence: ACCGGGTA (length: 8)>
+>>> d3 = d2.reverse_complement()
+>>> d3
+<DNASequence: TACCCGGT (length: 8)>
+
+It's also straight-forward to compute distances between sequences (optionally
+using user-defined distance metrics, default is hamming distance) for use in
+sequence clustering, phylogenetic reconstruction, etc.
+
+>>> d4 = DNASequence('GACCCGCT')
+>>> d5 = DNASequence('GACCCCCT')
+>>> d3.distance(d4)
+2
+>>> d3.distance(d5)
+3
+
+Class level attributes contain information about the molecule types.
+
+>>> DNASequence.iupac_degeneracies['B']
+set(['C', 'T', 'G'])
+
+>>> RNASequence.iupac_degeneracies['B']
+set(['C', 'U', 'G'])
+
+>>> DNASequence.is_gap('-')
+True
+
+"""
+from __future__ import division
 
 #-----------------------------------------------------------------------------
 # Copyright (c) 2013--, bipy development team.
@@ -8,7 +72,6 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-from __future__ import division
 from collections import Sequence
 from itertools import izip
 
