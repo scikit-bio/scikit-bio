@@ -147,7 +147,7 @@ class CCA(Ordination):
         vt_res = vt_res[:rank]
 
         U_res = vt_res.T
-        U_hat_res = Q_bar.dot(U_res) * s_res**-1
+        U_hat_res = Y_res.dot(U_res) * s_res**-1
 
         # Storing values needed to compute scores
         iter_ = (('column_marginals', column_marginals),
@@ -211,12 +211,15 @@ class CCA(Ordination):
         F_hat_res = V_res * self.s_res
 
         eigvals = self.eigenvalues
-        species_scores = np.hstack([(V, V_res),
-                                    (F_hat, F_hat_res)][scaling - 1])
-        site_scores = np.hstack([(F, F_res),
-                                 (V_hat, V_hat_res)][scaling - 1])
-        site_constraints = np.hstack([(Z_scaling1, F_res),
-                                      (Z_scaling2, V_hat_res)][scaling - 1])
+        if scaling == 1:
+            species_scores = np.hstack((V, V_res))
+            site_scores = np.hstack((F, F_res))
+            site_constraints = np.hstack((Z_scaling1, F_res))
+        elif scaling == 2:
+            species_scores = np.hstack((F_hat, F_hat_res))
+            site_scores = np.hstack((V_hat, V_hat_res))
+            site_constraints = np.hstack((Z_scaling2, V_hat_res))
+
         biplot_scores = corr(self.X_weighted, self.u)
         return OrdinationResults(eigvals=eigvals,
                                  species=species_scores,

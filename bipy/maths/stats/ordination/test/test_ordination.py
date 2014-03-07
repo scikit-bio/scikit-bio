@@ -329,21 +329,44 @@ class TestRDAErrors(object):
 class TestRDAResults(object):
     # STATUS: L&L only shows results with scaling 1, and they agree
     # with vegan's (module multiplying by a constant). I can also
-    # compute scaling 2, agreeing with vegan, but there no written
+    # compute scaling 2, agreeing with vegan, but there are no written
     # results in L&L.
     def setup(self):
-        """Data from table 9.11 in Legendre & Legendre 1998."""
+        """Data from table 11.3 in Legendre & Legendre 1998."""
         Y = np.loadtxt(get_data_path('example2_Y'))
-        X = np.loadtxt(get_data_path('example2_X')).reshape(-1, 4, order='F')
+        X = np.loadtxt(get_data_path('example2_X'))
         self.ordination = RDA(Y, X)
+
+    def test_scaling1(self):
+        scores = self.ordination.scores(1)
+
+        # Load data as computed with vegan 2.0-8
+        vegan_species = np.loadtxt(get_data_path(
+            'example2_species_scaling1_from_vegan'))
+        npt.assert_almost_equal(scores.species, vegan_species, decimal=6)
+
+        vegan_site = np.loadtxt(get_data_path(
+            'example2_site_scaling1_from_vegan'))
+        npt.assert_almost_equal(scores.site, vegan_site, decimal=6)
+
+    def test_scaling2(self):
+        scores = self.ordination.scores(2)
+
+        # Load data as computed with vegan 2.0-8
+        vegan_species = np.loadtxt(get_data_path(
+            'example2_species_scaling2_from_vegan'))
+        npt.assert_almost_equal(scores.species, vegan_species, decimal=6)
+
+        vegan_site = np.loadtxt(get_data_path(
+            'example2_site_scaling2_from_vegan'))
+        npt.assert_almost_equal(scores.site, vegan_site, decimal=6)
 
 
 class TestCCAErrors(object):
     def setup(self):
-        """Data from table 9.11 in Legendre & Legendre 1998."""
+        """Data from table 11.3 in Legendre & Legendre 1998."""
         self.Y = np.loadtxt(get_data_path('example3_Y'))
-        self.X = np.loadtxt(get_data_path('example3_X')).reshape(-1, 4,
-                                                                 order='F')
+        self.X = np.loadtxt(get_data_path('example3_X'))
 
     def test_shape(self):
         X, Y = self.X, self.Y
@@ -361,10 +384,41 @@ class TestCCAErrors(object):
 
 
 class TestCCAResults(object):
-    # TODO: Either hardcode some results or call vegan? Hardcoding
-    # them sounds better than requiring R and vegan to run tests.
     def setup(self):
-        pass
+        """Data from table 11.3 in Legendre & Legendre 1998
+        (p. 590). Loaded results as computed with vegan 2.0-8 and
+        compared with table 11.5 if also there."""
+        Y = np.loadtxt(get_data_path('example3_Y'))
+        X = np.loadtxt(get_data_path('example3_X'))
+        self.ordination = CCA(Y, X[:, :-1])
+
+    def test_scaling1_species(self):
+        scores = self.ordination.scores(1)
+
+        vegan_species = np.loadtxt(get_data_path(
+            'example3_species_scaling1_from_vegan'))
+        npt.assert_almost_equal(scores.species, vegan_species, decimal=6)
+
+    def test_scaling1_site(self):
+        scores = self.ordination.scores(1)
+
+        vegan_site = np.loadtxt(get_data_path(
+            'example3_site_scaling1_from_vegan'))
+        npt.assert_almost_equal(scores.site, vegan_site, decimal=4)
+
+    def test_scaling2_species(self):
+        scores = self.ordination.scores(2)
+
+        vegan_species = np.loadtxt(get_data_path(
+            'example3_species_scaling2_from_vegan'))
+        npt.assert_almost_equal(scores.species, vegan_species, decimal=5)
+
+    def test_scaling2_site(self):
+        scores = self.ordination.scores(2)
+
+        vegan_site = np.loadtxt(get_data_path(
+            'example3_site_scaling2_from_vegan'))
+        npt.assert_almost_equal(scores.site, vegan_site, decimal=4)
 
 
 class TestPCoAResults(object):
