@@ -45,7 +45,7 @@ class BiologicalSequence(Sequence):
         identifier : str, optional
             The sequence identifier (e.g., an accession number).
         description : str, optional
-            A description or comment about the sequence (e.g., "green 
+            A description or comment about the sequence (e.g., "green
             fluorescent protein").
         validate : bool, optional
             If True, runs the `is_valid` method after construction and raises
@@ -214,7 +214,7 @@ class BiologicalSequence(Sequence):
         >>> repr(t)
         '<BiologicalSequence: ACGT (length: 4)>'
         >>> t
-        '<BiologicalSequence: ACGT (length: 4)>'
+        <BiologicalSequence: ACGT (length: 4)>
 
         """
         first_ten = str(self)[:10]
@@ -308,7 +308,7 @@ class BiologicalSequence(Sequence):
         other : `BiologicalSequence`
         distance_fn : function, optional
             Function used to compute the distance between `self` and `other`. This
-            function must take two `Sequence` objects and is expected to return 
+            function must take two `Sequence` objects and is expected to return
             a number (int or float). For an example, see
             ``BiologicalSequence._hamming_distance``.
 
