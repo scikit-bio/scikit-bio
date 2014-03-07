@@ -2,9 +2,7 @@
 #
 
 # You can set these variables from the command line.
-
-# -W turns warnings into errors.
-SPHINXOPTS    = -W
+SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 PAPER         =
 BUILDDIR      = build

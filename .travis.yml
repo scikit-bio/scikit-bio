@@ -5,6 +5,7 @@ python:
   - "2.7"
 env:
   - NUMPY_VERSION=1.8
+  - SPHINXOPTS=-W
 before_install:
   - wget http://repo.continuum.io/miniconda/Miniconda-2.2.2-Linux-x86_64.sh -O miniconda.sh
   - chmod +x miniconda.sh
@@ -13,8 +14,11 @@ before_install:
   # Update conda itself
   - conda update --yes conda
 install:
-  - conda create --yes -n env_name python=$TRAVIS_PYTHON_VERSION pip numpy=$NUMPY_VERSION scipy matplotlib nose pep8 Sphinx numpydoc
+  - conda create --yes -n env_name python=$TRAVIS_PYTHON_VERSION pip numpy=$NUMPY_VERSION scipy matplotlib nose pep8 Sphinx
   - source activate env_name
+  # Need latest numpydoc otherwise some things won't link correctly (e.g.,
+  # inherited attributes in subclasses). The numpydoc available via pip is old.
+  - pip install git+git://github.com/numpy/numpydoc.git
   - pip install sphinx-bootstrap-theme
   - pip install . --no-deps
 script:
