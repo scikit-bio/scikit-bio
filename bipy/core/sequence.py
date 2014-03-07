@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 r"""
 Biological Sequences (:mod:`bipy.core.sequence`)
-=============================================
+================================================
 
 .. currentmodule:: bipy.core.sequence
 
