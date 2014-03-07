@@ -19,7 +19,7 @@ class PERMANOVA(CategoricalStats):
     """PERMANOVA statistical method executor.
 
     Permutational Multivariate Analysis of Variance (PERMANOVA) is a
-    non-parametric method that tests whether two or more groups of samples are
+    non-parametric method that tests whether two or more groups of objects are
     significantly different based on a categorical factor. It is conceptually
     similar to ANOVA except that it operates on a distance matrix, which allows
     for multivariate analysis. PERMANOVA computes a pseudo-F statistic and
@@ -46,17 +46,17 @@ class PERMANOVA(CategoricalStats):
     def __init__(self, distance_matrix, grouping):
         super(PERMANOVA, self).__init__(distance_matrix, grouping)
 
-        # Calculate number of samples in each group.
+        # Calculate number of objects in each group.
         self._group_sizes = np.bincount(self._grouping)
         self._num_groups = len(self._groups)
         self._distances = self._dm.condensed_form()
-        self._s_T = (self._distances ** 2).sum() / self._dm.num_samples
+        self._s_T = (self._distances ** 2).sum() / self._dm.shape[0]
 
     def _run(self, grouping):
         """Compute PERMANOVA pseudo-F statistic."""
-        # Create a matrix where samples in the same group are marked with the
-        # group index (e.g. 0, 1, 2, etc.). Samples that are not in the same
-        # are marked with -1.
+        # Create a matrix where objects in the same group are marked with the
+        # group index (e.g. 0, 1, 2, etc.). objects that are not in the same
+        # group are marked with -1.
         grouping_matrix = -1 * np.ones(self._dm.shape, dtype=int)
         for group_idx in range(len(self._groups)):
             within_indices = self._index_combinations(
@@ -75,7 +75,7 @@ class PERMANOVA(CategoricalStats):
 
     def _compute_f_stat(self, grouping_tri):
         a = self._num_groups
-        N = self._dm.num_samples
+        N = self._dm.shape[0]
 
         # Calculate s_W for each group, accounting for different group sizes.
         s_W = 0

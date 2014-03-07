@@ -29,7 +29,7 @@ class CategoricalStatsTests(TestCase):
             _ = CategoricalStats(DistanceMatrix([[0, 2], [3, 0]],
                                                 ['a', 'b']), [1, 2])
 
-        # Grouping vector length must match number of samples in dm.
+        # Grouping vector length must match number of objects in dm.
         with self.assertRaises(ValueError):
             _ = CategoricalStats(self.dm, [1, 2])
 

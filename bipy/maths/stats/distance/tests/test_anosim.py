@@ -23,18 +23,18 @@ class ANOSIMTests(TestCase):
     def setUp(self):
         # Distance matrices with and without ties in the ranks, with 2 groups
         # of equal size.
-        dm_sids = ['s1', 's2', 's3', 's4']
+        dm_ids = ['s1', 's2', 's3', 's4']
         grouping_equal = ['Control', 'Control', 'Fast', 'Fast']
 
         self.dm_ties = SymmetricDistanceMatrix([[0, 1, 1, 4],
                                                 [1, 0, 3, 2],
                                                 [1, 3, 0, 3],
-                                                [4, 2, 3, 0]], dm_sids)
+                                                [4, 2, 3, 0]], dm_ids)
 
         self.dm_no_ties = SymmetricDistanceMatrix([[0, 1, 5, 4],
                                                    [1, 0, 3, 2],
                                                    [5, 3, 0, 3],
-                                                   [4, 2, 3, 0]], dm_sids)
+                                                   [4, 2, 3, 0]], dm_ids)
 
         # Test with 3 groups of unequal size. This data also generates a
         # negative R statistic.

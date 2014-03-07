@@ -21,7 +21,7 @@ class CategoricalStats(object):
     """Base class for categorical statistical methods.
 
     Categorical statistical methods generally test for significant differences
-    between discrete groups of samples, as determined by a categorical variable
+    between discrete groups of objects, as determined by a categorical variable
     (grouping vector).
 
     See Also
@@ -37,7 +37,7 @@ class CategoricalStats(object):
     def __init__(self, distance_matrix, grouping):
         if not isinstance(distance_matrix, SymmetricDistanceMatrix):
             raise TypeError("Input must be a SymmetricDistanceMatrix.")
-        if len(grouping) != distance_matrix.num_samples:
+        if len(grouping) != distance_matrix.shape[0]:
             raise ValueError("Grouping vector size must match the number of "
                              "IDs in the distance matrix.")
 
@@ -50,18 +50,18 @@ class CategoricalStats(object):
                              "This method cannot operate on a grouping vector "
                              "with only unique values (e.g., there are no "
                              "'within' distances because each group of "
-                             "samples contains only a single sample).")
+                             "objects contains only a single object).")
         if len(groups) == 1:
             raise ValueError("All values in the grouping vector are the same. "
                              "This method cannot operate on a grouping vector "
-                             "with only a single group of samples (e.g., "
+                             "with only a single group of objects (e.g., "
                              "there are no 'between' distances because there "
                              "is only a single group).")
 
         self._dm = distance_matrix
         self._grouping = grouping
         self._groups = groups
-        self._tri_idxs = np.triu_indices(self._dm.num_samples, k=1)
+        self._tri_idxs = np.triu_indices(self._dm.shape[0], k=1)
 
     def __call__(self, permutations=999):
         """Execute the statistical method.
@@ -98,8 +98,8 @@ class CategoricalStats(object):
         return CategoricalStatsResults(self.short_method_name,
                                        self.long_method_name,
                                        self.test_statistic_name,
-                                       self._dm.num_samples, self._groups,
-                                       stat, p_value, permutations)
+                                       self._dm.shape[0], self._groups, stat,
+                                       p_value, permutations)
 
     def _run(self, grouping):
         raise NotImplementedError("Subclasses must implement _run().")

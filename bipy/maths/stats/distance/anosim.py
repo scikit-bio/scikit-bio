@@ -20,11 +20,10 @@ class ANOSIM(CategoricalStats):
     """ANOSIM statistical method executor.
 
     Analysis of Similarities (ANOSIM) is a non-parametric method that tests
-    whether two or more groups of samples are significantly different based on
+    whether two or more groups of objects are significantly different based on
     a categorical factor. The ranks of the distances in the distance matrix are
     used to calculate an R statistic, which ranges between -1 (anti-grouping)
-    to +1 (strong grouping of samples), with an R value of 0 indicating random
-    grouping.
+    to +1 (strong grouping), with an R value of 0 indicating random grouping.
 
     Notes
     -----
@@ -49,13 +48,13 @@ class ANOSIM(CategoricalStats):
     def __init__(self, distance_matrix, grouping):
         super(ANOSIM, self).__init__(distance_matrix, grouping)
 
-        self._divisor = self._dm.num_samples * ((self._dm.num_samples - 1) / 4)
+        self._divisor = self._dm.shape[0] * ((self._dm.shape[0] - 1) / 4)
         self._ranked_dists = rankdata(self._dm.condensed_form(),
                                       method='average')
 
     def _run(self, grouping):
         """Compute ANOSIM R statistic (between -1 and +1)."""
-        # Create a matrix where True means that the two samples are in the same
+        # Create a matrix where True means that the two objects are in the same
         # group. This ufunc requires that grouping is a numeric vector (e.g.,
         # it won't work with a grouping vector of strings).
         grouping_matrix = np.equal.outer(grouping, grouping)
