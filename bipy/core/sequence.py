@@ -7,8 +7,8 @@ Biological Sequences (:mod:`bipy.core.sequence`)
 
 This module provides functionality for working with biological sequences,
 including generic sequences, nucelotide sequences, DNA sequences, and RNA
-sequences. Class methods and attributes are also available to obtaining valid
-character sets and complement maps for different sequence types, and for
+sequences. Class methods and attributes are also available to obtain valid
+character sets, complement maps for different sequence types, and for
 obtaining degenerate character definitions.
 
 Classes
@@ -25,10 +25,15 @@ Classes
 Examples
 --------
 >>> from bipy.core.sequence import DNASequence, RNASequence
->>> d1 = DNASequence('ACC--G-GGTA..',identifier="seq1")
 
-New sequences can be created from existing sequences, for example as their
-reverse complement or as its degapped (i.e., unaligned) version.
+New sequences are created with optional identifier and description fields.
+
+>>> d1 = DNASequence('ACC--G-GGTA..')
+>>> d1 = DNASequence('ACC--G-GGTA..',identifier="seq1")
+>>> d1 = DNASequence('ACC--G-GGTA..',identifier="seq1",description="GFP")
+
+New sequences can also be created from existing sequences, for example as their
+reverse complement or degapped (i.e., unaligned) version.
 
 >>> d2 = d1.degap()
 >>> d1
@@ -116,7 +121,7 @@ class BiologicalSequence(Sequence):
 
         Raises
         ------
-        `BiologicalSequenceError`
+        bipy.core.exception.BiologicalSequenceError
           If ``validate == True`` and is_valid == False``.
 
         See Also
@@ -303,7 +308,7 @@ class BiologicalSequence(Sequence):
 
         Notes
         -----
-        ``BiologicalSequences`` are not equal if their sequence is different or
+        `BiologicalSequences` are not equal if their sequence is different or
         they are not the same type.
 
         Examples
@@ -388,12 +393,12 @@ class BiologicalSequence(Sequence):
             full sequence, but will not contain information about the type, or 
             `self.identifier` or `self.description`.
 
-        See also
+        See Also
         --------
-        ``BiologicalSequence.toFasta``
-        ``BiologicalSequence.identifier``
-        ``BiologicalSequence.description``
-        ``BiologicalSequence.__repr__``
+        to_fasta
+        identifier
+        description
+        __repr__
 
         Examples
         --------
@@ -442,12 +447,12 @@ class BiologicalSequence(Sequence):
         set
             Characters that are allowed in a valid `BiologicalSequence`
 
-        See also
+        See Also
         --------
-        ``BiologicalSequence.is_valid``
-        ``BiologicalSequence.gap_alphabet``
-        ``BiologicalSequence.unsupported_characters``
-        ``BiologicalSequence.has_unsupported_characters``
+        is_valid
+        gap_alphabet
+        unsupported_characters
+        has_unsupported_characters
 
         """
         return self._alphabet
@@ -473,14 +478,14 @@ class BiologicalSequence(Sequence):
         set
             Characters defined as gaps in a `BiologicalSequence`
 
-        See also
+        See Also
         --------
-        ``BiologicalSequence.alphabet``
-        ``BiologicalSequence.unsupported_characters``
-        ``BiologicalSequence.has_unsupported_characters``
-        ``BiologicalSequence.degap``
-        ``BiologicalSequence.gap_maps``
-        ``BiologicalSequence.gap_vector``
+        alphabet
+        unsupported_characters
+        has_unsupported_characters
+        degap
+        gap_maps
+        gap_vector
 
         """
         return self._gap_alphabet
@@ -565,9 +570,9 @@ class BiologicalSequence(Sequence):
 
         See Also
         --------
-        ``bipy.core.distance.DistanceMatrix``
-        ``BiologicalSequence.fraction_diff``
-        ``BiologicalSequence.fraction_same``
+        bipy.core.distance.DistanceMatrix
+        fraction_diff
+        fraction_same
 
         Examples
         --------
@@ -598,13 +603,13 @@ class BiologicalSequence(Sequence):
 
         See Also
         --------
-        ``BiologicalSequence.distance``
-        ``BiologicalSequence._hamming_distance``
-        ``BiologicalSequence.fraction_same``
+        distance
+        _hamming_distance
+        fraction_same
 
         Notes
         -----
-        Computation is based on the ``self._hamming_distance`` between the
+        Computation is based on the `self._hamming_distance` between the
         sequences. Differences are only counted through the length of the
         shorter sequence. 
         
@@ -637,13 +642,13 @@ class BiologicalSequence(Sequence):
 
         See Also
         --------
-        ``BiologicalSequence.distance``
-        ``BiologicalSequence._hamming_distance``
-        ``BiologicalSequence.fraction_diff``
+        distance
+        _hamming_distance
+        fraction_diff
 
         Notes
         -----
-        Computation is based on the ``self._hamming_distance`` between the
+        Computation is based on the `self._hamming_distance` between the
         sequences. Similarities are only counted through the length of the
         shorter sequence.
         
@@ -672,7 +677,7 @@ class BiologicalSequence(Sequence):
 
         See Also
         --------
-        ``BiologicalSequence.gap_vector``
+        gap_vector
 
         Notes
         -----
@@ -722,12 +727,12 @@ class BiologicalSequence(Sequence):
         list of booleans
             The list will be of length ``len(self)``, and a position will
             contain ``True`` if the character at that position in the
-            `BiologicalSequence` is in ``self.gap_alphabet``, and `False`
+            `BiologicalSequence` is in `self.gap_alphabet`, and ``False``
             otherwise.
 
         See Also
         --------
-        ``BiologicalSequence.gap_maps``
+        gap_maps
 
         Examples
         --------
@@ -747,15 +752,15 @@ class BiologicalSequence(Sequence):
         set
             Invalid characters in the `BiologicalSequence` (i.e., the
             characters that are present in the `BiologicalSequence` but which
-            are not in ``BiologicalSequence.alphabet`` or
-            ``BiologicalSequence.gap_alphabet``.
+            are not in `BiologicalSequence.alphabet` or
+            `BiologicalSequence.gap_alphabet`.
 
-        See also
+        See Also
         --------
-        ``BiologicalSequence.is_valid``
-        ``BiologicalSequence.alphabet``
-        ``BiologicalSequence.gap_alphabet``
-        ``BiologicalSequence.has_unsupported_characters``
+        is_valid
+        alphabet
+        gap_alphabet
+        has_unsupported_characters
 
         """
         return set(self) - self._alphabet - self._gap_alphabet
@@ -768,15 +773,15 @@ class BiologicalSequence(Sequence):
         bool
             ``True`` if invalid characters are present in the 
             `BiologicalSequence` (i.e., characters which are not in 
-            ``BiologicalSequence.alphabet`` or 
-            ``BiologicalSequence.gap_alphabet``) and ``False`` otherwise.
+            `BiologicalSequence.alphabet` or 
+            `BiologicalSequence.gap_alphabet`) and ``False`` otherwise.
 
-        See also
+        See Also
         --------
-        ``BiologicalSequence.is_valid``
-        ``BiologicalSequence.alphabet``
-        ``BiologicalSequence.gap_alphabet``
-        ``BiologicalSequence.has_unsupported_characters``
+        is_valid
+        alphabet
+        gap_alphabet
+        has_unsupported_characters
 
         """
         all_supported = self._alphabet | self._gap_alphabet
@@ -810,7 +815,7 @@ class BiologicalSequence(Sequence):
 
     @classmethod
     def is_gap(cls, char):
-        """Return True if `char` is in the ``gap_alphabet`` set
+        """Return True if `char` is in the `gap_alphabet` set
 
         Parameters
         ----------
@@ -822,7 +827,7 @@ class BiologicalSequence(Sequence):
         -------
         bool
             Indicates whether `char` is in the `BiologicalSequence` attribute 
-            ``gap_alphabet``.
+            `gap_alphabet`.
 
         Notes
         -----
@@ -849,7 +854,7 @@ class BiologicalSequence(Sequence):
         -------
         bool
             Indicates whether there are one or more occurences of any character
-            in ``self.gap_alphabet`` in the `BiologicalSequence`.
+            in `self.gap_alphabet` in the `BiologicalSequence`.
 
         Examples
         --------
@@ -873,11 +878,11 @@ class BiologicalSequence(Sequence):
         Returns
         -------
         bool
-            ``True`` if ``self`` is valid, and ``False`` otherwise.
+            ``True`` if `self` is valid, and ``False`` otherwise.
         Notes
         -----
         Validity is defined as not containing any characters outside of
-        ``self.alphabet`` and ``self.gap_alphabet``.
+        `self.alphabet` and `self.gap_alphabet`.
 
         """
         return not self.has_unsupported_characters()
@@ -889,7 +894,7 @@ class BiologicalSequence(Sequence):
         ----------
         field_delimiter : str, optional
             The character(s) to use on the header line between the
-            ``self.identifier`` and ``self.description``. 
+            `self.identifier` and `self.description`. 
 
         terminal_character : str, optional
             The last character to be included in the result (if you don't want
@@ -903,7 +908,7 @@ class BiologicalSequence(Sequence):
 
         See Also
         --------
-        `__str__`
+        __str__
 
         Examples
         --------
@@ -965,7 +970,7 @@ class NucleotideSequence(BiologicalSequence):
         Parameters
         ----------
         seq_iterator : iterator
-            The ``BiologicalSequence`` to be complemented.
+            The `BiologicalSequence` to be complemented.
 
         Returns
         -------
@@ -975,7 +980,7 @@ class NucleotideSequence(BiologicalSequence):
 
         Raises
         ------
-        BiologicalSequenceError
+        bipy.core.exception.BiologicalSequenceError
             If a character is present in the `NucleotideSequence` that is not
             in the complement map.
 
@@ -1026,7 +1031,7 @@ class NucleotideSequence(BiologicalSequence):
         
         Raises
         ------
-        BiologicalSequenceError
+        bipy.core.exception.BiologicalSequenceError
             If a character is present in the `NucleotideSequence` that is not
             in `self.complement_map`.
 
@@ -1049,7 +1054,7 @@ class NucleotideSequence(BiologicalSequence):
 
         Raises
         ------
-        BiologicalSequenceError
+        bipy.core.exception.BiologicalSequenceError
             If a character is present in `other` that is not in the
             `self.complement_map`.
 
@@ -1071,7 +1076,7 @@ class NucleotideSequence(BiologicalSequence):
         
         Raises
         ------
-        BiologicalSequenceError
+        bipy.core.exception.BiologicalSequenceError
             If a character is present in the `NucleotideSequence` that is not
             in `self.complement_map`.
 
