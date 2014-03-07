@@ -16,8 +16,7 @@ from bipy.core.exception import BiologicalSequenceError
 
 
 class BiologicalSequence(Sequence):
-    """
-    Base class for biological sequences.
+    """Base class for biological sequences.
         
     Attributes
     ----------
@@ -29,7 +28,7 @@ class BiologicalSequence(Sequence):
     Notes
     -----
     BiologicalSequence objects are immutable. Where applicable,
-     methods return a new object of the same class.
+    methods return a new object of the same class.
     """
 
     _alphabet = set()
@@ -37,12 +36,11 @@ class BiologicalSequence(Sequence):
 
     def __init__(self, sequence, identifier="", description="",
                  validate=False):
-        """
-        Initialize a BiologicalSequence object.
+        """Initialize a `BiologicalSequence` object.
         
         Parameters
         ----------
-        sequence : python Sequence (e.g., string, list or tuple)
+        sequence : python Sequence (e.g., str, list or tuple)
             The biological sequence.
         identifier : str, optional
             The sequence identifier (e.g., an accession number).
@@ -50,22 +48,23 @@ class BiologicalSequence(Sequence):
             A description or comment about the sequence (e.g., "green 
             fluorescent protein").
         validate : bool, optional
-            If True, runs the is_valid method after construction and raises 
-            BiologicalSequenceError if is_valid == False.
+            If True, runs the `is_valid` method after construction and raises
+            BiologicalSequenceError if ``is_valid == False``.
 
         Raises
         ------
-        BiologicalSequenceError
-          If validate == True and is_valid == False.
+        `BiologicalSequenceError`
+          If ``validate == True`` and is_valid == False``.
 
         See Also
         --------
-        NucleotideSequence : Base class for nucleotide sequences
-        DNASequence : Class for DNA sequences
-        RNASequence : Class for RNA sequences
+        NucleotideSequence
+        DNASequence
+        RNASequence
 
         Examples
         --------
+        >>> from bipy.core.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUCGUGAAGGA')
         >>> t = BiologicalSequence('GGUCCUGAAGGU')
 
@@ -81,8 +80,7 @@ class BiologicalSequence(Sequence):
                 % (" ".join(unsupported_chars)))
 
     def __contains__(self, other):
-        """ 
-        The in operator.
+        """The in operator.
         
         Parameters
         ----------
@@ -96,6 +94,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
+        >>> from bipy.core.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUCGUGAAGGA')
         >>> 'GGU' in s
         True
@@ -106,26 +105,26 @@ class BiologicalSequence(Sequence):
         return other in self._sequence
 
     def __eq__(self, other):
-        """
-        The equality operator.
+        """The equality operator.
 
         Parameters
         ----------
-        other : BiologicalSequence
+        other : `BiologicalSequence`
             The sequence to test for equality against.
 
         Returns
         -------
         bool
-            Indicates whether self and other are equal.
+            Indicates whether `self` and `other` are equal.
 
         Notes
         -----
-        BiologicalSequences are equal if their sequence is the same and
+        `BiologicalSequences` are equal if their sequence is the same and
         they are the same type.
 
         Examples
         --------
+        >>> from bipy.core.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUCGUGAAGGA')
         >>> t = BiologicalSequence('GGUCGUGAAGGA')
         >>> s == t
@@ -159,26 +158,26 @@ class BiologicalSequence(Sequence):
         return len(self._sequence)
 
     def __ne__(self, other):
-        """ 
-        The inequality operator.
+        """The inequality operator.
 
         Parameters
         ----------
-        other : BiologicalSequence
+        other : `BiologicalSequence`
             The sequence to test for inequality against.
 
         Returns
         -------
         bool
-            Indicates whether self and other are not equal.
+            Indicates whether `self` and `other` are not equal.
 
         Notes
         -----
-        BiologicalSequences are not equal if their sequence is different or
+        ``BiologicalSequences`` are not equal if their sequence is different or
         they are not the same type.
 
         Examples
         --------
+        >>> from bipy.core.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUCGUGAAGGA')
         >>> t = BiologicalSequence('GGUCGUGAAGGA')
         >>> s != t
@@ -191,8 +190,7 @@ class BiologicalSequence(Sequence):
         return not self.__eq__(other)
 
     def __repr__(self):
-        """
-        The repr method.
+        """The repr method.
         
         Returns
         -------
@@ -201,13 +199,14 @@ class BiologicalSequence(Sequence):
 
         Notes
         -----
-        String representation is contains the class name, the first ten
+        String representation contains the class name, the first ten
         characters of the sequence followed by elipses (or the full sequence
-        and no elipses, if the sequence is less than 11 characters long,
-        followed by the sequecne length.
+        and no elipses, if the sequence is less than 11 characters long),
+        followed by the sequence length.
 
         Examples
         --------
+        >>> from bipy.core.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUCGUGAAGGA')
         >>> repr(s)
         '<BiologicalSequence: GGUCGUGAAG... (length: 12)>'
@@ -247,31 +246,30 @@ class BiologicalSequence(Sequence):
 
     @property
     def alphabet(self):
-        """ return the set of characters allowed in the BiologicalSequence
+        """return the set of characters allowed in the BiologicalSequence
         """
         return self._alphabet
 
     @property
     def description(self):
-        """ return the description of the sequence
+        """return the description of the sequence
         """
         return self._description
 
     @property
     def gap_alphabet(self):
-        """ return the set of gap characters allowed in the BiologicalSequence
+        """return the set of gap characters allowed in the BiologicalSequence
         """
         return self._gap_alphabet
 
     @property
     def identifier(self):
-        """ return the identifier of the sequence
+        """return the identifier of the sequence
         """
         return self._identifier
 
     def count(self, subsequence):
-        """
-        Returns the number of occurences of subsequence.
+        """Returns the number of occurences of subsequence.
 
         Parameters
         ----------
@@ -281,50 +279,48 @@ class BiologicalSequence(Sequence):
         Returns
         -------
         int
-            The number of occurrences of substring in the ``BiologicalSequence``.
+            The number of occurrences of substring in the `BiologicalSequence`.
         """
         return self._sequence.count(subsequence)
 
     def degap(self):
-        """
-        Returns a new ``BiologicalSequence`` with gaps characters removed.
+        """Returns a new `BiologicalSequence` with gaps characters removed.
 
         Returns
         -------
-        A new ``BiologicalSequence`` with all characters from
-        ``self.gap_alphabet`` filtered from the sequence.
+        A new `BiologicalSequence` with all characters from
+        `self.gap_alphabet` filtered from the sequence.
 
         Notes
         -----
         The type, identifier, and description of the result will be the
-        same as ``self``.
+        same as `self`.
         """
         result = [e for e in self._sequence if e not in self._gap_alphabet]
         return self.__class__(result, identifier=self._identifier,
                               description=self._description)
 
     def distance(self, other, distance_fn=_hamming_distance):
-        """
-        Returns the distance to other
+        """Returns the distance to other
 
         Parameters
         ----------
-        other : ``BiologicalSequence``
+        other : `BiologicalSequence`
         distance_fn : function, optional
-            Function used to compute the distance between self and other. This
-            function must take two Sequence objects and is expected to return 
-            a number (integer or float). For an example, see
-            BiologicalSequence._hamming_distance.
+            Function used to compute the distance between `self` and `other`. This
+            function must take two `Sequence` objects and is expected to return 
+            a number (int or float). For an example, see
+            ``BiologicalSequence._hamming_distance``.
 
         Returns
         -------
         int or float
-            The distance between the ``BiologicalSequences`` self and other.
+            The distance between the `BiologicalSequences` `self` and `other`.
 
         See Also
         --------
         bipy.core.distance.DistanceMatrix : for storing distances between
-        collections of ``BiologicalSequences``.
+        collections of `BiologicalSequences`.
             
         """
         return distance_fn(self, other)
@@ -332,7 +328,7 @@ class BiologicalSequence(Sequence):
     def fraction_diff(self, other):
         """ return fraction of positions that differ
 
-            based on self._hamming_distance between the sequences
+            based on ``self._hamming_distance`` between the sequences
         """
         min_edit_dist = self._hamming_distance(other)
         len_shorter = min(len(self), len(other))
@@ -341,7 +337,7 @@ class BiologicalSequence(Sequence):
     def fraction_same(self, other):
         """ return fraction of positions that are the same
 
-            based on self._hamming_distance between the sequences
+            based on ``self._hamming_distance`` between the sequences
         """
         return 1. - self.fraction_diff(other)
 
@@ -356,8 +352,8 @@ class BiologicalSequence(Sequence):
              that base in the ungapped sequence.
 
             for example:
-             BiologicalSequence('-ACCGA-TA-').gap_maps() ==
-             ([1,2,3,4,5,7,8],[None,0,1,2,3,4,None,5,6,None])
+             ``BiologicalSequence('-ACCGA-TA-').gap_maps() ==
+             ([1,2,3,4,5,7,8],[None,0,1,2,3,4,None,5,6,None])``
 
              because:
 
@@ -389,8 +385,8 @@ class BiologicalSequence(Sequence):
         """ return a list indicating positions containing gaps
 
             for example:
-             BiologicalSequence('..ACG--TT-').gap_vector() ==
-             [True, True, False, False, False, True, True, False, False, True]
+             ``BiologicalSequence('..ACG--TT-').gap_vector() ==
+             [True, True, False, False, False, True, True, False, False, True]``
         """
         return map(self.is_gap, self._sequence)
 
@@ -403,7 +399,7 @@ class BiologicalSequence(Sequence):
         """ return True if unsupported characters are present
 
             unsupported characters are defined as any characters that are not
-            in a BiologicalSequence's alphabet
+            in a ``BiologicalSequence``'s alphabet
         """
         all_supported = self._alphabet | self._gap_alphabet
         for e in self:
@@ -427,7 +423,7 @@ class BiologicalSequence(Sequence):
         return char in cls._gap_alphabet
 
     def is_gapped(self):
-        """ return True if any gap characters are in the BiologicalSequence
+        """ return True if any gap characters are in the `BiologicalSequence`
         """
         for e in self:
             if self.is_gap(e):
@@ -438,7 +434,7 @@ class BiologicalSequence(Sequence):
         """ return True if the sequence is valid
 
             validity is defined as not containing any characters outside of
-            alphabet and gap_alphabet
+            `alphabet` and `gap_alphabet`
         """
         return not self.has_unsupported_characters()
 
@@ -447,7 +443,7 @@ class BiologicalSequence(Sequence):
 
             terminal_character: the last character to be included in the
              result (if you don't want a trailing newline or other character
-             in the result, you can pass terminal_character="")
+             in the result, you can pass ``terminal_character=""``)
         """
         if self._description:
             header_line = '%s%s%s' % (self._identifier, field_delimiter,
@@ -460,8 +456,8 @@ class BiologicalSequence(Sequence):
 
 
 class NucleotideSequence(BiologicalSequence):
-    """ class for representing nucleotide sequences
-
+    """Base class for nucleotide sequences.
+    
         all uppercase and lowercase IUPAC DNA/RNA characters are supported
     """
 
@@ -501,31 +497,31 @@ class NucleotideSequence(BiologicalSequence):
     def complement(self):
         """ return the complement of the sequence
 
-            raises BiologicalSequence error if there is a character in the
-             BiologicalSequence that's not in NucleotideSequence.complement_map
+            raises `BiologicalSequenceError` if there is a character in the
+             `BiologicalSequence` that's not in ``NucleotideSequence.complement_map``
         """
         return self._complement(self)
 
     def is_reverse_complement(self, other):
-        """ return True if NucleotideSequences are rev. comp. of one another
+        """ return True if `NucleotideSequences` are rev. comp. of one another
 
-            raises BiologicalSequence error if there is a character in the
-             BiologicalSequence that's not in NucleotideSequence.complement_map
+            raises `BiologicalSequenceError` if there is a character in the
+             `BiologicalSequence` that's not in ``NucleotideSequence.complement_map``
         """
         return self == other.reverse_complement()
 
     def reverse_complement(self):
         """ return the reverse complement of the sequence
 
-            raises BiologicalSequence error if there is a character in the
-             BiologicalSequence that's not in NucleotideSequence.complement_map
+            raises `BiologicalSequenceError` if there is a character in the
+             `BiologicalSequence` that's not in ``NucleotideSequence.complement_map``
         """
         return self._complement(reversed(self))
     rc = reverse_complement
 
 
 class DNASequence(NucleotideSequence):
-    """ class for representing DNA sequences
+    """Base class for DNA sequences.
 
         all uppercase and lowercase IUPAC DNA characters are supported
     """
@@ -550,8 +546,8 @@ DNA = DNASequence
 
 
 class RNASequence(NucleotideSequence):
-    """ class for representing RNA sequences
-
+    """Base class for RNA sequences.
+    
         all uppercase and lowercase IUPAC RNA characters are supported
     """
 
