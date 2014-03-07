@@ -11,7 +11,7 @@ classes available, where the appropriate class to use depends on the nature of
 the distances you wish to store.
 
 A distance matrix includes both a matrix of distances (floats) between objects,
-as well as IDs (labels) identifying each object in the matrix.
+as well as IDs (object labels; strings) identifying each object in the matrix.
 
 Classes
 -------
@@ -235,11 +235,11 @@ class DistanceMatrix(object):
         For example, a 2x2 distance matrix with IDs ``'a'`` and ``'b'`` might
         look like::
 
-            <tab>a<tab>b
-            a<tab>0.0<tab>1.0
-            b<tab>1.0<tab>0.0
+            <del>a<del>b
+            a<del>0.0<del>1.0
+            b<del>1.0<del>0.0
 
-        where ``<tab>`` is the delimiter between elements.
+        where ``<del>`` is the delimiter between elements.
 
         Parameters
         ----------
