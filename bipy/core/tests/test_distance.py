@@ -16,11 +16,10 @@ from tempfile import TemporaryFile
 
 import numpy as np
 
-from bipy.core.distance import (random_distance_matrix, DistanceMatrix,
-                                DistanceMatrixError, DistanceMatrixFormatError,
-                                MissingDataError, MissingHeaderError,
-                                MissingSampleIDError, SampleIDMismatchError,
-                                SymmetricDistanceMatrix)
+from bipy.core.distance import (randdm, DistanceMatrix, DistanceMatrixError,
+                                DistanceMatrixFormatError, MissingDataError,
+                                MissingHeaderError, MissingIDError,
+                                IDMismatchError, SymmetricDistanceMatrix)
 from bipy.util.unit_test import TestCase, main
 
 
@@ -130,12 +129,12 @@ class DistanceMatrixTests(DistanceMatrixTestData):
         with self.assertRaises(MissingHeaderError):
             _ = DistanceMatrix.from_file([])
 
-        # Number of values don't match number of sample IDs.
+        # Number of values don't match number of IDs.
         with self.assertRaises(DistanceMatrixFormatError):
             _ = DistanceMatrix.from_file(self.bad_dm_f1)
 
-        # Mismatched sample IDs.
-        with self.assertRaises(SampleIDMismatchError):
+        # Mismatched IDs.
+        with self.assertRaises(IDMismatchError):
             _ = DistanceMatrix.from_file(self.bad_dm_f2)
 
         # Extra data at end.
@@ -164,8 +163,31 @@ class DistanceMatrixTests(DistanceMatrixTestData):
 
             self.assertEqual(obs, dm_f_line)
 
+    def test_init_from_dm(self):
+        """Constructs a dm from a dm."""
+        ids = ['foo', 'bar', 'baz']
+
+        # DistanceMatrix -> DistanceMatrix
+        exp = DistanceMatrix(self.dm_3x3_data, ids)
+        obs = DistanceMatrix(self.dm_3x3, ids)
+        self.assertEqual(obs, exp)
+        # Test that copy of data is not made.
+        self.assertTrue(obs.data is self.dm_3x3.data)
+        obs.data[0, 1] = 424242
+        self.assertTrue(np.array_equal(obs.data, self.dm_3x3.data))
+
+        # SymmetricDistanceMatrix -> DistanceMatrix
+        exp = DistanceMatrix(self.dm_3x3_data, ids)
+        obs = DistanceMatrix(SymmetricDistanceMatrix(self.dm_3x3_data,
+                                                     ('a', 'b', 'c')), ids)
+        self.assertEqual(obs, exp)
+
+        # DistanceMatrix -> SymmetricDistanceMatrix
+        with self.assertRaises(DistanceMatrixError):
+            _ = SymmetricDistanceMatrix(self.dm_2x2_asym, ['foo', 'bar'])
+
     def test_init_invalid_input(self):
-        """Raises error on invalid distance matrix data / sample IDs."""
+        """Raises error on invalid distance matrix data / IDs."""
         # Empty data.
         with self.assertRaises(DistanceMatrixError):
             _ = DistanceMatrix([], [])
@@ -184,11 +206,11 @@ class DistanceMatrixTests(DistanceMatrixTestData):
 
         data = [[0, 1], [1, 0]]
 
-        # Duplicate sample IDs.
+        # Duplicate IDs.
         with self.assertRaises(DistanceMatrixError):
             _ = DistanceMatrix(data, ['a', 'a'])
 
-        # Number of sample IDs don't match dimensions.
+        # Number of IDs don't match dimensions.
         with self.assertRaises(DistanceMatrixError):
             _ = DistanceMatrix(data, ['a', 'b', 'c'])
 
@@ -206,29 +228,29 @@ class DistanceMatrixTests(DistanceMatrixTestData):
         with self.assertRaises(AttributeError):
             self.dm_3x3.data = 'foo'
 
-    def test_sample_ids(self):
-        """Test retrieving/setting sample IDs."""
-        obs = self.dm_3x3.sample_ids
+    def test_ids(self):
+        """Test retrieving/setting IDs."""
+        obs = self.dm_3x3.ids
         self.assertEqual(obs, ('a', 'b', 'c'))
 
-        # Test that we overwrite the existing sample IDs and that the sample
-        # index is correctly rebuilt.
-        new_sids = ['foo', 'bar', 'baz']
-        self.dm_3x3.sample_ids = new_sids
-        obs = self.dm_3x3.sample_ids
-        self.assertEqual(obs, tuple(new_sids))
+        # Test that we overwrite the existing IDs and that the ID index is
+        # correctly rebuilt.
+        new_ids = ['foo', 'bar', 'baz']
+        self.dm_3x3.ids = new_ids
+        obs = self.dm_3x3.ids
+        self.assertEqual(obs, tuple(new_ids))
         self.assertTrue(np.array_equal(self.dm_3x3['bar'],
                                        np.array([0.01, 0.0, 12.0])))
-        with self.assertRaises(MissingSampleIDError):
+        with self.assertRaises(MissingIDError):
             _ = self.dm_3x3['b']
 
-    def test_sample_ids_invalid_input(self):
-        """Test setting invalid sample IDs raises an error."""
+    def test_ids_invalid_input(self):
+        """Test setting invalid IDs raises an error."""
         with self.assertRaises(DistanceMatrixError):
-            self.dm_3x3.sample_ids = ['foo', 'bar']
+            self.dm_3x3.ids = ['foo', 'bar']
         # Make sure that we can still use the distance matrix after trying to
         # be evil.
-        obs = self.dm_3x3.sample_ids
+        obs = self.dm_3x3.ids
         self.assertEqual(obs, ('a', 'b', 'c'))
 
     def test_dtype(self):
@@ -240,11 +262,6 @@ class DistanceMatrixTests(DistanceMatrixTestData):
         """Test retrieving shape of data matrix."""
         for dm, shape in izip(self.dms, self.dm_shapes):
             self.assertEqual(dm.shape, shape)
-
-    def test_num_samples(self):
-        """Test retrieving the number of samples in the distance matrix."""
-        for dm, shape in izip(self.dms, self.dm_shapes):
-            self.assertEqual(dm.num_samples, shape[0])
 
     def test_size(self):
         """Test retrieving size of data matrix."""
@@ -273,11 +290,11 @@ class DistanceMatrixTests(DistanceMatrixTestData):
         self.assertFalse(copy.data is self.dm_2x2.data)
         # deepcopy doesn't actually create a copy of the IDs because it is a
         # tuple of strings, which is fully immutable.
-        self.assertTrue(copy.sample_ids is self.dm_2x2.sample_ids)
+        self.assertTrue(copy.ids is self.dm_2x2.ids)
 
         new_ids = ['hello', 'world']
-        copy.sample_ids = new_ids
-        self.assertNotEqual(copy.sample_ids, self.dm_2x2.sample_ids)
+        copy.ids = new_ids
+        self.assertNotEqual(copy.ids, self.dm_2x2.ids)
 
         copy = self.dm_2x2.copy()
         copy.data[0, 1] = 0.0001
@@ -311,9 +328,9 @@ class DistanceMatrixTests(DistanceMatrixTestData):
         # Wrong shape.
         self.assertTrue(self.dm_3x3 != self.dm_1x1)
 
-        # Wrong sample IDs.
+        # Wrong IDs.
         other = self.dm_3x3.copy()
-        other.sample_ids = ['foo', 'bar', 'baz']
+        other.ids = ['foo', 'bar', 'baz']
         self.assertTrue(self.dm_3x3 != other)
 
         # Wrong data.
@@ -330,8 +347,8 @@ class DistanceMatrixTests(DistanceMatrixTestData):
         self.assertTrue(np.array_equal(obs, np.array([[0.123, 0.0]])))
         self.assertEqual(type(obs), np.ndarray)
 
-    def test_getitem_by_sample_id(self):
-        """Test retrieving row vectors by sample ID."""
+    def test_getitem_by_id(self):
+        """Test retrieving row vectors by ID."""
         obs = self.dm_1x1['a']
         self.assertTrue(np.array_equal(obs, np.array([0.0])))
 
@@ -341,8 +358,24 @@ class DistanceMatrixTests(DistanceMatrixTestData):
         obs = self.dm_3x3['c']
         self.assertTrue(np.array_equal(obs, np.array([4.2, 12.0, 0.0])))
 
-        with self.assertRaises(MissingSampleIDError):
+        with self.assertRaises(MissingIDError):
             _ = self.dm_2x2['c']
+
+    def test_getitem_by_id_pair(self):
+        """Test retrieving elements by ID pair."""
+        # Same object.
+        self.assertEqual(self.dm_1x1['a', 'a'], 0.0)
+
+        # Different objects (symmetric).
+        self.assertEqual(self.dm_3x3['b', 'c'], 12.0)
+        self.assertEqual(self.dm_3x3['c', 'b'], 12.0)
+
+        # Different objects (asymmetric).
+        self.assertEqual(self.dm_2x2_asym['a', 'b'], 1.0)
+        self.assertEqual(self.dm_2x2_asym['b', 'a'], -2.0)
+
+        with self.assertRaises(MissingIDError):
+            _ = self.dm_2x2['a', 'c']
 
     def test_getitem_ndarray_indexing(self):
         """Test __getitem__ delegates to underlying ndarray."""
@@ -360,15 +393,15 @@ class DistanceMatrixTests(DistanceMatrixTestData):
         self.assertEqual(type(obs), np.ndarray)
 
         # Grab all data.
-        obs = self.dm_3x3[0:, 0:]
+        obs = self.dm_3x3[:, :]
         self.assertTrue(np.array_equal(obs, self.dm_3x3.data))
         self.assertEqual(type(obs), np.ndarray)
 
         with self.assertRaises(IndexError):
             _ = self.dm_3x3[:, 3]
 
-    def test_parse_sample_ids(self):
-        """Empty stub: DistanceMatrix._parse_sample_ids tested elsewhere."""
+    def test_parse_ids(self):
+        """Empty stub: DistanceMatrix._parse_ids tested elsewhere."""
         pass
 
     def test_validate(self):
@@ -379,20 +412,24 @@ class DistanceMatrixTests(DistanceMatrixTestData):
         """Empty stub: DistanceMatrix._index_list already tested elsewhere."""
         pass
 
-    def test_format_sample_ids(self):
-        """Empty stub: DistanceMatrix._format_sample_ids tested elsewhere."""
+    def test_is_id_pair(self):
+        """Empty stub: DistanceMatrix._is_id_pair already tested elsewhere."""
         pass
 
-    def test_pprint_sample_ids(self):
-        """Test pretty-print formatting of sample IDs."""
+    def test_format_ids(self):
+        """Empty stub: DistanceMatrix._format_ids tested elsewhere."""
+        pass
+
+    def test_pprint_ids(self):
+        """Test pretty-print formatting of IDs."""
         # No truncation.
         exp = 'a, b, c'
-        obs = self.dm_3x3._pprint_sample_ids()
+        obs = self.dm_3x3._pprint_ids()
         self.assertEqual(obs, exp)
 
         # Truncation.
         exp = 'a, b, ...'
-        obs = self.dm_3x3._pprint_sample_ids(max_chars=5)
+        obs = self.dm_3x3._pprint_ids(max_chars=5)
         self.assertEqual(obs, exp)
 
 
@@ -419,7 +456,7 @@ class SymmetricDistanceMatrixTests(DistanceMatrixTestData):
             _ = SymmetricDistanceMatrix.from_file(self.dm_2x2_asym_f)
 
     def test_init_invalid_input(self):
-        """Raises error on invalid distance matrix data / sample IDs."""
+        """Raises error on invalid distance matrix data / IDs."""
         # Asymmetric.
         data = [[0.0, 2.0], [1.0, 0.0]]
         with self.assertRaises(DistanceMatrixError):
@@ -438,7 +475,7 @@ class SymmetricDistanceMatrixTests(DistanceMatrixTestData):
     def test_eq(self):
         """Test data equality between different distance matrix types."""
         # Compare SymmetricDistanceMatrix to DistanceMatrix, where both have
-        # the same data and sample IDs.
+        # the same data and IDs.
         eq_dm = DistanceMatrix(self.dm_3x3_data, ['a', 'b', 'c'])
         self.assertTrue(self.dm_3x3 == eq_dm)
         self.assertTrue(eq_dm == self.dm_3x3)
@@ -449,23 +486,23 @@ class SymmetricDistanceMatrixTests(DistanceMatrixTestData):
 
 
 class RandomDistanceMatrixTests(TestCase):
-    """Tests for bipy.core.distance.random_distance_matrix."""
+    """Tests for bipy.core.distance.randdm."""
 
     def test_default_usage(self):
         """Test generating random distance matrices."""
         exp = DistanceMatrix(np.asarray([[0.0]]), ['1'])
-        obs = random_distance_matrix(1)
+        obs = randdm(1)
         self.assertEqual(obs, exp)
 
-        obs = random_distance_matrix(2)
+        obs = randdm(2)
         self.assertEqual(obs.shape, (2, 2))
-        self.assertEqual(obs.sample_ids, ('1', '2'))
+        self.assertEqual(obs.ids, ('1', '2'))
 
-        obs1 = random_distance_matrix(5)
+        obs1 = randdm(5)
         num_trials = 10
         found_diff = False
         for _ in range(num_trials):
-            obs2 = random_distance_matrix(5)
+            obs2 = randdm(5)
 
             if obs1 != obs2:
                 found_diff = True
@@ -473,17 +510,17 @@ class RandomDistanceMatrixTests(TestCase):
 
         self.assertTrue(found_diff)
 
-    def test_sample_ids(self):
-        """Test generating random dist mats with specific sample IDs."""
-        sids = ['foo', 'bar', 'baz']
-        obs = random_distance_matrix(3, sample_ids=sids)
+    def test_ids(self):
+        """Test generating random dist mats with specific IDs."""
+        ids = ['foo', 'bar', 'baz']
+        obs = randdm(3, ids=ids)
         self.assertEqual(obs.shape, (3, 3))
-        self.assertEqual(obs.sample_ids, tuple(sids))
+        self.assertEqual(obs.ids, tuple(ids))
 
     def test_constructor(self):
         """Test generating random dist mats with a specific constructor."""
         exp = SymmetricDistanceMatrix(np.asarray([[0.0]]), ['1'])
-        obs = random_distance_matrix(1, constructor=SymmetricDistanceMatrix)
+        obs = randdm(1, constructor=SymmetricDistanceMatrix)
         self.assertEqual(obs, exp)
         self.assertTrue(isinstance(obs, SymmetricDistanceMatrix))
 
@@ -497,22 +534,22 @@ class RandomDistanceMatrixTests(TestCase):
 
         exp = DistanceMatrix(np.asarray([[0, 42, 42], [42, 0, 42],
                                          [42, 42, 0]]), ['1', '2', '3'])
-        obs = random_distance_matrix(3, random_fn=myrand)
+        obs = randdm(3, random_fn=myrand)
         self.assertEqual(obs, exp)
 
     def test_invalid_input(self):
         """Test error-handling upon invalid input."""
         # Invalid dimensions.
         with self.assertRaises(DistanceMatrixError):
-            _ = random_distance_matrix(0)
+            _ = randdm(0)
 
         # Invalid dimensions.
         with self.assertRaises(ValueError):
-            _ = random_distance_matrix(-1)
+            _ = randdm(-1)
 
-        # Invalid number of sample IDs.
+        # Invalid number of IDs.
         with self.assertRaises(DistanceMatrixError):
-            _ = random_distance_matrix(2, sample_ids=['foo'])
+            _ = randdm(2, ids=['foo'])
 
 
 # 1x1:
@@ -558,7 +595,7 @@ DM_3x3_WHITESPACE_F = ['# foo',
 # missing data
 BAD_DM_F1 = 'a\tb\na\t0\t1\nb\t1'
 
-# mismatched sample IDs
+# mismatched IDs
 BAD_DM_F2 = '\ta\tb\nb\t0\t1\na\t1\t0'
 
 # extra data lines
