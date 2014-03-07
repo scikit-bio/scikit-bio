@@ -45,6 +45,6 @@ setup(name='bipy',
                         'scipy >=0.13.0'],
       extras_require={'test': ["nose >= 0.10.1", "pep8"],
                       'doc': ["Sphinx >= 1.1", "numpydoc",
-                              "sphinx_bootstrap_theme"]},
+                              "sphinx-bootstrap-theme"]},
       classifiers=classifiers
       )
