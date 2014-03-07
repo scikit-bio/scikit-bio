@@ -403,7 +403,7 @@ class BiologicalSequence(Sequence):
 
     @property
     def gap_alphabet(self):
-        """Return the set of characters defined as gaps in the `BiologicalSequence`
+        """Return the set of characters defined as gaps
 
         Returns
         -------
