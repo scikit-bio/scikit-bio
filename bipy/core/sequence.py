@@ -51,9 +51,9 @@ sequence clustering, phylogenetic reconstruction, etc.
 >>> d4 = DNASequence('GACCCGCT')
 >>> d5 = DNASequence('GACCCCCT')
 >>> d3.distance(d4)
-2
+0.25
 >>> d3.distance(d5)
-3
+0.375
 
 Class level attributes contain information about the molecule types.
 
@@ -79,6 +79,8 @@ from __future__ import division
 
 from collections import Sequence
 from itertools import izip
+
+from scipy.spatial.distance import hamming
 
 from bipy.core.exception import BiologicalSequenceError
 
@@ -412,32 +414,6 @@ class BiologicalSequence(Sequence):
         """
         return ''.join(self._sequence)
 
-    def _hamming_distance(self, other):
-        """Return the Hamming distance to `other` based on the shorter sequence
-
-        Parameters
-        ----------
-        other : `BiologicalSequence`
-            The `BiologicalSequence` to compute the distance against.
-
-        Returns
-        -------
-        int
-            The Hamming distance between `self` and `other`.
-
-        Notes
-        -----
-        The Hamming distance is the number of substitutions to convert one
-        sequence to the other. Can also be referred to as the minimum edit
-        distance.
-
-        """
-        distance = 0
-        for s, o in izip(self, other):
-            if s != o:
-                distance += 1
-        return distance
-
     @property
     def alphabet(self):
         """Return the set of characters allowed in the `BiologicalSequence`
@@ -553,7 +529,7 @@ class BiologicalSequence(Sequence):
         return self.__class__(result, identifier=self._identifier,
                               description=self._description)
 
-    def distance(self, other, distance_fn=_hamming_distance):
+    def distance(self, other, distance_fn=None):
         """Returns the distance to other
 
         Parameters
@@ -562,11 +538,18 @@ class BiologicalSequence(Sequence):
             The `BiologicalSequence` to compute the distance to.
         distance_fn : function, optional
             Function used to compute the distance between `self` and `other`.
+            If ``None`` (the default), `scipy.spatial.distance.hamming` will be
+            used.
 
         Returns
         -------
-        int or float
+        float
             The distance between `self` and `other`.
+
+        Raises
+        ------
+        bipy.core.exception.BiologicalSequenceError
+            If ``len(self) != len(other)``.
 
         See Also
         --------
@@ -577,15 +560,20 @@ class BiologicalSequence(Sequence):
         Examples
         --------
         >>> from bipy.core.sequence import BiologicalSequence
-        >>> s = BiologicalSequence('GGUCCACGTTC')
-        >>> t = BiologicalSequence('AGUCCACGTTCC')
+        >>> s = BiologicalSequence('GGUC')
+        >>> t = BiologicalSequence('AGUC')
         >>> s.distance(t)
-        1
+        0.25
         >>> def dumb_dist(s1, s2): return 42
         >>> s.distance(t, dumb_dist)
         42
 
         """
+        if distance_fn is None:
+            distance_fn = hamming
+        if len(self) != len(other):
+            raise BiologicalSequenceError("Distance can only be computed "
+                "between BiologicalSequences of equal length.")
         return distance_fn(self, other)
 
     def fraction_diff(self, other):
@@ -601,30 +589,36 @@ class BiologicalSequence(Sequence):
         float
             The fraction of positions that differ between `self` and `other`.
 
+        Raises
+        ------
+        bipy.core.exception.BiologicalSequenceError
+            If ``len(self) != len(other)``.
+        
         See Also
         --------
         distance
-        _hamming_distance
         fraction_same
+        scipy.spatial.distance.hamming
 
         Notes
         -----
-        Computation is based on the `self._hamming_distance` between the
-        sequences. Differences are only counted through the length of the
-        shorter sequence. 
-        
+        Computed as the Hamming distance between `self` and `other`. This is
+        here in addition to `distance` incase the `distance` method is ever
+        updated to use something other than ``scipy.spatial.distance.hamming`
+        as the default distance metric. So, if you specifically want the
+        fraction of positions that differ, you should use this function instead
+        of `distance` to ensure backward compatibility.
+
         Examples
         --------
         >>> from bipy.core.sequence import BiologicalSequence
-        >>> s = BiologicalSequence('GGUCCACGTT')
-        >>> t = BiologicalSequence('AGUCCACGTTC')
+        >>> s = BiologicalSequence('GGUC')
+        >>> t = BiologicalSequence('AGUC')
         >>> s.fraction_diff(t)
-        0.1
+        0.25
 
         """
-        min_edit_dist = self._hamming_distance(other)
-        len_shorter = min(len(self), len(other))
-        return min_edit_dist / len_shorter
+        return self.distance(other, distance_fn=hamming)
 
     def fraction_same(self, other):
         """Return fraction of positions that are the same relative to `other`
@@ -643,22 +637,16 @@ class BiologicalSequence(Sequence):
         See Also
         --------
         distance
-        _hamming_distance
         fraction_diff
+        scipy.spatial.distance.hamming
 
-        Notes
-        -----
-        Computation is based on the `self._hamming_distance` between the
-        sequences. Similarities are only counted through the length of the
-        shorter sequence.
-        
         Examples
         --------
         >>> from bipy.core.sequence import BiologicalSequence
-        >>> s = BiologicalSequence('GGUCCACGTT')
-        >>> t = BiologicalSequence('AGUCCACGTTC')
+        >>> s = BiologicalSequence('GGUC')
+        >>> t = BiologicalSequence('AGUC')
         >>> s.fraction_same(t)
-        0.9
+        0.75
 
         """
         return 1. - self.fraction_diff(other)
@@ -683,7 +671,7 @@ class BiologicalSequence(Sequence):
         -----
         Visual aid is useful here. Imagine we have
         ``BiologicalSequence('-ACCGA-TA-')``. The position numbers in the
-        ungapped sequence and gapped sequence will be as follows:
+        ungapped sequence and gapped sequence will be as follows::
 
               0123456 
               ACCGATA
