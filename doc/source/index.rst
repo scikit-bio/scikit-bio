@@ -11,4 +11,5 @@ API Reference
 .. toctree::
    :maxdepth: 1
 
+   bipy.core.sequence
    bipy.core.distance

@@ -18,7 +18,7 @@ Classes
    :toctree: generated/
 
    BiologicalSequence
-   NucelotideSequence
+   NucleotideSequence
    DNASequence
    RNASequence
 
@@ -874,6 +874,7 @@ class BiologicalSequence(Sequence):
         -------
         bool
             ``True`` if `self` is valid, and ``False`` otherwise.
+
         Notes
         -----
         Validity is defined as not containing any characters outside of
