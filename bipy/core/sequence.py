@@ -412,7 +412,7 @@ class BiologicalSequence(Sequence):
 
         See also
         --------
-        ``xBiologicalSequence.alphabet``
+        ``BiologicalSequence.alphabet``
         ``BiologicalSequence.unsupported_characters``
         ``BiologicalSequence.has_unsupported_characters``
         ``BiologicalSequence.degap``
@@ -607,6 +607,10 @@ class BiologicalSequence(Sequence):
             either None (if that position represents a gap) or the position of
             that base in the ungapped sequence.
 
+        See Also
+        --------
+        ``BiologicalSequence.gap_vector``
+
         Notes
         -----
         Visual aid is useful here. Imagine we have
@@ -648,24 +652,69 @@ class BiologicalSequence(Sequence):
         return degapped_to_gapped, gapped_to_degapped
 
     def gap_vector(self):
-        """ return a list indicating positions containing gaps
+        """Return list indicating positions containing gaps
 
-            for example:
-             ``BiologicalSequence('..ACG--TT-').gap_vector() ==
-             [True, True, False, False, False, True, True, False, False, True]``
+        Returns
+        -------
+        list of booleans
+            The list will be of length ``len(self)``, and a position will
+            contain ``True`` if the character at that position in the
+            `BiologicalSequence` is in ``self.gap_alphabet``, and `False`
+            otherwise.
+
+        See Also
+        --------
+        ``BiologicalSequence.gap_maps``
+
+        Examples
+        --------
+        >>> from bipy.core.sequence import BiologicalSequence
+        >>> s = BiologicalSequence('..ACG--TT-')
+        >>> s.gap_vector()
+        [True, True, False, False, False, True, True, False, False, True]
+
         """
         return map(self.is_gap, self._sequence)
 
     def unsupported_characters(self):
-        """ return set of unsupported characters present in the sequence
+        """Return the set of unsupported characters in the `BiologicalSequence`
+
+        Returns
+        -------
+        set
+            Invalid characters in the `BiologicalSequence` (i.e., the
+            characters that are present in the `BiologicalSequence` but which
+            are not in ``BiologicalSequence.alphabet`` or
+            ``BiologicalSequence.gap_alphabet``.
+
+        See also
+        --------
+        ``BiologicalSequence.is_valid``
+        ``BiologicalSequence.alphabet``
+        ``BiologicalSequence.gap_alphabet``
+        ``BiologicalSequence.has_unsupported_characters``
+
         """
         return set(self) - self._alphabet - self._gap_alphabet
 
     def has_unsupported_characters(self):
-        """ return True if unsupported characters are present
+        """Return bool indicating presence/absence of unsupported characters
 
-            unsupported characters are defined as any characters that are not
-            in a ``BiologicalSequence``'s alphabet
+        Returns
+        -------
+        bool
+            ``True`` if invalid characters are present in the 
+            `BiologicalSequence` (i.e., characters which are not in 
+            ``BiologicalSequence.alphabet`` or 
+            ``BiologicalSequence.gap_alphabet``) and ``False`` otherwise.
+
+        See also
+        --------
+        ``BiologicalSequence.is_valid``
+        ``BiologicalSequence.alphabet``
+        ``BiologicalSequence.gap_alphabet``
+        ``BiologicalSequence.has_unsupported_characters``
+
         """
         all_supported = self._alphabet | self._gap_alphabet
         for e in self:
@@ -674,7 +723,21 @@ class BiologicalSequence(Sequence):
         return False
 
     def index(self, subsequence):
-        """ return the position where subsequence first occurs
+        """Return the position where subsequence first occurs
+
+        Returns
+        -------
+        int
+            The position where `subsequence` first occurs in the
+            `BiologicalSequence`.
+
+        Examples
+        --------
+        >>> from bipy.core.sequence import BiologicalSequence
+        >>> s = BiologicalSequence('ACACGACGTT-')
+        >>> s.index('ACG')
+        2
+
         """
         try:
             return self._sequence.index(subsequence)
@@ -684,12 +747,57 @@ class BiologicalSequence(Sequence):
 
     @classmethod
     def is_gap(cls, char):
-        """ return True if char is a gap character
+        """Return True if `char` is in the ``gap_alphabet`` set
+
+        Parameters
+        ----------
+        char : str
+            The string to check for presense in the `BiologicalSequence`
+            `gap_alphabet`.
+
+        Returns
+        -------
+        bool
+            Indicates whether `char` is in the `BiologicalSequence` attribute 
+            ``gap_alphabet``.
+
+        Notes
+        -----
+        This is a class method.
+
+        Examples
+        --------
+        >>> from bipy.core.sequence import BiologicalSequence
+        >>> BiologicalSequence.is_gap('.')
+        True
+        >>> BiologicalSequence.is_gap('P')
+        False
+        >>> s = BiologicalSequence('ACACGACGTT')
+        >>> s.is_gap('-')
+        True
+
         """
         return char in cls._gap_alphabet
 
     def is_gapped(self):
-        """ return True if any gap characters are in the `BiologicalSequence`
+        """Return True if char(s) in `gap_alphabet` are present
+
+        Returns
+        -------
+        bool
+            Indicates whether there are one or more occurences of any character
+            in ``self.gap_alphabet`` in the `BiologicalSequence`.
+
+        Examples
+        --------
+        >>> from bipy.core.sequence import BiologicalSequence
+        >>> s = BiologicalSequence('ACACGACGTT')
+        >>> s.is_gapped()
+        False
+        >>> t = BiologicalSequence('A.CAC--GACGTT')
+        >>> t.is_gapped()
+        True
+
         """
         for e in self:
             if self.is_gap(e):
@@ -697,19 +805,55 @@ class BiologicalSequence(Sequence):
         return False
 
     def is_valid(self):
-        """ return True if the sequence is valid
+        """Return True if the sequence is valid
 
-            validity is defined as not containing any characters outside of
-            `alphabet` and `gap_alphabet`
+        Returns
+        -------
+        bool
+            ``True`` if ``self`` is valid, and ``False`` otherwise.
+        Notes
+        -----
+        Validity is defined as not containing any characters outside of
+        ``self.alphabet`` and ``self.gap_alphabet``.
+
         """
         return not self.has_unsupported_characters()
 
     def to_fasta(self, field_delimiter=" ", terminal_character="\n"):
-        """ return the sequence as a fasta-formatted string
+        """Return the sequence as a fasta-formatted string
 
-            terminal_character: the last character to be included in the
-             result (if you don't want a trailing newline or other character
-             in the result, you can pass ``terminal_character=""``)
+        Parameters
+        ----------
+        field_delimiter : str, optional
+            The character(s) to use on the header line between the
+            ``self.identifier`` and ``self.description``. 
+
+        terminal_character : str, optional
+            The last character to be included in the result (if you don't want
+            a trailing newline or other character in the result, you can pass 
+            ``terminal_character=""``).
+
+        Returns
+        -------
+        str
+            The `BiologicalSequence` as a fasta-formatted string.
+
+        See Also
+        --------
+        `__str__`
+
+        Examples
+        --------
+        >>> from bipy.core.sequence import BiologicalSequence
+        >>> s = BiologicalSequence('ACACGACGTT')
+        >>> print s.to_fasta(terminal_character="")
+        >
+        ACACGACGTT
+        >>> t = BiologicalSequence('ACA',identifier='my-seq',description='h')
+        >>> print t.to_fasta(terminal_character="")
+        >my-seq h
+        ACA
+
         """
         if self._description:
             header_line = '%s%s%s' % (self._identifier, field_delimiter,
