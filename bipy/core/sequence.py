@@ -87,7 +87,7 @@ from bipy.core.exception import BiologicalSequenceError
 
 class BiologicalSequence(Sequence):
     """Base class for biological sequences.
-        
+
     Attributes
     ----------
     alphabet
@@ -107,7 +107,7 @@ class BiologicalSequence(Sequence):
     def __init__(self, sequence, identifier="", description="",
                  validate=False):
         """Initialize a `BiologicalSequence` object.
-        
+
         Parameters
         ----------
         sequence : python Sequence (e.g., str, list or tuple)
@@ -151,7 +151,7 @@ class BiologicalSequence(Sequence):
 
     def __contains__(self, other):
         """The in operator.
-        
+
         Parameters
         ----------
         other : str
@@ -170,7 +170,7 @@ class BiologicalSequence(Sequence):
         True
         >>> 'CCC' in s
         False
-        
+
         """
         return other in self._sequence
 
@@ -213,12 +213,12 @@ class BiologicalSequence(Sequence):
 
     def __getitem__(self, i):
         """The indexing operator.
-        
+
         Parameters
         ----------
         i : int
             The position to return from the `BiologicalSequence`.
-        
+
         Returns
         -------
         str
@@ -230,7 +230,7 @@ class BiologicalSequence(Sequence):
         >>> s = BiologicalSequence('GGUCGUGAAGGA')
         >>> s[1]
         'G'
-        
+
         """
         try:
             return self._sequence[i]
@@ -268,7 +268,7 @@ class BiologicalSequence(Sequence):
         --------
         >>> from bipy.core.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUC')
-        >>> for c in s: print c 
+        >>> for c in s: print c
         G
         G
         U
@@ -289,7 +289,7 @@ class BiologicalSequence(Sequence):
         --------
         >>> from bipy.core.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUC')
-        >>> len(s) 
+        >>> len(s)
         4
 
         """
@@ -329,7 +329,7 @@ class BiologicalSequence(Sequence):
 
     def __repr__(self):
         """The repr method.
-        
+
         Returns
         -------
         str
@@ -376,7 +376,7 @@ class BiologicalSequence(Sequence):
         --------
         >>> from bipy.core.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUC')
-        >>> for c in reversed(s): print c 
+        >>> for c in reversed(s): print c
         C
         U
         G
@@ -392,7 +392,7 @@ class BiologicalSequence(Sequence):
         -------
         str
             String representation of the `BiologicalSequence`. This will be the
-            full sequence, but will not contain information about the type, or 
+            full sequence, but will not contain information about the type, or
             `self.identifier` or `self.description`.
 
         See Also
@@ -513,7 +513,7 @@ class BiologicalSequence(Sequence):
         -----
         The type, identifier, and description of the result will be the
         same as `self`.
-        
+
         Examples
         --------
         >>> from bipy.core.sequence import BiologicalSequence
@@ -595,7 +595,7 @@ class BiologicalSequence(Sequence):
         ------
         bipy.core.exception.BiologicalSequenceError
             If ``len(self) != len(other)``.
-        
+
         See Also
         --------
         distance
@@ -633,14 +633,14 @@ class BiologicalSequence(Sequence):
         Returns
         -------
         float
-            The fraction of positions that are the same between `self` and 
+            The fraction of positions that are the same between `self` and
             `other`.
 
         Raises
         ------
         bipy.core.exception.BiologicalSequenceError
             If ``len(self) != len(other)``.
-        
+
         See Also
         --------
         distance
@@ -664,8 +664,8 @@ class BiologicalSequence(Sequence):
         Returns
         -------
         tuple containing two lists
-            The first list is the length of the ungapped sequence, and each 
-            entry is the position of that base in the gapped sequence. The 
+            The first list is the length of the ungapped sequence, and each
+            entry is the position of that base in the gapped sequence. The
             second list is the length of the gapped sequence, and each entry is
             either None (if that position represents a gap) or the position of
             that base in the ungapped sequence.
@@ -680,15 +680,15 @@ class BiologicalSequence(Sequence):
         ``BiologicalSequence('-ACCGA-TA-')``. The position numbers in the
         ungapped sequence and gapped sequence will be as follows::
 
-              0123456 
+              0123456
               ACCGATA
-              |||||\\ 
+              |||||\\
              -ACCGA-TA-
              0123456789
 
         So, in the first list, position 0 maps to position 1, position 1
         maps to position 2, position 5 maps to position 7, ... And, in the
-        second list, position 0 doesn't map to anything (so it's None), 
+        second list, position 0 doesn't map to anything (so it's None),
         position 1 maps to position 0, ...
 
         Examples
@@ -766,9 +766,9 @@ class BiologicalSequence(Sequence):
         Returns
         -------
         bool
-            ``True`` if invalid characters are present in the 
-            `BiologicalSequence` (i.e., characters which are not in 
-            `BiologicalSequence.alphabet` or 
+            ``True`` if invalid characters are present in the
+            `BiologicalSequence` (i.e., characters which are not in
+            `BiologicalSequence.alphabet` or
             `BiologicalSequence.gap_alphabet`) and ``False`` otherwise.
 
         See Also
@@ -821,7 +821,7 @@ class BiologicalSequence(Sequence):
         Returns
         -------
         bool
-            Indicates whether `char` is in the `BiologicalSequence` attribute 
+            Indicates whether `char` is in the `BiologicalSequence` attribute
             `gap_alphabet`.
 
         Notes
@@ -889,11 +889,11 @@ class BiologicalSequence(Sequence):
         ----------
         field_delimiter : str, optional
             The character(s) to use on the header line between the
-            `self.identifier` and `self.description`. 
+            `self.identifier` and `self.description`.
 
         terminal_character : str, optional
             The last character to be included in the result (if you don't want
-            a trailing newline or other character in the result, you can pass 
+            a trailing newline or other character in the result, you can pass
             ``terminal_character=""``).
 
         Returns
@@ -941,8 +941,8 @@ class NucleotideSequence(BiologicalSequence):
     iupac_standard_characters : set
         The non-degenerate IUPAC nucleotide characters
     iupac_degeneracies : dict of sets
-        Mapping of IUPAC degenerate nucleotide character to the set of 
-        non-degenerate IUPAC nucleotide characters it represents 
+        Mapping of IUPAC degenerate nucleotide character to the set of
+        non-degenerate IUPAC nucleotide characters it represents
     iupac_degenerate_characters : set
         The degenerate IUPAC nucleotide characters
     iupac_characters : set
@@ -965,7 +965,7 @@ class NucleotideSequence(BiologicalSequence):
     _alphabet = iupac_characters | set([c.lower() for c in iupac_characters])
 
     def _complement(self, seq_iterator):
-        """Returns `NucleotideSequence` that is complement of `seq_iterator` 
+        """Returns `NucleotideSequence` that is complement of `seq_iterator`
 
         Parameters
         ----------
@@ -975,8 +975,8 @@ class NucleotideSequence(BiologicalSequence):
         Returns
         -------
         NucelotideSequence
-            The complement of the sequence represented by `seq_iterator`. 
-            Specific type will be the same as ``type(self)``. 
+            The complement of the sequence represented by `seq_iterator`.
+            Specific type will be the same as ``type(self)``.
 
         Raises
         ------
@@ -988,8 +988,8 @@ class NucleotideSequence(BiologicalSequence):
         -----
         This private method centralizes the logic for `complement` and
         `reverse_complement` by taking the sequence as an iterator (so it can
-        be passed the result of either `iter` or `reversed`). 
-        
+        be passed the result of either `iter` or `reversed`).
+
         """
         result = []
         for base in seq_iterator:
@@ -1026,9 +1026,9 @@ class NucleotideSequence(BiologicalSequence):
         Returns
         -------
         NucelotideSequence
-            The complement of `self`. Specific type will be the same as 
-            ``type(self)``. 
-        
+            The complement of `self`. Specific type will be the same as
+            ``type(self)``.
+
         Raises
         ------
         bipy.core.exception.BiologicalSequenceError
@@ -1071,9 +1071,9 @@ class NucleotideSequence(BiologicalSequence):
         Returns
         -------
         NucelotideSequence
-            The reverse complement of `self`. Specific type will be the same as 
-            ``type(self)``. 
-        
+            The reverse complement of `self`. Specific type will be the same as
+            ``type(self)``.
+
         Raises
         ------
         bipy.core.exception.BiologicalSequenceError
@@ -1093,7 +1093,7 @@ class NucleotideSequence(BiologicalSequence):
 
 class DNASequence(NucleotideSequence):
     """Base class for DNA sequences.
- 
+
     Attributes
     ----------
     alphabet
@@ -1104,8 +1104,8 @@ class DNASequence(NucleotideSequence):
     iupac_standard_characters : set
         The non-degenerate IUPAC DNA characters
     iupac_degeneracies : dict of sets
-        Mapping of IUPAC degenerate DNA character to the set of 
-        non-degenerate IUPAC DNA characters it represents 
+        Mapping of IUPAC degenerate DNA character to the set of
+        non-degenerate IUPAC DNA characters it represents
     iupac_degenerate_characters : set
         The degenerate IUPAC DNA characters
     iupac_characters : set
@@ -1138,7 +1138,7 @@ DNA = DNASequence
 
 class RNASequence(NucleotideSequence):
     """Base class for RNA sequences.
- 
+
     Attributes
     ----------
     alphabet
@@ -1149,8 +1149,8 @@ class RNASequence(NucleotideSequence):
     iupac_standard_characters : set
         The non-degenerate IUPAC RNA characters
     iupac_degeneracies : dict of sets
-        Mapping of IUPAC degenerate RNA character to the set of 
-        non-degenerate IUPAC RNA characters it represents 
+        Mapping of IUPAC degenerate RNA character to the set of
+        non-degenerate IUPAC RNA characters it represents
     iupac_degenerate_characters : set
         The degenerate IUPAC RNA characters
     iupac_characters : set
