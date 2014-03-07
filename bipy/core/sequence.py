@@ -45,7 +45,7 @@ reverse complement or degapped (i.e., unaligned) version.
 <DNASequence: TACCCGGT (length: 8)>
 
 It's also straight-forward to compute distances between sequences (optionally
-using user-defined distance metrics, default is hamming distance) for use in
+using user-defined distance metrics, default is Hamming distance) for use in
 sequence clustering, phylogenetic reconstruction, etc.
 
 >>> d4 = DNASequence('GACCCGCT')
@@ -413,7 +413,7 @@ class BiologicalSequence(Sequence):
         return ''.join(self._sequence)
 
     def _hamming_distance(self, other):
-        """Return the hamming distance to `other` based on the shorter sequence
+        """Return the Hamming distance to `other` based on the shorter sequence
 
         Parameters
         ----------
@@ -938,6 +938,11 @@ class NucleotideSequence(BiologicalSequence):
 
     Attributes
     ----------
+    alphabet
+    complement_map
+    description
+    gap_alphabet
+    identifier
     iupac_standard_characters : set
         The non-degenerate IUPAC nucleotide characters
     iupac_degeneracies : dict of sets
@@ -1093,7 +1098,24 @@ class NucleotideSequence(BiologicalSequence):
 
 class DNASequence(NucleotideSequence):
     """Base class for DNA sequences.
-    
+ 
+    Attributes
+    ----------
+    alphabet
+    complement_map
+    description
+    gap_alphabet
+    identifier
+    iupac_standard_characters : set
+        The non-degenerate IUPAC DNA characters
+    iupac_degeneracies : dict of sets
+        Mapping of IUPAC degenerate DNA character to the set of 
+        non-degenerate IUPAC DNA characters it represents 
+    iupac_degenerate_characters : set
+        The degenerate IUPAC DNA characters
+    iupac_characters : set
+        The non-degnerate and degenerate DNA characters
+
     Notes
     -----
     All uppercase and lowercase IUPAC DNA characters are supported.
@@ -1121,7 +1143,24 @@ DNA = DNASequence
 
 class RNASequence(NucleotideSequence):
     """Base class for RNA sequences.
-    
+ 
+    Attributes
+    ----------
+    alphabet
+    complement_map
+    description
+    gap_alphabet
+    identifier
+    iupac_standard_characters : set
+        The non-degenerate IUPAC RNA characters
+    iupac_degeneracies : dict of sets
+        Mapping of IUPAC degenerate RNA character to the set of 
+        non-degenerate IUPAC RNA characters it represents 
+    iupac_degenerate_characters : set
+        The degenerate IUPAC RNA characters
+    iupac_characters : set
+        The non-degnerate and degenerate RNA characters
+
     Notes
     -----
     All uppercase and lowercase IUPAC RNA characters are supported.
