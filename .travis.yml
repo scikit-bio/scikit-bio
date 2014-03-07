@@ -13,9 +13,14 @@ before_install:
   # Update conda itself
   - conda update --yes conda
 install:
-  - conda create --yes -n env_name python=$TRAVIS_PYTHON_VERSION pip numpy=$NUMPY_VERSION scipy matplotlib nose pep8
+  - conda create --yes -n env_name python=$TRAVIS_PYTHON_VERSION pip numpy=$NUMPY_VERSION scipy matplotlib nose pep8 Sphinx numpydoc sphinx_bootstrap_theme
   - source activate env_name
   - pip install . --no-deps
 script:
   - nosetests --with-doctest
   - pep8 bipy setup.py
+  - pushd doc
+  - make clean
+  - make html
+  - make linkcheck
+  - popd
