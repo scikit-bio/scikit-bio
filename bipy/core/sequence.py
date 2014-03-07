@@ -97,7 +97,7 @@ class BiologicalSequence(Sequence):
 
     Notes
     -----
-    BiologicalSequence objects are immutable. Where applicable,
+    `BiologicalSequence` objects are immutable. Where applicable,
     methods return a new object of the same class.
     """
 
@@ -160,7 +160,7 @@ class BiologicalSequence(Sequence):
         Returns
         -------
         bool
-            Indicates whether other is contained in self.
+            Indicates whether `other` is contained in `self`.
 
         Examples
         --------
