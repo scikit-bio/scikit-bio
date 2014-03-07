@@ -867,8 +867,23 @@ class BiologicalSequence(Sequence):
 
 class NucleotideSequence(BiologicalSequence):
     """Base class for nucleotide sequences.
-    
-        all uppercase and lowercase IUPAC DNA/RNA characters are supported
+
+    Attributes
+    ----------
+    iupac_standard_characters : set
+        The non-degenerate IUPAC nucleotide characters
+    iupac_degeneracies : dict of sets
+        Mapping of IUPAC degenerate nucleotide character to the set of 
+        non-degenerate IUPAC nucleotide characters it represents 
+    iupac_degenerate_characters : set
+        The degenerate IUPAC nucleotide characters
+    iupac_characters : set
+        The non-degnerate and degenerate nucleotide characters
+
+    Notes
+    -----
+    All uppercase and lowercase IUPAC DNA/RNA characters are supported.
+
     """
 
     iupac_standard_characters = set("ACGTU")
@@ -878,15 +893,35 @@ class NucleotideSequence(BiologicalSequence):
                           "H": set("ACTU"), "V": set("ACG"), "N": set("ACGTU")}
     iupac_degenerate_characters = set(iupac_degeneracies)
     iupac_characters = iupac_standard_characters | iupac_degenerate_characters
-    # complement_map cannot be defined for a generic NucleotideSequence
-    # as the complement of 'A' is ambiguous. thanks, nature...
     _complement_map = {}
     _alphabet = iupac_characters | set([c.lower() for c in iupac_characters])
 
     def _complement(self, seq_iterator):
-        """ private method for complementing based on an iterator
+        """Returns `NucleotideSequence` that is complement of `seq_iterator` 
 
-            this centralizes the logic for complement and reverse_complement
+        Parameters
+        ----------
+        seq_iterator : iterator
+            The ``BiologicalSequence`` to be complemented.
+
+        Returns
+        -------
+        NucelotideSequence
+            The complement of the sequence represented by `seq_iterator`. 
+            Specific type will be the same as ``type(self)``. 
+
+        Raises
+        ------
+        BiologicalSequenceError
+            If a character is present in the `NucleotideSequence` that is not
+            in the complement map.
+
+        Notes
+        -----
+        This private method centralizes the logic for `complement` and
+        `reverse_complement` by taking the sequence as an iterator (so it can
+        be passed the result of either `iter` or `reversed`). 
+        
         """
         result = []
         for base in seq_iterator:
@@ -900,31 +935,89 @@ class NucleotideSequence(BiologicalSequence):
 
     @property
     def complement_map(self):
-        """ return the mapping of characters to their complements
+        """Return the mapping of characters to their complements
+
+        Returns
+        -------
+        dict
+            Mapping of characters to their complements
+
+        Notes
+        -----
+        `complement_map` cannot be defined for a generic `NucleotideSequence`
+        because the complement of 'A' is ambiguous.
+        `NucleotideSequence.complement_map` will therefore be the empty dict.
+        Thanks, nature...
+
         """
         return self._complement_map
 
     def complement(self):
-        """ return the complement of the sequence
+        """Return the complement of the `NucleotideSequence`
 
-            raises `BiologicalSequenceError` if there is a character in the
-             `BiologicalSequence` that's not in ``NucleotideSequence.complement_map``
+        Returns
+        -------
+        NucelotideSequence
+            The complement of `self`. Specific type will be the same as 
+            ``type(self)``. 
+        
+        Raises
+        ------
+        BiologicalSequenceError
+            If a character is present in the `NucleotideSequence` that is not
+            in `self.complement_map`.
+
+        See Also
+        --------
+        reverse_complement
+        complement_map
+
         """
         return self._complement(self)
 
     def is_reverse_complement(self, other):
-        """ return True if `NucleotideSequences` are rev. comp. of one another
+        """Return True if `other` is the reverse complement of `self`
 
-            raises `BiologicalSequenceError` if there is a character in the
-             `BiologicalSequence` that's not in ``NucleotideSequence.complement_map``
+        Returns
+        -------
+        bool
+            `True` if `other` is the reverse complement of `self` and `False`
+            otherwise.
+
+        Raises
+        ------
+        BiologicalSequenceError
+            If a character is present in `other` that is not in the
+            `self.complement_map`.
+
+        See Also
+        --------
+        reverse_complement
+
         """
         return self == other.reverse_complement()
 
     def reverse_complement(self):
-        """ return the reverse complement of the sequence
+        """Return the reverse complement of the `NucleotideSequence`
 
-            raises `BiologicalSequenceError` if there is a character in the
-             `BiologicalSequence` that's not in ``NucleotideSequence.complement_map``
+        Returns
+        -------
+        NucelotideSequence
+            The reverse complement of `self`. Specific type will be the same as 
+            ``type(self)``. 
+        
+        Raises
+        ------
+        BiologicalSequenceError
+            If a character is present in the `NucleotideSequence` that is not
+            in `self.complement_map`.
+
+        See Also
+        --------
+        complement
+        complement_map
+        is_reverse_complement
+
         """
         return self._complement(reversed(self))
     rc = reverse_complement
@@ -932,8 +1025,11 @@ class NucleotideSequence(BiologicalSequence):
 
 class DNASequence(NucleotideSequence):
     """Base class for DNA sequences.
+    
+    Notes
+    -----
+    All uppercase and lowercase IUPAC DNA characters are supported.
 
-        all uppercase and lowercase IUPAC DNA characters are supported
     """
 
     iupac_standard_characters = set("ACGT")
@@ -958,7 +1054,10 @@ DNA = DNASequence
 class RNASequence(NucleotideSequence):
     """Base class for RNA sequences.
     
-        all uppercase and lowercase IUPAC RNA characters are supported
+    Notes
+    -----
+    All uppercase and lowercase IUPAC RNA characters are supported.
+
     """
 
     iupac_standard_characters = set("ACGU")
