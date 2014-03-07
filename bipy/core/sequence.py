@@ -142,6 +142,26 @@ class BiologicalSequence(Sequence):
             return True
 
     def __getitem__(self, i):
+        """The indexing operator.
+        
+        Parameters
+        ----------
+        i : int
+            The position to return from the `BiologicalSequence`.
+        
+        Returns
+        -------
+        str
+            The character at position `i` in the `BiologicalSequence`.
+
+        Examples
+        --------
+        >>> from bipy.core.sequence import BiologicalSequence
+        >>> s = BiologicalSequence('GGUCGUGAAGGA')
+        >>> s[1]
+        'G'
+        
+        """
         try:
             return self._sequence[i]
         except IndexError:
@@ -149,12 +169,60 @@ class BiologicalSequence(Sequence):
                 "Position %d is out of range for %r." % (i, self))
 
     def __hash__(self):
+        """The hash operator.
+
+        Returns
+        -------
+        int
+            The hash of the `BiologicalSequence`.
+
+        Examples
+        --------
+        >>> from bipy.core.sequence import BiologicalSequence
+        >>> s = BiologicalSequence('GGUCGUGAAGGA')
+        >>> hash(s)
+        -1080059835405276950
+
+        """
         return hash(self._sequence)
 
     def __iter__(self):
+        """The iter operator.
+
+        Returns
+        -------
+        iterator
+            Position iterator for the `BiologicalSequence`.
+
+        Examples
+        --------
+        >>> from bipy.core.sequence import BiologicalSequence
+        >>> s = BiologicalSequence('GGUC')
+        >>> for c in s: print c 
+        G
+        G
+        U
+        C
+
+        """
         return iter(self._sequence)
 
     def __len__(self):
+        """The len operator.
+
+        Returns
+        -------
+        int
+            The length of the `BiologicalSequence`.
+
+        Examples
+        --------
+        >>> from bipy.core.sequence import BiologicalSequence
+        >>> s = BiologicalSequence('GGUC')
+        >>> len(s) 
+        4
+
+        """
         return len(self._sequence)
 
     def __ne__(self, other):
@@ -227,16 +295,74 @@ class BiologicalSequence(Sequence):
         return '<%s: %s%s (length: %d)>' % (cn, first_ten, elipses, length)
 
     def __reversed__(self):
+        """The reversed operator.
+
+        Returns
+        -------
+        iterator
+            Reverse position iterator for the `BiologicalSequence`.
+
+        Examples
+        --------
+        >>> from bipy.core.sequence import BiologicalSequence
+        >>> s = BiologicalSequence('GGUC')
+        >>> for c in reversed(s): print c 
+        C
+        U
+        G
+        G
+
+        """
         return reversed(self._sequence)
 
     def __str__(self):
+        """The str operator
+
+        Returns
+        -------
+        str
+            String representation of the `BiologicalSequence`. This will be the
+            full sequence, but will not contain information about the type, or 
+            `self.identifier` or `self.description`.
+
+        See also
+        --------
+        ``BiologicalSequence.toFasta``
+        ``BiologicalSequence.identifier``
+        ``BiologicalSequence.description``
+        ``BiologicalSequence.__repr__``
+
+        Examples
+        --------
+        >>> from bipy.core.sequence import BiologicalSequence
+        >>> s = BiologicalSequence('GGUC')
+        >>> str(s)
+        'GGUC'
+        >>> print s
+        GGUC
+
+        """
         return ''.join(self._sequence)
 
     def _hamming_distance(self, other):
-        """ return the hamming distance to other based on the shorter sequence
+        """Return the hamming distance to `other` based on the shorter sequence
 
-            hamming distance is the number of substitutions to convert one
-             sequence to the other
+        Parameters
+        ----------
+        other : `BiologicalSequence`
+            The `BiologicalSequence` to compute the distance against.
+
+        Returns
+        -------
+        int
+            The Hamming distance between `self` and `other`.
+
+        Notes
+        -----
+        The Hamming distance is the number of substitutions to convert one
+        sequence to the other. Can also be referred to as the minimum edit
+        distance.
+
         """
         distance = 0
         for s, o in izip(self, other):
@@ -246,25 +372,65 @@ class BiologicalSequence(Sequence):
 
     @property
     def alphabet(self):
-        """return the set of characters allowed in the BiologicalSequence
+        """Return the set of characters allowed in the `BiologicalSequence`
+
+        Returns
+        -------
+        set
+            Characters that are allowed in a valid `BiologicalSequence`
+
+        See also
+        --------
+        ``BiologicalSequence.is_valid``
+        ``BiologicalSequence.gap_alphabet``
+        ``BiologicalSequence.unsupported_characters``
+        ``BiologicalSequence.has_unsupported_characters``
+
         """
         return self._alphabet
 
     @property
     def description(self):
-        """return the description of the sequence
+        """Return the description of the `BiologicalSequence`
+
+        Returns
+        -------
+        str
+            The description attribute of the `BiologicalSequence`
+
         """
         return self._description
 
     @property
     def gap_alphabet(self):
-        """return the set of gap characters allowed in the BiologicalSequence
+        """Return the set of characters defined as gaps in the `BiologicalSequence`
+
+        Returns
+        -------
+        set
+            Characters defined as gaps in a `BiologicalSequence`
+
+        See also
+        --------
+        ``xBiologicalSequence.alphabet``
+        ``BiologicalSequence.unsupported_characters``
+        ``BiologicalSequence.has_unsupported_characters``
+        ``BiologicalSequence.degap``
+        ``BiologicalSequence.gap_maps``
+        ``BiologicalSequence.gap_vector``
+
         """
         return self._gap_alphabet
 
     @property
     def identifier(self):
-        """return the identifier of the sequence
+        """Return the identifier of the `BiologicalSequence`
+
+        Returns
+        -------
+        str
+            The identifier attribute of the `BiologicalSequence`
+
         """
         return self._identifier
 
@@ -280,6 +446,14 @@ class BiologicalSequence(Sequence):
         -------
         int
             The number of occurrences of substring in the `BiologicalSequence`.
+
+        Examples
+        --------
+        >>> from bipy.core.sequence import BiologicalSequence
+        >>> s = BiologicalSequence('GGUC')
+        >>> s.count('G')
+        2
+
         """
         return self._sequence.count(subsequence)
 
@@ -295,6 +469,17 @@ class BiologicalSequence(Sequence):
         -----
         The type, identifier, and description of the result will be the
         same as `self`.
+        
+        Examples
+        --------
+        >>> from bipy.core.sequence import BiologicalSequence
+        >>> s = BiologicalSequence('GGUC-C--ACGTT-C.')
+        >>> t = s.degap()
+        >>> t
+        <BiologicalSequence: GGUCCACGTT... (length: 11)>
+        >>> print t
+        GGUCCACGTTC
+
         """
         result = [e for e in self._sequence if e not in self._gap_alphabet]
         return self.__class__(result, identifier=self._identifier,
@@ -306,68 +491,149 @@ class BiologicalSequence(Sequence):
         Parameters
         ----------
         other : `BiologicalSequence`
+            The `BiologicalSequence` to compute the distance to.
         distance_fn : function, optional
-            Function used to compute the distance between `self` and `other`. This
-            function must take two `Sequence` objects and is expected to return
-            a number (int or float). For an example, see
-            ``BiologicalSequence._hamming_distance``.
+            Function used to compute the distance between `self` and `other`.
 
         Returns
         -------
         int or float
-            The distance between the `BiologicalSequences` `self` and `other`.
+            The distance between `self` and `other`.
 
         See Also
         --------
-        bipy.core.distance.DistanceMatrix : for storing distances between
-        collections of `BiologicalSequences`.
-            
+        ``bipy.core.distance.DistanceMatrix``
+        ``BiologicalSequence.fraction_diff``
+        ``BiologicalSequence.fraction_same``
+
+        Examples
+        --------
+        >>> from bipy.core.sequence import BiologicalSequence
+        >>> s = BiologicalSequence('GGUCCACGTTC')
+        >>> t = BiologicalSequence('AGUCCACGTTCC')
+        >>> s.distance(t)
+        1
+        >>> def dumb_dist(s1, s2): return 42
+        >>> s.distance(t, dumb_dist)
+        42
+
         """
         return distance_fn(self, other)
 
     def fraction_diff(self, other):
-        """ return fraction of positions that differ
+        """Return fraction of positions that differ relative to `other`
 
-            based on ``self._hamming_distance`` between the sequences
+        Parameters
+        ----------
+        other : `BiologicalSequence`
+            The `BiologicalSequence` to compare against.
+
+        Returns
+        -------
+        float
+            The fraction of positions that differ between `self` and `other`.
+
+        See Also
+        --------
+        ``BiologicalSequence.distance``
+        ``BiologicalSequence._hamming_distance``
+        ``BiologicalSequence.fraction_same``
+
+        Notes
+        -----
+        Computation is based on the ``self._hamming_distance`` between the
+        sequences. Differences are only counted through the length of the
+        shorter sequence. 
+        
+        Examples
+        --------
+        >>> from bipy.core.sequence import BiologicalSequence
+        >>> s = BiologicalSequence('GGUCCACGTT')
+        >>> t = BiologicalSequence('AGUCCACGTTC')
+        >>> s.fraction_diff(t)
+        0.1
+
         """
         min_edit_dist = self._hamming_distance(other)
         len_shorter = min(len(self), len(other))
         return min_edit_dist / len_shorter
 
     def fraction_same(self, other):
-        """ return fraction of positions that are the same
+        """Return fraction of positions that are the same relative to `other`
 
-            based on ``self._hamming_distance`` between the sequences
+        Parameters
+        ----------
+        other : `BiologicalSequence`
+            The `BiologicalSequence` to compare against.
+
+        Returns
+        -------
+        float
+            The fraction of positions that are the same between `self` and 
+            `other`.
+
+        See Also
+        --------
+        ``BiologicalSequence.distance``
+        ``BiologicalSequence._hamming_distance``
+        ``BiologicalSequence.fraction_diff``
+
+        Notes
+        -----
+        Computation is based on the ``self._hamming_distance`` between the
+        sequences. Similarities are only counted through the length of the
+        shorter sequence.
+        
+        Examples
+        --------
+        >>> from bipy.core.sequence import BiologicalSequence
+        >>> s = BiologicalSequence('GGUCCACGTT')
+        >>> t = BiologicalSequence('AGUCCACGTTC')
+        >>> s.fraction_same(t)
+        0.9
+
         """
         return 1. - self.fraction_diff(other)
 
     def gap_maps(self):
-        """ return tuples mapping positions bw gapped and ungapped seq
+        """Return tuples mapping b/w gapped and ungapped positions
 
-            two lists of integers are returned:
-             the first is the length of the ungapped sequence, and each entry
-             is the position of that base in the gapped sequence.
-             the second is the length of the gapped sequence, and each entry is
-             either None (if that position represents a gap) or the position of
-             that base in the ungapped sequence.
+        Returns
+        -------
+        tuple containing two lists
+            The first list is the length of the ungapped sequence, and each 
+            entry is the position of that base in the gapped sequence. The 
+            second list is the length of the gapped sequence, and each entry is
+            either None (if that position represents a gap) or the position of
+            that base in the ungapped sequence.
 
-            for example:
-             ``BiologicalSequence('-ACCGA-TA-').gap_maps() ==
-             ([1,2,3,4,5,7,8],[None,0,1,2,3,4,None,5,6,None])``
+        Notes
+        -----
+        Visual aid is useful here. Imagine we have
+        ``BiologicalSequence('-ACCGA-TA-')``. The position numbers in the
+        ungapped sequence and gapped sequence will be as follows:
 
-             because:
-
-              01234 56 (spaces are for visual aid)
-              ACCGA TA
-              ||||| ||
+              0123456 
+              ACCGATA
+              |||||\\ 
              -ACCGA-TA-
              0123456789
 
-             so...
-             in the first list, position 0 maps to position 1, position 1
-             maps to position 2, position 5 maps to position 7, ...
-             and in the second list, position 0 doesn't map to anything (so
-             it's None), position 1 maps to position 0, ...
+        So, in the first list, position 0 maps to position 1, position 1
+        maps to position 2, position 5 maps to position 7, ... And, in the
+        second list, position 0 doesn't map to anything (so it's None), 
+        position 1 maps to position 0, ...
+
+        Examples
+        --------
+        >>> from bipy.core.sequence import BiologicalSequence
+        >>> s = BiologicalSequence('-ACCGA-TA-')
+        >>> m = s.gap_maps()
+        >>> m[0]
+        [1, 2, 3, 4, 5, 7, 8]
+        >>> m[1]
+        [None, 0, 1, 2, 3, 4, None, 5, 6, None]
+
         """
         degapped_to_gapped = []
         gapped_to_degapped = []
