@@ -16,10 +16,12 @@ from tempfile import TemporaryFile
 
 import numpy as np
 
-from bipy.core.distance import (randdm, DistanceMatrix, DistanceMatrixError,
-                                DistanceMatrixFormatError, MissingDataError,
-                                MissingHeaderError, MissingIDError,
-                                IDMismatchError, SymmetricDistanceMatrix)
+from bipy.core.distance import (randdm, DistanceMatrix,
+                                SymmetricDistanceMatrix)
+from bipy.core.exception import (DistanceMatrixError,
+                                 DistanceMatrixFormatError, IDMismatchError,
+                                 MissingDataError, MissingHeaderError,
+                                 MissingIDError)
 from bipy.util.unit_test import TestCase, main
 
 
