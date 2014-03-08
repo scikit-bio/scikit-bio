@@ -158,23 +158,6 @@ class BiologicalSequenceTests(TestCase):
         self.assertEqual(str(self.b2), "ACCGGTACC")
         self.assertEqual(str(self.b3), "GREG")
 
-    def test_hamming_distance(self):
-        """ _hamming_distance functions as expected
-        """
-        s1 = BiologicalSequence('AAAAA')
-        s2 = BiologicalSequence('AAAAA')
-        s3 = BiologicalSequence('AAAAAA')
-        s4 = BiologicalSequence('TAAAAA')
-        s5 = BiologicalSequence('CCCCCCX')
-        s6 = BiologicalSequence('CCCCCCC')
-
-        self.assertEqual(s1._hamming_distance(s2), 0)
-        self.assertEqual(s1._hamming_distance(s3), 0)
-        self.assertEqual(s1._hamming_distance(s4), 1)
-        self.assertEqual(s1._hamming_distance(s5), 5)
-        self.assertEqual(s4._hamming_distance(s5), 6)
-        self.assertEqual(s4._hamming_distance(s6), 6)
-
     def test_alphabet(self):
         """ alphabet property functions as expected
         """
@@ -218,8 +201,8 @@ class BiologicalSequenceTests(TestCase):
         """
         # note that test_hamming_distance covers default behavior more
         # extensively
-        self.assertEqual(self.b1.distance(self.b1), 0)
-        self.assertEqual(self.b1.distance(BiologicalSequence('GATTACC')), 1)
+        self.assertEqual(self.b1.distance(self.b1), 0.0)
+        self.assertEqual(self.b1.distance(BiologicalSequence('GATTACC')), 1./7)
 
         def dumb_distance(x, y):
             return 42
