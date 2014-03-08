@@ -1,0 +1,6 @@
+bipy.core.exception.DistanceMatrixError
+=======================================
+
+.. currentmodule:: bipy.core.exception
+
+.. autoexception:: DistanceMatrixError

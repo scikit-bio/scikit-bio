@@ -1,0 +1,6 @@
+bipy.core.exception.MissingDataError
+====================================
+
+.. currentmodule:: bipy.core.exception
+
+.. autoexception:: MissingDataError

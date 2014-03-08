@@ -1,0 +1,6 @@
+bipy.core.exception.MissingIDError
+==================================
+
+.. currentmodule:: bipy.core.exception
+
+.. autoexception:: MissingIDError
