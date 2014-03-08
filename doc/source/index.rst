@@ -13,3 +13,4 @@ API Reference
 
    bipy.core.sequence
    bipy.core.distance
+   bipy.core.exception
