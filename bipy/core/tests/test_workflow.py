@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 #-----------------------------------------------------------------------------
-# Copyright (c) 2013--, bipy development team.
+# Copyright (c) 2013, The BiPy Developers.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -126,22 +126,31 @@ class WorkflowTests(TestCase):
         exp_pre_state = {('wf_groupA', 0): [None, 1],
                          ('methodA1', 1): [None, 1],
                          ('methodA2', 2): ['A1', 1],
+                         ('wf_groupB', 6): ['C1', 1],
                          ('wf_groupC', 3): ['A2', 1],
-                         ('methodC1', 4): ['A2', 1]}
+                         ('methodC1', 4): ['A2', 1],
+                         ('methodC2', 5): ['C1', 1]}
 
         exp_post_state = {('wf_groupA', 0): ['A2', 1],
                           ('methodA1', 1): ['A1', 1],
                           ('methodA2', 2): ['A2', 1],
+                          ('wf_groupB', 6): ['C1', 1],
                           ('wf_groupC', 3): ['C1', 1],
-                          ('methodC1', 4): ['C1', 1]}
+                          ('methodC1', 4): ['C1', 1],
+                          ('methodC2', 5): ['C1', 1]}
+
+        exp_ignored = set([(('wf_groupB', 6), "Missing required option"),
+                           (('methodC2', 5), "Missing required option")])
 
         obs_trace = self.obj_debug.debug_trace
         obs_pre_state = self.obj_debug.debug_pre_state
         obs_post_state = self.obj_debug.debug_post_state
+        obs_ignored = self.obj_debug.debug_trace_ignored
 
         self.assertEqual(obs_trace, exp_trace)
         self.assertEqual(obs_pre_state, exp_pre_state)
         self.assertEqual(obs_post_state, exp_post_state)
+        self.assertEqual(obs_ignored, exp_ignored)
 
     def test_init(self):
         self.assertEqual(self.obj_short.options, {'A': True, 'C': True})
