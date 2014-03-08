@@ -1,0 +1,1 @@
+.. automodule:: bipy.core.sequence
