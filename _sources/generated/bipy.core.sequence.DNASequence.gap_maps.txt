@@ -1,0 +1,6 @@
+bipy.core.sequence.DNASequence.gap_maps
+=======================================
+
+.. currentmodule:: bipy.core.sequence
+
+.. automethod:: DNASequence.gap_maps

@@ -1,0 +1,6 @@
+bipy.core.sequence.RNASequence.complement
+=========================================
+
+.. currentmodule:: bipy.core.sequence
+
+.. automethod:: RNASequence.complement

@@ -1,0 +1,6 @@
+bipy.core.sequence.NucleotideSequence.degap
+===========================================
+
+.. currentmodule:: bipy.core.sequence
+
+.. automethod:: NucleotideSequence.degap

@@ -1,0 +1,6 @@
+bipy.core.sequence.BiologicalSequence.index
+===========================================
+
+.. currentmodule:: bipy.core.sequence
+
+.. automethod:: BiologicalSequence.index

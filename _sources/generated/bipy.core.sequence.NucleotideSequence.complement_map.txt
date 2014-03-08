@@ -1,0 +1,6 @@
+bipy.core.sequence.NucleotideSequence.complement_map
+====================================================
+
+.. currentmodule:: bipy.core.sequence
+
+.. autoattribute:: NucleotideSequence.complement_map

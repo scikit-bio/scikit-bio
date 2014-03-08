@@ -1,0 +1,6 @@
+bipy.core.distance.SymmetricDistanceMatrix.to_file
+==================================================
+
+.. currentmodule:: bipy.core.distance
+
+.. automethod:: SymmetricDistanceMatrix.to_file

@@ -1,0 +1,6 @@
+bipy.core.sequence.BiologicalSequence.gap_vector
+================================================
+
+.. currentmodule:: bipy.core.sequence
+
+.. automethod:: BiologicalSequence.gap_vector

@@ -1,0 +1,34 @@
+bipy.core.distance.DistanceMatrix
+=================================
+
+.. currentmodule:: bipy.core.distance
+
+.. autoclass:: DistanceMatrix
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         DistanceMatrix.copy
+         DistanceMatrix.from_file
+         DistanceMatrix.redundant_form
+         DistanceMatrix.to_file
+         DistanceMatrix.transpose
+
+
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         DistanceMatrix.T
+         DistanceMatrix.data
+         DistanceMatrix.dtype
+         DistanceMatrix.ids
+         DistanceMatrix.shape
+         DistanceMatrix.size
+

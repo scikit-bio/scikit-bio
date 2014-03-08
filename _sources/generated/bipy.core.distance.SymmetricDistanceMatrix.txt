@@ -1,0 +1,35 @@
+bipy.core.distance.SymmetricDistanceMatrix
+==========================================
+
+.. currentmodule:: bipy.core.distance
+
+.. autoclass:: SymmetricDistanceMatrix
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         SymmetricDistanceMatrix.condensed_form
+         SymmetricDistanceMatrix.copy
+         SymmetricDistanceMatrix.from_file
+         SymmetricDistanceMatrix.redundant_form
+         SymmetricDistanceMatrix.to_file
+         SymmetricDistanceMatrix.transpose
+
+
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         SymmetricDistanceMatrix.T
+         SymmetricDistanceMatrix.data
+         SymmetricDistanceMatrix.dtype
+         SymmetricDistanceMatrix.ids
+         SymmetricDistanceMatrix.shape
+         SymmetricDistanceMatrix.size
+

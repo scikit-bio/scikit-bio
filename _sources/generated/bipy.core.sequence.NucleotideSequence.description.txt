@@ -1,0 +1,6 @@
+bipy.core.sequence.NucleotideSequence.description
+=================================================
+
+.. currentmodule:: bipy.core.sequence
+
+.. autoattribute:: NucleotideSequence.description

@@ -1,0 +1,6 @@
+bipy.core.sequence.BiologicalSequence.identifier
+================================================
+
+.. currentmodule:: bipy.core.sequence
+
+.. autoattribute:: BiologicalSequence.identifier

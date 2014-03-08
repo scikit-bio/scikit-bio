@@ -1,0 +1,6 @@
+bipy.core.sequence.RNASequence.count
+====================================
+
+.. currentmodule:: bipy.core.sequence
+
+.. automethod:: RNASequence.count

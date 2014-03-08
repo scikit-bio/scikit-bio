@@ -1,0 +1,6 @@
+bipy.core.sequence.BiologicalSequence.description
+=================================================
+
+.. currentmodule:: bipy.core.sequence
+
+.. autoattribute:: BiologicalSequence.description

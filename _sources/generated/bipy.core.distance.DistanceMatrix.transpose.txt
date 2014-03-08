@@ -1,0 +1,6 @@
+bipy.core.distance.DistanceMatrix.transpose
+===========================================
+
+.. currentmodule:: bipy.core.distance
+
+.. automethod:: DistanceMatrix.transpose

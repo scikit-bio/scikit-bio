@@ -1,0 +1,6 @@
+bipy.core.sequence.RNASequence.description
+==========================================
+
+.. currentmodule:: bipy.core.sequence
+
+.. autoattribute:: RNASequence.description

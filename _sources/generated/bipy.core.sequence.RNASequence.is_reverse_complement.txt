@@ -1,0 +1,6 @@
+bipy.core.sequence.RNASequence.is_reverse_complement
+====================================================
+
+.. currentmodule:: bipy.core.sequence
+
+.. automethod:: RNASequence.is_reverse_complement

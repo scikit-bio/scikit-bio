@@ -1,0 +1,6 @@
+bipy.core.sequence.RNASequence.fraction_same
+============================================
+
+.. currentmodule:: bipy.core.sequence
+
+.. automethod:: RNASequence.fraction_same

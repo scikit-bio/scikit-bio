@@ -1,0 +1,6 @@
+bipy.core.distance.DistanceMatrix.copy
+======================================
+
+.. currentmodule:: bipy.core.distance
+
+.. automethod:: DistanceMatrix.copy

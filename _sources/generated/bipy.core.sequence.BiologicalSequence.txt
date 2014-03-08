@@ -1,0 +1,41 @@
+bipy.core.sequence.BiologicalSequence
+=====================================
+
+.. currentmodule:: bipy.core.sequence
+
+.. autoclass:: BiologicalSequence
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         BiologicalSequence.count
+         BiologicalSequence.degap
+         BiologicalSequence.distance
+         BiologicalSequence.fraction_diff
+         BiologicalSequence.fraction_same
+         BiologicalSequence.gap_maps
+         BiologicalSequence.gap_vector
+         BiologicalSequence.has_unsupported_characters
+         BiologicalSequence.index
+         BiologicalSequence.is_gap
+         BiologicalSequence.is_gapped
+         BiologicalSequence.is_valid
+         BiologicalSequence.to_fasta
+         BiologicalSequence.unsupported_characters
+
+
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         BiologicalSequence.alphabet
+         BiologicalSequence.description
+         BiologicalSequence.gap_alphabet
+         BiologicalSequence.identifier
+

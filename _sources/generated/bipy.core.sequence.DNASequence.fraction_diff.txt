@@ -1,0 +1,6 @@
+bipy.core.sequence.DNASequence.fraction_diff
+============================================
+
+.. currentmodule:: bipy.core.sequence
+
+.. automethod:: DNASequence.fraction_diff

@@ -1,0 +1,6 @@
+bipy.core.sequence.DNASequence.iupac_characters
+===============================================
+
+.. currentmodule:: bipy.core.sequence
+
+.. autoattribute:: DNASequence.iupac_characters

@@ -1,0 +1,6 @@
+bipy.core.distance.DistanceMatrix.from_file
+===========================================
+
+.. currentmodule:: bipy.core.distance
+
+.. automethod:: DistanceMatrix.from_file

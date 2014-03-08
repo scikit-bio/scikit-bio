@@ -1,0 +1,6 @@
+bipy.core.sequence.RNASequence.unsupported_characters
+=====================================================
+
+.. currentmodule:: bipy.core.sequence
+
+.. automethod:: RNASequence.unsupported_characters

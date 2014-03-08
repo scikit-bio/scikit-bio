@@ -1,0 +1,6 @@
+bipy.core.distance.DistanceMatrix.shape
+=======================================
+
+.. currentmodule:: bipy.core.distance
+
+.. autoattribute:: DistanceMatrix.shape

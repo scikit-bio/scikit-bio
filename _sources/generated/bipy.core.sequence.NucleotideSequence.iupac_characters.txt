@@ -1,0 +1,6 @@
+bipy.core.sequence.NucleotideSequence.iupac_characters
+======================================================
+
+.. currentmodule:: bipy.core.sequence
+
+.. autoattribute:: NucleotideSequence.iupac_characters

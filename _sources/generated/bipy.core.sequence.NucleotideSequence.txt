@@ -1,0 +1,50 @@
+bipy.core.sequence.NucleotideSequence
+=====================================
+
+.. currentmodule:: bipy.core.sequence
+
+.. autoclass:: NucleotideSequence
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         NucleotideSequence.complement
+         NucleotideSequence.count
+         NucleotideSequence.degap
+         NucleotideSequence.distance
+         NucleotideSequence.fraction_diff
+         NucleotideSequence.fraction_same
+         NucleotideSequence.gap_maps
+         NucleotideSequence.gap_vector
+         NucleotideSequence.has_unsupported_characters
+         NucleotideSequence.index
+         NucleotideSequence.is_gap
+         NucleotideSequence.is_gapped
+         NucleotideSequence.is_reverse_complement
+         NucleotideSequence.is_valid
+         NucleotideSequence.rc
+         NucleotideSequence.reverse_complement
+         NucleotideSequence.to_fasta
+         NucleotideSequence.unsupported_characters
+
+
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         NucleotideSequence.alphabet
+         NucleotideSequence.complement_map
+         NucleotideSequence.description
+         NucleotideSequence.gap_alphabet
+         NucleotideSequence.identifier
+         NucleotideSequence.iupac_characters
+         NucleotideSequence.iupac_degeneracies
+         NucleotideSequence.iupac_degenerate_characters
+         NucleotideSequence.iupac_standard_characters
+

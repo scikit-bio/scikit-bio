@@ -1,0 +1,6 @@
+bipy.core.sequence.NucleotideSequence.to_fasta
+==============================================
+
+.. currentmodule:: bipy.core.sequence
+
+.. automethod:: NucleotideSequence.to_fasta

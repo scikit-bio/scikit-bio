@@ -1,0 +1,6 @@
+bipy.core.distance.SymmetricDistanceMatrix.redundant_form
+=========================================================
+
+.. currentmodule:: bipy.core.distance
+
+.. automethod:: SymmetricDistanceMatrix.redundant_form

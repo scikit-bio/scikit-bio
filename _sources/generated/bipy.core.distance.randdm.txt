@@ -1,0 +1,6 @@
+bipy.core.distance.randdm
+=========================
+
+.. currentmodule:: bipy.core.distance
+
+.. autofunction:: randdm

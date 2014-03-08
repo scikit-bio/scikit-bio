@@ -1,0 +1,6 @@
+bipy.core.sequence.DNASequence.has_unsupported_characters
+=========================================================
+
+.. currentmodule:: bipy.core.sequence
+
+.. automethod:: DNASequence.has_unsupported_characters
