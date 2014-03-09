@@ -61,19 +61,23 @@ from functools import update_wrapper
 from collections import Iterable
 from types import MethodType
 
+
 class NotExecuted(object):
     """Helper object to track if a method was executed"""
     msg = None
+
     def __call__(self, msg):
         self.msg = msg
         return self
 _not_executed = NotExecuted()
+
 
 class Exists(object):
     """Stub object to assist with Workflow.requires when a value exists"""
     def __contains__(self, item):
         return True
 anything = Exists()  # external, for when a value can be anything
+
 
 class NotNone(object):
     def __contains__(self, item):
@@ -82,6 +86,7 @@ class NotNone(object):
         else:
             return True
 not_none = NotNone()
+
 
 class Workflow(object):
     """Arbitrary workflow support structure"""
