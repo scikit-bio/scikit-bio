@@ -407,6 +407,8 @@ class DistanceMatrix(object):
         str
             String representation (summary) of the distance matrix.
 
+        .. shownumpydoc
+
         """
         return '%dx%d distance matrix\nIDs:\n%s\nData:\n' % (
             self.shape[0], self.shape[1],
@@ -430,6 +432,8 @@ class DistanceMatrix(object):
         -------
         bool
             ``True`` if `self` is equal to `other`, ``False`` otherwise.
+
+        .. shownumpydoc
 
         """
         equal = True
@@ -468,6 +472,8 @@ class DistanceMatrix(object):
         See Also
         --------
         __eq__
+
+        .. shownumpydoc
 
         """
         return not self == other
@@ -516,6 +522,8 @@ class DistanceMatrix(object):
         Notes
         -----
         The lookup based on ID(s) is quick.
+
+        .. shownumpydoc
 
         """
         if isinstance(index, basestring):
