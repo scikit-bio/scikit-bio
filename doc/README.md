@@ -28,12 +28,14 @@ An easy way to install the dependencies is via pip:
     pip install Sphinx sphinx-bootstrap-theme
     pip install git+git://github.com/numpy/numpydoc.git
 
-Finally, you will need to install bipy. **IMPORTANT:** The documentation will
-be built for whatever version of bipy is *currently installed* on your system
-(i.e., the module imported by ```import bipy```). This may not match the code
-located in this repository. You will need to either install this version of
-bipy somewhere (e.g., in a virtualenv) or point your ```PYTHONPATH```
-environment variable to this code, *before* building the documentation.
+Finally, you will need to install bipy.
+
+**IMPORTANT:** The documentation will be built for whatever version of bipy is
+*currently installed* on your system (i.e., the version imported by
+```import bipy```). This may not match the code located in this repository. You
+will need to either install this version of bipy somewhere (e.g., in a
+virtualenv) or point your ```PYTHONPATH``` environment variable to this code,
+*before* building the documentation.
 
 To build the documentation, assuming you are at the root of the bipy
 repository:
@@ -72,7 +74,17 @@ module that you'd like to add to bipy (let's call it ```bipy/core/example.py```)
 
 The easiest way to get started with documenting your code is to look at the
 docstrings in existing bipy modules. A couple of modules to start with are
-```bipy.core.sequence``` and ```bipy.core.distance```. We recommend looking
+```bipy.core.sequence``` and ```bipy.core.distance```. Go ahead and look
 through those now.
 
-We highly recommend adding a module-level docstring.
+#### Module docstring
+
+We highly recommend including a docstring for the module. The docstring should
+be the first thing in the file following the ```#!``` line. It should start
+with a title for the module:
+
+    Documentation examples (:mod:`bipy.core.example`)
+    =================================================
+
+It is important to include the ```:mod:``` Sphinx directive, as this adds the
+module to Sphinx's module index and allows for cross-referencing.
