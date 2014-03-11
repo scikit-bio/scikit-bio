@@ -6,7 +6,7 @@ as guidelines for contributing to the documentation. Finally, lower-level
 details are included for maintainers of the documentation system.
 
 **Note:** If you're only interested in viewing the bipy documentation, visit
-[bipy.org][http://bipy.org].
+[bipy.org](http://bipy.org).
 
 Building the documentation
 --------------------------
@@ -50,3 +50,29 @@ Contributing to the documentation
 If you would like to contribute to the documentation, whether to add something
 entirely new or to modify existing documentation, please first review our [bipy
 contribution guide](../CONTRIBUTING.md).
+
+### Documentation guidelines
+
+Most of bipy's API documentation is automatically generated from docstrings.
+The advantage to this approach is that users can access the documentation in an
+interactive Python session or from our website as HTML. Other output forms are
+also possible, such as PDF.
+
+bipy docstrings follow the [numpydoc conventions](https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt). This ensures that the docstrings are easily readable both from the interpreter and HTML, PDF, etc.. Please read the numpydoc guidelines before continuing.
+
+### Documenting a module in bipy
+
+In addition to following the numpydoc conventions for docstrings, we have a few
+more conventions that will ensure your documentation is correctly built and linked
+within our website, and that it maintains consistency with the rest of the bipy
+docs.
+
+We'll take a top-down approach by discussing how to document a new
+module that you'd like to add to bipy (let's call it ```bipy/core/example.py```).
+
+The easiest way to get started with documenting your code is to look at the
+docstrings in existing bipy modules. A couple of modules to start with are
+```bipy.core.sequence``` and ```bipy.core.distance```. We recommend looking
+through those now.
+
+We highly recommend adding a module-level docstring.

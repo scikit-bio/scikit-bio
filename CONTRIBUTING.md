@@ -22,7 +22,7 @@ When considering submitting a new feature to bipy, you should begin by posting a
  1. The exact command or function call that you issue to create the bug.
  2. A link to all necessary input files for reproducing the bug. These files should only be as large as necessary to create the bug. For example, if you have an input file with 10,000 fasta-formatted sequences but the error only arises due to one of the sequences, create a new fasta file with only that sequence, run the command that was giving you problems, and verify that you still get an error. Then post that command and link to the trimmed fasta file. This is *extremely* useful to other developer, and it is likely that if you don't provide this information you'll get a response asking for it. Often this process helps you to better understand the bug as well.
 
-* For documentation additions, you should first post an issue describing what you propose to add, where you'd like to add it in the documentation, and a description of why you think it's an important addition. For documentation improvements and fixes, you should post an issue describing what is currently wrong or missing, and how you propose to address it.
+* For documentation additions, you should first post an issue describing what you propose to add, where you'd like to add it in the documentation, and a description of why you think it's an important addition. For documentation improvements and fixes, you should post an issue describing what is currently wrong or missing, and how you propose to address it. For more information about building and contributing to bipy's documentation, see [this guide](doc/README.md).
 
 When you post your issue, the bipy developers will respond to let you know if we agree with the addition or change. It's very important that you go through this step to avoid wasting time working on a feature that we are not interested in including in bipy.
 
@@ -102,7 +102,10 @@ Testing Guidelines
 
 All code that is added to bipy must be unit tested, and the unit test code must be submitted in the same pull request as the library code that you are submitting. We will not merge code that is not unit tested. The PyCogent Coding Guidelines describe our [expectations for unit tests](http://pycogent.org/coding_guidelines.html?highlight=coding%20guidelines#how-should-i-test-my-code). You should review the unit test section before working on your test code.
 
+Documentation Guidelines
+------------------------
 
+We strive to keep bipy's code well-documented, particularly its public-facing API. See our [documentation guide](doc/README.md) for more details on writing documentation in bipy.
 
 Getting help with git
 =====================
