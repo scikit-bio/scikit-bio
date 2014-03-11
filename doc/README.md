@@ -108,8 +108,10 @@ Next, include a more detailed description of the module. For example:
 
 Following that, list any classes, functions, and exceptions that you'd like
 documentation generated for. Note that you do *not* need to include every
-single class, function, or exception that is defined in the module. Only
-include objects that should be exposed as part of the public API.
+single class, function, or exception that is defined in the module. Also, you
+do not need to list class methods, as those will be automatically included in
+the generated class documentation. Only include objects that should be exposed
+as part of the public API.
 
 For example:
 
@@ -141,7 +143,7 @@ For example:
 
 The ```autosummary``` directives are important as they generate RST files in
 the ```generated/``` directory for each object. A single-line summary and link
-to each object is also inserted into the page.
+to each object is inserted into the page for you.
 
 After listing public module members, we encourage a usage example section
 showing how to use some of the module's functionality. Examples should be
@@ -174,8 +176,6 @@ these conventions, there are a few things to keep in mind:
   While numpydoc technically supports either form,
   ```__init__``` is not included in the list of methods and thus should have its
   documentation included in the class docstring.
-- We recommend including an ```Examples``` section for module members when
-  possible, in addition to the module-level examples section (see above).
 
 #### Including the module in the docs
 
@@ -190,6 +190,7 @@ documentation build system:
 3. Add the following line to ```source/core.example.rst```:
 
     .. automodule:: bipy.core.example
+
 4. Add the following line to ```source/index.rst```:
 
     bipy.core.distance
