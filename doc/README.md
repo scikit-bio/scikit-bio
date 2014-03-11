@@ -101,11 +101,15 @@ We also need to include another Sphinx directive below this:
 This directive tells Sphinx that other classes, functions, etc. that we will
 reference are located in the ```bipy.core.example``` module.
 
-Next, include a more detailed description of the module. Following that, list
-any classes, functions, and exceptions that you'd like documentation generated
-for. Note that you do *not* need to include every single class, function, or
-exception that are defined in the module. Only include objects that should be
-exposed as part of the public API.
+Next, include a more detailed description of the module. For example:
+
+    This module consists of several example classes and functions to illustrate
+    the bipy documentation system.
+
+Following that, list any classes, functions, and exceptions that you'd like
+documentation generated for. Note that you do *not* need to include every
+single class, function, or exception that is defined in the module. Only
+include objects that should be exposed as part of the public API.
 
 For example:
 
