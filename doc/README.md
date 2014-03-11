@@ -67,20 +67,21 @@ bipy docstrings follow the [numpydoc conventions](https://github.com/numpy/numpy
 In addition to following the numpydoc conventions for docstrings, we have a few
 more conventions that will ensure your documentation is correctly built and linked
 within our website, and that it maintains consistency with the rest of the bipy
-docs. Note that we've structured our docs in a similar way to
-[SciPy's documentation](http://docs.scipy.org/doc/scipy/reference/).
-
-We'll take a top-down approach by discussing how to document a new
-module that you'd like to add to bipy (let's call it ```bipy/core/example.py```).
+docs.
 
 The easiest way to get started with documenting your code is to look at the
 docstrings in existing bipy modules. A couple of modules to start with are
 ```bipy.core.sequence``` and ```bipy.core.distance```. Go ahead and look
-through those now.
+through those now. We've structured our docs in a similar way to
+[SciPy's documentation](http://docs.scipy.org/doc/scipy/reference/), so that
+may be another good place to look for examples.
+
+We'll take a top-down approach by discussing how to document a new
+module that you'd like to add to bipy (let's call it ```bipy/core/example.py```).
 
 #### Module docstring
 
-We highly recommend including a docstring for the module. The docstring should
+The first thing you'll need to add is a docstring for the module. The docstring should
 be the first thing in the file following the ```#!``` line. It should start
 with a title for the module:
 
