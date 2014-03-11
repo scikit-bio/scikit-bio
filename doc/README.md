@@ -189,7 +189,9 @@ documentation build system:
    as the suffix. For example, ```source/core.example.rst```.
 3. Add the following line to ```source/core.example.rst```:
 
+    ```
     .. automodule:: bipy.core.example
+    ```
 
 4. Add the following line to ```source/index.rst```:
 
