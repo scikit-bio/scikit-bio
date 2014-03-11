@@ -2,8 +2,7 @@ bipy documentation
 ==================
 
 This guide contains instructions for building the bipy documentation, as well
-as guidelines for contributing to the documentation. Finally, lower-level
-details are included for maintainers of the documentation system.
+as guidelines for contributing to the documentation.
 
 **Note:** If you're only interested in viewing the bipy documentation, visit
 [bipy.org](http://bipy.org).
@@ -30,7 +29,7 @@ An easy way to install the dependencies is via pip:
 
 Finally, you will need to install bipy.
 
-**IMPORTANT:** The documentation will be built for whatever version of bipy is
+**Important:** The documentation will be built for whatever version of bipy is
 *currently installed* on your system (i.e., the version imported by
 ```import bipy```). This may not match the code located in this repository. You
 will need to either install this version of bipy somewhere (e.g., in a
