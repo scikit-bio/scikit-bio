@@ -41,7 +41,6 @@ To build the documentation, assuming you are at the root of the bipy
 repository:
 
     cd doc
-    make clean
     make html
 
 The built HTML documentation will be at ```build/html/index.html```.
@@ -60,14 +59,16 @@ The advantage to this approach is that users can access the documentation in an
 interactive Python session or from our website as HTML. Other output forms are
 also possible, such as PDF.
 
-bipy docstrings follow the [numpydoc conventions](https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt). This ensures that the docstrings are easily readable both from the interpreter and HTML, PDF, etc.. Please read the numpydoc guidelines before continuing.
+bipy docstrings follow the [numpydoc conventions](https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt).
+This ensures that the docstrings are easily readable both from the interpreter
+and HTML, PDF, etc.. Please read the numpydoc guidelines before continuing.
 
 ### Documenting a module in bipy
 
 In addition to following the numpydoc conventions for docstrings, we have a few
-more conventions that will ensure your documentation is correctly built and linked
-within our website, and that it maintains consistency with the rest of the bipy
-docs.
+more conventions that will ensure your documentation is correctly built and
+linked within our website, and that it maintains consistency with the rest of
+the bipy docs.
 
 The easiest way to get started with documenting your code is to look at the
 docstrings in existing bipy modules. A couple of modules to start with are
@@ -76,14 +77,14 @@ through those now. We've structured our docs in a similar way to
 [SciPy's documentation](http://docs.scipy.org/doc/scipy/reference/), so that
 may be another good place to look for examples.
 
-We'll take a top-down approach by discussing how to document a new
-module that you'd like to add to bipy (let's call it ```bipy/core/example.py```).
+We'll take a top-down approach by discussing how to document a new module that
+you'd like to add to bipy (let's call it ```bipy/core/example.py```).
 
 #### Module docstring
 
-The first thing you'll need to add is a docstring for the module. The docstring should
-be the first thing in the file following the ```#!``` line. It should start
-with a title for the module:
+The first thing you'll need to add is a docstring for the module. The docstring
+should be the first thing in the file following the ```#!``` line. It should
+start with a title for the module:
 
     #!/usr/bin/env python
     """
@@ -174,8 +175,8 @@ these conventions, there are a few things to keep in mind:
 - When documenting a class, include the ```Parameters``` and ```Attributes```
   sections in the class docstring, instead of in the ```__init__``` docstring.
   While numpydoc technically supports either form,
-  ```__init__``` is not included in the list of methods and thus should have its
-  documentation included in the class docstring.
+  ```__init__``` is not included in the list of methods and thus should have
+  its documentation included in the class docstring.
 
 #### Including the module in the docs
 
@@ -187,15 +188,33 @@ documentation build system:
 2. Create a new file with the same name as your module under the ```source```
    directory. Do not include ```bipy``` as part of the name, and use ```.rst```
    as the suffix. For example, ```source/core.example.rst```.
-3. Add the following line to ```source/core.example.rst```:
+3. Add the following line to ```source/core.example.rst``` to have your
+   module's docstring pulled into the document:
 
     ```
     .. automodule:: bipy.core.example
     ```
 
-4. Add the following line to ```source/index.rst```:
+4. Add the following line to ```source/index.rst``` to add the new page to the
+   top-level table of contents:
 
-    bipy.core.distance
+    ```
+    bipy.core.example
+    ```
 
-That's it! You can now try building the documentation, which should now include
-the documentation for your new module!
+That's it! You can now try building the documentation, which should include the
+documentation for your new module!
+
+### Documenting a subpackage in bipy
+
+The process of documenting a subpackage is very similar to documenting a module
+in bipy. The only difference is that the module docstring goes in the
+subpackage's ```__init__.py```.
+
+### Troubleshooting
+
+If things aren't working correctly, try running ```make clean``` and then
+rebuild the docs. If things still aren't working, try building the docs
+*without* your changes, and see if there are any Sphinx errors or warnings.
+Make note of these, and then see what new errors or warnings are generated when
+you add your changes again.
