@@ -6,10 +6,16 @@ import sphinx_bootstrap_theme
 
 import bipy
 
+#import mock
+# 
+#MOCK_MODULES = ['numpy', 'numpy.random', 'numpy.testing', 'scipy', 'scipy.spatial.distance', 'scipy.stats.stats', 'scipy.stats.contingency']
+#for mod_name in MOCK_MODULES:
+#    sys.modules[mod_name] = mock.Mock()
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('../sphinxext/numpydoc'))
 
 # -- General configuration ------------------------------------------------
 
@@ -69,7 +75,7 @@ release = bipy.__version__
 # Exclude this file since it is only used by autosummary to generate other RST
 # files during the build process, and it will generate sphinx errors and
 # warnings otherwise.
-exclude_patterns = ['_templates/autosummary/class.rst']
+exclude_patterns = ['_templates/autosummary/*.rst']
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.

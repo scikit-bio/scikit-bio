@@ -1,0 +1,3 @@
+Sphinx>=1.1
+sphinx-bootstrap-theme
+-e git+https://github.com/numpy/numpydoc.git#egg=numpydoc

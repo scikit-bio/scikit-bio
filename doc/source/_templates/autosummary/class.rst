@@ -1,6 +1,6 @@
 {% extends "!autosummary/class.rst" %}
 
-{# Taken from scipy's sphinx documentation setup (https://github.com/scipy/scipy/blob/master/doc/source/_templates/autosummary/class.rst). #}
+{# Taken and modified from scipy's sphinx documentation setup (https://github.com/scipy/scipy/blob/master/doc/source/_templates/autosummary/class.rst). #}
 
 {% block methods %}
 {% if methods %}
@@ -8,9 +8,7 @@
       .. autosummary::
          :toctree:
       {% for item in all_methods %}
-         {%- if not item.startswith('_') or item in ['__call__'] %}
          {{ name }}.{{ item }}
-         {%- endif -%}
       {%- endfor %}
 {% endif %}
 {% endblock %}

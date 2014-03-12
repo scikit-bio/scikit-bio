@@ -1,0 +1,1 @@
+numpydoc license is at bipy/doc/sphinxext/numpydoc/LICENSE.txt
