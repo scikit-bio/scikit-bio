@@ -44,7 +44,6 @@ setup(name='bipy',
       install_requires=['numpy >= 1.5.1', 'matplotlib >= 1.1.0',
                         'scipy >=0.13.0'],
       extras_require={'test': ["nose >= 0.10.1", "pep8"],
-                      'doc': ["Sphinx >= 1.1", "numpydoc",
-                              "sphinx-bootstrap-theme"]},
+                      'doc': ["Sphinx >= 1.1", "sphinx-bootstrap-theme"]},
       classifiers=classifiers
       )
