@@ -14,18 +14,11 @@ To build the documentation, you'll need the following Python packages
 installed:
 
 - [Sphinx](http://sphinx-doc.org/) >= 1.1
-- [numpydoc](https://github.com/numpy/numpydoc) (latest master branch)
 - [sphinx-bootstrap-theme](https://pypi.python.org/pypi/sphinx-bootstrap-theme/)
-
-**Note:** At the time of this writing, the numpydoc version (0.4) on PyPI is a
-bit outdated and some things don't link up correctly in the generated
-documentation. You'll need to install the latest development version of
-numpydoc that's available on GitHub.
 
 An easy way to install the dependencies is via pip:
 
     pip install Sphinx sphinx-bootstrap-theme
-    pip install git+git://github.com/numpy/numpydoc.git
 
 Finally, you will need to install bipy.
 
@@ -186,8 +179,8 @@ these conventions, there are a few things to keep in mind:
 - When documenting a class, include the ```Parameters``` and ```Attributes```
   sections in the class docstring, instead of in the ```__init__``` docstring.
   While numpydoc technically supports either form,
-  ```__init__``` is not included in the list of methods and thus should have
-  its documentation included in the class docstring.
+  ```__init__``` is not included in the list of methods by default and thus
+  should have its documentation included in the class docstring.
 
 #### Including the module in the docs
 
