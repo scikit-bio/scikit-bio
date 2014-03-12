@@ -42,7 +42,7 @@ class DistributionsTests(TestCase):
             2.753624e-89, 4.906714e-198, 0.000000e+00, 0.000000e+00]
 
         for z, p in zip(self.values, probs):
-            assert_allclose(z_high(z), p)
+            assert_allclose(z_high(z), p, atol=10e-7)
         for z, p in zip(self.negvalues, negprobs):
             assert_allclose(z_high(z), p)
 
@@ -55,9 +55,9 @@ class DistributionsTests(TestCase):
             2.753624e-89, 4.906714e-198, 0.000000e+00, 0.000000e+00]]
 
         for z, p in zip(self.values, probs):
-            assert_allclose(zprob(z), p)
+            assert_allclose(zprob(z), p, atol=10e-7)
         for z, p in zip(self.negvalues, probs):
-            assert_allclose(zprob(z), p)
+            assert_allclose(zprob(z), p, atol=10e-7)
 
     def test_chi_high(self):
         """chi_high should match R's pchisq(lower.tail=FALSE) function"""
@@ -78,7 +78,7 @@ class DistributionsTests(TestCase):
 
         for df in self.df:
             for x, p in zip(self.values, probs[df]):
-                assert_allclose(chi_high(x, df), p)
+                assert_allclose(chi_high(x, df), p, atol=10e-7)
 
     def test_binomial_high(self):
         """Binomial high should match values from R for integer successes"""
@@ -143,7 +143,7 @@ class DistributionsTests(TestCase):
         }
         e = sorted(expected.items())
         for (key, value) in e:
-            assert_allclose(f_high(*key), value)
+            assert_allclose(f_high(*key), value, atol=10e-7)
 
     def test_bdtrc(self):
         """bdtrc should give same results as cephes"""
