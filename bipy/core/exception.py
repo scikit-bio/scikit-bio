@@ -96,3 +96,4 @@ class MissingDataError(Exception):
                                                                     actual),)
 class FastqParseError(Exception):
     pass
+    
