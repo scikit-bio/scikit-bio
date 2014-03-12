@@ -17,6 +17,8 @@ classes = """
     Development Status :: 1 - Planning
     License :: OSI Approved :: BSD License
     Topic :: Software Development :: Libraries
+    Topic :: Scientific/Engineering
+    Topic :: Scientific/Engineering :: Bio-Informatics
     Programming Language :: Python
     Programming Language :: Python :: 2.7
     Operating System :: Unix
@@ -42,6 +44,6 @@ setup(name='bipy',
       install_requires=['numpy >= 1.5.1', 'matplotlib >= 1.1.0',
                         'scipy >=0.13.0'],
       extras_require={'test': ["nose >= 0.10.1", "pep8"],
-                      'doc': "Sphinx >= 0.3"},
+                      'doc': ["Sphinx >= 1.1", "sphinx-bootstrap-theme"]},
       classifiers=classifiers
       )
