@@ -169,8 +169,17 @@ functions, and exceptions), follow the numpydoc conventions. In addition to
 these conventions, there are a few things to keep in mind:
 
 - When documenting a class, only public methods and attributes are included in
-  the built documentation. If a method or attribute starts with an underscore,
-  it will not be included in the list of class members.
+  the built documentation by default. If a method or attribute starts with an
+  underscore, it is assumed to be private. If you want a private method to be
+  included in the built documentation (e.g., you want to document "special"
+  methods such as ```__getitem__```), add the following line to the method's
+  docstring:
+
+    ```
+    .. shownumpydoc
+    ```
+  (we recommend placing this at the end of the docstring for consistency)
+
 - When documenting a class, include the ```Parameters``` and ```Attributes```
   sections in the class docstring, instead of in the ```__init__``` docstring.
   While numpydoc technically supports either form,
