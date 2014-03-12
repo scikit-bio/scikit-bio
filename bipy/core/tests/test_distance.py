@@ -22,7 +22,7 @@ from bipy.core.exception import (DistanceMatrixError,
                                  DistanceMatrixFormatError, IDMismatchError,
                                  MissingDataError, MissingHeaderError,
                                  MissingIDError)
-from bipy.util.unit_test import TestCase, main
+from unittest import TestCase, main
 
 
 class DistanceMatrixTestData(TestCase):

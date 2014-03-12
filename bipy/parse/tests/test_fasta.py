@@ -10,7 +10,7 @@
 
 from bipy.parse.fasta import MinimalFastaParser
 from bipy.parse.record import RecordError
-from bipy.util.unit_test import TestCase, main
+from unittest import TestCase, main
 
 
 class GenericFastaTest(TestCase):

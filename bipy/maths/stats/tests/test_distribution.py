@@ -13,7 +13,8 @@
 Currently using tests against calculations in R, spreadsheets being unreliable.
 """
 
-from bipy.util.unit_test import TestCase, main
+from unittest import TestCase, main
+from numpy.testing import assert_allclose
 from bipy.maths.stats.distribution import (chi_high, z_high, zprob, f_high,
                                            binomial_high, bdtrc, stdtr)
 
@@ -41,9 +42,9 @@ class DistributionsTests(TestCase):
             2.753624e-89, 4.906714e-198, 0.000000e+00, 0.000000e+00]
 
         for z, p in zip(self.values, probs):
-            self.assertFloatEqual(z_high(z), p)
+            assert_allclose(z_high(z), p)
         for z, p in zip(self.negvalues, negprobs):
-            self.assertFloatEqual(z_high(z), p)
+            assert_allclose(z_high(z), p)
 
     def test_zprob(self):
         """zprob should match twice the z_high probability for abs(z)"""
@@ -54,9 +55,9 @@ class DistributionsTests(TestCase):
             2.753624e-89, 4.906714e-198, 0.000000e+00, 0.000000e+00]]
 
         for z, p in zip(self.values, probs):
-            self.assertFloatEqual(zprob(z), p)
+            assert_allclose(zprob(z), p)
         for z, p in zip(self.negvalues, probs):
-            self.assertFloatEqual(zprob(z), p)
+            assert_allclose(zprob(z), p)
 
     def test_chi_high(self):
         """chi_high should match R's pchisq(lower.tail=FALSE) function"""
@@ -77,7 +78,7 @@ class DistributionsTests(TestCase):
 
         for df in self.df:
             for x, p in zip(self.values, probs[df]):
-                self.assertFloatEqual(chi_high(x, df), p)
+                assert_allclose(chi_high(x, df), p)
 
     def test_binomial_high(self):
         """Binomial high should match values from R for integer successes"""
@@ -96,7 +97,7 @@ class DistributionsTests(TestCase):
             (-0.5, 3, 0.1): 1,
         }
         for (key, value) in expected.items():
-            self.assertFloatEqualRel(binomial_high(*key), value, 1e-4)
+            assert_allclose(binomial_high(*key), value, 1e-4)
         # should reject if successes > trials or successes < -1
         self.assertRaises(ValueError, binomial_high, 7, 5, 0.5)
 
@@ -142,7 +143,7 @@ class DistributionsTests(TestCase):
         }
         e = sorted(expected.items())
         for (key, value) in e:
-            self.assertFloatEqualRel(f_high(*key), value)
+            assert_allclose(f_high(*key), value)
 
     def test_bdtrc(self):
         """bdtrc should give same results as cephes"""
@@ -231,7 +232,7 @@ class DistributionsTests(TestCase):
         for k in k_s:
             for n in n_s:
                 for p in p_s:
-                    self.assertFloatEqual(bdtrc(k, n, p), exp[index])
+                    assert_allclose(bdtrc(k, n, p), exp[index])
                     index += 1
 
     def test_stdtr(self):
@@ -267,7 +268,7 @@ class DistributionsTests(TestCase):
         index = 0
         for i in t:
             for j in k:
-                self.assertFloatEqual(stdtr(j, i), exp[index])
+                assert_allclose(stdtr(j, i), exp[index])
                 index += 1
 
 

@@ -8,7 +8,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-from bipy.util.unit_test import TestCase, main
+from unittest import TestCase, main
 from bipy.app.parameters import (FlagParameter, ValuedParameter,
                                  MixedParameter, Parameters,
                                  ParameterError, FilePath)
@@ -554,9 +554,9 @@ class ParametersTests(TestCase):
 
     def test_init(self):
         """Parameters: init functions as expected"""
-        self.assertEqualItems(self.p1, {})
-        self.assertEqualItems(self.p2, self.all_params)
-        self.assertEqualItems(self.p3, self.all_params)
+        self.assertEqual(self.p1, {})
+        self.assertEqual(self.p2, self.all_params)
+        self.assertEqual(self.p3, self.all_params)
 
     def test_lookup(self):
         """Parameters: test ability to lookup """
