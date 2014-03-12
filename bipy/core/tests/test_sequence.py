@@ -367,6 +367,7 @@ class DNASequenceTests(TestCase):
         self.b4 = DNASequence(
             'MRWSYKVHDBN', identifier="degen",
             description="All of the degenerate bases")
+        self.b5 = DNASequence('.G--ATTAC-A...')
 
     def test_complement(self):
         """ complement functions as expected
@@ -375,6 +376,7 @@ class DNASequenceTests(TestCase):
         self.assertEqual(self.b2.complement(), DNASequence("TGGCCATGG"))
         self.assertRaises(BiologicalSequenceError, self.b3.complement)
         self.assertEqual(self.b4.complement(), DNASequence("KYWSRMBDHVN"))
+        self.assertEqual(self.b5.complement(), DNASequence(".C--TAATG-T..."))
 
     def test_reverse_complement(self):
         """ reverse complement functions as expected
@@ -428,6 +430,7 @@ class RNASequenceTests(TestCase):
         self.b4 = RNASequence(
             'MRWSYKVHDBN', identifier="degen",
             description="All of the degenerate bases")
+        self.b5 = RNASequence('.G--AUUAC-A...')
 
     def test_complement(self):
         """ complement functions as expected
@@ -436,6 +439,7 @@ class RNASequenceTests(TestCase):
         self.assertEqual(self.b2.complement(), RNASequence("UGGCCAUGG"))
         self.assertRaises(BiologicalSequenceError, self.b3.complement)
         self.assertEqual(self.b4.complement(), RNASequence("KYWSRMBDHVN"))
+        self.assertEqual(self.b5.complement(), RNASequence(".C--UAAUG-U..."))
 
     def test_reverse_complement(self):
         """ reverse complement functions as expected
