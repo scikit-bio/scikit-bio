@@ -43,7 +43,6 @@ setup(name='bipy',
       packages=find_packages(),
       install_requires=[],
       extras_require={'test': ["nose >= 0.10.1", "pep8"],
-                      'doc': ["Sphinx >= 1.1", "numpydoc",
-                              "sphinx-bootstrap-theme"]},
+                      'doc': ["Sphinx >= 1.1", "sphinx-bootstrap-theme"]},
       classifiers=classifiers
       )
