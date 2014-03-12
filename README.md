@@ -3,12 +3,29 @@ bipy
 
 [![Build Status](https://travis-ci.org/biocore/bipy.png?branch=master)](https://travis-ci.org/biocore/bipy)
 
-Core objects, functions and statistics for working with biological data in Python.
+Core objects, functions and statistics for working with biological data in
+Python.
+
+To view bipy's documentation, visit [bipy.org](http://bipy.org).
+
+**Note:** bipy is currently under active development and its API is not stable.
+Major compatibility-breaking API changes will likely happen as development
+progresses. Once the API has started to solidify and we have an official
+release, we will strive to maintain backwards compatibility, provide
+deprecation warnings, etc. wherever possible. In the meantime, feel free to try
+out bipy and let us know what you think!
+
+Licensing
+---------
+
+bipy is available under the new BSD license. See [COPYING.txt](COPYING.txt) for
+bipy's license, and the ```licenses``` directory for the licenses of other
+software that is (either partially or wholelly) distributed with bipy.
 
 bipy development
 ----------------
 
-If you're interested in getting involved in or learning about bipy development, see [CONTRIBUTING.md](https://github.com/biocore/bipy/blob/master/CONTRIBUTING.md), in this directory.
+If you're interested in getting involved in or learning about bipy development, see [CONTRIBUTING.md](CONTRIBUTING.md), in this directory.
 
 See the [list of all of bipy's contributors](https://github.com/biocore/bipy/graphs/contributors).
 
