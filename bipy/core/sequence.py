@@ -1121,7 +1121,7 @@ class DNASequence(NucleotideSequence):
         'W': 'W', 'K': 'M', 'M': 'K', 'B': 'V', 'D': 'H', 'H': 'D', 'V': 'B',
         'N': 'N', 'a': 't', 't': 'a', 'g': 'c', 'c': 'g', 'y': 'r', 'r': 'y',
         's': 's', 'w': 'w', 'k': 'm', 'm': 'k', 'b': 'v', 'd': 'h', 'h': 'd',
-        'v': 'b', 'n': 'n', '.': '.', '-':'-'}
+        'v': 'b', 'n': 'n', '.': '.', '-': '-'}
     _alphabet = iupac_characters | set(map(str.lower, iupac_characters))
 
 # class is accessible with alternative name for convenience
@@ -1167,7 +1167,7 @@ class RNASequence(NucleotideSequence):
         'W': 'W', 'K': 'M', 'M': 'K', 'B': 'V', 'D': 'H', 'H': 'D', 'V': 'B',
         'N': 'N', 'a': 'u', 'u': 'a', 'g': 'c', 'c': 'g', 'y': 'r', 'r': 'y',
         's': 's', 'w': 'w', 'k': 'm', 'm': 'k', 'b': 'v', 'd': 'h', 'h': 'd',
-        'v': 'b', 'n': 'n', '.': '.', '-':'-'}
+        'v': 'b', 'n': 'n', '.': '.', '-': '-'}
     _alphabet = iupac_characters | set(map(str.lower, iupac_characters))
 
 # class is accessible with alternative name for convenience
