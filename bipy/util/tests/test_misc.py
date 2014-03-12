@@ -26,6 +26,5 @@ class UtilTests(TestCase):
         fd.close()
 
 
-
 if __name__ == '__main__':
     main()
