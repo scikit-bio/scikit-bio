@@ -94,6 +94,7 @@ class MissingDataError(Exception):
         super(MissingDataError, self).__init__()
         self.args = ("Expected %d row(s) of data, but found %d." % (expected,
                                                                     actual),)
+
+
 class FastqParseError(Exception):
     pass
-    
