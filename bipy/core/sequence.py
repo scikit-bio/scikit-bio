@@ -102,6 +102,11 @@ class BiologicalSequence(Sequence):
     """
 
     _alphabet = set()
+    # Note: the _complement_map dictionary (defined by NucleotideSequence base
+    # classes) explicitly defines the complement of the gap characters as
+    # themselves because it's clunky to access the _gap_alphabet member
+    # variable from the derived classes. If _gap_alphabet is ever changed, the
+    # _complement_map dictionaries should be updated to reflect those changes.
     _gap_alphabet = set('-.')
 
     def __init__(self, sequence, identifier="", description="",
