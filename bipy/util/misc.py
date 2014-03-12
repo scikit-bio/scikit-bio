@@ -29,6 +29,7 @@ from __future__ import division
 
 import hashlib
 
+
 def safe_md5(open_file, block_size=2**20):
     """Computes an md5 sum without loading the file into memory
 
@@ -49,7 +50,7 @@ def safe_md5(open_file, block_size=2**20):
     -----
 
     This method is based on the answers given in:
-    http://stackoverflow.com/questions/1131220/get-md5-hash-of-big-files-in-python/1131255
+    http://stackoverflow.com/a/1131255/379593
 
     Examples
     --------
