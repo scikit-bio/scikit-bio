@@ -49,7 +49,7 @@ def safe_md5(open_file, block_size=2**20):
     -----
 
     This method is based on the answers given in:
-    http://stackoverflow.com/a/1131255/379593
+    http://stackoverflow.com/questions/1131220/get-md5-hash-of-big-files-in-python/1131255
 
     Examples
     --------
