@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 r"""
-Biological Sequences (:mod:`bipy.core.sequence`)
+Biological sequences (:mod:`bipy.core.sequence`)
 ================================================
 
 .. currentmodule:: bipy.core.sequence
@@ -18,7 +18,7 @@ Classes
    :toctree: generated/
 
    BiologicalSequence
-   NucelotideSequence
+   NucleotideSequence
    DNASequence
    RNASequence
 
@@ -874,6 +874,7 @@ class BiologicalSequence(Sequence):
         -------
         bool
             ``True`` if `self` is valid, and ``False`` otherwise.
+
         Notes
         -----
         Validity is defined as not containing any characters outside of
@@ -934,10 +935,14 @@ class NucleotideSequence(BiologicalSequence):
     Attributes
     ----------
     alphabet
-    complement_map
     description
     gap_alphabet
     identifier
+    complement_map : dict
+        Mapping of characters to their complements. `complement_map` cannot be
+        defined for a generic `NucleotideSequence` because the complement of
+        'A' is ambiguous. `NucleotideSequence.complement_map` will therefore be
+        the empty dict. Thanks, nature...
     iupac_standard_characters : set
         The non-degenerate IUPAC nucleotide characters
     iupac_degeneracies : dict of sets
@@ -961,8 +966,8 @@ class NucleotideSequence(BiologicalSequence):
                           "H": set("ACTU"), "V": set("ACG"), "N": set("ACGTU")}
     iupac_degenerate_characters = set(iupac_degeneracies)
     iupac_characters = iupac_standard_characters | iupac_degenerate_characters
-    _complement_map = {}
-    _alphabet = iupac_characters | set([c.lower() for c in iupac_characters])
+    complement_map = {}
+    _alphabet = iupac_characters | set(map(str.lower, iupac_characters))
 
     def _complement(self, seq_iterator):
         """Returns `NucleotideSequence` that is complement of `seq_iterator`
@@ -994,31 +999,12 @@ class NucleotideSequence(BiologicalSequence):
         result = []
         for base in seq_iterator:
             try:
-                result.append(self._complement_map[base])
+                result.append(self.complement_map[base])
             except KeyError:
                 raise BiologicalSequenceError(
                     "Don't know how to complement base %s. Is it in "
                     "%s.complement_map?" % (base, self.__class__.__name__))
         return self.__class__(result, self._identifier, self._description)
-
-    @property
-    def complement_map(self):
-        """Return the mapping of characters to their complements
-
-        Returns
-        -------
-        dict
-            Mapping of characters to their complements
-
-        Notes
-        -----
-        `complement_map` cannot be defined for a generic `NucleotideSequence`
-        because the complement of 'A' is ambiguous.
-        `NucleotideSequence.complement_map` will therefore be the empty dict.
-        Thanks, nature...
-
-        """
-        return self._complement_map
 
     def complement(self):
         """Return the complement of the `NucleotideSequence`
@@ -1097,10 +1083,11 @@ class DNASequence(NucleotideSequence):
     Attributes
     ----------
     alphabet
-    complement_map
     description
     gap_alphabet
     identifier
+    complement_map : dict
+        Mapping of characters to their complements.
     iupac_standard_characters : set
         The non-degenerate IUPAC DNA characters
     iupac_degeneracies : dict of sets
@@ -1124,13 +1111,13 @@ class DNASequence(NucleotideSequence):
                           "H": set("ACT"), "V": set("ACG"), "N": set("ACGT")}
     iupac_degenerate_characters = set(iupac_degeneracies)
     iupac_characters = iupac_standard_characters | iupac_degenerate_characters
-    _complement_map = {
+    complement_map = {
         'A': 'T', 'T': 'A', 'G': 'C', 'C': 'G', 'Y': 'R', 'R': 'Y', 'S': 'S',
         'W': 'W', 'K': 'M', 'M': 'K', 'B': 'V', 'D': 'H', 'H': 'D', 'V': 'B',
         'N': 'N', 'a': 't', 't': 'a', 'g': 'c', 'c': 'g', 'y': 'r', 'r': 'y',
         's': 's', 'w': 'w', 'k': 'm', 'm': 'k', 'b': 'v', 'd': 'h', 'h': 'd',
         'v': 'b', 'n': 'n'}
-    _alphabet = iupac_characters | set([c.lower() for c in iupac_characters])
+    _alphabet = iupac_characters | set(map(str.lower, iupac_characters))
 
 # class is accessible with alternative name for convenience
 DNA = DNASequence
@@ -1142,10 +1129,11 @@ class RNASequence(NucleotideSequence):
     Attributes
     ----------
     alphabet
-    complement_map
     description
     gap_alphabet
     identifier
+    complement_map : dict
+        Mapping of characters to their complements.
     iupac_standard_characters : set
         The non-degenerate IUPAC RNA characters
     iupac_degeneracies : dict of sets
@@ -1169,13 +1157,13 @@ class RNASequence(NucleotideSequence):
                           "H": set("ACU"), "V": set("ACG"), "N": set("ACGU")}
     iupac_degenerate_characters = set(iupac_degeneracies)
     iupac_characters = iupac_standard_characters | iupac_degenerate_characters
-    _complement_map = {
+    complement_map = {
         'A': 'U', 'U': 'A', 'G': 'C', 'C': 'G', 'Y': 'R', 'R': 'Y', 'S': 'S',
         'W': 'W', 'K': 'M', 'M': 'K', 'B': 'V', 'D': 'H', 'H': 'D', 'V': 'B',
         'N': 'N', 'a': 'u', 'u': 'a', 'g': 'c', 'c': 'g', 'y': 'r', 'r': 'y',
         's': 's', 'w': 'w', 'k': 'm', 'm': 'k', 'b': 'v', 'd': 'h', 'h': 'd',
         'v': 'b', 'n': 'n'}
-    _alphabet = iupac_characters | set([c.lower() for c in iupac_characters])
+    _alphabet = iupac_characters | set(map(str.lower, iupac_characters))
 
 # class is accessible with alternative name for convenience
 RNA = RNASequence
