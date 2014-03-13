@@ -113,6 +113,12 @@ class SequenceCollectionTests(TestCase):
         invalid_seqs2 = SequenceCollection(self.seqs1_t, RNASequence)
         self.assertFalse(invalid_seqs2.is_valid())
 
+    def test_items(self):
+        """ items functions as expected
+        """
+        self.assertEqual(list(self.s1.items()),
+                [(s.identifier, s) for s in self.s1])
+
     def test_len(self):
         """ len functions as expected
         """

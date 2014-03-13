@@ -79,6 +79,12 @@ class SequenceCollection(object):
         """
         return iter(self._data)
 
+    def items(self):
+        """
+        """
+        for seq in self:
+            yield seq.identifier, seq
+
     def __len__(self):
         """
         """
