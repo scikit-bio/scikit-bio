@@ -31,8 +31,6 @@ def MinimalFastqParser(data, strict=True):
     Arguments:
         - strict: checks the quality and sequence labels are the same
     """
-    if type(data) == str:
-        data = open(data)
 
     # fastq format is very simple, defined by blocks of 4 lines
     line_num = -1

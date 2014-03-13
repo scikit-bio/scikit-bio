@@ -8,7 +8,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-from cogent.util.unit_test import TestCase, main
+from unittest import TestCase, main
 from bipy.parse.fastq import MinimalFastqParser
 
 data = {
