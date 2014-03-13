@@ -1,1 +1,1 @@
-.. automodule:: bipy.core.sequence
+.. automodule:: skbio.core.sequence
