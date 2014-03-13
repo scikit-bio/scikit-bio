@@ -7,7 +7,7 @@ from bipy.parse.record import RecordError
 from bipy.parse.record_finder import (DelimitedRecordFinder,
                                       LabeledRecordFinder, LineGrouper,
                                       TailedRecordFinder)
-from bipy.util.unit_test import TestCase, main
+from unittest import TestCase, main
 
 
 class TailedRecordFinderTests(TestCase):

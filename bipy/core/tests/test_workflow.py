@@ -11,7 +11,7 @@
 from itertools import izip
 from collections import defaultdict
 from bipy.core.workflow import Workflow, not_none
-from bipy.util.unit_test import TestCase, main
+from unittest import TestCase, main
 
 
 def construct_iterator(**kwargs):
