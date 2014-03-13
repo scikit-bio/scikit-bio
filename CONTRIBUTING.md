@@ -1,10 +1,9 @@
 Contributing to scikit-bio
-=====================
+==========================
 
 [scikit-bio](http://www.scikit-bio.org) is an open source software package, and we welcome community contributions. You can find the source code and test code for scikit-bio under public revision control in the scikit-bio git repository on [GitHub](https://github.com/biocore/scikit-bio). We very much welcome contributions.
 
 This document covers what you should do to get started with contributing to scikit-bio. You should read this whole document before considering submitting code to scikit-bio. This will save time for both you and the scikit-bio developers.
-
 
 Type of Submissions
 -------------------
@@ -49,7 +48,7 @@ Particularly for big changes, if you'd like feedback on your code in the form of
 
 
 Submitting code to scikit-bio
-------------------------
+-----------------------------
 
 scikit-bio is hosted on [GitHub](http://www.github.com), and we use GitHub's [Pull Request](https://help.github.com/articles/using-pull-requests) mechanism for accepting submissions. You should go through the following steps to submit code to scikit-bio.
 
