@@ -17,7 +17,6 @@ Functions
    safe_md5
    remove_files
    create_dir
-   curry
 
 """
 from __future__ import division
@@ -33,6 +32,7 @@ from __future__ import division
 import hashlib
 from os import remove, makedirs
 from os.path import exists, isdir
+from functools import partial
 
 
 def safe_md5(open_file, block_size=2 ** 20):
@@ -75,61 +75,6 @@ def safe_md5(open_file, block_size=2 ** 20):
         if data:
             md5.update(data)
     return md5
-
-
-def curry(f, *a, **kw):
-    """Curries a function as implemented in the python cookbook
-
-    curry(f,x)(y) = f(x,y) or =lambda y: f(x,y)
-
-    Parameters
-    ----------
-    f : callable
-        function to curry
-    a : argument
-        arguments to pass to the currying function
-    kw : keyword arguments
-        arguments to pass to the currying function
-
-    Returns
-    -------
-    c : callable
-        curried version of ``f``
-
-
-    Examples
-    --------
-
-    >>> from bipy.util.misc import curry
-    >>> f = lambda x, y : x/y
-    >>> curried_f = curry(f)
-    >>> curried_f(2, 10)
-    0.2
-
-
-    """
-    def curried(*more_a, **more_kw):
-        return f(*(a + more_a), **dict(kw, **more_kw))
-
-    # make docstring for curried funtion
-    curry_params = []
-    if a:
-        curry_params.extend([e for e in a])
-    if kw:
-        curry_params.extend(['%s=%s' % (k, v) for k, v in kw.items()])
-    # str it to prevent error in join()
-    curry_params = map(str, curry_params)
-
-    try:
-        f_name = f.func_name
-    except:  # e.g.  itertools.groupby failed .func_name
-        f_name = '?'
-
-    curried.__doc__ = ' curry(%s,%s)\n'\
-        '== curried from %s ==\n %s'\
-        % (f_name, ', '.join(curry_params), f_name, f.__doc__)
-
-    return curried
 
 
 def remove_files(list_of_filepaths, error_on_missing=True):
@@ -215,7 +160,7 @@ def create_dir(dir_name, fail_on_exist=False, handle_errors_externally=False):
     Examples
     --------
 
-    >>> from bipy.util.misc import create_dir
+    >>> from skbio.util.misc import create_dir
     >>> from os.path import exists, join
     >>> from tempfile import gettempdir
     >>> from os import rmdir
@@ -229,7 +174,7 @@ def create_dir(dir_name, fail_on_exist=False, handle_errors_externally=False):
     """
     error_code_lookup = get_create_dir_error_codes()
     # pre-instanciate function with
-    ror = curry(handle_error_codes, dir_name, handle_errors_externally)
+    ror = partial(handle_error_codes, dir_name, handle_errors_externally)
 
     if exists(dir_name):
         if isdir(dir_name):

@@ -17,7 +17,7 @@ from shutil import rmtree
 from tempfile import mkdtemp
 from uuid import uuid4
 
-from bipy.util.misc import (safe_md5, remove_files, curry, create_dir)
+from skbio.util.misc import (safe_md5, remove_files, create_dir)
 
 
 class UtilTests(TestCase):
@@ -69,15 +69,6 @@ class UtilTests(TestCase):
 
         # now get no error when error_on_missing=False
         remove_files(test_filepaths, error_on_missing=False)
-
-    def test_curry(self):
-        """curry should generate the function with parameters setted"""
-        curry_test = curry(cmp, 5)
-        knowns = ((3, 1),
-                  (9, -1),
-                  (5, 0))
-        for arg2, result in knowns:
-            self.assertEqual(curry_test(arg2), result)
 
     def test_create_dir(self):
         """create_dir creates dir and fails meaningful."""
