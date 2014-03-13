@@ -1,11 +1,12 @@
-__author__ = "Gavin Huttley, Anuj Pahwa"
-__copyright__ = "Copyright 2007-2012, The Cogent Project"
-__credits__ = ["Gavin Huttley", "Anuj Pahwa"]
-__license__ = "GPL"
-__version__ = "1.5.3-dev"
-__maintainer__ = "Gavin Huttley"
-__email__ = "Gavin.Huttley@anu.edu.au"
-__status__ = "Development"
+#!/usr/bin/env python
+
+#-----------------------------------------------------------------------------
+# Copyright (c) 2013--, bipy development team.
+#
+# Distributed under the terms of the Modified BSD License.
+#
+# The full license is in the file COPYING.txt, distributed with this software.
+#-----------------------------------------------------------------------------
 
 def MinimalFastqParser(data, strict=True):
     """yields name, seq, qual from fastq file
@@ -22,24 +23,22 @@ def MinimalFastqParser(data, strict=True):
     for line in data:
         line_num += 1
         if line_num == 4:
-            if strict: # make sure the seq and qual labels match
+            if strict:  # make sure the seq and qual labels match
                 assert record[0][1:] == record[2][1:], \
                   'Invalid format: %s -- %s' % (record[0][1:], record[2][1:])
             yield record[0][1:], record[1], record[3]
-            
+
             line_num = 0
             record = []
-        
+
         record.append(line.strip())
-    
+
     if record:
-        if strict and record[0]: # make sure the seq and qual labels match
+        if strict and record[0]:  # make sure the seq and qual labels match
             assert record[0][1:] == record[2][1:], 'Invalid format'
-        
-        if record[0]: # could be just an empty line at eof
+
+        if record[0]:  # could be just an empty line at eof
             yield record[0][1:], record[1], record[3]
-        
-    
+
     if type(data) == file:
         data.close()
-
