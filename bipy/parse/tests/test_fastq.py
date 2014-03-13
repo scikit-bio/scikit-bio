@@ -1,16 +1,15 @@
 #!/usr/bin/env python
+
+#-----------------------------------------------------------------------------
+# Copyright (c) 2013--, bipy development team.
+#
+# Distributed under the terms of the Modified BSD License.
+#
+# The full license is in the file COPYING.txt, distributed with this software.
+#-----------------------------------------------------------------------------
+
 from cogent.util.unit_test import TestCase, main
-
 from bipy.parse.fastq import MinimalFastqParser
-
-__author__ = "Gavin Huttley"
-__copyright__ = "Copyright 2007-2012, The Cogent Project"
-__credits__ = ["Gavin Huttley"]
-__license__ = "GPL"
-__version__ = "1.5.3-dev"
-__maintainer__ = "Gavin Huttley"
-__email__ = "gavin.huttley@anu.edu.au"
-__status__ = "Production"
 
 data = {
 "GAPC_0015:6:1:1259:10413#0/1":
@@ -42,7 +41,7 @@ data = {
              qual=r"cLcc\\dddddaaYd`T```bLYT\`a```bZccc"),
 "GAPC_0015:6:1:1317:3403#0/1":
         dict(seq="TTGTTTCCACTTGGTTGATTTCACCCCTGAGTTTG",
-             qual=r"\\\ZTYTSaLbb``\_UZ_bbcc`cc^[ac\a\T\ ".strip())# had to add space
+             qual=r"\\\ZTYTSaLbb``\_UZ_bbcc`cc^[ac\a\T\ ".strip()) # had to add space
 }
 class ParseFastq(TestCase):
     def test_parse(self):
