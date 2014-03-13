@@ -104,11 +104,3 @@ TTGTTTCCACTTGGTTGATTTCACCCCTGAGTTTG
 if __name__ == "__main__":
     main()
 
-
-
-
-# ']KZ[PY]_[YY^```ac^\\`bT``c`\x07T``bbb' != 
-# ']KZ[PY]_[YY^```ac^\\\\`bT``c`\\aT``bbb'
-
-
-
