@@ -6,8 +6,7 @@ scikit-bio
 Core objects, functions and statistics for working with biological data in
 Python.
 
-To view scikit-bio's documentation, visit
-[scikit-bio.org](http://scikit-bio.org).
+To view scikit-bio's documentation, visit [scikit-bio.org](http://scikit-bio.org).
 
 **Note:** scikit-bio is currently under active development and its API is not
 stable. Major compatibility-breaking API changes will likely happen as
