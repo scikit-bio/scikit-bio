@@ -78,9 +78,36 @@ def safe_md5(open_file, block_size=2**20):
 
 
 def curry(f, *a, **kw):
-    """curry(f,x)(y) = f(x,y) or =lambda y: f(x,y)
-    
-    modified from python cookbook"""
+    """Curries a function as implemented in the python cookbook
+
+    curry(f,x)(y) = f(x,y) or =lambda y: f(x,y)
+
+    Parameters
+    ----------
+    f : callable
+        function to curry
+    a : argument
+        arguments to pass to the currying function
+    kw : keyword arguments
+        arguments to pass to the currying function
+
+    Returns
+    -------
+    c : callable
+        curried version of ``f``
+
+
+    Examples
+    --------
+
+    >>> from bipy.util.misc import curry
+    >>> f = lambda x, y : x/y
+    >>> curried_f = curry(f)
+    >>> curried_f(2, 10)
+    0.2
+
+
+    """
     def curried(*more_a, **more_kw):
         return f(*(a + more_a), **dict(kw, **more_kw))
 
