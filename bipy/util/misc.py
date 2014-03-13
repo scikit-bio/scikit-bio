@@ -80,7 +80,7 @@ def remove_files(list_of_filepaths, error_on_missing=True):
     ----------
     list_of_filepaths : list of strings
         list with filepaths to remove
-    error_on_missing : bool
+    error_on_missing : bool, optional
         whether or not the function should raise an error if a file is not found
 
     Raises
@@ -97,10 +97,10 @@ def remove_files(list_of_filepaths, error_on_missing=True):
     >>> from os.path import exists
     >>> from bipy.util.misc import remove_files
     >>> h = NamedTemporaryFile(delete=False)
-    >>> exists(h.name)
+    >>> exists(h.name) # it exists
     True
     >>> remove_files([h.name])
-    >>> exists(h.name)
+    >>> exists(h.name) # and now it's gone
     False
 
     """
