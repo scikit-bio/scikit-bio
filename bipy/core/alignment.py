@@ -70,6 +70,11 @@ class SequenceCollection(object):
         """
         return iter(self._data)
 
+    def __len__(self):
+        """
+        """
+        return len(self._data)
+
     def _validate_character_set(self):
         """
         """
