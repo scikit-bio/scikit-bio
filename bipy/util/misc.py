@@ -28,6 +28,7 @@ from __future__ import division
 #-----------------------------------------------------------------------------
 
 import hashlib
+from os import remove
 
 def safe_md5(open_file, block_size=2**20):
     """Computes an md5 sum without loading the file into memory
@@ -69,3 +70,29 @@ def safe_md5(open_file, block_size=2**20):
         if data:
             md5.update(data)
     return md5
+
+def remove_files(list_of_filepaths, error_on_missing=True):
+    """Remove list of filepaths, optionally raising an error if any are missing
+
+    Parameters
+    ----------
+    list_of_filepaths : list of strings
+        list with filepaths to remove
+    error_on_missing : bool
+        whether or not the function should raise an error if a file is not found
+
+    Examples
+    --------
+
+    
+
+    """
+    missing = []
+    for fp in list_of_filepaths:
+        try:
+            remove(fp)
+        except OSError:
+            missing.append(fp)
+
+    if error_on_missing and missing:
+        raise OSError, "Some filepaths were not accessible: %s" % '\t'.join(missing)
