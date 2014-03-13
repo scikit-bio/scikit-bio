@@ -35,8 +35,12 @@ from __future__ import division
 
 
 class BiologicalSequenceError(Exception):
+    """General error for biological sequence validation failures."""
     pass
 
+class SequenceCollectionError(Exception):
+    """General error for sequence collection validation failures."""
+    pass
 
 class DistanceMatrixError(Exception):
     """General error for distance matrix validation failures."""
