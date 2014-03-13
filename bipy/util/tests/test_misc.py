@@ -44,18 +44,18 @@ class UtilTests(TestCase):
         extra_file = NamedTemporaryFile(delete=False).name
         test_filepaths.append(extra_file)
 
-        # no error is raised on trying to remove the files 
+        # no error is raised on trying to remove the files
         # (although 5 don't exist)...
         remove_files(test_filepaths, error_on_missing=False)
         # ... and the existing file was removed
         self.assertFalse(exists(extra_file))
 
-        # try to remove them with remove_files and verify that an IOError is 
+        # try to remove them with remove_files and verify that an IOError is
         # raises
         self.assertRaises(OSError, remove_files, test_filepaths)
 
         # now get no error when error_on_missing=False
-        remove_files(test_filepaths,error_on_missing=False)
+        remove_files(test_filepaths, error_on_missing=False)
 
 if __name__ == '__main__':
     main()

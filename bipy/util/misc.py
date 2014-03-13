@@ -73,6 +73,7 @@ def safe_md5(open_file, block_size=2**20):
             md5.update(data)
     return md5
 
+
 def remove_files(list_of_filepaths, error_on_missing=True):
     """Remove list of filepaths, optionally raising an error if any are missing
 
@@ -81,7 +82,8 @@ def remove_files(list_of_filepaths, error_on_missing=True):
     list_of_filepaths : list of strings
         list with filepaths to remove
     error_on_missing : bool, optional
-        whether or not the function should raise an error if a file is not found
+        whether or not the function should raise an ``OSError`` if a file is
+        not found
 
     Raises
     ------
@@ -112,4 +114,5 @@ def remove_files(list_of_filepaths, error_on_missing=True):
             missing.append(fp)
 
     if error_on_missing and missing:
-        raise OSError, "Some filepaths were not accessible: %s" % '\t'.join(missing)
+        raise OSError("Some filepaths were not accessible: %s" %
+                      '\t'.join(missing))
