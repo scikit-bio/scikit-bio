@@ -15,6 +15,7 @@ from os.path import exists
 from bipy.util.misc import safe_md5, remove_files
 from bipy.util.unit_test import TestCase, main
 
+
 class UtilTests(TestCase):
     """Test object for the miscellaneous utility functions"""
     def test_safe_md5(self):
@@ -23,7 +24,7 @@ class UtilTests(TestCase):
 
         fd = StringIO('foo bar baz')
         obs = safe_md5(fd)
-        self.assertEqual(obs.hexdigest(),exp)
+        self.assertEqual(obs.hexdigest(), exp)
 
         fd.close()
 
