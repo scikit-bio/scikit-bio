@@ -71,7 +71,7 @@ git pull upstream master
 git checkout -b my-topic-branch
 ```
 
-6. Run ``nosetests`` to confirm that the tests pass before you make any changes.
+6. Run ``nosetests --with-doctest ; pep8 bipy setup.py`` to confirm that the tests pass before you make any changes.
 
 7. Make your changes, add them (with ``git add``), and commit them (with ``git commit``). Don't forget to update associated scripts and tests as necessary. You should make incremental commits, rather than one massive commit at the end. Write descriptive commit messages to accompany each commit.
 
@@ -81,7 +81,7 @@ git checkout my-topic-branch
 git pull upstream master
 ```
 
-9. Run ``nosetests`` to ensure that your changes did not cause anything expected to break.
+9. Run ``nosetests --with-doctest ; pep8 bipy setup.py`` to ensure that your changes did not cause anything expected to break.
 
 10. Once the tests pass, you should push your changes to your forked repository on GitHub using:
 ```

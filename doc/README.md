@@ -43,6 +43,13 @@ If you would like to contribute to the documentation, whether by adding
 something entirely new or by modifying existing documentation, please first
 review our [bipy contribution guide](../CONTRIBUTING.md).
 
+Before submitting your changes, ensure that the documentation builds without
+any errors or warnings, and that there are no broken links:
+
+    make clean
+    make html
+    make linkcheck
+
 ### Documentation guidelines
 
 Most of bipy's API documentation is automatically generated from
