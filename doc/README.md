@@ -29,8 +29,7 @@ will need to either install this version of bipy somewhere (e.g., in a
 virtualenv) or point your ```PYTHONPATH``` environment variable to this code,
 *before* building the documentation.
 
-To build the documentation, assuming you are at the root of the bipy
-repository:
+To build the documentation, assuming you are at the top-level bipy directory:
 
     cd doc
     make html
