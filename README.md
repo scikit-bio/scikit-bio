@@ -20,7 +20,7 @@ Licensing
 
 bipy is available under the new BSD license. See [COPYING.txt](COPYING.txt) for
 bipy's license, and the ```licenses``` directory for the licenses of other
-software that is (either partially or wholelly) distributed with bipy.
+software that is (either partially or entirely) distributed with bipy.
 
 bipy development
 ----------------
