@@ -14,3 +14,4 @@ API Reference
    core.sequence
    core.distance
    core.exception
+   util.misc
