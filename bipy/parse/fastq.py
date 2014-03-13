@@ -40,7 +40,7 @@ def MinimalFastqParser(data, strict=True):
         line_num += 1
         if line_num == 4:
             if strict:  # make sure the seq and qual labels match
-                assert record[0][1:] == record[2][1:] \
+                assert record[0][1:] == record[2][1:], \
                     'Invalid format: %s -- %s' % (record[0][1:], record[2][1:])
             yield record[0][1:], record[1], record[3]
 
