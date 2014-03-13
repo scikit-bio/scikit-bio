@@ -42,7 +42,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'bipy'
-copyright = u'2014--, bipy development team'
+copyright = u'2014--, scikit-bio development team'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -213,7 +213,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
   ('index', 'bipy.tex', u'bipy Documentation',
-   u'bipy development team', 'manual'),
+   u'scikit-bio development team', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -243,7 +243,7 @@ latex_documents = [
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('index', 'bipy', u'bipy Documentation',
-     [u'bipy development team'], 1)
+     [u'scikit-bio development team'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -257,7 +257,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
   ('index', 'bipy', u'bipy Documentation',
-   u'bipy development team', 'bipy', 'One line description of project.',
+   u'scikit-bio development team', 'bipy', 'One line description of project.',
    'Miscellaneous'),
 ]
 

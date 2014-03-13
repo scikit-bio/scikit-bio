@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 #-----------------------------------------------------------------------------
-# Copyright (c) 2013--, bipy development team.
+# Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -35,9 +35,9 @@ setup(name='bipy',
       license='BSD',
       description='bipy',
       long_description=long_description,
-      author="bipy development team",
+      author="scikit-bio development team",
       author_email="gregcaporaso@gmail.com",
-      maintainer="bipy development team",
+      maintainer="scikit-bio development team",
       maintainer_email="gregcaporaso@gmail.com",
       url='https://github.com/biocore/bipy',
       packages=find_packages(),
