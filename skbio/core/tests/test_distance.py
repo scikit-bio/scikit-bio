@@ -17,11 +17,11 @@ from tempfile import TemporaryFile
 import numpy as np
 
 from skbio.core.distance import (randdm, DistanceMatrix,
-                                SymmetricDistanceMatrix)
+                                 SymmetricDistanceMatrix)
 from skbio.core.exception import (DistanceMatrixError,
-                                 DistanceMatrixFormatError, IDMismatchError,
-                                 MissingDataError, MissingHeaderError,
-                                 MissingIDError)
+                                  DistanceMatrixFormatError, IDMismatchError,
+                                  MissingDataError, MissingHeaderError,
+                                  MissingIDError)
 from unittest import TestCase, main
 
 

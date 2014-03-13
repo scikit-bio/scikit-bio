@@ -3,12 +3,12 @@
 """
 
 from skbio.parse.record import (FieldError, Grouper, DelimitedSplitter,
-                               GenericRecord, MappedRecord, TypeSetter,
-                               list_adder, dict_adder,
-                               LineOrientedConstructor, int_setter,
-                               bool_setter, string_and_strip, FieldWrapper,
-                               StrictFieldWrapper, raise_unknown_field,
-                               FieldMorpher)
+                                GenericRecord, MappedRecord, TypeSetter,
+                                list_adder, dict_adder,
+                                LineOrientedConstructor, int_setter,
+                                bool_setter, string_and_strip, FieldWrapper,
+                                StrictFieldWrapper, raise_unknown_field,
+                                FieldMorpher)
 
 from unittest import TestCase, main
 

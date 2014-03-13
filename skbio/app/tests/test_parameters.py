@@ -10,8 +10,8 @@
 
 from unittest import TestCase, main
 from skbio.app.parameters import (FlagParameter, ValuedParameter,
-                                 MixedParameter, Parameters,
-                                 ParameterError, FilePath)
+                                  MixedParameter, Parameters, ParameterError,
+                                  FilePath)
 
 
 class FlagParameterTests(TestCase):

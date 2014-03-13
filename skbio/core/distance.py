@@ -99,9 +99,9 @@ import numpy as np
 from scipy.spatial.distance import squareform
 
 from skbio.core.exception import (DistanceMatrixError,
-                                 DistanceMatrixFormatError, IDMismatchError,
-                                 MissingDataError, MissingHeaderError,
-                                 MissingIDError)
+                                  DistanceMatrixFormatError, IDMismatchError,
+                                  MissingDataError, MissingHeaderError,
+                                  MissingIDError)
 
 
 class DistanceMatrix(object):

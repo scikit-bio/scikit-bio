@@ -13,14 +13,14 @@ from warnings import filterwarnings
 
 from unittest import TestCase, main
 from skbio.maths.stats.test import (G_2_by_2, G_fit, t_paired, t_one_sample,
-                                   t_two_sample, mc_t_two_sample,
-                                   _permute_observations, t_one_observation,
-                                   correlation_t, ZeroExpectedError, fisher,
-                                   safe_sum_p_log_p, permute_2d, mantel,
-                                   mantel_t, _flatten_lower_triangle, pearson,
-                                   spearman, _get_rank, ANOVA_one_way, mw_t,
-                                   mw_boot, is_symmetric_and_hollow,
-                                   reverse_tails, tail)
+                                    t_two_sample, mc_t_two_sample,
+                                    _permute_observations, t_one_observation,
+                                    correlation_t, ZeroExpectedError, fisher,
+                                    safe_sum_p_log_p, permute_2d, mantel,
+                                    mantel_t, _flatten_lower_triangle, pearson,
+                                    spearman, _get_rank, ANOVA_one_way, mw_t,
+                                    mw_boot, is_symmetric_and_hollow,
+                                    reverse_tails, tail)
 
 from numpy import (array, concatenate, fill_diagonal, reshape, arange, matrix,
                    ones, tril, random)

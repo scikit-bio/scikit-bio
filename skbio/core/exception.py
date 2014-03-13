@@ -5,8 +5,8 @@ Exceptions (:mod:`skbio.core.exception`)
 
 .. currentmodule:: skbio.core.exception
 
-This module defines custom exception classes used throughout the core scikit-bio
-codebase.
+This module defines custom exception classes used throughout the core
+scikit-bio codebase.
 
 Exceptions
 ----------

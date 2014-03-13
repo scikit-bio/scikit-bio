@@ -14,13 +14,13 @@ from os.path import exists
 from copy import deepcopy
 
 from skbio.app.parameters import (FilePath, ValuedParameter, FlagParameter,
-                                 MixedParameter)
+                                  MixedParameter)
 from unittest import TestCase, main
 from skbio.app.util import (CommandLineApplication, ResultPath,
-                           ApplicationError, ParameterIterBase,
-                           ParameterCombinations, cmdline_generator,
-                           ApplicationNotFoundError, get_tmp_filename,
-                           guess_input_handler, which)
+                            ApplicationError, ParameterIterBase,
+                            ParameterCombinations, cmdline_generator,
+                            ApplicationNotFoundError, get_tmp_filename,
+                            guess_input_handler, which)
 
 
 class ParameterCombinationsTests(TestCase):

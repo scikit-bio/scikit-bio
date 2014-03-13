@@ -16,7 +16,7 @@ Currently using tests against calculations in R, spreadsheets being unreliable.
 from unittest import TestCase, main
 from numpy.testing import assert_allclose
 from skbio.maths.stats.distribution import (chi_high, z_high, zprob, f_high,
-                                           binomial_high, bdtrc, stdtr)
+                                            binomial_high, bdtrc, stdtr)
 
 
 class DistributionsTests(TestCase):

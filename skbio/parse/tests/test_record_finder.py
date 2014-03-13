@@ -5,8 +5,8 @@
 
 from skbio.parse.record import RecordError
 from skbio.parse.record_finder import (DelimitedRecordFinder,
-                                      LabeledRecordFinder, LineGrouper,
-                                      TailedRecordFinder)
+                                       LabeledRecordFinder, LineGrouper,
+                                       TailedRecordFinder)
 from unittest import TestCase, main
 
 
