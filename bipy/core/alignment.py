@@ -26,6 +26,12 @@ Examples
 >>> seqs = [("s1", "ACC--G-GGTA.."), ("s2", "TCC--G-GGCA..")]
 >>> a1 = Alignment(seqs, DNA)
 
+>>> from bipy.parse.fasta import MinimalFastaParser
+>>> fp = "/Users/caporaso/data/gg_13_8_otus/rep_set/79_otus.fasta"
+>>> s1 = SequenceCollection(MinimalFastaParser(open(fp)), DNA)
+>>> s1
+
+
 """
 from __future__ import division
 
@@ -37,7 +43,10 @@ from __future__ import division
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
+import numpy as np
+
 from bipy.core.exception import SequenceCollectionError
+
 
 class SequenceCollection(object):
     """
@@ -75,6 +84,26 @@ class SequenceCollection(object):
         """
         return len(self._data)
 
+    def __repr__(self):
+        """The repr method.
+
+        Returns
+        -------
+        str
+            Returns a string representation of the object.
+
+        Notes
+        -----
+
+        Examples
+        --------
+
+        """
+        cn = self.__class__.__name__
+        count, center, spread = self.count_center_spread() 
+        return "<%s: n=%d; mean +/- std length=%.2f +/- %.2f>" % (cn, count,
+                center, spread)
+
     def _validate_character_set(self):
         """
         """
@@ -83,10 +112,22 @@ class SequenceCollection(object):
                 return False
         return True
 
+    def count_center_spread(self, center_f=np.mean, spread_f=np.std):
+        """
+        """
+        sequence_lengths = self.sequence_lengths()
+        return (len(sequence_lengths), center_f(sequence_lengths),
+                spread_f(sequence_lengths))
+
     def is_valid(self):
         """
         """
         return self._validate_character_set()
+
+    def sequence_lengths(self):
+        """
+        """
+        return [len(seq) for seq in self]
 
     def to_fasta(self):
         """
