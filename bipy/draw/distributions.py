@@ -63,7 +63,7 @@ def boxplots(distributions, x_values=None, x_tick_labels=None, title=None,
         Maximum value of the y-axis. If ``None``, uses matplotlib's autoscale.
     whisker_length : scalar, optional
         Length of the whiskers as a function of the IQR. For example, if 1.5,
-        the whiskers extend to 1.5 * IQR. Anything outside of that range is
+        the whiskers extend to ``1.5 * IQR``. Anything outside of that range is
         treated as an outlier.
     box_width : scalar, optional
         Width of each box in plot units.
@@ -94,6 +94,11 @@ def boxplots(distributions, x_values=None, x_tick_labels=None, title=None,
     See Also
     --------
     matplotlib.pyplot.boxplot
+
+    Notes
+    -----
+    This is a convenience wrapper around matplotlib's ``boxplot`` function that
+    allows for coloring of boxplots and legend generation.
 
     Examples
     --------
