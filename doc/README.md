@@ -53,7 +53,7 @@ also possible, such as PDF.
 
 bipy docstrings follow the [numpydoc conventions](https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt).
 This ensures that the docstrings are easily readable both from the interpreter
-and HTML, PDF, etc.. Please read the numpydoc guidelines before continuing.
+and HTML, PDF, etc. Please read the numpydoc guidelines before continuing.
 
 ### Documenting a module in bipy
 
