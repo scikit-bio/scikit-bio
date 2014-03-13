@@ -16,6 +16,8 @@ Functions
 
    safe_md5
    remove_files
+   create_dir
+   curry
 
 """
 from __future__ import division
@@ -147,28 +149,55 @@ def remove_files(list_of_filepaths, error_on_missing=True):
                       '\t'.join(missing))
 
 def create_dir(dir_name, fail_on_exist=False, handle_errors_externally=False):
-    """Create a dir safely and fail meaningful.
+    """Create a directory safely and fail meaningfully
 
-    dir_name: name of directory to create
+    Parameters
+    ----------
 
-    fail_on_exist: if true raise an error if dir already exists
+    dir_name: string
+        name of directory to create
+
+    fail_on_exist: bool, optional
+        if true raise an error if ``dir_name`` already exists
     
-    handle_errors_externally: if True do not raise Errors, but return
-                   failure codes. This allows to handle errors locally and
-                   e.g. hint the user at a --force_overwrite options.
-                   
-    returns values (if no Error raised):
-    
-         0:  dir could be safely made
-         1:  directory already existed
-         2:  a file with the same name exists          
-         3:  any other unspecified OSError
+    handle_errors_externally: bool, optional
+        if True do not raise Errors, but return failure codes. This allows to
+        handle errors locally and e.g. hint the user at a --force_overwrite
+        options.
 
+    Returns
+    -------
+
+    return_value : int
+        These values are only returned if no error is raised:
+
+        - ``0``:  directory was safely created
+        - ``1``:  directory already existed
+        - ``2``:  a file with the same name exists          
+        - ``3``:  any other unspecified ``OSError``
+
+    Notes
+    -----
+
+    Depending  of how thorough we want to be we could add tests, e.g. for
+    testing actual write permission in an existing dir.
 
     See qiime/denoiser.py for an example of how to use this mechanism.
 
-    Note: Depending  of how thorough we want to be we could add tests,
-          e.g. for testing actual write permission in an existing dir.
+    Examples
+    --------
+
+    >>> from bipy.util.misc import create_dir
+    >>> from os.path import exists, join
+    >>> from tempfile import gettempdir
+    >>> from os import rmdir
+    >>> new_dir = join(gettempdir(), 'scikitbio')
+    >>> create_dir(new_dir)
+    0
+    >>> exists(new_dir)
+    True
+    >>> rmdir(new_dir)
+
     """
     error_code_lookup = get_create_dir_error_codes()
     #pre-instanciate function with
