@@ -50,7 +50,7 @@ class SequenceCollection(object):
             try:
                 identifier, description = seq_id.split(None, 1)
             except ValueError:
-                identifier = seq_id.split()
+                identifier = seq_id.strip()
                 description = None
             self._data.append(seq_constructor(seq, identifier=identifier,
               description=description))
