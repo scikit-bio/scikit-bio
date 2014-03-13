@@ -1,8 +1,8 @@
-bipy
+scikit-bio
 ====
 
-bipy (canonically pronounced *buy pie*) is a library for working with
-biological data in Python. bipy is open source, BSD-licensed software that is
+scikit-bio (canonically pronounced *buy pie*) is a library for working with
+biological data in Python. scikit-bio is open source, BSD-licensed software that is
 currently under active development.
 
 API Reference

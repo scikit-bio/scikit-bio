@@ -27,19 +27,19 @@ classes = """
 """
 classifiers = [s.strip() for s in classes.split('\n') if s]
 
-long_description = """The bipy project"""
+long_description = """The scikit-bio project"""
 
-setup(name='bipy',
+setup(name='scikit-bio',
       cmdclass={'build_py': build_py},
       version=__version__,
       license='BSD',
-      description='bipy',
+      description='scikit-bio',
       long_description=long_description,
       author="scikit-bio development team",
       author_email="gregcaporaso@gmail.com",
       maintainer="scikit-bio development team",
       maintainer_email="gregcaporaso@gmail.com",
-      url='https://github.com/biocore/bipy',
+      url='https://github.com/biocore/scikit-bio',
       packages=find_packages(),
       install_requires=['numpy >= 1.5.1', 'matplotlib >= 1.1.0',
                         'scipy >=0.13.0'],
