@@ -39,13 +39,14 @@ The built HTML documentation will be at ```build/html/index.html```.
 Contributing to the documentation
 ---------------------------------
 
-If you would like to contribute to the documentation, whether to add something
-entirely new or to modify existing documentation, please first review our [bipy
-contribution guide](../CONTRIBUTING.md).
+If you would like to contribute to the documentation, whether by adding
+something entirely new or by modifying existing documentation, please first
+review our [bipy contribution guide](../CONTRIBUTING.md).
 
 ### Documentation guidelines
 
-Most of bipy's API documentation is automatically generated from docstrings.
+Most of bipy's API documentation is automatically generated from
+[docstrings](http://legacy.python.org/dev/peps/pep-0257/#what-is-a-docstring).
 The advantage to this approach is that users can access the documentation in an
 interactive Python session or from our website as HTML. Other output forms are
 also possible, such as PDF.
