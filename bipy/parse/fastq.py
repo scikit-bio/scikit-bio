@@ -27,12 +27,10 @@ Functions
 
 
 def MinimalFastqParser(data, strict=True):
-    """yields name, seq, qual from fastq file
+    """Yields successive sequences from infile as (name, seq, qual) tuples.
 
-    Arguments:
-        - strict: checks the quality and sequence labels are the same
+    If strict is True (default), raises RecordError when qual or seq is missing.
     """
-
     # fastq format is very simple, defined by blocks of 4 lines
     line_num = -1
     record = []
