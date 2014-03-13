@@ -9,6 +9,7 @@ from bipy.parse.record_finder import (DelimitedRecordFinder,
                                       TailedRecordFinder)
 from unittest import TestCase, main
 
+
 class TailedRecordFinderTests(TestCase):
 
     """Tests of the TailedRecordFinder factory function."""
