@@ -1,4 +1,21 @@
 #!/usr/bin/env python
+"""
+Minimal Fasta Parser (:mod:`bipy.parse.fastq`)
+=============================================
+
+.. currentmodule:: bipy.fastq.parse
+
+This module provides a function for parsing a fastq file. 
+
+Functions
+---------
+
+.. autosummary::
+   :toctree: generated/
+
+   MinimalFastqParser
+
+"""
 
 #-----------------------------------------------------------------------------
 # Copyright (c) 2013--, bipy development team.
