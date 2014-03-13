@@ -28,7 +28,7 @@ Examples
 
 >>> from bipy.parse.fasta import MinimalFastaParser
 >>> fp = "/Users/caporaso/data/gg_13_8_otus/rep_set/79_otus.fasta"
->>> s1 = SequenceCollection(MinimalFastaParser(open(fp)), DNA)
+>>> s1 = SequenceCollection.from_fasta_records(MinimalFastaParser(open(fp)), DNA)
 >>> s1
 
 
