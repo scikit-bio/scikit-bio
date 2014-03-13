@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 r"""
 Miscellaneous Utilities (:mod:`bipy.util.misc`)
-============================
+===============================================
 
 .. currentmodule:: bipy.util.misc
 
