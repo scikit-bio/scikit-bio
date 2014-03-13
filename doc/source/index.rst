@@ -15,3 +15,4 @@ API Reference
    core.distance
    core.exception
    draw.distributions
+   util.misc

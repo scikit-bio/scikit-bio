@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Tests for FASTA sequence format writer.
 """
-from bipy.util.unit_test import TestCase, main
+from unittest import TestCase, main
 from bipy.format.fasta import fasta_from_sequences, fasta_from_alignment
 
 

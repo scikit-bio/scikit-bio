@@ -11,7 +11,8 @@
 """
 from __future__ import division
 
-from bipy.util.unit_test import TestCase, main
+from unittest import TestCase, main
+from numpy.testing import assert_allclose
 from bipy.maths.stats.special import ndtri, log1p
 
 import math
@@ -30,7 +31,7 @@ class SpecialTests(TestCase):
                0.69314713056, 0.69314718056, 0.69314718106, 0.698134722071,
                1.09861228867, ]
         for p, e in zip(p_s, exp):
-            self.assertFloatEqual(log1p(p), e)
+            assert_allclose(log1p(p), e)
 
     def test_ndtri(self):
         """ndtri should give same result as implementation in cephes"""
@@ -69,7 +70,7 @@ class SpecialTests(TestCase):
                1.5547735946, 1.64485362695, 1.75068607125, 1.88079360815,
                2.05374891063, 2.32634787404, ]
         obs = [ndtri(i / 100.0) for i in range(100)]
-        self.assertFloatEqualRel(obs, exp, 1e-6)
+        assert_allclose(obs, exp, 1e-6)
 
 # execute tests if called from command line
 if __name__ == '__main__':

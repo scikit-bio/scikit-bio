@@ -10,7 +10,7 @@ from bipy.parse.record import (FieldError, Grouper, DelimitedSplitter,
                                StrictFieldWrapper, raise_unknown_field,
                                FieldMorpher)
 
-from bipy.util.unit_test import TestCase, main
+from unittest import TestCase, main
 
 
 class recordsTests(TestCase):

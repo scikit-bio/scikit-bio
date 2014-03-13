@@ -15,7 +15,7 @@ from copy import deepcopy
 
 from bipy.app.parameters import (FilePath, ValuedParameter, FlagParameter,
                                  MixedParameter)
-from bipy.util.unit_test import TestCase, main
+from unittest import TestCase, main
 from bipy.app.util import (CommandLineApplication, ResultPath,
                            ApplicationError, ParameterIterBase,
                            ParameterCombinations, cmdline_generator,

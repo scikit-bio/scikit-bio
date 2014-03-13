@@ -4,7 +4,7 @@
 # You can set these variables from the command line.
 
 # Turn warnings into errors.
-SPHINXOPTS    =
+SPHINXOPTS    = -W
 SPHINXBUILD   = sphinx-build
 PAPER         =
 BUILDDIR      = build
