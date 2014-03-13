@@ -33,7 +33,7 @@ class TestsHelper(TestCase):
 
     # How many times a p-value should be tested to fall in a given range
     # before failing the test.
-    p_val_tests = 10
+    p_val_tests = 20
 
     def assertCorrectPValue(self, exp_min, exp_max, fn, args=None,
                             kwargs=None, p_val_idx=0):
