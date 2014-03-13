@@ -5,7 +5,7 @@ Minimal Fasta Parser (:mod:`bipy.parse.fastq`)
 
 .. currentmodule:: bipy.fastq.parse
 
-This module provides a function for parsing a fastq file. 
+This module provides a function for parsing a fastq file.
 
 Functions
 ---------
@@ -25,6 +25,7 @@ Functions
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
+
 def MinimalFastqParser(data, strict=True):
     """yields name, seq, qual from fastq file
 
@@ -39,8 +40,8 @@ def MinimalFastqParser(data, strict=True):
         line_num += 1
         if line_num == 4:
             if strict:  # make sure the seq and qual labels match
-                assert record[0][1:] == record[2][1:], \
-                  'Invalid format: %s -- %s' % (record[0][1:], record[2][1:])
+                assert record[0][1:] == record[2][1:] \
+                    'Invalid format: %s -- %s' % (record[0][1:], record[2][1:])
             yield record[0][1:], record[1], record[3]
 
             line_num = 0
