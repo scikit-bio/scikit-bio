@@ -12,6 +12,21 @@
 from bipy.parse.fastq import MinimalFastqParser
 from unittest import TestCase, main
 
+class ParseFastq(TestCase):
+
+    def setUp(self):
+        """ Initialize variables to be used by the tests """
+        self.fastq_example = fastq_example.split('\n')
+        
+        
+    def test_parse(self):
+        """sequence and info objects should correctly match"""
+        for label, seq, qual in MinimalFastqParser(self.fastq_example):
+            self.assertTrue(label in data)
+            self.assertEqual(seq, data[label]["seq"])
+            self.assertEqual(qual, data[label]["qual"])
+    
+    
 data = {
 "GAPC_0015:6:1:1259:10413#0/1":
         dict(seq='AACACCAAACTTCTCCACCACGTGAGCTACAAAAG',
@@ -44,20 +59,6 @@ data = {
         dict(seq="TTGTTTCCACTTGGTTGATTTCACCCCTGAGTTTG",
              qual=r"\\\ZTYTSaLbb``\_UZ_bbcc`cc^[ac\a\Tc ".strip()) # had to add space
 }
-class ParseFastq(TestCase):
-
-    def setUp(self):
-        """ Initialize variables to be used by the tests """
-        self.fastq_example = fastq_example.split('\n')
-        
-        
-    def test_parse(self):
-        """sequence and info objects should correctly match"""
-        for label, seq, qual in MinimalFastqParser(self.fastq_example):
-            self.assertTrue(label in data)
-            self.assertEqual(seq, data[label]["seq"])
-            self.assertEqual(qual, data[label]["qual"])
-    
     
 fastq_example = r"""@GAPC_0015:6:1:1259:10413#0/1
 AACACCAAACTTCTCCACCACGTGAGCTACAAAAG
