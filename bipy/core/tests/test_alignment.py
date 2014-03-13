@@ -97,8 +97,9 @@ class SequenceCollectionTests(TestCase):
         """ degap functions as expected
         """
         expected = [(id_, seq.replace('.', '').replace('-', '')) 
-                for id_, seq in self.seqs3]
-        actual = self.s3.degap()
+                for id_, seq in self.seqs2_t]
+        expected = SequenceCollection.from_fasta_records(expected, RNASequence)
+        actual = self.s2.degap()
         self.assertEqual(actual, expected)
 
     def test_getitem(self):
@@ -185,7 +186,8 @@ class AlignmentTests(TestCase):
         """ degap functions as expected
         """
         expected = [(id_, seq.replace('.', '').replace('-', '')) 
-                for id_, seq in self.seqs1]
+                for id_, seq in self.seqs1_t]
+        expected = SequenceCollection.from_fasta_records(expected, DNASequence)
         actual = self.s1.degap()
         self.assertEqual(actual, expected)
 

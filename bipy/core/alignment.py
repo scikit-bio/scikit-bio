@@ -76,6 +76,19 @@ class SequenceCollection(object):
               description=description))
  
         return cls(data, validate=validate)
+
+    def __eq__(self, other):
+        """
+        """
+        if self.__class__ != other.__class__:
+            return False
+        elif len(self) != len(other):
+            return False
+        else:
+            for self_seq, other_seq in zip(self,other):
+                if self_seq != other_seq:
+                    return False
+        return True
     
     def __getitem__(self, index):
         """
@@ -87,11 +100,13 @@ class SequenceCollection(object):
         """
         return iter(self._data)
 
-#    def degap(self):
-#        """
-#        """
-#        result = []
-#        for 
+    def degap(self):
+        """
+        """
+        result = []
+        for seq in self:
+            result.append(seq.degap())
+        return SequenceCollection(result)
 
     def items(self):
         """
