@@ -14,4 +14,5 @@ API Reference
    core.sequence
    core.distance
    core.exception
+   parse.mothur
    util.misc
