@@ -52,22 +52,30 @@ class SequenceCollection(object):
     """
     """
 
-    def __init__(self, seqs, seq_constructor, validate=False):
+    def __init__(self, seqs, validate=False):
+       """
+       """
+       self._data = seqs
+       if validate and not self.is_valid():
+           raise SequenceCollectionError(
+               "Something is wrong, and it's your fault.")
+
+    @classmethod
+    def from_fasta_records(cls, fasta_records, seq_constructor,
+            validate=False):
         """
         """
-        self._data = []
-        for seq_id, seq in seqs:
+        data = []
+        for seq_id, seq in fasta_records:
             try:
                 identifier, description = seq_id.split(None, 1)
             except ValueError:
                 identifier = seq_id.strip()
                 description = None
-            self._data.append(seq_constructor(seq, identifier=identifier,
+            data.append(seq_constructor(seq, identifier=identifier,
               description=description))
  
-        if validate and not self.is_valid():
-            raise SequenceCollectionError(
-                "Something is wrong, and it's your fault.")
+        return cls(data, validate=validate)
     
     def __getitem__(self, index):
         """
@@ -78,6 +86,12 @@ class SequenceCollection(object):
         """
         """
         return iter(self._data)
+
+#    def degap(self):
+#        """
+#        """
+#        result = []
+#        for 
 
     def items(self):
         """
