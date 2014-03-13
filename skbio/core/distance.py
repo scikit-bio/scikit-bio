@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 r"""
 Distance matrices (:mod:`skbio.core.distance`)
-=============================================
+==============================================
 
 .. currentmodule:: skbio.core.distance
 

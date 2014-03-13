@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 r"""
 Biological sequences (:mod:`skbio.core.sequence`)
-================================================
+=================================================
 
 .. currentmodule:: skbio.core.sequence
 

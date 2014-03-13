@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 Exceptions (:mod:`skbio.core.exception`)
-=======================================
+========================================
 
 .. currentmodule:: skbio.core.exception
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 r"""
 Miscellaneous Utilities (:mod:`skbio.util.misc`)
-===============================================
+================================================
 
 .. currentmodule:: skbio.util.misc
 

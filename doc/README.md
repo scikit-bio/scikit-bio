@@ -1,11 +1,11 @@
 scikit-bio documentation
-==================
+========================
 
-This guide contains instructions for building the scikit-bio documentation, as well
-as guidelines for contributing to the documentation.
+This guide contains instructions for building the scikit-bio documentation, as
+well as guidelines for contributing to the documentation.
 
-**Note:** If you're only interested in viewing the scikit-bio documentation, visit
-[scikit-bio.org](http://scikit-bio.org).
+**Note:** If you're only interested in viewing the scikit-bio documentation,
+visit [scikit-bio.org](http://scikit-bio.org).
 
 Building the documentation
 --------------------------
@@ -22,14 +22,15 @@ An easy way to install the dependencies is via pip:
 
 Finally, you will need to install scikit-bio.
 
-**Important:** The documentation will be built for whatever version of scikit-bio is
-*currently installed* on your system (i.e., the version imported by
-```import skbio```). This may not match the code located in this repository.
-You will need to either install this version of scikit-bio somewhere (e.g., in a
-virtualenv) or point your ```PYTHONPATH``` environment variable to this code,
+**Important:** The documentation will be built for whatever version of
+scikit-bio is *currently installed* on your system (i.e., the version imported
+by ```import skbio```). This may not match the code located in this repository.
+You will need to either install this version of scikit-bio somewhere (e.g., in
+a virtualenv) or point your ```PYTHONPATH``` environment variable to this code,
 *before* building the documentation.
 
-To build the documentation, assuming you are at the top-level scikit-bio directory:
+To build the documentation, assuming you are at the top-level scikit-bio
+directory:
 
     cd doc
     make html
@@ -70,8 +71,8 @@ linked within our website, and that it maintains consistency with the rest of
 the scikit-bio docs.
 
 The easiest way to get started with documenting your code is to look at the
-docstrings in existing scikit-bio modules. A couple of modules to start with are
-```skbio.core.sequence``` and ```skbio.core.distance```. Go ahead and look
+docstrings in existing scikit-bio modules. A couple of modules to start with
+are ```skbio.core.sequence``` and ```skbio.core.distance```. Go ahead and look
 through those now. We've structured our docs in a similar way to
 [SciPy's documentation](http://docs.scipy.org/doc/scipy/reference/), so that
 may be another good place to look for examples.
@@ -88,7 +89,7 @@ start with a title for the module:
     #!/usr/bin/env python
     """
     Documentation examples (:mod:`skbio.core.example`)
-    =================================================
+    ==================================================
 
 It is important to include the ```:mod:``` Sphinx directive in the title, as
 this title will be included in the table of contents. Also make sure that the
