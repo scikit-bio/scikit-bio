@@ -101,13 +101,6 @@ class SequenceCollectionTests(TestCase):
         self.assertEqual(count, len(self.seqs1))
         self.assertRaises(StopIteration, s1_iter.next)
 
-    def test_len(self):
-        """ len functions as expected
-        """
-        self.assertEqual(len(self.s1),2)
-        self.assertEqual(len(self.s2),3)
-        self.assertEqual(len(self.s3),5)
-
     def test_is_valid(self):
         """ is_valid functions as expected
         """
@@ -119,6 +112,23 @@ class SequenceCollectionTests(TestCase):
         self.assertFalse(invalid_seqs1.is_valid())
         invalid_seqs2 = SequenceCollection(self.seqs1_t, RNASequence)
         self.assertFalse(invalid_seqs2.is_valid())
+
+    def test_len(self):
+        """ len functions as expected
+        """
+        self.assertEqual(len(self.s1),2)
+        self.assertEqual(len(self.s2),3)
+        self.assertEqual(len(self.s3),5)
+
+    def test_repr(self):
+        """
+        """
+        self.assertEqual(repr(self.s1), 
+                "<SequenceCollection: n=2; mean +/- std length=5.00 +/- 2.00>")
+        self.assertEqual(repr(self.s2), 
+                "<SequenceCollection: n=3; mean +/- std length=7.33 +/- 3.68>")
+        self.assertEqual(repr(self.s3), 
+                "<SequenceCollection: n=5; mean +/- std length=6.40 +/- 3.32>")
 
     def test_sequence_lengths(self):
         """ sequence_lengths functions as expected
