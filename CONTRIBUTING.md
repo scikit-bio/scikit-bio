@@ -52,7 +52,7 @@ Submitting code to scikit-bio
 
 scikit-bio is hosted on [GitHub](http://www.github.com), and we use GitHub's [Pull Request](https://help.github.com/articles/using-pull-requests) mechanism for accepting submissions. You should go through the following steps to submit code to scikit-bio.
 
-1. Begin by [creating an issue](https://github.com/biocore/scikit-bio/issues) describing your proposed change. This should include a description of your proposed change (is it a new feature, a bug fix, etc.), and note in the issue description that you want to work on it. If you'll be modifying existing scikit-bio file(s), you'll want to get input from the developer responsible for the relevant file(s) via a discussion on the issue tracker to let them know you what you'd like to do. The developer responsible for the code is named in the ``__maintainer__`` variable at the top of the file. Once you hear back that it is OK to make changes (i.e., they don't have local edits, they agree with the change you'd like to make, and they're comfortable with you editing their code), we will assign the issue to you on GitHub.
+1. Begin by [creating an issue](https://github.com/biocore/scikit-bio/issues) describing your proposed change. This should include a description of your proposed change (is it a new feature, a bug fix, etc.), and note in the issue description that you want to work on it. Once you hear back from a maintainer that it is OK to make changes (i.e., they dont't have local edits, they agree with the change you'd like to make, and they're comfortable with you editing their code), we will assign the issue to you on GitHub.
 
 2. [Fork](https://help.github.com/articles/fork-a-repo) the scikit-bio repository on the GitHub website to your GitHub account.
 
