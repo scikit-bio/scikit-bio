@@ -257,8 +257,9 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
   ('index', 'scikit-bio', u'scikit-bio Documentation',
-   u'scikit-bio development team', 'scikit-bio', 'One line description of project.',
-   'Miscellaneous'),
+   u'scikit-bio development team', 'scikit-bio',
+   'Core objects, functions and statistics for working with biological data '
+   'in Python.', 'Miscellaneous'),
 ]
 
 # Documents to append as an appendix to all manuals.
