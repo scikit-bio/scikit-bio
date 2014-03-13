@@ -201,7 +201,7 @@ def create_dir(dir_name, fail_on_exist=False, handle_errors_externally=False):
 
         - ``0``:  directory was safely created
         - ``1``:  directory already existed
-        - ``2``:  a file with the same name exists          
+        - ``2``:  a file with the same name exists
         - ``3``:  any other unspecified ``OSError``
 
     Notes
@@ -270,7 +270,7 @@ def handle_error_codes(dir_name, supress_errors=False,
     """
     error_code_lookup = get_create_dir_error_codes()
 
-    if error_code == None:
+    if error_code is None:
         error_code = error_code_lookup['NO_ERROR']
 
     error_strings = \
@@ -287,4 +287,4 @@ def handle_error_codes(dir_name, supress_errors=False,
     if supress_errors:
         return error_code
     else:
-        raise OSError, error_strings[error_code]
+        raise OSError(error_strings[error_code])
