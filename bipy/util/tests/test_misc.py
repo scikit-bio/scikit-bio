@@ -11,7 +11,7 @@
 from StringIO import StringIO
 
 from bipy.util.misc import safe_md5
-from bipy.util.unit_test import TestCase, main
+from unittest import TestCase, main
 
 
 class UtilTests(TestCase):
