@@ -20,7 +20,9 @@ from bipy.util.misc import (safe_md5, remove_files, curry, create_dir)
 
 
 class UtilTests(TestCase):
+
     """Test object for the miscellaneous utility functions"""
+
     def setUp(self):
         self.dirs_to_remove = []
 
@@ -71,10 +73,10 @@ class UtilTests(TestCase):
         """curry should generate the function with parameters setted"""
         curry_test = curry(cmp, 5)
         knowns = ((3, 1),
-                (9, -1),
-                (5, 0))
+                  (9, -1),
+                  (5, 0))
         for arg2, result in knowns:
-            self.assertEqual (curry_test(arg2), result)
+            self.assertEqual(curry_test(arg2), result)
 
     def test_create_dir(self):
         """create_dir creates dir and fails meaningful."""
@@ -94,7 +96,7 @@ class UtilTests(TestCase):
         self.assertEquals(create_dir(tmp_dir_path, fail_on_exist=True,
                                      handle_errors_externally=True), 1)
 
-        # return should be 1 if dir exist and fail_on_exist=False 
+        # return should be 1 if dir exist and fail_on_exist=False
         self.assertEqual(create_dir(tmp_dir_path, fail_on_exist=False), 1)
 
         # if dir not there make it and return always 0

@@ -35,7 +35,7 @@ from os import remove, makedirs
 from os.path import exists, isdir
 
 
-def safe_md5(open_file, block_size=2**20):
+def safe_md5(open_file, block_size=2 ** 20):
     """Computes an md5 sum without loading the file into memory
 
     Parameters
@@ -111,18 +111,18 @@ def curry(f, *a, **kw):
     def curried(*more_a, **more_kw):
         return f(*(a + more_a), **dict(kw, **more_kw))
 
-    ## make docstring for curried funtion
+    # make docstring for curried funtion
     curry_params = []
     if a:
         curry_params.extend([e for e in a])
     if kw:
         curry_params.extend(['%s=%s' % (k, v) for k, v in kw.items()])
-    #str it to prevent error in join()
+    # str it to prevent error in join()
     curry_params = map(str, curry_params)
 
     try:
         f_name = f.func_name
-    except:  #e.g.  itertools.groupby failed .func_name 
+    except:  # e.g.  itertools.groupby failed .func_name
         f_name = '?'
 
     curried.__doc__ = ' curry(%s,%s)\n'\
@@ -175,6 +175,7 @@ def remove_files(list_of_filepaths, error_on_missing=True):
         raise OSError("Some filepaths were not accessible: %s" %
                       '\t'.join(missing))
 
+
 def create_dir(dir_name, fail_on_exist=False, handle_errors_externally=False):
     """Create a directory safely and fail meaningfully
 
@@ -186,7 +187,7 @@ def create_dir(dir_name, fail_on_exist=False, handle_errors_externally=False):
 
     fail_on_exist: bool, optional
         if true raise an error if ``dir_name`` already exists
-    
+
     handle_errors_externally: bool, optional
         if True do not raise Errors, but return failure codes. This allows to
         handle errors locally and e.g. hint the user at a --force_overwrite
@@ -227,7 +228,7 @@ def create_dir(dir_name, fail_on_exist=False, handle_errors_externally=False):
 
     """
     error_code_lookup = get_create_dir_error_codes()
-    #pre-instanciate function with
+    # pre-instanciate function with
     ror = curry(handle_error_codes, dir_name, handle_errors_externally)
 
     if exists(dir_name):
@@ -238,23 +239,26 @@ def create_dir(dir_name, fail_on_exist=False, handle_errors_externally=False):
             else:
                 return error_code_lookup['DIR_EXISTS']
         else:
-            #must be file with same name
+            # must be file with same name
             return ror(error_code_lookup['FILE_EXISTS'])
     else:
-        #no dir there, try making it
+        # no dir there, try making it
         try:
             makedirs(dir_name)
         except OSError:
             return ror(error_code_lookup['OTHER_OS_ERROR'])
-    
+
     return error_code_lookup['NO_ERROR']
 
-#some error codes for creating a dir
+# some error codes for creating a dir
+
+
 def get_create_dir_error_codes():
     return {'NO_ERROR':      0,
             'DIR_EXISTS':    1,
             'FILE_EXISTS':   2,
-            'OTHER_OS_ERROR':3}
+            'OTHER_OS_ERROR': 3}
+
 
 def handle_error_codes(dir_name, supress_errors=False,
                        error_code=None):
@@ -265,18 +269,18 @@ def handle_error_codes(dir_name, supress_errors=False,
     error_code: the code for the error
     """
     error_code_lookup = get_create_dir_error_codes()
-    
+
     if error_code == None:
         error_code = error_code_lookup['NO_ERROR']
-    
+
     error_strings = \
-        {error_code_lookup['DIR_EXISTS'] :
-          "Directory already exists: %s" % dir_name,
-         error_code_lookup['FILE_EXISTS'] : 
-          "File with same name exists: %s" % dir_name,
-         error_code_lookup['OTHER_OS_ERROR']: 
-          "Could not create output directory: %s. " % dir_name +
-          "Check the permissions."}
+        {error_code_lookup['DIR_EXISTS']:
+         "Directory already exists: %s" % dir_name,
+         error_code_lookup['FILE_EXISTS']:
+         "File with same name exists: %s" % dir_name,
+         error_code_lookup['OTHER_OS_ERROR']:
+         "Could not create output directory: %s. " % dir_name +
+         "Check the permissions."}
 
     if error_code == error_code_lookup['NO_ERROR']:
         return error_code_lookup['NO_ERROR']
