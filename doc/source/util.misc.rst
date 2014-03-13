@@ -1,1 +1,1 @@
-.. automodule:: bipy.util.misc
+.. automodule:: skbio.util.misc

@@ -1,11 +1,11 @@
-bipy documentation
-==================
+scikit-bio documentation
+========================
 
-This guide contains instructions for building the bipy documentation, as well
-as guidelines for contributing to the documentation.
+This guide contains instructions for building the scikit-bio documentation, as
+well as guidelines for contributing to the documentation.
 
-**Note:** If you're only interested in viewing the bipy documentation, visit
-[bipy.org](http://bipy.org).
+**Note:** If you're only interested in viewing the scikit-bio documentation,
+visit [scikit-bio.org](http://scikit-bio.org).
 
 Building the documentation
 --------------------------
@@ -20,16 +20,17 @@ An easy way to install the dependencies is via pip:
 
     pip install Sphinx sphinx-bootstrap-theme
 
-Finally, you will need to install bipy.
+Finally, you will need to install scikit-bio.
 
-**Important:** The documentation will be built for whatever version of bipy is
-*currently installed* on your system (i.e., the version imported by
-```import bipy```). This may not match the code located in this repository. You
-will need to either install this version of bipy somewhere (e.g., in a
-virtualenv) or point your ```PYTHONPATH``` environment variable to this code,
+**Important:** The documentation will be built for whatever version of
+scikit-bio is *currently installed* on your system (i.e., the version imported
+by ```import skbio```). This may not match the code located in this repository.
+You will need to either install this version of scikit-bio somewhere (e.g., in
+a virtualenv) or point your ```PYTHONPATH``` environment variable to this code,
 *before* building the documentation.
 
-To build the documentation, assuming you are at the top-level bipy directory:
+To build the documentation, assuming you are at the top-level scikit-bio
+directory:
 
     cd doc
     make html
@@ -41,7 +42,7 @@ Contributing to the documentation
 
 If you would like to contribute to the documentation, whether by adding
 something entirely new or by modifying existing documentation, please first
-review our [bipy contribution guide](../CONTRIBUTING.md).
+review our [scikit-bio contribution guide](../CONTRIBUTING.md).
 
 Before submitting your changes, ensure that the documentation builds without
 any errors or warnings, and that there are no broken links:
@@ -52,32 +53,32 @@ any errors or warnings, and that there are no broken links:
 
 ### Documentation guidelines
 
-Most of bipy's API documentation is automatically generated from
+Most of scikit-bio's API documentation is automatically generated from
 [docstrings](http://legacy.python.org/dev/peps/pep-0257/#what-is-a-docstring).
 The advantage to this approach is that users can access the documentation in an
 interactive Python session or from our website as HTML. Other output forms are
 also possible, such as PDF.
 
-bipy docstrings follow the [numpydoc conventions](https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt).
+scikit-bio docstrings follow the [numpydoc conventions](https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt).
 This ensures that the docstrings are easily readable both from the interpreter
 and HTML, PDF, etc. Please read the numpydoc guidelines before continuing.
 
-### Documenting a module in bipy
+### Documenting a module in scikit-bio
 
 In addition to following the numpydoc conventions for docstrings, we have a few
 more conventions that will ensure your documentation is correctly built and
 linked within our website, and that it maintains consistency with the rest of
-the bipy docs.
+the scikit-bio docs.
 
 The easiest way to get started with documenting your code is to look at the
-docstrings in existing bipy modules. A couple of modules to start with are
-```bipy.core.sequence``` and ```bipy.core.distance```. Go ahead and look
+docstrings in existing scikit-bio modules. A couple of modules to start with
+are ```skbio.core.sequence``` and ```skbio.core.distance```. Go ahead and look
 through those now. We've structured our docs in a similar way to
 [SciPy's documentation](http://docs.scipy.org/doc/scipy/reference/), so that
 may be another good place to look for examples.
 
 We'll take a top-down approach by discussing how to document a new module that
-you'd like to add to bipy (let's call it ```bipy/core/example.py```).
+you'd like to add to scikit-bio (let's call it ```skbio/core/example.py```).
 
 #### Module docstring
 
@@ -87,8 +88,8 @@ start with a title for the module:
 
     #!/usr/bin/env python
     """
-    Documentation examples (:mod:`bipy.core.example`)
-    =================================================
+    Documentation examples (:mod:`skbio.core.example`)
+    ==================================================
 
 It is important to include the ```:mod:``` Sphinx directive in the title, as
 this title will be included in the table of contents. Also make sure that the
@@ -96,15 +97,15 @@ title underline is the same length as the title.
 
 We also need to include another Sphinx directive below this:
 
-    .. currentmodule:: bipy.core.example
+    .. currentmodule:: skbio.core.example
 
 This directive tells Sphinx that other classes, functions, etc. that we will
-reference are located in the ```bipy.core.example``` module.
+reference are located in the ```skbio.core.example``` module.
 
 Next, include a more detailed description of the module. For example:
 
     This module consists of several example classes and functions to illustrate
-    the bipy documentation system.
+    the scikit-bio documentation system.
 
 Following that, list any classes, functions, and exceptions that you'd like
 documentation generated for. Note that you do *not* need to include every
@@ -156,7 +157,7 @@ that they can be automatically tested (e.g., using ```nosetests
 
     Run the ``example_function1`` function:
 
-    >>> from bipy.core.example import example_function1
+    >>> from skbio.core.example import example_function1
     >>> example_function1("hello", "world")
     hello world!
 
@@ -195,31 +196,31 @@ Until now, we've only been editing docstrings, which are attached to Python
 code. The final step is to hook up this new module's docstrings to the
 documentation build system:
 
-1. Make sure you're within the ```bipy/doc``` directory.
+1. Make sure you're within the ```scikit-bio/doc``` directory.
 2. Create a new file with the same name as your module under the ```source```
-   directory. Do not include ```bipy``` as part of the name, and use ```.rst```
-   as the suffix. For example, ```source/core.example.rst```.
+   directory. Do not include ```skbio``` as part of the name, and use
+   ```.rst``` as the suffix. For example, ```source/core.example.rst```.
 3. Add the following line to ```source/core.example.rst``` to have your
    module's docstring pulled into the document:
 
     ```
-    .. automodule:: bipy.core.example
+    .. automodule:: skbio.core.example
     ```
 
 4. Add the following line to ```source/index.rst``` to add the new page to the
    top-level table of contents:
 
     ```
-    bipy.core.example
+    skbio.core.example
     ```
 
 That's it! You can now try building the documentation, which should include the
 documentation for your new module!
 
-### Documenting a subpackage in bipy
+### Documenting a subpackage in scikit-bio
 
 The process of documenting a subpackage is very similar to documenting a module
-in bipy. The only difference is that the module docstring goes in the
+in scikit-bio. The only difference is that the module docstring goes in the
 subpackage's ```__init__.py```.
 
 ### Troubleshooting
