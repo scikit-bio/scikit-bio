@@ -19,7 +19,7 @@ install:
   - pip install . --no-deps
 script:
   - nosetests --with-doctest
-  - pep8 bipy setup.py
+  - pep8 skbio setup.py
   - pushd doc
   - make clean
   - make html
