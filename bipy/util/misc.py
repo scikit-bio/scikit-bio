@@ -15,6 +15,7 @@ Functions
    :toctree: generated/
 
    safe_md5
+   remove_files
 
 """
 from __future__ import division
@@ -81,10 +82,25 @@ def remove_files(list_of_filepaths, error_on_missing=True):
     error_on_missing : bool
         whether or not the function should raise an error if a file is not found
 
+    Raises
+    ------
+
+    OSError
+        If a filepath in the list does not exist
+
+
     Examples
     --------
 
-    
+    >>> from tempfile import NamedTemporaryFile
+    >>> from os.path import exists
+    >>> from bipy.util.misc import remove_files
+    >>> h = NamedTemporaryFile(delete=False)
+    >>> exists(h.name)
+    True
+    >>> remove_files([h.name])
+    >>> exists(h.name)
+    False
 
     """
     missing = []
