@@ -10,7 +10,7 @@
 
 from itertools import izip
 from collections import defaultdict
-from bipy.core.workflow import Workflow, not_none
+from skbio.core.workflow import Workflow, not_none
 from unittest import TestCase, main
 
 

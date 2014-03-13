@@ -12,7 +12,7 @@ from StringIO import StringIO
 from tempfile import NamedTemporaryFile
 from os.path import exists
 
-from bipy.util.misc import safe_md5, remove_files
+from skbio.util.misc import safe_md5, remove_files
 from unittest import TestCase, main
 
 

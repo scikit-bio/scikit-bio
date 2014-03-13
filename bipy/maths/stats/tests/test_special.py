@@ -13,7 +13,7 @@ from __future__ import division
 
 from unittest import TestCase, main
 from numpy.testing import assert_allclose
-from bipy.maths.stats.special import ndtri, log1p
+from skbio.maths.stats.special import ndtri, log1p
 
 import math
 

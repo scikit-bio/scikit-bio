@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 r"""
-Distance matrices (:mod:`bipy.core.distance`)
+Distance matrices (:mod:`skbio.core.distance`)
 =============================================
 
-.. currentmodule:: bipy.core.distance
+.. currentmodule:: skbio.core.distance
 
 This module provides functionality for serializing, deserializing, and
 manipulating distance matrices in memory. There are multiple distance matrix
@@ -42,7 +42,7 @@ Assume we have the following delimited text file::
 Load a distance matrix from the file:
 
 >>> from StringIO import StringIO
->>> from bipy.core.distance import DistanceMatrix
+>>> from skbio.core.distance import DistanceMatrix
 >>> dm_f = StringIO("\ta\tb\tc\n"
 ...                 "a\t0.0\t0.5\t1.0\n"
 ...                 "b\t0.5\t0.0\t0.75\n"
@@ -98,7 +98,7 @@ from itertools import izip
 import numpy as np
 from scipy.spatial.distance import squareform
 
-from bipy.core.exception import (DistanceMatrixError,
+from skbio.core.exception import (DistanceMatrixError,
                                  DistanceMatrixFormatError, IDMismatchError,
                                  MissingDataError, MissingHeaderError,
                                  MissingIDError)

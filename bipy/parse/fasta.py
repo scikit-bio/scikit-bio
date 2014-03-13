@@ -8,8 +8,8 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-from bipy.parse.record_finder import LabeledRecordFinder
-from bipy.parse.record import RecordError
+from skbio.parse.record_finder import LabeledRecordFinder
+from skbio.parse.record import RecordError
 
 
 def is_fasta_label(x):

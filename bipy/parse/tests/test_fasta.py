@@ -8,8 +8,8 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-from bipy.parse.fasta import MinimalFastaParser
-from bipy.parse.record import RecordError
+from skbio.parse.fasta import MinimalFastaParser
+from skbio.parse.record import RecordError
 from unittest import TestCase, main
 
 

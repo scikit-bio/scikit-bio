@@ -2,7 +2,7 @@
 """Unit tests for parser support libraries dealing with records.
 """
 
-from bipy.parse.record import (FieldError, Grouper, DelimitedSplitter,
+from skbio.parse.record import (FieldError, Grouper, DelimitedSplitter,
                                GenericRecord, MappedRecord, TypeSetter,
                                list_adder, dict_adder,
                                LineOrientedConstructor, int_setter,

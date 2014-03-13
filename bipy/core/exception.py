@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 """
-Exceptions (:mod:`bipy.core.exception`)
+Exceptions (:mod:`skbio.core.exception`)
 =======================================
 
-.. currentmodule:: bipy.core.exception
+.. currentmodule:: skbio.core.exception
 
 This module defines custom exception classes used throughout the core bipy
 codebase.

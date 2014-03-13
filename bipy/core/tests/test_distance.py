@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Unit tests for the bipy.core.distance module."""
+"""Unit tests for the skbio.core.distance module."""
 from __future__ import division
 
 #-----------------------------------------------------------------------------
@@ -16,9 +16,9 @@ from tempfile import TemporaryFile
 
 import numpy as np
 
-from bipy.core.distance import (randdm, DistanceMatrix,
+from skbio.core.distance import (randdm, DistanceMatrix,
                                 SymmetricDistanceMatrix)
-from bipy.core.exception import (DistanceMatrixError,
+from skbio.core.exception import (DistanceMatrixError,
                                  DistanceMatrixFormatError, IDMismatchError,
                                  MissingDataError, MissingHeaderError,
                                  MissingIDError)
@@ -45,7 +45,7 @@ class DistanceMatrixTestData(TestCase):
 
         self.dm_3x3_whitespace_f = StringIO('\n'.join(DM_3x3_WHITESPACE_F))
 
-        self.tmp_f = TemporaryFile(prefix='bipy.core.tests.test_distance',
+        self.tmp_f = TemporaryFile(prefix='skbio.core.tests.test_distance',
                                    suffix='.txt')
 
         self.bad_dm_f1 = StringIO(BAD_DM_F1)
@@ -488,7 +488,7 @@ class SymmetricDistanceMatrixTests(DistanceMatrixTestData):
 
 
 class RandomDistanceMatrixTests(TestCase):
-    """Tests for bipy.core.distance.randdm."""
+    """Tests for skbio.core.distance.randdm."""
 
     def test_default_usage(self):
         """Test generating random distance matrices."""

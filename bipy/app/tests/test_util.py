@@ -13,10 +13,10 @@ from os import remove, system, rmdir, getcwd, walk
 from os.path import exists
 from copy import deepcopy
 
-from bipy.app.parameters import (FilePath, ValuedParameter, FlagParameter,
+from skbio.app.parameters import (FilePath, ValuedParameter, FlagParameter,
                                  MixedParameter)
 from unittest import TestCase, main
-from bipy.app.util import (CommandLineApplication, ResultPath,
+from skbio.app.util import (CommandLineApplication, ResultPath,
                            ApplicationError, ParameterIterBase,
                            ParameterCombinations, cmdline_generator,
                            ApplicationNotFoundError, get_tmp_filename,

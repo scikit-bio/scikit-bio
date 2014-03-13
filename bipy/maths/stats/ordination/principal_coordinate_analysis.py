@@ -13,7 +13,7 @@ import warnings
 import numpy as np
 
 from .base import Ordination, OrdinationResults
-from bipy.core.distance import SymmetricDistanceMatrix
+from skbio.core.distance import SymmetricDistanceMatrix
 
 # - In cogent, after computing eigenvalues/vectors, the imaginary part
 #   is dropped, if any. We know for a fact that the eigenvalues are

@@ -12,7 +12,7 @@ from __future__ import division
 from warnings import filterwarnings
 
 from unittest import TestCase, main
-from bipy.maths.stats.test import (G_2_by_2, G_fit, t_paired, t_one_sample,
+from skbio.maths.stats.test import (G_2_by_2, G_fit, t_paired, t_one_sample,
                                    t_two_sample, mc_t_two_sample,
                                    _permute_observations, t_one_observation,
                                    correlation_t, ZeroExpectedError, fisher,

@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 r"""
-Biological sequences (:mod:`bipy.core.sequence`)
+Biological sequences (:mod:`skbio.core.sequence`)
 ================================================
 
-.. currentmodule:: bipy.core.sequence
+.. currentmodule:: skbio.core.sequence
 
 This module provides functionality for working with biological sequences,
 including generic sequences, nucelotide sequences, DNA sequences, and RNA
@@ -24,7 +24,7 @@ Classes
 
 Examples
 --------
->>> from bipy.core.sequence import DNASequence, RNASequence
+>>> from skbio.core.sequence import DNASequence, RNASequence
 
 New sequences are created with optional identifier and description fields.
 
@@ -82,7 +82,7 @@ from itertools import izip
 
 from scipy.spatial.distance import hamming
 
-from bipy.core.exception import BiologicalSequenceError
+from skbio.core.exception import BiologicalSequenceError
 
 
 class BiologicalSequence(Sequence):
@@ -128,7 +128,7 @@ class BiologicalSequence(Sequence):
 
         Raises
         ------
-        bipy.core.exception.BiologicalSequenceError
+        skbio.core.exception.BiologicalSequenceError
           If ``validate == True`` and is_valid == False``.
 
         See Also
@@ -139,7 +139,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from bipy.core.sequence import BiologicalSequence
+        >>> from skbio.core.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUCGUGAAGGA')
         >>> t = BiologicalSequence('GGUCCUGAAGGU')
 
@@ -169,7 +169,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from bipy.core.sequence import BiologicalSequence
+        >>> from skbio.core.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUCGUGAAGGA')
         >>> 'GGU' in s
         True
@@ -199,7 +199,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from bipy.core.sequence import BiologicalSequence
+        >>> from skbio.core.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUCGUGAAGGA')
         >>> t = BiologicalSequence('GGUCGUGAAGGA')
         >>> s == t
@@ -231,7 +231,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from bipy.core.sequence import BiologicalSequence
+        >>> from skbio.core.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUCGUGAAGGA')
         >>> s[1]
         'G'
@@ -253,7 +253,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from bipy.core.sequence import BiologicalSequence
+        >>> from skbio.core.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUCGUGAAGGA')
         >>> hash(s)
         -1080059835405276950
@@ -271,7 +271,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from bipy.core.sequence import BiologicalSequence
+        >>> from skbio.core.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUC')
         >>> for c in s: print c
         G
@@ -292,7 +292,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from bipy.core.sequence import BiologicalSequence
+        >>> from skbio.core.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUC')
         >>> len(s)
         4
@@ -320,7 +320,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from bipy.core.sequence import BiologicalSequence
+        >>> from skbio.core.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUCGUGAAGGA')
         >>> t = BiologicalSequence('GGUCGUGAAGGA')
         >>> s != t
@@ -349,7 +349,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from bipy.core.sequence import BiologicalSequence
+        >>> from skbio.core.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUCGUGAAGGA')
         >>> repr(s)
         '<BiologicalSequence: GGUCGUGAAG... (length: 12)>'
@@ -379,7 +379,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from bipy.core.sequence import BiologicalSequence
+        >>> from skbio.core.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUC')
         >>> for c in reversed(s): print c
         C
@@ -409,7 +409,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from bipy.core.sequence import BiologicalSequence
+        >>> from skbio.core.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUC')
         >>> str(s)
         'GGUC'
@@ -498,7 +498,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from bipy.core.sequence import BiologicalSequence
+        >>> from skbio.core.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUC')
         >>> s.count('G')
         2
@@ -521,7 +521,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from bipy.core.sequence import BiologicalSequence
+        >>> from skbio.core.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUC-C--ACGTT-C.')
         >>> t = s.degap()
         >>> t
@@ -553,19 +553,19 @@ class BiologicalSequence(Sequence):
 
         Raises
         ------
-        bipy.core.exception.BiologicalSequenceError
+        skbio.core.exception.BiologicalSequenceError
             If ``len(self) != len(other)``.
 
         See Also
         --------
         fraction_diff
         fraction_same
-        bipy.core.distance.DistanceMatrix
+        skbio.core.distance.DistanceMatrix
         scipy.spatial.distance.hamming
 
         Examples
         --------
-        >>> from bipy.core.sequence import BiologicalSequence
+        >>> from skbio.core.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUC')
         >>> t = BiologicalSequence('AGUC')
         >>> s.distance(t)
@@ -598,7 +598,7 @@ class BiologicalSequence(Sequence):
 
         Raises
         ------
-        bipy.core.exception.BiologicalSequenceError
+        skbio.core.exception.BiologicalSequenceError
             If ``len(self) != len(other)``.
 
         See Also
@@ -618,7 +618,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from bipy.core.sequence import BiologicalSequence
+        >>> from skbio.core.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUC')
         >>> t = BiologicalSequence('AGUC')
         >>> s.fraction_diff(t)
@@ -643,7 +643,7 @@ class BiologicalSequence(Sequence):
 
         Raises
         ------
-        bipy.core.exception.BiologicalSequenceError
+        skbio.core.exception.BiologicalSequenceError
             If ``len(self) != len(other)``.
 
         See Also
@@ -654,7 +654,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from bipy.core.sequence import BiologicalSequence
+        >>> from skbio.core.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUC')
         >>> t = BiologicalSequence('AGUC')
         >>> s.fraction_same(t)
@@ -698,7 +698,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from bipy.core.sequence import BiologicalSequence
+        >>> from skbio.core.sequence import BiologicalSequence
         >>> s = BiologicalSequence('-ACCGA-TA-')
         >>> m = s.gap_maps()
         >>> m[0]
@@ -736,7 +736,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from bipy.core.sequence import BiologicalSequence
+        >>> from skbio.core.sequence import BiologicalSequence
         >>> s = BiologicalSequence('..ACG--TT-')
         >>> s.gap_vector()
         [True, True, False, False, False, True, True, False, False, True]
@@ -801,7 +801,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from bipy.core.sequence import BiologicalSequence
+        >>> from skbio.core.sequence import BiologicalSequence
         >>> s = BiologicalSequence('ACACGACGTT-')
         >>> s.index('ACG')
         2
@@ -835,7 +835,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from bipy.core.sequence import BiologicalSequence
+        >>> from skbio.core.sequence import BiologicalSequence
         >>> BiologicalSequence.is_gap('.')
         True
         >>> BiologicalSequence.is_gap('P')
@@ -858,7 +858,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from bipy.core.sequence import BiologicalSequence
+        >>> from skbio.core.sequence import BiologicalSequence
         >>> s = BiologicalSequence('ACACGACGTT')
         >>> s.is_gapped()
         False
@@ -913,7 +913,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from bipy.core.sequence import BiologicalSequence
+        >>> from skbio.core.sequence import BiologicalSequence
         >>> s = BiologicalSequence('ACACGACGTT')
         >>> print s.to_fasta(terminal_character="")
         >
@@ -990,7 +990,7 @@ class NucleotideSequence(BiologicalSequence):
 
         Raises
         ------
-        bipy.core.exception.BiologicalSequenceError
+        skbio.core.exception.BiologicalSequenceError
             If a character is present in the `NucleotideSequence` that is not
             in the complement map.
 
@@ -1022,7 +1022,7 @@ class NucleotideSequence(BiologicalSequence):
 
         Raises
         ------
-        bipy.core.exception.BiologicalSequenceError
+        skbio.core.exception.BiologicalSequenceError
             If a character is present in the `NucleotideSequence` that is not
             in `self.complement_map`.
 
@@ -1045,7 +1045,7 @@ class NucleotideSequence(BiologicalSequence):
 
         Raises
         ------
-        bipy.core.exception.BiologicalSequenceError
+        skbio.core.exception.BiologicalSequenceError
             If a character is present in `other` that is not in the
             `self.complement_map`.
 
@@ -1067,7 +1067,7 @@ class NucleotideSequence(BiologicalSequence):
 
         Raises
         ------
-        bipy.core.exception.BiologicalSequenceError
+        skbio.core.exception.BiologicalSequenceError
             If a character is present in the `NucleotideSequence` that is not
             in `self.complement_map`.
 

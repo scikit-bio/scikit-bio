@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 r"""
-Miscellaneous Utilities (:mod:`bipy.util.misc`)
+Miscellaneous Utilities (:mod:`skbio.util.misc`)
 ===============================================
 
-.. currentmodule:: bipy.util.misc
+.. currentmodule:: skbio.util.misc
 
 This module provides miscellaneous useful utility classes and methods that do
 not fit in any specific module.
@@ -58,7 +58,7 @@ def safe_md5(open_file, block_size=2**20):
     --------
 
     >>> from StringIO import StringIO
-    >>> from bipy.util.misc import safe_md5
+    >>> from skbio.util.misc import safe_md5
     >>> fd = StringIO("foo bar baz") # open file like object
     >>> x = safe_md5(fd)
     >>> x.hexdigest()
@@ -97,7 +97,7 @@ def remove_files(list_of_filepaths, error_on_missing=True):
 
     >>> from tempfile import NamedTemporaryFile
     >>> from os.path import exists
-    >>> from bipy.util.misc import remove_files
+    >>> from skbio.util.misc import remove_files
     >>> h = NamedTemporaryFile(delete=False)
     >>> exists(h.name) # it exists
     True

@@ -9,7 +9,7 @@
 #-----------------------------------------------------------------------------
 
 from unittest import TestCase, main
-from bipy.app.parameters import (FlagParameter, ValuedParameter,
+from skbio.app.parameters import (FlagParameter, ValuedParameter,
                                  MixedParameter, Parameters,
                                  ParameterError, FilePath)
 

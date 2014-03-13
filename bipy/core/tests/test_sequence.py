@@ -10,10 +10,10 @@
 
 from unittest import TestCase, main
 
-from bipy.core.sequence import (
+from skbio.core.sequence import (
     BiologicalSequence, NucleotideSequence, DNASequence, RNASequence,
     DNA, RNA)
-from bipy.core.exception import BiologicalSequenceError
+from skbio.core.exception import BiologicalSequenceError
 
 
 class BiologicalSequenceTests(TestCase):

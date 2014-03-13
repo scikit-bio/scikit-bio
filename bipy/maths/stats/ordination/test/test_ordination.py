@@ -17,8 +17,8 @@ import numpy as np
 import numpy.testing as npt
 from scipy.spatial.distance import pdist
 
-from bipy.maths.stats.ordination import CA, RDA, CCA, PCoA
-from bipy.core.distance import SymmetricDistanceMatrix
+from skbio.maths.stats.ordination import CA, RDA, CCA, PCoA
+from skbio.core.distance import SymmetricDistanceMatrix
 
 
 def get_data_path(fn):

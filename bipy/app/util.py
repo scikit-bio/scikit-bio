@@ -16,7 +16,7 @@ from tempfile import gettempdir
 from copy import deepcopy
 from itertools import product
 
-from bipy.app.parameters import Parameters, FilePath
+from skbio.app.parameters import Parameters, FilePath
 
 # the following are used to create temp file names
 from string import ascii_letters, digits
