@@ -21,8 +21,9 @@ Functions
 .. autosummary::
    :toctree: generated/
 
-   build_trie
-   build_prefix_map
+Examples
+--------
+
 """
 from __future__ import division
 
@@ -36,32 +37,32 @@ from __future__ import division
 
 
 class _Compressed_Node(object):
-    """docstring for _Compressed_Node"""
+    """Represents a node in the compressed trie
+
+    Parameters
+    ----------
+    key : string
+        the key attached to the node
+
+    values : list of objects, optional
+        the values attached to this node
+
+    Attributes
+    ----------
+    values : list of objects
+        the values attached to this node
+    key : string
+        the key attached to the node
+    children : dict of {string: _Compressed_Node}
+        the children nodes below this node
+    """
 
     def __init__(self, key, values=None):
-        """Creates a new node"""
         self.values = values or []
         self.key = key
         self.children = {}
 
-    def __nonzero__(self):
-        """Checks if Node contains any data."""
-        return (self.key != "" or len(self.values) > 0
-                or len(self.children.keys()) > 0)
-
-    def __len__(self):
-        """Counts the number of sequences in the Trie"""
-        l = 0
-        for n in self.children.values():
-            l += len(n)
-        l += len(self.values)
-        return l
-
-    def _to_string(self, depth=0):
-        """Debugging method to display the Node's content.
-
-        depth: indentation level
-        """
+    def __str__(self, depth=0):
         s = ["\n%skey %s" % (depth * '\t', self.key)]
         #s = ["\n" + depth * '\t' + "key %s" % self.key]
         if self.values:
@@ -75,18 +76,63 @@ class _Compressed_Node(object):
             # s.append(depth*'\t'+"}\n")
         return "".join(s)
 
+    def __nonzero__(self):
+        return (self.key != "" or len(self.values) > 0
+                or len(self.children.keys()) > 0)
+
+    def __len__(self):
+        l = 0
+        for n in self.children.values():
+            l += len(n)
+        l += len(self.values)
+        return l
+
+    @property
     def size(self):
-        """Returns number of nodes."""
+        """int with the number of nodes below the node"""
         s = 1
         for n in self.children.values():
-            s += n.size()
+            s += n.size
         return s
 
-    def insert(self, key, value):
-        """Insert a key into the Trie.
+    @property
+    def prefix_map(self):
+        """Dict with the prefix map
 
-        key: The key of the entry
-        value: The value that should be stored for this key
+        Dictionary of {values: list of values} containing the prefix map
+            of this node
+        """
+        mapping = {}
+
+        if len(self.children) == 0:
+            # we have a leaf
+            mapping = {self.values[0]: self.values[1:]}
+        else:
+            # we are at an internal node
+            for child in self.children.values():
+                mapping.update(child.prefix_map)
+            # get largest group
+            n = -1
+            key_largest = None
+            for key, value in mapping.iteritems():
+                if len(value) > n:
+                    n = len(value)
+                    key_largest = key
+            # append this node's values
+            mapping[key_largest].extend(self.values)
+
+        return mapping
+
+    def insert(self, key, value):
+        """Inserts key with value in the node
+
+        Parameters
+        ----------
+        key : string
+            The string key attached to the value
+
+        value : object
+            Object to attach to the key
         """
         node_key_len = len(self.key)
         length = min(node_key_len, len(key))
@@ -132,7 +178,15 @@ class _Compressed_Node(object):
     def find(self, key):
         """Searches for key and returns values stored for the key.
 
-        key: the key whose values should be retuned.
+        Parameters
+        ----------
+        key : string
+
+
+        Returns
+        -------
+        object
+            The value attached to the key
         """
         #key exhausted
         if len(key) == 0:
@@ -158,29 +212,6 @@ class _Compressed_Node(object):
                 return node.find(key[index:])
         return []
 
-    def prefixMap(self):
-        """Builds a prefix map from sequences stored in Trie."""
-        mapping = {}
-
-        if len(self.children) == 0:
-            # we have a leaf
-            mapping = {self.values[0]: self.values[1:]}
-        else:
-            # we are at an internal node
-            for child in self.children.values():
-                mapping.update(child.prefixMap())
-            # get largest group
-            n = -1
-            key_largest = None
-            for key, value in mapping.iteritems():
-                if len(value) > n:
-                    n = len(value)
-                    key_largest = key
-            # append this node's values
-            mapping[key_largest].extend(self.values)
-
-        return mapping
-
 
 class Compressed_Trie:
     """ A compressed Trie for a list of (key, value) pairs
@@ -203,10 +234,10 @@ class Compressed_Trie:
                 self.insert(seq, value)
 
     def __str__(self):
-        return self._root._to_string()
+        return self._root.__str__()
 
     def __nonzero__(self):
-        return (self._root.__nonzero__())
+        return self._root.__nonzero__()
 
     def __len__(self):
         return len(self._root)
@@ -220,7 +251,7 @@ class Compressed_Trie:
     def prefix_map(self):
         """Dict with the prefix map
 
-        Dictionary of {value: list of values} containing the prefix map
+        Dictionary of {values: list of values} containing the prefix map
         """
         return self._root.prefixMap()
 
@@ -230,11 +261,24 @@ class Compressed_Trie:
         Parameters
         ----------
         key : string
+            The string key attached to the value
 
-        value : string
+        value : object
+            Object to attach to the key
         """
         self._root.insert(key, value)
 
     def find(self, key):
-        """Returns value for key in Trie."""
+        """Searches for key and returns values stored for the key.
+
+        Parameters
+        ----------
+        key : string
+
+
+        Returns
+        -------
+        object
+            The value attached to the key
+        """
         return self._root.find(key)
