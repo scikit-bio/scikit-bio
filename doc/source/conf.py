@@ -6,6 +6,9 @@ import sphinx_bootstrap_theme
 
 import bipy
 
+# NOTE: parts of this file were taken from scipy's doc/source/conf.py. See
+# bipy/licenses/scipy.txt for scipy's license.
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -27,6 +30,23 @@ extensions = [
     'sphinx.ext.doctest',
     'sphinx.ext.autosummary'
 ]
+
+# Determine if the matplotlib has a recent enough version of the
+# plot_directive.
+try:
+    from matplotlib.sphinxext import plot_directive
+except ImportError:
+    use_matplotlib_plot_directive = False
+else:
+    try:
+        use_matplotlib_plot_directive = (plot_directive.__version__ >= 2)
+    except AttributeError:
+        use_matplotlib_plot_directive = False
+
+if use_matplotlib_plot_directive:
+    extensions.append('matplotlib.sphinxext.plot_directive')
+else:
+    raise RuntimeError("You need a recent enough version of matplotlib")
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -275,3 +295,44 @@ texinfo_documents = [
 
 # -- Options for autosummary ----------------------------------------------
 autosummary_generate = glob.glob('*.rst')
+
+# -- Options for numpydoc -------------------------------------------------
+# Generate plots for example sections
+numpydoc_use_plots = True
+
+#------------------------------------------------------------------------------
+# Plot
+#------------------------------------------------------------------------------
+plot_pre_code = """
+import numpy as np
+import scipy as sp
+np.random.seed(123)
+"""
+plot_include_source = True
+#plot_formats = [('png', 96), 'pdf']
+#plot_html_show_formats = False
+
+import math
+phi = (math.sqrt(5) + 1)/2
+
+font_size = 13*72/96.0  # 13 px
+
+plot_rcparams = {
+    'font.size': font_size,
+    'axes.titlesize': font_size,
+    'axes.labelsize': font_size,
+    'xtick.labelsize': font_size,
+    'ytick.labelsize': font_size,
+    'legend.fontsize': font_size,
+    'figure.figsize': (3*phi, 3),
+    'figure.subplot.bottom': 0.2,
+    'figure.subplot.left': 0.2,
+    'figure.subplot.right': 0.9,
+    'figure.subplot.top': 0.85,
+    'figure.subplot.wspace': 0.4,
+    'text.usetex': False,
+}
+
+if not use_matplotlib_plot_directive:
+    import matplotlib
+    matplotlib.rcParams.update(plot_rcparams)
