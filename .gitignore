@@ -41,3 +41,6 @@ nosetests.xml
 
 # vi
 .*.swp
+
+# Sphinx builds
+doc/source/generated
