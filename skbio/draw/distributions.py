@@ -94,6 +94,7 @@ def boxplots(distributions, x_values=None, x_tick_labels=None, title=None,
     See Also
     --------
     matplotlib.pyplot.boxplot
+    scipy.stats.ttest_ind
 
     Notes
     -----
