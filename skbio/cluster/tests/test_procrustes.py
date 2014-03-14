@@ -2,7 +2,7 @@
 from __future__ import division
 
 #-----------------------------------------------------------------------------
-# Copyright (c) 2013--, bipy development team.
+# Copyright (c) 2013--, skbio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -13,8 +13,8 @@ from unittest import TestCase, main
 
 import numpy as np
 from numpy.testing import assert_equal, assert_almost_equal, assert_allclose
-from bipy.cluster.procrustes import (procrustes, _get_disparity, _center,
-                                     _normalize)
+from skbio.cluster.procrustes import (procrustes, _get_disparity, _center,
+                                      _normalize)
 
 
 class procrustesTests(TestCase):
