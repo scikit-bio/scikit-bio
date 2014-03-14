@@ -110,7 +110,8 @@ class DistributionsTests(TestCase):
         """_validate_input() should raise a ValueError on sample_names that are
         an invalid length."""
         self.assertRaises(ValueError, _validate_input,
-                          self.ValidSingleSampleData, None, None, ["Men", "Women"])
+                          self.ValidSingleSampleData, None, None,
+                          ["Men", "Women"])
 
     def test_validate_input_all_valid_input(self):
         """_validate_input() should return valid information about the data
@@ -167,19 +168,21 @@ class DistributionsTests(TestCase):
             out = StringIO()
             sys.stdout = out
             self.assertEqual(_get_distribution_markers('colors', None, 10),
-                             ['b', 'g', 'r', 'c', 'm', 'y', 'w', 'b', 'g', 'r'])
+                             ['b', 'g', 'r', 'c', 'm', 'y', 'w', 'b',
+                              'g', 'r'])
             self.assertEqual(_get_distribution_markers('symbols',
-                                                       ['^', '>', '<'], 5), ['^', '>', '<', '^', '>'])
+                                                       ['^', '>', '<'], 5),
+                             ['^', '>', '<', '^', '>'])
             output = out.getvalue().strip()
-            self.assertEqual(output, "There are not enough markers to "
-                             "uniquely represent each distribution in your dataset. "
-                             "You may want to provide a list of markers that is at "
-                             "least as large as the number of distributions in your "
-                             "dataset.\nThere are not enough markers to "
-                             "uniquely represent each distribution in your dataset. "
-                             "You may want to provide a list of markers that is at "
-                             "least as large as the number of distributions in your "
-                             "dataset.")
+            self.assertEqual(
+                output,
+                "There are not enough markers to uniquely represent each "
+                "distribution in your dataset. You may want to provide a "
+                "list of markers that is at least as large as the number of "
+                "distributions in your dataset.\nThere are not enough markers "
+                "to uniquely represent each distribution in your dataset. You "
+                "may want to provide a list of markers that is at least as "
+                "large as the number of distributions in your dataset.")
         finally:
             sys.stdout = saved_stdout
 
@@ -354,11 +357,10 @@ class DistributionsTests(TestCase):
     def test_grouped_distributions_bar(self):
         """Should return a valid barchart Figure object."""
         fig = grouped_distributions('bar', self.ValidTypicalData,
-                                         [1, 4, 10, 11], ["T0",
-                                                          "T1", "T2", "T3"],
-                                         ["Infants", "Children",
-                                             "Teens"], ['b', 'r', 'g'],
-                                         "x-axis label", "y-axis label", "Test")
+                                    [1, 4, 10, 11], ["T0", "T1", "T2", "T3"],
+                                    ["Infants", "Children", "Teens"],
+                                    ['b', 'r', 'g'], "x-axis label",
+                                    "y-axis label", "Test")
         ax = fig.get_axes()[0]
         self.assertEqual(ax.get_title(), "Test")
         self.assertEqual(ax.get_xlabel(), "x-axis label")
@@ -375,29 +377,27 @@ class DistributionsTests(TestCase):
         try:
             out = StringIO()
             sys.stdout = out
-            grouped_distributions('bar', self.ValidTypicalData,
-                                       [1, 4, 10, 11], ["T0",
-                                                        "T1", "T2", "T3"],
-                                       ["Infants", "Children",
-                                           "Teens"], ['b', 'r'],
-                                       "x-axis label", "y-axis label", "Test")
+            grouped_distributions('bar', self.ValidTypicalData, [1, 4, 10, 11],
+                                  ["T0", "T1", "T2", "T3"],
+                                  ["Infants", "Children", "Teens"], ['b', 'r'],
+                                  "x-axis label", "y-axis label", "Test")
             output = out.getvalue().strip()
-            self.assertEqual(output, "There are not enough markers to "
-                             "uniquely represent each distribution in your dataset. "
-                             "You may want to provide a list of markers that is at "
-                             "least as large as the number of distributions in your "
-                             "dataset.")
+            self.assertEqual(output,
+                             "There are not enough markers to uniquely "
+                             "represent each distribution in your dataset. "
+                             "You may want to provide a list of markers that "
+                             "is at least as large as the number of "
+                             "distributions in your dataset.")
         finally:
             sys.stdout = saved_stdout
 
     def test_grouped_distributions_scatter(self):
         """Should return a valid scatterplot Figure object."""
         fig = grouped_distributions('scatter', self.ValidTypicalData,
-                                         [1, 4, 10, 11], ["T0",
-                                                          "T1", "T2", "T3"],
-                                         ["Infants", "Children",
-                                             "Teens"], ['^', '>', '<'],
-                                         "x-axis label", "y-axis label", "Test")
+                                    [1, 4, 10, 11], ["T0", "T1", "T2", "T3"],
+                                    ["Infants", "Children", "Teens"],
+                                    ['^', '>', '<'], "x-axis label",
+                                    "y-axis label", "Test")
         ax = fig.get_axes()[0]
         self.assertEqual(ax.get_title(), "Test")
         self.assertEqual(ax.get_xlabel(), "x-axis label")
@@ -415,16 +415,16 @@ class DistributionsTests(TestCase):
             out = StringIO()
             sys.stdout = out
             grouped_distributions('scatter', self.ValidTypicalData,
-                                       [1, 4, 10, 11], ["T0",
-                                                        "T1", "T2", "T3"],
-                                       ["Infants", "Children", "Teens"], ['^'],
-                                       "x-axis label", "y-axis label", "Test")
+                                  [1, 4, 10, 11], ["T0", "T1", "T2", "T3"],
+                                  ["Infants", "Children", "Teens"], ['^'],
+                                  "x-axis label", "y-axis label", "Test")
             output = out.getvalue().strip()
-            self.assertEqual(output, "There are not enough markers to "
-                             "uniquely represent each distribution in your dataset. "
-                             "You may want to provide a list of markers that is at "
-                             "least as large as the number of distributions in your "
-                             "dataset.")
+            self.assertEqual(output,
+                             "There are not enough markers to uniquely "
+                             "represent each distribution in your dataset. "
+                             "You may want to provide a list of markers that "
+                             "is at least as large as the number of "
+                             "distributions in your dataset.")
         finally:
             sys.stdout = saved_stdout
 
@@ -432,18 +432,17 @@ class DistributionsTests(TestCase):
         """grouped_distributions() should use the predefined list of
         markers if an empty list is provided by the user."""
         grouped_distributions('scatter', self.ValidTypicalData,
-                                   [1, 4, 10, 11], ["T0", "T1", "T2", "T3"],
-                                   ["Infants", "Children", "Teens"], [],
-                                   "x-axis label", "y-axis label", "Test")
+                              [1, 4, 10, 11], ["T0", "T1", "T2", "T3"],
+                              ["Infants", "Children", "Teens"], [],
+                              "x-axis label", "y-axis label", "Test")
 
     def test_grouped_distributions_box(self):
         """Should return a valid boxplot Figure object."""
         fig = grouped_distributions('box', self.ValidTypicalData,
-                                         [1, 4, 10, 11], ["T0",
-                                                          "T1", "T2", "T3"],
-                                         ["Infants", "Children",
-                                             "Teens"], ['b', 'g', 'y'],
-                                         "x-axis label", "y-axis label", "Test")
+                                    [1, 4, 10, 11], ["T0", "T1", "T2", "T3"],
+                                    ["Infants", "Children", "Teens"],
+                                    ['b', 'g', 'y'], "x-axis label",
+                                    "y-axis label", "Test")
         ax = fig.get_axes()[0]
         self.assertEqual(ax.get_title(), "Test")
         self.assertEqual(ax.get_xlabel(), "x-axis label")

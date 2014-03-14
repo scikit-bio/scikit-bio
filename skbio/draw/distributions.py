@@ -281,7 +281,8 @@ def grouped_distributions(plot_type, data, x_values=None,
                          "'bar', 'scatter', or 'box'." % plot_type)
 
     num_points, num_distributions = _validate_input(data, x_values,
-                                                    data_point_labels, distribution_labels)
+                                                    data_point_labels,
+                                                    distribution_labels)
 
     # Create a list of matplotlib markers (colors or symbols) that can be used
     # to distinguish each of the distributions. If the user provided a list of
@@ -325,15 +326,20 @@ def grouped_distributions(plot_type, data, x_values=None,
                                                  point, distribution_markers):
             dist_location = x_pos + dist_offset
             distribution_plot_result = plotting_function(plot_axes, dist,
-                                                         dist_marker, distribution_width, dist_location,
-                                                         whisker_length, error_bar_type)
+                                                         dist_marker,
+                                                         distribution_width,
+                                                         dist_location,
+                                                         whisker_length,
+                                                         error_bar_type)
             dist_offset += distribution_width
 
     # Set up various plot options that are best set after the plotting is done.
     # The x-axis tick marks (one per data point) are centered on each group of
     # distributions.
     plot_axes.set_xticks(_calc_data_point_ticks(x_locations,
-                                                num_distributions, distribution_width, distribution_centered))
+                                                num_distributions,
+                                                distribution_width,
+                                                distribution_centered))
     _set_axes_options(plot_axes, title, x_label, y_label, x_values,
                       data_point_labels, x_tick_labels_orientation, y_min,
                       y_max)
@@ -526,8 +532,9 @@ def _plot_bar_data(plot_axes, distribution, distribution_color,
         elif error_bar_type == 'sem':
             error_bar = np.std(distribution) / np.sqrt(len(distribution))
         else:
-            raise ValueError("Invalid error bar type '%s'. Supported error "
-                             "bar types are 'stdv' and 'sem'." % error_bar_type)
+            raise ValueError(
+                "Invalid error bar type '%s'. Supported error bar types are "
+                "'stdv' and 'sem'." % error_bar_type)
         result = plot_axes.bar(x_position, avg, distribution_width,
                                yerr=error_bar, ecolor='black',
                                facecolor=distribution_color)
