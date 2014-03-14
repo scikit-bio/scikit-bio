@@ -21,9 +21,77 @@ Functions
 .. autosummary::
    :toctree: generated/
 
+   fasta_to_pairlist
+
 Examples
 --------
 
+Construct a Trie from a (key, value) list
+
+>>> from skbio.util.trie import CompressedTrie
+>>> pair_list = [("ab",  "0"),
+...              ("abababa", "1"),
+...              ("abab", "2"),
+...              ("baba", "3"),
+...              ("ababaa", "4"),
+...              ("a", "5"),
+...              ("abababa", "6"),
+...              ("bab", "7"),
+...              ("babba", "8")]
+>>> t = CompressedTrie(data)
+
+Get the number of keys stored in the trie
+
+>>> len(t)
+9
+
+Get the number of nodes in the trie
+
+>>> t.size
+10
+
+Get the trie's prefix map
+
+>>> t.prefix_map
+{'1': ['6', '2', '0', '5'], '3': [], '4': [], '8': ['7']}
+
+Find the value attached to a given key
+
+>>> t.find("ababaa")
+['4']
+
+Add a new (key, value) pair to the Trie
+
+>>> t.insert("bac", "9")
+>>> t.find("bac")
+['9']
+>>> t.prefix_map
+{'1': ['6', '2', '0', '5'], '3': [], '4': [], '8': ['7'], '9': []}
+
+Create a new trie with a list of sequences
+
+>>> from skbio.util.trie import CompressedTrie, fasta_to_pairlist
+
+>>> seqs = [("sid_0", "AC"),
+...         ("sid_1", "ACAGTC"),
+...         ("sid_2", "ACTA"),
+...         ("sid_3", "CAGT"),
+...         ("sid_4", "CATGAA"),
+...         ("sid_5", "A"),
+...         ("sid_6", "CATGTA"),
+...         ("sid_7", "CAA"),
+...         ("sid_8", "CACCA")]
+
+>>> t = CompressedTrie(fasta_to_pairlist(seqs))
+
+>>> t.prefix_map
+{'sid_1': ['sid_0', 'sid_5'],
+ 'sid_2': [],
+ 'sid_3': [],
+ 'sid_4': [],
+ 'sid_6': [],
+ 'sid_7': [],
+ 'sid_8': []}
 """
 from __future__ import division
 
@@ -268,3 +336,23 @@ class CompressedTrie:
             The value attached to the key
         """
         return self._root.find(key)
+
+
+def fasta_to_pairlist(seqs):
+    """Returns the fasta sequences in a key value list for Trie usage
+
+    Returns the sequence list `seqs` in (seq, label) tuples, so it can be used
+    as (key, value) pairs to populate the Trie object
+
+    Parameters
+    ----------
+    seqs : list
+        the list of sequences
+
+    Returns
+    -------
+    list of tuples
+        list of (seq, label)
+    """
+    for label, seq in seqs:
+        yield seq, label

@@ -11,8 +11,9 @@ from __future__ import division
 #-----------------------------------------------------------------------------
 
 from unittest import TestCase, main
+from itertools import izip
 
-from skbio.util.trie import CompressedTrie, _CompressedNode
+from skbio.util.trie import CompressedTrie, _CompressedNode, fasta_to_pairlist
 
 
 class CompressedNodeTests(TestCase):
@@ -169,15 +170,34 @@ class CompressedTrieTests(TestCase):
         self.assertEqual(self.trie.find("abababa"), ["1", "6"])
 
 
-# self.data = [("ab",  "0"),
-#                      ("1", "abababa"),
-#                      ("2", "abab"),
-#                      ("3", "baba"),
-#                      ("4", "ababaa"),
-#                      ("5", "a"),
-#                      ("6", "abababa"),
-#                      ("7", "bab"),
-#                      ("8", "babba")]
+class FastaToPairlistTests(TestCase):
+    """Tests for the fasta_to_pairlist function"""
+
+    def setUp(self):
+        self.seqs = [("sid_0", "AC"),
+                     ("sid_1", "ACAGTC"),
+                     ("sid_2", "ACTA"),
+                     ("sid_3", "CAGT"),
+                     ("sid_4", "CATGAA"),
+                     ("sid_5", "A"),
+                     ("sid_6", "CATGTA"),
+                     ("sid_7", "CAA"),
+                     ("sid_8", "CACCA")]
+
+    def test_fasta_to_pairlist(self):
+        """Correctly returns a list of (seq, label)"""
+        exp = [("AC", "sid_0"),
+               ("ACAGTC", "sid_1"),
+               ("ACTA", "sid_2"),
+               ("CAGT", "sid_3"),
+               ("CATGAA", "sid_4"),
+               ("A", "sid_5"),
+               ("CATGTA", "sid_6"),
+               ("CAA", "sid_7"),
+               ("CACCA", "sid_8")]
+
+        for obs, exp in izip(fasta_to_pairlist(self.seqs), exp):
+            self.assertEqual(obs, exp)
 
 if __name__ == '__main__':
     main()
