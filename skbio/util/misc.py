@@ -16,6 +16,7 @@ Functions
 
    safe_md5
    remove_files
+   create_dir
 
 """
 from __future__ import division
@@ -29,10 +30,12 @@ from __future__ import division
 #-----------------------------------------------------------------------------
 
 import hashlib
-from os import remove
+from os import remove, makedirs
+from os.path import exists, isdir
+from functools import partial
 
 
-def safe_md5(open_file, block_size=2**20):
+def safe_md5(open_file, block_size=2 ** 20):
     """Computes an md5 sum without loading the file into memory
 
     Parameters
@@ -116,3 +119,115 @@ def remove_files(list_of_filepaths, error_on_missing=True):
     if error_on_missing and missing:
         raise OSError("Some filepaths were not accessible: %s" %
                       '\t'.join(missing))
+
+
+def create_dir(dir_name, fail_on_exist=False, handle_errors_externally=False):
+    """Create a directory safely and fail meaningfully
+
+    Parameters
+    ----------
+
+    dir_name: string
+        name of directory to create
+
+    fail_on_exist: bool, optional
+        if true raise an error if ``dir_name`` already exists
+
+    handle_errors_externally: bool, optional
+        if True do not raise Errors, but return failure codes. This allows to
+        handle errors locally and e.g. hint the user at a --force_overwrite
+        options.
+
+    Returns
+    -------
+
+    return_value : int
+        These values are only returned if no error is raised:
+
+        - ``0``:  directory was safely created
+        - ``1``:  directory already existed
+        - ``2``:  a file with the same name exists
+        - ``3``:  any other unspecified ``OSError``
+
+    Notes
+    -----
+
+    Depending  of how thorough we want to be we could add tests, e.g. for
+    testing actual write permission in an existing dir.
+
+    Examples
+    --------
+
+    >>> from skbio.util.misc import create_dir
+    >>> from os.path import exists, join
+    >>> from tempfile import gettempdir
+    >>> from os import rmdir
+    >>> new_dir = join(gettempdir(), 'scikitbio')
+    >>> create_dir(new_dir)
+    0
+    >>> exists(new_dir)
+    True
+    >>> rmdir(new_dir)
+
+    """
+    error_code_lookup = get_create_dir_error_codes()
+    # pre-instanciate function with
+    ror = partial(handle_error_codes, dir_name, handle_errors_externally)
+
+    if exists(dir_name):
+        if isdir(dir_name):
+            #dir is there
+            if fail_on_exist:
+                return ror(error_code_lookup['DIR_EXISTS'])
+            else:
+                return error_code_lookup['DIR_EXISTS']
+        else:
+            # must be file with same name
+            return ror(error_code_lookup['FILE_EXISTS'])
+    else:
+        # no dir there, try making it
+        try:
+            makedirs(dir_name)
+        except OSError:
+            return ror(error_code_lookup['OTHER_OS_ERROR'])
+
+    return error_code_lookup['NO_ERROR']
+
+# some error codes for creating a dir
+
+
+def get_create_dir_error_codes():
+    return {'NO_ERROR':      0,
+            'DIR_EXISTS':    1,
+            'FILE_EXISTS':   2,
+            'OTHER_OS_ERROR': 3}
+
+
+def handle_error_codes(dir_name, supress_errors=False,
+                       error_code=None):
+    """Wrapper function for error_handling.
+
+    dir_name: name of directory that raised the error
+    suppress_errors: if True raise Errors, otherwise return error_code
+    error_code: the code for the error
+    """
+    error_code_lookup = get_create_dir_error_codes()
+
+    if error_code is None:
+        error_code = error_code_lookup['NO_ERROR']
+
+    error_strings = \
+        {error_code_lookup['DIR_EXISTS']:
+         "Directory already exists: %s" % dir_name,
+         error_code_lookup['FILE_EXISTS']:
+         "File with same name exists: %s" % dir_name,
+         error_code_lookup['OTHER_OS_ERROR']:
+         "Could not create output directory: %s. " % dir_name +
+         "Check the permissions."}
+
+    if error_code == error_code_lookup['NO_ERROR']:
+        return error_code_lookup['NO_ERROR']
+    if supress_errors:
+        return error_code
+    else:
+        raise OSError(error_strings[error_code])
