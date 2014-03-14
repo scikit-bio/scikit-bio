@@ -1,35 +1,35 @@
-bipy
-====
+scikit-bio
+==========
 
-[![Build Status](https://travis-ci.org/biocore/bipy.png?branch=master)](https://travis-ci.org/biocore/bipy)
+[![Build Status](https://travis-ci.org/biocore/scikit-bio.png?branch=master)](https://travis-ci.org/biocore/scikit-bio)
 
-Core objects, functions and statistics for working with biological data in
-Python.
+Core objects, functions and statistics for working with biological data in Python.
 
-To view bipy's documentation, visit [bipy.org](http://bipy.org).
+To view scikit-bio's documentation, visit [scikit-bio.org](http://scikit-bio.org).
 
-**Note:** bipy is currently under active development and its API is not stable.
-Major compatibility-breaking API changes will likely happen as development
-progresses. Once the API has started to solidify and we have an official
-release, we will strive to maintain backwards compatibility, provide
+**Note:** scikit-bio is currently under active development and its API is not
+stable. Major compatibility-breaking API changes will likely happen as
+development progresses. Once the API has started to solidify and we have an
+official release, we will strive to maintain backwards compatibility, provide
 deprecation warnings, etc. wherever possible. In the meantime, feel free to try
-out bipy and let us know what you think!
+out scikit-bio and let us know what you think!
 
 Licensing
 ---------
 
-bipy is available under the new BSD license. See [COPYING.txt](COPYING.txt) for
-bipy's license, and the ```licenses``` directory for the licenses of other
-software that is (either partially or entirely) distributed with bipy.
+scikit-bio is available under the new BSD license. See
+[COPYING.txt](COPYING.txt) for scikit-bio's license, and the ```licenses```
+directory for the licenses of other software that is (either partially or
+entirely) distributed with scikit-bio.
 
-bipy development
-----------------
+scikit-bio development
+----------------------
 
-If you're interested in getting involved in or learning about bipy development, see [CONTRIBUTING.md](CONTRIBUTING.md), in this directory.
+If you're interested in getting involved in or learning about scikit-bio development, see [CONTRIBUTING.md](CONTRIBUTING.md), in this directory.
 
-See the [list of all of bipy's contributors](https://github.com/biocore/bipy/graphs/contributors).
+See the [list of all of scikit-bio's contributors](https://github.com/biocore/scikit-bio/graphs/contributors).
 
-The pre-history of bipy
------------------------
+The pre-history of scikit-bio
+-----------------------------
 
-bipy began from code derived from [PyCogent](http://www.pycogent.org), and the contributors and/or copyright holders have agreed to make the code they wrote for PyCogent available under the BSD license. The contributors to PyCogent modules that have been ported to bipy are: Rob Knight (@rob-knight), Gavin Huttley (@gavin-huttley), Daniel McDonald (@wasade), Micah Hamady, Antonio Gonzalez (@antgonza), Sandra Smit, Greg Caporaso (@gregcaporaso), Jai Ram Rideout (@jrrideout), Cathy Lozupone (@clozupone), Mike Robeson (@mikerobeson), Marcin Cieslik, Peter Maxwell, Jeremy Widmann, and Zongzhi Liu.
+scikit-bio began from code derived from [PyCogent](http://www.pycogent.org), and the contributors and/or copyright holders have agreed to make the code they wrote for PyCogent available under the BSD license. The contributors to PyCogent modules that have been ported to scikit-bio are: Rob Knight (@rob-knight), Gavin Huttley (@gavin-huttley), Daniel McDonald (@wasade), Micah Hamady, Antonio Gonzalez (@antgonza), Sandra Smit, Greg Caporaso (@gregcaporaso), Jai Ram Rideout (@jrrideout), Cathy Lozupone (@clozupone), Mike Robeson (@mikerobeson), Marcin Cieslik, Peter Maxwell, Jeremy Widmann, and Zongzhi Liu.
