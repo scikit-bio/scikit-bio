@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-""" 
+"""
 Fit a Function to a Model (:mod:`skbio.math.fit_function`)
 ==========================================================
 
@@ -33,8 +33,8 @@ def fit_function(x_vals, y_vals, func, n_params, iterations=2):
     y_vals : array_like
         Values for y to fit the function func.
     func : callable ``f(x, a)``
-        Objective function (model) to be fitted to the data. This function 
-        should return either an array for models that are not a constant, 
+        Objective function (model) to be fitted to the data. This function
+        should return either an array for models that are not a constant,
         i.e. ``f(x)=exp(a[0]+x*a[1])``, or a single value for models that are a
         cosntant, i.e. ``f(x)=a[0]``
     n_params : int
@@ -68,8 +68,8 @@ def fit_function(x_vals, y_vals, func, n_params, iterations=2):
 
     # internal function to minimize the error
     def f2min(a):
-        #sum square deviation
-        return ((func(x_vals, a) - y_vals)**2).sum()
+        # sum square deviation
+        return ((func(x_vals, a) - y_vals) ** 2).sum()
 
     param_guess = np.array(range(n_params))
     for i in range(iterations):
