@@ -16,7 +16,7 @@ from skbio.util.misc import safe_md5, remove_files
 from unittest import TestCase, main
 
 
-class UtilTests(TestCase):
+class MiscTests(TestCase):
     """Test object for the miscellaneous utility functions"""
     def test_safe_md5(self):
         """Make sure we have the expected md5"""
