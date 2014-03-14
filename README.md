@@ -32,4 +32,14 @@ See the [list of all of scikit-bio's contributors](https://github.com/biocore/sc
 The pre-history of scikit-bio
 -----------------------------
 
-scikit-bio began from code derived from [PyCogent](http://www.pycogent.org), and the contributors and/or copyright holders have agreed to make the code they wrote for PyCogent available under the BSD license. The contributors to PyCogent modules that have been ported to scikit-bio are: Rob Knight (@rob-knight), Gavin Huttley (@gavin-huttley), Daniel McDonald (@wasade), Micah Hamady, Antonio Gonzalez (@antgonza), Sandra Smit, Greg Caporaso (@gregcaporaso), Jai Ram Rideout (@jrrideout), Cathy Lozupone (@clozupone), Mike Robeson (@mikerobeson), Marcin Cieslik, Peter Maxwell, Jeremy Widmann, and Zongzhi Liu.
+scikit-bio began from code derived from [PyCogent](http://www.pycogent.org) and
+[QIIME](http://www.qiime.org), and the contributors and/or copyright holders
+have agreed to make the code they wrote for PyCogent and/or QIIME available
+under the BSD license. The contributors to PyCogent and/or QIIME modules that
+have been ported to scikit-bio are: Rob Knight (@rob-knight),
+Gavin Huttley (@gavin-huttley), Daniel McDonald (@wasade), Micah Hamady,
+Antonio Gonzalez (@antgonza), Sandra Smit, Greg Caporaso (@gregcaporaso),
+Jai Ram Rideout (@ElBrogrammer), Cathy Lozupone (@clozupone),
+Mike Robeson (@mikerobeson), Marcin Cieslik, Peter Maxwell, Jeremy Widmann,
+Zongzhi Liu, Michael Dwan, Logan Knecht (@loganknecht), Andrew Cochran,
+Jose Carlos Clemente (@cleme), Damien Coy, and Levi McCracken.
