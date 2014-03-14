@@ -1,1 +1,1 @@
-.. automodule:: bipy.core.distance
+.. automodule:: skbio.core.distance
