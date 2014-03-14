@@ -95,7 +95,10 @@ class SequenceCollection(object):
     def __getitem__(self, index):
         """
         """
-        return self._data[index]
+        if isinstance(index, str):
+            return self.get_seq(index)
+        else:
+            return self._data[index]
 
     def __iter__(self):
         """
@@ -109,6 +112,17 @@ class SequenceCollection(object):
         for seq in self:
             result.append(seq.degap())
         return SequenceCollection(result)
+
+    def int_map(self, prefix=""):
+        """
+        """
+        int_keys = []
+        int_map = []
+        for i, seq in enumerate(self):
+            k = ("%s%d" % (prefix, i))
+            int_keys.append((k, seq.identifier))
+            int_map.append((k, seq))
+        return dict(int_map), dict(int_keys) 
 
     def get_seq(self, identifier):
         """
@@ -166,6 +180,11 @@ class SequenceCollection(object):
         return (len(sequence_lengths), center_f(sequence_lengths),
                 spread_f(sequence_lengths))
 
+    def num_seqs(self):
+        """
+        """
+        return len(self._data)
+
     def is_valid(self):
         """
         """
@@ -179,6 +198,11 @@ class SequenceCollection(object):
             result.append(seq.lower())
         return self.__class__(result)
 
+    def majority_consensis(self):
+        """
+        """
+        raise NotImplementedError
+
     def sequence_lengths(self):
         """
         """
@@ -188,6 +212,21 @@ class SequenceCollection(object):
         """
         """
         return ''.join([seq.to_fasta() for seq in self._data])
+   
+    def toFasta(self):
+        print "Deprecation warning!"
+        return self.to_fasta()
+    
+    def to_phylip(self):
+        """
+        """
+        raise NotImplementedError
+
+    def toPhylip(self):
+        """
+        """
+        print "Deprecation warning!"
+        return self.to_phylip()
 
     def upper(self):
         """
@@ -212,8 +251,52 @@ class Alignment(SequenceCollection):
                 return False
         return True
 
+    def alignment_length(self):
+        return len(self._data[0])
+
+    def distances(self):
+        """
+        """
+        raise NotImplementedError
+
+    def get_subalignment(self, seqs_to_keep=None, positions_to_keep=None,
+            invert_seqs_to_keep=False, invert_positions_to_keep=False):
+        """
+        """
+        raise NotImplementedError
+
     def is_valid(self):
         """
         """
         return super(Alignment, self).is_valid() and self._validate_lengths()
-        
+
+    def iter_positions(self):
+        """
+        """
+        raise NotImplementedError
+
+    def majority_consensus(self):
+        """
+        """
+        raise NotImplementedError
+
+
+    def omit_gap_sequences(self, allowed_gap_frac=0):
+        """
+        """
+        raise NotImplementedError
+
+    def omit_gap_positions(self, allowed_gap_frac=0):
+        """
+        """
+        raise NotImplementedError
+
+    def positional_frequencies(self):
+        """
+        """
+        raise NotImplementedError
+
+    def uncertainties(self):
+        """
+        """
+        raise NotImplementedError
