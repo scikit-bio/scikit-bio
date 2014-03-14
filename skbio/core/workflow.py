@@ -61,10 +61,13 @@ from functools import update_wrapper
 from collections import Iterable
 from types import MethodType
 
-# thank you Flask project...
-_not_executed = object()  # internal, for when a method has not executed
-not_none = object()   # external, for when a value can be anything except None
-
+class NotExecuted(object):
+    """Helper object to track if a method was executed"""
+    msg = None
+    def __call__(self, msg):
+        self.msg = msg
+        return self
+_not_executed = NotExecuted()
 
 class Exists(object):
     """Stub object to assist with Workflow.requires when a value exists"""
@@ -72,6 +75,13 @@ class Exists(object):
         return True
 anything = Exists()  # external, for when a value can be anything
 
+class NotNone(object):
+    def __contains__(self, item):
+        if item is None:
+            return False
+        else:
+            return True
+not_none = NotNone()
 
 class Workflow(object):
     """Arbitrary workflow support structure"""
@@ -169,7 +179,8 @@ class Workflow(object):
 
         The following information is tracked:
 
-            debug_trace : set([key])
+            debug_trace : set([(key, order)])
+            debug_trace_ignored : set([(key, reason)])
             debug_runtime : {key: runtime}
             debug_pre_state : {key: deepcopy(Workflow.state)}, state prior to
                 method execution
@@ -178,6 +189,7 @@ class Workflow(object):
         """
         self.debug_counter = 0
         self.debug_trace = set([])
+        self.debug_trace_ignored = set([])
         self.debug_runtime = {}
         self.debug_pre_state = {}
         self.debug_post_state = {}
@@ -232,16 +244,17 @@ class Workflow(object):
             start_time = time()
             if func() is _not_executed:
                 self.debug_trace.remove(key)
-            else:
-                self.debug_runtime[key] = time() - start_time
-                self.debug_pre_state[key] = pre_state
-                self.debug_post_state[key] = deepcopy(self.state)
+                self.debug_trace_ignored.add((key, _not_executed.msg))
+
+            self.debug_runtime[key] = time() - start_time
+            self.debug_pre_state[key] = pre_state
+            self.debug_post_state[key] = deepcopy(self.state)
 
         return update_wrapper(wrapped, func)
 
     class method(object):
         """Decorate a function to indicate it is a workflow method"""
-        highest_priority = sys.maxsize
+        highest_priority = sys.maxint
 
         def __init__(self, priority=0):
             self.priority = priority
@@ -290,7 +303,7 @@ class Workflow(object):
                 """
                 if self.required_state is not None:
                     if not self.required_state(dec_self.state):
-                        return _not_executed
+                        return _not_executed("Missing required state")
 
                 s_opt = self.option
                 ds_opts = dec_self.options
@@ -312,9 +325,9 @@ class Workflow(object):
                         func(dec_self)
 
                     else:
-                        return _not_executed
+                        return _not_executed("Missing required value")
 
                 else:
-                    return _not_executed
+                    return _not_executed("Missing required option")
 
             return update_wrapper(decorated, func)
