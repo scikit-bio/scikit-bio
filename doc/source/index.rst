@@ -15,4 +15,5 @@ API Reference
    core.distance
    core.exception
    draw.distributions
+   maths.stats.spatial
    util.misc

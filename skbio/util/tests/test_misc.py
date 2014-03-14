@@ -11,7 +11,6 @@
 from StringIO import StringIO
 from tempfile import NamedTemporaryFile
 from os.path import exists, join
-from skbio.util.misc import safe_md5, remove_files
 from unittest import TestCase, main
 from shutil import rmtree
 from tempfile import mkdtemp
@@ -21,7 +20,6 @@ from skbio.util.misc import (safe_md5, remove_files, create_dir)
 
 
 class MiscTests(TestCase):
-
     """Test object for the miscellaneous utility functions"""
 
     def setUp(self):
