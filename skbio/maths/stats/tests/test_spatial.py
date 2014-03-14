@@ -13,8 +13,8 @@ from unittest import TestCase, main
 
 import numpy as np
 from numpy.testing import assert_equal, assert_almost_equal, assert_allclose
-from skbio.maths.stats.spatial.procrustes import (procrustes, _get_disparity,
-                                                  _center, _normalize)
+from skbio.maths.stats.spatial import (procrustes, _get_disparity, _center,
+                                       _normalize)
 
 
 class ProcrustesTests(TestCase):

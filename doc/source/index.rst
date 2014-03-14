@@ -11,8 +11,8 @@ API Reference
 .. toctree::
    :maxdepth: 1
 
-   maths.stats.spatial.procrustes
    core.sequence
    core.distance
    core.exception
+   maths.stats.spatial
    util.misc

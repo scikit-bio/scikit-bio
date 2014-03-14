@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 r"""
-Procrustes Analysis (:mod:`skbio.maths.stats.spatial.procrustes`)
-=================================================================
+Spatial Statistics (:mod:`skbio.maths.stats.spatial`)
+=====================================================
 
-.. currentmodule:: skbio.maths.stats.spatial.procrustes
+.. currentmodule:: skbio.maths.stats.spatial
 
-This module provides a convenience function to do procrustes analysis.
+This module provides functions for spatial analysis.
 
 Functions
 ---------
@@ -32,7 +32,7 @@ from numpy.linalg import svd
 
 
 def procrustes(data1, data2):
-    """Procrustes analysis, a similarity test for two data sets
+    r"""Procrustes analysis, a similarity test for two data sets
 
     Each input matrix is a set of points or vectors (the rows of the matrix).
     The dimension of the space is the number of columns of each matrix. Given
@@ -42,8 +42,8 @@ def procrustes(data1, data2):
       matrix product).
     - Both sets of points are centered around the origin.
 
-    Procrustes then applies the optimal transform to the second matrix
-    (including scaling/dilation, rotations, and reflections) to minimize
+    Procrustes ([1]_, [2]_) then applies the optimal transform to the second
+    matrix (including scaling/dilation, rotations, and reflections) to minimize
     M^2 = sum(square(mtx1 - mtx2)), or the sum of the squares of the pointwise
     differences between the two input datasets.
 
@@ -73,8 +73,6 @@ def procrustes(data1, data2):
     mtx2 : array_like
         the orientation of data2 that best fits data1. Centered, but not
         necessarily trace(mtx2*mtx2') = 1
-    disparity : float
-        a metric for the dissimilarity of the two datasets,
     disparity : array_like
         M^2 defined above
 
@@ -84,21 +82,24 @@ def procrustes(data1, data2):
 
     - The disparity should not depend on the order of the input matrices, but
       the output matrices will, as only the first output matrix is guaranteed
-      to be scaled such that trace(AA') = 1.
+      to be scaled such that ``trace(AA') = 1``.
 
     - Duplicate datapoints are generally ok, duplicating a data point will
       increase it's effect on the procrustes fit.
 
     - The disparity scales as the number of points per input matrix.
 
-    This function is based on "Principles of Multivariate analysis, by
-    Krzanowski".
+    References
+    ----------
+
+    .. [1] Krzanowski, W. J. (2000). "Principles of Multivariate analysis".
+    .. [2] Gower, J. C. (1975). "Generalized procrustes analysis".
 
     Examples
     --------
 
     >>> import numpy as np
-    >>> from skbio.maths.stats.spatial.procrustes import procrustes
+    >>> from skbio.maths.stats.spatial import procrustes
     >>> a = np.array([[1, 3], [1, 2], [1, 1], [2, 1]], 'd')
     >>> b = np.array([[4, -2], [4, -4], [4, -6], [2, -6]], 'd')
     >>> p = procrustes(a, b)
