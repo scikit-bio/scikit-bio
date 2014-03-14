@@ -20,15 +20,15 @@ from uuid import uuid4
 from skbio.util.misc import (safe_md5, remove_files, create_dir)
 
 
-class UtilTests(TestCase):
+class MiscTests(TestCase):
 
     """Test object for the miscellaneous utility functions"""
 
     def setUp(self):
         self.dirs_to_remove = []
 
-    def teardown(self):
-        for element in sefl.dirs_to_remove:
+    def tearDown(self):
+        for element in self.dirs_to_remove:
             rmtree(element)
 
     def test_safe_md5(self):

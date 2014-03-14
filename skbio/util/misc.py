@@ -155,8 +155,6 @@ def create_dir(dir_name, fail_on_exist=False, handle_errors_externally=False):
     Depending  of how thorough we want to be we could add tests, e.g. for
     testing actual write permission in an existing dir.
 
-    See qiime/denoiser.py for an example of how to use this mechanism.
-
     Examples
     --------
 
