@@ -17,9 +17,18 @@ As of 12/27/03, should be capable of parsing the ClustalW .dnd files without
 difficulty.
 
 """
-from bipy.core.tree import TreeNode
+
+#-----------------------------------------------------------------------------
+# Copyright (c) 2013--, scikit-bio development team.
+#
+# Distributed under the terms of the Modified BSD License.
+#
+# The full license is in the file COPYING.txt, distributed with this software.
+#-----------------------------------------------------------------------------
+
+from skbio.core.tree import TreeNode
 from .record import RecordError
-from string import strip, maketrans
+from string import maketrans
 
 __author__ = "Rob Knight"
 __copyright__ = "Copyright 2007-2012, The Cogent Project"

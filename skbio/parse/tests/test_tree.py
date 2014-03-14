@@ -2,16 +2,16 @@
 """Unit tests for tree parsers"""
 
 #-----------------------------------------------------------------------------
-# Copyright (c) 2013, The BiPy Developers.
+# Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-from bipy.parse.tree import DndParser, DndTokenizer, RecordError
-from bipy.core.tree import TreeNode
-from bipy.util.unit_test import TestCase, main
+from unittest import TestCase, main
+from skbio.parse.tree import DndParser, DndTokenizer, RecordError
+from skbio.core.tree import TreeNode
 
 __credits__ = ["Rob Knight", "Peter Maxwell", "Daniel McDonald"]
 
