@@ -115,6 +115,11 @@ class SequenceCollection(object):
         """
         return self[self._identifier_to_index[identifier]]
 
+    def identifiers(self):
+        """
+        """
+        return self._identifier_to_index.keys()
+
     def items(self):
         """
         """
