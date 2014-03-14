@@ -320,6 +320,24 @@ class BiologicalSequenceTests(TestCase):
             self.b2.to_fasta(field_delimiter=":", terminal_character="!"),
             ">test-seq-2:A test sequence\nACCGGTACC!")
 
+    def test_upper(self):
+        """ upper functions as expected
+        """
+        b = NucleotideSequence('GAt.ACa-', identifier='x', description='42')
+        expected = NucleotideSequence('GAT.ACA-', identifier='x',
+                description='42')
+        self.assertEqual(b.upper(),expected)
+
+    def test_lower(self):
+        """ lower functions as expected
+        """
+        b = NucleotideSequence('GAt.ACa-', identifier='x', description='42')
+        expected = NucleotideSequence('gat.aca-', identifier='x',
+                description='42')
+        self.assertEqual(b.lower(),expected)
+
+
+
 
 class NucelotideSequenceTests(TestCase):
     """ Tests of the BiologicalSequence class """
