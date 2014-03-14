@@ -1,12 +1,20 @@
 #!/usr/bin/env python
 
+#-----------------------------------------------------------------------------
+# Copyright (c) 2013--, scikit-bio development team.
+#
+# Distributed under the terms of the Modified BSD License.
+#
+# The full license is in the file COPYING.txt, distributed with this software.
+#-----------------------------------------------------------------------------
+
 import numpy as np
 import numpy.testing as nptest
-from bipy.core.tree import TreeNode
-from bipy.core.exception import NoLengthError, TreeError
-from bipy.util.unit_test import TestCase, main
-from bipy.parse.tree import DndParser
-from bipy.maths.stats.test import correlation_t
+from unittest import TestCase, main
+from skbio.core.tree import TreeNode
+from skbio.core.exception import NoLengthError, TreeError
+from skbio.parse.tree import DndParser
+from skbio.maths.stats.test import correlation_t
 
 class TreeTests(TestCase):
     def setUp(self):

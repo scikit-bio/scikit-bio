@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 #-----------------------------------------------------------------------------
-# Copyright (c) 2013, The BiPy Developers.
+# Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -14,8 +14,8 @@ from random import shuffle
 from copy import deepcopy
 from itertools import combinations
 from numpy import argsort, zeros
-from bipy.maths.stats.test import correlation_t
-from bipy.core.exception import (NoLengthError, DuplicateNodeError,
+from skbio.maths.stats.test import correlation_t
+from skbio.core.exception import (NoLengthError, DuplicateNodeError,
     NoParentError, MissingNodeError, TreeError)
 
 __credits__ = ["Gavin Huttley", "Peter Maxwell", "Rob Knight",
