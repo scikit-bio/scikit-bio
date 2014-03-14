@@ -15,8 +15,6 @@ from unittest import TestCase, main
 
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib import use
-use('Agg', warn=False)
 
 from skbio.draw.distributions import (boxplots, grouped_distributions,
                                       _calc_data_point_locations,

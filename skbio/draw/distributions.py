@@ -31,9 +31,9 @@ from itertools import cycle
 
 import numpy as np
 
-import matplotlib.pyplot as plt
 from matplotlib import use
 use('Agg', warn=False)
+import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from matplotlib.patches import Polygon, Rectangle
 
