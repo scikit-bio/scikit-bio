@@ -13,7 +13,7 @@ Classes
 ..autosummary::
     :toctree: generated/
 
-    Compressed_Trie
+    CompressedTrie
 
 Functions
 ---------
@@ -36,7 +36,7 @@ from __future__ import division
 #-----------------------------------------------------------------------------
 
 
-class _Compressed_Node(object):
+class _CompressedNode(object):
     """Represents a node in the compressed trie
 
     Parameters
@@ -53,7 +53,7 @@ class _Compressed_Node(object):
         the values attached to this node
     key : string
         the key attached to the node
-    children : dict of {string: _Compressed_Node}
+    children : dict of {string: _CompressedNode}
         the children nodes below this node
     """
 
@@ -61,20 +61,6 @@ class _Compressed_Node(object):
         self.values = values or []
         self.key = key
         self.children = {}
-
-    def __str__(self, depth=0):
-        s = ["\n%skey %s" % (depth * '\t', self.key)]
-        #s = ["\n" + depth * '\t' + "key %s" % self.key]
-        if self.values:
-            s.append("%s" % str(self.values))
-        s.append("\n")
-
-        for n in self.children.values():
-            s.append("%s{%s" % (depth * '\t', n._to_string(depth + 1)))
-            s.append("%s}\n" % (depth * '\t'))
-            # s.append(depth*'\t' + "{%s" % (n._to_string(depth+1)))
-            # s.append(depth*'\t'+"}\n")
-        return "".join(s)
 
     def __nonzero__(self):
         return (self.key != "" or len(self.values) > 0
@@ -138,17 +124,20 @@ class _Compressed_Node(object):
         length = min(node_key_len, len(key))
         # Follow the key into the tree
         split_node = False
-        index = -1
+        index = 0
         while index < length and not split_node:
-            index += 1
             split_node = key[index] != self.key[index]
+            index += 1
 
         if split_node:
+            # Index has been incremented after split_node was set to true,
+            # decrement it to make it work
+            index -= 1
             # We need to split up the node pointed by index
             # Get the key for the new node
-            new_key_node = _Compressed_Node(key[index:], [value])
+            new_key_node = _CompressedNode(key[index:], [value])
             # Get a new node for the old key node
-            old_key_node = _Compressed_Node(self.key[index:], self.values)
+            old_key_node = _CompressedNode(self.key[index:], self.values)
             old_key_node.children = self.children
             self.children = {key[index]: new_key_node,
                              self.key[index]: old_key_node}
@@ -159,7 +148,7 @@ class _Compressed_Node(object):
             self.values.append(value)
         elif index < node_key_len:
             # Key shorter than node key
-            lower_node = _Compressed_Node(self.key[index:], self.values)
+            lower_node = _CompressedNode(self.key[index:], self.values)
             lower_node.children = self.children
             self.children = {self.key[index]: lower_node}
             self.key = key
@@ -172,7 +161,7 @@ class _Compressed_Node(object):
                 node.insert(key[index:], value)
             else:
                 # Create new node
-                new_node = _Compressed_Node(key[index:], [value])
+                new_node = _CompressedNode(key[index:], [value])
                 self.children[key[index]] = new_node
 
     def find(self, key):
@@ -195,10 +184,10 @@ class _Compressed_Node(object):
         #find matching part of key and node_key
         min_length = min(len(key), len(self.key))
         keys_diff = False
-        index = -1
+        index = 0
         while index < min_length and not keys_diff:
-            index += 1
             keys_diff = key[index] != self.key[index]
+            index += 1
 
         if keys_diff:
             return []
@@ -213,7 +202,7 @@ class _Compressed_Node(object):
         return []
 
 
-class Compressed_Trie:
+class CompressedTrie:
     """ A compressed Trie for a list of (key, value) pairs
 
     Parameters
@@ -228,13 +217,10 @@ class Compressed_Trie:
     """
 
     def __init__(self, pair_list=None):
-        self._root = _Compressed_Node("")
+        self._root = _CompressedNode("")
         if pair_list:
-            for value, seq in pair_list:
-                self.insert(seq, value)
-
-    def __str__(self):
-        return self._root.__str__()
+            for key, value in pair_list:
+                self.insert(key, value)
 
     def __nonzero__(self):
         return self._root.__nonzero__()
@@ -245,7 +231,7 @@ class Compressed_Trie:
     @property
     def size(self):
         """int with the number of nodes in the Trie"""
-        return self._root.size()
+        return self._root.size
 
     @property
     def prefix_map(self):
@@ -253,7 +239,7 @@ class Compressed_Trie:
 
         Dictionary of {values: list of values} containing the prefix map
         """
-        return self._root.prefixMap()
+        return self._root.prefix_map
 
     def insert(self, key, value):
         """Inserts key with value in Trie
