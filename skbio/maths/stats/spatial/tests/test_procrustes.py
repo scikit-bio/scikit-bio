@@ -17,7 +17,7 @@ from skbio.maths.stats.spatial.procrustes import (procrustes, _get_disparity,
                                                   _center, _normalize)
 
 
-class procrustesTests(TestCase):
+class ProcrustesTests(TestCase):
 
     """test the procrustes module, using floating point numpy arrays
     """
