@@ -197,6 +197,23 @@ class AlignmentTests(TestCase):
         actual = self.s1.degap()
         self.assertEqual(actual, expected)
 
+    def test_init_validate(self):
+        """ initialization with validation functions as expected
+        """
+        Alignment(self.seqs1, validate=True)
+
+        # invalid DNA character
+        invalid_seqs1 = [self.d1, self.d2, self.d3,
+                DNASequence('.-ACC-GTXGC--', identifier="i1")]
+        self.assertRaises(SequenceCollectionError, Alignment,
+                invalid_seqs1, validate=True)
+
+        # invalid lengths (they're not all equal)
+        invalid_seqs2 = [self.d1, self.d2, self.d3,
+                DNASequence('.-ACC-GTGC--', identifier="i2")]
+        self.assertRaises(SequenceCollectionError, Alignment,
+                invalid_seqs2, validate=True)
+
 
 if __name__ == "__main__":
     main()
