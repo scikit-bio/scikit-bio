@@ -9,7 +9,8 @@
 #-----------------------------------------------------------------------------
 
 
-from bipy.parse.fastq import MinimalFastqParser
+from skbio.parse.fastq import MinimalFastqParser
+from skbio.core.exception import FastqParseError
 from unittest import TestCase, main
 
 
@@ -18,6 +19,7 @@ class ParseFastq(TestCase):
     def setUp(self):
         """ Initialize variables to be used by the tests """
         self.fastq_example = fastq_example.split('\n')
+        self.fastq_example_2 = fastq_example_2.split('\n')
 
     def test_parse(self):
         """sequence and info objects should correctly match"""
@@ -25,6 +27,11 @@ class ParseFastq(TestCase):
             self.assertTrue(label in data)
             self.assertEqual(seq, data[label]["seq"])
             self.assertEqual(qual, data[label]["qual"])
+
+    def test_parse_error(self):
+        """Does this raise a FastqParseError with incorrect input?"""
+        with self.assertRaises(FastqParseError):
+            list(MinimalFastqParser(self.fastq_example_2))
 
 data = {
     "GAPC_0015:6:1:1259:10413#0/1":
@@ -100,6 +107,17 @@ cLcc\\dddddaaYd`T```bLYT\`a```bZccc
 TTGTTTCCACTTGGTTGATTTCACCCCTGAGTTTG
 +GAPC_0015:6:1:1317:3403#0/1
 \\\ZTYTSaLbb``\_UZ_bbcc`cc^[ac\a\Tc"""
+
+fastq_example_2 = r"""@GAPC_0017:6:1:1259:10413#0/1
+AACACCAAACTTCTCCACCACGTGAGCTACAAAAG
++GAPC_0015:6:1:1259:10413#0/1
+````Y^T]`]c^cabcacc`^Lb^ccYT\T\Y\WF
+@GAPC_0015:6:1:1283:11957#0/1
+TATGTATATATAACATATACATATATACATACATA
++GAPC_0015:6:1:1283:11957#0/1
+]KZ[PY]_[YY^```ac^\\`bT``c`\aT``bbb
+@GAPC_0015:6:1:1284:10484#0/1
+"""
 
 if __name__ == "__main__":
     main()
