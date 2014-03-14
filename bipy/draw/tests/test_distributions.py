@@ -2,7 +2,7 @@
 from __future__ import division
 
 #-----------------------------------------------------------------------------
-# Copyright (c) 2013--, bipy development team.
+# Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -16,10 +16,11 @@ from unittest import TestCase, main
 import numpy as np
 import matplotlib.pyplot as plt
 
-from bipy.draw.distributions import (boxplots, _validate_x_values,
-                                     _create_plot, _is_single_matplotlib_color,
-                                     _color_box_plot, _set_axes_options,
-                                     _create_legend, _set_figure_size)
+from skbio.draw.distributions import (boxplots, _validate_x_values,
+                                      _create_plot,
+                                      _is_single_matplotlib_color,
+                                      _color_box_plot, _set_axes_options,
+                                      _create_legend, _set_figure_size)
 
 
 class DistributionsTests(TestCase):

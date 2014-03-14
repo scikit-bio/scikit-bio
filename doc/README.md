@@ -166,7 +166,7 @@ documentation with the ```.. plot::``` directive. For example:
 
     .. plot::
 
-       >>> from bipy.draw.distributions import boxplots
+       >>> from skbio.draw.distributions import boxplots
        >>> fig = boxplots([[2, 2, 1, 3, 4, 4.2, 7], [0, -1, 4, 5, 6, 7]])
 
 This will include the plot, a link to the source code used to generate the

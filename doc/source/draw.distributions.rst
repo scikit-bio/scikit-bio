@@ -1,1 +1,1 @@
-.. automodule:: bipy.draw.distributions
+.. automodule:: skbio.draw.distributions
