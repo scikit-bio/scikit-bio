@@ -3,7 +3,7 @@
 import numpy as np
 import numpy.testing as nptest
 from bipy.core.tree import TreeNode
-from bipy.core.exception import NoLengthError
+from bipy.core.exception import NoLengthError, TreeError
 from bipy.util.unit_test import TestCase, main
 from bipy.parse.tree import DndParser
 from bipy.maths.stats.test import correlation_t
@@ -12,6 +12,16 @@ class TreeTests(TestCase):
     def setUp(self):
         """Prep the self"""
         self.simple_t = DndParser("((a,b)i1,(c,d)i2)root;")
+        nodes = dict([(x, TreeNode(x)) for x in 'abcdefgh'])
+        nodes['a'].append(nodes['b'])
+        nodes['b'].append(nodes['c'])
+        nodes['c'].append(nodes['d'])
+        nodes['c'].append(nodes['e'])
+        nodes['c'].append(nodes['f'])
+        nodes['f'].append(nodes['g'])
+        nodes['a'].append(nodes['h'])
+        self.TreeNode = nodes
+        self.TreeRoot = nodes['a']
 
     def test_copy(self):
         """copy a tree"""
@@ -342,6 +352,153 @@ class TreeTests(TestCase):
         obs, obs_order = t.tip_tip_distances(endpoints=nodes)
         nptest.assert_almost_equal(obs, exp)
         self.assertEqual(obs_order, exp_order)
+
+    def test_neighbors(self):
+        """Get neighbors of a node"""
+        t = DndParser("((a,b)c,(d,e)f);")
+        exp = t.Children
+        obs = t.neighbors()
+        self.assertEqual(obs, exp)
+
+        exp = t.Children[0].Children + [t]
+        obs = t.Children[0].neighbors()
+        self.assertEqual(obs, exp)
+
+        exp = [t.Children[0].Children[0]] + [t]
+        obs = t.Children[0].neighbors(ignore=t.Children[0].Children[1])
+        self.assertEqual(obs, exp)
+
+        exp = [t.Children[0]]
+        obs = t.Children[0].Children[0].neighbors()
+        self.assertEqual(obs, exp)
+
+    def test_has_children(self):
+        """Test if has children"""
+        t = DndParser("((a,b)c,(d,e)f);")
+        self.assertTrue(t.has_children())
+        self.assertTrue(t.Children[0].has_children())
+        self.assertTrue(t.Children[1].has_children())
+        self.assertFalse(t.Children[0].Children[0].has_children())
+        self.assertFalse(t.Children[0].Children[1].has_children())
+        self.assertFalse(t.Children[1].Children[0].has_children())
+        self.assertFalse(t.Children[1].Children[1].has_children())
+
+    def test_index_tree(self):
+        """index_tree should produce correct index and node map"""
+        #test for first tree: contains singleton outgroup
+        t1 = DndParser('(((a,b),c),(d,e))')
+        t2 = DndParser('(((a,b),(c,d)),(e,f))')
+        t3 = DndParser('(((a,b,c),(d)),(e,f))')
+
+        id_1, child_1 = t1.index_tree()
+        nodes_1 = [n._leaf_index for n in t1.traverse(self_before=False,
+                   self_after=True)]
+        self.assertEqual(nodes_1, [0, 1, 2, 3, 6, 4, 5, 7, 8])
+        self.assertEqual(child_1, [(2, 0, 1), (6, 2, 3), (7, 4, 5), (8, 6, 7)])
+
+        #test for second tree: strictly bifurcating
+        id_2, child_2 = t2.index_tree()
+        nodes_2 = [n._leaf_index for n in t2.traverse(self_before=False,
+                   self_after=True)]
+        self.assertEqual(nodes_2, [0, 1, 4, 2, 3, 5, 8, 6, 7, 9, 10])
+        self.assertEqual(child_2, [(4, 0, 1), (5, 2, 3), (8, 4, 5), (9, 6, 7),
+                                   (10, 8, 9)])
+
+        #test for third tree: contains trifurcation and single-child parent
+        id_3, child_3 = t3.index_tree()
+        nodes_3 = [n._leaf_index for n in t3.traverse(self_before=False,
+                   self_after=True)]
+
+        self.assertEqual(nodes_3, [0, 1, 2, 4, 3, 5, 8, 6, 7, 9, 10])
+        self.assertEqual(child_3, [(4, 0, 2), (5, 3, 3), (8, 4, 5), (9, 6, 7),
+                                   (10, 8, 9)])
+
+    def test_root_at(self):
+        """Form a new root"""
+        t = DndParser("(((a,b)c,(d,e)f)g,h)i;")
+        with self.assertRaises(TreeError):
+            _ = t.root_at(t.find('h'))
+
+        exp = "(a,b,((d,e)f,(h)g)c)root;"
+        rooted = t.root_at('c')
+        obs = str(rooted)
+        self.assertEqual(obs, exp)
+
+    def test_root_at_midpoint(self):
+        """Root at the midpoint"""
+        nodes, tree = self.TreeNode, self.TreeRoot
+        tree1 = tree.copy()
+
+        for n in tree1.traverse():
+            n.Length = 1
+
+        result = tree1.root_at_midpoint()
+        self.assertEqual(result.distance(result.find('e')), 1.5)
+        self.assertEqual(result.distance(result.find('g')), 2.5)
+        exp_dist, exp_order = tree1.tip_tip_distances()
+        obs_dist, obs_order = result.tip_tip_distances()
+        nptest.assert_almost_equal(obs_dist, exp_dist)
+        self.assertEqual([n.Name for n in obs_order],
+                         [n.Name for n in exp_order])
+
+    def test_compare_subsets(self):
+        """compare_subsets should return the fraction of shared subsets"""
+        t = DndParser('((H,G),(R,M));')
+        t2 = DndParser('(((H,G),R),M);')
+        t4 = DndParser('(((H,G),(O,R)),X);')
+
+        result = t.compare_subsets(t)
+        self.assertEqual(result, 0)
+
+        result = t2.compare_subsets(t2)
+        self.assertEqual(result, 0)
+
+        result = t.compare_subsets(t2)
+        self.assertEqual(result, 0.5)
+
+        result = t.compare_subsets(t4)
+        self.assertEqual(result, 1-2./5)
+
+        result = t.compare_subsets(t4, exclude_absent_taxa=True)
+        self.assertEqual(result, 1-2./3)
+
+        result = t.compare_subsets(self.TreeRoot, exclude_absent_taxa=True)
+        self.assertEqual(result, 1)
+
+        result = t.compare_subsets(self.TreeRoot)
+        self.assertEqual(result, 1)
+
+    def test_assign_ids(self):
+        """Assign IDs to the tree"""
+        t1 = DndParser("(((a,b),c),(e,f),(g));")
+        t2 = DndParser("(((a,b),c),(e,f),(g));")
+        t3 = DndParser("((g),(e,f),(c,(a,b)));")
+        t1_copy = t1.copy()
+
+        t1.assign_ids()
+        t2.assign_ids()
+        t3.assign_ids()
+        t1_copy.assign_ids()
+
+        self.assertEqual([(n.Name, n.Id) for n in t1.traverse()],
+                         [(n.Name, n.Id) for n in t2.traverse()])
+        self.assertEqual([(n.Name, n.Id) for n in t1.traverse()],
+                         [(n.Name, n.Id) for n in t1_copy.traverse()])
+        self.assertNotEqual([(n.Name, n.Id) for n in t1.traverse()],
+                            [(n.Name, n.Id) for n in t3.traverse()])
+
+
+    def test_unrooted_deepcopy(self):
+        """Do an unrooted_copy"""
+        t = DndParser("((a,(b,c)d)e,(f,g)h)i;")
+        exp = "(b,c,(a,((f,g)h)e)d)root;"
+        obs = t.find('d').unrooted_deepcopy()
+        self.assertEqual(str(obs), exp)
+
+        t_ids = {id(n) for n in t.traverse()}
+        obs_ids = {id(n) for n in obs.traverse()}
+
+        self.assertEqual(t_ids.intersection(obs_ids), set())
 
 if __name__ == '__main__':
     main()

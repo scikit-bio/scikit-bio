@@ -16,7 +16,7 @@ from itertools import combinations
 from numpy import argsort, zeros
 from bipy.maths.stats.test import correlation_t
 from bipy.core.exception import (NoLengthError, DuplicateNodeError,
-    NoParentError, MissingNodeError)
+    NoParentError, MissingNodeError, TreeError)
 
 __credits__ = ["Gavin Huttley", "Peter Maxwell", "Rob Knight",
                     "Andrew Butterfield", "Catherine Lozupone", "Micah Hamady",
@@ -30,12 +30,16 @@ def distance_from_r(m1, m2):
 class TreeNode(object):
     _exclude_from_copy = set(['Parent', 'Children', '_node_cache'])
 
-    def __init__(self, Name=None, Length=None, Parent=None):
+    def __init__(self, Name=None, Length=None, Parent=None, Children=None):
         self.Name = Name
         self.Length = Length
         self.Parent = Parent
-        self.Children = []
         self._node_cache = {}
+        self.Children = []
+
+        if Children:
+            for c in Children:
+                self.append(c)
 
     ### start operators ###
     def __repr__(self):
@@ -43,10 +47,11 @@ class TreeNode(object):
         nodes = [n for n in self.traverse(include_self=True)]
         n_tips = sum([n.is_tip() for n in nodes])
         n_nontips = len(nodes) - n_tips
-        name = self.__class__.__name__
+        classname = self.__class__.__name__
+        name = self.Name if self.Name is not None else "unnamed"
 
-        return "<%s, Number of internal nodes: %d, Number of tips: %d>" % \
-                (name, n_tips, n_nontips)
+        return "<%s, name: %s internal node count: %d, tips count: %d>" % \
+                (classname, name, n_nontips, n_tips)
 
     def __str__(self):
         """Returns string version of self, with names and distances."""
@@ -129,7 +134,7 @@ class TreeNode(object):
 
     ### end topology updates ###
 
-    ### copy like methods
+    ### copy like methods ###
     def copy(self, memo=None, _nil=[], constructor='ignored'):
         """Returns a copy of self using an iterative approach"""
         def __copy_node(n):
@@ -161,15 +166,55 @@ class TreeNode(object):
 
     __deepcopy__ = deepcopy = copy
 
+    def unrooted_deepcopy(self, parent=None):
+        """Walks the tree unrooted-style and returns a new copy"""
+        root = self.root()
+        root.assign_ids()
+
+        new_tree = root.copy()
+        new_tree.assign_ids()
+
+        new_tree_self = new_tree.find_by_id(self.Id)
+        return new_tree_self._unrooted_copy()
+
+    def _unrooted_copy(self, parent=None):
+        """Walks the tree unrooted-style and returns a copy
+
+        Warning, this is _NOT_ a deepcopy
+        """
+        neighbors = self.neighbors(ignore=parent)
+        children = [c._unrooted_copy(parent=self) for c in neighbors]
+
+        # we might be walking UP the tree, so:
+        if parent is None:
+            # base edge
+            edgename = None
+            length = None
+        elif parent.Parent is self:
+            # self's parent is becoming self's child
+            edgename = parent.Name
+            length = parent.Length
+        else:
+            if parent is not self.Parent:
+                raise TreeError("Should never happen...")
+            edgename = self.Name
+            length = self.Length
+
+        result = self.__class__(Name=edgename, Children=children, Length=length)
+
+        if parent is None:
+            result.Name = "root"
+
+        return result
+
     def subtree(self, tip_list=None):
         """Make a copy of the subtree"""
         st = self.copy()
         raise NotImplementedError()
 
-
     def subset(self):
         """Returns set of names that descend from specified node"""
-        return frozenset([i.Name for i in self.tips()])
+        return frozenset({i.Name for i in self.tips()})
 
     def subsets(self):
         """Returns all sets of names that come from self and its kids"""
@@ -185,7 +230,69 @@ class TreeNode(object):
         return frozenset(sets)
 
     def root_at(self, node):
-        raise NotImplementedError()
+        """Return a new tree rooted at the provided node.
+
+        Usage:
+            This can be useful for drawing unrooted trees with an orientation
+            that reflects knowledge of the true root location.
+        """
+        if isinstance(node, str):
+            node = self.find(node)
+
+        if not node.Children:
+            raise TreeError("Can't use a tip (%s) as the root" %
+                            repr(node.Name))
+        return node.unrooted_deepcopy()
+
+    def root_at_midpoint(self):
+        """Return a new tree rooted at midpoint of the two tips farthest apart
+
+        this fn doesn't preserve the internal node naming or structure,
+        but does keep tip to tip distances correct.  uses unrooted_copy()
+        """
+        tree = self.copy()
+        max_dist, tips = tree.get_max_distance()
+        half_max_dist = max_dist/2.0
+
+        if max_dist == 0.0: # only pathological cases with no lengths
+            return tree
+
+        tip1 = tree.find(tips[0])
+        tip2 = tree.find(tips[1])
+        lca = tree.lowest_common_ancestor([tip1, tip2])
+
+        if tip1._accumulate_to_ancestor(lca) > half_max_dist:
+            climb_node = tip1
+        else:
+            climb_node = tip2
+
+        dist_climbed = 0.0
+        while dist_climbed + climb_node.Length < half_max_dist:
+            dist_climbed += climb_node.Length
+            climb_node = climb_node.Parent
+
+        # now midpt is either at on the branch to climb_node's  parent
+        # or midpt is at climb_node's parent
+        if dist_climbed + climb_node.Length == half_max_dist:
+            # climb to midpoint spot
+            climb_node = climb_node.Parent
+            if climb_node.is_tip():
+                raise TreeError('error trying to root tree at tip')
+            else:
+                return climb_node._unrooted_copy()
+
+        else:
+            # make a new node on climb_node's branch to its parent
+            old_br_len = climb_node.Length
+
+            new_root = tree.__class__()
+            climb_node.Parent.append(new_root)
+            new_root.append(climb_node)
+
+            climb_node.Length = half_max_dist - dist_climbed
+            new_root.Length = old_br_len - climb_node.Length
+
+            return new_root._unrooted_copy()
 
     ### end copy like methods ###
 
@@ -199,9 +306,14 @@ class TreeNode(object):
         """Returns True if the current is a root, i.e. has no parent."""
         return self.Parent is None
 
+    def has_children(self):
+        """Returns True if self.Children."""
+        return bool(self.Children)
+
     ### end node checks ###
 
     ### traversal methods ###
+
     def traverse(self, self_before=True, self_after=False, include_self=True):
         """Returns iterator over descendants. Iterative: safe for large trees.
 
@@ -413,7 +525,30 @@ class TreeNode(object):
         else:
             return node
 
+    def find_by_id(self, id_):
+        """Find a node by id
+
+        This method returns raises MissingNodeError if the node is not found.
+        The first time this method is called, an internal cache is
+        constructed to improve performance on subsequent calls.
+        """
+        # if this method gets used frequently, then we should cache by ID
+        # as well
+        root = self.root()
+        root.assign_ids()
+
+        node = None
+        for n in self.traverse(include_self=True):
+            if n.Id == id_:
+                node = n
+
+        if node is None:
+            raise MissingNodeError("ID %d is not in self" % id_)
+        else:
+            return node
+
     ### path methods ###
+
     def ancestors(self):
         """Returns all ancestors back to the root. Dynamically calculated."""
         if self.is_root():
@@ -451,6 +586,14 @@ class TreeNode(object):
 
         return result
 
+    def neighbors(self, ignore=None):
+        """Get neighbors of self"""
+        nodes = [n for n in self.Children + [self.Parent] if n is not None]
+        if ignore is None:
+            return nodes
+        else:
+            return [n for n in nodes if n is not ignore]
+
     def lowest_common_ancestor(self, tipnames):
         """Lowest common ancestor for a list of tipnames
 
@@ -468,6 +611,10 @@ class TreeNode(object):
         nodes_to_scrub = []
 
         for t in tips:
+            if t.is_root():
+                # has to be the LCA...
+                return t
+
             prev = t
             curr = t.Parent
 
@@ -496,6 +643,7 @@ class TreeNode(object):
     ### end path methods ###
 
     ### formatters ###
+
     def to_newick(self, with_distances=False, semicolon=True, escape_name=True):
         """Return the newick string for this tree.
 
@@ -617,6 +765,7 @@ class TreeNode(object):
     ### end formatters ###
 
     ### distance methods ###
+
     def _accumulate_to_ancestor(self, ancestor):
         """Return the sum of the distance between self and ancestor"""
         accum = 0.0
@@ -659,9 +808,7 @@ class TreeNode(object):
                 n.MaxDistTips = [[0.0, n], [0.0, n]]
             else:
                 if len(n.Children) == 1:
-                    tip_a, tip_b = n.Children[0].MaxDistTips
-                    tip_a[0] += n.Children[0].Length or 0.0
-                    tip_b[0] += n.Children[0].Length or 0.0
+                    raise TreeError("No support for single descedent nodes")
                 else:
                     tip_info = [(max(c.MaxDistTips), c) for c in n.Children]
                     dists = [i[0][0] for i in tip_info]
@@ -672,13 +819,25 @@ class TreeNode(object):
                     tip_b[0] += child_b.Length or 0.0
                 n.MaxDistTips = [tip_a, tip_b]
 
+    def _get_max_distance_singledesc(self):
+        """returns the max distance between any pair of tips
+
+        Also returns the tip names  that it is between as a tuple"""
+        distmtx, tip_order = self.tip_tip_distances()
+        idx_max = divmod(distmtx.argmax(),distmtx.shape[1])
+        max_pair = (tip_order[idx_max[0]].Name, tip_order[idx_max[1]].Name)
+        return distmtx[idx_max], max_pair
+
     def get_max_distance(self):
         """Returns the max tip tip distance between any pair of tips
 
         Returns (dist, tips)
         """
         if not hasattr(self, 'MaxDistTips'):
-            self._set_max_distance()
+            try:
+                self._set_max_distance()
+            except TreeError:
+                return self._get_max_distance_singledesc()
 
         longest = 0.0
         tips = [None, None]
@@ -758,8 +917,31 @@ class TreeNode(object):
 
     ### comparison methods ###
 
-    def compare_subsets(self, other):
-        raise NotImplementedError()
+    def compare_subsets(self, other, exclude_absent_taxa=False):
+        """Returns fraction of overlapping subsets where self and other differ.
+
+        Other is expected to be a tree object compatible with PhyloNode.
+
+        Note: names present in only one of the two trees will count as
+        mismatches: if you don't want this behavior, strip out the non-matching
+        tips first.
+        """
+        self_sets, other_sets = self.subsets(), other.subsets()
+
+        if exclude_absent_taxa:
+            in_both = self.subset() & other.subset()
+            self_sets = (i & in_both for i in self_sets)
+            self_sets = frozenset({i for i in self_sets if len(i) > 1})
+            other_sets = (i & in_both for i in other_sets)
+            other_sets = frozenset({i for i in other_sets if len(i) > 1})
+
+        total_subsets = len(self_sets) + len(other_sets)
+        intersection_length = len(self_sets & other_sets)
+
+        if not total_subsets:  # no common subsets after filtering, so max dist
+            return 1
+
+        return 1 - (2*intersection_length / float(total_subsets))
 
     def compare_tip_distances(self, other, sample=None, dist_f=distance_from_r,
             shuffle_f=shuffle):
@@ -802,3 +984,51 @@ class TreeNode(object):
         return dist_f(self_matrix, other_matrix)
 
     ### end comparison methods ###
+
+    def index_tree(self):
+        """Returns ({node_id:node}, [node_id,first_child,last_child])
+
+        Indexes nodes in-place as n._leaf_index.
+
+        Algorithm is as follows:
+        for each node in post-order traversal over tree:
+            if the node has children:
+                set an index on each child
+                for each child with children:
+                    add the child and its start and end tips to the result
+        """
+        id_index = {}
+        child_index = []
+        curr_index = 0
+
+        for n in self.postorder():
+            for c in n.Children:
+                c._leaf_index = curr_index
+                id_index[curr_index] = c
+                curr_index += 1
+
+                if c:
+                    #c has children itself, so need to add to result
+                    child_index.append((c._leaf_index,
+                                        c.Children[0]._leaf_index,
+                                        c.Children[-1]._leaf_index))
+
+        # handle root, which should be t itself
+        self._leaf_index = curr_index
+        id_index[curr_index] = self
+
+        # only want to add to the child_index if self has children...
+        if self.Children:
+            child_index.append((self._leaf_index,
+                                self.Children[0]._leaf_index,
+                                self.Children[-1]._leaf_index))
+
+        return id_index, child_index
+
+    def assign_ids(self):
+        """Assign topologically stable unique IDs to self"""
+        if hasattr(self, 'Id'):
+            return
+
+        for idx, n in enumerate(self.traverse(include_self=True)):
+            n.Id = idx
