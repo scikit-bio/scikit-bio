@@ -56,6 +56,8 @@ class SequenceCollection(object):
        """
        """
        self._data = seqs
+       self._identifier_to_index = dict([(seq.identifier, i) 
+               for i, seq in enumerate(self._data)])
        if validate and not self.is_valid():
            raise SequenceCollectionError(
                "Something is wrong, and it's your fault.")
@@ -107,6 +109,11 @@ class SequenceCollection(object):
         for seq in self:
             result.append(seq.degap())
         return SequenceCollection(result)
+
+    def get_seq(self, identifier):
+        """
+        """
+        return self[self._identifier_to_index[identifier]]
 
     def items(self):
         """

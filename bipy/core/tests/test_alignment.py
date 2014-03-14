@@ -109,7 +109,13 @@ class SequenceCollectionTests(TestCase):
         self.assertEqual(self.s1[1], self.d2)
         self.assertEqual(self.s2[0], self.r1)
         self.assertEqual(self.s2[1], self.r2)
-        
+    
+    def test_get_seq(self):
+        """ getseq functions asexpected
+        """
+        self.assertEqual(self.s1.get_seq('d1'), self.d1)
+        self.assertEqual(self.s1.get_seq('d2'), self.d2)
+
     def test_iter(self):
         """ iter functions as expected
         """
