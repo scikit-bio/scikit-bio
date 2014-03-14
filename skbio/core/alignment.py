@@ -171,6 +171,14 @@ class SequenceCollection(object):
         """
         return self._validate_character_set()
 
+    def lower(self):
+        """
+        """
+        result = []
+        for seq in self:
+            result.append(seq.lower())
+        return self.__class__(result)
+
     def sequence_lengths(self):
         """
         """
@@ -181,6 +189,15 @@ class SequenceCollection(object):
         """
         return ''.join([seq.to_fasta() for seq in self._data])
 
+    def upper(self):
+        """
+        """
+        result = []
+        for seq in self:
+            result.append(seq.upper())
+        return self.__class__(result)
+
+
 
 class Alignment(SequenceCollection):
     """
@@ -190,7 +207,7 @@ class Alignment(SequenceCollection):
         """
         """
         seq1_length = len(self[0])
-        for seq in self:
+        for seq in self[1:]:
             if seq1_length != len(seq):
                 return False
         return True
@@ -198,5 +215,5 @@ class Alignment(SequenceCollection):
     def is_valid(self):
         """
         """
-        result = super(Alignment, self).is_valid() or self._validate_lengths()
-
+        return super(Alignment, self).is_valid() and self._validate_lengths()
+        
