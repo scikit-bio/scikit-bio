@@ -13,15 +13,44 @@ from operator import or_
 from random import shuffle
 from copy import deepcopy
 from itertools import combinations
+from string import maketrans
 from numpy import argsort, zeros
 from skbio.maths.stats.test import correlation_t
 from skbio.core.exception import (NoLengthError, DuplicateNodeError,
-    NoParentError, MissingNodeError, TreeError)
+    NoParentError, MissingNodeError, TreeError, RecordError)
 
 __credits__ = ["Gavin Huttley", "Peter Maxwell", "Rob Knight",
                     "Andrew Butterfield", "Catherine Lozupone", "Micah Hamady",
                     "Jeremy Widmann", "Zongzhi Liu", "Daniel McDonald",
                     "Justin Kuczynski"]
+
+_dnd_token_str = '(:),;'
+_dnd_tokens = set(_dnd_token_str)
+_dnd_tokens_and_spaces = _dnd_token_str + ' \t\v\n'
+
+remove_dnd_tokens = maketrans(_dnd_tokens_and_spaces,
+                              '-' * len(_dnd_tokens_and_spaces))
+
+def _dnd_tokenizer(data):
+    """Tokenizes data into a stream of punctuation, labels and lengths.
+
+    Note: data should all be a single sequence, e.g. a single string.
+    """
+    in_quotes = False
+    saved = []
+    sa = saved.append
+    for d in data:
+        if d == "'":
+            in_quotes = not(in_quotes)
+        if d in _dnd_tokens and not in_quotes:
+            curr = ''.join(saved).strip()
+            if curr:
+                yield curr
+            yield d
+            saved = []
+            sa = saved.append
+        else:
+            sa(d)
 
 def distance_from_r(m1, m2):
     """Estimates distance as (1-r)/2: neg correl = max distance"""
@@ -641,6 +670,115 @@ class TreeNode(object):
     lca = lowest_common_ancestor #for convenience
 
     ### end path methods ###
+
+    ### parsers ###
+
+
+    @classmethod
+    def from_newick(cls, lines, unescape_name=True):
+        """Returns tree from the Clustal .dnd file format, and anything equivalent.
+
+        Tree is made up of skbio.core.tree.TreeNode objects, with branch lengths
+        """
+        def _new_child(old_node):
+            """Returns new_node which has old_node as its parent."""
+            new_node = cls()
+            new_node.Parent = old_node
+            if old_node is not None:
+                if new_node not in old_node.Children:
+                    old_node.Children.append(new_node)
+            return new_node
+
+        if isinstance(lines, str):
+            data = lines
+        else:
+            data = ''.join(lines)
+
+        #skip arb comment stuff if present: start at first paren
+        paren_index = data.find('(')
+        data = data[paren_index:]
+        left_count = data.count('(')
+        right_count = data.count(')')
+
+        if left_count != right_count:
+            raise RecordError("Found %s left parens but %s right parens." %
+                              (left_count, right_count))
+
+        curr_node = None
+        state = 'PreColon'
+        state1 = 'PreClosed'
+        last_token = None
+
+        for t in _dnd_tokenizer(data):
+            if t == ':':
+                #expecting branch length
+                state = 'PostColon'
+                #prevent state reset
+                last_token = t
+                continue
+            if t == ')' and (last_token == ',' or last_token == '('):
+                # node without name
+                new_node = _new_child(curr_node)
+                new_node.Name = None
+                curr_node = new_node.Parent
+                state1 = 'PostClosed'
+                last_token = t
+                continue
+            if t == ')':
+                #closing the current node
+                curr_node = curr_node.Parent
+                state1 = 'PostClosed'
+                last_token = t
+                continue
+            if t == '(':
+                #opening a new node
+                curr_node = _new_child(curr_node)
+            elif t == ';':  #end of data
+                last_token = t
+                break
+            elif t == ',' and (last_token == ',' or last_token == '('):
+                # node without name
+                new_node = _new_child(curr_node)
+                new_node.Name = None
+                curr_node = new_node.Parent
+            elif t == ',':
+                # separator: next node adds to this node's parent
+                curr_node = curr_node.Parent
+            elif state == 'PreColon' and state1 == 'PreClosed':
+                # data for the current node
+                new_node = _new_child(curr_node)
+                if unescape_name:
+                    if t.startswith("'") and t.endswith("'"):
+                        while t.startswith("'") and t.endswith("'"):
+                            t = t[1:-1]
+                    else:
+                        if '_' in t:
+                            t = t.replace('_', ' ')
+                new_node.Name = t
+                curr_node = new_node
+            elif state == 'PreColon' and state1 == 'PostClosed':
+                if unescape_name:
+                    while t.startswith("'") and t.endswith("'"):
+                        t = t[1:-1]
+                curr_node.Name = t
+            elif state == 'PostColon':
+                # length data for the current node
+                curr_node.Length = float(t)
+            else:
+                # can't think of a reason to get here
+                raise RecordError("Incorrect PhyloNode state? %s" % t)
+            state = 'PreColon'  #get here for any non-colon token
+            state1 = 'PreClosed'
+            last_token = t
+
+        if curr_node is not None and curr_node.Parent is not None:
+            raise RecordError("Didn't get back to root of tree.")
+
+        if curr_node is None:       #no data -- return empty node
+            return cls()
+        return curr_node    #this should be the root of the tree
+
+    ### end parsers ###
 
     ### formatters ###
 
