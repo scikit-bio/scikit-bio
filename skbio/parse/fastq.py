@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 """
-Minimal Fasta Parser (:mod:`bipy.parse.fastq`)
+Minimal Fasta Parser (:mod:`skbio.parse.fastq`)
 =============================================
 
-.. currentmodule:: bipy.fastq.parse
+.. currentmodule:: skbio.fastq.parse
 
 This module provides a function for parsing a fastq file.
 
