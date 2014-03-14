@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 r"""
 Trie (:mod:`skbio.util.trie`)
-============================
+=============================
 
 .. currentmodule:: skbio.util.trie
 
@@ -38,7 +38,7 @@ Construct a Trie from a (key, value) list
 ...              ("abababa", "6"),
 ...              ("bab", "7"),
 ...              ("babba", "8")]
->>> t = CompressedTrie(data)
+>>> t = CompressedTrie(pair_list)
 
 Get the number of keys stored in the trie
 
@@ -53,7 +53,7 @@ Get the number of nodes in the trie
 Get the trie's prefix map
 
 >>> t.prefix_map
-{'1': ['6', '2', '0', '5'], '3': [], '4': [], '8': ['7']}
+{'1': ['6', '2', '0', '5'], '8': ['7'], '3': [], '4': []}
 
 Find the value attached to a given key
 
@@ -66,32 +66,25 @@ Add a new (key, value) pair to the Trie
 >>> t.find("bac")
 ['9']
 >>> t.prefix_map
-{'1': ['6', '2', '0', '5'], '3': [], '4': [], '8': ['7'], '9': []}
+{'1': ['6', '2', '0', '5'], '9': [], '3': [], '4': [], '8': ['7']}
 
 Create a new trie with a list of sequences
 
 >>> from skbio.util.trie import CompressedTrie, fasta_to_pairlist
 
->>> seqs = [("sid_0", "AC"),
-...         ("sid_1", "ACAGTC"),
-...         ("sid_2", "ACTA"),
-...         ("sid_3", "CAGT"),
-...         ("sid_4", "CATGAA"),
-...         ("sid_5", "A"),
-...         ("sid_6", "CATGTA"),
-...         ("sid_7", "CAA"),
-...         ("sid_8", "CACCA")]
+>>> seqs = [("s0", "ACA"),
+...         ("s1", "ACAGTC"),
+...         ("s2", "ACTA"),
+...         ("s3", "CAGT"),
+...         ("s4", "CATGAA"),
+...         ("s5", "A"),
+...         ("s6", "CATGTA"),
+...         ("s7", "CACCA")]
 
 >>> t = CompressedTrie(fasta_to_pairlist(seqs))
 
 >>> t.prefix_map
-{'sid_1': ['sid_0', 'sid_5'],
- 'sid_2': [],
- 'sid_3': [],
- 'sid_4': [],
- 'sid_6': [],
- 'sid_7': [],
- 'sid_8': []}
+{'s3': [], 's2': [], 's1': ['s0', 's5'], 's7': [], 's6': [], 's4': []}
 """
 from __future__ import division
 
@@ -139,7 +132,7 @@ class _CompressedNode(object):
 
         .. warning:: This method is recursive
         """
-        return sum([len(n) for n in self.children.values]) + len(self.values)
+        return sum([len(n) for n in self.children.values()]) + len(self.values)
 
     @property
     def size(self):
@@ -147,7 +140,7 @@ class _CompressedNode(object):
 
         .. warning:: This method is recursive
         """
-        return sum([n.size for n in self.children.values]) + 1
+        return sum([n.size for n in self.children.values()]) + 1
 
     @property
     def prefix_map(self):
