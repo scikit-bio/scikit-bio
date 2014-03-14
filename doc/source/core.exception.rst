@@ -1,1 +1,1 @@
-.. automodule:: bipy.core.exception
+.. automodule:: skbio.core.exception
