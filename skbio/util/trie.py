@@ -135,19 +135,19 @@ class _CompressedNode(object):
                 or len(self.children.keys()) > 0)
 
     def __len__(self):
-        l = 0
-        for n in self.children.values():
-            l += len(n)
-        l += len(self.values)
-        return l
+        """Returns the number of values attached to the node
+
+        .. warning:: This method is recursive
+        """
+        return sum([len(n) for n in self.children.values]) + len(self.values)
 
     @property
     def size(self):
-        """int with the number of nodes below the node"""
-        s = 1
-        for n in self.children.values():
-            s += n.size
-        return s
+        """int with the number of nodes below the node
+
+        .. warning:: This method is recursive
+        """
+        return sum([n.size for n in self.children.values]) + 1
 
     @property
     def prefix_map(self):
@@ -238,7 +238,7 @@ class _CompressedNode(object):
         Parameters
         ----------
         key : string
-
+            The key of the value to search for
 
         Returns
         -------
