@@ -1,1 +1,0 @@
-.. automodule:: bipy.cluster.procrustes

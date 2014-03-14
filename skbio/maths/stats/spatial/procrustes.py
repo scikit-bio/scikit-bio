@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 r"""
-Procrustes Analysis (:mod:`bipy.cluster.procrustes`)
-====================================================
+Procrustes Analysis (:mod:`skbio.maths.stats.spatial.procrustes`)
+=================================================================
 
-.. currentmodule:: bipy.cluster.procrustes
+.. currentmodule:: skbio.maths.stats.spatial.procrustes
 
 This module provides a convenience function to do procrustes analysis.
 
@@ -19,7 +19,7 @@ Functions
 from __future__ import division
 
 #-----------------------------------------------------------------------------
-# Copyright (c) 2013--, bipy development team.
+# Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -98,7 +98,7 @@ def procrustes(data1, data2):
     --------
 
     >>> import numpy as np
-    >>> from bipy.cluster.procrustes import procrustes
+    >>> from skbio.maths.stats.spatial.procrustes import procrustes
     >>> a = np.array([[1, 3], [1, 2], [1, 1], [2, 1]], 'd')
     >>> b = np.array([[4, -2], [4, -4], [4, -6], [2, -6]], 'd')
     >>> p = procrustes(a, b)
