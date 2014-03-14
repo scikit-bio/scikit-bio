@@ -238,7 +238,8 @@ class BiologicalSequence(Sequence):
 
         """
         try:
-            return self._sequence[i]
+            return self.__class__(self._sequence[i],
+                    self.identifier, self.description)
         except IndexError:
             raise IndexError(
                 "Position %d is out of range for %r." % (i, self))

@@ -114,9 +114,9 @@ class BiologicalSequenceTests(TestCase):
     def test_getitem(self):
         """ getitem functions as expected
         """
-        self.assertEqual(self.b1[0], 'G')
-        self.assertEqual(self.b1[:], 'GATTACA')
-        self.assertEqual(self.b1[::-1], 'ACATTAG')
+        self.assertEqual(self.b1[0], BiologicalSequence('G'))
+        self.assertEqual(self.b1[:], BiologicalSequence('GATTACA'))
+        self.assertEqual(self.b1[::-1], BiologicalSequence('ACATTAG'))
 
     def test_iter(self):
         """ iter functions as expected
