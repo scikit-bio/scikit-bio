@@ -14,4 +14,5 @@ API Reference
    core.sequence
    core.distance
    core.exception
+   maths.fit_function
    util.misc
