@@ -1,6 +1,0 @@
-bipy.core.sequence.RNASequence.rc
-=================================
-
-.. currentmodule:: bipy.core.sequence
-
-.. automethod:: RNASequence.rc

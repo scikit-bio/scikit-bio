@@ -1,6 +1,0 @@
-bipy.core.distance.DistanceMatrix.dtype
-=======================================
-
-.. currentmodule:: bipy.core.distance
-
-.. autoattribute:: DistanceMatrix.dtype

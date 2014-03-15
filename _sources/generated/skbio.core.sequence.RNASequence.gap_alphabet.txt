@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.core.sequence.RNASequence.gap_alphabet
+============================================
+
+.. currentmodule:: skbio.core.sequence
+
+.. autoattribute:: RNASequence.gap_alphabet

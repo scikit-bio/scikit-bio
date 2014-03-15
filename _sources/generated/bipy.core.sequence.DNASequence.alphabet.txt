@@ -1,6 +1,0 @@
-bipy.core.sequence.DNASequence.alphabet
-=======================================
-
-.. currentmodule:: bipy.core.sequence
-
-.. autoattribute:: DNASequence.alphabet

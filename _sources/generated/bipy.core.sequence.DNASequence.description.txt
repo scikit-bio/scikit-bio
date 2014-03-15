@@ -1,6 +1,0 @@
-bipy.core.sequence.DNASequence.description
-==========================================
-
-.. currentmodule:: bipy.core.sequence
-
-.. autoattribute:: DNASequence.description

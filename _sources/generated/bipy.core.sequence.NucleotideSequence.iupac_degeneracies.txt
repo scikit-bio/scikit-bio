@@ -1,6 +1,0 @@
-bipy.core.sequence.NucleotideSequence.iupac_degeneracies
-========================================================
-
-.. currentmodule:: bipy.core.sequence
-
-.. autoattribute:: NucleotideSequence.iupac_degeneracies

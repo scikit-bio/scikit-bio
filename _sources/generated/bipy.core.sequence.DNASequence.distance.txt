@@ -1,6 +1,0 @@
-bipy.core.sequence.DNASequence.distance
-=======================================
-
-.. currentmodule:: bipy.core.sequence
-
-.. automethod:: DNASequence.distance

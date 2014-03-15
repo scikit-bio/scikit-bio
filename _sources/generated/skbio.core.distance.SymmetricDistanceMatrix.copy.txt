@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.core.distance.SymmetricDistanceMatrix.copy
+================================================
+
+.. currentmodule:: skbio.core.distance
+
+.. automethod:: SymmetricDistanceMatrix.copy

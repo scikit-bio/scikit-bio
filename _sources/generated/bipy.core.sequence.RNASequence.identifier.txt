@@ -1,6 +1,0 @@
-bipy.core.sequence.RNASequence.identifier
-=========================================
-
-.. currentmodule:: bipy.core.sequence
-
-.. autoattribute:: RNASequence.identifier

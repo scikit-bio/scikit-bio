@@ -1,6 +1,0 @@
-bipy.core.sequence.BiologicalSequence.has_unsupported_characters
-================================================================
-
-.. currentmodule:: bipy.core.sequence
-
-.. automethod:: BiologicalSequence.has_unsupported_characters

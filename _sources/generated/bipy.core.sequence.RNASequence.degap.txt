@@ -1,6 +1,0 @@
-bipy.core.sequence.RNASequence.degap
-====================================
-
-.. currentmodule:: bipy.core.sequence
-
-.. automethod:: RNASequence.degap

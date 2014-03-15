@@ -1,6 +1,0 @@
-bipy.core.sequence.DNASequence.identifier
-=========================================
-
-.. currentmodule:: bipy.core.sequence
-
-.. autoattribute:: DNASequence.identifier

@@ -1,6 +1,0 @@
-bipy.core.sequence.NucleotideSequence.iupac_degenerate_characters
-=================================================================
-
-.. currentmodule:: bipy.core.sequence
-
-.. autoattribute:: NucleotideSequence.iupac_degenerate_characters

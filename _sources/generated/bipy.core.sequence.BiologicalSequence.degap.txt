@@ -1,6 +1,0 @@
-bipy.core.sequence.BiologicalSequence.degap
-===========================================
-
-.. currentmodule:: bipy.core.sequence
-
-.. automethod:: BiologicalSequence.degap

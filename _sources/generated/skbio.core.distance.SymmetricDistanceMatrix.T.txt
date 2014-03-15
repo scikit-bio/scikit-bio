@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.core.distance.SymmetricDistanceMatrix.T
+=============================================
+
+.. currentmodule:: skbio.core.distance
+
+.. autoattribute:: SymmetricDistanceMatrix.T

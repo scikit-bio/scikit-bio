@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.core.distance.SymmetricDistanceMatrix._validate
+=====================================================
+
+.. currentmodule:: skbio.core.distance
+
+.. automethod:: SymmetricDistanceMatrix._validate

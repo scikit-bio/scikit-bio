@@ -1,6 +1,0 @@
-bipy.core.sequence.RNASequence.is_gap
-=====================================
-
-.. currentmodule:: bipy.core.sequence
-
-.. automethod:: RNASequence.is_gap

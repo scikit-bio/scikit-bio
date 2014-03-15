@@ -1,6 +1,0 @@
-bipy.core.sequence.BiologicalSequence.alphabet
-==============================================
-
-.. currentmodule:: bipy.core.sequence
-
-.. autoattribute:: BiologicalSequence.alphabet

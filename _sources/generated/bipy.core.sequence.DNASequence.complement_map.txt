@@ -1,6 +1,0 @@
-bipy.core.sequence.DNASequence.complement_map
-=============================================
-
-.. currentmodule:: bipy.core.sequence
-
-.. autoattribute:: DNASequence.complement_map

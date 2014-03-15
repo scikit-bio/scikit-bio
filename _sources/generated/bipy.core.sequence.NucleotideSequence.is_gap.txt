@@ -1,6 +1,0 @@
-bipy.core.sequence.NucleotideSequence.is_gap
-============================================
-
-.. currentmodule:: bipy.core.sequence
-
-.. automethod:: NucleotideSequence.is_gap

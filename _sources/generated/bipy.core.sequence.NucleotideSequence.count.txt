@@ -1,6 +1,0 @@
-bipy.core.sequence.NucleotideSequence.count
-===========================================
-
-.. currentmodule:: bipy.core.sequence
-
-.. automethod:: NucleotideSequence.count

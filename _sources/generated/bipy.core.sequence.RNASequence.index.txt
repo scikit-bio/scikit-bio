@@ -1,6 +1,0 @@
-bipy.core.sequence.RNASequence.index
-====================================
-
-.. currentmodule:: bipy.core.sequence
-
-.. automethod:: RNASequence.index

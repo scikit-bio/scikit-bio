@@ -1,6 +1,0 @@
-bipy.core.sequence.RNASequence.distance
-=======================================
-
-.. currentmodule:: bipy.core.sequence
-
-.. automethod:: RNASequence.distance

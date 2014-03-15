@@ -1,6 +1,0 @@
-bipy.core.exception.BiologicalSequenceError
-===========================================
-
-.. currentmodule:: bipy.core.exception
-
-.. autoexception:: BiologicalSequenceError

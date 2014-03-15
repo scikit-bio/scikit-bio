@@ -1,0 +1,68 @@
+skbio.core.sequence.DNASequence
+===============================
+
+.. currentmodule:: skbio.core.sequence
+
+.. autoclass:: DNASequence
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         DNASequence.__contains__
+         DNASequence.__eq__
+         DNASequence.__format__
+         DNASequence.__getitem__
+         DNASequence.__hash__
+         DNASequence.__init__
+         DNASequence.__iter__
+         DNASequence.__len__
+         DNASequence.__ne__
+         DNASequence.__new__
+         DNASequence.__reduce__
+         DNASequence.__reduce_ex__
+         DNASequence.__repr__
+         DNASequence.__reversed__
+         DNASequence.__sizeof__
+         DNASequence.__str__
+         DNASequence.__subclasshook__
+         DNASequence._complement
+         DNASequence.complement
+         DNASequence.count
+         DNASequence.degap
+         DNASequence.distance
+         DNASequence.fraction_diff
+         DNASequence.fraction_same
+         DNASequence.gap_maps
+         DNASequence.gap_vector
+         DNASequence.has_unsupported_characters
+         DNASequence.index
+         DNASequence.is_gap
+         DNASequence.is_gapped
+         DNASequence.is_reverse_complement
+         DNASequence.is_valid
+         DNASequence.rc
+         DNASequence.reverse_complement
+         DNASequence.to_fasta
+         DNASequence.unsupported_characters
+
+
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         DNASequence.alphabet
+         DNASequence.complement_map
+         DNASequence.description
+         DNASequence.gap_alphabet
+         DNASequence.identifier
+         DNASequence.iupac_characters
+         DNASequence.iupac_degeneracies
+         DNASequence.iupac_degenerate_characters
+         DNASequence.iupac_standard_characters
+

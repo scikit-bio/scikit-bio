@@ -1,6 +1,0 @@
-bipy.core.sequence.BiologicalSequence.gap_alphabet
-==================================================
-
-.. currentmodule:: bipy.core.sequence
-
-.. autoattribute:: BiologicalSequence.gap_alphabet

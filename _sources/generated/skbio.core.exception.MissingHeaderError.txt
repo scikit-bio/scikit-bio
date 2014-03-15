@@ -1,0 +1,6 @@
+skbio.core.exception.MissingHeaderError
+=======================================
+
+.. currentmodule:: skbio.core.exception
+
+.. autoexception:: MissingHeaderError

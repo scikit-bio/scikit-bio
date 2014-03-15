@@ -1,6 +1,0 @@
-bipy.core.distance.SymmetricDistanceMatrix.dtype
-================================================
-
-.. currentmodule:: bipy.core.distance
-
-.. autoattribute:: SymmetricDistanceMatrix.dtype

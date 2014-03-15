@@ -1,6 +1,0 @@
-bipy.core.sequence.NucleotideSequence.alphabet
-==============================================
-
-.. currentmodule:: bipy.core.sequence
-
-.. autoattribute:: NucleotideSequence.alphabet

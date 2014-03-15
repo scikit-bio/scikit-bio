@@ -1,6 +1,0 @@
-bipy.core.sequence.NucleotideSequence.unsupported_characters
-============================================================
-
-.. currentmodule:: bipy.core.sequence
-
-.. automethod:: NucleotideSequence.unsupported_characters

@@ -1,0 +1,6 @@
+skbio.core.exception.DistanceMatrixFormatError
+==============================================
+
+.. currentmodule:: skbio.core.exception
+
+.. autoexception:: DistanceMatrixFormatError

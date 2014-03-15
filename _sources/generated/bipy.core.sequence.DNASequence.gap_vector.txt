@@ -1,6 +1,0 @@
-bipy.core.sequence.DNASequence.gap_vector
-=========================================
-
-.. currentmodule:: bipy.core.sequence
-
-.. automethod:: DNASequence.gap_vector

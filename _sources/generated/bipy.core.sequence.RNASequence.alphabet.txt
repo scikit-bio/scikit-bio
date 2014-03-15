@@ -1,6 +1,0 @@
-bipy.core.sequence.RNASequence.alphabet
-=======================================
-
-.. currentmodule:: bipy.core.sequence
-
-.. autoattribute:: RNASequence.alphabet

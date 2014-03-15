@@ -1,6 +1,0 @@
-bipy.core.sequence.RNASequence.gap_alphabet
-===========================================
-
-.. currentmodule:: bipy.core.sequence
-
-.. autoattribute:: RNASequence.gap_alphabet

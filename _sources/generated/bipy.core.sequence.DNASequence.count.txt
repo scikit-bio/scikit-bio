@@ -1,6 +1,0 @@
-bipy.core.sequence.DNASequence.count
-====================================
-
-.. currentmodule:: bipy.core.sequence
-
-.. automethod:: DNASequence.count

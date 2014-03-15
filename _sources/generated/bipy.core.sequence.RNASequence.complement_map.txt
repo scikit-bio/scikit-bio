@@ -1,6 +1,0 @@
-bipy.core.sequence.RNASequence.complement_map
-=============================================
-
-.. currentmodule:: bipy.core.sequence
-
-.. autoattribute:: RNASequence.complement_map

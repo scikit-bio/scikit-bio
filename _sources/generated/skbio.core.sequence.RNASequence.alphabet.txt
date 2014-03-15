@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.core.sequence.RNASequence.alphabet
+========================================
+
+.. currentmodule:: skbio.core.sequence
+
+.. autoattribute:: RNASequence.alphabet

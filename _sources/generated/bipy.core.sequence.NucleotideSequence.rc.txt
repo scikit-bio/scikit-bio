@@ -1,6 +1,0 @@
-bipy.core.sequence.NucleotideSequence.rc
-========================================
-
-.. currentmodule:: bipy.core.sequence
-
-.. automethod:: NucleotideSequence.rc

@@ -1,6 +1,0 @@
-bipy.core.sequence.RNASequence.gap_vector
-=========================================
-
-.. currentmodule:: bipy.core.sequence
-
-.. automethod:: RNASequence.gap_vector

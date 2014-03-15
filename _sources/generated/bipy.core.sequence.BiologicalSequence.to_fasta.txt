@@ -1,6 +1,0 @@
-bipy.core.sequence.BiologicalSequence.to_fasta
-==============================================
-
-.. currentmodule:: bipy.core.sequence
-
-.. automethod:: BiologicalSequence.to_fasta

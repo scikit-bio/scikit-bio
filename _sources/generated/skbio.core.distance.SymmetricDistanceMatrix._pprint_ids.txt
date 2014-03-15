@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.core.distance.SymmetricDistanceMatrix._pprint_ids
+=======================================================
+
+.. currentmodule:: skbio.core.distance
+
+.. automethod:: SymmetricDistanceMatrix._pprint_ids

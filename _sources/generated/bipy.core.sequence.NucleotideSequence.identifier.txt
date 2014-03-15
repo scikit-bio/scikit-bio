@@ -1,6 +1,0 @@
-bipy.core.sequence.NucleotideSequence.identifier
-================================================
-
-.. currentmodule:: bipy.core.sequence
-
-.. autoattribute:: NucleotideSequence.identifier

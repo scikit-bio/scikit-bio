@@ -1,6 +1,0 @@
-bipy.core.sequence.RNASequence.is_valid
-=======================================
-
-.. currentmodule:: bipy.core.sequence
-
-.. automethod:: RNASequence.is_valid

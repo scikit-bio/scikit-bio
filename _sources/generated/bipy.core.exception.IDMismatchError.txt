@@ -1,6 +1,0 @@
-bipy.core.exception.IDMismatchError
-===================================
-
-.. currentmodule:: bipy.core.exception
-
-.. autoexception:: IDMismatchError

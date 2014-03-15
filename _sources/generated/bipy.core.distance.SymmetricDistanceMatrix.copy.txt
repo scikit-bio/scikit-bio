@@ -1,6 +1,0 @@
-bipy.core.distance.SymmetricDistanceMatrix.copy
-===============================================
-
-.. currentmodule:: bipy.core.distance
-
-.. automethod:: SymmetricDistanceMatrix.copy

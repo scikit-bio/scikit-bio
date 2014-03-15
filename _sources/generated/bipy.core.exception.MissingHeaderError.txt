@@ -1,6 +1,0 @@
-bipy.core.exception.MissingHeaderError
-======================================
-
-.. currentmodule:: bipy.core.exception
-
-.. autoexception:: MissingHeaderError

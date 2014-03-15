@@ -1,0 +1,6 @@
+skbio.core.exception.MissingDataError
+=====================================
+
+.. currentmodule:: skbio.core.exception
+
+.. autoexception:: MissingDataError

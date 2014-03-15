@@ -1,6 +1,0 @@
-bipy.core.sequence.RNASequence.iupac_characters
-===============================================
-
-.. currentmodule:: bipy.core.sequence
-
-.. autoattribute:: RNASequence.iupac_characters

@@ -1,6 +1,0 @@
-bipy.core.sequence.DNASequence.complement
-=========================================
-
-.. currentmodule:: bipy.core.sequence
-
-.. automethod:: DNASequence.complement

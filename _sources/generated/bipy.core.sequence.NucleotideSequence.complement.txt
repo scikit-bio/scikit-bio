@@ -1,6 +1,0 @@
-bipy.core.sequence.NucleotideSequence.complement
-================================================
-
-.. currentmodule:: bipy.core.sequence
-
-.. automethod:: NucleotideSequence.complement

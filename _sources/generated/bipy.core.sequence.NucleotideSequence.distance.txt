@@ -1,6 +1,0 @@
-bipy.core.sequence.NucleotideSequence.distance
-==============================================
-
-.. currentmodule:: bipy.core.sequence
-
-.. automethod:: NucleotideSequence.distance

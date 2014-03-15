@@ -1,6 +1,0 @@
-bipy.core.sequence.DNASequence.is_gapped
-========================================
-
-.. currentmodule:: bipy.core.sequence
-
-.. automethod:: DNASequence.is_gapped

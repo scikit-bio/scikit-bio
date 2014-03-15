@@ -1,6 +1,0 @@
-bipy.core.sequence.DNASequence.rc
-=================================
-
-.. currentmodule:: bipy.core.sequence
-
-.. automethod:: DNASequence.rc

@@ -1,6 +1,0 @@
-bipy.core.distance.SymmetricDistanceMatrix.data
-===============================================
-
-.. currentmodule:: bipy.core.distance
-
-.. autoattribute:: SymmetricDistanceMatrix.data

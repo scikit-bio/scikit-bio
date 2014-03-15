@@ -1,6 +1,0 @@
-bipy.core.sequence.RNASequence.to_fasta
-=======================================
-
-.. currentmodule:: bipy.core.sequence
-
-.. automethod:: RNASequence.to_fasta
