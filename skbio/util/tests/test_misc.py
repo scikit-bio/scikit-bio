@@ -16,7 +16,7 @@ from shutil import rmtree
 from tempfile import mkdtemp
 from uuid import uuid4
 
-from skbio.util.misc import (safe_md5, remove_files, create_dir)
+from skbio.util.misc import (safe_md5, remove_files, create_dir, combinate)
 
 
 class MiscTests(TestCase):
@@ -92,6 +92,14 @@ class MiscTests(TestCase):
         # if dir not there make it and return always 0
         self.assertEqual(create_dir(tmp_dir_path2), 0)
         self.assertEqual(create_dir(tmp_dir_path3, fail_on_exist=True), 0)
+
+    def test_combinate(self):
+        """Should return combinations"""
+        input = [1,2,3,4]
+        n = 2
+        exp = [[1,2],[1,3],[1,4],[2,3],[2,4],[3,4]]
+        obs = list(combinate(input, n))
+        self.assertEqual(obs, exp)
 
 if __name__ == '__main__':
     main()
