@@ -161,7 +161,7 @@ class BiologicalSequenceTests(TestCase):
     def test_alphabet(self):
         """ alphabet property functions as expected
         """
-        self.assertEqual(self.b1.alphabet, set())
+        self.assertEqual(self.b1.alphabet(), set())
 
     def test_description(self):
         """ description property functions as expected
@@ -173,7 +173,7 @@ class BiologicalSequenceTests(TestCase):
     def test_gap_alphabet(self):
         """ gap_alphabet property functions as expected
         """
-        self.assertEqual(self.b1.gap_alphabet, set('-.'))
+        self.assertEqual(self.b1.gap_alphabet(), set('-.'))
 
     def test_identifier(self):
         """ identifier property functions as expected
