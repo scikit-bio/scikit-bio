@@ -58,10 +58,10 @@ sequence clustering, phylogenetic reconstruction, etc.
 Class level attributes contain information about the molecule types.
 
 >>> DNASequence.iupac_degeneracies['B']
-set(['C', 'T', 'G'])
+frozenset(['C', 'T', 'G'])
 
 >>> RNASequence.iupac_degeneracies['B']
-set(['C', 'U', 'G'])
+frozenset(['C', 'U', 'G'])
 
 >>> DNASequence.is_gap('-')
 True
@@ -101,13 +101,13 @@ class BiologicalSequence(Sequence):
     methods return a new object of the same class.
     """
 
-    _alphabet = set()
+    _alphabet = frozenset()
     # Note: the _complement_map dictionary (defined by NucleotideSequence base
     # classes) explicitly defines the complement of the gap characters as
     # themselves because it's clunky to access the _gap_alphabet member
     # variable from the derived classes. If _gap_alphabet is ever changed, the
     # _complement_map dictionaries should be updated to reflect those changes.
-    _gap_alphabet = set('-.')
+    _gap_alphabet = frozenset('-.')
 
     def __init__(self, sequence, identifier="", description="",
                  validate=False):
@@ -425,7 +425,7 @@ class BiologicalSequence(Sequence):
 
         Returns
         -------
-        set
+        frozenset
             Characters that are allowed in a valid `BiologicalSequence`
 
         See Also
@@ -456,7 +456,7 @@ class BiologicalSequence(Sequence):
 
         Returns
         -------
-        set
+        frozenset
             Characters defined as gaps in a `BiologicalSequence`
 
         See Also
@@ -948,14 +948,14 @@ class NucleotideSequence(BiologicalSequence):
         defined for a generic `NucleotideSequence` because the complement of
         'A' is ambiguous. `NucleotideSequence.complement_map` will therefore be
         the empty dict. Thanks, nature...
-    iupac_standard_characters : set
+    iupac_standard_characters : frozenset
         The non-degenerate IUPAC nucleotide characters
-    iupac_degeneracies : dict of sets
+    iupac_degeneracies : dict of frozensets
         Mapping of IUPAC degenerate nucleotide character to the set of
         non-degenerate IUPAC nucleotide characters it represents
-    iupac_degenerate_characters : set
+    iupac_degenerate_characters : frozenset
         The degenerate IUPAC nucleotide characters
-    iupac_characters : set
+    iupac_characters : frozenset
         The non-degnerate and degenerate nucleotide characters
 
     Notes
@@ -964,15 +964,17 @@ class NucleotideSequence(BiologicalSequence):
 
     """
 
-    iupac_standard_characters = set("ACGTU")
-    iupac_degeneracies = {"R": set("AG"), "Y": set("CTU"), "M": set("AC"),
-                          "K": set("TUG"), "W": set("ATU"), "S": set("GC"),
-                          "B": set("CGTU"), "D": set("AGTU"),
-                          "H": set("ACTU"), "V": set("ACG"), "N": set("ACGTU")}
-    iupac_degenerate_characters = set(iupac_degeneracies)
+    iupac_standard_characters = frozenset("ACGTU")
+    iupac_degeneracies = {"R": frozenset("AG"), "Y": frozenset("CTU"),
+                          "M": frozenset("AC"), "K": frozenset("TUG"),
+                          "W": frozenset("ATU"), "S": frozenset("GC"),
+                          "B": frozenset("CGTU"), "D": frozenset("AGTU"),
+                          "H": frozenset("ACTU"), "V": frozenset("ACG"),
+                          "N": frozenset("ACGTU")}
+    iupac_degenerate_characters = frozenset(iupac_degeneracies)
     iupac_characters = iupac_standard_characters | iupac_degenerate_characters
     complement_map = {}
-    _alphabet = iupac_characters | set(map(str.lower, iupac_characters))
+    _alphabet = iupac_characters | frozenset(map(str.lower, iupac_characters))
 
     def _complement(self, seq_iterator):
         """Returns `NucleotideSequence` that is complement of `seq_iterator`
@@ -1093,14 +1095,14 @@ class DNASequence(NucleotideSequence):
     identifier
     complement_map : dict
         Mapping of characters to their complements.
-    iupac_standard_characters : set
+    iupac_standard_characters : frozenset
         The non-degenerate IUPAC DNA characters
-    iupac_degeneracies : dict of sets
+    iupac_degeneracies : dict of frozensets
         Mapping of IUPAC degenerate DNA character to the set of
         non-degenerate IUPAC DNA characters it represents
-    iupac_degenerate_characters : set
+    iupac_degenerate_characters : frozenset
         The degenerate IUPAC DNA characters
-    iupac_characters : set
+    iupac_characters : frozenset
         The non-degnerate and degenerate DNA characters
 
     Notes
@@ -1109,12 +1111,14 @@ class DNASequence(NucleotideSequence):
 
     """
 
-    iupac_standard_characters = set("ACGT")
-    iupac_degeneracies = {"R": set("AG"), "Y": set("CT"), "M": set("AC"),
-                          "K": set("TG"), "W": set("AT"), "S": set("GC"),
-                          "B": set("CGT"), "D": set("AGT"),
-                          "H": set("ACT"), "V": set("ACG"), "N": set("ACGT")}
-    iupac_degenerate_characters = set(iupac_degeneracies)
+    iupac_standard_characters = frozenset("ACGT")
+    iupac_degeneracies = {"R": frozenset("AG"), "Y": frozenset("CT"),
+                          "M": frozenset("AC"), "K": frozenset("TG"),
+                          "W": frozenset("AT"), "S": frozenset("GC"),
+                          "B": frozenset("CGT"), "D": frozenset("AGT"),
+                          "H": frozenset("ACT"), "V": frozenset("ACG"),
+                          "N": frozenset("ACGT")}
+    iupac_degenerate_characters = frozenset(iupac_degeneracies)
     iupac_characters = iupac_standard_characters | iupac_degenerate_characters
     complement_map = {
         'A': 'T', 'T': 'A', 'G': 'C', 'C': 'G', 'Y': 'R', 'R': 'Y', 'S': 'S',
@@ -1122,7 +1126,7 @@ class DNASequence(NucleotideSequence):
         'N': 'N', 'a': 't', 't': 'a', 'g': 'c', 'c': 'g', 'y': 'r', 'r': 'y',
         's': 's', 'w': 'w', 'k': 'm', 'm': 'k', 'b': 'v', 'd': 'h', 'h': 'd',
         'v': 'b', 'n': 'n', '.': '.', '-': '-'}
-    _alphabet = iupac_characters | set(map(str.lower, iupac_characters))
+    _alphabet = iupac_characters | frozenset(map(str.lower, iupac_characters))
 
 # class is accessible with alternative name for convenience
 DNA = DNASequence
@@ -1139,14 +1143,14 @@ class RNASequence(NucleotideSequence):
     identifier
     complement_map : dict
         Mapping of characters to their complements.
-    iupac_standard_characters : set
+    iupac_standard_characters : frozenset
         The non-degenerate IUPAC RNA characters
-    iupac_degeneracies : dict of sets
-        Mapping of IUPAC degenerate RNA character to the set of
+    iupac_degeneracies : dict of frozensets
+        Mapping of IUPAC degenerate RNA character to the frozenset of
         non-degenerate IUPAC RNA characters it represents
-    iupac_degenerate_characters : set
+    iupac_degenerate_characters : frozenset
         The degenerate IUPAC RNA characters
-    iupac_characters : set
+    iupac_characters : frozenset
         The non-degnerate and degenerate RNA characters
 
     Notes
@@ -1155,12 +1159,14 @@ class RNASequence(NucleotideSequence):
 
     """
 
-    iupac_standard_characters = set("ACGU")
-    iupac_degeneracies = {"R": set("AG"), "Y": set("CU"), "M": set("AC"),
-                          "K": set("UG"), "W": set("AU"), "S": set("GC"),
-                          "B": set("CGU"), "D": set("AGU"),
-                          "H": set("ACU"), "V": set("ACG"), "N": set("ACGU")}
-    iupac_degenerate_characters = set(iupac_degeneracies)
+    iupac_standard_characters = frozenset("ACGU")
+    iupac_degeneracies = {"R": frozenset("AG"), "Y": frozenset("CU"),
+                          "M": frozenset("AC"), "K": frozenset("UG"),
+                          "W": frozenset("AU"), "S": frozenset("GC"),
+                          "B": frozenset("CGU"), "D": frozenset("AGU"),
+                          "H": frozenset("ACU"), "V": frozenset("ACG"),
+                          "N": frozenset("ACGU")}
+    iupac_degenerate_characters = frozenset(iupac_degeneracies)
     iupac_characters = iupac_standard_characters | iupac_degenerate_characters
     complement_map = {
         'A': 'U', 'U': 'A', 'G': 'C', 'C': 'G', 'Y': 'R', 'R': 'Y', 'S': 'S',
@@ -1168,7 +1174,7 @@ class RNASequence(NucleotideSequence):
         'N': 'N', 'a': 'u', 'u': 'a', 'g': 'c', 'c': 'g', 'y': 'r', 'r': 'y',
         's': 's', 'w': 'w', 'k': 'm', 'm': 'k', 'b': 'v', 'd': 'h', 'h': 'd',
         'v': 'b', 'n': 'n', '.': '.', '-': '-'}
-    _alphabet = iupac_characters | set(map(str.lower, iupac_characters))
+    _alphabet = iupac_characters | frozenset(map(str.lower, iupac_characters))
 
 # class is accessible with alternative name for convenience
 RNA = RNASequence
