@@ -15,6 +15,7 @@ from skbio.parse.sequences import fasta_parse
 from skbio.parse.record import RecordError
 from unittest import TestCase, main
 
+
 class GenericFastaTest(TestCase):
 
     """Setup data for all the various FASTA parsers."""
