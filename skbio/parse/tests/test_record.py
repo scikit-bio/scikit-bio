@@ -9,7 +9,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-from skbio.parse.record import (FieldError, Grouper, DelimitedSplitter,
+from skbio.parse.record import (FieldError, DelimitedSplitter,
                                 GenericRecord, MappedRecord, TypeSetter,
                                 list_adder, dict_adder,
                                 LineOrientedConstructor, int_setter,
@@ -35,40 +35,6 @@ class recordsTests(TestCase):
     def test_raise_unknown_field(self):
         """raise_unknown_field should always raise FieldError"""
         self.assertRaises(FieldError, raise_unknown_field, 'xyz', 123)
-
-
-class GrouperTests(TestCase):
-
-    """Tests of the Grouper class."""
-
-    def test_call(self):
-        """Grouper should return lists containing correct number of groups"""
-        empty = []
-        s3 = 'abc'
-        s10 = range(10)
-        g1 = Grouper(1)
-        g2 = Grouper(2)
-        g5 = Grouper(5)
-        self.assertEqual(list(g1(empty)), [])
-        self.assertEqual(list(g2(empty)), [])
-        self.assertEqual(list(g5(empty)), [])
-        self.assertEqual(list(g1(s3)), [['a'], ['b'], ['c']])
-        self.assertEqual(list(g2(s3)), [['a', 'b'], ['c']])
-        self.assertEqual(list(g5(s3)), [['a', 'b', 'c']])
-        self.assertEqual(list(g1(s10)), [[i] for i in range(10)])
-        self.assertEqual(
-            list(g2(s10)), [[0, 1], [2, 3], [4, 5], [6, 7], [8, 9]])
-        self.assertEqual(list(g5(s10)), [[0, 1, 2, 3, 4], [5, 6, 7, 8, 9]])
-
-    def test_call_bad(self):
-        """Grouper call should raise ValueError if NumItems is not an int"""
-        g_none = Grouper(None)
-        g_neg = Grouper(-1)
-        g_zero = Grouper(0)
-        g_alpha = Grouper('abc')
-        for g in (g_none, g_neg, g_zero, g_alpha):
-            iterator = g('abcd')
-            self.assertRaises(ValueError, list, iterator)
 
 
 class DelimitedSplitterTests(TestCase):
