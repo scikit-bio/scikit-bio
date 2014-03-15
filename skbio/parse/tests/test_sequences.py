@@ -108,7 +108,7 @@ class fasta_parseTests(GenericFastaTest):
         self.assertEqual(a, ('abc', 'caggac'))
 
 
-class ParseFastq(TestCase):
+class ParseFastqTests(TestCase):
 
     def setUp(self):
         """ Initialize variables to be used by the tests """
