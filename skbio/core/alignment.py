@@ -110,6 +110,11 @@ class SequenceCollection(object):
         """
         return len(self._data)
 
+    def __ne__(self, other):
+        """
+        """
+        return not self.__eq__(other)
+
     def __repr__(self):
         """The repr method.
 
@@ -235,7 +240,6 @@ class SequenceCollection(object):
 class Alignment(SequenceCollection):
     """
     """
-
 
     def distances(self):
         """

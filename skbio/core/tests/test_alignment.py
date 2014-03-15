@@ -76,7 +76,28 @@ class SequenceCollectionTests(TestCase):
         SequenceCollection.from_fasta_records(self.seqs3_t, NucleotideSequence)
 
     def test_eq(self):
-        raise NotImplementedError
+        """ equality operator functions as expected
+        """
+        self.assertTrue(self.s1 == self.s1)
+        self.assertFalse(self.s1 == self.s2)
+       
+        # different objects can be equal
+        self.assertTrue(self.s1 == 
+                SequenceCollection([self.d1, self.d2]))
+        self.assertTrue(SequenceCollection([self.d1, self.d2]) 
+                == self.s1)
+
+        # SequenceCollections with different number of sequences are not equal
+        self.assertFalse(self.s1 == SequenceCollection([self.d1]))
+        
+        class FakeSequenceCollection(SequenceCollection):
+            pass
+        # SequenceCollections of different types are not equal
+        self.assertFalse(self.s1 == FakeSequenceCollection([self.d1, self.d2]))
+        self.assertFalse(self.s1 == Alignment([self.d1, self.d2]))
+
+        # SequenceCollections with different sequences are not equal
+        self.assertFalse(self.s1 == SequenceCollection([self.d1, self.r1]))
 
     def test_getitem(self):
         """ getitem functions as expected
@@ -103,6 +124,24 @@ class SequenceCollectionTests(TestCase):
         self.assertEqual(len(self.s1),2)
         self.assertEqual(len(self.s2),3)
         self.assertEqual(len(self.s3),5)
+
+    def test_ne(self):
+        """ inequality operator functions as expected
+        """
+        self.assertFalse(self.s1 != self.s1)
+        self.assertTrue(self.s1 != self.s2)
+       
+        # SequenceCollections with different number of sequences are not equal
+        self.assertTrue(self.s1 != SequenceCollection([self.d1]))
+        
+        class FakeSequenceCollection(SequenceCollection):
+            pass
+        # SequenceCollections of different types are not equal
+        self.assertTrue(self.s1 != FakeSequenceCollection([self.d1, self.d2]))
+        self.assertTruee(self.s1 != Alignment([self.d1, self.d2]))
+
+        # SequenceCollections with different sequences are not equal
+        self.assertTrue(self.s1 != SequenceCollection([self.d1, self]))
 
     def test_repr(self):
         """
@@ -150,12 +189,21 @@ class SequenceCollectionTests(TestCase):
     def test_identifiers(self):
         """ identifiers functions as expected
         """
-        raise NotImplementedError
+        self.assertEqual(sorted(self.s1.identifiers()), ['d1', 'd2']) 
+        self.assertEqual(sorted(self.s2.identifiers()), ['r1', 'r2', 'r3']) 
+        self.assertEqual(sorted(self.s3.identifiers()),
+                ['d1', 'd2', 'r1', 'r2', 'r3']) 
 
     def test_int_map(self):
         """ int_map functions as expected
         """
-        raise NotImplementedError
+        expected1 = {"0": self.d1, "1": self.d2}
+        expected2 = {"0": "d1", "1": "d2"}
+        self.assertEqual(self.s1.int_map(), (expected1, expected2))
+        
+        expected1 = {"h-0": self.d1, "h-1": self.d2}
+        expected2 = {"h-0": "d1", "h-1": "d2"}
+        self.assertEqual(self.s1.int_map(prefix='h-'), (expected1, expected2))
 
     def test_is_valid(self):
         """ is_valid functions as expected
@@ -213,12 +261,18 @@ class AlignmentTests(TestCase):
         self.d2 = DNASequence('TTACCGGT-GGCC', identifier="d2")
         self.d3 = DNASequence('.-ACC-GTTGC--', identifier="d3")
         
+        self.r1 = DNASequence('UUAU-', identifier="r1")
+        self.r2 = DNASequence('ACGUU', identifier="r2")
+        
         self.seqs1 = [self.d1, self.d2, self.d3]
+        self.seqs2 = [self.r1, self.r2]
 
         self.seqs1_t = [('d1', '..ACC-GTTGG..'), ('d2', 'TTACCGGT-GGCC'),
                 ('d3', '.-ACC-GTTGC--')]
+        self.seqs2_t = [('r1', 'UUAU-'), ('r2', 'ACGUU')]
 
         self.a1 = Alignment(self.seqs1)
+        self.a2 = Alignment(self.seqs2)
 
     def test_degap(self):
         """ degap functions as expected
@@ -227,6 +281,14 @@ class AlignmentTests(TestCase):
                 for id_, seq in self.seqs1_t]
         expected = SequenceCollection.from_fasta_records(expected, DNASequence)
         actual = self.a1.degap()
+        self.assertEqual(actual, expected)
+        
+        expected = [(id_, seq.replace('.', '').replace('-', '')) 
+                for id_, seq in self.seqs2_t]
+        expected = SequenceCollection.from_fasta_records(expected, RNASequence)
+        actual = self.a2.degap()
+        print expected.to_fasta()
+        print actual.to_fasta()
         self.assertEqual(actual, expected)
 
     def test_distances(self):
