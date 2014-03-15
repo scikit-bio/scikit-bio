@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------------
 
 from unittest import TestCase, main
+from collections import Counter
 
 import numpy as np
 
@@ -349,6 +350,16 @@ class AlignmentTests(TestCase):
         self.seqs2_t = [('r1', 'UUAU-'), ('r2', 'ACGUU')]
         self.assertEqual(actual, expected)
 
+        actual = list(self.a2.iter_positions(constructor=str))
+        expected = [list('UA'), 
+                    list('UC'),
+                    list('AG'),
+                    list('UU'),
+                    list('-U')]
+        self.seqs2_t = [('r1', 'UUAU-'), ('r2', 'ACGUU')]
+        self.assertEqual(actual, expected)
+
+
     def test_majority_consensus(self):
         """ majority_consensus functions as expected
         """
@@ -363,7 +374,17 @@ class AlignmentTests(TestCase):
         """ omitting gap sequences functions as expected
         """
         raise NotImplementedError
-    
+
+    def test_position_counters(self):
+        """ position_counters functions as expected
+        """
+        expected = [Counter({'U': 1, 'A': 1}),
+                    Counter({'U': 1, 'C': 1}),
+                    Counter({'A': 1, 'G': 1}),
+                    Counter({'U': 2}),
+                    Counter({'-': 1, 'U': 1})]
+        self.assertEqual(self.a2.position_counters(), expected)
+
     def test_position_frequencies(self):
         """ computing position frequencies functions as expected
         """

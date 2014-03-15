@@ -43,6 +43,8 @@ from __future__ import division
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
+from collections import Counter
+
 import numpy as np
 
 from skbio.core.exception import SequenceCollectionError
@@ -265,11 +267,14 @@ class Alignment(SequenceCollection):
         """
         return super(Alignment, self).is_valid() and self._validate_lengths()
 
-    def iter_positions(self):
+    def iter_positions(self, constructor=None):
         """
         """
+        if constructor is None:
+            def constructor(s):
+                return s
         for i in range(self.sequence_length()):
-            position = [seq[i] for seq in self]
+            position = [constructor(seq[i]) for seq in self]
             yield position
 
     def majority_consensus(self):
@@ -287,9 +292,18 @@ class Alignment(SequenceCollection):
         """
         raise NotImplementedError
 
+    def position_counters(self):
+        """
+        """
+        result = []
+        for p in self.iter_positions(constructor=str):
+            result.append(Counter(p))
+        return result
+
     def position_frequencies(self):
         """
         """
+
         raise NotImplementedError
 
     def position_entropies(self):
