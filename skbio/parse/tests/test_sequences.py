@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 #-----------------------------------------------------------------------------
-# Copyright (c) 2013--, bipy development team.
+# Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -9,9 +9,103 @@
 #-----------------------------------------------------------------------------
 
 
-from skbio.parse.fastq import MinimalFastqParser
+from skbio.parse.sequences import fastq_parse
 from skbio.core.exception import FastqParseError
+from skbio.parse.sequences import fasta_parse
+from skbio.parse.record import RecordError
 from unittest import TestCase, main
+
+class GenericFastaTest(TestCase):
+
+    """Setup data for all the various FASTA parsers."""
+
+    def setUp(self):
+        """standard files"""
+        self.labels = '>abc\n>def\n>ghi\n'.split('\n')
+        self.oneseq = '>abc\nUCAG\n'.split('\n')
+        self.multiline = '>xyz\nUUUU\nCC\nAAAAA\nG'.split('\n')
+        self.threeseq = '>123\na\n> \t abc  \t \ncag\ngac\n>456\nc\ng'.split(
+            '\n')
+        self.twogood = '>123\n\n> \t abc  \t \ncag\ngac\n>456\nc\ng'.split(
+            '\n')
+        self.oneX = '>123\nX\n> \t abc  \t \ncag\ngac\n>456\nc\ng'.split('\n')
+        self.nolabels = 'GJ>DSJGSJDF\nSFHKLDFS>jkfs\n'.split('\n')
+        self.empty = []
+
+
+class fasta_parseTests(GenericFastaTest):
+
+    """Tests of fasta_parse: returns (label, seq) tuples."""
+
+    def test_empty(self):
+        """fasta_parse should return empty list from 'file' w/o labels
+        """
+        self.assertEqual(list(fasta_parse(self.empty)), [])
+        self.assertEqual(list(fasta_parse(self.nolabels, strict=False)),
+                         [])
+        self.assertRaises(RecordError, list, fasta_parse(self.nolabels))
+
+    def test_no_labels(self):
+        """fasta_parse should return empty list from file w/o seqs"""
+        # should fail if strict (the default)
+        self.assertRaises(RecordError, list,
+                          fasta_parse(self.labels, strict=True))
+        # if not strict, should skip the records
+        self.assertEqual(list(fasta_parse(self.labels, strict=False)),
+                         [])
+
+    def test_single(self):
+        """fasta_parse should read single record as (label, seq) tuple
+        """
+        f = list(fasta_parse(self.oneseq))
+        self.assertEqual(len(f), 1)
+        a = f[0]
+        self.assertEqual(a, ('abc', 'UCAG'))
+
+        f = list(fasta_parse(self.multiline))
+        self.assertEqual(len(f), 1)
+        a = f[0]
+        self.assertEqual(a, ('xyz', 'UUUUCCAAAAAG'))
+
+    def test_gt_bracket_in_seq(self):
+        """fasta_parse handles alternate finder function
+
+            this test also illustrates how to use the fasta_parse
+            to handle "sequences" that start with a > symbol, which can
+            happen when we abuse the fasta_parse to parse
+            fasta-like sequence quality files.
+        """
+        oneseq_w_gt = '>abc\n>CAG\n'.split('\n')
+
+        def get_two_line_records(infile):
+            line1 = None
+            for line in infile:
+                if line1 is None:
+                    line1 = line
+                else:
+                    yield (line1, line)
+                    line1 = None
+        f = list(fasta_parse(oneseq_w_gt, finder=get_two_line_records))
+        self.assertEqual(len(f), 1)
+        a = f[0]
+        self.assertEqual(a, ('abc', '>CAG'))
+
+    def test_multiple(self):
+        """fasta_parse should read multiline records correctly"""
+        f = list(fasta_parse(self.threeseq))
+        self.assertEqual(len(f), 3)
+        a, b, c = f
+        self.assertEqual(a, ('123', 'a'))
+        self.assertEqual(b, ('abc', 'caggac'))
+        self.assertEqual(c, ('456', 'cg'))
+
+    def test_multiple_bad(self):
+        """fasta_parse should complain or skip bad records"""
+        self.assertRaises(RecordError, list, fasta_parse(self.twogood))
+        f = list(fasta_parse(self.twogood, strict=False))
+        self.assertEqual(len(f), 2)
+        a, b = f
+        self.assertEqual(a, ('abc', 'caggac'))
 
 
 class ParseFastq(TestCase):
@@ -23,7 +117,7 @@ class ParseFastq(TestCase):
 
     def test_parse(self):
         """sequence and info objects should correctly match"""
-        for label, seq, qual in MinimalFastqParser(self.fastq_example):
+        for label, seq, qual in fastq_parse(self.fastq_example):
             self.assertTrue(label in data)
             self.assertEqual(seq, data[label]["seq"])
             self.assertEqual(qual, data[label]["qual"])
@@ -31,7 +125,7 @@ class ParseFastq(TestCase):
     def test_parse_error(self):
         """Does this raise a FastqParseError with incorrect input?"""
         with self.assertRaises(FastqParseError):
-            list(MinimalFastqParser(self.fastq_example_2))
+            list(fastq_parse(self.fastq_example_2))
 
 data = {
     "GAPC_0015:6:1:1259:10413#0/1":
