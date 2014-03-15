@@ -313,7 +313,6 @@ class AlignmentTests(TestCase):
     def test_get_subalignment(self):
         """ get_sub_alignment functions as expected
         """
-        self.a1.get_subalignment()
         raise NotImplementedError
 
     def test_init_validate(self):
@@ -341,7 +340,14 @@ class AlignmentTests(TestCase):
     def test_iter_positions(self):
         """ iter_positions functions as expected
         """
-        raise NotImplementedError
+        actual = list(self.a2.iter_positions())
+        expected = [map(DNASequence,list('UA')), 
+                    map(DNASequence,list('UC')),
+                    map(DNASequence,list('AG')),
+                    map(DNASequence,list('UU')),
+                    map(DNASequence,list('-U'))]
+        self.seqs2_t = [('r1', 'UUAU-'), ('r2', 'ACGUU')]
+        self.assertEqual(actual, expected)
 
     def test_majority_consensus(self):
         """ majority_consensus functions as expected

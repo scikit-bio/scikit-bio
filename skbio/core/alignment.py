@@ -268,7 +268,9 @@ class Alignment(SequenceCollection):
     def iter_positions(self):
         """
         """
-        raise NotImplementedError
+        for i in range(self.sequence_length()):
+            position = [seq[i] for seq in self]
+            yield position
 
     def majority_consensus(self):
         """
