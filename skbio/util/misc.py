@@ -14,9 +14,10 @@ Functions
 .. autosummary::
    :toctree: generated/
 
-   safe_md5
-   remove_files
+   combinate
    create_dir
+   remove_files
+   safe_md5
 
 """
 from __future__ import division
@@ -231,3 +232,42 @@ def handle_error_codes(dir_name, supress_errors=False,
         return error_code
     else:
         raise OSError(error_strings[error_code])
+
+def combinate(items, n):
+    """Yield combinations of items
+
+    Parameters
+    ----------
+
+    items : iterable
+        items from which the permutations are generated
+    n : int
+        number of elements to yield per iteration
+
+    Returns
+    -------
+
+    items : list
+        yields an list of ``n`` elements per iteration
+
+    Examples
+    --------
+
+    >>> from skbio.util.misc import combinate
+    >>> letters = ['a', 'b', 'c', 'd']
+    >>> for element in combinate(letters, 2):
+    ...     print element
+    ['a', 'b']
+    ['a', 'c']
+    ['a', 'd']
+    ['b', 'c']
+    ['b', 'd']
+    ['c', 'd']
+
+    """
+    if n == 0:
+        yield []
+    else:
+        for i in xrange(len(items) - n + 1):
+            for cc in combinate(items[i + 1:], n - 1):
+                yield [items[i]] + cc
