@@ -46,7 +46,7 @@ from __future__ import division
 import numpy as np
 
 from skbio.core.exception import SequenceCollectionError
-
+from skbio.core.distance import SymmetricDistanceMatrix
 
 class SequenceCollection(object):
     """
@@ -167,8 +167,8 @@ class SequenceCollection(object):
         int_map = []
         for i, seq in enumerate(self):
             k = ("%s%d" % (prefix, i))
-            int_keys.append((k, seq.identifier))
             int_map.append((k, seq))
+            int_keys.append((k, seq.identifier))
         return dict(int_map), dict(int_keys) 
 
     def is_valid(self):
@@ -244,7 +244,15 @@ class Alignment(SequenceCollection):
     def distances(self):
         """
         """
-        raise NotImplementedError
+        sequence_count = self.sequence_count()
+        dm = np.zeros((sequence_count, sequence_count))
+        identifiers = []
+        for i in range(sequence_count):
+            self_i = self[i]
+            identifiers.append(self_i.identifier)
+            for j in range(i):
+                dm[i, j] = dm[j, i] = self_i.distance(self[j])
+        return SymmetricDistanceMatrix(dm, identifiers)
 
     def get_subalignment(self, seqs_to_keep=None, positions_to_keep=None,
             invert_seqs_to_keep=False, invert_positions_to_keep=False):

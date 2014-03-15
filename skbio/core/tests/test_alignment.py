@@ -10,11 +10,13 @@
 
 from unittest import TestCase, main
 
+import numpy as np
+
 from skbio.core.sequence import (BiologicalSequence, NucleotideSequence, 
         DNASequence, RNASequence)
 from skbio.core.alignment import (SequenceCollection, Alignment)
 from skbio.core.exception import SequenceCollectionError
-
+from skbio.core.distance import SymmetricDistanceMatrix
 
 class SequenceCollectionTests(TestCase):
     """ Tests of the SequenceCollection class """
@@ -24,6 +26,8 @@ class SequenceCollectionTests(TestCase):
         """
         self.d1 = DNASequence('GATTACA', identifier="d1")
         self.d2 = DNASequence('TTG', identifier="d2")
+        self.d1_lower = DNASequence('gattaca', identifier="d1")
+        self.d2_lower = DNASequence('ttg', identifier="d2")
         self.r1 = RNASequence('GAUUACA', identifier="r1")
         self.r2 = RNASequence('UUG', identifier="r2")
         self.r3 = RNASequence('U-----UGCC--', identifier="r3")
@@ -31,6 +35,7 @@ class SequenceCollectionTests(TestCase):
         self.i1 = DNASequence('GATXACA', identifier="i1")
 
         self.seqs1 = [self.d1, self.d2]
+        self.seqs1_lower = [self.d1_lower, self.d2_lower]
         self.seqs2 = [self.r1, self.r2, self.r3]
         self.seqs3 = self.seqs1 + self.seqs2
 
@@ -40,6 +45,7 @@ class SequenceCollectionTests(TestCase):
         self.seqs3_t = self.seqs1_t + self.seqs2_t
 
         self.s1 = SequenceCollection(self.seqs1)
+        self.s1_lower = SequenceCollection(self.seqs1_lower)
         self.s2 = SequenceCollection(self.seqs2)
         self.s3 = SequenceCollection(self.seqs3)
 
@@ -223,12 +229,14 @@ class SequenceCollectionTests(TestCase):
     def test_lower(self):
         """ lower functions as expected
         """
-        raise NotImplementedError
+        self.assertEqual(self.s1.lower(), self.s1_lower)
 
     def test_sequence_count(self):
         """ num_seqs functions as expected
         """
-        raise NotImplementedError
+        self.assertEqual(self.s1.sequence_count(), 2)
+        self.assertEqual(self.s2.sequence_count(), 3)
+        self.assertEqual(self.s3.sequence_count(), 5)
 
     def test_sequence_lengths(self):
         """ sequence_lengths functions as expected
@@ -253,6 +261,7 @@ class SequenceCollectionTests(TestCase):
     def test_upper(self):
         """ upper functions as expected
         """
+        self.assertEqual(self.s1_lower.upper(), self.s1)
 
 class AlignmentTests(TestCase):
 
@@ -294,8 +303,12 @@ class AlignmentTests(TestCase):
     def test_distances(self):
         """ distances functions as expected
         """
-        self.a1.get_distances()
-        raise NotImplementedError
+        expected = [[    0, 6./13, 4./13],
+                    [6./13, 0,     7./13],
+                    [4./13, 7./13, 0]]
+        expected = SymmetricDistanceMatrix(expected, ['d1', 'd2', 'd3'])
+        actual = self.a1.distances()
+        self.assertEqual(actual, expected)
 
     def test_get_subalignment(self):
         """ get_sub_alignment functions as expected
