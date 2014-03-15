@@ -9,7 +9,7 @@
 #-----------------------------------------------------------------------------
 
 from skbio.parse.fasta import MinimalFastaParser
-from skbio.parse.record import RecordError
+from skbio.core.exception import RecordError
 from unittest import TestCase, main
 
 
