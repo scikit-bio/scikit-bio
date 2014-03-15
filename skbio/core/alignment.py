@@ -105,41 +105,6 @@ class SequenceCollection(object):
         """
         return iter(self._data)
 
-    def degap(self):
-        """
-        """
-        result = []
-        for seq in self:
-            result.append(seq.degap())
-        return SequenceCollection(result)
-
-    def int_map(self, prefix=""):
-        """
-        """
-        int_keys = []
-        int_map = []
-        for i, seq in enumerate(self):
-            k = ("%s%d" % (prefix, i))
-            int_keys.append((k, seq.identifier))
-            int_map.append((k, seq))
-        return dict(int_map), dict(int_keys) 
-
-    def get_seq(self, identifier):
-        """
-        """
-        return self[self._identifier_to_index[identifier]]
-
-    def identifiers(self):
-        """
-        """
-        return self._identifier_to_index.keys()
-
-    def items(self):
-        """
-        """
-        for seq in self:
-            yield seq.identifier, seq
-
     def __len__(self):
         """
         """
@@ -165,14 +130,6 @@ class SequenceCollection(object):
         return "<%s: n=%d; mean +/- std length=%.2f +/- %.2f>" % (cn, count,
                 center, spread)
 
-    def _validate_character_set(self):
-        """
-        """
-        for seq in self:
-            if not seq.is_valid():
-                return False
-        return True
-
     def count_center_spread(self, center_f=np.mean, spread_f=np.std):
         """
         """
@@ -180,15 +137,45 @@ class SequenceCollection(object):
         return (len(sequence_lengths), center_f(sequence_lengths),
                 spread_f(sequence_lengths))
 
-    def num_seqs(self):
+    def degap(self):
         """
         """
-        return len(self._data)
+        result = []
+        for seq in self:
+            result.append(seq.degap())
+        return SequenceCollection(result)
+
+    def get_seq(self, identifier):
+        """
+        """
+        return self[self._identifier_to_index[identifier]]
+
+    def identifiers(self):
+        """
+        """
+        return self._identifier_to_index.keys()
+
+    def int_map(self, prefix=""):
+        """
+        """
+        int_keys = []
+        int_map = []
+        for i, seq in enumerate(self):
+            k = ("%s%d" % (prefix, i))
+            int_keys.append((k, seq.identifier))
+            int_map.append((k, seq))
+        return dict(int_map), dict(int_keys) 
 
     def is_valid(self):
         """
         """
         return self._validate_character_set()
+
+    def items(self):
+        """
+        """
+        for seq in self:
+            yield seq.identifier, seq
 
     def lower(self):
         """
@@ -198,10 +185,10 @@ class SequenceCollection(object):
             result.append(seq.lower())
         return self.__class__(result)
 
-    def majority_consensis(self):
+    def sequence_count(self):
         """
         """
-        raise NotImplementedError
+        return len(self._data)
 
     def sequence_lengths(self):
         """
@@ -236,23 +223,19 @@ class SequenceCollection(object):
             result.append(seq.upper())
         return self.__class__(result)
 
+    def _validate_character_set(self):
+        """
+        """
+        for seq in self:
+            if not seq.is_valid():
+                return False
+        return True
 
 
 class Alignment(SequenceCollection):
     """
     """
 
-    def _validate_lengths(self):
-        """
-        """
-        seq1_length = len(self[0])
-        for seq in self[1:]:
-            if seq1_length != len(seq):
-                return False
-        return True
-
-    def alignment_length(self):
-        return len(self._data[0])
 
     def distances(self):
         """
@@ -280,23 +263,37 @@ class Alignment(SequenceCollection):
         """
         raise NotImplementedError
 
+    def omit_gap_positions(self, allowed_gap_frac=0):
+        """
+        """
+        raise NotImplementedError
 
     def omit_gap_sequences(self, allowed_gap_frac=0):
         """
         """
         raise NotImplementedError
 
-    def omit_gap_positions(self, allowed_gap_frac=0):
+    def position_frequencies(self):
         """
         """
         raise NotImplementedError
 
-    def positional_frequencies(self):
+    def position_entropies(self):
         """
         """
         raise NotImplementedError
 
-    def uncertainties(self):
+    def sequence_length(self):
         """
         """
-        raise NotImplementedError
+        return len(self._data[0])
+
+    def _validate_lengths(self):
+        """
+        """
+        seq1_length = len(self[0])
+        for seq in self[1:]:
+            if seq1_length != len(seq):
+                return False
+        return True
+

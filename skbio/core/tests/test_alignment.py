@@ -59,13 +59,6 @@ class SequenceCollectionTests(TestCase):
         SequenceCollection(self.seqs3)
         SequenceCollection(self.seqs3)
 
-    def test_from_fasta_records(self):
-        """ Initialization from list of tuples functions as expected
-        """
-        SequenceCollection.from_fasta_records(self.seqs1_t, DNASequence)
-        SequenceCollection.from_fasta_records(self.seqs2_t, RNASequence)
-        SequenceCollection.from_fasta_records(self.seqs3_t, NucleotideSequence)
-
     def test_init_validate(self):
         """ initialization with validation functions as expected
         """
@@ -75,6 +68,52 @@ class SequenceCollectionTests(TestCase):
         self.assertRaises(SequenceCollectionError, SequenceCollection,
                 self.invalid_s1, validate=True)
 
+    def test_from_fasta_records(self):
+        """ Initialization from list of tuples functions as expected
+        """
+        SequenceCollection.from_fasta_records(self.seqs1_t, DNASequence)
+        SequenceCollection.from_fasta_records(self.seqs2_t, RNASequence)
+        SequenceCollection.from_fasta_records(self.seqs3_t, NucleotideSequence)
+
+    def test_eq(self):
+        raise NotImplementedError
+
+    def test_getitem(self):
+        """ getitem functions as expected
+        """
+        self.assertEqual(self.s1[0], self.d1)
+        self.assertEqual(self.s1[1], self.d2)
+        self.assertEqual(self.s2[0], self.r1)
+        self.assertEqual(self.s2[1], self.r2)
+   
+    def test_iter(self):
+        """ iter functions as expected
+        """
+        s1_iter = iter(self.s1)
+        count = 0
+        for actual, expected in zip(s1_iter, self.seqs1):
+            count += 1
+            self.assertEqual(actual, expected)
+        self.assertEqual(count, len(self.seqs1))
+        self.assertRaises(StopIteration, s1_iter.next)
+
+    def test_len(self):
+        """ len functions as expected
+        """
+        self.assertEqual(len(self.s1),2)
+        self.assertEqual(len(self.s2),3)
+        self.assertEqual(len(self.s3),5)
+
+    def test_repr(self):
+        """
+        """
+        self.assertEqual(repr(self.s1), 
+                "<SequenceCollection: n=2; mean +/- std length=5.00 +/- 2.00>")
+        self.assertEqual(repr(self.s2), 
+                "<SequenceCollection: n=3; mean +/- std length=7.33 +/- 3.68>")
+        self.assertEqual(repr(self.s3), 
+                "<SequenceCollection: n=5; mean +/- std length=6.40 +/- 3.32>")
+   
     def test_count_center_spread(self):
         """ count_center_spread functions as expected
         """
@@ -102,30 +141,21 @@ class SequenceCollectionTests(TestCase):
         actual = self.s2.degap()
         self.assertEqual(actual, expected)
 
-    def test_getitem(self):
-        """ getitem functions as expected
-        """
-        self.assertEqual(self.s1[0], self.d1)
-        self.assertEqual(self.s1[1], self.d2)
-        self.assertEqual(self.s2[0], self.r1)
-        self.assertEqual(self.s2[1], self.r2)
-    
     def test_get_seq(self):
         """ getseq functions asexpected
         """
         self.assertEqual(self.s1.get_seq('d1'), self.d1)
         self.assertEqual(self.s1.get_seq('d2'), self.d2)
 
-    def test_iter(self):
-        """ iter functions as expected
+    def test_identifiers(self):
+        """ identifiers functions as expected
         """
-        s1_iter = iter(self.s1)
-        count = 0
-        for actual, expected in zip(s1_iter, self.seqs1):
-            count += 1
-            self.assertEqual(actual, expected)
-        self.assertEqual(count, len(self.seqs1))
-        self.assertRaises(StopIteration, s1_iter.next)
+        raise NotImplementedError
+
+    def test_int_map(self):
+        """ int_map functions as expected
+        """
+        raise NotImplementedError
 
     def test_is_valid(self):
         """ is_valid functions as expected
@@ -142,22 +172,15 @@ class SequenceCollectionTests(TestCase):
         self.assertEqual(list(self.s1.items()),
                 [(s.identifier, s) for s in self.s1])
 
-    def test_len(self):
-        """ len functions as expected
+    def test_lower(self):
+        """ lower functions as expected
         """
-        self.assertEqual(len(self.s1),2)
-        self.assertEqual(len(self.s2),3)
-        self.assertEqual(len(self.s3),5)
+        raise NotImplementedError
 
-    def test_repr(self):
+    def test_sequence_count(self):
+        """ num_seqs functions as expected
         """
-        """
-        self.assertEqual(repr(self.s1), 
-                "<SequenceCollection: n=2; mean +/- std length=5.00 +/- 2.00>")
-        self.assertEqual(repr(self.s2), 
-                "<SequenceCollection: n=3; mean +/- std length=7.33 +/- 3.68>")
-        self.assertEqual(repr(self.s3), 
-                "<SequenceCollection: n=5; mean +/- std length=6.40 +/- 3.32>")
+        raise NotImplementedError
 
     def test_sequence_lengths(self):
         """ sequence_lengths functions as expected
@@ -174,6 +197,15 @@ class SequenceCollectionTests(TestCase):
         exp2 = ">r1\nGATTACA\n>r2\nTTG\n>r3'U-----UGCC--\n"
         self.assertEqual(self.s1.to_fasta(),exp1)
 
+    def test_to_phylip(self):
+        """ to_phylip functions as expected
+        """
+        raise NotImplementedError
+
+    def test_upper(self):
+        """ upper functions as expected
+        """
+
 class AlignmentTests(TestCase):
 
     def setUp(self):
@@ -186,7 +218,7 @@ class AlignmentTests(TestCase):
         self.seqs1_t = [('d1', '..ACC-GTTGG..'), ('d2', 'TTACCGGT-GGCC'),
                 ('d3', '.-ACC-GTTGC--')]
 
-        self.s1 = Alignment(self.seqs1)
+        self.a1 = Alignment(self.seqs1)
 
     def test_degap(self):
         """ degap functions as expected
@@ -194,8 +226,20 @@ class AlignmentTests(TestCase):
         expected = [(id_, seq.replace('.', '').replace('-', '')) 
                 for id_, seq in self.seqs1_t]
         expected = SequenceCollection.from_fasta_records(expected, DNASequence)
-        actual = self.s1.degap()
+        actual = self.a1.degap()
         self.assertEqual(actual, expected)
+
+    def test_distances(self):
+        """ distances functions as expected
+        """
+        self.a1.get_distances()
+        raise NotImplementedError
+
+    def test_get_subalignment(self):
+        """ get_sub_alignment functions as expected
+        """
+        self.a1.get_subalignment()
+        raise NotImplementedError
 
     def test_init_validate(self):
         """ initialization with validation functions as expected
@@ -213,6 +257,52 @@ class AlignmentTests(TestCase):
                 DNASequence('.-ACC-GTGC--', identifier="i2")]
         self.assertRaises(SequenceCollectionError, Alignment,
                 invalid_seqs2, validate=True)
+
+    def test_is_valid(self):
+        """
+        """
+        raise NotImplementedError
+
+    def test_iter_positions(self):
+        """ iter_positions functions as expected
+        """
+        raise NotImplementedError
+
+    def test_majority_consensus(self):
+        """ majority_consensus functions as expected
+        """
+        raise NotImplementedError
+ 
+    def test_omit_gap_positions(self):
+        """ omitting gap positions functions as expected
+        """
+        raise NotImplementedError
+   
+    def test_omit_gap_sequences(self):
+        """ omitting gap sequences functions as expected
+        """
+        raise NotImplementedError
+    
+    def test_position_frequencies(self):
+        """ computing position frequencies functions as expected
+        """
+        raise NotImplementedError
+    
+    def test_position_entropies(self):
+        """ computing positional uncertainties functions as expected
+        """
+        raise NotImplementedError
+
+    def test_sequence_length(self):
+        """
+        """
+        raise NotImplementedError
+
+    def test_validate_lengths(self):
+        """
+        """
+        raise NotImplementedError
+
 
 
 if __name__ == "__main__":
