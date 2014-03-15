@@ -1,14 +1,5 @@
 #!/usr/bin/env python
 
-#The name of this need to be changed to fastqparse put that into a file "sequences" with fasta parse.
-# change all bipy instances to skbio or sci-kit as needed. See email 
-# change all qiime usage to new filepath
-# check parse.fasta to see if the functions in there are actually being used.
-#minimal rfam parser can also be ported from cogent into sequences. 
-
-
-
-
 """
 Sequences (:mod:`skbio.parse.sequences`)
 ========================================
@@ -120,6 +111,7 @@ GdeFinder = LabeledRecordFinder(is_gde_label, ignore=is_blank)
 
 
 def gde_parse(infile, strict=True, label_to_name=str):
+    """Parses a file with GDE label line"""
     return fasta_parse(infile,
                        strict,
                        label_to_name,
@@ -128,6 +120,7 @@ def gde_parse(infile, strict=True, label_to_name=str):
 
 
 def xmfa_label_to_name(line):
+    """returns name from xmfa label."""
     (loc, strand, contig) = line.split()
     (sp, loc) = loc.split(':')
     (lo, hi) = [int(x) for x in loc.split('-')]
@@ -148,6 +141,7 @@ XmfaFinder = LabeledRecordFinder(is_fasta_label,
 
 
 def xmfa_parse(infile, strict=True):
+    """Parses a file with xmfa label line"""
     # Fasta-like but with header info like ">1:10-1000 + chr1"
     return fasta_parse(infile,
                        strict,
