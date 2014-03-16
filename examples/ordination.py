@@ -1,7 +1,7 @@
 import os
 import numpy as np
 
-from bipy.maths.stats.ordination import CA, RDA, CCA
+from skbio.maths.stats.ordination import CA, RDA, CCA
 
 
 path = os.path.dirname(os.path.abspath(__file__))
