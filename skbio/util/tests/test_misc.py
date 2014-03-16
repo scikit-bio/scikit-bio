@@ -16,7 +16,7 @@ from shutil import rmtree
 from tempfile import mkdtemp
 from uuid import uuid4
 
-from skbio.util.misc import (safe_md5, remove_files, create_dir)
+from skbio.util.misc import safe_md5, remove_files, create_dir, flatten
 
 
 class MiscTests(TestCase):
@@ -92,6 +92,11 @@ class MiscTests(TestCase):
         # if dir not there make it and return always 0
         self.assertEqual(create_dir(tmp_dir_path2), 0)
         self.assertEqual(create_dir(tmp_dir_path3, fail_on_exist=True), 0)
+
+    def test_flatten(self):
+        """flatten should remove one level of nesting from nested sequences"""
+        self.assertEqual(flatten(['aa', 'bb', 'cc']), list('aabbcc'))
+        self.assertEqual(flatten([1,[2,3], [[4, [5]]]]), [1, 2, 3, [4,[5]]])
 
 if __name__ == '__main__':
     main()
