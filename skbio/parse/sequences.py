@@ -71,7 +71,7 @@ def fasta_parse(infile,
         An open fasta file.
 
     strict : bool
-        If strict is true a `RecordError` will
+        If strict is true a ``RecordError`` will
         be raised if no header line is found
 
     Returns
