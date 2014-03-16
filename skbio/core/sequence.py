@@ -502,7 +502,7 @@ class BiologicalSequence(Sequence):
         Returns
         -------
         A new `BiologicalSequence` with all characters from
-        `self.gap_alphabet()` filtered from the sequence.
+        `self.gap_alphabet` filtered from the sequence.
 
         Notes
         -----
@@ -718,7 +718,7 @@ class BiologicalSequence(Sequence):
         list of booleans
             The list will be of length ``len(self)``, and a position will
             contain ``True`` if the character at that position in the
-            `BiologicalSequence` is in `self.gap_alphabet()`, and ``False``
+            `BiologicalSequence` is in `self.gap_alphabet`, and ``False``
             otherwise.
 
         See Also
