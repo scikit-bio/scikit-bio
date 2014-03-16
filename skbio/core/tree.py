@@ -19,11 +19,6 @@ from skbio.maths.stats.test import correlation_t
 from skbio.core.exception import (NoLengthError, DuplicateNodeError,
     NoParentError, MissingNodeError, TreeError, RecordError)
 
-__credits__ = ["Gavin Huttley", "Peter Maxwell", "Rob Knight",
-                    "Andrew Butterfield", "Catherine Lozupone", "Micah Hamady",
-                    "Jeremy Widmann", "Zongzhi Liu", "Daniel McDonald",
-                    "Justin Kuczynski"]
-
 _dnd_token_str = '(:),;'
 _dnd_tokens = set(_dnd_token_str)
 _dnd_tokens_and_spaces = _dnd_token_str + ' \t\v\n'
