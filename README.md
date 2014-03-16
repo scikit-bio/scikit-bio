@@ -1,6 +1,30 @@
-scikit-bio
-==========
+               _ _    _ _          _     _
+              (_) |  (_) |        | |   (_)
+      ___  ___ _| | ___| |_ ______| |__  _  ___
+     / __|/ __| | |/ / | __|______| '_ \| |/ _ \
+     \__ \ (__| |   <| | |_       | |_) | | (_) |
+     |___/\___|_|_|\_\_|\__|      |_.__/|_|\___/
 
+
+           Opisthokonta
+                   \  Amoebozoa
+                    \ /
+                     *    Euryarchaeota
+                      \     |_ Crenarchaeota
+                       \   *
+                        \ /
+                         *
+                        /
+                       /
+                      /
+                     *
+                    / \
+                   /   \
+        Proteobacteria  \
+                       Cyanobacteria
+    
+    
+---
 [![Build Status](https://travis-ci.org/biocore/scikit-bio.png?branch=master)](https://travis-ci.org/biocore/scikit-bio)
 
 Core objects, functions and statistics for working with biological data in Python.
@@ -33,3 +57,7 @@ The pre-history of scikit-bio
 -----------------------------
 
 scikit-bio began from code derived from [PyCogent](http://www.pycogent.org) and [QIIME](http://www.qiime.org), and the contributors and/or copyright holders have agreed to make the code they wrote for PyCogent and/or QIIME available under the BSD license. The contributors to PyCogent and/or QIIME modules that have been ported to scikit-bio are: Rob Knight (@rob-knight), Gavin Huttley (@gavin-huttley), Daniel McDonald (@wasade), Micah Hamady, Antonio Gonzalez (@antgonza), Sandra Smit, Greg Caporaso (@gregcaporaso), Jai Ram Rideout (@ElBrogrammer), Cathy Lozupone (@clozupone), Mike Robeson (@mikerobeson), Marcin Cieslik, Peter Maxwell, Jeremy Widmann, Zongzhi Liu, Michael Dwan, Logan Knecht (@loganknecht), Andrew Cochran, Jose Carlos Clemente (@cleme), Damien Coy, Levi McCracken, and Andrew Butterfield.
+
+Logo
+----
+scikit-bio ASCII art created by [@gregcaporaso](https://github.com/gregcaporaso). Text logo created at [patorjk.com](http://patorjk.com/software/taag/).

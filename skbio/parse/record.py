@@ -10,38 +10,23 @@
 
 from copy import deepcopy
 
-class Grouper(object):
-    """Acts as iterator that returns lists of n items at a time from seq.
 
-    Note: returns a partial list if not evenly divisible by n.
-    """
+class FileFormatError(Exception):
 
-    def __init__(self, NumItems=1):
-        """Returns new Grouper object: will return n items at a time from seq
-        """
-        self.NumItems = NumItems
+    """Exception raised when a file can not be parsed."""
+    pass
 
-    def __call__(self, seq):
-        """Returns iterator over seq, returning n items at a time."""
-        try:
-            num = int(self.NumItems)
-            assert num >= 1
-        except:
-            raise ValueError("Grouper.NumItems must be positive int, not %s"
-                             % (self.NumItems))
-        curr = []
-        for i, item in enumerate(seq):
-            if (i % num == 0) and curr:
-                yield curr
-                curr = [item]
-            else:
-                curr.append(item)
-        # return any leftover items
-        if curr:
-            yield curr
 
-# Example of the instances Grouper provides:
-ByPairs = Grouper(2)
+class RecordError(FileFormatError):
+
+    """Exception raised when a record is bad."""
+    pass
+
+
+class FieldError(RecordError):
+
+    """Exception raised when a field within a record is bad."""
+    pass
 
 
 def string_and_strip(*items):
