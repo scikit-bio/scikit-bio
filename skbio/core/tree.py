@@ -909,8 +909,8 @@ class TreeNode(object):
                 raise NoParentError("Provided ancestor is not in the path")
 
             if curr.Length is None:
-                raise NoLengthError("No length on node %s found!" % \
-                        curr.Name if curr.Name is not None else "unnamed")
+                raise NoLengthError("No length on node %s found!" %
+                                    curr.Name or "unnamed")
 
             accum += curr.Length
             curr = curr.Parent
@@ -1079,7 +1079,7 @@ class TreeNode(object):
         return 1 - (2*intersection_length / float(total_subsets))
 
     def compare_tip_distances(self, other, sample=None, dist_f=distance_from_r,
-            shuffle_f=shuffle):
+                              shuffle_f=shuffle):
         """Compares self to other using tip-to-tip distance matrices.
 
         Value returned is dist_f(m1, m2) for the two matrices. Default is
