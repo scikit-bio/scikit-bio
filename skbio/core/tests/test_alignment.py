@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#1!/usr/bin/env python
 
 #-----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -145,10 +145,11 @@ class SequenceCollectionTests(TestCase):
             pass
         # SequenceCollections of different types are not equal
         self.assertTrue(self.s1 != FakeSequenceCollection([self.d1, self.d2]))
-        self.assertTruee(self.s1 != Alignment([self.d1, self.d2]))
+        self.assertTrue(self.s1 != Alignment([self.d1, self.d2]))
 
         # SequenceCollections with different sequences are not equal
-        self.assertTrue(self.s1 != SequenceCollection([self.d1, self]))
+        self.assertTrue(self.s1 != SequenceCollection([self.d1, self.d1,
+            self.d1]))
 
     def test_repr(self):
         """
@@ -439,13 +440,31 @@ class AlignmentTests(TestCase):
     def test_omit_gap_positions(self):
         """ omitting gap positions functions as expected
         """
-        raise NotImplementedError
-   
+        expected = self.a2
+        self.assertEqual(self.a2.omit_gap_positions(1.0),expected)
+        self.assertEqual(self.a2.omit_gap_positions(0.51),expected)
+        
+        r1 = RNASequence('UUAU', identifier="r1")
+        r2 = RNASequence('ACGU', identifier="r2")
+        expected = Alignment([r1, r2])
+        self.assertEqual(self.a2.omit_gap_positions(0.49),expected)
+        
+        r1 = RNASequence('', identifier="r1")
+        r2 = RNASequence('', identifier="r2")
+        expected = Alignment([r1, r2])
+        self.assertEqual(self.a2.omit_gap_positions(1.0),expected)
+
+
     def test_omit_gap_sequences(self):
         """ omitting gap sequences functions as expected
         """
-        raise NotImplementedError
+        expected = self.a1
+        self.assertEqual(self.a2.omit_gap_sequences(0.0),expected)
+        self.assertEqual(self.a2.omit_gap_sequences(0.20),expected)
 
+        a = Alignment([self.r2])
+        self.assertEqual(a.omit_gap_sequences(0.000199),expected)
+        
     def test_position_counters(self):
         """ position_counters functions as expected
         """

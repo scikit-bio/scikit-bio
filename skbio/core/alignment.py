@@ -337,15 +337,25 @@ class Alignment(SequenceCollection):
         result = ''.join(result)
         return constructor(result)
 
-    def omit_gap_positions(self, allowed_gap_frac=0):
+    def omit_gap_positions(self, allowed_gap_frac=0.0):
         """
         """
-        raise NotImplementedError
+        position_frequencies = self.position_frequencies()
+        sequence_count = self.sequence_count()
+        gap_alphabet = self[0].gap_alphabet
+        
+        positions_to_keep = []
+        for i, f in enumerate(position_frequencies):
+            gap_frequency = sum([f[c] for c in gap_alphabet])
+            if gap_frequency >= allowed_gap_frac:
+                positions_to_keep.append(i)
+        return self.subalignment(positions_to_keep=positions_to_keep)
 
-    def omit_gap_sequences(self, allowed_gap_frac=0):
+    def omit_gap_sequences(self, allowed_gap_frac=0.0):
         """
         """
-        raise NotImplementedError
+        #sequence_frequencies = self.sequence_frequencies()
+        #sequence_length = self.sequence_length
 
     def position_counters(self):
         """
