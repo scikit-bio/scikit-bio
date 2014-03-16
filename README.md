@@ -1,27 +1,27 @@
-           _ _    _ _          _     _       
-          (_) |  (_) |        | |   (_)      
-  ___  ___ _| | ___| |_ ______| |__  _  ___  
- / __|/ __| | |/ / | __|______| '_ \| |/ _ \ 
- \__ \ (__| |   <| | |_       | |_) | | (_) |
- |___/\___|_|_|\_\_|\__|      |_.__/|_|\___/ 
+               _ _    _ _          _     _       
+              (_) |  (_) |        | |   (_)      
+      ___  ___ _| | ___| |_ ______| |__  _  ___  
+     / __|/ __| | |/ / | __|______| '_ \| |/ _ \ 
+     \__ \ (__| |   <| | |_       | |_) | | (_) |
+     |___/\___|_|_|\_\_|\__|      |_.__/|_|\___/ 
 
 
-       Opisthokonta
-               \  Amoebozoa 
-                \ /
-                 *    Euryarchaeota  
-                  \     |_ Crenarchaeota
-                   \   *
-                    \ / 
-                     *            
-                    / 
-                   /
-                  / 
-                 *  
-                / \
-               /   \ 
-    Proteobacteria  \
-                   Cyanobacteria
+           Opisthokonta
+                   \  Amoebozoa 
+                    \ /
+                     *    Euryarchaeota  
+                      \     |_ Crenarchaeota
+                       \   *
+                        \ / 
+                         *            
+                        / 
+                       /
+                      / 
+                     *  
+                    / \
+                   /   \ 
+        Proteobacteria  \
+                       Cyanobacteria
 
 
 [![Build Status](https://travis-ci.org/biocore/scikit-bio.png?branch=master)](https://travis-ci.org/biocore/scikit-bio)
