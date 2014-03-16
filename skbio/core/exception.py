@@ -21,6 +21,15 @@ Exceptions
    MissingDataError
    MissingHeaderError
    MissingIDError
+   TreeError
+   NoLengthError
+   DuplicateNodeError
+   MissingNodeError
+   NoParentError
+   FileFormatError
+   RecordError
+   FieldError
+   FastqParseError
 
 """
 from __future__ import division
