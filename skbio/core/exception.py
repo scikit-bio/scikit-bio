@@ -121,6 +121,7 @@ class MissingNodeError(TreeError):
 
 class NoParentError(MissingNodeError):
     """Missing a parent"""
+    pass
 
 class FileFormatError(Exception):
     """Exception raised when a file can not be parsed."""
