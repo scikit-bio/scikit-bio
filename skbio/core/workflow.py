@@ -192,7 +192,7 @@ class Workflow(object):
                 method execution
         """
         self.debug_counter = 0
-        self.debug_trace = set([])
+        self.debug_trace = set()
         self.debug_runtime = {}
         self.debug_pre_state = {}
         self.debug_post_state = {}
