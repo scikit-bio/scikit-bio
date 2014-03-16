@@ -909,7 +909,8 @@ class TreeNode(object):
                 raise NoParentError("Provided ancestor is not in the path")
 
             if curr.Length is None:
-                raise NoLengthError
+                raise NoLengthError("No length on node %s found!" % \
+                        curr.Name if curr.Name is not None else "unnamed")
 
             accum += curr.Length
             curr = curr.Parent
