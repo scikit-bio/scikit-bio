@@ -64,7 +64,8 @@ from types import MethodType
 
 class NotExecuted(object):
     """Helper object to track if a method was executed"""
-    msg = None
+    def __init__(self):
+        self.msg = None
 
     def __call__(self, msg):
         self.msg = msg
