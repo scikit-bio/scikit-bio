@@ -10,3 +10,6 @@
 
 __credits__ = "https://github.com/biocore/scikit-bio/graphs/contributors"
 __version__ = "0.0.0-dev"
+
+motto = "It's gonna get weird, bro."
+
