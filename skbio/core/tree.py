@@ -97,25 +97,22 @@ class TreeNode(object):
     ### start topology updates ###
     def _adopt(self, node):
         """Update parent references but does NOT update self.Children"""
+        self.invalidate_node_cache()
         if node.Parent is not None:
             node.Parent.remove(node)
         node.Parent = self
-        self.invalidate_node_cache()
         return node
 
     def append(self, node):
         """Appends i to self.Children, in-place, cleaning up refs."""
         self.Children.append(self._adopt(node))
-        self.invalidate_node_cache()
 
     def extend(self, nodes):
         """Append a list of nodes to self"""
         self.Children.extend(map(self._adopt, nodes))
-        self.invalidate_node_cache()
 
     def pop(self, index=-1):
         """Remove a node from self"""
-        self.invalidate_node_cache()
         return self._remove_node(index)
 
     def _remove_node(self, idx):
@@ -131,7 +128,6 @@ class TreeNode(object):
             if curr_node == node:
                 self._remove_node(i)
                 return True
-        self.invalidate_node_cache()
         return False
 
     def remove_deleted(self, f):
@@ -163,7 +159,7 @@ class TreeNode(object):
     ### end topology updates ###
 
     ### copy like methods ###
-    def copy(self, memo=None, _nil=[], constructor='ignored'):
+    def copy(self, memo=None):
         """Returns a copy of self using an iterative approach"""
         def __copy_node(n):
             result = n.__class__()
@@ -192,6 +188,7 @@ class TreeNode(object):
                 nodes_stack.pop()
         return root
 
+    __copy__ = copy
     __deepcopy__ = deepcopy = copy
 
     def unrooted_deepcopy(self, parent=None):
