@@ -271,8 +271,8 @@ class AlignmentTests(TestCase):
         self.d2 = DNASequence('TTACCGGT-GGCC', identifier="d2")
         self.d3 = DNASequence('.-ACC-GTTGC--', identifier="d3")
         
-        self.r1 = DNASequence('UUAU-', identifier="r1")
-        self.r2 = DNASequence('ACGUU', identifier="r2")
+        self.r1 = RNASequence('UUAU-', identifier="r1")
+        self.r2 = RNASequence('ACGUU', identifier="r2")
         
         self.seqs1 = [self.d1, self.d2, self.d3]
         self.seqs2 = [self.r1, self.r2]
@@ -297,8 +297,6 @@ class AlignmentTests(TestCase):
                 for id_, seq in self.seqs2_t]
         expected = SequenceCollection.from_fasta_records(expected, RNASequence)
         actual = self.a2.degap()
-        print expected.to_fasta()
-        print actual.to_fasta()
         self.assertEqual(actual, expected)
 
     def test_distances(self):
@@ -342,11 +340,11 @@ class AlignmentTests(TestCase):
         """ iter_positions functions as expected
         """
         actual = list(self.a2.iter_positions())
-        expected = [map(DNASequence,list('UA')), 
-                    map(DNASequence,list('UC')),
-                    map(DNASequence,list('AG')),
-                    map(DNASequence,list('UU')),
-                    map(DNASequence,list('-U'))]
+        expected = [map(RNASequence,list('UA')), 
+                    map(RNASequence,list('UC')),
+                    map(RNASequence,list('AG')),
+                    map(RNASequence,list('UU')),
+                    map(RNASequence,list('-U'))]
         self.seqs2_t = [('r1', 'UUAU-'), ('r2', 'ACGUU')]
         self.assertEqual(actual, expected)
 
@@ -419,7 +417,7 @@ class AlignmentTests(TestCase):
                 expected, 5)
 
     def test_sequence_length(self):
-        """
+        """ sequence_length functions as expected 
         """
         self.assertEqual(self.a1.sequence_length(), 13)
         self.assertEqual(self.a2.sequence_length(), 5)
@@ -428,8 +426,13 @@ class AlignmentTests(TestCase):
     def test_validate_lengths(self):
         """
         """
-        raise NotImplementedError
-
+        self.assertTrue(self.a1._validate_lengths())
+        self.assertTrue(self.a2._validate_lengths())
+        self.assertTrue(Alignment([
+            DNASequence('TTT', identifier="d1")])._validate_lengths())
+        self.assertFalse(Alignment([
+            DNASequence('TTT', identifier="d1"),
+            DNASequence('TT', identifier="d2")])._validate_lengths())
 
 
 if __name__ == "__main__":
