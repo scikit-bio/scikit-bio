@@ -10,27 +10,7 @@
 
 from copy import deepcopy
 
-
-class FileFormatError(Exception):
-
-    """Exception raised when a file can not be parsed."""
-    pass
-
-
-class RecordError(FileFormatError):
-
-    """Exception raised when a record is bad."""
-    pass
-
-
-class FieldError(RecordError):
-
-    """Exception raised when a field within a record is bad."""
-    pass
-
-
 class Grouper(object):
-
     """Acts as iterator that returns lists of n items at a time from seq.
 
     Note: returns a partial list if not evenly divisible by n.

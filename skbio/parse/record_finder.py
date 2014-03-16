@@ -25,7 +25,7 @@ str.  Note that its default constuctor is rstrip instead of strip.
 
 from string import strip, rstrip
 
-from skbio.parse.record import RecordError
+from skbio.core.exception import RecordError
 
 
 def is_empty(line):

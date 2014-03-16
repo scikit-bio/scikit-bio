@@ -9,7 +9,7 @@
 #-----------------------------------------------------------------------------
 
 from skbio.parse.record_finder import LabeledRecordFinder
-from skbio.parse.record import RecordError
+from skbio.core.exception import RecordError
 
 
 def is_fasta_label(x):
