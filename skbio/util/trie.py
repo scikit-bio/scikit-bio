@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 r"""
-Trie (:mod:`skbio.util.trie`)
-=============================
+Digital Tree (trie) (:mod:`skbio.util.trie`)
+============================================
 
 .. currentmodule:: skbio.util.trie
 
@@ -10,7 +10,7 @@ This module provides functionality for working with tries.
 Classes
 -------
 
-..autosummary::
+.. autosummary::
     :toctree: generated/
 
     CompressedTrie
