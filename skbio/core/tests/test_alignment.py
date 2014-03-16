@@ -105,7 +105,7 @@ class SequenceCollectionTests(TestCase):
 
         # SequenceCollections with different sequences are not equal
         self.assertFalse(self.s1 == SequenceCollection([self.d1, self.r1]))
-
+        
     def test_getitem(self):
         """ getitem functions as expected
         """
@@ -309,10 +309,63 @@ class AlignmentTests(TestCase):
         actual = self.a1.distances()
         self.assertEqual(actual, expected)
 
-    def test_get_subalignment(self):
-        """ get_sub_alignment functions as expected
+    def test_subalignment(self):
+        """ subalignment functions as expected
         """
-        raise NotImplementedError
+        # keep seqs by identifiers
+        actual = self.a1.subalignment(seqs_to_keep=['d1','d3'])
+        expected = Alignment([self.d1, self.d3])
+        self.assertEqual(actual, expected)
+        
+        # keep seqs by indices
+        actual = self.a1.subalignment(seqs_to_keep=[0, 2])
+        expected = Alignment([self.d1, self.d3])
+        self.assertEqual(actual, expected)
+
+        # keep seqs by identifiers (invert)
+        actual = self.a1.subalignment(seqs_to_keep=['d1','d3'],
+                invert_seqs_to_keep=True)
+        expected = Alignment([self.d2])
+        self.assertEqual(actual, expected)
+        
+        # keep seqs by indices (invert)
+        actual = self.a1.subalignment(seqs_to_keep=[0, 2],
+                invert_seqs_to_keep=True)
+        expected = Alignment([self.d2])
+        self.assertEqual(actual, expected)
+        
+        # keep positions
+        actual = self.a1.subalignment(positions_to_keep=[0,2,3])
+        d1 = DNASequence('.AC', identifier="d1")
+        d2 = DNASequence('TAC', identifier="d2")
+        d3 = DNASequence('.AC', identifier="d3")
+        expected = Alignment([d1, d2, d3])
+        self.assertEqual(actual, expected)
+ 
+        # keep positions (invert)
+        actual = self.a1.subalignment(positions_to_keep=[0,2,3],
+                invert_positions_to_keep=True)
+        d1 = DNASequence('.C-GTTGG..', identifier="d1")
+        d2 = DNASequence('TCGGT-GGCC', identifier="d2")
+        d3 = DNASequence('-C-GTTGC--', identifier="d3")
+        expected = Alignment([d1, d2, d3])
+        self.assertEqual(actual, expected)
+
+        # keep seqs and positions
+        actual = self.a1.subalignment(seqs_to_keep=[0,2], 
+                positions_to_keep=[0,2,3])
+        d1 = DNASequence('.AC', identifier="d1")
+        d3 = DNASequence('.AC', identifier="d3")
+        expected = Alignment([d1, d3])
+        self.assertEqual(actual, expected)
+  
+        # keep seqs and positions (invert)
+        actual = self.a1.subalignment(seqs_to_keep=[0, 2], 
+                positions_to_keep=[0, 2, 3], invert_seqs_to_keep=True,
+                invert_positions_to_keep=True)
+        d2 = DNASequence('TCGGT-GGCC', identifier="d2")
+        expected = Alignment([d2])
+        self.assertEqual(actual, expected)
 
     def test_init_validate(self):
         """ initialization with validation functions as expected

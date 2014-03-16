@@ -258,11 +258,55 @@ class Alignment(SequenceCollection):
                 dm[i, j] = dm[j, i] = self_i.distance(self[j])
         return SymmetricDistanceMatrix(dm, identifiers)
 
-    def get_subalignment(self, seqs_to_keep=None, positions_to_keep=None,
+    def subalignment(self, seqs_to_keep=None, positions_to_keep=None,
             invert_seqs_to_keep=False, invert_positions_to_keep=False):
         """
         """
-        raise NotImplementedError
+        if seqs_to_keep is None:
+            if invert_seqs_to_keep:
+                return self.__class__([])
+            else:
+                def keep_seq(i, identifier):
+                    return True
+        else:
+            seqs_to_keep = set(seqs_to_keep)
+            if invert_seqs_to_keep:
+                def keep_seq(i, identifier):
+                    return not (identifier in seqs_to_keep or i in seqs_to_keep)
+            else:
+                def keep_seq(i, identifier):
+                    return (identifier in seqs_to_keep or i in seqs_to_keep)
+
+        if positions_to_keep is None:
+            if invert_positions_to_keep:
+                return self.__class__([])
+            else:
+                def keep_position(pos):
+                    return True
+        else:
+            positions_to_keep = set(positions_to_keep)
+            if invert_positions_to_keep:
+                def keep_position(pos):
+                    return not pos in positions_to_keep
+            else:
+                def keep_position(pos):
+                    return pos in positions_to_keep
+
+        result = []
+        for i, seq in enumerate(self):
+            if keep_seq(i, seq.identifier):
+                new_seq = []
+                for i,c in enumerate(seq):
+                    if keep_position(i):
+                        new_seq.append(c)
+                # this is bad, we are calling join too much. this
+                # should be addressed in issue #60
+                result.append(seq.__class__(''.join(new_seq),
+                    identifier = seq.identifier,
+                    description=seq.description))
+            else:
+                continue
+        return self.__class__(result)
 
     def is_valid(self):
         """
