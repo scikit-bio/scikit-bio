@@ -452,7 +452,7 @@ class AlignmentTests(TestCase):
         r1 = RNASequence('', identifier="r1")
         r2 = RNASequence('', identifier="r2")
         expected = Alignment([r1, r2])
-        self.assertEqual(self.a2.omit_gap_positions(1.0),expected)
+        self.assertEqual(self.a2.omit_gap_positions(0.0),expected)
 
 
     def test_omit_gap_sequences(self):

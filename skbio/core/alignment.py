@@ -347,7 +347,7 @@ class Alignment(SequenceCollection):
         positions_to_keep = []
         for i, f in enumerate(position_frequencies):
             gap_frequency = sum([f[c] for c in gap_alphabet])
-            if gap_frequency >= allowed_gap_frac:
+            if gap_frequency <= allowed_gap_frac:
                 positions_to_keep.append(i)
         return self.subalignment(positions_to_keep=positions_to_keep)
 
