@@ -22,8 +22,8 @@
                    /   \
         Proteobacteria  \
                        Cyanobacteria
-
-
+  
+  
 ---
 [![Build Status](https://travis-ci.org/biocore/scikit-bio.png?branch=master)](https://travis-ci.org/biocore/scikit-bio)
 
