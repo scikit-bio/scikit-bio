@@ -385,9 +385,20 @@ class AlignmentTests(TestCase):
                 invalid_seqs2, validate=True)
 
     def test_is_valid(self):
+        """ is_valid functions as expected
         """
-        """
-        raise NotImplementedError
+        self.assertTrue(self.a1.is_valid(), True)
+        self.assertTrue(self.a2.is_valid(), True)
+
+        # invalid because of length mismatch
+        d1 = DNASequence('..ACC-GTTGG..', identifier="d1")
+        d2 = DNASequence('TTACCGGT-GGC', identifier="d2")
+        self.assertFalse(Alignment([d1,d2]).is_valid())
+
+        # invalid because of invalid charaters
+        d1 = DNASequence('..ACC-GTXGG..', identifier="d1")
+        d2 = DNASequence('TTACCGGT-GGCC', identifier="d2")
+        self.assertFalse(Alignment([d1,d2]).is_valid())
 
     def test_iter_positions(self):
         """ iter_positions functions as expected
