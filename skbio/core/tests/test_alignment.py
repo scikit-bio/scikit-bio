@@ -406,13 +406,24 @@ class AlignmentTests(TestCase):
 
     def test_position_entropies(self):
         """ computing positional uncertainties functions as expected
+
+        tested by calculating values as described in this post:
+         http://stackoverflow.com/a/15476958/3424666
         """
-        raise NotImplementedError
+        expected = [0.69314, 0.69314, 0.69314, 0.0, 0.69314]
+        np.testing.assert_almost_equal(self.a2.position_entropies(),
+                expected, 5)
+        
+        expected = [1.0, 1.0, 1.0, 0.0, 1.0]
+        np.testing.assert_almost_equal(self.a2.position_entropies(base=2),
+                expected, 5)
 
     def test_sequence_length(self):
         """
         """
-        raise NotImplementedError
+        self.assertEqual(self.a1.sequence_length(), 13)
+        self.assertEqual(self.a2.sequence_length(), 5)
+
 
     def test_validate_lengths(self):
         """

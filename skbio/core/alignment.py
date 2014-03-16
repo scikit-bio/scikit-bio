@@ -47,6 +47,8 @@ from collections import Counter, defaultdict
 
 import numpy as np
 
+from scipy.stats import entropy
+
 from skbio.core.exception import SequenceCollectionError
 from skbio.core.distance import SymmetricDistanceMatrix
 
@@ -321,10 +323,22 @@ class Alignment(SequenceCollection):
             result.append(current_freqs)
         return result
 
-    def position_entropies(self):
+    def position_entropies(self, base=None):
         """
+        Parameters
+        ----------
+        base: float (optional)
+            log base for entropy calculation (default: e)
+
+        References
+        ----------
+        A Mathematical Theory of Communication, CE Shannon
+        The Bell System Technical Journal (1948).
         """
-        raise NotImplementedError
+        result = []
+        for f in self.position_frequencies():
+            result.append(entropy(f.values(), base=base))
+        return result
 
     def sequence_length(self):
         """
