@@ -17,3 +17,4 @@ API Reference
    draw.distributions
    maths.stats.spatial
    util.misc
+   parse.sequences
