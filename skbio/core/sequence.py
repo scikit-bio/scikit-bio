@@ -118,8 +118,8 @@ class BiologicalSequence(Sequence):
         """
         return set()
 
-    @staticmethod
-    def gap_alphabet():
+    @classmethod
+    def gap_alphabet(cls):
         """Return the set of characters defined as gaps.
 
         Returns
@@ -971,8 +971,8 @@ class NucleotideSequence(BiologicalSequence):
         """
         return {}
 
-    @staticmethod
-    def iupac_standard_characters():
+    @classmethod
+    def iupac_standard_characters(cls):
         """Return the non-degenerate IUPAC nucleotide characters.
 
         Returns
@@ -983,8 +983,8 @@ class NucleotideSequence(BiologicalSequence):
         """
         return set("ACGTU")
 
-    @staticmethod
-    def iupac_degeneracies():
+    @classmethod
+    def iupac_degeneracies(cls):
         """Return the mapping of degenerate to non-degenerate characters.
 
         Returns
@@ -1175,8 +1175,8 @@ class DNASequence(NucleotideSequence):
 
         return comp_map
 
-    @staticmethod
-    def iupac_standard_characters():
+    @classmethod
+    def iupac_standard_characters(cls):
         """Return the non-degenerate IUPAC DNA characters.
 
         Returns
@@ -1187,8 +1187,8 @@ class DNASequence(NucleotideSequence):
         """
         return set("ACGT")
 
-    @staticmethod
-    def iupac_degeneracies():
+    @classmethod
+    def iupac_degeneracies(cls):
         """Return the mapping of degenerate to non-degenerate characters.
 
         Returns
@@ -1248,8 +1248,8 @@ class RNASequence(NucleotideSequence):
 
         return comp_map
 
-    @staticmethod
-    def iupac_standard_characters():
+    @classmethod
+    def iupac_standard_characters(cls):
         """Return the non-degenerate IUPAC RNA characters.
 
         Returns
@@ -1260,8 +1260,8 @@ class RNASequence(NucleotideSequence):
         """
         return set("ACGU")
 
-    @staticmethod
-    def iupac_degeneracies():
+    @classmethod
+    def iupac_degeneracies(cls):
         """Return the mapping of degenerate to non-degenerate characters.
 
         Returns
