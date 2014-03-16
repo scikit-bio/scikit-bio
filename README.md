@@ -60,4 +60,4 @@ scikit-bio began from code derived from [PyCogent](http://www.pycogent.org) and 
 
 Logo
 ----
-scikit-bio ASCII art created by @gregcaporaso. Text logo created at [patorjk.com](http://patorjk.com/software/taag/).
+scikit-bio ASCII art created by [@gregcaporaso](https://github.com/gregcaporaso). Text logo created at [patorjk.com](http://patorjk.com/software/taag/).
