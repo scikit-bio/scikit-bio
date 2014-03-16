@@ -337,25 +337,30 @@ class Alignment(SequenceCollection):
         result = ''.join(result)
         return constructor(result)
 
-    def omit_gap_positions(self, allowed_gap_frac=0.0):
+    def omit_gap_positions(self, maximum_gap_frequency=0.0):
         """
         """
         position_frequencies = self.position_frequencies()
-        sequence_count = self.sequence_count()
         gap_alphabet = self[0].gap_alphabet
         
         positions_to_keep = []
         for i, f in enumerate(position_frequencies):
             gap_frequency = sum([f[c] for c in gap_alphabet])
-            if gap_frequency <= allowed_gap_frac:
+            if gap_frequency <= maximum_gap_frequency:
                 positions_to_keep.append(i)
         return self.subalignment(positions_to_keep=positions_to_keep)
 
-    def omit_gap_sequences(self, allowed_gap_frac=0.0):
+    def omit_gap_sequences(self, maximum_gap_frequency=0.0):
         """
         """
-        #sequence_frequencies = self.sequence_frequencies()
-        #sequence_length = self.sequence_length
+        sequence_frequencies = self.sequence_frequencies()
+        gap_alphabet = self[0].gap_alphabet
+        seqs_to_keep = []
+        for seq, f in zip(self, sequence_frequencies):
+            gap_frequency = sum([f[c] for c in gap_alphabet])
+            if gap_frequency <= maximum_gap_frequency:
+                seqs_to_keep.append(seq.identifier)
+        return self.subalignment(seqs_to_keep=seqs_to_keep)
 
     def position_counters(self):
         """
@@ -392,6 +397,18 @@ class Alignment(SequenceCollection):
         result = []
         for f in self.position_frequencies():
             result.append(entropy(f.values(), base=base))
+        return result
+
+    def sequence_frequencies(self):
+        """
+        """
+        result = []
+        count = 1 / self.sequence_length()
+        for s in self:
+            current_freqs = defaultdict(int)
+            for c in s:
+                current_freqs[c] += count
+            result.append(current_freqs)
         return result
 
     def sequence_length(self):

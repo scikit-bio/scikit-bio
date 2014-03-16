@@ -8,6 +8,8 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
+from __future__ import division
+
 from unittest import TestCase, main
 from collections import Counter, defaultdict
 
@@ -449,8 +451,8 @@ class AlignmentTests(TestCase):
         expected = Alignment([r1, r2])
         self.assertEqual(self.a2.omit_gap_positions(0.49),expected)
         
-        r1 = RNASequence('', identifier="r1")
-        r2 = RNASequence('', identifier="r2")
+        r1 = RNASequence('UUAU', identifier="r1")
+        r2 = RNASequence('ACGU', identifier="r2")
         expected = Alignment([r1, r2])
         self.assertEqual(self.a2.omit_gap_positions(0.0),expected)
 
@@ -458,12 +460,12 @@ class AlignmentTests(TestCase):
     def test_omit_gap_sequences(self):
         """ omitting gap sequences functions as expected
         """
-        expected = self.a1
-        self.assertEqual(self.a2.omit_gap_sequences(0.0),expected)
+        expected = self.a2
+        self.assertEqual(self.a2.omit_gap_sequences(1.0),expected)
         self.assertEqual(self.a2.omit_gap_sequences(0.20),expected)
 
-        a = Alignment([self.r2])
-        self.assertEqual(a.omit_gap_sequences(0.000199),expected)
+        expected = Alignment([self.r2])
+        self.assertEqual(self.a2.omit_gap_sequences(0.19),expected)
         
     def test_position_counters(self):
         """ position_counters functions as expected
@@ -498,6 +500,24 @@ class AlignmentTests(TestCase):
         expected = [1.0, 1.0, 1.0, 0.0, 1.0]
         np.testing.assert_almost_equal(self.a2.position_entropies(base=2),
                 expected, 5)
+
+    def test_sequence_frequencies(self):
+        """ sequence_frequencies functions as expected
+        """
+        expected = [defaultdict(int, {'U': 3/5, 'A': 1/5, '-': 1/5}),
+            defaultdict(int, {'A': 1/5, 'C': 1/5, 'G': 1/5, 'U': 2/5})]
+        actual = self.a2.sequence_frequencies()
+        for a, e in zip(actual, expected):
+            a_keys = a.keys()
+            a_keys.sort()
+            a_values = a.values()
+            a_values.sort()
+            e_keys = e.keys()
+            e_keys.sort()
+            e_values = e.values()
+            e_values.sort()
+            self.assertEqual(a_keys, e_keys, 5)
+            np.testing.assert_almost_equal(a_values, e_values, 5)
 
     def test_sequence_length(self):
         """ sequence_length functions as expected 
