@@ -109,20 +109,24 @@ class TreeNode(object):
         self.invalidate_node_cache()
 
     def extend(self, nodes):
+        """Append a list of nodes to self"""
         self.Children.extend(map(self._adopt, nodes))
         self.invalidate_node_cache()
 
     def pop(self, index=-1):
+        """Remove a node from self"""
         self.invalidate_node_cache()
         return self._remove_node(index)
 
     def _remove_node(self, idx):
+        """The actual (and only) method that performs node removal"""
         self.invalidate_node_cache()
         node = self.Children.pop(idx)
         node.Parent = None
         return node
 
     def remove(self, node):
+        """Remove a node from self"""
         for (i, curr_node) in enumerate(self.Children):
             if curr_node == node:
                 self._remove_node(i)
