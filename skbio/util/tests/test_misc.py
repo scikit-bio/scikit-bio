@@ -20,6 +20,7 @@ from skbio.util.misc import safe_md5, remove_files, create_dir, flatten
 
 
 class MiscTests(TestCase):
+
     """Test object for the miscellaneous utility functions"""
 
     def setUp(self):
@@ -96,7 +97,7 @@ class MiscTests(TestCase):
     def test_flatten(self):
         """flatten should remove one level of nesting from nested sequences"""
         self.assertEqual(flatten(['aa', 'bb', 'cc']), list('aabbcc'))
-        self.assertEqual(flatten([1,[2,3], [[4, [5]]]]), [1, 2, 3, [4,[5]]])
+        self.assertEqual(flatten([1, [2, 3], [[4, [5]]]]), [1, 2, 3, [4, [5]]])
 
 if __name__ == '__main__':
     main()

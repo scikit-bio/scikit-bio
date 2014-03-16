@@ -36,6 +36,7 @@ from os.path import exists, isdir
 from functools import partial
 from itertools import chain
 
+
 def safe_md5(open_file, block_size=2 ** 20):
     """Computes an md5 sum without loading the file into memory
 
@@ -232,6 +233,7 @@ def handle_error_codes(dir_name, supress_errors=False,
         return error_code
     else:
         raise OSError(error_strings[error_code])
+
 
 def flatten(items):
     """Removes one level of nesting from items
