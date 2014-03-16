@@ -9,7 +9,7 @@
 #-----------------------------------------------------------------------------
 
 from unittest import TestCase, main
-from collections import Counter
+from collections import Counter, defaultdict
 
 import numpy as np
 
@@ -359,12 +359,21 @@ class AlignmentTests(TestCase):
         self.seqs2_t = [('r1', 'UUAU-'), ('r2', 'ACGUU')]
         self.assertEqual(actual, expected)
 
-
     def test_majority_consensus(self):
         """ majority_consensus functions as expected
         """
-        raise NotImplementedError
- 
+        d1 = DNASequence('TTT', identifier="d1")
+        d2 = DNASequence('TT-', identifier="d2")
+        d3 = DNASequence('TC-', identifier="d3")
+        a1 = Alignment([d1, d2, d3])
+        self.assertEqual(a1.majority_consensus(), DNASequence('TT-'))
+        
+        d1 = DNASequence('T', identifier="d1")
+        d2 = DNASequence('A', identifier="d2")
+        a1 = Alignment([d1, d2])
+        self.assertTrue(a1.majority_consensus() in 
+                [DNASequence('T'), DNASequence('A')])
+
     def test_omit_gap_positions(self):
         """ omitting gap positions functions as expected
         """
@@ -388,8 +397,13 @@ class AlignmentTests(TestCase):
     def test_position_frequencies(self):
         """ computing position frequencies functions as expected
         """
-        raise NotImplementedError
-    
+        expected = [defaultdict(int, {'U': 0.5, 'A': 0.5}),
+                    defaultdict(int, {'U': 0.5, 'C': 0.5}),
+                    defaultdict(int, {'A': 0.5, 'G': 0.5}),
+                    defaultdict(int, {'U': 1.0}),
+                    defaultdict(int, {'-': 0.5, 'U': 0.5})]
+        self.assertEqual(self.a2.position_frequencies(), expected)
+
     def test_position_entropies(self):
         """ computing positional uncertainties functions as expected
         """

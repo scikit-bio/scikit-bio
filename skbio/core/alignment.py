@@ -43,7 +43,7 @@ from __future__ import division
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-from collections import Counter
+from collections import Counter, defaultdict
 
 import numpy as np
 
@@ -277,10 +277,19 @@ class Alignment(SequenceCollection):
             position = [constructor(seq[i]) for seq in self]
             yield position
 
-    def majority_consensus(self):
+    def majority_consensus(self, constructor=None):
         """
         """
-        raise NotImplementedError
+        if constructor is None:
+            constructor = self[0].__class__
+        result = []
+        for c in self.position_counters():
+            # Counter.most_common returns an ordered list of the 
+            # n most common (sequence, count) items in Counter. Here
+            # we set n=1, and take only the character, not the count.
+            result.append(c.most_common(1)[0][0])
+        result = ''.join(result)
+        return constructor(result)
 
     def omit_gap_positions(self, allowed_gap_frac=0):
         """
@@ -303,8 +312,14 @@ class Alignment(SequenceCollection):
     def position_frequencies(self):
         """
         """
-
-        raise NotImplementedError
+        result = []
+        count = 1 / self.sequence_count()
+        for p in self.iter_positions(constructor=str):
+            current_freqs = defaultdict(int)
+            for c in p:
+                current_freqs[c] += count
+            result.append(current_freqs)
+        return result
 
     def position_entropies(self):
         """
