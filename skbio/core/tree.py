@@ -712,7 +712,7 @@ class TreeNode(object):
                 #prevent state reset
                 last_token = t
                 continue
-            if t == ')' and (last_token == ',' or last_token == '('):
+            if t == ')' and last_token in ',(':
                 # node without name
                 new_node = _new_child(curr_node)
                 new_node.Name = None
@@ -732,7 +732,7 @@ class TreeNode(object):
             elif t == ';':  #end of data
                 last_token = t
                 break
-            elif t == ',' and (last_token == ',' or last_token == '('):
+            elif t == ',' and last_token in ',(':
                 # node without name
                 new_node = _new_child(curr_node)
                 new_node.Name = None
