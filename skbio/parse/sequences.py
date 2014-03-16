@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
 """
-Sequences (:mod:`skbio.parse.sequences`)
-========================================
+Parse biological sequences (:mod:`skbio.parse.sequences`)
+=========================================================
 
 .. currentmodule:: skbio.parse.sequences
 
-This module provides a functions for parsing sequence files.
+This module provides functions for parsing sequence files.
 
 Functions
 ---------
@@ -76,10 +76,10 @@ def fasta_parse(infile,
         An open fasta file.
 
     strict : bool
-        If strict is true a RecordError error will
+        If strict is true a `RecordError error` will
         be raised if no header line is found
 
-    Yields
+    Return
     ------
         yields the label and sequence for each entry.
 
@@ -150,7 +150,6 @@ def xmfa_parse(infile, strict=True):
 
 
 def fastq_parse(data, strict=True):
-
     """yields label, seq, and qual from a fastq file.
 
 
@@ -161,7 +160,7 @@ def fastq_parse(data, strict=True):
 
     strict : bool
         If strict is true a FastqParse error will be raised if the seq and qual
-    labels dont' match.
+        labels dont' match.
 
     Yields
     ------

@@ -15,3 +15,4 @@ API Reference
    core.distance
    core.exception
    util.misc
+   parse.sequences

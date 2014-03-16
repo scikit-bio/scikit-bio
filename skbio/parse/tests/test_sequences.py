@@ -17,7 +17,6 @@ from unittest import TestCase, main
 
 
 class GenericFastaTest(TestCase):
-
     """Setup data for all the various FASTA parsers."""
 
     def setUp(self):
@@ -35,7 +34,6 @@ class GenericFastaTest(TestCase):
 
 
 class fasta_parseTests(GenericFastaTest):
-
     """Tests of fasta_parse: returns (label, seq) tuples."""
 
     def test_empty(self):
@@ -110,7 +108,6 @@ class fasta_parseTests(GenericFastaTest):
 
 
 class ParseFastqTests(TestCase):
-
     def setUp(self):
         """ Initialize variables to be used by the tests """
         self.fastq_example = fastq_example.split('\n')
