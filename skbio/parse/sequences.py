@@ -14,15 +14,10 @@ Functions
 .. autosummary::
    :toctree: generated/
 
-    is_fasta_label
-    is_gde_label
-    is_blank_or_comment
-    is_blank
     fasta_parse
-    gde_parse
-    xmfa_label_to_name
-    xmfa_parse
     fastq_parse
+    gde_parse
+    xmfa_parse
 
 """
 
@@ -67,7 +62,7 @@ def fasta_parse(infile,
                 finder=FastaFinder,
                 is_label=None,
                 label_characters='>'):
-    """yields label and seq from a fasta file.
+    r"""yields label and seq from a fasta file.
 
 
     Parameters
@@ -79,9 +74,32 @@ def fasta_parse(infile,
         If strict is true a `RecordError error` will
         be raised if no header line is found
 
-    Return
-    ------
+    Returns
+    -------
+    label, sequence : string
         yields the label and sequence for each entry.
+
+    Examples
+    --------
+    Assume we have a fasta formatted file with the following contents::
+
+        >seq1
+        CGATGTCGATCGATCGATCGATCAG
+        >seq2
+        CATCGATCGATCGATGCATGCATGCATG
+
+    >>> from skbio.parse.sequences import fasta_parse
+    >>> fasta_f = StringIO('>seq1\n'
+    ...                    'CGATGTCGATCGATCGATCGATCAG\n'
+    ...                    '>seq2\n'
+    ...                    'CATCGATCGATCGATGCATGCATGCATG\n')
+    >>> for label, seq in fasta_parse(fasta_f):
+    ...     print label
+    ...     print seq
+    seq1
+    CGATGTCGATCGATCGATCGATCAG
+    seq2
+    CATCGATCGATCGATGCATGCATGCATG
 
     """
 
@@ -111,7 +129,13 @@ GdeFinder = LabeledRecordFinder(is_gde_label, ignore=is_blank)
 
 
 def gde_parse(infile, strict=True, label_to_name=str):
-    """Parses a file with GDE label line"""
+    """Parses a file with GDE label line
+
+    See Also
+    --------
+    fasta_parse
+
+    """
     return fasta_parse(infile,
                        strict,
                        label_to_name,
@@ -133,7 +157,14 @@ def xmfa_label_to_name(line):
 
 
 def is_xmfa_blank_or_comment(x):
-    """Checks if x is blank or an XMFA comment line."""
+    """Checks if x is blank or an XMFA comment line.
+
+    See Also
+    --------
+    fasta_parse
+
+    """
+
     return (not x) or x.startswith('=') or x.isspace()
 
 XmfaFinder = LabeledRecordFinder(is_fasta_label,
@@ -149,8 +180,8 @@ def xmfa_parse(infile, strict=True):
                        finder=XmfaFinder)
 
 
-def fastq_parse(data, strict=True):
-    """yields label, seq, and qual from a fastq file.
+def fastq_parse(data, strict=False):
+    r"""yields label, seq, and qual from a fastq file.
 
 
     Parameters
@@ -162,9 +193,45 @@ def fastq_parse(data, strict=True):
         If strict is true a FastqParse error will be raised if the seq and qual
         labels dont' match.
 
-    Yields
-    ------
+    Returns
+    -------
+    label, seq, qual : string
         yields the label, sequence and quality for each entry
+
+    Examples
+    --------
+    Assume we have a fastq formatted file with the following contents::
+
+        @seq1
+        AACACCAAACTTCTCCACCACGTGAGCTACAAAAG
+        +
+        ````Y^T]`]c^cabcacc`^Lb^ccYT\T\Y\WF
+        @seq2
+        TATGTATATATAACATATACATATATACATACATA
+        +
+        ]KZ[PY]_[YY^```ac^\\`bT``c`\aT``bbb
+
+    We can use the following code:
+
+    >>> from skbio.parse.sequences import fastq_parse
+    >>> fastq_f = StringIO('@seq1\n'
+    ...                     'AACACCAAACTTCTCCACCACGTGAGCTACAAAAG\n'
+    ...                     '+\n'
+    ...                     '````Y^T]`]c^cabcacc`^Lb^ccYT\T\Y\WF\n'
+    ...                     '@seq2\n'
+    ...                     'TATGTATATATAACATATACATATATACATACATA\n'
+    ...                     '+\n'
+    ...                     ']KZ[PY]_[YY^```ac^\\`bT``c`\aT``bbb\n'
+    >>> for label, seq, qual in fastq_parse(fastq_f):
+    ...     print label
+    ...     print seq
+    ...     print qual
+    seq1
+    AACACCAAACTTCTCCACCACGTGAGCTACAAAAG
+    ````Y^T]`]c^cabcacc`^Lb^ccYT\T\Y\WF
+    seq2
+    TATGTATATATAACATATACATATATACATACATA
+    ]KZ[PY]_[YY^```ac^\\`bT``c`\aT``bbb
 
     """
     # fastq format is very simple, defined by blocks of 4 lines
