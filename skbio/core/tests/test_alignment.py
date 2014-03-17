@@ -70,6 +70,12 @@ class SequenceCollectionTests(TestCase):
         SequenceCollection(self.seqs3)
 
     def test_init_validate(self):
+        """ initialization with sequences with overlapping identifiers fails
+        """
+        s1 = [self.d1, self.d1]
+        self.assertRaises(SequenceCollectionError, SequenceCollection, s1)
+    
+    def test_init_validate(self):
         """ initialization with validation functions as expected
         """
         SequenceCollection(self.seqs1, validate=True)
