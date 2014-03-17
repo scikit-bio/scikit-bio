@@ -45,7 +45,8 @@ def subsample(counts, n):
     Returns
     -------
     subsampled : ndarray
-        Subsampled vector of counts where ``subsampled.sum() == n``.
+        Subsampled vector of counts where the sum of the elements equals `n`
+        (i.e., ``subsampled.sum() == n``).
 
     Examples
     --------
