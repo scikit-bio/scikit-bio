@@ -74,7 +74,7 @@ class SequenceCollectionTests(TestCase):
         """
         s1 = [self.d1, self.d1]
         self.assertRaises(SequenceCollectionError, SequenceCollection, s1)
-    
+
     def test_init_validate(self):
         """ initialization with validation functions as expected
         """

@@ -191,8 +191,8 @@ class SequenceCollection(object):
                     "All sequence identifiers must be unique, but "
                     "identifier %s is present multiple times." % identifier)
             else:
-                self._identifier_to_index[seq.identifier] = i 
-       
+                self._identifier_to_index[seq.identifier] = i
+
         # This is bad because we're making a second pass through the sequence
         # collection to validate. We'll want to avoid this, but it's tricky
         # because different subclasses will want to define their own is_valid
