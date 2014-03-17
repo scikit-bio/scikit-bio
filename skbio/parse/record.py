@@ -9,25 +9,7 @@
 #-----------------------------------------------------------------------------
 
 from copy import deepcopy
-
-
-class FileFormatError(Exception):
-
-    """Exception raised when a file can not be parsed."""
-    pass
-
-
-class RecordError(FileFormatError):
-
-    """Exception raised when a record is bad."""
-    pass
-
-
-class FieldError(RecordError):
-
-    """Exception raised when a field within a record is bad."""
-    pass
-
+from skbio.core.exception import FieldError
 
 def string_and_strip(*items):
     """Converts items to strings and strips them."""
