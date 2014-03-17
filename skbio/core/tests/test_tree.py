@@ -263,7 +263,7 @@ class TreeTests(TestCase):
         t = TreeNode.from_newick("((a:0.1,b:0.2)c:0.3,(d:0.4,e)f:0.5)root;")
         a = t.find('a')
         exp_to_root = 0.1 + 0.3
-        obs_to_root = a._accumulate_to_ancestor(t)
+        obs_to_root = a.accumulate_to_ancestor(t)
         self.assertEqual(obs_to_root, exp_to_root)
 
     def test_distance(self):
