@@ -494,7 +494,37 @@ class SequenceCollection(object):
         return dict(int_map), dict(int_keys) 
 
     def is_valid(self):
-        """
+        """Return `True` if the sequence is valid
+
+        Returns
+        -------
+        bool
+            ``True`` if `self` is valid, and ``False`` otherwise.
+
+        Notes
+        -----
+        Validity is defined as having no sequences containing characters
+        outside of their valid character sets. 
+
+        See Also
+        --------
+        skbio.core.alignment.BiologicalSequence.is_valid
+        
+        Examples
+        --------
+        >>> from skbio.core.alignment import SequenceCollection
+        >>> from skbio.core.sequence import DNA, RNA
+        >>> sequences = [DNA('ACCGT', identifier="seq1"), 
+        ...              DNA('AACCGGT', identifier="seq2")]
+        >>> s1 = SequenceCollection(sequences)
+        >>> print s1.is_valid()
+        True
+        >>> sequences = [RNA('ACCGT', identifier="seq1"), 
+        ...              RNA('AACCGGT', identifier="seq2")]
+        >>> s1 = SequenceCollection(sequences)
+        >>> print s1.is_valid()
+        False
+
         """
         return self._validate_character_set()
 
