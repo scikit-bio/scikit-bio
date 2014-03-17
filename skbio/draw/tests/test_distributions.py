@@ -14,6 +14,8 @@ from StringIO import StringIO
 from unittest import TestCase, main
 
 import numpy as np
+from matplotlib import use
+use('Agg', warn=False)
 import matplotlib.pyplot as plt
 
 from skbio.draw.distributions import (boxplots, grouped_distributions,
