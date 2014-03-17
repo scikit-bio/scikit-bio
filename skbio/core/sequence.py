@@ -55,12 +55,12 @@ sequence clustering, phylogenetic reconstruction, etc.
 >>> d3.distance(d5)
 0.375
 
-Class level attributes contain information about the molecule types.
+Class-level methods contain information about the molecule types.
 
->>> DNASequence.iupac_degeneracies['B']
+>>> DNASequence.iupac_degeneracies()['B']
 set(['C', 'T', 'G'])
 
->>> RNASequence.iupac_degeneracies['B']
+>>> RNASequence.iupac_degeneracies()['B']
 set(['C', 'U', 'G'])
 
 >>> DNASequence.is_gap('-')
@@ -90,24 +90,54 @@ class BiologicalSequence(Sequence):
 
     Attributes
     ----------
-    alphabet
     description
-    gap_alphabet
     identifier
 
     Notes
     -----
-    `BiologicalSequence` objects are immutable. Where applicable,
-    methods return a new object of the same class.
+    `BiologicalSequence` objects are immutable. Where applicable, methods
+    return a new object of the same class.
     """
 
-    _alphabet = set()
-    # Note: the _complement_map dictionary (defined by NucleotideSequence base
-    # classes) explicitly defines the complement of the gap characters as
-    # themselves because it's clunky to access the _gap_alphabet member
-    # variable from the derived classes. If _gap_alphabet is ever changed, the
-    # _complement_map dictionaries should be updated to reflect those changes.
-    _gap_alphabet = set('-.')
+    @classmethod
+    def alphabet(cls):
+        """Return the set of characters allowed in a `BiologicalSequence`.
+
+        Returns
+        -------
+        set
+            Characters that are allowed in a valid `BiologicalSequence`.
+
+        See Also
+        --------
+        is_valid
+        gap_alphabet
+        unsupported_characters
+        has_unsupported_characters
+
+        """
+        return set()
+
+    @classmethod
+    def gap_alphabet(cls):
+        """Return the set of characters defined as gaps.
+
+        Returns
+        -------
+        set
+            Characters defined as gaps in a `BiologicalSequence`
+
+        See Also
+        --------
+        alphabet
+        unsupported_characters
+        has_unsupported_characters
+        degap
+        gap_maps
+        gap_vector
+
+        """
+        return set('-.')
 
     def __init__(self, sequence, identifier="", description="",
                  validate=False):
@@ -420,25 +450,6 @@ class BiologicalSequence(Sequence):
         return ''.join(self._sequence)
 
     @property
-    def alphabet(self):
-        """Return the set of characters allowed in the `BiologicalSequence`
-
-        Returns
-        -------
-        set
-            Characters that are allowed in a valid `BiologicalSequence`
-
-        See Also
-        --------
-        is_valid
-        gap_alphabet
-        unsupported_characters
-        has_unsupported_characters
-
-        """
-        return self._alphabet
-
-    @property
     def description(self):
         """Return the description of the `BiologicalSequence`
 
@@ -449,27 +460,6 @@ class BiologicalSequence(Sequence):
 
         """
         return self._description
-
-    @property
-    def gap_alphabet(self):
-        """Return the set of characters defined as gaps
-
-        Returns
-        -------
-        set
-            Characters defined as gaps in a `BiologicalSequence`
-
-        See Also
-        --------
-        alphabet
-        unsupported_characters
-        has_unsupported_characters
-        degap
-        gap_maps
-        gap_vector
-
-        """
-        return self._gap_alphabet
 
     @property
     def identifier(self):
@@ -530,7 +520,8 @@ class BiologicalSequence(Sequence):
         GGUCCACGTTC
 
         """
-        result = [e for e in self._sequence if e not in self._gap_alphabet]
+        gaps = self.gap_alphabet()
+        result = [e for e in self._sequence if e not in gaps]
         return self.__class__(result, identifier=self._identifier,
                               description=self._description)
 
@@ -763,7 +754,7 @@ class BiologicalSequence(Sequence):
         has_unsupported_characters
 
         """
-        return set(self) - self._alphabet - self._gap_alphabet
+        return set(self) - self.alphabet() - self.gap_alphabet()
 
     def has_unsupported_characters(self):
         """Return bool indicating presence/absence of unsupported characters
@@ -784,7 +775,7 @@ class BiologicalSequence(Sequence):
         has_unsupported_characters
 
         """
-        all_supported = self._alphabet | self._gap_alphabet
+        all_supported = self.alphabet() | self.gap_alphabet()
         for e in self:
             if not e in all_supported:
                 return True
@@ -820,7 +811,7 @@ class BiologicalSequence(Sequence):
         Parameters
         ----------
         char : str
-            The string to check for presense in the `BiologicalSequence`
+            The string to check for presence in the `BiologicalSequence`
             `gap_alphabet`.
 
         Returns
@@ -845,7 +836,7 @@ class BiologicalSequence(Sequence):
         True
 
         """
-        return char in cls._gap_alphabet
+        return char in cls.gap_alphabet()
 
     def is_gapped(self):
         """Return True if char(s) in `gap_alphabet` are present
@@ -939,24 +930,8 @@ class NucleotideSequence(BiologicalSequence):
 
     Attributes
     ----------
-    alphabet
     description
-    gap_alphabet
     identifier
-    complement_map : dict
-        Mapping of characters to their complements. `complement_map` cannot be
-        defined for a generic `NucleotideSequence` because the complement of
-        'A' is ambiguous. `NucleotideSequence.complement_map` will therefore be
-        the empty dict. Thanks, nature...
-    iupac_standard_characters : set
-        The non-degenerate IUPAC nucleotide characters
-    iupac_degeneracies : dict of sets
-        Mapping of IUPAC degenerate nucleotide character to the set of
-        non-degenerate IUPAC nucleotide characters it represents
-    iupac_degenerate_characters : set
-        The degenerate IUPAC nucleotide characters
-    iupac_characters : set
-        The non-degnerate and degenerate nucleotide characters
 
     Notes
     -----
@@ -964,15 +939,92 @@ class NucleotideSequence(BiologicalSequence):
 
     """
 
-    iupac_standard_characters = set("ACGTU")
-    iupac_degeneracies = {"R": set("AG"), "Y": set("CTU"), "M": set("AC"),
-                          "K": set("TUG"), "W": set("ATU"), "S": set("GC"),
-                          "B": set("CGTU"), "D": set("AGTU"),
-                          "H": set("ACTU"), "V": set("ACG"), "N": set("ACGTU")}
-    iupac_degenerate_characters = set(iupac_degeneracies)
-    iupac_characters = iupac_standard_characters | iupac_degenerate_characters
-    complement_map = {}
-    _alphabet = iupac_characters | set(map(str.lower, iupac_characters))
+    @classmethod
+    def alphabet(cls):
+        """Return the set of characters allowed in a `NucleotideSequence`.
+
+        Returns
+        -------
+        set
+            Characters that are allowed in a valid `NucleotideSequence`.
+
+        """
+        chars = cls.iupac_characters()
+        return chars | set(map(str.lower, chars))
+
+    @classmethod
+    def complement_map(cls):
+        """Return the mapping of characters to their complements.
+
+        Returns
+        -------
+        dict
+            Mapping of characters to their complements.
+
+        Notes
+        -----
+        Complements cannot be defined for a generic `NucleotideSequence`
+        because the complement of 'A' is ambiguous.
+        `NucleotideSequence.complement_map` will therefore be the empty dict.
+        Thanks, nature...
+
+        """
+        return {}
+
+    @classmethod
+    def iupac_standard_characters(cls):
+        """Return the non-degenerate IUPAC nucleotide characters.
+
+        Returns
+        -------
+        set
+            Non-degenerate IUPAC nucleotide characters.
+
+        """
+        return set("ACGTU")
+
+    @classmethod
+    def iupac_degeneracies(cls):
+        """Return the mapping of degenerate to non-degenerate characters.
+
+        Returns
+        -------
+        dict of sets
+            Mapping of IUPAC degenerate nucleotide character to the set of
+            non-degenerate IUPAC nucleotide characters it represents.
+
+        """
+        return {
+            "R": set("AG"), "Y": set("CTU"), "M": set("AC"), "K": set("TUG"),
+            "W": set("ATU"), "S": set("GC"), "B": set("CGTU"),
+            "D": set("AGTU"), "H": set("ACTU"), "V": set("ACG"),
+            "N": set("ACGTU")
+        }
+
+    @classmethod
+    def iupac_degenerate_characters(cls):
+        """Return the degenerate IUPAC nucleotide characters.
+
+        Returns
+        -------
+        set
+            Degenerate IUPAC nucleotide characters.
+
+        """
+        return set(cls.iupac_degeneracies())
+
+    @classmethod
+    def iupac_characters(cls):
+        """Return the non-degenerate and degenerate nucleotide characters.
+
+        Returns
+        -------
+        set
+            Non-degenerate and degenerate nucleotide characters.
+
+        """
+        return (cls.iupac_standard_characters() |
+                cls.iupac_degenerate_characters())
 
     def _complement(self, seq_iterator):
         """Returns `NucleotideSequence` that is complement of `seq_iterator`
@@ -1002,9 +1054,10 @@ class NucleotideSequence(BiologicalSequence):
 
         """
         result = []
+        complement_map = self.complement_map()
         for base in seq_iterator:
             try:
-                result.append(self.complement_map[base])
+                result.append(complement_map[base])
             except KeyError:
                 raise BiologicalSequenceError(
                     "Don't know how to complement base %s. Is it in "
@@ -1087,21 +1140,8 @@ class DNASequence(NucleotideSequence):
 
     Attributes
     ----------
-    alphabet
     description
-    gap_alphabet
     identifier
-    complement_map : dict
-        Mapping of characters to their complements.
-    iupac_standard_characters : set
-        The non-degenerate IUPAC DNA characters
-    iupac_degeneracies : dict of sets
-        Mapping of IUPAC degenerate DNA character to the set of
-        non-degenerate IUPAC DNA characters it represents
-    iupac_degenerate_characters : set
-        The degenerate IUPAC DNA characters
-    iupac_characters : set
-        The non-degnerate and degenerate DNA characters
 
     Notes
     -----
@@ -1109,20 +1149,57 @@ class DNASequence(NucleotideSequence):
 
     """
 
-    iupac_standard_characters = set("ACGT")
-    iupac_degeneracies = {"R": set("AG"), "Y": set("CT"), "M": set("AC"),
-                          "K": set("TG"), "W": set("AT"), "S": set("GC"),
-                          "B": set("CGT"), "D": set("AGT"),
-                          "H": set("ACT"), "V": set("ACG"), "N": set("ACGT")}
-    iupac_degenerate_characters = set(iupac_degeneracies)
-    iupac_characters = iupac_standard_characters | iupac_degenerate_characters
-    complement_map = {
-        'A': 'T', 'T': 'A', 'G': 'C', 'C': 'G', 'Y': 'R', 'R': 'Y', 'S': 'S',
-        'W': 'W', 'K': 'M', 'M': 'K', 'B': 'V', 'D': 'H', 'H': 'D', 'V': 'B',
-        'N': 'N', 'a': 't', 't': 'a', 'g': 'c', 'c': 'g', 'y': 'r', 'r': 'y',
-        's': 's', 'w': 'w', 'k': 'm', 'm': 'k', 'b': 'v', 'd': 'h', 'h': 'd',
-        'v': 'b', 'n': 'n', '.': '.', '-': '-'}
-    _alphabet = iupac_characters | set(map(str.lower, iupac_characters))
+    @classmethod
+    def complement_map(cls):
+        """Return the mapping of characters to their complements.
+
+        The complement of a gap character is itself.
+
+        Returns
+        -------
+        dict
+            Mapping of characters to their complements.
+
+        """
+        comp_map = {
+            'A': 'T', 'T': 'A', 'G': 'C', 'C': 'G', 'Y': 'R', 'R': 'Y',
+            'S': 'S', 'W': 'W', 'K': 'M', 'M': 'K', 'B': 'V', 'D': 'H',
+            'H': 'D', 'V': 'B', 'N': 'N', 'a': 't', 't': 'a', 'g': 'c',
+            'c': 'g', 'y': 'r', 'r': 'y', 's': 's', 'w': 'w', 'k': 'm',
+            'm': 'k', 'b': 'v', 'd': 'h', 'h': 'd', 'v': 'b', 'n': 'n'
+        }
+
+        comp_map.update({c: c for c in cls.gap_alphabet()})
+        return comp_map
+
+    @classmethod
+    def iupac_standard_characters(cls):
+        """Return the non-degenerate IUPAC DNA characters.
+
+        Returns
+        -------
+        set
+            Non-degenerate IUPAC DNA characters.
+
+        """
+        return set("ACGT")
+
+    @classmethod
+    def iupac_degeneracies(cls):
+        """Return the mapping of degenerate to non-degenerate characters.
+
+        Returns
+        -------
+        dict of sets
+            Mapping of IUPAC degenerate DNA character to the set of
+            non-degenerate IUPAC DNA characters it represents.
+
+        """
+        return {
+            "R": set("AG"), "Y": set("CT"), "M": set("AC"), "K": set("TG"),
+            "W": set("AT"), "S": set("GC"), "B": set("CGT"), "D": set("AGT"),
+            "H": set("ACT"), "V": set("ACG"), "N": set("ACGT")
+        }
 
 # class is accessible with alternative name for convenience
 DNA = DNASequence
@@ -1133,21 +1210,8 @@ class RNASequence(NucleotideSequence):
 
     Attributes
     ----------
-    alphabet
     description
-    gap_alphabet
     identifier
-    complement_map : dict
-        Mapping of characters to their complements.
-    iupac_standard_characters : set
-        The non-degenerate IUPAC RNA characters
-    iupac_degeneracies : dict of sets
-        Mapping of IUPAC degenerate RNA character to the set of
-        non-degenerate IUPAC RNA characters it represents
-    iupac_degenerate_characters : set
-        The degenerate IUPAC RNA characters
-    iupac_characters : set
-        The non-degnerate and degenerate RNA characters
 
     Notes
     -----
@@ -1155,20 +1219,57 @@ class RNASequence(NucleotideSequence):
 
     """
 
-    iupac_standard_characters = set("ACGU")
-    iupac_degeneracies = {"R": set("AG"), "Y": set("CU"), "M": set("AC"),
-                          "K": set("UG"), "W": set("AU"), "S": set("GC"),
-                          "B": set("CGU"), "D": set("AGU"),
-                          "H": set("ACU"), "V": set("ACG"), "N": set("ACGU")}
-    iupac_degenerate_characters = set(iupac_degeneracies)
-    iupac_characters = iupac_standard_characters | iupac_degenerate_characters
-    complement_map = {
-        'A': 'U', 'U': 'A', 'G': 'C', 'C': 'G', 'Y': 'R', 'R': 'Y', 'S': 'S',
-        'W': 'W', 'K': 'M', 'M': 'K', 'B': 'V', 'D': 'H', 'H': 'D', 'V': 'B',
-        'N': 'N', 'a': 'u', 'u': 'a', 'g': 'c', 'c': 'g', 'y': 'r', 'r': 'y',
-        's': 's', 'w': 'w', 'k': 'm', 'm': 'k', 'b': 'v', 'd': 'h', 'h': 'd',
-        'v': 'b', 'n': 'n', '.': '.', '-': '-'}
-    _alphabet = iupac_characters | set(map(str.lower, iupac_characters))
+    @classmethod
+    def complement_map(cls):
+        """Return the mapping of characters to their complements.
+
+        The complement of a gap character is itself.
+
+        Returns
+        -------
+        dict
+            Mapping of characters to their complements.
+
+        """
+        comp_map = {
+            'A': 'U', 'U': 'A', 'G': 'C', 'C': 'G', 'Y': 'R', 'R': 'Y',
+            'S': 'S', 'W': 'W', 'K': 'M', 'M': 'K', 'B': 'V', 'D': 'H',
+            'H': 'D', 'V': 'B', 'N': 'N', 'a': 'u', 'u': 'a', 'g': 'c',
+            'c': 'g', 'y': 'r', 'r': 'y', 's': 's', 'w': 'w', 'k': 'm',
+            'm': 'k', 'b': 'v', 'd': 'h', 'h': 'd', 'v': 'b', 'n': 'n'
+        }
+
+        comp_map.update({c: c for c in cls.gap_alphabet()})
+        return comp_map
+
+    @classmethod
+    def iupac_standard_characters(cls):
+        """Return the non-degenerate IUPAC RNA characters.
+
+        Returns
+        -------
+        set
+            Non-degenerate IUPAC RNA characters.
+
+        """
+        return set("ACGU")
+
+    @classmethod
+    def iupac_degeneracies(cls):
+        """Return the mapping of degenerate to non-degenerate characters.
+
+        Returns
+        -------
+        dict of sets
+            Mapping of IUPAC degenerate RNA character to the set of
+            non-degenerate IUPAC RNA characters it represents.
+
+        """
+        return {
+            "R": set("AG"), "Y": set("CU"), "M": set("AC"), "K": set("UG"),
+            "W": set("AU"), "S": set("GC"), "B": set("CGU"), "D": set("AGU"),
+            "H": set("ACU"), "V": set("ACG"), "N": set("ACGU")
+        }
 
 # class is accessible with alternative name for convenience
 RNA = RNASequence

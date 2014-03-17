@@ -61,9 +61,16 @@ from functools import update_wrapper
 from collections import Iterable
 from types import MethodType
 
-# thank you Flask project...
-_not_executed = object()  # internal, for when a method has not executed
-not_none = object()   # external, for when a value can be anything except None
+
+class NotExecuted(object):
+    """Helper object to track if a method was executed"""
+    def __init__(self):
+        self.msg = None
+
+    def __call__(self, msg):
+        self.msg = msg
+        return self
+_not_executed = NotExecuted()
 
 
 class Exists(object):
@@ -71,6 +78,15 @@ class Exists(object):
     def __contains__(self, item):
         return True
 anything = Exists()  # external, for when a value can be anything
+
+
+class NotNone(object):
+    def __contains__(self, item):
+        if item is None:
+            return False
+        else:
+            return True
+not_none = NotNone()
 
 
 class Workflow(object):
@@ -177,7 +193,7 @@ class Workflow(object):
                 method execution
         """
         self.debug_counter = 0
-        self.debug_trace = set([])
+        self.debug_trace = set()
         self.debug_runtime = {}
         self.debug_pre_state = {}
         self.debug_post_state = {}
