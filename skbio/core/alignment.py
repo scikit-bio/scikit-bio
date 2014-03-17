@@ -268,7 +268,7 @@ class SequenceCollection(object):
             The number of sequences in the `SequenceCollection`.
 
         """
-        return len(self._data)
+        return self.sequence_count()
 
     def __ne__(self, other):
         r"""The inequality operator.
@@ -529,13 +529,31 @@ class SequenceCollection(object):
         return self._validate_character_set()
 
     def items(self):
-        """
+        """Generator of identifier, sequence tuples
+
+        Returns
+        -------
+        generator of tuples
+            Each tuple contains ordered (BiologicalSequence.identifier,
+            BiologicalSequence) pairs.
+
         """
         for seq in self:
             yield seq.identifier, seq
 
     def lower(self):
-        """
+        """Converts all sequences to lowercase
+
+        Returns
+        -------
+        SequenceCollection
+            New `SequenceCollection` object where `BiologicalSequence.lower()`
+            has been called on each sequence.
+
+        See Also
+        --------
+        BiologicalSequence.lower
+
         """
         result = []
         for seq in self:
@@ -543,34 +561,76 @@ class SequenceCollection(object):
         return self.__class__(result)
 
     def sequence_count(self):
-        """
+        """Return the count of sequences in the `SequenceCollection`
+
+        Returns
+        -------
+        int
+            The number of sequences in the `SequenceCollection`
+
+        See Also
+        --------
+        sequence_lengths
+
         """
         return len(self._data)
 
     def sequence_lengths(self):
-        """
+        """Return lengths of the sequences in the `SequenceCollection`
+        
+        Returns
+        -------
+        list
+            The ordered list of sequence lengths.
+
+        See Also
+        --------
+        sequence_count
+        
         """
         return [len(seq) for seq in self]
 
     def to_fasta(self):
-        """
+        """Return fasta-formatted string representing the `SequenceCollection`
+
+        Returns
+        -------
+        str
+            A fasta-formatted string representing the `SequenceCollection`.
+
+        See Also
+        --------
+        skbio.parse.sequences.fasta_parse
         """
         return ''.join([seq.to_fasta() for seq in self._data])
    
     def toFasta(self):
-        print "Deprecation warning!"
+        """Return fasta-formatted string representing the `SequenceCollection`
+
+        Returns
+        -------
+        str
+            A fasta-formatted string representing the `SequenceCollection`.
+
+        Notes
+        -----
+        This method is deprecated in favor of to_fasta, but as these objects
+        are sometimes in passed into code that expects a
+        cogent.alignment.Alignment object (e.g., PyNAST), we need to support
+        the method with this name.
+        """
         return self.to_fasta()
     
     def to_phylip(self):
-        """
+        """Return phylip-formatted string representing the `SequenceCollection`
+
+        Returns
+        -------
+        str
+            A phylip-formatted string representing the `SequenceCollection`.
+
         """
         raise NotImplementedError
-
-    def toPhylip(self):
-        """
-        """
-        print "Deprecation warning!"
-        return self.to_phylip()
 
     def upper(self):
         """
