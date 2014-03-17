@@ -23,6 +23,14 @@ Classes
 Examples
 --------
 
+<<<<<<< Updated upstream
+=======
+### constructing a tree
+### traversing a tree in a few ways
+### pulling a subtree
+### comparing trees
+
+>>>>>>> Stashed changes
 DOC TEST EXAMPLES
 
 """
