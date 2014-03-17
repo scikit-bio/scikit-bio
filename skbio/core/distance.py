@@ -170,7 +170,7 @@ class DistanceMatrix(object):
     >>> dm = DistanceMatrix(data, ids)
     >>> print dm
     3x3 distance matrix
-    ids:
+    IDs:
     a, b, c
     Data:
     [[ 0.    0.5   1.  ]
