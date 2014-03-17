@@ -161,7 +161,7 @@ class BiologicalSequenceTests(TestCase):
     def test_alphabet(self):
         """ alphabet property functions as expected
         """
-        self.assertEqual(self.b1.alphabet, set())
+        self.assertEqual(self.b1.alphabet(), set())
 
     def test_description(self):
         """ description property functions as expected
@@ -173,7 +173,7 @@ class BiologicalSequenceTests(TestCase):
     def test_gap_alphabet(self):
         """ gap_alphabet property functions as expected
         """
-        self.assertEqual(self.b1.gap_alphabet, set('-.'))
+        self.assertEqual(self.b1.gap_alphabet(), set('-.'))
 
     def test_identifier(self):
         """ identifier property functions as expected
@@ -350,6 +350,67 @@ class NucelotideSequenceTests(TestCase):
             'ACCGGUACC', identifier="test-seq-2",
             description="A test sequence")
 
+    def test_alphabet(self):
+        """alphabet property functions as expected"""
+        exp = {
+            'A', 'C', 'B', 'D', 'G', 'H', 'K', 'M', 'N', 'S', 'R', 'U', 'T',
+            'W', 'V', 'Y', 'a', 'c', 'b', 'd', 'g', 'h', 'k', 'm', 'n', 's',
+            'r', 'u', 't', 'w', 'v', 'y'
+        }
+
+        # Test calling from an instance and purely static context.
+        self.assertEqual(self.b1.alphabet(), exp)
+        self.assertEqual(NucleotideSequence.alphabet(), exp)
+
+    def test_gap_alphabet(self):
+        """gap_alphabet property functions as expected"""
+        self.assertEqual(self.b1.gap_alphabet(), set('-.'))
+
+    def test_complement_map(self):
+        """complement_map property functions as expected"""
+        exp = {}
+        self.assertEqual(self.b1.complement_map(), exp)
+        self.assertEqual(NucleotideSequence.complement_map(), exp)
+
+    def test_iupac_standard_characters(self):
+        """iupac_standard_characters property functions as expected"""
+        exp = set("ACGTU")
+        self.assertEqual(self.b1.iupac_standard_characters(), exp)
+        self.assertEqual(NucleotideSequence.iupac_standard_characters(), exp)
+
+    def test_iupac_degeneracies(self):
+        """iupac_degeneracies property functions as expected"""
+        exp = {
+            'B': set(['C', 'U', 'T', 'G']), 'D': set(['A', 'U', 'T', 'G']),
+            'H': set(['A', 'C', 'U', 'T']), 'K': set(['U', 'T', 'G']),
+            'M': set(['A', 'C']), 'N': set(['A', 'C', 'U', 'T', 'G']),
+            'S': set(['C', 'G']), 'R': set(['A', 'G']),
+            'W': set(['A', 'U', 'T']), 'V': set(['A', 'C', 'G']),
+            'Y': set(['C', 'U', 'T'])
+        }
+        self.assertEqual(self.b1.iupac_degeneracies(), exp)
+        self.assertEqual(NucleotideSequence.iupac_degeneracies(), exp)
+
+        # Test that we can modify a copy of the mapping without altering the
+        # canonical representation.
+        degen = NucleotideSequence.iupac_degeneracies()
+        degen.update({'V': set("BRO"), 'Z': set("ZORRO")})
+        self.assertNotEqual(degen, exp)
+        self.assertEqual(NucleotideSequence.iupac_degeneracies(), exp)
+
+    def test_iupac_degenerate_characters(self):
+        """iupac_degenerate_characters property functions as expected"""
+        exp = set(['B', 'D', 'H', 'K', 'M', 'N', 'S', 'R', 'W', 'V', 'Y'])
+        self.assertEqual(self.b1.iupac_degenerate_characters(), exp)
+        self.assertEqual(NucleotideSequence.iupac_degenerate_characters(), exp)
+
+    def test_iupac_characters(self):
+        """iupac_characters property functions as expected"""
+        exp = set(['A', 'C', 'B', 'D', 'G', 'H', 'K', 'M', 'N', 'S', 'R', 'U',
+                   'T', 'W', 'V', 'Y'])
+        self.assertEqual(self.b1.iupac_characters(), exp)
+        self.assertEqual(NucleotideSequence.iupac_characters(), exp)
+
     def test_complement(self):
         """ complement fails (it's undefined for generic NucleotideSequence)
         """
@@ -386,6 +447,65 @@ class DNASequenceTests(TestCase):
             'MRWSYKVHDBN', identifier="degen",
             description="All of the degenerate bases")
         self.b5 = DNASequence('.G--ATTAC-A...')
+
+    def test_alphabet(self):
+        """alphabet property functions as expected"""
+        exp = {
+            'A', 'C', 'B', 'D', 'G', 'H', 'K', 'M', 'N', 'S', 'R', 'T', 'W',
+            'V', 'Y', 'a', 'c', 'b', 'd', 'g', 'h', 'k', 'm', 'n', 's', 'r',
+            't', 'w', 'v', 'y'
+        }
+
+        self.assertEqual(self.b1.alphabet(), exp)
+        self.assertEqual(DNASequence.alphabet(), exp)
+
+    def test_gap_alphabet(self):
+        """gap_alphabet property functions as expected"""
+        self.assertEqual(self.b1.gap_alphabet(), set('-.'))
+
+    def test_complement_map(self):
+        """complement_map property functions as expected"""
+        exp = {
+            '-': '-', '.': '.', 'A': 'T', 'C': 'G', 'B': 'V', 'D': 'H',
+            'G': 'C', 'H': 'D', 'K': 'M', 'M': 'K', 'N': 'N', 'S': 'S',
+            'R': 'Y', 'T': 'A', 'W': 'W', 'V': 'B', 'Y': 'R', 'a': 't',
+            'c': 'g', 'b': 'v', 'd': 'h', 'g': 'c', 'h': 'd', 'k': 'm',
+            'm': 'k', 'n': 'n', 's': 's', 'r': 'y', 't': 'a', 'w': 'w',
+            'v': 'b', 'y': 'r'
+        }
+        self.assertEqual(self.b1.complement_map(), exp)
+        self.assertEqual(DNASequence.complement_map(), exp)
+
+    def test_iupac_standard_characters(self):
+        """iupac_standard_characters property functions as expected"""
+        exp = set("ACGT")
+        self.assertEqual(self.b1.iupac_standard_characters(), exp)
+        self.assertEqual(DNASequence.iupac_standard_characters(), exp)
+
+    def test_iupac_degeneracies(self):
+        """iupac_degeneracies property functions as expected"""
+        exp = {
+            'B': set(['C', 'T', 'G']), 'D': set(['A', 'T', 'G']),
+            'H': set(['A', 'C', 'T']), 'K': set(['T', 'G']),
+            'M': set(['A', 'C']), 'N': set(['A', 'C', 'T', 'G']),
+            'S': set(['C', 'G']), 'R': set(['A', 'G']), 'W': set(['A', 'T']),
+            'V': set(['A', 'C', 'G']), 'Y': set(['C', 'T'])
+        }
+        self.assertEqual(self.b1.iupac_degeneracies(), exp)
+        self.assertEqual(DNASequence.iupac_degeneracies(), exp)
+
+    def test_iupac_degenerate_characters(self):
+        """iupac_degenerate_characters property functions as expected"""
+        exp = set(['B', 'D', 'H', 'K', 'M', 'N', 'S', 'R', 'W', 'V', 'Y'])
+        self.assertEqual(self.b1.iupac_degenerate_characters(), exp)
+        self.assertEqual(DNASequence.iupac_degenerate_characters(), exp)
+
+    def test_iupac_characters(self):
+        """iupac_characters property functions as expected"""
+        exp = set(['A', 'C', 'B', 'D', 'G', 'H', 'K', 'M', 'N', 'S', 'R', 'T',
+                   'W', 'V', 'Y'])
+        self.assertEqual(self.b1.iupac_characters(), exp)
+        self.assertEqual(DNASequence.iupac_characters(), exp)
 
     def test_complement(self):
         """ complement functions as expected
@@ -449,6 +569,65 @@ class RNASequenceTests(TestCase):
             'MRWSYKVHDBN', identifier="degen",
             description="All of the degenerate bases")
         self.b5 = RNASequence('.G--AUUAC-A...')
+
+    def test_alphabet(self):
+        """alphabet property functions as expected"""
+        exp = {
+            'A', 'C', 'B', 'D', 'G', 'H', 'K', 'M', 'N', 'S', 'R', 'U', 'W',
+            'V', 'Y', 'a', 'c', 'b', 'd', 'g', 'h', 'k', 'm', 'n', 's', 'r',
+            'u', 'w', 'v', 'y'
+        }
+
+        self.assertEqual(self.b1.alphabet(), exp)
+        self.assertEqual(RNASequence.alphabet(), exp)
+
+    def test_gap_alphabet(self):
+        """gap_alphabet property functions as expected"""
+        self.assertEqual(self.b1.gap_alphabet(), set('-.'))
+
+    def test_complement_map(self):
+        """complement_map property functions as expected"""
+        exp = {
+            '-': '-', '.': '.', 'A': 'U', 'C': 'G', 'B': 'V', 'D': 'H',
+            'G': 'C', 'H': 'D', 'K': 'M', 'M': 'K', 'N': 'N', 'S': 'S',
+            'R': 'Y', 'U': 'A', 'W': 'W', 'V': 'B', 'Y': 'R', 'a': 'u',
+            'c': 'g', 'b': 'v', 'd': 'h', 'g': 'c', 'h': 'd', 'k': 'm',
+            'm': 'k', 'n': 'n', 's': 's', 'r': 'y', 'u': 'a', 'w': 'w',
+            'v': 'b', 'y': 'r'
+        }
+        self.assertEqual(self.b1.complement_map(), exp)
+        self.assertEqual(RNASequence.complement_map(), exp)
+
+    def test_iupac_standard_characters(self):
+        """iupac_standard_characters property functions as expected"""
+        exp = set("ACGU")
+        self.assertEqual(self.b1.iupac_standard_characters(), exp)
+        self.assertEqual(RNASequence.iupac_standard_characters(), exp)
+
+    def test_iupac_degeneracies(self):
+        """iupac_degeneracies property functions as expected"""
+        exp = {
+            'B': set(['C', 'U', 'G']), 'D': set(['A', 'U', 'G']),
+            'H': set(['A', 'C', 'U']), 'K': set(['U', 'G']),
+            'M': set(['A', 'C']), 'N': set(['A', 'C', 'U', 'G']),
+            'S': set(['C', 'G']), 'R': set(['A', 'G']), 'W': set(['A', 'U']),
+            'V': set(['A', 'C', 'G']), 'Y': set(['C', 'U'])
+        }
+        self.assertEqual(self.b1.iupac_degeneracies(), exp)
+        self.assertEqual(RNASequence.iupac_degeneracies(), exp)
+
+    def test_iupac_degenerate_characters(self):
+        """iupac_degenerate_characters property functions as expected"""
+        exp = set(['B', 'D', 'H', 'K', 'M', 'N', 'S', 'R', 'W', 'V', 'Y'])
+        self.assertEqual(self.b1.iupac_degenerate_characters(), exp)
+        self.assertEqual(RNASequence.iupac_degenerate_characters(), exp)
+
+    def test_iupac_characters(self):
+        """iupac_characters property functions as expected"""
+        exp = set(['A', 'C', 'B', 'D', 'G', 'H', 'K', 'M', 'N', 'S', 'R', 'U',
+                   'W', 'V', 'Y'])
+        self.assertEqual(self.b1.iupac_characters(), exp)
+        self.assertEqual(RNASequence.iupac_characters(), exp)
 
     def test_complement(self):
         """ complement functions as expected
