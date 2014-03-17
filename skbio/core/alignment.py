@@ -364,7 +364,27 @@ class SequenceCollection(object):
                 spread_f(sequence_lengths))
 
     def degap(self):
-        """
+        """ Return a new `SequenceCollection` with all gap characters removed.
+        
+        Returns
+        -------
+        SequenceCollection
+            A new `SequenceCollection` where `BiologicalSequence.degap()` has
+            been called on each sequence.
+        
+        Examples
+        --------
+        >>> from skbio.core.alignment import SequenceCollection
+        >>> from skbio.core.sequence import DNA
+        >>> sequences = [DNA('A--CCGT.', identifier="seq1"), 
+        ...              DNA('.AACCG-GT.', identifier="seq2")]
+        >>> s1 = SequenceCollection(sequences)
+        >>> s2 = s1.degap()
+        >>> print s2[0]
+        ACCGT
+        >>> print s2[1]
+        AACCGGT
+        
         """
         result = []
         for seq in self:
