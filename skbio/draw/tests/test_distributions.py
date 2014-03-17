@@ -382,12 +382,13 @@ class DistributionsTests(TestCase):
                                   ["Infants", "Children", "Teens"], ['b', 'r'],
                                   "x-axis label", "y-axis label", "Test")
             output = out.getvalue().strip()
-            self.assertEqual(output,
-                             "There are not enough markers to uniquely "
-                             "represent each distribution in your dataset. "
-                             "You may want to provide a list of markers that "
-                             "is at least as large as the number of "
-                             "distributions in your dataset.")
+            exp = ("There are not enough markers to uniquely represent each "
+                   "distribution in your dataset. You may want to provide a "
+                   "list of markers that is at least as large as the number "
+                   "of distributions in your dataset.")
+            # output may contain other text, such as warning messages from
+            # matplotlib.
+            self.assertTrue(exp in output)
         finally:
             sys.stdout = saved_stdout
 
@@ -419,12 +420,11 @@ class DistributionsTests(TestCase):
                                   ["Infants", "Children", "Teens"], ['^'],
                                   "x-axis label", "y-axis label", "Test")
             output = out.getvalue().strip()
-            self.assertEqual(output,
-                             "There are not enough markers to uniquely "
-                             "represent each distribution in your dataset. "
-                             "You may want to provide a list of markers that "
-                             "is at least as large as the number of "
-                             "distributions in your dataset.")
+            exp = ("There are not enough markers to uniquely represent each "
+                   "distribution in your dataset. You may want to provide a "
+                   "list of markers that is at least as large as the number "
+                   "of distributions in your dataset.")
+            self.assertTrue(exp in output)
         finally:
             sys.stdout = saved_stdout
 
@@ -621,14 +621,13 @@ class DistributionsTests(TestCase):
             self.assertTrue(np.array_equal(fig.get_size_inches(),
                             (3, 3)))
             output = out.getvalue().strip()
-            self.assertEqual(
-                output,
-                "Warning: could not automatically resize plot to make room "
-                "for axes labels and plot title. This can happen if the "
-                "labels or title are extremely long and the plot size is too "
-                "small. Your plot may have its labels and/or title cut-off. "
-                "To fix this, try increasing the plot's size (in inches) and "
-                "try again.")
+            exp = ("Warning: could not automatically resize plot to make room "
+                   "for axes labels and plot title. This can happen if the "
+                   "labels or title are extremely long and the plot size is "
+                   "too small. Your plot may have its labels and/or title "
+                   "cut-off. To fix this, try increasing the plot's size (in "
+                   "inches) and try again.")
+            self.assertTrue(exp in output)
         finally:
             sys.stdout = saved_stdout
 
