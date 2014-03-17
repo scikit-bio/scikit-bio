@@ -257,11 +257,6 @@ class SequenceCollectionTests(TestCase):
         exp2 = ">r1\nGATTACA\n>r2\nTTG\n>r3'U-----UGCC--\n"
         self.assertEqual(self.s1.to_fasta(),exp1)
 
-    def test_to_phylip(self):
-        """ to_phylip functions as expected
-        """
-        raise NotImplementedError
-
     def test_upper(self):
         """ upper functions as expected
         """
@@ -525,6 +520,23 @@ class AlignmentTests(TestCase):
         self.assertEqual(self.a1.sequence_length(), 13)
         self.assertEqual(self.a2.sequence_length(), 5)
 
+    def test_to_phylip(self):
+        """ to_phylip functions as expected
+        """
+        d1 = DNASequence('..ACC-GTTGG..', identifier="d1")
+        d2 = DNASequence('TTACCGGT-GGCC', identifier="d2")
+        d3 = DNASequence('.-ACC-GTTGC--', identifier="d3")
+        a = Alignment([d1, d2, d3])
+
+        phylip_str, id_map =  a.to_phylip()
+        self.assertEqual(id_map, {'seq0000001':'d1',
+                                  'seq0000003': 'd3',
+                                  'seq0000002': 'd2'})
+
+        expected = "\n".join(["3 13",
+            "seq0000001 ..ACC-GTTGG..", "seq0000002 TTACCGGT-GGCC",
+            "seq0000003 .-ACC-GTTGC--"])
+        self.assertEqual(phylip_str, expected)
 
     def test_validate_lengths(self):
         """
