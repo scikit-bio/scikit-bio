@@ -7,7 +7,9 @@ Sequence collections and alignments (:mod:`skbio.core.alignment`)
 
 This module provides functionality for working with biological sequence
 collections and alignments. These can be composed of generic sequences, 
-nucelotide sequences, DNA sequences, and RNA sequences.
+nucelotide sequences, DNA sequences, and RNA sequences. By default, input is
+not validated, but all contructor methods take a validate option which checks
+different features of the input based on ``SequenceCollection`` type.
 
 Classes
 -------
@@ -20,17 +22,28 @@ Classes
 
 Examples
 --------
+>>> from StringIO import StringIO
 >>> from skbio.core.alignment import SequenceCollection, Alignment
 >>> from skbio.core.sequence import DNA
 
->>> seqs = [("s1", "ACC--G-GGTA.."), ("s2", "TCC--G-GGCA..")]
->>> a1 = Alignment(seqs, DNA)
+>>> seqs = [DNA("ACC--G-GGTA.."), DNA("TCC--G-GGCA..")]
+>>> a1 = Alignment(seqs)
+>>> a1
+<Alignment: n=2; mean +/- std length=13.00 +/- 0.00>
 
->>> from skbio.parse.fasta import MinimalFastaParser
->>> fp = "/Users/caporaso/data/gg_13_8_otus/rep_set/79_otus.fasta"
->>> s1 = SequenceCollection.from_fasta_records(MinimalFastaParser(open(fp)), DNA)
+>>> seqs = [DNA("ACCGGG"), DNA("TCCGGGCA")]
+>>> a1 = SequenceCollection(seqs)
+>>> a1
+<SequenceCollection: n=2; mean +/- std length=7.00 +/- 1.00>
+
+>>> from skbio.parse.sequences import fasta_parse
+>>> fasta_f = StringIO('>seq1\n'
+...                    'CGATGTCGATCGATCGATCGATCAG\n'
+...                    '>seq2\n'
+...                    'CATCGATCGATCGATGCATGCATGCATG\n')
+>>> s1 = SequenceCollection.from_fasta_records(fasta_parse(fasta_f), DNA)
 >>> s1
-
+<SequenceCollection: n=2; mean +/- std length=26.50 +/- 1.50>
 
 """
 from __future__ import division
@@ -53,23 +66,61 @@ from skbio.core.exception import SequenceCollectionError
 from skbio.core.distance import SymmetricDistanceMatrix
 
 class SequenceCollection(object):
+    """Base class for biological sequence collections.
     """
-    """
-
-    def __init__(self, seqs, validate=False):
-       """
-       """
-       self._data = seqs
-       self._identifier_to_index = dict([(seq.identifier, i) 
-               for i, seq in enumerate(self._data)])
-       if validate and not self.is_valid():
-           raise SequenceCollectionError(
-               "Something is wrong, and it's your fault.")
 
     @classmethod
     def from_fasta_records(cls, fasta_records, seq_constructor,
             validate=False):
-        """
+        r"""Initialize a `SequenceCollection` object
+
+        Parameters
+        ----------
+        fasta_records : generator of tuples
+            The records to load into a new `SequenceCollection` object. These
+            should be tuples of ``(sequence_identifier, sequence)``.
+        seq_constructor : skbio.core.sequence.BiologicalSequence
+        validate: bool, optional
+            If True, runs the `is_valid` method after construction and raises
+            `SequenceCollectionError` if ``is_valid == False``.
+
+        Results
+        -------
+        SequenceCollection (or a derived class)
+            The new `SequenceCollection` object.
+
+        Raises
+        ------
+        skbio.core.exception.SequenceCollectionError
+            If ``validate == True`` and ``is_valid == False``.
+
+        See Also
+        --------
+        skbio.core.sequence.BiologicalSequence
+        skbio.core.sequence.NucelotideSequence
+        skbio.core.sequence.DNASequence
+        skbio.core.sequence.RNASequence
+        SequenceCollection
+        Alignment
+        skbio.parse.sequences
+        skbio.parse.sequences.fasta_parse
+
+        Examples
+        --------
+        >>> from skbio.core.alignment import SequenceCollection
+        >>> from skbio.parse.sequences import fasta_parse
+        >>> from StringIO import StringIO
+        >>> from skbio.core.sequence import DNA
+        >>> fasta_f = StringIO('>seq1\nACCGT\n>seq2\nAACCGGT\n')
+        >>> s1 = SequenceCollection.from_fasta_records(fasta_parse(fasta_f), DNA)
+        >>> s1
+        <SequenceCollection: n=2; mean +/- std length=6.00 +/- 1.00>
+        
+        >>> records = [('seq1', 'ACCGT'), ('seq2', 'AACCGGT')]
+        >>> s1 = SequenceCollection.from_fasta_records(records, DNA)
+        >>> s1
+        <SequenceCollection: n=2; mean +/- std length=6.00 +/- 1.00>
+
         """
         data = []
         for seq_id, seq in fasta_records:
@@ -82,6 +133,47 @@ class SequenceCollection(object):
               description=description))
  
         return cls(data, validate=validate)
+
+    def __init__(self, seqs, validate=False):
+        """ Initialize a `SequenceCollection` object
+
+        Parameters
+        ----------
+        seqs : list of `BiologicalSequence` objects
+            The `BiologicalSequence` objects to load into a new 
+            `SequenceCollection` object.
+        validate: bool, optional
+            If True, runs the `is_valid` method after construction and raises
+            `SequenceCollectionError` if ``is_valid == False``.
+
+        Results
+        -------
+        SequenceCollection (or a derived class)
+            The new `SequenceCollection` object.
+
+        Raises
+        ------
+        skbio.core.exception.SequenceCollectionError
+            If ``validate == True`` and ``is_valid == False``.
+
+        See Also
+        --------
+        skbio.core.sequence.BiologicalSequence
+        skbio.core.sequence.NucelotideSequence
+        skbio.core.sequence.DNASequence
+        skbio.core.sequence.RNASequence
+        SequenceCollection
+        Alignment
+        skbio.parse.sequences
+        skbio.parse.sequences.fasta_parse
+
+        """
+        self._data = seqs
+        self._identifier_to_index = dict([(seq.identifier, i) 
+                for i, seq in enumerate(self._data)])
+        if validate and not self.is_valid():
+            raise SequenceCollectionError(
+                "Something is wrong, and it's your fault.")
 
     def __eq__(self, other):
         """
