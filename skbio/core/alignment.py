@@ -249,17 +249,44 @@ class SequenceCollection(object):
             return self._data[index]
 
     def __iter__(self):
-        """
+        """ The iter object.
+
+        Returns
+        -------
+        iterator
+            `BiologicalSequence` iterator for the `SequenceCollection`.
+
         """
         return iter(self._data)
 
     def __len__(self):
-        """
+        """ The len operator.
+
+        Returns
+        -------
+        int
+            The number of sequences in the `SequenceCollection`.
+
         """
         return len(self._data)
 
     def __ne__(self, other):
-        """
+        """ The inequality operator.
+
+        Parameters
+        ----------
+        other : `SequenceCollection`
+
+        Returns
+        -------
+        bool
+            Indicates whether self and other are not equal.
+
+        Notes
+        -----
+        See `SequenceCollection.__eq__` for a description of what it means for
+        a pair of `SequenceCollection` objects to be equal.
+
         """
         return not self.__eq__(other)
 
@@ -273,9 +300,19 @@ class SequenceCollection(object):
 
         Notes
         -----
+        String representation contains the class name, the number of sequences
+        in the `SequenceCollection` (n), and the mean and standard deviation
+        sequence length.
 
         Examples
         --------
+        >>> from skbio.core.alignment import SequenceCollection
+        >>> from skbio.core.sequence import DNA
+        >>> sequences = [DNA('ACCGT', identifier="seq1"), 
+        ...              DNA('AACCGGT', identifier="seq2")]
+        >>> s1 = SequenceCollection(sequences)
+        >>> print repr(s1)
+        <SequenceCollection: n=2; mean +/- std length=6.00 +/- 1.00>
 
         """
         cn = self.__class__.__name__
@@ -284,7 +321,43 @@ class SequenceCollection(object):
                 center, spread)
 
     def count_center_spread(self, center_f=np.mean, spread_f=np.std):
-        """
+        """Return sequence count, and center and spread of sequence lengths
+
+        Parameters
+        ----------
+        center_f : function
+            Should take a list-like object and return a single value
+            representing the center of the distribution.
+        spread_f : function
+            Should take a list-like object and return a single value
+            representing the spread of the distribution.
+
+        Return
+        ------
+        tuple
+            The sequence count, center of length distribution, spread of length
+            distribution.
+
+        Notes
+        -----
+        Alternatives for center_f and spread_f could be median and median
+        absolute deviation.
+
+        Examples
+        --------
+        >>> from skbio.core.alignment import SequenceCollection
+        >>> from skbio.core.sequence import DNA
+        >>> sequences = [DNA('ACCGT', identifier="seq1"), 
+        ...              DNA('AACCGGT', identifier="seq2")]
+        >>> s1 = SequenceCollection(sequences)
+        >>> count, center, spread = s1.count_center_spread()
+        >>> print count
+        2
+        >>> print center
+        6.0
+        >>> print spread
+        1.0
+
         """
         sequence_lengths = self.sequence_lengths()
         return (len(sequence_lengths), center_f(sequence_lengths),
