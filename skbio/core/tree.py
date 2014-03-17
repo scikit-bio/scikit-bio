@@ -13,31 +13,28 @@ from operator import or_
 from random import shuffle
 from copy import deepcopy
 from itertools import combinations
-from string import maketrans
 from numpy import argsort, zeros
 from skbio.maths.stats.test import correlation_t
 from skbio.core.exception import (NoLengthError, DuplicateNodeError,
-    NoParentError, MissingNodeError, TreeError, RecordError)
+                                  NoParentError, MissingNodeError,
+                                  TreeError, RecordError)
 
-_dnd_token_str = '(:),;'
-_dnd_tokens = set(_dnd_token_str)
-_dnd_tokens_and_spaces = _dnd_token_str + ' \t\v\n'
-
-remove_dnd_tokens = maketrans(_dnd_tokens_and_spaces,
-                              '-' * len(_dnd_tokens_and_spaces))
 
 def _dnd_tokenizer(data):
     """Tokenizes data into a stream of punctuation, labels and lengths.
 
     Note: data should all be a single sequence, e.g. a single string.
     """
+    dnd_token_str = '(:),;'
+    dnd_tokens = set(dnd_token_str)
+
     in_quotes = False
     saved = []
     sa = saved.append
     for d in data:
         if d == "'":
-            in_quotes = not(in_quotes)
-        if d in _dnd_tokens and not in_quotes:
+            in_quotes = not in_quotes
+        if d in dnd_tokens and not in_quotes:
             curr = ''.join(saved).strip()
             if curr:
                 yield curr
@@ -46,6 +43,7 @@ def _dnd_tokenizer(data):
             sa = saved.append
         else:
             sa(d)
+
 
 def distance_from_r(m1, m2):
     """Estimates distance as (1-r)/2: neg correl = max distance"""
@@ -61,6 +59,7 @@ class TreeNode(object):
         self.Parent = Parent
         self._node_cache = {}
         self.Children = []
+        self.Id = None
 
         if Children:
             for c in Children:
@@ -76,7 +75,7 @@ class TreeNode(object):
         name = self.Name if self.Name is not None else "unnamed"
 
         return "<%s, name: %s internal node count: %d, tips count: %d>" % \
-                (classname, name, n_nontips, n_tips)
+               (classname, name, n_nontips, n_tips)
 
     def __str__(self):
         """Returns string version of self, with names and distances."""
@@ -110,7 +109,7 @@ class TreeNode(object):
 
     def extend(self, nodes):
         """Append a list of nodes to self"""
-        self.Children.extend(map(self._adopt, nodes))
+        self.Children.extend([self._adopt(n) for n in nodes])
 
     def pop(self, index=-1):
         """Remove a node from self"""
@@ -131,10 +130,10 @@ class TreeNode(object):
                 return True
         return False
 
-    def remove_deleted(self, f):
+    def remove_deleted(self, func):
         """Delete nodes in which f(node) evaluates True"""
         for node in self.traverse(include_self=False):
-            if f(node):
+            if func(node):
                 node.Parent.remove(node)
 
     def prune(self):
@@ -160,14 +159,19 @@ class TreeNode(object):
     ### end topology updates ###
 
     ### copy like methods ###
-    def copy(self, memo=None):
+    def copy(self):
         """Returns a copy of self using an iterative approach"""
-        def __copy_node(n):
-            result = n.__class__()
-            efc = n._exclude_from_copy
-            for k,v in n.__dict__.items():
-                if k not in efc:
-                    result.__dict__[k] = deepcopy(n.__dict__[k])
+        def __copy_node(node_to_copy):
+            """Helper method to copy a node"""
+            # this is _possibly_ dangerous, we're assuming the node to copy is
+            # of the same class as self, and has the same exclusion criteria.
+            # however, it is potentially dangerous to mix TreeNode subclasses
+            # within a tree, so...
+            result = self.__class__()
+            efc = self._exclude_from_copy
+            for key in node_to_copy.__dict__:
+                if key not in efc:
+                    result.__dict__[key] = deepcopy(node_to_copy.__dict__[key])
             return result
 
         root = __copy_node(self)
@@ -183,9 +187,9 @@ class TreeNode(object):
                 old_child = old_top_node.Children[-unvisited_children]
                 new_child = __copy_node(old_child)
                 new_top_node.append(new_child)
-                nodes_stack.append([new_child, old_child, \
+                nodes_stack.append([new_child, old_child,
                                     len(old_child.Children)])
-            else:  #no unvisited children
+            else:  # no unvisited children
                 nodes_stack.pop()
         return root
 
@@ -201,9 +205,9 @@ class TreeNode(object):
         new_tree.assign_ids()
 
         new_tree_self = new_tree.find_by_id(self.Id)
-        return new_tree_self._unrooted_copy()
+        return new_tree_self.unrooted_copy(parent)
 
-    def _unrooted_copy(self, parent=None):
+    def unrooted_copy(self, parent=None):
         """Walks the tree unrooted-style and returns a copy
 
         Warning, this is _NOT_ a deepcopy
@@ -226,7 +230,8 @@ class TreeNode(object):
             edgename = self.Name
             length = self.Length
 
-        result = self.__class__(Name=edgename, Children=children, Length=length)
+        result = self.__class__(Name=edgename, Children=children,
+                                Length=length)
 
         if parent is None:
             result.Name = "root"
@@ -235,7 +240,6 @@ class TreeNode(object):
 
     def subtree(self, tip_list=None):
         """Make a copy of the subtree"""
-        st = self.copy()
         raise NotImplementedError()
 
     def subset(self):
@@ -280,14 +284,14 @@ class TreeNode(object):
         max_dist, tips = tree.get_max_distance()
         half_max_dist = max_dist/2.0
 
-        if max_dist == 0.0: # only pathological cases with no lengths
+        if max_dist == 0.0:  # only pathological cases with no lengths
             return tree
 
         tip1 = tree.find(tips[0])
         tip2 = tree.find(tips[1])
         lca = tree.lowest_common_ancestor([tip1, tip2])
 
-        if tip1._accumulate_to_ancestor(lca) > half_max_dist:
+        if tip1.accumulate_to_ancestor(lca) > half_max_dist:
             climb_node = tip1
         else:
             climb_node = tip2
@@ -305,7 +309,7 @@ class TreeNode(object):
             if climb_node.is_tip():
                 raise TreeError('error trying to root tree at tip')
             else:
-                return climb_node._unrooted_copy()
+                return climb_node.unrooted_copy()
 
         else:
             # make a new node on climb_node's branch to its parent
@@ -318,7 +322,7 @@ class TreeNode(object):
             climb_node.Length = half_max_dist - dist_climbed
             new_root.Length = old_br_len - climb_node.Length
 
-            return new_root._unrooted_copy()
+            return new_root.unrooted_copy()
 
     ### end copy like methods ###
 
@@ -492,7 +496,7 @@ class TreeNode(object):
         while stack:
             curr = stack.pop()
             if curr.Children:
-                stack.extend(curr.Children[::-1])   #20% faster than reversed
+                stack.extend(curr.Children[::-1])  # 20% faster than reversed
             else:
                 yield curr
 
@@ -500,8 +504,9 @@ class TreeNode(object):
         """Iterates over nontips descended from self, [] if none.
 
         include_self, if True (default is False), will return the current
-        node as part of the list of nontips if it is a nontip."""
-        for n in self.traverse(True, False, include_self):
+        node as part of the list of nontips if it is a nontip.
+        """
+        for n in self.postorder(include_self):
             if n.Children:
                 yield n
 
@@ -664,18 +669,17 @@ class TreeNode(object):
 
         return curr
 
-    lca = lowest_common_ancestor #for convenience
+    lca = lowest_common_ancestor  # for convenience
 
     ### end path methods ###
 
     ### parsers ###
 
-
     @classmethod
     def from_newick(cls, lines, unescape_name=True):
-        """Returns tree from the Clustal .dnd file format, and anything equivalent.
+        """Returns tree from the Clustal .dnd file format and equivalent.
 
-        Tree is made up of skbio.core.tree.TreeNode objects, with branch lengths
+        Tree is made of skbio.core.tree.TreeNode objects, with branch lengths
         """
         def _new_child(old_node):
             """Returns new_node which has old_node as its parent."""
@@ -730,7 +734,7 @@ class TreeNode(object):
             if t == '(':
                 #opening a new node
                 curr_node = _new_child(curr_node)
-            elif t == ';':  #end of data
+            elif t == ';':  # end of data
                 last_token = t
                 break
             elif t == ',' and last_token in ',(':
@@ -764,22 +768,23 @@ class TreeNode(object):
             else:
                 # can't think of a reason to get here
                 raise RecordError("Incorrect PhyloNode state? %s" % t)
-            state = 'PreColon'  #get here for any non-colon token
+            state = 'PreColon'  # get here for any non-colon token
             state1 = 'PreClosed'
             last_token = t
 
         if curr_node is not None and curr_node.Parent is not None:
             raise RecordError("Didn't get back to root of tree.")
 
-        if curr_node is None:       #no data -- return empty node
+        if curr_node is None:  # no data -- return empty node
             return cls()
-        return curr_node    #this should be the root of the tree
+        return curr_node  # this should be the root of the tree
 
     ### end parsers ###
 
     ### formatters ###
 
-    def to_newick(self, with_distances=False, semicolon=True, escape_name=True):
+    def to_newick(self, with_distances=False, semicolon=True,
+                  escape_name=True):
         """Return the newick string for this tree.
 
         Arguments:
@@ -801,14 +806,14 @@ class TreeNode(object):
             #check the top node, any children left unvisited?
             top = nodes_stack[-1]
             top_node, num_unvisited_children = top
-            if num_unvisited_children: #has any child unvisited
-                top[1] -= 1  #decrease the #of children unvisited
-                next_child = top_node.Children[-num_unvisited_children] # - for order
-                #pre-visit
+            if num_unvisited_children:  # has any child unvisited
+                top[1] -= 1  # decrease the #of children unvisited
+                next_child = top_node.Children[-num_unvisited_children]
+                # pre-visit
                 if next_child.Children:
                     result.append('(')
                 nodes_stack.append([next_child, len(next_child.Children)])
-            else:  #no unvisited children
+            else:  # no unvisited children
                 nodes_stack.pop()
                 #post-visit
                 if top_node.Children:
@@ -818,12 +823,12 @@ class TreeNode(object):
                     name = ''
                 else:
                     name = str(top_node.Name)
-                    if escape_name and not (name.startswith("'") and \
+                    if escape_name and not (name.startswith("'") and
                                             name.endswith("'")):
                         if re.search("""[]['"(),:;_]""", name):
                             name = "'%s'" % name.replace("'", "''")
                         else:
-                            name = name.replace(' ','_')
+                            name = name.replace(' ', '_')
                 result.append(name)
 
                 if with_distances and top_node.Length is not None:
@@ -837,7 +842,7 @@ class TreeNode(object):
                 return ";"
             else:
                 return ''
-        elif len_result == 3: # single node with name
+        elif len_result == 3:  # single node with name
             if semicolon:
                 return "%s;" % result[1]
             else:
@@ -853,7 +858,7 @@ class TreeNode(object):
         LEN = 10
         PAD = ' ' * LEN
         PA = ' ' * (LEN-1)
-        namestr = self.Name or '' # prevents name of NoneType
+        namestr = self.Name or ''  # prevents name of NoneType
         if self.Children:
             mids = []
             result = []
@@ -875,7 +880,7 @@ class TreeNode(object):
             prefixes = [PAD] * (lo+1) + [PA+'|'] * (hi-lo-1) + [PAD] * (end-hi)
             mid = (lo + hi) / 2
             prefixes[mid] = char1 + '-'*(LEN-2) + prefixes[mid][-1]
-            result = [p+l for (p,l) in zip(prefixes, result)]
+            result = [p+l for (p, l) in zip(prefixes, result)]
             if show_internal:
                 stem = result[mid]
                 result[mid] = stem[0] + namestr + stem[len(namestr)+1:]
@@ -893,15 +898,15 @@ class TreeNode(object):
         Note, this method calls a private recursive function and is not safe
         for large trees.
         """
-        (lines, mid) = self._ascii_art(
-                show_internal=show_internal, compact=compact)
+        (lines, mid) = self._ascii_art(show_internal=show_internal,
+                                       compact=compact)
         return '\n'.join(lines)
 
     ### end formatters ###
 
     ### distance methods ###
 
-    def _accumulate_to_ancestor(self, ancestor):
+    def accumulate_to_ancestor(self, ancestor):
         """Return the sum of the distance between self and ancestor"""
         accum = 0.0
         curr = self
@@ -925,8 +930,8 @@ class TreeNode(object):
 
         root = self.root()
         lca = root.lowest_common_ancestor([self, other])
-        accum = self._accumulate_to_ancestor(lca)
-        accum += other._accumulate_to_ancestor(lca)
+        accum = self.accumulate_to_ancestor(lca)
+        accum += other.accumulate_to_ancestor(lca)
 
         return accum
 
@@ -934,10 +939,10 @@ class TreeNode(object):
     def _set_max_distance(self):
         """Propagate tip distance information up the tree
 
-        This method was originally implemented by Julia Goodrich with the intent
-        of being able to determine max tip to tip distances between nodes on
-        large trees efficiently. The code has been modified to track the
-        specific tips the distance is between
+        This method was originally implemented by Julia Goodrich with the
+        intent of being able to determine max tip to tip distances between
+        nodes on large trees efficiently. The code has been modified to track
+        the specific tips the distance is between
         """
         for n in self.postorder():
             if n.is_tip():
@@ -960,7 +965,7 @@ class TreeNode(object):
 
         Also returns the tip names  that it is between as a tuple"""
         distmtx, tip_order = self.tip_tip_distances()
-        idx_max = divmod(distmtx.argmax(),distmtx.shape[1])
+        idx_max = divmod(distmtx.argmax(), distmtx.shape[1])
         max_pair = (tip_order[idx_max[0]].Name, tip_order[idx_max[1]].Name)
         return distmtx[idx_max], max_pair
 
