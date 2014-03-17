@@ -443,7 +443,7 @@ class Alignment(SequenceCollection):
         """
         """
         position_frequencies = self.position_frequencies()
-        gap_alphabet = self[0].gap_alphabet
+        gap_alphabet = self[0].gap_alphabet()
         
         positions_to_keep = []
         for i, f in enumerate(position_frequencies):
@@ -456,7 +456,7 @@ class Alignment(SequenceCollection):
         """
         """
         sequence_frequencies = self.sequence_frequencies()
-        gap_alphabet = self[0].gap_alphabet
+        gap_alphabet = self[0].gap_alphabet()
         seqs_to_keep = []
         for seq, f in zip(self, sequence_frequencies):
             gap_frequency = sum([f[c] for c in gap_alphabet])
