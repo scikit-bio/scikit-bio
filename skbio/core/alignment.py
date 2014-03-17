@@ -431,11 +431,59 @@ class SequenceCollection(object):
             The ordered list of identifiers for the `BiologicalSequences` in
             the `SequenceCollection`.
 
+        Examples
+        --------
+        >>> from skbio.core.alignment import SequenceCollection
+        >>> from skbio.core.sequence import DNA
+        >>> sequences = [DNA('A--CCGT.', identifier="seq1"), 
+        ...              DNA('.AACCG-GT.', identifier="seq2")]
+        >>> s1 = SequenceCollection(sequences)
+        >>> print s1.identifiers()
+        ['seq1', 'seq2']
+
         """
         return [seq.identifier for seq in self]
 
     def int_map(self, prefix=""):
-        """
+        """ Create an integer-based mapping of sequence identifiers
+
+        Parameters
+        ----------
+        prefix : str
+            String prefix for new integer-based identifiers.
+
+        Returns
+        -------
+        dict
+            Mapping of new identifiers to sequences.
+        dict
+            Mapping of new identifiers to old identifiers.
+
+        Notes
+        -----
+        This is useful when writing sequences out for use with programs that
+        are picky about sequence identifiers (e.g., raXML).
+
+        The integer-based identifiers will be strings, for consistency (e.g.,
+        if prefix is passed).
+
+        Examples
+        --------
+        >>> from skbio.core.alignment import SequenceCollection
+        >>> from skbio.core.sequence import DNA
+        >>> sequences = [DNA('ACCGT', identifier="seq1"), 
+        ...              DNA('AACCGGT', identifier="seq2")]
+        >>> s1 = SequenceCollection(sequences)
+        >>> new_id_to_seqs, new_id_to_old_ids = s1.int_map()
+        >>> print repr(new_id_to_seqs['0'])
+        <DNASequence: ACCGT (length: 5)>
+        >>> print repr(new_id_to_seqs['1'])
+        <DNASequence: AACCGGT (length: 7)>
+        >>> print new_id_to_old_ids['0']
+        seq1
+        >>> print new_id_to_old_ids['1']
+        seq2
+
         """
         int_keys = []
         int_map = []
