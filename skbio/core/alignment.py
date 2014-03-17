@@ -26,12 +26,14 @@ Examples
 >>> from skbio.core.alignment import SequenceCollection, Alignment
 >>> from skbio.core.sequence import DNA
 
->>> seqs = [DNA("ACC--G-GGTA.."), DNA("TCC--G-GGCA..")]
+>>> seqs = [DNA("ACC--G-GGTA..", identifier="seq1"),
+...     DNA("TCC--G-GGCA..", identifier="seqs2")]
 >>> a1 = Alignment(seqs)
 >>> a1
 <Alignment: n=2; mean +/- std length=13.00 +/- 0.00>
 
->>> seqs = [DNA("ACCGGG"), DNA("TCCGGGCA")]
+>>> seqs = [DNA("ACCGGG", identifier="seq1"),
+...     DNA("TCCGGGCA", identifier="seq2")]
 >>> a1 = SequenceCollection(seqs)
 >>> a1
 <SequenceCollection: n=2; mean +/- std length=7.00 +/- 1.00>
@@ -181,11 +183,23 @@ class SequenceCollection(object):
 
         """
         self._data = seqs
-        self._identifier_to_index = \
-            dict([(seq.identifier, i) for i, seq in enumerate(self._data)])
+        self._identifier_to_index = {}
+        for i, seq in enumerate(self._data):
+            identifier = seq.identifier
+            if identifier in self._identifier_to_index:
+                raise SequenceCollectionError(
+                    "All sequence identifiers must be unique, but "
+                    "identifier %s is present multiple times." % identifier)
+            else:
+                self._identifier_to_index[seq.identifier] = i 
+       
+        # This is bad because we're making a second pass through the sequence
+        # collection to validate. We'll want to avoid this, but it's tricky
+        # because different subclasses will want to define their own is_valid
+        # methods.
         if validate and not self.is_valid():
             raise SequenceCollectionError(
-                "Something is wrong, and it's your fault.")
+                "%s failed to validate." % self.__class__.__name__)
 
     def __eq__(self, other):
         r"""The equality operator.

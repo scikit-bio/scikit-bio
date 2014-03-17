@@ -150,7 +150,7 @@ class SequenceCollectionTests(TestCase):
 
         # SequenceCollections with different sequences are not equal
         self.assertTrue(self.s1 !=
-                        SequenceCollection([self.d1, self.d1, self.d1]))
+                        SequenceCollection([self.d1, self.r1]))
 
     def test_repr(self):
         """
