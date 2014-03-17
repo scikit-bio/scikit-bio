@@ -135,7 +135,7 @@ class SequenceCollection(object):
         return cls(data, validate=validate)
 
     def __init__(self, seqs, validate=False):
-        """ Initialize a `SequenceCollection` object
+        r"""Initialize a `SequenceCollection` object
 
         Parameters
         ----------
@@ -166,6 +166,16 @@ class SequenceCollection(object):
         Alignment
         skbio.parse.sequences
         skbio.parse.sequences.fasta_parse
+
+        Examples
+        --------
+        >>> from skbio.core.alignment import SequenceCollection
+        >>> from skbio.core.sequence import DNA
+        >>> sequences = [DNA('ACCGT', identifier="seq1"), 
+        ...              DNA('AACCGGT', identifier="seq2")]
+        >>> s1 = SequenceCollection(sequences)
+        >>> s1
+        <SequenceCollection: n=2; mean +/- std length=6.00 +/- 1.00>
 
         """
         self._data = seqs
