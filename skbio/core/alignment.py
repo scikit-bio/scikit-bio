@@ -186,7 +186,7 @@ class SequenceCollection(object):
                 "Something is wrong, and it's your fault.")
 
     def __eq__(self, other):
-        """The equality operator.
+        r"""The equality operator.
 
         Parameters
         ----------
@@ -216,7 +216,7 @@ class SequenceCollection(object):
         return True
     
     def __getitem__(self, index):
-        """ The indexing operator.
+        r"""The indexing operator.
 
         Parameters
         ----------
@@ -249,7 +249,7 @@ class SequenceCollection(object):
             return self._data[index]
 
     def __iter__(self):
-        """ The iter object.
+        r"""The iter object.
 
         Returns
         -------
@@ -260,7 +260,7 @@ class SequenceCollection(object):
         return iter(self._data)
 
     def __len__(self):
-        """ The len operator.
+        r"""The len operator.
 
         Returns
         -------
@@ -271,7 +271,7 @@ class SequenceCollection(object):
         return len(self._data)
 
     def __ne__(self, other):
-        """ The inequality operator.
+        r"""The inequality operator.
 
         Parameters
         ----------
@@ -291,7 +291,7 @@ class SequenceCollection(object):
         return not self.__eq__(other)
 
     def __repr__(self):
-        """The repr method.
+        r"""The repr method.
 
         Returns
         -------
@@ -321,7 +321,7 @@ class SequenceCollection(object):
                 center, spread)
 
     def count_center_spread(self, center_f=np.mean, spread_f=np.std):
-        """Return sequence count, and center and spread of sequence lengths
+        r"""Return sequence count, and center and spread of sequence lengths
 
         Parameters
         ----------
@@ -364,7 +364,7 @@ class SequenceCollection(object):
                 spread_f(sequence_lengths))
 
     def degap(self):
-        """ Return a new `SequenceCollection` with all gap characters removed.
+        r"""Return a new `SequenceCollection` with all gap characters removed.
         
         Returns
         -------
@@ -392,14 +392,47 @@ class SequenceCollection(object):
         return SequenceCollection(result)
 
     def get_seq(self, identifier):
-        """
+        r"""Return a sequence from the `SequenceCollection` by its identifier.
+
+        Parameters
+        ----------
+        identifier, str
+            The identifier of the sequence to return.
+
+        Returns
+        -------
+        BiologicalSequence
+            The `BiologicalSequence` with `identifier`.
+
+        Raises
+        ------
+        KeyError
+            If `identifier` is not in the `SequenceCollection` object.
+
+        Examples
+        --------
+        >>> from skbio.core.alignment import SequenceCollection
+        >>> from skbio.core.sequence import DNA
+        >>> sequences = [DNA('A--CCGT.', identifier="seq1"), 
+        ...              DNA('.AACCG-GT.', identifier="seq2")]
+        >>> s1 = SequenceCollection(sequences)
+        >>> print s1['seq1']
+        A--CCGT.
+
         """
         return self[self._identifier_to_index[identifier]]
 
     def identifiers(self):
+        """Returns the `BiologicalSequence` idenitfiers
+
+        Returns
+        -------
+        list
+            The ordered list of identifiers for the `BiologicalSequences` in
+            the `SequenceCollection`.
+
         """
-        """
-        return self._identifier_to_index.keys()
+        return [seq.identifier for seq in self]
 
     def int_map(self, prefix=""):
         """
