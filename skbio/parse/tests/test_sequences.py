@@ -122,7 +122,7 @@ class ParseFastqTests(TestCase):
     def test_parse_error(self):
         """Does this raise a FastqParseError with incorrect input?"""
         with self.assertRaises(FastqParseError):
-            list(fastq_parse(self.fastq_example_2))
+            list(fastq_parse(self.fastq_example_2, strict=True))
 
 data = {
     "GAPC_0015:6:1:1259:10413#0/1":
