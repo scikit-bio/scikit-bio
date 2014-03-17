@@ -48,6 +48,11 @@ def subsample(counts, n):
         Subsampled vector of counts where the sum of the elements equals `n`
         (i.e., ``subsampled.sum() == n``).
 
+    Raises
+    ------
+    TypeError
+        If `counts` cannot be safely converted to an integer datatype.
+
     Examples
     --------
     Subsample 4 items from a vector of counts:
