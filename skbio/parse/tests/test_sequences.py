@@ -9,10 +9,9 @@
 #-----------------------------------------------------------------------------
 
 
+from skbio.core.exception import FastqParseError, RecordError
 from skbio.parse.sequences import fastq_parse
-from skbio.core.exception import FastqParseError
 from skbio.parse.sequences import fasta_parse
-from skbio.parse.record import RecordError
 from unittest import TestCase, main
 
 
