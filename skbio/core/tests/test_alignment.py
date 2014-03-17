@@ -69,7 +69,7 @@ class SequenceCollectionTests(TestCase):
         SequenceCollection(self.seqs3)
         SequenceCollection(self.seqs3)
 
-    def test_init_validate(self):
+    def test_init_fail(self):
         """ initialization with sequences with overlapping identifiers fails
         """
         s1 = [self.d1, self.d1]
