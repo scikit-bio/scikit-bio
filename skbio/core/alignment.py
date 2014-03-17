@@ -1102,18 +1102,17 @@ class Alignment(SequenceCollection):
         ...              DNA('AT-C', identifier="seq2"),
         ...              DNA('TT-C', identifier="seq3")]
         >>> a1 = Alignment(sequences)
-        >>> for freqs in a1.position_frequencies():
-        ...     print freqs
-        defaultdict(<type 'int'>, {'A': 0.6666666666666666, 'T': 0.3333333333333333})
-        defaultdict(<type 'int'>, {'C': 0.3333333333333333, 'T': 0.6666666666666666})
-        defaultdict(<type 'int'>, {'-': 1.0})
-        defaultdict(<type 'int'>, {'C': 0.6666666666666666, '-': 0.3333333333333333})
+        >>> position_freqs = a1.position_frequencies()
+        >>> print round(position_freqs[0]['A'],3)
+        0.667
+        >>> print round(position_freqs[1]['A'],3)
+        0.0
 
         """
         result = []
         count = 1 / self.sequence_count()
         for p in self.iter_positions(constructor=str):
-            current_freqs = defaultdict(int)
+            current_freqs = defaultdict(float)
             for c in p:
                 current_freqs[c] += count
             result.append(current_freqs)
