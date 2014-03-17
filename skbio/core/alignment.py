@@ -668,6 +668,16 @@ class Alignment(SequenceCollection):
         skbio.core.distance.SymmetricDistanceMatrix
             Matrix representing the distances between the sequences in self.
 
+        Raises
+        ------
+        skbio.core.expection.BiologicalSequenceError
+            If ``len(self) 11= len(other)``.
+        
+        See Also
+        --------
+        skbio.core.distance.DistanceMatrix
+        scipy.spatial.distance.hamming
+
         Examples
         --------
         >>> from skbio.core.alignment import Alignment
@@ -697,7 +707,54 @@ class Alignment(SequenceCollection):
 
     def subalignment(self, seqs_to_keep=None, positions_to_keep=None,
             invert_seqs_to_keep=False, invert_positions_to_keep=False):
-        """
+        """Returns new `Alignment` that is a subset of the current `Alignment`
+
+        Parameters
+        ----------
+        seqs_to_keep: list, optional
+            A list of sequence identifiers to be retained in the resulting
+            `Alignment`. If this is not passed, the default will be to retain
+            all sequences. 
+        positions_to_keep: list, optional
+            A list of position identifiers to be retained in the resulting
+            `Alignment`. If this is not passed, the default will be to retain
+            all positions. 
+        invert_seqs_to_keep: bool, optional
+            If True, the sequences identified in `seqs_to_keep` will be
+            discarded, rather than retained.
+        invert_positions_to_keep: bool, optional
+            If True, the sequences identified in `positions_to_keep` will be
+            discarded, rather than retained.
+
+        Returns
+        -------
+        Alignment
+            The specified subalignment.
+
+        Examples
+        --------
+        >>> from skbio.core.alignment import Alignment
+        >>> from skbio.core.sequence import DNA
+        >>> seqs = [DNA("A-CCGGG", identifier="s1"),
+        ...         DNA("ATCC--G", identifier="s2"),
+        ...         DNA("ATCCGGA", identifier="s3")]
+        >>> a1 = Alignment(seqs)
+        >>> print a1
+        <Alignment: n=3; mean +/- std length=7.00 +/- 0.00>
+        >>> print a1.subalignment(seqs_to_keep=["s1", "s2"])
+        <Alignment: n=2; mean +/- std length=7.00 +/- 0.00>
+        >>> print a1.subalignment(seqs_to_keep=["s1", "s2"],
+        ...         invert_seqs_to_keep=True)
+        <Alignment: n=1; mean +/- std length=7.00 +/- 0.00>
+        >>> print a1.subalignment(positions_to_keep=[0, 2, 3, 5])
+        <Alignment: n=3; mean +/- std length=4.00 +/- 0.00>
+        >>> print a1.subalignment(positions_to_keep=[0, 2, 3, 5],
+        ...         invert_positions_to_keep=True)
+        <Alignment: n=3; mean +/- std length=3.00 +/- 0.00>
+        >>> print a1.subalignment(seqs_to_keep=["s1", "s2"],
+        ...         positions_to_keep=[0, 2, 3, 5])
+        <Alignment: n=2; mean +/- std length=4.00 +/- 0.00>
+
         """
         if seqs_to_keep is None:
             if invert_seqs_to_keep:
