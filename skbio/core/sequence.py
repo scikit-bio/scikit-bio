@@ -1169,10 +1169,7 @@ class DNASequence(NucleotideSequence):
             'm': 'k', 'b': 'v', 'd': 'h', 'h': 'd', 'v': 'b', 'n': 'n'
         }
 
-        gap_alphabet = cls.gap_alphabet()
-        for gap_char in gap_alphabet:
-            comp_map[gap_char] = gap_char
-
+        comp_map.update({c: c for c in cls.gap_alphabet()})
         return comp_map
 
     @classmethod
@@ -1242,10 +1239,7 @@ class RNASequence(NucleotideSequence):
             'm': 'k', 'b': 'v', 'd': 'h', 'h': 'd', 'v': 'b', 'n': 'n'
         }
 
-        gap_alphabet = cls.gap_alphabet()
-        for gap_char in gap_alphabet:
-            comp_map[gap_char] = gap_char
-
+        comp_map.update({c: c for c in cls.gap_alphabet()})
         return comp_map
 
     @classmethod
