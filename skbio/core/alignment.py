@@ -496,20 +496,20 @@ class SequenceCollection(object):
         ...              DNA('AACCGGT', identifier="seq2")]
         >>> s1 = SequenceCollection(sequences)
         >>> new_id_to_seqs, new_id_to_old_ids = s1.int_map()
-        >>> print repr(new_id_to_seqs['0'])
-        <DNASequence: ACCGT (length: 5)>
         >>> print repr(new_id_to_seqs['1'])
+        <DNASequence: ACCGT (length: 5)>
+        >>> print repr(new_id_to_seqs['2'])
         <DNASequence: AACCGGT (length: 7)>
-        >>> print new_id_to_old_ids['0']
-        seq1
         >>> print new_id_to_old_ids['1']
+        seq1
+        >>> print new_id_to_old_ids['2']
         seq2
 
         """
         int_keys = []
         int_map = []
         for i, seq in enumerate(self):
-            k = ("%s%d" % (prefix, i))
+            k = ("%s%d" % (prefix, i+1))
             int_map.append((k, seq))
             int_keys.append((k, seq.identifier))
         return dict(int_map), dict(int_keys)
@@ -645,17 +645,6 @@ class SequenceCollection(object):
         support the method with this name.
         """
         return self.to_fasta()
-
-    def to_phylip(self):
-        """Return phylip-formatted string representing the `SequenceCollection`
-
-        Returns
-        -------
-        str
-            A phylip-formatted string representing the `SequenceCollection`.
-
-        """
-        raise NotImplementedError
 
     def upper(self):
         """Converts all sequences to uppercase
@@ -1251,6 +1240,49 @@ class Alignment(SequenceCollection):
 
         """
         return len(self._data[0])
+
+    def to_phylip(self, map_labels=False, label_prefix=""):
+        """Return phylip-formatted string representing the `SequenceCollection`
+
+        Returns
+        -------
+        str
+            A phylip-formatted string representing the `SequenceCollection`.
+
+        """
+        if not self._validate_lengths():
+            raise SequenceCollectionError("PHYLIP-formatted string can only "
+                                          "be generated if all sequences are "
+                                          "of equal length.")
+
+        sequence_count = self.sequence_count()
+        if sequence_count == 0:
+            raise SequenceCollectionError("PHYLIP-formatted string can only "
+                                          "be generated if there is at least "
+                                          "one sequence in the Alignment.")
+
+        sequence_length = self.sequence_length()
+        if sequence_length == 0:
+            raise SequenceCollectionError("PHYLIP-formatted string can only "
+                                          "be generated if there is at least "
+                                          "one position in the Alignment.")
+
+        identifiers = self.identifiers()
+        result = ["%d %d" % (sequence_count, sequence_length)]
+        if map_labels:
+            seq_id_to_seqs, new_id_to_old_id =\
+                self.int_map(prefix=label_prefix)
+            old_id_to_new_id = {v: k for k, v in new_id_to_old_id.items()}
+        else:
+            seq_id_to_seqs = self
+            new_id_to_old_id = {seq_id: seq_id for seq_id in identifiers}
+
+        for seq_id in identifiers:
+            new_id = old_id_to_new_id[seq_id]
+            seq = self[seq_id]
+            result.append("%s %s" % (new_id, str(seq)))
+
+        return '\n'.join(result), new_id_to_old_id
 
     def _validate_lengths(self):
         """Return ``True`` if all sequences same length, ``False`` otherwise

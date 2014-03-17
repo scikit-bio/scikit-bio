@@ -215,12 +215,12 @@ class SequenceCollectionTests(TestCase):
     def test_int_map(self):
         """ int_map functions as expected
         """
-        expected1 = {"0": self.d1, "1": self.d2}
-        expected2 = {"0": "d1", "1": "d2"}
+        expected1 = {"1": self.d1, "2": self.d2}
+        expected2 = {"1": "d1", "2": "d2"}
         self.assertEqual(self.s1.int_map(), (expected1, expected2))
 
-        expected1 = {"h-0": self.d1, "h-1": self.d2}
-        expected2 = {"h-0": "d1", "h-1": "d2"}
+        expected1 = {"h-1": self.d1, "h-2": self.d2}
+        expected2 = {"h-1": "d1", "h-2": "d2"}
         self.assertEqual(self.s1.int_map(prefix='h-'), (expected1, expected2))
 
     def test_is_valid(self):
@@ -537,11 +537,11 @@ class AlignmentTests(TestCase):
         d3 = DNASequence('.-ACC-GTTGC--', identifier="d3")
         a = Alignment([d1, d2, d3])
 
-        phylip_str, id_map = a.to_phylip()
+        phylip_str, id_map = a.to_phylip(map_labels=True,
+                                         label_prefix="seq000000")
         self.assertEqual(id_map, {'seq0000001': 'd1',
                                   'seq0000003': 'd3',
                                   'seq0000002': 'd2'})
-
         expected = "\n".join(["3 13",
                               "seq0000001 ..ACC-GTTGG..",
                               "seq0000002 TTACCGGT-GGCC",
