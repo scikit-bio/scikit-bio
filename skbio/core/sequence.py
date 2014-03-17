@@ -502,8 +502,9 @@ class BiologicalSequence(Sequence):
 
         Returns
         -------
-        A new `BiologicalSequence` with all characters from
-        `self.gap_alphabet` filtered from the sequence.
+        BiologicalSequence
+            A new `BiologicalSequence` with all characters from 
+            `self.gap_alphabet` filtered from the sequence.
 
         Notes
         -----
