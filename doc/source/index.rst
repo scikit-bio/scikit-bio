@@ -19,3 +19,4 @@ API Reference
    maths.subsample
    parse.sequences
    util.misc
+   util.trie
