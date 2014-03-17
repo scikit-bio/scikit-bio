@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-
-"""
+r"""
 Parse biological sequences (:mod:`skbio.parse.sequences`)
 =========================================================
 
@@ -88,6 +87,7 @@ def fasta_parse(infile,
         >seq2
         CATCGATCGATCGATGCATGCATGCATG
 
+    >>> from StringIO import StringIO
     >>> from skbio.parse.sequences import fasta_parse
     >>> fasta_f = StringIO('>seq1\n'
     ...                    'CGATGTCGATCGATCGATCGATCAG\n'
@@ -183,7 +183,6 @@ def xmfa_parse(infile, strict=True):
 def fastq_parse(data, strict=False):
     r"""yields label, seq, and qual from a fastq file.
 
-
     Parameters
     ----------
     data : open file object
@@ -213,6 +212,7 @@ def fastq_parse(data, strict=False):
 
     We can use the following code:
 
+    >>> from StringIO import StringIO
     >>> from skbio.parse.sequences import fastq_parse
     >>> fastq_f = StringIO('@seq1\n'
     ...                     'AACACCAAACTTCTCCACCACGTGAGCTACAAAAG\n'
@@ -221,7 +221,7 @@ def fastq_parse(data, strict=False):
     ...                     '@seq2\n'
     ...                     'TATGTATATATAACATATACATATATACATACATA\n'
     ...                     '+\n'
-    ...                     ']KZ[PY]_[YY^```ac^\\`bT``c`\aT``bbb\n'
+    ...                     ']KZ[PY]_[YY^```ac^\\\`bT``c`\\aT``bbb\n')
     >>> for label, seq, qual in fastq_parse(fastq_f):
     ...     print label
     ...     print seq
