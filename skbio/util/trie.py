@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 r"""
-Digital Tree (trie) (:mod:`skbio.util.trie`)
-============================================
+Prefix tree (Trie) (:mod:`skbio.util.trie`)
+===========================================
 
 .. currentmodule:: skbio.util.trie
 
