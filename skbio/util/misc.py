@@ -14,9 +14,10 @@ Functions
 .. autosummary::
    :toctree: generated/
 
-   safe_md5
-   remove_files
    create_dir
+   flatten
+   remove_files
+   safe_md5
 
 """
 from __future__ import division
@@ -231,3 +232,37 @@ def handle_error_codes(dir_name, supress_errors=False,
         return error_code
     else:
         raise OSError(error_strings[error_code])
+
+
+def flatten(items):
+    """Removes one level of nesting from items
+
+    Parameters
+    ----------
+
+    items : list
+        list of items to flatten one level
+
+    Returns
+    -------
+
+    flattened_items : list
+        list of flattened items, items can be any sequence, but flatten always
+        returns a list.
+
+    Examples
+    --------
+
+    >>> from skbio.util.misc import flatten
+    >>> h = [['a', 'b', 'c', 'd'], [1, 2, 3, 4, 5], ['x', 'y'], ['foo']]
+    >>> print flatten(h)
+    ['a', 'b', 'c', 'd', 1, 2, 3, 4, 5, 'x', 'y', 'foo']
+
+    """
+    result = []
+    for i in items:
+        try:
+            result.extend(i)
+        except:
+            result.append(i)
+    return result
