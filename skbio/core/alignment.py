@@ -186,7 +186,24 @@ class SequenceCollection(object):
                 "Something is wrong, and it's your fault.")
 
     def __eq__(self, other):
-        """
+        """The equality operator.
+
+        Parameters
+        ----------
+        other : `SequenceCollection`
+            The sequence collection to test for equality against.
+
+        Returns
+        -------
+        bool
+            Indicates whether `self` and `other` are equal.
+
+        Notes
+        -----
+        `SequenceCollection` objects are equal if they are the same type,
+        contain the same number of sequences, and if each of the 
+        BiologicalSequences, in order, are equal.
+
         """
         if self.__class__ != other.__class__:
             return False
@@ -199,7 +216,32 @@ class SequenceCollection(object):
         return True
     
     def __getitem__(self, index):
-        """
+        """ The indexing operator.
+
+        Parameters
+        ----------
+        index : int, str
+            The position or sequence identifier to return from the
+            `BiologicalSequence`.
+
+        Returns
+        -------
+        str
+            The `BiologicalSequence` at the specified index in the
+            `SequenceCollection`.
+
+        Examples
+        --------
+        >>> from skbio.core.alignment import SequenceCollection
+        >>> from skbio.core.sequence import DNA
+        >>> sequences = [DNA('ACCGT', identifier="seq1"), 
+        ...              DNA('AACCGGT', identifier="seq2")]
+        >>> s1 = SequenceCollection(sequences)
+        >>> s1[0]
+        <DNASequence: ACCGT (length: 5)>
+        >>> s1["seq1"]
+        <DNASequence: ACCGT (length: 5)>
+
         """
         if isinstance(index, str):
             return self.get_seq(index)
