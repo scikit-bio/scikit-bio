@@ -659,11 +659,31 @@ class SequenceCollection(object):
 
 
 class Alignment(SequenceCollection):
-    """
-    """
 
     def distances(self):
-        """
+        """Compute distances between sequences in the alignment
+
+        Returns
+        -------
+        skbio.core.distance.SymmetricDistanceMatrix
+            Matrix representing the distances between the sequences in self.
+
+        Examples
+        --------
+        >>> from skbio.core.alignment import Alignment
+        >>> from skbio.core.sequence import DNA
+        >>> seqs = [DNA("A-CCGGG", identifier="s1"),
+        ...         DNA("ATCC--G", identifier="s2"),
+        ...         DNA("ATCCGGA", identifier="s3")]
+        >>> a1 = Alignment(seqs)
+        >>> print a1.distances()
+        3x3 distance matrix
+        IDs:
+        s1, s2, s3
+        Data:
+        [[ 0.          0.42857143  0.28571429]
+         [ 0.42857143  0.          0.42857143]
+         [ 0.28571429  0.42857143  0.        ]]
         """
         sequence_count = self.sequence_count()
         dm = np.zeros((sequence_count, sequence_count))
