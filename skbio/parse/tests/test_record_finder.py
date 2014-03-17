@@ -3,7 +3,7 @@
 """
 
 
-from skbio.parse.record import RecordError
+from skbio.core.exception import RecordError
 from skbio.parse.record_finder import (DelimitedRecordFinder,
                                        LabeledRecordFinder, LineGrouper,
                                        TailedRecordFinder)
