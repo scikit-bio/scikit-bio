@@ -34,7 +34,6 @@ import hashlib
 from os import remove, makedirs
 from os.path import exists, isdir
 from functools import partial
-from itertools import chain
 
 
 def safe_md5(open_file, block_size=2 ** 20):
