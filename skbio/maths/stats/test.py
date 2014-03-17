@@ -10,13 +10,15 @@
 
 from __future__ import division
 from skbio.maths.stats.special import MACHEP, ndtri
-from skbio.maths.stats.distribution import (chi_high, zprob, f_high,
-                                            binomial_high, t_high, t_low,
-                                            tprob)
+from skbio.maths.stats.distribution import (chi_high, zprob, f_high, t_high,
+                                            t_low, tprob)
 from numpy import (absolute, arctanh, array, asarray, concatenate, transpose,
                    ravel, take, nonzero, log, sum, mean, tanh, isnan, isinf,
-                   sqrt, trace, zeros, ones, var, std)
+                   sqrt, trace, zeros, ones, var, std, seterr)
 from numpy.random import permutation, randint
+
+
+seterr(divide='raise')
 
 
 class ZeroExpectedError(ValueError):
