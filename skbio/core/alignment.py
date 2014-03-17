@@ -8,8 +8,9 @@ Sequence collections and alignments (:mod:`skbio.core.alignment`)
 This module provides functionality for working with biological sequence
 collections and alignments. These can be composed of generic sequences,
 nucelotide sequences, DNA sequences, and RNA sequences. By default, input is
-not validated, but all contructor methods take a validate option which checks
-different features of the input based on ``SequenceCollection`` type.
+not validated, expect that sequence identifiers must be unique, but all
+contructor methods take a validate option which checks different features of
+the input based on `SequenceCollection` type.
 
 Classes
 -------
@@ -34,8 +35,8 @@ Examples
 
 >>> seqs = [DNA("ACCGGG", identifier="seq1"),
 ...     DNA("TCCGGGCA", identifier="seq2")]
->>> a1 = SequenceCollection(seqs)
->>> a1
+>>> s1 = SequenceCollection(seqs)
+>>> s1
 <SequenceCollection: n=2; mean +/- std length=7.00 +/- 1.00>
 
 >>> from skbio.parse.sequences import fasta_parse
@@ -69,7 +70,7 @@ from skbio.core.distance import SymmetricDistanceMatrix
 
 
 class SequenceCollection(object):
-    """Base class for biological sequence collections.
+    """Class for storing collections of biological sequences.
     """
 
     @classmethod
@@ -83,7 +84,7 @@ class SequenceCollection(object):
             The records to load into a new `SequenceCollection` object. These
             should be tuples of ``(sequence_identifier, sequence)``.
         seq_constructor : skbio.core.sequence.BiologicalSequence
-        validate: bool, optional
+        validate : bool, optional
             If True, runs the `is_valid` method after construction and raises
             `SequenceCollectionError` if ``is_valid == False``.
 
@@ -143,10 +144,10 @@ class SequenceCollection(object):
 
         Parameters
         ----------
-        seqs : list of `BiologicalSequence` objects
-            The `BiologicalSequence` objects to load into a new
-            `SequenceCollection` object.
-        validate: bool, optional
+        seqs : list of `skbio.core.sequence.BiologicalSequence` objects
+            The `skbio.core.sequence.BiologicalSequence` objects to load into
+            a new `SequenceCollection` object.
+        validate : bool, optional
             If True, runs the `is_valid` method after construction and raises
             `SequenceCollectionError` if ``is_valid == False``.
 
@@ -218,7 +219,7 @@ class SequenceCollection(object):
         -----
         `SequenceCollection` objects are equal if they are the same type,
         contain the same number of sequences, and if each of the
-        BiologicalSequences, in order, are equal.
+        `skbio.core.sequence.BiologicalSequence` objects, in order, are equal.
 
         """
         if self.__class__ != other.__class__:
@@ -237,14 +238,15 @@ class SequenceCollection(object):
         Parameters
         ----------
         index : int, str
-            The position or sequence identifier to return from the
-            `BiologicalSequence`.
+            The position or sequence identifier of the
+            `skbio.core.sequence.BiologicalSequence` to return from the
+            `SequenceCollection`.
 
         Returns
         -------
         str
-            The `BiologicalSequence` at the specified index in the
-            `SequenceCollection`.
+            The `skbio.core.sequence.BiologicalSequence` at the specified
+            index in the `SequenceCollection`.
 
         Examples
         --------
@@ -265,12 +267,13 @@ class SequenceCollection(object):
             return self._data[index]
 
     def __iter__(self):
-        r"""The iter object.
+        r"""The iter operator.
 
         Returns
         -------
         iterator
-            `BiologicalSequence` iterator for the `SequenceCollection`.
+            `skbio.core.sequence.BiologicalSequence` iterator for the
+            `SequenceCollection`.
 
         """
         return iter(self._data)
@@ -385,8 +388,9 @@ class SequenceCollection(object):
         Returns
         -------
         SequenceCollection
-            A new `SequenceCollection` where `BiologicalSequence.degap()` has
-            been called on each sequence.
+            A new `SequenceCollection` where
+            `skbio.core.sequence.BiologicalSequence.degap` has been called on
+            each sequence.
 
         Examples
         --------
@@ -417,8 +421,8 @@ class SequenceCollection(object):
 
         Returns
         -------
-        BiologicalSequence
-            The `BiologicalSequence` with `identifier`.
+        skbio.core.sequence.BiologicalSequence
+            The `skbio.core.sequence.BiologicalSequence` with `identifier`.
 
         Raises
         ------
@@ -444,8 +448,9 @@ class SequenceCollection(object):
         Returns
         -------
         list
-            The ordered list of identifiers for the `BiologicalSequences` in
-            the `SequenceCollection`.
+            The ordered list of identifiers for the
+            `skbio.core.sequence.BiologicalSequence` objects in the
+            `SequenceCollection`.
 
         Examples
         --------
@@ -461,7 +466,7 @@ class SequenceCollection(object):
         return [seq.identifier for seq in self]
 
     def int_map(self, prefix=""):
-        """ Create an integer-based mapping of sequence identifiers
+        """Create an integer-based mapping of sequence identifiers
 
         Parameters
         ----------
@@ -478,7 +483,7 @@ class SequenceCollection(object):
         Notes
         -----
         This is useful when writing sequences out for use with programs that
-        are picky about sequence identifiers (e.g., raXML).
+        are picky about their sequence identifiers (e.g., raXML).
 
         The integer-based identifiers will be strings, for consistency (e.g.,
         if prefix is passed).
@@ -510,7 +515,7 @@ class SequenceCollection(object):
         return dict(int_map), dict(int_keys)
 
     def is_valid(self):
-        """Return `True` if the SequenceCollection is valid
+        """Return ``True`` if the SequenceCollection is valid
 
         Returns
         -------
@@ -550,8 +555,9 @@ class SequenceCollection(object):
         Returns
         -------
         generator of tuples
-            Each tuple contains ordered (BiologicalSequence.identifier,
-            BiologicalSequence) pairs.
+            Each tuple contains ordered
+            (`skbio.core.sequence.BiologicalSequence.identifier`,
+             `skbio.core.sequence.BiologicalSequence`) pairs.
 
         """
         for seq in self:
@@ -563,12 +569,14 @@ class SequenceCollection(object):
         Returns
         -------
         SequenceCollection
-            New `SequenceCollection` object where `BiologicalSequence.lower()`
-            has been called on each sequence.
+            New `SequenceCollection` object where
+            `skbio.core.sequence.BiologicalSequence.lower()` has been called
+            on each sequence.
 
         See Also
         --------
-        BiologicalSequence.lower
+        skbio.core.sequence.BiologicalSequence.lower
+        upper
 
         """
         result = []
@@ -582,7 +590,7 @@ class SequenceCollection(object):
         Returns
         -------
         int
-            The number of sequences in the `SequenceCollection`
+            The number of sequences in the `SequenceCollection`.
 
         See Also
         --------
@@ -633,8 +641,8 @@ class SequenceCollection(object):
         -----
         This method is deprecated in favor of to_fasta, but as these objects
         are sometimes in passed into code that expects a
-        cogent.alignment.Alignment object (e.g., PyNAST), we need to support
-        the method with this name.
+        ``cogent.alignment.Alignment`` object (e.g., PyNAST), we need to
+        support the method with this name.
         """
         return self.to_fasta()
 
@@ -661,6 +669,7 @@ class SequenceCollection(object):
         See Also
         --------
         BiologicalSequence.upper
+        lower
 
         """
         result = []
@@ -669,6 +678,8 @@ class SequenceCollection(object):
         return self.__class__(result)
 
     def _validate_character_set(self):
+        """Return ``True`` if all sequences are valid, ``False`` otherwise
+        """
         for seq in self:
             if not seq.is_valid():
                 return False
@@ -676,19 +687,21 @@ class SequenceCollection(object):
 
 
 class Alignment(SequenceCollection):
+    """Class for storing alignments of biological sequences.
+    """
 
     def distances(self):
-        """Compute distances between sequences in the alignment
+        """Compute distances between all pairs of sequences
 
         Returns
         -------
         skbio.core.distance.SymmetricDistanceMatrix
-            Matrix representing the distances between the sequences in self.
+            Matrix containing the distances between all pairs of sequences.
 
         Raises
         ------
         skbio.core.expection.BiologicalSequenceError
-            If ``len(self) 11= len(other)``.
+            If ``len(self) != len(other)``.
 
         See Also
         --------
@@ -729,18 +742,18 @@ class Alignment(SequenceCollection):
 
         Parameters
         ----------
-        seqs_to_keep: list, optional
+        seqs_to_keep : list, optional
             A list of sequence identifiers to be retained in the resulting
             `Alignment`. If this is not passed, the default will be to retain
             all sequences.
-        positions_to_keep: list, optional
+        positions_to_keep : list, optional
             A list of position identifiers to be retained in the resulting
             `Alignment`. If this is not passed, the default will be to retain
             all positions.
-        invert_seqs_to_keep: bool, optional
+        invert_seqs_to_keep : bool, optional
             If True, the sequences identified in `seqs_to_keep` will be
             discarded, rather than retained.
-        invert_positions_to_keep: bool, optional
+        invert_positions_to_keep : bool, optional
             If True, the sequences identified in `positions_to_keep` will be
             discarded, rather than retained.
 
@@ -865,23 +878,24 @@ class Alignment(SequenceCollection):
         return super(Alignment, self).is_valid() and self._validate_lengths()
 
     def iter_positions(self, constructor=None):
-        """ Generator of `Alignment` positions (i.e., columns)
+        """Generator of `Alignment` positions (i.e., columns)
 
         Parameters
         ----------
-        constructor: function, optional
+        constructor : function, optional
             Constructor function for creating the positional values. By
             default, these will be the same type as corresponding
-            `BiologicalSequence` in the `SequenceCollection` object, but you
-            can pass a `BiologicalSequence` class here to ensure that they are
-            all of consistent type, or ``str`` to have them returned as
-            strings.
+            `skbio.core.sequence.BiologicalSequence` in the
+            `SequenceCollection` object, but you can pass a
+            `skbio.core.sequence.BiologicalSequence` class here to ensure
+            that they are all of consistent type, or ``str`` to have them
+            returned as strings.
 
         Returns
         -------
         generator
-            Generator of lists of positional values in the SequenceCollection
-            (effectively the transpose of the alignment).
+            Generator of lists of positional values in the
+            `SequenceCollection` (effectively the transpose of the alignment).
 
         See Also
         --------
@@ -923,18 +937,18 @@ class Alignment(SequenceCollection):
             yield position
 
     def majority_consensus(self, constructor=None):
-        """Return the majority consensus sequence of the `Alignment`
+        """Return the majority consensus sequence for the `Alignment`
 
         Parameters
         ----------
-        constructor: function, optional
+        constructor : function, optional
             Constructor function for creating the consensus sequence. By
             default, this will be the same type as the first sequence in the
             `Alignment`.
 
         Returns
         -------
-        BiologicalSequence
+        skbio.core.sequence.BiologicalSequence
             The consensus sequence of the `Alignment`. In other words, at each
             position the most common character is chosen, and those characters
             are combined to create a new sequence.
@@ -971,11 +985,11 @@ class Alignment(SequenceCollection):
         return constructor(result)
 
     def omit_gap_positions(self, maximum_gap_frequency):
-        """Returns new `Alignment` that is a subset of the current `Alignment`
+        """Returns `Alignment` with positions filtered based on gap frequency
 
         Parameters
         ----------
-        maximum_gap_frequency: float
+        maximum_gap_frequency : float
             The maximum fraction of the sequences that can contain a gap at a
             given position for that position to be retained in the resulting
             `Alignment`.
@@ -984,7 +998,7 @@ class Alignment(SequenceCollection):
         -------
         Alignment
             The subalignment containing only the positions with gaps in fewer
-            than maximum_gap_frequency fraction of the sequences.
+            than `maximum_gap_frequency` fraction of the sequences.
 
         Examples
         --------
@@ -1016,11 +1030,11 @@ class Alignment(SequenceCollection):
         return self.subalignment(positions_to_keep=positions_to_keep)
 
     def omit_gap_sequences(self, maximum_gap_frequency):
-        """Returns new `Alignment` that is a subset of the current `Alignment`
+        """Returns `Alignment` with sequences filtered based on gap frequency
 
         Parameters
         ----------
-        maximum_gap_frequency: float
+        maximum_gap_frequency : float
             The maximum fraction of the positions that can contain a gap in a
             given sequence for that sequence to be retained in the resulting
             `Alignment`.
@@ -1029,7 +1043,7 @@ class Alignment(SequenceCollection):
         -------
         Alignment
             The subalignment containing only the sequences with gaps in fewer
-            than maximum_gap_frequency fraction of the positions.
+            than `maximum_gap_frequency` fraction of the positions.
 
         Examples
         --------
@@ -1137,7 +1151,7 @@ class Alignment(SequenceCollection):
 
         Parameters
         ----------
-        base: float, optional
+        base : float, optional
             log base for entropy calculation. If not passed, default will be e
             (i.e., natural log will be computed).
 
@@ -1179,7 +1193,7 @@ class Alignment(SequenceCollection):
         Returns
         -------
         list
-            List of ``collection.defaultdict`` objects, one for each sequence
+            List of ``collections.defaultdict`` objects, one for each sequence
             in the `Alignment`, representing the frequency of each character in
             each sequence of the `Alignment`.
 
@@ -1212,12 +1226,12 @@ class Alignment(SequenceCollection):
         return result
 
     def sequence_length(self):
-        """Return the number of positions in the alignment
+        """Return the number of positions in `Alignment`
 
         Returns
         -------
         int
-            The number of positions in the alignment.
+            The number of positions in `Alignment`.
 
         See Also
         --------
@@ -1239,7 +1253,7 @@ class Alignment(SequenceCollection):
         return len(self._data[0])
 
     def _validate_lengths(self):
-        """
+        """Return ``True`` if all sequences same length, ``False`` otherwise
         """
         seq1_length = len(self[0])
         for seq in self[1:]:
