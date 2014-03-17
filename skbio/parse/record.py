@@ -11,6 +11,7 @@
 from copy import deepcopy
 from skbio.core.exception import FieldError
 
+
 def string_and_strip(*items):
     """Converts items to strings and strips them."""
     return [str(i).strip() for i in items]

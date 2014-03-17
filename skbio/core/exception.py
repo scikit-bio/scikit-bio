@@ -36,6 +36,7 @@ from __future__ import division
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
+
 class FileFormatError(Exception):
     """Exception raised when a file can not be parsed."""
     pass
