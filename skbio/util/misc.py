@@ -240,7 +240,7 @@ def flatten(items):
     Parameters
     ----------
 
-    items : list
+    items : iterable
         list of items to flatten one level
 
     Returns
@@ -263,6 +263,6 @@ def flatten(items):
     for i in items:
         try:
             result.extend(i)
-        except:
+        except TypeError:
             result.append(i)
     return result
