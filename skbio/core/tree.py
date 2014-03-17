@@ -1,5 +1,33 @@
 #!/usr/bin/env python
 
+r"""
+Tree representations (:mod:`skbio.core.tree`)
+=============================================
+
+.. currentmodule:: skbio.core.tree
+
+This module provides functionality for working with trees, including
+phylogenetic trees and hierarchies. Functionality is provided for
+constructing the trees, for traversing in multiple ways, comparisons,
+fetching subtrees, and more. This module supports trees that are multifurcating
+and support nodes that have single descendents as well.
+
+Classes
+-------
+
+.. autosummary::
+   :toctree: generated/
+
+   TreeNode
+
+Examples
+--------
+
+DOC TEST EXAMPLES
+
+"""
+from __future__ import division
+
 #-----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
