@@ -51,6 +51,7 @@ def distance_from_r(m1, m2):
     """Estimates distance as (1-r)/2: neg correl = max distance"""
     return (1-correlation_t(m1.flat, m2.flat)[0])/2
 
+
 class TreeNode(object):
     _exclude_from_copy = set(['Parent', 'Children', '_node_cache'])
 
