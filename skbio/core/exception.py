@@ -21,6 +21,15 @@ Exceptions
    MissingDataError
    MissingHeaderError
    MissingIDError
+   TreeError
+   NoLengthError
+   DuplicateNodeError
+   MissingNodeError
+   NoParentError
+   FileFormatError
+   RecordError
+   FieldError
+   FastqParseError
 
 """
 from __future__ import division
@@ -94,7 +103,38 @@ class MissingDataError(Exception):
         super(MissingDataError, self).__init__()
         self.args = ("Expected %d row(s) of data, but found %d." % (expected,
                                                                     actual),)
-
-
-class FastqParseError(Exception):
+class TreeError(Exception):
+    """General tree error"""
     pass
+
+class NoLengthError(TreeError):
+    """Missing length when expected"""
+    pass
+
+class DuplicateNodeError(TreeError):
+    """Duplicate nodes with identical names"""
+    pass
+
+class MissingNodeError(TreeError):
+    """Expecting a node"""
+    pass
+
+class NoParentError(MissingNodeError):
+    """Missing a parent"""
+    pass
+
+class FileFormatError(Exception):
+    """Exception raised when a file can not be parsed."""
+    pass
+
+class RecordError(FileFormatError):
+    """Exception raised when a record is bad."""
+    pass
+
+class FieldError(RecordError):
+    """Exception raised when a field within a record is bad."""
+    pass
+
+class FastqParseError(FileFormatError):
+    pass
+
