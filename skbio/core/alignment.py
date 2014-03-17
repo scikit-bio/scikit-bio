@@ -6,7 +6,7 @@ Sequence collections and alignments (:mod:`skbio.core.alignment`)
 .. currentmodule:: skbio.core.alignment
 
 This module provides functionality for working with biological sequence
-collections and alignments. These can be composed of generic sequences, 
+collections and alignments. These can be composed of generic sequences,
 nucelotide sequences, DNA sequences, and RNA sequences. By default, input is
 not validated, but all contructor methods take a validate option which checks
 different features of the input based on ``SequenceCollection`` type.
@@ -65,13 +65,14 @@ from scipy.stats import entropy
 from skbio.core.exception import SequenceCollectionError
 from skbio.core.distance import SymmetricDistanceMatrix
 
+
 class SequenceCollection(object):
     """Base class for biological sequence collections.
     """
 
     @classmethod
     def from_fasta_records(cls, fasta_records, seq_constructor,
-            validate=False):
+                           validate=False):
         r"""Initialize a `SequenceCollection` object
 
         Parameters
@@ -112,10 +113,11 @@ class SequenceCollection(object):
         >>> from StringIO import StringIO
         >>> from skbio.core.sequence import DNA
         >>> fasta_f = StringIO('>seq1\nACCGT\n>seq2\nAACCGGT\n')
-        >>> s1 = SequenceCollection.from_fasta_records(fasta_parse(fasta_f), DNA)
+        >>> s1 = SequenceCollection.from_fasta_records(
+        ...     fasta_parse(fasta_f), DNA)
         >>> s1
         <SequenceCollection: n=2; mean +/- std length=6.00 +/- 1.00>
-        
+
         >>> records = [('seq1', 'ACCGT'), ('seq2', 'AACCGGT')]
         >>> s1 = SequenceCollection.from_fasta_records(records, DNA)
         >>> s1
@@ -130,8 +132,8 @@ class SequenceCollection(object):
                 identifier = seq_id.strip()
                 description = None
             data.append(seq_constructor(seq, identifier=identifier,
-              description=description))
- 
+                                        description=description))
+
         return cls(data, validate=validate)
 
     def __init__(self, seqs, validate=False):
@@ -140,7 +142,7 @@ class SequenceCollection(object):
         Parameters
         ----------
         seqs : list of `BiologicalSequence` objects
-            The `BiologicalSequence` objects to load into a new 
+            The `BiologicalSequence` objects to load into a new
             `SequenceCollection` object.
         validate: bool, optional
             If True, runs the `is_valid` method after construction and raises
@@ -171,7 +173,7 @@ class SequenceCollection(object):
         --------
         >>> from skbio.core.alignment import SequenceCollection
         >>> from skbio.core.sequence import DNA
-        >>> sequences = [DNA('ACCGT', identifier="seq1"), 
+        >>> sequences = [DNA('ACCGT', identifier="seq1"),
         ...              DNA('AACCGGT', identifier="seq2")]
         >>> s1 = SequenceCollection(sequences)
         >>> s1
@@ -179,8 +181,8 @@ class SequenceCollection(object):
 
         """
         self._data = seqs
-        self._identifier_to_index = dict([(seq.identifier, i) 
-                for i, seq in enumerate(self._data)])
+        self._identifier_to_index = \
+            dict([(seq.identifier, i) for i, seq in enumerate(self._data)])
         if validate and not self.is_valid():
             raise SequenceCollectionError(
                 "Something is wrong, and it's your fault.")
@@ -201,7 +203,7 @@ class SequenceCollection(object):
         Notes
         -----
         `SequenceCollection` objects are equal if they are the same type,
-        contain the same number of sequences, and if each of the 
+        contain the same number of sequences, and if each of the
         BiologicalSequences, in order, are equal.
 
         """
@@ -210,11 +212,11 @@ class SequenceCollection(object):
         elif len(self) != len(other):
             return False
         else:
-            for self_seq, other_seq in zip(self,other):
+            for self_seq, other_seq in zip(self, other):
                 if self_seq != other_seq:
                     return False
         return True
-    
+
     def __getitem__(self, index):
         r"""The indexing operator.
 
@@ -234,7 +236,7 @@ class SequenceCollection(object):
         --------
         >>> from skbio.core.alignment import SequenceCollection
         >>> from skbio.core.sequence import DNA
-        >>> sequences = [DNA('ACCGT', identifier="seq1"), 
+        >>> sequences = [DNA('ACCGT', identifier="seq1"),
         ...              DNA('AACCGGT', identifier="seq2")]
         >>> s1 = SequenceCollection(sequences)
         >>> s1[0]
@@ -308,7 +310,7 @@ class SequenceCollection(object):
         --------
         >>> from skbio.core.alignment import SequenceCollection
         >>> from skbio.core.sequence import DNA
-        >>> sequences = [DNA('ACCGT', identifier="seq1"), 
+        >>> sequences = [DNA('ACCGT', identifier="seq1"),
         ...              DNA('AACCGGT', identifier="seq2")]
         >>> s1 = SequenceCollection(sequences)
         >>> print repr(s1)
@@ -316,9 +318,9 @@ class SequenceCollection(object):
 
         """
         cn = self.__class__.__name__
-        count, center, spread = self.count_center_spread() 
-        return "<%s: n=%d; mean +/- std length=%.2f +/- %.2f>" % (cn, count,
-                center, spread)
+        count, center, spread = self.count_center_spread()
+        return "<%s: n=%d; mean +/- std length=%.2f +/- %.2f>" \
+            % (cn, count, center, spread)
 
     def count_center_spread(self, center_f=np.mean, spread_f=np.std):
         r"""Return sequence count, and center and spread of sequence lengths
@@ -347,7 +349,7 @@ class SequenceCollection(object):
         --------
         >>> from skbio.core.alignment import SequenceCollection
         >>> from skbio.core.sequence import DNA
-        >>> sequences = [DNA('ACCGT', identifier="seq1"), 
+        >>> sequences = [DNA('ACCGT', identifier="seq1"),
         ...              DNA('AACCGGT', identifier="seq2")]
         >>> s1 = SequenceCollection(sequences)
         >>> count, center, spread = s1.count_center_spread()
@@ -365,18 +367,18 @@ class SequenceCollection(object):
 
     def degap(self):
         r"""Return a new `SequenceCollection` with all gap characters removed.
-        
+
         Returns
         -------
         SequenceCollection
             A new `SequenceCollection` where `BiologicalSequence.degap()` has
             been called on each sequence.
-        
+
         Examples
         --------
         >>> from skbio.core.alignment import SequenceCollection
         >>> from skbio.core.sequence import DNA
-        >>> sequences = [DNA('A--CCGT.', identifier="seq1"), 
+        >>> sequences = [DNA('A--CCGT.', identifier="seq1"),
         ...              DNA('.AACCG-GT.', identifier="seq2")]
         >>> s1 = SequenceCollection(sequences)
         >>> s2 = s1.degap()
@@ -384,7 +386,7 @@ class SequenceCollection(object):
         ACCGT
         >>> print s2[1]
         AACCGGT
-        
+
         """
         result = []
         for seq in self:
@@ -413,7 +415,7 @@ class SequenceCollection(object):
         --------
         >>> from skbio.core.alignment import SequenceCollection
         >>> from skbio.core.sequence import DNA
-        >>> sequences = [DNA('A--CCGT.', identifier="seq1"), 
+        >>> sequences = [DNA('A--CCGT.', identifier="seq1"),
         ...              DNA('.AACCG-GT.', identifier="seq2")]
         >>> s1 = SequenceCollection(sequences)
         >>> print s1['seq1']
@@ -435,7 +437,7 @@ class SequenceCollection(object):
         --------
         >>> from skbio.core.alignment import SequenceCollection
         >>> from skbio.core.sequence import DNA
-        >>> sequences = [DNA('A--CCGT.', identifier="seq1"), 
+        >>> sequences = [DNA('A--CCGT.', identifier="seq1"),
         ...              DNA('.AACCG-GT.', identifier="seq2")]
         >>> s1 = SequenceCollection(sequences)
         >>> print s1.identifiers()
@@ -471,7 +473,7 @@ class SequenceCollection(object):
         --------
         >>> from skbio.core.alignment import SequenceCollection
         >>> from skbio.core.sequence import DNA
-        >>> sequences = [DNA('ACCGT', identifier="seq1"), 
+        >>> sequences = [DNA('ACCGT', identifier="seq1"),
         ...              DNA('AACCGGT', identifier="seq2")]
         >>> s1 = SequenceCollection(sequences)
         >>> new_id_to_seqs, new_id_to_old_ids = s1.int_map()
@@ -491,7 +493,7 @@ class SequenceCollection(object):
             k = ("%s%d" % (prefix, i))
             int_map.append((k, seq))
             int_keys.append((k, seq.identifier))
-        return dict(int_map), dict(int_keys) 
+        return dict(int_map), dict(int_keys)
 
     def is_valid(self):
         """Return `True` if the SequenceCollection is valid
@@ -504,22 +506,22 @@ class SequenceCollection(object):
         Notes
         -----
         Validity is defined as having no sequences containing characters
-        outside of their valid character sets. 
+        outside of their valid character sets.
 
         See Also
         --------
         skbio.core.alignment.BiologicalSequence.is_valid
-        
+
         Examples
         --------
         >>> from skbio.core.alignment import SequenceCollection
         >>> from skbio.core.sequence import DNA, RNA
-        >>> sequences = [DNA('ACCGT', identifier="seq1"), 
+        >>> sequences = [DNA('ACCGT', identifier="seq1"),
         ...              DNA('AACCGGT', identifier="seq2")]
         >>> s1 = SequenceCollection(sequences)
         >>> print s1.is_valid()
         True
-        >>> sequences = [RNA('ACCGT', identifier="seq1"), 
+        >>> sequences = [RNA('ACCGT', identifier="seq1"),
         ...              RNA('AACCGGT', identifier="seq2")]
         >>> s1 = SequenceCollection(sequences)
         >>> print s1.is_valid()
@@ -578,7 +580,7 @@ class SequenceCollection(object):
 
     def sequence_lengths(self):
         """Return lengths of the sequences in the `SequenceCollection`
-        
+
         Returns
         -------
         list
@@ -587,7 +589,7 @@ class SequenceCollection(object):
         See Also
         --------
         sequence_count
-        
+
         """
         return [len(seq) for seq in self]
 
@@ -604,7 +606,7 @@ class SequenceCollection(object):
         skbio.parse.sequences.fasta_parse
         """
         return ''.join([seq.to_fasta() for seq in self._data])
-   
+
     def toFasta(self):
         """Return fasta-formatted string representing the `SequenceCollection`
 
@@ -621,7 +623,7 @@ class SequenceCollection(object):
         the method with this name.
         """
         return self.to_fasta()
-    
+
     def to_phylip(self):
         """Return phylip-formatted string representing the `SequenceCollection`
 
@@ -673,7 +675,7 @@ class Alignment(SequenceCollection):
         ------
         skbio.core.expection.BiologicalSequenceError
             If ``len(self) 11= len(other)``.
-        
+
         See Also
         --------
         skbio.core.distance.DistanceMatrix
@@ -707,7 +709,8 @@ class Alignment(SequenceCollection):
         return SymmetricDistanceMatrix(dm, identifiers)
 
     def subalignment(self, seqs_to_keep=None, positions_to_keep=None,
-            invert_seqs_to_keep=False, invert_positions_to_keep=False):
+                     invert_seqs_to_keep=False,
+                     invert_positions_to_keep=False):
         """Returns new `Alignment` that is a subset of the current `Alignment`
 
         Parameters
@@ -715,11 +718,11 @@ class Alignment(SequenceCollection):
         seqs_to_keep: list, optional
             A list of sequence identifiers to be retained in the resulting
             `Alignment`. If this is not passed, the default will be to retain
-            all sequences. 
+            all sequences.
         positions_to_keep: list, optional
             A list of position identifiers to be retained in the resulting
             `Alignment`. If this is not passed, the default will be to retain
-            all positions. 
+            all positions.
         invert_seqs_to_keep: bool, optional
             If True, the sequences identified in `seqs_to_keep` will be
             discarded, rather than retained.
@@ -767,10 +770,12 @@ class Alignment(SequenceCollection):
             seqs_to_keep = set(seqs_to_keep)
             if invert_seqs_to_keep:
                 def keep_seq(i, identifier):
-                    return not (identifier in seqs_to_keep or i in seqs_to_keep)
+                    return not (identifier in seqs_to_keep or
+                                i in seqs_to_keep)
             else:
                 def keep_seq(i, identifier):
-                    return (identifier in seqs_to_keep or i in seqs_to_keep)
+                    return (identifier in seqs_to_keep or
+                            i in seqs_to_keep)
 
         if positions_to_keep is None:
             if invert_positions_to_keep:
@@ -791,14 +796,14 @@ class Alignment(SequenceCollection):
         for i, seq in enumerate(self):
             if keep_seq(i, seq.identifier):
                 new_seq = []
-                for i,c in enumerate(seq):
+                for i, c in enumerate(seq):
                     if keep_position(i):
                         new_seq.append(c)
                 # this is bad, we are calling join too much. this
                 # should be addressed in issue #60
                 result.append(seq.__class__(''.join(new_seq),
-                    identifier = seq.identifier,
-                    description=seq.description))
+                              identifier=seq.identifier,
+                              description=seq.description))
             else:
                 continue
         return self.__class__(result)
@@ -815,27 +820,27 @@ class Alignment(SequenceCollection):
         -----
         Validity is defined as having no sequences containing characters
         outside of their valid character sets, and all sequences being of equal
-        length. 
+        length.
 
         See Also
         --------
         skbio.core.alignment.BiologicalSequence.is_valid
-        
+
         Examples
         --------
         >>> from skbio.core.alignment import Alignment
         >>> from skbio.core.sequence import DNA, RNA
-        >>> sequences = [DNA('ACCGT--', identifier="seq1"), 
+        >>> sequences = [DNA('ACCGT--', identifier="seq1"),
         ...              DNA('AACCGGT', identifier="seq2")]
         >>> a1 = Alignment(sequences)
         >>> print a1.is_valid()
         True
-        >>> sequences = [DNA('ACCGT', identifier="seq1"), 
+        >>> sequences = [DNA('ACCGT', identifier="seq1"),
         ...              DNA('AACCGGT', identifier="seq2")]
         >>> a1 = Alignment(sequences)
         >>> print a1.is_valid()
         False
-        >>> sequences = [RNA('ACCGT--', identifier="seq1"), 
+        >>> sequences = [RNA('ACCGT--', identifier="seq1"),
         ...              RNA('AACCGGT', identifier="seq2")]
         >>> a1 = Alignment(sequences)
         >>> print a1.is_valid()
@@ -852,7 +857,7 @@ class Alignment(SequenceCollection):
         ----------
         constructor: function, optional
             Constructor function for creating the positional values. By
-            default, these will be the same type as corresponding 
+            default, these will be the same type as corresponding
             `BiologicalSequence` in the `SequenceCollection` object, but you
             can pass a `BiologicalSequence` class here to ensure that they are
             all of consistent type, or ``str`` to have them returned as
@@ -872,7 +877,7 @@ class Alignment(SequenceCollection):
         --------
         >>> from skbio.core.alignment import Alignment
         >>> from skbio.core.sequence import DNA, RNA
-        >>> sequences = [DNA('ACCGT--', identifier="seq1"), 
+        >>> sequences = [DNA('ACCGT--', identifier="seq1"),
         ...              DNA('AACCGGT', identifier="seq2")]
         >>> a1 = Alignment(sequences)
         >>> for position in a1.iter_positions():
@@ -884,7 +889,7 @@ class Alignment(SequenceCollection):
         [<DNASequence: T (length: 1)>, <DNASequence: G (length: 1)>]
         [<DNASequence: - (length: 1)>, <DNASequence: G (length: 1)>]
         [<DNASequence: - (length: 1)>, <DNASequence: T (length: 1)>]
-        
+
         >>> for position in a1.iter_positions(constructor=str):
         ...     print position
         ['A', 'A']
@@ -930,7 +935,7 @@ class Alignment(SequenceCollection):
         --------
         >>> from skbio.core.alignment import Alignment
         >>> from skbio.core.sequence import DNA, RNA
-        >>> sequences = [DNA('AC--', identifier="seq1"), 
+        >>> sequences = [DNA('AC--', identifier="seq1"),
         ...              DNA('AT-C', identifier="seq2"),
         ...              DNA('TT-C', identifier="seq3")]
         >>> a1 = Alignment(sequences)
@@ -944,7 +949,7 @@ class Alignment(SequenceCollection):
             constructor = self[0].__class__
         result = []
         for c in self.position_counters():
-            # Counter.most_common returns an ordered list of the 
+            # Counter.most_common returns an ordered list of the
             # n most common (sequence, count) items in Counter. Here
             # we set n=1, and take only the character, not the count.
             result.append(c.most_common(1)[0][0])
@@ -959,7 +964,7 @@ class Alignment(SequenceCollection):
         maximum_gap_frequency: float
             The maximum fraction of the sequences that can contain a gap at a
             given position for that position to be retained in the resulting
-            `Alignment`. 
+            `Alignment`.
 
         Returns
         -------
@@ -971,7 +976,7 @@ class Alignment(SequenceCollection):
         --------
         >>> from skbio.core.alignment import Alignment
         >>> from skbio.core.sequence import DNA, RNA
-        >>> sequences = [DNA('AC--', identifier="seq1"), 
+        >>> sequences = [DNA('AC--', identifier="seq1"),
         ...              DNA('AT-C', identifier="seq2"),
         ...              DNA('TT-C', identifier="seq3")]
         >>> a1 = Alignment(sequences)
@@ -988,7 +993,7 @@ class Alignment(SequenceCollection):
         """
         position_frequencies = self.position_frequencies()
         gap_alphabet = self[0].gap_alphabet()
-        
+
         positions_to_keep = []
         for i, f in enumerate(position_frequencies):
             gap_frequency = sum([f[c] for c in gap_alphabet])
@@ -1016,7 +1021,7 @@ class Alignment(SequenceCollection):
         --------
         >>> from skbio.core.alignment import Alignment
         >>> from skbio.core.sequence import DNA, RNA
-        >>> sequences = [DNA('AC--', identifier="seq1"), 
+        >>> sequences = [DNA('AC--', identifier="seq1"),
         ...              DNA('AT-C', identifier="seq2"),
         ...              DNA('TT-C', identifier="seq3")]
         >>> a1 = Alignment(sequences)
@@ -1056,7 +1061,7 @@ class Alignment(SequenceCollection):
         --------
         >>> from skbio.core.alignment import Alignment
         >>> from skbio.core.sequence import DNA, RNA
-        >>> sequences = [DNA('AC--', identifier="seq1"), 
+        >>> sequences = [DNA('AC--', identifier="seq1"),
         ...              DNA('AT-C', identifier="seq2"),
         ...              DNA('TT-C', identifier="seq3")]
         >>> a1 = Alignment(sequences)
@@ -1079,8 +1084,8 @@ class Alignment(SequenceCollection):
         Returns
         -------
         list
-            List of ``collection.defaultdict`` objects, one for each position in
-            the `Alignment`, representing the frequency of each character in
+            List of ``collection.defaultdict`` objects, one for each position
+            in the `Alignment`, representing the frequency of each character in
             the `Alignment` at that position.
 
         See Also
@@ -1088,12 +1093,12 @@ class Alignment(SequenceCollection):
         position_counters
         position_entropies
         sequence_frequencies
-        
+
         Examples
         --------
         >>> from skbio.core.alignment import Alignment
         >>> from skbio.core.sequence import DNA, RNA
-        >>> sequences = [DNA('AC--', identifier="seq1"), 
+        >>> sequences = [DNA('AC--', identifier="seq1"),
         ...              DNA('AT-C', identifier="seq2"),
         ...              DNA('TT-C', identifier="seq3")]
         >>> a1 = Alignment(sequences)
@@ -1122,7 +1127,7 @@ class Alignment(SequenceCollection):
         base: float, optional
             log base for entropy calculation. If not passed, default will be e
             (i.e., natural log will be computed).
-        
+
         Returns
         -------
         list
@@ -1132,17 +1137,17 @@ class Alignment(SequenceCollection):
         --------
         position_counters
         position_frequencies
-        
+
         References
         ----------
         A Mathematical Theory of Communication, CE Shannon
         The Bell System Technical Journal (1948).
-        
+
         Examples
         --------
         >>> from skbio.core.alignment import Alignment
         >>> from skbio.core.sequence import DNA, RNA
-        >>> sequences = [DNA('AC--', identifier="seq1"), 
+        >>> sequences = [DNA('AC--', identifier="seq1"),
         ...              DNA('AT-C', identifier="seq2"),
         ...              DNA('TT-C', identifier="seq3")]
         >>> a1 = Alignment(sequences)
@@ -1161,8 +1166,8 @@ class Alignment(SequenceCollection):
         Returns
         -------
         list
-            List of ``collection.defaultdict`` objects, one for each sequence in
-            the `Alignment`, representing the frequency of each character in
+            List of ``collection.defaultdict`` objects, one for each sequence
+            in the `Alignment`, representing the frequency of each character in
             each sequence of the `Alignment`.
 
         See Also
@@ -1173,7 +1178,7 @@ class Alignment(SequenceCollection):
         --------
         >>> from skbio.core.alignment import Alignment
         >>> from skbio.core.sequence import DNA, RNA
-        >>> sequences = [DNA('AC--', identifier="seq1"), 
+        >>> sequences = [DNA('AC--', identifier="seq1"),
         ...              DNA('AT-C', identifier="seq2"),
         ...              DNA('TT-C', identifier="seq3")]
         >>> a1 = Alignment(sequences)
@@ -1210,7 +1215,7 @@ class Alignment(SequenceCollection):
         --------
         >>> from skbio.core.alignment import Alignment
         >>> from skbio.core.sequence import DNA, RNA
-        >>> sequences = [DNA('AC--', identifier="seq1"), 
+        >>> sequences = [DNA('AC--', identifier="seq1"),
         ...              DNA('AT-C', identifier="seq2"),
         ...              DNA('TT-C', identifier="seq3")]
         >>> a1 = Alignment(sequences)
@@ -1228,4 +1233,3 @@ class Alignment(SequenceCollection):
             if seq1_length != len(seq):
                 return False
         return True
-
