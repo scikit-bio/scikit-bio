@@ -159,7 +159,7 @@ class BiologicalSequence(Sequence):
         Raises
         ------
         skbio.core.exception.BiologicalSequenceError
-          If ``validate == True`` and is_valid == False``.
+          If ``validate == True`` and ``is_valid == False``.
 
         See Also
         --------
