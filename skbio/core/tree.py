@@ -23,16 +23,120 @@ Classes
 Examples
 --------
 
-<<<<<<< Updated upstream
-=======
-### constructing a tree
-### traversing a tree in a few ways
-### pulling a subtree
-### comparing trees
+>>> from skbio.core.tree import TreeNode
 
->>>>>>> Stashed changes
-DOC TEST EXAMPLES
+A new tree can be constructed from a Newick string. Newick is a common format
+used to represent tree objects within a file. Newick was part of the original
+PHYLIP package from Joseph Felsenstein's group (http://evolution.genetics.washington.edu/phylip/newicktree.html),
+and is based around representing nesting with parentheses. For instance, the
+following string describes a 3 taxon tree, with one internal node:
 
+    ((A, B)C, D)root;
+
+Where A, B, and D are tips of the tree, and C is an internal node that covers
+tips A and B.
+
+Now lets construct a simple tree and dump an ASCII representation:
+
+>>> tree = TreeNode.from_newick("((A, B)C, D)root;")
+>>> print tree.is_root()  # is this the root of the tree?
+True
+>>> print tree.is_tip()  # is this node a tip?
+False
+>>> print tree.ascii_art()
+                    /-A
+          /C-------|
+-root----|          \-B
+         |
+          \-D
+
+There are a few common ways to traverse a tree, and depending on your use,
+some methods are more appropriate than others. Wikipedia has a well written
+page on tree traversal methods (http://en.wikipedia.org/wiki/Tree_traversal), and
+will go into further depth than what we'll cover here. We're only going to cover
+two of the commonly used traversals here, preorder and postorder, but we well
+show examples of two other common helper traversal methods to gather tips or
+internal nodes.
+
+The first traversal we'll cover is a preorder traversal in which you evaluate
+from root to tips, looking at the left most child first. For instance:
+
+>>> for node in tree.preorder():
+...    print node.Name
+root
+C
+A
+B
+D
+
+The next method we'll look at is a postorder traveral which will evaluate the
+left subtree tips first before walking back up the tree:
+
+>>> for node in tree.postorder():
+...    print node.Name
+A
+B
+C
+D
+root
+
+TreeNode provides two helper methods as well for iterating over just the tips
+or for iterating over just the internal nodes. Note, by default, non_tips will
+ignore self (which is the root in this case). You can pass the include_self
+flag to non_tips if you wish to include self.
+
+>>> for node in tree.tips():
+...    print "Node name: %s, Is a tip: %s" % (node.Name, node.is_tip())
+Node name: A, Is a tip: True
+Node name: B, Is a tip: True
+Node name: D, Is a tip: True
+
+>>> for node in tree.non_tips():
+...    print "Node name: %s, Is a tip: %s" % (node.Name, node.is_tip())
+Node name: C, Is a tip: False
+
+The TreeNode provides a few ways to compare trees. First, lets create two
+similar trees and compare them topologically using compare_subsets. This
+distance is based off the number of common clades present between two
+trees:
+
+>>> tree1 = TreeNode.from_newick("((A, B)C, (D, E)F, (G, H)I)root;")
+>>> tree2 = TreeNode.from_newick("((G, H)C, (D, E)F, (B, A)I)root;")
+>>> tree3 = TreeNode.from_newick("((D, B)C, (A, E)F, (G, H)I)root;")
+>>> print tree1.compare_subsets(tree1)  # identity case
+0.0
+>>> print tree1.compare_subsets(tree2)  # same tree but different clade order
+0.0
+>>> print tree1.compare_subsets(tree3)  # only 1 of 3 common subsets
+0.666666666667
+
+We can additionally take into account branch length when computing distances
+between trees. First, we're going to construct two new trees with described
+branch length, note the difference in the Newick strings:
+
+>>> tree1 = TreeNode.from_newick("((A:0.1, B:0.2)C:0.3, D:0.4, E:0.5)root;")
+>>> tree2 = TreeNode.from_newick("((A:0.4, B:0.8)C:0.3, D:0.1, E:0.5)root;")
+
+In these two trees, we've added on a description of length from the node to
+its parent, so for instance:
+
+>>> for node in tree1.postorder():
+...     print node.Name, node.Length
+A 0.1
+B 0.2
+C 0.3
+D 0.4
+E 0.5
+root None
+
+Now lets compare two trees using the distances computed pairwise between tips
+in the trees. The distance computed, by default, is based off of the Pearson
+correlation coefficent:
+
+>>> print tree1.compare_tip_distances(tree1)  # identity case
+0.0
+>>> print tree1.compare_tip_distances(tree2)
+0.120492524415
 """
 from __future__ import division
 
@@ -45,11 +149,11 @@ from __future__ import division
 #-----------------------------------------------------------------------------
 
 import re
+import numpy as np
 from operator import or_
 from random import shuffle
 from copy import deepcopy
 from itertools import combinations
-from numpy import argsort, zeros
 from skbio.maths.stats.test import correlation_t
 from skbio.core.exception import (NoLengthError, DuplicateNodeError,
                                   NoParentError, MissingNodeError,
@@ -192,6 +296,23 @@ class TreeNode(object):
 
         self.invalidate_node_cache()
 
+#   def shear(self, names):
+#       """Lop off tips until the tree just has the desired tip names"""
+#       tcopy = self.deepcopy()
+#       all_tips = set([n.Name for n in tcopy.tips()])
+#       ids = set(names)
+#
+#       if not ids.issubset(all_tips):
+#           raise ValueError("ids are not a subset of the tree!")
+#
+#       while len(tcopy.tips()) != len(ids):
+#           for n in tcopy.tips():
+#               if n.Name not in ids:
+#                   n.Parent.removeNode(n)
+#
+#       tcopy.prune()
+#       return tcopy
+#
     ### end topology updates ###
 
     ### copy like methods ###
@@ -249,7 +370,7 @@ class TreeNode(object):
         Warning, this is _NOT_ a deepcopy
         """
         neighbors = self.neighbors(ignore=parent)
-        children = [c._unrooted_copy(parent=self) for c in neighbors]
+        children = [c.unrooted_copy(parent=self) for c in neighbors]
 
         # we might be walking UP the tree, so:
         if parent is None:
@@ -914,7 +1035,7 @@ class TreeNode(object):
                 result.pop()
             (lo, hi, end) = (mids[0], mids[-1], len(result))
             prefixes = [PAD] * (lo+1) + [PA+'|'] * (hi-lo-1) + [PAD] * (end-hi)
-            mid = (lo + hi) / 2
+            mid = np.int(np.trunc((lo + hi) / 2))
             prefixes[mid] = char1 + '-'*(LEN-2) + prefixes[mid][-1]
             result = [p+l for (p, l) in zip(prefixes, result)]
             if show_internal:
@@ -989,7 +1110,7 @@ class TreeNode(object):
                 else:
                     tip_info = [(max(c.MaxDistTips), c) for c in n.Children]
                     dists = [i[0][0] for i in tip_info]
-                    best_idx = argsort(dists)[-2:]
+                    best_idx = np.argsort(dists)[-2:]
                     tip_a, child_a = tip_info[best_idx[0]]
                     tip_b, child_b = tip_info[best_idx[1]]
                     tip_a[0] += child_a.Length or 0.0
@@ -1050,8 +1171,8 @@ class TreeNode(object):
         result_map = {n.__start: i for i, n in enumerate(tip_order)}
         num_all_tips = len(all_tips)  # total number of tips
         num_tips = len(tip_order)  # total number of tips in result
-        result = zeros((num_tips, num_tips), float)  # tip by tip matrix
-        distances = zeros((num_all_tips), float)  # dist from tip to curr node
+        result = np.zeros((num_tips, num_tips), float)  # tip by tip matrix
+        distances = np.zeros((num_all_tips), float)  # dist from tip to curr node
 
         def update_result():
         # set tip_tip distance between tips of different child
@@ -1093,6 +1214,33 @@ class TreeNode(object):
     ### end distance methods ###
 
     ### comparison methods ###
+
+#   def compare_rfd(self, other, proportion=False):
+#       """Calculates the Robinson and Foulds symmetric difference
+#
+#       Implementation based off of code by Julia Goodrich
+#       """
+#       t1names = {n.Name for n in self.tips()}
+#       t2names = {n.Name for n in other.tips()}
+#
+#       if t1names != t2names:
+#           if t1names < t2names:
+#               tree2 = other.shear(t1names)
+#           else:
+#               tree1 = self.shear(t2names)
+#
+#       tree1_sets = tree1.subsets()
+#       tree2_sets = tree2.subsets()
+#
+#       not_in_both = tree1_sets ^ tree2_sets
+#       total_subsets = len(tree1_sets) + len(tree2_sets)
+#
+#       dist = len(not_in_both)
+#
+#       if proportion:
+#           dist = dist/float(total_subsets)
+#
+#       return dist
 
     def compare_subsets(self, other, exclude_absent_taxa=False):
         """Returns fraction of overlapping subsets where self and other differ.
@@ -1204,8 +1352,5 @@ class TreeNode(object):
 
     def assign_ids(self):
         """Assign topologically stable unique IDs to self"""
-        if hasattr(self, 'Id'):
-            return
-
         for idx, n in enumerate(self.traverse(include_self=True)):
             n.Id = idx
