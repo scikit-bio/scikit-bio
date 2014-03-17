@@ -325,18 +325,16 @@ class BiologicalSequenceTests(TestCase):
         """
         b = NucleotideSequence('GAt.ACa-', identifier='x', description='42')
         expected = NucleotideSequence('GAT.ACA-', identifier='x',
-                description='42')
-        self.assertEqual(b.upper(),expected)
+                                      description='42')
+        self.assertEqual(b.upper(), expected)
 
     def test_lower(self):
         """ lower functions as expected
         """
         b = NucleotideSequence('GAt.ACa-', identifier='x', description='42')
         expected = NucleotideSequence('gat.aca-', identifier='x',
-                description='42')
-        self.assertEqual(b.lower(),expected)
-
-
+                                      description='42')
+        self.assertEqual(b.lower(), expected)
 
 
 class NucelotideSequenceTests(TestCase):

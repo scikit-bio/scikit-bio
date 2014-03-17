@@ -269,7 +269,7 @@ class BiologicalSequence(Sequence):
         """
         try:
             return self.__class__(self._sequence[i],
-                    self.identifier, self.description)
+                                  self.identifier, self.description)
         except IndexError:
             raise IndexError(
                 "Position %d is out of range for %r." % (i, self))
@@ -503,7 +503,7 @@ class BiologicalSequence(Sequence):
         Returns
         -------
         BiologicalSequence
-            A new `BiologicalSequence` with all characters from 
+            A new `BiologicalSequence` with all characters from
             `self.gap_alphabet` filtered from the sequence.
 
         Notes
@@ -886,8 +886,7 @@ class BiologicalSequence(Sequence):
 
         """
         return self.__class__(self._sequence.lower(),
-                self.identifier, self.description)
-
+                              self.identifier, self.description)
 
     def to_fasta(self, field_delimiter=" ", terminal_character="\n"):
         """Return the sequence as a fasta-formatted string
@@ -939,7 +938,8 @@ class BiologicalSequence(Sequence):
 
         """
         return self.__class__(self._sequence.upper(),
-                self.identifier, self.description)
+                              self.identifier, self.description)
+
 
 class NucleotideSequence(BiologicalSequence):
     """Base class for nucleotide sequences.
