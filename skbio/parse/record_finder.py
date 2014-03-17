@@ -24,7 +24,6 @@ str.  Note that its default constuctor is rstrip instead of strip.
 """
 
 from string import strip, rstrip
-
 from skbio.core.exception import RecordError
 
 
