@@ -571,6 +571,7 @@ class SequenceCollection(object):
         See Also
         --------
         sequence_lengths
+        Alignment.sequence_length
 
         """
         return len(self._data)
@@ -1046,6 +1047,11 @@ class Alignment(SequenceCollection):
             List of ``collection.Counter`` objects, one for each position in
             the `Alignment`.
 
+        See Also
+        --------
+        position_frequencies
+        position_entropies
+
         Examples
         --------
         >>> from skbio.core.alignment import Alignment
@@ -1077,6 +1083,12 @@ class Alignment(SequenceCollection):
             the `Alignment`, representing the frequency of each character in
             the `Alignment` at that position.
 
+        See Also
+        --------
+        position_counters
+        position_entropies
+        sequence_frequencies
+        
         Examples
         --------
         >>> from skbio.core.alignment import Alignment
@@ -1103,16 +1115,40 @@ class Alignment(SequenceCollection):
         return result
 
     def position_entropies(self, base=None):
-        """
+        """Return Shannon entropy of positions in `Alignment`
+
         Parameters
         ----------
-        base: float (optional)
-            log base for entropy calculation (default: e)
+        base: float, optional
+            log base for entropy calculation. If not passed, default will be e
+            (i.e., natural log will be computed).
+        
+        Returns
+        -------
+        list
+            List of floats of Shannon entropy at `Alignment` positions.
 
+        See Also
+        --------
+        position_counters
+        position_frequencies
+        
         References
         ----------
         A Mathematical Theory of Communication, CE Shannon
         The Bell System Technical Journal (1948).
+        
+        Examples
+        --------
+        >>> from skbio.core.alignment import Alignment
+        >>> from skbio.core.sequence import DNA, RNA
+        >>> sequences = [DNA('AC--', identifier="seq1"), 
+        ...              DNA('AT-C', identifier="seq2"),
+        ...              DNA('TT-C', identifier="seq3")]
+        >>> a1 = Alignment(sequences)
+        >>> print a1.position_entropies()
+        [0.63651416829481278, 0.63651416829481278, -0.0, 0.63651416829481278]
+
         """
         result = []
         for f in self.position_frequencies():
@@ -1120,7 +1156,33 @@ class Alignment(SequenceCollection):
         return result
 
     def sequence_frequencies(self):
-        """
+        """Return frequencies of characters for sequences in `Alignment`
+
+        Returns
+        -------
+        list
+            List of ``collection.defaultdict`` objects, one for each sequence in
+            the `Alignment`, representing the frequency of each character in
+            each sequence of the `Alignment`.
+
+        See Also
+        --------
+        position_frequencies
+
+        Examples
+        --------
+        >>> from skbio.core.alignment import Alignment
+        >>> from skbio.core.sequence import DNA, RNA
+        >>> sequences = [DNA('AC--', identifier="seq1"), 
+        ...              DNA('AT-C', identifier="seq2"),
+        ...              DNA('TT-C', identifier="seq3")]
+        >>> a1 = Alignment(sequences)
+        >>> for freqs in a1.sequence_frequencies():
+        ...     print freqs
+        defaultdict(<type 'int'>, {'A': 0.25, 'C': 0.25, '-': 0.5})
+        defaultdict(<type 'int'>, {'A': 0.25, 'C': 0.25, '-': 0.25, 'T': 0.25})
+        defaultdict(<type 'int'>, {'C': 0.25, '-': 0.25, 'T': 0.5})
+
         """
         result = []
         count = 1 / self.sequence_length()
@@ -1132,7 +1194,29 @@ class Alignment(SequenceCollection):
         return result
 
     def sequence_length(self):
-        """
+        """Return the number of positions in the alignment
+
+        Returns
+        -------
+        int
+            The number of positions in the alignment.
+
+        See Also
+        --------
+        sequence_lengths
+        sequence_count
+
+        Examples
+        --------
+        >>> from skbio.core.alignment import Alignment
+        >>> from skbio.core.sequence import DNA, RNA
+        >>> sequences = [DNA('AC--', identifier="seq1"), 
+        ...              DNA('AT-C', identifier="seq2"),
+        ...              DNA('TT-C', identifier="seq3")]
+        >>> a1 = Alignment(sequences)
+        >>> print a1.sequence_length()
+        4
+
         """
         return len(self._data[0])
 
