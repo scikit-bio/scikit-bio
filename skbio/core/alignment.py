@@ -633,7 +633,18 @@ class SequenceCollection(object):
         raise NotImplementedError
 
     def upper(self):
-        """
+        """Converts all sequences to uppercase
+
+        Returns
+        -------
+        SequenceCollection
+            New `SequenceCollection` object where `BiologicalSequence.upper()`
+            has been called on each sequence.
+
+        See Also
+        --------
+        BiologicalSequence.upper
+
         """
         result = []
         for seq in self:
@@ -641,8 +652,6 @@ class SequenceCollection(object):
         return self.__class__(result)
 
     def _validate_character_set(self):
-        """
-        """
         for seq in self:
             if not seq.is_valid():
                 return False
