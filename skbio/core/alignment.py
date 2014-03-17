@@ -1068,7 +1068,30 @@ class Alignment(SequenceCollection):
         return result
 
     def position_frequencies(self):
-        """
+        """Return frequencies of characters for positions in `Alignment`
+
+        Returns
+        -------
+        list
+            List of ``collection.defaultdict`` objects, one for each position in
+            the `Alignment`, representing the frequency of each character in
+            the `Alignment` at that position.
+
+        Examples
+        --------
+        >>> from skbio.core.alignment import Alignment
+        >>> from skbio.core.sequence import DNA, RNA
+        >>> sequences = [DNA('AC--', identifier="seq1"), 
+        ...              DNA('AT-C', identifier="seq2"),
+        ...              DNA('TT-C', identifier="seq3")]
+        >>> a1 = Alignment(sequences)
+        >>> for freqs in a1.position_frequencies():
+        ...     print freqs
+        defaultdict(<type 'int'>, {'A': 0.6666666666666666, 'T': 0.3333333333333333})
+        defaultdict(<type 'int'>, {'C': 0.3333333333333333, 'T': 0.6666666666666666})
+        defaultdict(<type 'int'>, {'-': 1.0})
+        defaultdict(<type 'int'>, {'C': 0.6666666666666666, '-': 0.3333333333333333})
+
         """
         result = []
         count = 1 / self.sequence_count()
