@@ -903,7 +903,41 @@ class Alignment(SequenceCollection):
             yield position
 
     def majority_consensus(self, constructor=None):
-        """
+        """Return the majority consensus sequence of the `Alignment`
+
+        Parameters
+        ----------
+        constructor: function, optional
+            Constructor function for creating the consensus sequence. By
+            default, this will be the same type as the first sequence in the
+            `Alignment`.
+
+        Returns
+        -------
+        BiologicalSequence
+            The consensus sequence of the `Alignment`. In other words, at each
+            position the most common character is chosen, and those characters
+            are combined to create a new sequence.
+
+        Notes
+        -----
+        If there are two characters that are equally abundant in the sequence
+        at a given position, the choice of which of those characters will be
+        present at that position in the result is arbitrary.
+
+        Examples
+        --------
+        >>> from skbio.core.alignment import Alignment
+        >>> from skbio.core.sequence import DNA, RNA
+        >>> sequences = [DNA('AC--', identifier="seq1"), 
+        ...              DNA('AT-C', identifier="seq2"),
+        ...              DNA('TT-C', identifier="seq3")]
+        >>> a1 = Alignment(sequences)
+        >>> a1.majority_consensus()
+        <DNASequence: AT-C (length: 4)>
+        >>> a1.majority_consensus(constructor=str)
+        'AT-C'
+
         """
         if constructor is None:
             constructor = self[0].__class__
@@ -916,8 +950,40 @@ class Alignment(SequenceCollection):
         result = ''.join(result)
         return constructor(result)
 
-    def omit_gap_positions(self, maximum_gap_frequency=0.0):
-        """
+    def omit_gap_positions(self, maximum_gap_frequency):
+        """Returns new `Alignment` that is a subset of the current `Alignment`
+
+        Parameters
+        ----------
+        maximum_gap_frequency: float
+            The maximum fraction of the sequences that can contain a gap at a
+            given position for that position to be retained in the resulting
+            `Alignment`. 
+
+        Returns
+        -------
+        Alignment
+            The subalignment containing only the positions with gaps in fewer
+            than maximum_gap_frequency fraction of the sequences.
+
+        Examples
+        --------
+        >>> from skbio.core.alignment import Alignment
+        >>> from skbio.core.sequence import DNA, RNA
+        >>> sequences = [DNA('AC--', identifier="seq1"), 
+        ...              DNA('AT-C', identifier="seq2"),
+        ...              DNA('TT-C', identifier="seq3")]
+        >>> a1 = Alignment(sequences)
+        >>> a2 = a1.omit_gap_positions(0.50)
+        >>> print a2
+        <Alignment: n=3; mean +/- std length=3.00 +/- 0.00>
+        >>> print a2[0]
+        AC-
+        >>> print a2[1]
+        ATC
+        >>> print a2[2]
+        TTC
+
         """
         position_frequencies = self.position_frequencies()
         gap_alphabet = self[0].gap_alphabet()
@@ -929,8 +995,38 @@ class Alignment(SequenceCollection):
                 positions_to_keep.append(i)
         return self.subalignment(positions_to_keep=positions_to_keep)
 
-    def omit_gap_sequences(self, maximum_gap_frequency=0.0):
-        """
+    def omit_gap_sequences(self, maximum_gap_frequency):
+        """Returns new `Alignment` that is a subset of the current `Alignment`
+
+        Parameters
+        ----------
+        maximum_gap_frequency: float
+            The maximum fraction of the positions that can contain a gap in a
+            given sequence for that sequence to be retained in the resulting
+            `Alignment`.
+
+        Returns
+        -------
+        Alignment
+            The subalignment containing only the sequences with gaps in fewer
+            than maximum_gap_frequency fraction of the positions.
+
+        Examples
+        --------
+        >>> from skbio.core.alignment import Alignment
+        >>> from skbio.core.sequence import DNA, RNA
+        >>> sequences = [DNA('AC--', identifier="seq1"), 
+        ...              DNA('AT-C', identifier="seq2"),
+        ...              DNA('TT-C', identifier="seq3")]
+        >>> a1 = Alignment(sequences)
+        >>> a2 = a1.omit_gap_sequences(0.49)
+        >>> print a2
+        <Alignment: n=2; mean +/- std length=4.00 +/- 0.00>
+        >>> print a2[0]
+        AT-C
+        >>> print a2[1]
+        TT-C
+
         """
         sequence_frequencies = self.sequence_frequencies()
         gap_alphabet = self[0].gap_alphabet()
@@ -942,7 +1038,29 @@ class Alignment(SequenceCollection):
         return self.subalignment(seqs_to_keep=seqs_to_keep)
 
     def position_counters(self):
-        """
+        """Return ``collection.Counter`` object for positions in `Alignment`
+
+        Returns
+        -------
+        list
+            List of ``collection.Counter`` objects, one for each position in
+            the `Alignment`.
+
+        Examples
+        --------
+        >>> from skbio.core.alignment import Alignment
+        >>> from skbio.core.sequence import DNA, RNA
+        >>> sequences = [DNA('AC--', identifier="seq1"), 
+        ...              DNA('AT-C', identifier="seq2"),
+        ...              DNA('TT-C', identifier="seq3")]
+        >>> a1 = Alignment(sequences)
+        >>> for counter in a1.position_counters():
+        ...     print counter
+        Counter({'A': 2, 'T': 1})
+        Counter({'T': 2, 'C': 1})
+        Counter({'-': 3})
+        Counter({'C': 2, '-': 1})
+
         """
         result = []
         for p in self.iter_positions(constructor=str):
