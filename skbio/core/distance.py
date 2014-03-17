@@ -151,11 +151,7 @@ class DistanceMatrix(object):
     --------
     Initialize a `skbio.core.distnace.DistanceMatrix` object from an existing
     ``numpy.array`` that represents the distances between  three samples with
-    IDs a, b, and c:
-
-        0.0\t0.5\t1.0
-        0.5\t0.0\t0.75
-        1.0\t0.75\t0.0
+    IDs a, b, and c.
 
     >>> from numpy import array
     >>> from skbio.core.distance import DistanceMatrix
