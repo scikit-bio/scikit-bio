@@ -31,8 +31,10 @@ from __future__ import division
 
 import hashlib
 from os import remove, makedirs
-from os.path import exists, isdir
+from os.path import join, exists, isdir, abspath
 from functools import partial
+from datetime import datetime
+from random import choice
 
 
 def safe_md5(open_file, block_size=2 ** 20):
@@ -201,6 +203,71 @@ def get_create_dir_error_codes():
             'DIR_EXISTS':    1,
             'FILE_EXISTS':   2,
             'OTHER_OS_ERROR': 3}
+
+
+def get_random_directory_name(suppress_mkdir=False,\
+    timestamp_pattern='%Y%m%d%H%M%S',\
+    rand_length=20,\
+    output_dir=None,\
+    prefix='',
+    suffix='',
+    return_absolute_path=True):
+    """Create a random directory safely and fail meaningfully
+
+    Parameters
+    ----------
+
+    suppress_mkdir: bool,
+    if true only build the directory name, don't create the directory
+
+    timestamp_pattern: string
+    parameter passed to strftime() to generate the timestamp (pass '' to
+    suppress the timestamp)
+
+    rand_length: int
+    length of random string of characters
+
+    output_dir: string
+    the directory which should contain the random directory
+
+    prefix: string
+    prefix for directory name
+
+    suffix: string
+    suffix for directory name
+
+    return_absolute_path: bool
+    If False, returns the local (relative) path to the new directory
+
+    Returns
+    -------
+    dirpath: string
+    The output folder
+    """
+
+    output_dir = output_dir or './'
+    # Define a set of characters to be used in the random directory name
+    chars = "abcdefghigklmnopqrstuvwxyz"
+    picks = chars + chars.upper() + "0123456790"
+
+    # Get a time stamp
+    timestamp = datetime.now().strftime(timestamp_pattern)
+
+    # Construct the directory name
+    dirname = '%s%s%s%s' % (prefix,timestamp,\
+                        ''.join([choice(picks) for i in range(rand_length)]),\
+                        suffix)
+    dirpath = join(output_dir,dirname)
+    abs_dirpath = abspath(dirpath)
+
+    # Make the directory
+    if not suppress_mkdir:
+        create_dir(abs_dirpath)
+
+    # Return the path to the directory
+    if return_absolute_path:
+        return abs_dirpath
+    return dirpath
 
 
 def handle_error_codes(dir_name, supress_errors=False,
