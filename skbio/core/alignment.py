@@ -494,7 +494,7 @@ class SequenceCollection(object):
         return dict(int_map), dict(int_keys) 
 
     def is_valid(self):
-        """Return `True` if the sequence is valid
+        """Return `True` if the SequenceCollection is valid
 
         Returns
         -------
@@ -803,12 +803,97 @@ class Alignment(SequenceCollection):
         return self.__class__(result)
 
     def is_valid(self):
+        """Return `True` if the Alignment is valid
+
+        Returns
+        -------
+        bool
+            ``True`` if `self` is valid, and ``False`` otherwise.
+
+        Notes
+        -----
+        Validity is defined as having no sequences containing characters
+        outside of their valid character sets, and all sequences being of equal
+        length. 
+
+        See Also
+        --------
+        skbio.core.alignment.BiologicalSequence.is_valid
+        
+        Examples
+        --------
+        >>> from skbio.core.alignment import Alignment
+        >>> from skbio.core.sequence import DNA, RNA
+        >>> sequences = [DNA('ACCGT--', identifier="seq1"), 
+        ...              DNA('AACCGGT', identifier="seq2")]
+        >>> a1 = Alignment(sequences)
+        >>> print a1.is_valid()
+        True
+        >>> sequences = [DNA('ACCGT', identifier="seq1"), 
+        ...              DNA('AACCGGT', identifier="seq2")]
+        >>> a1 = Alignment(sequences)
+        >>> print a1.is_valid()
+        False
+        >>> sequences = [RNA('ACCGT--', identifier="seq1"), 
+        ...              RNA('AACCGGT', identifier="seq2")]
+        >>> a1 = Alignment(sequences)
+        >>> print a1.is_valid()
+        False
+
         """
-        """
+
         return super(Alignment, self).is_valid() and self._validate_lengths()
 
     def iter_positions(self, constructor=None):
-        """
+        """ Generator of `Alignment` positions (i.e., columns)
+
+        Parameters
+        ----------
+        constructor: function, optional
+            Constructor function for creating the positional values. By
+            default, these will be the same type as corresponding 
+            `BiologicalSequence` in the `SequenceCollection` object, but you
+            can pass a `BiologicalSequence` class here to ensure that they are
+            all of consistent type, or ``str`` to have them returned as
+            strings.
+
+        Returns
+        -------
+        generator
+            Generator of lists of positional values in the SequenceCollection
+            (effectively the transpose of the alignment).
+
+        See Also
+        --------
+        iter
+
+        Examples
+        --------
+        >>> from skbio.core.alignment import Alignment
+        >>> from skbio.core.sequence import DNA, RNA
+        >>> sequences = [DNA('ACCGT--', identifier="seq1"), 
+        ...              DNA('AACCGGT', identifier="seq2")]
+        >>> a1 = Alignment(sequences)
+        >>> for position in a1.iter_positions():
+        ...     print position
+        [<DNASequence: A (length: 1)>, <DNASequence: A (length: 1)>]
+        [<DNASequence: C (length: 1)>, <DNASequence: A (length: 1)>]
+        [<DNASequence: C (length: 1)>, <DNASequence: C (length: 1)>]
+        [<DNASequence: G (length: 1)>, <DNASequence: C (length: 1)>]
+        [<DNASequence: T (length: 1)>, <DNASequence: G (length: 1)>]
+        [<DNASequence: - (length: 1)>, <DNASequence: G (length: 1)>]
+        [<DNASequence: - (length: 1)>, <DNASequence: T (length: 1)>]
+        
+        >>> for position in a1.iter_positions(constructor=str):
+        ...     print position
+        ['A', 'A']
+        ['C', 'A']
+        ['C', 'C']
+        ['G', 'C']
+        ['T', 'G']
+        ['-', 'G']
+        ['-', 'T']
+
         """
         if constructor is None:
             def constructor(s):
