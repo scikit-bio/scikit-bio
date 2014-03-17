@@ -1276,6 +1276,7 @@ class Alignment(SequenceCollection):
         else:
             seq_id_to_seqs = self
             new_id_to_old_id = {seq_id: seq_id for seq_id in identifiers}
+            old_id_to_new_id = new_id_to_old_id
 
         for seq_id in identifiers:
             new_id = old_id_to_new_id[seq_id]

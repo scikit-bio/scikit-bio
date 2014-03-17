@@ -537,15 +537,32 @@ class AlignmentTests(TestCase):
         d3 = DNASequence('.-ACC-GTTGC--', identifier="d3")
         a = Alignment([d1, d2, d3])
 
-        phylip_str, id_map = a.to_phylip(map_labels=True,
-                                         label_prefix="seq000000")
-        self.assertEqual(id_map, {'seq0000001': 'd1',
-                                  'seq0000003': 'd3',
-                                  'seq0000002': 'd2'})
+        phylip_str, id_map = a.to_phylip(map_labels=False)
+        self.assertEqual(id_map, {'d1': 'd1',
+                                  'd3': 'd3',
+                                  'd2': 'd2'})
         expected = "\n".join(["3 13",
-                              "seq0000001 ..ACC-GTTGG..",
-                              "seq0000002 TTACCGGT-GGCC",
-                              "seq0000003 .-ACC-GTTGC--"])
+                              "d1 ..ACC-GTTGG..",
+                              "d2 TTACCGGT-GGCC",
+                              "d3 .-ACC-GTTGC--"])
+        self.assertEqual(phylip_str, expected)
+
+    def test_to_phylip_map_labels(self):
+        """ to_phylip functions as expected with label mapping
+        """
+        d1 = DNASequence('..ACC-GTTGG..', identifier="d1")
+        d2 = DNASequence('TTACCGGT-GGCC', identifier="d2")
+        d3 = DNASequence('.-ACC-GTTGC--', identifier="d3")
+        a = Alignment([d1, d2, d3])
+
+        phylip_str, id_map = a.to_phylip(map_labels=True, label_prefix="s")
+        self.assertEqual(id_map, {'s1': 'd1',
+                                  's3': 'd3',
+                                  's2': 'd2'})
+        expected = "\n".join(["3 13",
+                              "s1 ..ACC-GTTGG..",
+                              "s2 TTACCGGT-GGCC",
+                              "s3 .-ACC-GTTGC--"])
         self.assertEqual(phylip_str, expected)
 
     def test_validate_lengths(self):
