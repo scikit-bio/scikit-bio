@@ -10,7 +10,7 @@
 
 from __future__ import division
 
-from numpy import sqrt, log, exp, abs
+import numpy as np
 
 ROUND_ERROR = 1e-14    # fp rounding error: causes some tests to fail
                         # will round to 0 if smaller in magnitude than this
@@ -210,7 +210,7 @@ def polevl(x, coef):
 def expm1(x):
     """Something to do with exp? From Cephes."""
     if (x < -0.5) or (x > 0.5):
-        return (exp(x) - 1.0)
+        return (np.exp(x) - 1.0)
     xx = x * x
     r = x * polevl(xx, EP)
     r /= polevl(xx, EQ) - r
@@ -221,7 +221,7 @@ def log1p(x):
     """Log for values close to 1: from Cephes math library"""
     z = 1 + x
     if (z < SQRTH) or (z > SQRT2):
-        return log(z)
+        return np.log(z)
     z = x * x
     z = -0.5 * z + x * (z * polevl(x, LP) / polevl(x, LQ))
     return x + z
@@ -236,10 +236,10 @@ def igam(a, x):
 
     # Compute x**a * exp(x) / Gamma(a)
 
-    ax = a * log(x) - x - lgam(a)
+    ax = a * np.log(x) - x - lgam(a)
     if ax < -MAXLOG:  # underflow
         return 0.0
-    ax = exp(ax)
+    ax = np.exp(ax)
 
     # power series
     r = a
@@ -276,7 +276,7 @@ def lgam(x):
         z = q * sin(PI * z)
         if z == 0:
             raise OverflowError("lgam returned infinity.")
-        z = LOGPI - log(z) - w
+        z = LOGPI - np.log(z) - w
         return z
     if x < 13:
         z = 1
@@ -298,14 +298,14 @@ def lgam(x):
         else:
             sgngam = 1
         if u == 2:
-            return log(z)
+            return np.log(z)
         p -= 2
         x = x + p
         p = x * polevl(x, GB) / polevl(x, GC)
-        return log(z) + p
+        return np.log(z) + p
     if x > MAXLGM:
         raise OverflowError("Too large a value of x in lgam.")
-    q = (x - 0.5) * log(x) - x + LS2PI
+    q = (x - 0.5) * np.log(x) - x + LS2PI
     if x > 1.0e8:
         return q
     p = 1 / (x * x)
@@ -324,10 +324,10 @@ def igamc(a, x):
         return 1
     if x < 1 or x < a:
         return 1 - igam(a, x)
-    ax = a * log(x) - x - lgam(a)
+    ax = a * np.log(x) - x - lgam(a)
     if ax < -MAXLOG:  # underflow
         return 0
-    ax = exp(ax)
+    ax = np.exp(ax)
     # continued fraction
     y = 1 - a
     z = x + y + 1
@@ -347,7 +347,7 @@ def igamc(a, x):
         qk = qkm1 * z - qkm2 * yc
         if qk != 0:
             r = pk / qk
-            t = abs((ans - r) / r)
+            t = np.abs((ans - r) / r)
             ans = r
         else:
             t = 1
@@ -355,7 +355,7 @@ def igamc(a, x):
         pkm1 = pk
         qkm2 = qkm1
         qkm1 = qk
-        if abs(pk) > big:
+        if np.abs(pk) > big:
             pkm2 *= biginv
             pkm1 *= biginv
             qkm2 *= biginv
@@ -402,8 +402,8 @@ def ndtri(y0):
         x = x * s2pi
         return x
 
-    x = sqrt(-2.0 * log(y))
-    x0 = x - log(x) / x
+    x = np.sqrt(-2.0 * np.log(y))
+    x0 = x - np.log(x) / x
 
     z = 1.0 / x
     if x < 8.0:  # y > exp(-32) = 1.2664165549e-14
@@ -455,9 +455,9 @@ def betai(aa, bb, xx):
         w = incbcf(a, b, x)
     else:
         w = incbd(a, b, x) / xc
-    y = a * log(x)
-    t = b * log(xc)
-    if ((a + b) < MAXGAM) and (abs(y) < MAXLOG) and (abs(t) < MAXLOG):
+    y = a * np.log(x)
+    t = b * np.log(xc)
+    if ((a + b) < MAXGAM) and (np.abs(y) < MAXLOG) and (np.abs(t) < MAXLOG):
         t = pow(xc, b)
         t *= pow(x, a)
         t /= a
@@ -466,11 +466,11 @@ def betai(aa, bb, xx):
         return betai_result(t, flag)
     # resort to logarithms
     y += t + lgam(a + b) - lgam(a) - lgam(b)
-    y += log(w / a)
+    y += np.log(w / a)
     if y < MINLOG:
         t = 0
     else:
-        t = exp(y)
+        t = np.exp(y)
     return betai_result(t, flag)
 
 
@@ -498,7 +498,7 @@ def pseries(a, b, x):
     n = 2
     s = 0
     z = MACHEP * ai
-    while abs(v) > z:
+    while np.abs(v) > z:
         u = (n - b) * x / n
         t *= u
         v = t / (a + n)
@@ -507,16 +507,16 @@ def pseries(a, b, x):
     s += t1
     s += ai
 
-    u = a * log(x)
-    if ((a + b) < MAXGAM) and (abs(u) < MAXLOG):
+    u = a * np.log(x)
+    if ((a + b) < MAXGAM) and (np.abs(u) < MAXLOG):
         t = Gamma(a + b) / (Gamma(a) * Gamma(b))
         s = s * t * pow(x, a)
     else:
-        t = lgam(a + b) - lgam(a) - lgam(b) + u + log(s)
+        t = lgam(a + b) - lgam(a) - lgam(b) + u + np.log(s)
         if t < MINLOG:
             s = 0
         else:
-            s = exp(t)
+            s = np.exp(t)
     return(s)
 
 
@@ -564,7 +564,7 @@ def incbd(a, b, x):
         if qk != 0:
             r = pk / qk
         if r != 0:
-            t = abs((ans - r) / r)
+            t = np.abs((ans - r) / r)
             ans = r
         else:
             t = 1.0
@@ -579,13 +579,13 @@ def incbd(a, b, x):
         k7 += 2
         k8 += 2
 
-        if (abs(qk) + abs(pk)) > big:
+        if (np.abs(qk) + np.abs(pk)) > big:
             pkm2 *= biginv
             pkm1 *= biginv
             qkm2 *= biginv
             qkm1 *= biginv
 
-        if (abs(qk) < biginv) or (abs(pk) < biginv):
+        if (np.abs(qk) < biginv) or (np.abs(pk) < biginv):
             pkm2 *= big
             pkm1 *= big
             qkm2 *= big
@@ -601,7 +601,7 @@ def Gamma(x):
     See Cephes docs for details."""
 
     sgngam = 1
-    q = abs(x)
+    q = np.abs(x)
     if q > 33:
         if x < 0:
             p = floor(q)
@@ -617,7 +617,7 @@ def Gamma(x):
             z = q * sin(PI * z)
             if z == 0:
                 raise OverflowError("Bad value of x in Gamma function.")
-            z = abs(z)
+            z = np.abs(z)
             z = PI / (z * stirf(q))
         else:
             z = stirf(x)
@@ -658,7 +658,7 @@ def stirf(x):
     """
     w = 1.0 / x
     w = 1 + w * polevl(w, STIR)
-    y = exp(x)
+    y = np.exp(x)
     if x > MAXSTIR:
         # avoid overflow in pow()
         v = pow(x, 0.5 * x - 0.25)
@@ -711,7 +711,7 @@ def incbcf(a, b, x):
         if qk != 0:
             r = pk / qk
         if r != 0:
-            t = abs((ans - r) / r)
+            t = np.abs((ans - r) / r)
             ans = r
         else:
             t = 1
@@ -726,12 +726,12 @@ def incbcf(a, b, x):
         k7 += 2
         k8 += 2
 
-        if (abs(qk) + abs(pk)) > big:
+        if (np.abs(qk) + np.abs(pk)) > big:
             pkm2 *= biginv
             pkm1 *= biginv
             qkm2 *= biginv
             qkm1 *= biginv
-        if (abs(qk) < biginv) or (abs(pk) < biginv):
+        if (np.abs(qk) < biginv) or (np.abs(pk) < biginv):
             pkm2 *= big
             pkm1 *= big
             qkm2 *= big
@@ -801,7 +801,7 @@ ZU = [
 
 def erf(a):
     """Returns the error function of a: see Cephes docs."""
-    if abs(a) > 1:
+    if np.abs(a) > 1:
         return 1 - erfc(a)
     z = a * a
     return a * polevl(z, ZT) / polevl(z, ZU)
@@ -823,7 +823,7 @@ def erfc(a):
             return 2
         else:
             return 0
-    z = exp(z)
+    z = np.exp(z)
 
     if x < 8:
         p = polevl(x, ZP)

@@ -12,7 +12,7 @@ from __future__ import division
 from unittest import TestCase, main
 
 import numpy as np
-from numpy.testing import assert_equal, assert_almost_equal, assert_allclose
+
 from skbio.maths.stats.spatial import (procrustes, _get_disparity, _center,
                                        _normalize)
 
@@ -58,12 +58,12 @@ class ProcrustesTests(TestCase):
         """
         # can shift, mirror, and scale an 'L'?
         a, b, disparity = procrustes(self.data1, self.data2)
-        assert_allclose(b, a)
-        assert_almost_equal(disparity, 0.)
+        np.testing.assert_allclose(b, a)
+        np.testing.assert_almost_equal(disparity, 0.)
 
         # if first mtx is standardized, leaves first mtx unchanged?
         m4, m5, disp45 = procrustes(self.data4, self.data5)
-        assert_equal(m4, self.data4)
+        np.testing.assert_equal(m4, self.data4)
 
         # at worst, data3 is an 'L' with one point off by .5
         m1, m3, disp13 = procrustes(self.data1, self.data3)
@@ -73,7 +73,7 @@ class ProcrustesTests(TestCase):
         """procrustes disparity should not depend on order of matrices"""
         m1, m3, disp13 = procrustes(self.data1, self.data3)
         m3_2, m1_2, disp31 = procrustes(self.data3, self.data1)
-        assert_almost_equal(disp13, disp31)
+        np.testing.assert_almost_equal(disp13, disp31)
 
         # try with 3d, 8 pts per
         rand1 = np.array([[2.61955202,  0.30522265,  0.55515826],
@@ -95,33 +95,34 @@ class ProcrustesTests(TestCase):
                          [-0.86106154, -0.28687488,  0.9644429]])
         res1, res3, disp13 = procrustes(rand1, rand3)
         res3_2, res1_2, disp31 = procrustes(rand3, rand1)
-        assert_almost_equal(disp13, disp31)
+        np.testing.assert_almost_equal(disp13, disp31)
 
     def test_get_disparity(self):
         """tests get_disparity"""
         disp = _get_disparity(self.data1, self.data3)
         disp2 = _get_disparity(self.data3, self.data1)
-        assert_equal(disp, disp2)
-        assert_equal(disp, (3. * 2. + (1. + 1.5 ** 2)))
+        np.testing.assert_equal(disp, disp2)
+        np.testing.assert_equal(disp, (3. * 2. + (1. + 1.5 ** 2)))
 
         d1 = np.append(self.data1, self.data1, 0)
         d3 = np.append(self.data3, self.data3, 0)
 
         disp3 = _get_disparity(d1, d3)
         disp4 = _get_disparity(d3, d1)
-        assert_equal(disp3, disp4)
+        np.testing.assert_equal(disp3, disp4)
         # 2x points in same configuration should give 2x disparity
-        assert_equal(disp3, 2. * disp)
+        np.testing.assert_equal(disp3, 2. * disp)
 
     def test_center(self):
         centered_mtx = _center(self.data1)
         column_means = centered_mtx.mean(0)
         for col_mean in column_means:
-            assert_equal(col_mean, 0.)
+            np.testing.assert_equal(col_mean, 0.)
 
     def test_normalize(self):
         norm_mtx = _normalize(self.data1)
-        assert_equal(np.trace(np.dot(norm_mtx, np.transpose(norm_mtx))), 1.)
+        np.testing.assert_equal(np.trace(np.dot(norm_mtx,
+                                                np.transpose(norm_mtx))), 1.)
 
     # match_points isn't yet tested, as it's almost a private function
     # and test_procrustes() tests it implicitly.

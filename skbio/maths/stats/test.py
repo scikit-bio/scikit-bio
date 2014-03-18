@@ -9,14 +9,14 @@
 #-----------------------------------------------------------------------------
 
 from __future__ import division
+
+import numpy as np
+
 from skbio.maths.stats.special import MACHEP, ndtri
-from skbio.maths.stats.distribution import (chi_high, zprob, f_high,
-                                            binomial_high, t_high, t_low,
-                                            tprob)
-from numpy import (absolute, arctanh, array, asarray, concatenate, transpose,
-                   ravel, take, nonzero, log, sum, mean, tanh, isnan, isinf,
-                   sqrt, trace, zeros, ones, var, std)
-from numpy.random import permutation, randint
+from skbio.maths.stats.distribution import (chi_high, zprob, f_high, t_high,
+                                            t_low, tprob)
+
+np.seterr(divide='raise')
 
 
 class ZeroExpectedError(ValueError):
@@ -59,7 +59,7 @@ def G_2_by_2(a, b, c, d, williams=1, directional=1):
     See Sokal & Rohlf (1995), ch. 17. Specifically, see box 17.6 (p731).
     """
     cells = [a, b, c, d]
-    n = sum(cells)
+    n = np.sum(cells)
     # return 0 if table was empty
     if not n:
         return (0, 1)
@@ -71,7 +71,7 @@ def G_2_by_2(a, b, c, d, williams=1, directional=1):
     G = 0
     # Add x ln x for items, adding zero for items whose counts are zero
     for i in filter(None, cells):
-        G += i * log(i)
+        G += i * np.log(i)
     # Find totals for rows and cols
     ab = a + b
     cd = c + d
@@ -84,9 +84,9 @@ def G_2_by_2(a, b, c, d, williams=1, directional=1):
         return (0, 1)
     # Subtract x ln x for rows and cols
     for i in filter(None, rows_cols):
-        G -= i * log(i)
+        G -= i * np.log(i)
     # Add x ln x for table
-    G += n * log(n)
+    G += n * np.log(n)
     # Result needs to be multiplied by 2
     G *= 2
 
@@ -110,12 +110,12 @@ def G_2_by_2(a, b, c, d, williams=1, directional=1):
 
 def safe_sum_p_log_p(a, base=None):
     """Calculates p * log(p) safely for an array that may contain zeros."""
-    flat = ravel(a)
-    nz = take(flat, nonzero(flat)[0])
-    logs = log(nz)
+    flat = np.ravel(a)
+    nz = np.take(flat, np.nonzero(flat)[0])
+    logs = np.log(nz)
     if base:
-        logs /= log(base)
-    return sum(nz * logs, 0)
+        logs /= np.log(base)
+    return np.sum(nz * logs, 0)
 
 
 def G_fit(obs, exp, williams=1):
@@ -144,7 +144,7 @@ def G_fit(obs, exp, williams=1):
             raise ZeroExpectedError(
                 "G_fit requires all expected values to be positive.")
         if o:  # if o is zero, o * log(o/e) must be zero as well.
-            G += o * log(o / e)
+            G += o * np.log(o / e)
             n += o
 
     G *= 2
@@ -173,7 +173,7 @@ def t_paired(a, b, tails=None, exp_diff=0):
     if n != len(b):
         raise ValueError('Unequal length lists in ttest_paired.')
     try:
-        diffs = array(a) - array(b)
+        diffs = np.array(a) - np.array(b)
         return t_one_sample(diffs, popmean=exp_diff, tails=tails)
     except (ZeroDivisionError, ValueError, AttributeError, TypeError,
             FloatingPointError):
@@ -192,11 +192,11 @@ def t_one_sample(a, popmean=0, tails=None):
     """
     try:
         n = len(a)
-        t = (mean(a) - popmean) / (std(a, ddof=1) / sqrt(n))
+        t = (np.mean(a) - popmean) / (np.std(a, ddof=1) / np.sqrt(n))
     except (ZeroDivisionError, ValueError, AttributeError, TypeError,
             FloatingPointError):
         return None, None
-    if isnan(t) or isinf(t):
+    if np.isnan(t) or np.isinf(t):
         return None, None
 
     prob = t_tailed_prob(t, n - 1, tails)
@@ -244,14 +244,14 @@ def t_two_sample(a, b, tails=None, exp_diff=0, none_on_zero_variance=True):
         n1 = len(a)
         if n1 < 2:
             t, prob = \
-                t_one_observation(sum(a), b, tails, exp_diff,
+                t_one_observation(np.sum(a), b, tails, exp_diff,
                                   none_on_zero_variance=none_on_zero_variance)
             return t, prob
 
         n2 = len(b)
         if n2 < 2:
             t, prob = \
-                t_one_observation(sum(b), a, reverse_tails(tails),
+                t_one_observation(np.sum(b), a, reverse_tails(tails),
                                   exp_diff,
                                   none_on_zero_variance=none_on_zero_variance)
 
@@ -263,12 +263,12 @@ def t_two_sample(a, b, tails=None, exp_diff=0, none_on_zero_variance=True):
             return (t, prob)
 
         # otherwise, calculate things properly
-        x1 = mean(a)
-        x2 = mean(b)
+        x1 = np.mean(a)
+        x2 = np.mean(b)
 
         # pass ddof=1 to estimate the unbiased variance
-        var1 = var(a, ddof=1)
-        var2 = var(b, ddof=1)
+        var1 = np.var(a, ddof=1)
+        var2 = np.var(b, ddof=1)
 
         if var1 == 0 and var2 == 0:
             # Both lists do not vary.
@@ -280,9 +280,9 @@ def t_two_sample(a, b, tails=None, exp_diff=0, none_on_zero_variance=True):
             # At least one list varies.
             df = n1 + n2 - 2
             svar = ((n1 - 1) * var1 + (n2 - 1) * var2) / df
-            t = (x1 - x2 - exp_diff) / sqrt(svar * (1 / n1 + 1 / n2))
+            t = (x1 - x2 - exp_diff) / np.sqrt(svar * (1 / n1 + 1 / n2))
 
-            if isnan(t) or isinf(t):
+            if np.isnan(t) or np.isinf(t):
                 result = (None, None)
             else:
                 prob = t_tailed_prob(t, df, tails)
@@ -391,18 +391,19 @@ def mc_t_two_sample(x_items, y_items, tails=None, permutations=999,
 
         # Compute nonparametric p-value based on the permuted t-test results.
         if tails is None:
-            better = (absolute(array(perm_t_stats)) >= absolute(obs_t)).sum()
+            better = (np.absolute(np.array(perm_t_stats)) >=
+                      np.absolute(obs_t)).sum()
         elif tails == 'low':
-            better = (array(perm_t_stats) <= obs_t).sum()
+            better = (np.array(perm_t_stats) <= obs_t).sum()
         elif tails == 'high':
-            better = (array(perm_t_stats) >= obs_t).sum()
+            better = (np.array(perm_t_stats) >= obs_t).sum()
         nonparam_p_val = (better + 1) / (permutations + 1)
 
     return obs_t, param_p_val, perm_t_stats, nonparam_p_val
 
 
 def _permute_observations(x_items, y_items, permutations,
-                          permute_f=permutation):
+                          permute_f=np.random.permutation):
     """Returns permuted versions of the sequences of observations.
 
     Values are permuted between x_items and y_items (i.e. shuffled between the
@@ -414,7 +415,7 @@ def _permute_observations(x_items, y_items, permutations,
     num_x = len(x_items)
     num_y = len(y_items)
     num_total_obs = num_x + num_y
-    combined_obs = concatenate((x_items, y_items))
+    combined_obs = np.concatenate((x_items, y_items))
 
     # Generate a list of all permutations.
     perms = [permute_f(num_total_obs) for i in range(permutations)]
@@ -438,8 +439,8 @@ def t_one_observation(x, sample, tails=None, exp_diff=0,
         sample=[1,1,1]), (None,None) will always be returned
     """
     try:
-        sample_mean = mean(sample)
-        sample_std = std(sample, ddof=1)
+        sample_mean = np.mean(sample)
+        sample_std = np.std(sample, ddof=1)
 
         if sample_std == 0:
             # The list does not vary.
@@ -450,7 +451,8 @@ def t_one_observation(x, sample, tails=None, exp_diff=0,
         else:
             # The list varies.
             n = len(sample)
-            t = (x - sample_mean - exp_diff) / sample_std / sqrt((n + 1) / n)
+            t = ((x - sample_mean - exp_diff) / sample_std / np.sqrt((n + 1) /
+                 n))
             prob = t_tailed_prob(t, n - 1, tails)
             result = (t, prob)
     except (ZeroDivisionError, ValueError, AttributeError, TypeError,
@@ -472,7 +474,7 @@ def pearson(x_items, y_items):
         x_items - the first list of observations
         y_items - the second list of observations
     """
-    x_items, y_items = array(x_items), array(y_items)
+    x_items, y_items = np.array(x_items), np.array(y_items)
 
     if len(x_items) != len(y_items):
         raise ValueError("The length of the two vectors must be the same in "
@@ -483,17 +485,17 @@ def pearson(x_items, y_items):
                          "elements. The vectors are "
                          "of length %d." % len(x_items))
 
-    sum_x = sum(x_items)
-    sum_y = sum(y_items)
-    sum_x_sq = sum(x_items * x_items)
-    sum_y_sq = sum(y_items * y_items)
-    sum_xy = sum(x_items * y_items)
+    sum_x = np.sum(x_items)
+    sum_y = np.sum(y_items)
+    sum_x_sq = np.sum(x_items * x_items)
+    sum_y_sq = np.sum(y_items * y_items)
+    sum_xy = np.sum(x_items * y_items)
     n = len(x_items)
 
     try:
         r = 1.0 * ((n * sum_xy) - (sum_x * sum_y)) / \
-            (sqrt((n * sum_x_sq) - (sum_x * sum_x))
-             * sqrt((n * sum_y_sq) - (sum_y * sum_y)))
+            (np.sqrt((n * sum_x_sq) - (sum_x * sum_x))
+             * np.sqrt((n * sum_y_sq) - (sum_y * sum_y)))
     except (ZeroDivisionError, ValueError, FloatingPointError):
         # no variation
         r = 0.0
@@ -517,7 +519,7 @@ def spearman(x_items, y_items):
         x_items - the first list of observations
         y_items - the second list of observations
     """
-    x_items, y_items = array(x_items), array(y_items)
+    x_items, y_items = np.array(x_items), np.array(y_items)
 
     if len(x_items) != len(y_items):
         raise ValueError("The length of the two vectors must be the same in "
@@ -533,18 +535,18 @@ def spearman(x_items, y_items):
 
     if ties1 == 0 and ties2 == 0:
         n = len(rank1)
-        sum_sqr = sum([(x - y) ** 2 for x, y in zip(rank1, rank2)])
+        sum_sqr = np.sum([(x - y) ** 2 for x, y in zip(rank1, rank2)])
         rho = 1 - (6 * sum_sqr / (n * (n ** 2 - 1)))
     else:
-        avg = lambda x: sum(x) / len(x)
+        avg = lambda x: np.sum(x) / len(x)
 
         x_bar = avg(rank1)
         y_bar = avg(rank2)
 
-        numerator = sum([(x - x_bar) * (y - y_bar)
-                        for x, y in zip(rank1, rank2)])
-        denominator = sqrt(sum([(x - x_bar) ** 2 for x in rank1]) *
-                           sum([(y - y_bar) ** 2 for y in rank2]))
+        numerator = np.sum([(x - x_bar) * (y - y_bar)
+                            for x, y in zip(rank1, rank2)])
+        denominator = np.sqrt(np.sum([(x - x_bar) ** 2 for x in rank1]) *
+                              np.sum([(y - y_bar) ** 2 for y in rank2]))
 
         # Calculate rho. Handle the case when there is no variation in one or
         # both of the input vectors.
@@ -652,14 +654,14 @@ def correlation_t(x_items, y_items, method='pearson', tails=None,
     corr_coeff = corr_fn(x_items, y_items)
 
     # Perform the parametric test first.
-    x_items, y_items = array(x_items), array(y_items)
+    x_items, y_items = np.array(x_items), np.array(y_items)
     n = len(x_items)
     df = n - 2
     if n < 3:
         parametric_p_val = 1
     else:
         try:
-            t = corr_coeff / sqrt((1 - (corr_coeff * corr_coeff)) / df)
+            t = corr_coeff / np.sqrt((1 - (corr_coeff * corr_coeff)) / df)
             parametric_p_val = t_tailed_prob(t, df, tails)
         except (ZeroDivisionError, FloatingPointError):
             # r/rho was presumably 1.
@@ -670,7 +672,7 @@ def correlation_t(x_items, y_items, method='pearson', tails=None,
     nonparametric_p_val = None
     better = 0
     for i in range(permutations):
-        permuted_y_items = y_items[permutation(n)]
+        permuted_y_items = y_items[np.random.permutation(n)]
         permuted_corr_coeff = corr_fn(x_items, permuted_y_items)
         permuted_corr_coeffs.append(permuted_corr_coeff)
 
@@ -700,8 +702,10 @@ def correlation_t(x_items, y_items, method='pearson', tails=None,
 
     if n > 3:
         try:
-            ci_low = tanh(arctanh(corr_coeff) - (z_crit / sqrt(n - 3)))
-            ci_high = tanh(arctanh(corr_coeff) + (z_crit / sqrt(n - 3)))
+            ci_low = np.tanh(np.arctanh(corr_coeff) - (z_crit /
+                                                       np.sqrt(n - 3)))
+            ci_high = np.tanh(np.arctanh(corr_coeff) + (z_crit /
+                                                        np.sqrt(n - 3)))
         except (ZeroDivisionError, FloatingPointError):
             # r/rho was presumably 1 or -1. Match what R does in this case.
             ci_low, ci_high = corr_coeff, corr_coeff
@@ -716,7 +720,7 @@ def fisher(probs):
     -2 * SUM(ln(P)) gives chi-squared distribution with 2n degrees of freedom.
     """
     try:
-        return chi_high(-2 * sum(map(log, probs)), 2 * len(probs))
+        return chi_high(-2 * np.sum(map(np.log, probs)), 2 * len(probs))
     except OverflowError as e:
         return 0.0
 
@@ -738,7 +742,7 @@ def ANOVA_one_way(a):
     all_vals = []
     for i in a:
         num_cases += len(i)
-        group_means.append(mean(i))
+        group_means.append(np.mean(i))
         group_variances.append(i.var(ddof=1) * (len(i) - 1))
         all_vals.extend(i)
 
@@ -746,11 +750,11 @@ def ANOVA_one_way(a):
     dfd = num_cases - len(group_means)
     # need to add a check -- if the sum of the group variances is zero it will
     # error, but only if the between_Groups value is not zero
-    within_Groups = sum(group_variances) / dfd
+    within_Groups = np.sum(group_variances) / dfd
     if within_Groups == 0.:
         return nan, nan
     # Get between Group variances (numerator)
-    all_vals = array(all_vals)
+    all_vals = np.array(all_vals)
     grand_mean = all_vals.mean()
     between_Groups = 0
     for i in a:
@@ -766,19 +770,19 @@ def ANOVA_one_way(a):
 
 
 def _average_rank(start_rank, end_rank):
-    ave_rank = sum(range(start_rank, end_rank + 1)) / \
+    ave_rank = np.sum(range(start_rank, end_rank + 1)) / \
         (1 + end_rank - start_rank)
     return ave_rank
 
 
 def _get_bootstrap_sample(x, y, num_reps):
     """yields num_reps random samples drawn with replacement from x and y"""
-    combined = array(list(x) + list(y))
+    combined = np.array(list(x) + list(y))
     total_obs = len(combined)
     num_x = len(x)
     for i in range(num_reps):
         # sampling with replacement
-        indices = randint(0, total_obs, total_obs)
+        indices = np.random.randint(0, total_obs, total_obs)
         sampled = combined.take(indices)
         # split into the two populations
         sampled_x = sampled[:num_x]
@@ -795,11 +799,11 @@ def mw_t(x, y):
     num_x = len(x)
     num_y = len(y)
 
-    x = zip(x, zeros(len(x), int), zeros(len(x), int))
-    y = zip(y, ones(len(y), int), zeros(len(y), int))
+    x = zip(x, np.zeros(len(x), int), np.zeros(len(x), int))
+    y = zip(y, np.ones(len(y), int), np.zeros(len(y), int))
     combined = x + y
-    combined = array(combined, dtype=[('stat', float), ('sample', int),
-                                      ('rank', float)])
+    combined = np.array(combined, dtype=[('stat', float), ('sample', int),
+                                         ('rank', float)])
     combined.sort(order='stat')
     prev = None
     start = None
@@ -831,15 +835,15 @@ def mw_t(x, y):
             combined['rank'][i] = ave_rank
 
     total = combined.shape[0]
-    x_ranks_sum = sum(combined['rank'][i]
-                      for i in range(total) if combined['sample'][i] == 0)
+    x_ranks_sum = np.sum(combined['rank'][i]
+                         for i in range(total) if combined['sample'][i] == 0)
     prod = num_x * num_y
     U1 = prod + (num_x * (num_x + 1) / 2) - x_ranks_sum
     U2 = prod - U1
     U = max([U1, U2])
     numerator = U - prod / 2
-    denominator = sqrt((prod / (total * (total - 1)))
-                       * ((total ** 3 - total - T) / 12))
+    denominator = np.sqrt((prod / (total * (total - 1))) *
+                          ((total ** 3 - total - T) / 12))
     z = (numerator / denominator)
     p = zprob(z)
     return U, p
@@ -855,7 +859,7 @@ def mw_boot(x, y, num_reps=1000):
     Uses the same Monte-Carlo resampling code as kw_boot
     """
     tol = MACHEP * 100
-    combined = array(list(x) + list(y))
+    combined = np.array(list(x) + list(y))
     observed_stat, obs_p = mw_t(x, y)
     total_obs = len(combined)
     num_x = len(x)
@@ -871,9 +875,9 @@ def permute_2d(m, p):
     """Performs 2D permutation of matrix m according to p."""
     return m[p][:, p]
     # unused below
-    m_t = transpose(m)
-    r_t = take(m_t, p, axis=0)
-    return take(transpose(r_t), p, axis=0)
+    m_t = np.transpose(m)
+    r_t = np.take(m_t, p, axis=0)
+    return np.take(np.transpose(r_t), p, axis=0)
 
 
 def mantel(m1, m2, n):
@@ -922,7 +926,7 @@ def mantel_t(m1, m2, n, alt="two sided",
     if alt not in ("two sided", "greater", "less"):
         raise ValueError("Unrecognized alternative hypothesis. Must be either "
                          "'two sided', 'greater', or 'less'.")
-    m1, m2 = asarray(m1), asarray(m2)
+    m1, m2 = np.asarray(m1), np.asarray(m2)
     if m1.shape != m2.shape:
         raise ValueError("Both distance matrices must be the same size.")
     if n < 1:
@@ -936,7 +940,8 @@ def mantel_t(m1, m2, n, alt="two sided",
     # Get a flattened list of lower-triangular matrix elements (excluding the
     # diagonal) in column-major order. Use these values to calculate the
     # correlation statistic.
-    m1_flat, m2_flat = _flatten_lower_triangle(m1), _flatten_lower_triangle(m2)
+    m1_flat, m2_flat = (_flatten_lower_triangle(m1),
+                        _flatten_lower_triangle(m2))
     orig_stat = pearson(m1_flat, m2_flat)
 
     # Run our permutation tests so we can calculate a p-value for the test.
@@ -944,7 +949,7 @@ def mantel_t(m1, m2, n, alt="two sided",
     better = 0
     perm_stats = []
     for i in range(n):
-        perm = permute_2d(m1, permutation(size))
+        perm = permute_2d(m1, np.random.permutation(size))
         perm_flat = _flatten_lower_triangle(perm)
         r = pearson(perm_flat, m2_flat)
 
@@ -970,7 +975,7 @@ def t_tailed_prob(t, df, tails):
 
 
 def is_symmetric_and_hollow(matrix):
-    return (matrix.T == matrix).all() and (trace(matrix) == 0)
+    return (matrix.T == matrix).all() and (np.trace(matrix) == 0)
 
 
 def _flatten_lower_triangle(matrix):
@@ -982,7 +987,7 @@ def _flatten_lower_triangle(matrix):
     Arguments:
         matrix - numpy array containing the matrix data
     """
-    matrix = asarray(matrix)
+    matrix = np.asarray(matrix)
     flattened = []
     for col_num in range(matrix.shape[1]):
         for row_num in range(matrix.shape[0]):
