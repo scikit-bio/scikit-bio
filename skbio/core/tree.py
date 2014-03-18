@@ -27,7 +27,7 @@ Examples
 
 A new tree can be constructed from a Newick string. Newick is a common format
 used to represent tree objects within a file. Newick was part of the original
-PHYLIP package from Joseph Felsenstein's group (http://evolution.genetics.washington.edu/phylip/newicktree.html),
+PHYLIP package from Joseph Felsenstein's group (defined `here <http://evolution.genetics.washington.edu/phylip/newicktree.html>`_),
 and is based around representing nesting with parentheses. For instance, the
 following string describes a 3 taxon tree, with one internal node:
 
