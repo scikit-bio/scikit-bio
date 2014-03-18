@@ -37,11 +37,6 @@ def is_fasta_label(x):
     return x.startswith('>')
 
 
-def is_gde_label(x):
-    """Checks if x looks like a GDE label line."""
-    return x and x[0] in '%#'
-
-
 def is_blank_or_comment(x):
     """Checks if x is blank or a FASTA comment line."""
     return (not x) or x.startswith('#') or x.isspace()
@@ -123,60 +118,6 @@ def parse_fasta(infile,
         seq = ''.join(rec[1:])
 
         yield label, seq
-
-GdeFinder = LabeledRecordFinder(is_gde_label, ignore=is_blank)
-
-
-def parse_gde(infile, strict=True, label_to_name=str):
-    """Parses a file with GDE label line
-
-    See Also
-    --------
-    parse_fasta
-
-    """
-    return parse_fasta(infile,
-                       strict,
-                       label_to_name,
-                       finder=GdeFinder,
-                       label_characters='%#')
-
-
-def xmfa_label_to_name(line):
-    """returns name from xmfa label."""
-    (loc, strand, contig) = line.split()
-    (sp, loc) = loc.split(':')
-    (lo, hi) = [int(x) for x in loc.split('-')]
-    if strand == '-':
-        (lo, hi) = (hi, lo)
-    else:
-        assert strand == '+'
-    name = '%s:%s:%s-%s' % (sp, contig, lo, hi)
-    return name
-
-
-def is_xmfa_blank_or_comment(x):
-    """Checks if x is blank or an XMFA comment line.
-
-    See Also
-    --------
-    parse_fasta
-
-    """
-
-    return (not x) or x.startswith('=') or x.isspace()
-
-XmfaFinder = LabeledRecordFinder(is_fasta_label,
-                                 ignore=is_xmfa_blank_or_comment)
-
-
-def parse_xmfa(infile, strict=True):
-    """Parses a file with xmfa label line"""
-    # Fasta-like but with header info like ">1:10-1000 + chr1"
-    return parse_fasta(infile,
-                       strict,
-                       label_to_name=xmfa_label_to_name,
-                       finder=XmfaFinder)
 
 
 def parse_fastq(data, strict=False):
