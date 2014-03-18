@@ -15,6 +15,7 @@ API Reference
    core.sequence
    core.distance
    core.exception
+   core.tree
    draw.distributions
    maths.stats.spatial
    maths.subsample

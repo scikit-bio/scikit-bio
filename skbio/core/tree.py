@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 r"""
 Tree representations (:mod:`skbio.core.tree`)
 =============================================
@@ -22,7 +21,6 @@ Classes
 
 Examples
 --------
-
 >>> from skbio.core.tree import TreeNode
 
 A new tree can be constructed from a Newick string. Newick is a common format
@@ -166,7 +164,7 @@ from skbio.core.exception import (NoLengthError, DuplicateNodeError,
 
 
 def _dnd_tokenizer(data):
-    """Tokenizes data into a stream of punctuation, labels and lengths.
+    r"""Tokenizes data into a stream of punctuation, labels and lengths.
 
     Parameters
     ----------
@@ -178,7 +176,7 @@ def _dnd_tokenizer(data):
     GeneratorType
         Yields successive DND tokens
 
-    See also
+    See Also
     --------
     TreeNode.from_newick
     TreeNode.to_newick
@@ -218,7 +216,7 @@ def _dnd_tokenizer(data):
 
 
 def distance_from_r(m1, m2):
-    """Estimates distance as (1-r)/2: neg correl = max distance
+    r"""Estimates distance as (1-r)/2: neg correl = max distance
 
     Parameters
     ----------
@@ -237,7 +235,7 @@ def distance_from_r(m1, m2):
 
 
 class TreeNode(object):
-    """Representation of a node within a tree
+    r"""Representation of a node within a tree
 
     A `TreeNode` instance stores links to its parent and optional children
     nodes. In addition, the `TreeNode` can represent a `Length` (e.g., a
@@ -283,7 +281,7 @@ class TreeNode(object):
 
     ### start operators ###
     def __repr__(self):
-        """Returns summary of the tree
+        r"""Returns summary of the tree
 
         Returns
         -------
@@ -313,7 +311,7 @@ class TreeNode(object):
                (classname, name, n_nontips, n_tips)
 
     def __str__(self):
-        """Returns string version of self, with names and distances
+        r"""Returns string version of self, with names and distances
 
         Returns
         -------
@@ -337,21 +335,21 @@ class TreeNode(object):
         return self.to_newick(with_distances=True)
 
     def __iter__(self):
-        """Node iter iterates over the Children."""
+        r"""Node iter iterates over the Children."""
         return iter(self.Children)
 
     def __len__(self):
         return len(self.Children)
 
     def __getitem__(self, i):
-        """Node delegates slicing to Children"""
+        r"""Node delegates slicing to Children"""
         return self.Children[i]
 
     ### end operators ###
 
     ### start topology updates ###
     def _adopt(self, node):
-        """Update parent references but does NOT update self.Children"""
+        r"""Update parent references but does NOT update self.Children"""
         self.invalidate_node_cache()
         if node.Parent is not None:
             node.Parent.remove(node)
@@ -359,7 +357,7 @@ class TreeNode(object):
         return node
 
     def append(self, node):
-        """Appends a node to self.Children, in-place, cleaning up refs
+        r"""Appends a node to self.Children, in-place, cleaning up refs
 
         `append` will invalidate any node lookup caches, remove an existing
         parent on `node` if one exists, set the parent of `node` to `self`
@@ -389,7 +387,7 @@ class TreeNode(object):
         self.Children.append(self._adopt(node))
 
     def extend(self, nodes):
-        """Append a list of nodes to self
+        r"""Append a list of nodes to self
 
         `extend` will invalidate any node lookup caches, remoev existing
         parents of the `nodes` if they have any, set their parents to `self
@@ -416,7 +414,7 @@ class TreeNode(object):
         self.Children.extend([self._adopt(n) for n in nodes])
 
     def pop(self, index=-1):
-        """Remove a node from self
+        r"""Remove a node from self
 
         Remove a child node by its index position. All node lookup caches
         are invalidated, and the parent reference for the popped node will be
@@ -448,14 +446,14 @@ class TreeNode(object):
         return self._remove_node(index)
 
     def _remove_node(self, idx):
-        """The actual (and only) method that performs node removal"""
+        r"""The actual (and only) method that performs node removal"""
         self.invalidate_node_cache()
         node = self.Children.pop(idx)
         node.Parent = None
         return node
 
     def remove(self, node):
-        """Remove a node from self
+        r"""Remove a node from self
 
         Remove a `node` from `self` by identity of the node.
 
@@ -489,7 +487,7 @@ class TreeNode(object):
         return False
 
     def remove_deleted(self, func):
-        """Delete nodes in which func(node) evaluates True
+        r"""Delete nodes in which func(node) evaluates True
 
         Remove all descendents from self that evaluate True from `func`. This
         has the potential to drop clades.
@@ -517,7 +515,7 @@ class TreeNode(object):
                 node.Parent.remove(node)
 
     def prune(self):
-        """Reconstructs correct topology after nodes have been removed.
+        r"""Reconstructs correct topology after nodes have been removed.
 
         Internal nodes with only one child will be removed and new connections
         will be made to reflect change. This method is useful to call
@@ -581,7 +579,7 @@ class TreeNode(object):
 
     ### copy like methods ###
     def copy(self):
-        """Returns a copy of self using an iterative approach
+        r"""Returns a copy of self using an iterative approach
 
         Perform an iterative deepcopy of self. It is not assured that the copy
         of node attributes will be performed iteratively as that depends on
@@ -608,7 +606,7 @@ class TreeNode(object):
         0
         """
         def __copy_node(node_to_copy):
-            """Helper method to copy a node"""
+            r"""Helper method to copy a node"""
             # this is _possibly_ dangerous, we're assuming the node to copy is
             # of the same class as self, and has the same exclusion criteria.
             # however, it is potentially dangerous to mix TreeNode subclasses
@@ -643,7 +641,7 @@ class TreeNode(object):
     __deepcopy__ = deepcopy = copy
 
     def unrooted_deepcopy(self, parent=None):
-        """Walks the tree unrooted-style and returns a new copy
+        r"""Walks the tree unrooted-style and returns a new copy
 
         Perform a deepcopy of self and return a new copy of the tree as an
         unrooted copy. This is useful for defining new roots of the tree as
@@ -685,7 +683,7 @@ class TreeNode(object):
         return new_tree_self.unrooted_copy(parent)
 
     def unrooted_copy(self, parent=None):
-        """Walks the tree unrooted-style and returns a copy
+        r"""Walks the tree unrooted-style and returns a copy
 
         Perform a copy of self and return a new copy of the tree as an
         unrooted copy. This is useful for defining new roots of the tree as
@@ -746,11 +744,11 @@ class TreeNode(object):
         return result
 
     def subtree(self, tip_list=None):
-        """Make a copy of the subtree"""
+        r"""Make a copy of the subtree"""
         raise NotImplementedError()
 
     def subset(self):
-        """Returns set of names that descend from specified node
+        r"""Returns set of names that descend from specified node
 
         Get the set of Names on tips that descend from this node
 
@@ -774,7 +772,7 @@ class TreeNode(object):
         return frozenset({i.Name for i in self.tips()})
 
     def subsets(self):
-        """Return all sets of names that come from self and its descendents
+        r"""Return all sets of names that come from self and its descendents
 
         Compute all subsets of tip names over self, or, represent a tree as a
         set of nested sets.
@@ -811,7 +809,7 @@ class TreeNode(object):
         return frozenset(sets)
 
     def root_at(self, node):
-        """Return a new tree rooted at the provided node.
+        r"""Return a new tree rooted at the provided node.
 
         This can be useful for drawing unrooted trees with an orientation that
         reflects knowledge of the true root location.
@@ -853,7 +851,7 @@ class TreeNode(object):
         return node.unrooted_deepcopy()
 
     def root_at_midpoint(self):
-        """Return a new tree rooted at midpoint of the two tips farthest apart
+        r"""Return a new tree rooted at midpoint of the two tips farthest apart
 
         This method doesn't preserve the internal node naming or structure,
         but does keep tip to tip distances correct. Uses unrooted_copy() but
@@ -934,7 +932,7 @@ class TreeNode(object):
     ### node checks ###
 
     def is_tip(self):
-        """Returns True if the current node is a tip, i.e. has no children.
+        r"""Returns True if the current node is a tip, i.e. has no children.
 
         Returns
         -------
@@ -958,7 +956,7 @@ class TreeNode(object):
         return not self.Children
 
     def is_root(self):
-        """Returns True if the current is a root, i.e. has no parent.
+        r"""Returns True if the current is a root, i.e. has no parent.
 
         Returns
         -------
@@ -982,7 +980,7 @@ class TreeNode(object):
         return self.Parent is None
 
     def has_children(self):
-        """Returns True if self.Children.
+        r"""Returns True if self.Children.
 
         Returns
         -------
@@ -1010,7 +1008,7 @@ class TreeNode(object):
     ### traversal methods ###
 
     def traverse(self, self_before=True, self_after=False, include_self=True):
-        """Returns iterator over descendants
+        r"""Returns iterator over descendants
 
         This is a depth-first traversal. Since the trees are not binary,
         preorder and postorder traversals are possible, but inorder traversals
@@ -1068,7 +1066,7 @@ class TreeNode(object):
                 return self.tips(include_self=include_self)
 
     def preorder(self, include_self=True):
-        """Performs preorder iteration over tree
+        r"""Performs preorder iteration over tree
 
         Parameters
         ----------
@@ -1109,7 +1107,7 @@ class TreeNode(object):
                 stack.extend(curr.Children[::-1])
 
     def postorder(self, include_self=True):
-        """Performs postorder iteration over tree.
+        r"""Performs postorder iteration over tree.
 
         This is somewhat inelegant compared to saving the node and its index
         on the stack, but is 30% faster in the average case and 3x faster in
@@ -1179,7 +1177,7 @@ class TreeNode(object):
                 child_index_stack[-1] += 1
 
     def pre_and_postorder(self, include_self=True):
-        """Performs iteration over tree, visiting node before and after
+        r"""Performs iteration over tree, visiting node before and after
 
         Parameters
         ----------
@@ -1252,7 +1250,7 @@ class TreeNode(object):
                 child_index_stack[-1] += 1
 
     def levelorder(self, include_self=True):
-        """Performs levelorder iteration over tree
+        r"""Performs levelorder iteration over tree
 
         Parameters
         ----------
@@ -1296,7 +1294,7 @@ class TreeNode(object):
                 queue.extend(curr.Children)
 
     def tips(self, include_self=False):
-        """Iterates over tips descended from self, [] if self is a tip
+        r"""Iterates over tips descended from self, [] if self is a tip
 
         Parameters
         ----------
@@ -1343,7 +1341,7 @@ class TreeNode(object):
                 yield curr
 
     def non_tips(self, include_self=False):
-        """Iterates over nontips descended from self, [] if none.
+        r"""Iterates over nontips descended from self, [] if none.
 
         include_self, if True (default is False), will return the current
         node as part of non_tips if it is a non_tip.
@@ -1385,7 +1383,7 @@ class TreeNode(object):
     ### search methods ###
 
     def invalidate_node_cache(self):
-        """Delete the node cache
+        r"""Delete the node cache
 
         See Also
         --------
@@ -1396,7 +1394,7 @@ class TreeNode(object):
         self._node_cache = {}
 
     def create_node_cache(self):
-        """Construct an internal lookup keyed by node name, valued by node
+        r"""Construct an internal lookup keyed by node name, valued by node
 
         This method will not cache nodes in which the .Name is None. This
         method will raise DuplicateNodeError if a name conflict is discovered.
@@ -1427,7 +1425,7 @@ class TreeNode(object):
             self._node_cache[name] = node
 
     def find(self, name):
-        """Find a node by name
+        r"""Find a node by name
 
         The first call to find will cache all nodes in the tree on the
         assumption that additional calls to `find` will be made.
@@ -1452,6 +1450,7 @@ class TreeNode(object):
         --------
         TreeNode.find_by_id
         TreeNode.find_by_func
+
         Examples
         --------
         >>> from skbio.core.tree import TreeNode
@@ -1471,12 +1470,12 @@ class TreeNode(object):
         else:
             return node
 
-    def find_by_id(self, id_):
-        """Find a node by id
+    def find_by_id(self, node_id):
+        r"""Find a node by id
 
         Parameters
         ----------
-        id_ : int
+        node_id : int
             The id of a node in the tree
 
         Returns
@@ -1508,16 +1507,16 @@ class TreeNode(object):
 
         node = None
         for n in self.traverse(include_self=True):
-            if n.Id == id_:
+            if n.Id == node_id:
                 node = n
 
         if node is None:
-            raise MissingNodeError("ID %d is not in self" % id_)
+            raise MissingNodeError("ID %d is not in self" % node_id)
         else:
             return node
 
     def find_by_func(self, func):
-        """Find all nodes given a function
+        r"""Find all nodes given a function
 
         Parameters
         ----------
@@ -1550,7 +1549,7 @@ class TreeNode(object):
     ### path methods ###
 
     def ancestors(self):
-        """Returns all ancestors back to the root
+        r"""Returns all ancestors back to the root
 
         This call will return all nodes in the path back to root, but does not
         include the node instance that the call was made from.
@@ -1580,7 +1579,7 @@ class TreeNode(object):
         return result
 
     def root(self):
-        """Returns root of the tree self is in
+        r"""Returns root of the tree self is in
 
         Returns
         -------
@@ -1605,7 +1604,7 @@ class TreeNode(object):
         return curr
 
     def siblings(self):
-        """Returns all nodes that are children of the same parent as self.
+        r"""Returns all nodes that are children of the same parent as self.
 
         This call excludes self from the list.
 
@@ -1635,7 +1634,7 @@ class TreeNode(object):
         return result
 
     def neighbors(self, ignore=None):
-        """Returns all nodes that are connected to self
+        r"""Returns all nodes that are connected to self
 
         This call does not include self in the result
 
@@ -1664,7 +1663,7 @@ class TreeNode(object):
             return [n for n in nodes if n is not ignore]
 
     def lowest_common_ancestor(self, tipnames):
-        """Lowest common ancestor for a list of tipnames
+        r"""Lowest common ancestor for a list of tipnames
 
         Parameters
         ----------
@@ -1735,34 +1734,34 @@ class TreeNode(object):
 
     @classmethod
     def from_newick(cls, lines, unescape_name=True):
-        """Returns tree from the Clustal .dnd file format and equivalent
+        r"""Returns tree from the Clustal .dnd file format and equivalent
 
         Tree is made of skbio.core.tree.TreeNode objects, with branch lengths
         if specified by the format.
 
         More information on the Newick format can be found here [1]. In brief,
         the format uses parentheses to define nesting. For instance, a three
-        taxon tree can be represented with:
+        taxon tree can be represented with::
 
-        ((a,b),c);
+            ((a,b),c);
 
-        Two possible ways to represent this tree drawing it out would be:
+        Two possible ways to represent this tree drawing it out would be::
 
-           *
-          /\\
-         *  \\
-        / \  \\
-        a b   c
+               *
+              /\\
+             *  \\
+            / \  \\
+            a b   c
 
-        a
-        \\__|___ c
-         /
-        b
+            a
+            \\__|___ c
+             /
+            b
 
         The Newick format allows for defining branch length as well, for
-        example:
+        example::
 
-        ((a:0.1,b:0.2):0.3,c:0.4);
+            ((a:0.1,b:0.2):0.3,c:0.4);
 
         This structure has a the same topology as the first example but the
         tree now contains more information about how similar or dissimilar
@@ -1812,6 +1811,7 @@ class TreeNode(object):
         References
         ----------
         [1] http://evolution.genetics.washington.edu/phylip/newicktree.html
+
         """
         def _new_child(old_node):
             """Returns new_node which has old_node as its parent."""
@@ -1917,17 +1917,36 @@ class TreeNode(object):
 
     def to_newick(self, with_distances=False, semicolon=True,
                   escape_name=True):
-        """Return the newick string for this tree.
+        r"""Return the newick string representation of this tree.
 
-        Arguments:
-            - with_distances: whether branch lengths are included.
-            - semicolon: end tree string with a semicolon
-            - escape_name: if any of these characters []'"(),:;_ exist in a
-                nodes name, wrap the name in single quotes
+        Please see `TreeNode.from_newick` for a further description of the
+        Newick format
 
-        NOTE: This method returns the Newick representation of this node
-        and its descendents. This method is a modification of an implementation
-        by Zongzhi Liu
+        Parameters
+        ----------
+        with_distances : bool
+            If true, include lengths between nodes
+        semicolon : bool
+            If true, terminate the tree string with a semicolon
+        escape_name : bool
+            If true, wrap node names that include []'"(),:;_ in single quotes
+
+        Returns
+        -------
+        str
+            A Newick string representation of the tree
+
+        See Also
+        --------
+        TreeNode.from_newick
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree = TreeNode.from_newick("((a,b)c,(d,e)f)root;")
+        >>> print tree.to_newick()
+        ((a,b)c,(d,e)f)root;
+
         """
         result = ['(']
         nodes_stack = [[self, len(self.Children)]]
@@ -2021,14 +2040,35 @@ class TreeNode(object):
             return ([char1 + '-' + namestr], 0)
 
     def ascii_art(self, show_internal=True, compact=False):
-        """Returns a string containing an ascii drawing of the tree.
-
-        Arguments:
-        - show_internal: includes internal edge names.
-        - compact: use exactly one line per tip.
+        r"""Returns a string containing an ascii drawing of the tree
 
         Note, this method calls a private recursive function and is not safe
         for large trees.
+
+        Parameters
+        ----------
+        show_internal : bool
+            includes internal edge names
+        compact : bool
+            use exactly one line per tip
+
+        Returns
+        -------
+        str
+            an ASCII formatted version of the tree
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree = TreeNode.from_newick("((a,b)c,(d,e)f)root;")
+        >>> print tree.ascii_art()
+                            /-a
+                  /c-------|
+                 |          \-b
+        -root----|
+                 |          /-d
+                  \\f-------|
+                            \-e
         """
         (lines, mid) = self._ascii_art(show_internal=show_internal,
                                        compact=compact)
@@ -2039,7 +2079,35 @@ class TreeNode(object):
     ### distance methods ###
 
     def accumulate_to_ancestor(self, ancestor):
-        """Return the sum of the distance between self and ancestor"""
+        r"""Return the sum of the distance between self and ancestor
+
+        Parameters
+        ----------
+        ancestor : TreeNode
+            The node of the ancestor to accumulate distance too
+
+        Returns
+        -------
+        float
+            The sum of lengths between self and ancestor
+
+        Raises
+        ------
+        NoParentError
+            A NoParentError is raised if the ancestor is not an ancestor of
+            self
+        NoLengthError
+            A NoLengthError is raised if one of the nodes between self and
+            ancestor (including self) lacks a `Length` attribute
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree = TreeNode.from_newick("((a:1,b:2)c:3,(d:4,e:5)f:6)root;")
+        >>> root = tree
+        >>> tree.find('a').accumulate_to_ancestor(root)
+        4.0
+        """
         accum = 0.0
         curr = self
         while curr is not ancestor:
@@ -2290,13 +2358,14 @@ class TreeNode(object):
 
         Indexes nodes in-place as n._leaf_index.
 
-        Algorithm is as follows:
-        for each node in post-order traversal over tree:
-            if the node has children:
-                set an index on each child
-                for each child with children:
-                    add the child and its start and end tips to the result
         """
+        ## stubbed out right now, broke numpydoc
+        #Algorithm is as follows
+        #for each node in post-order traversal over tree
+        #    if the node has children
+        #        set an index on each child
+        #        for each child with children
+        #            add the child and its start and end tips to the result
         id_index = {}
         child_index = []
         curr_index = 0
