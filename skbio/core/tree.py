@@ -150,11 +150,13 @@ from __future__ import division
 #-----------------------------------------------------------------------------
 
 import re
-import numpy as np
 from operator import or_
 from random import shuffle
 from copy import deepcopy
 from itertools import combinations
+
+import numpy as np
+
 from skbio.maths.stats.test import correlation_t
 from skbio.core.exception import (NoLengthError, DuplicateNodeError,
                                   NoParentError, MissingNodeError,
