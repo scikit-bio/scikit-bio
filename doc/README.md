@@ -276,4 +276,4 @@ Finally, we need to get the actual pre-commit script:
 Occasionally, your judgement overrides the judgement of PEP8. To ignore the
 pre-commit hook, specify ```--no-verify```. For instance:
 
-    $ git commit -m "I KNOW BETTER THAN THE PEP8" --no-verify
+    $ git commit -m "not executing pep8 pre-commit hook" --no-verify
