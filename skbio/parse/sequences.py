@@ -29,7 +29,9 @@ Functions
 #-----------------------------------------------------------------------------
 
 from skbio.core.exception import FastqParseError, RecordError
-from skbio.parse.record_finder import LabeledRecordFinder
+from skbio.parse.record_finder import (LabeledRecordFinder,
+                                       DelimitedRecordFinder)
+from skbio.core.sequence import Sequence
 
 
 def is_fasta_label(x):
@@ -51,7 +53,43 @@ def is_blank(x):
     """Checks if x is blank."""
     return (not x) or x.isspace()
 
+def is_rfam_header_line(line):
+    """Returns True if line is a header line"""
+    return line.startswith('#=GF')
+
+def is_rfam_seq_line(line):
+    """Returns True if line is a sequence line"""
+    return bool(line) and (not line[0].isspace()) and \
+    (not line.startswith('#')) and (not line.startswith('//'))
+
+def is_rfam_structure_line(line):
+    """Returns True if line is a structure line"""
+    return line.startswith('#=GC SS_cons')
+
+def load_from_clustal(data, seq_constructor=Sequence, strict=True):
+    recs = [(name, seq_constructor(seq, )) for name, seq in\
+        ClustalParser(data, strict)]
+    lengths = [len(i[1]) for i in recs]
+    if lengths and max(lengths) == min(lengths):
+        return Alignment(recs, MolType=BYTES)
+    else:
+        return SequenceCollection(recs, MolType=BYTES)
+
+def is_empty_or_html(line):
+    """Return True for HTML line and empty (or whitespace only) line.
+
+    line -- string
+
+    The Rfam adaptor that retrieves records inlcudes two HTML tags in
+    the record. These lines need to be ignored in addition to empty lines. 
+    """
+    if line.startswith('<pre') or line.startswith('</pre'):
+        return True
+    return (not line) or line.isspace()
+
+
 FastaFinder = LabeledRecordFinder(is_fasta_label, ignore=is_blank_or_comment)
+RfamFinder = DelimitedRecordFinder('//', ignore=is_empty_or_html)
 
 
 def fasta_parse(infile,
@@ -259,3 +297,66 @@ def fastq_parse(data, strict=False):
 
     if type(data) == file:
         data.close()
+
+def ChangedSequence(data, seq_constructor=Sequence):
+    """Returns new Sequence object, replaces dots with dashes in sequence.
+    """
+    return seq_constructor(str(data).replace('.','-'))
+
+def MinimalRfamParser(infile, strict=True, seq_constructor=ChangedSequence):
+    """Yield successive sequences as (header, sequences, structure) tuples.
+    
+    header is a list of header lines
+    sequences is an Alignment object. Sequences are objects keyed by the
+        original labels in the database.
+    structure is a WussStructure
+    """
+    for record in RfamFinder(infile):
+        header = []
+        sequences = []
+        structure = []
+        for line in record:
+            if is_rfam_header_line(line):
+                header.append(line.strip())
+            elif is_rfam_seq_line(line):
+                sequences.append(line)
+            elif is_rfam_structure_line(line):
+                structure.append(line)
+            else:
+                continue
+        #sequence and structure are required. 
+        #for example when looking at the stockholm format of just one family
+        if not sequences or not structure:
+            if strict:
+                error = 'Found record with missing element(s): '
+                if not sequences:
+                    error += 'sequences '
+                if not structure:
+                    error += 'structure '
+                raise RecordError, error
+            else:
+                continue
+        #join all sequence parts together, construct label
+        try:
+            new_seqs = load_from_clustal(sequences, strict=strict,
+                                         seq_constructor=seq_constructor)
+            sequences = new_seqs
+        except (DataError, RecordError), e:
+            if strict:
+                raise RecordError, str(e)
+            else:
+                continue
+
+        #construct the structure
+        try:
+            res = load_from_clustal(structure, strict=strict)
+            assert len(res.NamedSeqs) == 1 #otherwise multiple keys
+            structure = res.NamedSeqs['#=GC SS_cons']
+        except (RecordError, KeyError, AssertionError), e:
+            if strict:
+                raise RecordError("Can't parse structure of family: %s" %
+                                  str(header))
+            else:
+                structure = None
+        yield header, sequences, structure
+
