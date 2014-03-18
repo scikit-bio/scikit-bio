@@ -12,7 +12,8 @@ import numpy as np
 import numpy.testing as nptest
 from unittest import TestCase, main
 from skbio.core.tree import TreeNode, _dnd_tokenizer
-from skbio.core.exception import NoLengthError, TreeError, RecordError
+from skbio.core.exception import (NoLengthError, TreeError, RecordError,
+                                  MissingNodeError)
 from skbio.maths.stats.test import correlation_t
 
 
@@ -210,6 +211,36 @@ class TreeTests(TestCase):
         self.assertIs(root, self.simple_t.root())
         self.assertIs(root, self.simple_t.Children[0].root())
         self.assertIs(root, self.simple_t.Children[1].Children[1].root())
+
+    def test_find(self):
+        """Find a node in a tree"""
+        t = TreeNode.from_newick("((a,b)c,(d,e)f);")
+        exp = t.Children[0]
+        obs = t.find('c')
+        self.assertEqual(obs, exp)
+
+        exp = t.Children[0].Children[1]
+        obs = t.find('b')
+        self.assertEqual(obs, exp)
+
+        with self.assertRaises(MissingNodeError):
+            _ = t.find('does not exist')
+
+    def test_find_by_id(self):
+        """Find a node by id"""
+        t1 = TreeNode.from_newick("((,),(,,));")
+        t2 = TreeNode.from_newick("((,),(,,));")
+
+        exp = t1.Children[1]
+        obs = t1.find_by_id(6)  # right inner node with 3 children
+        self.assertEqual(obs, exp)
+
+        exp = t2.Children[1]
+        obs = t2.find_by_id(6)  # right inner node with 3 children
+        self.assertEqual(obs, exp)
+
+        with self.assertRaises(MissingNodeError):
+            _ = t1.find_by_id(100)
 
     def test_ancestors(self):
         """Get all the ancestors"""
