@@ -260,21 +260,16 @@ arbitrary scripts prior to commit.
 
 ### Setting up pre-commit hooks
 
-First, we need to setup a standard place for our hooks to live:
+First, we need to setup a place for your hooks to live under your favorite
+repository:
 
-    $ mkdir -p $HOME/git/templates/hooks
-    $ git config --global init.templatedir $HOME/git/templates 
+    $ mkdir -p /path/to/scikit-bio/.git/hooks
 
-Next, we need to get the actual pre-commit script:
+Finally, we need to get the actual pre-commit script:
 
     $ wget https://gist.github.com/wasade/9611804/download --no-check-certificate
-    $ mv download $HOME/git/templates/hooks/pre-commit
+    $ mv download /path/to/scikit-bio/.git/hooks/pre-commit
     $ chmod +x $HOME/git/templates/hooks/pre-commit
-
-Finally, switch to your favorite repository and re-initialize it:
-
-    $ cd /path/to/scikit-bio
-    $ git init
 
 ### Ignoring the pre-commit hook
 
