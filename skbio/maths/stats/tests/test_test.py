@@ -85,16 +85,18 @@ class TestsTests(TestCase):
     def test_fisher(self):
         """fisher results should match p 795 Sokal and Rohlf"""
         np.testing.assert_allclose(fisher([0.073, 0.086, 0.10, 0.080, 0.060]),
-                        0.0045957946540917905, atol=10e-7)
+                                   0.0045957946540917905, atol=10e-7)
 
     def test_permute_2d(self):
         """permute_2d permutes rows and cols of a matrix."""
         a = np.reshape(np.arange(9), (3, 3))
         np.testing.assert_allclose(permute_2d(a, [0, 1, 2]), a)
         np.testing.assert_allclose(permute_2d(a, [2, 1, 0]),
-                        np.array([[8, 7, 6], [5, 4, 3], [2, 1, 0]]))
+                                   np.array([[8, 7, 6], [5, 4, 3],
+                                            [2, 1, 0]]))
         np.testing.assert_allclose(permute_2d(a, [1, 2, 0]),
-                        np.array([[4, 5, 3], [7, 8, 6], [1, 2, 0]]))
+                                   np.array([[4, 5, 3], [7, 8, 6],
+                                             [1, 2, 0]]))
 
 
 class GTests(TestCase):
@@ -858,8 +860,7 @@ class CorrelationTests(TestsHelper):
                             confidence_level=0.90, permutations=990,
                             tails='low')
         np.testing.assert_allclose(obs[:2], (-0.03760147,
-                                             0.45893148638586434),
-                        atol=10e-7)
+                                             0.45893148638586434), atol=10e-7)
         self.assertEqual(len(obs[2]), 990)
         for r in obs[2]:
             self.assertTrue(r >= -1.0 and r <= 1.0)
@@ -888,8 +889,8 @@ class CorrelationTests(TestsHelper):
                                  {'method': 'spearman',
                                   'tails': 'high'},
                                  p_val_idx=3)
-        np.testing.assert_allclose(obs[4],
-                        (-0.7251388558041697, 0.51034422964834503))
+        np.testing.assert_allclose(obs[4], (-0.7251388558041697,
+                                            0.51034422964834503))
 
         # The p-value is off because the example uses a one-tailed test, while
         # we use a two-tailed test. Someone confirms the answer that we get

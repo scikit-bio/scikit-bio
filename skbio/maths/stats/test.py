@@ -451,7 +451,8 @@ def t_one_observation(x, sample, tails=None, exp_diff=0,
         else:
             # The list varies.
             n = len(sample)
-            t = (x - sample_mean - exp_diff) / sample_std / np.sqrt((n + 1) / n)
+            t = ((x - sample_mean - exp_diff) / sample_std / np.sqrt((n + 1) /
+                 n))
             prob = t_tailed_prob(t, n - 1, tails)
             result = (t, prob)
     except (ZeroDivisionError, ValueError, AttributeError, TypeError,
@@ -543,9 +544,9 @@ def spearman(x_items, y_items):
         y_bar = avg(rank2)
 
         numerator = np.sum([(x - x_bar) * (y - y_bar)
-                        for x, y in zip(rank1, rank2)])
+                            for x, y in zip(rank1, rank2)])
         denominator = np.sqrt(np.sum([(x - x_bar) ** 2 for x in rank1]) *
-                           np.sum([(y - y_bar) ** 2 for y in rank2]))
+                              np.sum([(y - y_bar) ** 2 for y in rank2]))
 
         # Calculate rho. Handle the case when there is no variation in one or
         # both of the input vectors.
@@ -802,7 +803,7 @@ def mw_t(x, y):
     y = zip(y, np.ones(len(y), int), np.zeros(len(y), int))
     combined = x + y
     combined = np.array(combined, dtype=[('stat', float), ('sample', int),
-                                      ('rank', float)])
+                                         ('rank', float)])
     combined.sort(order='stat')
     prev = None
     start = None
@@ -835,14 +836,14 @@ def mw_t(x, y):
 
     total = combined.shape[0]
     x_ranks_sum = np.sum(combined['rank'][i]
-                      for i in range(total) if combined['sample'][i] == 0)
+                         for i in range(total) if combined['sample'][i] == 0)
     prod = num_x * num_y
     U1 = prod + (num_x * (num_x + 1) / 2) - x_ranks_sum
     U2 = prod - U1
     U = max([U1, U2])
     numerator = U - prod / 2
-    denominator = np.sqrt((prod / (total * (total - 1)))
-                       * ((total ** 3 - total - T) / 12))
+    denominator = np.sqrt((prod / (total * (total - 1))) *
+                          ((total ** 3 - total - T) / 12))
     z = (numerator / denominator)
     p = zprob(z)
     return U, p
