@@ -82,9 +82,7 @@ D
 root
 
 TreeNode provides two helper methods as well for iterating over just the tips
-or for iterating over just the internal nodes. Note, by default, non_tips will
-ignore self (which is the root in this case). You can pass the include_self
-flag to non_tips if you wish to include self.
+or for iterating over just the internal nodes.
 
 >>> for node in tree.tips():
 ...    print "Node name: %s, Is a tip: %s" % (node.Name, node.is_tip())
@@ -95,6 +93,9 @@ Node name: D, Is a tip: True
 >>> for node in tree.non_tips():
 ...    print "Node name: %s, Is a tip: %s" % (node.Name, node.is_tip())
 Node name: C, Is a tip: False
+
+Note, by default, non_tips will ignore self (which is the root in this case).
+You can pass the include_self flag to non_tips if you wish to include self.
 
 The TreeNode provides a few ways to compare trees. First, lets create two
 similar trees and compare them topologically using compare_subsets. This
