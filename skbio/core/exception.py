@@ -18,6 +18,7 @@ Exceptions
    RecordError
    FieldError
    BiologicalSequenceError
+   SequenceCollectionError
    DistanceMatrixError
    DistanceMatrixFormatError
    IDMismatchError
@@ -61,6 +62,12 @@ class FieldError(RecordError):
 
 
 class BiologicalSequenceError(Exception):
+    """General error for biological sequence validation failures."""
+    pass
+
+
+class SequenceCollectionError(Exception):
+    """General error for sequence collection validation failures."""
     pass
 
 
