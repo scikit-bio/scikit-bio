@@ -16,6 +16,7 @@ API Reference
    core.exception
    draw.distributions
    maths.stats.spatial
+   maths.subsample
    parse.sequences
    util.misc
    util.trie
