@@ -121,7 +121,8 @@ class ProcrustesTests(TestCase):
 
     def test_normalize(self):
         norm_mtx = _normalize(self.data1)
-        np.testing.assert_equal(np.trace(np.dot(norm_mtx, np.transpose(norm_mtx))), 1.)
+        np.testing.assert_equal(np.trace(np.dot(norm_mtx,
+                                                np.transpose(norm_mtx))), 1.)
 
     # match_points isn't yet tested, as it's almost a private function
     # and test_procrustes() tests it implicitly.
