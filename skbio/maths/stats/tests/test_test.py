@@ -104,8 +104,10 @@ class GTests(TestCase):
     def test_G_2_by_2_2tailed_equal(self):
         """G_2_by_2 should return 0 if all cell counts are equal"""
         np.testing.assert_allclose(0, G_2_by_2(1, 1, 1, 1, False, False)[0])
-        np.testing.assert_allclose(0, G_2_by_2(100, 100, 100, 100, False, False)[0])
-        np.testing.assert_allclose(0, G_2_by_2(100, 100, 100, 100, True, False)[0])
+        np.testing.assert_allclose(0, G_2_by_2(100, 100, 100, 100, False,
+                                               False)[0])
+        np.testing.assert_allclose(0, G_2_by_2(100, 100, 100, 100, True,
+                                               False)[0])
 
     def test_G_2_by_2_bad_data(self):
         """G_2_by_2 should raise ValueError if any counts are negative"""
@@ -116,19 +118,20 @@ class GTests(TestCase):
         # example from p 731, Sokal and Rohlf (1995)
         # without correction
         np.testing.assert_allclose(G_2_by_2(12, 22, 16, 50, False, False)[0],
-                        1.33249, 0.0001)
+                                   1.33249, 0.0001)
         np.testing.assert_allclose(G_2_by_2(12, 22, 16, 50, False, False)[1],
-                        0.24836, 0.0001)
+                                   0.24836, 0.0001)
         # with correction
         np.testing.assert_allclose(G_2_by_2(12, 22, 16, 50, True, False)[0],
-                        1.30277, 0.0001)
+                                   1.30277, 0.0001)
         np.testing.assert_allclose(G_2_by_2(12, 22, 16, 50, True, False)[1],
-                        0.25371, 0.0001)
+                                   0.25371, 0.0001)
 
     def test_G_2_by_2_1tailed_examples(self):
         """G_2_by_2 values should match values from codon_binding program"""
         # first up...the famous arginine case
-        np.testing.assert_allclose(G_2_by_2(36, 16, 38, 106), (29.111609, 0), atol=10e-7)
+        np.testing.assert_allclose(G_2_by_2(36, 16, 38, 106), (29.111609, 0),
+                                   atol=10e-7)
         # then some other miscellaneous positive and negative values
         np.testing.assert_allclose(
             G_2_by_2(0, 52, 12, 132), (-7.259930, 0.996474), atol=10e-7)
@@ -159,8 +162,10 @@ class GTests(TestCase):
         exp = [67.78125, 22.59375, 22.59375, 7.53125, 45.18750,
                15.06250, 45.18750, 15.06250]
         # without correction
-        np.testing.assert_allclose(G_fit(obs, exp, False)[0], 8.82397, 0.00002)
-        np.testing.assert_allclose(G_fit(obs, exp, False)[1], 0.26554, 0.00002)
+        np.testing.assert_allclose(G_fit(obs, exp, False)[0], 8.82397,
+                                   0.00002)
+        np.testing.assert_allclose(G_fit(obs, exp, False)[1], 0.26554,
+                                   0.00002)
         # with correction
         np.testing.assert_allclose(G_fit(obs, exp)[0], 8.76938, 0.00002)
         np.testing.assert_allclose(G_fit(obs, exp)[1], 0.26964, 0.00002)
@@ -169,8 +174,10 @@ class GTests(TestCase):
         obs = [130, 46]
         exp = [132, 44]
         # without correction
-        np.testing.assert_allclose(G_fit(obs, exp, False)[0], 0.12002, 0.00002)
-        np.testing.assert_allclose(G_fit(obs, exp, False)[1], 0.72901, 0.00002)
+        np.testing.assert_allclose(G_fit(obs, exp, False)[0], 0.12002,
+                                   0.00002)
+        np.testing.assert_allclose(G_fit(obs, exp, False)[1], 0.72901,
+                                   0.00002)
         # with correction
         np.testing.assert_allclose(G_fit(obs, exp)[0], 0.11968, 0.00002)
         np.testing.assert_allclose(G_fit(obs, exp)[1], 0.72938, 0.00002)
@@ -249,8 +256,9 @@ class StatTests(TestsHelper):
         """t_two_sample should match example on p.225 of Sokal and Rohlf"""
         I = np.array([7.2, 7.1, 9.1, 7.2, 7.3, 7.2, 7.5])
         II = np.array([8.8, 7.5, 7.7, 7.6, 7.4, 6.7, 7.2])
-        np.testing.assert_allclose(t_two_sample(I, II), (-0.1184, 0.45385 * 2),
-                        atol=10e-3)
+        np.testing.assert_allclose(t_two_sample(I, II),
+                                   (-0.1184, 0.45385 * 2),
+                                   atol=10e-3)
 
     def test_t_two_sample_no_variance(self):
         """t_two_sample should properly handle lists that are invariant"""
@@ -308,7 +316,8 @@ class StatTests(TestsHelper):
         """t_one_sample results should match those from R"""
         x = np.array(range(-5, 5))
         y = np.array(range(-1, 10))
-        np.testing.assert_allclose(t_one_sample(x), (-0.5222, 0.6141), atol=10e-3)
+        np.testing.assert_allclose(t_one_sample(x), (-0.5222, 0.6141),
+                                   atol=10e-3)
         np.testing.assert_allclose(t_one_sample(y), (4, 0.002518), atol=10e-3)
         # do some one-tailed tests as well
         np.testing.assert_allclose(
@@ -320,8 +329,10 @@ class StatTests(TestsHelper):
         """t_two_sample should call t_one_observation if 1 item in sample."""
         sample = np.array([4.02, 3.88, 3.34, 3.87, 3.18])
         x = np.array([3.02])
-        np.testing.assert_allclose(t_two_sample(x, sample), (-1.5637254, 0.1929248))
-        np.testing.assert_allclose(t_two_sample(sample, x), (1.5637254, 0.1929248))
+        np.testing.assert_allclose(t_two_sample(x, sample),
+                                   (-1.5637254, 0.1929248))
+        np.testing.assert_allclose(t_two_sample(sample, x),
+                                   (1.5637254, 0.1929248))
 
         # can't do the test if both samples have single item
         self.assertEqual(t_two_sample(x, x), (None, None))
@@ -337,7 +348,7 @@ class StatTests(TestsHelper):
         # note that this differs after the 3rd decimal place from what's in
         # the book, because Sokal and Rohlf round their intermediate steps...
         np.testing.assert_allclose(t_one_observation(x, sample),
-                        (-1.5637254, 0.1929248))
+                                   (-1.5637254, 0.1929248))
 
     def test_t_one_observation_no_variance(self):
         """t_one_observation should correctly handle an invariant list."""
@@ -517,10 +528,10 @@ class StatTests(TestsHelper):
 
     def test_mc_t_two_sample_invalid_input(self):
         """Test fails on various invalid input."""
-        self.assertRaises(ValueError, mc_t_two_sample, [1, 2, 3], [4., 5., 4.],
-                          tails='foo')
-        self.assertRaises(ValueError, mc_t_two_sample, [1, 2, 3], [4., 5., 4.],
-                          permutations=-1)
+        self.assertRaises(ValueError, mc_t_two_sample, [1, 2, 3],
+                          [4., 5., 4.], tails='foo')
+        self.assertRaises(ValueError, mc_t_two_sample, [1, 2, 3],
+                          [4., 5., 4.], permutations=-1)
         self.assertRaises(ValueError, mc_t_two_sample, [1], [4.])
         self.assertRaises(ValueError, mc_t_two_sample, [1, 2], [])
 
@@ -533,8 +544,8 @@ class StatTests(TestsHelper):
         self.assertEqual(len(obs[1]), 1)
         self.assertEqual(len(obs[0][0]), len(I))
         self.assertEqual(len(obs[1][0]), len(II))
-        np.testing.assert_allclose(sorted(np.concatenate((obs[0][0], obs[1][0]))),
-                        sorted(I + II))
+        np.testing.assert_allclose(sorted(np.concatenate((obs[0][0],
+                                   obs[1][0]))), sorted(I + II))
 
     def test_reverse_tails(self):
         """reverse_tails should return 'high' if tails was 'low' or vice versa
@@ -681,8 +692,8 @@ class CorrelationTests(TestsHelper):
 
     def test_mantel_test_invalid_input(self):
         """Test mantel test with invalid input."""
-        self.assertRaises(ValueError, mantel_t, np.array([[1]]), np.array([[1]]),
-                          999, alt='foo')
+        self.assertRaises(ValueError, mantel_t, np.array([[1]]),
+                          np.array([[1]]), 999, alt='foo')
         self.assertRaises(ValueError, mantel_t, np.array([[1]]),
                           np.array([[1, 2], [3, 4]]), 999)
         self.assertRaises(ValueError, mantel_t, np.array([[1]]),
@@ -694,7 +705,8 @@ class CorrelationTests(TestsHelper):
         """Should correctly test for symmetry and hollowness of dist mats."""
         self.assertTrue(is_symmetric_and_hollow(np.array([[0, 1], [1, 0]])))
         self.assertTrue(is_symmetric_and_hollow(np.matrix([[0, 1], [1, 0]])))
-        self.assertTrue(is_symmetric_and_hollow(np.matrix([[0.0, 0], [0.0, 0]])))
+        self.assertTrue(is_symmetric_and_hollow(np.matrix([[0.0, 0],
+                                                           [0.0, 0]])))
         self.assertTrue(not is_symmetric_and_hollow(
             np.array([[0.001, 1], [1, 0]])))
         self.assertTrue(not is_symmetric_and_hollow(
@@ -828,8 +840,8 @@ class CorrelationTests(TestsHelper):
         # Test with non-default confidence level and permutations.
         obs = correlation_t(self.data1, self.data2, method='pearson',
                             confidence_level=0.90, permutations=990)
-        np.testing.assert_allclose(obs[:2], (-0.03760147, 0.91786297277172868),
-                        atol=10e-7)
+        np.testing.assert_allclose(obs[:2], (-0.03760147,
+                                             0.91786297277172868), atol=10e-7)
         self.assertEqual(len(obs[2]), 990)
         for r in obs[2]:
             self.assertTrue(r >= -1.0 and r <= 1.0)
@@ -845,7 +857,8 @@ class CorrelationTests(TestsHelper):
         obs = correlation_t(self.data1, self.data2, method='pearson',
                             confidence_level=0.90, permutations=990,
                             tails='low')
-        np.testing.assert_allclose(obs[:2], (-0.03760147, 0.45893148638586434),
+        np.testing.assert_allclose(obs[:2], (-0.03760147,
+                                             0.45893148638586434),
                         atol=10e-7)
         self.assertEqual(len(obs[2]), 990)
         for r in obs[2]:
@@ -865,7 +878,8 @@ class CorrelationTests(TestsHelper):
         # http://en.wikipedia.org/wiki/Spearman's_rank_correlation_coefficient
         obs = correlation_t(self.data1, self.data2, method='spearman',
                             tails='high')
-        np.testing.assert_allclose(obs[:2], (-0.17575757575757578, 0.686405827612))
+        np.testing.assert_allclose(obs[:2], (-0.17575757575757578,
+                                             0.686405827612))
         self.assertEqual(len(obs[2]), 999)
         for rho in obs[2]:
             self.assertTrue(rho >= -1.0 and rho <= 1.0)
@@ -884,8 +898,8 @@ class CorrelationTests(TestsHelper):
         #     for-spearmans-rank-correlation-coefficient-example-on-wikip
         obs = correlation_t(self.data1, self.data2, method='spearman',
                             tails=None)
-        np.testing.assert_allclose(obs[:2],
-                        (-0.17575757575757578, 0.62718834477648433))
+        np.testing.assert_allclose(obs[:2], (-0.17575757575757578,
+                                             0.62718834477648433))
         self.assertEqual(len(obs[2]), 999)
         for rho in obs[2]:
             self.assertTrue(rho >= -1.0 and rho <= 1.0)
@@ -893,8 +907,8 @@ class CorrelationTests(TestsHelper):
                                  (self.data1, self.data2),
                                  {'method': 'spearman', 'tails': None},
                                  p_val_idx=3)
-        np.testing.assert_allclose(obs[4],
-                        (-0.7251388558041697, 0.51034422964834503))
+        np.testing.assert_allclose(obs[4], (-0.7251388558041697,
+                                            0.51034422964834503))
 
     def test_correlation_test_invalid_input(self):
         """Test correlation_t using invalid input."""
@@ -933,8 +947,8 @@ class CorrelationTests(TestsHelper):
         """Test correlation_t with perfectly-correlated input vectors."""
         # These results were verified with R.
         obs = correlation_t([1, 2, 3, 4], [1, 2, 3, 4])
-        np.testing.assert_allclose(obs[:2],
-                        (0.99999999999999978, 2.2204460492503131e-16))
+        np.testing.assert_allclose(obs[:2], (0.99999999999999978,
+                                             2.2204460492503131e-16))
         self.assertEqual(len(obs[2]), 999)
         for r in obs[2]:
             self.assertTrue(r >= -1.0 and r <= 1.0)
