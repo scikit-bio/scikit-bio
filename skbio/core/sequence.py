@@ -882,7 +882,13 @@ class BiologicalSequence(Sequence):
         return not self.has_unsupported_characters()
 
     def lower(self):
-        """
+        """Convert the BiologicalSequence to lowercase
+
+        Returns
+        -------
+        BiologicalSequence
+            The `BiologicalSequence` with all characters converted to
+            lowercase.
 
         """
         return self.__class__(self._sequence.lower(),
@@ -934,7 +940,13 @@ class BiologicalSequence(Sequence):
             header_line, str(self), terminal_character)
 
     def upper(self):
-        """
+        """Convert the BiologicalSequence to uppercase
+
+        Returns
+        -------
+        BiologicalSequence
+            The `BiologicalSequence` with all characters converted to
+            uppercase.
 
         """
         return self.__class__(self._sequence.upper(),

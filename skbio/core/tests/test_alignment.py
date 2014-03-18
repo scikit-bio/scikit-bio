@@ -23,10 +23,10 @@ from skbio.core.distance import SymmetricDistanceMatrix
 
 
 class SequenceCollectionTests(TestCase):
-    """ Tests of the SequenceCollection class """
+    """Tests of the SequenceCollection class """
 
     def setUp(self):
-        """ Initialize values to be used in tests
+        """Initialize values to be used in tests
         """
         self.d1 = DNASequence('GATTACA', identifier="d1")
         self.d2 = DNASequence('TTG', identifier="d2")
@@ -56,7 +56,7 @@ class SequenceCollectionTests(TestCase):
         self.invalid_s1 = SequenceCollection([self.i1])
 
     def test_init(self):
-        """ Initialization functions as expected with varied input types
+        """Initialization functions as expected with varied input types
         """
         SequenceCollection(self.seqs1)
         SequenceCollection(self.seqs1)
@@ -70,13 +70,13 @@ class SequenceCollectionTests(TestCase):
         SequenceCollection(self.seqs3)
 
     def test_init_fail(self):
-        """ initialization with sequences with overlapping identifiers fails
+        """initialization with sequences with overlapping identifiers fails
         """
         s1 = [self.d1, self.d1]
         self.assertRaises(SequenceCollectionError, SequenceCollection, s1)
 
     def test_init_validate(self):
-        """ initialization with validation functions as expected
+        """initialization with validation functions as expected
         """
         SequenceCollection(self.seqs1, validate=True)
         SequenceCollection(self.seqs1, validate=True)
@@ -85,14 +85,14 @@ class SequenceCollectionTests(TestCase):
                           self.invalid_s1, validate=True)
 
     def test_from_fasta_records(self):
-        """ Initialization from list of tuples functions as expected
+        """Initialization from list of tuples functions as expected
         """
         SequenceCollection.from_fasta_records(self.seqs1_t, DNASequence)
         SequenceCollection.from_fasta_records(self.seqs2_t, RNASequence)
         SequenceCollection.from_fasta_records(self.seqs3_t, NucleotideSequence)
 
     def test_eq(self):
-        """ equality operator functions as expected
+        """equality operator functions as expected
         """
         self.assertTrue(self.s1 == self.s1)
         self.assertFalse(self.s1 == self.s2)
@@ -114,7 +114,7 @@ class SequenceCollectionTests(TestCase):
         self.assertFalse(self.s1 == SequenceCollection([self.d1, self.r1]))
 
     def test_getitem(self):
-        """ getitem functions as expected
+        """getitem functions as expected
         """
         self.assertEqual(self.s1[0], self.d1)
         self.assertEqual(self.s1[1], self.d2)
@@ -122,7 +122,7 @@ class SequenceCollectionTests(TestCase):
         self.assertEqual(self.s2[1], self.r2)
 
     def test_iter(self):
-        """ iter functions as expected
+        """iter functions as expected
         """
         s1_iter = iter(self.s1)
         count = 0
@@ -133,14 +133,14 @@ class SequenceCollectionTests(TestCase):
         self.assertRaises(StopIteration, s1_iter.next)
 
     def test_len(self):
-        """ len functions as expected
+        """len functions as expected
         """
         self.assertEqual(len(self.s1), 2)
         self.assertEqual(len(self.s2), 3)
         self.assertEqual(len(self.s3), 5)
 
     def test_ne(self):
-        """ inequality operator functions as expected
+        """inequality operator functions as expected
         """
         self.assertFalse(self.s1 != self.s1)
         self.assertTrue(self.s1 != self.s2)
@@ -159,7 +159,7 @@ class SequenceCollectionTests(TestCase):
                         SequenceCollection([self.d1, self.r1]))
 
     def test_repr(self):
-        """
+        """repr functions as expected
         """
         self.assertEqual(repr(self.s1),
                          "<SequenceCollection: n=2; "
@@ -172,7 +172,7 @@ class SequenceCollectionTests(TestCase):
                          "mean +/- std length=6.40 +/- 3.32>")
 
     def test_distribution_stats(self):
-        """ distribution_stats functions as expected
+        """distribution_stats functions as expected
         """
         actual1 = self.s1.distribution_stats()
         self.assertEqual(actual1[0], 2)
@@ -190,7 +190,7 @@ class SequenceCollectionTests(TestCase):
         self.assertAlmostEqual(actual3[2], 3.323, 3)
 
     def test_degap(self):
-        """ degap functions as expected
+        """degap functions as expected
         """
         expected = [(id_, seq.replace('.', '').replace('-', ''))
                     for id_, seq in self.seqs2_t]
@@ -199,13 +199,13 @@ class SequenceCollectionTests(TestCase):
         self.assertEqual(actual, expected)
 
     def test_get_seq(self):
-        """ getseq functions asexpected
+        """getseq functions asexpected
         """
         self.assertEqual(self.s1.get_seq('d1'), self.d1)
         self.assertEqual(self.s1.get_seq('d2'), self.d2)
 
     def test_identifiers(self):
-        """ identifiers functions as expected
+        """identifiers functions as expected
         """
         self.assertEqual(sorted(self.s1.identifiers()), ['d1', 'd2'])
         self.assertEqual(sorted(self.s2.identifiers()), ['r1', 'r2', 'r3'])
@@ -213,7 +213,7 @@ class SequenceCollectionTests(TestCase):
                          ['d1', 'd2', 'r1', 'r2', 'r3'])
 
     def test_int_map(self):
-        """ int_map functions as expected
+        """int_map functions as expected
         """
         expected1 = {"1": self.d1, "2": self.d2}
         expected2 = {"1": "d1", "2": "d2"}
@@ -224,7 +224,7 @@ class SequenceCollectionTests(TestCase):
         self.assertEqual(self.s1.int_map(prefix='h-'), (expected1, expected2))
 
     def test_is_valid(self):
-        """ is_valid functions as expected
+        """is_valid functions as expected
         """
         self.assertTrue(self.s1.is_valid())
         self.assertTrue(self.s2.is_valid())
@@ -233,32 +233,32 @@ class SequenceCollectionTests(TestCase):
         self.assertFalse(self.invalid_s1.is_valid())
 
     def test_iteritems(self):
-        """ iteritems functions as expected
+        """iteritems functions as expected
         """
         self.assertEqual(list(self.s1.iteritems()),
                          [(s.identifier, s) for s in self.s1])
 
     def test_lower(self):
-        """ lower functions as expected
+        """lower functions as expected
         """
         self.assertEqual(self.s1.lower(), self.s1_lower)
 
     def test_sequence_count(self):
-        """ num_seqs functions as expected
+        """num_seqs functions as expected
         """
         self.assertEqual(self.s1.sequence_count(), 2)
         self.assertEqual(self.s2.sequence_count(), 3)
         self.assertEqual(self.s3.sequence_count(), 5)
 
     def test_sequence_lengths(self):
-        """ sequence_lengths functions as expected
+        """sequence_lengths functions as expected
         """
         self.assertEqual(self.s1.sequence_lengths(), [7, 3])
         self.assertEqual(self.s2.sequence_lengths(), [7, 3, 12])
         self.assertEqual(self.s3.sequence_lengths(), [7, 3, 7, 3, 12])
 
     def test_to_fasta(self):
-        """ to_fasta functions as expected
+        """to_fasta functions as expected
         """
         exp1 = ">d1\nGATTACA\n>d2\nTTG\n"
         self.assertEqual(self.s1.to_fasta(), exp1)
@@ -266,7 +266,7 @@ class SequenceCollectionTests(TestCase):
         self.assertEqual(self.s1.to_fasta(), exp1)
 
     def test_upper(self):
-        """ upper functions as expected
+        """upper functions as expected
         """
         self.assertEqual(self.s1_lower.upper(), self.s1)
 
@@ -292,7 +292,7 @@ class AlignmentTests(TestCase):
         self.a2 = Alignment(self.seqs2)
 
     def test_degap(self):
-        """ degap functions as expected
+        """degap functions as expected
         """
         expected = [(id_, seq.replace('.', '').replace('-', ''))
                     for id_, seq in self.seqs1_t]
@@ -307,7 +307,7 @@ class AlignmentTests(TestCase):
         self.assertEqual(actual, expected)
 
     def test_distances(self):
-        """ distances functions as expected
+        """distances functions as expected
         """
         expected = [[0, 6./13, 4./13],
                     [6./13, 0, 7./13],
@@ -317,7 +317,7 @@ class AlignmentTests(TestCase):
         self.assertEqual(actual, expected)
 
     def test_subalignment(self):
-        """ subalignment functions as expected
+        """subalignment functions as expected
         """
         # keep seqs by identifiers
         actual = self.a1.subalignment(seqs_to_keep=['d1', 'd3'])
@@ -376,7 +376,7 @@ class AlignmentTests(TestCase):
         self.assertEqual(actual, expected)
 
     def test_init_validate(self):
-        """ initialization with validation functions as expected
+        """initialization with validation functions as expected
         """
         Alignment(self.seqs1, validate=True)
 
@@ -393,7 +393,7 @@ class AlignmentTests(TestCase):
                           invalid_seqs2, validate=True)
 
     def test_is_valid(self):
-        """ is_valid functions as expected
+        """is_valid functions as expected
         """
         self.assertTrue(self.a1.is_valid(), True)
         self.assertTrue(self.a2.is_valid(), True)
@@ -409,7 +409,7 @@ class AlignmentTests(TestCase):
         self.assertFalse(Alignment([d1, d2]).is_valid())
 
     def test_iter_positions(self):
-        """ iter_positions functions as expected
+        """iter_positions functions as expected
         """
         actual = list(self.a2.iter_positions())
         expected = [map(RNASequence, list('UA')),
@@ -430,7 +430,7 @@ class AlignmentTests(TestCase):
         self.assertEqual(actual, expected)
 
     def test_majority_consensus(self):
-        """ majority_consensus functions as expected
+        """majority_consensus functions as expected
         """
         d1 = DNASequence('TTT', identifier="d1")
         d2 = DNASequence('TT-', identifier="d2")
@@ -445,7 +445,7 @@ class AlignmentTests(TestCase):
                         [DNASequence('T'), DNASequence('A')])
 
     def test_omit_gap_positions(self):
-        """ omitting gap positions functions as expected
+        """omitting gap positions functions as expected
         """
         expected = self.a2
         self.assertEqual(self.a2.omit_gap_positions(1.0), expected)
@@ -462,7 +462,7 @@ class AlignmentTests(TestCase):
         self.assertEqual(self.a2.omit_gap_positions(0.0), expected)
 
     def test_omit_gap_sequences(self):
-        """ omitting gap sequences functions as expected
+        """omitting gap sequences functions as expected
         """
         expected = self.a2
         self.assertEqual(self.a2.omit_gap_sequences(1.0), expected)
@@ -472,7 +472,7 @@ class AlignmentTests(TestCase):
         self.assertEqual(self.a2.omit_gap_sequences(0.19), expected)
 
     def test_position_counters(self):
-        """ position_counters functions as expected
+        """position_counters functions as expected
         """
         expected = [Counter({'U': 1, 'A': 1}),
                     Counter({'U': 1, 'C': 1}),
@@ -482,7 +482,7 @@ class AlignmentTests(TestCase):
         self.assertEqual(self.a2.position_counters(), expected)
 
     def test_position_frequencies(self):
-        """ computing position frequencies functions as expected
+        """computing position frequencies functions as expected
         """
         expected = [defaultdict(int, {'U': 0.5, 'A': 0.5}),
                     defaultdict(int, {'U': 0.5, 'C': 0.5}),
@@ -492,7 +492,7 @@ class AlignmentTests(TestCase):
         self.assertEqual(self.a2.position_frequencies(), expected)
 
     def test_position_entropies(self):
-        """ computing positional uncertainties functions as expected
+        """computing positional uncertainties functions as expected
 
         tested by calculating values as described in this post:
          http://stackoverflow.com/a/15476958/3424666
@@ -506,7 +506,7 @@ class AlignmentTests(TestCase):
                                        expected, 5)
 
     def test_sequence_frequencies(self):
-        """ sequence_frequencies functions as expected
+        """sequence_frequencies functions as expected
         """
         expected = [defaultdict(int, {'U': 3/5, 'A': 1/5, '-': 1/5}),
                     defaultdict(int, {'A': 1/5, 'C': 1/5, 'G': 1/5, 'U': 2/5})]
@@ -524,13 +524,13 @@ class AlignmentTests(TestCase):
             np.testing.assert_almost_equal(a_values, e_values, 5)
 
     def test_sequence_length(self):
-        """ sequence_length functions as expected
+        """sequence_length functions as expected
         """
         self.assertEqual(self.a1.sequence_length(), 13)
         self.assertEqual(self.a2.sequence_length(), 5)
 
     def test_to_phylip(self):
-        """ to_phylip functions as expected
+        """to_phylip functions as expected
         """
         d1 = DNASequence('..ACC-GTTGG..', identifier="d1")
         d2 = DNASequence('TTACCGGT-GGCC', identifier="d2")
@@ -548,7 +548,7 @@ class AlignmentTests(TestCase):
         self.assertEqual(phylip_str, expected)
 
     def test_to_phylip_map_labels(self):
-        """ to_phylip functions as expected with label mapping
+        """to_phylip functions as expected with label mapping
         """
         d1 = DNASequence('..ACC-GTTGG..', identifier="d1")
         d2 = DNASequence('TTACCGGT-GGCC', identifier="d2")

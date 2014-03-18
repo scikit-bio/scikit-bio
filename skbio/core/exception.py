@@ -18,6 +18,7 @@ Exceptions
    RecordError
    FieldError
    BiologicalSequenceError
+   SequenceCollectionError
    DistanceMatrixError
    DistanceMatrixFormatError
    IDMismatchError

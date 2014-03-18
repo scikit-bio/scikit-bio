@@ -552,7 +552,7 @@ class SequenceCollection(object):
         generator of tuples
             Each tuple contains ordered
             (`skbio.core.sequence.BiologicalSequence.identifier`,
-             `skbio.core.sequence.BiologicalSequence`) pairs.
+            `skbio.core.sequence.BiologicalSequence`) pairs.
 
         """
         for seq in self:
@@ -1207,7 +1207,7 @@ class Alignment(SequenceCollection):
         return result
 
     def sequence_frequencies(self):
-        """Return frequencies of characters for sequences in `Alignment`
+        """Return frequencies of characters for sequences in Alignment
 
         Returns
         -------
@@ -1245,7 +1245,7 @@ class Alignment(SequenceCollection):
         return result
 
     def sequence_length(self):
-        """Return the number of positions in `Alignment`
+        """Return the number of positions in Alignment
 
         Returns
         -------
@@ -1265,7 +1265,7 @@ class Alignment(SequenceCollection):
         ...              DNA('AT-C', identifier="seq2"),
         ...              DNA('TT-C', identifier="seq3")]
         >>> a1 = Alignment(sequences)
-        >>> print a1.sequence_length()
+        >>> a1.sequence_length()
         4
 
         """
