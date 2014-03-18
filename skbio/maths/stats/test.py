@@ -16,7 +16,7 @@ from skbio.maths.stats.special import MACHEP, ndtri
 from skbio.maths.stats.distribution import (chi_high, zprob, f_high, t_high,
                                             t_low, tprob)
 
-seterr(divide='raise')
+np.seterr(divide='raise')
 
 
 class ZeroExpectedError(ValueError):
