@@ -254,9 +254,9 @@ This package can be installed with:
     $ pip install pep8
 
 But, it is frustrating to submit code only to have it shot down due to PEP8
-errors. What we'd really like to do is check for errors prior to we even
-issue a pull request. Luckily, git provides mechanisms to automatically 
-execute arbitrary scripts prior to commit.
+errors. What we'd really like to do is check for errors prior even issuing 
+a pull request. Luckily, git provides mechanisms to automatically execute 
+arbitrary scripts prior to commit.
 
 ### Setting up pre-commit hooks
 
