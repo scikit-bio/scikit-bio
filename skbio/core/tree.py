@@ -131,7 +131,7 @@ D 0.4
 E 0.5
 root None
 
-Now lets compare two trees using the distances computed pairwise between tips
+Now let's compare two trees using the distances computed pairwise between tips
 in the trees. The distance computed, by default, is based off of the Pearson
 correlation coefficent:
 
