@@ -39,12 +39,12 @@ Examples
 >>> s1
 <SequenceCollection: n=2; mean +/- std length=7.00 +/- 1.00>
 
->>> from skbio.parse.sequences import fasta_parse
+>>> from skbio.parse.sequences import parse_fasta
 >>> fasta_f = StringIO('>seq1\n'
 ...                    'CGATGTCGATCGATCGATCGATCAG\n'
 ...                    '>seq2\n'
 ...                    'CATCGATCGATCGATGCATGCATGCATG\n')
->>> s1 = SequenceCollection.from_fasta_records(fasta_parse(fasta_f), DNA)
+>>> s1 = SequenceCollection.from_fasta_records(parse_fasta(fasta_f), DNA)
 >>> s1
 <SequenceCollection: n=2; mean +/- std length=26.50 +/- 1.50>
 
@@ -107,17 +107,17 @@ class SequenceCollection(object):
         SequenceCollection
         Alignment
         skbio.parse.sequences
-        skbio.parse.sequences.fasta_parse
+        skbio.parse.sequences.parse_fasta
 
         Examples
         --------
         >>> from skbio.core.alignment import SequenceCollection
-        >>> from skbio.parse.sequences import fasta_parse
+        >>> from skbio.parse.sequences import parse_fasta
         >>> from StringIO import StringIO
         >>> from skbio.core.sequence import DNA
         >>> fasta_f = StringIO('>seq1\nACCGT\n>seq2\nAACCGGT\n')
         >>> s1 = SequenceCollection.from_fasta_records(
-        ...     fasta_parse(fasta_f), DNA)
+        ...     parse_fasta(fasta_f), DNA)
         >>> s1
         <SequenceCollection: n=2; mean +/- std length=6.00 +/- 1.00>
 
@@ -170,7 +170,7 @@ class SequenceCollection(object):
         SequenceCollection
         Alignment
         skbio.parse.sequences
-        skbio.parse.sequences.fasta_parse
+        skbio.parse.sequences.parse_fasta
 
         Examples
         --------
@@ -625,7 +625,7 @@ class SequenceCollection(object):
 
         See Also
         --------
-        skbio.parse.sequences.fasta_parse
+        skbio.parse.sequences.parse_fasta
         """
         return ''.join([seq.to_fasta() for seq in self._data])
 
