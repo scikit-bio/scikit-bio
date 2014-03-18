@@ -1296,7 +1296,38 @@ class TreeNode(object):
                 queue.extend(curr.Children)
 
     def tips(self, include_self=False):
-        """Iterates over tips descended from self, [] if self is a tip."""
+        """Iterates over tips descended from self, [] if self is a tip
+
+        Parameters
+        ----------
+        include_self : bool
+            include the initial node if True
+
+        Returns
+        -------
+        GeneratorType
+            Yields successive `TreeNode` objects
+
+        See Also
+        --------
+        TreeNode.traverse
+        TreeNode.postorder
+        TreeNode.preorder
+        TreeNode.pre_and_postorder
+        TreeNode.levelorder
+        TreeNode.non_tips
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree = TreeNode.from_newick("((a,b)c,(d,e)f);")
+        >>> for node in tree.tips():
+        ...     print node.Name
+        a
+        b
+        d
+        e
+        """
         #bail out in easy case
         if not self.Children:
             if include_self:
@@ -1315,7 +1346,35 @@ class TreeNode(object):
         """Iterates over nontips descended from self, [] if none.
 
         include_self, if True (default is False), will return the current
-        node as part of the list of nontips if it is a nontip.
+        node as part of non_tips if it is a non_tip.
+
+        Parameters
+        ----------
+        include_self : bool
+            include the initial node if True
+
+        Returns
+        -------
+        GeneratorType
+            Yields successive `TreeNode` objects
+
+        See Also
+        --------
+        TreeNode.traverse
+        TreeNode.postorder
+        TreeNode.preorder
+        TreeNode.pre_and_postorder
+        TreeNode.levelorder
+        TreeNode.tips
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree = TreeNode.from_newick("((a,b)c,(d,e)f);")
+        >>> for node in tree.non_tips():
+        ...     print node.Name
+        c
+        f
         """
         for n in self.postorder(include_self):
             if n.Children:
