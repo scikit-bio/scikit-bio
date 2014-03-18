@@ -151,6 +151,32 @@ class DistanceMatrix(object):
     ----------
     .. [1] http://docs.scipy.org/doc/scipy/reference/spatial.distance.html
 
+    Examples
+    --------
+    Initialize a `skbio.core.distance.DistanceMatrix` object from an existing
+    ``numpy.array`` that represents the distances between three samples with
+    IDs a, b, and c:
+
+        0.0\t0.5\t1.0
+        0.5\t0.0\t0.75
+        1.0\t0.75\t0.0
+
+    >>> import numpy as np
+    >>> from skbio.core.distance import DistanceMatrix
+    >>> data = np.array([[0.0,0.5,1.0],
+    ...                  [0.5,0.0,0.75],
+    ...                  [1.0,0.75,0.0]])
+    >>> ids = ["a", "b", "c"]
+    >>> dm = DistanceMatrix(data, ids)
+    >>> print dm
+    3x3 distance matrix
+    IDs:
+    a, b, c
+    Data:
+    [[ 0.    0.5   1.  ]
+     [ 0.5   0.    0.75]
+     [ 1.    0.75  0.  ]]
+
     """
 
     @classmethod
