@@ -27,9 +27,10 @@ Examples
 
 A new tree can be constructed from a Newick string. Newick is a common format
 used to represent tree objects within a file. Newick was part of the original
-PHYLIP package from Joseph Felsenstein's group (defined `here <http://evolution.genetics.washington.edu/phylip/newicktree.html>`_),
-and is based around representing nesting with parentheses. For instance, the
-following string describes a 3 taxon tree, with one internal node:
+PHYLIP package from Joseph Felsenstein's group (defined
+`here <http://goo.gl/fIY1Iq>`_), and is based around representing nesting with
+parentheses. For instance, the following string describes a 3 taxon tree, with
+one internal node:
 
     ((A, B)C, D)root;
 
@@ -52,10 +53,10 @@ False
 
 There are a few common ways to traverse a tree, and depending on your use,
 some methods are more appropriate than others. Wikipedia has a well written
-page on tree traversal methods (http://en.wikipedia.org/wiki/Tree_traversal), and
-will go into further depth than what we'll cover here. We're only going to cover
-two of the commonly used traversals here, preorder and postorder, but we well
-show examples of two other common helper traversal methods to gather tips or
+page on tree `traversal methods <http://goo.gl/K4Ufl>`_, and will go into
+further depth than what we'll cover here. We're only going to cover two of the
+commonly used traversals here, preorder and postorder, but we well show
+examples of two other common helper traversal methods to gather tips or
 internal nodes.
 
 The first traversal we'll cover is a preorder traversal in which you evaluate
@@ -1172,7 +1173,7 @@ class TreeNode(object):
         num_all_tips = len(all_tips)  # total number of tips
         num_tips = len(tip_order)  # total number of tips in result
         result = np.zeros((num_tips, num_tips), float)  # tip by tip matrix
-        distances = np.zeros((num_all_tips), float)  # dist from tip to curr node
+        distances = np.zeros((num_all_tips), float)  # dist from tip to tip
 
         def update_result():
         # set tip_tip distance between tips of different child
