@@ -1580,7 +1580,22 @@ class TreeNode(object):
         return result
 
     def root(self):
-        """Returns root of the tree self is in. Dynamically calculated."""
+        """Returns root of the tree self is in
+
+        Returns
+        -------
+        TreeNode
+            The root of the tree
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree = TreeNode.from_newick("((a,b)c,(d,e)f)root;")
+        >>> tip_a = tree.find('a')
+        >>> root = tip_a.root()
+        >>> root == tree
+        True
+        """
         if self.is_root():
             return self
 
@@ -1592,7 +1607,24 @@ class TreeNode(object):
     def siblings(self):
         """Returns all nodes that are children of the same parent as self.
 
-        Note: excludes self from the list. Dynamically calculated.
+        This call excludes self from the list.
+
+        Returns
+        -------
+        list of TreeNode
+            The list of sibling nodes relative to self
+
+        See Also
+        --------
+        TreeNode.neighbors
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree = TreeNode.from_newick("((a,b)c,(d,e,f)g)root;")
+        >>> tip_e = tree.find('e')
+        >>> [n.Name for n in tip_e.siblings()]
+        ['d', 'f']
         """
         if self.is_root():
             return []
@@ -1603,7 +1635,28 @@ class TreeNode(object):
         return result
 
     def neighbors(self, ignore=None):
-        """Get neighbors of self"""
+        """Returns all nodes that are connected to self
+
+        This call does not include self in the result
+
+        Parameters
+        ----------
+        ignore : TreeNode
+            A node to ignore
+
+        Returns
+        -------
+        list of TreeNode
+            The list of all nodes that are connected to self
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree = TreeNode.from_newick("((a,b)c,(d,e)f)root;")
+        >>> node_c = tree.find('c')
+        >>> [n.Name for n in node_c.neighbors()]
+        ['a', 'b', 'root']
+        """
         nodes = [n for n in self.Children + [self.Parent] if n is not None]
         if ignore is None:
             return nodes
