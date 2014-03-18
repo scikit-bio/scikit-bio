@@ -170,7 +170,8 @@ def _dnd_tokenizer(data):
 
     Parameters
     ----------
-    data : str, a DND-like (e.g., newick) string
+    data : str
+        a DND-like (e.g., newick) string
 
     Returns
     -------
@@ -222,11 +223,40 @@ def distance_from_r(m1, m2):
     Parameters
     ----------
     m1 : SymmetricDistanceMatrix
+        a distance matrix to compare
+    m2 : SymmetricDistanceMatrix
+        a distance matrix to compare
+
+    Returns
+    -------
+
+    float
+        The distance between m1 and m2
     """
     return (1-correlation_t(m1.flat, m2.flat)[0])/2
 
 
 class TreeNode(object):
+    """Representation of a node within a tree
+
+    A `TreeNode` instance stores links to its parent and optional children
+    nodes. In addition, the `TreeNode` can represent a `Length` (e.g., a
+    branch length) between itself and its parent.
+
+    Parameters
+    ----------
+    name : str or None
+        A node can have a name. It is common for tips in particular to have
+        names, for instance, in a phylogenetic tree where the tips correspond
+        to species.
+    length : float, int, or None
+        Distances between nodes can be used to represent evolutionary
+        distances, time, etc.
+    parent : TreeNode or None
+        Connect this node to a parent
+    children : list of TreeNode or None
+        Connect this node to existing children
+    """
     _exclude_from_copy = set(['Parent', 'Children', '_node_cache'])
 
     def __init__(self, Name=None, Length=None, Parent=None, Children=None):
