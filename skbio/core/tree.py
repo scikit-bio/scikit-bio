@@ -168,7 +168,33 @@ from skbio.core.exception import (NoLengthError, DuplicateNodeError,
 def _dnd_tokenizer(data):
     """Tokenizes data into a stream of punctuation, labels and lengths.
 
-    Note: data should all be a single sequence, e.g. a single string.
+    Parameters
+    ----------
+    data : str, a DND-like (e.g., newick) string
+
+    Returns
+    -------
+    GeneratorType
+        Yields successive DND tokens
+
+    See also
+    --------
+    TreeNode.from_newick
+    TreeNode.to_newick
+
+    Examples
+    --------
+    >>> from skbio.core.tree import _dnd_tokenizer
+    >>> for token in _dnd_tokenizer("((tip1, tip2)internal1)"):
+    ...     print token
+    (
+    (
+    tip1
+    ,
+    tip2
+    )
+    internal1
+    )
     """
     dnd_token_str = '(:),;'
     dnd_tokens = set(dnd_token_str)
@@ -191,7 +217,12 @@ def _dnd_tokenizer(data):
 
 
 def distance_from_r(m1, m2):
-    """Estimates distance as (1-r)/2: neg correl = max distance"""
+    """Estimates distance as (1-r)/2: neg correl = max distance
+
+    Parameters
+    ----------
+    m1 : SymmetricDistanceMatrix
+    """
     return (1-correlation_t(m1.flat, m2.flat)[0])/2
 
 
