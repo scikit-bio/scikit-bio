@@ -29,7 +29,7 @@
     <script type="text/javascript" src="_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
     <link rel="top" title="scikit-bio 0.0.0-dev documentation" href="index.html" />
-    <link rel="next" title="skbio.core.exception.BiologicalSequenceError" href="generated/skbio.core.exception.BiologicalSequenceError.html" />
+    <link rel="next" title="skbio.core.exception.FileFormatError" href="generated/skbio.core.exception.FileFormatError.html" />
     <link rel="prev" title="skbio.core.distance.randdm" href="generated/skbio.core.distance.randdm.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
@@ -82,12 +82,16 @@
   <ul class="dropdown-menu globaltoc"
       role="menu"
       aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="core.alignment.html">Sequence collections and alignments (<tt class="docutils literal"><span class="pre">skbio.core.alignment</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="core.sequence.html">Biological sequences (<tt class="docutils literal"><span class="pre">skbio.core.sequence</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="core.distance.html">Distance matrices (<tt class="docutils literal"><span class="pre">skbio.core.distance</span></tt>)</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">Exceptions (<tt class="docutils literal"><span class="pre">skbio.core.exception</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="draw.distributions.html">Distribution visualizations (<tt class="docutils literal"><span class="pre">skbio.draw.distributions</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="maths.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.maths.stats.spatial</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="maths.subsample.html">Subsampling (<tt class="docutils literal"><span class="pre">skbio.maths.subsample</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="parse.sequences.html">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="util.misc.html">Miscellaneous Utilities (<tt class="docutils literal"><span class="pre">skbio.util.misc</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="util.trie.html">Prefix tree (Trie) (<tt class="docutils literal"><span class="pre">skbio.util.trie</span></tt>)</a></li>
 </ul>
 </ul>
 </li>
@@ -146,8 +150,20 @@ scikit-bio codebase.</p>
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.core.exception.BiologicalSequenceError.html#skbio.core.exception.BiologicalSequenceError" title="skbio.core.exception.BiologicalSequenceError"><tt class="xref py py-obj docutils literal"><span class="pre">BiologicalSequenceError</span></tt></a></td>
-<td></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.core.exception.FileFormatError.html#skbio.core.exception.FileFormatError" title="skbio.core.exception.FileFormatError"><tt class="xref py py-obj docutils literal"><span class="pre">FileFormatError</span></tt></a></td>
+<td>Exception raised when a file can not be parsed.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.core.exception.RecordError.html#skbio.core.exception.RecordError" title="skbio.core.exception.RecordError"><tt class="xref py py-obj docutils literal"><span class="pre">RecordError</span></tt></a></td>
+<td>Exception raised when a record is bad.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.core.exception.FieldError.html#skbio.core.exception.FieldError" title="skbio.core.exception.FieldError"><tt class="xref py py-obj docutils literal"><span class="pre">FieldError</span></tt></a></td>
+<td>Exception raised when a field within a record is bad.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.core.exception.BiologicalSequenceError.html#skbio.core.exception.BiologicalSequenceError" title="skbio.core.exception.BiologicalSequenceError"><tt class="xref py py-obj docutils literal"><span class="pre">BiologicalSequenceError</span></tt></a></td>
+<td>General error for biological sequence validation failures.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.core.exception.SequenceCollectionError.html#skbio.core.exception.SequenceCollectionError" title="skbio.core.exception.SequenceCollectionError"><tt class="xref py py-obj docutils literal"><span class="pre">SequenceCollectionError</span></tt></a></td>
+<td>General error for sequence collection validation failures.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="generated/skbio.core.exception.DistanceMatrixError.html#skbio.core.exception.DistanceMatrixError" title="skbio.core.exception.DistanceMatrixError"><tt class="xref py py-obj docutils literal"><span class="pre">DistanceMatrixError</span></tt></a></td>
 <td>General error for distance matrix validation failures.</td>

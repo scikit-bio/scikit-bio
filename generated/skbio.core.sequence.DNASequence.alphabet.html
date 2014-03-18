@@ -30,8 +30,8 @@
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="top" title="scikit-bio 0.0.0-dev documentation" href="../index.html" />
     <link rel="up" title="skbio.core.sequence.DNASequence" href="skbio.core.sequence.DNASequence.html" />
-    <link rel="next" title="skbio.core.sequence.DNASequence.description" href="skbio.core.sequence.DNASequence.description.html" />
-    <link rel="prev" title="skbio.core.sequence.DNASequence" href="skbio.core.sequence.DNASequence.html" />
+    <link rel="next" title="skbio.core.sequence.DNASequence.complement" href="skbio.core.sequence.DNASequence.complement.html" />
+    <link rel="prev" title="skbio.core.sequence.DNASequence.identifier" href="skbio.core.sequence.DNASequence.identifier.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
@@ -83,12 +83,16 @@
   <ul class="dropdown-menu globaltoc"
       role="menu"
       aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../core.alignment.html">Sequence collections and alignments (<tt class="docutils literal"><span class="pre">skbio.core.alignment</span></tt>)</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../core.sequence.html">Biological sequences (<tt class="docutils literal"><span class="pre">skbio.core.sequence</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../core.distance.html">Distance matrices (<tt class="docutils literal"><span class="pre">skbio.core.distance</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../core.exception.html">Exceptions (<tt class="docutils literal"><span class="pre">skbio.core.exception</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../draw.distributions.html">Distribution visualizations (<tt class="docutils literal"><span class="pre">skbio.draw.distributions</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../maths.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.maths.stats.spatial</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../maths.subsample.html">Subsampling (<tt class="docutils literal"><span class="pre">skbio.maths.subsample</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../parse.sequences.html">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../util.misc.html">Miscellaneous Utilities (<tt class="docutils literal"><span class="pre">skbio.util.misc</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.trie.html">Prefix tree (Trie) (<tt class="docutils literal"><span class="pre">skbio.util.trie</span></tt>)</a></li>
 </ul>
 </ul>
 </li>
@@ -134,26 +138,22 @@
       
   <div class="section" id="skbio-core-sequence-dnasequence-alphabet">
 <h1>skbio.core.sequence.DNASequence.alphabet<a class="headerlink" href="#skbio-core-sequence-dnasequence-alphabet" title="Permalink to this headline">¶</a></h1>
-<dl class="attribute">
+<dl class="classmethod">
 <dt id="skbio.core.sequence.DNASequence.alphabet">
-<tt class="descclassname">DNASequence.</tt><tt class="descname">alphabet</tt><a class="headerlink" href="#skbio.core.sequence.DNASequence.alphabet" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the set of characters allowed in the <cite>BiologicalSequence</cite></p>
+<em class="property">classmethod </em><tt class="descclassname">DNASequence.</tt><tt class="descname">alphabet</tt><big>(</big><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/master/skbio/core/sequence.py#L970"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.core.sequence.DNASequence.alphabet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the set of characters allowed in a <cite>NucleotideSequence</cite>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">set</p>
 <blockquote class="last">
-<div><p>Characters that are allowed in a valid <cite>BiologicalSequence</cite></p>
+<div><p>Characters that are allowed in a valid <cite>NucleotideSequence</cite>.</p>
 </div></blockquote>
 </td>
 </tr>
 </tbody>
 </table>
-<div class="admonition seealso">
-<p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="skbio.core.sequence.DNASequence.is_valid.html#skbio.core.sequence.DNASequence.is_valid" title="skbio.core.sequence.DNASequence.is_valid"><tt class="xref py py-obj docutils literal"><span class="pre">is_valid</span></tt></a>, <a class="reference internal" href="skbio.core.sequence.DNASequence.gap_alphabet.html#skbio.core.sequence.DNASequence.gap_alphabet" title="skbio.core.sequence.DNASequence.gap_alphabet"><tt class="xref py py-obj docutils literal"><span class="pre">gap_alphabet</span></tt></a>, <a class="reference internal" href="skbio.core.sequence.DNASequence.unsupported_characters.html#skbio.core.sequence.DNASequence.unsupported_characters" title="skbio.core.sequence.DNASequence.unsupported_characters"><tt class="xref py py-obj docutils literal"><span class="pre">unsupported_characters</span></tt></a>, <a class="reference internal" href="skbio.core.sequence.DNASequence.has_unsupported_characters.html#skbio.core.sequence.DNASequence.has_unsupported_characters" title="skbio.core.sequence.DNASequence.has_unsupported_characters"><tt class="xref py py-obj docutils literal"><span class="pre">has_unsupported_characters</span></tt></a></p>
-</div>
 </dd></dl>
 
 </div>

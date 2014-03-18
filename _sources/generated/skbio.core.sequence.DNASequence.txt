@@ -29,12 +29,15 @@ skbio.core.sequence.DNASequence
          DNASequence.__str__
          DNASequence.__subclasshook__
          DNASequence._complement
+         DNASequence.alphabet
          DNASequence.complement
+         DNASequence.complement_map
          DNASequence.count
          DNASequence.degap
          DNASequence.distance
          DNASequence.fraction_diff
          DNASequence.fraction_same
+         DNASequence.gap_alphabet
          DNASequence.gap_maps
          DNASequence.gap_vector
          DNASequence.has_unsupported_characters
@@ -43,10 +46,16 @@ skbio.core.sequence.DNASequence
          DNASequence.is_gapped
          DNASequence.is_reverse_complement
          DNASequence.is_valid
+         DNASequence.iupac_characters
+         DNASequence.iupac_degeneracies
+         DNASequence.iupac_degenerate_characters
+         DNASequence.iupac_standard_characters
+         DNASequence.lower
          DNASequence.rc
          DNASequence.reverse_complement
          DNASequence.to_fasta
          DNASequence.unsupported_characters
+         DNASequence.upper
 
 
 
@@ -56,13 +65,6 @@ skbio.core.sequence.DNASequence
       .. autosummary::
          :toctree:
       
-         DNASequence.alphabet
-         DNASequence.complement_map
          DNASequence.description
-         DNASequence.gap_alphabet
          DNASequence.identifier
-         DNASequence.iupac_characters
-         DNASequence.iupac_degeneracies
-         DNASequence.iupac_degenerate_characters
-         DNASequence.iupac_standard_characters
 

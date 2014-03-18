@@ -30,7 +30,8 @@
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="top" title="scikit-bio 0.0.0-dev documentation" href="../index.html" />
     <link rel="up" title="Miscellaneous Utilities (skbio.util.misc)" href="../util.misc.html" />
-    <link rel="prev" title="skbio.util.misc.remove_files" href="skbio.util.misc.remove_files.html" />
+    <link rel="next" title="skbio.util.misc.flatten" href="skbio.util.misc.flatten.html" />
+    <link rel="prev" title="skbio.util.misc.safe_md5" href="skbio.util.misc.safe_md5.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
@@ -82,12 +83,16 @@
   <ul class="dropdown-menu globaltoc"
       role="menu"
       aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../core.alignment.html">Sequence collections and alignments (<tt class="docutils literal"><span class="pre">skbio.core.alignment</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../core.sequence.html">Biological sequences (<tt class="docutils literal"><span class="pre">skbio.core.sequence</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../core.distance.html">Distance matrices (<tt class="docutils literal"><span class="pre">skbio.core.distance</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../core.exception.html">Exceptions (<tt class="docutils literal"><span class="pre">skbio.core.exception</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../draw.distributions.html">Distribution visualizations (<tt class="docutils literal"><span class="pre">skbio.draw.distributions</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../maths.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.maths.stats.spatial</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../maths.subsample.html">Subsampling (<tt class="docutils literal"><span class="pre">skbio.maths.subsample</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../parse.sequences.html">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../util.misc.html">Miscellaneous Utilities (<tt class="docutils literal"><span class="pre">skbio.util.misc</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.trie.html">Prefix tree (Trie) (<tt class="docutils literal"><span class="pre">skbio.util.trie</span></tt>)</a></li>
 </ul>
 </ul>
 </li>
@@ -135,7 +140,7 @@
 <h1>skbio.util.misc.create_dir<a class="headerlink" href="#skbio-util-misc-create-dir" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="skbio.util.misc.create_dir">
-<tt class="descclassname">skbio.util.misc.</tt><tt class="descname">create_dir</tt><big>(</big><em>dir_name</em>, <em>fail_on_exist=False</em>, <em>handle_errors_externally=False</em><big>)</big><a class="headerlink" href="#skbio.util.misc.create_dir" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">skbio.util.misc.</tt><tt class="descname">create_dir</tt><big>(</big><em>dir_name</em>, <em>fail_on_exist=False</em>, <em>handle_errors_externally=False</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/master/skbio/util/misc.py#L125"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.util.misc.create_dir" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a directory safely and fail meaningfully</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />

@@ -29,12 +29,15 @@ skbio.core.sequence.NucleotideSequence
          NucleotideSequence.__str__
          NucleotideSequence.__subclasshook__
          NucleotideSequence._complement
+         NucleotideSequence.alphabet
          NucleotideSequence.complement
+         NucleotideSequence.complement_map
          NucleotideSequence.count
          NucleotideSequence.degap
          NucleotideSequence.distance
          NucleotideSequence.fraction_diff
          NucleotideSequence.fraction_same
+         NucleotideSequence.gap_alphabet
          NucleotideSequence.gap_maps
          NucleotideSequence.gap_vector
          NucleotideSequence.has_unsupported_characters
@@ -43,10 +46,16 @@ skbio.core.sequence.NucleotideSequence
          NucleotideSequence.is_gapped
          NucleotideSequence.is_reverse_complement
          NucleotideSequence.is_valid
+         NucleotideSequence.iupac_characters
+         NucleotideSequence.iupac_degeneracies
+         NucleotideSequence.iupac_degenerate_characters
+         NucleotideSequence.iupac_standard_characters
+         NucleotideSequence.lower
          NucleotideSequence.rc
          NucleotideSequence.reverse_complement
          NucleotideSequence.to_fasta
          NucleotideSequence.unsupported_characters
+         NucleotideSequence.upper
 
 
 
@@ -56,13 +65,6 @@ skbio.core.sequence.NucleotideSequence
       .. autosummary::
          :toctree:
       
-         NucleotideSequence.alphabet
-         NucleotideSequence.complement_map
          NucleotideSequence.description
-         NucleotideSequence.gap_alphabet
          NucleotideSequence.identifier
-         NucleotideSequence.iupac_characters
-         NucleotideSequence.iupac_degeneracies
-         NucleotideSequence.iupac_degenerate_characters
-         NucleotideSequence.iupac_standard_characters
 

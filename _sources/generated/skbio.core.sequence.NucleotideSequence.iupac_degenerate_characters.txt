@@ -5,4 +5,4 @@ skbio.core.sequence.NucleotideSequence.iupac_degenerate_characters
 
 .. currentmodule:: skbio.core.sequence
 
-.. autoattribute:: NucleotideSequence.iupac_degenerate_characters
+.. automethod:: NucleotideSequence.iupac_degenerate_characters

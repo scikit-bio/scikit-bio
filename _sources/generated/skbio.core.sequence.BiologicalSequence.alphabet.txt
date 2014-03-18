@@ -5,4 +5,4 @@ skbio.core.sequence.BiologicalSequence.alphabet
 
 .. currentmodule:: skbio.core.sequence
 
-.. autoattribute:: BiologicalSequence.alphabet
+.. automethod:: BiologicalSequence.alphabet

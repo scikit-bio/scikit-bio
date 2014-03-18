@@ -5,4 +5,4 @@ skbio.core.sequence.DNASequence.iupac_characters
 
 .. currentmodule:: skbio.core.sequence
 
-.. autoattribute:: DNASequence.iupac_characters
+.. automethod:: DNASequence.iupac_characters

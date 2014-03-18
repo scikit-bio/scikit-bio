@@ -29,6 +29,9 @@
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="top" title="scikit-bio 0.0.0-dev documentation" href="../index.html" />
+    <link rel="up" title="skbio.core.sequence.NucleotideSequence" href="skbio.core.sequence.NucleotideSequence.html" />
+    <link rel="next" title="skbio.core.sequence.NucleotideSequence.iupac_standard_characters" href="skbio.core.sequence.NucleotideSequence.iupac_standard_characters.html" />
+    <link rel="prev" title="skbio.core.sequence.NucleotideSequence.iupac_degeneracies" href="skbio.core.sequence.NucleotideSequence.iupac_degeneracies.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
@@ -79,13 +82,17 @@
      href="../index.html">Site <b class="caret"></b></a>
   <ul class="dropdown-menu globaltoc"
       role="menu"
-      aria-labelledby="dLabelGlobalToc"><ul>
-<li class="toctree-l1"><a class="reference internal" href="../core.sequence.html">Biological sequences (<tt class="docutils literal"><span class="pre">skbio.core.sequence</span></tt>)</a></li>
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../core.alignment.html">Sequence collections and alignments (<tt class="docutils literal"><span class="pre">skbio.core.alignment</span></tt>)</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../core.sequence.html">Biological sequences (<tt class="docutils literal"><span class="pre">skbio.core.sequence</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../core.distance.html">Distance matrices (<tt class="docutils literal"><span class="pre">skbio.core.distance</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../core.exception.html">Exceptions (<tt class="docutils literal"><span class="pre">skbio.core.exception</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../draw.distributions.html">Distribution visualizations (<tt class="docutils literal"><span class="pre">skbio.draw.distributions</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../maths.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.maths.stats.spatial</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../maths.subsample.html">Subsampling (<tt class="docutils literal"><span class="pre">skbio.maths.subsample</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../parse.sequences.html">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../util.misc.html">Miscellaneous Utilities (<tt class="docutils literal"><span class="pre">skbio.util.misc</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.trie.html">Prefix tree (Trie) (<tt class="docutils literal"><span class="pre">skbio.util.trie</span></tt>)</a></li>
 </ul>
 </ul>
 </li>
@@ -131,10 +138,23 @@
       
   <div class="section" id="skbio-core-sequence-nucleotidesequence-iupac-degenerate-characters">
 <h1>skbio.core.sequence.NucleotideSequence.iupac_degenerate_characters<a class="headerlink" href="#skbio-core-sequence-nucleotidesequence-iupac-degenerate-characters" title="Permalink to this headline">¶</a></h1>
-<dl class="attribute">
+<dl class="classmethod">
 <dt id="skbio.core.sequence.NucleotideSequence.iupac_degenerate_characters">
-<tt class="descclassname">NucleotideSequence.</tt><tt class="descname">iupac_degenerate_characters</tt><em class="property"> = set(['B', 'D', 'H', 'K', 'M', 'N', 'S', 'R', 'W', 'V', 'Y'])</em><a class="headerlink" href="#skbio.core.sequence.NucleotideSequence.iupac_degenerate_characters" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<em class="property">classmethod </em><tt class="descclassname">NucleotideSequence.</tt><tt class="descname">iupac_degenerate_characters</tt><big>(</big><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/master/skbio/core/sequence.py#L1032"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.core.sequence.NucleotideSequence.iupac_degenerate_characters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the degenerate IUPAC nucleotide characters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">set</p>
+<blockquote class="last">
+<div><p>Degenerate IUPAC nucleotide characters.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 </div>
 

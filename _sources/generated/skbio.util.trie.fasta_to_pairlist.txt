@@ -1,0 +1,6 @@
+skbio.util.trie.fasta_to_pairlist
+=================================
+
+.. currentmodule:: skbio.util.trie
+
+.. autofunction:: fasta_to_pairlist

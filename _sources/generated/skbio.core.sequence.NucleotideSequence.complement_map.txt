@@ -5,4 +5,4 @@ skbio.core.sequence.NucleotideSequence.complement_map
 
 .. currentmodule:: skbio.core.sequence
 
-.. autoattribute:: NucleotideSequence.complement_map
+.. automethod:: NucleotideSequence.complement_map

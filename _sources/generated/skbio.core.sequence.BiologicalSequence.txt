@@ -28,11 +28,13 @@ skbio.core.sequence.BiologicalSequence
          BiologicalSequence.__sizeof__
          BiologicalSequence.__str__
          BiologicalSequence.__subclasshook__
+         BiologicalSequence.alphabet
          BiologicalSequence.count
          BiologicalSequence.degap
          BiologicalSequence.distance
          BiologicalSequence.fraction_diff
          BiologicalSequence.fraction_same
+         BiologicalSequence.gap_alphabet
          BiologicalSequence.gap_maps
          BiologicalSequence.gap_vector
          BiologicalSequence.has_unsupported_characters
@@ -40,8 +42,10 @@ skbio.core.sequence.BiologicalSequence
          BiologicalSequence.is_gap
          BiologicalSequence.is_gapped
          BiologicalSequence.is_valid
+         BiologicalSequence.lower
          BiologicalSequence.to_fasta
          BiologicalSequence.unsupported_characters
+         BiologicalSequence.upper
 
 
 
@@ -51,8 +55,6 @@ skbio.core.sequence.BiologicalSequence
       .. autosummary::
          :toctree:
       
-         BiologicalSequence.alphabet
          BiologicalSequence.description
-         BiologicalSequence.gap_alphabet
          BiologicalSequence.identifier
 

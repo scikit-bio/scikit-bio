@@ -83,12 +83,16 @@
   <ul class="dropdown-menu globaltoc"
       role="menu"
       aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../core.alignment.html">Sequence collections and alignments (<tt class="docutils literal"><span class="pre">skbio.core.alignment</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../core.sequence.html">Biological sequences (<tt class="docutils literal"><span class="pre">skbio.core.sequence</span></tt>)</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../core.distance.html">Distance matrices (<tt class="docutils literal"><span class="pre">skbio.core.distance</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../core.exception.html">Exceptions (<tt class="docutils literal"><span class="pre">skbio.core.exception</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../draw.distributions.html">Distribution visualizations (<tt class="docutils literal"><span class="pre">skbio.draw.distributions</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../maths.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.maths.stats.spatial</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../maths.subsample.html">Subsampling (<tt class="docutils literal"><span class="pre">skbio.maths.subsample</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../parse.sequences.html">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../util.misc.html">Miscellaneous Utilities (<tt class="docutils literal"><span class="pre">skbio.util.misc</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.trie.html">Prefix tree (Trie) (<tt class="docutils literal"><span class="pre">skbio.util.trie</span></tt>)</a></li>
 </ul>
 </ul>
 </li>
@@ -138,7 +142,7 @@
 <h1>skbio.core.distance.DistanceMatrix<a class="headerlink" href="#skbio-core-distance-distancematrix" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="skbio.core.distance.DistanceMatrix">
-<em class="property">class </em><tt class="descclassname">skbio.core.distance.</tt><tt class="descname">DistanceMatrix</tt><big>(</big><em>data</em>, <em>ids</em><big>)</big><a class="headerlink" href="#skbio.core.distance.DistanceMatrix" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">skbio.core.distance.</tt><tt class="descname">DistanceMatrix</tt><big>(</big><em>data</em>, <em>ids</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/master/skbio/core/distance.py#L107"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.core.distance.DistanceMatrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>Store distances between objects and object IDs.</p>
 <p>A <cite>DistanceMatrix</cite> instance stores a square, hollow, two-dimensional matrix
 of distances between objects. Objects could be, for example, samples or DNA
@@ -182,6 +186,31 @@ symmetric.</p>
 <tr><td class="label">[R3]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>)</em> <a class="reference external" href="http://docs.scipy.org/doc/scipy/reference/spatial.distance.html">http://docs.scipy.org/doc/scipy/reference/spatial.distance.html</a></td></tr>
 </tbody>
 </table>
+<p class="rubric">Examples</p>
+<p>Initialize a <cite>skbio.core.distance.DistanceMatrix</cite> object from an existing
+<tt class="docutils literal"><span class="pre">numpy.array</span></tt> that represents the distances between three samples with
+IDs a, b, and c:</p>
+<blockquote>
+<div>0.0     0.5     1.0
+0.5     0.0     0.75
+1.0     0.75    0.0</div></blockquote>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.core.distance</span> <span class="kn">import</span> <span class="n">DistanceMatrix</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">1.0</span><span class="p">],</span>
+<span class="gp">... </span>                 <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.75</span><span class="p">],</span>
+<span class="gp">... </span>                 <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span><span class="mf">0.75</span><span class="p">,</span><span class="mf">0.0</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ids</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;a&quot;</span><span class="p">,</span> <span class="s">&quot;b&quot;</span><span class="p">,</span> <span class="s">&quot;c&quot;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dm</span> <span class="o">=</span> <span class="n">DistanceMatrix</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">ids</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">dm</span>
+<span class="go">3x3 distance matrix</span>
+<span class="go">IDs:</span>
+<span class="go">a, b, c</span>
+<span class="go">Data:</span>
+<span class="go">[[ 0.    0.5   1.  ]</span>
+<span class="go"> [ 0.5   0.    0.75]</span>
+<span class="go"> [ 1.    0.75  0.  ]]</span>
+</pre></div>
+</div>
 <p class="rubric">Attributes</p>
 <table border="1" class="longtable docutils">
 <colgroup>

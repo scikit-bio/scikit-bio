@@ -5,4 +5,4 @@ skbio.core.sequence.RNASequence.iupac_degeneracies
 
 .. currentmodule:: skbio.core.sequence
 
-.. autoattribute:: RNASequence.iupac_degeneracies
+.. automethod:: RNASequence.iupac_degeneracies

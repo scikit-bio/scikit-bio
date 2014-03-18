@@ -1,0 +1,30 @@
+skbio.util.trie.CompressedTrie
+==============================
+
+.. currentmodule:: skbio.util.trie
+
+.. autoclass:: CompressedTrie
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         CompressedTrie.__init__
+         CompressedTrie.__len__
+         CompressedTrie.__nonzero__
+         CompressedTrie.find
+         CompressedTrie.insert
+
+
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         CompressedTrie.prefix_map
+         CompressedTrie.size
+

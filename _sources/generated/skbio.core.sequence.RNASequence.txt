@@ -29,12 +29,15 @@ skbio.core.sequence.RNASequence
          RNASequence.__str__
          RNASequence.__subclasshook__
          RNASequence._complement
+         RNASequence.alphabet
          RNASequence.complement
+         RNASequence.complement_map
          RNASequence.count
          RNASequence.degap
          RNASequence.distance
          RNASequence.fraction_diff
          RNASequence.fraction_same
+         RNASequence.gap_alphabet
          RNASequence.gap_maps
          RNASequence.gap_vector
          RNASequence.has_unsupported_characters
@@ -43,10 +46,16 @@ skbio.core.sequence.RNASequence
          RNASequence.is_gapped
          RNASequence.is_reverse_complement
          RNASequence.is_valid
+         RNASequence.iupac_characters
+         RNASequence.iupac_degeneracies
+         RNASequence.iupac_degenerate_characters
+         RNASequence.iupac_standard_characters
+         RNASequence.lower
          RNASequence.rc
          RNASequence.reverse_complement
          RNASequence.to_fasta
          RNASequence.unsupported_characters
+         RNASequence.upper
 
 
 
@@ -56,13 +65,6 @@ skbio.core.sequence.RNASequence
       .. autosummary::
          :toctree:
       
-         RNASequence.alphabet
-         RNASequence.complement_map
          RNASequence.description
-         RNASequence.gap_alphabet
          RNASequence.identifier
-         RNASequence.iupac_characters
-         RNASequence.iupac_degeneracies
-         RNASequence.iupac_degenerate_characters
-         RNASequence.iupac_standard_characters
 

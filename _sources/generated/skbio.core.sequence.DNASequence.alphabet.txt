@@ -5,4 +5,4 @@ skbio.core.sequence.DNASequence.alphabet
 
 .. currentmodule:: skbio.core.sequence
 
-.. autoattribute:: DNASequence.alphabet
+.. automethod:: DNASequence.alphabet

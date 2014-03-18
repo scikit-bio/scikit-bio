@@ -1,0 +1,6 @@
+skbio.maths.subsample.subsample
+===============================
+
+.. currentmodule:: skbio.maths.subsample
+
+.. autofunction:: subsample

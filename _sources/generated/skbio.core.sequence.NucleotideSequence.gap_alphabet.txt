@@ -5,4 +5,4 @@ skbio.core.sequence.NucleotideSequence.gap_alphabet
 
 .. currentmodule:: skbio.core.sequence
 
-.. autoattribute:: NucleotideSequence.gap_alphabet
+.. automethod:: NucleotideSequence.gap_alphabet
