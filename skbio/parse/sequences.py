@@ -15,8 +15,7 @@ Functions
 
     parse_fasta
     parse_fastq
-    parse_gde
-    parse_xmfa
+
 
 """
 
