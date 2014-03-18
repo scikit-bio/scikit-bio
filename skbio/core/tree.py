@@ -1385,7 +1385,14 @@ class TreeNode(object):
     ### search methods ###
 
     def invalidate_node_cache(self):
-        """Delete the node cache"""
+        """Delete the node cache
+
+        See Also
+        --------
+        TreeNode.create_node_cache
+        TreeNode.find
+
+        """
         self._node_cache = {}
 
     def create_node_cache(self):
@@ -1393,6 +1400,18 @@ class TreeNode(object):
 
         This method will not cache nodes in which the .Name is None. This
         method will raise DuplicateNodeError if a name conflict is discovered.
+
+        Raises
+        ------
+        DuplicateNodeError
+            The node cache requies that names are unique (with the exception of
+            names that are None)
+
+        See Also
+        --------
+        TreeNode.invalidate_node_cache
+        TreeNode.find
+
         """
         if self._node_cache:
             return
@@ -1410,9 +1429,31 @@ class TreeNode(object):
     def find(self, name):
         """Find a node by name
 
-        This method returns raises MissingNodeError if the node is not found.
-        The first time this method is called, an internal cache is
-        constructed to improve performance on subsequent calls.
+        The first call to find will cache all nodes in the tree on the
+        assumption that additional calls to `find` will be made.
+
+        Parameters
+        ----------
+        name : TreeNode or str
+            The name or node to find. If `name` is `TreeNode` then it is
+            simply returned
+
+        Raises
+        ------
+        MissingNodeError
+            Raises if the node to be searched for is not found
+
+        Returns
+        -------
+        TreeNode
+            The found node
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree = TreeNode.from_newick("((a,b)c,(d,e)f);")
+        >>> print tree.find('c').Name
+        c
         """
         # if what is being passed in looks like a node, just return it
         if isinstance(name, self.__class__):
