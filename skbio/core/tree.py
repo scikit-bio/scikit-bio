@@ -2067,7 +2067,7 @@ class TreeNode(object):
                  |          \-b
         -root----|
                  |          /-d
-                  \\f-------|
+                  \f-------|
                             \-e
         """
         (lines, mid) = self._ascii_art(show_internal=show_internal,
@@ -2100,6 +2100,10 @@ class TreeNode(object):
             A NoLengthError is raised if one of the nodes between self and
             ancestor (including self) lacks a `Length` attribute
 
+        See Also
+        --------
+        TreeNode.distance
+
         Examples
         --------
         >>> from skbio.core.tree import TreeNode
@@ -2124,7 +2128,43 @@ class TreeNode(object):
         return accum
 
     def distance(self, other):
-        """Return the distance between self and other"""
+        """Return the distance between self and other
+
+        This method can be used to compute the distances between two tips,
+        however, it is not optimized for computing pairwise tip distances.
+
+        Parameters
+        ----------
+        other : TreeNode
+            The node to compute a distance to
+
+        Returns
+        -------
+        float
+            The distance between two nodes
+
+        Raises
+        ------
+        NoLengthError
+            A NoLengthError will be raised if a node without `Length` is
+            encountered
+
+        See Also
+        --------
+        TreeNode.tip_tip_distances
+        TreeNode.accumulate_to_ancestor
+        TreeNode.compare_by_distances
+        TreeNode.get_max_distance
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree = TreeNode.from_newick("((a:1,b:2)c:3,(d:4,e:5)f:6)root;")
+        >>> tip_a = tree.find('a')
+        >>> tip_d = tree.find('d')
+        >>> tip_a.distance(tip_d)
+        14.0
+        """
         if self is other:
             return 0.0
 
@@ -2172,12 +2212,41 @@ class TreeNode(object):
     def get_max_distance(self):
         """Returns the max tip tip distance between any pair of tips
 
-        Returns (dist, tips)
+        Returns
+        -------
+        float
+            The distance between the two most distant tips in the tree
+        tuple of TreeNode
+            The two most distant tips in the tree
+
+        Raises
+        ------
+        NoLengthError
+            A NoLengthError will be thrown if a node without length is
+            encountered
+
+        See Also
+        --------
+        TreeNode.distance
+        TreeNode.tip_tip_distances
+        TreeNode.compare_by_distances
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree = TreeNode.from_newick("((a:1,b:2)c:3,(d:4,e:5)f:6)root;")
+        >>> dist, tips = tree.get_max_distance()
+        >>> dist
+        16.0
+        >>> [n.Name for n in tips]
+        ['b', 'e']
         """
         if not hasattr(self, 'MaxDistTips'):
+            # _set_max_distance will throw a TreeError if a node with a single
+            # child is encountered
             try:
                 self._set_max_distance()
-            except TreeError:
+            except TreeError:  #
                 return self._get_max_distance_singledesc()
 
         longest = 0.0
@@ -2191,19 +2260,58 @@ class TreeNode(object):
                 tips = [tip_a[1], tip_b[1]]
         return longest, tips
 
-    def tip_tip_distances(self, endpoints=None, default_length=1):
-        """Returns distance matrix between all pairs of tips, and a tip order.
+    def tip_tip_distances(self, endpoints=None):
+        """Returns distance matrix between pairs of tips, and a tip order.
 
-        Warning: .__start and .__stop added to self and its descendants.
+        By default, all pairwise distances are calculated in the tree. If
+        `endpoints` are specified, then only the distances between those tips
+        are computed.
 
-        tip_order contains the actual node objects, not their names (may be
-        confusing in some cases).
+        Parameters
+        ----------
+        endpoints : list of TreeNode or str, or None
+            A list of TreeNode objects or names of TreeNode objects
+
+        Returns
+        -------
+        ndarray(dtype=float)
+            The distance matrix
+        list of TreeNode
+            The tip order in the distance matrix
+
+        Raises
+        ------
+        ValueError
+            If any of the specified `endpoints` are not tips
+        NoLengthError
+            If a node without Length is encountered
+
+        See Also
+        --------
+        TreeNode.distance
+        TreeNode.compare_by_distances
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree = TreeNode.from_newick("((a:1,b:2)c:3,(d:4,e:5)f:6)root;")
+        >>> mat, tips = tree.tip_tip_distances()
+        >>> mat
+        array([[  0.,   3.,  14.,  15.],
+               [  3.,   0.,  15.,  16.],
+               [ 14.,  15.,   0.,   9.],
+               [ 15.,  16.,   9.,   0.]])
+        >>> [n.Name for n in tips]
+        ['a', 'b', 'd', 'e']
         """
         all_tips = list(self.tips())
         if endpoints is None:
             tip_order = all_tips
         else:
             tip_order = [self.find(n) for n in endpoints]
+            for n in tip_order:
+                if not n.is_tip():
+                    raise ValueError("%s is not a tip!" % n.Name)
 
         ## linearize all tips in postorder
         # .__start, .__stop compose the slice in tip_order.
@@ -2237,12 +2345,10 @@ class TreeNode(object):
             ### can possibly use np.zeros
             starts, stops = [], []  # to calc ._start and ._stop for curr node
             for child in node.Children:
-                if child.Length is not None:
-                    child_len = child.Length
-                else:
-                    child_len = default_length
+                if child.Length is None:
+                    raise NoLengthError("%s doesn't have Length" % child.Name)
 
-                distances[child.__start:child.__stop] += child_len
+                distances[child.__start:child.__stop] += child.Length
 
                 starts.append(child.__start)
                 stops.append(child.__stop)
@@ -2288,11 +2394,34 @@ class TreeNode(object):
     def compare_subsets(self, other, exclude_absent_taxa=False):
         """Returns fraction of overlapping subsets where self and other differ.
 
-        Other is expected to be a tree object compatible with PhyloNode.
+        Names present in only one of the two trees will count as mismatches,
+        if you don't want this behavior, strip out the non-matching tips first.
 
-        Note: names present in only one of the two trees will count as
-        mismatches: if you don't want this behavior, strip out the non-matching
-        tips first.
+        Parameters
+        ----------
+        other : TreeNode
+            The tree to compare
+        exclude_absent_taxa : bool
+            Strip out names that don't occur in both trees
+
+        Returns
+        -------
+        float
+            The fraction of overlapping subsets that differ between the trees
+
+        See Also
+        --------
+        TreeNode.compare_by_distances
+        TreeNode.subsets
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree1 = TreeNode.from_newick("((a,b),(c,d));")
+        >>> tree2 = TreeNode.from_newick("(((a,b),c),d);")
+        >>> tree1.compare_subsets(tree2)
+        0.5
+
         """
         self_sets, other_sets = self.subsets(), other.subsets()
 
@@ -2327,6 +2456,44 @@ class TreeNode(object):
         names and matching names is undefined in the tree where they don't
         match, and because we need to reorder the names in the two trees to
         match up the distance matrices).
+
+        Parameters
+        ----------
+        other : TreeNode
+            The tree to compare
+        sample : int or None
+            Randomly subsample the tips in common between the trees to
+            compare. This is useful when comparing very large trees.
+        dist_f : function
+            The distance function used to compare two the tip-tip distance
+            matrices
+        shuffle_f : function
+            The shuffling function used if `sample` is not None
+
+        Returns
+        -------
+        float
+            The distance between the trees
+
+        Raises
+        ------
+        ValueError
+            A ValueError is raised if there does not exist common tips
+            between the trees
+
+        See Also
+        --------
+        TreeNode.compare_subsets
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> # note, only three common taxa between the trees
+        >>> tree1 = TreeNode.from_newick("((a:1,b:1):2,(c:0.5,X:0.7):3);")
+        >>> tree2 = TreeNode.from_newick("(((a:1,b:1,Y:1):2,c:3):1,Z:4);")
+        >>> dist = tree1.compare_tip_distances(tree2)
+        >>> print "%.9f" % dist
+        0.000133446
         """
         self_names = {i.Name: i for i in self.tips()}
         other_names = {i.Name: i for i in other.tips()}
@@ -2354,18 +2521,19 @@ class TreeNode(object):
     ### end comparison methods ###
 
     def index_tree(self):
-        """Returns ({node_id:node}, [node_id,first_child,last_child])
+        """Index a tree for rapid lookups within a tree array
 
         Indexes nodes in-place as n._leaf_index.
 
+        Results
+        -------
+        dict
+            A mapping {node_id: TreeNode}
+        list of tuple of (int, int, int)
+            The first index in each tuple is the corresponding node_id. The
+            second index is the left most leaf index. The third index is the
+            right most leaf index
         """
-        ## stubbed out right now, broke numpydoc
-        #Algorithm is as follows
-        #for each node in post-order traversal over tree
-        #    if the node has children
-        #        set an index on each child
-        #        for each child with children
-        #            add the child and its start and end tips to the result
         id_index = {}
         child_index = []
         curr_index = 0
@@ -2395,6 +2563,10 @@ class TreeNode(object):
         return id_index, child_index
 
     def assign_ids(self):
-        """Assign topologically stable unique IDs to self"""
+        """Assign topologically stable unique Ids to self
+
+        Following the call, all nodes in the tree will have their `Id`
+        attribute set
+        """
         for idx, n in enumerate(self.postorder(include_self=True)):
             n.Id = idx
