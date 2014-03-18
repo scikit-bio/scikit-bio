@@ -232,10 +232,10 @@ class SequenceCollectionTests(TestCase):
 
         self.assertFalse(self.invalid_s1.is_valid())
 
-    def test_items(self):
-        """ items functions as expected
+    def test_iteritems(self):
+        """ iteritems functions as expected
         """
-        self.assertEqual(list(self.s1.items()),
+        self.assertEqual(list(self.s1.iteritems()),
                          [(s.identifier, s) for s in self.s1])
 
     def test_lower(self):

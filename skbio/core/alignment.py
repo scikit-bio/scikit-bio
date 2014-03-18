@@ -351,13 +351,13 @@ class SequenceCollection(object):
 
         Return
         ------
-        tuple
+        tuple of (int, float, float)
             The sequence count, center of length distribution, spread of length
             distribution.
 
         Notes
         -----
-        Alternatives for center_f and spread_f could be median and median
+        Alternatives for `center_f` and `spread_f` could be median and median
         absolute deviation.
 
         Examples
@@ -367,13 +367,8 @@ class SequenceCollection(object):
         >>> sequences = [DNA('ACCGT', identifier="seq1"),
         ...              DNA('AACCGGT', identifier="seq2")]
         >>> s1 = SequenceCollection(sequences)
-        >>> count, center, spread = s1.distribution_stats()
-        >>> print count
-        2
-        >>> print center
-        6.0
-        >>> print spread
-        1.0
+        >>> s1.distribution_stats()
+        (2, 6.0, 1.0)
 
         """
         sequence_lengths = self.sequence_lengths()
@@ -404,10 +399,7 @@ class SequenceCollection(object):
         AACCGGT
 
         """
-        result = []
-        for seq in self:
-            result.append(seq.degap())
-        return SequenceCollection(result)
+        return SequenceCollection([seq.degap() for seq in self])
 
     def get_seq(self, identifier):
         r"""Return a sequence from the `SequenceCollection` by its identifier.
@@ -441,7 +433,7 @@ class SequenceCollection(object):
         return self[self._identifier_to_index[identifier]]
 
     def identifiers(self):
-        """Returns the `BiologicalSequence` idenitfiers
+        """Returns the `BiologicalSequence` identifiers
 
         Returns
         -------
@@ -484,7 +476,12 @@ class SequenceCollection(object):
         are picky about their sequence identifiers (e.g., raXML).
 
         The integer-based identifiers will be strings, for consistency (e.g.,
-        if prefix is passed).
+        if prefix is passed) and begin at 1.
+
+        References
+        ----------
+        RAxML Version 8: A tool for Phylogenetic Analysis and Post-Analysis of
+        Large Phylogenies". In Bioinformatics, 2014
 
         Examples
         --------
@@ -513,7 +510,7 @@ class SequenceCollection(object):
         return dict(int_map), dict(int_keys)
 
     def is_valid(self):
-        """Return ``True`` if the SequenceCollection is valid
+        """Return True if the SequenceCollection is valid
 
         Returns
         -------
@@ -547,7 +544,7 @@ class SequenceCollection(object):
         """
         return self._validate_character_set()
 
-    def items(self):
+    def iteritems(self):
         """Generator of identifier, sequence tuples
 
         Returns
@@ -577,10 +574,7 @@ class SequenceCollection(object):
         upper
 
         """
-        result = []
-        for seq in self:
-            result.append(seq.lower())
-        return self.__class__(result)
+        return self.__class__([seq.lower() for seq in self])
 
     def sequence_count(self):
         """Return the count of sequences in the `SequenceCollection`
@@ -659,10 +653,7 @@ class SequenceCollection(object):
         lower
 
         """
-        result = []
-        for seq in self:
-            result.append(seq.upper())
-        return self.__class__(result)
+        return self.__class__([seq.upper() for seq in self])
 
     def _validate_character_set(self):
         """Return ``True`` if all sequences are valid, ``False`` otherwise
@@ -675,6 +666,13 @@ class SequenceCollection(object):
 
 class Alignment(SequenceCollection):
     """Class for storing alignments of biological sequences.
+
+    Notes
+    -----
+    By definition, all of the sequences in an alignment must be of the same
+    length. For this reason, an alignment can be thought of as a matrix of
+    sequences (rows) by positions (columns).
+
     """
 
     def distances(self):
@@ -687,13 +685,18 @@ class Alignment(SequenceCollection):
 
         Raises
         ------
-        skbio.core.expection.BiologicalSequenceError
+        skbio.core.exception.BiologicalSequenceError
             If ``len(self) != len(other)``.
 
         See Also
         --------
         skbio.core.distance.DistanceMatrix
         scipy.spatial.distance.hamming
+
+        Notes
+        -----
+        Distances between sequences are computed as hamming distances, though
+        this will be generalized (see #194).
 
         Examples
         --------
@@ -715,10 +718,10 @@ class Alignment(SequenceCollection):
         sequence_count = self.sequence_count()
         dm = np.zeros((sequence_count, sequence_count))
         identifiers = []
-        for i in range(sequence_count):
+        for i in xrange(sequence_count):
             self_i = self[i]
             identifiers.append(self_i.identifier)
-            for j in range(i):
+            for j in xrange(i):
                 dm[i, j] = dm[j, i] = self_i.distance(self[j])
         return SymmetricDistanceMatrix(dm, identifiers)
 
@@ -738,10 +741,10 @@ class Alignment(SequenceCollection):
             `Alignment`. If this is not passed, the default will be to retain
             all positions.
         invert_seqs_to_keep : bool, optional
-            If True, the sequences identified in `seqs_to_keep` will be
+            If `True`, the sequences identified in `seqs_to_keep` will be
             discarded, rather than retained.
         invert_positions_to_keep : bool, optional
-            If True, the sequences identified in `positions_to_keep` will be
+            If `True`, the sequences identified in `positions_to_keep` will be
             discarded, rather than retained.
 
         Returns
@@ -774,56 +777,87 @@ class Alignment(SequenceCollection):
         <Alignment: n=2; mean +/- std length=4.00 +/- 0.00>
 
         """
+        # if seqs_to_keep was not passed
         if seqs_to_keep is None:
+            # and invert_seqs_to_keep is True
             if invert_seqs_to_keep:
+                # return an empty alignment (because we're inverting the
+                # default of keeping all sequences)
                 return self.__class__([])
+            # else if invert_seqs_to_keep is False
             else:
+                # default to returning all sequences
                 def keep_seq(i, identifier):
                     return True
+        # else, if seqs_to_keep was passed
         else:
             seqs_to_keep = set(seqs_to_keep)
+            # and invert_seqs_to_keep is True
             if invert_seqs_to_keep:
+                # keep only sequences that were not listed in seqs_to_keep
                 def keep_seq(i, identifier):
                     return not (identifier in seqs_to_keep or
                                 i in seqs_to_keep)
+            # else if invert_seqs_to_keep is False
             else:
+                # keep only sequences that were listed in seqs_to_keep
                 def keep_seq(i, identifier):
                     return (identifier in seqs_to_keep or
                             i in seqs_to_keep)
 
+        # if positions_to_keep was not passed
         if positions_to_keep is None:
+            # and invert_positions_to_keep is True
             if invert_positions_to_keep:
+                # return an empty alignment (because we're inverting the
+                # default of keeping all positions)
                 return self.__class__([])
+            # else if invert_positions_to_keep is False
             else:
+                # default to returning all positions
                 def keep_position(pos):
                     return True
+        # else, if positions_to_keep was passed
         else:
             positions_to_keep = set(positions_to_keep)
+            # and invert_positions_to_keep is True
             if invert_positions_to_keep:
+                # keep only positions that were not listed in
+                # positions_to_keep
                 def keep_position(pos):
                     return not pos in positions_to_keep
+            # else if invert_positions_to_keep is False
             else:
+                # keep only sequences that were listed in positions_to_keep
                 def keep_position(pos):
                     return pos in positions_to_keep
 
+        # prep the result object
         result = []
-        for i, seq in enumerate(self):
-            if keep_seq(i, seq.identifier):
-                new_seq = []
-                for i, c in enumerate(seq):
-                    if keep_position(i):
-                        new_seq.append(c)
-                # this is bad, we are calling join too much. this
-                # should be addressed in issue #60
+        # iterate over sequences
+        for sequence_index, seq in enumerate(self):
+            # determine if we're keeping the current sequence
+            if keep_seq(sequence_index, seq.identifier):
+                # if so, iterate over the positions to determine which we're
+                # keeping, and store them in a new list
+                new_seq = [c for i, c in enumerate(seq) if keep_position(i)]
+                # and then pack the resulting sequence into a new
+                # BiologicalSequence object, of the same type as the current
+                # object.
+                # Note: This is bad, we are calling join too much. This
+                # should be addressed in issue #194.
                 result.append(seq.__class__(''.join(new_seq),
                               identifier=seq.identifier,
                               description=seq.description))
+            # if we're not keeping the current sequence, move on to the next
             else:
                 continue
+        # pack the result up in the same type of object as the current object
+        # and return it
         return self.__class__(result)
 
     def is_valid(self):
-        """Return `True` if the Alignment is valid
+        """Return True if the Alignment is valid
 
         Returns
         -------
@@ -847,7 +881,7 @@ class Alignment(SequenceCollection):
         >>> sequences = [DNA('ACCGT--', identifier="seq1"),
         ...              DNA('AACCGGT', identifier="seq2")]
         >>> a1 = Alignment(sequences)
-        >>> print a1.is_valid()
+        >>> a1.is_valid()
         True
         >>> sequences = [DNA('ACCGT', identifier="seq1"),
         ...              DNA('AACCGGT', identifier="seq2")]
@@ -865,11 +899,11 @@ class Alignment(SequenceCollection):
         return super(Alignment, self).is_valid() and self._validate_lengths()
 
     def iter_positions(self, constructor=None):
-        """Generator of `Alignment` positions (i.e., columns)
+        """Generator of Alignment positions (i.e., columns)
 
         Parameters
         ----------
-        constructor : function, optional
+        constructor : type, optional
             Constructor function for creating the positional values. By
             default, these will be the same type as corresponding
             `skbio.core.sequence.BiologicalSequence` in the
@@ -880,7 +914,7 @@ class Alignment(SequenceCollection):
 
         Returns
         -------
-        generator
+        GeneratorType
             Generator of lists of positional values in the
             `SequenceCollection` (effectively the transpose of the alignment).
 
@@ -972,7 +1006,7 @@ class Alignment(SequenceCollection):
         return constructor(result)
 
     def omit_gap_positions(self, maximum_gap_frequency):
-        """Returns `Alignment` with positions filtered based on gap frequency
+        """Returns Alignment with positions filtered based on gap frequency
 
         Parameters
         ----------
@@ -990,7 +1024,7 @@ class Alignment(SequenceCollection):
         Examples
         --------
         >>> from skbio.core.alignment import Alignment
-        >>> from skbio.core.sequence import DNA, RNA
+        >>> from skbio.core.sequence import DNA
         >>> sequences = [DNA('AC--', identifier="seq1"),
         ...              DNA('AT-C', identifier="seq2"),
         ...              DNA('TT-C', identifier="seq3")]
@@ -1017,7 +1051,7 @@ class Alignment(SequenceCollection):
         return self.subalignment(positions_to_keep=positions_to_keep)
 
     def omit_gap_sequences(self, maximum_gap_frequency):
-        """Returns `Alignment` with sequences filtered based on gap frequency
+        """Returns Alignment with sequences filtered based on gap frequency
 
         Parameters
         ----------
@@ -1052,14 +1086,14 @@ class Alignment(SequenceCollection):
         sequence_frequencies = self.sequence_frequencies()
         gap_alphabet = self[0].gap_alphabet()
         seqs_to_keep = []
-        for seq, f in zip(self, sequence_frequencies):
+        for seq, f in izip(self, sequence_frequencies):
             gap_frequency = sum([f[c] for c in gap_alphabet])
             if gap_frequency <= maximum_gap_frequency:
                 seqs_to_keep.append(seq.identifier)
         return self.subalignment(seqs_to_keep=seqs_to_keep)
 
     def position_counters(self):
-        """Return ``collection.Counter`` object for positions in `Alignment`
+        """Return collection.Counter object for positions in Alignment
 
         Returns
         -------
@@ -1088,13 +1122,10 @@ class Alignment(SequenceCollection):
         Counter({'C': 2, '-': 1})
 
         """
-        result = []
-        for p in self.iter_positions(constructor=str):
-            result.append(Counter(p))
-        return result
+        return [Counter(p) for p in self.iter_positions(constructor=str)]
 
     def position_frequencies(self):
-        """Return frequencies of characters for positions in `Alignment`
+        """Return frequencies of characters for positions in Alignment
 
         Returns
         -------
@@ -1134,7 +1165,7 @@ class Alignment(SequenceCollection):
         return result
 
     def position_entropies(self, base=None):
-        """Return Shannon entropy of positions in `Alignment`
+        """Return Shannon entropy of positions in Alignment
 
         Parameters
         ----------
