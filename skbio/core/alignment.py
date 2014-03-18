@@ -8,7 +8,7 @@ Sequence collections and alignments (:mod:`skbio.core.alignment`)
 This module provides functionality for working with biological sequence
 collections and alignments. These can be composed of generic sequences,
 nucelotide sequences, DNA sequences, and RNA sequences. By default, input is
-not validated, expect that sequence identifiers must be unique, but all
+not validated, except that sequence identifiers must be unique, but all
 contructor methods take a validate option which checks different features of
 the input based on `SequenceCollection` type.
 
@@ -925,7 +925,7 @@ class Alignment(SequenceCollection):
         Examples
         --------
         >>> from skbio.core.alignment import Alignment
-        >>> from skbio.core.sequence import DNA, RNA
+        >>> from skbio.core.sequence import DNA
         >>> sequences = [DNA('ACCGT--', identifier="seq1"),
         ...              DNA('AACCGGT', identifier="seq2")]
         >>> a1 = Alignment(sequences)
@@ -983,7 +983,7 @@ class Alignment(SequenceCollection):
         Examples
         --------
         >>> from skbio.core.alignment import Alignment
-        >>> from skbio.core.sequence import DNA, RNA
+        >>> from skbio.core.sequence import DNA
         >>> sequences = [DNA('AC--', identifier="seq1"),
         ...              DNA('AT-C', identifier="seq2"),
         ...              DNA('TT-C', identifier="seq3")]
@@ -1069,7 +1069,7 @@ class Alignment(SequenceCollection):
         Examples
         --------
         >>> from skbio.core.alignment import Alignment
-        >>> from skbio.core.sequence import DNA, RNA
+        >>> from skbio.core.sequence import DNA
         >>> sequences = [DNA('AC--', identifier="seq1"),
         ...              DNA('AT-C', identifier="seq2"),
         ...              DNA('TT-C', identifier="seq3")]
@@ -1109,7 +1109,7 @@ class Alignment(SequenceCollection):
         Examples
         --------
         >>> from skbio.core.alignment import Alignment
-        >>> from skbio.core.sequence import DNA, RNA
+        >>> from skbio.core.sequence import DNA
         >>> sequences = [DNA('AC--', identifier="seq1"),
         ...              DNA('AT-C', identifier="seq2"),
         ...              DNA('TT-C', identifier="seq3")]
@@ -1143,7 +1143,7 @@ class Alignment(SequenceCollection):
         Examples
         --------
         >>> from skbio.core.alignment import Alignment
-        >>> from skbio.core.sequence import DNA, RNA
+        >>> from skbio.core.sequence import DNA
         >>> sequences = [DNA('AC--', identifier="seq1"),
         ...              DNA('AT-C', identifier="seq2"),
         ...              DNA('TT-C', identifier="seq3")]
@@ -1191,7 +1191,7 @@ class Alignment(SequenceCollection):
         Examples
         --------
         >>> from skbio.core.alignment import Alignment
-        >>> from skbio.core.sequence import DNA, RNA
+        >>> from skbio.core.sequence import DNA
         >>> sequences = [DNA('AC--', identifier="seq1"),
         ...              DNA('AT-C', identifier="seq2"),
         ...              DNA('TT-C', identifier="seq3")]
@@ -1222,7 +1222,7 @@ class Alignment(SequenceCollection):
         Examples
         --------
         >>> from skbio.core.alignment import Alignment
-        >>> from skbio.core.sequence import DNA, RNA
+        >>> from skbio.core.sequence import DNA
         >>> sequences = [DNA('AC--', identifier="seq1"),
         ...              DNA('AT-C', identifier="seq2"),
         ...              DNA('TT-C', identifier="seq3")]
@@ -1259,7 +1259,7 @@ class Alignment(SequenceCollection):
         Examples
         --------
         >>> from skbio.core.alignment import Alignment
-        >>> from skbio.core.sequence import DNA, RNA
+        >>> from skbio.core.sequence import DNA
         >>> sequences = [DNA('AC--', identifier="seq1"),
         ...              DNA('AT-C', identifier="seq2"),
         ...              DNA('TT-C', identifier="seq3")]
