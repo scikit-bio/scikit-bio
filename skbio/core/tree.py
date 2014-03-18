@@ -359,15 +359,92 @@ class TreeNode(object):
         return node
 
     def append(self, node):
-        """Appends i to self.Children, in-place, cleaning up refs."""
+        """Appends a node to self.Children, in-place, cleaning up refs
+
+        `append` will invalidate any node lookup caches, remove an existing
+        parent on `node` if one exists, set the parent of `node` to `self`
+        and add the `node` to `self`s `children`.
+
+        Parameters
+        ----------
+        node : TreeNode
+            An existing TreeNode object
+
+        See Also
+        --------
+        TreeNode.extend
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> root = TreeNode(Name="root")
+        >>> child1 = TreeNode(Name="child1")
+        >>> child2 = TreeNode(Name="child2")
+        >>> root.append(child1)
+        >>> root.append(child2)
+        >>> print root
+        (child1,child2)root;
+
+        """
         self.Children.append(self._adopt(node))
 
     def extend(self, nodes):
-        """Append a list of nodes to self"""
+        """Append a list of nodes to self
+
+        `extend` will invalidate any node lookup caches, remoev existing
+        parents of the `nodes` if they have any, set their parents to `self
+        and add the nodes to `self`s `children`.
+
+        Parameters
+        ----------
+        nodes : list of TreeNode
+            A list of TreeNode objects
+
+        See Also
+        --------
+        TreeNode.append
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> root = TreeNode(Name="root")
+        >>> root.extend([TreeNode(Name="child1"), TreeNode(Name="child2")])
+        >>> print root
+        (child1,child2)root;
+
+        """
         self.Children.extend([self._adopt(n) for n in nodes])
 
     def pop(self, index=-1):
-        """Remove a node from self"""
+        """Remove a node from self
+
+        Remove a child node by its index position. All node lookup caches
+        are invalidated, and the parent reference for the popped node will be
+        set to None.
+
+        Parameters
+        ----------
+        index : int
+            The index position in children to pop
+
+        Returns
+        -------
+        TreeNode
+            The popped child
+
+        See Also
+        --------
+        TreeNode.remove
+        TreeNode.remove_deleted
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree = TreeNode.from_newick("(a,b)c;")
+        >>> print tree.pop(0)
+        a;
+
+        """
         return self._remove_node(index)
 
     def _remove_node(self, idx):
@@ -378,7 +455,33 @@ class TreeNode(object):
         return node
 
     def remove(self, node):
-        """Remove a node from self"""
+        """Remove a node from self
+
+        Remove a `node` from `self` by identity of the node.
+
+        Parameters
+        ----------
+        node : TreeNode
+            The node to remove from self's children
+
+        Returns
+        -------
+        bool
+            True if the node was removed, False otherwise
+
+        See Also
+        --------
+        TreeNode.pop
+        TreeNode.remove_deleted
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree = TreeNode.from_newick("(a,b)c;")
+        >>> tree.remove(tree.Children[0])
+        True
+
+        """
         for (i, curr_node) in enumerate(self.Children):
             if curr_node == node:
                 self._remove_node(i)
@@ -386,7 +489,29 @@ class TreeNode(object):
         return False
 
     def remove_deleted(self, func):
-        """Delete nodes in which f(node) evaluates True"""
+        """Delete nodes in which func(node) evaluates True
+
+        Remove all descendents from self that evaluate True from `func`. This
+        has the potential to drop clades.
+
+        Parameters
+        ----------
+        func : a function
+            A function that evaluates `True` when a node should be deleted
+
+        See Also
+        --------
+        TreeNode.pop
+        TreeNode.remove
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree = TreeNode.from_newick("(a,b)c;")
+        >>> tree.remove_deleted(lambda x: x.Name == 'b')
+        >>> print tree
+        (a)c;
+        """
         for node in self.traverse(include_self=False):
             if func(node):
                 node.Parent.remove(node)
@@ -395,7 +520,33 @@ class TreeNode(object):
         """Reconstructs correct topology after nodes have been removed.
 
         Internal nodes with only one child will be removed and new connections
-        will be made to reflect change.
+        will be made to reflect change. This method is useful to call
+        following node removals as it will clean up nodes with singular
+        children.
+
+        Names and properties of singular children will override the names and
+        properties of their parents following the prune.
+
+        Node lookup caches are invalidated.
+
+        See Also
+        --------
+        TreeNode.shear
+        TreeNode.remove
+        TreeNode.pop
+        Treenode.remove_deleted
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree = TreeNode.from_newick("((a,b)c,(d,e)f)root;")
+        >>> to_delete = tree.find('b')
+        >>> tree.remove_deleted(lambda x: x == to_delete)
+        >>> print tree
+        ((a)c,(d,e)f)root;
+        >>> tree.prune()
+        >>> print tree
+        ((d,e)f,a)root;
         """
         # build up the list of nodes to remove so the topology is not altered
         # while traversing
@@ -408,8 +559,6 @@ class TreeNode(object):
         for node in nodes_to_remove:
             node.Parent.append(node.Children[0])
             node.Parent.remove(node)
-
-        self.invalidate_node_cache()
 
 #   def shear(self, names):
 #       """Lop off tips until the tree just has the desired tip names"""
@@ -432,7 +581,32 @@ class TreeNode(object):
 
     ### copy like methods ###
     def copy(self):
-        """Returns a copy of self using an iterative approach"""
+        """Returns a copy of self using an iterative approach
+
+        Perform an iterative deepcopy of self. It is not assured that the copy
+        of node attributes will be performed iteratively as that depends on
+        the copy method of the types being copied
+
+        Returns
+        -------
+        TreeNode
+            A new copy of self
+
+        See Also
+        --------
+        TreeNode.unrooted_deepcopy
+        TreeNode.unrooted_copy
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree = TreeNode.from_newick("((a,b)c,(d,e)f)root;")
+        >>> tree_copy = tree.copy()
+        >>> tree_nodes = set([id(n) for n in tree.traverse()])
+        >>> tree_copy_nodes = set([id(n) for n in tree_copy.traverse()])
+        >>> print len(tree_nodes.intersection(tree_copy_nodes))
+        0
+        """
         def __copy_node(node_to_copy):
             """Helper method to copy a node"""
             # this is _possibly_ dangerous, we're assuming the node to copy is
