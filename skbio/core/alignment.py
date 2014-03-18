@@ -87,7 +87,7 @@ class SequenceCollection(object):
             If True, runs the `is_valid` method after construction and raises
             `SequenceCollectionError` if ``is_valid == False``.
 
-        Results
+        Returns
         -------
         SequenceCollection (or a derived class)
             The new `SequenceCollection` object.
@@ -149,7 +149,7 @@ class SequenceCollection(object):
             If True, runs the `is_valid` method after construction and raises
             `SequenceCollectionError` if ``is_valid == False``.
 
-        Results
+        Returns
         -------
         SequenceCollection (or a derived class)
             The new `SequenceCollection` object.
@@ -349,8 +349,8 @@ class SequenceCollection(object):
             Should take a list-like object and return a single value
             representing the spread of the distribution.
 
-        Return
-        ------
+        Returns
+        -------
         tuple of (int, float, float)
             The sequence count, center of length distribution, spread of length
             distribution.
