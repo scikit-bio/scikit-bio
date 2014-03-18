@@ -271,8 +271,8 @@ class CompressedTrie:
     pair_list : list of tuples, optional
         List of (key, value) pairs to initialize the Trie
 
-    Attributes:
-    -----------
+    Attributes
+    ----------
     size
     prefix_map
     """
