@@ -133,8 +133,8 @@ E 0.5
 root None
 
 Now let's compare two trees using the distances computed pairwise between tips
-in the trees. The distance computed, by default, is based off of the Pearson
-correlation coefficent:
+in the trees. The distance computed, by default, is the correlation of all
+pairwise tip-to-tip distances between trees:
 
 >>> print tree1.compare_tip_distances(tree1)  # identity case
 0.0
