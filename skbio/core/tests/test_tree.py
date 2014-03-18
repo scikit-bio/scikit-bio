@@ -457,9 +457,7 @@ class TreeTests(TestCase):
 
     def test_root_at_midpoint(self):
         """Root at the midpoint"""
-        nodes, tree = self.TreeNode, self.TreeRoot
-        tree1 = tree.copy()
-
+        nodes, tree1 = self.TreeNode, self.TreeRoot
         for n in tree1.traverse():
             n.Length = 1
 

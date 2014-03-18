@@ -826,6 +826,11 @@ class TreeNode(object):
         TreeNode
             A new copy of the tree
 
+        Raises
+        ------
+        TreeError
+            Raises a `TreeError` if a tip is specified as the new root
+
         See Also
         --------
         TreeNode.root_at_midpoint
@@ -850,8 +855,35 @@ class TreeNode(object):
     def root_at_midpoint(self):
         """Return a new tree rooted at midpoint of the two tips farthest apart
 
-        this fn doesn't preserve the internal node naming or structure,
-        but does keep tip to tip distances correct.  uses unrooted_copy()
+        This method doesn't preserve the internal node naming or structure,
+        but does keep tip to tip distances correct. Uses unrooted_copy() but
+        operates on a full copy of the tree.
+
+        Raises
+        ------
+        TreeError
+            If a tip ends up being the mid point
+
+        Returns
+        -------
+        TreeNode
+            A tree rooted at its midpoint
+        LengthError
+            Midpoint rooting requires `Length` and will raise (indirectly) if
+            evaluated nodes don't have `Length`
+
+        See Also
+        --------
+        TreeNode.root_at
+        TreeNode.unrooted_deepcopy
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree = TreeNode.from_newick("(((d:1,e:1,(g:1)f:1)c:1)b:1,h:1)a:1;")
+        >>> print tree.root_at_midpoint()
+        ((d:1.0,e:1.0,(g:1.0)f:1.0)c:0.5,((h:1.0)b:1.0):0.5)root;
+
         """
         tree = self.copy()
         max_dist, tips = tree.get_max_distance()
@@ -902,11 +934,51 @@ class TreeNode(object):
     ### node checks ###
 
     def is_tip(self):
-        """Returns True if the current node is a tip, i.e. has no children."""
+        """Returns True if the current node is a tip, i.e. has no children.
+
+        Returns
+        -------
+        bool
+            `True` if the node is a tip
+
+        See Also
+        --------
+        TreeNode.is_root
+        TreeNode.has_children
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree = TreeNode.from_newick("((a,b)c);")
+        >>> print tree.is_tip()
+        False
+        >>> print tree.find('a').is_tip()
+        True
+        """
         return not self.Children
 
     def is_root(self):
-        """Returns True if the current is a root, i.e. has no parent."""
+        """Returns True if the current is a root, i.e. has no parent.
+
+        Returns
+        -------
+        bool
+            `True` if the node is the root
+
+        See Also
+        --------
+        TreeNode.is_tip
+        TreeNode.has_children
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree = TreeNode.from_newick("((a,b)c);")
+        >>> print tree.is_root()
+        True
+        >>> print tree.find('a').is_root()
+        False
+        """
         return self.Parent is None
 
     def has_children(self):
