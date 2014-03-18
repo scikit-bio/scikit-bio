@@ -256,7 +256,17 @@ class TreeNode(object):
         Connect this node to a parent
     children : list of TreeNode or None
         Connect this node to existing children
+
+    Attributes
+    ----------
+    name
+    length
+    parent
+    children
+    id
+
     """
+
     _exclude_from_copy = set(['Parent', 'Children', '_node_cache'])
 
     def __init__(self, Name=None, Length=None, Parent=None, Children=None):
@@ -273,8 +283,27 @@ class TreeNode(object):
 
     ### start operators ###
     def __repr__(self):
-        """Returns summary of the tree"""
-        nodes = [n for n in self.traverse(include_self=True)]
+        """Returns summary of the tree
+
+        Returns
+        -------
+        str
+            A summary of this node and all descendents
+
+        Notes
+        -----
+        This method returns the name of the node and a count of tips and the
+        number of internal nodes in the tree
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree = TreeNode.from_newick("((a,b)c, d)root;")
+        >>> repr(tree)
+        '<TreeNode, name: root internal node count: 1, tips count: 3>'
+
+        """
+        nodes = [n for n in self.traverse(include_self=False)]
         n_tips = sum([n.is_tip() for n in nodes])
         n_nontips = len(nodes) - n_tips
         classname = self.__class__.__name__
@@ -284,7 +313,27 @@ class TreeNode(object):
                (classname, name, n_nontips, n_tips)
 
     def __str__(self):
-        """Returns string version of self, with names and distances."""
+        """Returns string version of self, with names and distances
+
+        Returns
+        -------
+        str
+            Returns a Newick representation of the tree
+
+        See Also
+        --------
+        TreeNode.to_newick
+        TreeNode.from_newick
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree = TreeNode.from_newick("((a,b)c);")
+        >>> str(tree)
+        '((a,b)c);'
+
+        """
+
         return self.to_newick(with_distances=True)
 
     def __iter__(self):
