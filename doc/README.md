@@ -263,12 +263,12 @@ arbitrary scripts prior to commit.
 First, we need to setup a place for your hooks to live under your favorite
 repository:
 
-    $ mkdir -p /path/to/scikit-bio/.git/hooks
+    $ mkdir -p $HOME/scikit-bio/.git/hooks
 
 Finally, we need to get the actual pre-commit script:
 
-    $ curl -o /path/to/scikit-bio/.git/hooks/pre-commit http://goo.gl/nQ1KVz
-    $ chmod +x $HOME/git/templates/hooks/pre-commit
+    $ curl -o $HOME/scikit-bio/.git/hooks/pre-commit http://goo.gl/nQ1KVz
+    $ chmod +x $HOME/skikit-bio/.git/hooks/pre-commit
 
 ### Ignoring the pre-commit hook
 
