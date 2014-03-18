@@ -99,8 +99,9 @@ You can pass the include_self flag to non_tips if you wish to include self.
 
 The TreeNode provides a few ways to compare trees. First, let's create two
 similar trees and compare their topologies using compare_subsets. This
-distance is based off the number of common clades present between two
-trees:
+distance is the fraction of common clades present in the two trees, where a
+distance of 0 means the trees contain identical clades, and a distance of 1
+indicates the trees do not share any common clades:
 
 >>> tree1 = TreeNode.from_newick("((A, B)C, (D, E)F, (G, H)I)root;")
 >>> tree2 = TreeNode.from_newick("((G, H)C, (D, E)F, (B, A)I)root;")
