@@ -1448,6 +1448,10 @@ class TreeNode(object):
         TreeNode
             The found node
 
+        See Also
+        --------
+        TreeNode.find_by_id
+        TreeNode.find_by_func
         Examples
         --------
         >>> from skbio.core.tree import TreeNode
@@ -1470,9 +1474,32 @@ class TreeNode(object):
     def find_by_id(self, id_):
         """Find a node by id
 
-        This method returns raises MissingNodeError if the node is not found.
-        The first time this method is called, an internal cache is
-        constructed to improve performance on subsequent calls.
+        Parameters
+        ----------
+        id_ : int
+            The id of a node in the tree
+
+        Returns
+        -------
+        TreeNode
+            The tree node with the matcing id
+
+        Raises
+        ------
+        MissingNodeError
+            This method will raise if the id cannot be found
+
+        See Also
+        --------
+        TreeNode.find
+        TreeNode.find_by_func
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree = TreeNode.from_newick("((a,b)c,(d,e)f);")
+        >>> print tree.find_by_id(2).Name
+        c
         """
         # if this method gets used frequently, then we should cache by ID
         # as well
@@ -1489,10 +1516,57 @@ class TreeNode(object):
         else:
             return node
 
+    def find_by_func(self, func):
+        """Find all nodes given a function
+
+        Parameters
+        ----------
+        func : a function
+            A function that accepts a TreeNode and returns True or False,
+            where True indicates the node is to be yielded
+
+        Returns
+        -------
+        GeneratorType
+            A generator that yields nodes
+
+        See Also
+        --------
+        TreeNode.find
+        TreeNode.find_by_id
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree = TreeNode.from_newick("((a,b)c,(d,e)f);")
+        >>> func = lambda x: x.Parent == tree.find('c')
+        >>> [n.Name for n in tree.find_by_func(func)]
+        ['a', 'b']
+        """
+        for node in self.traverse(include_self=True):
+            if func(node):
+                yield node
+
     ### path methods ###
 
     def ancestors(self):
-        """Returns all ancestors back to the root. Dynamically calculated."""
+        """Returns all ancestors back to the root
+
+        This call will return all nodes in the path back to root, but does not
+        include the node instance that the call was made from.
+
+        Returns
+        -------
+        list of TreeNode
+            The path, toward the root, from self
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree = TreeNode.from_newick("((a,b)c,(d,e)f)root;")
+        >>> [node.Name for node in tree.find('a').ancestors()]
+        ['c', 'root']
+        """
         if self.is_root():
             return []
 
@@ -2106,5 +2180,5 @@ class TreeNode(object):
 
     def assign_ids(self):
         """Assign topologically stable unique IDs to self"""
-        for idx, n in enumerate(self.traverse(include_self=True)):
+        for idx, n in enumerate(self.postorder(include_self=True)):
             n.Id = idx

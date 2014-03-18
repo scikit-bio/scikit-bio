@@ -242,6 +242,14 @@ class TreeTests(TestCase):
         with self.assertRaises(MissingNodeError):
             _ = t1.find_by_id(100)
 
+    def test_find_by_func(self):
+        """Find nodes by a function"""
+        t = TreeNode.from_newick("((a,b)c,(d,e)f);")
+        func = lambda x: x.Parent == t.find('c')
+        exp = ['a', 'b']
+        obs = [n.Name for n in t.find_by_func(func)]
+        self.assertEqual(obs, exp)
+
     def test_ancestors(self):
         """Get all the ancestors"""
         exp = ['i1', 'root']
