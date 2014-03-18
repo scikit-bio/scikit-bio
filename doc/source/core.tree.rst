@@ -1,1 +1,1 @@
-.. automodule:: skbio.core.sequence
+.. automodule:: skbio.core.tree
