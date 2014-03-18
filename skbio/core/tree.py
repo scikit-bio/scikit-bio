@@ -1666,8 +1666,28 @@ class TreeNode(object):
     def lowest_common_ancestor(self, tipnames):
         """Lowest common ancestor for a list of tipnames
 
-        This should be around O(H sqrt(n)), where H is height and n is the
-        number of tips passed in.
+        Parameters
+        ----------
+        tipnames : list of TreeNode or str
+            The nodes of interest
+
+        Returns
+        -------
+        TreeNode
+            The lowest common ancestor of the passed in nodes
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree = TreeNode.from_newick("((a,b)c,(d,e)f)root;")
+        >>> nodes = [tree.find('a'), tree.find('b')]
+        >>> lca = tree.lowest_common_ancestor(nodes)
+        >>> print lca.Name
+        c
+        >>> nodes = [tree.find('a'), tree.find('e')]
+        >>> lca = tree.lca(nodes)  # lca is an alias for convience
+        >>> print lca.Name
+        root
         """
         if len(tipnames) == 1:
             return self.find(tipnames[0])
@@ -1715,9 +1735,83 @@ class TreeNode(object):
 
     @classmethod
     def from_newick(cls, lines, unescape_name=True):
-        """Returns tree from the Clustal .dnd file format and equivalent.
+        """Returns tree from the Clustal .dnd file format and equivalent
 
         Tree is made of skbio.core.tree.TreeNode objects, with branch lengths
+        if specified by the format.
+
+        More information on the Newick format can be found here [1]. In brief,
+        the format uses parentheses to define nesting. For instance, a three
+        taxon tree can be represented with:
+
+        ((a,b),c);
+
+        Two possible ways to represent this tree drawing it out would be:
+
+           *
+          /\\
+         *  \\
+        / \  \\
+        a b   c
+
+        a
+        \\__|___ c
+         /
+        b
+
+        The Newick format allows for defining branch length as well, for
+        example:
+
+        ((a:0.1,b:0.2):0.3,c:0.4);
+
+        This structure has a the same topology as the first example but the
+        tree now contains more information about how similar or dissimilar
+        nodes are to their parents. In the above example, we can see that tip
+        `a` has a distance of 0.1 to its parent, and `b` has a distance of 0.2
+        to its parent. We can additionally see that the clade that encloses
+        tips `a` and `b` has a distance of 0.3 to its parent, or in this case,
+        the root.
+
+        Parameters
+        ----------
+        lines : a str, a list of str, or a file-like object
+            The input newick string to parse
+        unescape_names : bool
+            Remove extraneous quote marks around names. Sometimes other
+            programs are sensitive to the characters used in names, and it
+            is essential (at times) to quote node names for compatibility.
+
+        Returns
+        -------
+        TreeNode
+            The root of the parsed tree
+
+        Raises
+        ------
+        RecordError
+            The following three conditions will trigger a `RecordError`:
+                * Unbalanced number of left and right parentheses
+                * A malformed newick string. For instance, if a semicolon is
+                    embedded within the string as opposed to at the end.
+                * If a non-newick string is passed.
+
+        See Also
+        --------
+        TreeNode.to_newick
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> TreeNode.from_newick("((a,b)c,(d,e)f)root;")
+        <TreeNode, name: root internal node count: 2, tips count: 4>
+        >>> from StringIO import StringIO
+        >>> s = StringIO("((a,b),c);")
+        >>> TreeNode.from_newick(s)
+        <TreeNode, name: unnamed internal node count: 1, tips count: 3>
+
+        References
+        ----------
+        [1] http://evolution.genetics.washington.edu/phylip/newicktree.html
         """
         def _new_child(old_node):
             """Returns new_node which has old_node as its parent."""
