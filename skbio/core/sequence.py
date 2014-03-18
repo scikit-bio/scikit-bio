@@ -159,7 +159,7 @@ class BiologicalSequence(Sequence):
         Raises
         ------
         skbio.core.exception.BiologicalSequenceError
-          If ``validate == True`` and is_valid == False``.
+          If ``validate == True`` and ``is_valid == False``.
 
         See Also
         --------
@@ -264,11 +264,12 @@ class BiologicalSequence(Sequence):
         >>> from skbio.core.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUCGUGAAGGA')
         >>> s[1]
-        'G'
+        <BiologicalSequence: G (length: 1)>
 
         """
         try:
-            return self._sequence[i]
+            return self.__class__(self._sequence[i],
+                                  self.identifier, self.description)
         except IndexError:
             raise IndexError(
                 "Position %d is out of range for %r." % (i, self))
@@ -501,8 +502,9 @@ class BiologicalSequence(Sequence):
 
         Returns
         -------
-        A new `BiologicalSequence` with all characters from
-        `self.gap_alphabet` filtered from the sequence.
+        BiologicalSequence
+            A new `BiologicalSequence` with all characters from
+            `self.gap_alphabet` filtered from the sequence.
 
         Notes
         -----
@@ -879,6 +881,19 @@ class BiologicalSequence(Sequence):
         """
         return not self.has_unsupported_characters()
 
+    def lower(self):
+        """Convert the BiologicalSequence to lowercase
+
+        Returns
+        -------
+        BiologicalSequence
+            The `BiologicalSequence` with all characters converted to
+            lowercase.
+
+        """
+        return self.__class__(self._sequence.lower(),
+                              self.identifier, self.description)
+
     def to_fasta(self, field_delimiter=" ", terminal_character="\n"):
         """Return the sequence as a fasta-formatted string
 
@@ -923,6 +938,19 @@ class BiologicalSequence(Sequence):
 
         return '>%s\n%s%s' % (
             header_line, str(self), terminal_character)
+
+    def upper(self):
+        """Convert the BiologicalSequence to uppercase
+
+        Returns
+        -------
+        BiologicalSequence
+            The `BiologicalSequence` with all characters converted to
+            uppercase.
+
+        """
+        return self.__class__(self._sequence.upper(),
+                              self.identifier, self.description)
 
 
 class NucleotideSequence(BiologicalSequence):

@@ -11,6 +11,7 @@ API Reference
 .. toctree::
    :maxdepth: 1
 
+   core.alignment
    core.sequence
    core.distance
    core.exception
