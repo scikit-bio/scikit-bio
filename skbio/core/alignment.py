@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 r"""
 Sequence collections and alignments (:mod:`skbio.core.alignment`)
-================================================================
+=================================================================
 
 .. currentmodule:: skbio.core.alignment
 
