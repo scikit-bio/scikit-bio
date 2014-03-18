@@ -10,8 +10,8 @@
 
 
 from skbio.core.exception import FastqParseError, RecordError
-from skbio.parse.sequences import fastq_parse
-from skbio.parse.sequences import fasta_parse
+from skbio.parse.sequences import parse_fastq
+from skbio.parse.sequences import parse_fasta
 from unittest import TestCase, main
 
 
@@ -32,45 +32,45 @@ class GenericFastaTest(TestCase):
         self.empty = []
 
 
-class fasta_parseTests(GenericFastaTest):
-    """Tests of fasta_parse: returns (label, seq) tuples."""
+class parse_fastaTests(GenericFastaTest):
+    """Tests of parse_fasta: returns (label, seq) tuples."""
 
     def test_empty(self):
-        """fasta_parse should return empty list from 'file' w/o labels
+        """parse_fasta should return empty list from 'file' w/o labels
         """
-        self.assertEqual(list(fasta_parse(self.empty)), [])
-        self.assertEqual(list(fasta_parse(self.nolabels, strict=False)),
+        self.assertEqual(list(parse_fasta(self.empty)), [])
+        self.assertEqual(list(parse_fasta(self.nolabels, strict=False)),
                          [])
-        self.assertRaises(RecordError, list, fasta_parse(self.nolabels))
+        self.assertRaises(RecordError, list, parse_fasta(self.nolabels))
 
     def test_no_labels(self):
-        """fasta_parse should return empty list from file w/o seqs"""
+        """parse_fasta should return empty list from file w/o seqs"""
         # should fail if strict (the default)
         self.assertRaises(RecordError, list,
-                          fasta_parse(self.labels, strict=True))
+                          parse_fasta(self.labels, strict=True))
         # if not strict, should skip the records
-        self.assertEqual(list(fasta_parse(self.labels, strict=False)),
+        self.assertEqual(list(parse_fasta(self.labels, strict=False)),
                          [])
 
     def test_single(self):
-        """fasta_parse should read single record as (label, seq) tuple
+        """parse_fasta should read single record as (label, seq) tuple
         """
-        f = list(fasta_parse(self.oneseq))
+        f = list(parse_fasta(self.oneseq))
         self.assertEqual(len(f), 1)
         a = f[0]
         self.assertEqual(a, ('abc', 'UCAG'))
 
-        f = list(fasta_parse(self.multiline))
+        f = list(parse_fasta(self.multiline))
         self.assertEqual(len(f), 1)
         a = f[0]
         self.assertEqual(a, ('xyz', 'UUUUCCAAAAAG'))
 
     def test_gt_bracket_in_seq(self):
-        """fasta_parse handles alternate finder function
+        """parse_fasta handles alternate finder function
 
-            this test also illustrates how to use the fasta_parse
+            this test also illustrates how to use the parse_fasta
             to handle "sequences" that start with a > symbol, which can
-            happen when we abuse the fasta_parse to parse
+            happen when we abuse the parse_fasta to parse
             fasta-like sequence quality files.
         """
         oneseq_w_gt = '>abc\n>CAG\n'.split('\n')
@@ -83,14 +83,14 @@ class fasta_parseTests(GenericFastaTest):
                 else:
                     yield (line1, line)
                     line1 = None
-        f = list(fasta_parse(oneseq_w_gt, finder=get_two_line_records))
+        f = list(parse_fasta(oneseq_w_gt, finder=get_two_line_records))
         self.assertEqual(len(f), 1)
         a = f[0]
         self.assertEqual(a, ('abc', '>CAG'))
 
     def test_multiple(self):
-        """fasta_parse should read multiline records correctly"""
-        f = list(fasta_parse(self.threeseq))
+        """parse_fasta should read multiline records correctly"""
+        f = list(parse_fasta(self.threeseq))
         self.assertEqual(len(f), 3)
         a, b, c = f
         self.assertEqual(a, ('123', 'a'))
@@ -98,9 +98,9 @@ class fasta_parseTests(GenericFastaTest):
         self.assertEqual(c, ('456', 'cg'))
 
     def test_multiple_bad(self):
-        """fasta_parse should complain or skip bad records"""
-        self.assertRaises(RecordError, list, fasta_parse(self.twogood))
-        f = list(fasta_parse(self.twogood, strict=False))
+        """parse_fasta should complain or skip bad records"""
+        self.assertRaises(RecordError, list, parse_fasta(self.twogood))
+        f = list(parse_fasta(self.twogood, strict=False))
         self.assertEqual(len(f), 2)
         a, b = f
         self.assertEqual(a, ('abc', 'caggac'))
@@ -114,7 +114,7 @@ class ParseFastqTests(TestCase):
 
     def test_parse(self):
         """sequence and info objects should correctly match"""
-        for label, seq, qual in fastq_parse(self.fastq_example):
+        for label, seq, qual in parse_fastq(self.fastq_example):
             self.assertTrue(label in data)
             self.assertEqual(seq, data[label]["seq"])
             self.assertEqual(qual, data[label]["qual"])
@@ -122,7 +122,7 @@ class ParseFastqTests(TestCase):
     def test_parse_error(self):
         """Does this raise a FastqParseError with incorrect input?"""
         with self.assertRaises(FastqParseError):
-            list(fastq_parse(self.fastq_example_2, strict=True))
+            list(parse_fastq(self.fastq_example_2, strict=True))
 
 data = {
     "GAPC_0015:6:1:1259:10413#0/1":
