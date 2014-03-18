@@ -106,6 +106,40 @@ Documentation Guidelines
 
 We strive to keep scikit-bio's code well-documented, particularly its public-facing API. See our [documentation guide](doc/README.md) for more details on writing documentation in scikit-bio.
 
+Automatically verifying commits against PEP8
+--------------------------------------------
+
+The scikit-bio package conforms to the coding style guidelines in 
+[PEP8](http://legacy.python.org/dev/peps/pep-0008). There is a handy script
+that will check a [script](https://pypi.python.org/pypi/pep8) against PEP8. 
+This package can be installed with:
+
+    $ pip install pep8
+
+But, it is frustrating to submit code only to have it shot down due to PEP8
+errors. What we'd really like to do is check for errors prior even issuing 
+a pull request. Luckily, git provides mechanisms to automatically execute 
+arbitrary scripts prior to commit.
+
+### Setting up pre-commit hooks
+
+First, we need to setup a place for your hooks to live under your favorite
+repository:
+
+    $ mkdir -p $HOME/scikit-bio/.git/hooks
+
+Finally, we need to get the actual pre-commit script:
+
+    $ curl -o $HOME/scikit-bio/.git/hooks/pre-commit http://goo.gl/nQ1KVz
+    $ chmod +x $HOME/skikit-bio/.git/hooks/pre-commit
+
+### Ignoring the pre-commit hook
+
+Occasionally, your judgement overrides the judgement of PEP8. To ignore the
+pre-commit hook, specify ```--no-verify```. For instance:
+
+    $ git commit -m "not executing pep8 pre-commit hook" --no-verify
+
 Getting help with git
 =====================
 
