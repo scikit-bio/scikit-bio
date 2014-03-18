@@ -643,7 +643,38 @@ class TreeNode(object):
     __deepcopy__ = deepcopy = copy
 
     def unrooted_deepcopy(self, parent=None):
-        """Walks the tree unrooted-style and returns a new copy"""
+        """Walks the tree unrooted-style and returns a new copy
+
+        Perform a deepcopy of self and return a new copy of the tree as an
+        unrooted copy. This is useful for defining new roots of the tree as
+        the `TreeNode`.
+
+        This method calls TreeNode.unrooted_copy which is recursive.
+
+        Parameters
+        ----------
+        parent : TreeNode or None
+            Used to avoid infinite loops when performing the unrooted traverse
+
+        Returns
+        -------
+        TreeNode
+            A new copy of the tree
+
+        See Also
+        --------
+        TreeNode.copy
+        TreeNode.unrooted_copy
+        TreeNode.root_at
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree = TreeNode.from_newick("((a,(b,c)d)e,(f,g)h)i;")
+        >>> new_tree = tree.find('d').unrooted_deepcopy()
+        >>> print new_tree
+        (b,c,(a,((f,g)h)e)d)root;
+        """
         root = self.root()
         root.assign_ids()
 
@@ -656,7 +687,37 @@ class TreeNode(object):
     def unrooted_copy(self, parent=None):
         """Walks the tree unrooted-style and returns a copy
 
+        Perform a copy of self and return a new copy of the tree as an
+        unrooted copy. This is useful for defining new roots of the tree as
+        the `TreeNode`.
+
+        This method is recursive.
+
         Warning, this is _NOT_ a deepcopy
+
+        Parameters
+        ----------
+        parent : TreeNode or None
+            Used to avoid infinite loops when performing the unrooted traverse
+
+        Returns
+        -------
+        TreeNode
+            A new copy of the tree
+
+        See Also
+        --------
+        TreeNode.copy
+        TreeNode.unrooted_deepcopy
+        TreeNode.root_at
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree = TreeNode.from_newick("((a,(b,c)d)e,(f,g)h)i;")
+        >>> new_tree = tree.find('d').unrooted_copy()
+        >>> print new_tree
+        (b,c,(a,((f,g)h)e)d)root;
         """
         neighbors = self.neighbors(ignore=parent)
         children = [c.unrooted_copy(parent=self) for c in neighbors]
@@ -689,11 +750,55 @@ class TreeNode(object):
         raise NotImplementedError()
 
     def subset(self):
-        """Returns set of names that descend from specified node"""
+        """Returns set of names that descend from specified node
+
+        Get the set of Names on tips that descend from this node
+
+        Returns
+        -------
+        frozenset
+            The set of names at the tips of the clade that descends from self
+
+        See Also
+        --------
+        TreeNode.subsets
+        TreeNode.compare_subsets
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree = TreeNode.from_newick("((a,(b,c)d)e,(f,g)h)i;")
+        >>> sorted(tree.subset())
+        ['a', 'b', 'c', 'f', 'g']
+        """
         return frozenset({i.Name for i in self.tips()})
 
     def subsets(self):
-        """Returns all sets of names that come from self and its kids"""
+        """Return all sets of names that come from self and its descendents
+
+        Compute all subsets of tip names over self, or, represent a tree as a
+        set of nested sets.
+
+        Returns
+        -------
+        frozenset
+            A frozenset of frozensets of str
+
+        See Also
+        --------
+        TreeNode.subset
+        TreeNode.compare_subsets
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree = TreeNode.from_newick("(((a,b)c,(d,e)f)h)root;")
+        >>> for s in sorted(tree.subsets()):
+        ...     print sorted(s)
+        ['a', 'b']
+        ['d', 'e']
+        ['a', 'b', 'd', 'e']
+        """
         sets = []
         for i in self.postorder(include_self=False):
             if not i.Children:
@@ -708,9 +813,31 @@ class TreeNode(object):
     def root_at(self, node):
         """Return a new tree rooted at the provided node.
 
-        Usage:
-            This can be useful for drawing unrooted trees with an orientation
-            that reflects knowledge of the true root location.
+        This can be useful for drawing unrooted trees with an orientation that
+        reflects knowledge of the true root location.
+
+        Parameters
+        ----------
+        node : TreeNode or str
+            The node to root at
+
+        Returns
+        -------
+        TreeNode
+            A new copy of the tree
+
+        See Also
+        --------
+        TreeNode.root_at_midpoint
+        TreeNode.unrooted_deepcopy
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree = TreeNode.from_newick("(((a,b)c,(d,e)f)g,h)i;")
+        >>> print tree.root_at('c')
+        (a,b,((d,e)f,(h)g)c)root;
+
         """
         if isinstance(node, str):
             node = self.find(node)
