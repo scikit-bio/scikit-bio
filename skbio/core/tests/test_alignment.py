@@ -171,20 +171,20 @@ class SequenceCollectionTests(TestCase):
                          "<SequenceCollection: n=5; "
                          "mean +/- std length=6.40 +/- 3.32>")
 
-    def test_count_center_spread(self):
-        """ count_center_spread functions as expected
+    def test_distribution_stats(self):
+        """ distribution_stats functions as expected
         """
-        actual1 = self.s1.count_center_spread()
+        actual1 = self.s1.distribution_stats()
         self.assertEqual(actual1[0], 2)
         self.assertAlmostEqual(actual1[1], 5.0, 3)
         self.assertAlmostEqual(actual1[2], 2.0, 3)
 
-        actual2 = self.s2.count_center_spread()
+        actual2 = self.s2.distribution_stats()
         self.assertEqual(actual2[0], 3)
         self.assertAlmostEqual(actual2[1], 7.333, 3)
         self.assertAlmostEqual(actual2[2], 3.682, 3)
 
-        actual3 = self.s3.count_center_spread()
+        actual3 = self.s3.distribution_stats()
         self.assertEqual(actual3[0], 5)
         self.assertAlmostEqual(actual3[1], 6.400, 3)
         self.assertAlmostEqual(actual3[2], 3.323, 3)

@@ -26,7 +26,6 @@ Examples
 >>> from StringIO import StringIO
 >>> from skbio.core.alignment import SequenceCollection, Alignment
 >>> from skbio.core.sequence import DNA
-
 >>> seqs = [DNA("ACC--G-GGTA..", identifier="seq1"),
 ...     DNA("TCC--G-GGCA..", identifier="seqs2")]
 >>> a1 = Alignment(seqs)
@@ -60,9 +59,9 @@ from __future__ import division
 #-----------------------------------------------------------------------------
 
 from collections import Counter, defaultdict
+from itertools import izip
 
 import numpy as np
-
 from scipy.stats import entropy
 
 from skbio.core.exception import SequenceCollectionError
@@ -80,7 +79,7 @@ class SequenceCollection(object):
 
         Parameters
         ----------
-        fasta_records : generator of tuples
+        fasta_records : iterator of tuples
             The records to load into a new `SequenceCollection` object. These
             should be tuples of ``(sequence_identifier, sequence)``.
         seq_constructor : skbio.core.sequence.BiologicalSequence
@@ -104,7 +103,6 @@ class SequenceCollection(object):
         skbio.core.sequence.NucelotideSequence
         skbio.core.sequence.DNASequence
         skbio.core.sequence.RNASequence
-        SequenceCollection
         Alignment
         skbio.parse.sequences
         skbio.parse.sequences.parse_fasta
@@ -227,7 +225,7 @@ class SequenceCollection(object):
         elif len(self) != len(other):
             return False
         else:
-            for self_seq, other_seq in zip(self, other):
+            for self_seq, other_seq in izip(self, other):
                 if self_seq != other_seq:
                     return False
         return True
@@ -244,7 +242,7 @@ class SequenceCollection(object):
 
         Returns
         -------
-        str
+        `skbio.core.sequence.BiologicalSequence`
             The `skbio.core.sequence.BiologicalSequence` at the specified
             index in the `SequenceCollection`.
 
@@ -335,11 +333,11 @@ class SequenceCollection(object):
 
         """
         cn = self.__class__.__name__
-        count, center, spread = self.count_center_spread()
+        count, center, spread = self.distribution_stats()
         return "<%s: n=%d; mean +/- std length=%.2f +/- %.2f>" \
             % (cn, count, center, spread)
 
-    def count_center_spread(self, center_f=np.mean, spread_f=np.std):
+    def distribution_stats(self, center_f=np.mean, spread_f=np.std):
         r"""Return sequence count, and center and spread of sequence lengths
 
         Parameters
@@ -369,7 +367,7 @@ class SequenceCollection(object):
         >>> sequences = [DNA('ACCGT', identifier="seq1"),
         ...              DNA('AACCGGT', identifier="seq2")]
         >>> s1 = SequenceCollection(sequences)
-        >>> count, center, spread = s1.count_center_spread()
+        >>> count, center, spread = s1.distribution_stats()
         >>> print count
         2
         >>> print center
