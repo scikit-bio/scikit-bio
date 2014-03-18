@@ -267,8 +267,7 @@ repository:
 
 Finally, we need to get the actual pre-commit script:
 
-    $ wget https://gist.github.com/wasade/9611804/download --no-check-certificate
-    $ mv download /path/to/scikit-bio/.git/hooks/pre-commit
+    $ curl -o /path/to/scikit-bio/.git/hooks/pre-commit http://goo.gl/nQ1KVz
     $ chmod +x $HOME/git/templates/hooks/pre-commit
 
 ### Ignoring the pre-commit hook
