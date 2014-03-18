@@ -982,19 +982,48 @@ class TreeNode(object):
         return self.Parent is None
 
     def has_children(self):
-        """Returns True if self.Children."""
-        return bool(self.Children)
+        """Returns True if self.Children.
+
+        Returns
+        -------
+        bool
+            `True` if the node has children
+
+        See Also
+        --------
+        TreeNode.is_tip
+        TreeNode.is_root
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree = TreeNode.from_newick("((a,b)c);")
+        >>> print tree.has_children()
+        True
+        >>> print tree.find('a').has_children()
+        False
+        """
+        return not self.is_tip()
 
     ### end node checks ###
 
     ### traversal methods ###
 
     def traverse(self, self_before=True, self_after=False, include_self=True):
-        """Returns iterator over descendants. Iterative: safe for large trees.
+        """Returns iterator over descendants
 
-        self_before includes each node before its descendants if True.
-        self_after includes each node after its descendants if True.
-        include_self includes the initial node if True.
+        This is a depth-first traversal. Since the trees are not binary,
+        preorder and postorder traversals are possible, but inorder traversals
+        would depend on the data in the tree and are not handled here.
+
+        Parameters
+        ----------
+        self_before : bool
+            includes each node before its descendants if True
+        self_after : bool
+            includes each node after its descendants if True
+        include_self : bool
+            include the initial node if True
 
         self_before and self_after are independent. If neither is True, only
         terminal nodes will be returned.
@@ -1002,9 +1031,30 @@ class TreeNode(object):
         Note that if self is terminal, it will only be included once even if
         self_before and self_after are both True.
 
-        This is a depth-first traversal. Since the trees are not binary,
-        preorder and postorder traversals are possible, but inorder traversals
-        would depend on the data in the tree and are not handled here.
+        Returns
+        -------
+        GeneratorType
+            Yields successive `TreeNode` objects
+
+        See Also
+        --------
+        TreeNode.preorder
+        TreeNode.postorder
+        TreeNode.pre_and_postorder
+        TreeNode.levelorder
+        TreeNode.tips
+        TreeNode.non_tips
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree = TreeNode.from_newick("((a,b)c);")
+        >>> for node in tree.traverse():
+        ...     print node.Name
+        None
+        c
+        a
+        b
         """
         if self_before:
             if self_after:
@@ -1018,7 +1068,38 @@ class TreeNode(object):
                 return self.tips(include_self=include_self)
 
     def preorder(self, include_self=True):
-        """Performs preorder iteration over tree."""
+        """Performs preorder iteration over tree
+
+        Parameters
+        ----------
+        include_self : bool
+            include the initial node if True
+
+        Returns
+        -------
+        GeneratorType
+            Yields successive `TreeNode` objects
+
+        See Also
+        --------
+        TreeNode.traverse
+        TreeNode.postorder
+        TreeNode.pre_and_postorder
+        TreeNode.levelorder
+        TreeNode.tips
+        TreeNode.non_tips
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree = TreeNode.from_newick("((a,b)c);")
+        >>> for node in tree.preorder():
+        ...     print node.Name
+        None
+        c
+        a
+        b
+        """
         stack = [self]
         while stack:
             curr = stack.pop()
@@ -1034,17 +1115,35 @@ class TreeNode(object):
         on the stack, but is 30% faster in the average case and 3x faster in
         the worst case (for a comb tree).
 
-        Zongzhi Liu's slower but more compact version is:
+        Parameters
+        ----------
+        include_self : bool
+            include the initial node if True
 
-        def postorder_zongzhi(self):
-            stack = [[self, 0]]
-            while stack:
-                curr, child_idx = stack[-1]
-                if child_idx < len(curr.Children):
-                    stack[-1][1] += 1
-                    stack.append([curr.Children[child_idx], 0])
-                else:
-                    yield stack.pop()[0]
+        Returns
+        -------
+        GeneratorType
+            Yields successive `TreeNode` objects
+
+        See Also
+        --------
+        TreeNode.traverse
+        TreeNode.preorder
+        TreeNode.pre_and_postorder
+        TreeNode.levelorder
+        TreeNode.tips
+        TreeNode.non_tips
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree = TreeNode.from_newick("((a,b)c);")
+        >>> for node in tree.postorder():
+        ...     print node.Name
+        a
+        b
+        c
+        None
         """
         child_index_stack = [0]
         curr = self
@@ -1080,7 +1179,40 @@ class TreeNode(object):
                 child_index_stack[-1] += 1
 
     def pre_and_postorder(self, include_self=True):
-        """Performs iteration over tree, visiting node before and after."""
+        """Performs iteration over tree, visiting node before and after
+
+        Parameters
+        ----------
+        include_self : bool
+            include the initial node if True
+
+        Returns
+        -------
+        GeneratorType
+            Yields successive `TreeNode` objects
+
+        See Also
+        --------
+        TreeNode.traverse
+        TreeNode.postorder
+        TreeNode.preorder
+        TreeNode.levelorder
+        TreeNode.tips
+        TreeNode.non_tips
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree = TreeNode.from_newick("((a,b)c);")
+        >>> for node in tree.pre_and_postorder():
+        ...     print node.Name
+        None
+        c
+        a
+        b
+        c
+        None
+        """
         #handle simple case first
         if not self.Children:
             if include_self:
@@ -1120,7 +1252,41 @@ class TreeNode(object):
                 child_index_stack[-1] += 1
 
     def levelorder(self, include_self=True):
-        """Performs levelorder iteration over tree"""
+        """Performs levelorder iteration over tree
+
+        Parameters
+        ----------
+        include_self : bool
+            include the initial node if True
+
+        Returns
+        -------
+        GeneratorType
+            Yields successive `TreeNode` objects
+
+        See Also
+        --------
+        TreeNode.traverse
+        TreeNode.postorder
+        TreeNode.preorder
+        TreeNode.pre_and_postorder
+        TreeNode.tips
+        TreeNode.non_tips
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree = TreeNode.from_newick("((a,b)c,(d,e)f);")
+        >>> for node in tree.levelorder():
+        ...     print node.Name
+        None
+        c
+        f
+        a
+        b
+        d
+        e
+        """
         queue = [self]
         while queue:
             curr = queue.pop(0)
