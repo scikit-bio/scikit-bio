@@ -32,7 +32,7 @@ class GenericFastaTest(TestCase):
         self.empty = []
 
 
-class ParseFastTests(GenericFastaTest):
+class ParseFastaTests(GenericFastaTest):
     """Tests of parse_fasta: returns (label, seq) tuples."""
 
     def test_empty(self):
