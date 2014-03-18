@@ -1176,7 +1176,8 @@ class Alignment(SequenceCollection):
         Returns
         -------
         list
-            List of floats of Shannon entropy at `Alignment` positions.
+            List of floats of Shannon entropy at `Alignment` positions. Shannon
+            entropy is defined in [1].
 
         See Also
         --------
@@ -1185,7 +1186,7 @@ class Alignment(SequenceCollection):
 
         References
         ----------
-        A Mathematical Theory of Communication, CE Shannon
+        [1] A Mathematical Theory of Communication, CE Shannon
         The Bell System Technical Journal (1948).
 
         Examples
