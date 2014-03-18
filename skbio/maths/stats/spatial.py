@@ -28,8 +28,6 @@ from __future__ import division
 
 import numpy as np
 
-from numpy.linalg import svd
-
 
 def procrustes(data1, data2):
     r"""Procrustes analysis, a similarity test for two data sets
@@ -210,7 +208,7 @@ def _match_points(mtx1, mtx2):
     mtx 2.  See procrustes docs for details.
 
     """
-    u, s, vh = svd(np.dot(np.transpose(mtx1), mtx2))
+    u, s, vh = np.linalg.svd(np.dot(np.transpose(mtx1), mtx2))
     q = np.dot(np.transpose(vh), np.transpose(u))
     new_mtx2 = np.dot(mtx2, q)
     new_mtx2 *= np.sum(s)

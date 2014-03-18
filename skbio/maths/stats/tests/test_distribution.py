@@ -14,7 +14,9 @@ Currently using tests against calculations in R, spreadsheets being unreliable.
 """
 
 from unittest import TestCase, main
-from numpy.testing import assert_allclose
+
+import numpy as np
+
 from skbio.maths.stats.distribution import (chi_high, z_high, zprob, f_high,
                                             binomial_high, bdtrc, stdtr)
 
@@ -42,9 +44,9 @@ class DistributionsTests(TestCase):
             2.753624e-89, 4.906714e-198, 0.000000e+00, 0.000000e+00]
 
         for z, p in zip(self.values, probs):
-            assert_allclose(z_high(z), p, atol=10e-7)
+            np.testing.assert_allclose(z_high(z), p, atol=10e-7)
         for z, p in zip(self.negvalues, negprobs):
-            assert_allclose(z_high(z), p)
+            np.testing.assert_allclose(z_high(z), p)
 
     def test_zprob(self):
         """zprob should match twice the z_high probability for abs(z)"""
@@ -55,9 +57,9 @@ class DistributionsTests(TestCase):
             2.753624e-89, 4.906714e-198, 0.000000e+00, 0.000000e+00]]
 
         for z, p in zip(self.values, probs):
-            assert_allclose(zprob(z), p, atol=10e-7)
+            np.testing.assert_allclose(zprob(z), p, atol=10e-7)
         for z, p in zip(self.negvalues, probs):
-            assert_allclose(zprob(z), p, atol=10e-7)
+            np.testing.assert_allclose(zprob(z), p, atol=10e-7)
 
     def test_chi_high(self):
         """chi_high should match R's pchisq(lower.tail=FALSE) function"""
@@ -78,7 +80,7 @@ class DistributionsTests(TestCase):
 
         for df in self.df:
             for x, p in zip(self.values, probs[df]):
-                assert_allclose(chi_high(x, df), p, atol=10e-7)
+                np.testing.assert_allclose(chi_high(x, df), p, atol=10e-7)
 
     def test_binomial_high(self):
         """Binomial high should match values from R for integer successes"""
@@ -97,7 +99,7 @@ class DistributionsTests(TestCase):
             (-0.5, 3, 0.1): 1,
         }
         for (key, value) in expected.items():
-            assert_allclose(binomial_high(*key), value, 1e-4)
+            np.testing.assert_allclose(binomial_high(*key), value, 1e-4)
         # should reject if successes > trials or successes < -1
         self.assertRaises(ValueError, binomial_high, 7, 5, 0.5)
 
@@ -143,7 +145,7 @@ class DistributionsTests(TestCase):
         }
         e = sorted(expected.items())
         for (key, value) in e:
-            assert_allclose(f_high(*key), value, atol=10e-7)
+            np.testing.assert_allclose(f_high(*key), value, atol=10e-7)
 
     def test_bdtrc(self):
         """bdtrc should give same results as cephes"""
@@ -232,7 +234,7 @@ class DistributionsTests(TestCase):
         for k in k_s:
             for n in n_s:
                 for p in p_s:
-                    assert_allclose(bdtrc(k, n, p), exp[index])
+                    np.testing.assert_allclose(bdtrc(k, n, p), exp[index])
                     index += 1
 
     def test_stdtr(self):
@@ -268,7 +270,7 @@ class DistributionsTests(TestCase):
         index = 0
         for i in t:
             for j in k:
-                assert_allclose(stdtr(j, i), exp[index])
+                np.testing.assert_allclose(stdtr(j, i), exp[index])
                 index += 1
 
 
