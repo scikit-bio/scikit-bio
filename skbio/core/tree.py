@@ -97,7 +97,7 @@ Node name: C, Is a tip: False
 Note, by default, non_tips will ignore self (which is the root in this case).
 You can pass the include_self flag to non_tips if you wish to include self.
 
-The TreeNode provides a few ways to compare trees. First, lets create two
+The TreeNode provides a few ways to compare trees. First, let's create two
 similar trees and compare them topologically using compare_subsets. This
 distance is based off the number of common clades present between two
 trees:
