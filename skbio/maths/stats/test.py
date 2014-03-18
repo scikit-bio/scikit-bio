@@ -701,8 +701,10 @@ def correlation_t(x_items, y_items, method='pearson', tails=None,
 
     if n > 3:
         try:
-            ci_low = np.tanh(np.arctanh(corr_coeff) - (z_crit / np.sqrt(n - 3)))
-            ci_high = np.tanh(np.arctanh(corr_coeff) + (z_crit / np.sqrt(n - 3)))
+            ci_low = np.tanh(np.arctanh(corr_coeff) - (z_crit /
+                                                       np.sqrt(n - 3)))
+            ci_high = np.tanh(np.arctanh(corr_coeff) + (z_crit /
+                                                        np.sqrt(n - 3)))
         except (ZeroDivisionError, FloatingPointError):
             # r/rho was presumably 1 or -1. Match what R does in this case.
             ci_low, ci_high = corr_coeff, corr_coeff
@@ -937,7 +939,8 @@ def mantel_t(m1, m2, n, alt="two sided",
     # Get a flattened list of lower-triangular matrix elements (excluding the
     # diagonal) in column-major order. Use these values to calculate the
     # correlation statistic.
-    m1_flat, m2_flat = _flatten_lower_triangle(m1), _flatten_lower_triangle(m2)
+    m1_flat, m2_flat = (_flatten_lower_triangle(m1),
+                        _flatten_lower_triangle(m2))
     orig_stat = pearson(m1_flat, m2_flat)
 
     # Run our permutation tests so we can calculate a p-value for the test.
