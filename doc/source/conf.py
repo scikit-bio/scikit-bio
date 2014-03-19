@@ -24,7 +24,7 @@ needs_sphinx = '1.1'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx.ext.pngmath',
+    'sphinx.ext.mathjax',
     'numpydoc',
     'sphinx.ext.coverage',
     'sphinx.ext.doctest',
