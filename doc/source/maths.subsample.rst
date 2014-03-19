@@ -1,0 +1,1 @@
+.. automodule:: skbio.maths.subsample

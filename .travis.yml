@@ -15,14 +15,11 @@ before_install:
 install:
   - conda create --yes -n env_name python=$TRAVIS_PYTHON_VERSION pip numpy=$NUMPY_VERSION scipy matplotlib nose pep8 Sphinx
   - source activate env_name
-  # Need latest numpydoc otherwise some things won't link correctly (e.g.,
-  # inherited attributes in subclasses). The numpydoc available via pip is old.
-  - pip install git+git://github.com/numpy/numpydoc.git
   - pip install sphinx-bootstrap-theme
   - pip install . --no-deps
 script:
   - nosetests --with-doctest
-  - pep8 bipy setup.py
+  - pep8 skbio setup.py
   - pushd doc
   - make clean
   - make html
