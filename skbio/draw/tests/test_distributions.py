@@ -381,7 +381,7 @@ class DistributionsTests(TestCase):
         args = ('scatter', self.ValidTypicalData, [1, 4, 10, 11],
                 ["T0", "T1", "T2", "T3"], ["Infants", "Children", "Teens"],
                 ['^'], "x-axis label", "y-axis label", "Test")
-    
+
         npt.assert_warns(RuntimeWarning, grouped_distributions, *args)
 
     def test_grouped_distributions_empty_marker_list(self):
