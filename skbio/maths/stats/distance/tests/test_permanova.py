@@ -9,12 +9,12 @@
 #-----------------------------------------------------------------------------
 
 from __future__ import division
+from unittest import TestCase, main
 
 import numpy as np
 
 from skbio.core.distance import DistanceMatrix, SymmetricDistanceMatrix
 from skbio.maths.stats.distance.permanova import PERMANOVA
-from skbio.util.unit_test import TestCase, main
 
 
 class PERMANOVATests(TestCase):
@@ -62,8 +62,8 @@ class PERMANOVATests(TestCase):
             self.assertEqual(obs.sample_size, 4)
             self.assertTrue(np.array_equal(obs.groups,
                                            np.asarray(['Control', 'Fast'])))
-            self.assertFloatEqual(obs.statistic, 2.0)
-            self.assertFloatEqual(obs.p_value, 0.671)
+            self.assertAlmostEqual(obs.statistic, 2.0)
+            self.assertAlmostEqual(obs.p_value, 0.671)
             self.assertEqual(obs.permutations, 999)
 
     def test_call_no_ties(self):
@@ -72,8 +72,8 @@ class PERMANOVATests(TestCase):
         self.assertEqual(obs.sample_size, 4)
         self.assertTrue(np.array_equal(obs.groups,
                                        np.asarray(['Control', 'Fast'])))
-        self.assertFloatEqual(obs.statistic, 4.4)
-        self.assertFloatEqual(obs.p_value, 0.332)
+        self.assertAlmostEqual(obs.statistic, 4.4)
+        self.assertAlmostEqual(obs.p_value, 0.332)
         self.assertEqual(obs.permutations, 999)
 
     def test_call_no_permutations(self):
@@ -81,7 +81,7 @@ class PERMANOVATests(TestCase):
         self.assertEqual(obs.sample_size, 4)
         self.assertTrue(np.array_equal(obs.groups,
                                        np.asarray(['Control', 'Fast'])))
-        self.assertFloatEqual(obs.statistic, 4.4)
+        self.assertAlmostEqual(obs.statistic, 4.4)
         self.assertEqual(obs.p_value, None)
         self.assertEqual(obs.permutations, 0)
 
@@ -92,8 +92,8 @@ class PERMANOVATests(TestCase):
         self.assertTrue(np.array_equal(obs.groups,
                                        np.asarray(['Control', 'Treatment1',
                                                    'Treatment2'])))
-        self.assertFloatEqual(obs.statistic, 0.578848)
-        self.assertFloatEqual(obs.p_value, 0.645)
+        self.assertAlmostEqual(obs.statistic, 0.578848, 6)
+        self.assertAlmostEqual(obs.p_value, 0.645)
         self.assertEqual(obs.permutations, 999)
 
 

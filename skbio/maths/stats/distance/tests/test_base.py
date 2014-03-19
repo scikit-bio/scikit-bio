@@ -9,11 +9,11 @@
 #-----------------------------------------------------------------------------
 
 from __future__ import division
+from unittest import TestCase, main
 
 from skbio.core.distance import DistanceMatrix, SymmetricDistanceMatrix
 from skbio.maths.stats.distance.base import (CategoricalStats,
                                              CategoricalStatsResults)
-from skbio.util.unit_test import TestCase, main
 
 
 class CategoricalStatsTests(TestCase):
