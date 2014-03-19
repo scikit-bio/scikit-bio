@@ -28,6 +28,7 @@ Functions
 from __future__ import division
 
 from itertools import cycle
+import warnings
 
 import numpy as np
 
@@ -460,10 +461,12 @@ def _get_distribution_markers(marker_type, marker_choices, num_markers):
         # beginning of the list again) until we have enough, but the user
         # should still know because they may want to provide a new list of
         # markers.
-        print ("There are not enough markers to uniquely represent each "
-               "distribution in your dataset. You may want to provide a list "
-               "of markers that is at least as large as the number of "
-               "distributions in your dataset.")
+        warnings.warn(
+            "There are not enough markers to uniquely represent each "
+            "distribution in your dataset. You may want to provide a list "
+            "of markers that is at least as large as the number of "
+            "distributions in your dataset.",
+            RuntimeWarning)
         marker_cycle = cycle(marker_choices[:])
         while len(marker_choices) < num_markers:
             marker_choices.append(marker_cycle.next())
@@ -713,8 +716,10 @@ def _set_figure_size(fig, width=None, height=None):
     try:
         fig.tight_layout()
     except ValueError:
-        print ("Warning: could not automatically resize plot to make room for "
-               "axes labels and plot title. This can happen if the labels or "
-               "title are extremely long and the plot size is too small. Your "
-               "plot may have its labels and/or title cut-off. To fix this, "
-               "try increasing the plot's size (in inches) and try again.")
+        warnings.warn(
+            "Could not automatically resize plot to make room for "
+            "axes labels and plot title. This can happen if the labels or "
+            "title are extremely long and the plot size is too small. Your "
+            "plot may have its labels and/or title cut-off. To fix this, "
+            "try increasing the plot's size (in inches) and try again.",
+            RuntimeWarning)
