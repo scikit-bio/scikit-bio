@@ -138,7 +138,7 @@ def boxplots(distributions, x_values=None, x_tick_labels=None, title=None,
     _validate_x_values(x_values, x_tick_labels, len(distributions))
 
     # Create a new figure to plot our data on, and then plot the distributions.
-    result, plot_axes = _create_plot()
+    result, plot_axes = plt.subplots()
     box_plot = plt.boxplot(distributions, positions=x_values,
                            whis=whisker_length, widths=box_width)
 
@@ -316,7 +316,7 @@ def grouped_distributions(plot_type, data, x_values=None,
             raise ValueError("The width of a distribution cannot be less than "
                              "or equal to zero.")
 
-    result, plot_axes = _create_plot()
+    result, plot_axes = plt.subplots()
 
     # Iterate over each data point, and plot each of the distributions at that
     # data point. Increase the offset after each distribution is plotted,
@@ -425,13 +425,6 @@ def _validate_x_values(x_values, x_tick_labels, num_expected_values):
         if len(x_tick_labels) != num_expected_values:
             raise ValueError("The number of x-axis tick labels must match the "
                              "number of data points.")
-
-
-def _create_plot():
-    """Creates a plot and returns the associated Figure and Axes objects."""
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    return fig, ax
 
 
 def _get_distribution_markers(marker_type, marker_choices, num_markers):
