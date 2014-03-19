@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 from skbio.draw.distributions import (boxplots, grouped_distributions,
                                       _calc_data_point_locations,
                                       _calc_data_point_ticks, _color_box_plot,
-                                      _create_legend, _create_plot,
+                                      _create_legend,
                                       _get_distribution_markers,
                                       _is_single_matplotlib_color,
                                       _plot_bar_data, _plot_box_data,
@@ -198,16 +198,9 @@ class DistributionsTests(TestCase):
         self.assertEqual(_get_distribution_markers('symbols', None, 0), [])
         self.assertEqual(_get_distribution_markers('symbols', ['^'], 0), [])
 
-    def test_create_plot(self):
-        """_create_plot() should return a tuple containing a Figure and
-        Axes."""
-        fig, ax = _create_plot()
-        self.assertEqual(fig.__class__.__name__, "Figure")
-        self.assertEqual(ax.__class__.__name__, "AxesSubplot")
-
     def test_plot_bar_data(self):
         """_plot_bar_data() should return a list of Rectangle objects."""
-        fig, ax = _create_plot()
+        fig, ax = plt.subplots()
         result = _plot_bar_data(ax, [1, 2, 3], 'red', 0.5, 3.75, 1.5, 'stdv')
         self.assertEqual(result[0].__class__.__name__, "Rectangle")
         self.assertEqual(len(result), 1)
@@ -215,7 +208,7 @@ class DistributionsTests(TestCase):
         self.assertAlmostEqual(result[0].get_facecolor(), (1.0, 0.0, 0.0, 1.0))
         self.assertAlmostEqual(result[0].get_height(), 2.0)
 
-        fig, ax = _create_plot()
+        fig, ax = plt.subplots()
         result = _plot_bar_data(ax, [1, 2, 3], 'red', 0.5, 3.75, 1.5, 'sem')
         self.assertEqual(result[0].__class__.__name__, "Rectangle")
         self.assertEqual(len(result), 1)
@@ -225,37 +218,37 @@ class DistributionsTests(TestCase):
 
     def test_plot_bar_data_bad_error_bar_type(self):
         """_plot_bar_data() should raise an exception on bad error bar type."""
-        fig, ax = _create_plot()
+        fig, ax = plt.subplots()
         self.assertRaises(ValueError, _plot_bar_data, ax, [1, 2, 3], 'red',
                           0.5, 3.75, 1.5, 'var')
 
     def test_plot_bar_data_empty(self):
         """_plot_bar_data() should not error when given empty list of data,
         but should not plot anything."""
-        fig, ax = _create_plot()
+        fig, ax = plt.subplots()
         result = _plot_bar_data(ax, [], 'red', 0.5, 3.75, 1.5, 'stdv')
         self.assertTrue(result is None)
 
-        fig, ax = _create_plot()
+        fig, ax = plt.subplots()
         result = _plot_bar_data(ax, [], 'red', 0.5, 3.75, 1.5, 'sem')
         self.assertTrue(result is None)
 
     def test_plot_scatter_data(self):
         """_plot_scatter_data() should return a Collection instance."""
-        fig, ax = _create_plot()
+        fig, ax = plt.subplots()
         result = _plot_scatter_data(ax, [1, 2, 3], '^', 0.77, 1, 1.5, 'stdv')
         self.assertEqual(result.get_sizes(), 20)
 
     def test_plot_scatter_data_empty(self):
         """_plot_scatter_data() should not error when given empty list of data,
         but should not plot anything."""
-        fig, ax = _create_plot()
+        fig, ax = plt.subplots()
         result = _plot_scatter_data(ax, [], '^', 0.77, 1, 1.5, 'stdv')
         self.assertTrue(result is None)
 
     def test_plot_box_data(self):
         """_plot_box_data() should return a dictionary for Line2D's."""
-        fig, ax = _create_plot()
+        fig, ax = plt.subplots()
         result = _plot_box_data(ax, [0, 0, 7, 8, -3, 44], 'blue', 0.33, 55,
                                 1.5, 'stdv')
         self.assertEqual(result.__class__.__name__, "dict")
@@ -267,7 +260,7 @@ class DistributionsTests(TestCase):
 
     def test_plot_box_data_empty(self):
         """Should ignore empty distribution."""
-        fig, ax = _create_plot()
+        fig, ax = plt.subplots()
         result = _plot_box_data(ax, [], 'blue', 0.33, 55, 1.5, 'stdv')
         self.assertTrue(result is None)
 
@@ -309,7 +302,7 @@ class DistributionsTests(TestCase):
     def test_set_axes_options(self):
         """_set_axes_options() should set the labels on the axes and not raise
         any exceptions."""
-        fig, ax = _create_plot()
+        fig, ax = plt.subplots()
         _set_axes_options(ax, "Plot Title", "x-axis label", "y-axis label",
                           x_tick_labels=["T0", "T1"])
         self.assertEqual(ax.get_title(), "Plot Title")
@@ -319,7 +312,7 @@ class DistributionsTests(TestCase):
 
     def test_set_axes_options_ylim(self):
         """_set_axes_options() should set the y-axis limits."""
-        fig, ax = _create_plot()
+        fig, ax = plt.subplots()
         _set_axes_options(ax, "Plot Title", "x-axis label", "y-axis label",
                           x_tick_labels=["T0", "T1", "T2"], y_min=0, y_max=1)
         self.assertEqual(ax.get_title(), "Plot Title")
@@ -331,7 +324,7 @@ class DistributionsTests(TestCase):
     def test_set_axes_options_bad_ylim(self):
         """_set_axes_options() should raise an exception when given non-numeric
         y limits."""
-        fig, ax = _create_plot()
+        fig, ax = plt.subplots()
         self.assertRaises(ValueError, _set_axes_options, ax, "Plot Title",
                           "x-axis label", "y-axis label",
                           x_tick_labels=["T0", "T1", "T2"], y_min='car',
@@ -339,18 +332,18 @@ class DistributionsTests(TestCase):
 
     def test_create_legend(self):
         """_create_box_plot_legend() should create a legend on valid input."""
-        fig, ax = _create_plot()
+        fig, ax = plt.subplots()
         _create_legend(ax, ['b', 'r'], ['dist1', 'dist2'], 'colors')
         self.assertEqual(len(ax.get_legend().get_texts()), 2)
 
-        fig, ax = _create_plot()
+        fig, ax = plt.subplots()
         _create_legend(ax, ['^', '<', '>'], ['dist1', 'dist2', 'dist3'],
                        'symbols')
         self.assertEqual(len(ax.get_legend().get_texts()), 3)
 
     def test_create_legend_invalid_input(self):
         """Test raises error on bad input."""
-        fig, ax = _create_plot()
+        fig, ax = plt.subplots()
         self.assertRaises(ValueError, _create_legend, ax,
                           ['^', '<', '>'], ['dist1', 'dist2'], 'symbols')
         self.assertRaises(ValueError, _create_legend, ax, ['^', '<', '>'],
@@ -529,30 +522,30 @@ class DistributionsTests(TestCase):
 
     def test_color_box_plot(self):
         """Should not throw an exception when passed the proper input."""
-        fig, ax = _create_plot()
+        fig, ax = plt.subplots()
         box_plot = plt.boxplot(self.ValidTypicalBoxData)
         _color_box_plot(ax, box_plot, ['blue', 'w', (1, 1, 0.9)])
 
         # Some colors are None.
-        fig, ax = _create_plot()
+        fig, ax = plt.subplots()
         box_plot = plt.boxplot(self.ValidTypicalBoxData)
         _color_box_plot(ax, box_plot, ['blue', None, (1, 1, 0.9)])
 
         # All colors are None.
-        fig, ax = _create_plot()
+        fig, ax = plt.subplots()
         box_plot = plt.boxplot(self.ValidTypicalBoxData)
         _color_box_plot(ax, box_plot, [None, None, None])
 
     def test_color_box_plot_invalid_input(self):
         """Should throw an exception on invalid input."""
         # Invalid color.
-        fig, ax = _create_plot()
+        fig, ax = plt.subplots()
         box_plot = plt.boxplot(self.ValidTypicalBoxData)
         self.assertRaises(ValueError, _color_box_plot, ax, box_plot,
                           ['red', 'foobarbaz', 'blue'])
 
         # Wrong number of colors.
-        fig, ax = _create_plot()
+        fig, ax = plt.subplots()
         box_plot = plt.boxplot(self.ValidTypicalBoxData)
         self.assertRaises(ValueError, _color_box_plot, ax, box_plot,
                           ['blue', (1, 1, 0.9)])
@@ -578,7 +571,7 @@ class DistributionsTests(TestCase):
 
     def test_set_figure_size(self):
         """Test setting a valid figure size."""
-        fig, ax = _create_plot()
+        fig, ax = plt.subplots()
         _set_axes_options(ax, 'foo', 'x_foo', 'y_foo',
                           x_tick_labels=['foofoofoo', 'barbarbar'],
                           x_tick_labels_orientation='vertical')
@@ -587,7 +580,7 @@ class DistributionsTests(TestCase):
 
     def test_set_figure_size_defaults(self):
         """Test setting a figure size using matplotlib defaults."""
-        fig, ax = _create_plot()
+        fig, ax = plt.subplots()
         _set_axes_options(ax, 'foo', 'x_foo', 'y_foo',
                           x_tick_labels=['foofoofoo', 'barbarbar'],
                           x_tick_labels_orientation='vertical')
@@ -597,7 +590,7 @@ class DistributionsTests(TestCase):
 
     def test_set_figure_size_invalid(self):
         """Test setting a figure size using invalid dimensions."""
-        fig, ax = _create_plot()
+        fig, ax = plt.subplots()
         _set_axes_options(ax, 'foo', 'x_foo', 'y_foo',
                           x_tick_labels=['foofoofoo', 'barbarbar'],
                           x_tick_labels_orientation='vertical')
@@ -612,7 +605,7 @@ class DistributionsTests(TestCase):
             out = StringIO()
             sys.stdout = out
 
-            fig, ax = _create_plot()
+            fig, ax = plt.subplots()
             _set_axes_options(ax, 'foo', 'x_foo', 'y_foo',
                               x_tick_labels=['foofoofooooooooooooooooooooooooo'
                                              'oooooooooooooooooooooooooooooooo'
