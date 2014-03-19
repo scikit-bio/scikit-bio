@@ -9,11 +9,10 @@ from __future__ import division
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-import sys
-from StringIO import StringIO
 from unittest import TestCase, main
 
 import numpy as np
+import numpy.testing as npt
 from matplotlib import use
 use('Agg', warn=False)
 import matplotlib.pyplot as plt
@@ -161,32 +160,14 @@ class DistributionsTests(TestCase):
     def test_get_distribution_markers_insufficient_markers(self):
         """_get_distribution_markers() should return a wrapped list of
         predefined markers."""
-        # Save stdout and replace it with something that will capture the print
-        # statement. Note: this code was taken from here:
-        # http://stackoverflow.com/questions/4219717/how-to-assert-output-
-        # with-nosetest-unittest-in-python/4220278#4220278
-        saved_stdout = sys.stdout
-        try:
-            out = StringIO()
-            sys.stdout = out
-            self.assertEqual(_get_distribution_markers('colors', None, 10),
-                             ['b', 'g', 'r', 'c', 'm', 'y', 'w', 'b',
-                              'g', 'r'])
-            self.assertEqual(_get_distribution_markers('symbols',
-                                                       ['^', '>', '<'], 5),
-                             ['^', '>', '<', '^', '>'])
-            output = out.getvalue().strip()
-            self.assertEqual(
-                output,
-                "There are not enough markers to uniquely represent each "
-                "distribution in your dataset. You may want to provide a "
-                "list of markers that is at least as large as the number of "
-                "distributions in your dataset.\nThere are not enough markers "
-                "to uniquely represent each distribution in your dataset. You "
-                "may want to provide a list of markers that is at least as "
-                "large as the number of distributions in your dataset.")
-        finally:
-            sys.stdout = saved_stdout
+        self.assertEqual(npt.assert_warns(RuntimeWarning,
+                                          _get_distribution_markers,
+                                          'colors', None, 10),
+                         ['b', 'g', 'r', 'c', 'm', 'y', 'w', 'b', 'g', 'r'])
+        self.assertEqual(npt.assert_warns(RuntimeWarning,
+                                          _get_distribution_markers,
+                                          'symbols', ['^', '>', '<'], 5),
+                         ['^', '>', '<', '^', '>'])
 
     def test_get_distribution_markers_bad_marker_type(self):
         """_get_distribution_markers() should raise a ValueError."""
@@ -366,26 +347,14 @@ class DistributionsTests(TestCase):
 
     def test_grouped_distributions_insufficient_colors(self):
         """grouped_distributions() should work even when there aren't
-        enough colors. We should capture a print statement that warns the
-        users."""
-        saved_stdout = sys.stdout
-        try:
-            out = StringIO()
-            sys.stdout = out
-            grouped_distributions('bar', self.ValidTypicalData, [1, 4, 10, 11],
-                                  ["T0", "T1", "T2", "T3"],
-                                  ["Infants", "Children", "Teens"], ['b', 'r'],
-                                  "x-axis label", "y-axis label", "Test")
-            output = out.getvalue().strip()
-            exp = ("There are not enough markers to uniquely represent each "
-                   "distribution in your dataset. You may want to provide a "
-                   "list of markers that is at least as large as the number "
-                   "of distributions in your dataset.")
-            # output may contain other text, such as warning messages from
-            # matplotlib.
-            self.assertTrue(exp in output)
-        finally:
-            sys.stdout = saved_stdout
+        enough colors. We should capture a warning."""
+        args = ('bar', self.ValidTypicalData, [1, 4, 10, 11],
+                ["T0", "T1", "T2", "T3"], ["Infants", "Children", "Teens"],
+                ['b', 'r'], "x-axis label", "y-axis label", "Test")
+
+        npt.assert_warns(RuntimeWarning,
+                         grouped_distributions,
+                         *args)
 
     def test_grouped_distributions_scatter(self):
         """Should return a valid scatterplot Figure object."""
@@ -404,24 +373,12 @@ class DistributionsTests(TestCase):
 
     def test_grouped_distributions_insufficient_symbols(self):
         """grouped_distributions() should work even when there aren't
-        enough symbols. We should capture a print statement that warns the
-        users."""
-        saved_stdout = sys.stdout
-        try:
-            out = StringIO()
-            sys.stdout = out
-            grouped_distributions('scatter', self.ValidTypicalData,
-                                  [1, 4, 10, 11], ["T0", "T1", "T2", "T3"],
-                                  ["Infants", "Children", "Teens"], ['^'],
-                                  "x-axis label", "y-axis label", "Test")
-            output = out.getvalue().strip()
-            exp = ("There are not enough markers to uniquely represent each "
-                   "distribution in your dataset. You may want to provide a "
-                   "list of markers that is at least as large as the number "
-                   "of distributions in your dataset.")
-            self.assertTrue(exp in output)
-        finally:
-            sys.stdout = saved_stdout
+        enough symbols. We should capture a warning."""
+        args = ('scatter', self.ValidTypicalData, [1, 4, 10, 11],
+                ["T0", "T1", "T2", "T3"], ["Infants", "Children", "Teens"],
+                ['^'], "x-axis label", "y-axis label", "Test")
+    
+        npt.assert_warns(RuntimeWarning, grouped_distributions, *args)
 
     def test_grouped_distributions_empty_marker_list(self):
         """grouped_distributions() should use the predefined list of
@@ -600,31 +557,15 @@ class DistributionsTests(TestCase):
 
     def test_set_figure_size_long_labels(self):
         """Test setting a figure size that has really long labels."""
-        saved_stdout = sys.stdout
-        try:
-            out = StringIO()
-            sys.stdout = out
-
-            fig, ax = plt.subplots()
-            _set_axes_options(ax, 'foo', 'x_foo', 'y_foo',
-                              x_tick_labels=['foofoofooooooooooooooooooooooooo'
-                                             'oooooooooooooooooooooooooooooooo'
-                                             'oooooooooooooooooooooooooooooooo'
-                                             'oooo', 'barbarbar'],
-                              x_tick_labels_orientation='vertical')
-            _set_figure_size(fig, 3, 3)
-            self.assertTrue(np.array_equal(fig.get_size_inches(),
-                            (3, 3)))
-            output = out.getvalue().strip()
-            exp = ("Warning: could not automatically resize plot to make room "
-                   "for axes labels and plot title. This can happen if the "
-                   "labels or title are extremely long and the plot size is "
-                   "too small. Your plot may have its labels and/or title "
-                   "cut-off. To fix this, try increasing the plot's size (in "
-                   "inches) and try again.")
-            self.assertTrue(exp in output)
-        finally:
-            sys.stdout = saved_stdout
+        fig, ax = plt.subplots()
+        _set_axes_options(ax, 'foo', 'x_foo', 'y_foo',
+                          x_tick_labels=['foofoofooooooooooooooooooooooooo'
+                                         'oooooooooooooooooooooooooooooooo'
+                                         'oooooooooooooooooooooooooooooooo'
+                                         'oooo', 'barbarbar'],
+                          x_tick_labels_orientation='vertical')
+        npt.assert_warns(RuntimeWarning, _set_figure_size, fig, 3, 3)
+        npt.assert_array_equal(fig.get_size_inches(), (3, 3))
 
 
 if __name__ == '__main__':
