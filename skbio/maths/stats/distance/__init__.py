@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 """
-Distance-based statistics (:mod:`bipy.maths.stats.distance`)
-============================================================
+Distance-based statistics (:mod:`skbio.maths.stats.distance`)
+=============================================================
 
-.. currentmodule:: bipy.maths.stats.distance
+.. currentmodule:: skbio.maths.stats.distance
 
 Distance-based statistical methods package.
 
@@ -22,7 +22,7 @@ Examples
 Load a 4x4 distance matrix and grouping vector denoting 2 groups of objects.
 Note that these statistical methods require symmetric distances:
 
->>> from bipy.core.distance import SymmetricDistanceMatrix
+>>> from skbio.core.distance import SymmetricDistanceMatrix
 >>> dm = SymmetricDistanceMatrix([[0, 1, 1, 4],
 ...                               [1, 0, 3, 2],
 ...                               [1, 3, 0, 3],
@@ -34,7 +34,7 @@ Create an ANOSIM instance and run the method with 99 permutations:
 
 >>> import numpy as np
 >>> np.random.seed(0) # Make output deterministic; not necessary for normal use
->>> from bipy.maths.stats.distance import ANOSIM
+>>> from skbio.maths.stats.distance import ANOSIM
 >>> anosim = ANOSIM(dm, grouping)
 >>> results = anosim(99)
 >>> print results.summary() # doctest: +NORMALIZE_WHITESPACE
@@ -45,7 +45,7 @@ ANOSIM\t4\t2\t0.25\t0.67\t99
 """
 
 #-----------------------------------------------------------------------------
-# Copyright (c) 2013--, bipy development team.
+# Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #

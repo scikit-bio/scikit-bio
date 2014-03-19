@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 #-----------------------------------------------------------------------------
-# Copyright (c) 2013--, bipy development team.
+# Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -12,9 +12,9 @@ from __future__ import division
 
 import numpy as np
 
-from bipy.core.distance import DistanceMatrix, SymmetricDistanceMatrix
-from bipy.maths.stats.distance.anosim import ANOSIM
-from bipy.util.unit_test import TestCase, main
+from skbio.core.distance import DistanceMatrix, SymmetricDistanceMatrix
+from skbio.maths.stats.distance.anosim import ANOSIM
+from skbio.util.unit_test import TestCase, main
 
 
 class ANOSIMTests(TestCase):
