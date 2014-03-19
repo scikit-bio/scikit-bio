@@ -58,6 +58,14 @@ class CategoricalStatsResultsTests(TestCase):
                                                0.01234567890, 0.1151111, 99)
         self.p_value = 0.119123123123
 
+    def test_str(self):
+        exp = ('Method name  Sample size  Number of groups       my stat  '
+               'p-value  Number of permutations\n        foo           42'
+               '                 4  0.0123456789     0.12'
+               '                      99\n')
+        obs = str(self.results)
+        self.assertEqual(obs, exp)
+
     def test_summary(self):
         exp = ('Method name\tSample size\tNumber of groups\tmy stat\tp-value\t'
                'Number of permutations\nfoo\t42\t4\t0.0123456789\t0.12\t99\n')

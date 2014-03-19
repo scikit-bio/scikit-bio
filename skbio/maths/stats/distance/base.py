@@ -78,6 +78,8 @@ class CategoricalStats(object):
         CategoricalStatsResults
             Results of the method, including test statistic and p-value.
 
+        .. shownumpydoc
+
         """
         if permutations < 0:
             raise ValueError("Number of permutations must be greater than or "
@@ -131,26 +133,46 @@ class CategoricalStatsResults(object):
         self.p_value = p_value
         self.permutations = permutations
 
+    def __str__(self):
+        """Return pretty-print (fixed width) string."""
+        rows = (self._format_header(), self._format_data())
+
+        max_widths = []
+        for col_idx in range(len(rows[0])):
+            max_widths.append(max(map(lambda e: len(e[col_idx]), rows)))
+
+        results = []
+        for row in rows:
+            padded_row = []
+            for col_idx, val in enumerate(row):
+                padded_row.append(val.rjust(max_widths[col_idx]))
+            results.append('  '.join(padded_row))
+
+        return '\n'.join(results) + '\n'
+
     def summary(self, delimiter='\t'):
         """Return a formatted summary of results as a string.
 
         The string is formatted as delimited text.
 
         """
-        p_value_str = self._format_p_value(self.p_value, self.permutations)
-
         summary = StringIO()
         csv_writer = csv.writer(summary, delimiter=delimiter,
                                 lineterminator='\n')
-        csv_writer.writerow(('Method name', 'Sample size',
-                             'Number of groups', self.test_statistic_name,
-                             'p-value', 'Number of permutations'))
-        csv_writer.writerow((self.short_method_name,
-                             '%d' % self.sample_size,
-                             '%d' % len(self.groups), self.statistic,
-                             p_value_str, '%d' % self.permutations))
-
+        csv_writer.writerow(self._format_header())
+        csv_writer.writerow(self._format_data())
         return summary.getvalue()
+
+    def _format_header(self):
+        return ('Method name', 'Sample size', 'Number of groups',
+                self.test_statistic_name, 'p-value', 'Number of permutations')
+
+    def _format_data(self):
+        p_value_str = self._format_p_value(self.p_value, self.permutations)
+
+        return (self.short_method_name, '%d' % self.sample_size,
+                '%d' % len(self.groups), str(self.statistic), p_value_str,
+                '%d' % self.permutations)
 
     def _format_p_value(self, p_value, permutations):
         """Format p-value as a string with the correct number of decimals.

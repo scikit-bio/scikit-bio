@@ -37,10 +37,11 @@ Create an ANOSIM instance and run the method with 99 permutations:
 >>> from skbio.maths.stats.distance import ANOSIM
 >>> anosim = ANOSIM(dm, grouping)
 >>> results = anosim(99)
->>> print results.summary() # doctest: +NORMALIZE_WHITESPACE
-Method name\tSample size\tNumber of groups\tR statistic\tp-value\t\
+>>> print results # doctest: +NORMALIZE_WHITESPACE
+Method name  Sample size  Number of groups  R statistic  p-value  \
 Number of permutations
-ANOSIM\t4\t2\t0.25\t0.67\t99
+     ANOSIM            4                 2         0.25     0.67  \
+                    99
 
 """
 
