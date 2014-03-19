@@ -1,3 +1,4 @@
+from __future__ import print_function
 #!/usr/bin/env python
 
 #-----------------------------------------------------------------------------
@@ -50,5 +51,5 @@ else:
 
 
 if __name__ == '__main__':
-    print title
-    print art
+    print(title)
+    print(art)
