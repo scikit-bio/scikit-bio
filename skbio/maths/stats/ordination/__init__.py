@@ -1,3 +1,25 @@
+r"""
+Ordination methods (:mod:`skbio.maths.stats.ordination`)
+========================================================
+
+.. currentmodule:: skbio.maths.stats.ordination
+
+This module contains several ordination methods, including Principal
+Coordinate Analysis, Correspondence Analysis, Redundancy Analysis and
+Canonical Correspondence Analysis.
+
+Classes
+-------
+
+.. autosummary::
+   :toctree: generated/
+
+   PCoA
+   CA
+   RDA
+   CCA
+
+"""
 #-----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
