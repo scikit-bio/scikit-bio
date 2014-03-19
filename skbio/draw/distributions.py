@@ -642,7 +642,7 @@ def _set_axes_options(plot_axes, title=None, x_label=None, y_label=None,
             x_tick_labels_orientation != 'horizontal'):
         raise ValueError("Invalid orientation for x-axis tick labels: %s. "
                          "Valid orientations are 'vertical' or 'horizontal'."
-                         % x_tick_labels_rotation)
+                         % x_tick_labels_orientation)
 
     # If labels are provided, always use them. If they aren't, use the x_values
     # that denote the spacing between data points as labels. If that isn't
