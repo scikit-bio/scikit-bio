@@ -130,7 +130,7 @@ repository:
 
 Finally, we need to get the actual pre-commit script:
 
-    $ curl -o $HOME/scikit-bio/.git/hooks/pre-commit http://goo.gl/nQ1KVz
+    $ curl -Lk -o $HOME/scikit-bio/.git/hooks/pre-commit http://goo.gl/nQ1KVz
     $ chmod +x $HOME/skikit-bio/.git/hooks/pre-commit
 
 ### Ignoring the pre-commit hook
