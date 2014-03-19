@@ -380,9 +380,9 @@ def _validate_input(data, x_values, data_point_labels, distribution_labels):
     num_points = len(data)
     num_distributions = len(data[0])
 
-    empty_data_error_msg = "The data must contain at least one data " + \
-                           "point, and each data point must contain at " + \
-                           "least one distribution to plot."
+    empty_data_error_msg = ("The data must contain at least one data "
+                            "point, and each data point must contain at "
+                            "least one distribution to plot.")
     if num_points == 0 or num_distributions == 0:
         raise ValueError(empty_data_error_msg)
 
