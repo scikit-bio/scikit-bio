@@ -1748,13 +1748,13 @@ class TreeNode(object):
         Two possible ways to represent this tree drawing it out would be::
 
                *
-              /\\
-             *  \\
-            / \  \\
+              / \
+             *   \
+            / \   \
             a b   c
 
             a
-            \\__|___ c
+             \__|___ c
              /
             b
 
