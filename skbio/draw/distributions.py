@@ -130,7 +130,7 @@ def boxplots(distributions, x_values=None, x_tick_labels=None, title=None,
     # Make sure our input makes sense.
     for distribution in distributions:
         try:
-            map(float, distribution)
+            list(map(float, distribution))
         except:
             raise ValueError("Each value in each distribution must be a "
                              "number.")
@@ -417,7 +417,7 @@ def _validate_x_values(x_values, x_tick_labels, num_expected_values):
             raise ValueError("The number of x values must match the number "
                              "of data points.")
         try:
-            map(float, x_values)
+            list(map(float, x_values))
         except:
             raise ValueError("Each x value must be a number.")
 
