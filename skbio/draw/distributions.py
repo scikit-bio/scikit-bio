@@ -17,8 +17,6 @@ Functions
    grouped_distributions
 
 """
-from __future__ import division
-
 #-----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -26,6 +24,8 @@ from __future__ import division
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
+
+from __future__ import division
 
 from itertools import cycle
 
