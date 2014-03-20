@@ -40,11 +40,11 @@ class CompressedNodeTests(TestCase):
         self.assertEqual(n.key, self.key)
         self.assertEqual(n.children, {})
 
-    def test_nonzero(self):
+    def test_truth_value(self):
         """Non zero should check for any data on the node"""
         n = _CompressedNode("")
-        self.assertFalse(n.__nonzero__())
-        self.assertTrue(self.node.__nonzero__())
+        self.assertFalse(bool(n))
+        self.assertTrue(bool(self.node))
 
     def test_len(self):
         """Should return the number of values attached to the node"""
