@@ -15,34 +15,35 @@ from .utils import corr, svd_rank, scale
 
 
 class RDA(Ordination):
+    r"""Compute redundancy analysis, a type of canonical analysis.
+
+    It is related to PCA and multiple regression because the explained
+    variables `Y` are fitted to the explanatory variables `X` and PCA
+    is then performed on the fitted values. A similar process is
+    performed on the residuals.
+
+    RDA should be chosen if the studied gradient is small, and CCA
+    when it's large, so that the contingency table is sparse.
+
+    Parameters
+    ----------
+    Y : array_like
+        :math:`n \times p` response matrix. Its columns need be
+        dimensionally homogeneous (or you can set `scale_Y=True`).
+    X : array_like
+        :math:`n \times m, n \geq m` matrix of explanatory
+        variables. Its columns need not be standardized, but doing so
+        turns regression coefficients into standard regression
+        coefficients.
+    scale_Y : bool, optional
+        Controls whether the response matrix columns are scaled to
+        have unit standard deviation. Defaults to `False`.
+    """
+
     short_method_name = 'RDA'
     long_method_name = 'Redundancy Analysis'
 
     def __init__(self, Y, X, scale_Y=False):
-        r"""Compute redundancy analysis, a type of canonical analysis.
-
-        It is related to PCA and multiple regression because the
-        explained variables `Y` are fitted to the explanatory variables
-        `X` and PCA is then performed on the fitted values. A similar
-        process is performed on the residuals.
-
-        RDA should be chosen if the studied gradient is small, and CCA
-        when it's large, so that the contingency table is sparse.
-
-        Parameters
-        ----------
-        Y : array_like
-            :math:`n \times p` response matrix. Its columns need be
-            dimensionally homogeneous (or you can set `scale_Y=True`).
-        X : array_like
-            :math:`n \times m, n \geq m` matrix of explanatory
-            variables. Its columns need not be standardized, but doing
-            so turns regression coefficients into standard regression
-            coefficients.
-        scale_Y : bool, optional
-            Controls whether the response matrix columns are scaled to
-            have unit standard deviation. Defaults to `False`.
-        """
         self.Y = np.asarray(Y, dtype=np.float64)
         self.X = np.asarray(X, dtype=np.float64)
         self._rda(scale_Y)

@@ -31,47 +31,48 @@ from skbio.core.distance import SymmetricDistanceMatrix
 
 
 class PCoA(Ordination):
+    r"""Perform Principal Coordinate Analysis.
+
+    Principal Coordinate Analysis (PCoA) is a method similar to PCA
+    that works from distance matrices, and so it can be used with
+    ecologically meaningful distances like unifrac for bacteria.
+
+    In ecology, the euclidean distance preserved by Principal
+    Component Analysis (PCA) is often not a good choice because it
+    deals poorly with double zeros (Species have unimodal
+    distributions along environmental gradients, so if a species is
+    absent from two sites at the same site, it can't be known if an
+    environmental variable is too high in one of them and too low in
+    the other, or too low in both, etc. On the other hand, if an
+    species is present in two sites, that means that the sites are
+    similar.).
+
+    Parameters
+    ==========
+    distance_matrix : SymmetricDistanceMatrix
+        A distance matrix.
+
+    Notes
+    =====
+    It is sometimes known as metric multidimensional scaling or
+    classical scaling.
+
+    .. note::
+
+       If the distance is not euclidean (for example if it is a
+       semimetric and the triangle inequality doesn't hold),
+       negative eigenvalues can appear. There are different ways
+       to deal with that problem (see Legendre & Legendre 1998, \S
+       9.2.3), but none are currently implemented here.
+
+       However, a warning is raised whenever negative eigenvalues
+       appear, allowing the user to decide if they can be safely
+       ignored.
+    """
     short_method_name = 'PCoA'
     long_method_name = 'Principal Coordinate Analysis'
 
     def __init__(self, distance_matrix):
-        r"""In ecology, the euclidean distance preserved by Principal
-        Component Analysis (PCA) is often not a good choice because it
-        deals poorly with double zeros (Species have unimodal
-        distributions along environmental gradients, so if a species
-        is absent from two sites at the same site, it can't be known
-        if an environmental variable is too high in one of them and
-        too low in the other, or too low in both, etc. On the other
-        hand, if an species is present in two sites, that means that
-        the sites are similar.).
-
-        Principal Coordinate Analysis (PCoA) is a method similar to
-        PCA that works from distance matrices, and so it can be used
-        with ecologically meaningful distances like unifrac for
-        bacteria.
-
-        Parameters
-        ==========
-        distance_matrix : SymmetricDistanceMatrix
-            A distance matrix.
-
-        Notes
-        =====
-        It is sometimes known as metric multidimensional scaling or
-        classical scaling.
-
-        .. note::
-
-           If the distance is not euclidean (for example if it is a
-           semimetric and the triangle inequality doesn't hold),
-           negative eigenvalues can appear. There are different ways
-           to deal with that problem (see Legendre & Legendre 1998, \S
-           9.2.3), but none are currently implemented here.
-
-           However, a warning is raised whenever negative eigenvalues
-           appear, allowing the user to decide if they can be safely
-           ignored.
-        """
         if isinstance(distance_matrix, SymmetricDistanceMatrix):
             self.dm = np.asarray(distance_matrix.data, dtype=np.float64)
         else:
