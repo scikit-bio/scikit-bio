@@ -96,7 +96,7 @@ class CategoricalStatsResultsTests(TestCase):
                               '(permutations = 0)')
 
     def test_format_p_value_none(self):
-        obs = self.results._format_p_value(None, 999)
+        obs = self.results._format_p_value(None, 0)
         self.assertEqual(obs, 'N/A')
 
 

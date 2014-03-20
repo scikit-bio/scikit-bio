@@ -113,6 +113,17 @@ class CategoricalStatsResults(object):
     Stores the results of running a `CategoricalStats` method a single time,
     and provides a way to format the results.
 
+    Attributes
+    ----------
+    short_method_name
+    long_method_name
+    test_statistic_name
+    sample_size
+    groups
+    statistic
+    p_value
+    permutations
+
     Notes
     -----
     Users will generally not directly instantiate objects of this class. The
@@ -155,6 +166,16 @@ class CategoricalStatsResults(object):
 
         The string is formatted as delimited text.
 
+        Parameters
+        ----------
+        delimiter : str, optional
+            String to delimit fields with in formatted output.
+
+        Returns
+        -------
+        str
+            Delimited-text summary of results.
+
         """
         summary = StringIO()
         csv_writer = csv.writer(summary, delimiter=delimiter,
@@ -179,13 +200,13 @@ class CategoricalStatsResults(object):
 
         Number of decimals is determined by the number of permutations.
         """
-        if permutations < 10:
+        if p_value is None:
+            result = 'N/A'
+        elif permutations < 10:
             # This can be the last step of a long process, so we don't want to
             # fail.
             result = ('Too few permutations to compute p-value (permutations '
                       '= %d)' % permutations)
-        elif p_value is None:
-            result = 'N/A'
         else:
             decimal_places = int(np.log10(permutations + 1))
             result = ('%1.' + '%df' % decimal_places) % p_value

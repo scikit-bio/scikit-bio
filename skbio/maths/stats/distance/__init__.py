@@ -37,11 +37,44 @@ Create an ANOSIM instance and run the method with 99 permutations:
 >>> from skbio.maths.stats.distance import ANOSIM
 >>> anosim = ANOSIM(dm, grouping)
 >>> results = anosim(99)
->>> print results # doctest: +NORMALIZE_WHITESPACE
+>>> print results
 Method name  Sample size  Number of groups  R statistic  p-value  \
 Number of permutations
      ANOSIM            4                 2         0.25     0.67  \
                     99
+<BLANKLINE>
+
+It is possible to rerun a method using an existing instance. Rerun ANOSIM with
+999 permutations this time. Note that we obtain the same R statistic as before:
+
+>>> results = anosim(999)
+>>> print results
+Method name  Sample size  Number of groups  R statistic  p-value  \
+Number of permutations
+     ANOSIM            4                 2         0.25    0.667  \
+                   999
+<BLANKLINE>
+
+To suppress calculation of the p-value and only obtain the R statistic, specify
+zero permutations:
+
+>>> results = anosim(0)
+>>> print results
+Method name  Sample size  Number of groups  R statistic  p-value  \
+Number of permutations
+     ANOSIM            4                 2         0.25      N/A  \
+                     0
+<BLANKLINE>
+
+A statistical results object can also format its results as delimited text.
+This is useful, for example, if you want to view the results in a spreadsheet
+program such as Excel:
+
+>>> print results.summary(delimiter=',')
+Method name,Sample size,Number of groups,R statistic,p-value,\
+Number of permutations
+ANOSIM,4,2,0.25,N/A,0
+<BLANKLINE>
 
 """
 
