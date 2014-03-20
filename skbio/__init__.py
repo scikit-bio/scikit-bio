@@ -1,5 +1,5 @@
-from __future__ import print_function
 #!/usr/bin/env python
+from __future__ import print_function
 
 #-----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
