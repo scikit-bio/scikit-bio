@@ -23,7 +23,6 @@ DelimitedRecordFinder except that it accept a is_tail function instead of a
 str.  Note that its default constuctor is rstrip instead of strip.
 """
 
-from string import strip, rstrip
 from skbio.core.exception import RecordError
 
 
@@ -37,13 +36,13 @@ def never_ignore(line):
     return False
 
 
-def DelimitedRecordFinder(delimiter, constructor=strip, ignore=is_empty,
+def DelimitedRecordFinder(delimiter, constructor=str.strip, ignore=is_empty,
                           keep_delimiter=True, strict=True):
     """Returns function that returns successive delimited records from file.
 
     Includes delimiter in return value. Returns list of relevant lines.
 
-    Default constructor is string.strip, but can supply another constructor
+    Default constructor is str.strip, but can supply another constructor
     to transform lines and/or coerce into correct type. If constructor is None,
     passes along the lines without alteration.
 
@@ -86,7 +85,7 @@ def DelimitedRecordFinder(delimiter, constructor=strip, ignore=is_empty,
 GbFinder = DelimitedRecordFinder('//')
 
 
-def TailedRecordFinder(is_tail_line, constructor=rstrip, ignore=is_empty,
+def TailedRecordFinder(is_tail_line, constructor=str.rstrip, ignore=is_empty,
                        strict=True):
     """Returns function that returns successive tailed records from lines.
 
@@ -127,7 +126,7 @@ def TailedRecordFinder(is_tail_line, constructor=rstrip, ignore=is_empty,
     return parser
 
 
-def LabeledRecordFinder(is_label_line, constructor=strip, ignore=is_empty):
+def LabeledRecordFinder(is_label_line, constructor=str.strip, ignore=is_empty):
     """Returns function that returns successive labeled records from file.
 
     Includes label line in return value. Returns list of relevant lines.
@@ -172,10 +171,10 @@ def is_fasta_label(x):
 FastaFinder = LabeledRecordFinder(is_fasta_label)
 
 
-def LineGrouper(num, constructor=strip, ignore=is_empty):
+def LineGrouper(num, constructor=str.strip, ignore=is_empty):
     """Returns num lines at a time, stripping and ignoring blanks.
 
-    Default constructor is string.strip, but can supply another constructor
+    Default constructor is str.strip, but can supply another constructor
     to transform lines and/or coerce into correct type. If constructor is None,
     passes along the lines without alteration.
 
