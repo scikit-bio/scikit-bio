@@ -14,6 +14,7 @@ Functions
    :toctree: generated/
 
    subsample
+   subsample_multinomial
 
 """
 from __future__ import division
@@ -29,18 +30,21 @@ from __future__ import division
 import numpy as np
 
 
-def subsample(counts, n):
-    """Subsample from a vector of counts.
+def subsample(counts, n, multinomial=False):
+    """Randomly subsample from a vector of counts.
 
-    Returns `counts` if `n` is equal to or larger than the number of items in
-    `counts`.
+    Returns a copy of `counts` if `n` is equal to or larger than the number of
+    items in `counts`.
 
     Parameters
     ----------
     counts : 1-D array_like
-        Vector of counts (integers) to subsample from.
+        Vector of counts (integers) to randomly subsample from.
     n : int
         Number of items to subsample from `counts`.
+    multinomial : bool, optional
+        If ``True``, subsample with replacement. If ``False`` (the default),
+        subsample without replacement.
 
     Returns
     -------
@@ -53,9 +57,13 @@ def subsample(counts, n):
     TypeError
         If `counts` cannot be safely converted to an integer datatype.
 
+    See Also
+    --------
+    subsample_multinomial
+
     Examples
     --------
-    Subsample 4 items from a vector of counts:
+    Subsample 4 items (without replacement) from a vector of counts:
 
     >>> import numpy as np
     >>> from skbio.maths.subsample import subsample
@@ -70,6 +78,12 @@ def subsample(counts, n):
     >>> subsample([0, 3, 0, 1], 8)
     array([0, 3, 0, 1])
 
+    Subsample 5 items (with replacement):
+
+    >>> sub = subsample([1, 0, 1, 2, 2, 3, 0, 1], 5, multinomial=True)
+    >>> sub.sum()
+    5
+
     """
     counts = np.asarray(counts)
     counts = counts.astype(int, casting='safe')
@@ -81,11 +95,33 @@ def subsample(counts, n):
         return counts
 
     nz = counts.nonzero()[0]
-    unpacked = np.concatenate([np.repeat(np.array(i,), counts[i]) for i in nz])
-    permuted = np.random.permutation(unpacked)[:n]
 
-    result = np.zeros(len(counts), dtype=int)
-    for p in permuted:
-        result[p] += 1
+    if multinomial:
+        compressed = counts.take(nz).astype(float)
+        compressed /= compressed.sum()
+        counts[nz] = np.random.multinomial(n, compressed).astype(int)
+        result = counts
+    else:
+        unpacked = np.concatenate([np.repeat(np.array(i,), counts[i])
+                                   for i in nz])
+        permuted = np.random.permutation(unpacked)[:n]
+
+        result = np.zeros(len(counts), dtype=int)
+        for p in permuted:
+            result[p] += 1
 
     return result
+
+
+def subsample_multinomial(counts, n):
+    """Randomly subsample with replacement from a vector of counts.
+
+    This is a convenience wrapper that simply calls ``subsample`` with
+    ``multinomial=True``. See ``subsample`` for full documentation.
+
+    See Also
+    --------
+    subsample
+
+    """
+    return subsample(counts, n, multinomial=True)
