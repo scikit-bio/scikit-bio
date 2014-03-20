@@ -59,7 +59,7 @@ def DelimitedRecordFinder(delimiter, constructor=strip, ignore=is_empty,
     def parser(lines):
         curr = []
         for line in lines:
-            if constructor:
+            if constructor is not None:
                 line = constructor(line)
             # else:
             #    line = l
@@ -92,8 +92,9 @@ def TailedRecordFinder(is_tail_line, constructor=rstrip, ignore=is_empty,
 
     Includes tail line in return value. Returns list of relevant lines.
 
-    constructor: a modifier for each line, default is string.rstrip: to remove
-    \n and trailing spaces.
+    constructor: a modifier for each line, default is str.rstrip: to remove
+    \n and trailing spaces. If constructor is None, passes along the lines
+    without alteration.
 
     Skips over any lines for which ignore(line) evaluates True (default is
     to skip empty lines).  note that the line maybe modified by constructor.
@@ -104,7 +105,7 @@ def TailedRecordFinder(is_tail_line, constructor=rstrip, ignore=is_empty,
     def parser(lines):
         curr = []
         for line in lines:
-            if constructor:
+            if constructor is not None:
                 line = constructor(line)
             if ignore(line):
                 continue
@@ -146,7 +147,7 @@ def LabeledRecordFinder(is_label_line, constructor=strip, ignore=is_empty):
     def parser(lines):
         curr = []
         for l in lines:
-            if constructor:
+            if constructor is not None:
                 line = constructor(l)
             else:
                 line = l
@@ -185,7 +186,7 @@ def LineGrouper(num, constructor=strip, ignore=is_empty):
     def parser(lines):
         curr = []
         for l in lines:
-            if constructor:
+            if constructor is not None:
                 line = constructor(l)
             else:
                 line = l
