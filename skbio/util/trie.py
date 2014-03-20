@@ -132,7 +132,7 @@ class _CompressedNode(object):
 
         .. warning:: This method is recursive
         """
-        return sum([len(n) for n in self.children.values()]) + len(self.values)
+        return sum(len(n) for n in self.children.values()) + len(self.values)
 
     @property
     def size(self):
@@ -140,7 +140,7 @@ class _CompressedNode(object):
 
         .. warning:: This method is recursive
         """
-        return sum([n.size for n in self.children.values()]) + 1
+        return sum(n.size for n in self.children.values()) + 1
 
     @property
     def prefix_map(self):
@@ -284,7 +284,7 @@ class CompressedTrie:
                 self.insert(key, value)
 
     def __nonzero__(self):
-        return self._root.__nonzero__()
+        return bool(self._root)
 
     def __len__(self):
         return len(self._root)

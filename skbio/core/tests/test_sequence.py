@@ -8,11 +8,12 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
+from __future__ import division
+
 from unittest import TestCase, main
 
 from skbio.core.sequence import (
-    BiologicalSequence, NucleotideSequence, DNASequence, RNASequence,
-    DNA, RNA)
+    BiologicalSequence, NucleotideSequence, DNASequence, RNASequence)
 from skbio.core.exception import BiologicalSequenceError
 
 
