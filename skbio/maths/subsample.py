@@ -91,15 +91,15 @@ def subsample(counts, n, multinomial=False):
     if counts.ndim != 1:
         raise ValueError("Only 1-D vectors are supported.")
 
-    if counts.sum() <= n:
+    counts_sum = counts.sum()
+    if counts_sum <= n:
         return counts
 
     nz = counts.nonzero()[0]
 
     if multinomial:
-        compressed = counts.take(nz).astype(float)
-        compressed /= compressed.sum()
-        counts[nz] = np.random.multinomial(n, compressed).astype(int)
+        probs = np.true_divide(counts.take(nz), counts_sum)
+        counts[nz] = np.random.multinomial(n, probs)
         result = counts
     else:
         unpacked = np.concatenate([np.repeat(np.array(i,), counts[i])
