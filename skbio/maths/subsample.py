@@ -29,7 +29,7 @@ from __future__ import division
 import numpy as np
 
 
-def subsample(counts, n, multinomial=False):
+def subsample(counts, n, replace=False):
     """Randomly subsample from a vector of counts.
 
     Returns a copy of `counts` if `n` is equal to or larger than the number of
@@ -41,7 +41,7 @@ def subsample(counts, n, multinomial=False):
         Vector of counts (integers) to randomly subsample from.
     n : int
         Number of items to subsample from `counts`.
-    multinomial : bool, optional
+    replace : bool, optional
         If ``True``, subsample with replacement. If ``False`` (the default),
         subsample without replacement.
 
@@ -75,7 +75,7 @@ def subsample(counts, n, multinomial=False):
 
     Subsample 5 items (with replacement):
 
-    >>> sub = subsample([1, 0, 1, 2, 2, 3, 0, 1], 5, multinomial=True)
+    >>> sub = subsample([1, 0, 1, 2, 2, 3, 0, 1], 5, replace=True)
     >>> sub.sum()
     5
 
@@ -90,7 +90,7 @@ def subsample(counts, n, multinomial=False):
     if counts_sum <= n:
         return counts
 
-    if multinomial:
+    if replace:
         probs = np.true_divide(counts, counts_sum)
         result = np.random.multinomial(n, probs)
     else:

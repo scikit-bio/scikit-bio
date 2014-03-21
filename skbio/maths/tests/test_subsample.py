@@ -29,8 +29,8 @@ class SubsampleTests(TestCase):
         # Can only choose from one bin.
         np.testing.assert_equal(subsample(a, 2), np.array([0, 2, 0]))
 
-    def test_subsample_random(self):
-        """Should return a random subsample of a vector."""
+    def test_subsample_without_replacement(self):
+        """Should return a random subsample (without replacement)."""
         # Selecting 2 counts from the vector 1000 times yields each of the two
         # possible results at least once each.
         a = np.array([2, 0, 1])
@@ -44,14 +44,14 @@ class SubsampleTests(TestCase):
         self.assertTrue(np.array_equal(obs, np.array([1, 0, 1])) or
                         np.array_equal(obs, np.array([2, 0, 0])))
 
-    def test_subsample_multinomial(self):
-        """Should return a random subsample of a vector (multinomial)."""
+    def test_subsample_with_replacement(self):
+        """Should return a random subsample (with replacement)."""
         # Can choose from all in first bin, all in last bin (since we're
         # sampling with replacement), or split across bins.
         a = np.array([2, 0, 1])
         actual = {}
         for i in range(1000):
-            obs = subsample(a, 2, multinomial=True)
+            obs = subsample(a, 2, replace=True)
             actual[tuple(obs)] = None
         self.assertEqual(actual, {(1, 0, 1): None, (2, 0, 0): None,
                                   (0, 0, 2): None})
@@ -63,7 +63,7 @@ class SubsampleTests(TestCase):
         a = np.array([2, 0, 1, 2, 1, 8, 6, 0, 3, 3, 5, 0, 0, 0, 5])
         actual = {}
         for i in range(1000):
-            obs = subsample(a, 35, multinomial=True)
+            obs = subsample(a, 35, replace=True)
             self.assertEqual(obs.sum(), 35)
             actual[tuple(obs)] = None
         self.assertTrue(len(actual) > 10)
