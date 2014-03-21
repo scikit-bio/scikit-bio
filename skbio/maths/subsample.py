@@ -95,13 +95,11 @@ def subsample(counts, n, multinomial=False):
     if counts_sum <= n:
         return counts
 
-    nz = counts.nonzero()[0]
-
     if multinomial:
-        probs = np.true_divide(counts.take(nz), counts_sum)
-        counts[nz] = np.random.multinomial(n, probs)
-        result = counts
+        probs = np.true_divide(counts, counts_sum)
+        result = np.random.multinomial(n, probs)
     else:
+        nz = counts.nonzero()[0]
         unpacked = np.concatenate([np.repeat(np.array(i,), counts[i])
                                    for i in nz])
         permuted = np.random.permutation(unpacked)[:n]
