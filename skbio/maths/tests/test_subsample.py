@@ -13,7 +13,7 @@ from unittest import TestCase, main
 
 import numpy as np
 
-from skbio.maths.subsample import subsample, subsample_multinomial
+from skbio.maths.subsample import subsample
 
 
 class SubsampleTests(TestCase):
@@ -51,7 +51,7 @@ class SubsampleTests(TestCase):
         a = np.array([2, 0, 1])
         actual = {}
         for i in range(1000):
-            obs = subsample_multinomial(a, 2)
+            obs = subsample(a, 2, multinomial=True)
             actual[tuple(obs)] = None
         self.assertEqual(actual, {(1, 0, 1): None, (2, 0, 0): None,
                                   (0, 0, 2): None})
@@ -63,7 +63,7 @@ class SubsampleTests(TestCase):
         a = np.array([2, 0, 1, 2, 1, 8, 6, 0, 3, 3, 5, 0, 0, 0, 5])
         actual = {}
         for i in range(1000):
-            obs = subsample_multinomial(a, 35)
+            obs = subsample(a, 35, multinomial=True)
             self.assertEqual(obs.sum(), 35)
             actual[tuple(obs)] = None
         self.assertTrue(len(actual) > 10)

@@ -14,7 +14,6 @@ Functions
    :toctree: generated/
 
    subsample
-   subsample_multinomial
 
 """
 from __future__ import division
@@ -56,10 +55,6 @@ def subsample(counts, n, multinomial=False):
     ------
     TypeError
         If `counts` cannot be safely converted to an integer datatype.
-
-    See Also
-    --------
-    subsample_multinomial
 
     Examples
     --------
@@ -109,17 +104,3 @@ def subsample(counts, n, multinomial=False):
             result[p] += 1
 
     return result
-
-
-def subsample_multinomial(counts, n):
-    """Randomly subsample with replacement from a vector of counts.
-
-    This is a convenience wrapper that simply calls ``subsample`` with
-    ``multinomial=True``. See ``subsample`` for full documentation.
-
-    See Also
-    --------
-    subsample
-
-    """
-    return subsample(counts, n, multinomial=True)
