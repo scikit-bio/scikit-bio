@@ -169,7 +169,8 @@ class CategoricalStatsResults(object):
         Parameters
         ----------
         delimiter : str, optional
-            String to delimit fields with in formatted output.
+            String to delimit fields by in formatted output. Default is tab
+            (TSV).
 
         Returns
         -------

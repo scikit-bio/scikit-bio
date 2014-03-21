@@ -76,6 +76,17 @@ Number of permutations
 ANOSIM,4,2,0.25,N/A,0
 <BLANKLINE>
 
+Individual values of the results can be accessed via the attributes of the
+``CategoricalStatsResults`` class:
+
+>>> results = anosim(99)
+>>> results.statistic
+0.25
+>>> results.p_value
+0.75
+>>> results.permutations
+99
+
 """
 
 #-----------------------------------------------------------------------------
