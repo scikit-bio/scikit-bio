@@ -56,10 +56,11 @@ class SubsampleTests(TestCase):
         self.assertEqual(actual, {(1, 0, 1): None, (2, 0, 0): None,
                                   (0, 0, 2): None})
 
-        # Selecting 35 counts from a 36-count vector 1000 times yields more
-        # than 10 different subsamples. If we were subsampling *without*
-        # replacement, there would be only 10 possible subsamples, but there
-        # are more possibilities when sampling *with* replacement.
+        # Test that selecting 35 counts from a 36-count vector 1000 times
+        # yields more than 10 different subsamples. If we were subsampling
+        # *without* replacement, there would be only 10 possible subsamples
+        # because there are 10 nonzero bins in array a. However, there are more
+        # than 10 possibilities when sampling *with* replacement.
         a = np.array([2, 0, 1, 2, 1, 8, 6, 0, 3, 3, 5, 0, 0, 0, 5])
         actual = {}
         for i in range(1000):
