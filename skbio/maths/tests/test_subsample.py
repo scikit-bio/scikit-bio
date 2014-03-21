@@ -34,11 +34,11 @@ class SubsampleTests(TestCase):
         # Selecting 2 counts from the vector 1000 times yields each of the two
         # possible results at least once each.
         a = np.array([2, 0, 1])
-        actual = {}
+        actual = set()
         for i in range(1000):
             obs = subsample(a, 2)
-            actual[tuple(obs)] = None
-        self.assertEqual(actual, {(1, 0, 1): None, (2, 0, 0): None})
+            actual.add(tuple(obs))
+        self.assertEqual(actual, {(1, 0, 1), (2, 0, 0)})
 
         obs = subsample(a, 2)
         self.assertTrue(np.array_equal(obs, np.array([1, 0, 1])) or
@@ -49,12 +49,11 @@ class SubsampleTests(TestCase):
         # Can choose from all in first bin, all in last bin (since we're
         # sampling with replacement), or split across bins.
         a = np.array([2, 0, 1])
-        actual = {}
+        actual = set()
         for i in range(1000):
             obs = subsample(a, 2, replace=True)
-            actual[tuple(obs)] = None
-        self.assertEqual(actual, {(1, 0, 1): None, (2, 0, 0): None,
-                                  (0, 0, 2): None})
+            actual.add(tuple(obs))
+        self.assertEqual(actual, {(1, 0, 1), (2, 0, 0), (0, 0, 2)})
 
         # Test that selecting 35 counts from a 36-count vector 1000 times
         # yields more than 10 different subsamples. If we were subsampling
@@ -62,11 +61,11 @@ class SubsampleTests(TestCase):
         # because there are 10 nonzero bins in array a. However, there are more
         # than 10 possibilities when sampling *with* replacement.
         a = np.array([2, 0, 1, 2, 1, 8, 6, 0, 3, 3, 5, 0, 0, 0, 5])
-        actual = {}
+        actual = set()
         for i in range(1000):
             obs = subsample(a, 35, replace=True)
             self.assertEqual(obs.sum(), 35)
-            actual[tuple(obs)] = None
+            actual.add(tuple(obs))
         self.assertTrue(len(actual) > 10)
 
     def test_subsample_invalid_input(self):
