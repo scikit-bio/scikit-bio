@@ -223,9 +223,8 @@ class TreeNode(object):
         self.children = []
         self.id = None
 
-        if children:
-            for c in children:
-                self.append(c)
+        if children is not None:
+            self.extend(children)
 
     ### start operators ###
     def __repr__(self):
@@ -248,6 +247,7 @@ class TreeNode(object):
         >>> repr(tree)
         '<TreeNode, name: root internal node count: 1, tips count: 3>'
 
+        .. shownumpydoc
         """
         nodes = [n for n in self.traverse(include_self=False)]
         n_tips = sum([n.is_tip() for n in nodes])
@@ -255,7 +255,7 @@ class TreeNode(object):
         classname = self.__class__.__name__
         name = self.name if self.name is not None else "unnamed"
 
-        return "<%s, name: %s internal node count: %d, tips count: %d>" % \
+        return "<%s, name: %s, internal node count: %d, tips count: %d>" % \
                (classname, name, n_nontips, n_tips)
 
     def __str__(self):
@@ -278,6 +278,7 @@ class TreeNode(object):
         >>> str(tree)
         '((a,b)c);'
 
+        .. shownumpydoc
         """
 
         return self.to_newick(with_distances=True)
@@ -429,7 +430,7 @@ class TreeNode(object):
 
         """
         for (i, curr_node) in enumerate(self.children):
-            if curr_node == node:
+            if curr_node is node:
                 self._remove_node(i)
                 return True
         return False
@@ -1518,11 +1519,10 @@ class TreeNode(object):
             return []
 
         result = []
-        curr = self.parent
+        curr = self
         while not curr.is_root():
-            result.append(curr)
+            result.append(curr.parent)
             curr = curr.parent
-        result.append(curr)
 
         return result
 
