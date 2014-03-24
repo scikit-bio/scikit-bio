@@ -248,7 +248,7 @@ class TreeNode(object):
         >>> from skbio.core.tree import TreeNode
         >>> tree = TreeNode.from_newick("((a,b)c, d)root;")
         >>> repr(tree)
-        '<TreeNode, name: root internal node count: 1, tips count: 3>'
+        '<TreeNode, name: root, internal node count: 1, tips count: 3>'
 
         .. shownumpydoc
         """
@@ -1248,6 +1248,9 @@ class TreeNode(object):
     def tips(self, include_self=False):
         r"""Iterates over tips descended from self, [] if self is a tip
 
+        Node order is consistent between calls and is ordered by a
+        postorder traversal of the tree.
+
         Parameters
         ----------
         include_self : bool
@@ -1278,25 +1281,17 @@ class TreeNode(object):
         d
         e
         """
-        #bail out in easy case
-        if not self.children:
-            if include_self:
-                yield self
-            raise StopIteration
-
-        stack = [self]
-        while stack:
-            curr = stack.pop()
-            if curr.children:
-                stack.extend(curr.children[::-1])  # 20% faster than reversed
-            else:
-                yield curr
+        for n in self.postorder(include_self=False):
+            if n.is_tip():
+                yield n
 
     def non_tips(self, include_self=False):
         r"""Iterates over nontips descended from self, [] if none.
 
         include_self, if True (default is False), will return the current
-        node as part of non_tips if it is a non_tip.
+        node as part of non_tips if it is a non_tip. Node order is consistent
+        between calls and is ordered by a postorder traversal of the tree.
+
 
         Parameters
         ----------
@@ -1327,7 +1322,7 @@ class TreeNode(object):
         f
         """
         for n in self.postorder(include_self):
-            if n.children:
+            if not n.is_tip():
                 yield n
 
     ### end traversal methods ###
@@ -1750,11 +1745,11 @@ class TreeNode(object):
         --------
         >>> from skbio.core.tree import TreeNode
         >>> TreeNode.from_newick("((a,b)c,(d,e)f)root;")
-        <TreeNode, name: root internal node count: 2, tips count: 4>
+        <TreeNode, name: root, internal node count: 2, tips count: 4>
         >>> from StringIO import StringIO
         >>> s = StringIO("((a,b),c);")
         >>> TreeNode.from_newick(s)
-        <TreeNode, name: unnamed internal node count: 1, tips count: 3>
+        <TreeNode, name: unnamed, internal node count: 1, tips count: 3>
 
         References
         ----------
