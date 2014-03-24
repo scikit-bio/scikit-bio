@@ -91,7 +91,7 @@ def subsample(counts, n, replace=False):
         return counts
 
     if replace:
-        probs = np.true_divide(counts, counts_sum)
+        probs = counts / counts_sum
         result = np.random.multinomial(n, probs)
     else:
         nz = counts.nonzero()[0]
