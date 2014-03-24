@@ -1028,7 +1028,7 @@ class NucleotideSequence(BiologicalSequence):
             "N": set("ACGTU")
         }
 
-        for degen_char in degen_map.keys():
+        for degen_char in list(degen_map.keys()):
             nondegen_chars = degen_map[degen_char]
             degen_map[degen_char.lower()] = set(
                 ''.join(nondegen_chars).lower())
@@ -1235,7 +1235,7 @@ class DNASequence(NucleotideSequence):
             "H": set("ACT"), "V": set("ACG"), "N": set("ACGT")
         }
 
-        for degen_char in degen_map.keys():
+        for degen_char in list(degen_map.keys()):
             nondegen_chars = degen_map[degen_char]
             degen_map[degen_char.lower()] = set(
                 ''.join(nondegen_chars).lower())
@@ -1312,7 +1312,7 @@ class RNASequence(NucleotideSequence):
             "H": set("ACU"), "V": set("ACG"), "N": set("ACGU")
         }
 
-        for degen_char in degen_map.keys():
+        for degen_char in list(degen_map.keys()):
             nondegen_chars = degen_map[degen_char]
             degen_map[degen_char.lower()] = set(
                 ''.join(nondegen_chars).lower())
