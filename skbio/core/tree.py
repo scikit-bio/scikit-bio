@@ -9,7 +9,7 @@ This module provides functionality for working with trees, including
 phylogenetic trees and hierarchies. Functionality is provided for
 constructing the trees, for traversing in multiple ways, comparisons,
 fetching subtrees, and more. This module supports trees that are multifurcating
-and nodes that have single descendents as well.
+and nodes that have single descendants as well.
 
 Classes
 -------
@@ -188,8 +188,8 @@ class TreeNode(object):
     A `TreeNode` instance stores links to its parent and optional children
     nodes. In addition, the `TreeNode` can represent a `length` (e.g., a
     branch length) between itself and its parent. Within this object, the use
-    of "children" and "descendents" is frequent in the documentation. A child
-    is a direct descendent of a node, while descendents are all nodes that are
+    of "children" and "descendants" is frequent in the documentation. A child
+    is a direct descendant of a node, while descendants are all nodes that are
     below a given node (e.g., grand-children, etc).
 
     Parameters
@@ -236,7 +236,7 @@ class TreeNode(object):
         Returns
         -------
         str
-            A summary of this node and all descendents
+            A summary of this node and all descendants
 
         Notes
         -----
@@ -441,7 +441,7 @@ class TreeNode(object):
     def remove_deleted(self, func):
         r"""Delete nodes in which func(node) evaluates True
 
-        Remove all descendents from self that evaluate True from `func`. This
+        Remove all descendants from self that evaluate True from `func`. This
         has the potential to drop clades.
 
         Parameters
@@ -724,7 +724,7 @@ class TreeNode(object):
         return frozenset({i.name for i in self.tips()})
 
     def subsets(self):
-        r"""Return all sets of names that come from self and its descendents
+        r"""Return all sets of names that come from self and its descendants
 
         Compute all subsets of tip names over self, or, represent a tree as a
         set of nested sets.
