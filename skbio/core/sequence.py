@@ -977,8 +977,7 @@ class NucleotideSequence(BiologicalSequence):
             Characters that are allowed in a valid `NucleotideSequence`.
 
         """
-        chars = cls.iupac_characters()
-        return chars | set(map(str.lower, chars))
+        return cls.iupac_characters()
 
     @classmethod
     def complement_map(cls):
@@ -1009,7 +1008,7 @@ class NucleotideSequence(BiologicalSequence):
             Non-degenerate IUPAC nucleotide characters.
 
         """
-        return set("ACGTU")
+        return set("ACGTUacgtu")
 
     @classmethod
     def iupac_degeneracies(cls):
@@ -1022,12 +1021,19 @@ class NucleotideSequence(BiologicalSequence):
             non-degenerate IUPAC nucleotide characters it represents.
 
         """
-        return {
+        degen_map = {
             "R": set("AG"), "Y": set("CTU"), "M": set("AC"), "K": set("TUG"),
             "W": set("ATU"), "S": set("GC"), "B": set("CGTU"),
             "D": set("AGTU"), "H": set("ACTU"), "V": set("ACG"),
             "N": set("ACGTU")
         }
+
+        for degen_char in list(degen_map.keys()):
+            nondegen_chars = degen_map[degen_char]
+            degen_map[degen_char.lower()] = set(
+                ''.join(nondegen_chars).lower())
+
+        return degen_map
 
     @classmethod
     def iupac_degenerate_characters(cls):
@@ -1210,7 +1216,7 @@ class DNASequence(NucleotideSequence):
             Non-degenerate IUPAC DNA characters.
 
         """
-        return set("ACGT")
+        return set("ACGTacgt")
 
     @classmethod
     def iupac_degeneracies(cls):
@@ -1223,11 +1229,18 @@ class DNASequence(NucleotideSequence):
             non-degenerate IUPAC DNA characters it represents.
 
         """
-        return {
+        degen_map = {
             "R": set("AG"), "Y": set("CT"), "M": set("AC"), "K": set("TG"),
             "W": set("AT"), "S": set("GC"), "B": set("CGT"), "D": set("AGT"),
             "H": set("ACT"), "V": set("ACG"), "N": set("ACGT")
         }
+
+        for degen_char in list(degen_map.keys()):
+            nondegen_chars = degen_map[degen_char]
+            degen_map[degen_char.lower()] = set(
+                ''.join(nondegen_chars).lower())
+
+        return degen_map
 
 # class is accessible with alternative name for convenience
 DNA = DNASequence
@@ -1280,7 +1293,7 @@ class RNASequence(NucleotideSequence):
             Non-degenerate IUPAC RNA characters.
 
         """
-        return set("ACGU")
+        return set("ACGUacgu")
 
     @classmethod
     def iupac_degeneracies(cls):
@@ -1293,11 +1306,18 @@ class RNASequence(NucleotideSequence):
             non-degenerate IUPAC RNA characters it represents.
 
         """
-        return {
+        degen_map = {
             "R": set("AG"), "Y": set("CU"), "M": set("AC"), "K": set("UG"),
             "W": set("AU"), "S": set("GC"), "B": set("CGU"), "D": set("AGU"),
             "H": set("ACU"), "V": set("ACG"), "N": set("ACGU")
         }
+
+        for degen_char in list(degen_map.keys()):
+            nondegen_chars = degen_map[degen_char]
+            degen_map[degen_char.lower()] = set(
+                ''.join(nondegen_chars).lower())
+
+        return degen_map
 
 # class is accessible with alternative name for convenience
 RNA = RNASequence
