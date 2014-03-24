@@ -9,7 +9,7 @@ This module provides functionality for working with trees, including
 phylogenetic trees and hierarchies. Functionality is provided for
 constructing the trees, for traversing in multiple ways, comparisons,
 fetching subtrees, and more. This module supports trees that are multifurcating
-and support nodes that have single descendents as well.
+and nodes that have single descendents as well.
 
 Classes
 -------
@@ -35,7 +35,7 @@ one internal node:
 Where A, B, and D are tips of the tree, and C is an internal node that covers
 tips A and B.
 
-Now lets construct a simple tree and dump an ASCII representation:
+Now let's construct a simple tree and dump an ASCII representation:
 
 >>> tree = TreeNode.from_newick("((A, B)C, D)root;")
 >>> print tree.is_root()  # is this the root of the tree?
@@ -53,7 +53,7 @@ There are a few common ways to traverse a tree, and depending on your use,
 some methods are more appropriate than others. Wikipedia has a well written
 page on tree `traversal methods <http://goo.gl/K4Ufl>`_, and will go into
 further depth than what we'll cover here. We're only going to cover two of the
-commonly used traversals here, preorder and postorder, but we well show
+commonly used traversals here, preorder and postorder, but we will show
 examples of two other common helper traversal methods to gather tips or
 internal nodes.
 
@@ -163,77 +163,6 @@ from skbio.core.exception import (NoLengthError, DuplicateNodeError,
                                   TreeError, RecordError)
 
 
-def _dnd_tokenizer(data):
-    r"""Tokenizes data into a stream of punctuation, labels and lengths.
-
-    Parameters
-    ----------
-    data : str
-        a DND-like (e.g., newick) string
-
-    Returns
-    -------
-    GeneratorType
-        Yields successive DND tokens
-
-    See Also
-    --------
-    TreeNode.from_newick
-    TreeNode.to_newick
-
-    Examples
-    --------
-    >>> from skbio.core.tree import _dnd_tokenizer
-    >>> for token in _dnd_tokenizer("((tip1, tip2)internal1)"):
-    ...     print token
-    (
-    (
-    tip1
-    ,
-    tip2
-    )
-    internal1
-    )
-    """
-    dnd_token_str = '(:),;'
-    dnd_tokens = set(dnd_token_str)
-
-    in_quotes = False
-    saved = []
-    sa = saved.append
-    for d in data:
-        if d == "'":
-            in_quotes = not in_quotes
-        if d in dnd_tokens and not in_quotes:
-            curr = ''.join(saved).strip()
-            if curr:
-                yield curr
-            yield d
-            saved = []
-            sa = saved.append
-        else:
-            sa(d)
-
-
-def distance_from_r(m1, m2):
-    r"""Estimates distance as (1-r)/2: neg correl = max distance
-
-    Parameters
-    ----------
-    m1 : SymmetricDistanceMatrix
-        a distance matrix to compare
-    m2 : SymmetricDistanceMatrix
-        a distance matrix to compare
-
-    Returns
-    -------
-
-    float
-        The distance between m1 and m2
-    """
-    return (1-correlation_t(m1.flat, m2.flat)[0])/2
-
-
 class TreeNode(object):
     r"""Representation of a node within a tree
 
@@ -320,8 +249,8 @@ class TreeNode(object):
 
         See Also
         --------
-        TreeNode.to_newick
-        TreeNode.from_newick
+        to_newick
+        from_newick
 
         Examples
         --------
@@ -370,7 +299,7 @@ class TreeNode(object):
 
         See Also
         --------
-        TreeNode.extend
+        extend
 
         Examples
         --------
@@ -400,7 +329,7 @@ class TreeNode(object):
 
         See Also
         --------
-        TreeNode.append
+        append
 
         Examples
         --------
@@ -432,8 +361,8 @@ class TreeNode(object):
 
         See Also
         --------
-        TreeNode.remove
-        TreeNode.remove_deleted
+        remove
+        remove_deleted
 
         Examples
         --------
@@ -469,8 +398,8 @@ class TreeNode(object):
 
         See Also
         --------
-        TreeNode.pop
-        TreeNode.remove_deleted
+        pop
+        remove_deleted
 
         Examples
         --------
@@ -499,8 +428,8 @@ class TreeNode(object):
 
         See Also
         --------
-        TreeNode.pop
-        TreeNode.remove
+        pop
+        remove
 
         Examples
         --------
@@ -529,10 +458,10 @@ class TreeNode(object):
 
         See Also
         --------
-        TreeNode.shear
-        TreeNode.remove
-        TreeNode.pop
-        Treenode.remove_deleted
+        shear
+        remove
+        pop
+        remove_deleted
 
         Examples
         --------
@@ -592,8 +521,8 @@ class TreeNode(object):
 
         See Also
         --------
-        TreeNode.unrooted_deepcopy
-        TreeNode.unrooted_copy
+        unrooted_deepcopy
+        unrooted_copy
 
         Examples
         --------
@@ -661,9 +590,9 @@ class TreeNode(object):
 
         See Also
         --------
-        TreeNode.copy
-        TreeNode.unrooted_copy
-        TreeNode.root_at
+        copy
+        unrooted_copy
+        root_at
 
         Examples
         --------
@@ -705,9 +634,9 @@ class TreeNode(object):
 
         See Also
         --------
-        TreeNode.copy
-        TreeNode.unrooted_deepcopy
-        TreeNode.root_at
+        copy
+        unrooted_deepcopy
+        root_at
 
         Examples
         --------
@@ -759,8 +688,8 @@ class TreeNode(object):
 
         See Also
         --------
-        TreeNode.subsets
-        TreeNode.compare_subsets
+        subsets
+        compare_subsets
 
         Examples
         --------
@@ -784,8 +713,8 @@ class TreeNode(object):
 
         See Also
         --------
-        TreeNode.subset
-        TreeNode.compare_subsets
+        subset
+        compare_subsets
 
         Examples
         --------
@@ -831,8 +760,8 @@ class TreeNode(object):
 
         See Also
         --------
-        TreeNode.root_at_midpoint
-        TreeNode.unrooted_deepcopy
+        root_at_midpoint
+        unrooted_deepcopy
 
         Examples
         --------
@@ -872,8 +801,8 @@ class TreeNode(object):
 
         See Also
         --------
-        TreeNode.root_at
-        TreeNode.unrooted_deepcopy
+        root_at
+        unrooted_deepcopy
 
         Examples
         --------
@@ -941,8 +870,8 @@ class TreeNode(object):
 
         See Also
         --------
-        TreeNode.is_root
-        TreeNode.has_children
+        is_root
+        has_children
 
         Examples
         --------
@@ -965,8 +894,8 @@ class TreeNode(object):
 
         See Also
         --------
-        TreeNode.is_tip
-        TreeNode.has_children
+        is_tip
+        has_children
 
         Examples
         --------
@@ -989,8 +918,8 @@ class TreeNode(object):
 
         See Also
         --------
-        TreeNode.is_tip
-        TreeNode.is_root
+        is_tip
+        is_root
 
         Examples
         --------
@@ -1036,12 +965,12 @@ class TreeNode(object):
 
         See Also
         --------
-        TreeNode.preorder
-        TreeNode.postorder
-        TreeNode.pre_and_postorder
-        TreeNode.levelorder
-        TreeNode.tips
-        TreeNode.non_tips
+        preorder
+        postorder
+        pre_and_postorder
+        levelorder
+        tips
+        non_tips
 
         Examples
         --------
@@ -1080,12 +1009,12 @@ class TreeNode(object):
 
         See Also
         --------
-        TreeNode.traverse
-        TreeNode.postorder
-        TreeNode.pre_and_postorder
-        TreeNode.levelorder
-        TreeNode.tips
-        TreeNode.non_tips
+        traverse
+        postorder
+        pre_and_postorder
+        levelorder
+        tips
+        non_tips
 
         Examples
         --------
@@ -1125,12 +1054,12 @@ class TreeNode(object):
 
         See Also
         --------
-        TreeNode.traverse
-        TreeNode.preorder
-        TreeNode.pre_and_postorder
-        TreeNode.levelorder
-        TreeNode.tips
-        TreeNode.non_tips
+        traverse
+        preorder
+        pre_and_postorder
+        levelorder
+        tips
+        non_tips
 
         Examples
         --------
@@ -1191,12 +1120,12 @@ class TreeNode(object):
 
         See Also
         --------
-        TreeNode.traverse
-        TreeNode.postorder
-        TreeNode.preorder
-        TreeNode.levelorder
-        TreeNode.tips
-        TreeNode.non_tips
+        traverse
+        postorder
+        preorder
+        levelorder
+        tips
+        non_tips
 
         Examples
         --------
@@ -1264,12 +1193,12 @@ class TreeNode(object):
 
         See Also
         --------
-        TreeNode.traverse
-        TreeNode.postorder
-        TreeNode.preorder
-        TreeNode.pre_and_postorder
-        TreeNode.tips
-        TreeNode.non_tips
+        traverse
+        postorder
+        preorder
+        pre_and_postorder
+        tips
+        non_tips
 
         Examples
         --------
@@ -1308,12 +1237,12 @@ class TreeNode(object):
 
         See Also
         --------
-        TreeNode.traverse
-        TreeNode.postorder
-        TreeNode.preorder
-        TreeNode.pre_and_postorder
-        TreeNode.levelorder
-        TreeNode.non_tips
+        traverse
+        postorder
+        preorder
+        pre_and_postorder
+        levelorder
+        non_tips
 
         Examples
         --------
@@ -1358,12 +1287,12 @@ class TreeNode(object):
 
         See Also
         --------
-        TreeNode.traverse
-        TreeNode.postorder
-        TreeNode.preorder
-        TreeNode.pre_and_postorder
-        TreeNode.levelorder
-        TreeNode.tips
+        traverse
+        postorder
+        preorder
+        pre_and_postorder
+        levelorder
+        tips
 
         Examples
         --------
@@ -1387,8 +1316,8 @@ class TreeNode(object):
 
         See Also
         --------
-        TreeNode.create_node_cache
-        TreeNode.find
+        create_node_cache
+        find
 
         """
         self._node_cache = {}
@@ -1407,8 +1336,8 @@ class TreeNode(object):
 
         See Also
         --------
-        TreeNode.invalidate_node_cache
-        TreeNode.find
+        invalidate_node_cache
+        find
 
         """
         if self._node_cache:
@@ -1448,8 +1377,8 @@ class TreeNode(object):
 
         See Also
         --------
-        TreeNode.find_by_id
-        TreeNode.find_by_func
+        find_by_id
+        find_by_func
 
         Examples
         --------
@@ -1490,8 +1419,8 @@ class TreeNode(object):
 
         See Also
         --------
-        TreeNode.find
-        TreeNode.find_by_func
+        find
+        find_by_func
 
         Examples
         --------
@@ -1531,8 +1460,8 @@ class TreeNode(object):
 
         See Also
         --------
-        TreeNode.find
-        TreeNode.find_by_id
+        find
+        find_by_id
 
         Examples
         --------
@@ -1615,7 +1544,7 @@ class TreeNode(object):
 
         See Also
         --------
-        TreeNode.neighbors
+        neighbors
 
         Examples
         --------
@@ -1796,7 +1725,7 @@ class TreeNode(object):
 
         See Also
         --------
-        TreeNode.to_newick
+        to_newick
 
         Examples
         --------
@@ -1938,7 +1867,7 @@ class TreeNode(object):
 
         See Also
         --------
-        TreeNode.from_newick
+        from_newick
 
         Examples
         --------
@@ -2102,7 +2031,7 @@ class TreeNode(object):
 
         See Also
         --------
-        TreeNode.distance
+        distance
 
         Examples
         --------
@@ -2151,10 +2080,10 @@ class TreeNode(object):
 
         See Also
         --------
-        TreeNode.tip_tip_distances
-        TreeNode.accumulate_to_ancestor
-        TreeNode.compare_by_distances
-        TreeNode.get_max_distance
+        tip_tip_distances
+        accumulate_to_ancestor
+        compare_by_distances
+        get_max_distance
 
         Examples
         --------
@@ -2227,9 +2156,9 @@ class TreeNode(object):
 
         See Also
         --------
-        TreeNode.distance
-        TreeNode.tip_tip_distances
-        TreeNode.compare_by_distances
+        distance
+        tip_tip_distances
+        compare_by_distances
 
         Examples
         --------
@@ -2288,8 +2217,8 @@ class TreeNode(object):
 
         See Also
         --------
-        TreeNode.distance
-        TreeNode.compare_by_distances
+        distance
+        compare_by_distances
 
         Examples
         --------
@@ -2411,8 +2340,8 @@ class TreeNode(object):
 
         See Also
         --------
-        TreeNode.compare_by_distances
-        TreeNode.subsets
+        compare_by_distances
+        subsets
 
         Examples
         --------
@@ -2483,7 +2412,7 @@ class TreeNode(object):
 
         See Also
         --------
-        TreeNode.compare_subsets
+        compare_subsets
 
         Examples
         --------
@@ -2570,3 +2499,74 @@ class TreeNode(object):
         """
         for idx, n in enumerate(self.postorder(include_self=True)):
             n.Id = idx
+
+
+def _dnd_tokenizer(data):
+    r"""Tokenizes data into a stream of punctuation, labels and lengths.
+
+    Parameters
+    ----------
+    data : str
+        a DND-like (e.g., newick) string
+
+    Returns
+    -------
+    GeneratorType
+        Yields successive DND tokens
+
+    See Also
+    --------
+    TreeNode.from_newick
+    TreeNode.to_newick
+
+    Examples
+    --------
+    >>> from skbio.core.tree import _dnd_tokenizer
+    >>> for token in _dnd_tokenizer("((tip1, tip2)internal1)"):
+    ...     print token
+    (
+    (
+    tip1
+    ,
+    tip2
+    )
+    internal1
+    )
+    """
+    dnd_token_str = '(:),;'
+    dnd_tokens = set(dnd_token_str)
+
+    in_quotes = False
+    saved = []
+    sa = saved.append
+    for d in data:
+        if d == "'":
+            in_quotes = not in_quotes
+        if d in dnd_tokens and not in_quotes:
+            curr = ''.join(saved).strip()
+            if curr:
+                yield curr
+            yield d
+            saved = []
+            sa = saved.append
+        else:
+            sa(d)
+
+
+def distance_from_r(m1, m2):
+    r"""Estimates distance as (1-r)/2: neg correl = max distance
+
+    Parameters
+    ----------
+    m1 : SymmetricDistanceMatrix
+        a distance matrix to compare
+    m2 : SymmetricDistanceMatrix
+        a distance matrix to compare
+
+    Returns
+    -------
+
+    float
+        The distance between m1 and m2
+    """
+    return (1-correlation_t(m1.flat, m2.flat)[0])/2
