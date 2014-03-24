@@ -213,18 +213,18 @@ class TreeNode(object):
 
     """
 
-    _exclude_from_copy = set(['Parent', 'Children', '_node_cache'])
+    _exclude_from_copy = set(['Parent', 'children', '_node_cache'])
 
-    def __init__(self, name=None, length=None, Parent=None, Children=None):
+    def __init__(self, name=None, length=None, Parent=None, children=None):
         self.name = name
         self.length = length
         self.Parent = Parent
         self._node_cache = {}
-        self.Children = []
+        self.children = []
         self.Id = None
 
-        if Children:
-            for c in Children:
+        if children:
+            for c in children:
                 self.append(c)
 
     ### start operators ###
@@ -283,21 +283,21 @@ class TreeNode(object):
         return self.to_newick(with_distances=True)
 
     def __iter__(self):
-        r"""Node iter iterates over the Children."""
-        return iter(self.Children)
+        r"""Node iter iterates over the children."""
+        return iter(self.children)
 
     def __len__(self):
-        return len(self.Children)
+        return len(self.children)
 
     def __getitem__(self, i):
-        r"""Node delegates slicing to Children"""
-        return self.Children[i]
+        r"""Node delegates slicing to children"""
+        return self.children[i]
 
     ### end operators ###
 
     ### start topology updates ###
     def _adopt(self, node):
-        r"""Update parent references but does NOT update self.Children"""
+        r"""Update parent references but does NOT update self.children"""
         self.invalidate_node_cache()
         if node.Parent is not None:
             node.Parent.remove(node)
@@ -305,7 +305,7 @@ class TreeNode(object):
         return node
 
     def append(self, node):
-        r"""Appends a node to self.Children, in-place, cleaning up refs
+        r"""Appends a node to self.children, in-place, cleaning up refs
 
         `append` will invalidate any node lookup caches, remove an existing
         parent on `node` if one exists, set the parent of `node` to `self`
@@ -332,7 +332,7 @@ class TreeNode(object):
         (child1,child2)root;
 
         """
-        self.Children.append(self._adopt(node))
+        self.children.append(self._adopt(node))
 
     def extend(self, nodes):
         r"""Append a list of nodes to self
@@ -359,7 +359,7 @@ class TreeNode(object):
         (child1,child2)root;
 
         """
-        self.Children.extend([self._adopt(n) for n in nodes])
+        self.children.extend([self._adopt(n) for n in nodes])
 
     def pop(self, index=-1):
         r"""Remove a node from self
@@ -396,7 +396,7 @@ class TreeNode(object):
     def _remove_node(self, idx):
         r"""The actual (and only) method that performs node removal"""
         self.invalidate_node_cache()
-        node = self.Children.pop(idx)
+        node = self.children.pop(idx)
         node.Parent = None
         return node
 
@@ -424,11 +424,11 @@ class TreeNode(object):
         --------
         >>> from skbio.core.tree import TreeNode
         >>> tree = TreeNode.from_newick("(a,b)c;")
-        >>> tree.remove(tree.Children[0])
+        >>> tree.remove(tree.children[0])
         True
 
         """
-        for (i, curr_node) in enumerate(self.Children):
+        for (i, curr_node) in enumerate(self.children):
             if curr_node == node:
                 self._remove_node(i)
                 return True
@@ -498,12 +498,12 @@ class TreeNode(object):
         # while traversing
         nodes_to_remove = []
         for node in self.traverse(include_self=False):
-            if len(node.Children) == 1:
+            if len(node.children) == 1:
                 nodes_to_remove.append(node)
 
         # clean up the single children nodes
         for node in nodes_to_remove:
-            node.Parent.append(node.Children[0])
+            node.Parent.append(node.children[0])
             node.Parent.remove(node)
 
 #   def shear(self, names):
@@ -567,7 +567,7 @@ class TreeNode(object):
             return result
 
         root = __copy_node(self)
-        nodes_stack = [[root, self, len(self.Children)]]
+        nodes_stack = [[root, self, len(self.children)]]
 
         while nodes_stack:
             #check the top node, any children left unvisited?
@@ -576,11 +576,11 @@ class TreeNode(object):
 
             if unvisited_children:
                 top[2] -= 1
-                old_child = old_top_node.Children[-unvisited_children]
+                old_child = old_top_node.children[-unvisited_children]
                 new_child = __copy_node(old_child)
                 new_top_node.append(new_child)
                 nodes_stack.append([new_child, old_child,
-                                    len(old_child.Children)])
+                                    len(old_child.children)])
             else:  # no unvisited children
                 nodes_stack.pop()
         return root
@@ -683,7 +683,7 @@ class TreeNode(object):
             edgename = self.name
             length = self.length
 
-        result = self.__class__(name=edgename, Children=children,
+        result = self.__class__(name=edgename, children=children,
                                 length=length)
 
         if parent is None:
@@ -747,10 +747,10 @@ class TreeNode(object):
         """
         sets = []
         for i in self.postorder(include_self=False):
-            if not i.Children:
+            if not i.children:
                 i.__leaf_set = frozenset([i.name])
             else:
-                leaf_set = reduce(or_, [c.__leaf_set for c in i.Children])
+                leaf_set = reduce(or_, [c.__leaf_set for c in i.children])
                 if len(leaf_set) > 1:
                     sets.append(leaf_set)
                 i.__leaf_set = leaf_set
@@ -793,7 +793,7 @@ class TreeNode(object):
         if isinstance(node, str):
             node = self.find(node)
 
-        if not node.Children:
+        if not node.children:
             raise TreeError("Can't use a tip (%s) as the root" %
                             repr(node.name))
         return node.unrooted_deepcopy()
@@ -901,7 +901,7 @@ class TreeNode(object):
         >>> print tree.find('a').is_tip()
         True
         """
-        return not self.Children
+        return not self.children
 
     def is_root(self):
         r"""Returns True if the current is a root, i.e. has no parent.
@@ -928,7 +928,7 @@ class TreeNode(object):
         return self.Parent is None
 
     def has_children(self):
-        r"""Returns True if self.Children.
+        r"""Returns True if self.children.
 
         Returns
         -------
@@ -1051,8 +1051,8 @@ class TreeNode(object):
             curr = stack.pop()
             if include_self or (curr is not self):
                 yield curr
-            if curr.Children:
-                stack.extend(curr.Children[::-1])
+            if curr.children:
+                stack.extend(curr.children[::-1])
 
     def postorder(self, include_self=True):
         r"""Performs postorder iteration over tree.
@@ -1093,7 +1093,7 @@ class TreeNode(object):
         """
         child_index_stack = [0]
         curr = self
-        curr_children = self.Children
+        curr_children = self.children
         curr_children_len = len(curr_children)
         while 1:
             curr_index = child_index_stack[-1]
@@ -1101,10 +1101,10 @@ class TreeNode(object):
             if curr_index < curr_children_len:
                 curr_child = curr_children[curr_index]
                 #if the current child has children, go there
-                if curr_child.Children:
+                if curr_child.children:
                     child_index_stack.append(0)
                     curr = curr_child
-                    curr_children = curr.Children
+                    curr_children = curr.children
                     curr_children_len = len(curr_children)
                     curr_index = 0
                 #otherwise, yield that child
@@ -1119,7 +1119,7 @@ class TreeNode(object):
                 if curr is self:
                     break
                 curr = curr.Parent
-                curr_children = curr.Children
+                curr_children = curr.children
                 curr_children_len = len(curr_children)
                 child_index_stack.pop()
                 child_index_stack[-1] += 1
@@ -1160,13 +1160,13 @@ class TreeNode(object):
         None
         """
         #handle simple case first
-        if not self.Children:
+        if not self.children:
             if include_self:
                 yield self
             raise StopIteration
         child_index_stack = [0]
         curr = self
-        curr_children = self.Children
+        curr_children = self.children
         while 1:
             curr_index = child_index_stack[-1]
             if not curr_index:
@@ -1176,10 +1176,10 @@ class TreeNode(object):
             if curr_index < len(curr_children):
                 curr_child = curr_children[curr_index]
                 #if the current child has children, go there
-                if curr_child.Children:
+                if curr_child.children:
                     child_index_stack.append(0)
                     curr = curr_child
-                    curr_children = curr.Children
+                    curr_children = curr.children
                     curr_index = 0
                 #otherwise, yield that child
                 else:
@@ -1193,7 +1193,7 @@ class TreeNode(object):
                 if curr is self:
                     break
                 curr = curr.Parent
-                curr_children = curr.Children
+                curr_children = curr.children
                 child_index_stack.pop()
                 child_index_stack[-1] += 1
 
@@ -1238,8 +1238,8 @@ class TreeNode(object):
             curr = queue.pop(0)
             if include_self or (curr is not self):
                 yield curr
-            if curr.Children:
-                queue.extend(curr.Children)
+            if curr.children:
+                queue.extend(curr.children)
 
     def tips(self, include_self=False):
         r"""Iterates over tips descended from self, [] if self is a tip
@@ -1275,7 +1275,7 @@ class TreeNode(object):
         e
         """
         #bail out in easy case
-        if not self.Children:
+        if not self.children:
             if include_self:
                 yield self
             raise StopIteration
@@ -1283,8 +1283,8 @@ class TreeNode(object):
         stack = [self]
         while stack:
             curr = stack.pop()
-            if curr.Children:
-                stack.extend(curr.Children[::-1])  # 20% faster than reversed
+            if curr.children:
+                stack.extend(curr.children[::-1])  # 20% faster than reversed
             else:
                 yield curr
 
@@ -1323,7 +1323,7 @@ class TreeNode(object):
         f
         """
         for n in self.postorder(include_self):
-            if n.Children:
+            if n.children:
                 yield n
 
     ### end traversal methods ###
@@ -1576,7 +1576,7 @@ class TreeNode(object):
         if self.is_root():
             return []
 
-        result = self.Parent.Children[:]
+        result = self.Parent.children[:]
         result.remove(self)
 
         return result
@@ -1604,7 +1604,7 @@ class TreeNode(object):
         >>> [n.name for n in node_c.neighbors()]
         ['a', 'b', 'root']
         """
-        nodes = [n for n in self.Children + [self.Parent] if n is not None]
+        nodes = [n for n in self.children + [self.Parent] if n is not None]
         if ignore is None:
             return nodes
         else:
@@ -1766,8 +1766,8 @@ class TreeNode(object):
             new_node = cls()
             new_node.Parent = old_node
             if old_node is not None:
-                if new_node not in old_node.Children:
-                    old_node.Children.append(new_node)
+                if new_node not in old_node.children:
+                    old_node.children.append(new_node)
             return new_node
 
         if isinstance(lines, str):
@@ -1897,7 +1897,7 @@ class TreeNode(object):
 
         """
         result = ['(']
-        nodes_stack = [[self, len(self.Children)]]
+        nodes_stack = [[self, len(self.children)]]
         node_count = 1
 
         while nodes_stack:
@@ -1907,15 +1907,15 @@ class TreeNode(object):
             top_node, num_unvisited_children = top
             if num_unvisited_children:  # has any child unvisited
                 top[1] -= 1  # decrease the #of children unvisited
-                next_child = top_node.Children[-num_unvisited_children]
+                next_child = top_node.children[-num_unvisited_children]
                 # pre-visit
-                if next_child.Children:
+                if next_child.children:
                     result.append('(')
-                nodes_stack.append([next_child, len(next_child.Children)])
+                nodes_stack.append([next_child, len(next_child.children)])
             else:  # no unvisited children
                 nodes_stack.pop()
                 #post-visit
-                if top_node.Children:
+                if top_node.children:
                     result[-1] = ')'
 
                 if top_node.name is None:
@@ -1958,13 +1958,13 @@ class TreeNode(object):
         PAD = ' ' * LEN
         PA = ' ' * (LEN-1)
         namestr = self.name or ''  # prevents name of NoneType
-        if self.Children:
+        if self.children:
             mids = []
             result = []
-            for c in self.Children:
-                if c is self.Children[0]:
+            for c in self.children:
+                if c is self.children[0]:
                     char2 = '/'
-                elif c is self.Children[-1]:
+                elif c is self.children[-1]:
                     char2 = '\\'
                 else:
                     char2 = '-'
@@ -2136,10 +2136,10 @@ class TreeNode(object):
             if n.is_tip():
                 n.MaxDistTips = [[0.0, n], [0.0, n]]
             else:
-                if len(n.Children) == 1:
+                if len(n.children) == 1:
                     raise TreeError("No support for single descedent nodes")
                 else:
-                    tip_info = [(max(c.MaxDistTips), c) for c in n.Children]
+                    tip_info = [(max(c.MaxDistTips), c) for c in n.children]
                     dists = [i[0][0] for i in tip_info]
                     best_idx = np.argsort(dists)[-2:]
                     tip_a, child_a = tip_info[best_idx[0]]
@@ -2275,7 +2275,7 @@ class TreeNode(object):
 
         def update_result():
         # set tip_tip distance between tips of different child
-            for child1, child2 in combinations(node.Children, 2):
+            for child1, child2 in combinations(node.children, 2):
                 for tip1 in range(child1.__start, child1.__stop):
                     if tip1 not in result_map:
                         continue
@@ -2287,12 +2287,12 @@ class TreeNode(object):
                         result[t1idx, t2idx] = distances[tip1]+distances[tip2]
 
         for node in self.postorder():
-            if not node.Children:
+            if not node.children:
                 continue
             ## subtree with solved child wedges
             ### can possibly use np.zeros
             starts, stops = [], []  # to calc ._start and ._stop for curr node
-            for child in node.Children:
+            for child in node.children:
                 if child.length is None:
                     raise NoLengthError("%s doesn't have length" % child.name)
 
@@ -2303,7 +2303,7 @@ class TreeNode(object):
 
             node.__start, node.__stop = min(starts), max(stops)
 
-            if len(node.Children) > 1:
+            if len(node.children) > 1:
                 update_result()
 
         return result + result.T, tip_order
@@ -2487,7 +2487,7 @@ class TreeNode(object):
         curr_index = 0
 
         for n in self.postorder():
-            for c in n.Children:
+            for c in n.children:
                 c._leaf_index = curr_index
                 id_index[curr_index] = c
                 curr_index += 1
@@ -2495,18 +2495,18 @@ class TreeNode(object):
                 if c:
                     #c has children itself, so need to add to result
                     child_index.append((c._leaf_index,
-                                        c.Children[0]._leaf_index,
-                                        c.Children[-1]._leaf_index))
+                                        c.children[0]._leaf_index,
+                                        c.children[-1]._leaf_index))
 
         # handle root, which should be t itself
         self._leaf_index = curr_index
         id_index[curr_index] = self
 
         # only want to add to the child_index if self has children...
-        if self.Children:
+        if self.children:
             child_index.append((self._leaf_index,
-                                self.Children[0]._leaf_index,
-                                self.Children[-1]._leaf_index))
+                                self.children[0]._leaf_index,
+                                self.children[-1]._leaf_index))
 
         return id_index, child_index
 
