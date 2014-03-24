@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.maths.stats.distance.ANOSIM.test_statistic_name
+=====================================================
+
+.. currentmodule:: skbio.maths.stats.distance
+
+.. autoattribute:: ANOSIM.test_statistic_name

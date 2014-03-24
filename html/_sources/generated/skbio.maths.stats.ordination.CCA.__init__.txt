@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.maths.stats.ordination.CCA.__init__
+=========================================
+
+.. currentmodule:: skbio.maths.stats.ordination
+
+.. automethod:: CCA.__init__

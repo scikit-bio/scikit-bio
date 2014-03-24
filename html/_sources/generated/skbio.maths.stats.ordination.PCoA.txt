@@ -1,0 +1,36 @@
+skbio.maths.stats.ordination.PCoA
+=================================
+
+.. currentmodule:: skbio.maths.stats.ordination
+
+.. autoclass:: PCoA
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         PCoA._E_matrix
+         PCoA._F_matrix
+         PCoA.__format__
+         PCoA.__init__
+         PCoA.__new__
+         PCoA.__reduce__
+         PCoA.__reduce_ex__
+         PCoA.__sizeof__
+         PCoA.__subclasshook__
+         PCoA._pcoa
+         PCoA.scores
+
+
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         PCoA.long_method_name
+         PCoA.short_method_name
+

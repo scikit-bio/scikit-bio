@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.maths.stats.ordination.PCoA.scores
+========================================
+
+.. currentmodule:: skbio.maths.stats.ordination
+
+.. automethod:: PCoA.scores

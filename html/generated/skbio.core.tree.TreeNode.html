@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>skbio.core.tree.TreeNode &mdash; scikit-bio 0.0.0-dev documentation</title>
+    
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.1.0/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.0.0-dev',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="top" title="scikit-bio 0.0.0-dev documentation" href="../index.html" />
+    <link rel="up" title="Tree representations (skbio.core.tree)" href="../core.tree.html" />
+    <link rel="next" title="skbio.core.tree.TreeNode.__repr__" href="skbio.core.tree.TreeNode.__repr__.html" />
+    <link rel="prev" title="skbio.core.tree.TreeNode.unrooted_deepcopy" href="skbio.core.tree.TreeNode.unrooted_deepcopy.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body>
+  
+  <a href="https://github.com/biocore/scikit-bio"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_white_ffffff.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          scikit-bio docs</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.0.0-dev</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            <li class="divider-vertical"></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../core.alignment.html">Sequence collections and alignments (<tt class="docutils literal"><span class="pre">skbio.core.alignment</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core.sequence.html">Biological sequences (<tt class="docutils literal"><span class="pre">skbio.core.sequence</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core.distance.html">Distance matrices (<tt class="docutils literal"><span class="pre">skbio.core.distance</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core.exception.html">Exceptions (<tt class="docutils literal"><span class="pre">skbio.core.exception</span></tt>)</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../core.tree.html">Tree representations (<tt class="docutils literal"><span class="pre">skbio.core.tree</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../draw.distributions.html">Distribution visualizations (<tt class="docutils literal"><span class="pre">skbio.draw.distributions</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../maths.stats.distance.html">Distance-based statistics (<tt class="docutils literal"><span class="pre">skbio.maths.stats.distance</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../maths.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.maths.stats.spatial</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../maths.stats.ordination.html">Ordination methods (<tt class="docutils literal"><span class="pre">skbio.maths.stats.ordination</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../maths.subsample.html">Subsampling (<tt class="docutils literal"><span class="pre">skbio.maths.subsample</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../parse.sequences.html">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.misc.html">Miscellaneous Utilities (<tt class="docutils literal"><span class="pre">skbio.util.misc</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.trie.html">Prefix tree (Trie) (<tt class="docutils literal"><span class="pre">skbio.util.trie</span></tt>)</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">skbio.core.tree.TreeNode</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      
+  <div class="section" id="skbio-core-tree-treenode">
+<h1>skbio.core.tree.TreeNode<a class="headerlink" href="#skbio-core-tree-treenode" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="skbio.core.tree.TreeNode">
+<em class="property">class </em><tt class="descclassname">skbio.core.tree.</tt><tt class="descname">TreeNode</tt><big>(</big><em>name=None</em>, <em>length=None</em>, <em>parent=None</em>, <em>children=None</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/master/skbio/core/tree.py#L185"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.core.tree.TreeNode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Representation of a node within a tree</p>
+<p>A <cite>TreeNode</cite> instance stores links to its parent and optional children
+nodes. In addition, the <cite>TreeNode</cite> can represent a <cite>length</cite> (e.g., a
+branch length) between itself and its parent. Within this object, the use
+of &#8220;children&#8221; and &#8220;descendants&#8221; is frequent in the documentation. A child
+is a direct descendant of a node, while descendants are all nodes that are
+below a given node (e.g., grand-children, etc).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>name</strong> : str or None</p>
+<blockquote>
+<div><p>A node can have a name. It is common for tips in particular to have
+names, for instance, in a phylogenetic tree where the tips correspond
+to species.</p>
+</div></blockquote>
+<p><strong>length</strong> : float, int, or None</p>
+<blockquote>
+<div><p>Distances between nodes can be used to represent evolutionary
+distances, time, etc.</p>
+</div></blockquote>
+<p><strong>parent</strong> : TreeNode or None</p>
+<blockquote>
+<div><p>Connect this node to a parent</p>
+</div></blockquote>
+<p><strong>children</strong> : list of TreeNode or None</p>
+<blockquote class="last">
+<div><p>Connect this node to existing children</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="44%" />
+<col width="56%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>name</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>length</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>parent</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>children</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>id</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="skbio.core.tree.TreeNode.__repr__.html#skbio.core.tree.TreeNode.__repr__" title="skbio.core.tree.TreeNode.__repr__"><tt class="xref py py-obj docutils literal"><span class="pre">__repr__</span></tt></a>()</td>
+<td>Returns summary of the tree</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.core.tree.TreeNode.__str__.html#skbio.core.tree.TreeNode.__str__" title="skbio.core.tree.TreeNode.__str__"><tt class="xref py py-obj docutils literal"><span class="pre">__str__</span></tt></a>()</td>
+<td>Returns string version of self, with names and distances</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.core.tree.TreeNode.accumulate_to_ancestor.html#skbio.core.tree.TreeNode.accumulate_to_ancestor" title="skbio.core.tree.TreeNode.accumulate_to_ancestor"><tt class="xref py py-obj docutils literal"><span class="pre">accumulate_to_ancestor</span></tt></a>(ancestor)</td>
+<td>Return the sum of the distance between self and ancestor</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.core.tree.TreeNode.ancestors.html#skbio.core.tree.TreeNode.ancestors" title="skbio.core.tree.TreeNode.ancestors"><tt class="xref py py-obj docutils literal"><span class="pre">ancestors</span></tt></a>()</td>
+<td>Returns all ancestors back to the root</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.core.tree.TreeNode.append.html#skbio.core.tree.TreeNode.append" title="skbio.core.tree.TreeNode.append"><tt class="xref py py-obj docutils literal"><span class="pre">append</span></tt></a>(node)</td>
+<td>Appends a node to self.children, in-place, cleaning up refs</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.core.tree.TreeNode.ascii_art.html#skbio.core.tree.TreeNode.ascii_art" title="skbio.core.tree.TreeNode.ascii_art"><tt class="xref py py-obj docutils literal"><span class="pre">ascii_art</span></tt></a>([show_internal,&nbsp;compact])</td>
+<td>Returns a string containing an ascii drawing of the tree</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.core.tree.TreeNode.assign_ids.html#skbio.core.tree.TreeNode.assign_ids" title="skbio.core.tree.TreeNode.assign_ids"><tt class="xref py py-obj docutils literal"><span class="pre">assign_ids</span></tt></a>()</td>
+<td>Assign topologically stable unique ids to self</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.core.tree.TreeNode.compare_subsets.html#skbio.core.tree.TreeNode.compare_subsets" title="skbio.core.tree.TreeNode.compare_subsets"><tt class="xref py py-obj docutils literal"><span class="pre">compare_subsets</span></tt></a>(other[,&nbsp;exclude_absent_taxa])</td>
+<td>Returns fraction of overlapping subsets where self and other differ.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.core.tree.TreeNode.compare_tip_distances.html#skbio.core.tree.TreeNode.compare_tip_distances" title="skbio.core.tree.TreeNode.compare_tip_distances"><tt class="xref py py-obj docutils literal"><span class="pre">compare_tip_distances</span></tt></a>(other[,&nbsp;sample,&nbsp;...])</td>
+<td>Compares self to other using tip-to-tip distance matrices.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.core.tree.TreeNode.copy.html#skbio.core.tree.TreeNode.copy" title="skbio.core.tree.TreeNode.copy"><tt class="xref py py-obj docutils literal"><span class="pre">copy</span></tt></a>()</td>
+<td>Returns a copy of self using an iterative approach</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.core.tree.TreeNode.create_node_cache.html#skbio.core.tree.TreeNode.create_node_cache" title="skbio.core.tree.TreeNode.create_node_cache"><tt class="xref py py-obj docutils literal"><span class="pre">create_node_cache</span></tt></a>()</td>
+<td>Construct an internal lookup keyed by node name, valued by node</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.core.tree.TreeNode.deepcopy.html#skbio.core.tree.TreeNode.deepcopy" title="skbio.core.tree.TreeNode.deepcopy"><tt class="xref py py-obj docutils literal"><span class="pre">deepcopy</span></tt></a>()</td>
+<td>Returns a copy of self using an iterative approach</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.core.tree.TreeNode.distance.html#skbio.core.tree.TreeNode.distance" title="skbio.core.tree.TreeNode.distance"><tt class="xref py py-obj docutils literal"><span class="pre">distance</span></tt></a>(other)</td>
+<td>Return the distance between self and other</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.core.tree.TreeNode.extend.html#skbio.core.tree.TreeNode.extend" title="skbio.core.tree.TreeNode.extend"><tt class="xref py py-obj docutils literal"><span class="pre">extend</span></tt></a>(nodes)</td>
+<td>Append a list of nodes to self</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.core.tree.TreeNode.find.html#skbio.core.tree.TreeNode.find" title="skbio.core.tree.TreeNode.find"><tt class="xref py py-obj docutils literal"><span class="pre">find</span></tt></a>(name)</td>
+<td>Find a node by name</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.core.tree.TreeNode.find_by_func.html#skbio.core.tree.TreeNode.find_by_func" title="skbio.core.tree.TreeNode.find_by_func"><tt class="xref py py-obj docutils literal"><span class="pre">find_by_func</span></tt></a>(func)</td>
+<td>Find all nodes given a function</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.core.tree.TreeNode.find_by_id.html#skbio.core.tree.TreeNode.find_by_id" title="skbio.core.tree.TreeNode.find_by_id"><tt class="xref py py-obj docutils literal"><span class="pre">find_by_id</span></tt></a>(node_id)</td>
+<td>Find a node by id</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.core.tree.TreeNode.from_newick.html#skbio.core.tree.TreeNode.from_newick" title="skbio.core.tree.TreeNode.from_newick"><tt class="xref py py-obj docutils literal"><span class="pre">from_newick</span></tt></a>(lines[,&nbsp;unescape_name])</td>
+<td>Returns tree from the Clustal .dnd file format and equivalent</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.core.tree.TreeNode.get_max_distance.html#skbio.core.tree.TreeNode.get_max_distance" title="skbio.core.tree.TreeNode.get_max_distance"><tt class="xref py py-obj docutils literal"><span class="pre">get_max_distance</span></tt></a>()</td>
+<td>Returns the max tip tip distance between any pair of tips</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.core.tree.TreeNode.has_children.html#skbio.core.tree.TreeNode.has_children" title="skbio.core.tree.TreeNode.has_children"><tt class="xref py py-obj docutils literal"><span class="pre">has_children</span></tt></a>()</td>
+<td>Returns True if self.children.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.core.tree.TreeNode.index_tree.html#skbio.core.tree.TreeNode.index_tree" title="skbio.core.tree.TreeNode.index_tree"><tt class="xref py py-obj docutils literal"><span class="pre">index_tree</span></tt></a>()</td>
+<td>Index a tree for rapid lookups within a tree array</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.core.tree.TreeNode.invalidate_node_cache.html#skbio.core.tree.TreeNode.invalidate_node_cache" title="skbio.core.tree.TreeNode.invalidate_node_cache"><tt class="xref py py-obj docutils literal"><span class="pre">invalidate_node_cache</span></tt></a>()</td>
+<td>Delete the node cache</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.core.tree.TreeNode.is_root.html#skbio.core.tree.TreeNode.is_root" title="skbio.core.tree.TreeNode.is_root"><tt class="xref py py-obj docutils literal"><span class="pre">is_root</span></tt></a>()</td>
+<td>Returns True if the current is a root, i.e.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.core.tree.TreeNode.is_tip.html#skbio.core.tree.TreeNode.is_tip" title="skbio.core.tree.TreeNode.is_tip"><tt class="xref py py-obj docutils literal"><span class="pre">is_tip</span></tt></a>()</td>
+<td>Returns True if the current node is a tip, i.e.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.core.tree.TreeNode.lca.html#skbio.core.tree.TreeNode.lca" title="skbio.core.tree.TreeNode.lca"><tt class="xref py py-obj docutils literal"><span class="pre">lca</span></tt></a>(tipnames)</td>
+<td>Lowest common ancestor for a list of tipnames</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.core.tree.TreeNode.levelorder.html#skbio.core.tree.TreeNode.levelorder" title="skbio.core.tree.TreeNode.levelorder"><tt class="xref py py-obj docutils literal"><span class="pre">levelorder</span></tt></a>([include_self])</td>
+<td>Performs levelorder iteration over tree</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.core.tree.TreeNode.lowest_common_ancestor.html#skbio.core.tree.TreeNode.lowest_common_ancestor" title="skbio.core.tree.TreeNode.lowest_common_ancestor"><tt class="xref py py-obj docutils literal"><span class="pre">lowest_common_ancestor</span></tt></a>(tipnames)</td>
+<td>Lowest common ancestor for a list of tipnames</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.core.tree.TreeNode.neighbors.html#skbio.core.tree.TreeNode.neighbors" title="skbio.core.tree.TreeNode.neighbors"><tt class="xref py py-obj docutils literal"><span class="pre">neighbors</span></tt></a>([ignore])</td>
+<td>Returns all nodes that are connected to self</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.core.tree.TreeNode.non_tips.html#skbio.core.tree.TreeNode.non_tips" title="skbio.core.tree.TreeNode.non_tips"><tt class="xref py py-obj docutils literal"><span class="pre">non_tips</span></tt></a>([include_self])</td>
+<td>Iterates over nontips descended from self, [] if none.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.core.tree.TreeNode.pop.html#skbio.core.tree.TreeNode.pop" title="skbio.core.tree.TreeNode.pop"><tt class="xref py py-obj docutils literal"><span class="pre">pop</span></tt></a>([index])</td>
+<td>Remove a node from self</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.core.tree.TreeNode.postorder.html#skbio.core.tree.TreeNode.postorder" title="skbio.core.tree.TreeNode.postorder"><tt class="xref py py-obj docutils literal"><span class="pre">postorder</span></tt></a>([include_self])</td>
+<td>Performs postorder iteration over tree.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.core.tree.TreeNode.pre_and_postorder.html#skbio.core.tree.TreeNode.pre_and_postorder" title="skbio.core.tree.TreeNode.pre_and_postorder"><tt class="xref py py-obj docutils literal"><span class="pre">pre_and_postorder</span></tt></a>([include_self])</td>
+<td>Performs iteration over tree, visiting node before and after</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.core.tree.TreeNode.preorder.html#skbio.core.tree.TreeNode.preorder" title="skbio.core.tree.TreeNode.preorder"><tt class="xref py py-obj docutils literal"><span class="pre">preorder</span></tt></a>([include_self])</td>
+<td>Performs preorder iteration over tree</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.core.tree.TreeNode.prune.html#skbio.core.tree.TreeNode.prune" title="skbio.core.tree.TreeNode.prune"><tt class="xref py py-obj docutils literal"><span class="pre">prune</span></tt></a>()</td>
+<td>Reconstructs correct topology after nodes have been removed.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.core.tree.TreeNode.remove.html#skbio.core.tree.TreeNode.remove" title="skbio.core.tree.TreeNode.remove"><tt class="xref py py-obj docutils literal"><span class="pre">remove</span></tt></a>(node)</td>
+<td>Remove a node from self</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.core.tree.TreeNode.remove_deleted.html#skbio.core.tree.TreeNode.remove_deleted" title="skbio.core.tree.TreeNode.remove_deleted"><tt class="xref py py-obj docutils literal"><span class="pre">remove_deleted</span></tt></a>(func)</td>
+<td>Delete nodes in which func(node) evaluates True</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.core.tree.TreeNode.root.html#skbio.core.tree.TreeNode.root" title="skbio.core.tree.TreeNode.root"><tt class="xref py py-obj docutils literal"><span class="pre">root</span></tt></a>()</td>
+<td>Returns root of the tree self is in</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.core.tree.TreeNode.root_at.html#skbio.core.tree.TreeNode.root_at" title="skbio.core.tree.TreeNode.root_at"><tt class="xref py py-obj docutils literal"><span class="pre">root_at</span></tt></a>(node)</td>
+<td>Return a new tree rooted at the provided node.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.core.tree.TreeNode.root_at_midpoint.html#skbio.core.tree.TreeNode.root_at_midpoint" title="skbio.core.tree.TreeNode.root_at_midpoint"><tt class="xref py py-obj docutils literal"><span class="pre">root_at_midpoint</span></tt></a>()</td>
+<td>Return a new tree rooted at midpoint of the two tips farthest apart</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.core.tree.TreeNode.siblings.html#skbio.core.tree.TreeNode.siblings" title="skbio.core.tree.TreeNode.siblings"><tt class="xref py py-obj docutils literal"><span class="pre">siblings</span></tt></a>()</td>
+<td>Returns all nodes that are children of the same parent as self.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.core.tree.TreeNode.subset.html#skbio.core.tree.TreeNode.subset" title="skbio.core.tree.TreeNode.subset"><tt class="xref py py-obj docutils literal"><span class="pre">subset</span></tt></a>()</td>
+<td>Returns set of names that descend from specified node</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.core.tree.TreeNode.subsets.html#skbio.core.tree.TreeNode.subsets" title="skbio.core.tree.TreeNode.subsets"><tt class="xref py py-obj docutils literal"><span class="pre">subsets</span></tt></a>()</td>
+<td>Return all sets of names that come from self and its descendants</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.core.tree.TreeNode.subtree.html#skbio.core.tree.TreeNode.subtree" title="skbio.core.tree.TreeNode.subtree"><tt class="xref py py-obj docutils literal"><span class="pre">subtree</span></tt></a>([tip_list])</td>
+<td>Make a copy of the subtree</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.core.tree.TreeNode.tip_tip_distances.html#skbio.core.tree.TreeNode.tip_tip_distances" title="skbio.core.tree.TreeNode.tip_tip_distances"><tt class="xref py py-obj docutils literal"><span class="pre">tip_tip_distances</span></tt></a>([endpoints])</td>
+<td>Returns distance matrix between pairs of tips, and a tip order.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.core.tree.TreeNode.tips.html#skbio.core.tree.TreeNode.tips" title="skbio.core.tree.TreeNode.tips"><tt class="xref py py-obj docutils literal"><span class="pre">tips</span></tt></a>([include_self])</td>
+<td>Iterates over tips descended from self, [] if self is a tip</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.core.tree.TreeNode.to_newick.html#skbio.core.tree.TreeNode.to_newick" title="skbio.core.tree.TreeNode.to_newick"><tt class="xref py py-obj docutils literal"><span class="pre">to_newick</span></tt></a>([with_distances,&nbsp;semicolon,&nbsp;...])</td>
+<td>Return the newick string representation of this tree.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.core.tree.TreeNode.traverse.html#skbio.core.tree.TreeNode.traverse" title="skbio.core.tree.TreeNode.traverse"><tt class="xref py py-obj docutils literal"><span class="pre">traverse</span></tt></a>([self_before,&nbsp;self_after,&nbsp;include_self])</td>
+<td>Returns iterator over descendants</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.core.tree.TreeNode.unrooted_copy.html#skbio.core.tree.TreeNode.unrooted_copy" title="skbio.core.tree.TreeNode.unrooted_copy"><tt class="xref py py-obj docutils literal"><span class="pre">unrooted_copy</span></tt></a>([parent])</td>
+<td>Walks the tree unrooted-style and returns a copy</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.core.tree.TreeNode.unrooted_deepcopy.html#skbio.core.tree.TreeNode.unrooted_deepcopy" title="skbio.core.tree.TreeNode.unrooted_deepcopy"><tt class="xref py py-obj docutils literal"><span class="pre">unrooted_deepcopy</span></tt></a>([parent])</td>
+<td>Walks the tree unrooted-style and returns a new copy</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014--, scikit-bio development team.<br/>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.2.2.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

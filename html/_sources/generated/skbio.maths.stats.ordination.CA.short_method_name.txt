@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.maths.stats.ordination.CA.short_method_name
+=================================================
+
+.. currentmodule:: skbio.maths.stats.ordination
+
+.. autoattribute:: CA.short_method_name

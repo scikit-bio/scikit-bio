@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.maths.stats.ordination.PCoA.__subclasshook__
+==================================================
+
+.. currentmodule:: skbio.maths.stats.ordination
+
+.. automethod:: PCoA.__subclasshook__

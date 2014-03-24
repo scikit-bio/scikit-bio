@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.maths.stats.distance.PERMANOVA.__call__
+=============================================
+
+.. currentmodule:: skbio.maths.stats.distance
+
+.. automethod:: PERMANOVA.__call__

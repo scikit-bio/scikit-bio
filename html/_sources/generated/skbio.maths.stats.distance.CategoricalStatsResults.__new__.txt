@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.maths.stats.distance.CategoricalStatsResults.__new__
+==========================================================
+
+.. currentmodule:: skbio.maths.stats.distance
+
+.. automethod:: CategoricalStatsResults.__new__

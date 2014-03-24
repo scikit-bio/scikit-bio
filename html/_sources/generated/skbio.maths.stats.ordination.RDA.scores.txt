@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.maths.stats.ordination.RDA.scores
+=======================================
+
+.. currentmodule:: skbio.maths.stats.ordination
+
+.. automethod:: RDA.scores
