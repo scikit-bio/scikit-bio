@@ -122,7 +122,7 @@ In these two trees, we've added on a description of length from the node to
 its parent, so for instance:
 
 >>> for node in tree1.postorder():
-...     print node.name, node.Length
+...     print node.name, node.length
 A 0.1
 B 0.2
 C 0.3
@@ -186,7 +186,7 @@ class TreeNode(object):
     r"""Representation of a node within a tree
 
     A `TreeNode` instance stores links to its parent and optional children
-    nodes. In addition, the `TreeNode` can represent a `Length` (e.g., a
+    nodes. In addition, the `TreeNode` can represent a `length` (e.g., a
     branch length) between itself and its parent.
 
     Parameters
@@ -215,9 +215,9 @@ class TreeNode(object):
 
     _exclude_from_copy = set(['Parent', 'Children', '_node_cache'])
 
-    def __init__(self, name=None, Length=None, Parent=None, Children=None):
+    def __init__(self, name=None, length=None, Parent=None, Children=None):
         self.name = name
-        self.Length = Length
+        self.length = length
         self.Parent = Parent
         self._node_cache = {}
         self.Children = []
@@ -676,15 +676,15 @@ class TreeNode(object):
         elif parent.Parent is self:
             # self's parent is becoming self's child
             edgename = parent.name
-            length = parent.Length
+            length = parent.length
         else:
             if parent is not self.Parent:
                 raise TreeError("Should never happen...")
             edgename = self.name
-            length = self.Length
+            length = self.length
 
         result = self.__class__(name=edgename, Children=children,
-                                Length=length)
+                                length=length)
 
         if parent is None:
             result.name = "root"
@@ -815,8 +815,8 @@ class TreeNode(object):
         TreeNode
             A tree rooted at its midpoint
         LengthError
-            Midpoint rooting requires `Length` and will raise (indirectly) if
-            evaluated nodes don't have `Length`
+            Midpoint rooting requires `length` and will raise (indirectly) if
+            evaluated nodes don't have `length`
 
         See Also
         --------
@@ -848,13 +848,13 @@ class TreeNode(object):
             climb_node = tip2
 
         dist_climbed = 0.0
-        while dist_climbed + climb_node.Length < half_max_dist:
-            dist_climbed += climb_node.Length
+        while dist_climbed + climb_node.length < half_max_dist:
+            dist_climbed += climb_node.length
             climb_node = climb_node.Parent
 
         # now midpt is either at on the branch to climb_node's  parent
         # or midpt is at climb_node's parent
-        if dist_climbed + climb_node.Length == half_max_dist:
+        if dist_climbed + climb_node.length == half_max_dist:
             # climb to midpoint spot
             climb_node = climb_node.Parent
             if climb_node.is_tip():
@@ -864,14 +864,14 @@ class TreeNode(object):
 
         else:
             # make a new node on climb_node's branch to its parent
-            old_br_len = climb_node.Length
+            old_br_len = climb_node.length
 
             new_root = tree.__class__()
             climb_node.Parent.append(new_root)
             new_root.append(climb_node)
 
-            climb_node.Length = half_max_dist - dist_climbed
-            new_root.Length = old_br_len - climb_node.Length
+            climb_node.length = half_max_dist - dist_climbed
+            new_root.length = old_br_len - climb_node.length
 
             return new_root.unrooted_copy()
 
@@ -1844,7 +1844,7 @@ class TreeNode(object):
                 curr_node.name = t
             elif state == 'PostColon':
                 # length data for the current node
-                curr_node.Length = float(t)
+                curr_node.length = float(t)
             else:
                 # can't think of a reason to get here
                 raise RecordError("Incorrect PhyloNode state? %s" % t)
@@ -1930,8 +1930,8 @@ class TreeNode(object):
                             name = name.replace(' ', '_')
                 result.append(name)
 
-                if with_distances and top_node.Length is not None:
-                    result[-1] = "%s:%s" % (result[-1], top_node.Length)
+                if with_distances and top_node.length is not None:
+                    result[-1] = "%s:%s" % (result[-1], top_node.length)
 
                 result.append(',')
 
@@ -2046,7 +2046,7 @@ class TreeNode(object):
             self
         NoLengthError
             A NoLengthError is raised if one of the nodes between self and
-            ancestor (including self) lacks a `Length` attribute
+            ancestor (including self) lacks a `length` attribute
 
         See Also
         --------
@@ -2066,11 +2066,11 @@ class TreeNode(object):
             if curr.is_root():
                 raise NoParentError("Provided ancestor is not in the path")
 
-            if curr.Length is None:
+            if curr.length is None:
                 raise NoLengthError("No length on node %s found!" %
                                     curr.name or "unnamed")
 
-            accum += curr.Length
+            accum += curr.length
             curr = curr.Parent
 
         return accum
@@ -2094,7 +2094,7 @@ class TreeNode(object):
         Raises
         ------
         NoLengthError
-            A NoLengthError will be raised if a node without `Length` is
+            A NoLengthError will be raised if a node without `length` is
             encountered
 
         See Also
@@ -2144,8 +2144,8 @@ class TreeNode(object):
                     best_idx = np.argsort(dists)[-2:]
                     tip_a, child_a = tip_info[best_idx[0]]
                     tip_b, child_b = tip_info[best_idx[1]]
-                    tip_a[0] += child_a.Length or 0.0
-                    tip_b[0] += child_b.Length or 0.0
+                    tip_a[0] += child_a.length or 0.0
+                    tip_b[0] += child_b.length or 0.0
                 n.MaxDistTips = [tip_a, tip_b]
 
     def _get_max_distance_singledesc(self):
@@ -2232,7 +2232,7 @@ class TreeNode(object):
         ValueError
             If any of the specified `endpoints` are not tips
         NoLengthError
-            If a node without Length is encountered
+            If a node without length is encountered
 
         See Also
         --------
@@ -2293,10 +2293,10 @@ class TreeNode(object):
             ### can possibly use np.zeros
             starts, stops = [], []  # to calc ._start and ._stop for curr node
             for child in node.Children:
-                if child.Length is None:
-                    raise NoLengthError("%s doesn't have Length" % child.name)
+                if child.length is None:
+                    raise NoLengthError("%s doesn't have length" % child.name)
 
-                distances[child.__start:child.__stop] += child.Length
+                distances[child.__start:child.__stop] += child.length
 
                 starts.append(child.__start)
                 stops.append(child.__stop)

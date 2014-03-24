@@ -35,8 +35,8 @@ class TreeTests(TestCase):
 
     def test_copy(self):
         """copy a tree"""
-        self.simple_t.Children[0].Length = 1.2
-        self.simple_t.Children[1].Children[0].Length = 0.5
+        self.simple_t.Children[0].length = 1.2
+        self.simple_t.Children[1].Children[0].length = 0.5
         cp = self.simple_t.copy()
         gen = zip(cp.traverse(include_self=True),
                   self.simple_t.traverse(include_self=True))
@@ -44,7 +44,7 @@ class TreeTests(TestCase):
         for a, b in gen:
             self.assertIsNot(a, b)
             self.assertEqual(a.name, b.name)
-            self.assertEqual(a.Length, b.Length)
+            self.assertEqual(a.length, b.length)
 
     def test_append(self):
         """Append a node to a tree"""
@@ -90,7 +90,7 @@ class TreeTests(TestCase):
         self.assertEqual(str(p), ';')
         p.name = 'abc'
         self.assertEqual(str(p), 'abc;')
-        p.Length = 3
+        p.length = 3
         self.assertEqual(str(p), 'abc:3;')  # don't suppress branch from root
         q = TreeNode()
         p.append(q)
@@ -100,7 +100,7 @@ class TreeTests(TestCase):
         self.assertEqual(str(p), '(())abc:3;')
         r.name = 'xyz'
         self.assertEqual(str(p), '((xyz))abc:3;')
-        q.Length = 2
+        q.length = 2
         self.assertEqual(str(p), '((xyz):2)abc:3;')
 
     def test_pop(self):
@@ -167,7 +167,7 @@ class TreeTests(TestCase):
         for a, b in gen:
             self.assertIsNot(a, b)
             self.assertEqual(a.name, b.name)
-            self.assertEqual(a.Length, b.Length)
+            self.assertEqual(a.length, b.length)
 
         # create a single descendent by removing tip 'a'
         n = self.simple_t.Children[0]
@@ -498,7 +498,7 @@ class TreeTests(TestCase):
         """Root at the midpoint"""
         nodes, tree1 = self.TreeNode, self.TreeRoot
         for n in tree1.traverse():
-            n.Length = 1
+            n.length = 1
 
         result = tree1.root_at_midpoint()
         self.assertEqual(result.distance(result.find('e')), 1.5)
@@ -648,7 +648,7 @@ class DndParserTests(TestCase):
         self.assertEqual(len(t), 1)
         child = t[0]
         self.assertEqual(child.name, 'abc')
-        self.assertEqual(child.Length, 3)
+        self.assertEqual(child.length, 3)
         self.assertEqual(str(t), '(abc:3.0);')
 
     def test_gdouble(self):
@@ -674,7 +674,7 @@ class DndParserTests(TestCase):
         self.assertEqual(str(t), '(abc:3.0,(def:4.0,ghi:5.0)jkl:6.0);')
         info_dict = {}
         for node in t.traverse():
-            info_dict[node.name] = node.Length
+            info_dict[node.name] = node.length
         self.assertEqual(info_dict['abc'], 3.0)
         self.assertEqual(info_dict['def'], 4.0)
         self.assertEqual(info_dict['ghi'], 5.0)
@@ -708,18 +708,18 @@ class DndParserTests(TestCase):
         self.assertEqual(tree_unesc.name, 'E')
         self.assertEqual(tree_unesc.Children[0].name, 'A a')
         self.assertEqual(tree_unesc.Children[1].Children[0].name, 'B')
-        self.assertEqual(tree_unesc.Children[1].Children[0].Length, 1.0)
+        self.assertEqual(tree_unesc.Children[1].Children[0].length, 1.0)
         self.assertEqual(tree_unesc.Children[1].Children[1].name, 'C')
         self.assertEqual(tree_unesc.Children[2].name, 'D_e')
-        self.assertEqual(tree_unesc.Children[2].Length, 0.5)
+        self.assertEqual(tree_unesc.Children[2].length, 0.5)
 
         self.assertEqual(tree_esc.name, 'E')
         self.assertEqual(tree_esc.Children[0].name, 'A_a')
         self.assertEqual(tree_esc.Children[1].Children[0].name, 'B')
-        self.assertEqual(tree_esc.Children[1].Children[0].Length, 1.0)
+        self.assertEqual(tree_esc.Children[1].Children[0].length, 1.0)
         self.assertEqual(tree_esc.Children[1].Children[1].name, 'C')
         self.assertEqual(tree_esc.Children[2].name, "'D_e'")
-        self.assertEqual(tree_esc.Children[2].Length, 0.5)
+        self.assertEqual(tree_esc.Children[2].length, 0.5)
 
         reload_test = tree_esc.to_newick(with_distances=True,
                                          escape_name=False)
