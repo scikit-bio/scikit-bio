@@ -163,6 +163,25 @@ from skbio.core.exception import (NoLengthError, DuplicateNodeError,
                                   TreeError, RecordError)
 
 
+def distance_from_r(m1, m2):
+    r"""Estimates distance as (1-r)/2: neg correl = max distance
+
+    Parameters
+    ----------
+    m1 : SymmetricDistanceMatrix
+        a distance matrix to compare
+    m2 : SymmetricDistanceMatrix
+        a distance matrix to compare
+
+    Returns
+    -------
+
+    float
+        The distance between m1 and m2
+    """
+    return (1-correlation_t(m1.flat, m2.flat)[0])/2
+
+
 class TreeNode(object):
     r"""Representation of a node within a tree
 
@@ -2533,8 +2552,7 @@ def _dnd_tokenizer(data):
     internal1
     )
     """
-    dnd_token_str = '(:),;'
-    dnd_tokens = set(dnd_token_str)
+    dnd_tokens = set('(:),;')
 
     in_quotes = False
     saved = []
@@ -2551,22 +2569,3 @@ def _dnd_tokenizer(data):
             sa = saved.append
         else:
             sa(d)
-
-
-def distance_from_r(m1, m2):
-    r"""Estimates distance as (1-r)/2: neg correl = max distance
-
-    Parameters
-    ----------
-    m1 : SymmetricDistanceMatrix
-        a distance matrix to compare
-    m2 : SymmetricDistanceMatrix
-        a distance matrix to compare
-
-    Returns
-    -------
-
-    float
-        The distance between m1 and m2
-    """
-    return (1-correlation_t(m1.flat, m2.flat)[0])/2
