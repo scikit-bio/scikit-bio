@@ -1543,9 +1543,6 @@ class TreeNode(object):
         >>> root == tree
         True
         """
-        if self.is_root():
-            return self
-
         curr = self
         while not curr.is_root():
             curr = curr.parent
