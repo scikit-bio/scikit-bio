@@ -407,3 +407,9 @@ def linkcode_resolve(domain, info):
         return "http://github.com/biocore/scikit-bio/blob/%s/skbio/%s%s" % (
            skbio.__version__, fn, linespec)
 
+#------------------------------------------------------------------------------
+# linkcheck
+#------------------------------------------------------------------------------
+
+# Link-checking on Travis sometimes times out.
+linkcheck_timeout = 5
