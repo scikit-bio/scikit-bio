@@ -344,6 +344,7 @@ class NucelotideSequenceTests(TestCase):
     def setUp(self):
         """ Initialize values to be used in tests
         """
+        self.empty = NucleotideSequence('')
         self.b1 = NucleotideSequence('GATTACA')
         self.b2 = NucleotideSequence(
             'ACCGGUACC', identifier="test-seq-2",
@@ -441,6 +442,18 @@ class NucelotideSequenceTests(TestCase):
         self.assertRaises(BiologicalSequenceError,
                           self.b1.is_reverse_complement, self.b1)
 
+    def test_nondegenerates(self):
+        """nondegenerates should yield all possible nondegenerate sequences."""
+        self.assertEqual(list(self.empty.nondegenerates()), [])
+        self.assertEqual(list(self.b1.nondegenerates()),
+                         [NucleotideSequence('GATTACA')])
+
+        exp = [NucleotideSequence('AGC'), NucleotideSequence('AGT'),
+               NucleotideSequence('AGU'), NucleotideSequence('GGC'),
+               NucleotideSequence('GGT'), NucleotideSequence('GGU')]
+        obs = sorted(NucleotideSequence('RGY').nondegenerates())
+        self.assertEqual(obs, exp)
+
 
 class DNASequenceTests(TestCase):
     """ Tests of the DNASequence class """
@@ -448,6 +461,7 @@ class DNASequenceTests(TestCase):
     def setUp(self):
         """ Initialize values to be used in tests
         """
+        self.empty = DNASequence('')
         self.b1 = DNASequence('GATTACA')
         self.b2 = DNASequence(
             'ACCGGTACC', identifier="test-seq-2",
@@ -572,6 +586,17 @@ class DNASequenceTests(TestCase):
         self.assertTrue(
             self.b4.is_reverse_complement(DNASequence('NVHDBMRSWYK')))
 
+    def test_nondegenerates(self):
+        """nondegenerates should yield all possible nondegenerate sequences."""
+        self.assertEqual(list(self.empty.nondegenerates()), [])
+        self.assertEqual(list(self.b1.nondegenerates()),
+                         [DNASequence('GATTACA')])
+
+        exp = [DNASequence('AGC'), DNASequence('AGT'), DNASequence('GGC'),
+               DNASequence('GGT')]
+        obs = sorted(DNASequence('RGY').nondegenerates())
+        self.assertEqual(obs, exp)
+
 
 class RNASequenceTests(TestCase):
     """ Tests of the DNASequence class """
@@ -579,6 +604,7 @@ class RNASequenceTests(TestCase):
     def setUp(self):
         """ Initialize values to be used in tests
         """
+        self.empty = RNASequence('')
         self.b1 = RNASequence('GAUUACA')
         self.b2 = RNASequence(
             'ACCGGUACC', identifier="test-seq-2",
@@ -702,6 +728,18 @@ class RNASequenceTests(TestCase):
             self.b1.is_reverse_complement(RNASequence('UGUAAUC')))
         self.assertTrue(
             self.b4.is_reverse_complement(RNASequence('NVHDBMRSWYK')))
+
+    def test_nondegenerates(self):
+        """nondegenerates should yield all possible nondegenerate sequences."""
+        self.assertEqual(list(self.empty.nondegenerates()), [])
+        self.assertEqual(list(self.b1.nondegenerates()),
+                         [RNASequence('GAUUACA')])
+
+        exp = [RNASequence('AGC'), RNASequence('AGU'), RNASequence('GGC'),
+               RNASequence('GGU')]
+        obs = sorted(RNASequence('RGY').nondegenerates())
+        self.assertEqual(obs, exp)
+
 
 if __name__ == "__main__":
     main()

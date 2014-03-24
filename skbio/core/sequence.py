@@ -78,13 +78,15 @@ from __future__ import division
 #-----------------------------------------------------------------------------
 
 from collections import Sequence
-from itertools import izip
+from functools import total_ordering
+from itertools import izip, product
 
 from scipy.spatial.distance import hamming
 
 from skbio.core.exception import BiologicalSequenceError
 
 
+@total_ordering
 class BiologicalSequence(Sequence):
     """Base class for biological sequences.
 
@@ -330,6 +332,9 @@ class BiologicalSequence(Sequence):
 
         """
         return len(self._sequence)
+
+    def __lt__(self, other):
+        return self._sequence < other._sequence
 
     def __ne__(self, other):
         """The inequality operator.
@@ -1167,6 +1172,29 @@ class NucleotideSequence(BiologicalSequence):
         """
         return self._complement(reversed(self))
     rc = reverse_complement
+
+    def nondegenerates(self):
+        """Yield all non-degenerate versions of the sequence."""
+        # Should this return an empty list (as it does currently) or should it
+        # return a list with an empty NucleotideSequence, i.e.
+        # NucleotideSequence('') ?
+        if len(self) < 1:
+            return
+
+        standard_chars = self.iupac_standard_characters()
+        degen_chars = self.iupac_degeneracies()
+
+        expansions = []
+        for char in self:
+            if char in standard_chars:
+                expansions.append(set(char))
+            else:
+                expansions.append(degen_chars[char])
+
+        result = product(*expansions)
+        for nondegen_seq in result:
+            yield self.__class__(''.join(nondegen_seq), self.identifier,
+                                 self.description)
 
 
 class DNASequence(NucleotideSequence):
