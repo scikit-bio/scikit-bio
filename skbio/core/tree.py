@@ -61,7 +61,7 @@ The first traversal we'll cover is a preorder traversal in which you evaluate
 from root to tips, looking at the left most child first. For instance:
 
 >>> for node in tree.preorder():
-...    print node.Name
+...    print node.name
 root
 C
 A
@@ -72,7 +72,7 @@ The next method we'll look at is a postorder traveral which will evaluate the
 left subtree tips first before walking back up the tree:
 
 >>> for node in tree.postorder():
-...    print node.Name
+...    print node.name
 A
 B
 C
@@ -83,13 +83,13 @@ TreeNode provides two helper methods as well for iterating over just the tips
 or for iterating over just the internal nodes.
 
 >>> for node in tree.tips():
-...    print "Node name: %s, Is a tip: %s" % (node.Name, node.is_tip())
+...    print "Node name: %s, Is a tip: %s" % (node.name, node.is_tip())
 Node name: A, Is a tip: True
 Node name: B, Is a tip: True
 Node name: D, Is a tip: True
 
 >>> for node in tree.non_tips():
-...    print "Node name: %s, Is a tip: %s" % (node.Name, node.is_tip())
+...    print "Node name: %s, Is a tip: %s" % (node.name, node.is_tip())
 Node name: C, Is a tip: False
 
 Note, by default, non_tips will ignore self (which is the root in this case).
@@ -122,7 +122,7 @@ In these two trees, we've added on a description of length from the node to
 its parent, so for instance:
 
 >>> for node in tree1.postorder():
-...     print node.Name, node.Length
+...     print node.name, node.Length
 A 0.1
 B 0.2
 C 0.3
@@ -215,8 +215,8 @@ class TreeNode(object):
 
     _exclude_from_copy = set(['Parent', 'Children', '_node_cache'])
 
-    def __init__(self, Name=None, Length=None, Parent=None, Children=None):
-        self.Name = Name
+    def __init__(self, name=None, Length=None, Parent=None, Children=None):
+        self.name = name
         self.Length = Length
         self.Parent = Parent
         self._node_cache = {}
@@ -253,7 +253,7 @@ class TreeNode(object):
         n_tips = sum([n.is_tip() for n in nodes])
         n_nontips = len(nodes) - n_tips
         classname = self.__class__.__name__
-        name = self.Name if self.Name is not None else "unnamed"
+        name = self.name if self.name is not None else "unnamed"
 
         return "<%s, name: %s internal node count: %d, tips count: %d>" % \
                (classname, name, n_nontips, n_tips)
@@ -323,9 +323,9 @@ class TreeNode(object):
         Examples
         --------
         >>> from skbio.core.tree import TreeNode
-        >>> root = TreeNode(Name="root")
-        >>> child1 = TreeNode(Name="child1")
-        >>> child2 = TreeNode(Name="child2")
+        >>> root = TreeNode(name="root")
+        >>> child1 = TreeNode(name="child1")
+        >>> child2 = TreeNode(name="child2")
         >>> root.append(child1)
         >>> root.append(child2)
         >>> print root
@@ -353,8 +353,8 @@ class TreeNode(object):
         Examples
         --------
         >>> from skbio.core.tree import TreeNode
-        >>> root = TreeNode(Name="root")
-        >>> root.extend([TreeNode(Name="child1"), TreeNode(Name="child2")])
+        >>> root = TreeNode(name="root")
+        >>> root.extend([TreeNode(name="child1"), TreeNode(name="child2")])
         >>> print root
         (child1,child2)root;
 
@@ -454,7 +454,7 @@ class TreeNode(object):
         --------
         >>> from skbio.core.tree import TreeNode
         >>> tree = TreeNode.from_newick("(a,b)c;")
-        >>> tree.remove_deleted(lambda x: x.Name == 'b')
+        >>> tree.remove_deleted(lambda x: x.name == 'b')
         >>> print tree
         (a)c;
         """
@@ -509,7 +509,7 @@ class TreeNode(object):
 #   def shear(self, names):
 #       """Lop off tips until the tree just has the desired tip names"""
 #       tcopy = self.deepcopy()
-#       all_tips = set([n.Name for n in tcopy.tips()])
+#       all_tips = set([n.name for n in tcopy.tips()])
 #       ids = set(names)
 #
 #       if not ids.issubset(all_tips):
@@ -517,7 +517,7 @@ class TreeNode(object):
 #
 #       while len(tcopy.tips()) != len(ids):
 #           for n in tcopy.tips():
-#               if n.Name not in ids:
+#               if n.name not in ids:
 #                   n.Parent.removeNode(n)
 #
 #       tcopy.prune()
@@ -675,19 +675,19 @@ class TreeNode(object):
             length = None
         elif parent.Parent is self:
             # self's parent is becoming self's child
-            edgename = parent.Name
+            edgename = parent.name
             length = parent.Length
         else:
             if parent is not self.Parent:
                 raise TreeError("Should never happen...")
-            edgename = self.Name
+            edgename = self.name
             length = self.Length
 
-        result = self.__class__(Name=edgename, Children=children,
+        result = self.__class__(name=edgename, Children=children,
                                 Length=length)
 
         if parent is None:
-            result.Name = "root"
+            result.name = "root"
 
         return result
 
@@ -717,7 +717,7 @@ class TreeNode(object):
         >>> sorted(tree.subset())
         ['a', 'b', 'c', 'f', 'g']
         """
-        return frozenset({i.Name for i in self.tips()})
+        return frozenset({i.name for i in self.tips()})
 
     def subsets(self):
         r"""Return all sets of names that come from self and its descendents
@@ -748,7 +748,7 @@ class TreeNode(object):
         sets = []
         for i in self.postorder(include_self=False):
             if not i.Children:
-                i.__leaf_set = frozenset([i.Name])
+                i.__leaf_set = frozenset([i.name])
             else:
                 leaf_set = reduce(or_, [c.__leaf_set for c in i.Children])
                 if len(leaf_set) > 1:
@@ -795,7 +795,7 @@ class TreeNode(object):
 
         if not node.Children:
             raise TreeError("Can't use a tip (%s) as the root" %
-                            repr(node.Name))
+                            repr(node.name))
         return node.unrooted_deepcopy()
 
     def root_at_midpoint(self):
@@ -996,7 +996,7 @@ class TreeNode(object):
         >>> from skbio.core.tree import TreeNode
         >>> tree = TreeNode.from_newick("((a,b)c);")
         >>> for node in tree.traverse():
-        ...     print node.Name
+        ...     print node.name
         None
         c
         a
@@ -1040,7 +1040,7 @@ class TreeNode(object):
         >>> from skbio.core.tree import TreeNode
         >>> tree = TreeNode.from_newick("((a,b)c);")
         >>> for node in tree.preorder():
-        ...     print node.Name
+        ...     print node.name
         None
         c
         a
@@ -1085,7 +1085,7 @@ class TreeNode(object):
         >>> from skbio.core.tree import TreeNode
         >>> tree = TreeNode.from_newick("((a,b)c);")
         >>> for node in tree.postorder():
-        ...     print node.Name
+        ...     print node.name
         a
         b
         c
@@ -1151,7 +1151,7 @@ class TreeNode(object):
         >>> from skbio.core.tree import TreeNode
         >>> tree = TreeNode.from_newick("((a,b)c);")
         >>> for node in tree.pre_and_postorder():
-        ...     print node.Name
+        ...     print node.name
         None
         c
         a
@@ -1224,7 +1224,7 @@ class TreeNode(object):
         >>> from skbio.core.tree import TreeNode
         >>> tree = TreeNode.from_newick("((a,b)c,(d,e)f);")
         >>> for node in tree.levelorder():
-        ...     print node.Name
+        ...     print node.name
         None
         c
         f
@@ -1268,7 +1268,7 @@ class TreeNode(object):
         >>> from skbio.core.tree import TreeNode
         >>> tree = TreeNode.from_newick("((a,b)c,(d,e)f);")
         >>> for node in tree.tips():
-        ...     print node.Name
+        ...     print node.name
         a
         b
         d
@@ -1318,7 +1318,7 @@ class TreeNode(object):
         >>> from skbio.core.tree import TreeNode
         >>> tree = TreeNode.from_newick("((a,b)c,(d,e)f);")
         >>> for node in tree.non_tips():
-        ...     print node.Name
+        ...     print node.name
         c
         f
         """
@@ -1344,7 +1344,7 @@ class TreeNode(object):
     def create_node_cache(self):
         r"""Construct an internal lookup keyed by node name, valued by node
 
-        This method will not cache nodes in which the .Name is None. This
+        This method will not cache nodes in which the .name is None. This
         method will raise DuplicateNodeError if a name conflict is discovered.
 
         Raises
@@ -1363,7 +1363,7 @@ class TreeNode(object):
             return
 
         for node in self.traverse():
-            name = node.Name
+            name = node.name
             if name is None:
                 continue
 
@@ -1403,7 +1403,7 @@ class TreeNode(object):
         --------
         >>> from skbio.core.tree import TreeNode
         >>> tree = TreeNode.from_newick("((a,b)c,(d,e)f);")
-        >>> print tree.find('c').Name
+        >>> print tree.find('c').name
         c
         """
         # if what is being passed in looks like a node, just return it
@@ -1445,7 +1445,7 @@ class TreeNode(object):
         --------
         >>> from skbio.core.tree import TreeNode
         >>> tree = TreeNode.from_newick("((a,b)c,(d,e)f);")
-        >>> print tree.find_by_id(2).Name
+        >>> print tree.find_by_id(2).name
         c
         """
         # if this method gets used frequently, then we should cache by ID
@@ -1487,7 +1487,7 @@ class TreeNode(object):
         >>> from skbio.core.tree import TreeNode
         >>> tree = TreeNode.from_newick("((a,b)c,(d,e)f);")
         >>> func = lambda x: x.Parent == tree.find('c')
-        >>> [n.Name for n in tree.find_by_func(func)]
+        >>> [n.name for n in tree.find_by_func(func)]
         ['a', 'b']
         """
         for node in self.traverse(include_self=True):
@@ -1511,7 +1511,7 @@ class TreeNode(object):
         --------
         >>> from skbio.core.tree import TreeNode
         >>> tree = TreeNode.from_newick("((a,b)c,(d,e)f)root;")
-        >>> [node.Name for node in tree.find('a').ancestors()]
+        >>> [node.name for node in tree.find('a').ancestors()]
         ['c', 'root']
         """
         if self.is_root():
@@ -1570,7 +1570,7 @@ class TreeNode(object):
         >>> from skbio.core.tree import TreeNode
         >>> tree = TreeNode.from_newick("((a,b)c,(d,e,f)g)root;")
         >>> tip_e = tree.find('e')
-        >>> [n.Name for n in tip_e.siblings()]
+        >>> [n.name for n in tip_e.siblings()]
         ['d', 'f']
         """
         if self.is_root():
@@ -1601,7 +1601,7 @@ class TreeNode(object):
         >>> from skbio.core.tree import TreeNode
         >>> tree = TreeNode.from_newick("((a,b)c,(d,e)f)root;")
         >>> node_c = tree.find('c')
-        >>> [n.Name for n in node_c.neighbors()]
+        >>> [n.name for n in node_c.neighbors()]
         ['a', 'b', 'root']
         """
         nodes = [n for n in self.Children + [self.Parent] if n is not None]
@@ -1629,11 +1629,11 @@ class TreeNode(object):
         >>> tree = TreeNode.from_newick("((a,b)c,(d,e)f)root;")
         >>> nodes = [tree.find('a'), tree.find('b')]
         >>> lca = tree.lowest_common_ancestor(nodes)
-        >>> print lca.Name
+        >>> print lca.name
         c
         >>> nodes = [tree.find('a'), tree.find('e')]
         >>> lca = tree.lca(nodes)  # lca is an alias for convience
-        >>> print lca.Name
+        >>> print lca.name
         root
         """
         if len(tipnames) == 1:
@@ -1800,7 +1800,7 @@ class TreeNode(object):
             if t == ')' and last_token in ',(':
                 # node without name
                 new_node = _new_child(curr_node)
-                new_node.Name = None
+                new_node.name = None
                 curr_node = new_node.Parent
                 state1 = 'PostClosed'
                 last_token = t
@@ -1820,7 +1820,7 @@ class TreeNode(object):
             elif t == ',' and last_token in ',(':
                 # node without name
                 new_node = _new_child(curr_node)
-                new_node.Name = None
+                new_node.name = None
                 curr_node = new_node.Parent
             elif t == ',':
                 # separator: next node adds to this node's parent
@@ -1835,13 +1835,13 @@ class TreeNode(object):
                     else:
                         if '_' in t:
                             t = t.replace('_', ' ')
-                new_node.Name = t
+                new_node.name = t
                 curr_node = new_node
             elif state == 'PreColon' and state1 == 'PostClosed':
                 if unescape_name:
                     while t.startswith("'") and t.endswith("'"):
                         t = t[1:-1]
-                curr_node.Name = t
+                curr_node.name = t
             elif state == 'PostColon':
                 # length data for the current node
                 curr_node.Length = float(t)
@@ -1918,10 +1918,10 @@ class TreeNode(object):
                 if top_node.Children:
                     result[-1] = ')'
 
-                if top_node.Name is None:
+                if top_node.name is None:
                     name = ''
                 else:
-                    name = str(top_node.Name)
+                    name = str(top_node.name)
                     if escape_name and not (name.startswith("'") and
                                             name.endswith("'")):
                         if re.search("""[]['"(),:;_]""", name):
@@ -1957,7 +1957,7 @@ class TreeNode(object):
         LEN = 10
         PAD = ' ' * LEN
         PA = ' ' * (LEN-1)
-        namestr = self.Name or ''  # prevents name of NoneType
+        namestr = self.name or ''  # prevents name of NoneType
         if self.Children:
             mids = []
             result = []
@@ -2068,7 +2068,7 @@ class TreeNode(object):
 
             if curr.Length is None:
                 raise NoLengthError("No length on node %s found!" %
-                                    curr.Name or "unnamed")
+                                    curr.name or "unnamed")
 
             accum += curr.Length
             curr = curr.Parent
@@ -2154,7 +2154,7 @@ class TreeNode(object):
         Also returns the tip names  that it is between as a tuple"""
         distmtx, tip_order = self.tip_tip_distances()
         idx_max = divmod(distmtx.argmax(), distmtx.shape[1])
-        max_pair = (tip_order[idx_max[0]].Name, tip_order[idx_max[1]].Name)
+        max_pair = (tip_order[idx_max[0]].name, tip_order[idx_max[1]].name)
         return distmtx[idx_max], max_pair
 
     def get_max_distance(self):
@@ -2186,7 +2186,7 @@ class TreeNode(object):
         >>> dist, tips = tree.get_max_distance()
         >>> dist
         16.0
-        >>> [n.Name for n in tips]
+        >>> [n.name for n in tips]
         ['b', 'e']
         """
         if not hasattr(self, 'MaxDistTips'):
@@ -2249,7 +2249,7 @@ class TreeNode(object):
                [  3.,   0.,  15.,  16.],
                [ 14.,  15.,   0.,   9.],
                [ 15.,  16.,   9.,   0.]])
-        >>> [n.Name for n in tips]
+        >>> [n.name for n in tips]
         ['a', 'b', 'd', 'e']
         """
         all_tips = list(self.tips())
@@ -2259,7 +2259,7 @@ class TreeNode(object):
             tip_order = [self.find(n) for n in endpoints]
             for n in tip_order:
                 if not n.is_tip():
-                    raise ValueError("%s is not a tip!" % n.Name)
+                    raise ValueError("%s is not a tip!" % n.name)
 
         ## linearize all tips in postorder
         # .__start, .__stop compose the slice in tip_order.
@@ -2294,7 +2294,7 @@ class TreeNode(object):
             starts, stops = [], []  # to calc ._start and ._stop for curr node
             for child in node.Children:
                 if child.Length is None:
-                    raise NoLengthError("%s doesn't have Length" % child.Name)
+                    raise NoLengthError("%s doesn't have Length" % child.name)
 
                 distances[child.__start:child.__stop] += child.Length
 
@@ -2317,8 +2317,8 @@ class TreeNode(object):
 #
 #       Implementation based off of code by Julia Goodrich
 #       """
-#       t1names = {n.Name for n in self.tips()}
-#       t2names = {n.Name for n in other.tips()}
+#       t1names = {n.name for n in self.tips()}
+#       t2names = {n.name for n in other.tips()}
 #
 #       if t1names != t2names:
 #           if t1names < t2names:
@@ -2443,8 +2443,8 @@ class TreeNode(object):
         >>> print "%.9f" % dist
         0.000133446
         """
-        self_names = {i.Name: i for i in self.tips()}
-        other_names = {i.Name: i for i in other.tips()}
+        self_names = {i.name: i for i in self.tips()}
+        other_names = {i.name: i for i in other.tips()}
         common_names = frozenset(self_names) & frozenset(other_names)
         common_names = list(common_names)
 
