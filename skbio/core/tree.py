@@ -221,7 +221,7 @@ class TreeNode(object):
         self.parent = parent
         self._node_cache = {}
         self.children = []
-        self.Id = None
+        self.id = None
 
         if children:
             for c in children:
@@ -627,7 +627,7 @@ class TreeNode(object):
         new_tree = root.copy()
         new_tree.assign_ids()
 
-        new_tree_self = new_tree.find_by_id(self.Id)
+        new_tree_self = new_tree.find_by_id(self.id)
         return new_tree_self.unrooted_copy(parent)
 
     def unrooted_copy(self, parent=None):
@@ -1455,7 +1455,7 @@ class TreeNode(object):
 
         node = None
         for n in self.traverse(include_self=True):
-            if n.Id == node_id:
+            if n.id == node_id:
                 node = n
 
         if node is None:
@@ -2511,13 +2511,13 @@ class TreeNode(object):
         return id_index, child_index
 
     def assign_ids(self):
-        """Assign topologically stable unique Ids to self
+        """Assign topologically stable unique ids to self
 
-        Following the call, all nodes in the tree will have their `Id`
+        Following the call, all nodes in the tree will have their `id`
         attribute set
         """
         for idx, n in enumerate(self.postorder(include_self=True)):
-            n.Id = idx
+            n.id = idx
 
 
 def _dnd_tokenizer(data):

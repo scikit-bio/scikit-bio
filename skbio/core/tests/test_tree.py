@@ -548,12 +548,12 @@ class TreeTests(TestCase):
         t3.assign_ids()
         t1_copy.assign_ids()
 
-        self.assertEqual([(n.name, n.Id) for n in t1.traverse()],
-                         [(n.name, n.Id) for n in t2.traverse()])
-        self.assertEqual([(n.name, n.Id) for n in t1.traverse()],
-                         [(n.name, n.Id) for n in t1_copy.traverse()])
-        self.assertNotEqual([(n.name, n.Id) for n in t1.traverse()],
-                            [(n.name, n.Id) for n in t3.traverse()])
+        self.assertEqual([(n.name, n.id) for n in t1.traverse()],
+                         [(n.name, n.id) for n in t2.traverse()])
+        self.assertEqual([(n.name, n.id) for n in t1.traverse()],
+                         [(n.name, n.id) for n in t1_copy.traverse()])
+        self.assertNotEqual([(n.name, n.id) for n in t1.traverse()],
+                            [(n.name, n.id) for n in t3.traverse()])
 
     def test_unrooted_deepcopy(self):
         """Do an unrooted_copy"""
