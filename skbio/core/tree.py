@@ -1513,9 +1513,6 @@ class TreeNode(object):
         >>> [node.name for node in tree.find('a').ancestors()]
         ['c', 'root']
         """
-        if self.is_root():
-            return []
-
         result = []
         curr = self
         while not curr.is_root():
