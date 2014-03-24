@@ -57,7 +57,7 @@ class TreeTests(TestCase):
         self.assertEqual(len(self.simple_t.children), 3)
         self.assertEqual(self.simple_t.children[2].children[0].name, 'x')
         self.assertEqual(self.simple_t.children[2].children[1].name, 'y')
-        self.assertEqual(second_tree.Parent, self.simple_t)
+        self.assertEqual(second_tree.parent, self.simple_t)
 
     def test_extend(self):
         """Extend a few nodes"""
@@ -74,8 +74,8 @@ class TreeTests(TestCase):
         self.assertEqual(self.simple_t.children[2].children[1].name, 'y1')
         self.assertEqual(self.simple_t.children[3].children[0].name, 'x2')
         self.assertEqual(self.simple_t.children[3].children[1].name, 'y2')
-        self.assertIs(second_tree.Parent, self.simple_t)
-        self.assertIs(third_tree.Parent, self.simple_t)
+        self.assertIs(second_tree.parent, self.simple_t)
+        self.assertIs(third_tree.parent, self.simple_t)
 
     def test_extend_empty(self):
         """Extend on the empty case should work"""
@@ -143,14 +143,14 @@ class TreeTests(TestCase):
         # adopt doesn't update .children
         self.assertEqual(len(self.simple_t.children), 2)
 
-        self.assertIs(n1.Parent, self.simple_t)
-        self.assertIs(n2.Parent, self.simple_t.children[-1])
-        self.assertIs(n3.Parent, n2)
+        self.assertIs(n1.parent, self.simple_t)
+        self.assertIs(n2.parent, self.simple_t.children[-1])
+        self.assertIs(n3.parent, n2)
 
     def test_remove_node(self):
         """Remove a node by index"""
         n = self.simple_t._remove_node(-1)
-        self.assertEqual(n.Parent, None)
+        self.assertEqual(n.parent, None)
         self.assertEqual(len(self.simple_t.children), 1)
         self.assertEqual(len(n.children), 2)
         self.assertNotIn(n, self.simple_t.children)
@@ -245,7 +245,7 @@ class TreeTests(TestCase):
     def test_find_by_func(self):
         """Find nodes by a function"""
         t = TreeNode.from_newick("((a,b)c,(d,e)f);")
-        func = lambda x: x.Parent == t.find('c')
+        func = lambda x: x.parent == t.find('c')
         exp = ['a', 'b']
         obs = [n.name for n in t.find_by_func(func)]
         self.assertEqual(obs, exp)

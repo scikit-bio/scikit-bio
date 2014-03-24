@@ -213,12 +213,12 @@ class TreeNode(object):
 
     """
 
-    _exclude_from_copy = set(['Parent', 'children', '_node_cache'])
+    _exclude_from_copy = set(['parent', 'children', '_node_cache'])
 
-    def __init__(self, name=None, length=None, Parent=None, children=None):
+    def __init__(self, name=None, length=None, parent=None, children=None):
         self.name = name
         self.length = length
-        self.Parent = Parent
+        self.parent = parent
         self._node_cache = {}
         self.children = []
         self.Id = None
@@ -299,9 +299,9 @@ class TreeNode(object):
     def _adopt(self, node):
         r"""Update parent references but does NOT update self.children"""
         self.invalidate_node_cache()
-        if node.Parent is not None:
-            node.Parent.remove(node)
-        node.Parent = self
+        if node.parent is not None:
+            node.parent.remove(node)
+        node.parent = self
         return node
 
     def append(self, node):
@@ -397,7 +397,7 @@ class TreeNode(object):
         r"""The actual (and only) method that performs node removal"""
         self.invalidate_node_cache()
         node = self.children.pop(idx)
-        node.Parent = None
+        node.parent = None
         return node
 
     def remove(self, node):
@@ -460,7 +460,7 @@ class TreeNode(object):
         """
         for node in self.traverse(include_self=False):
             if func(node):
-                node.Parent.remove(node)
+                node.parent.remove(node)
 
     def prune(self):
         r"""Reconstructs correct topology after nodes have been removed.
@@ -503,8 +503,8 @@ class TreeNode(object):
 
         # clean up the single children nodes
         for node in nodes_to_remove:
-            node.Parent.append(node.children[0])
-            node.Parent.remove(node)
+            node.parent.append(node.children[0])
+            node.parent.remove(node)
 
 #   def shear(self, names):
 #       """Lop off tips until the tree just has the desired tip names"""
@@ -518,7 +518,7 @@ class TreeNode(object):
 #       while len(tcopy.tips()) != len(ids):
 #           for n in tcopy.tips():
 #               if n.name not in ids:
-#                   n.Parent.removeNode(n)
+#                   n.parent.removeNode(n)
 #
 #       tcopy.prune()
 #       return tcopy
@@ -673,12 +673,12 @@ class TreeNode(object):
             # base edge
             edgename = None
             length = None
-        elif parent.Parent is self:
+        elif parent.parent is self:
             # self's parent is becoming self's child
             edgename = parent.name
             length = parent.length
         else:
-            if parent is not self.Parent:
+            if parent is not self.parent:
                 raise TreeError("Should never happen...")
             edgename = self.name
             length = self.length
@@ -850,13 +850,13 @@ class TreeNode(object):
         dist_climbed = 0.0
         while dist_climbed + climb_node.length < half_max_dist:
             dist_climbed += climb_node.length
-            climb_node = climb_node.Parent
+            climb_node = climb_node.parent
 
         # now midpt is either at on the branch to climb_node's  parent
         # or midpt is at climb_node's parent
         if dist_climbed + climb_node.length == half_max_dist:
             # climb to midpoint spot
-            climb_node = climb_node.Parent
+            climb_node = climb_node.parent
             if climb_node.is_tip():
                 raise TreeError('error trying to root tree at tip')
             else:
@@ -867,7 +867,7 @@ class TreeNode(object):
             old_br_len = climb_node.length
 
             new_root = tree.__class__()
-            climb_node.Parent.append(new_root)
+            climb_node.parent.append(new_root)
             new_root.append(climb_node)
 
             climb_node.length = half_max_dist - dist_climbed
@@ -925,7 +925,7 @@ class TreeNode(object):
         >>> print tree.find('a').is_root()
         False
         """
-        return self.Parent is None
+        return self.parent is None
 
     def has_children(self):
         r"""Returns True if self.children.
@@ -1118,7 +1118,7 @@ class TreeNode(object):
                     yield curr
                 if curr is self:
                     break
-                curr = curr.Parent
+                curr = curr.parent
                 curr_children = curr.children
                 curr_children_len = len(curr_children)
                 child_index_stack.pop()
@@ -1192,7 +1192,7 @@ class TreeNode(object):
                     yield curr
                 if curr is self:
                     break
-                curr = curr.Parent
+                curr = curr.parent
                 curr_children = curr.children
                 child_index_stack.pop()
                 child_index_stack[-1] += 1
@@ -1486,7 +1486,7 @@ class TreeNode(object):
         --------
         >>> from skbio.core.tree import TreeNode
         >>> tree = TreeNode.from_newick("((a,b)c,(d,e)f);")
-        >>> func = lambda x: x.Parent == tree.find('c')
+        >>> func = lambda x: x.parent == tree.find('c')
         >>> [n.name for n in tree.find_by_func(func)]
         ['a', 'b']
         """
@@ -1518,10 +1518,10 @@ class TreeNode(object):
             return []
 
         result = []
-        curr = self.Parent
+        curr = self.parent
         while not curr.is_root():
             result.append(curr)
-            curr = curr.Parent
+            curr = curr.parent
         result.append(curr)
 
         return result
@@ -1548,7 +1548,7 @@ class TreeNode(object):
 
         curr = self
         while not curr.is_root():
-            curr = curr.Parent
+            curr = curr.parent
         return curr
 
     def siblings(self):
@@ -1576,7 +1576,7 @@ class TreeNode(object):
         if self.is_root():
             return []
 
-        result = self.Parent.children[:]
+        result = self.parent.children[:]
         result.remove(self)
 
         return result
@@ -1604,7 +1604,7 @@ class TreeNode(object):
         >>> [n.name for n in node_c.neighbors()]
         ['a', 'b', 'root']
         """
-        nodes = [n for n in self.children + [self.Parent] if n is not None]
+        nodes = [n for n in self.children + [self.parent] if n is not None]
         if ignore is None:
             return nodes
         else:
@@ -1652,13 +1652,13 @@ class TreeNode(object):
                 return t
 
             prev = t
-            curr = t.Parent
+            curr = t.parent
 
             while curr and not hasattr(curr, 'black'):
                 setattr(curr, 'black', [prev])
                 nodes_to_scrub.append(curr)
                 prev = curr
-                curr = curr.Parent
+                curr = curr.parent
 
             # increase black count, multiple children lead to here
             if curr:
@@ -1764,7 +1764,7 @@ class TreeNode(object):
         def _new_child(old_node):
             """Returns new_node which has old_node as its parent."""
             new_node = cls()
-            new_node.Parent = old_node
+            new_node.parent = old_node
             if old_node is not None:
                 if new_node not in old_node.children:
                     old_node.children.append(new_node)
@@ -1801,13 +1801,13 @@ class TreeNode(object):
                 # node without name
                 new_node = _new_child(curr_node)
                 new_node.name = None
-                curr_node = new_node.Parent
+                curr_node = new_node.parent
                 state1 = 'PostClosed'
                 last_token = t
                 continue
             if t == ')':
                 #closing the current node
-                curr_node = curr_node.Parent
+                curr_node = curr_node.parent
                 state1 = 'PostClosed'
                 last_token = t
                 continue
@@ -1821,10 +1821,10 @@ class TreeNode(object):
                 # node without name
                 new_node = _new_child(curr_node)
                 new_node.name = None
-                curr_node = new_node.Parent
+                curr_node = new_node.parent
             elif t == ',':
                 # separator: next node adds to this node's parent
-                curr_node = curr_node.Parent
+                curr_node = curr_node.parent
             elif state == 'PreColon' and state1 == 'PreClosed':
                 # data for the current node
                 new_node = _new_child(curr_node)
@@ -1852,7 +1852,7 @@ class TreeNode(object):
             state1 = 'PreClosed'
             last_token = t
 
-        if curr_node is not None and curr_node.Parent is not None:
+        if curr_node is not None and curr_node.parent is not None:
             raise RecordError("Didn't get back to root of tree.")
 
         if curr_node is None:  # no data -- return empty node
@@ -2071,7 +2071,7 @@ class TreeNode(object):
                                     curr.name or "unnamed")
 
             accum += curr.length
-            curr = curr.Parent
+            curr = curr.parent
 
         return accum
 
