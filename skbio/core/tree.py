@@ -187,7 +187,10 @@ class TreeNode(object):
 
     A `TreeNode` instance stores links to its parent and optional children
     nodes. In addition, the `TreeNode` can represent a `length` (e.g., a
-    branch length) between itself and its parent.
+    branch length) between itself and its parent. Within this object, the use
+    of "children" and "descendents" is frequent in the documentation. A child
+    is a direct descendent of a node, while descendents are all nodes that are
+    below a given node (e.g., grand-children, etc).
 
     Parameters
     ----------
