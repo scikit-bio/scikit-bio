@@ -86,7 +86,6 @@ from scipy.spatial.distance import hamming
 from skbio.core.exception import BiologicalSequenceError
 
 
-@total_ordering
 class BiologicalSequence(Sequence):
     """Base class for biological sequences.
 
@@ -332,9 +331,6 @@ class BiologicalSequence(Sequence):
 
         """
         return len(self._sequence)
-
-    def __lt__(self, other):
-        return self._sequence < other._sequence
 
     def __ne__(self, other):
         """The inequality operator.

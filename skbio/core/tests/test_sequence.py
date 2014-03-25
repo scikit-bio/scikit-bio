@@ -451,7 +451,8 @@ class NucelotideSequenceTests(TestCase):
         exp = [NucleotideSequence('AGC'), NucleotideSequence('AGT'),
                NucleotideSequence('AGU'), NucleotideSequence('GGC'),
                NucleotideSequence('GGT'), NucleotideSequence('GGU')]
-        obs = sorted(NucleotideSequence('RGY').nondegenerates())
+        # Sort based on sequence string.
+        obs = sorted(NucleotideSequence('RGY').nondegenerates(), key=str)
         self.assertEqual(obs, exp)
 
 
@@ -594,7 +595,7 @@ class DNASequenceTests(TestCase):
 
         exp = [DNASequence('AGC'), DNASequence('AGT'), DNASequence('GGC'),
                DNASequence('GGT')]
-        obs = sorted(DNASequence('RGY').nondegenerates())
+        obs = sorted(DNASequence('RGY').nondegenerates(), key=str)
         self.assertEqual(obs, exp)
 
 
@@ -737,7 +738,7 @@ class RNASequenceTests(TestCase):
 
         exp = [RNASequence('AGC'), RNASequence('AGU'), RNASequence('GGC'),
                RNASequence('GGU')]
-        obs = sorted(RNASequence('RGY').nondegenerates())
+        obs = sorted(RNASequence('RGY').nondegenerates(), key=str)
         self.assertEqual(obs, exp)
 
 
