@@ -434,9 +434,10 @@ class SequenceCollection(object):
         ...              DNA('.AACCG-GT.', identifier="seq2")]
         >>> s1 = SequenceCollection(sequences)
         >>> s2 = s1.degap()
-        >>> print s2[0]
+        >>> print s2
+        >seq1
         ACCGT
-        >>> print s2[1]
+        >seq2
         AACCGGT
 
         """
