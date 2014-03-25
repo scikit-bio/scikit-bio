@@ -1165,7 +1165,7 @@ class Alignment(SequenceCollection):
         return result
 
     def position_entropies(self, base=None,
-                           nan_on_non_iupac_standard_chars=True):
+                           nan_on_non_standard_chars=True):
         """Return Shannon entropy of positions in Alignment
 
         Parameters
@@ -1173,12 +1173,18 @@ class Alignment(SequenceCollection):
         base : float, optional
             log base for entropy calculation. If not passed, default will be e
             (i.e., natural log will be computed).
+        nan_on_non_standard_chars : bool, optional
+            if True, the entropy at positions containing characters outside of
+            the first sequence's `iupac_standard_characters` will be `np.nan`.
+            This is useful, and the default behavior, as it's not clear how a
+            gap or degenerate character should contribute to a positional
+            entropy. This issue was described in [1].
 
         Returns
         -------
         list
             List of floats of Shannon entropy at `Alignment` positions. Shannon
-            entropy is defined in [1].
+            entropy is defined in [2].
 
         See Also
         --------
@@ -1187,7 +1193,11 @@ class Alignment(SequenceCollection):
 
         References
         ----------
-        [1] A Mathematical Theory of Communication, CE Shannon
+        [1] Identifying DNA and protein patterns with statistically significant
+        alignments of multiple sequences.
+        Hertz GZ, Stormo GD.
+        Bioinformatics. 1999 Jul-Aug;15(7-8):563-77.
+        [2] A Mathematical Theory of Communication, CE Shannon
         The Bell System Technical Journal (1948).
 
         Examples
@@ -1205,7 +1215,7 @@ class Alignment(SequenceCollection):
         result = []
         iupac_standard_characters = self[0].iupac_standard_characters()
         for f in self.position_frequencies():
-            if (nan_on_non_iupac_standard_chars and
+            if (nan_on_non_standard_chars and
                     len(set(f.keys()) - iupac_standard_characters) > 0):
                 result.append(np.nan)
             else:
