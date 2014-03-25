@@ -215,6 +215,8 @@ class SequenceCollection(object):
             Indicates whether `identifier` corresponds to a sequence identifier
             in the `SequenceCollection`.
 
+        .. shownumpydoc
+
         """
         return identifier in self._identifier_to_index
 
@@ -236,6 +238,8 @@ class SequenceCollection(object):
         `SequenceCollection` objects are equal if they are the same type,
         contain the same number of sequences, and if each of the
         `skbio.core.sequence.BiologicalSequence` objects, in order, are equal.
+
+        .. shownumpydoc
 
         """
         if self.__class__ != other.__class__:
@@ -276,6 +280,8 @@ class SequenceCollection(object):
         >>> s1["seq1"]
         <DNASequence: ACCGT (length: 5)>
 
+        .. shownumpydoc
+
         """
         if isinstance(index, str):
             return self.get_seq(index)
@@ -291,6 +297,8 @@ class SequenceCollection(object):
             `skbio.core.sequence.BiologicalSequence` iterator for the
             `SequenceCollection`.
 
+        .. shownumpydoc
+
         """
         return iter(self._data)
 
@@ -301,6 +309,8 @@ class SequenceCollection(object):
         -------
         int
             The number of sequences in the `SequenceCollection`.
+
+        .. shownumpydoc
 
         """
         return self.sequence_count()
@@ -321,6 +331,8 @@ class SequenceCollection(object):
         -----
         See `SequenceCollection.__eq__` for a description of what it means for
         a pair of `SequenceCollection` objects to be equal.
+
+        .. shownumpydoc
 
         """
         return not self.__eq__(other)
@@ -349,6 +361,8 @@ class SequenceCollection(object):
         >>> print repr(s1)
         <SequenceCollection: n=2; mean +/- std length=6.00 +/- 1.00>
 
+        .. shownumpydoc
+
         """
         cn = self.__class__.__name__
         count, center, spread = self.distribution_stats()
@@ -364,6 +378,8 @@ class SequenceCollection(object):
             `skbio.core.sequence.BiologicalSequence` iterator for the
             `SequenceCollection` in reverse order.
 
+        .. shownumpydoc
+
         """
         return reversed(self._data)
 
@@ -374,6 +390,8 @@ class SequenceCollection(object):
         -------
         str
             Fasta-formatted string of all sequences in the object.
+
+        .. shownumpydoc
 
         """
         return self.to_fasta()
