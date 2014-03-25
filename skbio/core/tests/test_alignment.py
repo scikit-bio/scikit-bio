@@ -91,6 +91,13 @@ class SequenceCollectionTests(TestCase):
         SequenceCollection.from_fasta_records(self.seqs2_t, RNASequence)
         SequenceCollection.from_fasta_records(self.seqs3_t, NucleotideSequence)
 
+    def test_contains(self):
+        """in operator functions as expected
+        """
+        self.assertTrue('d1' in self.s1)
+        self.assertTrue('r2' in self.s2)
+        self.assertFalse('r2' in self.s1)
+
     def test_eq(self):
         """equality operator functions as expected
         """

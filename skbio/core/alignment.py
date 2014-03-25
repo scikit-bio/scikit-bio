@@ -186,7 +186,7 @@ class SequenceCollection(object):
         self._identifier_to_index = {}
         for i, seq in enumerate(self._data):
             identifier = seq.identifier
-            if identifier in self._identifier_to_index:
+            if identifier in self:
                 raise SequenceCollectionError(
                     "All sequence identifiers must be unique, but "
                     "identifier %s is present multiple times." % identifier)
@@ -201,13 +201,30 @@ class SequenceCollection(object):
             raise SequenceCollectionError(
                 "%s failed to validate." % self.__class__.__name__)
 
+    def __contains__(self, identifier):
+        r"""The in operator.
+
+        Parameters
+        ----------
+        identifier : `str`
+            The identifier to look up in the `SequenceCollection`.
+
+        Returns
+        -------
+        bool
+            Indicates whether `identifier` corresponds to a sequence identifier
+            in the `SequenceCollection`.
+
+        """
+        return identifier in self._identifier_to_index
+
     def __eq__(self, other):
         r"""The equality operator.
 
         Parameters
         ----------
         other : `SequenceCollection`
-            The sequence collection to test for equality against.
+            The `SequenceCollection` to test for equality against.
 
         Returns
         -------
