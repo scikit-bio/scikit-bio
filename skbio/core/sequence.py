@@ -956,11 +956,6 @@ class NucleotideSequence(BiologicalSequence):
     A `NucleotideSequence` is a `BiologicalSequence` with additional methods
     that are only applicable for nucleotide sequences.
 
-    Attributes
-    ----------
-    description
-    identifier
-
     See Also
     --------
     BiologialSequence
@@ -1179,11 +1174,6 @@ class DNASequence(NucleotideSequence):
     A `DNASequence` is a `NucelotideSequence` that is restricted to only
     containing characters used in IUPAC DNA lexicon.
 
-    Attributes
-    ----------
-    description
-    identifier
-
     See Also
     --------
     NucleotideSequence
@@ -1263,11 +1253,6 @@ class RNASequence(NucleotideSequence):
 
     An `RNASequence` is a `NucelotideSequence` that is restricted to only
     containing characters used in the IUPAC RNA lexicon.
-
-    Attributes
-    ----------
-    description
-    identifier
 
     Notes
     -----
