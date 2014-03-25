@@ -88,16 +88,46 @@ from skbio.core.exception import BiologicalSequenceError
 class BiologicalSequence(Sequence):
     """Base class for biological sequences.
 
-    Attributes
-    ----------
-    description
-    identifier
+     Parameters
+     ----------
+     sequence : python Sequence (e.g., str, list or tuple)
+         The biological sequence.
+     identifier : str, optional
+         The sequence identifier (e.g., an accession number).
+     description : str, optional
+         A description or comment about the sequence (e.g., "green
+         fluorescent protein").
+     validate : bool, optional
+         If True, runs the `is_valid` method after construction and raises
+         BiologicalSequenceError if ``is_valid == False``.
 
-    Notes
-    -----
-    `BiologicalSequence` objects are immutable. Where applicable, methods
-    return a new object of the same class.
-    """
+     Attributes
+     ----------
+     description
+     identifier
+
+     Raises
+     ------
+     skbio.core.exception.BiologicalSequenceError
+       If ``validate == True`` and ``is_valid == False``.
+
+     See Also
+     --------
+     NucleotideSequence
+     DNASequence
+     RNASequence
+
+     Notes
+     -----
+     `BiologicalSequence` objects are immutable. Where applicable, methods
+     return a new object of the same class.
+
+     Examples
+     --------
+     >>> from skbio.core.sequence import BiologicalSequence
+     >>> s = BiologicalSequence('GGUCGUGAAGGA')
+     >>> t = BiologicalSequence('GGUCCUGAAGGU')
+     """
 
     @classmethod
     def alphabet(cls):
@@ -141,39 +171,6 @@ class BiologicalSequence(Sequence):
 
     def __init__(self, sequence, identifier="", description="",
                  validate=False):
-        """Initialize a `BiologicalSequence` object.
-
-        Parameters
-        ----------
-        sequence : python Sequence (e.g., str, list or tuple)
-            The biological sequence.
-        identifier : str, optional
-            The sequence identifier (e.g., an accession number).
-        description : str, optional
-            A description or comment about the sequence (e.g., "green
-            fluorescent protein").
-        validate : bool, optional
-            If True, runs the `is_valid` method after construction and raises
-            BiologicalSequenceError if ``is_valid == False``.
-
-        Raises
-        ------
-        skbio.core.exception.BiologicalSequenceError
-          If ``validate == True`` and ``is_valid == False``.
-
-        See Also
-        --------
-        NucleotideSequence
-        DNASequence
-        RNASequence
-
-        Examples
-        --------
-        >>> from skbio.core.sequence import BiologicalSequence
-        >>> s = BiologicalSequence('GGUCGUGAAGGA')
-        >>> t = BiologicalSequence('GGUCCUGAAGGU')
-
-        """
         self._sequence = ''.join(sequence)
         self._identifier = identifier
         self._description = description
@@ -956,10 +953,17 @@ class BiologicalSequence(Sequence):
 class NucleotideSequence(BiologicalSequence):
     """Base class for nucleotide sequences.
 
+    A `NucleotideSequence` is a `BiologicalSequence` with additional methods
+    that are only applicable for nucleotide sequences.
+
     Attributes
     ----------
     description
     identifier
+
+    See Also
+    --------
+    BiologialSequence
 
     Notes
     -----
@@ -1172,10 +1176,18 @@ class NucleotideSequence(BiologicalSequence):
 class DNASequence(NucleotideSequence):
     """Base class for DNA sequences.
 
+    A `DNASequence` is a `NucelotideSequence` that is restricted to only
+    containing characters used in IUPAC DNA lexicon.
+
     Attributes
     ----------
     description
     identifier
+
+    See Also
+    --------
+    NucleotideSequence
+    BiologicalSequence
 
     Notes
     -----
@@ -1248,6 +1260,9 @@ DNA = DNASequence
 
 class RNASequence(NucleotideSequence):
     """Base class for RNA sequences.
+
+    An `RNASequence` is a `NucelotideSequence` that is restricted to only
+    containing characters used in the IUPAC RNA lexicon.
 
     Attributes
     ----------
