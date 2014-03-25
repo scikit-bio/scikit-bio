@@ -213,6 +213,8 @@ class BiologicalSequence(Sequence):
         >>> 'CCC' in s
         False
 
+        .. shownumpydoc
+
         """
         return other in self._sequence
 
@@ -245,6 +247,8 @@ class BiologicalSequence(Sequence):
         >>> u == t
         False
 
+        .. shownumpydoc
+
         """
         if self.__class__ != other.__class__:
             return False
@@ -273,6 +277,8 @@ class BiologicalSequence(Sequence):
         >>> s[1]
         <BiologicalSequence: G (length: 1)>
 
+        .. shownumpydoc
+
         """
         try:
             return self.__class__(self._sequence[i],
@@ -296,6 +302,8 @@ class BiologicalSequence(Sequence):
         >>> hash(s)
         -1080059835405276950
 
+        .. shownumpydoc
+
         """
         return hash(self._sequence)
 
@@ -317,6 +325,8 @@ class BiologicalSequence(Sequence):
         U
         C
 
+        .. shownumpydoc
+
         """
         return iter(self._sequence)
 
@@ -334,6 +344,8 @@ class BiologicalSequence(Sequence):
         >>> s = BiologicalSequence('GGUC')
         >>> len(s)
         4
+
+        .. shownumpydoc
 
         """
         return len(self._sequence)
@@ -367,6 +379,8 @@ class BiologicalSequence(Sequence):
         >>> u != t
         True
 
+        .. shownumpydoc
+
         """
         return not self.__eq__(other)
 
@@ -397,6 +411,8 @@ class BiologicalSequence(Sequence):
         >>> t
         <BiologicalSequence: ACGT (length: 4)>
 
+        .. shownumpydoc
+
         """
         first_ten = str(self)[:10]
         cn = self.__class__.__name__
@@ -424,6 +440,8 @@ class BiologicalSequence(Sequence):
         U
         G
         G
+
+        .. shownumpydoc
 
         """
         return reversed(self._sequence)
@@ -453,6 +471,8 @@ class BiologicalSequence(Sequence):
         'GGUC'
         >>> print s
         GGUC
+
+        .. shownumpydoc
 
         """
         return ''.join(self._sequence)
