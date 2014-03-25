@@ -60,6 +60,7 @@ from __future__ import division
 
 from collections import Counter, defaultdict
 from itertools import izip
+from warnings import warn
 
 import numpy as np
 from scipy.stats import entropy
@@ -636,6 +637,8 @@ class SequenceCollection(object):
         ``cogent.alignment.Alignment`` object (e.g., PyNAST), we need to
         support the method with this name.
         """
+        warn("SequenceCollection.toFasta() is deprecated. You should use "
+             "SequenceCollection.to_fasta().")
         return self.to_fasta()
 
     def upper(self):
