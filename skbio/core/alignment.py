@@ -1164,7 +1164,8 @@ class Alignment(SequenceCollection):
             result.append(current_freqs)
         return result
 
-    def position_entropies(self, base=None):
+    def position_entropies(self, base=None,
+                           nan_on_non_iupac_standard_chars=True):
         """Return Shannon entropy of positions in Alignment
 
         Parameters
@@ -1198,12 +1199,17 @@ class Alignment(SequenceCollection):
         ...              DNA('TT-C', identifier="seq3")]
         >>> a1 = Alignment(sequences)
         >>> print a1.position_entropies()
-        [0.63651416829481278, 0.63651416829481278, -0.0, 0.63651416829481278]
+        [0.63651416829481278, 0.63651416829481278, -0.0, np.nan]
 
         """
         result = []
+        iupac_standard_characters = self[0].iupac_standard_characters()
         for f in self.position_frequencies():
-            result.append(entropy(f.values(), base=base))
+            if (nan_on_non_iupac_standard_chars and
+                    len(set(f.keys()) - iupac_standard_characters) > 0):
+                result.append(np.nan)
+            else:
+                result.append(entropy(f.values(), base=base))
         return result
 
     def sequence_frequencies(self):

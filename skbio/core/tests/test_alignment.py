@@ -497,11 +497,11 @@ class AlignmentTests(TestCase):
         tested by calculating values as described in this post:
          http://stackoverflow.com/a/15476958/3424666
         """
-        expected = [0.69314, 0.69314, 0.69314, 0.0, 0.69314]
+        expected = [0.69314, 0.69314, 0.69314, 0.0, np.nan]
         np.testing.assert_almost_equal(self.a2.position_entropies(),
                                        expected, 5)
 
-        expected = [1.0, 1.0, 1.0, 0.0, 1.0]
+        expected = [1.0, 1.0, 1.0, 0.0, np.nan]
         np.testing.assert_almost_equal(self.a2.position_entropies(base=2),
                                        expected, 5)
 
