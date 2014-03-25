@@ -338,6 +338,17 @@ class SequenceCollection(object):
         return "<%s: n=%d; mean +/- std length=%.2f +/- %.2f>" \
             % (cn, count, center, spread)
 
+    def __str__(self):
+        r"""The str method.
+
+        Returns
+        -------
+        str
+            Fasta-formatted string of all sequences in the object.
+
+        """
+        return self.to_fasta()
+
     def distribution_stats(self, center_f=np.mean, spread_f=np.std):
         r"""Return sequence count, and center and spread of sequence lengths
 

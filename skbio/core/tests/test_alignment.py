@@ -171,6 +171,14 @@ class SequenceCollectionTests(TestCase):
                          "<SequenceCollection: n=5; "
                          "mean +/- std length=6.40 +/- 3.32>")
 
+    def test_str(self):
+        """str functions as expected
+        """
+        exp1 = ">d1\nGATTACA\n>d2\nTTG\n"
+        self.assertEqual(str(self.s1), exp1)
+        exp2 = ">r1\nGAUUACA\n>r2\nUUG\n>r3\nU-----UGCC--\n"
+        self.assertEqual(str(self.s2), exp2)
+
     def test_distribution_stats(self):
         """distribution_stats functions as expected
         """
@@ -262,8 +270,8 @@ class SequenceCollectionTests(TestCase):
         """
         exp1 = ">d1\nGATTACA\n>d2\nTTG\n"
         self.assertEqual(self.s1.to_fasta(), exp1)
-        exp2 = ">r1\nGATTACA\n>r2\nTTG\n>r3'U-----UGCC--\n"
-        self.assertEqual(self.s1.to_fasta(), exp1)
+        exp2 = ">r1\nGAUUACA\n>r2\nUUG\n>r3\nU-----UGCC--\n"
+        self.assertEqual(self.s2.to_fasta(), exp2)
 
     def test_upper(self):
         """upper functions as expected
