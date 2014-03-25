@@ -22,12 +22,20 @@ class SubsampleTests(TestCase):
         """Should function correctly for nonrandom cases."""
         a = np.array([0, 5, 0])
 
-        # Input has too few counts.
-        np.testing.assert_equal(subsample(a, 6), a)
+        # Subsample same number of items that are in input (without
+        # replacement).
         np.testing.assert_equal(subsample(a, 5), a)
 
         # Can only choose from one bin.
-        np.testing.assert_equal(subsample(a, 2), np.array([0, 2, 0]))
+        exp = np.array([0, 2, 0])
+        np.testing.assert_equal(subsample(a, 2), exp)
+        np.testing.assert_equal(subsample(a, 2, replace=True), exp)
+
+        # Subsample zero items.
+        a = [3, 0, 1]
+        exp = np.array([0, 0, 0])
+        np.testing.assert_equal(subsample(a, 0), exp)
+        np.testing.assert_equal(subsample(a, 0, replace=True), exp)
 
     def test_subsample_without_replacement(self):
         """Should return a random subsample (without replacement)."""
@@ -68,15 +76,33 @@ class SubsampleTests(TestCase):
             actual.add(tuple(obs))
         self.assertTrue(len(actual) > 10)
 
+    def test_subsample_with_replacement_equal_n(self):
+        """Returns random subsample (w/ replacement) when n == counts.sum()."""
+        a = np.array([0, 0, 3, 4, 2, 1])
+        actual = set()
+        for i in range(1000):
+            obs = subsample(a, 10, replace=True)
+            self.assertEqual(obs.sum(), 10)
+            actual.add(tuple(obs))
+        self.assertTrue(len(actual) > 1)
+
     def test_subsample_invalid_input(self):
         """Should raise an error on invalid input."""
-        # Wrong number of dimensions.
+        # Negative n.
         with self.assertRaises(ValueError):
-            _ = subsample([[1, 2, 3], [4, 5, 6]], 2)
+            _ = subsample([1, 2, 3], -1)
 
         # Floats.
         with self.assertRaises(TypeError):
             _ = subsample([1, 2.3, 3], 2)
+
+        # Wrong number of dimensions.
+        with self.assertRaises(ValueError):
+            _ = subsample([[1, 2, 3], [4, 5, 6]], 2)
+
+        # Input has too few counts.
+        with self.assertRaises(ValueError):
+            _ = subsample([0, 5, 0], 6)
 
 
 if __name__ == '__main__':
