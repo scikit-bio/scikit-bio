@@ -434,11 +434,8 @@ class SequenceCollection(object):
         ...              DNA('.AACCG-GT.', identifier="seq2")]
         >>> s1 = SequenceCollection(sequences)
         >>> s2 = s1.degap()
-        >>> print s2
-        >seq1
-        ACCGT
-        >seq2
-        AACCGGT
+        >>> s2
+        <SequenceCollection: n=2; mean +/- std length=6.00 +/- 1.00>
 
         """
         return SequenceCollection([seq.degap() for seq in self])
@@ -804,19 +801,19 @@ class Alignment(SequenceCollection):
         ...         DNA("ATCC--G", identifier="s2"),
         ...         DNA("ATCCGGA", identifier="s3")]
         >>> a1 = Alignment(seqs)
-        >>> print a1
+        >>> a1
         <Alignment: n=3; mean +/- std length=7.00 +/- 0.00>
-        >>> print a1.subalignment(seqs_to_keep=["s1", "s2"])
+        >>> a1.subalignment(seqs_to_keep=["s1", "s2"])
         <Alignment: n=2; mean +/- std length=7.00 +/- 0.00>
-        >>> print a1.subalignment(seqs_to_keep=["s1", "s2"],
+        >>> a1.subalignment(seqs_to_keep=["s1", "s2"],
         ...         invert_seqs_to_keep=True)
         <Alignment: n=1; mean +/- std length=7.00 +/- 0.00>
-        >>> print a1.subalignment(positions_to_keep=[0, 2, 3, 5])
+        >>> a1.subalignment(positions_to_keep=[0, 2, 3, 5])
         <Alignment: n=3; mean +/- std length=4.00 +/- 0.00>
-        >>> print a1.subalignment(positions_to_keep=[0, 2, 3, 5],
+        >>> a1.subalignment(positions_to_keep=[0, 2, 3, 5],
         ...         invert_positions_to_keep=True)
         <Alignment: n=3; mean +/- std length=3.00 +/- 0.00>
-        >>> print a1.subalignment(seqs_to_keep=["s1", "s2"],
+        >>> a1.subalignment(seqs_to_keep=["s1", "s2"],
         ...         positions_to_keep=[0, 2, 3, 5])
         <Alignment: n=2; mean +/- std length=4.00 +/- 0.00>
 
@@ -1074,7 +1071,7 @@ class Alignment(SequenceCollection):
         ...              DNA('TT-C', identifier="seq3")]
         >>> a1 = Alignment(sequences)
         >>> a2 = a1.omit_gap_positions(0.50)
-        >>> print a2
+        >>> a2
         <Alignment: n=3; mean +/- std length=3.00 +/- 0.00>
         >>> print a2[0]
         AC-
@@ -1119,7 +1116,7 @@ class Alignment(SequenceCollection):
         ...              DNA('TT-C', identifier="seq3")]
         >>> a1 = Alignment(sequences)
         >>> a2 = a1.omit_gap_sequences(0.49)
-        >>> print a2
+        >>> a2
         <Alignment: n=2; mean +/- std length=4.00 +/- 0.00>
         >>> print a2[0]
         AT-C
@@ -1253,7 +1250,7 @@ class Alignment(SequenceCollection):
         ...              DNA('TT-C', identifier="seq3")]
         >>> a1 = Alignment(sequences)
         >>> print a1.position_entropies()
-        [0.63651416829481278, 0.63651416829481278, -0.0, np.nan]
+        [0.63651416829481278, 0.63651416829481278, nan, nan]
 
         """
         result = []
