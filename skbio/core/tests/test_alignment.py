@@ -178,6 +178,17 @@ class SequenceCollectionTests(TestCase):
                          "<SequenceCollection: n=5; "
                          "mean +/- std length=6.40 +/- 3.32>")
 
+    def test_reversed(self):
+        """reversed functions as expected
+        """
+        s1_iter = reversed(self.s1)
+        count = 0
+        for actual, expected in zip(s1_iter, self.seqs1[::-1]):
+            count += 1
+            self.assertEqual(actual, expected)
+        self.assertEqual(count, len(self.seqs1))
+        self.assertRaises(StopIteration, s1_iter.next)
+
     def test_str(self):
         """str functions as expected
         """

@@ -355,6 +355,18 @@ class SequenceCollection(object):
         return "<%s: n=%d; mean +/- std length=%.2f +/- %.2f>" \
             % (cn, count, center, spread)
 
+    def __reversed__(self):
+        """The reversed method.
+
+        Returns
+        -------
+        iterator
+            `skbio.core.sequence.BiologicalSequence` iterator for the
+            `SequenceCollection` in reverse order.
+
+        """
+        return reversed(self._data)
+
     def __str__(self):
         r"""The str method.
 
