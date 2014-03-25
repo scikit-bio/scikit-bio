@@ -78,7 +78,6 @@ from __future__ import division
 #-----------------------------------------------------------------------------
 
 from collections import Sequence
-from functools import total_ordering
 from itertools import izip, product
 
 from scipy.spatial.distance import hamming
