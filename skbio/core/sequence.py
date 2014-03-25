@@ -127,6 +127,16 @@ class BiologicalSequence(Sequence):
      >>> from skbio.core.sequence import BiologicalSequence
      >>> s = BiologicalSequence('GGUCGUGAAGGA')
      >>> t = BiologicalSequence('GGUCCUGAAGGU')
+
+     References
+     ----------
+     The IUPAC codes referenced by the objects herein  were initially
+     presented in:
+     Nomenclature for incompletely specified bases in nucleic acid sequences:
+     recommendations 1984.
+     Nucleic Acids Res. May 10, 1985; 13(9): 3021-3030.
+     A Cornish-Bowden
+
      """
 
     @classmethod
