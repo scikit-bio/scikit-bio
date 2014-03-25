@@ -121,6 +121,9 @@ class BiologicalSequence(Sequence):
     -----
     `BiologicalSequence` objects are immutable. Where applicable, methods
     return a new object of the same class.
+    Subclasses are typically defined by methods relevant to only a specific
+    type of biological sequence, and by containing characters only contained in
+    the IUPAC standard character set [1]_ for that molecule type.
 
     Examples
     --------
@@ -130,12 +133,10 @@ class BiologicalSequence(Sequence):
 
     References
     ----------
-    The IUPAC codes referenced by the objects herein  were initially
-    presented in:
-    Nomenclature for incompletely specified bases in nucleic acid sequences:
-    recommendations 1984.
-    Nucleic Acids Res. May 10, 1985; 13(9): 3021-3030.
-    A Cornish-Bowden
+    .. [1] Nomenclature for incompletely specified bases in nucleic acid
+       sequences: recommendations 1984.
+       Nucleic Acids Res. May 10, 1985; 13(9): 3021-3030.
+       A Cornish-Bowden
 
     """
 
