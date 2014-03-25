@@ -412,4 +412,4 @@ def linkcode_resolve(domain, info):
 #------------------------------------------------------------------------------
 
 # Link-checking on Travis sometimes times out.
-linkcheck_timeout = 5
+linkcheck_timeout = 30
