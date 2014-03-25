@@ -206,7 +206,7 @@ class SequenceCollection(object):
 
         Parameters
         ----------
-        identifier : `str`
+        identifier : str`
             The identifier to look up in the `SequenceCollection`.
 
         Returns
@@ -663,17 +663,20 @@ class SequenceCollection(object):
     def toFasta(self):
         """Return fasta-formatted string representing the `SequenceCollection`
 
+        .. note:: Deprecated in skbio 0.0.0
+                  `SequenceCollection.toFasta` will be removed in skbio 0.2.0,
+                  it is replaced by `SequenceCollection.to_fasta` as the latter
+                  adheres to pep8 naming conventions. This is necessary to keep
+                  in place now as these objects are sometimes in passed into
+                  code that expects a `cogent.alignment.Alignment` object
+                  (e.g., PyNAST), so we need to support the method with this
+                  name.
+
         Returns
         -------
         str
             A fasta-formatted string representing the `SequenceCollection`.
 
-        Notes
-        -----
-        This method is deprecated in favor of to_fasta, but as these objects
-        are sometimes in passed into code that expects a
-        ``cogent.alignment.Alignment`` object (e.g., PyNAST), we need to
-        support the method with this name.
         """
         warn("SequenceCollection.toFasta() is deprecated. You should use "
              "SequenceCollection.to_fasta().")
@@ -1219,13 +1222,13 @@ class Alignment(SequenceCollection):
             the first sequence's `iupac_standard_characters` will be `np.nan`.
             This is useful, and the default behavior, as it's not clear how a
             gap or degenerate character should contribute to a positional
-            entropy. This issue was described in [1].
+            entropy. This issue was described in [1]_.
 
         Returns
         -------
         list
             List of floats of Shannon entropy at `Alignment` positions. Shannon
-            entropy is defined in [2].
+            entropy is defined in [2]_.
 
         See Also
         --------
@@ -1234,12 +1237,13 @@ class Alignment(SequenceCollection):
 
         References
         ----------
-        [1] Identifying DNA and protein patterns with statistically significant
-        alignments of multiple sequences.
-        Hertz GZ, Stormo GD.
-        Bioinformatics. 1999 Jul-Aug;15(7-8):563-77.
-        [2] A Mathematical Theory of Communication, CE Shannon
-        The Bell System Technical Journal (1948).
+        .. [1] Identifying DNA and protein patterns with statistically
+           significant alignments of multiple sequences.
+           Hertz GZ, Stormo GD.
+           Bioinformatics. 1999 Jul-Aug;15(7-8):563-77.
+        .. [2] A Mathematical Theory of Communication
+           CE Shannon
+           The Bell System Technical Journal (1948).
 
         Examples
         --------
