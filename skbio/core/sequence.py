@@ -123,7 +123,7 @@ class BiologicalSequence(Sequence):
     return a new object of the same class.
     Subclasses are typically defined by methods relevant to only a specific
     type of biological sequence, and by containing characters only contained in
-    the IUPAC standard character set [1] for that molecule type.
+    the IUPAC standard character set [1]_ for that molecule type.
 
     Examples
     --------
