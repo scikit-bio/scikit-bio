@@ -1211,6 +1211,8 @@ class NucleotideSequence(BiologicalSequence):
             if char in standard_chars or char in gap_chars:
                 expansions.append(char)
             else:
+                # Use a try/except instead of explicitly checking for set
+                # membership as this yields improved performance.
                 try:
                     expansions.append(degen_chars[char])
                 except KeyError:
@@ -1224,8 +1226,7 @@ class NucleotideSequence(BiologicalSequence):
         desc = self.description
         cls = self.__class__
 
-        for nondegen_seq in result:
-            yield cls(nondegen_seq, id_, desc)
+        return (cls(nondegen_seq, id_, desc) for nondegen_seq in result)
 
 
 class DNASequence(NucleotideSequence):
