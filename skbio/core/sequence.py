@@ -1218,9 +1218,14 @@ class NucleotideSequence(BiologicalSequence):
                         "Sequence contains an invalid character: %s" % char)
 
         result = product(*expansions)
+
+        # Cache lookups here as there may be a lot of sequences to generate.
+        id_ = self.identifier
+        desc = self.description
+        cls = self.__class__
+
         for nondegen_seq in result:
-            yield self.__class__(''.join(nondegen_seq), self.identifier,
-                                 self.description)
+            yield cls(nondegen_seq, id_, desc)
 
 
 class DNASequence(NucleotideSequence):
