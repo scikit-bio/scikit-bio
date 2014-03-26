@@ -1169,22 +1169,53 @@ class NucleotideSequence(BiologicalSequence):
     rc = reverse_complement
 
     def nondegenerates(self):
-        """Yield all non-degenerate versions of the sequence."""
-        # Should this return an empty list (as it does currently) or should it
-        # return a list with an empty NucleotideSequence, i.e.
-        # NucleotideSequence('') ?
-        if len(self) < 1:
-            return
+        """Yield all nondegenerate versions of the sequence.
 
+        Returns
+        -------
+        generator
+            Generator yielding all possible nondegenerate versions of the
+            sequence. Each sequence will have the same type, identifier, and
+            description as `self`.
+
+        Raises
+        ------
+        BiologicalSequenceError
+            If the sequence contains an invalid character (a character that
+            isn't an IUPAC character or a gap character).
+
+        See Also
+        --------
+        iupac_degeneracies
+
+        Notes
+        -----
+        There is no guaranteed ordering to the generated sequences.
+
+        Examples
+        --------
+        >>> from skbio.core.sequence import NucleotideSequence
+        >>> seq = NucleotideSequence('TRG')
+        >>> seq_generator = seq.nondegenerates()
+        >>> for s in sorted(seq_generator, key=str): print(s)
+        TAG
+        TGG
+
+        """
         standard_chars = self.iupac_standard_characters()
         degen_chars = self.iupac_degeneracies()
+        gap_chars = self.gap_alphabet()
 
         expansions = []
         for char in self:
-            if char in standard_chars:
-                expansions.append(set(char))
+            if char in standard_chars or char in gap_chars:
+                expansions.append(char)
             else:
-                expansions.append(degen_chars[char])
+                try:
+                    expansions.append(degen_chars[char])
+                except KeyError:
+                    raise BiologicalSequenceError(
+                        "Sequence contains an invalid character: %s" % char)
 
         result = product(*expansions)
         for nondegen_seq in result:
