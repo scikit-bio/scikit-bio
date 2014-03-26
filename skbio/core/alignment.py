@@ -60,6 +60,7 @@ from __future__ import division
 
 from collections import Counter, defaultdict
 from itertools import izip
+from warnings import warn
 
 import numpy as np
 from scipy.stats import entropy
@@ -185,7 +186,7 @@ class SequenceCollection(object):
         self._identifier_to_index = {}
         for i, seq in enumerate(self._data):
             identifier = seq.identifier
-            if identifier in self._identifier_to_index:
+            if identifier in self:
                 raise SequenceCollectionError(
                     "All sequence identifiers must be unique, but "
                     "identifier %s is present multiple times." % identifier)
@@ -200,13 +201,32 @@ class SequenceCollection(object):
             raise SequenceCollectionError(
                 "%s failed to validate." % self.__class__.__name__)
 
+    def __contains__(self, identifier):
+        r"""The in operator.
+
+        Parameters
+        ----------
+        identifier : str
+            The identifier to look up in the `SequenceCollection`.
+
+        Returns
+        -------
+        bool
+            Indicates whether `identifier` corresponds to a sequence identifier
+            in the `SequenceCollection`.
+
+        .. shownumpydoc
+
+        """
+        return identifier in self._identifier_to_index
+
     def __eq__(self, other):
         r"""The equality operator.
 
         Parameters
         ----------
         other : `SequenceCollection`
-            The sequence collection to test for equality against.
+            The `SequenceCollection` to test for equality against.
 
         Returns
         -------
@@ -218,6 +238,8 @@ class SequenceCollection(object):
         `SequenceCollection` objects are equal if they are the same type,
         contain the same number of sequences, and if each of the
         `skbio.core.sequence.BiologicalSequence` objects, in order, are equal.
+
+        .. shownumpydoc
 
         """
         if self.__class__ != other.__class__:
@@ -258,6 +280,8 @@ class SequenceCollection(object):
         >>> s1["seq1"]
         <DNASequence: ACCGT (length: 5)>
 
+        .. shownumpydoc
+
         """
         if isinstance(index, str):
             return self.get_seq(index)
@@ -273,6 +297,8 @@ class SequenceCollection(object):
             `skbio.core.sequence.BiologicalSequence` iterator for the
             `SequenceCollection`.
 
+        .. shownumpydoc
+
         """
         return iter(self._data)
 
@@ -283,6 +309,8 @@ class SequenceCollection(object):
         -------
         int
             The number of sequences in the `SequenceCollection`.
+
+        .. shownumpydoc
 
         """
         return self.sequence_count()
@@ -303,6 +331,8 @@ class SequenceCollection(object):
         -----
         See `SequenceCollection.__eq__` for a description of what it means for
         a pair of `SequenceCollection` objects to be equal.
+
+        .. shownumpydoc
 
         """
         return not self.__eq__(other)
@@ -331,11 +361,40 @@ class SequenceCollection(object):
         >>> print repr(s1)
         <SequenceCollection: n=2; mean +/- std length=6.00 +/- 1.00>
 
+        .. shownumpydoc
+
         """
         cn = self.__class__.__name__
         count, center, spread = self.distribution_stats()
         return "<%s: n=%d; mean +/- std length=%.2f +/- %.2f>" \
             % (cn, count, center, spread)
+
+    def __reversed__(self):
+        """The reversed method.
+
+        Returns
+        -------
+        iterator
+            `skbio.core.sequence.BiologicalSequence` iterator for the
+            `SequenceCollection` in reverse order.
+
+        .. shownumpydoc
+
+        """
+        return reversed(self._data)
+
+    def __str__(self):
+        r"""The str method.
+
+        Returns
+        -------
+        str
+            Fasta-formatted string of all sequences in the object.
+
+        .. shownumpydoc
+
+        """
+        return self.to_fasta()
 
     def distribution_stats(self, center_f=np.mean, spread_f=np.std):
         r"""Return sequence count, and center and spread of sequence lengths
@@ -393,10 +452,8 @@ class SequenceCollection(object):
         ...              DNA('.AACCG-GT.', identifier="seq2")]
         >>> s1 = SequenceCollection(sequences)
         >>> s2 = s1.degap()
-        >>> print s2[0]
-        ACCGT
-        >>> print s2[1]
-        AACCGGT
+        >>> s2
+        <SequenceCollection: n=2; mean +/- std length=6.00 +/- 1.00>
 
         """
         return SequenceCollection([seq.degap() for seq in self])
@@ -624,18 +681,23 @@ class SequenceCollection(object):
     def toFasta(self):
         """Return fasta-formatted string representing the `SequenceCollection`
 
+        .. note:: Deprecated in skbio 0.0.0
+                  `SequenceCollection.toFasta` will be removed in skbio 0.2.0,
+                  it is replaced by `SequenceCollection.to_fasta` as the latter
+                  adheres to PEP8 naming conventions. This is necessary to keep
+                  in place now as these objects are sometimes passed into
+                  code that expects a `cogent.alignment.Alignment` object
+                  (e.g., PyNAST), so we need to support the method with this
+                  name.
+
         Returns
         -------
         str
             A fasta-formatted string representing the `SequenceCollection`.
 
-        Notes
-        -----
-        This method is deprecated in favor of to_fasta, but as these objects
-        are sometimes in passed into code that expects a
-        ``cogent.alignment.Alignment`` object (e.g., PyNAST), we need to
-        support the method with this name.
         """
+        warn("SequenceCollection.toFasta() is deprecated. You should use "
+             "SequenceCollection.to_fasta().")
         return self.to_fasta()
 
     def upper(self):
@@ -760,19 +822,19 @@ class Alignment(SequenceCollection):
         ...         DNA("ATCC--G", identifier="s2"),
         ...         DNA("ATCCGGA", identifier="s3")]
         >>> a1 = Alignment(seqs)
-        >>> print a1
+        >>> a1
         <Alignment: n=3; mean +/- std length=7.00 +/- 0.00>
-        >>> print a1.subalignment(seqs_to_keep=["s1", "s2"])
+        >>> a1.subalignment(seqs_to_keep=["s1", "s2"])
         <Alignment: n=2; mean +/- std length=7.00 +/- 0.00>
-        >>> print a1.subalignment(seqs_to_keep=["s1", "s2"],
+        >>> a1.subalignment(seqs_to_keep=["s1", "s2"],
         ...         invert_seqs_to_keep=True)
         <Alignment: n=1; mean +/- std length=7.00 +/- 0.00>
-        >>> print a1.subalignment(positions_to_keep=[0, 2, 3, 5])
+        >>> a1.subalignment(positions_to_keep=[0, 2, 3, 5])
         <Alignment: n=3; mean +/- std length=4.00 +/- 0.00>
-        >>> print a1.subalignment(positions_to_keep=[0, 2, 3, 5],
+        >>> a1.subalignment(positions_to_keep=[0, 2, 3, 5],
         ...         invert_positions_to_keep=True)
         <Alignment: n=3; mean +/- std length=3.00 +/- 0.00>
-        >>> print a1.subalignment(seqs_to_keep=["s1", "s2"],
+        >>> a1.subalignment(seqs_to_keep=["s1", "s2"],
         ...         positions_to_keep=[0, 2, 3, 5])
         <Alignment: n=2; mean +/- std length=4.00 +/- 0.00>
 
@@ -1030,7 +1092,7 @@ class Alignment(SequenceCollection):
         ...              DNA('TT-C', identifier="seq3")]
         >>> a1 = Alignment(sequences)
         >>> a2 = a1.omit_gap_positions(0.50)
-        >>> print a2
+        >>> a2
         <Alignment: n=3; mean +/- std length=3.00 +/- 0.00>
         >>> print a2[0]
         AC-
@@ -1075,7 +1137,7 @@ class Alignment(SequenceCollection):
         ...              DNA('TT-C', identifier="seq3")]
         >>> a1 = Alignment(sequences)
         >>> a2 = a1.omit_gap_sequences(0.49)
-        >>> print a2
+        >>> a2
         <Alignment: n=2; mean +/- std length=4.00 +/- 0.00>
         >>> print a2[0]
         AT-C
@@ -1164,7 +1226,8 @@ class Alignment(SequenceCollection):
             result.append(current_freqs)
         return result
 
-    def position_entropies(self, base=None):
+    def position_entropies(self, base=None,
+                           nan_on_non_standard_chars=True):
         """Return Shannon entropy of positions in Alignment
 
         Parameters
@@ -1172,12 +1235,18 @@ class Alignment(SequenceCollection):
         base : float, optional
             log base for entropy calculation. If not passed, default will be e
             (i.e., natural log will be computed).
+        nan_on_non_standard_chars : bool, optional
+            if True, the entropy at positions containing characters outside of
+            the first sequence's `iupac_standard_characters` will be `np.nan`.
+            This is useful, and the default behavior, as it's not clear how a
+            gap or degenerate character should contribute to a positional
+            entropy. This issue was described in [1]_.
 
         Returns
         -------
         list
             List of floats of Shannon entropy at `Alignment` positions. Shannon
-            entropy is defined in [1].
+            entropy is defined in [2]_.
 
         See Also
         --------
@@ -1186,8 +1255,13 @@ class Alignment(SequenceCollection):
 
         References
         ----------
-        [1] A Mathematical Theory of Communication, CE Shannon
-        The Bell System Technical Journal (1948).
+        .. [1] Identifying DNA and protein patterns with statistically
+           significant alignments of multiple sequences.
+           Hertz GZ, Stormo GD.
+           Bioinformatics. 1999 Jul-Aug;15(7-8):563-77.
+        .. [2] A Mathematical Theory of Communication
+           CE Shannon
+           The Bell System Technical Journal (1948).
 
         Examples
         --------
@@ -1198,12 +1272,17 @@ class Alignment(SequenceCollection):
         ...              DNA('TT-C', identifier="seq3")]
         >>> a1 = Alignment(sequences)
         >>> print a1.position_entropies()
-        [0.63651416829481278, 0.63651416829481278, -0.0, 0.63651416829481278]
+        [0.63651416829481278, 0.63651416829481278, nan, nan]
 
         """
         result = []
+        iupac_standard_characters = self[0].iupac_standard_characters()
         for f in self.position_frequencies():
-            result.append(entropy(f.values(), base=base))
+            if (nan_on_non_standard_chars and
+                    len(set(f.keys()) - iupac_standard_characters) > 0):
+                result.append(np.nan)
+            else:
+                result.append(entropy(f.values(), base=base))
         return result
 
     def sequence_frequencies(self):
