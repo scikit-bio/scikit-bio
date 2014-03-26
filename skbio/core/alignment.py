@@ -684,7 +684,7 @@ class SequenceCollection(object):
         .. note:: Deprecated in skbio 0.0.0
                   `SequenceCollection.toFasta` will be removed in skbio 0.2.0,
                   it is replaced by `SequenceCollection.to_fasta` as the latter
-                  adheres to pep8 naming conventions. This is necessary to keep
+                  adheres to PEP8 naming conventions. This is necessary to keep
                   in place now as these objects are sometimes passed into
                   code that expects a `cogent.alignment.Alignment` object
                   (e.g., PyNAST), so we need to support the method with this
