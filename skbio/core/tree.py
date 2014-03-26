@@ -2465,7 +2465,7 @@ class TreeNode(object):
 
         Indexes nodes in-place as n._leaf_index.
 
-        Results
+        Returns
         -------
         dict
             A mapping {node_id: TreeNode}
