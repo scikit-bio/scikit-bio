@@ -1208,6 +1208,8 @@ class NucleotideSequence(BiologicalSequence):
 
         expansions = []
         for char in self:
+            # We don't union standard_chars and gap_chars outside of the
+            # for-loop because the current implementation is faster.
             if char in standard_chars or char in gap_chars:
                 expansions.append(char)
             else:
