@@ -78,7 +78,7 @@ from __future__ import division
 #-----------------------------------------------------------------------------
 
 from collections import Sequence
-from itertools import izip
+from itertools import izip, product
 
 from scipy.spatial.distance import hamming
 
@@ -1198,6 +1198,69 @@ class NucleotideSequence(BiologicalSequence):
         """
         return self._complement(reversed(self))
     rc = reverse_complement
+
+    def nondegenerates(self):
+        """Yield all nondegenerate versions of the sequence.
+
+        Returns
+        -------
+        generator
+            Generator yielding all possible nondegenerate versions of the
+            sequence. Each sequence will have the same type, identifier, and
+            description as `self`.
+
+        Raises
+        ------
+        BiologicalSequenceError
+            If the sequence contains an invalid character (a character that
+            isn't an IUPAC character or a gap character).
+
+        See Also
+        --------
+        iupac_degeneracies
+
+        Notes
+        -----
+        There is no guaranteed ordering to the generated sequences.
+
+        Examples
+        --------
+        >>> from skbio.core.sequence import NucleotideSequence
+        >>> seq = NucleotideSequence('TRG')
+        >>> seq_generator = seq.nondegenerates()
+        >>> for s in sorted(seq_generator, key=str): print(s)
+        TAG
+        TGG
+
+        """
+        degen_chars = self.iupac_degeneracies()
+        nonexpansion_chars = self.iupac_standard_characters().union(
+            self.gap_alphabet())
+
+        expansions = []
+        for char in self:
+            if char in nonexpansion_chars:
+                expansions.append(char)
+            else:
+                # Use a try/except instead of explicitly checking for set
+                # membership on the assumption that an exception is rarely
+                # thrown.
+                try:
+                    expansions.append(degen_chars[char])
+                except KeyError:
+                    raise BiologicalSequenceError(
+                        "Sequence contains an invalid character: %s" % char)
+
+        result = product(*expansions)
+
+        # Cache lookups here as there may be a lot of sequences to generate.
+        # Could use functools.partial, but it ends up being a little slower
+        # than this method.
+        id_ = self.identifier
+        desc = self.description
+        cls = self.__class__
+
+        return (cls(nondegen_seq, id_, desc) for nondegen_seq in result)
 
 
 class DNASequence(NucleotideSequence):
