@@ -1202,15 +1202,13 @@ class NucleotideSequence(BiologicalSequence):
         TGG
 
         """
-        standard_chars = self.iupac_standard_characters()
         degen_chars = self.iupac_degeneracies()
-        gap_chars = self.gap_alphabet()
+        nonexpansion_chars = self.iupac_standard_characters().union(
+            self.gap_alphabet())
 
         expansions = []
         for char in self:
-            # We don't union standard_chars and gap_chars outside of the
-            # for-loop because the current implementation is faster.
-            if char in standard_chars or char in gap_chars:
+            if char in nonexpansion_chars:
                 expansions.append(char)
             else:
                 # Use a try/except instead of explicitly checking for set
