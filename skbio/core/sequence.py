@@ -1212,7 +1212,8 @@ class NucleotideSequence(BiologicalSequence):
                 expansions.append(char)
             else:
                 # Use a try/except instead of explicitly checking for set
-                # membership as this yields improved performance.
+                # membership on the assumption that an exception is rarely
+                # thrown.
                 try:
                     expansions.append(degen_chars[char])
                 except KeyError:
@@ -1222,6 +1223,8 @@ class NucleotideSequence(BiologicalSequence):
         result = product(*expansions)
 
         # Cache lookups here as there may be a lot of sequences to generate.
+        # Could use functools.partial, but it ends up being a little slower
+        # than this method.
         id_ = self.identifier
         desc = self.description
         cls = self.__class__
