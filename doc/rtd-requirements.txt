@@ -1,2 +1,2 @@
-Sphinx>=1.2.2
 sphinx-bootstrap-theme
+Sphinx==1.2.2
