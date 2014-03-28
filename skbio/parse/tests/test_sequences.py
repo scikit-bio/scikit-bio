@@ -262,9 +262,10 @@ class RfamParserTests(TestCase):
         # strict = False
         # you expect to get back as much information as possible, also
         # half records or sequences
-        result = MinimalRfamParser(self._fake_record_bad_sequence_1,strict=False)
-        self.assertEqual(len(list(MinimalRfamParser(\
-            self._fake_record_bad_sequence_1,strict=False))[0][1].NamedSeqs), 3)            
+        result = MinimalRfamParser(self._fake_record_bad_sequence_1,
+                                   strict=False)
+        sequences = list(result)[0][1]
+        self.assertEqual(sequences.sequence_count(), 3)
 
     def test_MinimalRfamParser_strict_invalid_structure(self):
         """MinimalRfamParser: toggle strict functions w/ invalid structure
