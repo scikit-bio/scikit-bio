@@ -7,9 +7,12 @@
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
+from __future__ import division
 
 from skbio.parse.sequences import (MinimalRfamParser, RfamFinder,
-                                   ChangedSequence, is_empty_or_html)
+                                   ChangedSequence, is_empty_or_html,
+                                   is_rfam_header_line, is_rfam_seq_line,
+                                   is_rfam_structure_line)
 from skbio.core.alignment import Alignment
 
 
@@ -187,6 +190,47 @@ class RfamParserTests(TestCase):
         self.assertEqual(is_empty_or_html(line), True)
         line = '\t<//\n'
         self.assertEqual(is_empty_or_html(line), False)
+
+    def test_is_rfam_header_line(self):
+        """is_rfam_header_line: functions correctly w/ various lines """
+        self.assertEqual(is_rfam_header_line('#=GF'), True)
+        self.assertEqual(is_rfam_header_line('#=GF AC   RF00001'), True)
+        self.assertEqual(is_rfam_header_line('#=GF CC   until it is\
+            required for transcription. '), True)
+
+        self.assertEqual(is_rfam_header_line(''), False)
+        self.assertEqual(is_rfam_header_line('X07545.1/505-619 '), False)
+        self.assertEqual(is_rfam_header_line('#=G'), False)
+        self.assertEqual(is_rfam_header_line('=GF'), False)
+        self.assertEqual(is_rfam_header_line('#=GC SS_cons'), False)
+
+    def test_is_rfam_seq_line(self):
+        """is_rfam_seq_line: functions correctly w/ various lines """
+        s = 'X07545.1/505-619                     .\
+            .ACCCGGC.CAUA...GUGGCCG.GGCAA.CAC.CCGG.U.C..UCGUU'
+        self.assertTrue(is_rfam_seq_line('s'))
+        self.assertTrue(is_rfam_seq_line('X07545.1/505-619'))
+        self.assertTrue(is_rfam_seq_line('M21086.1/8-123'))
+
+        self.assertFalse(is_rfam_seq_line(''))
+        self.assertFalse(is_rfam_seq_line('#GF='))
+        self.assertFalse(is_rfam_seq_line('//blah'))
+
+    def test_is_rfam_structure_line(self):
+        """is_rfam_structure_line: functions correctly w/ various lines """
+        s = '#=GC SS_cons\
+            <<<<<<<<<........<<.<<<<.<...<.<...<<<<.<.<.......'
+        self.assertEqual(is_rfam_structure_line(s), True)
+        self.assertEqual(is_rfam_structure_line('#=GC SS_cons'), True)
+        self.assertEqual(is_rfam_structure_line('#=GC SS_cons '), True)
+
+        self.assertEqual(is_rfam_structure_line(''), False)
+        self.assertEqual(is_rfam_structure_line(' '), False)
+        self.assertEqual(is_rfam_structure_line('#=GF AC   RF00001'), False)
+        self.assertEqual(is_rfam_structure_line('X07545.1/505-619'), False)
+        self.assertEqual(is_rfam_structure_line('=GC SS_cons'), False)
+        self.assertEqual(is_rfam_structure_line('#=GC'), False)
+        self.assertEqual(is_rfam_structure_line('#=GC RF'), False)
 
     def test_MinimalRfamParser_strict_missing_fields(self):
         """MinimalRfamParser: toggle strict functions w/ missing fields"""
