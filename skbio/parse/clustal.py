@@ -1,5 +1,4 @@
 #/usr/bin/env python
-
 """Parsers for Clustal and related formats (e.g. MUSCLE).
 
 Implementation Notes:
@@ -18,18 +17,19 @@ If the lines have trailing numbers (i.e. Clustal was run with -LINENOS=ON),
 silently deletes them. Does not check that the numbers actually correspond to
 the number of chars in the sequence printed so far.
 """
-from cogent.parse.record import RecordError, DelimitedSplitter
-from string import strip
+from __future__ import division
 
-__author__ = "Rob Knight"
-__copyright__ = "Copyright 2007-2012, The Cogent Project"
-__credits__ = ["Rob Knight", "Sandra Smit", "Gavin Huttley",
-                    "Peter Maxwell"]
-__license__ = "GPL"
-__version__ = "1.5.3-dev"
-__maintainer__ = "Rob Knight"
-__email__ = "rob@spot.colorado.edu"
-__status__ = "Development"
+#-----------------------------------------------------------------------------
+# Copyright (c) 2013--, scikit-bio development team.
+#
+# Distributed under the terms of the Modified BSD License.
+#
+# The full license is in the file COPYING.txt, distributed with this software.
+#-----------------------------------------------------------------------------
+
+from skbio.core.exception import RecordError
+from skbio.parse.record import DelimitedSplitter
+from string import strip
 
 def LabelLineParser(record, splitter, strict=True):
     """Returns dict mapping list of data to labels, plus list with field order.
@@ -95,3 +95,4 @@ def ClustalParser(record, strict=True):
     seqs, labels = MinimalClustalParser(record, strict)
     for l in labels:
         yield l, ''.join(seqs[l])
+
