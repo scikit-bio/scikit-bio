@@ -31,6 +31,8 @@ from skbio.core.exception import FastqParseError, RecordError
 from skbio.parse.record_finder import (LabeledRecordFinder,
                                        DelimitedRecordFinder)
 from skbio.core.sequence import Sequence
+from skbio.core.alignment import (Alignment, SequenceCollection,
+                                  SequenceCollectionError)
 from skbio.parse.clustal import ClustalParser
 
 def is_fasta_label(x):
@@ -281,7 +283,7 @@ def MinimalRfamParser(infile, strict=True, seq_constructor=ChangedSequence):
             new_seqs = load_from_clustal(sequences, strict=strict,
                                          seq_constructor=seq_constructor)
             sequences = new_seqs
-        except (DataError, RecordError), e:
+        except SequenceCollectionError as e:
             if strict:
                 raise RecordError, str(e)
             else:
@@ -292,7 +294,7 @@ def MinimalRfamParser(infile, strict=True, seq_constructor=ChangedSequence):
             res = load_from_clustal(structure, strict=strict)
             assert len(res.NamedSeqs) == 1 #otherwise multiple keys
             structure = res.NamedSeqs['#=GC SS_cons']
-        except (RecordError, KeyError, AssertionError), e:
+        except SequenceCollectionError as e:
             if strict:
                 raise RecordError("Can't parse structure of family: %s" %
                                   str(header))
