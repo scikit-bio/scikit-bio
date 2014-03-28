@@ -294,9 +294,10 @@ def MinimalRfamParser(infile, strict=True, seq_constructor=ChangedSequence):
         #construct the structure
         try:
             res = load_from_clustal(structure, strict=strict)
-            assert len(res.NamedSeqs) == 1 #otherwise multiple keys
-            structure = res.NamedSeqs['#=GC SS_cons']
-        except SequenceCollectionError as e:
+            named_seqs = dict(list(res.iteritems()))
+            assert len(named_seqs) == 1 #otherwise multiple keys
+            structure = named_seqs['#=GC SS_cons']
+        except (SequenceCollectionError, AssertionError, KeyError) as e:
             if strict:
                 raise RecordError("Can't parse structure of family: %s" %
                                   str(header))
