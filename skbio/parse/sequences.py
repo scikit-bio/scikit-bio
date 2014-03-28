@@ -34,6 +34,7 @@ from skbio.core.sequence import BiologicalSequence
 from skbio.core.alignment import (Alignment, SequenceCollection,
                                   SequenceCollectionError)
 from skbio.parse.clustal import ClustalParser
+from skbio.core.sequence import DNA
 
 def is_fasta_label(x):
     """Checks if x looks like a FASTA label line."""
@@ -63,13 +64,14 @@ def is_rfam_structure_line(line):
     return line.startswith('#=GC SS_cons')
 
 def load_from_clustal(data, seq_constructor=BiologicalSequence, strict=True):
-    recs = [(name, seq_constructor(seq, )) for name, seq in\
+    recs = [(name, seq_constructor(seq)) for name, seq in\
         ClustalParser(data, strict)]
     lengths = [len(i[1]) for i in recs]
+
     if lengths and max(lengths) == min(lengths):
-        return Alignment(recs)
+        return Alignment.from_fasta_records(recs, DNA)
     else:
-        return SequenceCollection(recs)
+        return SequenceCollection.from_fasta_records(recs, DNA)
 
 def is_empty_or_html(line):
     """Return True for HTML line and empty (or whitespace only) line.
