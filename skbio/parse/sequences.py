@@ -13,10 +13,9 @@ Functions
 .. autosummary::
    :toctree: generated/
 
-    fasta_parse
-    fastq_parse
-    gde_parse
-    xmfa_parse
+    parse_fasta
+    parse_fastq
+
 
 """
 
@@ -37,11 +36,6 @@ from skbio.parse.clustal import ClustalParser
 def is_fasta_label(x):
     """Checks if x looks like a FASTA label line."""
     return x.startswith('>')
-
-
-def is_gde_label(x):
-    """Checks if x looks like a GDE label line."""
-    return x and x[0] in '%#'
 
 
 def is_blank_or_comment(x):
@@ -92,7 +86,7 @@ FastaFinder = LabeledRecordFinder(is_fasta_label, ignore=is_blank_or_comment)
 RfamFinder = DelimitedRecordFinder('//', ignore=is_empty_or_html)
 
 
-def fasta_parse(infile,
+def parse_fasta(infile,
                 strict=True,
                 label_to_name=str,
                 finder=FastaFinder,
@@ -125,12 +119,12 @@ def fasta_parse(infile,
         CATCGATCGATCGATGCATGCATGCATG
 
     >>> from StringIO import StringIO
-    >>> from skbio.parse.sequences import fasta_parse
+    >>> from skbio.parse.sequences import parse_fasta
     >>> fasta_f = StringIO('>seq1\n'
     ...                    'CGATGTCGATCGATCGATCGATCAG\n'
     ...                    '>seq2\n'
     ...                    'CATCGATCGATCGATGCATGCATGCATG\n')
-    >>> for label, seq in fasta_parse(fasta_f):
+    >>> for label, seq in parse_fasta(fasta_f):
     ...     print label
     ...     print seq
     seq1
@@ -162,62 +156,8 @@ def fasta_parse(infile,
 
         yield label, seq
 
-GdeFinder = LabeledRecordFinder(is_gde_label, ignore=is_blank)
 
-
-def gde_parse(infile, strict=True, label_to_name=str):
-    """Parses a file with GDE label line
-
-    See Also
-    --------
-    fasta_parse
-
-    """
-    return fasta_parse(infile,
-                       strict,
-                       label_to_name,
-                       finder=GdeFinder,
-                       label_characters='%#')
-
-
-def xmfa_label_to_name(line):
-    """returns name from xmfa label."""
-    (loc, strand, contig) = line.split()
-    (sp, loc) = loc.split(':')
-    (lo, hi) = [int(x) for x in loc.split('-')]
-    if strand == '-':
-        (lo, hi) = (hi, lo)
-    else:
-        assert strand == '+'
-    name = '%s:%s:%s-%s' % (sp, contig, lo, hi)
-    return name
-
-
-def is_xmfa_blank_or_comment(x):
-    """Checks if x is blank or an XMFA comment line.
-
-    See Also
-    --------
-    fasta_parse
-
-    """
-
-    return (not x) or x.startswith('=') or x.isspace()
-
-XmfaFinder = LabeledRecordFinder(is_fasta_label,
-                                 ignore=is_xmfa_blank_or_comment)
-
-
-def xmfa_parse(infile, strict=True):
-    """Parses a file with xmfa label line"""
-    # Fasta-like but with header info like ">1:10-1000 + chr1"
-    return fasta_parse(infile,
-                       strict,
-                       label_to_name=xmfa_label_to_name,
-                       finder=XmfaFinder)
-
-
-def fastq_parse(data, strict=False):
+def parse_fastq(data, strict=False):
     r"""yields label, seq, and qual from a fastq file.
 
     Parameters
@@ -250,7 +190,7 @@ def fastq_parse(data, strict=False):
     We can use the following code:
 
     >>> from StringIO import StringIO
-    >>> from skbio.parse.sequences import fastq_parse
+    >>> from skbio.parse.sequences import parse_fastq
     >>> fastq_f = StringIO('@seq1\n'
     ...                     'AACACCAAACTTCTCCACCACGTGAGCTACAAAAG\n'
     ...                     '+\n'
@@ -259,7 +199,7 @@ def fastq_parse(data, strict=False):
     ...                     'TATGTATATATAACATATACATATATACATACATA\n'
     ...                     '+\n'
     ...                     ']KZ[PY]_[YY^```ac^\\\`bT``c`\\aT``bbb\n')
-    >>> for label, seq, qual in fastq_parse(fastq_f):
+    >>> for label, seq, qual in parse_fastq(fastq_f):
     ...     print label
     ...     print seq
     ...     print qual

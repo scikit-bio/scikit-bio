@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 
 #-----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -50,5 +51,5 @@ else:
 
 
 if __name__ == '__main__':
-    print title
-    print art
+    print(title)
+    print(art)

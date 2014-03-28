@@ -11,10 +11,16 @@ API Reference
 .. toctree::
    :maxdepth: 1
 
+   core.alignment
    core.sequence
    core.distance
    core.exception
+   core.tree
    draw.distributions
+   maths.stats.distance
    maths.stats.spatial
-   util.misc
+   maths.stats.ordination
+   maths.subsample
    parse.sequences
+   util.misc
+   util.trie

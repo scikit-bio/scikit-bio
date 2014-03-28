@@ -18,12 +18,21 @@ Exceptions
    RecordError
    FieldError
    BiologicalSequenceError
+   SequenceCollectionError
    DistanceMatrixError
    DistanceMatrixFormatError
    IDMismatchError
    MissingDataError
    MissingHeaderError
    MissingIDError
+   TreeError
+   NoLengthError
+   DuplicateNodeError
+   MissingNodeError
+   NoParentError
+   FileFormatError
+   RecordError
+   FastqParseError
 
 """
 from __future__ import division
@@ -53,6 +62,12 @@ class FieldError(RecordError):
 
 
 class BiologicalSequenceError(Exception):
+    """General error for biological sequence validation failures."""
+    pass
+
+
+class SequenceCollectionError(Exception):
+    """General error for sequence collection validation failures."""
     pass
 
 
@@ -114,5 +129,40 @@ class MissingDataError(Exception):
                                                                     actual),)
 
 
-class FastqParseError(Exception):
+class TreeError(Exception):
+    """General tree error"""
+    pass
+
+
+class NoLengthError(TreeError):
+    """Missing length when expected"""
+    pass
+
+
+class DuplicateNodeError(TreeError):
+    """Duplicate nodes with identical names"""
+    pass
+
+
+class MissingNodeError(TreeError):
+    """Expecting a node"""
+    pass
+
+
+class NoParentError(MissingNodeError):
+    """Missing a parent"""
+    pass
+
+
+class FileFormatError(Exception):
+    """Exception raised when a file can not be parsed."""
+    pass
+
+
+class RecordError(FileFormatError):
+    """Exception raised when a record is bad."""
+    pass
+
+
+class FastqParseError(FileFormatError):
     pass
