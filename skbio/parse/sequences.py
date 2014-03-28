@@ -30,7 +30,7 @@ Functions
 from skbio.core.exception import FastqParseError, RecordError
 from skbio.parse.record_finder import (LabeledRecordFinder,
                                        DelimitedRecordFinder)
-from skbio.core.sequence import Sequence
+from skbio.core.sequence import BiologicalSequence
 from skbio.core.alignment import (Alignment, SequenceCollection,
                                   SequenceCollectionError)
 from skbio.parse.clustal import ClustalParser
@@ -62,7 +62,7 @@ def is_rfam_structure_line(line):
     """Returns True if line is a structure line"""
     return line.startswith('#=GC SS_cons')
 
-def load_from_clustal(data, seq_constructor=Sequence, strict=True):
+def load_from_clustal(data, seq_constructor=BiologicalSequence, strict=True):
     recs = [(name, seq_constructor(seq, )) for name, seq in\
         ClustalParser(data, strict)]
     lengths = [len(i[1]) for i in recs]
@@ -240,10 +240,10 @@ def parse_fastq(data, strict=False):
     if type(data) == file:
         data.close()
 
-def ChangedSequence(data, seq_constructor=Sequence):
-    """Returns new Sequence object, replaces dots with dashes in sequence.
+def ChangedSequence(data, seq_constructor=BiologicalSequence):
+    """Returns new BiologicalSequence object, replaces dots with dashes in sequence.
     """
-    return seq_constructor(str(data).replace('.','-'))
+    return str(seq_constructor(str(data).replace('.','-')))
 
 def MinimalRfamParser(infile, strict=True, seq_constructor=ChangedSequence):
     """Yield successive sequences as (header, sequences, structure) tuples.
