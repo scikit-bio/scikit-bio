@@ -30,10 +30,17 @@ classifiers = [s.strip() for s in classes.split('\n') if s]
 
 long_description = """The scikit-bio project"""
 
-# Taken from http://read-the-docs.readthedocs.org/en/latest/faq.html
+# If readthedocs.org is building the project, we're not able to build the
+# required numpy/scipy versions on their machines (nor do we want to, as that
+# would take a long time). To build the docs, we don't need the latest versions
+# of these dependencies anyways, so we use whatever is in their system's
+# site-packages to make scikit-bio importable. See doc/rtd-requirements.txt for
+# dependencies that RTD must install in order to build our docs.
+#
+# Code to check whether RTD is building our project is taken from
+# http://read-the-docs.readthedocs.org/en/latest/faq.html
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 if on_rtd:
-    #install_requires = ['Sphinx >= 1.2.2', 'sphinx-bootstrap-theme']
     install_requires = []
 else:
     install_requires = ['numpy >= 1.5.1', 'matplotlib >= 1.1.0',
