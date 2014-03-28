@@ -36,7 +36,7 @@ if on_rtd:
     install_requires = ['Sphinx == 1.2.2', 'sphinx-bootstrap-theme']
 else:
     install_requires = ['numpy >= 1.5.1', 'matplotlib >= 1.1.0',
-                        'scipy >=0.13.0']
+                        'scipy >= 0.13.0']
 
 setup(name='scikit-bio',
       cmdclass={'build_py': build_py},
@@ -52,6 +52,6 @@ setup(name='scikit-bio',
       packages=find_packages(),
       install_requires=install_requires,
       extras_require={'test': ["nose >= 0.10.1", "pep8"],
-                      'doc': ["Sphinx >= 1.1", "sphinx-bootstrap-theme"]},
+                      'doc': ["Sphinx >= 1.2.2", "sphinx-bootstrap-theme"]},
       classifiers=classifiers
       )
