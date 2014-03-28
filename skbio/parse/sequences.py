@@ -32,7 +32,7 @@ from skbio.core.exception import FastqParseError, RecordError
 from skbio.parse.record_finder import (LabeledRecordFinder,
                                        DelimitedRecordFinder)
 from skbio.core.sequence import Sequence
-
+from skbio.parse.clustal import ClustalParser
 
 def is_fasta_label(x):
     """Checks if x looks like a FASTA label line."""
@@ -71,9 +71,9 @@ def load_from_clustal(data, seq_constructor=Sequence, strict=True):
         ClustalParser(data, strict)]
     lengths = [len(i[1]) for i in recs]
     if lengths and max(lengths) == min(lengths):
-        return Alignment(recs, MolType=BYTES)
+        return Alignment(recs)
     else:
-        return SequenceCollection(recs, MolType=BYTES)
+        return SequenceCollection(recs)
 
 def is_empty_or_html(line):
     """Return True for HTML line and empty (or whitespace only) line.
