@@ -33,7 +33,8 @@ long_description = """The scikit-bio project"""
 # Taken from http://read-the-docs.readthedocs.org/en/latest/faq.html
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 if on_rtd:
-    install_requires = ['Sphinx == 1.2.2', 'sphinx-bootstrap-theme']
+    #install_requires = ['Sphinx >= 1.2.2', 'sphinx-bootstrap-theme']
+    install_requires = []
 else:
     install_requires = ['numpy >= 1.5.1', 'matplotlib >= 1.1.0',
                         'scipy >= 0.13.0']
