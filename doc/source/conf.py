@@ -1,3 +1,4 @@
+import shutil
 import glob
 import sys
 import os
@@ -8,6 +9,13 @@ import skbio
 
 # NOTE: parts of this file were taken from scipy's doc/source/conf.py. See
 # scikit-bio/licenses/scipy.txt for scipy's license.
+
+on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+if on_rtd:
+    generated_path = os.path.join(os.path.dirname(__file__), 'generated')
+
+    if os.path.exists(generated_path):
+        shutil.rmtree(generated_path)
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
