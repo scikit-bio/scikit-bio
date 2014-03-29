@@ -295,15 +295,20 @@ class RfamParserTests(TestCase):
         ''.join(['CUCACAUCAGAUUUCCUGGUGUAACGAA-UUUUCAAGUGCUUCUUGCAUA',\
             'AGCAAGUUUGAUCCCGACCCGU--AGGGCCGGGAUUU'])}
 
-        structure = WussStructure(''.join(\
-        ['...<<<<<<<.....>>>>>>>....................<<<<<...',\
-        '.>>>>>....<<<<<<<<<<.....>>>>>>>>>>..']))
-        
+        structure = ('...<<<<<<<.....>>>>>>>....................<<<<<....>>>>>'
+                     '....<<<<<<<<<<.....>>>>>>>>>>..')
+
         data = []
         for r in MinimalRfamParser(self._fake_two_records, strict=False):
             data.append(r)
-        self.assertEqual(data[0],(headers,sequences,structure))
-        assert isinstance(data[0][1],Alignment)
+
+        # Format it like this so the actual sequence is a string of ACGTs
+        out_sequences = {e[0]: str(e[1]) for e in data[0][1].iteritems()}
+
+        self.assertEqual(data[0][0], headers)
+        self.assertEqual(out_sequences, sequences)
+        self.assertEqual(data[0][2], structure)
+        self.assertTrue(isinstance(data[0][1], Alignment))
 
         # This line tests that invalid entries are ignored when strict=False
         # Note, there are two records in self._fake_two_records, but 2nd is
