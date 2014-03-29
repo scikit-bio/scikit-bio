@@ -19,13 +19,13 @@ Functions
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 from skbio.core.exception import FastqParseError, RecordError
 from skbio.parse.record_finder import (LabeledRecordFinder,
@@ -35,6 +35,7 @@ from skbio.core.alignment import (Alignment, SequenceCollection,
                                   SequenceCollectionError)
 from skbio.parse.clustal import ClustalParser
 from skbio.core.sequence import DNA
+
 
 def is_fasta_label(x):
     """Checks if x looks like a FASTA label line."""
@@ -50,22 +51,26 @@ def is_blank(x):
     """Checks if x is blank."""
     return (not x) or x.isspace()
 
+
 def is_rfam_header_line(line):
     """Returns True if line is a header line"""
     return line.startswith('#=GF')
 
+
 def is_rfam_seq_line(line):
     """Returns True if line is a sequence line"""
     return bool(line) and (not line[0].isspace()) and \
-    (not line.startswith('#')) and (not line.startswith('//'))
+        (not line.startswith('#')) and (not line.startswith('//'))
+
 
 def is_rfam_structure_line(line):
     """Returns True if line is a structure line"""
     return line.startswith('#=GC SS_cons')
 
+
 def load_from_clustal(data, seq_constructor=BiologicalSequence, strict=True):
-    recs = [seq_constructor(seq, name) for name, seq in\
-        ClustalParser(data, strict)]
+    recs = [seq_constructor(seq, name) for name, seq in
+            ClustalParser(data, strict)]
     lengths = [len(i) for i in recs]
 
     if lengths and max(lengths) == min(lengths):
@@ -73,13 +78,14 @@ def load_from_clustal(data, seq_constructor=BiologicalSequence, strict=True):
     else:
         return SequenceCollection(recs)
 
+
 def is_empty_or_html(line):
     """Return True for HTML line and empty (or whitespace only) line.
 
     line -- string
 
     The Rfam adaptor that retrieves records inlcudes two HTML tags in
-    the record. These lines need to be ignored in addition to empty lines. 
+    the record. These lines need to be ignored in addition to empty lines.
     """
     if line.startswith('<pre') or line.startswith('</pre'):
         return True
@@ -239,19 +245,21 @@ def parse_fastq(data, strict=False):
         if record[0]:  # could be just an empty line at eof
             yield record[0][1:], record[1], record[3]
 
-    if type(data) == file:
+    if isinstance(data, file):
         data.close()
+
 
 def ChangedSequence(data, identifier="", description="",
                     seq_constructor=BiologicalSequence):
     """Returns new Sequence object, replacing dots with dashes in sequence
     """
-    return seq_constructor(sequence=str(data).replace('.','-'),
+    return seq_constructor(sequence=str(data).replace('.', '-'),
                            identifier=identifier, description=description)
+
 
 def MinimalRfamParser(infile, strict=True, seq_constructor=ChangedSequence):
     """Yield successive sequences as (header, sequences, structure) tuples.
-    
+
     header is a list of header lines
     sequences is an Alignment object. Sequences are objects keyed by the
         original labels in the database.
@@ -270,8 +278,8 @@ def MinimalRfamParser(infile, strict=True, seq_constructor=ChangedSequence):
                 structure.append(line)
             else:
                 continue
-        #sequence and structure are required. 
-        #for example when looking at the stockholm format of just one family
+        # sequence and structure are required.
+        # for example when looking at the stockholm format of just one family
         if not sequences or not structure:
             if strict:
                 error = 'Found record with missing element(s): '
@@ -279,24 +287,24 @@ def MinimalRfamParser(infile, strict=True, seq_constructor=ChangedSequence):
                     error += 'sequences '
                 if not structure:
                     error += 'structure '
-                raise RecordError, error
+                raise RecordError(error)
             else:
                 continue
-        #join all sequence parts together, construct label
+        # join all sequence parts together, construct label
         try:
             new_seqs = load_from_clustal(sequences, strict=strict,
                                          seq_constructor=seq_constructor)
             sequences = new_seqs
         except SequenceCollectionError as e:
             if strict:
-                raise RecordError, str(e)
+                raise RecordError(str(e))
             else:
                 continue
 
-        #construct the structure
+        # construct the structure
         try:
             res = load_from_clustal(structure, strict=strict)
-            assert res.sequence_count() == 1 #otherwise multiple keys
+            assert res.sequence_count() == 1  # otherwise multiple keys
             # the sequence with this identifier is the structureg
             structure = str(res.get_seq('#=GC SS_cons'))
         except (SequenceCollectionError, AssertionError, KeyError) as e:
@@ -306,4 +314,3 @@ def MinimalRfamParser(infile, strict=True, seq_constructor=ChangedSequence):
             else:
                 structure = None
         yield header, sequences, structure
-

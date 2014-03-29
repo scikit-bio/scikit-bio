@@ -1,4 +1,4 @@
-#/usr/bin/env python
+#!/usr/bin/env python
 """Parsers for Clustal and related formats (e.g. MUSCLE).
 
 Implementation Notes:
@@ -19,24 +19,26 @@ the number of chars in the sequence printed so far.
 """
 from __future__ import division
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 from skbio.core.exception import RecordError
 from skbio.parse.record import DelimitedSplitter
+
 from string import strip
+
 
 def LabelLineParser(record, splitter, strict=True):
     """Returns dict mapping list of data to labels, plus list with field order.
 
     Field order contains labels in order encountered in file.
 
-    NOTE: doesn't care if lines are out of order in different blocks. This 
+    NOTE: doesn't care if lines are out of order in different blocks. This
     should never happen anyway, but it's possible that this behavior should
     be changed to tighten up validation.
     """
@@ -47,11 +49,12 @@ def LabelLineParser(record, splitter, strict=True):
             key, val = splitter(line.rstrip())
         except:
             if strict:
-                raise RecordError, \
-                    "Failed to extract key and value from line %s" % line
+                raise RecordError(
+                    "Failed to extract key and value from line %s" %
+                    line)
             else:
-                continue    #just skip the line if not strict
-            
+                continue  # just skip the line if not strict
+
         if key in result:
             result[key].append(val)
         else:
@@ -59,8 +62,9 @@ def LabelLineParser(record, splitter, strict=True):
             labels.append(key)
     return result, labels
 
+
 def is_clustal_seq_line(line):
-    """Returns True if line starts with a non-blank character but not 'CLUSTAL'.
+    """Returns True if line starts with a non-blank character but not 'CLUSTAL'
 
     Useful for filtering other lines out of the file.
     """
@@ -69,10 +73,11 @@ def is_clustal_seq_line(line):
 
 last_space = DelimitedSplitter(None, -1)
 
+
 def delete_trailing_number(line):
     """Deletes trailing number from a line.
 
-    WARNING: does not preserve internal whitespace when a number is removed! 
+    WARNING: does not preserve internal whitespace when a number is removed!
     (converts each whitespace run to a single space). Returns the original
     line if it didn't end in a number.
     """
@@ -80,19 +85,20 @@ def delete_trailing_number(line):
     try:
         int(pieces[-1])
         return ' '.join(pieces[:-1])
-    except ValueError:  #no trailing numbers
+    except ValueError:  # no trailing numbers
         return line
+
 
 def MinimalClustalParser(record, strict=True):
     """Returns (data, label_order) tuple.
 
     Data is dict of label -> sequence (pieces not joined).
     """
-    return LabelLineParser(map(delete_trailing_number, \
-        filter(is_clustal_seq_line, record)), last_space, strict)
+    records = map(delete_trailing_number, filter(is_clustal_seq_line, record))
+    return LabelLineParser(records, last_space, strict)
+
 
 def ClustalParser(record, strict=True):
     seqs, labels = MinimalClustalParser(record, strict)
     for l in labels:
         yield l, ''.join(seqs[l])
-

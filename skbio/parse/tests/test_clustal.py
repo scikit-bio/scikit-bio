@@ -1,19 +1,19 @@
 #!/usr/bin/env python
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 from __future__ import division
-
-from unittest import TestCase, main
 
 from skbio.parse.clustal import (is_clustal_seq_line,
                                  last_space, delete_trailing_number,
                                  MinimalClustalParser)
 from skbio.core.exception import RecordError
+
+from unittest import TestCase, main
 
 
 class ClustalTests(TestCase):
