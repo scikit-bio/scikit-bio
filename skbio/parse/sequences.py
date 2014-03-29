@@ -64,14 +64,14 @@ def is_rfam_structure_line(line):
     return line.startswith('#=GC SS_cons')
 
 def load_from_clustal(data, seq_constructor=BiologicalSequence, strict=True):
-    recs = [(name, seq_constructor(seq)) for name, seq in\
+    recs = [seq_constructor(seq, name) for name, seq in\
         ClustalParser(data, strict)]
-    lengths = [len(i[1]) for i in recs]
+    lengths = [len(i) for i in recs]
 
     if lengths and max(lengths) == min(lengths):
-        return Alignment.from_fasta_records(recs, BiologicalSequence)
+        return Alignment(recs)
     else:
-        return SequenceCollection.from_fasta_records(recs, BiologicalSequence)
+        return SequenceCollection(recs)
 
 def is_empty_or_html(line):
     """Return True for HTML line and empty (or whitespace only) line.
@@ -242,10 +242,12 @@ def parse_fastq(data, strict=False):
     if type(data) == file:
         data.close()
 
-def ChangedSequence(data, seq_constructor=BiologicalSequence):
-    """Returns new BiologicalSequence object, replaces dots with dashes in sequence.
+def ChangedSequence(data, identifier="", description="",
+                    seq_constructor=BiologicalSequence):
+    """Returns new Sequence object, replacing dots with dashes in sequence
     """
-    return str(seq_constructor(str(data).replace('.','-')))
+    return seq_constructor(sequence=str(data).replace('.','-'),
+                           identifier=identifier, description=description)
 
 def MinimalRfamParser(infile, strict=True, seq_constructor=ChangedSequence):
     """Yield successive sequences as (header, sequences, structure) tuples.
@@ -295,11 +297,8 @@ def MinimalRfamParser(infile, strict=True, seq_constructor=ChangedSequence):
         try:
             res = load_from_clustal(structure, strict=strict)
             assert res.sequence_count() == 1 #otherwise multiple keys
-            # this is horrible but given from_fasta_records splits the is
-            # on blankspaces, SS_cons becomes part of the description
-            assert res.get_seq("#=GC").description == 'SS_cons'
-            # get the sequence string
-            structure = str(res.get_seq('#=GC'))
+            # the sequence with this identifier is the structureg
+            structure = str(res.get_seq('#=GC SS_cons'))
         except (SequenceCollectionError, AssertionError, KeyError) as e:
             if strict:
                 raise RecordError("Can't parse structure of family: %s" %

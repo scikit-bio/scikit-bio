@@ -333,7 +333,7 @@ class RfamParserTests(TestCase):
         s_out = 'AACA--CAU--CAGAUUUCCU--GGUGUAA-CGAA'
         sequence = ChangedSequence(s_in)
         
-        self.assertEqual(sequence, s_out)
+        self.assertEqual(sequence, BiologicalSequence(s_out))
 
         # test some extremes on the seq
         # sequence of all blanks
@@ -341,14 +341,14 @@ class RfamParserTests(TestCase):
         s_out = '-' * 5
         sequence = ChangedSequence(s_in)
 
-        self.assertEqual(sequence, s_out)
+        self.assertEqual(sequence, BiologicalSequence(s_out))
 
         # sequence of no blanks
         s_in = 'U' * 5
         s_out = 'U' * 5
         sequence = ChangedSequence(s_in)
 
-        self.assertEqual(sequence, s_out)
+        self.assertEqual(sequence, BiologicalSequence(s_out))
        
 
 # This is an altered version of some header info from Rfam.seed modified to
