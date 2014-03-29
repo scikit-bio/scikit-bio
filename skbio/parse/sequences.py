@@ -69,9 +69,9 @@ def load_from_clustal(data, seq_constructor=BiologicalSequence, strict=True):
     lengths = [len(i[1]) for i in recs]
 
     if lengths and max(lengths) == min(lengths):
-        return Alignment.from_fasta_records(recs, DNA)
+        return Alignment.from_fasta_records(recs, BiologicalSequence)
     else:
-        return SequenceCollection.from_fasta_records(recs, DNA)
+        return SequenceCollection.from_fasta_records(recs, BiologicalSequence)
 
 def is_empty_or_html(line):
     """Return True for HTML line and empty (or whitespace only) line.
