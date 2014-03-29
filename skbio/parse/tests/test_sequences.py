@@ -239,8 +239,14 @@ class RfamParserTests(TestCase):
 
         # strict = False
         # no header shouldn't be a problem
-        self.assertEqual(list(MinimalRfamParser(self._fake_record_no_headers,\
-            strict=False)), [([],{'Z11765.1/1-89':'GGUC'},'............>>>')])
+        res = list(MinimalRfamParser(self._fake_record_no_headers,
+                                     strict=False))
+        records = [BiologicalSequence('GGUC', 'Z11765.1/1-89')]
+        aln = Alignment(records)
+        self.assertEqual(res[0][0], [])
+        self.assertEqual(res[0][1], aln)
+        self.assertEqual(res[0][2], '............>>>')
+
         # should get empty on missing sequence or missing structure
         self.assertEqual(list(MinimalRfamParser(self._fake_record_no_sequences,\
             strict=False)), [])
@@ -279,17 +285,16 @@ class RfamParserTests(TestCase):
         # Some ugly constructions here, but this is what the output of
         # parsing fake_two_records should be
         headers = ['#=GF AC   RF00014','#=GF AU   Mifsud W']
-        sequences =\
-        {'U17136.1/898-984':\
-        ''.join(['AACACAUCAGAUUUCCUGGUGUAACGAAUUUUUUAAGUGCUUCUUGCUUA',\
-            'AGCAAGUUUCAUCCCGACCCCCUCAGGGUCGGGAUUU']),\
-        'M15749.1/155-239':\
-        ''.join(['AACGCAUCGGAUUUCCCGGUGUAACGAA-UUUUCAAGUGCUUCUUGCAUU',\
-            'AGCAAGUUUGAUCCCGACUCCUG-CGAGUCGGGAUUU']),\
-        'AF090431.1/222-139':\
-        ''.join(['CUCACAUCAGAUUUCCUGGUGUAACGAA-UUUUCAAGUGCUUCUUGCAUA',\
-            'AGCAAGUUUGAUCCCGACCCGU--AGGGCCGGGAUUU'])}
-
+        records = [BiologicalSequence('AACACAUCAGAUUUCCUGGUGUAACGAAUUUUUUAAGU'
+                                      'GCUUCUUGCUUAAGCAAGUUUCAUCCCGACCCCCUCAG'
+                                      'GGUCGGGAUUU', 'U17136.1/898-984'),
+                   BiologicalSequence('AACGCAUCGGAUUUCCCGGUGUAACGAA-UUUUCAAGU'
+                                      'GCUUCUUGCAUUAGCAAGUUUGAUCCCGACUCCUG-CG'
+                                      'AGUCGGGAUUU', 'M15749.1/155-239'),
+                   BiologicalSequence('CUCACAUCAGAUUUCCUGGUGUAACGAA-UUUUCAAGU'
+                                      'GCUUCUUGCAUAAGCAAGUUUGAUCCCGACCCGU--AG'
+                                      'GGCCGGGAUUU', 'AF090431.1/222-139')]
+        algn = Alignment(records)
         structure = ('...<<<<<<<.....>>>>>>>....................<<<<<....>>>>>'
                      '....<<<<<<<<<<.....>>>>>>>>>>..')
 
@@ -297,11 +302,8 @@ class RfamParserTests(TestCase):
         for r in MinimalRfamParser(self._fake_two_records, strict=False):
             data.append(r)
 
-        # Format it like this so the actual sequence is a string of ACGTs
-        out_sequences = {e[0]: str(e[1]) for e in data[0][1].iteritems()}
-
         self.assertEqual(data[0][0], headers)
-        self.assertEqual(out_sequences, sequences)
+        self.assertEqual(data[0][1], algn)
         self.assertEqual(data[0][2], structure)
         self.assertTrue(isinstance(data[0][1], Alignment))
 
