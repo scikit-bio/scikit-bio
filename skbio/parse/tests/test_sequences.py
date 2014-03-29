@@ -12,17 +12,12 @@ from __future__ import division
 from skbio.parse.sequences import (MinimalRfamParser, RfamFinder,
                                    ChangedSequence, is_empty_or_html,
                                    is_rfam_header_line, is_rfam_seq_line,
-                                   is_rfam_structure_line)
+                                   is_rfam_structure_line, parse_fastq,
+                                   parse_fasta)
 from skbio.core.alignment import Alignment
-
-
-#from cogent.struct.rna2d import WussStructure
-#from cogent.core.moltype import BYTES
-#Sequence = BYTES.Sequence
-
+from skbio.core.sequence import BiologicalSequence
 from skbio.core.exception import FastqParseError, RecordError
-from skbio.parse.sequences import parse_fastq
-from skbio.parse.sequences import parse_fasta
+
 from unittest import TestCase, main
 
 
