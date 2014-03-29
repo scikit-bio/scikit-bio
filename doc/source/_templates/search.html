@@ -1,6 +1,13 @@
 {% extends "!search.html" %}
 
-{# Taken and modified from sphinx-bootstrap-theme demo site (https://github.com/ryan-roemer/sphinx-bootstrap-theme/blob/master/demo/source/_templates/layout.html). #}
+{# Taken and modified from sphinx-bootstrap-theme demo site
+   (https://github.com/ryan-roemer/sphinx-bootstrap-theme/blob/master/demo/source/_templates/layout.html).
+
+   We override page.html and search.html instead of layout.html because RTD
+   uses its own layout.html, which currently can't be overridden. When
+   https://github.com/rtfd/readthedocs.org/issues/152 is fixed, this hack
+   should be removed. See also page.html, in this same directory.
+#}
 
 {# Add github banner (from: https://github.com/blog/273-github-ribbons). #}
 {% block header %}
