@@ -1338,7 +1338,10 @@ class TreeNode(object):
         find
 
         """
-        self._node_cache = {}
+        if not self.is_root():
+            self.root().invalidate_node_cache()
+        else:
+            self._node_cache = {}
 
     def create_node_cache(self):
         r"""Construct an internal lookup keyed by node name, valued by node
@@ -1358,18 +1361,20 @@ class TreeNode(object):
         find
 
         """
-        if self._node_cache:
-            return
+        if not self.is_root():
+            self.root().create_node_cache()
+        else:
+            if self._node_cache:
+                return
 
-        for node in self.traverse():
-            name = node.name
-            if name is None:
-                continue
+            for node in self.traverse():
+                name = node.name
+                if name is None:
+                    continue
 
-            if name in self._node_cache:
-                raise DuplicateNodeError("%s already exists!" % name)
-
-            self._node_cache[name] = node
+                if name in self._node_cache:
+                    raise DuplicateNodeError("%s already exists!" % name)
+                self._node_cache[name] = node
 
     def find(self, name):
         r"""Find a node by name
