@@ -16,7 +16,8 @@ from shutil import rmtree
 from tempfile import mkdtemp
 from uuid import uuid4
 
-from skbio.util.misc import safe_md5, remove_files, create_dir, flatten
+from skbio.util.misc import (safe_md5, remove_files, create_dir, flatten,
+                             unzip)
 
 
 class MiscTests(TestCase):
@@ -98,6 +99,19 @@ class MiscTests(TestCase):
         """flatten should remove one level of nesting from nested sequences"""
         self.assertEqual(flatten(['aa', 'bb', 'cc']), list('aabbcc'))
         self.assertEqual(flatten([1, [2, 3], [[4, [5]]]]), [1, 2, 3, [4, [5]]])
+
+    def test_unzip(self):
+        """unzip(items) should be the inverse of zip(*items)"""
+        chars = [list('abcde'), list('ghijk')]
+        numbers = [[1, 2, 3, 4, 5], [0, 0, 0, 0, 0]]
+        strings = [["abcde", "fghij", "klmno"], ['xxxxx'] * 3]
+
+        lists = [chars, numbers, strings]
+        zipped = [zip(*i) for i in lists]
+        unzipped = [unzip(i) for i in zipped]
+
+        for u, l in zip(unzipped, lists):
+            self.assertEqual(u, l)
 
 if __name__ == '__main__':
     main()
