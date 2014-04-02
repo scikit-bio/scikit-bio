@@ -1338,7 +1338,10 @@ class TreeNode(object):
         find
 
         """
-        self._node_cache = {}
+        if not self.is_root():
+            self.root().invalidate_node_cache()
+        else:
+            self._node_cache = {}
 
     def create_node_cache(self):
         r"""Construct an internal lookup keyed by node name, valued by node
@@ -1358,18 +1361,20 @@ class TreeNode(object):
         find
 
         """
-        if self._node_cache:
-            return
+        if not self.is_root():
+            self.root().create_node_cache()
+        else:
+            if self._node_cache:
+                return
 
-        for node in self.traverse():
-            name = node.name
-            if name is None:
-                continue
+            for node in self.traverse():
+                name = node.name
+                if name is None:
+                    continue
 
-            if name in self._node_cache:
-                raise DuplicateNodeError("%s already exists!" % name)
-
-            self._node_cache[name] = node
+                if name in self._node_cache:
+                    raise DuplicateNodeError("%s already exists!" % name)
+                self._node_cache[name] = node
 
     def find(self, name):
         r"""Find a node by name
@@ -1405,12 +1410,14 @@ class TreeNode(object):
         >>> print tree.find('c').name
         c
         """
+        root = self.root()
+
         # if what is being passed in looks like a node, just return it
-        if isinstance(name, self.__class__):
+        if isinstance(name, root.__class__):
             return name
 
-        self.create_node_cache()
-        node = self._node_cache.get(name, None)
+        root.create_node_cache()
+        node = root._node_cache.get(name, None)
 
         if node is None:
             raise MissingNodeError("Node %s is not in self" % name)
@@ -1419,6 +1426,8 @@ class TreeNode(object):
 
     def find_by_id(self, node_id):
         r"""Find a node by id
+
+        This search method is based from the root.
 
         Parameters
         ----------
@@ -1464,6 +1473,8 @@ class TreeNode(object):
 
     def find_by_func(self, func):
         r"""Find all nodes given a function
+
+        This search method is based on the current subtree, not the root.
 
         Parameters
         ----------
