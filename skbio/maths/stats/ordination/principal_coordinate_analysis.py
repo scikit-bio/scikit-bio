@@ -131,11 +131,10 @@ class PCoA(Ordination):
 
         coordinates = eigvecs * np.sqrt(eigvals)
 
-        abs_eigvals = np.abs(eigvals)
-        perc_expl = (abs_eigvals / abs_eigvals.sum()) * 100
+        perc_expl = (eigvals / eigvals.sum()) * 100
 
         # TODO: Improve OrdinationResults to better cope with PCoA
-        return OrdinationResults(eigvals=self.eigvals, species=coordinates,
+        return OrdinationResults(eigvals=eigvals, species=coordinates,
                                  perc_expl=perc_expl)
 
     @staticmethod
