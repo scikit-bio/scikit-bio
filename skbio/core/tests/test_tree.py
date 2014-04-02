@@ -226,6 +226,16 @@ class TreeTests(TestCase):
         with self.assertRaises(MissingNodeError):
             _ = t.find('does not exist')
 
+    def test_find_cache_bug(self):
+        """First implementation did not force the cache to be at the root"""
+        t = TreeNode.from_newick("((a,b)c,(d,e)f);")
+        tip_a = t.children[0].children[0]
+        tip_a.create_node_cache()
+        tip_e = tip_a.find('e')
+        self.assertEqual(tip_a._node_cache, {})
+        self.assertEqual(sorted(t._node_cache.keys()), ['a', 'b', 'c',
+                                                        'd', 'e', 'f'])
+
     def test_find_by_id(self):
         """Find a node by id"""
         t1 = TreeNode.from_newick("((,),(,,));")
