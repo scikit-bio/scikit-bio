@@ -123,3 +123,7 @@ class MissingDataError(Exception):
 
 class FastqParseError(Exception):
     pass
+
+
+class StockholmParseError(Exception):
+    pass

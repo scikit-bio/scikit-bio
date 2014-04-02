@@ -20,6 +20,7 @@ API Reference
    maths.stats.spatial
    maths.stats.ordination
    maths.subsample
+   format.stockholm
    parse.sequences
    util.misc
    util.trie
