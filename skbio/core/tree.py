@@ -574,7 +574,7 @@ class TreeNode(object):
         nodes_stack = [[root, self, len(self.children)]]
 
         while nodes_stack:
-            #check the top node, any children left unvisited?
+            # check the top node, any children left unvisited?
             top = nodes_stack[-1]
             new_top_node, old_top_node, unvisited_children = top
 
@@ -1104,19 +1104,19 @@ class TreeNode(object):
             #if there are children left, process them
             if curr_index < curr_children_len:
                 curr_child = curr_children[curr_index]
-                #if the current child has children, go there
+                # if the current child has children, go there
                 if curr_child.children:
                     child_index_stack.append(0)
                     curr = curr_child
                     curr_children = curr.children
                     curr_children_len = len(curr_children)
                     curr_index = 0
-                #otherwise, yield that child
+                # otherwise, yield that child
                 else:
                     yield curr_child
                     child_index_stack[-1] += 1
-            #if there are no children left, return self, and move to
-            #self's parent
+            # if there are no children left, return self, and move to
+            # self's parent
             else:
                 if include_self or (curr is not self):
                     yield curr
@@ -1163,7 +1163,7 @@ class TreeNode(object):
         c
         None
         """
-        #handle simple case first
+        # handle simple case first
         if not self.children:
             if include_self:
                 yield self
@@ -1176,21 +1176,21 @@ class TreeNode(object):
             if not curr_index:
                 if include_self or (curr is not self):
                     yield curr
-            #if there are children left, process them
+            # if there are children left, process them
             if curr_index < len(curr_children):
                 curr_child = curr_children[curr_index]
-                #if the current child has children, go there
+                # if the current child has children, go there
                 if curr_child.children:
                     child_index_stack.append(0)
                     curr = curr_child
                     curr_children = curr.children
                     curr_index = 0
-                #otherwise, yield that child
+                # otherwise, yield that child
                 else:
                     yield curr_child
                     child_index_stack[-1] += 1
-            #if there are no children left, return self, and move to
-            #self's parent
+            # if there are no children left, return self, and move to
+            # self's parent
             else:
                 if include_self or (curr is not self):
                     yield curr
@@ -1778,7 +1778,7 @@ class TreeNode(object):
         else:
             data = ''.join(lines)
 
-        #skip arb comment stuff if present: start at first paren
+        # skip arb comment stuff if present: start at first paren
         paren_index = data.find('(')
         data = data[paren_index:]
         left_count = data.count('(')
@@ -1795,9 +1795,9 @@ class TreeNode(object):
 
         for t in _dnd_tokenizer(data):
             if t == ':':
-                #expecting branch length
+                # expecting branch length
                 state = 'PostColon'
-                #prevent state reset
+                # prevent state reset
                 last_token = t
                 continue
             if t == ')' and last_token in ',(':
@@ -1809,13 +1809,13 @@ class TreeNode(object):
                 last_token = t
                 continue
             if t == ')':
-                #closing the current node
+                # closing the current node
                 curr_node = curr_node.parent
                 state1 = 'PostClosed'
                 last_token = t
                 continue
             if t == '(':
-                #opening a new node
+                # opening a new node
                 curr_node = _new_child(curr_node)
             elif t == ';':  # end of data
                 last_token = t
@@ -1905,7 +1905,7 @@ class TreeNode(object):
 
         while nodes_stack:
             node_count += 1
-            #check the top node, any children left unvisited?
+            # check the top node, any children left unvisited?
             top = nodes_stack[-1]
             top_node, num_unvisited_children = top
             if num_unvisited_children:  # has any child unvisited
@@ -1917,7 +1917,7 @@ class TreeNode(object):
                 nodes_stack.append([next_child, len(next_child.children)])
             else:  # no unvisited children
                 nodes_stack.pop()
-                #post-visit
+                # post-visit
                 if top_node.children:
                     result[-1] = ')'
 
@@ -2292,8 +2292,8 @@ class TreeNode(object):
         for node in self.postorder():
             if not node.children:
                 continue
-            ## subtree with solved child wedges
-            ### can possibly use np.zeros
+            # subtree with solved child wedges
+            # can possibly use np.zeros
             starts, stops = [], []  # to calc ._start and ._stop for curr node
             for child in node.children:
                 if child.length is None:
@@ -2496,7 +2496,7 @@ class TreeNode(object):
                 curr_index += 1
 
                 if c:
-                    #c has children itself, so need to add to result
+                    # c has children itself, so need to add to result
                     child_index.append((c._leaf_index,
                                         c.children[0]._leaf_index,
                                         c.children[-1]._leaf_index))
