@@ -461,6 +461,7 @@ class TestPCoAResultsExtensive(object):
         self.ordination = PCoA(dist_matrix)
 
     def test_values(self):
+        results = self.ordination.scores()
         expected = np.array([[-0.028597, 0.22903853, 0.07055272,
                               0.26163576, 0.28398669],
                              [0.37494056, 0.22334055, -0.20892914,
@@ -473,8 +474,15 @@ class TestPCoAResultsExtensive(object):
                               -0.06455635, -0.21141632],
                              [0.01727687, 0.012458, -0.07382761,
                               -0.42690292, 0.1695749]])
-        actual = self.ordination.scores().species
-        npt.assert_almost_equal(*normalize_signs(expected, actual))
+        npt.assert_almost_equal(*normalize_signs(expected, results.species))
+
+        expected = np.array([0.3984635, 0.36405689, 0.28804535, 0.27479983,
+                            0.19165361, 0.])
+        npt.assert_almost_equal(results.eigvals, expected)
+
+        expected = np.array([26.26621381, 23.99817314, 18.98758748,
+                             18.11445992, 12.63356565])
+        npt.assert_almost_equal(results.perc_expl, expected)
 
 
 class TestPCoAPrivateMethods(object):

@@ -14,15 +14,16 @@ from collections import namedtuple
 
 class OrdinationResults(namedtuple('OrdinationResults',
                                    ('eigvals', 'species', 'site', 'biplot',
-                                    'site_constraints'))):
+                                    'site_constraints', 'perc_expl'))):
     __slots__ = ()  # To avoid creating a dict, as a namedtuple
                     # doesn't have it
 
     def __new__(cls, eigvals, species, site=None, biplot=None,
-                site_constraints=None):
+                site_constraints=None, perc_expl=None):
         return super(OrdinationResults, cls).__new__(cls, eigvals, species,
                                                      site, biplot,
-                                                     site_constraints)
+                                                     site_constraints,
+                                                     perc_expl)
 
 
 class Ordination(object):
