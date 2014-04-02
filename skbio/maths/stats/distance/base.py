@@ -14,7 +14,7 @@ import csv
 
 import numpy as np
 
-from skbio.core.distance import SymmetricDistanceMatrix
+from skbio.core.distance import DistanceMatrix
 
 
 class CategoricalStats(object):
@@ -35,8 +35,8 @@ class CategoricalStats(object):
     test_statistic_name = ''
 
     def __init__(self, distance_matrix, grouping):
-        if not isinstance(distance_matrix, SymmetricDistanceMatrix):
-            raise TypeError("Input must be a SymmetricDistanceMatrix.")
+        if not isinstance(distance_matrix, DistanceMatrix):
+            raise TypeError("Input must be a DistanceMatrix.")
         if len(grouping) != distance_matrix.shape[0]:
             raise ValueError("Grouping vector size must match the number of "
                              "IDs in the distance matrix.")

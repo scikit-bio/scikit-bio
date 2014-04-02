@@ -19,7 +19,7 @@ from skbio.core.sequence import (BiologicalSequence, NucleotideSequence,
                                  DNASequence, RNASequence)
 from skbio.core.alignment import (SequenceCollection, Alignment)
 from skbio.core.exception import SequenceCollectionError
-from skbio.core.distance import SymmetricDistanceMatrix
+from skbio.core.distance import DistanceMatrix
 
 
 class SequenceCollectionTests(TestCase):
@@ -338,7 +338,7 @@ class AlignmentTests(TestCase):
         expected = [[0, 6./13, 4./13],
                     [6./13, 0, 7./13],
                     [4./13, 7./13, 0]]
-        expected = SymmetricDistanceMatrix(expected, ['d1', 'd2', 'd3'])
+        expected = DistanceMatrix(expected, ['d1', 'd2', 'd3'])
         actual = self.a1.distances()
         self.assertEqual(actual, expected)
 

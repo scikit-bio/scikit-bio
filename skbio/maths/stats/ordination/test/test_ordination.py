@@ -18,7 +18,7 @@ import numpy.testing as npt
 from scipy.spatial.distance import pdist
 
 from skbio.maths.stats.ordination import CA, RDA, CCA, PCoA
-from skbio.core.distance import SymmetricDistanceMatrix
+from skbio.core.distance import DistanceMatrix
 
 
 def get_data_path(fn):
@@ -426,8 +426,7 @@ class TestPCoAResults(object):
         """Sample data set from page 111 of W.J Krzanowski. Principles
         of multivariate analysis, 2000, Oxford University Press."""
         matrix = np.loadtxt(get_data_path('PCoA_sample_data'))
-        dist_matrix = SymmetricDistanceMatrix(matrix,
-                                              map(str, range(matrix.shape[0])))
+        dist_matrix = DistanceMatrix(matrix, map(str, range(matrix.shape[0])))
         self.dist_matrix = dist_matrix
 
     def test_negative_eigenvalue_warning(self):
@@ -456,8 +455,7 @@ class TestPCoAResults(object):
 class TestPCoAResultsExtensive(object):
     def setup(self):
         matrix = np.loadtxt(get_data_path('PCoA_sample_data_2'))
-        dist_matrix = SymmetricDistanceMatrix(matrix,
-                                              map(str, range(matrix.shape[0])))
+        dist_matrix = DistanceMatrix(matrix, map(str, range(matrix.shape[0])))
         self.ordination = PCoA(dist_matrix)
 
     def test_values(self):

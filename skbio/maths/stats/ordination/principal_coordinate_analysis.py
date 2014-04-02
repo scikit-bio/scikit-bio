@@ -13,7 +13,7 @@ import warnings
 import numpy as np
 
 from .base import Ordination, OrdinationResults
-from skbio.core.distance import SymmetricDistanceMatrix
+from skbio.core.distance import DistanceMatrix
 
 # - In cogent, after computing eigenvalues/vectors, the imaginary part
 #   is dropped, if any. We know for a fact that the eigenvalues are
@@ -49,7 +49,7 @@ class PCoA(Ordination):
 
     Parameters
     ==========
-    distance_matrix : SymmetricDistanceMatrix
+    distance_matrix : DistanceMatrix
         A distance matrix.
 
     Notes
@@ -73,10 +73,10 @@ class PCoA(Ordination):
     long_method_name = 'Principal Coordinate Analysis'
 
     def __init__(self, distance_matrix):
-        if isinstance(distance_matrix, SymmetricDistanceMatrix):
+        if isinstance(distance_matrix, DistanceMatrix):
             self.dm = np.asarray(distance_matrix.data, dtype=np.float64)
         else:
-            raise TypeError("Input must be a SymmetricDistanceMatrix.")
+            raise TypeError("Input must be a DistanceMatrix.")
         self._pcoa()
 
     def _pcoa(self):

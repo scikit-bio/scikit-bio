@@ -66,7 +66,7 @@ import numpy as np
 from scipy.stats import entropy
 
 from skbio.core.exception import SequenceCollectionError
-from skbio.core.distance import SymmetricDistanceMatrix
+from skbio.core.distance import DistanceMatrix
 
 
 class SequenceCollection(object):
@@ -742,7 +742,7 @@ class Alignment(SequenceCollection):
 
         Returns
         -------
-        skbio.core.distance.SymmetricDistanceMatrix
+        skbio.core.distance.DistanceMatrix
             Matrix containing the distances between all pairs of sequences.
 
         Raises
@@ -785,7 +785,7 @@ class Alignment(SequenceCollection):
             identifiers.append(self_i.identifier)
             for j in xrange(i):
                 dm[i, j] = dm[j, i] = self_i.distance(self[j])
-        return SymmetricDistanceMatrix(dm, identifiers)
+        return DistanceMatrix(dm, identifiers)
 
     def subalignment(self, seqs_to_keep=None, positions_to_keep=None,
                      invert_seqs_to_keep=False,

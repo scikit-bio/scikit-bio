@@ -65,7 +65,7 @@ Load a distance matrix from the file:
 ...                 "c\t1.0\t0.75\t0.0\n")
 >>> dm = DistanceMatrix.from_file(dm_f)
 >>> print dm
-3x3 dissimilarity matrix
+3x3 distance matrix
 IDs:
 a, b, c
 Data:
@@ -107,7 +107,7 @@ A distance matrix object can also be created from an existing ``numpy.array``
 >>> ids = ["a", "b", "c"]
 >>> dm_from_np = DistanceMatrix(data, ids)
 >>> print dm_from_np
-3x3 dissimilarity matrix
+3x3 distance matrix
 IDs:
 a, b, c
 Data:
@@ -191,6 +191,9 @@ class DissimilarityMatrix(object):
     .. [1] http://docs.scipy.org/doc/scipy/reference/spatial.distance.html
 
     """
+
+    # Used in __str__
+    _matrix_element_name = 'dissimilarity'
 
     @classmethod
     def from_file(cls, dm_f, delimiter='\t'):
@@ -452,8 +455,8 @@ class DissimilarityMatrix(object):
         .. shownumpydoc
 
         """
-        return '%dx%d dissimilarity matrix\nIDs:\n%s\nData:\n' % (
-            self.shape[0], self.shape[1],
+        return '%dx%d %s matrix\nIDs:\n%s\nData:\n' % (
+            self.shape[0], self.shape[1], self._matrix_element_name,
             self._pprint_ids()) + str(self.data)
 
     def __eq__(self, other):
@@ -721,6 +724,9 @@ class DistanceMatrix(DissimilarityMatrix):
     .. [2] http://en.wikipedia.org/wiki/Metric_(mathematics)
 
     """
+
+    # Override here, used in superclass __str__
+    _matrix_element_name = 'distance'
 
     def condensed_form(self):
         """Return an array of distances in condensed format.
