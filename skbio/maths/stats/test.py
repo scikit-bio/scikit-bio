@@ -735,7 +735,6 @@ def ANOVA_one_way(a):
     An F value is first calculated as the variance of the group means
     divided by the mean of the within-group variances.
     """
-    #a = array(a)
     group_means = []
     group_variances = []
     num_cases = 0  # total observations in all groups

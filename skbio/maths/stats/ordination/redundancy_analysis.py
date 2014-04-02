@@ -83,9 +83,9 @@ class RDA(Ordination):
         # (11.4) B = [X' X]^{-1} X' Y
         #          = R^{-1} R'^{-1} R' Q' Y
         #          = R^{-1} Q'
-        #Q, R = np.linalg.qr(X)
-        #Y_hat = Q.dot(Q.T).dot(Y)
-        #B = scipy.linalg.solve_triangular(R, Q.T.dot(Y))
+        # Q, R = np.linalg.qr(X)
+        # Y_hat = Q.dot(Q.T).dot(Y)
+        # B = scipy.linalg.solve_triangular(R, Q.T.dot(Y))
         # This works provided X has full rank. When not, you can still
         # fix it using R's pseudoinverse or partitioning R. To avoid any
         # issues, like the numerical instability when trying to
@@ -116,7 +116,7 @@ class RDA(Ordination):
         Z = Y_hat.dot(U)
 
         # Canonical coefficients (formula 11.14)
-        #C = B.dot(U)  # Not used
+        # C = B.dot(U)  # Not used
 
         Y_res = Y - Y_hat
         # PCA on the residuals
@@ -185,7 +185,7 @@ class RDA(Ordination):
         # The "Correlations of environmental variables with site
         # scores" from table 11.4 are quite similar to vegan's biplot
         # scores, but they're computed like this:
-        #corr(self.X, self.F))
+        # corr(self.X, self.F))
         return OrdinationResults(eigvals=eigvals,
                                  species=species_scores,
                                  site=site_scores,
