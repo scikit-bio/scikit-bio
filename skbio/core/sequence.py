@@ -807,7 +807,7 @@ class BiologicalSequence(Sequence):
         """
         all_supported = self.alphabet() | self.gap_alphabet()
         for e in self:
-            if not e in all_supported:
+            if e not in all_supported:
                 return True
         return False
 

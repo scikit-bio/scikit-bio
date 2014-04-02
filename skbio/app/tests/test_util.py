@@ -1125,7 +1125,7 @@ def teardown_module():
     rmdir('/tmp/blah')
 
 
-#=====================END OF TESTS===================================
+# =====================END OF TESTS==================================
 
 script = """#!/usr/bin/env python
 #This is a test script intended to test the CommandLineApplication

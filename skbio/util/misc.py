@@ -177,7 +177,7 @@ def create_dir(dir_name, fail_on_exist=False, handle_errors_externally=False):
 
     if exists(dir_name):
         if isdir(dir_name):
-            #dir is there
+            # dir is there
             if fail_on_exist:
                 return ror(error_code_lookup['DIR_EXISTS'])
             else:

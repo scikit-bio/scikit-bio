@@ -887,7 +887,7 @@ class Alignment(SequenceCollection):
                 # keep only positions that were not listed in
                 # positions_to_keep
                 def keep_position(pos):
-                    return not pos in positions_to_keep
+                    return pos not in positions_to_keep
             # else if invert_positions_to_keep is False
             else:
                 # keep only sequences that were listed in positions_to_keep

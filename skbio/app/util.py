@@ -222,13 +222,7 @@ class CommandLineApplication(Application):
         self.TmpDir = FilePath(TmpDir)
         self.TmpNameLen = TmpNameLen
         self.HaltExec = HALT_EXEC
-        #===========================
-        # try:
-        #    mkdir(self.WorkingDir)
-        # except OSError:
-            # Directory already exists
-        #    pass
-        #===========================
+
         # create a variable to hold the name of the file being used as
         # input to the application. this is important especially when
         # you are using an input handler which creates a temporary file
