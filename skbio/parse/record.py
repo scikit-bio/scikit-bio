@@ -93,7 +93,7 @@ class GenericRecord(dict):
         dict.__init__(temp, *args, **kwargs)
         self.update(temp)
         for name, prototype in self.Required.iteritems():
-            if not name in self:
+            if name not in self:
                 self[name] = deepcopy(prototype)
 
     def __delitem__(self, item):
@@ -170,7 +170,7 @@ class MappedRecord(GenericRecord):
             self[unalias(key)] = val
         for name, prototype in self.Required.iteritems():
             new_name = unalias(name)
-            if not new_name in self:
+            if new_name not in self:
                 self[new_name] = self._copy(prototype)
 
     def unalias(self, key):
