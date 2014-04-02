@@ -1,4 +1,4 @@
-#1!/usr/bin/env python
+#!/usr/bin/env python
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -15,9 +15,8 @@ from collections import Counter, defaultdict
 
 import numpy as np
 
-from skbio.core.sequence import (BiologicalSequence, NucleotideSequence,
-                                 DNASequence, RNASequence)
-from skbio.core.alignment import (SequenceCollection, Alignment)
+from skbio.core.sequence import NucleotideSequence, DNASequence, RNASequence
+from skbio.core.alignment import SequenceCollection, Alignment
 from skbio.core.exception import SequenceCollectionError
 from skbio.core.distance import SymmetricDistanceMatrix
 
