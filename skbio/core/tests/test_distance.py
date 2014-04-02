@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-"""Unit tests for the skbio.core.distance module."""
 from __future__ import division
 
 #-----------------------------------------------------------------------------
