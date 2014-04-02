@@ -33,7 +33,7 @@ from skbio.parse.record import DelimitedSplitter
 from string import strip
 
 
-def LabelLineParser(record, splitter, strict=True):
+def label_line_parser(record, splitter, strict=True):
     """Returns dict mapping list of data to labels, plus list with field order.
 
     Field order contains labels in order encountered in file.
@@ -89,16 +89,11 @@ def delete_trailing_number(line):
         return line
 
 
-def MinimalClustalParser(record, strict=True):
+def parse_clustal(record, strict=True):
     """Returns (data, label_order) tuple.
 
     Data is dict of label -> sequence (pieces not joined).
     """
     records = map(delete_trailing_number, filter(is_clustal_seq_line, record))
-    return LabelLineParser(records, last_space, strict)
+    return label_line_parser(records, last_space, strict)
 
-
-def ClustalParser(record, strict=True):
-    seqs, labels = MinimalClustalParser(record, strict)
-    for l in labels:
-        yield l, ''.join(seqs[l])
