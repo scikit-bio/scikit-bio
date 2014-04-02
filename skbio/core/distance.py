@@ -7,26 +7,26 @@ Dissimilarity and distance matrices (:mod:`skbio.core.distance`)
 
 This module provides functionality for serializing, deserializing, and
 manipulating dissimilarity and distance matrices in memory. There are two
-matrix classes available, ``DissimilarityMatrix`` and ``DistanceMatrix``.
+matrix classes available, `DissimilarityMatrix` and `DistanceMatrix`.
 Both classes can store measures of difference/distinction between objects. A
 dissimilarity/distance matrix includes both a matrix of
 dissimilarities/distances (floats) between objects, as well as unique IDs
 (object labels; strings) identifying each object in the matrix.
 
-``DissimilarityMatrix`` can be used to store measures of dissimilarity between
+`DissimilarityMatrix` can be used to store measures of dissimilarity between
 objects, and does not require that the dissimilarities are symmetric (e.g.,
 dissimilarities obtained using the UniFrac Gain metric).
-``DissimilarityMatrix`` is a more general container to store differences than
-``DistanceMatrix``.
+`DissimilarityMatrix` is a more general container to store differences than
+`DistanceMatrix`.
 
-``DistanceMatrix`` has the additional requirement that the differences it
+`DistanceMatrix` has the additional requirement that the differences it
 stores are symmetric (e.g., Euclidean or Hamming distances).
 
-.. note:: ``DissimilarityMatrix`` can be used to store distances, but it is
-recommended to use ``DistanceMatrix`` to store this type of data as it provides
-an additional check for symmetry. A distance matrix *is a* dissimilarity
-matrix; this is modeled in the class design by having ``DistanceMatrix`` be a
-subclass of ``DissimilarityMatrix``.
+.. note:: `DissimilarityMatrix` can be used to store distances, but it is
+   recommended to use `DistanceMatrix` to store this type of data as it
+   provides an additional check for symmetry. A distance matrix is a
+   dissimilarity matrix; this is modeled in the class design by having
+   `DistanceMatrix` as a subclass of `DissimilarityMatrix`.
 
 Classes
 -------
@@ -721,7 +721,7 @@ class DistanceMatrix(DissimilarityMatrix):
     References
     ----------
     .. [1] http://docs.scipy.org/doc/scipy/reference/spatial.distance.html
-    .. [2] http://en.wikipedia.org/wiki/Metric_(mathematics)
+    .. [2] http://planetmath.org/metricspace
 
     """
 
