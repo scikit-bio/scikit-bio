@@ -65,7 +65,7 @@ Load a distance matrix from the file:
 ...                 "c\t1.0\t0.75\t0.0\n")
 >>> dm = DistanceMatrix.from_file(dm_f)
 >>> print dm
-3x3 distance matrix
+3x3 dissimilarity matrix
 IDs:
 a, b, c
 Data:
@@ -107,7 +107,7 @@ A distance matrix object can also be created from an existing ``numpy.array``
 >>> ids = ["a", "b", "c"]
 >>> dm_from_np = DistanceMatrix(data, ids)
 >>> print dm_from_np
-3x3 distance matrix
+3x3 dissimilarity matrix
 IDs:
 a, b, c
 Data:
