@@ -1,24 +1,4 @@
 #!/usr/bin/env python
-r"""
-Parse biological sequences (:mod:`skbio.parse.sequences`)
-=========================================================
-
-.. currentmodule:: skbio.parse.sequences
-
-This module provides functions for parsing sequence files.
-
-Functions
----------
-
-.. autosummary::
-   :toctree: generated/
-
-    parse_fasta
-    parse_fastq
-
-
-"""
-
 # -----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -26,15 +6,10 @@ Functions
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # -----------------------------------------------------------------------------
+from __future__ import division
 
-from skbio.core.exception import FastqParseError, RecordError
-from skbio.parse.record_finder import (LabeledRecordFinder,
-                                       DelimitedRecordFinder)
-from skbio.core.sequence import BiologicalSequence
-from skbio.core.alignment import (Alignment, SequenceCollection,
-                                  SequenceCollectionError)
-from skbio.parse.clustal import ClustalParser
-from skbio.core.sequence import DNA
+from skbio.core.exception import RecordError
+from skbio.parse.record_finder import LabeledRecordFinder
 
 
 def is_fasta_label(x):
@@ -52,56 +27,10 @@ def is_blank(x):
     return (not x) or x.isspace()
 
 
-def is_rfam_header_line(line):
-    """Returns True if line is a header line"""
-    return line.startswith('#=GF')
-
-
-def is_rfam_seq_line(line):
-    """Returns True if line is a sequence line"""
-    return bool(line) and (not line[0].isspace()) and \
-        (not line.startswith('#')) and (not line.startswith('//'))
-
-
-def is_rfam_structure_line(line):
-    """Returns True if line is a structure line"""
-    return line.startswith('#=GC SS_cons')
-
-
-def load_from_clustal(data, seq_constructor=BiologicalSequence, strict=True):
-    recs = [seq_constructor(seq, name) for name, seq in
-            ClustalParser(data, strict)]
-    lengths = [len(i) for i in recs]
-
-    if lengths and max(lengths) == min(lengths):
-        return Alignment(recs)
-    else:
-        return SequenceCollection(recs)
-
-
-def is_empty_or_html(line):
-    """Return True for HTML line and empty (or whitespace only) line.
-
-    line -- string
-
-    The Rfam adaptor that retrieves records inlcudes two HTML tags in
-    the record. These lines need to be ignored in addition to empty lines.
-    """
-    if line.startswith('<pre') or line.startswith('</pre'):
-        return True
-    return (not line) or line.isspace()
-
-
 FastaFinder = LabeledRecordFinder(is_fasta_label, ignore=is_blank_or_comment)
-RfamFinder = DelimitedRecordFinder('//', ignore=is_empty_or_html)
 
-
-def parse_fasta(infile,
-                strict=True,
-                label_to_name=str,
-                finder=FastaFinder,
-                is_label=None,
-                label_characters='>'):
+def parse_fasta(infile, strict=True, label_to_name=str, finder=FastaFinder,
+                is_label=None, label_characters='>'):
     r"""yields label and seq from a fasta file.
 
 
@@ -166,151 +95,3 @@ def parse_fasta(infile,
 
         yield label, seq
 
-
-def parse_fastq(data, strict=False):
-    r"""yields label, seq, and qual from a fastq file.
-
-    Parameters
-    ----------
-    data : open file object
-        An open fastq file.
-
-    strict : bool
-        If strict is true a FastqParse error will be raised if the seq and qual
-        labels dont' match.
-
-    Returns
-    -------
-    label, seq, qual : string
-        yields the label, sequence and quality for each entry
-
-    Examples
-    --------
-    Assume we have a fastq formatted file with the following contents::
-
-        @seq1
-        AACACCAAACTTCTCCACCACGTGAGCTACAAAAG
-        +
-        ````Y^T]`]c^cabcacc`^Lb^ccYT\T\Y\WF
-        @seq2
-        TATGTATATATAACATATACATATATACATACATA
-        +
-        ]KZ[PY]_[YY^```ac^\\`bT``c`\aT``bbb
-
-    We can use the following code:
-
-    >>> from StringIO import StringIO
-    >>> from skbio.parse.sequences import parse_fastq
-    >>> fastq_f = StringIO('@seq1\n'
-    ...                     'AACACCAAACTTCTCCACCACGTGAGCTACAAAAG\n'
-    ...                     '+\n'
-    ...                     '````Y^T]`]c^cabcacc`^Lb^ccYT\T\Y\WF\n'
-    ...                     '@seq2\n'
-    ...                     'TATGTATATATAACATATACATATATACATACATA\n'
-    ...                     '+\n'
-    ...                     ']KZ[PY]_[YY^```ac^\\\`bT``c`\\aT``bbb\n')
-    >>> for label, seq, qual in parse_fastq(fastq_f):
-    ...     print label
-    ...     print seq
-    ...     print qual
-    seq1
-    AACACCAAACTTCTCCACCACGTGAGCTACAAAAG
-    ````Y^T]`]c^cabcacc`^Lb^ccYT\T\Y\WF
-    seq2
-    TATGTATATATAACATATACATATATACATACATA
-    ]KZ[PY]_[YY^```ac^\\`bT``c`\aT``bbb
-
-    """
-    # fastq format is very simple, defined by blocks of 4 lines
-    line_num = -1
-    record = []
-    for line in data:
-        line_num += 1
-        if line_num == 4:
-            if strict:  # make sure the seq and qual labels match
-                if record[0][1:] != record[2][1:]:
-                    raise FastqParseError('Invalid format: %s -- %s'
-                                          % (record[0][1:], record[2][1:]))
-            yield record[0][1:], record[1], record[3]
-            line_num = 0
-            record = []
-        record.append(line.strip())
-
-    if record:
-        if strict and record[0]:  # make sure the seq and qual labels match
-            if record[0][1:] != record[2][1:]:
-                raise FastqParseError('Invalid format: %s -- %s'
-                                      % (record[0][1:], record[2][1:]))
-
-        if record[0]:  # could be just an empty line at eof
-            yield record[0][1:], record[1], record[3]
-
-    if isinstance(data, file):
-        data.close()
-
-
-def ChangedSequence(data, identifier="", description="",
-                    seq_constructor=BiologicalSequence):
-    """Returns new Sequence object, replacing dots with dashes in sequence
-    """
-    return seq_constructor(sequence=str(data).replace('.', '-'),
-                           identifier=identifier, description=description)
-
-
-def MinimalRfamParser(infile, strict=True, seq_constructor=ChangedSequence):
-    """Yield successive sequences as (header, sequences, structure) tuples.
-
-    header is a list of header lines
-    sequences is an Alignment object. Sequences are objects keyed by the
-        original labels in the database.
-    structure is a WussStructure
-    """
-    for record in RfamFinder(infile):
-        header = []
-        sequences = []
-        structure = []
-        for line in record:
-            if is_rfam_header_line(line):
-                header.append(line.strip())
-            elif is_rfam_seq_line(line):
-                sequences.append(line)
-            elif is_rfam_structure_line(line):
-                structure.append(line)
-            else:
-                continue
-        # sequence and structure are required.
-        # for example when looking at the stockholm format of just one family
-        if not sequences or not structure:
-            if strict:
-                error = 'Found record with missing element(s): '
-                if not sequences:
-                    error += 'sequences '
-                if not structure:
-                    error += 'structure '
-                raise RecordError(error)
-            else:
-                continue
-        # join all sequence parts together, construct label
-        try:
-            new_seqs = load_from_clustal(sequences, strict=strict,
-                                         seq_constructor=seq_constructor)
-            sequences = new_seqs
-        except SequenceCollectionError as e:
-            if strict:
-                raise RecordError(str(e))
-            else:
-                continue
-
-        # construct the structure
-        try:
-            res = load_from_clustal(structure, strict=strict)
-            assert res.sequence_count() == 1  # otherwise multiple keys
-            # the sequence with this identifier is the structureg
-            structure = str(res.get_seq('#=GC SS_cons'))
-        except (SequenceCollectionError, AssertionError, KeyError) as e:
-            if strict:
-                raise RecordError("Can't parse structure of family: %s" %
-                                  str(header))
-            else:
-                structure = None
-        yield header, sequences, structure
