@@ -14,9 +14,9 @@ Classes
 -------
 
 .. autosummary::
-    :toctree: generated/
+   :toctree: generated/
 
-    Workflow
+   Workflow
 
 Examples
 --------
@@ -75,10 +75,8 @@ exciting on success.
 
 >>> def success_f(obj):
 ...     return "SUCCESS: %s" % obj.state
-...
 >>> def fail_f(obj):
 ...     return "FAIL: %s" % obj.state
-...
 
 Now, lets process some data!
 
@@ -96,8 +94,8 @@ which is expected as it matched our nucleotide pattern of interest. Finally,
 of the sequences we processed, only a single sequence failed.
 
 To assist in constructing workflows, debug information is available but it
-must be turned on at instantiation. Lets do that, and while we're at it, lets
-go ahead and enable the reversal method. This time through though, we're going
+must be turned on at instantiation. Lets do that, and while were at it, lets
+go ahead and enable the reversal method. This time through though, were going
 to walk through an item at a time so we can examine the debug information.
 
 >>> wf = SequenceProcessor(state=None, options={'reverse':True}, debug=True)
