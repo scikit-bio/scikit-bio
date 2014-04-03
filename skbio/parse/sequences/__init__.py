@@ -33,4 +33,3 @@ from .fasta import parse_fasta
 from .fastq import parse_fastq
 
 __all__ = ['parse_clustal', 'parse_fasta', 'parse_fastq']
-

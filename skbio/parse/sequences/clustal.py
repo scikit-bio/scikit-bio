@@ -96,4 +96,3 @@ def parse_clustal(record, strict=True):
     """
     records = map(delete_trailing_number, filter(is_clustal_seq_line, record))
     return label_line_parser(records, last_space, strict)
-

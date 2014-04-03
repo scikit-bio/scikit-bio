@@ -91,4 +91,3 @@ def parse_fastq(data, strict=False):
 
     if isinstance(data, file):
         data.close()
-

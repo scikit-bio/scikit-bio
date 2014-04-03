@@ -29,6 +29,7 @@ def is_blank(x):
 
 FastaFinder = LabeledRecordFinder(is_fasta_label, ignore=is_blank_or_comment)
 
+
 def parse_fasta(infile, strict=True, label_to_name=str, finder=FastaFinder,
                 is_label=None, label_characters='>'):
     r"""yields label and seq from a fasta file.
@@ -94,4 +95,3 @@ def parse_fasta(infile, strict=True, label_to_name=str, finder=FastaFinder,
         seq = ''.join(rec[1:])
 
         yield label, seq
-
