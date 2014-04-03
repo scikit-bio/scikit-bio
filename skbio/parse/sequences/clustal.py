@@ -1,22 +1,4 @@
 #!/usr/bin/env python
-"""Parsers for Clustal and related formats (e.g. MUSCLE).
-
-Implementation Notes:
-
-Currently, does not check whether sequences are the same length and are in
-order. Skips any line that starts with a blank.
-
-ClustalParser preserves the order of the sequences from the original file.
-However, it does use a dict as an intermediate, so two sequences can't have
-the same label. This is probably OK since Clustal will refuse to run on a
-FASTA file in which two sequences have the same label, but could potentially
-cause trouble with manually edited files (all the segments of the conflicting
-sequences would be interleaved, possibly in an unpredictable way).
-
-If the lines have trailing numbers (i.e. Clustal was run with -LINENOS=ON),
-silently deletes them. Does not check that the numbers actually correspond to
-the number of chars in the sequence printed so far.
-"""
 from __future__ import division
 
 # -----------------------------------------------------------------------------
@@ -90,9 +72,47 @@ def delete_trailing_number(line):
 
 
 def parse_clustal(record, strict=True):
-    """Returns (data, label_order) tuple.
+    """Yields data and labels
 
-    Data is dict of label -> sequence (pieces not joined).
+    Parameters
+    ----------
+
+    data : open file object
+        An open Clustal file.
+
+
+    strict : boolean
+        Whether or not to raise a ``RecordError`` when no labels are found.
+
+
+    Returns
+    -------
+
+    data : dict
+        a dict of label -> sequence (pieces not joined)
+
+    Notes
+    -----
+
+    Currently, does not check whether sequences are the same length and are in
+    order. Skips any line that starts with a blank.
+
+    ``parse_clustal`` preserves the order of the sequences from the original
+    file.  However, it does use a dict as an intermediate, so two sequences
+    can't have the same label. This is probably OK since Clustal will refuse to
+    run on a FASTA file in which two sequences have the same label, but could
+    potentially cause trouble with manually edited files (all the segments of
+    the conflicting sequences would be interleaved, possibly in an
+    unpredictable way).
+
+    If the lines have trailing numbers (i.e. Clustal was run with
+    `-LINENOS=ON`), silently deletes them. Does not check that the numbers
+    actually correspond to the number of chars in the sequence printed so far.
+
+    References
+    ----------
+    .. [1] Clustal: Multiple Sequence Alginment http://www.clustal.org
+
     """
     records = map(delete_trailing_number, filter(is_clustal_seq_line, record))
     return label_line_parser(records, last_space, strict)
