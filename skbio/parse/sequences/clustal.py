@@ -72,7 +72,7 @@ def delete_trailing_number(line):
 
 
 def parse_clustal(record, strict=True):
-    """Yields data and labels
+    r"""Returns a dictionary of the parsed data
 
     Parameters
     ----------
@@ -88,8 +88,11 @@ def parse_clustal(record, strict=True):
     Returns
     -------
 
+    labels: list
+        list of strings with the labels
+
     data : dict
-        a dict of label -> sequence (pieces not joined)
+        a dict of label to sequence (pieces not joined)
 
     Notes
     -----
@@ -109,8 +112,48 @@ def parse_clustal(record, strict=True):
     `-LINENOS=ON`), silently deletes them. Does not check that the numbers
     actually correspond to the number of chars in the sequence printed so far.
 
+
+    Examples
+    --------
+    Assume we have a fasta formatted file with the following contents::
+
+        CLUSTAL W (1.82) multiple sequence alignment
+
+        abc   GCAUGCAUCUGCAUACGUACGUACGCAUGCAUCA 60
+        def   ----------------------------------
+        xyz   ----------------------------------
+
+        abc   GUCGAUACAUACGUACGUCGUACGUACGU-CGAC 11
+        def   ---------------CGCGAUGCAUGCAU-CGAU 18
+        xyz   -----------CAUGCAUCGUACGUACGCAUGAC 23
+
+    We can use the following code:
+
+    >>> from StringIO import StringIO
+    >>> from skbio.parse.sequences import parse_clustal
+    >>> clustal_f = StringIO("abc   GCAUGCAUCUGCAUACGUACGUACGCAUGCA 60\n"
+    ...                      'def   -------------------------------\n'
+    ...                      'xyz   -------------------------------\n'
+    ...                      '\n'
+    ...                      'abc   GUCGAUACAUACGUACGUCGGUACGU-CGAC 11\n'
+    ...                      'def   ---------------CGUGCAUGCAU-CGAU 18\n'
+    ...                      'xyz   -----------CAUUCGUACGUACGCAUGAC 23\n')
+    >>> data, labels = parse_clustal(clustal_f)
+    >>> print labels
+    ['abc', 'def', 'xyz']
+    >>> for label, seq in data.iteritems():
+    ...     print label
+    ...     print seq
+    xyz
+    ['-------------------------------', '-----------CAUUCGUACGUACGCAUGAC']
+    abc
+    ['GCAUGCAUCUGCAUACGUACGUACGCAUGCA', 'GUCGAUACAUACGUACGUCGGUACGU-CGAC']
+    def
+    ['-------------------------------', '---------------CGUGCAUGCAU-CGAU']
+
     References
     ----------
+
     .. [1] Clustal: Multiple Sequence Alginment http://www.clustal.org
 
     """
