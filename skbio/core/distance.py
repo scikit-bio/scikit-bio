@@ -15,7 +15,7 @@ dissimilarities/distances (floats) between objects, as well as unique IDs
 
 `DissimilarityMatrix` can be used to store measures of dissimilarity between
 objects, and does not require that the dissimilarities are symmetric (e.g.,
-dissimilarities obtained using the UniFrac Gain metric).
+dissimilarities obtained using the *Gain in PD* measure [1]_).
 `DissimilarityMatrix` is a more general container to store differences than
 `DistanceMatrix`.
 
@@ -44,6 +44,11 @@ Functions
    :toctree: generated/
 
    randdm
+
+References
+----------
+.. [1] Faith, D. P. (1992). "Conservation evaluation and phylogenetic
+   diversity".
 
 Examples
 --------
