@@ -13,6 +13,7 @@ __version__ = '0.0.0-dev'
 import os
 from setuptools import find_packages, setup
 from distutils.command.build_py import build_py
+from numpy.distutils.core import setup
 
 classes = """
     Development Status :: 1 - Planning
@@ -46,6 +47,22 @@ else:
     install_requires = ['numpy >= 1.5.1', 'matplotlib >= 1.1.0',
                         'scipy >= 0.13.0']
 
+def configuration(parent_package='', top_path=None):
+    from numpy.distutils.misc_util import Configuration
+    config = Configuration(None, parent_package, top_path)
+
+    # Avoid non-useful msg:
+    # "Ignoring attempt to set 'name' (from ... "
+    config.set_options(ignore_setup_xxx_py=True,
+                       assume_default_configuration=True,
+                       delegate_options_to_subpackages=True,
+                       quiet=True)
+    config.add_data_dir('tests')
+    config.add_data_dir('skbio/maths/stats/ordination/tests/data')
+    config.add_subpackage('skbio')
+
+    return config
+
 setup(name='scikit-bio',
       cmdclass={'build_py': build_py},
       version=__version__,
@@ -61,5 +78,5 @@ setup(name='scikit-bio',
       install_requires=install_requires,
       extras_require={'test': ["nose >= 0.10.1", "pep8"],
                       'doc': ["Sphinx >= 1.2.2", "sphinx-bootstrap-theme"]},
-      classifiers=classifiers
-      )
+      classifiers=classifiers,
+      configuration=configuration,)
