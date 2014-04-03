@@ -438,7 +438,19 @@ class Workflow(object):
         return update_wrapper(wrapped, func)
 
     class method(object):
-        """Decorate a function to indicate it is a workflow method"""
+        """Decorate a function to indicate it is a workflow method
+
+        Parameters
+        ----------
+        priority : int
+            Specify a priority for the method, the higher the value the higher
+            the priority. Priorities are relative to a given workflow
+
+        Returns
+        -------
+        Method
+            A decorated method
+        """
         highest_priority = sys.maxsize
 
         def __init__(self, priority=0):
@@ -449,15 +461,29 @@ class Workflow(object):
             return func
 
     class requires(object):
-        """Decorator that executes a function if requirements are met"""
+        """Decorator that executes a function if requirements are met
+
+        Parameters
+        ----------
+        option : any Hashable object
+            An option that is required for the decorated method to execute.
+            This option will be looked up within the containing ``Workflow``s'
+            ``options``,
+        values : literally anything
+            A required value. This defaults to ``anything`` indicating that
+            the only requirement is that the ``option`` exists. It can be
+            useful to specify ``not_none`` which indicates that the
+            requirement is satisfied if the ``option`` exists and it holds
+            a value that is not ``None``. Values also supports iterables
+            or singular values
+        state : Function
+            A requirement on workflow state. This must be a function that
+            accepts a single argument, and returns ``True`` to indicate
+            the requirement is satisfied, or ``False`` to indicate the
+            requirement is not satisfied. This method will be passed the
+            containing ``Workflow``s' ``state`` member variable.
+        """
         def __init__(self, option=None, values=anything, state=None):
-            """
-            option : a required option
-            values : required values associated with an option
-            state : If state is not None and is a function, that function will
-                check if state(Workflow.state) is True, or valid, for each
-                item in the iterable operated on by Workflow.__call__.
-            """
             # self here is the requires object
             self.option = option
             self.required_state = state
