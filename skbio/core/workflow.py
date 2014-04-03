@@ -230,29 +230,50 @@ not_none = NotNone()
 
 
 class Workflow(object):
-    """Arbitrary workflow support structure"""
+    """Arbitrary workflow support structure
+
+    Methods that are considered to be directly part of the workflow must
+    be decorated with ``Workflow.method``. The workflow methods offer a
+    mechanism to logically group functionality together, and are free to
+    make subsequent calls to other methods.
+
+    All methods of a subclass of Workflow (those with and without the
+    Workflow.method decoration) can take advantage of the ``Workflow.requires``
+    decorator to specify any option or state requirements for the
+    decorated function.
+
+    Parameters
+    ----------
+    state : object
+        State can be anything or nothing. This is dependent on the
+        workflow as in some cases, it is useful to preallocate state
+        while in other workflows state may be ignored.
+    short_circuit : bool
+        if True, enables ignoring function methods when a given item
+        has failed
+    debug : bool
+        Enable debug mode
+    options : dict
+        runtime options, {'option':values}, that the ``Workflow.requires``
+        decorator can interrogate.
+    kwargs : dict
+        Additional arguments will be added as member variables to self.
+        This is handy if additional contextual information is needed by a
+        workflow method (e.g., a lookup table).
+
+    Attributes
+    ----------
+    state
+    short_circuit
+    debug
+    options
+    failed
+
+    """
 
     def __init__(self, state, short_circuit=True, debug=False, options=None,
                  **kwargs):
-        """Build thy self
-
-        state : an allocated object to store state
-        short_circuit : if True, enables ignoring function methods when a given
-            item has failed
-        debug : Enable debug mode
-        options : runtime options, {'option':values}
-        kwargs : Additional arguments will be added to self
-
-        Methods that are considered to be directly part of the workflow must
-        be decorated with Workflow.method. The workflow methods offer a
-        mechanism to logically group functionality together, and are free to
-        make subsequent calls to other methods.
-
-        All methods of a subclass of Workflow (those with and without the
-        Workflow.method decoration) can take advantage of the Workflow.requires
-        decorator to specify any option or state requirements for the
-        decorated function.
-        """
+        r"""Build thy workflow of self"""
         if options is None:
             self.options = {}
         else:
@@ -276,6 +297,11 @@ class Workflow(object):
 
         This method is called first prior to any other defined workflow method
         with the exception of _setup_debug_trace if self.debug is True
+
+        Parameters
+        ----------
+        item : anything
+            Workflow dependent
         """
         raise NotImplementedError("Must implement this method")
 
@@ -341,10 +367,21 @@ class Workflow(object):
     def __call__(self, iter_, success_callback=None, fail_callback=None):
         """Operate on all the data
 
+        This is the processing engine of the workflow. Callbacks are executed
+        following applying all workflow methods to an item from ``iter_``
+        (unless ``short_cicruit=True`` in which case method execution for an
+        item is stopped if ``failed=True``). Callbacks are provided ``self``
+        which allows them to examine any aspect of the workflow.
+
+        Parameters
+        ----------
         it : an iterator
         success_callback : method to call on a successful item prior to
-            yielding
-        fail_callback : method to call on a failed item prior to yielding
+            yielding. By default, ``self.state`` is yielded.
+        fail_callback : method to call on a failed item prior to yielding. By
+            default, failures are ignored.
+
+        .. shownumpydoc
         """
         if success_callback is None:
             success_callback = lambda x: x.state
