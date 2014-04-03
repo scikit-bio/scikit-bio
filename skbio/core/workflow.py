@@ -268,6 +268,7 @@ class Workflow(object):
     debug
     options
     failed
+    iter_
 
     """
 
@@ -283,6 +284,7 @@ class Workflow(object):
         self.failed = False
         self.debug = debug
         self.state = state
+        self.iter_ = None
 
         for k, v in kwargs.iteritems():
             if hasattr(self, k):
@@ -386,9 +388,10 @@ class Workflow(object):
         if success_callback is None:
             success_callback = lambda x: x.state
 
+        self.iter_ = iter_
         workflow = self._all_wf_methods()
 
-        for item in iter_:
+        for item in self.iter_:
             self.failed = False
 
             self.initialize_state(item)
@@ -403,6 +406,8 @@ class Workflow(object):
                     yield fail_callback(self)
             else:
                 yield success_callback(self)
+
+        self.iter_ = None
 
     ### Decorators ###
 
