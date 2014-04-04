@@ -91,6 +91,13 @@ class SequenceCollectionTests(TestCase):
         SequenceCollection.from_fasta_records(self.seqs2_t, RNASequence)
         SequenceCollection.from_fasta_records(self.seqs3_t, NucleotideSequence)
 
+    def test_contains(self):
+        """in operator functions as expected
+        """
+        self.assertTrue('d1' in self.s1)
+        self.assertTrue('r2' in self.s2)
+        self.assertFalse('r2' in self.s1)
+
     def test_eq(self):
         """equality operator functions as expected
         """
@@ -170,6 +177,25 @@ class SequenceCollectionTests(TestCase):
         self.assertEqual(repr(self.s3),
                          "<SequenceCollection: n=5; "
                          "mean +/- std length=6.40 +/- 3.32>")
+
+    def test_reversed(self):
+        """reversed functions as expected
+        """
+        s1_iter = reversed(self.s1)
+        count = 0
+        for actual, expected in zip(s1_iter, self.seqs1[::-1]):
+            count += 1
+            self.assertEqual(actual, expected)
+        self.assertEqual(count, len(self.seqs1))
+        self.assertRaises(StopIteration, s1_iter.next)
+
+    def test_str(self):
+        """str functions as expected
+        """
+        exp1 = ">d1\nGATTACA\n>d2\nTTG\n"
+        self.assertEqual(str(self.s1), exp1)
+        exp2 = ">r1\nGAUUACA\n>r2\nUUG\n>r3\nU-----UGCC--\n"
+        self.assertEqual(str(self.s2), exp2)
 
     def test_distribution_stats(self):
         """distribution_stats functions as expected
@@ -262,8 +288,8 @@ class SequenceCollectionTests(TestCase):
         """
         exp1 = ">d1\nGATTACA\n>d2\nTTG\n"
         self.assertEqual(self.s1.to_fasta(), exp1)
-        exp2 = ">r1\nGATTACA\n>r2\nTTG\n>r3'U-----UGCC--\n"
-        self.assertEqual(self.s1.to_fasta(), exp1)
+        exp2 = ">r1\nGAUUACA\n>r2\nUUG\n>r3\nU-----UGCC--\n"
+        self.assertEqual(self.s2.to_fasta(), exp2)
 
     def test_upper(self):
         """upper functions as expected
@@ -497,11 +523,11 @@ class AlignmentTests(TestCase):
         tested by calculating values as described in this post:
          http://stackoverflow.com/a/15476958/3424666
         """
-        expected = [0.69314, 0.69314, 0.69314, 0.0, 0.69314]
+        expected = [0.69314, 0.69314, 0.69314, 0.0, np.nan]
         np.testing.assert_almost_equal(self.a2.position_entropies(),
                                        expected, 5)
 
-        expected = [1.0, 1.0, 1.0, 0.0, 1.0]
+        expected = [1.0, 1.0, 1.0, 0.0, np.nan]
         np.testing.assert_almost_equal(self.a2.position_entropies(base=2),
                                        expected, 5)
 

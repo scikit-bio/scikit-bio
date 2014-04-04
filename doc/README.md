@@ -13,7 +13,7 @@ Building the documentation
 To build the documentation, you'll need the following Python packages
 installed:
 
-- [Sphinx](http://sphinx-doc.org/) >= 1.1
+- [Sphinx](http://sphinx-doc.org/) >= 1.2.2
 - [sphinx-bootstrap-theme](https://pypi.python.org/pypi/sphinx-bootstrap-theme/)
 
 An easy way to install the dependencies is via pip:

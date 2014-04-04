@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 r"""
-Parse biological sequences (:mod:`skbio.parse.sequences`)
+Parse stockholm files (:mod:`skbio.parse.stockholm`)
 =========================================================
 
-.. currentmodule:: skbio.parse.sequences
+.. currentmodule:: skbio.parse.stockholm
 
-This module provides functions for parsing sequence files.
+This module provides functions for parsing stockholm files.
 
 Functions
 ---------
@@ -13,8 +13,6 @@ Functions
 .. autosummary::
    :toctree: generated/
 
-    parse_fasta
-    parse_fastq
     parse_stockholm
 
 
@@ -28,9 +26,7 @@ Functions
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-from skbio.core.exception import (FastqParseError, RecordError,
-                                  StockholmParseError)
-from skbio.parse.record_finder import LabeledRecordFinder
+from skbio.core.exception import StockholmParseError
 from skbio.format.stockholm import Stockholm
 from skbio.core.alignment import Alignment
 
@@ -120,7 +116,7 @@ def _parse_gc_info(lines, strict=False, seqlen=-1):
         parsed[feature] = ''.join(parsed[feature])
         if strict:
             if len(parsed[feature]) != seqlen:
-                raise StockholmParseError("GR must have exactly one char "
+                raise StockholmParseError("GC must have exactly one char "
                                           "per position in alignment!")
 
     return parsed
@@ -155,6 +151,7 @@ def _parse_gs_gr_info(lines, strict=False, seqlen=-1):
                                               "per position in alignment!")
     return parsed
 
+
 def parse_stockholm(infile, seq_constructor, strict=False):
     r"""yields Stockholm objects from a stockholm file.
 
@@ -167,11 +164,49 @@ def parse_stockholm(infile, seq_constructor, strict=False):
         The biologicalsequence object that corresponds to what the stockholm
         file holds. See skbio.core.sequence
 
+    strict : bool (optional)
+        Turns on strict parsing of GR and GC lines to ensure one char per pos
+        Default: False
+
     Returns
     -------
     sto : named tuple
         yields in Stockholm named tuple format. For more information, see
         skbio.format.stockholm.Stockholm
+
+    Raises
+    ------
+    StockholmParseError
+        If any lines are found that don't conform to stockholm format
+
+    Examples
+    --------
+    Assume we have a very basic stockholm file with the following contents::
+
+        # STOCKHOLM 1.0
+        seq1         ACC--G-GGGU
+        seq2         TCC--G-GGGA
+        #=GC SS_cons (((.....)))
+        //
+
+    >>> from skbio.core.sequence import RNA
+    >>> from skbio.parse.stockholm import parse_stockholm
+    >>> from StringIO import StringIO
+    >>> sto_in = StringIO("# STOCKHOLM 1.0\n"
+    ...                  "seq1         ACC--G-GGGU\nseq2         TCC--G-GGGA\n"
+    ...                  "#=GC SS_cons (((.....)))\n//")
+    >>> sto_records = parse_stockholm(sto_in, RNA)
+    >>> for sto in sto_records:
+    >>>     print sto
+    Stockholm(aln=<Alignment: n=2; mean +/- std length=11.00 +/- 0.00>, GF={},
+              GS={}, GR={}, GC={'SS_cons': '(((.....)))'})
+
+    Notes
+    -----
+    If a single record stockholm file is being parsed, you can add .next()
+    to get the stockholm record directly without the generator obj:
+
+    sto = parse_stockholm(sto_in, RNA).next()
     """
     #make sure first line is corect
     line = infile.readline()
@@ -214,173 +249,3 @@ def parse_stockholm(infile, seq_constructor, strict=False):
                 seqs[lineinfo[0]] += lineinfo[1]
             else:
                 seqs[lineinfo[0]] = lineinfo[1]
-
-
-def is_fasta_label(x):
-    """Checks if x looks like a FASTA label line."""
-    return x.startswith('>')
-
-
-def is_blank_or_comment(x):
-    """Checks if x is blank or a FASTA comment line."""
-    return (not x) or x.startswith('#') or x.isspace()
-
-
-def is_blank(x):
-    """Checks if x is blank."""
-    return (not x) or x.isspace()
-
-FastaFinder = LabeledRecordFinder(is_fasta_label, ignore=is_blank_or_comment)
-
-
-def parse_fasta(infile,
-                strict=True,
-                label_to_name=str,
-                finder=FastaFinder,
-                is_label=None,
-                label_characters='>'):
-    r"""yields label and seq from a fasta file.
-
-
-    Parameters
-    ----------
-    data : open file object
-        An open fasta file.
-
-    strict : bool
-        If strict is true a ``RecordError`` will
-        be raised if no header line is found
-
-    Returns
-    -------
-    label, sequence : string
-        yields the label and sequence for each entry.
-
-    Examples
-    --------
-    Assume we have a fasta formatted file with the following contents::
-
-        >seq1
-        CGATGTCGATCGATCGATCGATCAG
-        >seq2
-        CATCGATCGATCGATGCATGCATGCATG
-
-    >>> from StringIO import StringIO
-    >>> from skbio.parse.sequences import parse_fasta
-    >>> fasta_f = StringIO('>seq1\n'
-    ...                    'CGATGTCGATCGATCGATCGATCAG\n'
-    ...                    '>seq2\n'
-    ...                    'CATCGATCGATCGATGCATGCATGCATG\n')
-    >>> for label, seq in parse_fasta(fasta_f):
-    ...     print label
-    ...     print seq
-    seq1
-    CGATGTCGATCGATCGATCGATCAG
-    seq2
-    CATCGATCGATCGATGCATGCATGCATG
-
-    """
-
-    for rec in finder(infile):
-        # first line must be a label line
-        if not rec[0][0] in label_characters:
-            if strict:
-                raise RecordError("Found Fasta record without label line: %s" %
-                                  rec)
-            else:
-                continue
-        # record must have at least one sequence
-        if len(rec) < 2:
-            if strict:
-                raise RecordError("Found label line without sequences: %s" %
-                                  rec)
-            else:
-                continue
-
-        label = rec[0][1:].strip()
-        label = label_to_name(label)
-        seq = ''.join(rec[1:])
-
-        yield label, seq
-
-
-def parse_fastq(data, strict=False):
-    r"""yields label, seq, and qual from a fastq file.
-
-    Parameters
-    ----------
-    data : open file object
-        An open fastq file.
-
-    strict : bool
-        If strict is true a FastqParse error will be raised if the seq and qual
-        labels dont' match.
-
-    Returns
-    -------
-    label, seq, qual : string
-        yields the label, sequence and quality for each entry
-
-    Examples
-    --------
-    Assume we have a fastq formatted file with the following contents::
-
-        @seq1
-        AACACCAAACTTCTCCACCACGTGAGCTACAAAAG
-        +
-        ````Y^T]`]c^cabcacc`^Lb^ccYT\T\Y\WF
-        @seq2
-        TATGTATATATAACATATACATATATACATACATA
-        +
-        ]KZ[PY]_[YY^```ac^\\`bT``c`\aT``bbb
-
-    We can use the following code:
-
-    >>> from StringIO import StringIO
-    >>> from skbio.parse.sequences import parse_fastq
-    >>> fastq_f = StringIO('@seq1\n'
-    ...                     'AACACCAAACTTCTCCACCACGTGAGCTACAAAAG\n'
-    ...                     '+\n'
-    ...                     '````Y^T]`]c^cabcacc`^Lb^ccYT\T\Y\WF\n'
-    ...                     '@seq2\n'
-    ...                     'TATGTATATATAACATATACATATATACATACATA\n'
-    ...                     '+\n'
-    ...                     ']KZ[PY]_[YY^```ac^\\\`bT``c`\\aT``bbb\n')
-    >>> for label, seq, qual in parse_fastq(fastq_f):
-    ...     print label
-    ...     print seq
-    ...     print qual
-    seq1
-    AACACCAAACTTCTCCACCACGTGAGCTACAAAAG
-    ````Y^T]`]c^cabcacc`^Lb^ccYT\T\Y\WF
-    seq2
-    TATGTATATATAACATATACATATATACATACATA
-    ]KZ[PY]_[YY^```ac^\\`bT``c`\aT``bbb
-
-    """
-    # fastq format is very simple, defined by blocks of 4 lines
-    line_num = -1
-    record = []
-    for line in data:
-        line_num += 1
-        if line_num == 4:
-            if strict:  # make sure the seq and qual labels match
-                if record[0][1:] != record[2][1:]:
-                    raise FastqParseError('Invalid format: %s -- %s'
-                                          % (record[0][1:], record[2][1:]))
-            yield record[0][1:], record[1], record[3]
-            line_num = 0
-            record = []
-        record.append(line.strip())
-
-    if record:
-        if strict and record[0]:  # make sure the seq and qual labels match
-            if record[0][1:] != record[2][1:]:
-                raise FastqParseError('Invalid format: %s -- %s'
-                                      % (record[0][1:], record[2][1:]))
-
-        if record[0]:  # could be just an empty line at eof
-            yield record[0][1:], record[1], record[3]
-
-    if type(data) == file:
-        data.close()

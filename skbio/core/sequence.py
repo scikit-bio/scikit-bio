@@ -78,7 +78,7 @@ from __future__ import division
 #-----------------------------------------------------------------------------
 
 from collections import Sequence
-from itertools import izip
+from itertools import izip, product
 
 from scipy.spatial.distance import hamming
 
@@ -88,15 +88,56 @@ from skbio.core.exception import BiologicalSequenceError
 class BiologicalSequence(Sequence):
     """Base class for biological sequences.
 
+    Parameters
+    ----------
+    sequence : python Sequence (e.g., str, list or tuple)
+        The biological sequence.
+    identifier : str, optional
+        The sequence identifier (e.g., an accession number).
+    description : str, optional
+        A description or comment about the sequence (e.g., "green
+        fluorescent protein").
+    validate : bool, optional
+        If True, runs the `is_valid` method after construction and raises
+        BiologicalSequenceError if ``is_valid == False``.
+
     Attributes
     ----------
     description
     identifier
 
+    Raises
+    ------
+    skbio.core.exception.BiologicalSequenceError
+      If ``validate == True`` and ``is_valid == False``.
+
+    See Also
+    --------
+    NucleotideSequence
+    DNASequence
+    RNASequence
+
     Notes
     -----
     `BiologicalSequence` objects are immutable. Where applicable, methods
     return a new object of the same class.
+    Subclasses are typically defined by methods relevant to only a specific
+    type of biological sequence, and by containing characters only contained in
+    the IUPAC standard character set [1]_ for that molecule type.
+
+    Examples
+    --------
+    >>> from skbio.core.sequence import BiologicalSequence
+    >>> s = BiologicalSequence('GGUCGUGAAGGA')
+    >>> t = BiologicalSequence('GGUCCUGAAGGU')
+
+    References
+    ----------
+    .. [1] Nomenclature for incompletely specified bases in nucleic acid
+       sequences: recommendations 1984.
+       Nucleic Acids Res. May 10, 1985; 13(9): 3021-3030.
+       A Cornish-Bowden
+
     """
 
     @classmethod
@@ -141,39 +182,6 @@ class BiologicalSequence(Sequence):
 
     def __init__(self, sequence, identifier="", description="",
                  validate=False):
-        """Initialize a `BiologicalSequence` object.
-
-        Parameters
-        ----------
-        sequence : python Sequence (e.g., str, list or tuple)
-            The biological sequence.
-        identifier : str, optional
-            The sequence identifier (e.g., an accession number).
-        description : str, optional
-            A description or comment about the sequence (e.g., "green
-            fluorescent protein").
-        validate : bool, optional
-            If True, runs the `is_valid` method after construction and raises
-            BiologicalSequenceError if ``is_valid == False``.
-
-        Raises
-        ------
-        skbio.core.exception.BiologicalSequenceError
-          If ``validate == True`` and ``is_valid == False``.
-
-        See Also
-        --------
-        NucleotideSequence
-        DNASequence
-        RNASequence
-
-        Examples
-        --------
-        >>> from skbio.core.sequence import BiologicalSequence
-        >>> s = BiologicalSequence('GGUCGUGAAGGA')
-        >>> t = BiologicalSequence('GGUCCUGAAGGU')
-
-        """
         self._sequence = ''.join(sequence)
         self._identifier = identifier
         self._description = description
@@ -205,6 +213,8 @@ class BiologicalSequence(Sequence):
         True
         >>> 'CCC' in s
         False
+
+        .. shownumpydoc
 
         """
         return other in self._sequence
@@ -238,6 +248,8 @@ class BiologicalSequence(Sequence):
         >>> u == t
         False
 
+        .. shownumpydoc
+
         """
         if self.__class__ != other.__class__:
             return False
@@ -266,6 +278,8 @@ class BiologicalSequence(Sequence):
         >>> s[1]
         <BiologicalSequence: G (length: 1)>
 
+        .. shownumpydoc
+
         """
         try:
             return self.__class__(self._sequence[i],
@@ -289,6 +303,8 @@ class BiologicalSequence(Sequence):
         >>> hash(s)
         -1080059835405276950
 
+        .. shownumpydoc
+
         """
         return hash(self._sequence)
 
@@ -310,6 +326,8 @@ class BiologicalSequence(Sequence):
         U
         C
 
+        .. shownumpydoc
+
         """
         return iter(self._sequence)
 
@@ -327,6 +345,8 @@ class BiologicalSequence(Sequence):
         >>> s = BiologicalSequence('GGUC')
         >>> len(s)
         4
+
+        .. shownumpydoc
 
         """
         return len(self._sequence)
@@ -360,6 +380,8 @@ class BiologicalSequence(Sequence):
         >>> u != t
         True
 
+        .. shownumpydoc
+
         """
         return not self.__eq__(other)
 
@@ -390,6 +412,8 @@ class BiologicalSequence(Sequence):
         >>> t
         <BiologicalSequence: ACGT (length: 4)>
 
+        .. shownumpydoc
+
         """
         first_ten = str(self)[:10]
         cn = self.__class__.__name__
@@ -417,6 +441,8 @@ class BiologicalSequence(Sequence):
         U
         G
         G
+
+        .. shownumpydoc
 
         """
         return reversed(self._sequence)
@@ -446,6 +472,8 @@ class BiologicalSequence(Sequence):
         'GGUC'
         >>> print s
         GGUC
+
+        .. shownumpydoc
 
         """
         return ''.join(self._sequence)
@@ -956,10 +984,13 @@ class BiologicalSequence(Sequence):
 class NucleotideSequence(BiologicalSequence):
     """Base class for nucleotide sequences.
 
-    Attributes
-    ----------
-    description
-    identifier
+    A `NucleotideSequence` is a `BiologicalSequence` with additional methods
+    that are only applicable for nucleotide sequences, and containing only
+    characters used in the IUPAC DNA or RNA lexicon.
+
+    See Also
+    --------
+    BiologialSequence
 
     Notes
     -----
@@ -1168,14 +1199,80 @@ class NucleotideSequence(BiologicalSequence):
         return self._complement(reversed(self))
     rc = reverse_complement
 
+    def nondegenerates(self):
+        """Yield all nondegenerate versions of the sequence.
+
+        Returns
+        -------
+        generator
+            Generator yielding all possible nondegenerate versions of the
+            sequence. Each sequence will have the same type, identifier, and
+            description as `self`.
+
+        Raises
+        ------
+        BiologicalSequenceError
+            If the sequence contains an invalid character (a character that
+            isn't an IUPAC character or a gap character).
+
+        See Also
+        --------
+        iupac_degeneracies
+
+        Notes
+        -----
+        There is no guaranteed ordering to the generated sequences.
+
+        Examples
+        --------
+        >>> from skbio.core.sequence import NucleotideSequence
+        >>> seq = NucleotideSequence('TRG')
+        >>> seq_generator = seq.nondegenerates()
+        >>> for s in sorted(seq_generator, key=str): print(s)
+        TAG
+        TGG
+
+        """
+        degen_chars = self.iupac_degeneracies()
+        nonexpansion_chars = self.iupac_standard_characters().union(
+            self.gap_alphabet())
+
+        expansions = []
+        for char in self:
+            if char in nonexpansion_chars:
+                expansions.append(char)
+            else:
+                # Use a try/except instead of explicitly checking for set
+                # membership on the assumption that an exception is rarely
+                # thrown.
+                try:
+                    expansions.append(degen_chars[char])
+                except KeyError:
+                    raise BiologicalSequenceError(
+                        "Sequence contains an invalid character: %s" % char)
+
+        result = product(*expansions)
+
+        # Cache lookups here as there may be a lot of sequences to generate.
+        # Could use functools.partial, but it ends up being a little slower
+        # than this method.
+        id_ = self.identifier
+        desc = self.description
+        cls = self.__class__
+
+        return (cls(nondegen_seq, id_, desc) for nondegen_seq in result)
+
 
 class DNASequence(NucleotideSequence):
     """Base class for DNA sequences.
 
-    Attributes
-    ----------
-    description
-    identifier
+    A `DNASequence` is a `NucelotideSequence` that is restricted to only
+    containing characters used in IUPAC DNA lexicon.
+
+    See Also
+    --------
+    NucleotideSequence
+    BiologicalSequence
 
     Notes
     -----
@@ -1249,10 +1346,8 @@ DNA = DNASequence
 class RNASequence(NucleotideSequence):
     """Base class for RNA sequences.
 
-    Attributes
-    ----------
-    description
-    identifier
+    An `RNASequence` is a `NucelotideSequence` that is restricted to only
+    containing characters used in the IUPAC RNA lexicon.
 
     Notes
     -----

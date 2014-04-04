@@ -1,3 +1,4 @@
+import shutil
 import glob
 import sys
 import os
@@ -8,6 +9,23 @@ import skbio
 
 # NOTE: parts of this file were taken from scipy's doc/source/conf.py. See
 # scikit-bio/licenses/scipy.txt for scipy's license.
+
+# If readthedocs.org is building the project, delete the generated/ directory,
+# which is created by autosummary when generating the API reference. For some
+# reason, when RTD rebuilds the docs (i.e., not starting from a fresh build),
+# some links are not generated correctly if generated/ already exists. Links to
+# modules/subpackages work, but links aren't created for classes, methods,
+# attributes, etc. and we get a bunch of warnings. This does not happen when
+# building the docs locally or on Travis.
+#
+# Code to check whether RTD is building our project is taken from
+# http://read-the-docs.readthedocs.org/en/latest/faq.html
+on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+if on_rtd:
+    generated_path = os.path.join(os.path.dirname(__file__), 'generated')
+
+    if os.path.exists(generated_path):
+        shutil.rmtree(generated_path)
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -412,4 +430,4 @@ def linkcode_resolve(domain, info):
 #------------------------------------------------------------------------------
 
 # Link-checking on Travis sometimes times out.
-linkcheck_timeout = 5
+linkcheck_timeout = 30
