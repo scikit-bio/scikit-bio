@@ -17,7 +17,7 @@ from skbio.maths.diversity.alpha import (berger_parker_d, brillouin_d,
                                          dominance, doubles, enspie,
                                          equitability, mcintosh_d, mcintosh_e,
                                          menhinick, observed_species, osd,
-                                         shannon, simpson, simpson_e,
+                                         robbins, shannon, simpson, simpson_e,
                                          simpson_reciprocal, singles, strong)
 
 
@@ -91,6 +91,9 @@ class AlphaDiversityTests(TestCase):
 
     def test_osd(self):
         self.assertEqual(osd(self.counts), (9, 3, 3))
+
+    def test_robbins(self):
+        self.assertEqual(robbins(np.array([1, 2, 3, 0, 1])), 2 / 7)
 
     def test_shannon(self):
         self.assertEqual(shannon(np.array([5])), 0)

@@ -148,7 +148,25 @@ def observed_species(counts):
 
 def osd(counts):
     """Calculate **o**bserved, **s**ingles and **d**oubles from counts."""
-    return observed_species(counts), (counts == 1).sum(), (counts == 2).sum()
+    return observed_species(counts), singles(counts), doubles(counts)
+
+
+def robbins(counts):
+    """Robbins 1968 estimator for Pr(unobserved) at n trials.
+
+    probability_of_unobserved_colors = S/(n+1),
+
+    Notes
+    -----
+    This is the estimate for ``(n-1)`` counts, i.e. x-axis is off by 1.
+
+    References
+    ----------
+    .. [1] H. E. Robbins (1968, Ann. of Stats. Vol 36, pp. 256-257)
+    (where s = singletons).
+
+    """
+    return singles(counts) / counts.sum()
 
 
 def shannon(counts, base=2):
