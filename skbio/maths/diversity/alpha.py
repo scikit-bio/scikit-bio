@@ -93,6 +93,15 @@ def enspie(counts):
 simpson_reciprocal = enspie
 
 
+def equitability(counts, base=2):
+    """Calculate Shannon index corrected for number of species, pure evenness.
+
+    """
+    numerator = shannon(counts, base)
+    denominator = np.log(observed_species(counts)) / np.log(base)
+    return numerator / denominator
+
+
 def mcintosh_d(counts):
     """Calculate McIntosh index of alpha diversity.
 

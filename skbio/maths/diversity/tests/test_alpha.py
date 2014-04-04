@@ -15,7 +15,7 @@ import numpy as np
 
 from skbio.maths.diversity.alpha import (berger_parker_d, brillouin_d,
                                          dominance, doubles, enspie,
-                                         mcintosh_d, mcintosh_e,
+                                         equitability, mcintosh_d, mcintosh_e,
                                          observed_species, osd, shannon,
                                          simpson, simpson_e,
                                          simpson_reciprocal, singles, strong)
@@ -67,6 +67,11 @@ class AlphaDiversityTests(TestCase):
         """Should match (1 / dominance) results."""
         arr = np.array([1, 0, 2, 5, 2])
         self.assertAlmostEqual(simpson_reciprocal(arr), 1 / dominance(arr))
+
+    def test_equitability(self):
+        """Should match hand-calculated values."""
+        self.assertAlmostEqual(equitability(np.array([5, 5])), 1)
+        self.assertAlmostEqual(equitability(np.array([1, 1, 1, 1, 0])), 1)
 
     def test_mcintosh_d(self):
         """Should match hand-calculated values."""
