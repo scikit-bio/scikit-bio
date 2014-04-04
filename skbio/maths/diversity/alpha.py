@@ -52,10 +52,19 @@ def brillouin_d(counts):
     n = nz.sum()
     return (gammaln(n + 1) - gammaln(nz + 1).sum()) / n
 
+def dominance(counts):
+    """Calculates probability that two species sampled are the same.
+
+    Dominance = 1 - Simpson's index, sum of squares of probabilities.
+
+    """
+    freqs = counts / counts.sum()
+    return (freqs * freqs).sum()
+
 def observed_species(counts):
     """Calculate number of distinct species."""
     return (counts != 0).sum()
 
 def osd(counts):
-    """Calculate observed, singles and doubles from counts."""
+    """Calculate **o**bserved, **s**ingles and **d**oubles from counts."""
     return observed_species(counts), (counts == 1).sum(), (counts == 2).sum()

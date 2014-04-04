@@ -14,7 +14,7 @@ from unittest import TestCase, main
 import numpy as np
 
 from skbio.maths.diversity.alpha import (berger_parker_d, brillouin_d,
-                                         observed_species, osd)
+                                         dominance, observed_species, osd)
 
 
 class AlphaDiversityTests(TestCase):
@@ -32,6 +32,11 @@ class AlphaDiversityTests(TestCase):
         """Should match hand-calculated values."""
         self.assertAlmostEqual(brillouin_d(np.array([1, 2, 0, 0, 3, 1])),
                                0.86289353018248782)
+
+    def test_dominance(self):
+        """Should match hand-calculated values."""
+        self.assertEqual(dominance(np.array([5])), 1)
+        self.assertAlmostEqual(dominance(np.array([1, 0, 2, 5, 2])), 0.34)
 
     def test_observed_species(self):
         """Should return number of observed species."""
