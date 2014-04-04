@@ -25,6 +25,7 @@ Functions
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
+from collections import OrderedDict
 
 from skbio.core.exception import StockholmParseError
 from skbio.format.stockholm import Stockholm
@@ -125,13 +126,16 @@ def _parse_gc_info(lines, strict=False, seqlen=-1):
 def _parse_gs_gr_info(lines, strict=False, seqlen=-1):
     """Takes care of parsing GS and GR lines in stockholm format"""
     parsed = {}
+    parsetype = ""
     for line in lines:
         try:
             init, label, feature, content = line.split(None, 3)
         except ValueError:
             raise StockholmParseError("Malformed GS/GR line encountered!\n%s" %
                                       line.split(None, 3))
-        if init != "#=GS" and init != "#=GR":
+        if parsetype == "":
+            parsetype = init
+        elif init != parsetype:
                 raise StockholmParseError("Non-GS/GR line encountered!")
 
         #parse each line, taking into account we can have interleaved format
@@ -216,11 +220,12 @@ def parse_stockholm(infile, seq_constructor, strict=False):
     gf_lines = []
     gr_lines = []
     gc_lines = []
-    seqs = {}
+    #OrderedDict used so sequences maintain same order as in file
+    seqs = OrderedDict()
     for line in infile:
         line = line.strip()
-        if line == "":
-            #skip blank lines
+        if line == "" or line.startswith("# S"):
+            #skip blank lines or secondary headers
             continue
         elif line == "//":
             #create alignment from stockholm file
@@ -233,6 +238,12 @@ def parse_stockholm(infile, seq_constructor, strict=False):
             GC = _parse_gc_info(gc_lines, strict, seqlen)
             #yield the actual stockholm object
             yield Stockholm(aln, GF, GS, GR, GC)
+            #reset all storage variables
+            gs_lines = []
+            gf_lines = []
+            gr_lines = []
+            gc_lines = []
+            seqs = OrderedDict()
         elif line.startswith("#=GF"):
             gf_lines.append(line)
         elif line.startswith("#=GS"):
