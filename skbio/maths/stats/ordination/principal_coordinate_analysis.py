@@ -75,6 +75,7 @@ class PCoA(Ordination):
     def __init__(self, distance_matrix):
         if isinstance(distance_matrix, SymmetricDistanceMatrix):
             self.dm = np.asarray(distance_matrix.data, dtype=np.float64)
+            self.ids = distance_matrix.ids
         else:
             raise TypeError("Input must be a SymmetricDistanceMatrix.")
         self._pcoa()
@@ -134,7 +135,7 @@ class PCoA(Ordination):
         perc_expl = (eigvals / eigvals.sum()) * 100
 
         return OrdinationResults(eigvals=eigvals, species=coordinates,
-                                 perc_expl=perc_expl)
+                                 perc_expl=perc_expl, ids=self.ids)
 
     @staticmethod
     def _E_matrix(distance_matrix):

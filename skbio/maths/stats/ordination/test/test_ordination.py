@@ -456,8 +456,8 @@ class TestPCoAResults(object):
 class TestPCoAResultsExtensive(object):
     def setup(self):
         matrix = np.loadtxt(get_data_path('PCoA_sample_data_2'))
-        dist_matrix = SymmetricDistanceMatrix(matrix,
-                                              map(str, range(matrix.shape[0])))
+        self.ids = map(str, range(matrix.shape[0]))
+        dist_matrix = SymmetricDistanceMatrix(matrix, self.ids)
         self.ordination = PCoA(dist_matrix)
 
     def test_values(self):
@@ -487,12 +487,16 @@ class TestPCoAResultsExtensive(object):
                              18.11445992, 12.63356565])
         npt.assert_almost_equal(results.perc_expl, expected)
 
+        npt.assert_equal(results.ids, self.ids)
+
 
 class TestPCoAEigenResults(object):
     def setup(self):
         with open(get_data_path('PCoA_sample_data_3'), 'U') as lines:
             dist_matrix = SymmetricDistanceMatrix.from_file(lines)
         self.ordination = PCoA(dist_matrix)
+        self.ids = ['PC.636', 'PC.635', 'PC.356', 'PC.481', 'PC.354', 'PC.593',
+                    'PC.355', 'PC.607', 'PC.634']
 
     def test_values(self):
         results = self.ordination.scores()
@@ -530,6 +534,8 @@ class TestPCoAEigenResults(object):
         expected = np.array([26.75738328, 15.7044696, 13.99118638, 10.91402725,
                              10.01110485, 8.38401162, 7.84269939, 6.39511764])
         npt.assert_almost_equal(results.perc_expl, expected)
+
+        npt.assert_equal(results.ids, self.ids)
 
 
 class TestPCoAPrivateMethods(object):
