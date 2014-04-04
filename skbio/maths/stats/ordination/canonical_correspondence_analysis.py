@@ -172,7 +172,7 @@ class CCA(Ordination):
         # In this case scores are also a bit intertwined, so we'll
         # almost compute them both and then choose.
 
-        ## Scalings (p. 596 L&L 1998)
+        # Scalings (p. 596 L&L 1998):
         # Species scores, scaling 1
         V = (self.column_marginals**-0.5)[:, None] * self.U
 

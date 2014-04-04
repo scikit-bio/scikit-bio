@@ -12,8 +12,9 @@ from __future__ import division
 
 import numpy as np
 
-ROUND_ERROR = 1e-14    # fp rounding error: causes some tests to fail
-                        # will round to 0 if smaller in magnitude than this
+# fp rounding error causes some tests to fail. Will round to 0 if
+# smaller in magnitude than this:
+ROUND_ERROR = 1e-14
 MAXNUM = 1.7976931348623158E308  # 2**1024
 SQRT2 = 1.41421356237309504880  # sqrt(2)
 SQRTH = 7.07106781186547524401E-1  # sqrt(2)/2
