@@ -229,7 +229,6 @@ class TreeNode(object):
         if children is not None:
             self.extend(children)
 
-    ### start operators ###
     def __repr__(self):
         r"""Returns summary of the tree
 
@@ -297,9 +296,6 @@ class TreeNode(object):
         r"""Node delegates slicing to children"""
         return self.children[i]
 
-    ### end operators ###
-
-    ### start topology updates ###
     def _adopt(self, node):
         r"""Update parent references but does NOT update self.children"""
         self.invalidate_node_cache()
@@ -527,9 +523,7 @@ class TreeNode(object):
 #       tcopy.prune()
 #       return tcopy
 #
-    ### end topology updates ###
 
-    ### copy like methods ###
     def copy(self):
         r"""Returns a copy of self using an iterative approach
 
@@ -879,10 +873,6 @@ class TreeNode(object):
 
             return new_root.unrooted_copy()
 
-    ### end copy like methods ###
-
-    ### node checks ###
-
     def is_tip(self):
         r"""Returns True if the current node is a tip, i.e. has no children.
 
@@ -954,10 +944,6 @@ class TreeNode(object):
         False
         """
         return not self.is_tip()
-
-    ### end node checks ###
-
-    ### traversal methods ###
 
     def traverse(self, self_before=True, self_after=False, include_self=True):
         r"""Returns iterator over descendants
@@ -1101,7 +1087,7 @@ class TreeNode(object):
         curr_children_len = len(curr_children)
         while 1:
             curr_index = child_index_stack[-1]
-            #if there are children left, process them
+            # if there are children left, process them
             if curr_index < curr_children_len:
                 curr_child = curr_children[curr_index]
                 # if the current child has children, go there
@@ -1325,10 +1311,6 @@ class TreeNode(object):
             if not n.is_tip():
                 yield n
 
-    ### end traversal methods ###
-
-    ### search methods ###
-
     def invalidate_node_cache(self):
         r"""Delete the node cache
 
@@ -1504,7 +1486,6 @@ class TreeNode(object):
             if func(node):
                 yield node
 
-    ### path methods ###
 
     def ancestors(self):
         r"""Returns all ancestors back to the root
@@ -1678,10 +1659,6 @@ class TreeNode(object):
         return curr
 
     lca = lowest_common_ancestor  # for convenience
-
-    ### end path methods ###
-
-    ### parsers ###
 
     @classmethod
     def from_newick(cls, lines, unescape_name=True):
@@ -1862,9 +1839,6 @@ class TreeNode(object):
             return cls()
         return curr_node  # this should be the root of the tree
 
-    ### end parsers ###
-
-    ### formatters ###
 
     def to_newick(self, with_distances=False, semicolon=True,
                   escape_name=True):
@@ -2025,10 +1999,6 @@ class TreeNode(object):
                                        compact=compact)
         return '\n'.join(lines)
 
-    ### end formatters ###
-
-    ### distance methods ###
-
     def accumulate_to_ancestor(self, ancestor):
         r"""Return the sum of the distance between self and ancestor
 
@@ -2126,7 +2096,6 @@ class TreeNode(object):
 
         return accum
 
-    ### make max distance a property?
     def _set_max_distance(self):
         """Propagate tip distance information up the tree
 
@@ -2264,7 +2233,7 @@ class TreeNode(object):
                 if not n.is_tip():
                     raise ValueError("%s is not a tip!" % n.name)
 
-        ## linearize all tips in postorder
+        # linearize all tips in postorder
         # .__start, .__stop compose the slice in tip_order.
         for i, node in enumerate(all_tips):
             node.__start, node.__stop = i, i+1
@@ -2277,7 +2246,7 @@ class TreeNode(object):
         distances = np.zeros((num_all_tips), float)  # dist from tip to tip
 
         def update_result():
-        # set tip_tip distance between tips of different child
+            # set tip_tip distance between tips of different child
             for child1, child2 in combinations(node.children, 2):
                 for tip1 in range(child1.__start, child1.__stop):
                     if tip1 not in result_map:
@@ -2310,10 +2279,6 @@ class TreeNode(object):
                 update_result()
 
         return result + result.T, tip_order
-
-    ### end distance methods ###
-
-    ### comparison methods ###
 
 #   def compare_rfd(self, other, proportion=False):
 #       """Calculates the Robinson and Foulds symmetric difference
@@ -2468,8 +2433,6 @@ class TreeNode(object):
         other_matrix = other.tip_tip_distances(endpoints=other_nodes)[0]
 
         return dist_f(self_matrix, other_matrix)
-
-    ### end comparison methods ###
 
     def index_tree(self):
         """Index a tree for rapid lookups within a tree array
