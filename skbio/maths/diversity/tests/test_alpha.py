@@ -15,6 +15,7 @@ import numpy as np
 
 from skbio.maths.diversity.alpha import (berger_parker_d, brillouin_d,
                                          dominance, doubles, enspie,
+                                         mcintosh_d, mcintosh_e,
                                          observed_species, osd, simpson,
                                          simpson_reciprocal, singles)
 
@@ -65,6 +66,18 @@ class AlphaDiversityTests(TestCase):
         """Should match (1 / dominance) results."""
         arr = np.array([1, 0, 2, 5, 2])
         self.assertAlmostEqual(simpson_reciprocal(arr), 1 / dominance(arr))
+
+    def test_mcintosh_d(self):
+        """Should match hand-calculated values."""
+        self.assertAlmostEqual(mcintosh_d(np.array([1, 2, 3])),
+                               0.636061424871458)
+
+    def test_mcintosh_e(self):
+        """Should match hand-calculated results."""
+        num = np.sqrt(15)
+        den = np.sqrt(19)
+        exp = num / den
+        self.assertEqual(mcintosh_e(np.array([1, 2, 3, 1])), exp)
 
     def test_observed_species(self):
         """Should return number of observed species."""

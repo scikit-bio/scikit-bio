@@ -93,6 +93,34 @@ def enspie(counts):
 simpson_reciprocal = enspie
 
 
+def mcintosh_d(counts):
+    """Calculate McIntosh index of alpha diversity.
+
+    References
+    ----------
+    .. [1] McIntosh 1967, by way of SDR-IV.
+
+    """
+    u = np.sqrt((counts * counts).sum())
+    n = counts.sum()
+    return (n - u) / (n - np.sqrt(n))
+
+
+def mcintosh_e(counts):
+    """Calculate McIntosh's evenness measure.
+
+    References
+    ----------
+    .. [1] Heip & Engels 1974 p 560 (wrong in SDR-IV).
+
+    """
+    numerator = np.sqrt((counts * counts).sum())
+    n = counts.sum()
+    s = observed_species(counts)
+    denominator = np.sqrt((n - s + 1) ** 2 + s - 1)
+    return numerator / denominator
+
+
 def observed_species(counts):
     """Calculate number of distinct species."""
     return (counts != 0).sum()
