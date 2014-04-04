@@ -140,6 +140,11 @@ def simpson(counts):
     return 1 - dominance(counts)
 
 
+def simpson_e(counts):
+    """Calculate Simpson's evenness."""
+    return enspie(counts) / observed_species(counts)
+
+
 def singles(counts):
     """Return count of single occurrences."""
     return (counts == 1).sum()

@@ -17,7 +17,8 @@ from skbio.maths.diversity.alpha import (berger_parker_d, brillouin_d,
                                          dominance, doubles, enspie,
                                          mcintosh_d, mcintosh_e,
                                          observed_species, osd, simpson,
-                                         simpson_reciprocal, singles)
+                                         simpson_e, simpson_reciprocal,
+                                         singles)
 
 
 class AlphaDiversityTests(TestCase):
@@ -98,6 +99,26 @@ class AlphaDiversityTests(TestCase):
         """Should match hand-calculated values."""
         self.assertAlmostEqual(simpson(np.array([1, 0, 2, 5, 2])), 0.66)
         self.assertAlmostEqual(simpson(np.array([5])), 0)
+
+    def test_simpson_e(self):
+        """Should match hand-calculated values."""
+        # A totally even community should have simpson_e = 1.
+        self.assertEqual(simpson_e(np.array([1, 1, 1, 1, 1, 1, 1])), 1)
+
+        arr = np.array([0, 30, 25, 40, 0, 0, 5])
+        freq_arr = arr / arr.sum()
+        D = (freq_arr ** 2).sum()
+        exp = 1 / (D * 4)
+        obs = simpson_e(arr)
+        self.assertEqual(obs, exp)
+
+        # From:
+        # https://groups.nceas.ucsb.edu/sun/meetings/calculating-evenness-
+        #   of-habitat-distributions
+        arr = np.array([500, 400, 600, 500])
+        D = 0.0625 + 0.04 + 0.09 + 0.0625
+        exp = 1 / (D * 4)
+        self.assertEqual(simpson_e(arr), exp)
 
     def test_singles(self):
         """Should return correct number of singles."""
