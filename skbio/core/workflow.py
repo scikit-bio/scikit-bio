@@ -227,8 +227,6 @@ class Workflow(object):
             else:
                 yield success_callback(self)
 
-    ### Decorators ###
-
     def _debug_trace_wrapper(self, func):
         """Trace a function call"""
         def wrapped():

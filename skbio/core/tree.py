@@ -1486,7 +1486,6 @@ class TreeNode(object):
             if func(node):
                 yield node
 
-
     def ancestors(self):
         r"""Returns all ancestors back to the root
 
@@ -1838,7 +1837,6 @@ class TreeNode(object):
         if curr_node is None:  # no data -- return empty node
             return cls()
         return curr_node  # this should be the root of the tree
-
 
     def to_newick(self, with_distances=False, semicolon=True,
                   escape_name=True):
