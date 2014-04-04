@@ -14,7 +14,8 @@ from unittest import TestCase, main
 import numpy as np
 
 from skbio.maths.diversity.alpha import (berger_parker_d, brillouin_d,
-                                         dominance, observed_species, osd)
+                                         dominance, doubles, observed_species,
+                                         osd, singles)
 
 
 class AlphaDiversityTests(TestCase):
@@ -38,6 +39,12 @@ class AlphaDiversityTests(TestCase):
         self.assertEqual(dominance(np.array([5])), 1)
         self.assertAlmostEqual(dominance(np.array([1, 0, 2, 5, 2])), 0.34)
 
+    def test_doubles(self):
+        """Should return correct number of doubles."""
+        self.assertEqual(doubles(self.counts), 3)
+        self.assertEqual(doubles(np.array([0, 3, 4])), 0)
+        self.assertEqual(doubles(np.array([2])), 1)
+
     def test_observed_species(self):
         """Should return number of observed species."""
         obs = observed_species(np.array([4, 3, 4, 0, 1, 0, 2]))
@@ -52,6 +59,12 @@ class AlphaDiversityTests(TestCase):
     def test_osd(self):
         """Should return correct number of observed, singles, and doubles."""
         self.assertEqual(osd(self.counts), (9, 3, 3))
+
+    def test_singles(self):
+        """Should return correct number of singles."""
+        self.assertEqual(singles(self.counts), 3)
+        self.assertEqual(singles(np.array([0, 3, 4])), 0)
+        self.assertEqual(singles(np.array([1])), 1)
 
 
 if __name__ == '__main__':

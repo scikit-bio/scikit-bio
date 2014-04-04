@@ -45,7 +45,7 @@ def brillouin_d(counts):
 
     References
     ----------
-    Pielou 1975, by way of SDR-IV.
+    .. [1] Pielou 1975, by way of SDR-IV.
 
     """
     nz = counts[counts.nonzero()]
@@ -53,13 +53,17 @@ def brillouin_d(counts):
     return (gammaln(n + 1) - gammaln(nz + 1).sum()) / n
 
 def dominance(counts):
-    """Calculates probability that two species sampled are the same.
+    """Calculate probability that two species sampled are the same.
 
     Dominance = 1 - Simpson's index, sum of squares of probabilities.
 
     """
     freqs = counts / counts.sum()
     return (freqs * freqs).sum()
+
+def doubles(counts):
+    """Return count of double occurrences."""
+    return (counts == 2).sum()
 
 def observed_species(counts):
     """Calculate number of distinct species."""
@@ -68,3 +72,7 @@ def observed_species(counts):
 def osd(counts):
     """Calculate **o**bserved, **s**ingles and **d**oubles from counts."""
     return observed_species(counts), (counts == 1).sum(), (counts == 2).sum()
+
+def singles(counts):
+    """Return count of single occurrences."""
+    return (counts == 1).sum()
