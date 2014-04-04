@@ -102,6 +102,18 @@ def equitability(counts, base=2):
     return numerator / denominator
 
 
+def heip_e(counts):
+    """Calculate Heip's evenness measure.
+
+    References
+    ----------
+    .. [1] Heip & Engels 1974.
+
+    """
+    return (np.exp(shannon(counts, base=np.e) - 1) /
+            (observed_species(counts) - 1))
+
+
 def kempton_taylor_q(counts, lower_quantile=.25, upper_quantile=.75):
     """Kempton-Taylor (1976) q index of alpha diversity, by way of SDR-IV.
 

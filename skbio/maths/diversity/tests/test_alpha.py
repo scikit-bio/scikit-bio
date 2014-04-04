@@ -15,10 +15,11 @@ import numpy as np
 
 from skbio.maths.diversity.alpha import (berger_parker_d, brillouin_d,
                                          dominance, doubles, enspie,
-                                         equitability, kempton_taylor_q,
-                                         margalef, mcintosh_d, mcintosh_e,
-                                         menhinick, observed_species, osd,
-                                         robbins, shannon, simpson, simpson_e,
+                                         equitability, heip_e,
+                                         kempton_taylor_q, margalef,
+                                         mcintosh_d, mcintosh_e, menhinick,
+                                         observed_species, osd, robbins,
+                                         shannon, simpson, simpson_e,
                                          simpson_reciprocal, singles, strong)
 
 
@@ -66,6 +67,12 @@ class AlphaDiversityTests(TestCase):
     def test_equitability(self):
         self.assertAlmostEqual(equitability(np.array([5, 5])), 1)
         self.assertAlmostEqual(equitability(np.array([1, 1, 1, 1, 0])), 1)
+
+    def test_heip_e(self):
+        arr = np.array([1, 2, 3, 1])
+        h = shannon(arr, base=np.e)
+        expected = np.exp(h - 1) / 3
+        self.assertEqual(heip_e(arr), expected)
 
     def test_kempton_taylor_q(self):
         # Approximate Magurran 1998 calculation p143.
