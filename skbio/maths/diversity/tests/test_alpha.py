@@ -13,12 +13,19 @@ from unittest import TestCase, main
 
 import numpy as np
 
-from skbio.maths.diversity.alpha import observed_species, osd
+from skbio.maths.diversity.alpha import berger_parker_d, observed_species, osd
 
 
 class AlphaDiversityTests(TestCase):
     def setUp(self):
         self.counts = np.array([0, 1, 1, 4, 2, 5, 2, 4, 1, 2])
+
+    def test_berger_parker_d(self):
+        """Should match hand-calculated values."""
+        self.assertEqual(berger_parker_d(np.array([5])), 1)
+        self.assertEqual(berger_parker_d(np.array([5, 5])), 0.5)
+        self.assertEqual(berger_parker_d(np.array([1, 1, 1, 1, 0])), 0.25)
+        self.assertEqual(berger_parker_d(self.counts), 5 / 22)
 
     def test_observed_species(self):
         """Should return number of observed species."""

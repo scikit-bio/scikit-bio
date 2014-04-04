@@ -29,6 +29,16 @@ from __future__ import division
 import numpy as np
 
 
+def berger_parker_d(counts):
+    """Fraction of the sample that belongs to the most abundant species.
+
+    References
+    ----------
+    .. [1] Berger & Parker 1970, by way of SDR-IV online help.
+
+    """
+    return counts.max() / counts.sum()
+
 def observed_species(counts):
     """Calculate number of distinct species."""
     return (counts != 0).sum()
