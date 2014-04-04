@@ -131,6 +131,13 @@ def osd(counts):
     return observed_species(counts), (counts == 1).sum(), (counts == 2).sum()
 
 
+def shannon(counts, base=2):
+    """Calculate Shannon entropy of counts, default in bits."""
+    freqs = counts / counts.sum()
+    nonzero_freqs = freqs[freqs.nonzero()]
+    return -(nonzero_freqs * np.log(nonzero_freqs)).sum() / np.log(base)
+
+
 def simpson(counts):
     """Calculate Simpson's index.
 

@@ -16,9 +16,9 @@ import numpy as np
 from skbio.maths.diversity.alpha import (berger_parker_d, brillouin_d,
                                          dominance, doubles, enspie,
                                          mcintosh_d, mcintosh_e,
-                                         observed_species, osd, simpson,
-                                         simpson_e, simpson_reciprocal,
-                                         singles, strong)
+                                         observed_species, osd, shannon,
+                                         simpson, simpson_e,
+                                         simpson_reciprocal, singles, strong)
 
 
 class AlphaDiversityTests(TestCase):
@@ -94,6 +94,12 @@ class AlphaDiversityTests(TestCase):
     def test_osd(self):
         """Should return correct number of observed, singles, and doubles."""
         self.assertEqual(osd(self.counts), (9, 3, 3))
+
+    def test_shannon(self):
+        """Should match hand-calculated values."""
+        self.assertEqual(shannon(np.array([5])), 0)
+        self.assertEqual(shannon(np.array([5, 5])), 1)
+        self.assertEqual(shannon(np.array([1, 1, 1, 1, 0])), 2)
 
     def test_simpson(self):
         """Should match hand-calculated values."""
