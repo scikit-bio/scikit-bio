@@ -102,6 +102,29 @@ def equitability(counts, base=2):
     return numerator / denominator
 
 
+def kempton_taylor_q(counts, lower_quantile=.25, upper_quantile=.75):
+    """Kempton-Taylor (1976) q index of alpha diversity, by way of SDR-IV.
+
+    Estimates the slope of the cumulative abundance curve in the interquantile
+    range. By default, uses lower and upper quartiles, rounding inwards.
+
+    Note: this differs slightly from the results given in Magurran 1998.
+    Specifically, we have 14 in the numerator rather than 15. Magurran
+    recommends counting half of the species with the same # counts as the
+    point where the UQ falls and the point where the LQ falls, but the
+    justification for this is unclear (e.g. if there were a very large #
+    species that just overlapped one of the quantiles, the results would
+    be considerably off). Leaving the calculation as-is for now, but consider
+    changing.
+    """
+    n = len(counts)
+    lower = int(np.ceil(n * lower_quantile))
+    upper = int(n * upper_quantile)
+    sorted_counts = np.sort(counts)
+    return (upper - lower) / np.log(sorted_counts[upper] /
+                                    sorted_counts[lower])
+
+
 def margalef(counts):
     """Margalef's index, assumes log accumulation.
 

@@ -15,10 +15,10 @@ import numpy as np
 
 from skbio.maths.diversity.alpha import (berger_parker_d, brillouin_d,
                                          dominance, doubles, enspie,
-                                         equitability, margalef, mcintosh_d,
-                                         mcintosh_e, menhinick,
-                                         observed_species, osd, robbins,
-                                         shannon, simpson, simpson_e,
+                                         equitability, kempton_taylor_q,
+                                         margalef, mcintosh_d, mcintosh_e,
+                                         menhinick, observed_species, osd,
+                                         robbins, shannon, simpson, simpson_e,
                                          simpson_reciprocal, singles, strong)
 
 
@@ -66,6 +66,17 @@ class AlphaDiversityTests(TestCase):
     def test_equitability(self):
         self.assertAlmostEqual(equitability(np.array([5, 5])), 1)
         self.assertAlmostEqual(equitability(np.array([1, 1, 1, 1, 0])), 1)
+
+    def test_kempton_taylor_q(self):
+        # Approximate Magurran 1998 calculation p143.
+        arr = np.array([2, 3, 3, 3, 3, 3, 4, 4, 4, 6, 6, 7, 7, 9, 9, 11, 14,
+                        15, 15, 20, 29, 33, 34, 36, 37, 53, 57, 138, 146, 170])
+        exp = 14 / np.log(34 / 4)
+        self.assertAlmostEqual(kempton_taylor_q(arr), exp)
+
+        # Should get same answer regardless of input order.
+        np.random.shuffle(arr)
+        self.assertAlmostEqual(kempton_taylor_q(arr), exp)
 
     def test_margalef(self):
         self.assertEqual(margalef(self.counts), 8 / np.log(22))
