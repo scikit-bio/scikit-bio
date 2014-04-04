@@ -40,6 +40,7 @@ def berger_parker_d(counts):
     """
     return counts.max() / counts.sum()
 
+
 def brillouin_d(counts):
     """Calculate Brilloun index of alpha diversity.
 
@@ -52,6 +53,7 @@ def brillouin_d(counts):
     n = nz.sum()
     return (gammaln(n + 1) - gammaln(nz + 1).sum()) / n
 
+
 def dominance(counts):
     """Calculate probability that two species sampled are the same.
 
@@ -61,17 +63,54 @@ def dominance(counts):
     freqs = counts / counts.sum()
     return (freqs * freqs).sum()
 
+
 def doubles(counts):
     """Return count of double occurrences."""
     return (counts == 2).sum()
+
+
+def enspie(counts):
+    """Calculate ENS_pie alpha diversity measure.
+
+    ENS_pie = 1 / sum(pi ^ 2) with the sum occurring over all ``S`` species in
+    the pool. ``pi`` is the proportion of the entire community that species
+    ``i`` represents.
+
+    Notes
+    -----
+    For more information about ENS_pie, see [1]_.
+
+    References
+    ----------
+    .. [1] "Scale-dependent effect sizes of ecological drivers on biodiversity:
+       why standardised sampling is not enough". Chase and Knight. Ecology
+       Letters, Volume 16, Issue Supplement s1, pgs 17-26 May 2013.
+
+    """
+    return 1 / dominance(counts)
+
+# For backwards-compatibility with QIIME.
+simpson_reciprocal = enspie
+
 
 def observed_species(counts):
     """Calculate number of distinct species."""
     return (counts != 0).sum()
 
+
 def osd(counts):
     """Calculate **o**bserved, **s**ingles and **d**oubles from counts."""
     return observed_species(counts), (counts == 1).sum(), (counts == 2).sum()
+
+
+def simpson(counts):
+    """Calculate Simpson's index.
+
+    Simpson's index = 1 - dominance.
+
+    """
+    return 1 - dominance(counts)
+
 
 def singles(counts):
     """Return count of single occurrences."""

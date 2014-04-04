@@ -14,8 +14,9 @@ from unittest import TestCase, main
 import numpy as np
 
 from skbio.maths.diversity.alpha import (berger_parker_d, brillouin_d,
-                                         dominance, doubles, observed_species,
-                                         osd, singles)
+                                         dominance, doubles, enspie,
+                                         observed_species, osd, simpson,
+                                         simpson_reciprocal, singles)
 
 
 class AlphaDiversityTests(TestCase):
@@ -45,6 +46,26 @@ class AlphaDiversityTests(TestCase):
         self.assertEqual(doubles(np.array([0, 3, 4])), 0)
         self.assertEqual(doubles(np.array([2])), 1)
 
+    def test_enspie(self):
+        """Test that ENS_pie is correctly calculated."""
+        # Totally even community should have ENS_pie = number of species.
+        self.assertAlmostEqual(enspie(np.array([1, 1, 1, 1, 1, 1])), 6)
+        self.assertAlmostEqual(enspie(np.array([13, 13, 13, 13])), 4)
+
+        # Hand calculated.
+        arr = np.array([1, 41, 0, 0, 12, 13])
+        exp = 1 / ((arr / arr.sum()) ** 2).sum()
+        self.assertAlmostEqual(enspie(arr), exp)
+
+        # Using dominance.
+        exp = 1 / dominance(arr)
+        self.assertAlmostEqual(enspie(arr), exp)
+
+    def test_simpson_reciprocal(self):
+        """Should match (1 / dominance) results."""
+        arr = np.array([1, 0, 2, 5, 2])
+        self.assertAlmostEqual(simpson_reciprocal(arr), 1 / dominance(arr))
+
     def test_observed_species(self):
         """Should return number of observed species."""
         obs = observed_species(np.array([4, 3, 4, 0, 1, 0, 2]))
@@ -59,6 +80,11 @@ class AlphaDiversityTests(TestCase):
     def test_osd(self):
         """Should return correct number of observed, singles, and doubles."""
         self.assertEqual(osd(self.counts), (9, 3, 3))
+
+    def test_simpson(self):
+        """Should match hand-calculated values."""
+        self.assertAlmostEqual(simpson(np.array([1, 0, 2, 5, 2])), 0.66)
+        self.assertAlmostEqual(simpson(np.array([5])), 0)
 
     def test_singles(self):
         """Should return correct number of singles."""
