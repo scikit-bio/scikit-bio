@@ -13,7 +13,7 @@ from unittest import TestCase, main
 
 import numpy as np
 
-from skbio.maths.diversity.alpha import observed_species
+from skbio.maths.diversity.alpha import observed_species, osd
 
 
 class AlphaDiversityTests(TestCase):
@@ -30,6 +30,10 @@ class AlphaDiversityTests(TestCase):
 
         obs = observed_species(self.counts)
         self.assertEqual(obs, 9)
+
+    def test_osd(self):
+        """Should return correct number of observed, singles, and doubles."""
+        self.assertEqual(osd(self.counts), (9, 3, 3))
 
 
 if __name__ == '__main__':

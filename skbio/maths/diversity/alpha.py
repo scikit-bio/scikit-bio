@@ -32,3 +32,7 @@ import numpy as np
 def observed_species(counts):
     """Calculate number of distinct species."""
     return (counts != 0).sum()
+
+def osd(counts):
+    """Calculate observed, singles and doubles from counts."""
+    return observed_species(counts), (counts == 1).sum(), (counts == 2).sum()
