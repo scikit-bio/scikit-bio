@@ -130,6 +130,17 @@ def mcintosh_e(counts):
     return numerator / denominator
 
 
+def menhinick(counts):
+    """Menhinick's index, assumes sqrt accumulation.
+
+    References
+    ----------
+    .. [1] Magurran 2004, p 77.
+
+    """
+    return observed_species(counts) / np.sqrt(counts.sum())
+
+
 def observed_species(counts):
     """Calculate number of distinct species."""
     return (counts != 0).sum()

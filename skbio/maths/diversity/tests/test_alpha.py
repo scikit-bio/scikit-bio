@@ -16,8 +16,8 @@ import numpy as np
 from skbio.maths.diversity.alpha import (berger_parker_d, brillouin_d,
                                          dominance, doubles, enspie,
                                          equitability, mcintosh_d, mcintosh_e,
-                                         observed_species, osd, shannon,
-                                         simpson, simpson_e,
+                                         menhinick, observed_species, osd,
+                                         shannon, simpson, simpson_e,
                                          simpson_reciprocal, singles, strong)
 
 
@@ -84,6 +84,10 @@ class AlphaDiversityTests(TestCase):
         den = np.sqrt(19)
         exp = num / den
         self.assertEqual(mcintosh_e(np.array([1, 2, 3, 1])), exp)
+
+    def test_menhinick(self):
+        """Should match hand-calculated values"""
+        self.assertEqual(menhinick(self.counts), 9 / np.sqrt(22))
 
     def test_observed_species(self):
         """Should return number of observed species."""
