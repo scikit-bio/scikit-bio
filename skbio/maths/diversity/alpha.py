@@ -27,6 +27,7 @@ from __future__ import division
 #-----------------------------------------------------------------------------
 
 import numpy as np
+from scipy.special import gammaln
 
 
 def berger_parker_d(counts):
@@ -38,6 +39,18 @@ def berger_parker_d(counts):
 
     """
     return counts.max() / counts.sum()
+
+def brillouin_d(counts):
+    """Calculate Brilloun index of alpha diversity.
+
+    References
+    ----------
+    Pielou 1975, by way of SDR-IV.
+
+    """
+    nz = counts[counts.nonzero()]
+    n = nz.sum()
+    return (gammaln(n + 1) - gammaln(nz + 1).sum()) / n
 
 def observed_species(counts):
     """Calculate number of distinct species."""
