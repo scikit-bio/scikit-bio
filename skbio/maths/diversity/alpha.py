@@ -148,3 +148,11 @@ def simpson_e(counts):
 def singles(counts):
     """Return count of single occurrences."""
     return (counts == 1).sum()
+
+def strong(counts):
+    """Calculate Strong's 2002 dominance index, by way of SDR-IV."""
+    n = counts.sum()
+    s = observed_species(counts)
+    i = np.arange(1, len(counts) + 1)
+    sorted_sum = np.sort(counts)[::-1].cumsum()
+    return (sorted_sum / n - (i / s)).max()

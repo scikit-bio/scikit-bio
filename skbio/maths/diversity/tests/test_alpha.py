@@ -18,7 +18,7 @@ from skbio.maths.diversity.alpha import (berger_parker_d, brillouin_d,
                                          mcintosh_d, mcintosh_e,
                                          observed_species, osd, simpson,
                                          simpson_e, simpson_reciprocal,
-                                         singles)
+                                         singles, strong)
 
 
 class AlphaDiversityTests(TestCase):
@@ -125,6 +125,10 @@ class AlphaDiversityTests(TestCase):
         self.assertEqual(singles(self.counts), 3)
         self.assertEqual(singles(np.array([0, 3, 4])), 0)
         self.assertEqual(singles(np.array([1])), 1)
+
+    def test_strong(self):
+        """Strong's dominance index should match hand-calculated values."""
+        self.assertAlmostEqual(strong(np.array([1, 2, 3, 1])), 0.214285714)
 
 
 if __name__ == '__main__':
