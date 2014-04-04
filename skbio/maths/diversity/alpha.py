@@ -102,6 +102,17 @@ def equitability(counts, base=2):
     return numerator / denominator
 
 
+def margalef(counts):
+    """Margalef's index, assumes log accumulation.
+
+    References
+    ----------
+    Magurran 2004, p 77.
+
+    """
+    return (observed_species(counts) - 1) / np.log(counts.sum())
+
+
 def mcintosh_d(counts):
     """Calculate McIntosh index of alpha diversity.
 

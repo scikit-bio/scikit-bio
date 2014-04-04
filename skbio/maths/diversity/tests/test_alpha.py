@@ -15,9 +15,10 @@ import numpy as np
 
 from skbio.maths.diversity.alpha import (berger_parker_d, brillouin_d,
                                          dominance, doubles, enspie,
-                                         equitability, mcintosh_d, mcintosh_e,
-                                         menhinick, observed_species, osd,
-                                         robbins, shannon, simpson, simpson_e,
+                                         equitability, margalef, mcintosh_d,
+                                         mcintosh_e, menhinick,
+                                         observed_species, osd, robbins,
+                                         shannon, simpson, simpson_e,
                                          simpson_reciprocal, singles, strong)
 
 
@@ -65,6 +66,9 @@ class AlphaDiversityTests(TestCase):
     def test_equitability(self):
         self.assertAlmostEqual(equitability(np.array([5, 5])), 1)
         self.assertAlmostEqual(equitability(np.array([1, 1, 1, 1, 0])), 1)
+
+    def test_margalef(self):
+        self.assertEqual(margalef(self.counts), 8 / np.log(22))
 
     def test_mcintosh_d(self):
         self.assertAlmostEqual(mcintosh_d(np.array([1, 2, 3])),
