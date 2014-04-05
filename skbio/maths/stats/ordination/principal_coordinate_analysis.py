@@ -132,10 +132,11 @@ class PCoA(Ordination):
 
         coordinates = eigvecs * np.sqrt(eigvals)
 
-        perc_expl = (eigvals / eigvals.sum()) * 100
+        proportion_explained = eigvals / eigvals.sum()
 
         return OrdinationResults(eigvals=eigvals, species=coordinates,
-                                 perc_expl=perc_expl, ids=self.ids)
+                                 proportion_explained=proportion_explained,
+                                 ids=self.ids)
 
     @staticmethod
     def _E_matrix(distance_matrix):

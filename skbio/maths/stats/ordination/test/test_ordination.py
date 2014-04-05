@@ -483,9 +483,9 @@ class TestPCoAResultsExtensive(object):
                             0.19165361])
         npt.assert_almost_equal(results.eigvals, expected)
 
-        expected = np.array([26.26621381, 23.99817314, 18.98758748,
-                             18.11445992, 12.63356565])
-        npt.assert_almost_equal(results.perc_expl, expected)
+        expected = np.array([0.2626621381, 0.2399817314, 0.1898758748,
+                             0.1811445992, 0.1263356565])
+        npt.assert_almost_equal(results.proportion_explained, expected)
 
         npt.assert_equal(results.ids, self.ids)
 
@@ -531,9 +531,10 @@ class TestPCoAEigenResults(object):
                              0.19169895, 0.16054235,  0.15017696,  0.12245775])
         npt.assert_almost_equal(results.eigvals, expected)
 
-        expected = np.array([26.75738328, 15.7044696, 13.99118638, 10.91402725,
-                             10.01110485, 8.38401162, 7.84269939, 6.39511764])
-        npt.assert_almost_equal(results.perc_expl, expected)
+        expected = np.array([0.2675738328, 0.157044696, 0.1399118638,
+                             0.1091402725, 0.1001110485, 0.0838401162,
+                             0.0784269939, 0.0639511764])
+        npt.assert_almost_equal(results.proportion_explained, expected)
 
         npt.assert_equal(results.ids, self.ids)
 
