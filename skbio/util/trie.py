@@ -88,13 +88,13 @@ Create a new trie with a list of sequences
 """
 from __future__ import division
 
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 
 class _CompressedNode(object):
@@ -238,11 +238,11 @@ class _CompressedNode(object):
         object
             The value attached to the key
         """
-        #key exhausted
+        # key exhausted
         if len(key) == 0:
             return self.values
 
-        #find matching part of key and node_key
+        # find matching part of key and node_key
         min_length = min(len(key), len(self.key))
         keys_diff = False
         index = 0
@@ -253,7 +253,7 @@ class _CompressedNode(object):
         if keys_diff:
             return []
         elif index == len(key):
-            #key and node_key match exactly
+            # key and node_key match exactly
             return self.values
         else:
             node = self.children.get(key[index])
