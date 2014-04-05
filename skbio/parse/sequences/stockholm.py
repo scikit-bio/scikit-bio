@@ -14,17 +14,15 @@ Functions
    :toctree: generated/
 
     parse_stockholm
-
-
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 from collections import OrderedDict
 
 from skbio.core.exception import StockholmParseError
@@ -35,7 +33,7 @@ from skbio.core.alignment import Alignment
 def _parse_gf_info(lines):
     """Takes care of parsing GF lines in stockholm including special cases"""
     parsed = {}
-    #needed for making each multi-line RT and NH one string
+    # needed for making each multi-line RT and NH one string
     rt = []
     nh = []
     lastline = ""
@@ -48,9 +46,9 @@ def _parse_gf_info(lines):
         if init != "#=GF":
             raise StockholmParseError("Non-GF line encountered!")
 
-        #take care of adding multiline RT to the parsed information
+        # take care of adding multiline RT to the parsed information
         if lastline == "RT" and feature != "RT":
-            #add rt line to the parsed dictionary
+            # add rt line to the parsed dictionary
             rtline = " ".join(rt)
             rt = []
             if "RT" in parsed:
@@ -61,7 +59,8 @@ def _parse_gf_info(lines):
             rt.append(content)
             lastline = feature
             continue
-        #Take care of adding multiline NH to the parsed dictionary
+
+        # Take care of adding multiline NH to the parsed dictionary
         elif lastline == "NH" and feature != "NH":
             nhline = " ".join(nh)
             nh = []
@@ -74,16 +73,16 @@ def _parse_gf_info(lines):
             lastline = feature
             continue
 
-        #add current feature to the parsed information
+        # add current feature to the parsed information
         if feature in parsed:
             parsed[feature].append(content)
         else:
             parsed[feature] = [content]
         lastline = feature
 
-    #clean up parsed info by removing unneccessary lists
+    # clean up parsed info by removing unneccessary lists
     for feature in parsed:
-        #list of multi-line features to join into single string if necessary
+        # list of multi-line features to join into single string if necessary
         if feature in ["CC"]:
             parsed[feature] = ' '.join(parsed[feature])
         elif len(parsed[feature]) == 1:
@@ -103,7 +102,7 @@ def _parse_gc_info(lines, strict=False, seqlen=-1):
         if init != "#=GC":
             raise StockholmParseError("Non-GC line encountered!")
 
-        #add current feature to the parsed information
+        # add current feature to the parsed information
         if feature in parsed:
             if strict:
                 raise StockholmParseError("Should not have multiple lines "
@@ -112,7 +111,7 @@ def _parse_gc_info(lines, strict=False, seqlen=-1):
         else:
             parsed[feature] = [content]
 
-    #clean up parsed info by removing unneccessary lists
+    # clean up parsed info by removing unneccessary lists
     for feature in parsed:
         parsed[feature] = ''.join(parsed[feature])
         if strict:
@@ -138,14 +137,14 @@ def _parse_gs_gr_info(lines, strict=False, seqlen=-1):
         elif init != parsetype:
                 raise StockholmParseError("Non-GS/GR line encountered!")
 
-        #parse each line, taking into account we can have interleaved format
+        # parse each line, taking into account we can have interleaved format
         if label in parsed and feature in parsed[label]:
-                #interleaved format, so need list of content
+                # interleaved format, so need list of content
                 parsed[label][feature].append(content)
         else:
             parsed[label] = {feature: [content]}
 
-    #join all the crazy lists created during parsing
+    # join all the crazy lists created during parsing
     for label in parsed:
         for feature, content in parsed[label].items():
             parsed[label][feature] = ''.join(content)
@@ -212,7 +211,7 @@ def parse_stockholm(infile, seq_constructor, strict=False):
 
     sto = parse_stockholm(sto_in, RNA).next()
     """
-    #make sure first line is corect
+    # make sure first line is corect
     line = infile.readline()
     if not line.startswith("# STOCKHOLM 1.0"):
         raise StockholmParseError("Incorrect header found")
@@ -220,25 +219,28 @@ def parse_stockholm(infile, seq_constructor, strict=False):
     gf_lines = []
     gr_lines = []
     gc_lines = []
-    #OrderedDict used so sequences maintain same order as in file
+    # OrderedDict used so sequences maintain same order as in file
     seqs = OrderedDict()
     for line in infile:
         line = line.strip()
         if line == "" or line.startswith("# S"):
-            #skip blank lines or secondary headers
+            # skip blank lines or secondary headers
             continue
         elif line == "//":
-            #create alignment from stockholm file
+            # create alignment from stockholm file
             aln = Alignment.from_fasta_records(seqs.items(), seq_constructor)
             seqlen = len(aln)
-            #parse information lines
+
+            # parse information lines
             GF = _parse_gf_info(gf_lines)
             GS = _parse_gs_gr_info(gs_lines)
             GR = _parse_gs_gr_info(gr_lines, strict, seqlen)
             GC = _parse_gc_info(gc_lines, strict, seqlen)
-            #yield the actual stockholm object
+
+            # yield the actual stockholm object
             yield Stockholm(aln, GF, GS, GR, GC)
-            #reset all storage variables
+
+            # reset all storage variables
             gs_lines = []
             gf_lines = []
             gr_lines = []
@@ -254,9 +256,10 @@ def parse_stockholm(infile, seq_constructor, strict=False):
             gc_lines.append(line)
         else:
             lineinfo = line.split()
-            #assume sequence since nothing else in format is left
-            #in case of interleaved format, need to do check
+            # assume sequence since nothing else in format is left
+            # in case of interleaved format, need to do check
             if lineinfo[0] in seqs:
-                seqs[lineinfo[0]] += lineinfo[1]
+                val = seqs[lineinfo[0]]
+                seqs[lineinfo[0]] = ''.join([val, lineinfo[1]])
             else:
                 seqs[lineinfo[0]] = lineinfo[1]

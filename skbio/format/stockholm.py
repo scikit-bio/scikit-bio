@@ -15,7 +15,6 @@ Constants
 
     Stockholm
 
-
 Functions
 ---------
 
@@ -23,24 +22,25 @@ Functions
    :toctree: generated/
 
     stockholm_from_alignment
-
-
 """
 
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 from collections import namedtuple
+try:
+    from itertools import izip as zip
+except ImportError:  # doesn't exist in python3 so import fails
+    pass
 
 Stockholm = namedtuple("Stockholm", ("aln", "GF", "GS", "GR", "GC"))
-r"""
-Stockholm named tuple for holding all information in a stockholm file
+r"""Stockholm named tuple for holding all information in a stockholm file
 
 Attributes
 ----------
@@ -62,17 +62,16 @@ Works with collectons.OrderedDict if the order of information matters
 
 
 def stockholm_from_alignment(stdata):
-    r"""
-    Parses a Stockholm named tuple into a string with stockholm format
+    r"""Parses a Stockholm named tuple into a string with stockholm format
 
     Parameters
     ----------
-    stdata: Stockholm named tuple
-        Stockholm formatted named tuple with alignment and all information
+    stdata: Stockholm namedtuple
+        Stockholm formatted namedtuple with alignment and all information
 
     Returns
     -------
-    sto: string
+    sto: str
         Stockholm formatted string containing all information passed
 
     Examples
@@ -85,7 +84,8 @@ def stockholm_from_alignment(stdata):
     >>> seqs = [RNA("ACC--G-GGGU", identifier="seq1"),
     ...     RNA("TCC--G-GGGA", identifier="seq2")]
     >>> a1 = Alignment(seqs)
-    >>> sto = Stockholm(a1, None, None, None, {"SS_cons": "(((....)))"})
+    >>> sto = Stockholm(a1, GR=None, GS=None, GF=None,
+    ...    GC={"SS_cons": "(((....)))"})
     >>> stockholm_from_alignment(sto)
     '# STOCKHOLM 1.0\nseq1          ACC--G-GGGU\nseq2          TCC--G-GGGA\n
     #=GC SS_cons  (((....)))\n//'
@@ -139,25 +139,35 @@ def stockholm_from_alignment(stdata):
 
     If there are multiple trees included, use a list to store identifiers and
     trees, with position 0 holding identifier for tree in position 0, etc.
+
+    See also
+    --------
+    skbio.parse.sequences.stockholm
+
+    References
+    ----------
+    http://sonnhammer.sbc.su.se/Stockholm.html
+    http://en.wikipedia.org/wiki/Stockholm_format
     """
 
-    #find length of leader info needed to make file pretty
-    #10 comes from the characters for '#=GF ' and the feature after label
+    # find length of leader info needed to make file pretty
+    # 10 comes from the characters for '#=GF ' and the feature after label
     infolen = max(len(label) for label in stdata.aln.identifiers()) + 10
 
     GF_lines = []
     GS_lines = []
     GC_lines = []
-    #NOTE: EVERYTHING MUST BE COERECED TO STR in case ints or floats are passed
-    #add GF information if applicable
+    # NOTE: EVERYTHING MUST BE COERECED TO STR in case int or float is passed
+    # add GF information if applicable
     if stdata.GF:
+        skipfeatures = set(("NH", "RC", "RM", "RN", "RA", "RL"))
         for feature, value in stdata.GF.items():
-            #list of features to skip and parse special later
-            if feature in ("NH", "RC", "RM", "RN", "RA", "RL"):
+            # list of features to skip and parse special later
+            if feature in skipfeatures:
                 continue
-            #list of features to parse special
+            # list of features to parse special
             elif feature == "TN":
-                #trees must be in proper order of identifier then tree
+                # trees must be in proper order of identifier then tree
                 ident = value if isinstance(value, list) else [value]
                 tree = stdata.GF["NH"] if isinstance(stdata.GF["NH"], list) \
                     else [stdata.GF["NH"]]
@@ -165,17 +175,18 @@ def stockholm_from_alignment(stdata):
                     GF_lines.append(' '.join(["#=GF", "TN", str(ident)]))
                     GF_lines.append(' '.join(["#=GF", "NH", str(tree)]))
             elif feature == "RT":
-                #make sure each reference block stays together
-                #set up lists to zip in case some bits are missing
-                #create rn list if needed: always have to have numbered refs
-                rn = stdata.GF["RN"] if "RN" in stdata.GF else ["[%i]" % x for
-                     x in range(1, len(value)+1)]
-                rm = stdata.GF["RM"] if "RM" in stdata.GF else [0]*len(value)
-                rt = stdata.GF["RT"] if "RT" in stdata.GF else [0]*len(value)
-                ra = stdata.GF["RA"] if "RA" in stdata.GF else [0]*len(value)
-                rl = stdata.GF["RL"] if "RL" in stdata.GF else [0]*len(value)
-                rc = stdata.GF["RC"] if "RC" in stdata.GF else [0]*len(value)
-                #order: RN, RM, RT, RA, RL, RC
+                # make sure each reference block stays together
+                # set up lists to zip in case some bits are missing
+                # create rn list if needed: always have to have numbered refs
+                default_none = [0]*len(value)
+                rn = stdata.GF.get("RN", ["[%i]" % x for x in
+                                          range(1, len(value)+1)])
+                rm = stdata.GF.get("RM", default_none)
+                rt = stdata.GF.get("RT", default_none)
+                ra = stdata.GF.get("RA", default_none)
+                rl = stdata.GF.get("RL", default_none)
+                rc = stdata.GF.get("RC", default_none)
+                # order: RN, RM, RT, RA, RL, RC
                 for n, m, t, a, l, c in zip(rn, rm, rt, ra, rl, rc):
                     GF_lines.append(' '.join(["#=GF", "RN", n]))
                     if m:
@@ -189,20 +200,21 @@ def stockholm_from_alignment(stdata):
                     if c:
                         GF_lines.append(' '.join(["#=GF", "RC", str(c)]))
             else:
-                #normal addition for everything else
+                # normal addition for everything else
                 if not isinstance(value, list):
                     value = [value]
                 for val in value:
                     GF_lines.append(' '.join(["#=GF", feature, str(val)]))
 
-    #add GS information if applicable
+    # add GS information if applicable
     if stdata.GS:
         for seqname in stdata.GS:
             for feature in stdata.GS[seqname]:
                 GS_lines.append(' '.join(["#=GS", seqname, feature,
                                          str(stdata.GS[seqname][feature])]))
 
-    #add GC information if applicable
+    # add GC information if applicable
+    # NOTE: .items() used here for py3 compatability, iteritems() not in py3
     if stdata.GC:
         for feature, value in stdata.GC.items():
             leaderinfo = ' '.join(["#=GC", feature])
@@ -212,11 +224,11 @@ def stockholm_from_alignment(stdata):
     gr = stdata.GR if stdata.GR else {}
 
     sto_lines = ["# STOCKHOLM 1.0"] + GF_lines + GS_lines
-    #create seq output along with GR info if applicable
+    # create seq output along with GR info if applicable
     for label, seq in stdata.aln.iteritems():
         spacer = ' ' * (infolen - len(label))
         sto_lines.append(spacer.join([label, str(seq)]))
-        #GR info added if exists for sequence
+        # GR info added if exists for sequence
         if label in gr:
             for feature, value in gr[label].iteritems():
                 leaderinfo = ' '.join(['#=GR', label, feature])
@@ -224,7 +236,7 @@ def stockholm_from_alignment(stdata):
                 sto_lines.append(spacer.join([leaderinfo, value]))
 
     sto_lines.extend(GC_lines)
-    #add final slashes to end of file
+    # add final slashes to end of file
     sto_lines.append('//')
 
     return '\n'.join(sto_lines)
