@@ -22,13 +22,13 @@ Functions
 """
 from __future__ import division
 
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 import hashlib
 from os import remove, makedirs
@@ -177,7 +177,7 @@ def create_dir(dir_name, fail_on_exist=False, handle_errors_externally=False):
 
     if exists(dir_name):
         if isdir(dir_name):
-            #dir is there
+            # dir is there
             if fail_on_exist:
                 return ror(error_code_lookup['DIR_EXISTS'])
             else:

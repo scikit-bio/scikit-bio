@@ -69,13 +69,13 @@ True
 """
 from __future__ import division
 
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 from collections import Sequence
 from itertools import izip, product
@@ -807,7 +807,7 @@ class BiologicalSequence(Sequence):
         """
         all_supported = self.alphabet() | self.gap_alphabet()
         for e in self:
-            if not e in all_supported:
+            if e not in all_supported:
                 return True
         return False
 
