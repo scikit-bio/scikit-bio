@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 from __future__ import division
 
@@ -735,7 +735,6 @@ def ANOVA_one_way(a):
     An F value is first calculated as the variance of the group means
     divided by the mean of the within-group variances.
     """
-    #a = array(a)
     group_means = []
     group_variances = []
     num_cases = 0  # total observations in all groups
