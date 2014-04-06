@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 from tempfile import gettempdir
 from os import remove, system, rmdir, getcwd, walk
@@ -1125,7 +1125,7 @@ def teardown_module():
     rmdir('/tmp/blah')
 
 
-#=====================END OF TESTS===================================
+# =====================END OF TESTS==================================
 
 script = """#!/usr/bin/env python
 #This is a test script intended to test the CommandLineApplication

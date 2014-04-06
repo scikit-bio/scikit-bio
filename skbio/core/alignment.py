@@ -50,13 +50,13 @@ Examples
 """
 from __future__ import division
 
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 from collections import Counter, defaultdict
 from itertools import izip
@@ -887,7 +887,7 @@ class Alignment(SequenceCollection):
                 # keep only positions that were not listed in
                 # positions_to_keep
                 def keep_position(pos):
-                    return not pos in positions_to_keep
+                    return pos not in positions_to_keep
             # else if invert_positions_to_keep is False
             else:
                 # keep only sequences that were listed in positions_to_keep
