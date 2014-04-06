@@ -126,7 +126,7 @@ class PCoA(Ordination):
 
         # We only return coordinates that make sense (i.e., that have
         # a corresponding positive eigenvalue)
-        num_positive = (self.eigvals > 0).sum()
+        num_positive = (self.eigvals >= 0).sum()
         eigvecs = self.eigvecs[:, :num_positive]
         eigvals = self.eigvals[:num_positive]
 
