@@ -449,7 +449,7 @@ class CommandLineApplicationTests(TestCase):
         # because parameters are printed in arbitrary order
         app.Parameters['-F'].on('junk.txt')
         app.Parameters['--duh'].on()
-        self.failUnless(app.BaseCommand ==
+        self.assertTrue(app.BaseCommand ==
                         'cd "/tmp/"; /tmp/CLAppTester.py -F "junk.txt" --duh'
                         or app.BaseCommand ==
                         'cd "/tmp/"; /tmp/CLAppTester.py --duh -F "junk.txt"')
