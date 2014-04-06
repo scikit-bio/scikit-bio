@@ -49,14 +49,10 @@ if __doc__ is None:
 else:
     __doc__ = title + art + __doc__
 
-def test(level=1, verbosity=1):
-    from numpy.testing import Tester
-    test = Tester(package='skbio').test(level, verbosity)
+from numpy.testing import Tester
+test = Tester().test
 
 if __name__ == '__main__':
     print(title)
     print(art)
 
-from numpy.testing import Tester
-test = Tester().test
-bench = Tester().bench

@@ -42,3 +42,6 @@ __all__ = ['blast',
            'unafold',
            'util',
            'vienna_package']
+
+from numpy.testing import Tester
+test = Tester().test

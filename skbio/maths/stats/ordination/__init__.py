@@ -34,3 +34,6 @@ from .canonical_correspondence_analysis import CCA
 from .principal_coordinate_analysis import PCoA
 
 __all__ = ['CA', 'RDA', 'CCA', 'PCoA']
+
+from numpy.testing import Tester
+test = Tester().test
