@@ -55,4 +55,3 @@ test = Tester().test
 if __name__ == '__main__':
     print(title)
     print(art)
-
