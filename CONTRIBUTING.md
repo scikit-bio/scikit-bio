@@ -101,6 +101,24 @@ Testing Guidelines
 
 All code that is added to scikit-bio must be unit tested, and the unit test code must be submitted in the same pull request as the library code that you are submitting. We will not merge code that is not unit tested. The PyCogent Coding Guidelines describe our [expectations for unit tests](http://pycogent.org/coding_guidelines.html?highlight=coding%20guidelines#how-should-i-test-my-code). You should review the unit test section before working on your test code.
 
+Tests can be executed using [nose](https://nose.readthedocs.org/en/latest/) running `nosetests --with-doctest` from the base directory of the project or from within a(n) (I)Python session running the following code:
+
+``` python
+>>> import skbio
+>>> skbio.test()
+# full test suite is executed
+>>> skbio.parse.test()
+# tests for the parse module are executed
+```
+
+Note that this is possible because the lines below are added at the end of each `__init__.py` file in the package, hence if you add a new module make sure these are included:
+
+```python
+from numpy.testing import Tester
+test = Tester().test
+```
+
+
 Documentation Guidelines
 ------------------------
 
