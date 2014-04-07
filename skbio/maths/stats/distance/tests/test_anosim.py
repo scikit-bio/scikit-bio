@@ -13,7 +13,7 @@ from unittest import TestCase, main
 
 import numpy as np
 
-from skbio.core.distance import DistanceMatrix, SymmetricDistanceMatrix
+from skbio.core.distance import SymmetricDistanceMatrix
 from skbio.maths.stats.distance.anosim import ANOSIM
 
 
