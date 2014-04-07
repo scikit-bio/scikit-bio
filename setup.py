@@ -43,7 +43,7 @@ on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 if on_rtd:
     install_requires = []
 else:
-    install_requires = ['numpy >= 1.5.1', 'matplotlib >= 1.1.0',
+    install_requires = ['numpy >= 1.7', 'matplotlib >= 1.1.0',
                         'scipy >= 0.13.0']
 
 setup(name='scikit-bio',
