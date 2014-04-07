@@ -46,22 +46,6 @@ else:
     install_requires = ['numpy >= 1.5.1', 'matplotlib >= 1.1.0',
                         'scipy >= 0.13.0']
 
-
-# add the tests & data to be able to do skbio.tests() from a(n) (I)Python shell
-tests = []
-for root, _, fnames in os.walk('skbio'):
-    try:
-        root = root.split('/', 1)[1]
-    except IndexError:
-        # nothing to gather at the root directory of skbio
-        continue
-    else:
-        for fname in fnames:
-            fp = os.path.join(root, fname)
-            # the filepath has to be either test data or a test suite
-            if any([e in fp for e in ['/data/', '/tests/', '/test/']]):
-                tests.append(os.path.join(root, fname))
-
 setup(name='scikit-bio',
       cmdclass={'build_py': build_py},
       version=__version__,
@@ -78,4 +62,4 @@ setup(name='scikit-bio',
       extras_require={'test': ["nose >= 0.10.1", "pep8"],
                       'doc': ["Sphinx >= 1.2.2", "sphinx-bootstrap-theme"]},
       classifiers=classifiers,
-      package_data={'skbio':tests})
+      package_data={'skbio': ['maths/stats/ordination/test/data/*']})
