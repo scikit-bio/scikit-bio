@@ -22,9 +22,6 @@ Exceptions
    DissimilarityMatrixError
    DistanceMatrixError
    DissimilarityMatrixFormatError
-   IDMismatchError
-   MissingDataError
-   MissingHeaderError
    MissingIDError
    TreeError
    NoLengthError
@@ -98,41 +95,6 @@ class DissimilarityMatrixFormatError(DissimilarityMatrixError):
 
     """
     pass
-
-
-class IDMismatchError(DissimilarityMatrixFormatError):
-    """Error for reporting mismatch between IDs in a dissimilarity matrix file.
-
-    Typically used during parsing.
-
-    """
-
-    def __init__(self, actual, expected):
-        super(IDMismatchError, self).__init__()
-        self.args = ("Encountered mismatched IDs while parsing the "
-                     "dissimilarity matrix file. Found '%s' but expected "
-                     "'%s'. Please ensure that the IDs match between the "
-                     "dissimilarity matrix header (first row) and the row "
-                     "labels (first column)." % (actual, expected),)
-
-
-class MissingHeaderError(DissimilarityMatrixFormatError):
-    """Error for reporting a missing ID header line during parsing."""
-
-    def __init__(self):
-        super(MissingHeaderError, self).__init__()
-        self.args = ("Could not find a header line containing IDs in the "
-                     "dissimilarity matrix file. Please verify that the file "
-                     "is not empty.",)
-
-
-class MissingDataError(DissimilarityMatrixFormatError):
-    """Error for reporting missing data lines during parsing."""
-
-    def __init__(self, actual, expected):
-        super(MissingDataError, self).__init__()
-        self.args = ("Expected %d row(s) of data, but found %d." % (expected,
-                                                                    actual),)
 
 
 class TreeError(Exception):

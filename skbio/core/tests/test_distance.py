@@ -19,8 +19,7 @@ from skbio.core.distance import randdm, DissimilarityMatrix, DistanceMatrix
 from skbio.core.exception import (DissimilarityMatrixError,
                                   DistanceMatrixError,
                                   DissimilarityMatrixFormatError,
-                                  IDMismatchError, MissingDataError,
-                                  MissingHeaderError, MissingIDError)
+                                  MissingIDError)
 from unittest import TestCase, main
 
 
@@ -124,7 +123,7 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
     def test_from_file_invalid_input(self):
         """Raises error on ill-formatted dissimilarity matrix file."""
         # Empty dm.
-        with self.assertRaises(MissingHeaderError):
+        with self.assertRaises(DissimilarityMatrixFormatError):
             _ = DissimilarityMatrix.from_file([])
 
         # Number of values don't match number of IDs.
@@ -132,7 +131,7 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
             _ = DissimilarityMatrix.from_file(self.bad_dm_f1)
 
         # Mismatched IDs.
-        with self.assertRaises(IDMismatchError):
+        with self.assertRaises(DissimilarityMatrixFormatError):
             _ = DissimilarityMatrix.from_file(self.bad_dm_f2)
 
         # Extra data at end.
@@ -140,11 +139,11 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
             _ = DissimilarityMatrix.from_file(self.bad_dm_f3)
 
         # Missing data.
-        with self.assertRaises(MissingDataError):
+        with self.assertRaises(DissimilarityMatrixFormatError):
             _ = DissimilarityMatrix.from_file(self.bad_dm_f4)
 
         # Header, but no data.
-        with self.assertRaises(MissingDataError):
+        with self.assertRaises(DissimilarityMatrixFormatError):
             _ = DissimilarityMatrix.from_file(self.bad_dm_f5)
 
         # Non-hollow.

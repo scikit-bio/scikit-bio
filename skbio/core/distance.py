@@ -141,9 +141,7 @@ from scipy.spatial.distance import squareform
 
 from skbio.core.exception import (DissimilarityMatrixError,
                                   DissimilarityMatrixFormatError,
-                                  DistanceMatrixError, IDMismatchError,
-                                  MissingDataError, MissingHeaderError,
-                                  MissingIDError)
+                                  DistanceMatrixError, MissingIDError)
 
 
 class DissimilarityMatrix(object):
@@ -296,12 +294,19 @@ class DissimilarityMatrix(object):
             if curr_id == expected_id:
                 data[curr_row_idx, :] = np.asarray(tokens[1:], dtype='float')
             else:
-                raise IDMismatchError(curr_id, expected_id)
+                raise DissimilarityMatrixFormatError(
+                    "Encountered mismatched IDs while parsing the "
+                    "dissimilarity matrix file. Found '%s' but expected '%s'. "
+                    "Please ensure that the IDs match between the "
+                    "dissimilarity matrix header (first row) and the row "
+                    "labels (first column)." % (curr_id, expected_id))
 
             curr_row_idx += 1
 
         if curr_row_idx != num_ids:
-            raise MissingDataError(curr_row_idx, num_ids)
+            raise DissimilarityMatrixFormatError(
+                "Expected %d row(s) of data, but found %d." % (num_ids,
+                    curr_row_idx))
 
         return cls(data, ids)
 
@@ -630,7 +635,10 @@ class DissimilarityMatrix(object):
                 break
 
         if header_line is None:
-            raise MissingHeaderError
+            raise DissimilarityMatrixFormatError(
+                "Could not find a header line containing IDs in the "
+                "dissimilarity matrix file. Please verify that the file is "
+                "not empty.")
         else:
             return map(lambda e: e.strip(), header_line.split(delimiter))
 
