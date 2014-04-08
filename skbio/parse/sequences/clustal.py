@@ -78,8 +78,6 @@ def parse_clustal(record, strict=True):
 
     data : open file object
         An open Clustal file.
-
-
     strict : boolean
         Whether or not to raise a ``RecordError`` when no labels are found.
 
@@ -89,7 +87,6 @@ def parse_clustal(record, strict=True):
 
     labels: list
         list of strings with the labels
-
     data : dict
         a dict of label to sequence (pieces not joined)
 
