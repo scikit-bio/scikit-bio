@@ -10,6 +10,8 @@ from __future__ import division
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import os
+
 from itertools import izip
 from StringIO import StringIO
 from tempfile import TemporaryFile
@@ -23,6 +25,14 @@ from skbio.core.exception import (DistanceMatrixError,
                                   MissingDataError, MissingHeaderError,
                                   MissingIDError)
 from unittest import TestCase, main
+
+
+# copied from maths/stats/ordination/tests/test_ordination.py
+def get_data_path(fn):
+    """Return path to filename `fn` in the data folder."""
+    path = os.path.dirname(os.path.abspath(__file__))
+    data_path = os.path.join(path, 'data', fn)
+    return data_path
 
 
 class DistanceMatrixTestData(TestCase):
@@ -47,6 +57,10 @@ class DistanceMatrixTestData(TestCase):
 
         self.tmp_f = TemporaryFile(prefix='skbio.core.tests.test_distance',
                                    suffix='.txt')
+
+        self.bad_dm_fp = get_data_path('bad_dm.txt')
+        self.dm_2x2_asym_fp = get_data_path('dm_2x2_asym.txt')
+        self.dm_3x3_fp = get_data_path('dm_3x3.txt')
 
         self.bad_dm_f1 = StringIO(BAD_DM_F1)
         self.bad_dm_f2 = StringIO(BAD_DM_F2)
@@ -106,6 +120,19 @@ class DistanceMatrixTests(DistanceMatrixTestData):
         for dm_f, dm in izip(self.dm_fs, self.dms):
             obs = DistanceMatrix.from_file(dm_f)
             self.assertEqual(obs, dm)
+
+    def test_from_file_with_file_path(self):
+        """Should identify the filepath correctly and parse from it."""
+
+        # should fail with the expected exception
+        with self.assertRaises(IDMismatchError):
+            _ = DistanceMatrix.from_file(self.bad_dm_fp)
+
+        obs = DistanceMatrix.from_file(self.dm_2x2_asym_fp)
+        self.assertEqual(self.dm_2x2_asym, obs)
+
+        obs = DistanceMatrix.from_file(self.dm_3x3_fp)
+        self.assertEqual(self.dm_3x3, obs)
 
     def test_from_file_extra_junk(self):
         """Should correctly parse a file with extra whitespace and comments."""
