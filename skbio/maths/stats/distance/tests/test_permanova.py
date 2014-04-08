@@ -1,17 +1,18 @@
 #! /usr/bin/env python
 
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 from __future__ import division
 from unittest import TestCase, main
 
 import numpy as np
+import numpy.testing as npt
 
 from skbio.core.distance import DistanceMatrix
 from skbio.maths.stats.distance.permanova import PERMANOVA
@@ -60,8 +61,7 @@ class PERMANOVATests(TestCase):
             np.random.seed(0)
             obs = self.permanova_ties()
             self.assertEqual(obs.sample_size, 4)
-            self.assertTrue(np.array_equal(obs.groups,
-                                           np.asarray(['Control', 'Fast'])))
+            npt.assert_array_equal(obs.groups, ['Control', 'Fast'])
             self.assertAlmostEqual(obs.statistic, 2.0)
             self.assertAlmostEqual(obs.p_value, 0.671)
             self.assertEqual(obs.permutations, 999)
@@ -70,8 +70,7 @@ class PERMANOVATests(TestCase):
         np.random.seed(0)
         obs = self.permanova_no_ties()
         self.assertEqual(obs.sample_size, 4)
-        self.assertTrue(np.array_equal(obs.groups,
-                                       np.asarray(['Control', 'Fast'])))
+        npt.assert_array_equal(obs.groups, ['Control', 'Fast'])
         self.assertAlmostEqual(obs.statistic, 4.4)
         self.assertAlmostEqual(obs.p_value, 0.332)
         self.assertEqual(obs.permutations, 999)
@@ -79,8 +78,7 @@ class PERMANOVATests(TestCase):
     def test_call_no_permutations(self):
         obs = self.permanova_no_ties(0)
         self.assertEqual(obs.sample_size, 4)
-        self.assertTrue(np.array_equal(obs.groups,
-                                       np.asarray(['Control', 'Fast'])))
+        npt.assert_array_equal(obs.groups, ['Control', 'Fast'])
         self.assertAlmostEqual(obs.statistic, 4.4)
         self.assertEqual(obs.p_value, None)
         self.assertEqual(obs.permutations, 0)
@@ -89,9 +87,8 @@ class PERMANOVATests(TestCase):
         np.random.seed(0)
         obs = self.permanova_unequal()
         self.assertEqual(obs.sample_size, 6)
-        self.assertTrue(np.array_equal(obs.groups,
-                                       np.asarray(['Control', 'Treatment1',
-                                                   'Treatment2'])))
+        npt.assert_array_equal(obs.groups,
+                               ['Control', 'Treatment1', 'Treatment2'])
         self.assertAlmostEqual(obs.statistic, 0.578848, 6)
         self.assertAlmostEqual(obs.p_value, 0.645)
         self.assertEqual(obs.permutations, 999)

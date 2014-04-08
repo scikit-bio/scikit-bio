@@ -1,10 +1,10 @@
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
 
@@ -75,6 +75,7 @@ class PCoA(Ordination):
     def __init__(self, distance_matrix):
         if isinstance(distance_matrix, DistanceMatrix):
             self.dm = np.asarray(distance_matrix.data, dtype=np.float64)
+            self.ids = distance_matrix.ids
         else:
             raise TypeError("Input must be a DistanceMatrix.")
         self._pcoa()
@@ -125,14 +126,17 @@ class PCoA(Ordination):
 
         # We only return coordinates that make sense (i.e., that have
         # a corresponding positive eigenvalue)
-        num_positive = (self.eigvals > 0).sum()
+        num_positive = (self.eigvals >= 0).sum()
         eigvecs = self.eigvecs[:, :num_positive]
         eigvals = self.eigvals[:num_positive]
 
         coordinates = eigvecs * np.sqrt(eigvals)
 
-        # TODO: Improve OrdinationResults to better cope with PCoA
-        return OrdinationResults(eigvals=self.eigvals, species=coordinates)
+        proportion_explained = eigvals / eigvals.sum()
+
+        return OrdinationResults(eigvals=eigvals, species=coordinates,
+                                 proportion_explained=proportion_explained,
+                                 ids=self.ids)
 
     @staticmethod
     def _E_matrix(distance_matrix):
