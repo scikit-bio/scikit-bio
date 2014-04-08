@@ -492,7 +492,7 @@ class TestPCoAResultsExtensive(object):
 class TestPCoAEigenResults(object):
     def setup(self):
         with open(get_data_path('PCoA_sample_data_3'), 'U') as lines:
-            dist_matrix = SymmetricDistanceMatrix.from_file(lines)
+            dist_matrix = DistanceMatrix.from_file(lines)
         self.ordination = PCoA(dist_matrix)
         self.ids = ['PC.636', 'PC.635', 'PC.356', 'PC.481', 'PC.354', 'PC.593',
                     'PC.355', 'PC.607', 'PC.634']
