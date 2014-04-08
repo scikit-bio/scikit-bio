@@ -150,7 +150,10 @@ def parse_clustal(record, strict=True):
     References
     ----------
 
-    .. [1] Clustal: Multiple Sequence Alginment http://www.clustal.org
+    .. [1] Thompson JD, Higgins DG, Gibson TJ,  "CLUSTAL W: improving the
+        sensitivity of progressive multiple sequence alignment through sequence
+        weighting, position-specific gap penalties and weight matrix choice.
+        Thompson", Nucleic Acids Res. 1994 Nov 11;22(22):4673-80.
 
     """
     records = map(delete_trailing_number, filter(is_clustal_seq_line, record))
