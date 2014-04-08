@@ -306,7 +306,7 @@ class DissimilarityMatrix(object):
         if curr_row_idx != num_ids:
             raise DissimilarityMatrixFormatError(
                 "Expected %d row(s) of data, but found %d." % (num_ids,
-                    curr_row_idx))
+                                                               curr_row_idx))
 
         return cls(data, ids)
 
