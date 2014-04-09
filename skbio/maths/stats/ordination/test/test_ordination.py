@@ -446,11 +446,11 @@ class TestPCoAResults(object):
         scores = ordination.scores()
 
         # Note the absolute value because column can have signs swapped
-        npt.assert_almost_equal(np.abs(scores.species[0, 0]),
+        npt.assert_almost_equal(np.abs(scores.site[0, 0]),
                                 0.24078813304509292)
 
         # cogent returned the scores transposed
-        npt.assert_almost_equal(np.abs(scores.species[0, 1]),
+        npt.assert_almost_equal(np.abs(scores.site[0, 1]),
                                 0.23367716219400031)
 
 
@@ -464,7 +464,7 @@ class TestPCoAResultsExtensive(object):
     def test_values(self):
         results = self.ordination.scores()
 
-        npt.assert_almost_equal(len(results.eigvals), len(results.species[0]))
+        npt.assert_almost_equal(len(results.eigvals), len(results.site[0]))
 
         expected = np.array([[-0.028597, 0.22903853, 0.07055272,
                               0.26163576, 0.28398669, 0.0],
@@ -478,7 +478,7 @@ class TestPCoAResultsExtensive(object):
                               -0.06455635, -0.21141632, 0.0],
                              [0.01727687, 0.012458, -0.07382761,
                               -0.42690292, 0.1695749, 0.0]])
-        npt.assert_almost_equal(*normalize_signs(expected, results.species))
+        npt.assert_almost_equal(*normalize_signs(expected, results.site))
 
         expected = np.array([0.3984635, 0.36405689, 0.28804535, 0.27479983,
                             0.19165361, 0.0])
@@ -488,7 +488,7 @@ class TestPCoAResultsExtensive(object):
                              0.1811445992, 0.1263356565, 0.0])
         npt.assert_almost_equal(results.proportion_explained, expected)
 
-        npt.assert_equal(results.ids, self.ids)
+        npt.assert_equal(results.site_ids, self.ids)
 
 
 class TestPCoAEigenResults(object):
@@ -502,7 +502,7 @@ class TestPCoAEigenResults(object):
     def test_values(self):
         results = self.ordination.scores()
 
-        npt.assert_almost_equal(len(results.eigvals), len(results.species[0]))
+        npt.assert_almost_equal(len(results.eigvals), len(results.site[0]))
 
         expected = np.array([[-0.25846546, 0.17399955, 0.03828758, -0.19447751,
                               0.0831176, 0.26243033, -0.02316364, -0.0184794,
@@ -531,7 +531,7 @@ class TestPCoAEigenResults(object):
                              [-0.35991516, 0.1138226, 0.06622034, 0.029758,
                               -0.05722541, -0.19313351, 0.14502633,
                               -0.14965861, 0.0]])
-        npt.assert_almost_equal(*normalize_signs(expected, results.species))
+        npt.assert_almost_equal(*normalize_signs(expected, results.site))
 
         expected = np.array([0.51236726, 0.30071909, 0.26791207, 0.20898868,
                              0.19169895, 0.16054235,  0.15017696,  0.12245775,
@@ -543,7 +543,7 @@ class TestPCoAEigenResults(object):
                              0.0784269939, 0.0639511764, 0.0])
         npt.assert_almost_equal(results.proportion_explained, expected)
 
-        npt.assert_equal(results.ids, self.ids)
+        npt.assert_equal(results.site_ids, self.ids)
 
 
 class TestPCoAPrivateMethods(object):
