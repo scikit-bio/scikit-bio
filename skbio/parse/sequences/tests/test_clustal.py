@@ -54,24 +54,23 @@ class ClustalParserTests(TestCase):
     def test_null(self):
         """Should return empty dict and list on null input"""
         result = parse_clustal([])
-        self.assertEqual(result, ({}, []))
+        self.assertEqual(dict(result), {})
 
     def test_minimal(self):
         """Should handle single-line input correctly"""
         result = parse_clustal([MINIMAL])  # expects seq of lines
-        self.assertEqual(result, ({'abc': ['ucag']}, ['abc']))
+        self.assertEqual(dict(result), {'abc': ['ucag']})
 
     def test_two(self):
         """Should handle two-sequence input correctly"""
         result = parse_clustal(TWO)
-        self.assertEqual(result, ({'abc': ['uuu', 'aaa'], 'def': ['ccc',
-                                   'ggg']}, ['abc', 'def']))
+        self.assertEqual(dict(result), {'abc': ['uuu', 'aaa'], 'def': ['ccc',
+                                   'ggg']})
 
     def test_real(self):
         """Should handle real Clustal output"""
-        data, labels = parse_clustal(REAL)
-        self.assertEqual(labels, ['abc', 'def', 'xyz'])
-        self.assertEqual(data, {
+        data = parse_clustal(REAL)
+        self.assertEqual(dict(data), {
             'abc':
             ['GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA',
              'GUCGAUACGUACGUCAGUCAGUACGUCAGCAUGCAUACGUACGUCGUACGUACGU-CGAC',
@@ -92,15 +91,15 @@ class ClustalParserTests(TestCase):
     def test_bad(self):
         """Should reject bad data if strict"""
         result = parse_clustal(BAD, strict=False)
-        self.assertEqual(result, ({}, []))
+        self.assertEqual(dict(result), {})
         # should fail unless we turned strict processing off
-        self.assertRaises(RecordError, parse_clustal, BAD)
+        with self.assertRaises(RecordError):
+            _ = dict(parse_clustal(BAD))
 
     def test_space_labels(self):
         """Should tolerate spaces in labels"""
         result = parse_clustal(SPACE_LABELS)
-        self.assertEqual(result, ({'abc': ['uca'], 'def ggg': ['ccc']},
-                                  ['abc', 'def ggg']))
+        self.assertEqual(dict(result), {'abc': ['uca'], 'def ggg': ['ccc']})
 
 
 MINIMAL = 'abc\tucag'

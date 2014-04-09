@@ -1,5 +1,3 @@
-from __future__ import division
-
 # -----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -7,11 +5,12 @@ from __future__ import division
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # -----------------------------------------------------------------------------
+from __future__ import division
+
+from string import strip
 
 from skbio.core.exception import RecordError
 from skbio.parse.record import DelimitedSplitter
-
-from string import strip
 
 
 def label_line_parser(record, splitter, strict=True):
@@ -80,6 +79,7 @@ def parse_clustal(record, strict=True):
         An open Clustal file.
     strict : boolean
         Whether or not to raise a ``RecordError`` when no labels are found.
+
 
 
     Returns
@@ -157,4 +157,7 @@ def parse_clustal(record, strict=True):
 
     """
     records = map(delete_trailing_number, filter(is_clustal_seq_line, record))
-    return label_line_parser(records, last_space, strict)
+    data, labels = label_line_parser(records, last_space, strict)
+
+    for key in labels:
+        yield key, data[key]
