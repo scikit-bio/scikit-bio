@@ -23,7 +23,7 @@ Functions
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # -----------------------------------------------------------------------------
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 
 from skbio.core.exception import StockholmParseError
 from skbio.format.stockholm import Stockholm
@@ -32,7 +32,7 @@ from skbio.core.alignment import Alignment
 
 def _parse_gf_info(lines):
     """Takes care of parsing GF lines in stockholm including special cases"""
-    parsed = {}
+    parsed = defaultdict(list)
     # needed for making each multi-line RT and NH one string
     rt = []
     nh = []
@@ -51,10 +51,7 @@ def _parse_gf_info(lines):
             # add rt line to the parsed dictionary
             rtline = " ".join(rt)
             rt = []
-            if "RT" in parsed:
-                parsed["RT"].append(rtline)
-            else:
-                parsed["RT"] = [rtline]
+            parsed["RT"].append(rtline)
         elif feature == "RT":
             rt.append(content)
             lastline = feature
@@ -64,29 +61,23 @@ def _parse_gf_info(lines):
         elif lastline == "NH" and feature != "NH":
             nhline = " ".join(nh)
             nh = []
-            if "NH" in parsed:
-                parsed["NH"].append(nhline)
-            else:
-                parsed["NH"] = [nhline]
+            parsed["NH"].append(nhline)
         elif feature == "NH":
             nh.append(content)
             lastline = feature
             continue
 
         # add current feature to the parsed information
-        if feature in parsed:
-            parsed[feature].append(content)
-        else:
-            parsed[feature] = [content]
+        parsed[feature].append(content)
         lastline = feature
 
-    # clean up parsed info by removing unneccessary lists
-    for feature in parsed:
+    #removing unneccessary lists from parsed. Use .items() for py3 support
+    for feature, value in parsed.items():
         # list of multi-line features to join into single string if necessary
         if feature in ["CC"]:
-            parsed[feature] = ' '.join(parsed[feature])
+            parsed[feature] = ' '.join(value)
         elif len(parsed[feature]) == 1:
-            parsed[feature] = parsed[feature][0]
+            parsed[feature] = value[0]
     return parsed
 
 
@@ -111,11 +102,11 @@ def _parse_gc_info(lines, strict=False, seqlen=-1):
         else:
             parsed[feature] = [content]
 
-    # clean up parsed info by removing unneccessary lists
-    for feature in parsed:
-        parsed[feature] = ''.join(parsed[feature])
+    #removing unneccessary lists from parsed. Use .items() for py3 support
+    for feature, value in parsed.items():
+        parsed[feature] = ''.join(value)
         if strict:
-            if len(parsed[feature]) != seqlen:
+            if len(value) != seqlen:
                 raise StockholmParseError("GC must have exactly one char "
                                           "per position in alignment!")
 
@@ -139,8 +130,8 @@ def _parse_gs_gr_info(lines, strict=False, seqlen=-1):
 
         # parse each line, taking into account we can have interleaved format
         if label in parsed and feature in parsed[label]:
-                # interleaved format, so need list of content
-                parsed[label][feature].append(content)
+            # interleaved format, so need list of content
+            parsed[label][feature].append(content)
         else:
             parsed[label] = {feature: [content]}
 
@@ -259,7 +250,7 @@ def parse_stockholm(infile, seq_constructor, strict=False):
             # assume sequence since nothing else in format is left
             # in case of interleaved format, need to do check
             if lineinfo[0] in seqs:
-                val = seqs[lineinfo[0]]
-                seqs[lineinfo[0]] = ''.join([val, lineinfo[1]])
+                sequence = seqs[lineinfo[0]]
+                seqs[lineinfo[0]] = ''.join([sequence, lineinfo[1]])
             else:
                 seqs[lineinfo[0]] = lineinfo[1]
