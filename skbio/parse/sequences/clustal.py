@@ -70,7 +70,7 @@ def delete_trailing_number(line):
 
 
 def parse_clustal(record, strict=True):
-    r"""Returns a dictionary of the parsed data
+    r"""yields labels and lists of sequences
 
     Parameters
     ----------
@@ -85,10 +85,10 @@ def parse_clustal(record, strict=True):
     Returns
     -------
 
-    labels: list
-        list of strings with the labels
-    data : dict
-        a dict of label to sequence (pieces not joined)
+    label : str
+        label of the sequence
+    seq : list of str
+        list of sequences for each label
 
     Notes
     -----
@@ -134,18 +134,16 @@ def parse_clustal(record, strict=True):
     ...                      'abc   GUCGAUACAUACGUACGUCGGUACGU-CGAC 11\n'
     ...                      'def   ---------------CGUGCAUGCAU-CGAU 18\n'
     ...                      'xyz   -----------CAUUCGUACGUACGCAUGAC 23\n')
-    >>> data, labels = parse_clustal(clustal_f)
-    >>> print labels
-    ['abc', 'def', 'xyz']
-    >>> for label, seq in data.iteritems():
+    >>> for label, seq in parse_clustal(clustal_f):
     ...     print label
     ...     print seq
-    xyz
-    ['-------------------------------', '-----------CAUUCGUACGUACGCAUGAC']
     abc
     ['GCAUGCAUCUGCAUACGUACGUACGCAUGCA', 'GUCGAUACAUACGUACGUCGGUACGU-CGAC']
     def
     ['-------------------------------', '---------------CGUGCAUGCAU-CGAU']
+    xyz
+    ['-------------------------------', '-----------CAUUCGUACGUACGCAUGAC']
+
 
     References
     ----------
