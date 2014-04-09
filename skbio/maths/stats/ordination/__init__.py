@@ -36,3 +36,6 @@ from .principal_coordinate_analysis import PCoA
 from .base import OrdinationResults
 
 __all__ = ['CA', 'RDA', 'CCA', 'PCoA', 'OrdinationResults']
+
+from numpy.testing import Tester
+test = Tester().test
