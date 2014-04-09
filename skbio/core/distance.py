@@ -253,11 +253,17 @@ class DissimilarityMatrix(object):
         # has finished). See:
         # http://mail.scipy.org/pipermail/numpy-tickets/2012-August/006749.html
 
-        # check if it's a string and a valid path, if so read the contents
+        fd = None
+
+        # We use iter() as we want to take a single pass over the iterable and
+        # maintain our current position after finding the header (mainly
+        # necessary for something like a list of strings).
         if isinstance(dm_f, str) and exists(dm_f):
+            # check if it's a valid path, if so read the contents
             fd = open(dm_f, 'U')
-            dm_f = fd.readlines()
-            fd.close()
+            dm_f = iter(fd)
+        else:
+            dm_f = iter(dm_f)
 
         # Strategy:
         #     - find the header
@@ -265,10 +271,6 @@ class DissimilarityMatrix(object):
         #     - for each row of data in the input file:
         #         - populate the corresponding row in the ndarray with floats
 
-        # We use iter() as we want to take a single pass over the iterable and
-        # maintain our current position after finding the header (mainly
-        # necessary for something like a list of strings).
-        dm_f = iter(dm_f)
         ids = cls._parse_ids(dm_f, delimiter)
         num_ids = len(ids)
         data = np.empty((num_ids, num_ids), dtype='float')
@@ -318,6 +320,10 @@ class DissimilarityMatrix(object):
             raise DissimilarityMatrixFormatError(
                 "Expected %d row(s) of data, but found %d." % (num_ids,
                                                                curr_row_idx))
+
+        # if the input was a file path close the file
+        if fd is not None:
+            fd.close()
 
         return cls(data, ids)
 

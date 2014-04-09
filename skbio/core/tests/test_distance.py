@@ -120,7 +120,7 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         """Should identify the filepath correctly and parse from it."""
 
         # should fail with the expected exception
-        with self.assertRaises(IDMismatchError):
+        with self.assertRaises(DissimilarityMatrixFormatError):
             _ = DissimilarityMatrix.from_file(self.bad_dm_fp)
 
         obs = DissimilarityMatrix.from_file(self.dm_2x2_asym_fp)
