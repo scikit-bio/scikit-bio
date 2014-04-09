@@ -49,6 +49,8 @@ if __doc__ is None:
 else:
     __doc__ = title + art + __doc__
 
+from numpy.testing import Tester
+test = Tester().test
 
 if __name__ == '__main__':
     print(title)

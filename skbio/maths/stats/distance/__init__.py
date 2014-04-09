@@ -102,3 +102,6 @@ from .anosim import ANOSIM
 from .permanova import PERMANOVA
 
 __all__ = ['ANOSIM', 'PERMANOVA', 'CategoricalStatsResults']
+
+from numpy.testing import Tester
+test = Tester().test
