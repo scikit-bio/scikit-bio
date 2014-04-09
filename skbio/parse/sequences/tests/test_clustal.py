@@ -65,7 +65,7 @@ class ClustalParserTests(TestCase):
         """Should handle two-sequence input correctly"""
         result = parse_clustal(TWO)
         self.assertEqual(dict(result), {'abc': ['uuu', 'aaa'], 'def': ['ccc',
-                                   'ggg']})
+                                                                       'ggg']})
 
     def test_real(self):
         """Should handle real Clustal output"""
