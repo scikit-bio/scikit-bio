@@ -135,9 +135,11 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
 
         obs = DissimilarityMatrix.from_file(self.dm_2x2_asym_fp)
         self.assertEqual(self.dm_2x2_asym, obs)
+        self.assertTrue(isinstance(obs, DissimilarityMatrix))
 
         obs = DissimilarityMatrix.from_file(self.dm_3x3_fp)
         self.assertEqual(self.dm_3x3, obs)
+        self.assertTrue(isinstance(obs, DissimilarityMatrix))
 
     def test_from_file_extra_junk(self):
         """Should correctly parse a file with extra whitespace and comments."""
@@ -488,6 +490,7 @@ class DistanceMatrixTests(DissimilarityMatrixTestData):
 
         obs = DistanceMatrix.from_file(self.dm_3x3_fp)
         self.assertEqual(self.dm_3x3, obs)
+        self.assertTrue(isinstance(obs, DistanceMatrix))
 
     def test_from_file_invalid_input(self):
         """Raises error on invalid distance matrix file."""
