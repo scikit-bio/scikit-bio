@@ -1,17 +1,32 @@
 #!/usr/bin/env python
 r"""
-Distance matrices (:mod:`skbio.core.distance`)
-==============================================
+Dissimilarity and distance matrices (:mod:`skbio.core.distance`)
+================================================================
 
 .. currentmodule:: skbio.core.distance
 
 This module provides functionality for serializing, deserializing, and
-manipulating distance matrices in memory. There are multiple distance matrix
-classes available, where the appropriate class to use depends on the nature of
-the distances you wish to store.
+manipulating dissimilarity and distance matrices in memory. There are two
+matrix classes available, `DissimilarityMatrix` and `DistanceMatrix`.
+Both classes can store measures of difference/distinction between objects. A
+dissimilarity/distance matrix includes both a matrix of
+dissimilarities/distances (floats) between objects, as well as unique IDs
+(object labels; strings) identifying each object in the matrix.
 
-A distance matrix includes both a matrix of distances (floats) between objects,
-as well as IDs (object labels; strings) identifying each object in the matrix.
+`DissimilarityMatrix` can be used to store measures of dissimilarity between
+objects, and does not require that the dissimilarities are symmetric (e.g.,
+dissimilarities obtained using the *Gain in PD* measure [1]_).
+`DissimilarityMatrix` is a more general container to store differences than
+`DistanceMatrix`.
+
+`DistanceMatrix` has the additional requirement that the differences it
+stores are symmetric (e.g., Euclidean or Hamming distances).
+
+.. note:: `DissimilarityMatrix` can be used to store distances, but it is
+   recommended to use `DistanceMatrix` to store this type of data as it
+   provides an additional check for symmetry. A distance matrix is a
+   dissimilarity matrix; this is modeled in the class design by having
+   `DistanceMatrix` as a subclass of `DissimilarityMatrix`.
 
 Classes
 -------
@@ -19,8 +34,8 @@ Classes
 .. autosummary::
    :toctree: generated/
 
+   DissimilarityMatrix
    DistanceMatrix
-   SymmetricDistanceMatrix
 
 Functions
 ---------
@@ -30,9 +45,15 @@ Functions
 
    randdm
 
+References
+----------
+.. [1] Faith, D. P. (1992). "Conservation evaluation and phylogenetic
+   diversity".
+
 Examples
 --------
-Assume we have the following delimited text file::
+Assume we have the following delimited text file storing distances between
+three objects with IDs ``a``, ``b``, and ``c``::
 
     \ta\tb\tc
     a\t0.0\t0.5\t1.0
@@ -81,6 +102,26 @@ Serialize the distance matrix to delimited text file:
 >>> out_f.getvalue() == dm_f.getvalue()
 True
 
+A distance matrix object can also be created from an existing ``numpy.array``
+(or an array-like object, such as a nested Python list):
+
+>>> import numpy as np
+>>> data = np.array([[0.0, 0.5, 1.0],
+...                  [0.5, 0.0, 0.75],
+...                  [1.0, 0.75, 0.0]])
+>>> ids = ["a", "b", "c"]
+>>> dm_from_np = DistanceMatrix(data, ids)
+>>> print dm_from_np
+3x3 distance matrix
+IDs:
+a, b, c
+Data:
+[[ 0.    0.5   1.  ]
+ [ 0.5   0.    0.75]
+ [ 1.    0.75  0.  ]]
+>>> dm_from_np == dm
+True
+
 """
 from __future__ import division
 
@@ -99,31 +140,32 @@ from os.path import exists
 import numpy as np
 from scipy.spatial.distance import squareform
 
-from skbio.core.exception import (DistanceMatrixError,
-                                  DistanceMatrixFormatError, IDMismatchError,
-                                  MissingDataError, MissingHeaderError,
-                                  MissingIDError)
+from skbio.core.exception import (DissimilarityMatrixError,
+                                  DissimilarityMatrixFormatError,
+                                  DistanceMatrixError, MissingIDError)
 
 
-class DistanceMatrix(object):
-    """Store distances between objects and object IDs.
+class DissimilarityMatrix(object):
+    """Store dissimilarities between objects.
 
-    A `DistanceMatrix` instance stores a square, hollow, two-dimensional matrix
-    of distances between objects. Objects could be, for example, samples or DNA
-    sequences. A sequence of IDs accompanies the distances.
+    A `DissimilarityMatrix` instance stores a square, hollow, two-dimensional
+    matrix of dissimilarities between objects. Objects could be, for example,
+    samples or DNA sequences. A sequence of IDs accompanies the
+    dissimilarities.
 
-    Methods are provided to load and save distance matrices from/to disk, as
-    well as perform common operations such as extracting distances based on ID.
+    Methods are provided to load and save dissimilarity matrices from/to disk,
+    as well as perform common operations such as extracting dissimilarities
+    based on object ID.
 
     Parameters
     ----------
-    data : array_like or DistanceMatrix
-        Square, hollow, two-dimensional ``numpy.ndarray`` of distances
+    data : array_like or DissimilarityMatrix
+        Square, hollow, two-dimensional ``numpy.ndarray`` of dissimilarities
         (floats), or a structure that can be converted to a ``numpy.ndarray``
-        using ``numpy.asarray``. Can instead be a `DistanceMatrix` instance, in
-        which case the distance matrix's data will be used. Data will be
-        converted to a float ``dtype`` if necessary. A copy will *not* be made
-        if already a ``numpy.ndarray`` with a float ``dtype``.
+        using ``numpy.asarray``. Can instead be a `DissimilarityMatrix` (or
+        subclass) instance, in which case the instance's data will be used.
+        Data will be converted to a float ``dtype`` if necessary. A copy will
+        *not* be made if already a ``numpy.ndarray`` with a float ``dtype``.
     ids : sequence of str
         Sequence of strings to be used as object IDs. Must match the number of
         rows/cols in `data`.
@@ -139,11 +181,11 @@ class DistanceMatrix(object):
 
     See Also
     --------
-    SymmetricDistanceMatrix
+    DistanceMatrix
 
     Notes
     -----
-    The distances are stored in redundant (square-form) format [1]_.
+    The dissimilarities are stored in redundant (square-form) format [1]_.
 
     The data are not checked for symmetry, nor guaranteed/assumed to be
     symmetric.
@@ -152,49 +194,24 @@ class DistanceMatrix(object):
     ----------
     .. [1] http://docs.scipy.org/doc/scipy/reference/spatial.distance.html
 
-    Examples
-    --------
-    Initialize a `skbio.core.distance.DistanceMatrix` object from an existing
-    ``numpy.array`` that represents the distances between three samples with
-    IDs a, b, and c::
-
-        0.0\t0.5\t1.0
-        0.5\t0.0\t0.75
-        1.0\t0.75\t0.0
-
-    >>> import numpy as np
-    >>> from skbio.core.distance import DistanceMatrix
-    >>> data = np.array([[0.0, 0.5, 1.0],
-    ...                  [0.5, 0.0, 0.75],
-    ...                  [1.0, 0.75, 0.0]])
-    >>> ids = ["a", "b", "c"]
-    >>> dm = DistanceMatrix(data, ids)
-    >>> print dm
-    3x3 distance matrix
-    IDs:
-    a, b, c
-    Data:
-    [[ 0.    0.5   1.  ]
-     [ 0.5   0.    0.75]
-     [ 1.    0.75  0.  ]]
-
     """
+
+    # Used in __str__
+    _matrix_element_name = 'dissimilarity'
 
     @classmethod
     def from_file(cls, dm_f, delimiter='\t'):
-        """Load distance matrix from delimited text file or file path.
+        """Load distance matrix from a delimited text file or file path.
 
-        Creates a `DistanceMatrix` instance from a serialized distance
-        matrix stored as delimited text or at a file path.
+        Creates a `DissimilarityMatrix` instance from a serialized
+        dissimilarity matrix stored as delimited text or at a file path.
 
         `dm_f` can be a file-like or a file path object containing delimited
         text. The first line (header) must contain the IDs of each object. The
-        subsequent lines must contain an ID followed by each distance (float)
-        between the current object and all other objects, where the order of
-        objects is determined by the header line.
-
-        For example, a 2x2 distance matrix with IDs ``'a'`` and ``'b'`` might
-        look like::
+        subsequent lines must contain an ID followed by each dissimilarity
+        (float) between the current object and all other objects, where the
+        order of objects is determined by the header line.  For example, a 2x2
+        dissimilarity matrix with IDs ``'a'`` and ``'b'`` might look like::
 
             <del>a<del>b
             a<del>0.0<del>1.0
@@ -207,13 +224,13 @@ class DistanceMatrix(object):
         dm_f : iterable of str or str
             Iterable of strings (e.g., open file handle, file-like object, list
             of strings, etc.) or a file path (a string) containing a serialized
-            distance matrix.
+            dissimilarity matrix.
         delimiter : str, optional
             String delimiting elements in `dm_f`.
 
         Returns
         -------
-        DistanceMatrix
+        DissimilarityMatrix
             Instance of type `cls` containing the parsed contents of `dm_f`.
 
         Notes
@@ -270,7 +287,7 @@ class DistanceMatrix(object):
                 # We've hit a nonempty line after we already filled the data
                 # matrix. Raise an error because we shouldn't ignore extra
                 # data.
-                raise DistanceMatrixFormatError(
+                raise DissimilarityMatrixFormatError(
                     "Encountered extra rows without corresponding IDs in the "
                     "header.")
 
@@ -278,7 +295,7 @@ class DistanceMatrix(object):
 
             # -1 because the first element contains the current ID.
             if len(tokens) - 1 != num_ids:
-                raise DistanceMatrixFormatError(
+                raise DissimilarityMatrixFormatError(
                     "There are %d values in row number %d, which is not equal "
                     "to the number of IDs in the header (%d)."
                     % (len(tokens) - 1, curr_row_idx + 1, num_ids))
@@ -288,17 +305,24 @@ class DistanceMatrix(object):
             if curr_id == expected_id:
                 data[curr_row_idx, :] = np.asarray(tokens[1:], dtype='float')
             else:
-                raise IDMismatchError(curr_id, expected_id)
+                raise DissimilarityMatrixFormatError(
+                    "Encountered mismatched IDs while parsing the "
+                    "dissimilarity matrix file. Found '%s' but expected '%s'. "
+                    "Please ensure that the IDs match between the "
+                    "dissimilarity matrix header (first row) and the row "
+                    "labels (first column)." % (curr_id, expected_id))
 
             curr_row_idx += 1
 
         if curr_row_idx != num_ids:
-            raise MissingDataError(curr_row_idx, num_ids)
+            raise DissimilarityMatrixFormatError(
+                "Expected %d row(s) of data, but found %d." % (num_ids,
+                                                               curr_row_idx))
 
         return cls(data, ids)
 
     def __init__(self, data, ids):
-        if isinstance(data, DistanceMatrix):
+        if isinstance(data, DissimilarityMatrix):
             data = data.data
         data = np.asarray(data, dtype='float')
 
@@ -311,9 +335,9 @@ class DistanceMatrix(object):
 
     @property
     def data(self):
-        """Array of distances.
+        """Array of dissimilarities.
 
-        A square, hollow, two-dimensional ``numpy.ndarray`` of distances
+        A square, hollow, two-dimensional ``numpy.ndarray`` of dissimilarities
         (floats). A copy is *not* returned.
 
         Notes
@@ -327,7 +351,7 @@ class DistanceMatrix(object):
     def ids(self):
         """Tuple of object IDs.
 
-        A tuple of strings, one for each object in the distance matrix.
+        A tuple of strings, one for each object in the dissimilarity matrix.
 
         Notes
         -----
@@ -346,24 +370,24 @@ class DistanceMatrix(object):
 
     @property
     def dtype(self):
-        """Data type of the distances."""
+        """Data type of the dissimilarities."""
         return self.data.dtype
 
     @property
     def shape(self):
-        """Two-element tuple containing the distance matrix dimensions.
+        """Two-element tuple containing the dissimilarity matrix dimensions.
 
         Notes
         -----
-        As the distance matrix is guaranteed to be square, both tuple entries
-        will be equal.
+        As the dissimilarity matrix is guaranteed to be square, both tuple
+        entries will always be equal.
 
         """
         return self.data.shape
 
     @property
     def size(self):
-        """Total number of elements in the distance matrix.
+        """Total number of elements in the dissimilarity matrix.
 
         Notes
         -----
@@ -374,7 +398,7 @@ class DistanceMatrix(object):
 
     @property
     def T(self):
-        """Transpose of the distance matrix.
+        """Transpose of the dissimilarity matrix.
 
         See Also
         --------
@@ -384,7 +408,7 @@ class DistanceMatrix(object):
         return self.transpose()
 
     def transpose(self):
-        """Return the transpose of the distance matrix.
+        """Return the transpose of the dissimilarity matrix.
 
         Notes
         -----
@@ -392,26 +416,28 @@ class DistanceMatrix(object):
 
         Returns
         -------
-        DistanceMatrix
-            Transpose of the distance matrix. Will be the same type as `self`.
+        DissimilarityMatrix
+            Transpose of the dissimilarity matrix. Will be the same type as
+            `self`.
 
         """
         return self.__class__(self.data.T.copy(), deepcopy(self.ids))
 
     def redundant_form(self):
-        """Return an array of distances in redundant format.
+        """Return an array of dissimilarities in redundant format.
 
-        As this is the native format that the distances are stored in, this is
-        simply an alias for `data`.
+        As this is the native format that the dissimilarities are stored in,
+        this is simply an alias for `data`.
 
         Returns
         -------
         ndarray
-            Two-dimensional ``numpy.ndarray`` of distances in redundant format.
+            Two-dimensional ``numpy.ndarray`` of dissimilarities in redundant
+            format.
 
         Notes
         -----
-        Redundant and condensed formats are described in [1]_.
+        Redundant format is described in [1]_.
 
         Does *not* return a copy of the data.
 
@@ -423,12 +449,13 @@ class DistanceMatrix(object):
         return self.data
 
     def copy(self):
-        """Return a deep copy of the distance matrix.
+        """Return a deep copy of the dissimilarity matrix.
 
         Returns
         -------
-        DistanceMatrix
-            Deep copy of the distance matrix. Will be the same type as `self`.
+        DissimilarityMatrix
+            Deep copy of the dissimilarity matrix. Will be the same type as
+            `self`.
 
         """
         # We deepcopy IDs in case the tuple contains mutable objects at some
@@ -436,36 +463,36 @@ class DistanceMatrix(object):
         return self.__class__(self.data.copy(), deepcopy(self.ids))
 
     def __str__(self):
-        """Return a string representation of the distance matrix.
+        """Return a string representation of the dissimilarity matrix.
 
         Summary includes matrix dimensions, a (truncated) list of IDs, and
-        (truncated) array of distances.
+        (truncated) array of dissimilarities.
 
         Returns
         -------
         str
-            String representation (summary) of the distance matrix.
+            String representation of the dissimilarity matrix.
 
         .. shownumpydoc
 
         """
-        return '%dx%d distance matrix\nIDs:\n%s\nData:\n' % (
-            self.shape[0], self.shape[1],
+        return '%dx%d %s matrix\nIDs:\n%s\nData:\n' % (
+            self.shape[0], self.shape[1], self._matrix_element_name,
             self._pprint_ids()) + str(self.data)
 
     def __eq__(self, other):
-        """Compare this distance matrix to another for equality.
+        """Compare this dissimilarity matrix to another for equality.
 
-        Two distance matrices are equal if they have the same shape, IDs (in
-        the same order!), and have data arrays that are equal.
+        Two dissimilarity matrices are equal if they have the same shape, IDs
+        (in the same order!), and have data arrays that are equal.
 
-        Checks are *not* performed to ensure that `other` is a `DistanceMatrix`
-        instance.
+        Checks are *not* performed to ensure that `other` is a
+        `DissimilarityMatrix` instance.
 
         Parameters
         ----------
-        other : DistanceMatrix
-            Distance matrix to compare to for equality.
+        other : DissimilarityMatrix
+            Dissimilarity matrix to compare to for equality.
 
         Returns
         -------
@@ -496,12 +523,12 @@ class DistanceMatrix(object):
         return equal
 
     def __ne__(self, other):
-        """Determine whether two distance matrices are not equal.
+        """Determine whether two dissimilarity matrices are not equal.
 
         Parameters
         ----------
-        other : DistanceMatrix
-            Distance matrix to compare to.
+        other : DissimilarityMatrix
+            Dissimilarity matrix to compare to.
 
         Returns
         -------
@@ -518,10 +545,10 @@ class DistanceMatrix(object):
         return not self == other
 
     def __getitem__(self, index):
-        """Slice into distance data by ID or numpy indexing.
+        """Slice into dissimilarity data by object ID or numpy indexing.
 
-        Extracts data from the distance matrix by ID, a pair of IDs, or numpy
-        indexing/slicing.
+        Extracts data from the dissimilarity matrix by object ID, a pair of
+        IDs, or numpy indexing/slicing.
 
         Parameters
         ----------
@@ -531,21 +558,21 @@ class DistanceMatrix(object):
 
             If `index` is a string, it is assumed to be an ID and a
             ``numpy.ndarray`` row vector is returned for the corresponding ID.
-            Note that the ID's row of distances is returned, *not* its column.
-            If the matrix is symmetric, the two will be identical, but this
-            makes a difference if the matrix is asymmetric.
+            Note that the ID's row of dissimilarities is returned, *not* its
+            column. If the matrix is symmetric, the two will be identical, but
+            this makes a difference if the matrix is asymmetric.
 
             If `index` is a two-tuple of strings, each string is assumed to be
             an ID and the corresponding matrix element is returned that
-            represents the distance between the two IDs. Note that the order of
-            lookup by ID pair matters if the matrix is asymmetric: the first ID
-            will be used to look up the row, and the second ID will be used to
-            look up the column. Thus, ``dm['a', 'b']`` may not be the same as
-            ``dm['b', 'a']`` if the matrix is asymmetric.
+            represents the dissimilarity between the two IDs. Note that the
+            order of lookup by ID pair matters if the matrix is asymmetric: the
+            first ID will be used to look up the row, and the second ID will be
+            used to look up the column. Thus, ``dm['a', 'b']`` may not be the
+            same as ``dm['b', 'a']`` if the matrix is asymmetric.
 
             Otherwise, `index` will be passed through to
-            ``DistanceMatrix.data.__getitem__``, allowing for standard indexing
-            of a ``numpy.ndarray`` (e.g., slicing).
+            ``DissimilarityMatrix.data.__getitem__``, allowing for standard
+            indexing of a ``numpy.ndarray`` (e.g., slicing).
 
         Returns
         -------
@@ -556,7 +583,8 @@ class DistanceMatrix(object):
         Raises
         ------
         MissingIDError
-            If the ID(s) specified in `index` are not in the distance matrix.
+            If the ID(s) specified in `index` are not in the dissimilarity
+            matrix.
 
         Notes
         -----
@@ -580,7 +608,7 @@ class DistanceMatrix(object):
             return self.data.__getitem__(index)
 
     def to_file(self, out_f, delimiter='\t'):
-        """Save the distance matrix to file in delimited text format.
+        """Save the dissimilarity matrix to file in delimited text format.
 
         See Also
         --------
@@ -618,7 +646,10 @@ class DistanceMatrix(object):
                 break
 
         if header_line is None:
-            raise MissingHeaderError
+            raise DissimilarityMatrixFormatError(
+                "Could not find a header line containing IDs in the "
+                "dissimilarity matrix file. Please verify that the file is "
+                "not empty.")
         else:
             return map(lambda e: e.strip(), header_line.split(delimiter))
 
@@ -630,36 +661,40 @@ class DistanceMatrix(object):
         number of IDs matches the number of rows/cols in the data array.
 
         Subclasses can override this method to perform different/more specific
-        validation (e.g., see `SymmetricDistanceMatrix`).
+        validation (e.g., see `DistanceMatrix`).
 
         Notes
         -----
         Accepts arguments instead of inspecting instance attributes to avoid
-        creating an invalid distance matrix before raising an error. Otherwise,
-        the invalid distance matrix could be used after the exception is
-        caught and handled.
+        creating an invalid dissimilarity matrix before raising an error.
+        Otherwise, the invalid dissimilarity matrix could be used after the
+        exception is caught and handled.
 
         """
         num_ids = len(ids)
 
         if 0 in data.shape:
-            raise DistanceMatrixError("Data must be at least 1x1 in size.")
+            raise DissimilarityMatrixError("Data must be at least 1x1 in "
+                                           "size.")
         elif len(data.shape) != 2:
-            raise DistanceMatrixError("Data must have exactly two dimensions.")
+            raise DissimilarityMatrixError("Data must have exactly two "
+                                           "dimensions.")
         elif data.shape[0] != data.shape[1]:
-            raise DistanceMatrixError("Data must be square (i.e., have the "
-                                      "same number of rows and columns).")
+            raise DissimilarityMatrixError("Data must be square (i.e., have "
+                                           "the same number of rows and "
+                                           "columns).")
         elif data.dtype != np.double:
-            raise DistanceMatrixError("Data must contain only floating point "
-                                      "values.")
+            raise DissimilarityMatrixError("Data must contain only floating "
+                                           "point values.")
         elif np.trace(data) != 0:
-            raise DistanceMatrixError("Data must be hollow (i.e., the "
-                                      "diagonal can only contain zeros).")
+            raise DissimilarityMatrixError("Data must be hollow (i.e., the "
+                                           "diagonal can only contain zeros).")
         elif num_ids != len(set(ids)):
-            raise DistanceMatrixError("IDs must be unique.")
+            raise DissimilarityMatrixError("IDs must be unique.")
         elif num_ids != data.shape[0]:
-            raise DistanceMatrixError("The number of IDs must match the "
-                                      "number of rows/columns in the data.")
+            raise DissimilarityMatrixError("The number of IDs must match the "
+                                           "number of rows/columns in the "
+                                           "data.")
 
     def _index_list(self, list_):
         return {id_: idx for idx, id_ in enumerate(list_)}
@@ -683,16 +718,16 @@ class DistanceMatrix(object):
         return ids_str
 
 
-class SymmetricDistanceMatrix(DistanceMatrix):
-    """Store symmetric distance data.
+class DistanceMatrix(DissimilarityMatrix):
+    """Store distances between objects.
 
-    A `SymmetricDistanceMatrix` is a `DistanceMatrix` with the additional
+    A `DistanceMatrix` is a `DissimilarityMatrix` with the additional
     requirement that the matrix data is symmetric. There are additional methods
     made available that take advantage of this symmetry.
 
     See Also
     --------
-    DistanceMatrix
+    DissimilarityMatrix
 
     Notes
     -----
@@ -701,11 +736,21 @@ class SymmetricDistanceMatrix(DistanceMatrix):
     distances can be retrieved in condensed (vector-form) format using
     `condensed_form`.
 
+    `DistanceMatrix` only requires that the distances it stores are symmetric.
+    Checks are *not* performed to ensure the other three metric properties
+    hold (non-negativity, identity of indiscernibles, and triangle inequality)
+    [2]_. Thus, a `DistanceMatrix` instance can store distances that are not
+    metric.
+
     References
     ----------
     .. [1] http://docs.scipy.org/doc/scipy/reference/spatial.distance.html
+    .. [2] http://planetmath.org/metricspace
 
     """
+
+    # Override here, used in superclass __str__
+    _matrix_element_name = 'distance'
 
     def condensed_form(self):
         """Return an array of distances in condensed format.
@@ -736,7 +781,7 @@ class SymmetricDistanceMatrix(DistanceMatrix):
         addition to the checks performed in the superclass.
 
         """
-        super(SymmetricDistanceMatrix, self)._validate(data, ids)
+        super(DistanceMatrix, self)._validate(data, ids)
 
         if (data.T != data).any():
             raise DistanceMatrixError("Data must be symmetric.")
@@ -762,7 +807,7 @@ def randdm(num_objects, ids=None, constructor=None, random_fn=None):
         integers cast as strings (numbering starts at 1). For example,
         ``('1', '2', '3')``.
     constructor : type, optional
-        `DistanceMatrix` or subclass constructor to use when creating the
+        `DissimilarityMatrix` or subclass constructor to use when creating the
         random distance matrix. The returned distance matrix will be of this
         type. If ``None`` (the default), a `DistanceMatrix` instance will be
         returned.
@@ -774,8 +819,8 @@ def randdm(num_objects, ids=None, constructor=None, random_fn=None):
 
     Returns
     -------
-    DistanceMatrix
-        `DistanceMatrix` (or subclass) instance of random distances. Type
+    DissimilarityMatrix
+        `DissimilarityMatrix` (or subclass) instance of random distances. Type
         depends on `constructor`.
 
     See Also
