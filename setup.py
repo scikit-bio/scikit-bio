@@ -43,7 +43,7 @@ on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 if on_rtd:
     install_requires = []
 else:
-    install_requires = ['numpy >= 1.5.1', 'matplotlib >= 1.1.0',
+    install_requires = ['numpy >= 1.7', 'matplotlib >= 1.1.0',
                         'scipy >= 0.13.0']
 
 setup(name='scikit-bio',
@@ -61,5 +61,5 @@ setup(name='scikit-bio',
       install_requires=install_requires,
       extras_require={'test': ["nose >= 0.10.1", "pep8"],
                       'doc': ["Sphinx >= 1.2.2", "sphinx-bootstrap-theme"]},
-      classifiers=classifiers
-      )
+      classifiers=classifiers,
+      package_data={'skbio': ['maths/stats/ordination/test/data/*']})

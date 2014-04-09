@@ -168,9 +168,9 @@ def distance_from_r(m1, m2):
 
     Parameters
     ----------
-    m1 : SymmetricDistanceMatrix
+    m1 : DistanceMatrix
         a distance matrix to compare
-    m2 : SymmetricDistanceMatrix
+    m2 : DistanceMatrix
         a distance matrix to compare
 
     Returns

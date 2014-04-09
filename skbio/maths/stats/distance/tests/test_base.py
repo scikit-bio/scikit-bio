@@ -11,7 +11,7 @@
 from __future__ import division
 from unittest import TestCase, main
 
-from skbio.core.distance import DistanceMatrix, SymmetricDistanceMatrix
+from skbio.core.distance import DissimilarityMatrix, DistanceMatrix
 from skbio.maths.stats.distance.base import (CategoricalStats,
                                              CategoricalStatsResults)
 
@@ -19,15 +19,15 @@ from skbio.maths.stats.distance.base import (CategoricalStats,
 class CategoricalStatsTests(TestCase):
 
     def setUp(self):
-        self.dm = SymmetricDistanceMatrix([[0.0, 1.0, 2.0], [1.0, 0.0, 3.0],
-                                           [2.0, 3.0, 0.0]], ['a', 'b', 'c'])
+        self.dm = DistanceMatrix([[0.0, 1.0, 2.0], [1.0, 0.0, 3.0],
+                                  [2.0, 3.0, 0.0]], ['a', 'b', 'c'])
         self.categorical_stats = CategoricalStats(self.dm, [1, 2, 1])
 
     def test_init_invalid_input(self):
-        # Requires a SymmetricDistanceMatrix.
+        # Requires a DistanceMatrix.
         with self.assertRaises(TypeError):
-            _ = CategoricalStats(DistanceMatrix([[0, 2], [3, 0]],
-                                                ['a', 'b']), [1, 2])
+            _ = CategoricalStats(DissimilarityMatrix([[0, 2], [3, 0]],
+                                                     ['a', 'b']), [1, 2])
 
         # Grouping vector length must match number of objects in dm.
         with self.assertRaises(ValueError):
