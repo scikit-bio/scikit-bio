@@ -201,10 +201,10 @@ class DissimilarityMatrix(object):
 
     @classmethod
     def from_file(cls, dm_f, delimiter='\t'):
-        """Load distance matrix from a delimited text file or file path.
+        """Load dissimilarity matrix from a delimited text file or file path.
 
         Creates a `DissimilarityMatrix` instance from a serialized
-        dissimilarity matrix stored as delimited text or at a file path.
+        dissimilarity matrix stored as delimited text.
 
         `dm_f` can be a file-like or a file path object containing delimited
         text. The first line (header) must contain the IDs of each object. The
