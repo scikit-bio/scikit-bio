@@ -33,3 +33,6 @@ from .fasta import parse_fasta
 from .fastq import parse_fastq
 
 __all__ = ['parse_clustal', 'parse_fasta', 'parse_fastq']
+
+from numpy.testing import Tester
+test = Tester().test
