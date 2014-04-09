@@ -572,6 +572,10 @@ class TestPCoAErrors(object):
 
 class TestOrdinationResults(object):
     def test_to_file(self):
+        # CA results
+        self.X = np.loadtxt(get_data_path('L&L_CA_data'))
+        self.ordination = CA(self.X)
+        # CCA results
         # PCoA results
         with open(get_data_path('PCoA_sample_data_3'), 'U') as lines:
             dist_matrix = SymmetricDistanceMatrix.from_file(lines)
@@ -586,3 +590,5 @@ class TestOrdinationResults(object):
             exp = f.readlines()
 
         npt.assert_equal(obs, ''.join(exp))
+
+        # RA results
