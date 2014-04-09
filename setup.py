@@ -62,5 +62,6 @@ setup(name='scikit-bio',
       extras_require={'test': ["nose >= 0.10.1", "pep8"],
                       'doc': ["Sphinx >= 1.2.2", "sphinx-bootstrap-theme"]},
       classifiers=classifiers,
-      package_data={'skbio': ['core/tests/data/*.txt']}
-      )
+      package_data={'skbio': ['core/tests/data/*.txt',
+                              'maths/stats/ordination/test/data/*']
+                    })
