@@ -134,9 +134,9 @@ class PCoA(Ordination):
 
         proportion_explained = eigvals / eigvals.sum()
 
-        return OrdinationResults(eigvals=eigvals, species=coordinates,
+        return OrdinationResults(eigvals=eigvals, site=coordinates,
                                  proportion_explained=proportion_explained,
-                                 ids=self.ids)
+                                 site_ids=self.ids)
 
     @staticmethod
     def _E_matrix(distance_matrix):

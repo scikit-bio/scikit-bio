@@ -12,12 +12,13 @@ from __future__ import division
 
 import os
 import warnings
+from StringIO import StringIO
 
 import numpy as np
 import numpy.testing as npt
 from scipy.spatial.distance import pdist
 
-from skbio.maths.stats.ordination import CA, RDA, CCA, PCoA
+from skbio.maths.stats.ordination import CA, RDA, CCA, PCoA, OrdinationResults
 from skbio.core.distance import SymmetricDistanceMatrix
 
 
@@ -567,3 +568,21 @@ class TestPCoAErrors(object):
     def test_input(self):
         with npt.assert_raises(TypeError):
             PCoA([[1, 2], [3, 4]])
+
+
+class TestOrdinationResults(object):
+    def test_to_file(self):
+        # PCoA results
+        with open(get_data_path('PCoA_sample_data_3'), 'U') as lines:
+            dist_matrix = SymmetricDistanceMatrix.from_file(lines)
+        pcoa = PCoA(dist_matrix)
+        pcoa_scores = pcoa.scores()
+        obs_f = StringIO()
+        pcoa_scores.to_file(obs_f)
+        obs = obs_f.getvalue()
+        obs_f.close()
+
+        with open(get_data_path('PCoA_sample_data_3_scores'), 'U') as f:
+            exp = f.readlines()
+
+        npt.assert_equal(obs, ''.join(exp))

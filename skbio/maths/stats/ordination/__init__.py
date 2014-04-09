@@ -18,6 +18,7 @@ Classes
    CA
    RDA
    CCA
+   OrdinationResults
 
 """
 # ----------------------------------------------------------------------------
@@ -32,5 +33,6 @@ from .correspondence_analysis import CA
 from .redundancy_analysis import RDA
 from .canonical_correspondence_analysis import CCA
 from .principal_coordinate_analysis import PCoA
+from .base import OrdinationResults
 
-__all__ = ['CA', 'RDA', 'CCA', 'PCoA']
+__all__ = ['CA', 'RDA', 'CCA', 'PCoA', 'OrdinationResults']
