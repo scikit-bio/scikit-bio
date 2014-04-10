@@ -430,9 +430,13 @@ class SequenceCollection(object):
         (2, 6.0, 1.0)
 
         """
-        sequence_lengths = self.sequence_lengths()
-        return (len(sequence_lengths), center_f(sequence_lengths),
-                spread_f(sequence_lengths))
+        sequence_count = self.sequence_count()
+        if sequence_count == 0:
+            return (0, 0.0, 0.0)
+        else:
+            sequence_lengths = self.sequence_lengths()
+            return (sequence_count, center_f(sequence_lengths),
+                    spread_f(sequence_lengths))
 
     def degap(self):
         r"""Return a new `SequenceCollection` with all gap characters removed.

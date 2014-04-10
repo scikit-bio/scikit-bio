@@ -41,6 +41,7 @@ class SequenceCollectionTests(TestCase):
         self.seqs1_lower = [self.d1_lower, self.d2_lower]
         self.seqs2 = [self.r1, self.r2, self.r3]
         self.seqs3 = self.seqs1 + self.seqs2
+        self.seqs4 = []
 
         self.seqs1_t = [('d1', 'GATTACA'), ('d2', 'TTG')]
         self.seqs2_t = [('r1', 'GAUUACA'), ('r2', 'UUG'),
@@ -51,6 +52,7 @@ class SequenceCollectionTests(TestCase):
         self.s1_lower = SequenceCollection(self.seqs1_lower)
         self.s2 = SequenceCollection(self.seqs2)
         self.s3 = SequenceCollection(self.seqs3)
+        self.s4 = SequenceCollection(self.seqs4)
 
         self.invalid_s1 = SequenceCollection([self.i1])
 
@@ -58,15 +60,9 @@ class SequenceCollectionTests(TestCase):
         """Initialization functions as expected with varied input types
         """
         SequenceCollection(self.seqs1)
-        SequenceCollection(self.seqs1)
-        SequenceCollection(self.seqs1)
-
         SequenceCollection(self.seqs2)
-        SequenceCollection(self.seqs2)
-        SequenceCollection(self.seqs2)
-
         SequenceCollection(self.seqs3)
-        SequenceCollection(self.seqs3)
+        SequenceCollection(self.seqs4)
 
     def test_init_fail(self):
         """initialization with sequences with overlapping identifiers fails
@@ -127,6 +123,9 @@ class SequenceCollectionTests(TestCase):
         self.assertEqual(self.s2[0], self.r1)
         self.assertEqual(self.s2[1], self.r2)
 
+        self.assertRaises(IndexError, self.s4.__getitem__, 0)
+        self.assertRaises(KeyError, self.s4.__getitem__, '0')
+
     def test_iter(self):
         """iter functions as expected
         """
@@ -144,6 +143,7 @@ class SequenceCollectionTests(TestCase):
         self.assertEqual(len(self.s1), 2)
         self.assertEqual(len(self.s2), 3)
         self.assertEqual(len(self.s3), 5)
+        self.assertEqual(len(self.s4), 0)
 
     def test_ne(self):
         """inequality operator functions as expected
@@ -176,6 +176,9 @@ class SequenceCollectionTests(TestCase):
         self.assertEqual(repr(self.s3),
                          "<SequenceCollection: n=5; "
                          "mean +/- std length=6.40 +/- 3.32>")
+        self.assertEqual(repr(self.s4),
+                         "<SequenceCollection: n=0; "
+                         "mean +/- std length=0.00 +/- 0.00>")
 
     def test_reversed(self):
         """reversed functions as expected
