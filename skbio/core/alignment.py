@@ -430,10 +430,10 @@ class SequenceCollection(object):
         (2, 6.0, 1.0)
 
         """
-        sequence_count = self.sequence_count()
-        if sequence_count == 0:
+        if self.is_empty():
             return (0, 0.0, 0.0)
         else:
+            sequence_count = self.sequence_count()
             sequence_lengths = self.sequence_lengths()
             return (sequence_count, center_f(sequence_lengths),
                     spread_f(sequence_lengths))
