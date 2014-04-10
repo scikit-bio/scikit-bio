@@ -198,6 +198,8 @@ class SequenceCollectionTests(TestCase):
         self.assertEqual(str(self.s1), exp1)
         exp2 = ">r1\nGAUUACA\n>r2\nUUG\n>r3\nU-----UGCC--\n"
         self.assertEqual(str(self.s2), exp2)
+        exp4 = ""
+        self.assertEqual(str(self.s4), exp4)
 
     def test_distribution_stats(self):
         """distribution_stats functions as expected
@@ -216,6 +218,11 @@ class SequenceCollectionTests(TestCase):
         self.assertEqual(actual3[0], 5)
         self.assertAlmostEqual(actual3[1], 6.400, 3)
         self.assertAlmostEqual(actual3[2], 3.323, 3)
+
+        actual4 = self.s4.distribution_stats()
+        self.assertEqual(actual4[0], 0)
+        self.assertEqual(actual4[1], 0.0)
+        self.assertEqual(actual4[2], 0.0)
 
     def test_degap(self):
         """degap functions as expected
@@ -239,6 +246,7 @@ class SequenceCollectionTests(TestCase):
         self.assertEqual(sorted(self.s2.identifiers()), ['r1', 'r2', 'r3'])
         self.assertEqual(sorted(self.s3.identifiers()),
                          ['d1', 'd2', 'r1', 'r2', 'r3'])
+        self.assertEqual(sorted(self.s4.identifiers()), [])
 
     def test_int_map(self):
         """int_map functions as expected
@@ -257,6 +265,7 @@ class SequenceCollectionTests(TestCase):
         self.assertTrue(self.s1.is_valid())
         self.assertTrue(self.s2.is_valid())
         self.assertTrue(self.s3.is_valid())
+        self.assertTrue(self.s4.is_valid())
 
         self.assertFalse(self.invalid_s1.is_valid())
 
@@ -277,6 +286,7 @@ class SequenceCollectionTests(TestCase):
         self.assertEqual(self.s1.sequence_count(), 2)
         self.assertEqual(self.s2.sequence_count(), 3)
         self.assertEqual(self.s3.sequence_count(), 5)
+        self.assertEqual(self.s4.sequence_count(), 0)
 
     def test_sequence_lengths(self):
         """sequence_lengths functions as expected
@@ -284,6 +294,7 @@ class SequenceCollectionTests(TestCase):
         self.assertEqual(self.s1.sequence_lengths(), [7, 3])
         self.assertEqual(self.s2.sequence_lengths(), [7, 3, 12])
         self.assertEqual(self.s3.sequence_lengths(), [7, 3, 7, 3, 12])
+        self.assertEqual(self.s4.sequence_lengths(), [])
 
     def test_to_fasta(self):
         """to_fasta functions as expected
@@ -311,6 +322,7 @@ class AlignmentTests(TestCase):
 
         self.seqs1 = [self.d1, self.d2, self.d3]
         self.seqs2 = [self.r1, self.r2]
+        self.seqs3 = []
 
         self.seqs1_t = [('d1', '..ACC-GTTGG..'), ('d2', 'TTACCGGT-GGCC'),
                         ('d3', '.-ACC-GTTGC--')]
@@ -318,6 +330,7 @@ class AlignmentTests(TestCase):
 
         self.a1 = Alignment(self.seqs1)
         self.a2 = Alignment(self.seqs2)
+        self.a3 = Alignment(self.seqs3)
 
     def test_degap(self):
         """degap functions as expected
@@ -423,8 +436,9 @@ class AlignmentTests(TestCase):
     def test_is_valid(self):
         """is_valid functions as expected
         """
-        self.assertTrue(self.a1.is_valid(), True)
-        self.assertTrue(self.a2.is_valid(), True)
+        self.assertTrue(self.a1.is_valid())
+        self.assertTrue(self.a2.is_valid())
+        self.assertTrue(self.a3.is_valid())
 
         # invalid because of length mismatch
         d1 = DNASequence('..ACC-GTTGG..', identifier="d1")
@@ -556,6 +570,7 @@ class AlignmentTests(TestCase):
         """
         self.assertEqual(self.a1.sequence_length(), 13)
         self.assertEqual(self.a2.sequence_length(), 5)
+        self.assertEqual(self.a3.sequence_length(), 0)
 
     def test_to_phylip(self):
         """to_phylip functions as expected
@@ -598,6 +613,8 @@ class AlignmentTests(TestCase):
         """
         self.assertTrue(self.a1._validate_lengths())
         self.assertTrue(self.a2._validate_lengths())
+        self.assertTrue(self.a3._validate_lengths())
+
         self.assertTrue(Alignment([
             DNASequence('TTT', identifier="d1")])._validate_lengths())
         self.assertFalse(Alignment([

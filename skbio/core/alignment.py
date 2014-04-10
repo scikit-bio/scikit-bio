@@ -1352,7 +1352,10 @@ class Alignment(SequenceCollection):
         4
 
         """
-        return len(self._data[0])
+        if self.sequence_count() == 0:
+            return 0
+        else:
+            return len(self._data[0])
 
     def to_phylip(self, map_labels=False, label_prefix=""):
         """Return phylip-formatted string representing the `SequenceCollection`
@@ -1401,8 +1404,8 @@ class Alignment(SequenceCollection):
     def _validate_lengths(self):
         """Return ``True`` if all sequences same length, ``False`` otherwise
         """
-        seq1_length = len(self[0])
-        for seq in self[1:]:
+        seq1_length = self.sequence_length()
+        for seq in self:
             if seq1_length != len(seq):
                 return False
         return True
