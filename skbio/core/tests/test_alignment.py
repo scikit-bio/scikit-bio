@@ -258,6 +258,15 @@ class SequenceCollectionTests(TestCase):
         expected2 = {"h-1": "d1", "h-2": "d2"}
         self.assertEqual(self.s1.int_map(prefix='h-'), (expected1, expected2))
 
+    def test_is_empty(self):
+        """is_empty functions as expected
+        """
+        self.assertFalse(self.s1.is_empty())
+        self.assertFalse(self.s2.is_empty())
+        self.assertFalse(self.s3.is_empty())
+
+        self.assertTrue(self.empty.is_empty())
+
     def test_is_valid(self):
         """is_valid functions as expected
         """

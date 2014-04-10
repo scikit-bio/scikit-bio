@@ -570,6 +570,18 @@ class SequenceCollection(object):
             int_keys.append((k, seq.identifier))
         return dict(int_map), dict(int_keys)
 
+    def is_empty(self):
+        """Return True if the SequenceCollection is empty
+
+        Returns
+        -------
+        bool
+            ``True`` if `self` contains zero sequences, and ``False``
+            otherwise.
+
+        """
+        return self.sequence_count() == 0
+
     def is_valid(self):
         """Return True if the SequenceCollection is valid
 
