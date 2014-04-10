@@ -1060,6 +1060,10 @@ class Alignment(SequenceCollection):
         'AT-C'
 
         """
+        # handle empty Alignment case
+        if self.sequence_count() == 0:
+            return ''
+
         if constructor is None:
             constructor = self[0].__class__
         result = []
@@ -1106,6 +1110,10 @@ class Alignment(SequenceCollection):
         TTC
 
         """
+        # handle empty Alignment case
+        if self.sequence_count() == 0:
+            return self.__class__([])
+
         position_frequencies = self.position_frequencies()
         gap_alphabet = self[0].gap_alphabet()
 
@@ -1149,6 +1157,10 @@ class Alignment(SequenceCollection):
         TT-C
 
         """
+        # handle empty Alignment case
+        if self.sequence_count() == 0:
+            return self.__class__([])
+
         sequence_frequencies = self.sequence_frequencies()
         gap_alphabet = self[0].gap_alphabet()
         seqs_to_keep = []
@@ -1222,6 +1234,10 @@ class Alignment(SequenceCollection):
 
         """
         result = []
+        # handle the empty Alignment case
+        if self.sequence_count() == 0:
+            return result
+
         count = 1 / self.sequence_count()
         for p in self.iter_positions(constructor=str):
             current_freqs = defaultdict(float)
@@ -1280,6 +1296,10 @@ class Alignment(SequenceCollection):
 
         """
         result = []
+        # handle empty Alignment case
+        if self.sequence_count() == 0:
+            return result
+
         iupac_standard_characters = self[0].iupac_standard_characters()
         for f in self.position_frequencies():
             if (nan_on_non_standard_chars and
@@ -1319,6 +1339,10 @@ class Alignment(SequenceCollection):
 
         """
         result = []
+        # handle empty Alignment case
+        if self.sequence_length() == 0:
+            return result
+
         count = 1 / self.sequence_length()
         for s in self:
             current_freqs = defaultdict(int)
@@ -1352,6 +1376,7 @@ class Alignment(SequenceCollection):
         4
 
         """
+        # handle the empty Alignment case
         if self.sequence_count() == 0:
             return 0
         else:
