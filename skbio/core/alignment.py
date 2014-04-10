@@ -1073,7 +1073,7 @@ class Alignment(SequenceCollection):
 
         """
         # handle empty Alignment case
-        if self.sequence_count() == 0:
+        if self.is_empty():
             return ''
 
         if constructor is None:
@@ -1123,7 +1123,7 @@ class Alignment(SequenceCollection):
 
         """
         # handle empty Alignment case
-        if self.sequence_count() == 0:
+        if self.is_empty():
             return self.__class__([])
 
         position_frequencies = self.position_frequencies()
@@ -1170,7 +1170,7 @@ class Alignment(SequenceCollection):
 
         """
         # handle empty Alignment case
-        if self.sequence_count() == 0:
+        if self.is_empty():
             return self.__class__([])
 
         sequence_frequencies = self.sequence_frequencies()
@@ -1247,7 +1247,7 @@ class Alignment(SequenceCollection):
         """
         result = []
         # handle the empty Alignment case
-        if self.sequence_count() == 0:
+        if self.is_empty():
             return result
 
         count = 1 / self.sequence_count()
@@ -1309,7 +1309,7 @@ class Alignment(SequenceCollection):
         """
         result = []
         # handle empty Alignment case
-        if self.sequence_count() == 0:
+        if self.is_empty():
             return result
 
         iupac_standard_characters = self[0].iupac_standard_characters()
@@ -1352,7 +1352,7 @@ class Alignment(SequenceCollection):
         """
         result = []
         # handle empty Alignment case
-        if self.sequence_length() == 0:
+        if self.is_empty():
             return result
 
         count = 1 / self.sequence_length()
@@ -1389,7 +1389,7 @@ class Alignment(SequenceCollection):
 
         """
         # handle the empty Alignment case
-        if self.sequence_count() == 0:
+        if self.is_empty():
             return 0
         else:
             return len(self._data[0])
@@ -1408,8 +1408,7 @@ class Alignment(SequenceCollection):
                                           "be generated if all sequences are "
                                           "of equal length.")
 
-        sequence_count = self.sequence_count()
-        if sequence_count == 0:
+        if self.is_empty():
             raise SequenceCollectionError("PHYLIP-formatted string can only "
                                           "be generated if there is at least "
                                           "one sequence in the Alignment.")
@@ -1421,6 +1420,7 @@ class Alignment(SequenceCollection):
                                           "one position in the Alignment.")
 
         identifiers = self.identifiers()
+        sequence_count = self.sequence_count()
         result = ["%d %d" % (sequence_count, sequence_length)]
         if map_labels:
             seq_id_to_seqs, new_id_to_old_id =\
