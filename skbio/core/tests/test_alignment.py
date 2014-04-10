@@ -486,6 +486,8 @@ class AlignmentTests(TestCase):
         self.assertTrue(a1.majority_consensus() in
                         [DNASequence('T'), DNASequence('A')])
 
+        self.assertEqual(self.a3.majority_consensus(), '')
+
     def test_omit_gap_positions(self):
         """omitting gap positions functions as expected
         """
@@ -503,6 +505,10 @@ class AlignmentTests(TestCase):
         expected = Alignment([r1, r2])
         self.assertEqual(self.a2.omit_gap_positions(0.0), expected)
 
+        self.assertEqual(self.a3.omit_gap_positions(0.0), self.a3)
+        self.assertEqual(self.a3.omit_gap_positions(0.49), self.a3)
+        self.assertEqual(self.a3.omit_gap_positions(1.0), self.a3)
+
     def test_omit_gap_sequences(self):
         """omitting gap sequences functions as expected
         """
@@ -512,6 +518,10 @@ class AlignmentTests(TestCase):
 
         expected = Alignment([self.r2])
         self.assertEqual(self.a2.omit_gap_sequences(0.19), expected)
+
+        self.assertEqual(self.a3.omit_gap_sequences(0.0), self.a3)
+        self.assertEqual(self.a3.omit_gap_sequences(0.2), self.a3)
+        self.assertEqual(self.a3.omit_gap_sequences(1.0), self.a3)
 
     def test_position_counters(self):
         """position_counters functions as expected
@@ -523,6 +533,8 @@ class AlignmentTests(TestCase):
                     Counter({'-': 1, 'U': 1})]
         self.assertEqual(self.a2.position_counters(), expected)
 
+        self.assertEqual(self.a3.position_counters(), [])
+
     def test_position_frequencies(self):
         """computing position frequencies functions as expected
         """
@@ -532,6 +544,8 @@ class AlignmentTests(TestCase):
                     defaultdict(int, {'U': 1.0}),
                     defaultdict(int, {'-': 0.5, 'U': 0.5})]
         self.assertEqual(self.a2.position_frequencies(), expected)
+
+        self.assertEqual(self.a3.position_frequencies(), [])
 
     def test_position_entropies(self):
         """computing positional uncertainties functions as expected
@@ -546,6 +560,9 @@ class AlignmentTests(TestCase):
         expected = [1.0, 1.0, 1.0, 0.0, np.nan]
         np.testing.assert_almost_equal(self.a2.position_entropies(base=2),
                                        expected, 5)
+
+        expected = []
+        np.testing.assert_almost_equal(self.a3.position_entropies(base=2), [])
 
     def test_sequence_frequencies(self):
         """sequence_frequencies functions as expected
