@@ -17,7 +17,7 @@ import numpy as np
 class OrdinationResults(namedtuple('OrdinationResults',
                                    ('eigvals', 'species', 'site', 'biplot',
                                     'site_constraints', 'proportion_explained',
-                                    'specieds_ids', 'site_ids'))):
+                                    'species_ids', 'site_ids'))):
     # To avoid creating a dict, as a namedtuple doesn't have it:
     __slots__ = ()
 
@@ -159,7 +159,7 @@ class OrdinationResults(namedtuple('OrdinationResults',
 
         # Write proportion explained
         if self.proportion_explained is None:
-            out_f.write("Proportion explained\t0\n")
+            out_f.write("Proportion explained\t0\n\n")
         else:
             out_f.write("Proportion explained\t%d\n" %
                         self.proportion_explained.shape)
@@ -171,7 +171,7 @@ class OrdinationResults(namedtuple('OrdinationResults',
             out_f.write("Species\t0\t0\n\n")
         else:
             out_f.write("Species\t%d\t%d\n" % self.species.shape)
-            for id_, vals in izip(self.ids, self.species):
+            for id_, vals in izip(self.species_ids, self.species):
                 out_f.write("%s\t%s\n" % (id_, '\t'.join(np.asarray(vals,
                             dtype=np.str))))
             out_f.write("\n")

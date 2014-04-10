@@ -265,7 +265,8 @@ class TestCAResults(object):
     def setup(self):
         """Data from table 9.11 in Legendre & Legendre 1998."""
         self.X = np.loadtxt(get_data_path('L&L_CA_data'))
-        self.ordination = CA(self.X)
+        self.ordination = CA(self.X, ['Site1', 'Site2', 'Site3'],
+                             ['Species1', 'Species2', 'Species3'])
 
     def test_scaling2(self):
         scores = self.ordination.scores(scaling=2)
@@ -316,7 +317,7 @@ class TestCAErrors(object):
     def test_negative(self):
         X = np.array([[1, 2], [-0.1, -2]])
         with npt.assert_raises(ValueError):
-            CA(X)
+            CA(X, None, None)
 
 
 class TestRDAErrors(object):
@@ -572,8 +573,20 @@ class TestPCoAErrors(object):
 class TestOrdinationResults(object):
     def test_to_file(self):
         # CA results
-        self.X = np.loadtxt(get_data_path('L&L_CA_data'))
-        self.ordination = CA(self.X)
+        ca = CA(np.loadtxt(get_data_path('L&L_CA_data')),
+                ['Site1', 'Site2', 'Site3'],
+                ['Species1', 'Species2', 'Species3'])
+        ca_scores = ca.scores(2)
+        obs_f = StringIO()
+        ca_scores.to_file(obs_f)
+        obs = obs_f.getvalue()
+        obs_f.close()
+
+        with open(get_data_path('L&L_CA_data_scores'), 'U') as f:
+            exp = f.read()
+
+        npt.assert_equal(obs, exp)
+
         # CCA results
         # PCoA results
         with open(get_data_path('PCoA_sample_data_3'), 'U') as lines:
@@ -586,8 +599,8 @@ class TestOrdinationResults(object):
         obs_f.close()
 
         with open(get_data_path('PCoA_sample_data_3_scores'), 'U') as f:
-            exp = f.readlines()
+            exp = f.read()
 
-        npt.assert_equal(obs, ''.join(exp))
+        npt.assert_equal(obs, exp)
 
         # RA results
