@@ -373,16 +373,16 @@ class TestCCAErrors(object):
     def test_shape(self):
         X, Y = self.X, self.Y
         with npt.assert_raises(ValueError):
-            CCA(Y, X[:-1])
+            CCA(Y, X[:-1], None, None)
 
     def test_Y_values(self):
         X, Y = self.X, self.Y
         Y[0, 0] = -1
         with npt.assert_raises(ValueError):
-            CCA(Y, X)
+            CCA(Y, X, None, None)
         Y[0] = 0
         with npt.assert_raises(ValueError):
-            CCA(Y, X)
+            CCA(Y, X, None, None)
 
 
 class TestCCAResults(object):
@@ -392,7 +392,12 @@ class TestCCAResults(object):
         compared with table 11.5 if also there."""
         Y = np.loadtxt(get_data_path('example3_Y'))
         X = np.loadtxt(get_data_path('example3_X'))
-        self.ordination = CCA(Y, X[:, :-1])
+        self.ordination = CCA(Y, X[:, :-1],
+                              ['Site0', 'Site1', 'Site2', 'Site3', 'Site4',
+                               'Site5', 'Site6', 'Site7', 'Site8', 'Site9'],
+                              ['Species0', 'Species1', 'Species2', 'Species3',
+                               'Species4', 'Species5', 'Species6', 'Species7',
+                               'Species8'])
 
     def test_scaling1_species(self):
         scores = self.ordination.scores(1)
@@ -588,6 +593,24 @@ class TestOrdinationResults(object):
         npt.assert_equal(obs, exp)
 
         # CCA results
+        Y = np.loadtxt(get_data_path('example3_Y'))
+        X = np.loadtxt(get_data_path('example3_X'))
+        cca = CCA(Y, X[:, :-1],
+                  ['Site0', 'Site1', 'Site2', 'Site3', 'Site4', 'Site5',
+                   'Site6', 'Site7', 'Site8', 'Site9'],
+                  ['Species0', 'Species1', 'Species2', 'Species3', 'Species4',
+                   'Species5', 'Species6', 'Species7', 'Species8'])
+        cca_scores = cca.scores(2)
+        obs_f = StringIO()
+        cca_scores.to_file(obs_f)
+        obs = obs_f.getvalue()
+        obs_f.close()
+
+        with open(get_data_path('example3_scores'), 'U') as f:
+            exp = f.read()
+
+        npt.assert_equal(obs, exp)
+
         # PCoA results
         with open(get_data_path('PCoA_sample_data_3'), 'U') as lines:
             dist_matrix = DistanceMatrix.from_file(lines)

@@ -202,7 +202,7 @@ class OrdinationResults(namedtuple('OrdinationResults',
             out_f.write("Site constraints\t%d\t%d\n" %
                         self.site_constraints.shape)
             for vals in self.site_constraints:
-                out_f.write("%s\t%s\n" % (id_, '\t'.join(np.asarray(vals,
+                out_f.write("%s\n" % ('\t'.join(np.asarray(vals,
                             dtype=np.str))))
 
 
