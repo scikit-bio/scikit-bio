@@ -241,11 +241,11 @@ class SequenceCollectionTests(TestCase):
     def test_identifiers(self):
         """identifiers functions as expected
         """
-        self.assertEqual(sorted(self.s1.identifiers()), ['d1', 'd2'])
-        self.assertEqual(sorted(self.s2.identifiers()), ['r1', 'r2', 'r3'])
-        self.assertEqual(sorted(self.s3.identifiers()),
+        self.assertEqual(self.s1.identifiers(), ['d1', 'd2'])
+        self.assertEqual(self.s2.identifiers(), ['r1', 'r2', 'r3'])
+        self.assertEqual(self.s3.identifiers(),
                          ['d1', 'd2', 'r1', 'r2', 'r3'])
-        self.assertEqual(sorted(self.empty.identifiers()), [])
+        self.assertEqual(self.empty.identifiers(), [])
 
     def test_int_map(self):
         """int_map functions as expected
@@ -559,7 +559,6 @@ class AlignmentTests(TestCase):
         np.testing.assert_almost_equal(self.a2.position_entropies(base=2),
                                        expected, 5)
 
-        expected = []
         np.testing.assert_almost_equal(self.empty.position_entropies(base=2),
                                        [])
 
