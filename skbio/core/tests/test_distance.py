@@ -9,6 +9,8 @@ from __future__ import division
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import os
+
 from itertools import izip
 from StringIO import StringIO
 from tempfile import TemporaryFile
@@ -23,10 +25,32 @@ from skbio.core.exception import (DissimilarityMatrixError,
 from unittest import TestCase, main
 
 
+# copied from maths/stats/ordination/tests/test_ordination.py
+def get_data_path(fn):
+    """Return path to filename `fn` in the data folder."""
+    path = os.path.dirname(os.path.abspath(__file__))
+    data_path = os.path.join(path, 'data', fn)
+    return data_path
+
+
 class DissimilarityMatrixTestData(TestCase):
     """Test data used in DissimilarityMatrix and subclass unit tests."""
 
     def setUp(self):
+        self.bad_dm_fp = get_data_path('bad_dm.txt')
+        self.dm_2x2_asym_fp = get_data_path('dm_2x2_asym.txt')
+        self.dm_3x3_fp = get_data_path('dm_3x3.txt')
+
+        fd = open(self.bad_dm_fp, 'U')
+        self.bad_dm_f2_lines = ''.join(fd.readlines())
+        fd.close()
+        fd = open(self.dm_2x2_asym_fp, 'U')
+        self.dm_2x2_asym_lines = ''.join(fd.readlines())
+        fd.close()
+        fd = open(self.dm_3x3_fp, 'U')
+        self.dm_3x3_lines = ''.join(fd.readlines())
+        fd.close()
+
         self.dm_1x1_data = [[0.0]]
         self.dm_1x1_f = StringIO(DM_1x1_F)
 
@@ -34,19 +58,18 @@ class DissimilarityMatrixTestData(TestCase):
         self.dm_2x2_f = StringIO(DM_2x2_F)
 
         self.dm_2x2_asym_data = [[0.0, 1.0], [-2.0, 0.0]]
-        self.dm_2x2_asym_f = StringIO(DM_2x2_ASYM_F)
+        self.dm_2x2_asym_f = StringIO(self.dm_2x2_asym_lines)
 
         self.dm_3x3_data = [[0.0, 0.01, 4.2], [0.01, 0.0, 12.0],
                             [4.2, 12.0, 0.0]]
-        self.dm_3x3_f = StringIO(DM_3x3_F)
-
+        self.dm_3x3_f = StringIO(self.dm_3x3_lines)
         self.dm_3x3_whitespace_f = StringIO('\n'.join(DM_3x3_WHITESPACE_F))
 
         self.tmp_f = TemporaryFile(prefix='skbio.core.tests.test_distance',
                                    suffix='.txt')
 
         self.bad_dm_f1 = StringIO(BAD_DM_F1)
-        self.bad_dm_f2 = StringIO(BAD_DM_F2)
+        self.bad_dm_f2 = StringIO(self.bad_dm_f2_lines)
         self.bad_dm_f3 = StringIO(BAD_DM_F3)
         self.bad_dm_f4 = StringIO(BAD_DM_F4)
         self.bad_dm_f5 = StringIO(BAD_DM_F5)
@@ -68,7 +91,8 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         self.dm_3x3 = DissimilarityMatrix(self.dm_3x3_data, ['a', 'b', 'c'])
 
         self.dms = [self.dm_1x1, self.dm_2x2, self.dm_2x2_asym, self.dm_3x3]
-        self.dm_f_lines = [DM_1x1_F, DM_2x2_F, DM_2x2_ASYM_F, DM_3x3_F]
+        self.dm_f_lines = [DM_1x1_F, DM_2x2_F, self.dm_2x2_asym_lines,
+                           self.dm_3x3_lines]
         self.dm_fs = [self.dm_1x1_f, self.dm_2x2_f, self.dm_2x2_asym_f,
                       self.dm_3x3_f]
         self.dm_shapes = [(1, 1), (2, 2), (2, 2), (3, 3)]
@@ -101,6 +125,21 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         for dm_f, dm in izip(self.dm_fs, self.dms):
             obs = DissimilarityMatrix.from_file(dm_f)
             self.assertEqual(obs, dm)
+
+    def test_from_file_with_file_path(self):
+        """Should identify the filepath correctly and parse from it."""
+
+        # should fail with the expected exception
+        with self.assertRaises(DissimilarityMatrixFormatError):
+            _ = DissimilarityMatrix.from_file(self.bad_dm_fp)
+
+        obs = DissimilarityMatrix.from_file(self.dm_2x2_asym_fp)
+        self.assertEqual(self.dm_2x2_asym, obs)
+        self.assertTrue(isinstance(obs, DissimilarityMatrix))
+
+        obs = DissimilarityMatrix.from_file(self.dm_3x3_fp)
+        self.assertEqual(self.dm_3x3, obs)
+        self.assertTrue(isinstance(obs, DissimilarityMatrix))
 
     def test_from_file_extra_junk(self):
         """Should correctly parse a file with extra whitespace and comments."""
@@ -442,6 +481,17 @@ class DistanceMatrixTests(DissimilarityMatrixTestData):
         self.dm_condensed_forms = [np.array([]), np.array([0.123]),
                                    np.array([0.01, 4.2, 12.0])]
 
+    def test_from_file_with_file_path(self):
+        """Should identify the filepath correctly and parse from it."""
+
+        # should fail with the expected exception
+        with self.assertRaises(DissimilarityMatrixFormatError):
+            _ = DistanceMatrix.from_file(self.bad_dm_fp)
+
+        obs = DistanceMatrix.from_file(self.dm_3x3_fp)
+        self.assertEqual(self.dm_3x3, obs)
+        self.assertTrue(isinstance(obs, DistanceMatrix))
+
     def test_from_file_invalid_input(self):
         """Raises error on invalid distance matrix file."""
         # Asymmetric.
@@ -554,18 +604,6 @@ DM_1x1_F = "\ta\na\t0.0\n"
 #     0.123    0.0
 DM_2x2_F = "\ta\tb\na\t0.0\t0.123\nb\t0.123\t0.0\n"
 
-# 2x2, asymmetric:
-#     0.0 1.0
-#    -2.0 0.0
-DM_2x2_ASYM_F = '\ta\tb\na\t0.0\t1.0\nb\t-2.0\t0.0\n'
-
-# 3x3:
-#      0.0   0.01   4.2
-#     0.01    0.0  12.0
-#      4.2   12.0   0.0
-DM_3x3_F = ("\ta\tb\tc\na\t0.0\t0.01\t4.2\nb\t0.01\t0.0\t12.0\n"
-            "c\t4.2\t12.0\t0.0\n")
-
 # Extra whitespace-only lines throughout. Also has comments before the header.
 DM_3x3_WHITESPACE_F = ['# foo',
                        '      \t \t ',
@@ -587,9 +625,6 @@ DM_3x3_WHITESPACE_F = ['# foo',
 
 # missing data
 BAD_DM_F1 = 'a\tb\na\t0\t1\nb\t1'
-
-# mismatched IDs
-BAD_DM_F2 = '\ta\tb\nb\t0\t1\na\t1\t0'
 
 # extra data lines
 BAD_DM_F3 = '\ta\tb\na\t0\t1\nb\t1\t0\n  \nfoo\n\n\n'

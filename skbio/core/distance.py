@@ -135,6 +135,7 @@ from __future__ import division
 
 from copy import deepcopy
 from itertools import izip
+from os.path import exists
 
 import numpy as np
 from scipy.spatial.distance import squareform
@@ -200,19 +201,17 @@ class DissimilarityMatrix(object):
 
     @classmethod
     def from_file(cls, dm_f, delimiter='\t'):
-        """Load dissimilarity matrix from delimited text file.
+        """Load dissimilarity matrix from a delimited text file or file path.
 
         Creates a `DissimilarityMatrix` instance from a serialized
         dissimilarity matrix stored as delimited text.
 
-        `dm_f` must be a file-like object containing delimited text. The first
-        line (header) must contain the IDs of each object. The subsequent lines
-        must contain an ID followed by each dissimilarity (float) between the
-        current object and all other objects, where the order of objects is
-        determined by the header line.
-
-        For example, a 2x2 dissimilarity matrix with IDs ``'a'`` and ``'b'``
-        might look like::
+        `dm_f` can be a file-like or a file path object containing delimited
+        text. The first line (header) must contain the IDs of each object. The
+        subsequent lines must contain an ID followed by each dissimilarity
+        (float) between the current object and all other objects, where the
+        order of objects is determined by the header line.  For example, a 2x2
+        dissimilarity matrix with IDs ``'a'`` and ``'b'`` might look like::
 
             <del>a<del>b
             a<del>0.0<del>1.0
@@ -222,9 +221,10 @@ class DissimilarityMatrix(object):
 
         Parameters
         ----------
-        dm_f : iterable of str
+        dm_f : iterable of str or str
             Iterable of strings (e.g., open file handle, file-like object, list
-            of strings, etc.) containing a serialized dissimilarity matrix.
+            of strings, etc.) or a file path (a string) containing a serialized
+            dissimilarity matrix.
         delimiter : str, optional
             String delimiting elements in `dm_f`.
 
@@ -242,11 +242,28 @@ class DissimilarityMatrix(object):
         IDs will have any leading/trailing whitespace removed when they are
         parsed.
 
+        .. note::
+            File-like objects passed to this method will not be closed upon the
+            completion of the parsing, it is responsibility of the owner of the
+            object to perform this operation.
+
         """
         # We aren't using np.loadtxt because it uses *way* too much memory
         # (e.g, a 2GB matrix eats up 10GB, which then isn't freed after parsing
         # has finished). See:
         # http://mail.scipy.org/pipermail/numpy-tickets/2012-August/006749.html
+
+        fd = None
+
+        # We use iter() as we want to take a single pass over the iterable and
+        # maintain our current position after finding the header (mainly
+        # necessary for something like a list of strings).
+        if isinstance(dm_f, str) and exists(dm_f):
+            # check if it's a valid path, if so read the contents
+            fd = open(dm_f, 'U')
+            dm_f = iter(fd)
+        else:
+            dm_f = iter(dm_f)
 
         # Strategy:
         #     - find the header
@@ -254,10 +271,6 @@ class DissimilarityMatrix(object):
         #     - for each row of data in the input file:
         #         - populate the corresponding row in the ndarray with floats
 
-        # We use iter() as we want to take a single pass over the iterable and
-        # maintain our current position after finding the header (mainly
-        # necessary for something like a list of strings).
-        dm_f = iter(dm_f)
         ids = cls._parse_ids(dm_f, delimiter)
         num_ids = len(ids)
         data = np.empty((num_ids, num_ids), dtype='float')
@@ -307,6 +320,10 @@ class DissimilarityMatrix(object):
             raise DissimilarityMatrixFormatError(
                 "Expected %d row(s) of data, but found %d." % (num_ids,
                                                                curr_row_idx))
+
+        # if the input was a file path close the file
+        if fd is not None:
+            fd.close()
 
         return cls(data, ids)
 
