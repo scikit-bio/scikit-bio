@@ -204,11 +204,12 @@ def parse_fastq(data, strict=False):
     ...     print qual
     seq1
     AACACCAAACTTCTCCACCACGTGAGCTACAAAAG
-    ````Y^T]`]c^cabcacc`^Lb^ccYT\T\Y\WF
+    [32 32 32 32 25 30 20 29 32 29 35 30 35 33 34 35 33 35 35 32 30 12 34 30 35
+     35 25 20 28 20 28 25 28 23  6]
     seq2
     TATGTATATATAACATATACATATATACATACATA
-    ]KZ[PY]_[YY^```ac^\\`bT``c`\aT``bbb
-
+    [29 11 26 27 16 25 29 31 27 25 25 30 32 32 32 33 35 30 28 28 32 34 20 32 32
+     35 32 28 33 20 32 32 34 34 34]
     """
     # fastq format is very simple, defined by blocks of 4 lines
     line_num = -1
