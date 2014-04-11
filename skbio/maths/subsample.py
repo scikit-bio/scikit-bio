@@ -126,3 +126,8 @@ def subsample(counts, n, replace=False):
                 result[p] += 1
 
     return result
+
+try:
+    from _subsample import *
+except ImportError:
+    pass
