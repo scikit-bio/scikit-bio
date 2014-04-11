@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 r"""
 Parse biological sequences (:mod:`skbio.parse.sequences`)
 =========================================================
