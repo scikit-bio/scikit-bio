@@ -8,8 +8,8 @@
 # -----------------------------------------------------------------------------
 from __future__ import division
 
-from skbio.parse.sequences.clustal import (is_clustal_seq_line, last_space,
-                                           delete_trailing_number,
+from skbio.parse.sequences.clustal import (_is_clustal_seq_line, last_space,
+                                           _delete_trailing_number,
                                            parse_clustal)
 from skbio.core.exception import RecordError
 
@@ -21,8 +21,8 @@ class ClustalTests(TestCase):
     """Tests of top-level functions."""
 
     def test_is_clustal_seq_line(self):
-        """is_clustal_seq_line should reject blanks and 'CLUSTAL'"""
-        ic = is_clustal_seq_line
+        """_is_clustal_seq_line should reject blanks and 'CLUSTAL'"""
+        ic = _is_clustal_seq_line
         assert ic('abc')
         assert ic('abc  def')
         assert not ic('CLUSTAL')
@@ -39,7 +39,7 @@ class ClustalTests(TestCase):
 
     def test_delete_trailing_number(self):
         """Should delete the trailing number if present"""
-        dtn = delete_trailing_number
+        dtn = _delete_trailing_number
         self.assertEqual(dtn('abc'), 'abc')
         self.assertEqual(dtn('a b c'), 'a b c')
         self.assertEqual(dtn('a \t  b  \t  c'), 'a \t  b  \t  c')
@@ -59,33 +59,29 @@ class ClustalParserTests(TestCase):
     def test_minimal(self):
         """Should handle single-line input correctly"""
         result = parse_clustal([MINIMAL])  # expects seq of lines
-        self.assertEqual(dict(result), {'abc': ['ucag']})
+        self.assertEqual(dict(result), {'abc': 'ucag'})
 
     def test_two(self):
         """Should handle two-sequence input correctly"""
         result = parse_clustal(TWO)
-        self.assertEqual(dict(result), {'abc': ['uuu', 'aaa'], 'def': ['ccc',
-                                                                       'ggg']})
+        self.assertEqual(dict(result), {'abc': 'uuuaaa', 'def': 'cccggg'})
 
     def test_real(self):
         """Should handle real Clustal output"""
         data = parse_clustal(REAL)
         self.assertEqual(dict(data), {
             'abc':
-            ['GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA',
-             'GUCGAUACGUACGUCAGUCAGUACGUCAGCAUGCAUACGUACGUCGUACGUACGU-CGAC',
-             'UGACUAGUCAGCUAGCAUCGAUCAGU'
-             ],
+            'GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA'
+            'GUCGAUACGUACGUCAGUCAGUACGUCAGCAUGCAUACGUACGUCGUACGUACGU-CGAC'
+            'UGACUAGUCAGCUAGCAUCGAUCAGU',
             'def':
-            ['------------------------------------------------------------',
-             '-----------------------------------------CGCGAUGCAUGCAU-CGAU',
-             'CGAUCAGUCAGUCGAU----------'
-             ],
+            '------------------------------------------------------------'
+            '-----------------------------------------CGCGAUGCAUGCAU-CGAU'
+            'CGAUCAGUCAGUCGAU----------',
             'xyz':
-            ['------------------------------------------------------------',
-             '-------------------------------------CAUGCAUCGUACGUACGCAUGAC',
-             'UGCUGCAUCA----------------'
-             ]
+            '------------------------------------------------------------'
+            '-------------------------------------CAUGCAUCGUACGUACGCAUGAC'
+            'UGCUGCAUCA----------------'
         })
 
     def test_bad(self):
@@ -99,7 +95,7 @@ class ClustalParserTests(TestCase):
     def test_space_labels(self):
         """Should tolerate spaces in labels"""
         result = parse_clustal(SPACE_LABELS)
-        self.assertEqual(dict(result), {'abc': ['uca'], 'def ggg': ['ccc']})
+        self.assertEqual(dict(result), {'abc': 'uca', 'def ggg': 'ccc'})
 
 
 MINIMAL = 'abc\tucag'

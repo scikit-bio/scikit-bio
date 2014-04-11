@@ -13,7 +13,7 @@ from skbio.core.exception import RecordError
 from skbio.parse.record import DelimitedSplitter
 
 
-def label_line_parser(record, splitter, strict=True):
+def _label_line_parser(record, splitter, strict=True):
     """Returns dict mapping list of data to labels, plus list with field order.
 
     Field order contains labels in order encountered in file.
@@ -43,7 +43,7 @@ def label_line_parser(record, splitter, strict=True):
     return result, labels
 
 
-def is_clustal_seq_line(line):
+def _is_clustal_seq_line(line):
     """Returns True if line starts with a non-blank character but not 'CLUSTAL'
 
     Useful for filtering other lines out of the file.
@@ -54,7 +54,7 @@ def is_clustal_seq_line(line):
 last_space = DelimitedSplitter(None, -1)
 
 
-def delete_trailing_number(line):
+def _delete_trailing_number(line):
     """Deletes trailing number from a line.
 
     WARNING: does not preserve internal whitespace when a number is removed!
@@ -63,14 +63,14 @@ def delete_trailing_number(line):
     """
     pieces = line.split()
     try:
-        int(pieces[-1])
+        _ = int(pieces[-1])
         return ' '.join(pieces[:-1])
     except ValueError:  # no trailing numbers
         return line
 
 
 def parse_clustal(record, strict=True):
-    r"""yields labels and lists of sequences
+    r"""yields labels and sequences
 
     Parameters
     ----------
@@ -80,15 +80,13 @@ def parse_clustal(record, strict=True):
     strict : boolean
         Whether or not to raise a ``RecordError`` when no labels are found.
 
-
-
     Returns
     -------
 
     label : str
         label of the sequence
-    seq : list of str
-        list of sequences for each label
+    seq : str
+        sequence for each label
 
     Notes
     -----
@@ -138,11 +136,11 @@ def parse_clustal(record, strict=True):
     ...     print label
     ...     print seq
     abc
-    ['GCAUGCAUCUGCAUACGUACGUACGCAUGCA', 'GUCGAUACAUACGUACGUCGGUACGU-CGAC']
+    GCAUGCAUCUGCAUACGUACGUACGCAUGCAGUCGAUACAUACGUACGUCGGUACGU-CGAC
     def
-    ['-------------------------------', '---------------CGUGCAUGCAU-CGAU']
+    ----------------------------------------------CGUGCAUGCAU-CGAU
     xyz
-    ['-------------------------------', '-----------CAUUCGUACGUACGCAUGAC']
+    ------------------------------------------CAUUCGUACGUACGCAUGAC
 
 
     References
@@ -154,8 +152,9 @@ def parse_clustal(record, strict=True):
         Thompson", Nucleic Acids Res. 1994 Nov 11;22(22):4673-80.
 
     """
-    records = map(delete_trailing_number, filter(is_clustal_seq_line, record))
-    data, labels = label_line_parser(records, last_space, strict)
+    records = map(_delete_trailing_number,
+                  filter(_is_clustal_seq_line, record))
+    data, labels = _label_line_parser(records, last_space, strict)
 
     for key in labels:
-        yield key, data[key]
+        yield key, ''.join(data[key])
