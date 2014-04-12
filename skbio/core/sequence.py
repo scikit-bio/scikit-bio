@@ -940,14 +940,17 @@ class BiologicalSequence(Sequence):
         """
         if k < 1:
             raise ValueError("k must be greater than 0.")
+
         result = []
-        len_s = len(self)
+        sequence_length = len(self)
+
         if overlapping:
             step = 1
         else:
             step = k
-        for i in range(0, len_s, step):
-            if i+k > len_s:
+
+        for i in range(0, sequence_length, step):
+            if i+k > sequence_length:
                 # if there are no more k-mers left
                 break
             else:
