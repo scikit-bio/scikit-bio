@@ -909,6 +909,25 @@ class BiologicalSequence(Sequence):
         """
         return not self.has_unsupported_characters()
 
+    def k_words(self, k, overlapping=True, constructor=str):
+        """Get the list of words of length k
+        """
+        if k < 1:
+            raise ValueError("k must be greater than 0.")
+        result = []
+        len_s = len(self)
+        if overlapping:
+            step = 1
+        else:
+            step = k
+        for i in range(0, len_s, step):
+            if i+k > len_s:
+                # if there are no more k-mers left
+                break
+            else:
+                result.append(constructor(self[i:i+k]))
+        return result
+
     def lower(self):
         """Convert the BiologicalSequence to lowercase
 
