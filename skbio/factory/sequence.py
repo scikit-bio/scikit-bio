@@ -1,4 +1,34 @@
 #!/usr/bin/env python
+r"""
+Sequence factory (:mod:`skbio.factory.sequence`)
+================================================
+
+.. currentmodule:: skbio.factory.sequence
+
+The sequence factory provides a standard mechanism to iterate over sequence
+files regardless of file type or whether they are compressed. The method
+will take a single or list of file paths, resolve the necessary file openers,
+necessary iterator objects and the corresponding parsers.
+
+Methods
+-------
+
+.. autosummary::
+   :toctree: generated/
+
+   factory
+
+See Also
+--------
+
+skbio.core.iterator.SequenceIterator
+
+Examples
+--------
+
+>>> pass
+
+"""
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
