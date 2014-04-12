@@ -16,6 +16,7 @@ Functions
     parse_clustal
     parse_fasta
     parse_fastq
+    parse_qual
 
 
 """
@@ -31,7 +32,7 @@ from .clustal import parse_clustal
 from .fasta import parse_fasta
 from .fastq import parse_fastq
 
-__all__ = ['parse_clustal', 'parse_fasta', 'parse_fastq']
+__all__ = ['parse_clustal', 'parse_fasta', 'parse_fastq', 'parse_qual']
 
 from numpy.testing import Tester
 test = Tester().test
