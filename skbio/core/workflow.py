@@ -104,6 +104,8 @@ to walk through an item at a time so we can examine the debug information.
 'TTTTTTTAAAAAAA'
 >>> print wf.failed
 False
+>>> print wf.debug_trace
+set([('check_length', 0), ('reverse', 2)])
 
 The ``debug_trace`` specifies the methods executed, and the order of their
 execution where closer to zero indicates earlier in the execution order. Gaps
@@ -207,13 +209,6 @@ class NotExecuted(object):
     def __call__(self, msg):
         self.msg = msg
         return self
-
-    def __eq__(self, other):
-        try:
-            return self._ghetto_identity == other._ghetto_identity
-        except:
-            return False
-
 _not_executed = NotExecuted()
 
 
@@ -428,7 +423,7 @@ class Workflow(object):
             self.debug_counter += 1
 
             start_time = time()
-            if func() == _not_executed:
+            if func() is _not_executed:
                 self.debug_trace.remove(key)
             else:
                 self.debug_runtime[key] = time() - start_time
