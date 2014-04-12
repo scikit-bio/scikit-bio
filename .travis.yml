@@ -17,7 +17,7 @@ install:
   - conda create --yes -n env_name python=$TRAVIS_PYTHON_VERSION pip numpy=$NUMPY_VERSION scipy matplotlib nose pep8 Sphinx
   - source activate env_name
   - pip install sphinx-bootstrap-theme future
-  - pip install . --no-deps
+  - pip install -e . --no-deps
 script:
   - nosetests --with-doctest
   - pep8 skbio setup.py
