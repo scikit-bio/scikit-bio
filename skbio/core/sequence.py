@@ -925,7 +925,7 @@ class BiologicalSequence(Sequence):
         Returns
         -------
         list
-            The list of words of length `k` containted in the
+            The list of words of length `k` contained in the
             BiologicalSequence.
 
         Examples
@@ -971,7 +971,7 @@ class BiologicalSequence(Sequence):
         Returns
         -------
         collections.Counter
-            The counts of words of length `k` containted in the
+            The counts of words of length `k` contained in the
             BiologicalSequence.
 
         Examples
