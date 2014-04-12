@@ -18,7 +18,6 @@ Classes
 .. autosummary::
    :toctree: generated/
 
-   SequenceRecord
    SequenceIterator
    FastaIterator
    FastqIterator
