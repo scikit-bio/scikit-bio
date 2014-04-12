@@ -10,7 +10,7 @@
 
 from __future__ import division
 
-from collections import Counter
+from collections import Counter, defaultdict
 from unittest import TestCase, main
 
 from skbio.core.sequence import (
@@ -182,6 +182,38 @@ class BiologicalSequenceTests(TestCase):
         self.assertEqual(self.b1.k_word_counts(3, overlapping=False),
                          expected)
         expected = Counter(['GATTACA'])
+        self.assertEqual(self.b1.k_word_counts(7, overlapping=False),
+                         expected)
+
+    def test_k_word_frequencies(self):
+        """ k_word_frequencies functions as expected
+        """
+        # overlapping = True
+        expected = defaultdict(int)
+        expected['A'] = 3/7.
+        expected['C'] = 1/7.
+        expected['G'] = 1/7.
+        expected['T'] = 2/7.
+        expected = Counter('GATTACA')
+        self.assertEqual(self.b1.k_word_frequencies(1, overlapping=True),
+                         expected)
+        expected = defaultdict(int)
+        expected['GAT'] = 1/5.
+        expected['ATT'] = 1/5.
+        expected['TTA'] = 1/5.
+        expected['TAC'] = 1/5.
+        expected['ACA'] = 1/5.
+        self.assertEqual(self.b1.k_word_frequencies(3, overlapping=True),
+                         expected)
+
+        # overlapping = False
+        expected = defaultdict(int)
+        expected['GAT'] = 1/2.
+        expected['TAC'] = 1/2.
+        self.assertEqual(self.b1.k_word_counts(3, overlapping=False),
+                         expected)
+        expected = defaultdict(int)
+        expected['GATTACA'] = 1.0
         self.assertEqual(self.b1.k_word_counts(7, overlapping=False),
                          expected)
 
