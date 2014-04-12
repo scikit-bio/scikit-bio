@@ -16,6 +16,7 @@ API Reference
    core.distance
    core.exception
    core.tree
+   core.workflow
    draw.distributions
    maths.stats.distance
    maths.stats.spatial
