@@ -77,7 +77,7 @@ from __future__ import division
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from collections import Sequence
+from collections import Sequence, Counter
 from itertools import izip, product
 
 from scipy.spatial.distance import hamming
@@ -956,6 +956,34 @@ class BiologicalSequence(Sequence):
             else:
                 result.append(constructor(self[i:i+k]))
         return result
+
+    def k_word_counts(self, k, overlapping=True):
+        """Get the counts of words of length k
+
+        Parameters
+        ----------
+        k : int
+            The word length.
+        overlapping : bool, optional
+            Defines whether the k-words should be overlapping or not
+            overlapping.
+
+        Returns
+        -------
+        collections.Counter
+            The counts of words of length `k` containted in the
+            BiologicalSequence.
+
+        Examples
+        --------
+        >>> from skbio.core.sequence import BiologicalSequence
+        >>> s = BiologicalSequence('ACACAT')
+        >>> s.k_word_counts(3, overlapping=True)
+        Counter({'ACA': 2, 'CAC': 1, 'CAT': 1})
+
+        """
+        k_words = self.k_words(k, overlapping, constructor=str)
+        return Counter(k_words)
 
     def lower(self):
         """Convert the BiologicalSequence to lowercase

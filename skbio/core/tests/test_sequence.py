@@ -10,6 +10,7 @@
 
 from __future__ import division
 
+from collections import Counter
 from unittest import TestCase, main
 
 from skbio.core.sequence import (
@@ -164,6 +165,25 @@ class BiologicalSequenceTests(TestCase):
                          ['HE.', '.--', '..L'])
         b = BiologicalSequence('')
         self.assertEqual(b.k_words(3), [])
+
+    def test_k_word_counts(self):
+        """ k_word_counts functions as expected
+        """
+        # overlapping = True
+        expected = Counter('GATTACA')
+        self.assertEqual(self.b1.k_word_counts(1, overlapping=True),
+                         expected)
+        expected = Counter(['GAT', 'ATT', 'TTA', 'TAC', 'ACA'])
+        self.assertEqual(self.b1.k_word_counts(3, overlapping=True),
+                         expected)
+
+        # overlapping = False
+        expected = Counter(['GAT', 'TAC'])
+        self.assertEqual(self.b1.k_word_counts(3, overlapping=False),
+                         expected)
+        expected = Counter(['GATTACA'])
+        self.assertEqual(self.b1.k_word_counts(7, overlapping=False),
+                         expected)
 
     def test_len(self):
         """ len functions as expected
