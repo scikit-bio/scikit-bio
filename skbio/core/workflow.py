@@ -37,18 +37,18 @@ be subjected directly to workflow checks.
 ...    def initialize_state(self, item):
 ...        # Setup the state for a new item (e.g., a new sequence)
 ...        self.state = item
-...    @Workflow.method(priority=100)
+...    @method(priority=100)
 ...    def check_length(self):
 ...        # Always make sure the sequence is at least 10 nucleotides
 ...        if len(self.state) < 10:
 ...            self.failed = True
-...    @Workflow.method(priority=90)
-...    @Workflow.requires(state=has_nuc_pattern)
+...    @method(priority=90)
+...    @requires(state=has_nuc_pattern)
 ...    def truncate(self):
 ...        # Truncate if a specific starting nucleotide pattern is observed
 ...        self.state = self.state[len(nuc_pattern):]
-...    @Workflow.method(priority=80)
-...    @Workflow.requires(option='reverse', values=True)
+...    @method(priority=80)
+...    @requires(option='reverse', values=True)
 ...    def reverse(self):
 ...        # Reverse the sequence if indicatd at runtime
 ...        self.state = self.state[::-1]
@@ -169,16 +169,16 @@ allow you to indicate ``anything`` as an option value,anything that is
 
 >>> from skbio.core.workflow import not_none, anything
 >>> class Ex(Workflow):
-...     @Workflow.method()
-...     @Workflow.requires(option='foo', values=not_none)
+...     @method()
+...     @requires(option='foo', values=not_none)
 ...     def do_something(self):
 ...         pass
-...     @Workflow.method()
-...     @Workflow.requires(option='bar', values=anything)
+...     @method()
+...     @requires(option='bar', values=anything)
 ...     def do_something_else(self):
 ...         pass
-...     @Workflow.method()
-...     @Workflow.requires(option='foobar', values=[1,2,3])
+...     @method()
+...     @requires(option='foobar', values=[1,2,3])
 ...     def do_something_awesome(self):
 ...         pass
 ...
@@ -204,15 +204,23 @@ class NotExecuted(object):
     """Helper object to track if a method was executed"""
     def __init__(self):
         self.msg = None
+        self._ghetto_identity = "doc test does insane things"
 
     def __call__(self, msg):
         self.msg = msg
         return self
+
+    def __eq__(self, other):
+        try:
+            return self._ghetto_identity == other._ghetto_identity
+        except:
+            return False
+
 _not_executed = NotExecuted()
 
 
 class Exists(object):
-    """Stub object to assist with Workflow.requires when a value exists"""
+    """Stub object to assist with ``requires`` when a value exists"""
     def __contains__(self, item):
         return True
 anything = Exists()  # external, for when a value can be anything
@@ -231,14 +239,13 @@ class Workflow(object):
     """Arbitrary workflow support structure
 
     Methods that are considered to be directly part of the workflow must
-    be decorated with ``Workflow.method``. The workflow methods offer a
-    mechanism to logically group functionality together, and are free to
-    make subsequent calls to other methods.
+    be decorated with ``method``. The workflow methods offer a mechanism to
+    logically group functionality together, and are free to make subsequent
+    calls to other methods.
 
     All methods of a subclass of Workflow (those with and without the
-    Workflow.method decoration) can take advantage of the ``Workflow.requires``
-    decorator to specify any option or state requirements for the
-    decorated function.
+    ``method`` decoration) can take advantage of the ``requires`` decorator
+    to specify any option or state requirements for the decorated function.
 
     Parameters
     ----------
@@ -252,7 +259,7 @@ class Workflow(object):
     debug : bool
         Enable debug mode
     options : dict
-        runtime options, {'option':values}, that the ``Workflow.requires``
+        runtime options, {'option':values}, that the ``requires``
         decorator can interrogate.
     kwargs : dict
         Additional arguments will be added as member variables to self.
@@ -407,8 +414,6 @@ class Workflow(object):
 
         self.iter_ = None
 
-    ### Decorators ###
-
     def _debug_trace_wrapper(self, func):
         """Trace a function call"""
         def wrapped():
@@ -426,7 +431,7 @@ class Workflow(object):
             self.debug_counter += 1
 
             start_time = time()
-            if func() is _not_executed:
+            if func() == _not_executed:
                 self.debug_trace.remove(key)
             else:
                 self.debug_runtime[key] = time() - start_time
@@ -435,108 +440,110 @@ class Workflow(object):
 
         return update_wrapper(wrapped, func)
 
-    class method(object):
-        """Decorate a function to indicate it is a workflow method
 
-        Parameters
-        ----------
-        priority : int
-            Specify a priority for the method, the higher the value the higher
-            the priority. Priorities are relative to a given workflow
+class method(object):
+    """Decorate a function to indicate it is a workflow method
 
-        Returns
-        -------
-        Method
-            A decorated method
-        """
-        highest_priority = sys.maxsize
+    Parameters
+    ----------
+    priority : int
+        Specify a priority for the method, the higher the value the higher
+        the priority. Priorities are relative to a given workflow
 
-        def __init__(self, priority=0):
-            self.priority = priority
+    Returns
+    -------
+    Method
+        A decorated method
+    """
+    highest_priority = sys.maxsize
 
-        def __call__(self, func):
-            func.priority = self.priority
-            return func
+    def __init__(self, priority=0):
+        self.priority = priority
 
-    class requires(object):
-        """Decorator that executes a function if requirements are met
+    def __call__(self, func):
+        func.priority = self.priority
+        return func
 
-        Parameters
-        ----------
-        option : any Hashable object
-            An option that is required for the decorated method to execute.
-            This option will be looked up within the containing ``Workflow``s'
-            ``options``,
-        values : literally anything
-            A required value. This defaults to ``anything`` indicating that
-            the only requirement is that the ``option`` exists. It can be
-            useful to specify ``not_none`` which indicates that the
-            requirement is satisfied if the ``option`` exists and it holds
-            a value that is not ``None``. Values also supports iterables
-            or singular values
-        state : Function
-            A requirement on workflow state. This must be a function that
-            accepts a single argument, and returns ``True`` to indicate
-            the requirement is satisfied, or ``False`` to indicate the
-            requirement is not satisfied. This method will be passed the
-            containing ``Workflow``s' ``state`` member variable.
-        """
-        def __init__(self, option=None, values=anything, state=None):
-            # self here is the requires object
-            self.option = option
-            self.required_state = state
 
-            if values is anything:
-                self.values = anything
-            elif values is not_none:
-                self.values = not_none
-            elif isinstance(values, set):
+class requires(object):
+    """Decorator that executes a function if requirements are met
+
+    Parameters
+    ----------
+    option : any Hashable object
+        An option that is required for the decorated method to execute.
+        This option will be looked up within the containing ``Workflow``s'
+        ``options``,
+    values : literally anything
+        A required value. This defaults to ``anything`` indicating that
+        the only requirement is that the ``option`` exists. It can be
+        useful to specify ``not_none`` which indicates that the
+        requirement is satisfied if the ``option`` exists and it holds
+        a value that is not ``None``. Values also supports iterables
+        or singular values
+    state : Function
+        A requirement on workflow state. This must be a function that
+        accepts a single argument, and returns ``True`` to indicate
+        the requirement is satisfied, or ``False`` to indicate the
+        requirement is not satisfied. This method will be passed the
+        containing ``Workflow``s' ``state`` member variable.
+    """
+    def __init__(self, option=None, values=anything, state=None):
+        # self here is the requires object
+        self.option = option
+        self.required_state = state
+
+        if values is anything:
+            self.values = anything
+        elif values is not_none:
+            self.values = not_none
+        elif isinstance(values, set):
+            self.values = values
+        else:
+            if isinstance(values, str):
                 self.values = values
+            elif isinstance(values, Iterable):
+                self.values = set(values)
             else:
-                if isinstance(values, str):
-                    self.values = values
-                elif isinstance(values, Iterable):
-                    self.values = set(values)
-                else:
-                    self.values = set([values])
+                self.values = set([values])
 
-        def __call__(self, func):
-            """Wrap a function
+    def __call__(self, func):
+        """Wrap a function
 
-            func : the function to wrap
+        func : the function to wrap
+        """
+        def decorated(dec_self):
+            """A decorated function that has requirements
+
+            dec_self : this is "self" for the decorated function
             """
-            def decorated(dec_self):
-                """A decorated function that has requirements
+            if self.required_state is not None:
+                if not self.required_state(dec_self.state):
+                    return _not_executed
 
-                dec_self : this is "self" for the decorated function
-                """
-                if self.required_state is not None:
-                    if not self.required_state(dec_self.state):
-                        return _not_executed
+            s_opt = self.option
+            ds_opts = dec_self.options
 
-                s_opt = self.option
-                ds_opts = dec_self.options
+            # if this is a function that doesn't have an option to validate
+            if s_opt is None:
+                func(dec_self)
 
-                # if this is a function that doesn't have an option to validate
-                if s_opt is None:
+            # if the option exists in the Workflow
+            elif s_opt in ds_opts:
+                val = ds_opts[s_opt]
+
+                # if the value just needs to be not None
+                if self.values is not_none and val is not None:
                     func(dec_self)
 
-                # if the option exists in the Workflow
-                elif s_opt in ds_opts:
-                    val = ds_opts[s_opt]
-
-                    # if the value just needs to be not None
-                    if self.values is not_none and val is not None:
-                        func(dec_self)
-
-                    # otherwise make sure the value is acceptable
-                    elif val in self.values:
-                        func(dec_self)
-
-                    else:
-                        return _not_executed
+                # otherwise make sure the value is acceptable
+                elif val in self.values:
+                    func(dec_self)
 
                 else:
                     return _not_executed
 
-            return update_wrapper(decorated, func)
+            else:
+                return _not_executed
+
+        return update_wrapper(decorated, func)
