@@ -50,13 +50,13 @@ Examples
 """
 from __future__ import division
 
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 from collections import Counter, defaultdict
 from itertools import izip
@@ -66,7 +66,7 @@ import numpy as np
 from scipy.stats import entropy
 
 from skbio.core.exception import SequenceCollectionError
-from skbio.core.distance import SymmetricDistanceMatrix
+from skbio.core.distance import DistanceMatrix
 
 
 class SequenceCollection(object):
@@ -430,9 +430,13 @@ class SequenceCollection(object):
         (2, 6.0, 1.0)
 
         """
-        sequence_lengths = self.sequence_lengths()
-        return (len(sequence_lengths), center_f(sequence_lengths),
-                spread_f(sequence_lengths))
+        if self.is_empty():
+            return (0, 0.0, 0.0)
+        else:
+            sequence_count = self.sequence_count()
+            sequence_lengths = self.sequence_lengths()
+            return (sequence_count, center_f(sequence_lengths),
+                    spread_f(sequence_lengths))
 
     def degap(self):
         r"""Return a new `SequenceCollection` with all gap characters removed.
@@ -565,6 +569,18 @@ class SequenceCollection(object):
             int_map.append((k, seq))
             int_keys.append((k, seq.identifier))
         return dict(int_map), dict(int_keys)
+
+    def is_empty(self):
+        """Return True if the SequenceCollection is empty
+
+        Returns
+        -------
+        bool
+            ``True`` if `self` contains zero sequences, and ``False``
+            otherwise.
+
+        """
+        return self.sequence_count() == 0
 
     def is_valid(self):
         """Return True if the SequenceCollection is valid
@@ -742,7 +758,7 @@ class Alignment(SequenceCollection):
 
         Returns
         -------
-        skbio.core.distance.SymmetricDistanceMatrix
+        skbio.core.distance.DistanceMatrix
             Matrix containing the distances between all pairs of sequences.
 
         Raises
@@ -785,7 +801,7 @@ class Alignment(SequenceCollection):
             identifiers.append(self_i.identifier)
             for j in xrange(i):
                 dm[i, j] = dm[j, i] = self_i.distance(self[j])
-        return SymmetricDistanceMatrix(dm, identifiers)
+        return DistanceMatrix(dm, identifiers)
 
     def subalignment(self, seqs_to_keep=None, positions_to_keep=None,
                      invert_seqs_to_keep=False,
@@ -887,7 +903,7 @@ class Alignment(SequenceCollection):
                 # keep only positions that were not listed in
                 # positions_to_keep
                 def keep_position(pos):
-                    return not pos in positions_to_keep
+                    return pos not in positions_to_keep
             # else if invert_positions_to_keep is False
             else:
                 # keep only sequences that were listed in positions_to_keep
@@ -1056,6 +1072,10 @@ class Alignment(SequenceCollection):
         'AT-C'
 
         """
+        # handle empty Alignment case
+        if self.is_empty():
+            return ''
+
         if constructor is None:
             constructor = self[0].__class__
         result = []
@@ -1102,6 +1122,10 @@ class Alignment(SequenceCollection):
         TTC
 
         """
+        # handle empty Alignment case
+        if self.is_empty():
+            return self.__class__([])
+
         position_frequencies = self.position_frequencies()
         gap_alphabet = self[0].gap_alphabet()
 
@@ -1145,6 +1169,10 @@ class Alignment(SequenceCollection):
         TT-C
 
         """
+        # handle empty Alignment case
+        if self.is_empty():
+            return self.__class__([])
+
         sequence_frequencies = self.sequence_frequencies()
         gap_alphabet = self[0].gap_alphabet()
         seqs_to_keep = []
@@ -1218,6 +1246,10 @@ class Alignment(SequenceCollection):
 
         """
         result = []
+        # handle the empty Alignment case
+        if self.is_empty():
+            return result
+
         count = 1 / self.sequence_count()
         for p in self.iter_positions(constructor=str):
             current_freqs = defaultdict(float)
@@ -1276,6 +1308,10 @@ class Alignment(SequenceCollection):
 
         """
         result = []
+        # handle empty Alignment case
+        if self.is_empty():
+            return result
+
         iupac_standard_characters = self[0].iupac_standard_characters()
         for f in self.position_frequencies():
             if (nan_on_non_standard_chars and
@@ -1315,6 +1351,10 @@ class Alignment(SequenceCollection):
 
         """
         result = []
+        # handle empty Alignment case
+        if self.is_empty():
+            return result
+
         count = 1 / self.sequence_length()
         for s in self:
             current_freqs = defaultdict(int)
@@ -1348,7 +1388,11 @@ class Alignment(SequenceCollection):
         4
 
         """
-        return len(self._data[0])
+        # handle the empty Alignment case
+        if self.is_empty():
+            return 0
+        else:
+            return len(self._data[0])
 
     def to_phylip(self, map_labels=False, label_prefix=""):
         """Return phylip-formatted string representing the `SequenceCollection`
@@ -1364,8 +1408,7 @@ class Alignment(SequenceCollection):
                                           "be generated if all sequences are "
                                           "of equal length.")
 
-        sequence_count = self.sequence_count()
-        if sequence_count == 0:
+        if self.is_empty():
             raise SequenceCollectionError("PHYLIP-formatted string can only "
                                           "be generated if there is at least "
                                           "one sequence in the Alignment.")
@@ -1377,6 +1420,7 @@ class Alignment(SequenceCollection):
                                           "one position in the Alignment.")
 
         identifiers = self.identifiers()
+        sequence_count = self.sequence_count()
         result = ["%d %d" % (sequence_count, sequence_length)]
         if map_labels:
             seq_id_to_seqs, new_id_to_old_id =\
@@ -1397,8 +1441,8 @@ class Alignment(SequenceCollection):
     def _validate_lengths(self):
         """Return ``True`` if all sequences same length, ``False`` otherwise
         """
-        seq1_length = len(self[0])
-        for seq in self[1:]:
+        seq1_length = self.sequence_length()
+        for seq in self:
             if seq1_length != len(seq):
                 return False
         return True

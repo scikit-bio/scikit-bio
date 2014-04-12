@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 from copy import deepcopy
 from skbio.core.exception import FieldError
@@ -93,7 +93,7 @@ class GenericRecord(dict):
         dict.__init__(temp, *args, **kwargs)
         self.update(temp)
         for name, prototype in self.Required.iteritems():
-            if not name in self:
+            if name not in self:
                 self[name] = deepcopy(prototype)
 
     def __delitem__(self, item):
@@ -170,7 +170,7 @@ class MappedRecord(GenericRecord):
             self[unalias(key)] = val
         for name, prototype in self.Required.iteritems():
             new_name = unalias(name)
-            if not new_name in self:
+            if new_name not in self:
                 self[new_name] = self._copy(prototype)
 
     def unalias(self, key):

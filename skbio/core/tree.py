@@ -141,13 +141,13 @@ pairwise tip-to-tip distances between trees:
 """
 from __future__ import division
 
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 import re
 from operator import or_
@@ -168,9 +168,9 @@ def distance_from_r(m1, m2):
 
     Parameters
     ----------
-    m1 : SymmetricDistanceMatrix
+    m1 : DistanceMatrix
         a distance matrix to compare
-    m2 : SymmetricDistanceMatrix
+    m2 : DistanceMatrix
         a distance matrix to compare
 
     Returns
@@ -229,7 +229,6 @@ class TreeNode(object):
         if children is not None:
             self.extend(children)
 
-    ### start operators ###
     def __repr__(self):
         r"""Returns summary of the tree
 
@@ -297,9 +296,6 @@ class TreeNode(object):
         r"""Node delegates slicing to children"""
         return self.children[i]
 
-    ### end operators ###
-
-    ### start topology updates ###
     def _adopt(self, node):
         r"""Update parent references but does NOT update self.children"""
         self.invalidate_node_cache()
@@ -527,9 +523,7 @@ class TreeNode(object):
 #       tcopy.prune()
 #       return tcopy
 #
-    ### end topology updates ###
 
-    ### copy like methods ###
     def copy(self):
         r"""Returns a copy of self using an iterative approach
 
@@ -574,7 +568,7 @@ class TreeNode(object):
         nodes_stack = [[root, self, len(self.children)]]
 
         while nodes_stack:
-            #check the top node, any children left unvisited?
+            # check the top node, any children left unvisited?
             top = nodes_stack[-1]
             new_top_node, old_top_node, unvisited_children = top
 
@@ -879,10 +873,6 @@ class TreeNode(object):
 
             return new_root.unrooted_copy()
 
-    ### end copy like methods ###
-
-    ### node checks ###
-
     def is_tip(self):
         r"""Returns True if the current node is a tip, i.e. has no children.
 
@@ -954,10 +944,6 @@ class TreeNode(object):
         False
         """
         return not self.is_tip()
-
-    ### end node checks ###
-
-    ### traversal methods ###
 
     def traverse(self, self_before=True, self_after=False, include_self=True):
         r"""Returns iterator over descendants
@@ -1101,22 +1087,22 @@ class TreeNode(object):
         curr_children_len = len(curr_children)
         while 1:
             curr_index = child_index_stack[-1]
-            #if there are children left, process them
+            # if there are children left, process them
             if curr_index < curr_children_len:
                 curr_child = curr_children[curr_index]
-                #if the current child has children, go there
+                # if the current child has children, go there
                 if curr_child.children:
                     child_index_stack.append(0)
                     curr = curr_child
                     curr_children = curr.children
                     curr_children_len = len(curr_children)
                     curr_index = 0
-                #otherwise, yield that child
+                # otherwise, yield that child
                 else:
                     yield curr_child
                     child_index_stack[-1] += 1
-            #if there are no children left, return self, and move to
-            #self's parent
+            # if there are no children left, return self, and move to
+            # self's parent
             else:
                 if include_self or (curr is not self):
                     yield curr
@@ -1163,7 +1149,7 @@ class TreeNode(object):
         c
         None
         """
-        #handle simple case first
+        # handle simple case first
         if not self.children:
             if include_self:
                 yield self
@@ -1176,21 +1162,21 @@ class TreeNode(object):
             if not curr_index:
                 if include_self or (curr is not self):
                     yield curr
-            #if there are children left, process them
+            # if there are children left, process them
             if curr_index < len(curr_children):
                 curr_child = curr_children[curr_index]
-                #if the current child has children, go there
+                # if the current child has children, go there
                 if curr_child.children:
                     child_index_stack.append(0)
                     curr = curr_child
                     curr_children = curr.children
                     curr_index = 0
-                #otherwise, yield that child
+                # otherwise, yield that child
                 else:
                     yield curr_child
                     child_index_stack[-1] += 1
-            #if there are no children left, return self, and move to
-            #self's parent
+            # if there are no children left, return self, and move to
+            # self's parent
             else:
                 if include_self or (curr is not self):
                     yield curr
@@ -1325,10 +1311,6 @@ class TreeNode(object):
             if not n.is_tip():
                 yield n
 
-    ### end traversal methods ###
-
-    ### search methods ###
-
     def invalidate_node_cache(self):
         r"""Delete the node cache
 
@@ -1338,7 +1320,10 @@ class TreeNode(object):
         find
 
         """
-        self._node_cache = {}
+        if not self.is_root():
+            self.root().invalidate_node_cache()
+        else:
+            self._node_cache = {}
 
     def create_node_cache(self):
         r"""Construct an internal lookup keyed by node name, valued by node
@@ -1358,18 +1343,20 @@ class TreeNode(object):
         find
 
         """
-        if self._node_cache:
-            return
+        if not self.is_root():
+            self.root().create_node_cache()
+        else:
+            if self._node_cache:
+                return
 
-        for node in self.traverse():
-            name = node.name
-            if name is None:
-                continue
+            for node in self.traverse():
+                name = node.name
+                if name is None:
+                    continue
 
-            if name in self._node_cache:
-                raise DuplicateNodeError("%s already exists!" % name)
-
-            self._node_cache[name] = node
+                if name in self._node_cache:
+                    raise DuplicateNodeError("%s already exists!" % name)
+                self._node_cache[name] = node
 
     def find(self, name):
         r"""Find a node by name
@@ -1405,12 +1392,14 @@ class TreeNode(object):
         >>> print tree.find('c').name
         c
         """
+        root = self.root()
+
         # if what is being passed in looks like a node, just return it
-        if isinstance(name, self.__class__):
+        if isinstance(name, root.__class__):
             return name
 
-        self.create_node_cache()
-        node = self._node_cache.get(name, None)
+        root.create_node_cache()
+        node = root._node_cache.get(name, None)
 
         if node is None:
             raise MissingNodeError("Node %s is not in self" % name)
@@ -1419,6 +1408,8 @@ class TreeNode(object):
 
     def find_by_id(self, node_id):
         r"""Find a node by id
+
+        This search method is based from the root.
 
         Parameters
         ----------
@@ -1465,6 +1456,8 @@ class TreeNode(object):
     def find_by_func(self, func):
         r"""Find all nodes given a function
 
+        This search method is based on the current subtree, not the root.
+
         Parameters
         ----------
         func : a function
@@ -1492,8 +1485,6 @@ class TreeNode(object):
         for node in self.traverse(include_self=True):
             if func(node):
                 yield node
-
-    ### path methods ###
 
     def ancestors(self):
         r"""Returns all ancestors back to the root
@@ -1668,10 +1659,6 @@ class TreeNode(object):
 
     lca = lowest_common_ancestor  # for convenience
 
-    ### end path methods ###
-
-    ### parsers ###
-
     @classmethod
     def from_newick(cls, lines, unescape_name=True):
         r"""Returns tree from the Clustal .dnd file format and equivalent
@@ -1767,7 +1754,7 @@ class TreeNode(object):
         else:
             data = ''.join(lines)
 
-        #skip arb comment stuff if present: start at first paren
+        # skip arb comment stuff if present: start at first paren
         paren_index = data.find('(')
         data = data[paren_index:]
         left_count = data.count('(')
@@ -1784,9 +1771,9 @@ class TreeNode(object):
 
         for t in _dnd_tokenizer(data):
             if t == ':':
-                #expecting branch length
+                # expecting branch length
                 state = 'PostColon'
-                #prevent state reset
+                # prevent state reset
                 last_token = t
                 continue
             if t == ')' and last_token in ',(':
@@ -1798,13 +1785,13 @@ class TreeNode(object):
                 last_token = t
                 continue
             if t == ')':
-                #closing the current node
+                # closing the current node
                 curr_node = curr_node.parent
                 state1 = 'PostClosed'
                 last_token = t
                 continue
             if t == '(':
-                #opening a new node
+                # opening a new node
                 curr_node = _new_child(curr_node)
             elif t == ';':  # end of data
                 last_token = t
@@ -1851,10 +1838,6 @@ class TreeNode(object):
             return cls()
         return curr_node  # this should be the root of the tree
 
-    ### end parsers ###
-
-    ### formatters ###
-
     def to_newick(self, with_distances=False, semicolon=True,
                   escape_name=True):
         r"""Return the newick string representation of this tree.
@@ -1894,7 +1877,7 @@ class TreeNode(object):
 
         while nodes_stack:
             node_count += 1
-            #check the top node, any children left unvisited?
+            # check the top node, any children left unvisited?
             top = nodes_stack[-1]
             top_node, num_unvisited_children = top
             if num_unvisited_children:  # has any child unvisited
@@ -1906,7 +1889,7 @@ class TreeNode(object):
                 nodes_stack.append([next_child, len(next_child.children)])
             else:  # no unvisited children
                 nodes_stack.pop()
-                #post-visit
+                # post-visit
                 if top_node.children:
                     result[-1] = ')'
 
@@ -2014,10 +1997,6 @@ class TreeNode(object):
                                        compact=compact)
         return '\n'.join(lines)
 
-    ### end formatters ###
-
-    ### distance methods ###
-
     def accumulate_to_ancestor(self, ancestor):
         r"""Return the sum of the distance between self and ancestor
 
@@ -2115,7 +2094,6 @@ class TreeNode(object):
 
         return accum
 
-    ### make max distance a property?
     def _set_max_distance(self):
         """Propagate tip distance information up the tree
 
@@ -2253,7 +2231,7 @@ class TreeNode(object):
                 if not n.is_tip():
                     raise ValueError("%s is not a tip!" % n.name)
 
-        ## linearize all tips in postorder
+        # linearize all tips in postorder
         # .__start, .__stop compose the slice in tip_order.
         for i, node in enumerate(all_tips):
             node.__start, node.__stop = i, i+1
@@ -2266,7 +2244,7 @@ class TreeNode(object):
         distances = np.zeros((num_all_tips), float)  # dist from tip to tip
 
         def update_result():
-        # set tip_tip distance between tips of different child
+            # set tip_tip distance between tips of different child
             for child1, child2 in combinations(node.children, 2):
                 for tip1 in range(child1.__start, child1.__stop):
                     if tip1 not in result_map:
@@ -2281,8 +2259,8 @@ class TreeNode(object):
         for node in self.postorder():
             if not node.children:
                 continue
-            ## subtree with solved child wedges
-            ### can possibly use np.zeros
+            # subtree with solved child wedges
+            # can possibly use np.zeros
             starts, stops = [], []  # to calc ._start and ._stop for curr node
             for child in node.children:
                 if child.length is None:
@@ -2299,10 +2277,6 @@ class TreeNode(object):
                 update_result()
 
         return result + result.T, tip_order
-
-    ### end distance methods ###
-
-    ### comparison methods ###
 
 #   def compare_rfd(self, other, proportion=False):
 #       """Calculates the Robinson and Foulds symmetric difference
@@ -2458,14 +2432,12 @@ class TreeNode(object):
 
         return dist_f(self_matrix, other_matrix)
 
-    ### end comparison methods ###
-
     def index_tree(self):
         """Index a tree for rapid lookups within a tree array
 
         Indexes nodes in-place as n._leaf_index.
 
-        Results
+        Returns
         -------
         dict
             A mapping {node_id: TreeNode}
@@ -2485,7 +2457,7 @@ class TreeNode(object):
                 curr_index += 1
 
                 if c:
-                    #c has children itself, so need to add to result
+                    # c has children itself, so need to add to result
                     child_index.append((c._leaf_index,
                                         c.children[0]._leaf_index,
                                         c.children[-1]._leaf_index))

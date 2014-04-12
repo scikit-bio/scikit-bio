@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 from __future__ import division
 
@@ -344,6 +344,7 @@ class NucelotideSequenceTests(TestCase):
     def setUp(self):
         """ Initialize values to be used in tests
         """
+        self.empty = NucleotideSequence('')
         self.b1 = NucleotideSequence('GATTACA')
         self.b2 = NucleotideSequence(
             'ACCGGUACC', identifier="test-seq-2",
@@ -441,6 +442,53 @@ class NucelotideSequenceTests(TestCase):
         self.assertRaises(BiologicalSequenceError,
                           self.b1.is_reverse_complement, self.b1)
 
+    def test_nondegenerates_invalid(self):
+        """Should raise error if seq has invalid characters."""
+        with self.assertRaises(BiologicalSequenceError):
+            _ = list(NucleotideSequence('AZA').nondegenerates())
+
+    def test_nondegenerates_empty(self):
+        """Should correctly handle an empty sequence."""
+        self.assertEqual(list(self.empty.nondegenerates()), [self.empty])
+
+    def test_nondegenerates_no_degens(self):
+        """Should correctly handle a sequence without any degeneracies."""
+        self.assertEqual(list(self.b1.nondegenerates()), [self.b1])
+
+    def test_nondegenerates_all_degens(self):
+        """Should correctly handle a purely-degenerate sequence."""
+        # Same chars.
+        exp = [NucleotideSequence('CC'), NucleotideSequence('CG'),
+               NucleotideSequence('GC'), NucleotideSequence('GG')]
+        # Sort based on sequence string, as order is not guaranteed.
+        obs = sorted(NucleotideSequence('SS').nondegenerates(), key=str)
+        self.assertEqual(obs, exp)
+
+        # Different chars.
+        exp = [NucleotideSequence('AC'), NucleotideSequence('AG'),
+               NucleotideSequence('GC'), NucleotideSequence('GG')]
+        obs = sorted(NucleotideSequence('RS').nondegenerates(), key=str)
+        self.assertEqual(obs, exp)
+
+        # Odd number of chars.
+        obs = list(NucleotideSequence('NNN').nondegenerates())
+        self.assertEqual(len(obs), 5**3)
+
+    def test_nondegenerates_mixed_degens(self):
+        """Should correctly handle a sequence with standard and degen chars."""
+        exp = [NucleotideSequence('AGC'), NucleotideSequence('AGT'),
+               NucleotideSequence('AGU'), NucleotideSequence('GGC'),
+               NucleotideSequence('GGT'), NucleotideSequence('GGU')]
+        obs = sorted(NucleotideSequence('RGY').nondegenerates(), key=str)
+        self.assertEqual(obs, exp)
+
+    def test_nondegenerates_gap_mixed_case(self):
+        """Should correctly handle a sequence with gap chars and mixed case."""
+        exp = [NucleotideSequence('-A.a'), NucleotideSequence('-A.c'),
+               NucleotideSequence('-C.a'), NucleotideSequence('-C.c')]
+        obs = sorted(NucleotideSequence('-M.m').nondegenerates(), key=str)
+        self.assertEqual(obs, exp)
+
 
 class DNASequenceTests(TestCase):
     """ Tests of the DNASequence class """
@@ -448,6 +496,7 @@ class DNASequenceTests(TestCase):
     def setUp(self):
         """ Initialize values to be used in tests
         """
+        self.empty = DNASequence('')
         self.b1 = DNASequence('GATTACA')
         self.b2 = DNASequence(
             'ACCGGTACC', identifier="test-seq-2",
@@ -572,13 +621,60 @@ class DNASequenceTests(TestCase):
         self.assertTrue(
             self.b4.is_reverse_complement(DNASequence('NVHDBMRSWYK')))
 
+    def test_nondegenerates_invalid(self):
+        """Should raise error if seq has invalid characters."""
+        with self.assertRaises(BiologicalSequenceError):
+            _ = list(DNASequence('AZA').nondegenerates())
+
+    def test_nondegenerates_empty(self):
+        """Should correctly handle an empty sequence."""
+        self.assertEqual(list(self.empty.nondegenerates()), [self.empty])
+
+    def test_nondegenerates_no_degens(self):
+        """Should correctly handle a sequence without any degeneracies."""
+        self.assertEqual(list(self.b1.nondegenerates()), [self.b1])
+
+    def test_nondegenerates_all_degens(self):
+        """Should correctly handle a purely-degenerate sequence."""
+        # Same chars.
+        exp = [DNASequence('CC'), DNASequence('CG'), DNASequence('GC'),
+               DNASequence('GG')]
+        # Sort based on sequence string, as order is not guaranteed.
+        obs = sorted(DNASequence('SS').nondegenerates(), key=str)
+        self.assertEqual(obs, exp)
+
+        # Different chars.
+        exp = [DNASequence('AC'), DNASequence('AG'), DNASequence('GC'),
+               DNASequence('GG')]
+        obs = sorted(DNASequence('RS').nondegenerates(), key=str)
+        self.assertEqual(obs, exp)
+
+        # Odd number of chars.
+        obs = list(DNASequence('NNN').nondegenerates())
+        self.assertEqual(len(obs), 4**3)
+
+    def test_nondegenerates_mixed_degens(self):
+        """Should correctly handle a sequence with standard and degen chars."""
+        exp = [DNASequence('AGC'), DNASequence('AGT'), DNASequence('GGC'),
+               DNASequence('GGT')]
+        obs = sorted(DNASequence('RGY').nondegenerates(), key=str)
+        self.assertEqual(obs, exp)
+
+    def test_nondegenerates_gap_mixed_case(self):
+        """Should correctly handle a sequence with gap chars and mixed case."""
+        exp = [DNASequence('-A.a'), DNASequence('-A.c'),
+               DNASequence('-C.a'), DNASequence('-C.c')]
+        obs = sorted(DNASequence('-M.m').nondegenerates(), key=str)
+        self.assertEqual(obs, exp)
+
 
 class RNASequenceTests(TestCase):
-    """ Tests of the DNASequence class """
+    """ Tests of the RNASequence class """
 
     def setUp(self):
         """ Initialize values to be used in tests
         """
+        self.empty = RNASequence('')
         self.b1 = RNASequence('GAUUACA')
         self.b2 = RNASequence(
             'ACCGGUACC', identifier="test-seq-2",
@@ -702,6 +798,53 @@ class RNASequenceTests(TestCase):
             self.b1.is_reverse_complement(RNASequence('UGUAAUC')))
         self.assertTrue(
             self.b4.is_reverse_complement(RNASequence('NVHDBMRSWYK')))
+
+    def test_nondegenerates_invalid(self):
+        """Should raise error if seq has invalid characters."""
+        with self.assertRaises(BiologicalSequenceError):
+            _ = list(RNASequence('AZA').nondegenerates())
+
+    def test_nondegenerates_empty(self):
+        """Should correctly handle an empty sequence."""
+        self.assertEqual(list(self.empty.nondegenerates()), [self.empty])
+
+    def test_nondegenerates_no_degens(self):
+        """Should correctly handle a sequence without any degeneracies."""
+        self.assertEqual(list(self.b1.nondegenerates()), [self.b1])
+
+    def test_nondegenerates_all_degens(self):
+        """Should correctly handle a purely-degenerate sequence."""
+        # Same chars.
+        exp = [RNASequence('CC'), RNASequence('CG'), RNASequence('GC'),
+               RNASequence('GG')]
+        # Sort based on sequence string, as order is not guaranteed.
+        obs = sorted(RNASequence('SS').nondegenerates(), key=str)
+        self.assertEqual(obs, exp)
+
+        # Different chars.
+        exp = [RNASequence('AC'), RNASequence('AG'), RNASequence('GC'),
+               RNASequence('GG')]
+        obs = sorted(RNASequence('RS').nondegenerates(), key=str)
+        self.assertEqual(obs, exp)
+
+        # Odd number of chars.
+        obs = list(RNASequence('NNN').nondegenerates())
+        self.assertEqual(len(obs), 4**3)
+
+    def test_nondegenerates_mixed_degens(self):
+        """Should correctly handle a sequence with standard and degen chars."""
+        exp = [RNASequence('AGC'), RNASequence('AGU'), RNASequence('GGC'),
+               RNASequence('GGU')]
+        obs = sorted(RNASequence('RGY').nondegenerates(), key=str)
+        self.assertEqual(obs, exp)
+
+    def test_nondegenerates_gap_mixed_case(self):
+        """Should correctly handle a sequence with gap chars and mixed case."""
+        exp = [RNASequence('-A.a'), RNASequence('-A.c'),
+               RNASequence('-C.a'), RNASequence('-C.c')]
+        obs = sorted(RNASequence('-M.m').nondegenerates(), key=str)
+        self.assertEqual(obs, exp)
+
 
 if __name__ == "__main__":
     main()
