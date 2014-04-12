@@ -4,12 +4,10 @@
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-# ----------------------------------------------------------------------------
-
+# -----------------------------------------------------------------------------
 from __future__ import division
 
 import numpy as np
-
 from skbio.core.exception import FastqParseError
 
 
@@ -81,7 +79,7 @@ def parse_fastq(data, strict=False):
     We can use the following code:
 
     >>> from StringIO import StringIO
-    >>> from skbio.parse.sequences import parse_fastq
+    >>> from skbio.parse.sequences.fastq import parse_fastq
     >>> fastq_f = StringIO('@seq1\n'
     ...                     'AACACCAAACTTCTCCACCACGTGAGCTACAAAAG\n'
     ...                     '+\n'
@@ -102,6 +100,7 @@ def parse_fastq(data, strict=False):
     TATGTATATATAACATATACATATATACATACATA
     [29 11 26 27 16 25 29 31 27 25 25 30 32 32 32 33 35 30 28 28 32 34 20 32 32
      35 32 28 33 20 32 32 34 34 34]
+
     """
     # fastq format is very simple, defined by blocks of 4 lines
     line_num = -1
