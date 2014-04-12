@@ -177,7 +177,6 @@ class Workflow(object):
     debug
     options
     failed
-    iter_
 
     """
 
