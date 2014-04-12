@@ -13,6 +13,7 @@ from numpy import array
 from skbio.core.exception import FastqParseError, RecordError
 from skbio.parse.sequences import parse_fastq
 from skbio.parse.sequences import parse_fasta
+from skbio.parse.sequences import parse_qual
 from unittest import TestCase, main
 
 
@@ -124,6 +125,19 @@ class ParseFastqTests(TestCase):
         """Does this raise a FastqParseError with incorrect input?"""
         with self.assertRaises(FastqParseError):
             list(parse_fastq(self.fastq_example_2, strict=True))
+
+    def test_parse_qual(self):
+        """parse_qual should yield (id_, quals)"""
+        scores = ['>x', '5 10 5', '12',
+                  '>y', '30 40',
+                  '>a', '5 10 5', '12',
+                  '>b', '30 40']
+        gen = list(parse_qual(scores))
+        self.assertItemsEqual(gen[0][1], [5, 10, 5, 12])
+        self.assertItemsEqual(gen[1][1], [30, 40])
+        self.assertItemsEqual(gen[2][1], [5, 10, 5, 12])
+        self.assertItemsEqual(gen[3][1], [30, 40])
+
 data = {
     "GAPC_0015:6:1:1259:10413#0/1":
     dict(seq='AACACCAAACTTCTCCACCACGTGAGCTACAAAAG',

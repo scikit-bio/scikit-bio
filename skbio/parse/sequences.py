@@ -250,3 +250,64 @@ def parse_fastq(data, strict=False):
 
     if type(data) == file:
         data.close()
+
+
+def parse_qual(infile, value_cast_f=int, full_header=False):
+    r"""yields label and qual from a qual file.
+
+
+    Parameters
+    ----------
+    infile : open file object
+        An open fasta file.
+
+    value_cast_f : function
+        Type to cast to
+
+    full_header : bool
+        Return the full header or just the id
+
+    Returns
+    -------
+    label : str
+        The quality label
+    qual : array
+        The quality at each position
+
+    Examples
+    --------
+    Assume we have a qual formatted file with the following contents::
+
+        >seq1
+        10 20 30 40
+        >seq2
+        1 2 3 4
+
+    >>> from StringIO import StringIO
+    >>> from skbio.parse.sequences import parse_qual
+    >>> qual_f = StringIO('>seq1\n'
+    ...                   '10 20 30 40\n'
+    ...                   '>seq2\n'
+    ...                   '1 2 3 4\n')
+    >>> for label, qual in parse_qual(qual_f):
+    ...     print label
+    ...     print qual
+    seq1
+    [10 20 30 40]
+    seq2
+    [1 2 3 4]
+
+    """
+    for rec in FastaFinder(infile):
+        curr_id = rec[0][1:]
+        curr_qual = ' '.join(rec[1:])
+        try:
+            parts = np.asarray(curr_qual.split(), dtype=value_cast_f)
+        except ValueError:
+            raise RecordError(
+                "Invalid qual file. Check the format of the qual files.")
+        if full_header:
+            curr_pid = curr_id
+        else:
+            curr_pid = curr_id.split()[0]
+        yield (curr_pid, parts)
