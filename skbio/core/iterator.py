@@ -104,7 +104,6 @@ CCGGTTAA
 #-----------------------------------------------------------------------------
 
 from itertools import chain, izip
-from collections import namedtuple
 
 from skbio.parse.sequences import parse_fasta, parse_fastq, parse_qual
 from skbio.core.workflow import Workflow, not_none, method, requires
