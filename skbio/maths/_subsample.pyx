@@ -102,7 +102,6 @@ def subsample(counts, n, replace=False):
     if n < 0:
         raise ValueError("n cannot be negative.")
 
-    
     counts = np.asarray(counts)
     counts = counts.astype(int, casting='safe')
 
