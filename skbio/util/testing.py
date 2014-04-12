@@ -9,6 +9,7 @@
 import os
 import inspect
 
+
 def get_data_path(fn):
     """Return path to filename ``fn`` in the data folder.
 
