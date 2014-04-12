@@ -271,17 +271,8 @@ class FastqIterator(SequenceIterator):
     """
     def _gen(self):
         """Construct internal iterators"""
-        # construct fastq parsers
-        fastq_gens = chain(*[parse_fastq(f, False) for f in self.seq])
-
-        # peek the first record to determine phred offset
-        first_item = next(fastq_gens)
-        seqid, seq, qual = first_item
-        fastq_gens = chain([first_item], fastq_gens)
-
-        gen = self._fastq_gen(fastq_gens)
-
-        return gen
+        fastq_gens = chain(*[parse_fastq(f) for f in self.seq])
+        return self._fastq_gen(fastq_gens)
 
     def _fastq_gen(self, fastq_gens):
         """Yield fastq data"""
