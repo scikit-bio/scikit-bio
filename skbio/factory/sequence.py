@@ -41,6 +41,7 @@ and the second will be a gzip'd FASTQ file:
 
 Now, lets see what the factory can do:
 
+>>> from skbio.factory.sequence import factory
 >>> it = factory(['test_seqs.fna', 'test_seqs.fq.gz'])
 >>> for rec in it:
 ...     print rec['SequenceID']
