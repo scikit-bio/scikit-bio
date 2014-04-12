@@ -29,7 +29,7 @@ Functions
 # -----------------------------------------------------------------------------
 
 from .clustal import parse_clustal
-from .fasta import parse_fasta
+from .fasta import parse_fasta, parse_qual
 from .fastq import parse_fastq
 
 __all__ = ['parse_clustal', 'parse_fasta', 'parse_fastq', 'parse_qual']
