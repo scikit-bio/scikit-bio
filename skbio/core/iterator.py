@@ -1,5 +1,100 @@
 #!/usr/bin/env python
+r"""
+Iterators (:mod:`skbio.core.iterator`)
+======================================
 
+.. currentmodule:: skbio.core.iterator
+
+This module provides standardized iterators. The benefit of using these
+iterators for things like sequence files is that the type of the file, and
+any file format details are abstracted out to the developer. In this mannor,
+the developer does not need to worry about whether they're operating on
+FASTA or FASTQ, and any differences in the returns from their respective
+parsers.
+
+Classes
+-------
+
+.. autosummary::
+   :toctree: generated/
+
+   SequenceRecord
+   SequenceIterator
+   FastaIterator
+   FastqIterator
+
+See Also
+--------
+
+skbio.core.factory.sequence
+
+Examples
+--------
+
+>>> from StringIO import StringIO
+>>> from skbio.core.iterator import FastaIterator, FastqIterator
+
+In the first example, we're going to construct a FASTA iterator that is also
+paired with quality scores.
+
+>>> seqs = StringIO(">seq1\n"
+...                 "ATGC\n"
+...                 ">seq2\n"
+...                 "TTGGCC\n")
+>>> qual = StringIO(">seq1\n"
+...                 "10 20 30 40\n"
+...                 ">seq2\n"
+...                 "1 2 3 4 5 6\n")
+>>> it = FastaIterator(seq=[seqs], qual=[qual])
+>>> for record in it:
+...     print record['Sequence']
+...     print record['Qual']
+ATGC
+[10 20 30 40]
+TTGGCC
+[1 2 3 4 5 6]
+
+In the next example, we're going to iterate over multiple FASTQ files at once.
+
+>>> seqs1 = StringIO("@seq1\n"
+...                  "ATGC\n"
+...                  "+\n"
+...                  "hhhh\n")
+>>> seqs2 = StringIO("@seq2\n"
+...                 "AATTGGCC\n"
+...                 ">seq2\n"
+...                 "abcdefgh\n")
+>>> it = FastqIterator(seq=[seqs1, seqs2])
+>>> for record in it:
+...     print record['Sequence']
+...     print record['Qual']
+ATGC
+[40 40 40 40]
+AATTGGCC
+[33 34 35 36 37 38 39 40]
+
+Finally, we can apply arbitrary transforms to the sequences during iteratation.
+
+>>> seqs1 = StringIO("@seq1\n"
+...                  "ATGC\n"
+...                  "+\n"
+...                  "hhhh\n")
+>>> seqs2 = StringIO("@seq2\n"
+...                 "AATTGGCC\n"
+...                 ">seq2\n"
+...                 "abcdefgh\n")
+>>> def rev_f(st):
+...     st['Sequence'] = st['Sequence'][::-1]
+...     st['Qual'] = st['Qual'][::-1] if st['Qual'] is not None else None
+>>> it = FastqIterator(seq=[seqs1, seqs2], transform=rev_f)
+>>> for record in it:
+...     print record['Sequence']
+...     print record['Qual']
+CGTA
+[40 40 40 40]
+CCGGTTAA
+[40 39 38 37 36 35 34 33]
+"""
 #-----------------------------------------------------------------------------
 # Copyright (c) 2013, The BiPy Developers.
 #
@@ -11,17 +106,8 @@
 from itertools import chain, izip
 from collections import namedtuple
 
-from ..parse.sequences import parse_fasta, parse_fastq, parse_qual
-from .workflow import Workflow, not_none, method, requires
-
-
-class SequenceRecord(namedtuple("SequenceRecord", ("SequenceID", "Sequence",
-                                                   "QualID", "Qual"))):
-    __slots__ = ()
-
-    def __new__(cls, SequenceID, Sequence, QualID=None, Qual=None):
-        return super(SequenceRecord, cls).__new__(cls, SequenceID, Sequence,
-                                                  QualID, Qual)
+from skbio.parse.sequences import parse_fasta, parse_fastq, parse_qual
+from skbio.core.workflow import Workflow, not_none, method, requires
 
 
 def _has_qual(item):
@@ -30,9 +116,9 @@ def _has_qual(item):
 
 
 class SequenceIterator(Workflow):
-    """Provide a standard API for interacting with sequence files
+    """Provide a standard API for interacting with sequence data
 
-    Provide a common interface for iterating over sequence files, including
+    Provide a common interface for iterating over sequence data, including
     support for quality scores and transforms.
 
     A transform method is a function that takes the state dict and modifies it
@@ -43,33 +129,43 @@ class SequenceIterator(Workflow):
         st['Sequence']= st['Sequence'][::-1]
         st['Qual'] = st['Qual'][::-1] if st['Qual'] is not None else None
 
-    as transform. The primary intention is to support reverse complementing
+    as ``transform``. The primary intention is to support reverse complementing
     of sequences.
 
-    All subclasses of this object are expected to yield a dict that contains
-    the following keys and types
+    All subclasses of this object are expected to update the following in
+    ``state``:
 
         SequenceID : str, the sequence identifier
         Sequence   : str, the sequence itself
         QualID     : str or None, the quality ID (for completeness)
         Qual       : np.array or None, the quality scores
 
-    The yielded object is preallocated a single time, as such (assuming the
-    first two sequences are in fact not identical)::
+    ``state`` is preallocated a single time to avoid repetitive allocations.
+    What this means is that the object being yielded is updated in place. If
+    an individual record needs to be tracked over time, then it is recommended
+    that copies of the yielded data are made.
 
-        gen = instance_of_sequence_iterator()
+    Parameters
+    ----------
 
-        item1 = gen.next()
-        seq1 = item1['Sequence']
+    seq : list of open file-like objects
+    qual : list of open file-like objects or None
+    transform : function or None
+        If provided, this function will be passed ``state``
+    valid_id : bool
+        If true, verify sequence and qual IDs are identical (if relevant)
+    valid_length : bool
+        If true, verify the length of the sequence and qual are the same
+        (if relevant)
 
-        item2 = gen.next()
-        seq2 = item2['Sequence']
+    Attributes
+    ----------
 
-        id(item1) == id(item2) # True
-        item1 == item2         # True
+    seq
+    qual
+    state
+    options
 
-        id(seq1) == id(seq2)   # False
-        seq1 == seq2           # False
     """
     def __init__(self, seq, qual=None, transform=None, valid_id=True,
                  valid_length=True):
@@ -103,11 +199,8 @@ class SequenceIterator(Workflow):
         return self()
 
     def initialize_state(self, item):
-        """Reset the buffer"""
-        self.state['SequenceID'] = item.SequenceID
-        self.state['Sequence'] = item.Sequence
-        self.state['QualID'] = item.QualID
-        self.state['Qual'] = item.Qual
+        """Do nothing here as the subclassed iterators update state directly"""
+        pass
 
     @method(priority=100)
     @requires(option='valid_id', values=True, state=_has_qual)
@@ -127,7 +220,7 @@ class SequenceIterator(Workflow):
 
 
 class FastaIterator(SequenceIterator):
-    """Populate and yield records based on fasta sequence"""
+    """Populate state based on fasta sequence and qual (if provided)"""
     def _gen(self):
         """Construct internal iterators"""
         # construct fasta generators
@@ -151,17 +244,29 @@ class FastaIterator(SequenceIterator):
         """Yield fasta data"""
         _iter = fasta_gens
         for (seq_id, seq) in _iter:
-            yield SequenceRecord(seq_id, seq)
+            self.state['SequenceID'] = seq_id
+            self.state['Sequence'] = seq
+
+            # as we're updating state in place and effectively circumventing
+            # Workflow.initialize_state, we do not need to yield anything
+            yield None
 
     def _fasta_qual_gen(self, fasta_gen, qual_gen):
         """Yield fasta and qual together"""
         _iter = izip(fasta_gen, qual_gen)
         for (seq_id, seq), (qual_id, qual) in _iter:
-            yield SequenceRecord(seq_id, seq, qual_id, qual)
+            self.state['SequenceID'] = seq_id
+            self.state['Sequence'] = seq
+            self.state['QualID'] = qual_id
+            self.state['Qual'] = qual
+
+            # as we're updating state in place and effectively circumventing
+            # Workflow.initialize_state, we do not need to yield anything
+            yield None
 
 
 class FastqIterator(SequenceIterator):
-    """Populate and yield records based on fastq sequence
+    """Populate state based on fastq sequence
 
     Note: thq 'qual' keyword argument is ignored by this object.
     """
@@ -182,4 +287,11 @@ class FastqIterator(SequenceIterator):
     def _fastq_gen(self, fastq_gens):
         """Yield fastq data"""
         for (seq_id, seq, qual) in fastq_gens:
-            yield SequenceRecord(seq_id, seq, seq_id, qual)
+            self.state['SequenceID'] = seq_id
+            self.state['Sequence'] = seq
+            self.state['QualID'] = seq_id
+            self.state['Qual'] = qual
+
+            # as we're updating state in place and effectively circumventing
+            # Workflow.initialize_state, we do not need to yield anything
+            yield None
