@@ -26,7 +26,43 @@ skbio.core.iterator.SequenceIterator
 Examples
 --------
 
->>> pass
+Since the ``factory`` is intended to operate on file paths, lets create two
+files for the ``factory`` to use. The first one will be a regular FASTA file,
+and the second will be a gzip'd FASTQ file:
+
+>>> import os
+>>> import gzip
+>>> out = open('test_seqs.fna', 'w')
+>>> out.write(">s1\nATGC\n>s2\nATGGC\n")
+>>> out.close()
+>>> outgz = gzip.open('test_seqs.fq.gz', 'w')
+>>> _ = outgz.write("@s3\nAATTGG\n+\nghghgh\n@s4\nAAA\n+\nfgh\n")
+>>> outgz.close()
+
+Now, lets see what the factory can do:
+
+>>> it = factory(['test_seqs.fna', 'test_seqs.fq.gz'])
+>>> for rec in it:
+...     print rec['SequenceID']
+...     print rec['Sequence']
+...     print rec['Qual']
+s1
+ATGC
+None
+s2
+ATGGC
+None
+s3
+AATTGG
+[39 40 39 40 39 40]
+s4
+AAA
+[38 39 40]
+
+To be polite, lets now remove the files we just created:
+
+>>> os.remove('test_seqs.fna')
+>>> os.remove('test_seqs.fq.gz')
 
 """
 
