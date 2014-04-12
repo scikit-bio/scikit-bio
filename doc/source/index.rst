@@ -15,9 +15,11 @@ API Reference
    core.sequence
    core.distance
    core.exception
+   core.iterator
    core.tree
    core.workflow
    draw.distributions
+   factory.sequence
    maths.stats.distance
    maths.stats.spatial
    maths.stats.ordination
