@@ -96,38 +96,38 @@ def subsample(counts, n, replace=False):
     (8,)
 
     """
-    cdef cnp.ndarray[cnp.int64_t, ndim=1] result, permuted, unpacked
+    cdef cnp.ndarray[cnp.int64_t, ndim=1] int_counts, result, permuted, unpacked
     cdef cnp.int64_t cnt, unpacked_idx, i, j
 
     if n < 0:
         raise ValueError("n cannot be negative.")
 
     counts = np.asarray(counts)
-    counts = counts.astype(int, casting='safe')
+    int_counts = counts.astype(int, casting='safe')
 
-    if counts.ndim != 1:
+    if int_counts.ndim != 1:
         raise ValueError("Only 1-D vectors are supported.")
 
-    counts_sum = counts.sum()
+    counts_sum = int_counts.sum()
     if n > counts_sum:
         raise ValueError("Cannot subsample more items than exist in input "
                          "counts vector.")
 
     if replace:
-        probs = counts / counts_sum
+        probs = int_counts / counts_sum
         result = np.random.multinomial(n, probs)
     else:
         unpacked = np.empty(counts_sum, dtype=int)
         unpacked_idx = 0
-        for i in range(counts.shape[0]):
-            cnt = counts[i]
+        for i in range(int_counts.shape[0]):
+            cnt = int_counts[i]
             for j in range(cnt):
                 unpacked[unpacked_idx] = i
                 unpacked_idx += 1
 
         permuted = np.random.permutation(unpacked)[:n]
 
-        result = np.zeros_like(counts)
+        result = np.zeros_like(int_counts)
         for idx in range(permuted.shape[0]):
             result[permuted[idx]] += 1
 
