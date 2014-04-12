@@ -911,6 +911,32 @@ class BiologicalSequence(Sequence):
 
     def k_words(self, k, overlapping=True, constructor=str):
         """Get the list of words of length k
+
+        Parameters
+        ----------
+        k : int
+            The word length.
+        overlapping : bool, optional
+            Defines whether the k-words should be overlapping or not
+            overlapping.
+        constructor : type, optional
+            The constructor for the returned k-words
+
+        Returns
+        -------
+        list
+            The list of words of length `k` containted in the
+            BiologicalSequence.
+
+        Examples
+        --------
+        >>> from skbio.core.sequence import BiologicalSequence
+        >>> s = BiologicalSequence('ACACGACGTT')
+        >>> s.k_words(4, overlapping=False)
+        ['ACAC', 'GACG']
+        >>> s.k_words(3, overlapping=True)
+        ['ACA', 'CAC', 'ACG', 'CGA', 'GAC', 'ACG', 'CGT', 'GTT']
+
         """
         if k < 1:
             raise ValueError("k must be greater than 0.")
