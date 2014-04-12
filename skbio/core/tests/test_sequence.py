@@ -194,7 +194,6 @@ class BiologicalSequenceTests(TestCase):
         expected['C'] = 1/7.
         expected['G'] = 1/7.
         expected['T'] = 2/7.
-        expected = Counter('GATTACA')
         self.assertEqual(self.b1.k_word_frequencies(1, overlapping=True),
                          expected)
         expected = defaultdict(int)
@@ -210,11 +209,11 @@ class BiologicalSequenceTests(TestCase):
         expected = defaultdict(int)
         expected['GAT'] = 1/2.
         expected['TAC'] = 1/2.
-        self.assertEqual(self.b1.k_word_counts(3, overlapping=False),
+        self.assertEqual(self.b1.k_word_frequencies(3, overlapping=False),
                          expected)
         expected = defaultdict(int)
         expected['GATTACA'] = 1.0
-        self.assertEqual(self.b1.k_word_counts(7, overlapping=False),
+        self.assertEqual(self.b1.k_word_frequencies(7, overlapping=False),
                          expected)
 
     def test_len(self):

@@ -77,7 +77,7 @@ from __future__ import division
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from collections import Sequence, Counter
+from collections import Sequence, Counter, defaultdict
 from itertools import izip, product
 
 from scipy.spatial.distance import hamming
@@ -984,6 +984,39 @@ class BiologicalSequence(Sequence):
         """
         k_words = self.k_words(k, overlapping, constructor=str)
         return Counter(k_words)
+
+    def k_word_frequencies(self, k, overlapping=True):
+        """Get the frequencies of words of length k
+
+        Parameters
+        ----------
+        k : int
+            The word length.
+        overlapping : bool, optional
+            Defines whether the k-words should be overlapping or not
+            overlapping.
+
+        Returns
+        -------
+        collections.defaultdict
+            The frequencies of words of length `k` contained in the
+            BiologicalSequence.
+
+        Examples
+        --------
+        >>> from skbio.core.sequence import BiologicalSequence
+        >>> s = BiologicalSequence('ACACAT')
+        >>> s.k_word_frequencies(3, overlapping=True)
+        defaultdict(<type 'int'>, {'CAC': 0.25, 'ACA': 0.5, 'CAT': 0.25})
+
+        """
+        result = defaultdict(int)
+        k_words = self.k_words(k, overlapping, constructor=str)
+        num_words = len(k_words)
+        count = 1. / num_words
+        for word in k_words:
+            result[word] += count
+        return result
 
     def lower(self):
         """Convert the BiologicalSequence to lowercase
