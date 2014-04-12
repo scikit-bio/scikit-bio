@@ -96,8 +96,10 @@ def subsample(counts, n, replace=False):
     (8,)
 
     """
-    cdef cnp.ndarray[cnp.int64_t, ndim=1] int_counts, result, permuted, unpacked
-    cdef cnp.int64_t cnt, unpacked_idx, i, j
+    cdef:
+        cnp.ndarray[cnp.int64_t, ndim=1] int_counts, result, permuted, unpacked
+        cnp.int64_t cnt
+        Py_ssize_t unpacked_idx, i, j
 
     if n < 0:
         raise ValueError("n cannot be negative.")
