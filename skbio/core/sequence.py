@@ -920,7 +920,7 @@ class BiologicalSequence(Sequence):
             Defines whether the k-words should be overlapping or not
             overlapping.
         constructor : type, optional
-            The constructor for the returned k-words
+            The constructor for the returned k-words.
 
         Returns
         -------
@@ -967,7 +967,7 @@ class BiologicalSequence(Sequence):
             Defines whether the k-words should be overlapping or not
             overlapping.
         constructor : type, optional
-            The constructor for the returned k-words
+            The constructor for the returned k-words.
 
         Returns
         -------
@@ -997,7 +997,7 @@ class BiologicalSequence(Sequence):
             Defines whether the k-words should be overlapping or not
             overlapping.
         constructor : type, optional
-            The constructor for the returned k-words
+            The constructor for the returned k-words.
 
         Returns
         -------

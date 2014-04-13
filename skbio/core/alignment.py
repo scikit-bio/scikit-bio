@@ -665,6 +665,55 @@ class SequenceCollection(object):
         """
         return len(self._data)
 
+    def sequence_frequencies(self, k=1, overlapping=True, constructor=str):
+        """Return frequencies of length k words for sequences in Alignment
+
+        Parameters
+        ----------
+        k : int, optional
+            The word length. When the default of 1 is used, this returns the
+            per-sequence character frequencies.
+        overlapping : bool, optional
+            Defines whether the k-words should be overlapping or not
+            overlapping. This is only relevant when k > 1.
+        constructor : type, optional
+            The constructor for the returned k-words.
+
+        Returns
+        -------
+        list
+            List of ``collections.defaultdict`` objects, one for each sequence
+            in the `Alignment`, representing the frequency of each character in
+            each sequence of the `Alignment`.
+
+        See Also
+        --------
+        position_frequencies
+
+        Examples
+        --------
+        >>> from skbio.core.alignment import Alignment
+        >>> from skbio.core.sequence import DNA
+        >>> sequences = [DNA('AC--', identifier="seq1"),
+        ...              DNA('AT-C', identifier="seq2"),
+        ...              DNA('TT-C', identifier="seq3")]
+        >>> a1 = Alignment(sequences)
+        >>> for freqs in a1.sequence_frequencies():
+        ...     print freqs
+        defaultdict(<type 'int'>, {'A': 0.25, 'C': 0.25, '-': 0.5})
+        defaultdict(<type 'int'>, {'A': 0.25, 'C': 0.25, '-': 0.25, 'T': 0.25})
+        defaultdict(<type 'int'>, {'C': 0.25, '-': 0.25, 'T': 0.5})
+
+        """
+        result = []
+        # handle empty Alignment case
+        if self.is_empty():
+            return result
+
+        for s in self:
+            result.append(s.k_word_frequencies(k, overlapping, constructor))
+        return result
+
     def sequence_lengths(self):
         """Return lengths of the sequences in the `SequenceCollection`
 
@@ -1319,48 +1368,6 @@ class Alignment(SequenceCollection):
                 result.append(np.nan)
             else:
                 result.append(entropy(f.values(), base=base))
-        return result
-
-    def sequence_frequencies(self):
-        """Return frequencies of characters for sequences in Alignment
-
-        Returns
-        -------
-        list
-            List of ``collections.defaultdict`` objects, one for each sequence
-            in the `Alignment`, representing the frequency of each character in
-            each sequence of the `Alignment`.
-
-        See Also
-        --------
-        position_frequencies
-
-        Examples
-        --------
-        >>> from skbio.core.alignment import Alignment
-        >>> from skbio.core.sequence import DNA
-        >>> sequences = [DNA('AC--', identifier="seq1"),
-        ...              DNA('AT-C', identifier="seq2"),
-        ...              DNA('TT-C', identifier="seq3")]
-        >>> a1 = Alignment(sequences)
-        >>> for freqs in a1.sequence_frequencies():
-        ...     print freqs
-        defaultdict(<type 'int'>, {'A': 0.25, 'C': 0.25, '-': 0.5})
-        defaultdict(<type 'int'>, {'A': 0.25, 'C': 0.25, '-': 0.25, 'T': 0.25})
-        defaultdict(<type 'int'>, {'C': 0.25, '-': 0.25, 'T': 0.5})
-
-        """
-        result = []
-        # handle empty Alignment case
-        if self.is_empty():
-            return result
-
-        count = 1 / self.sequence_length()
-        for s in self:
-            current_freqs = defaultdict(int)
-            for c in s:
-                current_freqs[c] += count
-            result.append(current_freqs)
         return result
 
     def sequence_length(self):
