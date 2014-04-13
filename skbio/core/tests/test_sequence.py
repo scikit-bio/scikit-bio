@@ -215,6 +215,10 @@ class BiologicalSequenceTests(TestCase):
         expected['GATTACA'] = 1.0
         self.assertEqual(self.b1.k_word_frequencies(7, overlapping=False),
                          expected)
+        expected = defaultdict(int)
+        empty = BiologicalSequence('')
+        self.assertEqual(empty.k_word_frequencies(1, overlapping=False),
+                         expected)
 
     def test_len(self):
         """ len functions as expected

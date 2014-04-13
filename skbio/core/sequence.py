@@ -1018,6 +1018,10 @@ class BiologicalSequence(Sequence):
             num_words = len(self) - k + 1
         else:
             num_words = int(len(self) / k)
+
+        if num_words == 0:
+            return result
+
         count = 1. / num_words
         for word in self.k_words(k, overlapping, constructor):
             result[word] += count
