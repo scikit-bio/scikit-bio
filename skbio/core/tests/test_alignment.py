@@ -190,8 +190,8 @@ class SequenceCollectionTests(TestCase):
         self.assertEqual(count, len(self.seqs1))
         self.assertRaises(StopIteration, s1_iter.next)
 
-    def test_sequence_frequencies(self):
-        """sequence_frequencies functions as expected
+    def test_k_word_frequencies(self):
+        """k_word_frequencies functions as expected
         """
         expected1 = defaultdict(int)
         expected1['A'] = 3/7.
@@ -201,7 +201,7 @@ class SequenceCollectionTests(TestCase):
         expected2 = defaultdict(int)
         expected2['G'] = 1/3.
         expected2['T'] = 2/3.
-        self.assertEqual(self.s1.sequence_frequencies(),
+        self.assertEqual(self.s1.k_word_frequencies(k=1),
                          [expected1, expected2])
 
         expected1 = defaultdict(int)
@@ -209,10 +209,10 @@ class SequenceCollectionTests(TestCase):
         expected1['TAC'] = 1/2.
         expected2 = defaultdict(int)
         expected2['TTG'] = 1/1.
-        self.assertEqual(self.s1.sequence_frequencies(k=3, overlapping=False),
+        self.assertEqual(self.s1.k_word_frequencies(k=3, overlapping=False),
                          [expected1, expected2])
 
-        self.assertEqual(self.empty.sequence_frequencies(), [])
+        self.assertEqual(self.empty.k_word_frequencies(k=1), [])
 
     def test_str(self):
         """str functions as expected
@@ -595,12 +595,12 @@ class AlignmentTests(TestCase):
         np.testing.assert_almost_equal(self.empty.position_entropies(base=2),
                                        [])
 
-    def test_sequence_frequencies(self):
-        """sequence_frequencies functions as expected
+    def test_k_word_frequencies(self):
+        """k_word_frequencies( functions as expected
         """
         expected = [defaultdict(int, {'U': 3/5, 'A': 1/5, '-': 1/5}),
                     defaultdict(int, {'A': 1/5, 'C': 1/5, 'G': 1/5, 'U': 2/5})]
-        actual = self.a2.sequence_frequencies()
+        actual = self.a2.k_word_frequencies(k=1)
         for a, e in zip(actual, expected):
             a_keys = a.keys()
             a_keys.sort()

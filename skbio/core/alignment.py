@@ -665,14 +665,13 @@ class SequenceCollection(object):
         """
         return len(self._data)
 
-    def sequence_frequencies(self, k=1, overlapping=True, constructor=str):
+    def k_word_frequencies(self, k, overlapping=True, constructor=str):
         """Return frequencies of length k words for sequences in Alignment
 
         Parameters
         ----------
-        k : int, optional
-            The word length. When the default of 1 is used, this returns the
-            per-sequence character frequencies.
+        k : int
+            The word length.
         overlapping : bool, optional
             Defines whether the k-words should be overlapping or not
             overlapping. This is only relevant when k > 1.
@@ -694,15 +693,20 @@ class SequenceCollection(object):
         --------
         >>> from skbio.core.alignment import Alignment
         >>> from skbio.core.sequence import DNA
-        >>> sequences = [DNA('AC--', identifier="seq1"),
-        ...              DNA('AT-C', identifier="seq2"),
-        ...              DNA('TT-C', identifier="seq3")]
-        >>> a1 = Alignment(sequences)
-        >>> for freqs in a1.sequence_frequencies():
+        >>> sequences = [DNA('A', identifier="seq1"),
+        ...              DNA('AT', identifier="seq2"),
+        ...              DNA('TTTT', identifier="seq3")]
+        >>> s1 = SequenceCollection(sequences)
+        >>> for freqs in s1.k_word_frequencies(1):
         ...     print freqs
-        defaultdict(<type 'int'>, {'A': 0.25, 'C': 0.25, '-': 0.5})
-        defaultdict(<type 'int'>, {'A': 0.25, 'C': 0.25, '-': 0.25, 'T': 0.25})
-        defaultdict(<type 'int'>, {'C': 0.25, '-': 0.25, 'T': 0.5})
+        defaultdict(<type 'int'>, {'A': 1.0})
+        defaultdict(<type 'int'>, {'A': 0.5, 'T': 0.5})
+        defaultdict(<type 'int'>, {'T': 1.0})
+        >>> for freqs in s1.k_word_frequencies(2):
+        ...     print freqs
+        defaultdict(<type 'int'>, {})
+        defaultdict(<type 'int'>, {'AT': 1.0})
+        defaultdict(<type 'int'>, {'TT': 1.0})
 
         """
         result = []
@@ -1219,10 +1223,10 @@ class Alignment(SequenceCollection):
         if self.is_empty():
             return self.__class__([])
 
-        sequence_frequencies = self.sequence_frequencies()
+        base_frequencies = self.k_word_frequencies(k=1)
         gap_alphabet = self[0].gap_alphabet()
         seqs_to_keep = []
-        for seq, f in izip(self, sequence_frequencies):
+        for seq, f in izip(self, base_frequencies):
             gap_frequency = sum([f[c] for c in gap_alphabet])
             if gap_frequency <= maximum_gap_frequency:
                 seqs_to_keep.append(seq.identifier)
@@ -1274,7 +1278,7 @@ class Alignment(SequenceCollection):
         --------
         position_counters
         position_entropies
-        sequence_frequencies
+        k_word_frequencies
 
         Examples
         --------
