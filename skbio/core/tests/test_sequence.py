@@ -133,38 +133,38 @@ class BiologicalSequenceTests(TestCase):
         """ k_words functions as expected
         """
         # overlapping = True
-        self.assertEqual(self.b1.k_words(1, overlapping=True),
+        self.assertEqual(list(self.b1.k_words(1, overlapping=True)),
                          ['G', 'A', 'T', 'T', 'A', 'C', 'A'])
-        self.assertEqual(self.b1.k_words(2, overlapping=True),
+        self.assertEqual(list(self.b1.k_words(2, overlapping=True)),
                          ['GA', 'AT', 'TT', 'TA', 'AC', 'CA'])
-        self.assertEqual(self.b1.k_words(3, overlapping=True),
+        self.assertEqual(list(self.b1.k_words(3, overlapping=True)),
                          ['GAT', 'ATT', 'TTA', 'TAC', 'ACA'])
-        self.assertEqual(self.b1.k_words(7, overlapping=True),
+        self.assertEqual(list(self.b1.k_words(7, overlapping=True)),
                          ['GATTACA'])
-        self.assertEqual(self.b1.k_words(8, overlapping=True),
+        self.assertEqual(list(self.b1.k_words(8, overlapping=True)),
                          [])
 
         # overlapping = False
-        self.assertEqual(self.b1.k_words(1, overlapping=True),
+        self.assertEqual(list(self.b1.k_words(1, overlapping=True)),
                          ['G', 'A', 'T', 'T', 'A', 'C', 'A'])
-        self.assertEqual(self.b1.k_words(2, overlapping=False),
+        self.assertEqual(list(self.b1.k_words(2, overlapping=False)),
                          ['GA', 'TT', 'AC'])
-        self.assertEqual(self.b1.k_words(3, overlapping=False),
+        self.assertEqual(list(self.b1.k_words(3, overlapping=False)),
                          ['GAT', 'TAC'])
-        self.assertEqual(self.b1.k_words(7, overlapping=False),
+        self.assertEqual(list(self.b1.k_words(7, overlapping=False)),
                          ['GATTACA'])
-        self.assertEqual(self.b1.k_words(8, overlapping=False),
+        self.assertEqual(list(self.b1.k_words(8, overlapping=False)),
                          [])
 
         # error on invalid k
-        self.assertRaises(ValueError, self.b1.k_words, 0)
-        self.assertRaises(ValueError, self.b1.k_words, -42)
+        self.assertRaises(ValueError, list, self.b1.k_words(0))
+        self.assertRaises(ValueError, list, self.b1.k_words(-42))
 
         # tests with different sequences
-        self.assertEqual(self.b8.k_words(3, overlapping=False),
+        self.assertEqual(list(self.b8.k_words(3, overlapping=False)),
                          ['HE.', '.--', '..L'])
         b = BiologicalSequence('')
-        self.assertEqual(b.k_words(3), [])
+        self.assertEqual(list(b.k_words(3)), [])
 
     def test_k_word_counts(self):
         """ k_word_counts functions as expected

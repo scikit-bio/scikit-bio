@@ -924,24 +924,28 @@ class BiologicalSequence(Sequence):
 
         Returns
         -------
-        list
-            The list of words of length `k` contained in the
+        iterator
+            Iterator of words of length `k` contained in the
             BiologicalSequence.
+
+        Raises
+        ------
+        ValueError
+            If k < 1.
 
         Examples
         --------
         >>> from skbio.core.sequence import BiologicalSequence
         >>> s = BiologicalSequence('ACACGACGTT')
-        >>> s.k_words(4, overlapping=False)
+        >>> list(s.k_words(4, overlapping=False))
         ['ACAC', 'GACG']
-        >>> s.k_words(3, overlapping=True)
+        >>> list(s.k_words(3, overlapping=True))
         ['ACA', 'CAC', 'ACG', 'CGA', 'GAC', 'ACG', 'CGT', 'GTT']
 
         """
         if k < 1:
             raise ValueError("k must be greater than 0.")
 
-        result = []
         sequence_length = len(self)
 
         if overlapping:
@@ -949,15 +953,10 @@ class BiologicalSequence(Sequence):
         else:
             step = k
 
-        for i in range(0, sequence_length, step):
-            if i+k > sequence_length:
-                # if there are no more k-mers left
-                break
-            else:
-                result.append(constructor(self[i:i+k]))
-        return result
+        for i in range(0, sequence_length - k + 1, step):
+            yield constructor(self[i:i+k])
 
-    def k_word_counts(self, k, overlapping=True):
+    def k_word_counts(self, k, overlapping=True, constructor=str):
         """Get the counts of words of length k
 
         Parameters
@@ -967,6 +966,8 @@ class BiologicalSequence(Sequence):
         overlapping : bool, optional
             Defines whether the k-words should be overlapping or not
             overlapping.
+        constructor : type, optional
+            The constructor for the returned k-words
 
         Returns
         -------
@@ -982,10 +983,10 @@ class BiologicalSequence(Sequence):
         Counter({'ACA': 2, 'CAC': 1, 'CAT': 1})
 
         """
-        k_words = self.k_words(k, overlapping, constructor=str)
+        k_words = self.k_words(k, overlapping, constructor)
         return Counter(k_words)
 
-    def k_word_frequencies(self, k, overlapping=True):
+    def k_word_frequencies(self, k, overlapping=True, constructor=str):
         """Get the frequencies of words of length k
 
         Parameters
@@ -995,6 +996,8 @@ class BiologicalSequence(Sequence):
         overlapping : bool, optional
             Defines whether the k-words should be overlapping or not
             overlapping.
+        constructor : type, optional
+            The constructor for the returned k-words
 
         Returns
         -------
@@ -1011,10 +1014,12 @@ class BiologicalSequence(Sequence):
 
         """
         result = defaultdict(int)
-        k_words = self.k_words(k, overlapping, constructor=str)
-        num_words = len(k_words)
+        if overlapping:
+            num_words = len(self) - k + 1
+        else:
+            num_words = int(len(self) / k)
         count = 1. / num_words
-        for word in k_words:
+        for word in self.k_words(k, overlapping, constructor):
             result[word] += count
         return result
 
