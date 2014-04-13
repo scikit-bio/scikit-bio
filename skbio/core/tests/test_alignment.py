@@ -596,7 +596,7 @@ class AlignmentTests(TestCase):
                                        [])
 
     def test_k_word_frequencies(self):
-        """k_word_frequencies( functions as expected
+        """k_word_frequencies functions as expected
         """
         expected = [defaultdict(int, {'U': 3/5, 'A': 1/5, '-': 1/5}),
                     defaultdict(int, {'A': 1/5, 'C': 1/5, 'G': 1/5, 'U': 2/5})]
