@@ -706,9 +706,6 @@ class SequenceCollection(object):
 
         """
         result = []
-        # handle empty Alignment case
-        if self.is_empty():
-            return result
 
         for s in self:
             result.append(s.k_word_frequencies(k, overlapping, constructor))

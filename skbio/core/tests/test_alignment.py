@@ -212,6 +212,8 @@ class SequenceCollectionTests(TestCase):
         self.assertEqual(self.s1.sequence_frequencies(k=3, overlapping=False),
                          [expected1, expected2])
 
+        self.assertEqual(self.empty.sequence_frequencies(), [])
+
     def test_str(self):
         """str functions as expected
         """
