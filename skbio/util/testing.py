@@ -13,7 +13,20 @@ import inspect
 def get_data_path(fn):
     """Return path to filename ``fn`` in the data folder.
 
-    Useful to load files in tests/data/* when testing."""
+    During testing it is often necessary to load data files. This
+    function returns the full path to files in the ``data`` subfolder.
+
+    Parameters
+    ----------
+    fn : str
+        File name.
+
+    Returns
+    -------
+    str
+        Full path to ``/get_data_path(fn) caller's path/data/fn``.
+
+    """
     # getouterframes returns a list of tuples: the second tuple
     # contains info about the caller, and the second element is its
     # filename
