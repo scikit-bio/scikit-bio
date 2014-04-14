@@ -12,6 +12,7 @@ import os
 from unittest import TestCase, main
 from numpy import array
 from skbio.factory.sequence import factory
+from skbio.core.iterator import FastaIterator
 
 
 # copied from maths/stats/ordination/tests/test_ordination.py
@@ -29,6 +30,7 @@ class SequenceFactoryTests(TestCase):
         self.fq1 = get_data_path('fq1.fq')
         self.fq1gz = get_data_path('fq1.fastq.gz')
         self.qual1 = get_data_path('fna1.qual')
+        self.noext = get_data_path('noextensionfasta')
 
     def test_single_files(self):
         """Factory should handle a single file, and can be gzipped"""
@@ -158,6 +160,14 @@ class SequenceFactoryTests(TestCase):
         self.assertEqual(o['QualID'], e['QualID'])
         self.assertEqual(o['Qual'], e['Qual'])
 
+    def test_force_constructor(self):
+        it = factory([self.noext], constructor=FastaIterator)
+        obs = [rec.copy() for rec in it]
+        exp = [{'Sequence': 'AATTGG', 'SequenceID': 'seq1',
+                'Qual': None, 'QualID': None},
+               {'Sequence': 'ATATA', 'SequenceID': 'seq2',
+                'Qual': None, 'QualID': None}]
+        self.assertEqual(obs, exp)
 
 if __name__ == '__main__':
     main()

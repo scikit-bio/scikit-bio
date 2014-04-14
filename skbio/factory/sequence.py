@@ -146,7 +146,7 @@ def _open_or_none(opener, f):
         return opened
 
 
-def factory(seqs, qual=None, **kwargs):
+def factory(seqs, qual=None, constructor=None, **kwargs):
     """Construct the appropriate iterator for all your processing needs
 
     This method will attempt to open all files correctly and to feed the
@@ -159,6 +159,7 @@ def factory(seqs, qual=None, **kwargs):
     ----------
     seqs : str or list of sequence file paths
     qual : str or list of qual file paths or None
+    constructor : force a constructor on seqs
     kwargs : dict
         passed into the subsequent generators.
 
@@ -183,7 +184,12 @@ def factory(seqs, qual=None, **kwargs):
         qual = [qual]
 
     # i -> iters, o -> openers
-    i_seqs, o_seqs = _determine_types_and_openers(seqs)
+    if constructor is not None:
+        i_seqs = [constructor] * len(seqs)
+        o_seqs = [open] * len(seqs)
+    else:
+        i_seqs, o_seqs = _determine_types_and_openers(seqs)
+
     i_qual, o_qual = _determine_types_and_openers(qual)
 
     seqs = [_open_or_none(o, f) for f, o in izip(seqs, o_seqs)]
