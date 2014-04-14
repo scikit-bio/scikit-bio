@@ -10,6 +10,7 @@
 
 from __future__ import division
 
+from collections import Counter, defaultdict
 from unittest import TestCase, main
 
 from skbio.core.sequence import (
@@ -127,6 +128,97 @@ class BiologicalSequenceTests(TestCase):
             self.assertEqual(actual, expected)
 
         self.assertRaises(StopIteration, b1_iter.next)
+
+    def test_k_words(self):
+        """ k_words functions as expected
+        """
+        # overlapping = True
+        self.assertEqual(list(self.b1.k_words(1, overlapping=True)),
+                         ['G', 'A', 'T', 'T', 'A', 'C', 'A'])
+        self.assertEqual(list(self.b1.k_words(2, overlapping=True)),
+                         ['GA', 'AT', 'TT', 'TA', 'AC', 'CA'])
+        self.assertEqual(list(self.b1.k_words(3, overlapping=True)),
+                         ['GAT', 'ATT', 'TTA', 'TAC', 'ACA'])
+        self.assertEqual(list(self.b1.k_words(7, overlapping=True)),
+                         ['GATTACA'])
+        self.assertEqual(list(self.b1.k_words(8, overlapping=True)),
+                         [])
+
+        # overlapping = False
+        self.assertEqual(list(self.b1.k_words(1, overlapping=True)),
+                         ['G', 'A', 'T', 'T', 'A', 'C', 'A'])
+        self.assertEqual(list(self.b1.k_words(2, overlapping=False)),
+                         ['GA', 'TT', 'AC'])
+        self.assertEqual(list(self.b1.k_words(3, overlapping=False)),
+                         ['GAT', 'TAC'])
+        self.assertEqual(list(self.b1.k_words(7, overlapping=False)),
+                         ['GATTACA'])
+        self.assertEqual(list(self.b1.k_words(8, overlapping=False)),
+                         [])
+
+        # error on invalid k
+        self.assertRaises(ValueError, list, self.b1.k_words(0))
+        self.assertRaises(ValueError, list, self.b1.k_words(-42))
+
+        # tests with different sequences
+        self.assertEqual(list(self.b8.k_words(3, overlapping=False)),
+                         ['HE.', '.--', '..L'])
+        b = BiologicalSequence('')
+        self.assertEqual(list(b.k_words(3)), [])
+
+    def test_k_word_counts(self):
+        """ k_word_counts functions as expected
+        """
+        # overlapping = True
+        expected = Counter('GATTACA')
+        self.assertEqual(self.b1.k_word_counts(1, overlapping=True),
+                         expected)
+        expected = Counter(['GAT', 'ATT', 'TTA', 'TAC', 'ACA'])
+        self.assertEqual(self.b1.k_word_counts(3, overlapping=True),
+                         expected)
+
+        # overlapping = False
+        expected = Counter(['GAT', 'TAC'])
+        self.assertEqual(self.b1.k_word_counts(3, overlapping=False),
+                         expected)
+        expected = Counter(['GATTACA'])
+        self.assertEqual(self.b1.k_word_counts(7, overlapping=False),
+                         expected)
+
+    def test_k_word_frequencies(self):
+        """ k_word_frequencies functions as expected
+        """
+        # overlapping = True
+        expected = defaultdict(int)
+        expected['A'] = 3/7.
+        expected['C'] = 1/7.
+        expected['G'] = 1/7.
+        expected['T'] = 2/7.
+        self.assertEqual(self.b1.k_word_frequencies(1, overlapping=True),
+                         expected)
+        expected = defaultdict(int)
+        expected['GAT'] = 1/5.
+        expected['ATT'] = 1/5.
+        expected['TTA'] = 1/5.
+        expected['TAC'] = 1/5.
+        expected['ACA'] = 1/5.
+        self.assertEqual(self.b1.k_word_frequencies(3, overlapping=True),
+                         expected)
+
+        # overlapping = False
+        expected = defaultdict(int)
+        expected['GAT'] = 1/2.
+        expected['TAC'] = 1/2.
+        self.assertEqual(self.b1.k_word_frequencies(3, overlapping=False),
+                         expected)
+        expected = defaultdict(int)
+        expected['GATTACA'] = 1.0
+        self.assertEqual(self.b1.k_word_frequencies(7, overlapping=False),
+                         expected)
+        expected = defaultdict(int)
+        empty = BiologicalSequence('')
+        self.assertEqual(empty.k_word_frequencies(1, overlapping=False),
+                         expected)
 
     def test_len(self):
         """ len functions as expected
