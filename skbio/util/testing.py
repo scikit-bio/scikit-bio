@@ -42,8 +42,13 @@ def get_data_path(fn):
     Returns
     -------
     str
-        Full path to ``/get_data_path(fn) caller's path/data/fn``.
+        Inferred absolute path to the test data for the module where
+        ``get_data_path(fn)`` is called.
 
+    Notes
+    -----
+    The requested path may not point to an existing file, as its
+    existence is not checked.
     """
     # getouterframes returns a list of tuples: the second tuple
     # contains info about the caller, and the second element is its
