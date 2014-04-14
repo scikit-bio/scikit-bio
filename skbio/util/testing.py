@@ -1,3 +1,21 @@
+"""
+Testing utilities (:mod:`skbio.util.testing`)
+=============================================
+
+.. currentmodule:: skbio.util.testing
+
+Common functionality to support testing in skbio.
+
+Functions
+---------
+
+.. autosummary::
+   :toctree: generated/
+
+   get_data_path
+
+"""
+
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
