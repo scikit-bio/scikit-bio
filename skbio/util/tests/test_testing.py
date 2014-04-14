@@ -19,4 +19,3 @@ def test_get_data_path():
     data_path = os.path.join(path, 'data', fn)
     data_path_2 = get_data_path(fn)
     npt.assert_string_equal(data_path_2, data_path)
-
