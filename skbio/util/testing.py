@@ -16,7 +16,7 @@ def get_data_path(fn):
     Useful to load files in tests/data/* when testing."""
     # getouterframes returns a list of tuples: the second tuple
     # contains info about the caller, and the second element is its
-    # filname
+    # filename
     callers_filename = inspect.getouterframes(inspect.currentframe())[1][1]
     path = os.path.dirname(os.path.abspath(callers_filename))
     data_path = os.path.join(path, 'data', fn)
