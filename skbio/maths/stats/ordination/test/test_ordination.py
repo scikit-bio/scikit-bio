@@ -13,6 +13,7 @@ from __future__ import division
 import os
 import warnings
 from StringIO import StringIO
+from itertools import izip
 
 import numpy as np
 import numpy.testing as npt
@@ -325,7 +326,7 @@ class TestRDAErrors(object):
         for n, p, n_, m in [(3, 4, 2, 1), (3, 4, 3, 10)]:
             Y = np.random.randn(n, p)
             X = np.random.randn(n_, m)
-            yield npt.assert_raises, ValueError, RDA, Y, X
+            yield npt.assert_raises, ValueError, RDA, Y, X, None, None
 
 
 class TestRDAResults(object):
@@ -337,7 +338,11 @@ class TestRDAResults(object):
         """Data from table 11.3 in Legendre & Legendre 1998."""
         Y = np.loadtxt(get_data_path('example2_Y'))
         X = np.loadtxt(get_data_path('example2_X'))
-        self.ordination = RDA(Y, X)
+        self.ordination = RDA(Y, X,
+                              ['Site0', 'Site1', 'Site2', 'Site3', 'Site4',
+                               'Site5', 'Site6', 'Site7', 'Site8', 'Site9'],
+                              ['Species0', 'Species1', 'Species2', 'Species3',
+                               'Species4', 'Species5'])
 
     def test_scaling1(self):
         scores = self.ordination.scores(1)
@@ -576,22 +581,12 @@ class TestPCoAErrors(object):
 
 
 class TestOrdinationResults(object):
-    def test_to_file(self):
+    def setup(self):
         # CA results
         ca = CA(np.loadtxt(get_data_path('L&L_CA_data')),
                 ['Site1', 'Site2', 'Site3'],
                 ['Species1', 'Species2', 'Species3'])
         ca_scores = ca.scores(2)
-        obs_f = StringIO()
-        ca_scores.to_file(obs_f)
-        obs = obs_f.getvalue()
-        obs_f.close()
-
-        with open(get_data_path('L&L_CA_data_scores'), 'U') as f:
-            exp = f.read()
-
-        npt.assert_equal(obs, exp)
-
         # CCA results
         Y = np.loadtxt(get_data_path('example3_Y'))
         X = np.loadtxt(get_data_path('example3_X'))
@@ -601,29 +596,33 @@ class TestOrdinationResults(object):
                   ['Species0', 'Species1', 'Species2', 'Species3', 'Species4',
                    'Species5', 'Species6', 'Species7', 'Species8'])
         cca_scores = cca.scores(2)
-        obs_f = StringIO()
-        cca_scores.to_file(obs_f)
-        obs = obs_f.getvalue()
-        obs_f.close()
-
-        with open(get_data_path('example3_scores'), 'U') as f:
-            exp = f.read()
-
-        npt.assert_equal(obs, exp)
-
         # PCoA results
         with open(get_data_path('PCoA_sample_data_3'), 'U') as lines:
             dist_matrix = DistanceMatrix.from_file(lines)
         pcoa = PCoA(dist_matrix)
         pcoa_scores = pcoa.scores()
-        obs_f = StringIO()
-        pcoa_scores.to_file(obs_f)
-        obs = obs_f.getvalue()
-        obs_f.close()
+        # RDA results
+        Y = np.loadtxt(get_data_path('example2_Y'))
+        X = np.loadtxt(get_data_path('example2_X'))
+        rda = RDA(Y, X,
+                  ['Site0', 'Site1', 'Site2', 'Site3', 'Site4', 'Site5',
+                   'Site6', 'Site7', 'Site8', 'Site9'],
+                  ['Species0', 'Species1', 'Species2', 'Species3', 'Species4',
+                   'Species5'])
+        rda_scores = rda.scores(2)
 
-        with open(get_data_path('PCoA_sample_data_3_scores'), 'U') as f:
-            exp = f.read()
+        self.scores = [ca_scores, cca_scores, pcoa_scores, rda_scores]
+        self.test_paths = ['L&L_CA_data_scores', 'example3_scores',
+                           'PCoA_sample_data_3_scores', 'example2_scores']
 
-        npt.assert_equal(obs, exp)
+    def test_to_file(self):
+        for scores, test_path in izip(self.scores, self.test_paths):
+            obs_f = StringIO()
+            scores.to_file(obs_f)
+            obs = obs_f.getvalue()
+            obs_f.close()
 
-        # RA results
+            with open(get_data_path(test_path), 'U') as f:
+                exp = f.read()
+
+            npt.assert_equal(obs, exp)

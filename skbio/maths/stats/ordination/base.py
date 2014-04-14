@@ -39,21 +39,39 @@ class OrdinationResults(namedtuple('OrdinationResults',
 
         `ord_res_f` must be a file-like object containing text.
 
+        The ord_res_f format should look like::
 
-        The first line
-        (header) must contain the IDs of each object. The subsequent lines
-        must contain an ID followed by each distance (float) between the
-        current object and all other objects, where the order of objects is
-        determined by the header line.
+            Eigvals<tab>2
+            0.096<tab>0.040
 
-        For example, a 2x2 distance matrix with IDs ``'a'`` and ``'b'`` might
-        look like::
+            Proportion explained<tab>2
+            0.512<tab>0.488
 
-            <del>a<del>b
-            a<del>0.0<del>1.0
-            b<del>1.0<del>0.0
+            Species<tab>3<tab>2
+            Species1<tab>0.408<tab>0.069
+            Species2<tab>-0.115<tab>-0.299
+            Species3<tab>-0.309<tab>0.187
 
-        where ``<del>`` is the delimiter between elements.
+            Site<tab>3<tab>2
+            Site1<tab>-0.848<tab>0.882
+            Site2<tab>-0.220<tab>-1.344
+            Site3<tab>1.666<tab>0.470
+
+            Biplot<tab>4<tab>3
+            0.422<tab>-0.559<tab>-0.713
+            0.988<tab>0.150<tab>-0.011
+            -0.556<tab>0.817<tab>0.147
+            -0.404<tab>-0.905<tab>-0.127
+
+            Site constraints<tab>3<tab>2
+            Site1<tab>-0.848<tab>0.882
+            Site2<tab>-0.220<tab>-1.344
+            Site3<tab>1.666<tab>0.470
+
+        If a given result attribute is not present (e.g. Biplot), it should be
+        still defined and declare its size as 0::
+
+            Biplot<tab>0<tab>0
 
         Parameters
         ----------
@@ -66,15 +84,6 @@ class OrdinationResults(namedtuple('OrdinationResults',
         OrdinationResults
             Instance of type `cls` containing the parsed contents of
             `ord_res_f`.
-
-        Notes
-        -----
-        Whitespace-only lines can occur anywhere throughout the "file" and are
-        ignored. Lines starting with ``#`` are treated as comments and ignored.
-        These comments can only occur *before* the ID header.
-
-        IDs will have any leading/trailing whitespace removed when they are
-        parsed.
 
         """
         # We aren't using np.loadtxt because it uses *way* too much memory
