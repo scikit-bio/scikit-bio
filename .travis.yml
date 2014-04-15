@@ -16,7 +16,7 @@ before_install:
   - conda update --yes conda
 install:
   - conda create --yes -n env_name python=$TRAVIS_PYTHON_VERSION pip numpy=$NUMPY_VERSION scipy matplotlib nose pep8 Sphinx
-  - if [ ${USE_CYTHON} ]; then conda install -n env_name cython; fi
+  - if [ ${USE_CYTHON} ]; then conda install --yes -n env_name cython; fi
   - source activate env_name
   - pip install sphinx-bootstrap-theme future
   - pip install -e . --no-deps
