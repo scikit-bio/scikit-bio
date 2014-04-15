@@ -1,10 +1,10 @@
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
 
@@ -15,39 +15,42 @@ from .utils import svd_rank
 
 
 class CA(Ordination):
+    r"""Compute correspondence analysis, a multivariate statistical
+    technique for ordination.
+
+    In general, rows in the data table will correspond to sites and
+    columns to species, but the method is symmetric. In order to
+    measure the correspondence between rows and columns, the
+    :math:`\chi^2` distance is used, and those distances are preserved
+    in the transformed space. The :math:`\chi^2` distance doesn't take
+    double zeros into account, and so it is expected to produce better
+    ordination that PCA when the data has lots of zero values.
+
+    It is related to Principal Component Analysis (PCA) but it should
+    be preferred in the case of steep or long gradients, that is, when
+    there are many zeros in the input data matrix.
+
+    Parameters
+    ----------
+    X : array_like
+        Contingency table. It can be applied to different kinds of
+        data tables but data must be non-negative and dimensionally
+        homogeneous (quantitative or binary).
+
+    Notes
+    -----
+    The algorithm is based on Legendre & Legendre (1998) 9.4.1. and is
+    expected to give the same results as ``cca(X)`` in R's package
+    vegan.
+
+    See Also
+    --------
+    CCA
+    """
     short_method_name = 'CA'
     long_method_name = 'Canonical Analysis'
 
     def __init__(self, X):
-        r"""Compute correspondence analysis, a multivariate statistical
-        technique for ordination.
-
-        In general, rows in the data table will correspond to sites
-        and columns to species, but the method is symmetric. In order
-        to measure the correspondence between rows and columns, the
-        :math:`\chi^2` distance is used, and those distances are
-        preserved in the transformed space. The :math:`\chi^2`
-        distance doesn't take double zeros into account, and so it is
-        expected to produce better ordination that PCA when the data
-        has lots of zero values.
-
-        It is related to Principal Component Analysis (PCA) but it
-        should be preferred in the case of steep or long gradients, that
-        is, when there are many zeros in the input data matrix.
-
-        Parameters
-        ----------
-        X : array_like
-            Contingency table. It can be applied to different kinds of
-            data tables but data must be non-negative and
-            dimensionally homogeneous (quantitative or binary).
-
-        Notes
-        -----
-        The algorithm is based on Legendre & Legendre (1998) 9.4.1. and
-        is expected to give the same results as `cca(X)` in R's package
-        vegan.
-        """
         self.X = np.asarray(X, dtype=np.float64)
         self._ca()
 
@@ -131,7 +134,7 @@ class CA(Ordination):
         V_hat = self.row_marginals[:, None]**-0.5 * self.U_hat
         F = V_hat * self.W
         # According to Formula 9.43, this should hold
-        #assert np.allclose(F, (row_marginals**-1)[:, None] * Q.dot(V))
+        # assert np.allclose(F, (row_marginals**-1)[:, None] * Q.dot(V))
         # but it doesn't (notice that W**2==Lambda):
         # (9.43a) F = V_hat W = D(p_i+)^{-1/2} U_hat W
         #           = D(p_i+)^{-1/2} Q_bar U W^{-1} W  (substituting 9.38)
@@ -141,7 +144,7 @@ class CA(Ordination):
         #           = D(p_i+)^{-1/2} D(p_i+)^{-1/2} Q D(p_+j)^{-1/2} U
         #           = D(p_i+)^{-1/2} Q_tilde U         (using 9.40)
         # It holds if we replace Q in 9.43b with Q after centering, ie
-        #assert np.allclose(
+        # assert np.allclose(
         #    F,
         #    (row_marginals**-1)[:, None] * (Q - expected).dot(V))
         # Comparing results with vegan and the examples in the book, 9.43a

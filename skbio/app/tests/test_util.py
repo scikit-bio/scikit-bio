@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 from tempfile import gettempdir
 from os import remove, system, rmdir, getcwd, walk
@@ -449,7 +449,7 @@ class CommandLineApplicationTests(TestCase):
         # because parameters are printed in arbitrary order
         app.Parameters['-F'].on('junk.txt')
         app.Parameters['--duh'].on()
-        self.failUnless(app.BaseCommand ==
+        self.assertTrue(app.BaseCommand ==
                         'cd "/tmp/"; /tmp/CLAppTester.py -F "junk.txt" --duh'
                         or app.BaseCommand ==
                         'cd "/tmp/"; /tmp/CLAppTester.py --duh -F "junk.txt"')
@@ -1125,7 +1125,7 @@ def teardown_module():
     rmdir('/tmp/blah')
 
 
-#=====================END OF TESTS===================================
+# =====================END OF TESTS==================================
 
 script = """#!/usr/bin/env python
 #This is a test script intended to test the CommandLineApplication

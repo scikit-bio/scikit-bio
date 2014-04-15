@@ -17,17 +17,18 @@ Functions
    grouped_distributions
 
 """
-from __future__ import division
-
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
+
+from __future__ import division
 
 from itertools import cycle
+import warnings
 
 import numpy as np
 
@@ -129,7 +130,7 @@ def boxplots(distributions, x_values=None, x_tick_labels=None, title=None,
     # Make sure our input makes sense.
     for distribution in distributions:
         try:
-            map(float, distribution)
+            list(map(float, distribution))
         except:
             raise ValueError("Each value in each distribution must be a "
                              "number.")
@@ -137,7 +138,7 @@ def boxplots(distributions, x_values=None, x_tick_labels=None, title=None,
     _validate_x_values(x_values, x_tick_labels, len(distributions))
 
     # Create a new figure to plot our data on, and then plot the distributions.
-    result, plot_axes = _create_plot()
+    result, plot_axes = plt.subplots()
     box_plot = plt.boxplot(distributions, positions=x_values,
                            whis=whisker_length, widths=box_width)
 
@@ -315,7 +316,7 @@ def grouped_distributions(plot_type, data, x_values=None,
             raise ValueError("The width of a distribution cannot be less than "
                              "or equal to zero.")
 
-    result, plot_axes = _create_plot()
+    result, plot_axes = plt.subplots()
 
     # Iterate over each data point, and plot each of the distributions at that
     # data point. Increase the offset after each distribution is plotted,
@@ -379,9 +380,9 @@ def _validate_input(data, x_values, data_point_labels, distribution_labels):
     num_points = len(data)
     num_distributions = len(data[0])
 
-    empty_data_error_msg = "The data must contain at least one data " + \
-                           "point, and each data point must contain at " + \
-                           "least one distribution to plot."
+    empty_data_error_msg = ("The data must contain at least one data "
+                            "point, and each data point must contain at "
+                            "least one distribution to plot.")
     if num_points == 0 or num_distributions == 0:
         raise ValueError(empty_data_error_msg)
 
@@ -416,7 +417,7 @@ def _validate_x_values(x_values, x_tick_labels, num_expected_values):
             raise ValueError("The number of x values must match the number "
                              "of data points.")
         try:
-            map(float, x_values)
+            list(map(float, x_values))
         except:
             raise ValueError("Each x value must be a number.")
 
@@ -424,13 +425,6 @@ def _validate_x_values(x_values, x_tick_labels, num_expected_values):
         if len(x_tick_labels) != num_expected_values:
             raise ValueError("The number of x-axis tick labels must match the "
                              "number of data points.")
-
-
-def _create_plot():
-    """Creates a plot and returns the associated Figure and Axes objects."""
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    return fig, ax
 
 
 def _get_distribution_markers(marker_type, marker_choices, num_markers):
@@ -460,10 +454,12 @@ def _get_distribution_markers(marker_type, marker_choices, num_markers):
         # beginning of the list again) until we have enough, but the user
         # should still know because they may want to provide a new list of
         # markers.
-        print ("There are not enough markers to uniquely represent each "
-               "distribution in your dataset. You may want to provide a list "
-               "of markers that is at least as large as the number of "
-               "distributions in your dataset.")
+        warnings.warn(
+            "There are not enough markers to uniquely represent each "
+            "distribution in your dataset. You may want to provide a list "
+            "of markers that is at least as large as the number of "
+            "distributions in your dataset.",
+            RuntimeWarning)
         marker_cycle = cycle(marker_choices[:])
         while len(marker_choices) < num_markers:
             marker_choices.append(marker_cycle.next())
@@ -646,7 +642,7 @@ def _set_axes_options(plot_axes, title=None, x_label=None, y_label=None,
             x_tick_labels_orientation != 'horizontal'):
         raise ValueError("Invalid orientation for x-axis tick labels: %s. "
                          "Valid orientations are 'vertical' or 'horizontal'."
-                         % x_tick_labels_rotation)
+                         % x_tick_labels_orientation)
 
     # If labels are provided, always use them. If they aren't, use the x_values
     # that denote the spacing between data points as labels. If that isn't
@@ -713,8 +709,10 @@ def _set_figure_size(fig, width=None, height=None):
     try:
         fig.tight_layout()
     except ValueError:
-        print ("Warning: could not automatically resize plot to make room for "
-               "axes labels and plot title. This can happen if the labels or "
-               "title are extremely long and the plot size is too small. Your "
-               "plot may have its labels and/or title cut-off. To fix this, "
-               "try increasing the plot's size (in inches) and try again.")
+        warnings.warn(
+            "Could not automatically resize plot to make room for "
+            "axes labels and plot title. This can happen if the labels or "
+            "title are extremely long and the plot size is too small. Your "
+            "plot may have its labels and/or title cut-off. To fix this, "
+            "try increasing the plot's size (in inches) and try again.",
+            RuntimeWarning)

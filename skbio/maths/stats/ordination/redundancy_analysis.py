@@ -1,10 +1,10 @@
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
 
@@ -15,34 +15,35 @@ from .utils import corr, svd_rank, scale
 
 
 class RDA(Ordination):
+    r"""Compute redundancy analysis, a type of canonical analysis.
+
+    It is related to PCA and multiple regression because the explained
+    variables `Y` are fitted to the explanatory variables `X` and PCA
+    is then performed on the fitted values. A similar process is
+    performed on the residuals.
+
+    RDA should be chosen if the studied gradient is small, and CCA
+    when it's large, so that the contingency table is sparse.
+
+    Parameters
+    ----------
+    Y : array_like
+        :math:`n \times p` response matrix. Its columns need be
+        dimensionally homogeneous (or you can set `scale_Y=True`).
+    X : array_like
+        :math:`n \times m, n \geq m` matrix of explanatory
+        variables. Its columns need not be standardized, but doing so
+        turns regression coefficients into standard regression
+        coefficients.
+    scale_Y : bool, optional
+        Controls whether the response matrix columns are scaled to
+        have unit standard deviation. Defaults to `False`.
+    """
+
     short_method_name = 'RDA'
     long_method_name = 'Redundancy Analysis'
 
     def __init__(self, Y, X, scale_Y=False):
-        r"""Compute redundancy analysis, a type of canonical analysis.
-
-        It is related to PCA and multiple regression because the
-        explained variables `Y` are fitted to the explanatory variables
-        `X` and PCA is then performed on the fitted values. A similar
-        process is performed on the residuals.
-
-        RDA should be chosen if the studied gradient is small, and CCA
-        when it's large, so that the contingency table is sparse.
-
-        Parameters
-        ----------
-        Y : array_like
-            :math:`n \times p` response matrix. Its columns need be
-            dimensionally homogeneous (or you can set `scale_Y=True`).
-        X : array_like
-            :math:`n \times m, n \geq m` matrix of explanatory
-            variables. Its columns need not be standardized, but doing
-            so turns regression coefficients into standard regression
-            coefficients.
-        scale_Y : bool, optional
-            Controls whether the response matrix columns are scaled to
-            have unit standard deviation. Defaults to `False`.
-        """
         self.Y = np.asarray(Y, dtype=np.float64)
         self.X = np.asarray(X, dtype=np.float64)
         self._rda(scale_Y)
@@ -82,9 +83,9 @@ class RDA(Ordination):
         # (11.4) B = [X' X]^{-1} X' Y
         #          = R^{-1} R'^{-1} R' Q' Y
         #          = R^{-1} Q'
-        #Q, R = np.linalg.qr(X)
-        #Y_hat = Q.dot(Q.T).dot(Y)
-        #B = scipy.linalg.solve_triangular(R, Q.T.dot(Y))
+        # Q, R = np.linalg.qr(X)
+        # Y_hat = Q.dot(Q.T).dot(Y)
+        # B = scipy.linalg.solve_triangular(R, Q.T.dot(Y))
         # This works provided X has full rank. When not, you can still
         # fix it using R's pseudoinverse or partitioning R. To avoid any
         # issues, like the numerical instability when trying to
@@ -115,7 +116,7 @@ class RDA(Ordination):
         Z = Y_hat.dot(U)
 
         # Canonical coefficients (formula 11.14)
-        #C = B.dot(U)  # Not used
+        # C = B.dot(U)  # Not used
 
         Y_res = Y - Y_hat
         # PCA on the residuals
@@ -184,7 +185,7 @@ class RDA(Ordination):
         # The "Correlations of environmental variables with site
         # scores" from table 11.4 are quite similar to vegan's biplot
         # scores, but they're computed like this:
-        #corr(self.X, self.F))
+        # corr(self.X, self.F))
         return OrdinationResults(eigvals=eigvals,
                                  species=species_scores,
                                  site=site_scores,

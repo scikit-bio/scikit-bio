@@ -2,13 +2,13 @@
 """Unit tests for the skbio.util.trie module"""
 from __future__ import division
 
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 from unittest import TestCase, main
 from itertools import izip
@@ -40,11 +40,11 @@ class CompressedNodeTests(TestCase):
         self.assertEqual(n.key, self.key)
         self.assertEqual(n.children, {})
 
-    def test_nonzero(self):
+    def test_truth_value(self):
         """Non zero should check for any data on the node"""
         n = _CompressedNode("")
-        self.assertFalse(n.__nonzero__())
-        self.assertTrue(self.node.__nonzero__())
+        self.assertFalse(bool(n))
+        self.assertTrue(bool(self.node))
 
     def test_len(self):
         """Should return the number of values attached to the node"""

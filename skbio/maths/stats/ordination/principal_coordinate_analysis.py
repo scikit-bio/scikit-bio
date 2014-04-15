@@ -1,10 +1,10 @@
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
 
@@ -13,7 +13,7 @@ import warnings
 import numpy as np
 
 from .base import Ordination, OrdinationResults
-from skbio.core.distance import SymmetricDistanceMatrix
+from skbio.core.distance import DistanceMatrix
 
 # - In cogent, after computing eigenvalues/vectors, the imaginary part
 #   is dropped, if any. We know for a fact that the eigenvalues are
@@ -31,51 +31,53 @@ from skbio.core.distance import SymmetricDistanceMatrix
 
 
 class PCoA(Ordination):
+    r"""Perform Principal Coordinate Analysis.
+
+    Principal Coordinate Analysis (PCoA) is a method similar to PCA
+    that works from distance matrices, and so it can be used with
+    ecologically meaningful distances like unifrac for bacteria.
+
+    In ecology, the euclidean distance preserved by Principal
+    Component Analysis (PCA) is often not a good choice because it
+    deals poorly with double zeros (Species have unimodal
+    distributions along environmental gradients, so if a species is
+    absent from two sites at the same site, it can't be known if an
+    environmental variable is too high in one of them and too low in
+    the other, or too low in both, etc. On the other hand, if an
+    species is present in two sites, that means that the sites are
+    similar.).
+
+    Parameters
+    ==========
+    distance_matrix : DistanceMatrix
+        A distance matrix.
+
+    Notes
+    =====
+    It is sometimes known as metric multidimensional scaling or
+    classical scaling.
+
+    .. note::
+
+       If the distance is not euclidean (for example if it is a
+       semimetric and the triangle inequality doesn't hold),
+       negative eigenvalues can appear. There are different ways
+       to deal with that problem (see Legendre & Legendre 1998, \S
+       9.2.3), but none are currently implemented here.
+
+       However, a warning is raised whenever negative eigenvalues
+       appear, allowing the user to decide if they can be safely
+       ignored.
+    """
     short_method_name = 'PCoA'
     long_method_name = 'Principal Coordinate Analysis'
 
     def __init__(self, distance_matrix):
-        r"""In ecology, the euclidean distance preserved by Principal
-        Component Analysis (PCA) is often not a good choice because it
-        deals poorly with double zeros (Species have unimodal
-        distributions along environmental gradients, so if a species
-        is absent from two sites at the same site, it can't be known
-        if an environmental variable is too high in one of them and
-        too low in the other, or too low in both, etc. On the other
-        hand, if an species is present in two sites, that means that
-        the sites are similar.).
-
-        Principal Coordinate Analysis (PCoA) is a method similar to
-        PCA that works from distance matrices, and so it can be used
-        with ecologically meaningful distances like unifrac for
-        bacteria.
-
-        Parameters
-        ==========
-        distance_matrix : SymmetricDistanceMatrix
-            A distance matrix.
-
-        Notes
-        =====
-        It is sometimes known as metric multidimensional scaling or
-        classical scaling.
-
-        .. note::
-
-           If the distance is not euclidean (for example if it is a
-           semimetric and the triangle inequality doesn't hold),
-           negative eigenvalues can appear. There are different ways
-           to deal with that problem (see Legendre & Legendre 1998, \S
-           9.2.3), but none are currently implemented here.
-
-           However, a warning is raised whenever negative eigenvalues
-           appear, allowing the user to decide if they can be safely
-           ignored.
-        """
-        if isinstance(distance_matrix, SymmetricDistanceMatrix):
+        if isinstance(distance_matrix, DistanceMatrix):
             self.dm = np.asarray(distance_matrix.data, dtype=np.float64)
+            self.ids = distance_matrix.ids
         else:
-            raise TypeError("Input must be a SymmetricDistanceMatrix.")
+            raise TypeError("Input must be a DistanceMatrix.")
         self._pcoa()
 
     def _pcoa(self):
@@ -124,14 +126,17 @@ class PCoA(Ordination):
 
         # We only return coordinates that make sense (i.e., that have
         # a corresponding positive eigenvalue)
-        num_positive = (self.eigvals > 0).sum()
+        num_positive = (self.eigvals >= 0).sum()
         eigvecs = self.eigvecs[:, :num_positive]
         eigvals = self.eigvals[:num_positive]
 
         coordinates = eigvecs * np.sqrt(eigvals)
 
-        # TODO: Improve OrdinationResults to better cope with PCoA
-        return OrdinationResults(eigvals=self.eigvals, species=coordinates)
+        proportion_explained = eigvals / eigvals.sum()
+
+        return OrdinationResults(eigvals=eigvals, species=coordinates,
+                                 proportion_explained=proportion_explained,
+                                 ids=self.ids)
 
     @staticmethod
     def _E_matrix(distance_matrix):

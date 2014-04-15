@@ -101,10 +101,62 @@ Testing Guidelines
 
 All code that is added to scikit-bio must be unit tested, and the unit test code must be submitted in the same pull request as the library code that you are submitting. We will not merge code that is not unit tested. The PyCogent Coding Guidelines describe our [expectations for unit tests](http://pycogent.org/coding_guidelines.html?highlight=coding%20guidelines#how-should-i-test-my-code). You should review the unit test section before working on your test code.
 
+Tests can be executed using [nose](https://nose.readthedocs.org/en/latest/) by running `nosetests --with-doctest` from the base directory of the project or from within a Python or IPython session running the following code:
+
+``` python
+>>> import skbio
+>>> skbio.test()
+# full test suite is executed
+>>> skbio.parse.test()
+# tests for the parse module are executed
+```
+
+Note that this is possible because the lines below are added at the end of each `__init__.py` file in the package, so if you add a new module, be sure to include these lines in its `__init__.py`:
+
+```python
+from numpy.testing import Tester
+test = Tester().test
+```
+
+
 Documentation Guidelines
 ------------------------
 
 We strive to keep scikit-bio's code well-documented, particularly its public-facing API. See our [documentation guide](doc/README.md) for more details on writing documentation in scikit-bio.
+
+Automatically verifying commits against PEP8
+--------------------------------------------
+
+The scikit-bio package conforms to the coding style guidelines in 
+[PEP8](http://legacy.python.org/dev/peps/pep-0008). There is a handy script
+that will check a [script](https://pypi.python.org/pypi/pep8) against PEP8. 
+This package can be installed with:
+
+    $ pip install pep8
+
+But, it is frustrating to submit code only to have it shot down due to PEP8
+errors. What we'd really like to do is check for errors prior even issuing 
+a pull request. Luckily, git provides mechanisms to automatically execute 
+arbitrary scripts prior to commit.
+
+### Setting up pre-commit hooks
+
+First, we need to setup a place for your hooks to live under your favorite
+repository:
+
+    $ mkdir -p $HOME/scikit-bio/.git/hooks
+
+Finally, we need to get the actual pre-commit script:
+
+    $ curl -Lk -o $HOME/scikit-bio/.git/hooks/pre-commit http://goo.gl/nQ1KVz
+    $ chmod +x $HOME/skikit-bio/.git/hooks/pre-commit
+
+### Ignoring the pre-commit hook
+
+Occasionally, your judgement overrides the judgement of PEP8. To ignore the
+pre-commit hook, specify ```--no-verify```. For instance:
+
+    $ git commit -m "not executing pep8 pre-commit hook" --no-verify
 
 Getting help with git
 =====================

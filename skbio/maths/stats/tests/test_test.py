@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 from __future__ import division
 
 from warnings import filterwarnings
@@ -243,9 +243,9 @@ class StatTests(TestsHelper):
         """t_paired should allow a specific difference to be passed"""
         x, y = self.x, self.y
         # difference is 0.2, so test should be non-significant if 0.2 passed
-        self.failIf(t_paired(y, x, exp_diff=0.2)[0] > 1e-10)
+        self.assertFalse(t_paired(y, x, exp_diff=0.2)[0] > 1e-10)
         # same, except that reversing list order reverses sign of difference
-        self.failIf(t_paired(x, y, exp_diff=-0.2)[0] > 1e-10)
+        self.assertFalse(t_paired(x, y, exp_diff=-0.2)[0] > 1e-10)
         # check that there's no significant difference from the true mean
         np.testing.assert_allclose(
             t_paired(y, x, exp_diff=0.2)[1], 1, 1e-4)

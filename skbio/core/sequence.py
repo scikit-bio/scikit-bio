@@ -69,16 +69,16 @@ True
 """
 from __future__ import division
 
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
-from collections import Sequence
-from itertools import izip
+from collections import Sequence, Counter, defaultdict
+from itertools import izip, product
 
 from scipy.spatial.distance import hamming
 
@@ -88,15 +88,56 @@ from skbio.core.exception import BiologicalSequenceError
 class BiologicalSequence(Sequence):
     """Base class for biological sequences.
 
+    Parameters
+    ----------
+    sequence : python Sequence (e.g., str, list or tuple)
+        The biological sequence.
+    identifier : str, optional
+        The sequence identifier (e.g., an accession number).
+    description : str, optional
+        A description or comment about the sequence (e.g., "green
+        fluorescent protein").
+    validate : bool, optional
+        If True, runs the `is_valid` method after construction and raises
+        BiologicalSequenceError if ``is_valid == False``.
+
     Attributes
     ----------
     description
     identifier
 
+    Raises
+    ------
+    skbio.core.exception.BiologicalSequenceError
+      If ``validate == True`` and ``is_valid == False``.
+
+    See Also
+    --------
+    NucleotideSequence
+    DNASequence
+    RNASequence
+
     Notes
     -----
     `BiologicalSequence` objects are immutable. Where applicable, methods
     return a new object of the same class.
+    Subclasses are typically defined by methods relevant to only a specific
+    type of biological sequence, and by containing characters only contained in
+    the IUPAC standard character set [1]_ for that molecule type.
+
+    Examples
+    --------
+    >>> from skbio.core.sequence import BiologicalSequence
+    >>> s = BiologicalSequence('GGUCGUGAAGGA')
+    >>> t = BiologicalSequence('GGUCCUGAAGGU')
+
+    References
+    ----------
+    .. [1] Nomenclature for incompletely specified bases in nucleic acid
+       sequences: recommendations 1984.
+       Nucleic Acids Res. May 10, 1985; 13(9): 3021-3030.
+       A Cornish-Bowden
+
     """
 
     @classmethod
@@ -141,39 +182,6 @@ class BiologicalSequence(Sequence):
 
     def __init__(self, sequence, identifier="", description="",
                  validate=False):
-        """Initialize a `BiologicalSequence` object.
-
-        Parameters
-        ----------
-        sequence : python Sequence (e.g., str, list or tuple)
-            The biological sequence.
-        identifier : str, optional
-            The sequence identifier (e.g., an accession number).
-        description : str, optional
-            A description or comment about the sequence (e.g., "green
-            fluorescent protein").
-        validate : bool, optional
-            If True, runs the `is_valid` method after construction and raises
-            BiologicalSequenceError if ``is_valid == False``.
-
-        Raises
-        ------
-        skbio.core.exception.BiologicalSequenceError
-          If ``validate == True`` and is_valid == False``.
-
-        See Also
-        --------
-        NucleotideSequence
-        DNASequence
-        RNASequence
-
-        Examples
-        --------
-        >>> from skbio.core.sequence import BiologicalSequence
-        >>> s = BiologicalSequence('GGUCGUGAAGGA')
-        >>> t = BiologicalSequence('GGUCCUGAAGGU')
-
-        """
         self._sequence = ''.join(sequence)
         self._identifier = identifier
         self._description = description
@@ -205,6 +213,8 @@ class BiologicalSequence(Sequence):
         True
         >>> 'CCC' in s
         False
+
+        .. shownumpydoc
 
         """
         return other in self._sequence
@@ -238,6 +248,8 @@ class BiologicalSequence(Sequence):
         >>> u == t
         False
 
+        .. shownumpydoc
+
         """
         if self.__class__ != other.__class__:
             return False
@@ -264,11 +276,14 @@ class BiologicalSequence(Sequence):
         >>> from skbio.core.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUCGUGAAGGA')
         >>> s[1]
-        'G'
+        <BiologicalSequence: G (length: 1)>
+
+        .. shownumpydoc
 
         """
         try:
-            return self._sequence[i]
+            return self.__class__(self._sequence[i],
+                                  self.identifier, self.description)
         except IndexError:
             raise IndexError(
                 "Position %d is out of range for %r." % (i, self))
@@ -287,6 +302,8 @@ class BiologicalSequence(Sequence):
         >>> s = BiologicalSequence('GGUCGUGAAGGA')
         >>> hash(s)
         -1080059835405276950
+
+        .. shownumpydoc
 
         """
         return hash(self._sequence)
@@ -309,6 +326,8 @@ class BiologicalSequence(Sequence):
         U
         C
 
+        .. shownumpydoc
+
         """
         return iter(self._sequence)
 
@@ -326,6 +345,8 @@ class BiologicalSequence(Sequence):
         >>> s = BiologicalSequence('GGUC')
         >>> len(s)
         4
+
+        .. shownumpydoc
 
         """
         return len(self._sequence)
@@ -359,6 +380,8 @@ class BiologicalSequence(Sequence):
         >>> u != t
         True
 
+        .. shownumpydoc
+
         """
         return not self.__eq__(other)
 
@@ -389,6 +412,8 @@ class BiologicalSequence(Sequence):
         >>> t
         <BiologicalSequence: ACGT (length: 4)>
 
+        .. shownumpydoc
+
         """
         first_ten = str(self)[:10]
         cn = self.__class__.__name__
@@ -416,6 +441,8 @@ class BiologicalSequence(Sequence):
         U
         G
         G
+
+        .. shownumpydoc
 
         """
         return reversed(self._sequence)
@@ -445,6 +472,8 @@ class BiologicalSequence(Sequence):
         'GGUC'
         >>> print s
         GGUC
+
+        .. shownumpydoc
 
         """
         return ''.join(self._sequence)
@@ -501,8 +530,9 @@ class BiologicalSequence(Sequence):
 
         Returns
         -------
-        A new `BiologicalSequence` with all characters from
-        `self.gap_alphabet` filtered from the sequence.
+        BiologicalSequence
+            A new `BiologicalSequence` with all characters from
+            `self.gap_alphabet` filtered from the sequence.
 
         Notes
         -----
@@ -777,7 +807,7 @@ class BiologicalSequence(Sequence):
         """
         all_supported = self.alphabet() | self.gap_alphabet()
         for e in self:
-            if not e in all_supported:
+            if e not in all_supported:
                 return True
         return False
 
@@ -879,6 +909,137 @@ class BiologicalSequence(Sequence):
         """
         return not self.has_unsupported_characters()
 
+    def k_words(self, k, overlapping=True, constructor=str):
+        """Get the list of words of length k
+
+        Parameters
+        ----------
+        k : int
+            The word length.
+        overlapping : bool, optional
+            Defines whether the k-words should be overlapping or not
+            overlapping.
+        constructor : type, optional
+            The constructor for the returned k-words.
+
+        Returns
+        -------
+        iterator
+            Iterator of words of length `k` contained in the
+            BiologicalSequence.
+
+        Raises
+        ------
+        ValueError
+            If k < 1.
+
+        Examples
+        --------
+        >>> from skbio.core.sequence import BiologicalSequence
+        >>> s = BiologicalSequence('ACACGACGTT')
+        >>> list(s.k_words(4, overlapping=False))
+        ['ACAC', 'GACG']
+        >>> list(s.k_words(3, overlapping=True))
+        ['ACA', 'CAC', 'ACG', 'CGA', 'GAC', 'ACG', 'CGT', 'GTT']
+
+        """
+        if k < 1:
+            raise ValueError("k must be greater than 0.")
+
+        sequence_length = len(self)
+
+        if overlapping:
+            step = 1
+        else:
+            step = k
+
+        for i in range(0, sequence_length - k + 1, step):
+            yield constructor(self[i:i+k])
+
+    def k_word_counts(self, k, overlapping=True, constructor=str):
+        """Get the counts of words of length k
+
+        Parameters
+        ----------
+        k : int
+            The word length.
+        overlapping : bool, optional
+            Defines whether the k-words should be overlapping or not
+            overlapping.
+        constructor : type, optional
+            The constructor for the returned k-words.
+
+        Returns
+        -------
+        collections.Counter
+            The counts of words of length `k` contained in the
+            BiologicalSequence.
+
+        Examples
+        --------
+        >>> from skbio.core.sequence import BiologicalSequence
+        >>> s = BiologicalSequence('ACACAT')
+        >>> s.k_word_counts(3, overlapping=True)
+        Counter({'ACA': 2, 'CAC': 1, 'CAT': 1})
+
+        """
+        k_words = self.k_words(k, overlapping, constructor)
+        return Counter(k_words)
+
+    def k_word_frequencies(self, k, overlapping=True, constructor=str):
+        """Get the frequencies of words of length k
+
+        Parameters
+        ----------
+        k : int
+            The word length.
+        overlapping : bool, optional
+            Defines whether the k-words should be overlapping or not
+            overlapping.
+        constructor : type, optional
+            The constructor for the returned k-words.
+
+        Returns
+        -------
+        collections.defaultdict
+            The frequencies of words of length `k` contained in the
+            BiologicalSequence.
+
+        Examples
+        --------
+        >>> from skbio.core.sequence import BiologicalSequence
+        >>> s = BiologicalSequence('ACACAT')
+        >>> s.k_word_frequencies(3, overlapping=True)
+        defaultdict(<type 'int'>, {'CAC': 0.25, 'ACA': 0.5, 'CAT': 0.25})
+
+        """
+        result = defaultdict(int)
+        if overlapping:
+            num_words = len(self) - k + 1
+        else:
+            num_words = int(len(self) / k)
+
+        if num_words == 0:
+            return result
+
+        count = 1. / num_words
+        for word in self.k_words(k, overlapping, constructor):
+            result[word] += count
+        return result
+
+    def lower(self):
+        """Convert the BiologicalSequence to lowercase
+
+        Returns
+        -------
+        BiologicalSequence
+            The `BiologicalSequence` with all characters converted to
+            lowercase.
+
+        """
+        return self.__class__(self._sequence.lower(),
+                              self.identifier, self.description)
+
     def to_fasta(self, field_delimiter=" ", terminal_character="\n"):
         """Return the sequence as a fasta-formatted string
 
@@ -924,14 +1085,30 @@ class BiologicalSequence(Sequence):
         return '>%s\n%s%s' % (
             header_line, str(self), terminal_character)
 
+    def upper(self):
+        """Convert the BiologicalSequence to uppercase
+
+        Returns
+        -------
+        BiologicalSequence
+            The `BiologicalSequence` with all characters converted to
+            uppercase.
+
+        """
+        return self.__class__(self._sequence.upper(),
+                              self.identifier, self.description)
+
 
 class NucleotideSequence(BiologicalSequence):
     """Base class for nucleotide sequences.
 
-    Attributes
-    ----------
-    description
-    identifier
+    A `NucleotideSequence` is a `BiologicalSequence` with additional methods
+    that are only applicable for nucleotide sequences, and containing only
+    characters used in the IUPAC DNA or RNA lexicon.
+
+    See Also
+    --------
+    BiologialSequence
 
     Notes
     -----
@@ -949,8 +1126,7 @@ class NucleotideSequence(BiologicalSequence):
             Characters that are allowed in a valid `NucleotideSequence`.
 
         """
-        chars = cls.iupac_characters()
-        return chars | set(map(str.lower, chars))
+        return cls.iupac_characters()
 
     @classmethod
     def complement_map(cls):
@@ -981,7 +1157,7 @@ class NucleotideSequence(BiologicalSequence):
             Non-degenerate IUPAC nucleotide characters.
 
         """
-        return set("ACGTU")
+        return set("ACGTUacgtu")
 
     @classmethod
     def iupac_degeneracies(cls):
@@ -994,12 +1170,19 @@ class NucleotideSequence(BiologicalSequence):
             non-degenerate IUPAC nucleotide characters it represents.
 
         """
-        return {
+        degen_map = {
             "R": set("AG"), "Y": set("CTU"), "M": set("AC"), "K": set("TUG"),
             "W": set("ATU"), "S": set("GC"), "B": set("CGTU"),
             "D": set("AGTU"), "H": set("ACTU"), "V": set("ACG"),
             "N": set("ACGTU")
         }
+
+        for degen_char in list(degen_map.keys()):
+            nondegen_chars = degen_map[degen_char]
+            degen_map[degen_char.lower()] = set(
+                ''.join(nondegen_chars).lower())
+
+        return degen_map
 
     @classmethod
     def iupac_degenerate_characters(cls):
@@ -1134,14 +1317,80 @@ class NucleotideSequence(BiologicalSequence):
         return self._complement(reversed(self))
     rc = reverse_complement
 
+    def nondegenerates(self):
+        """Yield all nondegenerate versions of the sequence.
+
+        Returns
+        -------
+        generator
+            Generator yielding all possible nondegenerate versions of the
+            sequence. Each sequence will have the same type, identifier, and
+            description as `self`.
+
+        Raises
+        ------
+        BiologicalSequenceError
+            If the sequence contains an invalid character (a character that
+            isn't an IUPAC character or a gap character).
+
+        See Also
+        --------
+        iupac_degeneracies
+
+        Notes
+        -----
+        There is no guaranteed ordering to the generated sequences.
+
+        Examples
+        --------
+        >>> from skbio.core.sequence import NucleotideSequence
+        >>> seq = NucleotideSequence('TRG')
+        >>> seq_generator = seq.nondegenerates()
+        >>> for s in sorted(seq_generator, key=str): print(s)
+        TAG
+        TGG
+
+        """
+        degen_chars = self.iupac_degeneracies()
+        nonexpansion_chars = self.iupac_standard_characters().union(
+            self.gap_alphabet())
+
+        expansions = []
+        for char in self:
+            if char in nonexpansion_chars:
+                expansions.append(char)
+            else:
+                # Use a try/except instead of explicitly checking for set
+                # membership on the assumption that an exception is rarely
+                # thrown.
+                try:
+                    expansions.append(degen_chars[char])
+                except KeyError:
+                    raise BiologicalSequenceError(
+                        "Sequence contains an invalid character: %s" % char)
+
+        result = product(*expansions)
+
+        # Cache lookups here as there may be a lot of sequences to generate.
+        # Could use functools.partial, but it ends up being a little slower
+        # than this method.
+        id_ = self.identifier
+        desc = self.description
+        cls = self.__class__
+
+        return (cls(nondegen_seq, id_, desc) for nondegen_seq in result)
+
 
 class DNASequence(NucleotideSequence):
     """Base class for DNA sequences.
 
-    Attributes
-    ----------
-    description
-    identifier
+    A `DNASequence` is a `NucelotideSequence` that is restricted to only
+    containing characters used in IUPAC DNA lexicon.
+
+    See Also
+    --------
+    NucleotideSequence
+    BiologicalSequence
 
     Notes
     -----
@@ -1182,7 +1431,7 @@ class DNASequence(NucleotideSequence):
             Non-degenerate IUPAC DNA characters.
 
         """
-        return set("ACGT")
+        return set("ACGTacgt")
 
     @classmethod
     def iupac_degeneracies(cls):
@@ -1195,11 +1444,18 @@ class DNASequence(NucleotideSequence):
             non-degenerate IUPAC DNA characters it represents.
 
         """
-        return {
+        degen_map = {
             "R": set("AG"), "Y": set("CT"), "M": set("AC"), "K": set("TG"),
             "W": set("AT"), "S": set("GC"), "B": set("CGT"), "D": set("AGT"),
             "H": set("ACT"), "V": set("ACG"), "N": set("ACGT")
         }
+
+        for degen_char in list(degen_map.keys()):
+            nondegen_chars = degen_map[degen_char]
+            degen_map[degen_char.lower()] = set(
+                ''.join(nondegen_chars).lower())
+
+        return degen_map
 
 # class is accessible with alternative name for convenience
 DNA = DNASequence
@@ -1208,10 +1464,8 @@ DNA = DNASequence
 class RNASequence(NucleotideSequence):
     """Base class for RNA sequences.
 
-    Attributes
-    ----------
-    description
-    identifier
+    An `RNASequence` is a `NucelotideSequence` that is restricted to only
+    containing characters used in the IUPAC RNA lexicon.
 
     Notes
     -----
@@ -1252,7 +1506,7 @@ class RNASequence(NucleotideSequence):
             Non-degenerate IUPAC RNA characters.
 
         """
-        return set("ACGU")
+        return set("ACGUacgu")
 
     @classmethod
     def iupac_degeneracies(cls):
@@ -1265,11 +1519,18 @@ class RNASequence(NucleotideSequence):
             non-degenerate IUPAC RNA characters it represents.
 
         """
-        return {
+        degen_map = {
             "R": set("AG"), "Y": set("CU"), "M": set("AC"), "K": set("UG"),
             "W": set("AU"), "S": set("GC"), "B": set("CGU"), "D": set("AGU"),
             "H": set("ACU"), "V": set("ACG"), "N": set("ACGU")
         }
+
+        for degen_char in list(degen_map.keys()):
+            nondegen_chars = degen_map[degen_char]
+            degen_map[degen_char.lower()] = set(
+                ''.join(nondegen_chars).lower())
+
+        return degen_map
 
 # class is accessible with alternative name for convenience
 RNA = RNASequence

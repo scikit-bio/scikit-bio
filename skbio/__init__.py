@@ -1,12 +1,13 @@
 #!/usr/bin/env python
+from __future__ import print_function
 
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 __credits__ = "https://github.com/biocore/scikit-bio/graphs/contributors"
 __version__ = "0.0.0-dev"
@@ -48,7 +49,9 @@ if __doc__ is None:
 else:
     __doc__ = title + art + __doc__
 
+from numpy.testing import Tester
+test = Tester().test
 
 if __name__ == '__main__':
-    print title
-    print art
+    print(title)
+    print(art)

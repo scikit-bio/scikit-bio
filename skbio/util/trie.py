@@ -88,13 +88,13 @@ Create a new trie with a list of sequences
 """
 from __future__ import division
 
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 
 class _CompressedNode(object):
@@ -132,7 +132,7 @@ class _CompressedNode(object):
 
         .. warning:: This method is recursive
         """
-        return sum([len(n) for n in self.children.values()]) + len(self.values)
+        return sum(len(n) for n in self.children.values()) + len(self.values)
 
     @property
     def size(self):
@@ -140,7 +140,7 @@ class _CompressedNode(object):
 
         .. warning:: This method is recursive
         """
-        return sum([n.size for n in self.children.values()]) + 1
+        return sum(n.size for n in self.children.values()) + 1
 
     @property
     def prefix_map(self):
@@ -238,11 +238,11 @@ class _CompressedNode(object):
         object
             The value attached to the key
         """
-        #key exhausted
+        # key exhausted
         if len(key) == 0:
             return self.values
 
-        #find matching part of key and node_key
+        # find matching part of key and node_key
         min_length = min(len(key), len(self.key))
         keys_diff = False
         index = 0
@@ -253,7 +253,7 @@ class _CompressedNode(object):
         if keys_diff:
             return []
         elif index == len(key):
-            #key and node_key match exactly
+            # key and node_key match exactly
             return self.values
         else:
             node = self.children.get(key[index])
@@ -271,8 +271,8 @@ class CompressedTrie:
     pair_list : list of tuples, optional
         List of (key, value) pairs to initialize the Trie
 
-    Attributes:
-    -----------
+    Attributes
+    ----------
     size
     prefix_map
     """
@@ -284,7 +284,7 @@ class CompressedTrie:
                 self.insert(key, value)
 
     def __nonzero__(self):
-        return self._root.__nonzero__()
+        return bool(self._root)
 
     def __len__(self):
         return len(self._root)
