@@ -17,7 +17,7 @@ import numpy.testing as npt
 from skbio.maths.diversity.alpha import (berger_parker_d, brillouin_d,
                                          dominance, doubles, enspie,
                                          equitability, esty_ci, gini_index,
-                                         heip_e,
+                                         goods_coverage, heip_e,
                                          kempton_taylor_q, margalef,
                                          mcintosh_d, mcintosh_e, menhinick,
                                          observed_species, osd, robbins,
@@ -131,6 +131,11 @@ class AlphaDiversityTests(TestCase):
         exp = 0.20271210013908214
         obs = gini_index(self.gini_data, 'rectangles')
         self.assertAlmostEqual(obs, exp)
+
+    def test_goods_coverage(self):
+        counts = [1] * 75 + [2, 2, 2, 2, 2, 2, 3, 4, 4]
+        obs = goods_coverage(counts)
+        self.assertAlmostEqual(obs, 0.23469387755)
 
     def test_heip_e(self):
         arr = np.array([1, 2, 3, 1])

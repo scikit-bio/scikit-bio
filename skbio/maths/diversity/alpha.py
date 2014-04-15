@@ -152,6 +152,19 @@ def gini_index(data, method='rectangles'):
     return 1 - 2 * B
 
 
+def goods_coverage(counts):
+    """Return Good's Coverage of counts.
+
+    C = 1 - (n1/N)
+    n1 = number of OTUs with abundance of 1
+    N = number of individuals (sum of abundances for all OTUs)
+
+    """
+    n1 = (np.asarray(counts) == 1).sum()
+    N = (np.asarray(counts)).sum()
+    return 1 - (n1 / N)
+
+
 def heip_e(counts):
     """Calculate Heip's evenness measure.
 
