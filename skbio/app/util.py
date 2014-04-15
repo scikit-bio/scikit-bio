@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 import os
 from os import remove, system, mkdir, getcwd
@@ -222,13 +222,7 @@ class CommandLineApplication(Application):
         self.TmpDir = FilePath(TmpDir)
         self.TmpNameLen = TmpNameLen
         self.HaltExec = HALT_EXEC
-        #===========================
-        # try:
-        #    mkdir(self.WorkingDir)
-        # except OSError:
-            # Directory already exists
-        #    pass
-        #===========================
+
         # create a variable to hold the name of the file being used as
         # input to the application. this is important especially when
         # you are using an input handler which creates a temporary file

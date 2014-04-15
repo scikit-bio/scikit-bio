@@ -1,12 +1,12 @@
 #! /usr/bin/env python
 
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division
 from StringIO import StringIO
@@ -14,7 +14,7 @@ import csv
 
 import numpy as np
 
-from skbio.core.distance import SymmetricDistanceMatrix
+from skbio.core.distance import DistanceMatrix
 
 
 class CategoricalStats(object):
@@ -35,8 +35,8 @@ class CategoricalStats(object):
     test_statistic_name = ''
 
     def __init__(self, distance_matrix, grouping):
-        if not isinstance(distance_matrix, SymmetricDistanceMatrix):
-            raise TypeError("Input must be a SymmetricDistanceMatrix.")
+        if not isinstance(distance_matrix, DistanceMatrix):
+            raise TypeError("Input must be a DistanceMatrix.")
         if len(grouping) != distance_matrix.shape[0]:
             raise ValueError("Grouping vector size must match the number of "
                              "IDs in the distance matrix.")

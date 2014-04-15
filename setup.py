@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 __version__ = '0.0.0-dev'
 
@@ -43,7 +43,7 @@ on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 if on_rtd:
     install_requires = []
 else:
-    install_requires = ['numpy >= 1.5.1', 'matplotlib >= 1.1.0',
+    install_requires = ['numpy >= 1.7', 'matplotlib >= 1.1.0',
                         'scipy >= 0.13.0']
 
 setup(name='scikit-bio',
@@ -61,5 +61,7 @@ setup(name='scikit-bio',
       install_requires=install_requires,
       extras_require={'test': ["nose >= 0.10.1", "pep8"],
                       'doc': ["Sphinx >= 1.2.2", "sphinx-bootstrap-theme"]},
-      classifiers=classifiers
-      )
+      classifiers=classifiers,
+      package_data={'skbio': ['core/tests/data/*.txt',
+                              'maths/stats/ordination/test/data/*']
+                    })
