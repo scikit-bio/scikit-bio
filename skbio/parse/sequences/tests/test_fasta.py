@@ -9,10 +9,8 @@
 # -----------------------------------------------------------------------------
 from __future__ import division
 
-from skbio.parse.sequences.fasta import parse_fasta
-from skbio.core.alignment import Alignment
-from skbio.core.sequence import BiologicalSequence
-from skbio.core.exception import FastqParseError, RecordError
+from skbio.parse.sequences.fasta import parse_fasta, parse_qual
+from skbio.core.exception import RecordError
 
 from unittest import TestCase, main
 
@@ -109,6 +107,17 @@ class ParseFastaTests(GenericFastaTest):
         a, b = f
         self.assertEqual(a, ('abc', 'caggac'))
 
+    def test_parse_qual(self):
+        """parse_qual should yield (id_, quals)"""
+        scores = ['>x', '5 10 5', '12',
+                  '>y', '30 40',
+                  '>a', '5 10 5', '12',
+                  '>b', '30 40']
+        gen = list(parse_qual(scores))
+        self.assertItemsEqual(gen[0][1], [5, 10, 5, 12])
+        self.assertItemsEqual(gen[1][1], [30, 40])
+        self.assertItemsEqual(gen[2][1], [5, 10, 5, 12])
+        self.assertItemsEqual(gen[3][1], [30, 40])
 
 if __name__ == "__main__":
     main()
