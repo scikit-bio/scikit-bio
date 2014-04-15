@@ -12,20 +12,46 @@ from __future__ import division
 from unittest import TestCase, main
 
 import numpy as np
+import numpy.testing as npt
 
 from skbio.maths.diversity.alpha import (berger_parker_d, brillouin_d,
                                          dominance, doubles, enspie,
-                                         equitability, heip_e,
+                                         equitability, esty_ci, heip_e,
                                          kempton_taylor_q, margalef,
                                          mcintosh_d, mcintosh_e, menhinick,
                                          observed_species, osd, robbins,
                                          shannon, simpson, simpson_e,
-                                         simpson_reciprocal, singles, strong)
+                                         simpson_reciprocal, singles, strong,
+                                         _indices_to_counts)
 
 
 class AlphaDiversityTests(TestCase):
     def setUp(self):
         self.counts = np.array([0, 1, 1, 4, 2, 5, 2, 4, 1, 2])
+
+    def diversity(self, indices, f, step=1, start=None):
+        """Calculate diversity index for each window of size step.
+
+        indices: vector of indices of species
+        f: f(counts) -> diversity measure
+        start: first index to sum up to (default: step)
+        step: step size (default:1)
+
+        """
+        result = []
+        if start is None:
+            start = step
+        freqs = np.zeros(max(indices) + 1)
+        i = 0
+        for j in range(start, len(indices) + 1, step):
+            freqs = _indices_to_counts(indices[i:j], freqs)
+            try:
+                curr = f(freqs)
+            except (ZeroDivisionError, FloatingPointError):
+                curr = 0
+            result.append(curr)
+            i = j
+        return np.array(result)
 
     def test_berger_parker_d(self):
         self.assertEqual(berger_parker_d(np.array([5])), 1)
@@ -67,6 +93,22 @@ class AlphaDiversityTests(TestCase):
     def test_equitability(self):
         self.assertAlmostEqual(equitability(np.array([5, 5])), 1)
         self.assertAlmostEqual(equitability(np.array([1, 1, 1, 1, 0])), 1)
+
+    def test_esty_ci(self):
+        data = [1, 1, 2, 1, 1, 3, 2, 1, 3, 4]
+
+        (observed_upper, observed_lower) = zip(
+            *self.diversity(data, esty_ci, step=1))
+
+        expected_upper = np.array([1, 1.38590382, 1.40020259, 0.67434465,
+                                   0.55060902, 0.71052858, 0.61613483,
+                                   0.54041008, 0.43554755, 0.53385652])
+        expected_lower = np.array([1, -1.38590382, -0.73353593, -0.17434465,
+                                   -0.15060902, -0.04386191, -0.33042054,
+                                   -0.29041008, -0.43554755, -0.33385652])
+
+        npt.assert_array_almost_equal(observed_upper, expected_upper)
+        npt.assert_array_almost_equal(observed_lower, expected_lower)
 
     def test_heip_e(self):
         arr = np.array([1, 2, 3, 1])

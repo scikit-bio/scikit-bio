@@ -102,6 +102,39 @@ def equitability(counts, base=2):
     return numerator / denominator
 
 
+def esty_ci(counts):
+    """Esty's CI for (1-m).
+
+    counts: Vector of counts (NOT the sample)
+
+    Esty's CI is defined in
+    Esty WW (1983) A Normal limit law for a nonparametric estimator of the
+    coverage of a random sample. Ann Statist 11: 905-912.
+
+    n1 / n  +/- z * square-root(W);
+
+    where
+    n1 = number of species observed once in n samples;
+    n = sample size;
+    z = a constant that depends on the targeted confidence and based on
+        the Normal distribution. For a 95% CI, z=1.959963985;
+    n2 = number of species observed twice in n samples;
+    W = [ n1*(n - n1)  +  2*n*n2 ] / (n**3).
+
+    Note: for other confidence levels we first need the appropriate z,
+          Not yet hooked up to CLI.
+
+    Returns: (upper bound, lower bound)
+    """
+    n1 = singles(counts)
+    n2 = doubles(counts)
+    n = counts.sum()
+    z = 1.959963985
+    W = (n1 * (n - n1) + 2 * n * n2) / (n ** 3)
+
+    return n1 / n + z * np.sqrt(W), n1 / n - z * np.sqrt(W)
+
+
 def heip_e(counts):
     """Calculate Heip's evenness measure.
 
@@ -240,6 +273,7 @@ def singles(counts):
     """Return count of single occurrences."""
     return (counts == 1).sum()
 
+
 def strong(counts):
     """Calculate Strong's 2002 dominance index, by way of SDR-IV."""
     n = counts.sum()
@@ -247,3 +281,19 @@ def strong(counts):
     i = np.arange(1, len(counts) + 1)
     sorted_sum = np.sort(counts)[::-1].cumsum()
     return (sorted_sum / n - (i / s)).max()
+
+
+def _indices_to_counts(indices, result=None):
+    """Converts vector of indices to counts of each index.
+
+    WARNING: does not check that 'result' array is big enough to store new
+    counts, suggest preallocating based on whole dataset if doing cumulative
+    analysis.
+
+    """
+    if result is None:
+        max_val = indices.max()
+        result = np.zeros(max_val + 1)
+    for i in indices:
+        result[i] += 1
+    return result
