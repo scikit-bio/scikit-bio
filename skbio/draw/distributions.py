@@ -26,6 +26,7 @@ Functions
 # ----------------------------------------------------------------------------
 
 from __future__ import division
+from future.utils.six import string_types
 
 from itertools import cycle
 import warnings
@@ -373,7 +374,7 @@ def _validate_input(data, x_values, data_point_labels, distribution_labels):
     Validates plotting options to make sure they are valid with the supplied
     data.
     """
-    if data is None or not data or isinstance(data, basestring):
+    if data is None or not data or isinstance(data, string_types):
         raise ValueError("The data must be a list type, and it cannot be "
                          "None or empty.")
 
