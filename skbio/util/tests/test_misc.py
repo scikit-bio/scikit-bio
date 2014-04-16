@@ -8,7 +8,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from StringIO import StringIO
+from future.utils.six import BytesIO
 from tempfile import NamedTemporaryFile
 from os.path import exists, join
 from unittest import TestCase, main
@@ -34,7 +34,7 @@ class MiscTests(TestCase):
         """Make sure we have the expected md5"""
         exp = 'ab07acbb1e496801937adfa772424bf7'
 
-        fd = StringIO('foo bar baz')
+        fd = BytesIO(b'foo bar baz')
         obs = safe_md5(fd)
         self.assertEqual(obs.hexdigest(), exp)
 
