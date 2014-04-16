@@ -58,7 +58,7 @@ Examples
 # ----------------------------------------------------------------------------
 
 from __future__ import division
-from future.builtins import zip
+from future.builtins import zip, range
 
 from collections import Counter, defaultdict
 from warnings import warn
@@ -847,10 +847,10 @@ class Alignment(SequenceCollection):
         sequence_count = self.sequence_count()
         dm = np.zeros((sequence_count, sequence_count))
         identifiers = []
-        for i in xrange(sequence_count):
+        for i in range(sequence_count):
             self_i = self[i]
             identifiers.append(self_i.identifier)
-            for j in xrange(i):
+            for j in range(i):
                 dm[i, j] = dm[j, i] = self_i.distance(self[j])
         return DistanceMatrix(dm, identifiers)
 
