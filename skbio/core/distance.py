@@ -123,7 +123,6 @@ Data:
 True
 
 """
-from __future__ import division
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -133,8 +132,10 @@ from __future__ import division
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from __future__ import division
+from future.builtins import zip
+
 from copy import deepcopy
-from itertools import izip
 from os.path import exists
 
 import numpy as np
@@ -634,7 +635,7 @@ class DissimilarityMatrix(object):
         out_f.write(formatted_ids)
         out_f.write('\n')
 
-        for id_, vals in izip(self.ids, self.data):
+        for id_, vals in zip(self.ids, self.data):
             out_f.write(id_)
             out_f.write(delimiter)
             out_f.write(delimiter.join(np.asarray(vals, dtype=np.str)))

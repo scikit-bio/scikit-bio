@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 """Unit tests for the skbio.util.trie module"""
-from __future__ import division
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -10,8 +9,10 @@ from __future__ import division
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from __future__ import division
+from future.builtins import zip
+
 from unittest import TestCase, main
-from itertools import izip
 
 from skbio.util.trie import CompressedTrie, _CompressedNode, fasta_to_pairlist
 
@@ -196,7 +197,7 @@ class FastaToPairlistTests(TestCase):
                ("CAA", "sid_7"),
                ("CACCA", "sid_8")]
 
-        for obs, exp in izip(fasta_to_pairlist(self.seqs), exp):
+        for obs, exp in zip(fasta_to_pairlist(self.seqs), exp):
             self.assertEqual(obs, exp)
 
 if __name__ == '__main__':

@@ -8,7 +8,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from itertools import izip
+from future.builtins import zip
 from collections import defaultdict
 from skbio.core.workflow import Workflow, not_none
 from unittest import TestCase, main
@@ -23,7 +23,7 @@ def construct_iterator(**kwargs):
     if len(to_gen) == 1:
         return (x for x in to_gen[0])
     else:
-        return izip(*to_gen)
+        return zip(*to_gen)
 
 
 class MockWorkflow(Workflow):
