@@ -635,7 +635,7 @@ class ParameterIterBase:
         return self
 
     def next(self):
-        return self._generator.next()
+        return next(self._generator)
 
     def reset(self):
         self._generator = self._init_generator()

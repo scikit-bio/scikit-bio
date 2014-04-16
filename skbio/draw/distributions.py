@@ -463,7 +463,7 @@ def _get_distribution_markers(marker_type, marker_choices, num_markers):
             RuntimeWarning)
         marker_cycle = cycle(marker_choices[:])
         while len(marker_choices) < num_markers:
-            marker_choices.append(marker_cycle.next())
+            marker_choices.append(next(marker_cycle))
     return marker_choices[:num_markers]
 
 

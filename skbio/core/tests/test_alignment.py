@@ -134,7 +134,7 @@ class SequenceCollectionTests(TestCase):
             count += 1
             self.assertEqual(actual, expected)
         self.assertEqual(count, len(self.seqs1))
-        self.assertRaises(StopIteration, s1_iter.next)
+        self.assertRaises(StopIteration, next(s1_iter))
 
     def test_len(self):
         """len functions as expected
@@ -188,7 +188,7 @@ class SequenceCollectionTests(TestCase):
             count += 1
             self.assertEqual(actual, expected)
         self.assertEqual(count, len(self.seqs1))
-        self.assertRaises(StopIteration, s1_iter.next)
+        self.assertRaises(StopIteration, next(s1_iter))
 
     def test_k_word_frequencies(self):
         """k_word_frequencies functions as expected
