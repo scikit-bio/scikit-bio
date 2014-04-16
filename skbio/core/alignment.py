@@ -48,7 +48,6 @@ Examples
 <SequenceCollection: n=2; mean +/- std length=26.50 +/- 1.50>
 
 """
-from __future__ import division
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -58,8 +57,10 @@ from __future__ import division
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from __future__ import division
+from future.builtins import zip
+
 from collections import Counter, defaultdict
-from itertools import izip
 from warnings import warn
 
 import numpy as np
@@ -247,7 +248,7 @@ class SequenceCollection(object):
         elif len(self) != len(other):
             return False
         else:
-            for self_seq, other_seq in izip(self, other):
+            for self_seq, other_seq in zip(self, other):
                 if self_seq != other_seq:
                     return False
         return True
@@ -1226,7 +1227,7 @@ class Alignment(SequenceCollection):
         base_frequencies = self.k_word_frequencies(k=1)
         gap_alphabet = self[0].gap_alphabet()
         seqs_to_keep = []
-        for seq, f in izip(self, base_frequencies):
+        for seq, f in zip(self, base_frequencies):
             gap_frequency = sum([f[c] for c in gap_alphabet])
             if gap_frequency <= maximum_gap_frequency:
                 seqs_to_keep.append(seq.identifier)
