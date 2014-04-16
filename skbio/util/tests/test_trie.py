@@ -148,7 +148,7 @@ class CompressedTrieTests(TestCase):
                "8": ["7"],
                "3": [],
                "4": []}
-        self.assertEqual(self.trie.prefix_map, exp)
+        self.assertEqual(exp, self.trie.prefix_map)
 
     def test_insert(self):
         """Correctly inserts a new key into the trie"""
@@ -161,7 +161,7 @@ class CompressedTrieTests(TestCase):
                "3": [],
                "4": [],
                "8": []}
-        self.assertEqual(t.prefix_map, exp)
+        self.assertEqual(exp, t.prefix_map)
 
     def test_find(self):
         """Correctly founds the values present on the trie"""
