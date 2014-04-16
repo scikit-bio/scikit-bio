@@ -54,6 +54,41 @@ def brillouin_d(counts):
     return (gammaln(n + 1) - gammaln(nz + 1).sum()) / n
 
 
+def chao1(counts, bias_corrected=True):
+    """Calculates chao1 according to table in EstimateS manual.
+
+    Specifically, uses bias-corrected version unless bias_corrected is set
+    to False _and_ there are both singletons and doubletons.
+
+    Uncorrected:
+
+    Calculates chao1 given counts. Eq. 1 in EstimateS manual.
+
+    Formula: chao1 = S_obs + N_1^2/(2*N_2) where N_1 and N_2 are
+    count of singletons and doubletons respectively.
+
+    Note: this is the original formula from Chao 1984, not bias-corrected,
+    and is Equation 1 in the EstimateS manual.
+
+    Corrected:
+
+    Calculates bias-corrected chao1 given counts: Eq. 2 in EstimateS manual.
+
+    Formula: chao1 = S_obs + N_1(N_1-1)/(2*(N_2+1)) where N_1 and N_2 are
+    count of singletons and doubletons respectively.
+
+    Note: this is the bias-corrected formulat from Chao 1987, Eq. 2 in the
+    EstimateS manual.
+
+    """
+    o, s, d = osd(counts)
+
+    if not bias_corrected and s and d:
+        return o + s ** 2 / (d * 2)
+    else:
+        return o + s * (s - 1) / (2 * (d + 1))
+
+
 def dominance(counts):
     """Calculate probability that two species sampled are the same.
 

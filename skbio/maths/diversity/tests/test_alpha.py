@@ -14,7 +14,7 @@ from unittest import TestCase, main
 import numpy as np
 import numpy.testing as npt
 
-from skbio.maths.diversity.alpha import (berger_parker_d, brillouin_d,
+from skbio.maths.diversity.alpha import (berger_parker_d, brillouin_d, chao1,
                                          dominance, doubles, enspie,
                                          equitability, esty_ci, gini_index,
                                          goods_coverage, heip_e,
@@ -30,6 +30,8 @@ from skbio.maths.diversity.alpha import (berger_parker_d, brillouin_d,
 class AlphaDiversityTests(TestCase):
     def setUp(self):
         self.counts = np.array([0, 1, 1, 4, 2, 5, 2, 4, 1, 2])
+        self.no_singles = np.array([0, 2, 2, 4, 5, 0, 0, 0, 0, 0])
+        self.no_doubles = np.array([0, 1, 1, 4, 5, 0, 0, 0, 0, 0])
 
         # For Gini index and related tests.
         self.gini_data = np.array([4.5, 6.7, 3.4, 15., 18., 3.5, 6.7, 14.1])
@@ -75,6 +77,16 @@ class AlphaDiversityTests(TestCase):
     def test_brillouin_d(self):
         self.assertAlmostEqual(brillouin_d(np.array([1, 2, 0, 0, 3, 1])),
                                0.86289353018248782)
+
+    def test_chao1(self):
+        self.assertEqual(chao1(self.counts), 9.75)
+        self.assertEqual(chao1(self.counts, bias_corrected=False), 10.5)
+
+        self.assertEqual(chao1(self.no_singles), 4)
+        self.assertEqual(chao1(self.no_singles, bias_corrected=False), 4)
+
+        self.assertEqual(chao1(self.no_doubles), 5)
+        self.assertEqual(chao1(self.no_doubles, bias_corrected=False), 5)
 
     def test_dominance(self):
         self.assertEqual(dominance(np.array([5])), 1)
