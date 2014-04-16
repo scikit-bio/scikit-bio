@@ -78,7 +78,7 @@ from __future__ import division
 # ----------------------------------------------------------------------------
 
 from collections import Sequence, Counter, defaultdict
-from itertools import izip, product
+from itertools import product
 
 from scipy.spatial.distance import hamming
 
