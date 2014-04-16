@@ -29,9 +29,9 @@ class ParameterCombinationsTests(TestCase):
         """Setup for ParameterCombinations tests"""
         self.mock_app = ParameterCombinationsApp
         self.params = {'-flag1': True,
-                       '--value1': range(0, 5),
-                       '-delim': range(0, 2),
-                       '-mix1': [None] + range(0, 3)}
+                       '--value1': list(range(0, 5)),
+                       '-delim': list(range(0, 2)),
+                       '-mix1': [None] + list(range(0, 3))}
         self.always_on = ['--value1']
         self.param_iter = ParameterCombinations(self.mock_app, self.params,
                                                 self.always_on)
@@ -86,9 +86,9 @@ class ParameterIterBaseTests(TestCase):
         """Setup for ParameterIterBase tests"""
         self.mock_app = ParameterCombinationsApp
         self.params = {'-flag1': True,
-                       '--value1': range(0, 5),
-                       '-delim': range(0, 2),
-                       '-mix1': [None] + range(0, 3)}
+                       '--value1': list(range(0, 5)),
+                       '-delim': list(range(0, 2)),
+                       '-mix1': [None] + list(range(0, 3))}
         self.always_on = ['--value1']
         self.param_base = ParameterIterBase(self.mock_app, self.params,
                                             self.always_on)
@@ -96,8 +96,8 @@ class ParameterIterBaseTests(TestCase):
     def test_init(self):
         """Test constructor"""
         exp_params = {'-flag1': [True, False],
-                      '--value1': range(0, 5),
-                      '-delim': range(0, 2) + [False],
+                      '--value1': list(range(0, 5)),
+                      '-delim': list(range(0, 2)) + [False],
                       '-mix1': [None, 0, 1, 2] + [False]}
 
         self.assertEqual(exp_params,
