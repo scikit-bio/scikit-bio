@@ -74,7 +74,7 @@ class ParameterCombinationsTests(TestCase):
     def test_reset(self):
         """Resets the iterator"""
         first = list(self.param_iter)
-        self.assertRaises(StopIteration, next(self.param_iter))
+        self.assertRaises(StopIteration, lambda: next(self.param_iter))
         self.param_iter.reset()
         second = list(self.param_iter)
         self.assertEqual(first, second)
