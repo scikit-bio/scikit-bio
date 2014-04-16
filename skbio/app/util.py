@@ -8,6 +8,8 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from future.utils import implements_iterator
+
 import os
 from os import remove, system, mkdir, getcwd
 from os.path import isabs, exists
@@ -546,6 +548,7 @@ class CommandLineApplication(Application):
             result_constructor(suffix)
 
 
+@implements_iterator
 class ParameterIterBase(object):
 
     """Base class for parameter iteration objects
@@ -634,7 +637,7 @@ class ParameterIterBase(object):
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         return next(self._generator)
 
     def reset(self):
