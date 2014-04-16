@@ -9,11 +9,10 @@ from __future__ import division
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import os
-
 from itertools import izip
 from StringIO import StringIO
 from tempfile import TemporaryFile
+from unittest import TestCase, main
 
 import numpy as np
 
@@ -22,15 +21,7 @@ from skbio.core.exception import (DissimilarityMatrixError,
                                   DistanceMatrixError,
                                   DissimilarityMatrixFormatError,
                                   MissingIDError)
-from unittest import TestCase, main
-
-
-# copied from maths/stats/ordination/tests/test_ordination.py
-def get_data_path(fn):
-    """Return path to filename `fn` in the data folder."""
-    path = os.path.dirname(os.path.abspath(__file__))
-    data_path = os.path.join(path, 'data', fn)
-    return data_path
+from skbio.util.testing import get_data_path
 
 
 class DissimilarityMatrixTestData(TestCase):
