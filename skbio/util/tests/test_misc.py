@@ -84,8 +84,8 @@ class MiscTests(TestCase):
         # create on existing dir raises OSError if fail_on_exist=True
         self.assertRaises(OSError, create_dir, tmp_dir_path,
                           fail_on_exist=True)
-        self.assertEquals(create_dir(tmp_dir_path, fail_on_exist=True,
-                                     handle_errors_externally=True), 1)
+        self.assertEqual(create_dir(tmp_dir_path, fail_on_exist=True,
+                                    handle_errors_externally=True), 1)
 
         # return should be 1 if dir exist and fail_on_exist=False
         self.assertEqual(create_dir(tmp_dir_path, fail_on_exist=False), 1)
