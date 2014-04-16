@@ -546,7 +546,7 @@ class CommandLineApplication(Application):
             result_constructor(suffix)
 
 
-class ParameterIterBase:
+class ParameterIterBase(object):
 
     """Base class for parameter iteration objects
 
