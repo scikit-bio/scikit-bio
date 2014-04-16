@@ -54,6 +54,8 @@ for i in wf(gen):
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from future.utils import viewitems
+
 import sys
 from copy import deepcopy
 from time import time
@@ -123,7 +125,7 @@ class Workflow(object):
         self.debug = debug
         self.state = state
 
-        for k, v in kwargs.iteritems():
+        for k, v in viewitems(kwargs):
             if hasattr(self, k):
                 raise AttributeError("%s exists in self!" % k)
             setattr(self, k, v)

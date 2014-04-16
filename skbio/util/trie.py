@@ -86,7 +86,6 @@ Create a new trie with a list of sequences
 >>> t.prefix_map
 {'s3': [], 's2': [], 's1': ['s0', 's5'], 's7': [], 's6': [], 's4': []}
 """
-from __future__ import division
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -95,6 +94,9 @@ from __future__ import division
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
+
+from __future__ import division
+from future.utils import viewitems
 
 
 class _CompressedNode(object):
@@ -161,7 +163,7 @@ class _CompressedNode(object):
             # get largest group
             n = -1
             key_largest = None
-            for key, value in mapping.iteritems():
+            for key, value in viewitems(mapping):
                 if len(value) > n:
                     n = len(value)
                     key_largest = key

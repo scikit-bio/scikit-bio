@@ -9,6 +9,7 @@
 # ----------------------------------------------------------------------------
 
 from future.builtins import int
+from future.utils import viewitems
 
 from copy import deepcopy
 from skbio.core.exception import FieldError
@@ -94,7 +95,7 @@ class GenericRecord(dict):
         temp = {}
         dict.__init__(temp, *args, **kwargs)
         self.update(temp)
-        for name, prototype in self.Required.iteritems():
+        for name, prototype in viewitems(self.Required):
             if name not in self:
                 self[name] = deepcopy(prototype)
 
@@ -114,7 +115,7 @@ class GenericRecord(dict):
         """Coerces copy to correct type"""
         temp = self.__class__(super(GenericRecord, self).copy())
         # don't forget to copy attributes!
-        for attr, val in self.__dict__.iteritems():
+        for attr, val in viewitems(self.__dict__):
             temp.__dict__[attr] = deepcopy(val)
         return temp
 
@@ -168,9 +169,9 @@ class MappedRecord(GenericRecord):
         temp = {}
         unalias = self.unalias
         dict.__init__(temp, *args, **kwargs)
-        for key, val in temp.iteritems():
+        for key, val in viewitems(temp.iteritems):
             self[unalias(key)] = val
-        for name, prototype in self.Required.iteritems():
+        for name, prototype in viewitems(self.Required):
             new_name = unalias(name)
             if new_name not in self:
                 self[new_name] = self._copy(prototype)
@@ -253,7 +254,7 @@ class MappedRecord(GenericRecord):
         temp = {}
         unalias = self.unalias
         temp.update(*args, **kwargs)
-        for key, val in temp.iteritems():
+        for key, val in viewitems(temp):
             self[unalias(key)] = val
 
 # The following methods are useful for handling particular types of fields in
@@ -476,7 +477,7 @@ class FieldMorpher(object):
         result = {}
         default = self.Default
         cons = self.Constructors
-        for key, val in data.iteritems():
+        for key, val in viewitems(data):
             if key in cons:
                 result[key] = cons[key](val)
             else:
