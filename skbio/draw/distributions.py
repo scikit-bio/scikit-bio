@@ -613,7 +613,7 @@ def _color_box_plot(plot_axes, box_plot, colors):
                 box_x.append(box.get_xdata()[i])
                 box_y.append(box.get_ydata()[i])
 
-            box_coords = zip(box_x, box_y)
+            box_coords = list(zip(box_x, box_y))
             box_polygon = Polygon(box_coords, facecolor=color)
             plot_axes.add_patch(box_polygon)
 
