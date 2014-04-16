@@ -11,7 +11,7 @@
 from __future__ import division
 from future.builtins import zip
 
-from StringIO import StringIO
+from future.utils.six import StringIO
 from tempfile import TemporaryFile
 from unittest import TestCase, main
 
