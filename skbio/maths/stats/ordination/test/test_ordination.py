@@ -448,7 +448,7 @@ class TestPCoAResults(object):
 class TestPCoAResultsExtensive(object):
     def setup(self):
         matrix = np.loadtxt(get_data_path('PCoA_sample_data_2'))
-        self.ids = map(str, range(matrix.shape[0]))
+        self.ids = list(map(str, range(matrix.shape[0])))
         dist_matrix = DistanceMatrix(matrix, self.ids)
         self.ordination = PCoA(dist_matrix)
 

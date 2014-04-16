@@ -763,7 +763,7 @@ class BiologicalSequence(Sequence):
         [True, True, False, False, False, True, True, False, False, True]
 
         """
-        return map(self.is_gap, self._sequence)
+        return list(map(self.is_gap, self._sequence))
 
     def unsupported_characters(self):
         """Return the set of unsupported characters in the `BiologicalSequence`

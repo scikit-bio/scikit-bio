@@ -658,7 +658,7 @@ class DissimilarityMatrix(object):
                 "dissimilarity matrix file. Please verify that the file is "
                 "not empty.")
         else:
-            return map(lambda e: e.strip(), header_line.split(delimiter))
+            return [e.strip() for e in header_line.split(delimiter)]
 
     def _validate(self, data, ids):
         """Validate the data array and IDs.

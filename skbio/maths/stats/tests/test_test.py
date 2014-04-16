@@ -985,9 +985,9 @@ class CorrelationTests(TestsHelper):
 class MannWhitneyTests(TestCase):
 
     """check accuracy of Mann-Whitney implementation"""
-    x = map(int, "104 109 112 114 116 118 118 119 121 123 125 126"
-            " 126 128 128 128".split())
-    y = map(int, "100 105 107 107 108 111 116 120 121 123".split())
+    x = list(map(int, "104 109 112 114 116 118 118 119 121 123 125 126"
+                 " 126 128 128 128".split()))
+    y = list(map(int, "100 105 107 107 108 111 116 120 121 123".split()))
 
     def test_mw_test(self):
         """mann-whitney test results should match Sokal & Rohlf"""

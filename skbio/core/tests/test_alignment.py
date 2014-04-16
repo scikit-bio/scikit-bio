@@ -485,11 +485,8 @@ class AlignmentTests(TestCase):
         """iter_positions functions as expected
         """
         actual = list(self.a2.iter_positions())
-        expected = [map(RNASequence, list('UA')),
-                    map(RNASequence, list('UC')),
-                    map(RNASequence, list('AG')),
-                    map(RNASequence, list('UU')),
-                    map(RNASequence, list('-U'))]
+        expected = [list(map(RNASequence, list(i))) for i in
+                    ['UA', 'UC', 'AG', 'UU', '-U']]
         self.seqs2_t = [('r1', 'UUAU-'), ('r2', 'ACGUU')]
         self.assertEqual(actual, expected)
 

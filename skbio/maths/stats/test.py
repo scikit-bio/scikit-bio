@@ -720,8 +720,8 @@ def fisher(probs):
     -2 * SUM(ln(P)) gives chi-squared distribution with 2n degrees of freedom.
     """
     try:
-        return chi_high(-2 * np.sum(map(np.log, probs)), 2 * len(probs))
-    except OverflowError as e:
+        return chi_high(-2 * np.sum(np.log(probs)), 2 * len(probs))
+    except OverflowError:
         return 0.0
 
 
