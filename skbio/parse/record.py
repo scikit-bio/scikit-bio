@@ -155,9 +155,9 @@ class MappedRecord(GenericRecord):
             return prototype.copy()
         elif isinstance(prototype, list):
             return prototype[:]
-        elif isinstance(prototype, str) or isinstance(prototype, int) or\
-                isinstance(prototype, long) or isinstance(prototype, tuple)\
-                or isinstance(prototype, complex) or prototype is None:
+        elif (isinstance(prototype, str) or isinstance(prototype, int) or
+              isinstance(prototype, tuple) or isinstance(prototype, complex) or
+              prototype is None):
             return prototype  # immutable type: use directly
         else:
             return deepcopy(prototype)
