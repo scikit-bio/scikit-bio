@@ -169,7 +169,7 @@ class MappedRecord(GenericRecord):
         temp = {}
         unalias = self.unalias
         dict.__init__(temp, *args, **kwargs)
-        for key, val in viewitems(temp.iteritems):
+        for key, val in viewitems(temp):
             self[unalias(key)] = val
         for name, prototype in viewitems(self.Required):
             new_name = unalias(name)
