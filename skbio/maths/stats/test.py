@@ -559,8 +559,8 @@ def spearman(x_items, y_items):
 
 def _get_rank(data):
     """Ranks the elements of a list. Used in Spearman correlation."""
-    indices = range(len(data))
-    ranks = range(1, len(data) + 1)
+    indices = list(range(len(data)))
+    ranks = list(range(1, len(data) + 1))
     indices.sort(key=lambda index: data[index])
     ranks.sort(key=lambda index: indices[index - 1])
     data_len = len(data)
@@ -798,8 +798,8 @@ def mw_t(x, y):
     num_x = len(x)
     num_y = len(y)
 
-    x = zip(x, np.zeros(len(x), int), np.zeros(len(x), int))
-    y = zip(y, np.ones(len(y), int), np.zeros(len(y), int))
+    x = list(zip(x, np.zeros(len(x), int), np.zeros(len(x), int)))
+    y = list(zip(y, np.ones(len(y), int), np.zeros(len(y), int)))
     combined = x + y
     combined = np.array(combined, dtype=[('stat', float), ('sample', int),
                                          ('rank', float)])
