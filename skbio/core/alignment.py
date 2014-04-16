@@ -59,6 +59,7 @@ Examples
 
 from __future__ import division
 from future.builtins import zip, range
+from future.utils import viewkeys
 
 from collections import Counter, defaultdict
 from warnings import warn
@@ -1366,10 +1367,10 @@ class Alignment(SequenceCollection):
         iupac_standard_characters = self[0].iupac_standard_characters()
         for f in self.position_frequencies():
             if (nan_on_non_standard_chars and
-                    len(set(f.keys()) - iupac_standard_characters) > 0):
+                    len(viewkeys(f) - iupac_standard_characters) > 0):
                 result.append(np.nan)
             else:
-                result.append(entropy(f.values(), base=base))
+                result.append(entropy(list(f.values()), base=base))
         return result
 
     def sequence_length(self):
