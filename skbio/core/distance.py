@@ -134,6 +134,7 @@ True
 
 from __future__ import division
 from future.builtins import zip
+from future.utils.six import string_types
 
 from copy import deepcopy
 from os.path import exists
@@ -600,7 +601,7 @@ class DissimilarityMatrix(object):
         .. shownumpydoc
 
         """
-        if isinstance(index, basestring):
+        if isinstance(index, string_types):
             if index in self._id_index:
                 return self.data[self._id_index[index]]
             else:
@@ -709,7 +710,7 @@ class DissimilarityMatrix(object):
     def _is_id_pair(self, index):
         return (isinstance(index, tuple) and
                 len(index) == 2 and
-                all(map(lambda e: isinstance(e, basestring), index)))
+                all(map(lambda e: isinstance(e, string_types), index)))
 
     def _format_ids(self, delimiter):
         return delimiter.join([''] + list(self.ids))
