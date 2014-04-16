@@ -265,7 +265,7 @@ class _CompressedNode(object):
         return []
 
 
-class CompressedTrie:
+class CompressedTrie(object):
     """ A compressed Trie for a list of (key, value) pairs
 
     Parameters
