@@ -16,7 +16,8 @@ from shutil import rmtree
 from tempfile import mkdtemp
 from uuid import uuid4
 
-from skbio.util.misc import safe_md5, remove_files, create_dir, flatten
+from skbio.util.misc import (safe_md5, remove_files, create_dir, flatten,
+                             is_casava_v180_or_later)
 
 
 class MiscTests(TestCase):
@@ -29,6 +30,12 @@ class MiscTests(TestCase):
     def tearDown(self):
         for element in self.dirs_to_remove:
             rmtree(element)
+
+    def test_is_casava_v180_or_later(self):
+        """Attempt to determine casava version"""
+        self.assertFalse(is_casava_v180_or_later('@foo'))
+        id_ = '@M00176:17:000000000-A0CNA:1:1:15487:1773 1:N:0:0'
+        self.assertTrue(is_casava_v180_or_later(id_))
 
     def test_safe_md5(self):
         """Make sure we have the expected md5"""
