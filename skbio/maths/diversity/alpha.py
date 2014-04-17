@@ -28,6 +28,7 @@ from __future__ import division
 
 import numpy as np
 from scipy.special import gammaln
+from scipy.optimize import fmin_powell
 
 
 def ace(count, rare_threshold=10):
@@ -344,6 +345,30 @@ def esty_ci(counts):
     W = (n1 * (n - n1) + 2 * n * n2) / (n ** 3)
 
     return n1 / n + z * np.sqrt(W), n1 / n - z * np.sqrt(W)
+
+
+def fisher_alpha(counts, bounds=(1e-3, 1e12)):
+    """Fisher's alpha: S = alpha ln(1+N/alpha) where S=species, N=individuals
+
+    bounds are guess for Powell optimizer bracket search.
+
+    WARNING: may need to adjust bounds for some datasets.
+    """
+    n = counts.sum()
+    s = observed_species(counts)
+
+    def f(alpha):
+        if alpha >= bounds[0] and alpha <= bounds[1]:
+            return (alpha * np.log(1 + (n / alpha)) - s) ** 2
+        else:
+            return np.inf
+
+    alpha = fmin_powell(f, 1.0, disp=False)
+
+    if f(alpha) > 1.0:
+        raise RuntimeError("Optimizer failed to converge (error > 1.0), so "
+                           "could not compute Fisher's alpha.")
+    return alpha
 
 
 def gini_index(data, method='rectangles'):

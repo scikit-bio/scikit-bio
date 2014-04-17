@@ -18,8 +18,8 @@ import numpy.testing as npt
 from skbio.maths.diversity.alpha import (ace, berger_parker_d, brillouin_d,
                                          chao1, chao1_confidence, _chao1_var,
                                          dominance, doubles, enspie,
-                                         equitability, esty_ci, gini_index,
-                                         goods_coverage, heip_e,
+                                         equitability, esty_ci, fisher_alpha,
+                                         gini_index, goods_coverage, heip_e,
                                          kempton_taylor_q, margalef,
                                          mcintosh_d, mcintosh_e, menhinick,
                                          observed_species, osd, robbins,
@@ -194,6 +194,11 @@ class AlphaDiversityTests(TestCase):
 
         npt.assert_array_almost_equal(observed_upper, expected_upper)
         npt.assert_array_almost_equal(observed_lower, expected_lower)
+
+    def test_fisher_alpha(self):
+        arr = np.array([4, 3, 4, 0, 1, 0, 2])
+        obs = fisher_alpha(arr)
+        self.assertAlmostEqual(obs, 2.7823795367398798)
 
     def test_gini_index(self):
         exp = 0.32771210013908214
