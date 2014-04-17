@@ -138,6 +138,3 @@ def parse_fastq(data, strict=False):
 
             qual = np.array([phred_f(q) for q in record[3]], dtype=int)
             yield record[0][1:], record[1], qual
-
-    if isinstance(data, file):
-        data.close()
