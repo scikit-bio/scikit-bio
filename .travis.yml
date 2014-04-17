@@ -1,12 +1,10 @@
 # Check on http://lint.travis-ci.org/ after modifying it!  Originally
 # modified from https://gist.github.com/dan-blanchard/7045057
 language: python
-python:
-  - "2.7"
-  - "3.4"
 env:
-  - NUMPY_VERSION=1.8
-  - NUMPY_VERSION=1.7
+  - PYTHON_VERSION=3.4 NUMPY_VERSION=1.8
+  - PYTHON_VERSION=2.7 NUMPY_VERSION=1.8
+  - PYTHON_VERSION=2.7 NUMPY_VERSION=1.7
 before_install:
   - wget http://repo.continuum.io/miniconda/Miniconda-2.2.2-Linux-x86_64.sh -O miniconda.sh
   - chmod +x miniconda.sh
@@ -15,7 +13,7 @@ before_install:
   # Update conda itself
   - conda update --yes conda
 install:
-  - conda create --yes -n env_name python=$TRAVIS_PYTHON_VERSION pip numpy=$NUMPY_VERSION scipy matplotlib nose pep8 Sphinx
+  - conda create --yes -n env_name python=$PYTHON_VERSION pip numpy=$NUMPY_VERSION scipy matplotlib nose pep8 Sphinx
   - source activate env_name
   - pip install sphinx-bootstrap-theme future
   - pip install . --no-deps
