@@ -30,6 +30,7 @@ Functions
 from .ace import ace
 from .chao1 import chao1, chao1_confidence
 from .base import observed_species
+from .gini import gini_index
 
 # Need a better way to handle __all__ than updating by hand
 #__all__ = ['ace', 'observed_species']

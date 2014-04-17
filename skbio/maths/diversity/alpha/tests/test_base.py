@@ -18,15 +18,14 @@ import numpy.testing as npt
 from skbio.maths.diversity.alpha.base import (berger_parker_d, brillouin_d,
                                          dominance, doubles, enspie,
                                          equitability, esty_ci, fisher_alpha,
-                                         gini_index, goods_coverage, heip_e,
+                                         goods_coverage, heip_e,
                                          kempton_taylor_q, margalef,
                                          mcintosh_d, mcintosh_e, menhinick,
                                          michaelis_menten_fit,
                                          observed_species, osd, robbins,
                                          shannon, simpson, simpson_e,
                                          simpson_reciprocal, singles, strong,
-                                         _indices_to_counts, _lorenz_curve,
-                                         _lorenz_curve_integrator,
+                                         _indices_to_counts,
                                          _expand_counts,
                                          lladser_point_estimates,
                                          get_interval_for_r_new_species,
@@ -37,17 +36,6 @@ from skbio.maths.diversity.alpha.base import (berger_parker_d, brillouin_d,
 class AlphaDiversityTests(TestCase):
     def setUp(self):
         self.counts = np.array([0, 1, 1, 4, 2, 5, 2, 4, 1, 2])
-
-        # For Gini index and related tests.
-        self.gini_data = np.array([4.5, 6.7, 3.4, 15., 18., 3.5, 6.7, 14.1])
-        self.gini_lorenz_curve_points = [(0.125, 0.047287899860917935),
-                                         (0.25, 0.095966620305980521),
-                                         (0.375, 0.15855354659248957),
-                                         (0.5, 0.2517385257301808),
-                                         (0.625, 0.34492350486787204),
-                                         (0.75, 0.541029207232267),
-                                         (0.875, 0.74965229485396379),
-                                         (1.0, 1.0)]
 
     def diversity(self, indices, f, step=1, start=None):
         """Calculate diversity index for each window of size step.
@@ -61,7 +49,7 @@ class AlphaDiversityTests(TestCase):
         result = []
         if start is None:
             start = step
-        freqs = np.zeros(max(indices) + 1)
+        freqs = np.zeros(max(indices) + 1, dtype=int)
         i = 0
         for j in range(start, len(indices) + 1, step):
             freqs = _indices_to_counts(indices[i:j], freqs)
@@ -91,6 +79,11 @@ class AlphaDiversityTests(TestCase):
         npt.assert_array_equal(obs, np.array([42]))
         self.assertEqual(obs.dtype, int)
         self.assertEqual(obs.shape, (1,))
+
+        # suppress casting to int
+        obs = _validate([42.2, 42.1, 0], suppress_cast=True)
+        npt.assert_array_equal(obs, np.array([42.2, 42.1, 0]))
+        self.assertEqual(obs.dtype, float)
 
         # wrong dtype
         with self.assertRaises(TypeError):
@@ -165,15 +158,6 @@ class AlphaDiversityTests(TestCase):
         arr = np.array([4, 3, 4, 0, 1, 0, 2])
         obs = fisher_alpha(arr)
         self.assertAlmostEqual(obs, 2.7823795367398798)
-
-    def test_gini_index(self):
-        exp = 0.32771210013908214
-        obs = gini_index(self.gini_data, 'trapezoids')
-        self.assertAlmostEqual(obs, exp)
-
-        exp = 0.20271210013908214
-        obs = gini_index(self.gini_data, 'rectangles')
-        self.assertAlmostEqual(obs, exp)
 
     def test_goods_coverage(self):
         counts = [1] * 75 + [2, 2, 2, 2, 2, 2, 3, 4, 4]
@@ -286,29 +270,6 @@ class AlphaDiversityTests(TestCase):
         exp = np.array([2, 3, 2, 0, 0, 3])
         obs = _indices_to_counts(np.array([2, 2, 1, 0]), obs)
         npt.assert_array_equal(obs, exp)
-
-    def test_lorenz_curve(self):
-        self.assertEqual(_lorenz_curve(self.gini_data),
-                         self.gini_lorenz_curve_points)
-
-        # Raises error on negative data.
-        with self.assertRaises(ValueError):
-            _lorenz_curve([1.0, -3.1, 4.5])
-
-    def test_lorenz_curve_integrator(self):
-        exp = 0.33614394993045893
-        obs = _lorenz_curve_integrator(self.gini_lorenz_curve_points,
-                                       'trapezoids')
-        self.assertAlmostEqual(obs, exp)
-
-        exp = 0.39864394993045893
-        obs = _lorenz_curve_integrator(self.gini_lorenz_curve_points,
-                                       'rectangles')
-        self.assertAlmostEqual(obs, exp)
-
-        # Raises error on invalid method.
-        with self.assertRaises(ValueError):
-            _lorenz_curve_integrator(self.gini_lorenz_curve_points, 'brofist')
 
     def test_expand_counts(self):
         arr = np.array([2, 0, 1, 2])

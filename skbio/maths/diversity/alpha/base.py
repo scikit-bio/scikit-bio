@@ -16,14 +16,16 @@ from scipy.optimize import fmin_powell
 from skbio.maths.subsample import subsample
 
 
-def _validate(counts):
+def _validate(counts, suppress_cast=False):
     """Validate and convert input to counts vector.
 
     Note: may not always return a copy of `counts`!
 
     """
     counts = np.asarray(counts)
-    counts = counts.astype(int, casting='safe', copy=False)
+
+    if not suppress_cast:
+        counts = counts.astype(int, casting='safe', copy=False)
 
     if counts.ndim != 1:
         raise ValueError("Only 1-D vectors are supported.")
@@ -63,12 +65,14 @@ def dominance(counts):
     Dominance = 1 - Simpson's index, sum of squares of probabilities.
 
     """
+    counts = _validate(counts)
     freqs = counts / counts.sum()
     return (freqs * freqs).sum()
 
 
 def doubles(counts):
     """Return count of double occurrences."""
+    counts = _validate(counts)
     return (counts == 2).sum()
 
 
@@ -90,6 +94,7 @@ def enspie(counts):
        Letters, Volume 16, Issue Supplement s1, pgs 17-26 May 2013.
 
     """
+    counts = _validate(counts)
     return 1 / dominance(counts)
 
 # For backwards-compatibility with QIIME.
@@ -100,6 +105,7 @@ def equitability(counts, base=2):
     """Calculate Shannon index corrected for number of species, pure evenness.
 
     """
+    counts = _validate(counts)
     numerator = shannon(counts, base)
     denominator = np.log(observed_species(counts)) / np.log(base)
     return numerator / denominator
@@ -129,6 +135,7 @@ def esty_ci(counts):
 
     Returns: (upper bound, lower bound)
     """
+    counts = _validate(counts)
     n1 = singles(counts)
     n2 = doubles(counts)
     n = counts.sum()
@@ -145,6 +152,7 @@ def fisher_alpha(counts, bounds=(1e-3, 1e12)):
 
     WARNING: may need to adjust bounds for some datasets.
     """
+    counts = _validate(counts)
     n = counts.sum()
     s = observed_species(counts)
 
@@ -160,23 +168,6 @@ def fisher_alpha(counts, bounds=(1e-3, 1e12)):
         raise RuntimeError("Optimizer failed to converge (error > 1.0), so "
                            "could not compute Fisher's alpha.")
     return alpha
-
-
-def gini_index(data, method='rectangles'):
-    """Calculates the gini index of data.
-    Notes:
-     formula is G = A/(A+B) where A is the area between y=x and the Lorenz curve
-     and B is the area under the Lorenz curve. Simplifies to 1-2B since A+B=.5
-     Formula available on wikipedia.
-    Inputs:
-     data - list or 1d arr, counts/abundances/proportions etc. All entries must
-     be non-negative.
-     method - str, either 'rectangles' or 'trapezoids'. see
-     lorenz_curve_integrator for details.
-    """
-    lorenz_points = _lorenz_curve(data)
-    B = _lorenz_curve_integrator(lorenz_points, method)
-    return 1 - 2 * B
 
 
 def goods_coverage(counts):
@@ -406,58 +397,6 @@ def _indices_to_counts(indices, result=None):
     for i in indices:
         result[i] += 1
     return result
-
-
-def _lorenz_curve(data):
-    """Calculates the Lorenz curve for input data.
-    Notes:
-     Formula available on wikipedia.
-    Inputs:
-     data - list or 1d arr, counts/abundances/proportions etc. All entries must
-     be non-negative."""
-    if any(np.array(data) < 0):
-        raise ValueError('Lorenz curves aren\'t meaningful for non-positive ' +
-                         'data.')
-    # dont wan't to change input, copy and sort
-    sdata = np.array(sorted((data[:])))
-    n = float(len(sdata))
-    Sn = sdata.sum()
-    # ind+1 because must sum first point, eg. x[:0] = []
-    lorenz_points = [((ind + 1) / n, sdata[:ind + 1].sum() / Sn)
-                     for ind in range(int(n))]
-    return lorenz_points
-
-
-def _lorenz_curve_integrator(lc_pts, method):
-    """Calculates the area under a lorenz curve.
-    Notes:
-     Could be utilized for integrating other simple, non-pathological
-     'functions' where width of the trapezoids is constant.
-     Two methods are available.
-     1. Trapezoids, connecting the lc_pts by linear segments between them.
-        Basically assumes that given sampling is accurate and that more features
-        of given data would fall on linear gradients between the values of this
-        data. formula is: dx[(h_0+h_n)/2 + sum(i=1,i=n-1,h_i)]
-     2. Rectangles, connecting lc_pts by lines parallel to x axis. This is the
-        correct method in my opinion though trapezoids might be desirable in
-        some circumstances. forumla is : dx(sum(i=1,i=n,h_i))
-    Inputs:
-     lc_pts - list of tuples, output of lorenz_curve.
-     method - str, either 'rectangles' or 'trapezoids'
-    """
-    if method is 'trapezoids':
-        dx = 1. / len(lc_pts)  # each point differs by 1/n
-        h_0 = 0.0  # 0 percent of the population has zero percent of the goods
-        h_n = lc_pts[-1][1]
-        sum_hs = sum([pt[1] for pt in lc_pts[:-1]])  # the 0th entry is at x=
-        # 1/n
-        return dx * ((h_0 + h_n) / 2. + sum_hs)
-    elif method is 'rectangles':
-        dx = 1. / len(lc_pts)  # each point differs by 1/n
-        return dx * sum([pt[1] for pt in lc_pts])
-    else:
-        raise ValueError("Method '%s' not implemented. Available methods: "
-                         "'rectangles', 'trapezoids'." % method)
 
 
 # NOT TESTED: NEED TEST DATA!
