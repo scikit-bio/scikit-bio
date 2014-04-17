@@ -46,7 +46,8 @@ def is_casava_v180_or_later(header_line):
 
     Returns
     -------
-    bool : True for if casava v1.8+, otherwise False
+    bool
+        ``True`` for if casava v1.8+, otherwise ``False``
 
     Examples
     --------
