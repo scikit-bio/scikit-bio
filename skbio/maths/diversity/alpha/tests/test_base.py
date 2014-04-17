@@ -31,7 +31,8 @@ from skbio.maths.diversity.alpha.base import (berger_parker_d, brillouin_d,
                                          _expand_counts,
                                          lladser_point_estimates,
                                          get_interval_for_r_new_species,
-                                         lladser_ci_series, lladser_ci_from_r)
+                                         lladser_ci_series, lladser_ci_from_r,
+                                         _validate)
 
 
 class AlphaDiversityTests(TestCase):
@@ -74,6 +75,37 @@ class AlphaDiversityTests(TestCase):
             result.append(curr)
             i = j
         return np.array(result)
+
+    def test_validate(self):
+        # python list
+        obs = _validate([0, 2, 1, 3])
+        npt.assert_array_equal(obs, np.array([0, 2, 1, 3]))
+        self.assertEqual(obs.dtype, int)
+
+        # numpy array (no copy made)
+        data = np.array([0, 2, 1, 3])
+        obs = _validate(data)
+        npt.assert_array_equal(obs, data)
+        self.assertEqual(obs.dtype, int)
+        self.assertTrue(obs is data)
+
+        # single element
+        obs = _validate([42])
+        npt.assert_array_equal(obs, np.array([42]))
+        self.assertEqual(obs.dtype, int)
+        self.assertEqual(obs.shape, (1,))
+
+        # wrong dtype
+        with self.assertRaises(TypeError):
+            _ = _validate([0, 2, 1.2, 3])
+
+        # wrong number of dimensions (2-D)
+        with self.assertRaises(ValueError):
+            _ = _validate([[0, 2, 1, 3], [4, 5, 6, 7]])
+
+        # wrong number of dimensions (scalar)
+        with self.assertRaises(ValueError):
+            _ = _validate(1)
 
     def test_berger_parker_d(self):
         self.assertEqual(berger_parker_d(np.array([5])), 1)

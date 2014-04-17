@@ -16,6 +16,21 @@ from scipy.optimize import fmin_powell
 from skbio.maths.subsample import subsample
 
 
+def _validate(counts):
+    """Validate and convert input to counts vector.
+
+    Note: may not always return a copy of `counts`!
+
+    """
+    counts = np.asarray(counts)
+    counts = counts.astype(int, casting='safe', copy=False)
+
+    if counts.ndim != 1:
+        raise ValueError("Only 1-D vectors are supported.")
+
+    return counts
+
+
 def berger_parker_d(counts):
     """Fraction of the sample that belongs to the most abundant species.
 

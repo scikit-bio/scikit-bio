@@ -11,14 +11,14 @@ from __future__ import division
 
 import numpy as np
 
-from .base import _indices_to_counts
+from .base import _indices_to_counts, _validate
 
 
-def ace(count, rare_threshold=10):
+def ace(counts, rare_threshold=10):
     """Implements the ACE metric from EstimateS. Based on the equations
     given under ACE:Abundance-based Coverage Estimator.
 
-    count = an OTU by sample vector
+    counts = an OTU by sample vector
     rare_threshold = threshold at which a species containing as many or
     fewer individuals will be considered rare.
 
@@ -31,12 +31,13 @@ def ace(count, rare_threshold=10):
     rare_threshold default value is 10. Based on Chao 2000 in Statistica
     Sinica pg. 229 citing empirical observations by Chao, Ma, Yang 1993.
 
-    If the count vector contains 0's, indicating species which are known
+    If counts contains 0's, indicating species which are known
     to exist in the environment but did not appear in the sample, they
     will be ignored for the purpose of calculating s_rare.
 
     """
-    freq_counts = _indices_to_counts(count)
+    counts = _validate(counts)
+    freq_counts = _indices_to_counts(counts)
 
     if freq_counts[1:rare_threshold].sum() == 0:
         return _species_abundant(freq_counts, rare_threshold)
