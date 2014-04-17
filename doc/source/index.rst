@@ -24,3 +24,4 @@ API Reference
    parse.sequences
    util.misc
    util.trie
+   util.testing

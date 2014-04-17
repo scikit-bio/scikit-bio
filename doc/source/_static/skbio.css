@@ -1,0 +1,10 @@
+/* as suggested in http://stackoverflow.com/a/4410376/379593 */
+
+@import url("default.css");
+
+/* -- change the font for elements enclosed in single back ticks ------------ */
+
+cite {
+    font-family: "Courier New";
+}
+
