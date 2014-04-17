@@ -158,8 +158,8 @@ def parse_fastq(data, strict=False, force_phred_offset=None):
 
             if strict:
                 if seqid != qualid:
-                    raise FastqParseError('Bad record: %s != %s' % (seqid,
-                                                                    qualid))
+                    raise FastqParseError('ID mismatch: %s != %s' % (seqid,
+                                                                     qualid))
         elif linetype == QUAL:
             qual = phred_f(line)
 
