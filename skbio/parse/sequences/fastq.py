@@ -21,29 +21,29 @@ def _is_casava_v180_or_later(header_line):
     return len(fields) == 10 and fields[7] in 'YN'
 
 
-def _ascii_to_phred(c, offset):
+def _ascii_to_phred(s, offset):
     """Convert ascii to Phred quality score with specified ASCII offset."""
-    return ord(c) - offset
+    return np.fromstring(s, dtype='|S1').view(np.int8) - offset
 
 
-def _ascii_to_phred33(c):
-    """Convert ascii character to Phred quality score with ASCII offset of 33.
+def _ascii_to_phred33(s):
+    """Convert ascii string to Phred quality score with ASCII offset of 33.
 
     Standard "Sanger" ASCII offset of 33. This is used by Illumina in CASAVA
     versions after 1.8.0, and most other places. Note that internal Illumina
     files still use offset of 64
     """
-    return _ascii_to_phred(c, 33)
+    return _ascii_to_phred(s, 33)
 
 
-def _ascii_to_phred64(c):
-    """Convert ascii character to Phred quality score with ASCII offset of 64.
+def _ascii_to_phred64(s):
+    """Convert ascii string to Phred quality score with ASCII offset of 64.
 
     Illumina-specific ASCII offset of 64. This is used by Illumina in CASAVA
     versions prior to 1.8.0, and in Illumina internal formats (e.g.,
     export.txt files).
     """
-    return _ascii_to_phred(c, 64)
+    return _ascii_to_phred(s, 64)
 
 
 def parse_fastq(data, strict=False, force_phred_offset=None):
@@ -57,6 +57,10 @@ def parse_fastq(data, strict=False, force_phred_offset=None):
     strict : bool
         If strict is true a FastqParse error will be raised if the seq and qual
         labels dont' match.
+
+    force_phred_offset : str or None
+        Force a PHRED offset, currently restricted to either '33' or '64'.
+        Default behavior is to infer the PHRED offset.
 
     Returns
     -------
@@ -118,7 +122,6 @@ def parse_fastq(data, strict=False, force_phred_offset=None):
         else:
             raise ValueError("Unknown PHRED offset of %s" % force_phred_offset)
 
-    # fastq format is very simple, defined by blocks of 4 lines
     line_num = 0
     record = [first_line]
     for line in data:
@@ -129,7 +132,7 @@ def parse_fastq(data, strict=False, force_phred_offset=None):
                     raise FastqParseError('Invalid format: %s -- %s'
                                           % (record[0][1:], record[2][1:]))
 
-            qual = np.array([phred_f(q) for q in record[3]], dtype=int)
+            qual = phred_f(record[3])
             yield record[0][1:], record[1], qual
             line_num = 0
             record = []
@@ -143,5 +146,5 @@ def parse_fastq(data, strict=False, force_phred_offset=None):
 
         if record[0]:  # could be just an empty line at eof
 
-            qual = np.array([phred_f(q) for q in record[3]], dtype=int)
+            qual = phred_f(record[3])
             yield record[0][1:], record[1], qual
