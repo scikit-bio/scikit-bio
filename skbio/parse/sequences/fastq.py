@@ -46,6 +46,11 @@ def _ascii_to_phred64(s):
     return _ascii_to_phred(s, 64)
 
 
+def _drop_id_marker(s):
+    """Drop the first character of str"""
+    return s[1:]
+
+
 def parse_fastq(data, strict=False, force_phred_offset=None):
     r"""yields label, seq, and qual from a fastq file.
 
@@ -106,6 +111,12 @@ def parse_fastq(data, strict=False, force_phred_offset=None):
      35 32 28 33 20 32 32 34 34 34]
 
     """
+    # line number modulus
+    SEQUENCEID = 0
+    SEQUENCE = 1
+    QUALID = 2
+    QUAL = 3
+
     data = iter(data)
     first_line = data.next().strip()
 
@@ -122,29 +133,38 @@ def parse_fastq(data, strict=False, force_phred_offset=None):
         else:
             raise ValueError("Unknown PHRED offset of %s" % force_phred_offset)
 
-    line_num = 0
-    record = [first_line]
-    for line in data:
-        line_num += 1
-        if line_num == 4:
-            if strict:  # make sure the seq and qual labels match
-                if record[0][1:] != record[2][1:]:
-                    raise FastqParseError('Invalid format: %s -- %s'
-                                          % (record[0][1:], record[2][1:]))
+    seqid = _drop_id_marker(first_line)
+    seq = None
+    qualid = None
+    qual = None
 
-            qual = phred_f(record[3])
-            yield record[0][1:], record[1], qual
-            line_num = 0
-            record = []
-        record.append(line.strip())
+    for idx, line in enumerate(data):
+        # +1 due to fetch of line prior to loop
+        lineno = idx + 1
+        linetype = lineno % 4
+        line = line.strip()
 
-    if record:
-        if strict and record[0]:  # make sure the seq and qual labels match
-            if record[0][1:] != record[2][1:]:
-                raise FastqParseError('Invalid format: %s -- %s'
-                                      % (record[0][1:], record[2][1:]))
+        if linetype == SEQUENCEID:
+            yield seqid, seq, qual
 
-        if record[0]:  # could be just an empty line at eof
+            seqid = _drop_id_marker(line)
+            seq = None
+            qualid = None
+            qual = None
+        elif linetype == SEQUENCE:
+            seq = line
+        elif linetype == QUALID:
+            qualid = _drop_id_marker(line)
 
-            qual = phred_f(record[3])
-            yield record[0][1:], record[1], qual
+            if strict:
+                if seqid != qualid:
+                    raise FastqParseError('Bad record: %s != %s' % (seqid,
+                                                                    qualid))
+        elif linetype == QUAL:
+            qual = phred_f(line)
+
+    # if we did not have a complete record at the end of the data
+    if qual is None:
+        raise FastqParseError("Incomplete record at the end of data!")
+    else:
+        yield (seqid, seq, qual)
