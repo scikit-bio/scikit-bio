@@ -64,8 +64,8 @@ def parse_fastq(data, strict=False, force_phred_offset=None):
         labels dont' match.
 
     force_phred_offset : str or None
-        Force a PHRED offset, currently restricted to either '33' or '64'.
-        Default behavior is to infer the PHRED offset.
+        Force a Phred offset, currently restricted to either '33' or '64'.
+        Default behavior is to infer the Phred offset.
 
     Returns
     -------
