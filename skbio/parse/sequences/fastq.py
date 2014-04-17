@@ -63,8 +63,8 @@ def parse_fastq(data, strict=False, force_phred_offset=None):
         If strict is true a FastqParse error will be raised if the seq and qual
         labels dont' match.
 
-    force_phred_offset : str or None
-        Force a Phred offset, currently restricted to either '33' or '64'.
+    force_phred_offset : int or None
+        Force a Phred offset, currently restricted to either 33 or 64.
         Default behavior is to infer the Phred offset.
 
     Returns
@@ -126,9 +126,9 @@ def parse_fastq(data, strict=False, force_phred_offset=None):
         else:
             phred_f = _ascii_to_phred64
     else:
-        if force_phred_offset == '33':
+        if force_phred_offset == 33:
             phred_f = _ascii_to_phred33
-        elif force_phred_offset == '64':
+        elif force_phred_offset == 64:
             phred_f = _ascii_to_phred64
         else:
             raise ValueError("Unknown PHRED offset of %s" % force_phred_offset)
