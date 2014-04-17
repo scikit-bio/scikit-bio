@@ -22,6 +22,7 @@ from skbio.maths.diversity.alpha import (ace, berger_parker_d, brillouin_d,
                                          gini_index, goods_coverage, heip_e,
                                          kempton_taylor_q, margalef,
                                          mcintosh_d, mcintosh_e, menhinick,
+                                         michaelis_menten_fit,
                                          observed_species, osd, robbins,
                                          shannon, simpson, simpson_e,
                                          simpson_reciprocal, singles, strong,
@@ -246,6 +247,19 @@ class AlphaDiversityTests(TestCase):
 
     def test_menhinick(self):
         self.assertEqual(menhinick(self.counts), 9 / np.sqrt(22))
+
+    def test_michaelis_menten_fit(self):
+        obs = michaelis_menten_fit([22])
+        self.assertAlmostEqual(obs, 1.0)
+
+        obs = michaelis_menten_fit([42])
+        self.assertAlmostEqual(obs, 1.0)
+
+        obs = michaelis_menten_fit([34], num_repeats=3, params_guess=[13, 13])
+        self.assertAlmostEqual(obs, 1.0)
+
+        obs = michaelis_menten_fit([70, 70], num_repeats=5)
+        self.assertAlmostEqual(obs, 2.0, places=1)
 
     def test_observed_species(self):
         obs = observed_species(np.array([4, 3, 4, 0, 1, 0, 2]))

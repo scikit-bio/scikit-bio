@@ -30,6 +30,8 @@ import numpy as np
 from scipy.special import gammaln
 from scipy.optimize import fmin_powell
 
+from skbio.maths.subsample import subsample
+
 
 def ace(count, rare_threshold=10):
     """Implements the ACE metric from EstimateS. Based on the equations
@@ -484,6 +486,58 @@ def menhinick(counts):
 
     """
     return observed_species(counts) / np.sqrt(counts.sum())
+
+
+def michaelis_menten_fit(counts, num_repeats=1, params_guess=None,
+                         return_b=False):
+    """Michaelis-Menten fit to rarefaction curve of observed species
+
+    Note: there is some controversy about how to do the fitting. The ML model
+    givem by Raaijmakers 1987 is based on the assumption that error is roughly
+    proportional to magnitude of observation, reasonable for enzyme kinetics
+    but not reasonable for rarefaction data. Here we just do a nonlinear
+    curve fit for the parameters using least-squares.
+
+    S = Smax*n/(B + n) . n: number of individuals, S: # of species
+    returns Smax
+
+    inputs:
+    num_repeats: will perform rarefaction (subsampling without replacement)
+    this many times at each value of n
+    params_guess: intial guess of Smax, B (None => default)
+    return_b: if True will return the estimate for Smax, B. Default: just Smax
+
+    the fit is made to datapoints where n = 1,2,...counts.sum(),
+    S = species represented in random sample of n individuals
+
+    """
+    counts = np.asarray(counts)
+    if params_guess is None:
+        params_guess = np.array([100, 500])
+
+    # observed # of species vs # of individuals sampled, S vs n
+    xvals = np.arange(1, counts.sum() + 1)
+    ymtx = []
+    for i in range(num_repeats):
+        ymtx.append(np.array([observed_species(subsample(counts, n))
+                              for n in xvals]))
+    ymtx = np.asarray(ymtx)
+    yvals = ymtx.mean(0)
+
+    # fit to obs_sp = max_sp * num_idiv / (num_indiv + B)
+    # return max_sp
+    def fitfn(p, n):  # works with vectors of n, returns vector of S
+        return p[0] * n / (p[1] + n)
+
+    def errfn(p, n, y):  # vectors of actual vals y and number of individuals n
+        return ((fitfn(p, n) - y) ** 2).sum()
+
+    p1 = fmin_powell(errfn, params_guess, ftol=1e-5, args=(xvals, yvals),
+                     disp=False)
+    if return_b:
+        return p1
+    else:
+        return p1[0]  # return only S_max, not the K_m (B) param
 
 
 def observed_species(counts):
