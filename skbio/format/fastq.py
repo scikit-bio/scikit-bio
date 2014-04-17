@@ -38,6 +38,24 @@ def format_fastq_record(seqid, seq, qual):
         The sequence
     qual : np.array of int8
         The quality scores
+
+    Returns
+    -------
+
+    str : a string representation of a single FASTQ record
+
+    Examples
+    --------
+    >>> from skbio.format.fastq import format_fastq_record
+    >>> from numpy import array, int8
+    >>> seqid = 'seq1'
+    >>> seq = 'AATTGG'
+    >>> qual = array([38, 38, 39, 39, 40, 40], dtype=int8)
+    >>> print format_fastq_record(seqid, seq, qual),
+    @seq1
+    AATTGG
+    +
+    ffgghh
     """
     if is_casava_v180_or_later("@%s" % seqid):
         phred_f = _phred_to_ascii33
