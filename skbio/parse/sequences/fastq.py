@@ -46,7 +46,7 @@ def _ascii_to_phred64(c):
     return _ascii_to_phred(c, 64)
 
 
-def parse_fastq(data, strict=False):
+def parse_fastq(data, strict=False, force_phred_offset=None):
     r"""yields label, seq, and qual from a fastq file.
 
     Parameters
@@ -102,9 +102,25 @@ def parse_fastq(data, strict=False):
      35 32 28 33 20 32 32 34 34 34]
 
     """
+    data = iter(data)
+    first_line = data.next().strip()
+
+    if force_phred_offset is None:
+        if _is_casava_v180_or_later(first_line):
+            phred_f = _ascii_to_phred33
+        else:
+            phred_f = _ascii_to_phred64
+    else:
+        if force_phred_offset == '33':
+            phred_f = _ascii_to_phred33
+        elif force_phred_offset == '64':
+            phred_f = _ascii_to_phred64
+        else:
+            raise ValueError("Unknown PHRED offset of %s" % force_phred_offset)
+
     # fastq format is very simple, defined by blocks of 4 lines
-    line_num = -1
-    record = []
+    line_num = 0
+    record = [first_line]
     for line in data:
         line_num += 1
         if line_num == 4:
@@ -112,11 +128,6 @@ def parse_fastq(data, strict=False):
                 if record[0][1:] != record[2][1:]:
                     raise FastqParseError('Invalid format: %s -- %s'
                                           % (record[0][1:], record[2][1:]))
-
-            if _is_casava_v180_or_later('@%s' % record[0]):
-                phred_f = _ascii_to_phred33
-            else:
-                phred_f = _ascii_to_phred64
 
             qual = np.array([phred_f(q) for q in record[3]], dtype=int)
             yield record[0][1:], record[1], qual
@@ -131,10 +142,6 @@ def parse_fastq(data, strict=False):
                                       % (record[0][1:], record[2][1:]))
 
         if record[0]:  # could be just an empty line at eof
-            if _is_casava_v180_or_later('@%s' % record[0]):
-                phred_f = _ascii_to_phred33
-            else:
-                phred_f = _ascii_to_phred64
 
             qual = np.array([phred_f(q) for q in record[3]], dtype=int)
             yield record[0][1:], record[1], qual
