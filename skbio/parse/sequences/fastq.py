@@ -21,32 +21,37 @@ def _is_casava_v180_or_later(header_line):
     return len(fields) == 10 and fields[7] in 'YN'
 
 
-def _ascii_to_phred(c, offset):
+def _ascii_to_phred(s, offset):
     """Convert ascii to Phred quality score with specified ASCII offset."""
-    return ord(c) - offset
+    return np.fromstring(s, dtype='|S1').view(np.int8) - offset
 
 
-def _ascii_to_phred33(c):
-    """Convert ascii character to Phred quality score with ASCII offset of 33.
+def _ascii_to_phred33(s):
+    """Convert ascii string to Phred quality score with ASCII offset of 33.
 
     Standard "Sanger" ASCII offset of 33. This is used by Illumina in CASAVA
     versions after 1.8.0, and most other places. Note that internal Illumina
     files still use offset of 64
     """
-    return _ascii_to_phred(c, 33)
+    return _ascii_to_phred(s, 33)
 
 
-def _ascii_to_phred64(c):
-    """Convert ascii character to Phred quality score with ASCII offset of 64.
+def _ascii_to_phred64(s):
+    """Convert ascii string to Phred quality score with ASCII offset of 64.
 
     Illumina-specific ASCII offset of 64. This is used by Illumina in CASAVA
     versions prior to 1.8.0, and in Illumina internal formats (e.g.,
     export.txt files).
     """
-    return _ascii_to_phred(c, 64)
+    return _ascii_to_phred(s, 64)
 
 
-def parse_fastq(data, strict=False):
+def _drop_id_marker(s):
+    """Drop the first character of str"""
+    return s[1:]
+
+
+def parse_fastq(data, strict=False, force_phred_offset=None):
     r"""yields label, seq, and qual from a fastq file.
 
     Parameters
@@ -57,6 +62,10 @@ def parse_fastq(data, strict=False):
     strict : bool
         If strict is true a FastqParse error will be raised if the seq and qual
         labels dont' match.
+
+    force_phred_offset : int or None
+        Force a Phred offset, currently restricted to either 33 or 64.
+        Default behavior is to infer the Phred offset.
 
     Returns
     -------
@@ -102,42 +111,60 @@ def parse_fastq(data, strict=False):
      35 32 28 33 20 32 32 34 34 34]
 
     """
-    # fastq format is very simple, defined by blocks of 4 lines
-    line_num = -1
-    record = []
-    for line in data:
-        line_num += 1
-        if line_num == 4:
-            if strict:  # make sure the seq and qual labels match
-                if record[0][1:] != record[2][1:]:
-                    raise FastqParseError('Invalid format: %s -- %s'
-                                          % (record[0][1:], record[2][1:]))
+    # line number modulus
+    SEQUENCEID = 0
+    SEQUENCE = 1
+    QUALID = 2
+    QUAL = 3
 
-            if _is_casava_v180_or_later('@%s' % record[0]):
-                phred_f = _ascii_to_phred33
-            else:
-                phred_f = _ascii_to_phred64
+    data = iter(data)
+    first_line = data.next().strip()
 
-            qual = np.array([phred_f(q) for q in record[3]], dtype=int)
-            yield record[0][1:], record[1], qual
-            line_num = 0
-            record = []
-        record.append(line.strip())
+    if force_phred_offset is None:
+        if _is_casava_v180_or_later(first_line):
+            phred_f = _ascii_to_phred33
+        else:
+            phred_f = _ascii_to_phred64
+    else:
+        if force_phred_offset == 33:
+            phred_f = _ascii_to_phred33
+        elif force_phred_offset == 64:
+            phred_f = _ascii_to_phred64
+        else:
+            raise ValueError("Unknown PHRED offset of %s" % force_phred_offset)
 
-    if record:
-        if strict and record[0]:  # make sure the seq and qual labels match
-            if record[0][1:] != record[2][1:]:
-                raise FastqParseError('Invalid format: %s -- %s'
-                                      % (record[0][1:], record[2][1:]))
+    seqid = _drop_id_marker(first_line)
+    seq = None
+    qualid = None
+    qual = None
 
-        if record[0]:  # could be just an empty line at eof
-            if _is_casava_v180_or_later('@%s' % record[0]):
-                phred_f = _ascii_to_phred33
-            else:
-                phred_f = _ascii_to_phred64
+    for idx, line in enumerate(data):
+        # +1 due to fetch of line prior to loop
+        lineno = idx + 1
+        linetype = lineno % 4
+        line = line.strip()
 
-            qual = np.array([phred_f(q) for q in record[3]], dtype=int)
-            yield record[0][1:], record[1], qual
+        if linetype == SEQUENCEID:
+            yield seqid, seq, qual
 
-    if isinstance(data, file):
-        data.close()
+            seqid = _drop_id_marker(line)
+            seq = None
+            qualid = None
+            qual = None
+        elif linetype == SEQUENCE:
+            seq = line
+        elif linetype == QUALID:
+            qualid = _drop_id_marker(line)
+
+            if strict:
+                if seqid != qualid:
+                    raise FastqParseError('ID mismatch: %s != %s' % (seqid,
+                                                                     qualid))
+        elif linetype == QUAL:
+            qual = phred_f(line)
+
+    # if we did not have a complete record at the end of the data
+    if qual is None:
+        raise FastqParseError("Incomplete record at the end of data!")
+    else:
+        yield (seqid, seq, qual)
