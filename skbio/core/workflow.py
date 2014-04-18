@@ -21,7 +21,10 @@ Classes
 Decorators
 ----------
 
-requries
+.. autosummary::
+    :toctree: generated/
+
+requires
 method
 
 Examples
@@ -466,14 +469,14 @@ class requires(object):
     option : any Hashable object
         An option that is required for the decorated method to execute.
         This option will be looked up within the containing ``Workflow``s'
-        ``options``,
+        ``options``.
     values : object
         A required value. This defaults to ``anything`` indicating that
         the only requirement is that the ``option`` exists. It can be
         useful to specify ``not_none`` which indicates that the
         requirement is satisfied if the ``option`` exists and it holds
         a value that is not ``None``. Values also supports iterables
-        or singular values
+        or singular values.
     state : Function
         A requirement on workflow state. This must be a function that
         accepts a single argument, and returns ``True`` to indicate
