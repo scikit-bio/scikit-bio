@@ -118,7 +118,7 @@ class BaseTests(TestCase):
         self.assertAlmostEqual(equitability(np.array([1, 1, 1, 1, 0])), 1)
 
     def test_esty_ci(self):
-        def _diversity(indices, f, step=1, start=None):
+        def _diversity(indices, f, step):
             """Calculate diversity index for each window of size step.
 
             indices: vector of indices of species
@@ -128,8 +128,7 @@ class BaseTests(TestCase):
 
             """
             result = []
-            if start is None:
-                start = step
+            start = step
             freqs = np.zeros(max(indices) + 1, dtype=int)
             i = 0
             for j in range(start, len(indices) + 1, step):
@@ -144,8 +143,7 @@ class BaseTests(TestCase):
 
         data = [1, 1, 2, 1, 1, 3, 2, 1, 3, 4]
 
-        (observed_upper, observed_lower) = zip(
-            *_diversity(data, esty_ci, step=1))
+        (observed_upper, observed_lower) = zip(*_diversity(data, esty_ci, 1))
 
         expected_upper = np.array([1, 1.38590382, 1.40020259, 0.67434465,
                                    0.55060902, 0.71052858, 0.61613483,
