@@ -485,7 +485,7 @@ class AlignmentTests(TestCase):
         """iter_positions functions as expected
         """
         actual = list(self.a2.iter_positions())
-        expected = [list(map(RNASequence, list(i))) for i in
+        expected = [[RNASequence(j) for j in i] for i in
                     ['UA', 'UC', 'AG', 'UU', '-U']]
         self.seqs2_t = [('r1', 'UUAU-'), ('r2', 'ACGUU')]
         self.assertEqual(actual, expected)
@@ -599,7 +599,7 @@ class AlignmentTests(TestCase):
                     defaultdict(int, {'A': 1/5, 'C': 1/5, 'G': 1/5, 'U': 2/5})]
         actual = self.a2.k_word_frequencies(k=1)
         for a, e in zip(actual, expected):
-            self.assertEqual(sorted(a.keys()), sorted(e.keys()), 5)
+            self.assertEqual(sorted(a), sorted(e), 5)
             np.testing.assert_almost_equal(sorted(a.values()),
                                            sorted(e.values()), 5)
 
