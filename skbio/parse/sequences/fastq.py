@@ -155,8 +155,5 @@ def parse_fastq(data, strict=False, force_phred_offset=None):
         elif linetype == QUAL:
             qual = phred_f(line)
 
-    # if we did not have a complete record at the end of the data
-    if qual is None:
-        raise FastqParseError("Incomplete record at the end of data!")
-    else:
+    if seqid:
         yield (seqid, seq, qual)
