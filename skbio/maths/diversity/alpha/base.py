@@ -282,7 +282,7 @@ def fisher_alpha(counts, bounds=(1e-3, 1e12)):
     ----------
     counts : (N,) array_like, int
         Vector of counts.
-    bounds : tuple
+    bounds : tuple, optional
         Bounds for Powell optimizer (may need to adjust bounds for some
         datasets).
 
@@ -547,25 +547,54 @@ def menhinick(counts):
 
 def michaelis_menten_fit(counts, num_repeats=1, params_guess=None,
                          return_b=False):
-    """Michaelis-Menten fit to rarefaction curve of observed species
+    """Calculate Michaelis-Menten fit to rarefaction curve of observed species.
 
-    Note: there is some controversy about how to do the fitting. The ML model
-    givem by Raaijmakers 1987 is based on the assumption that error is roughly
-    proportional to magnitude of observation, reasonable for enzyme kinetics
-    but not reasonable for rarefaction data. Here we just do a nonlinear
-    curve fit for the parameters using least-squares.
+    The Michaelis-Menten equation is defined as ``S = (S_max*n) / (B+n)``,
+    where ``n`` is the number of individuals and ``S`` is the number of
+    species. This function estimates the ``S_max`` parameter, and also provides
+    an option to return ``B``.
 
-    S = Smax*n/(B + n) . n: number of individuals, S: # of species
-    returns Smax
+    The fit is made to datapoints where n = 1, 2, ..., counts.sum(), and ``S``
+    is the number of species represented in a random sample of ``n``
+    individuals.
 
-    inputs:
-    num_repeats: will perform rarefaction (subsampling without replacement)
-    this many times at each value of n
-    params_guess: intial guess of Smax, B (None => default)
-    return_b: if True will return the estimate for Smax, B. Default: just Smax
+    Parameters
+    ----------
+    counts : (N,) array_like, int
+        Vector of counts.
+    num_repeats : int, optional
+        The number of times to perform rarefaction (subsampling without
+        replacement) at each value of ``n``.
+    params_guess : tuple, optional
+        Initial guess of ``S_max`` and ``B``. Default is ``(100, 500)``.
+    return_b : bool, optional
+        If ``True``, return the estimate for both ``S_max`` and ``B``. The
+        default is to just return ``S_max``.
 
-    the fit is made to datapoints where n = 1,2,...counts.sum(),
-    S = species represented in random sample of n individuals
+    Returns
+    -------
+    S_max : double
+        Estimate of the ``S_max`` parameter in the Michaelis-Menten equation.
+    B : double
+        If ``return_b`` is ``True``, will also return the estimate for ``B`` in
+        the Michaelis-Menten equation.
+
+    See Also
+    --------
+    skbio.maths.subsample
+
+    Notes
+    -----
+    There is some controversy about how to do the fitting. The ML model given
+    in [1]_ is based on the assumption that error is roughly proportional to
+    magnitude of observation, reasonable for enzyme kinetics but not reasonable
+    for rarefaction data. Here we just do a nonlinear curve fit for the
+    parameters using least-squares.
+
+    References
+    ----------
+    .. [1] Raaijmakers, J. G. W. 1987 Statistical analysis of the
+       Michaelis-Menten equation. Biometrics 43, 793-803.
 
     """
     counts = _validate(counts)
@@ -599,7 +628,19 @@ def michaelis_menten_fit(counts, num_repeats=1, params_guess=None,
 
 
 def observed_species(counts):
-    """Calculate number of distinct species."""
+    """Calculate the number of distinct species.
+
+    Parameters
+    ----------
+    counts : (N,) array_like, int
+        Vector of counts.
+
+    Returns
+    -------
+    int
+        Distinct species count.
+
+    """
     counts = _validate(counts)
     return (counts != 0).sum()
 
@@ -625,7 +666,7 @@ def osd(counts):
 
     Notes
     -----
-    This is a convenience function used by many of the other indices that rely
+    This is a convenience function used by many of the other measures that rely
     on these three measures.
 
     """
@@ -634,7 +675,7 @@ def osd(counts):
 
 
 def robbins(counts):
-    """Calculate Robbins 1968 estimator for Pr(unobserved) at n trials.
+    """Calculate Robbins' estimator for the probability of unobserved outcomes.
 
     Robbins' estimator is defined as ``S / (n+1)`` where ``S`` is the number of
     singletons.
@@ -646,7 +687,7 @@ def robbins(counts):
 
     Returns
     -------
-    robbins : double
+    double
         Robbins' estimate.
 
     Notes
