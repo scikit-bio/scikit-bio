@@ -9,7 +9,6 @@ from __future__ import division
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from itertools import izip
 from unittest import TestCase, main
 
 import numpy as np
@@ -25,15 +24,10 @@ from skbio.maths.diversity.alpha.base import (berger_parker_d, brillouin_d,
                                          observed_species, osd, robbins,
                                          shannon, simpson, simpson_e,
                                          simpson_reciprocal, singles, strong,
-                                         _indices_to_counts,
-                                         _expand_counts,
-                                         lladser_point_estimates,
-                                         get_interval_for_r_new_species,
-                                         lladser_ci_series, lladser_ci_from_r,
-                                         _validate)
+                                         _indices_to_counts, _validate)
 
 
-class AlphaDiversityTests(TestCase):
+class BaseTests(TestCase):
     def setUp(self):
         self.counts = np.array([0, 1, 1, 4, 2, 5, 2, 4, 1, 2])
 
@@ -96,6 +90,15 @@ class AlphaDiversityTests(TestCase):
         # wrong number of dimensions (scalar)
         with self.assertRaises(ValueError):
             _ = _validate(1)
+
+    def test_indices_to_counts(self):
+        exp = np.array([1, 2, 0, 0, 0, 3])
+        obs = _indices_to_counts(np.array([5, 0, 1, 1, 5, 5]))
+        npt.assert_array_equal(obs, exp)
+
+        exp = np.array([2, 3, 2, 0, 0, 3])
+        obs = _indices_to_counts(np.array([2, 2, 1, 0]), obs)
+        npt.assert_array_equal(obs, exp)
 
     def test_berger_parker_d(self):
         self.assertEqual(berger_parker_d(np.array([5])), 1)
@@ -261,122 +264,6 @@ class AlphaDiversityTests(TestCase):
 
     def test_strong(self):
         self.assertAlmostEqual(strong(np.array([1, 2, 3, 1])), 0.214285714)
-
-    def test_indices_to_counts(self):
-        exp = np.array([1, 2, 0, 0, 0, 3])
-        obs = _indices_to_counts(np.array([5, 0, 1, 1, 5, 5]))
-        npt.assert_array_equal(obs, exp)
-
-        exp = np.array([2, 3, 2, 0, 0, 3])
-        obs = _indices_to_counts(np.array([2, 2, 1, 0]), obs)
-        npt.assert_array_equal(obs, exp)
-
-    def test_expand_counts(self):
-        arr = np.array([2, 0, 1, 2])
-        npt.assert_array_equal(_expand_counts(arr), np.array([0, 0, 2, 3, 3]))
-
-    def test_lladser_point_estimates(self):
-        s = [5, 1, 5, 1, 2, 3, 1, 5, 3, 2, 5, 3]
-        r = 3
-        observed = list(lladser_point_estimates(s, r))
-        self.assertEqual(len(observed), 3)
-
-        for k in (range(3)):
-            x = observed[k]
-            t = x[2]
-            self.assertEqual(x[0], (r - 1) / t)
-
-        # Estimator has variance of (1-p)^2/(r-2),
-        # which for r=7 and p=0.5 is 0.05
-        seq = "WBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBW"
-        reps = 1000
-        sum = 0
-        for i in range(reps):
-            p, _, _ = list(lladser_point_estimates(seq, r=7))[0]
-            sum += p
-        self.assertTrue(0.45 < sum / reps and sum / reps < 0.55)
-
-    def test_get_interval_for_r_new_species(self):
-        s = [5, 1, 5, 1, 2, 3, 1, 5, 3, 2, 5]
-        expected = [(3, set([5]), 4, 0),
-                    (4, set([5, 1]), 6, 1),
-                    (4, set([5, 1, 2]), 9, 4)]
-        for x, y in izip(get_interval_for_r_new_species(s, 2), expected):
-            self.assertEqual(y, x)
-
-        s = [5, 5, 5, 5, 5]
-        # never saw new one
-        self.assertEqual(list(get_interval_for_r_new_species(s, 2)), [])
-
-    def test_lladser_ci_series_exact(self):
-        # Values are from Manuel's email of 9/11/09
-        # have seen RWB
-        urn_1 = 'RWBWWBWRRWRYWRPPZ'
-        results = list(lladser_ci_series(urn_1, r=4))
-        self.assertEqual(len(results), 3)
-
-    def test_lladser_ci_series_random(self):
-        seq = "WBWBWBWBWBWB"
-        observations = []
-        alpha = 0.95
-        reps = 1000
-        for i in range(reps):
-            obs = list(lladser_ci_series(seq, r=4, alpha=alpha))[0]
-            observations.append(obs)
-        tps = filter(lambda a_b: a_b[0] < 0.5 and 0.5 < a_b[1], observations)
-        self.assertTrue(len(tps) >= alpha * reps)  # 100%-95%
-
-    def test_lladser_ci_from_r(self):
-        f = 10
-        t = 10
-        r = 4
-        obs_low, obs_high = lladser_ci_from_r(r=r, t=t, f=f)
-        self.assertAlmostEqual(obs_low, 0.0806026244)
-        self.assertAlmostEqual(obs_high, 0.806026244)
-
-        r = 20
-        t = 100
-        obs_low, obs_high = lladser_ci_from_r(r=r, t=t, f=f)
-        self.assertAlmostEqual(obs_low, 0.02787923964)
-        self.assertAlmostEqual(obs_high, 0.2787923964)
-
-        # make sure we test with each possible alpha
-        alpha = 0.99
-        obs_low, obs_high = lladser_ci_from_r(r=r, t=t, f=f, alpha=alpha)
-        self.assertAlmostEqual(obs_low, 0.03184536992)
-        self.assertAlmostEqual(obs_high, 0.3184536992)
-
-        alpha = 0.9
-        r = 3
-        obs_low, obs_high = lladser_ci_from_r(r=r, t=t, f=f, alpha=alpha)
-        self.assertAlmostEqual(obs_low, 0.005635941995)
-        self.assertAlmostEqual(obs_high, 0.05635941995)
-
-        # test other ci_types
-        ci_type = 'ULCU'
-        obs_low, obs_high = lladser_ci_from_r(
-            r=r, t=t, f=f, alpha=alpha, ci_type=ci_type)
-        self.assertAlmostEqual(obs_low, 0.01095834700)
-        self.assertAlmostEqual(obs_high, 0.1095834700)
-
-        alpha = 0.95
-        t = 10
-        ci_type = 'U'
-        obs_low, obs_high = lladser_ci_from_r(
-            r=r, t=t, f=f, alpha=alpha, ci_type=ci_type)
-        self.assertAlmostEqual(obs_low, 0)
-        self.assertAlmostEqual(obs_high, 0.6295793622)
-
-        ci_type = 'L'
-        obs_low, obs_high = lladser_ci_from_r(
-            r=r, t=t, f=f, alpha=alpha, ci_type=ci_type)
-        self.assertAlmostEqual(obs_low, 0.0817691447)
-        self.assertAlmostEqual(obs_high, 1)
-
-        # Requesting CI for not precomputed values raises Exception
-        r = 500
-        self.assertRaises(ValueError, lladser_ci_from_r, r=r, t=t, f=f,
-                          alpha=alpha, ci_type=ci_type)
 
 
 if __name__ == '__main__':
