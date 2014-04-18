@@ -24,8 +24,8 @@ Decorators
 .. autosummary::
     :toctree: generated/
 
-requires
-method
+    requires
+    method
 
 Examples
 --------
