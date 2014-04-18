@@ -447,10 +447,6 @@ class method(object):
         Specify a priority for the method, the higher the value the higher
         the priority. Priorities are relative to a given workflow
 
-    Returns
-    -------
-    Method
-        A decorated method
     """
     highest_priority = sys.maxsize
 
