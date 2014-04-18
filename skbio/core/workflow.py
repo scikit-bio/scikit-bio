@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 r"""
-Workflow (:mod:`skbio.core.workflow`)
+Constructing workflows (:mod:`skbio.core.workflow`)
 =====================================
 
 .. currentmodule:: skbio.core.workflow
@@ -18,18 +18,24 @@ Classes
 
     Workflow
 
+Decorators
+----------
+
+requries
+method
+
 Examples
 --------
 >>> from skbio.core.workflow import Workflow
 
-As an example of the ``Workflow`` object, lets construct a sequence processor
-that will filter sequences that are < 10 nucleotides, reversse the sequence
-if the runtime options indicate to, and truncate if a specific nucleotide 5
+As an example of the ``Workflow`` object, let's construct a sequence processor
+that will filter sequences that are < 10 nucleotides, reverse the sequence
+if the runtime options indicate to, and truncate if a specific nucleotide
 pattern is observed. The ``Workflow`` object will only short circuit, and
-evaluate requirements on methods decorated by ``Workflow.method``. Developers
-are free to define as many methods as they'd like within the object
-definition, and which can be called from workflow methods, but they will not
-be subjected directly to workflow checks.
+evaluate requirements on methods decorated by ``method``. Developers are free
+to define as many methods as they'd like within the object definition, and
+which can be called from workflow methods, but they will not be subjected
+directly to workflow checks.
 
 >>> nuc_pattern = 'AATTG'
 >>> has_nuc_pattern = lambda s: s[:len(nuc_pattern)] == nuc_pattern
@@ -66,7 +72,7 @@ iterable. So, lets create a ``list`` of sequences.
 
 >>> seqs = ['AAAAAAATTTTTTT', 'ATAGACC', 'AATTGCCGGAC', 'ATATGAACAAA']
 
-Beforw we run these sequences through, we're going to also define callbacks
+Before we run these sequences through, we're going to also define callbacks
 that are applied to the result of an single pass through the ``Workflow``.
 Callbacks are optional -- by default, a success will simply yield the state
 member variable while failures are ignored -- but, depending on your workflow,
@@ -88,13 +94,13 @@ SUCCESS: CCGGAC
 SUCCESS: ATATGAACAAA
 
 A few things of note just happened. First off, none of the sequences were
-not reveresed as the ``SequenceProcessor`` did not have option "reverse"
+reversed as the ``SequenceProcessor`` did not have option "reverse"
 set to ``True``. Second, you'll notice that the 3rd sequence was truncated,
 which is expected as it matched our nucleotide pattern of interest. Finally,
 of the sequences we processed, only a single sequence failed.
 
 To assist in constructing workflows, debug information is available but it
-must be turned on at instantiation. Lets do that, and while were at it, lets
+must be turned on at instantiation. Let's do that, and while we're at it, let's
 go ahead and enable the reversal method. This time through though, were going
 to walk through an item at a time so we can examine the debug information.
 
@@ -161,11 +167,11 @@ nucleotide pattern of interest. Awesome, right?
 There is one final piece of debug output, ``wf.debug_runtime``, which can
 be useful when diagnosing the amount of time required for individual methods
 on a particular piece of state (as opposed to the aggregate as provided by
-cProfile.
+cProfile).
 
 Three final components of the workflow that are quite handy are objects that
-allow you to indicate ``anything`` as an option value,anything that is
-not_none, and a mechanism to define a range of valid values.
+allow you to indicate ``anything`` as an option value, anything that is
+``not_none``, and a mechanism to define a range of valid values.
 
 >>> from skbio.core.workflow import not_none, anything
 >>> class Ex(Workflow):
