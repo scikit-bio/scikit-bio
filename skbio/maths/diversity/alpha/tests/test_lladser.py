@@ -25,6 +25,7 @@ def test_expand_counts():
     arr = np.array([2, 0, 1, 2])
     npt.assert_array_equal(_expand_counts(arr), np.array([0, 0, 2, 3, 3]))
 
+
 def test_lladser_point_estimates():
     s = [5, 1, 5, 1, 2, 3, 1, 5, 3, 2, 5, 3]
     r = 3
@@ -46,6 +47,7 @@ def test_lladser_point_estimates():
         sum += p
     assert_true(0.45 < sum / reps and sum / reps < 0.55)
 
+
 def test_get_interval_for_r_new_species():
     s = [5, 1, 5, 1, 2, 3, 1, 5, 3, 2, 5]
     expected = [(3, set([5]), 4, 0),
@@ -58,12 +60,14 @@ def test_get_interval_for_r_new_species():
     # never saw new one
     assert_equal(list(_get_interval_for_r_new_species(s, 2)), [])
 
+
 def test_lladser_ci_series_exact():
     # Values are from Manuel's email of 9/11/09
     # have seen RWB
     urn_1 = 'RWBWWBWRRWRYWRPPZ'
     results = list(_lladser_ci_series(urn_1, r=4))
     assert_equal(len(results), 3)
+
 
 def test_lladser_ci_series_random():
     seq = "WBWBWBWBWBWB"
@@ -75,6 +79,7 @@ def test_lladser_ci_series_random():
         observations.append(obs)
     tps = filter(lambda a_b: a_b[0] < 0.5 and 0.5 < a_b[1], observations)
     assert_true(len(tps) >= alpha * reps)  # 100%-95%
+
 
 def test_lladser_ci_from_r():
     f = 10

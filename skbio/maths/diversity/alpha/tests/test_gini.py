@@ -17,6 +17,7 @@ import numpy.testing as npt
 from skbio.maths.diversity.alpha.gini import (gini_index, _lorenz_curve,
                                               _lorenz_curve_integrator)
 
+
 class GiniTests(TestCase):
     def setUp(self):
         self.data = np.array([4.5, 6.7, 3.4, 15., 18., 3.5, 6.7, 14.1])

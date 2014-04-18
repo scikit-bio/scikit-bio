@@ -63,8 +63,8 @@ def _lladser_point_estimates(sample, r=10):
     r: Number of new colors that are required for the next prediction
 
     This is the point estimator described in Theorem 2 (i):
-    Lladser, Gouet, and Reeder, "Extrapolation of Urn Models via Poissonization:
-    Accurate Measurements of the Microbial Unknown" PLoS 2011.
+    Lladser, Gouet, and Reeder, "Extrapolation of Urn Models via
+    Poissonization: Accurate Measurements of the Microbial Unknown" PLoS 2011.
     Returns: Each new color yields 3-tuple:
          - point estimate
          - position in sample of prediction
@@ -91,7 +91,7 @@ def _get_interval_for_r_new_species(seq, r):
     Returns: for each new color seen for the first time, yield:
              - length of interval, i.e. number of observations looked at
              - the set of seen colors
-             - position in seq after seeing the last new color (end of interval)
+             - position in seq after seeing last new color (end of interval)
              - position in seq where interval is started
     """
     seen = set()
@@ -156,8 +156,8 @@ def _lladser_ci_from_r(r, t, alpha=0.95, f=10, ci_type='ULCL'):
              L: Lower bound only, upper bound fixed to 1
 
     This is the formula that is described in Theorem 2 iii
-    Lladser, Gouet, and Reeder, "Extrapolation of Urn Models via Poissonization:
-    Accurate Measurements of the Microbial Unknown" PLoS 2011.
+    Lladser, Gouet, and Reeder, "Extrapolation of Urn Models via
+    Poissonization: Accurate Measurements of the Microbial Unknown" PLoS 2011.
 
     Returns: A confidence interval that contains the true conditional
              uncovered probability with a probability of 100% * alpha.

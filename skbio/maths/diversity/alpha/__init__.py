@@ -34,7 +34,7 @@ from .gini import gini_index
 from .lladser import lladser_pe, lladser_ci
 
 # Need a better way to handle __all__ than updating by hand
-#__all__ = ['ace', 'observed_species']
+# __all__ = ['ace', 'observed_species']
 
 from numpy.testing import Tester
 test = Tester().test

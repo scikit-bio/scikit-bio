@@ -18,8 +18,9 @@ def gini_index(data, method='rectangles'):
     """Calculates the gini index of data.
 
     Notes:
-     formula is G = A/(A+B) where A is the area between y=x and the Lorenz curve
-     and B is the area under the Lorenz curve. Simplifies to 1-2B since A+B=.5
+     formula is G = A/(A+B) where A is the area between y=x and the Lorenz
+     curve and B is the area under the Lorenz curve. Simplifies to 1-2B since
+     A+B=.5
      Formula available on wikipedia.
     Inputs:
      data - list or 1d arr, counts/abundances/proportions etc. All entries must
@@ -67,9 +68,9 @@ def _lorenz_curve_integrator(lc_pts, method):
      'functions' where width of the trapezoids is constant.
      Two methods are available.
      1. Trapezoids, connecting the lc_pts by linear segments between them.
-        Basically assumes that given sampling is accurate and that more features
-        of given data would fall on linear gradients between the values of this
-        data. formula is: dx[(h_0+h_n)/2 + sum(i=1,i=n-1,h_i)]
+        Basically assumes that given sampling is accurate and that more
+        features of given data would fall on linear gradients between the
+        values of this data. formula is: dx[(h_0+h_n)/2 + sum(i=1,i=n-1,h_i)]
      2. Rectangles, connecting lc_pts by lines parallel to x axis. This is the
         correct method in my opinion though trapezoids might be desirable in
         some circumstances. forumla is : dx(sum(i=1,i=n,h_i))
