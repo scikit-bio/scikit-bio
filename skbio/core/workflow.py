@@ -467,7 +467,7 @@ class requires(object):
         An option that is required for the decorated method to execute.
         This option will be looked up within the containing ``Workflow``s'
         ``options``,
-    values : literally anything
+    values : object
         A required value. This defaults to ``anything`` indicating that
         the only requirement is that the ``option`` exists. It can be
         useful to specify ``not_none`` which indicates that the
