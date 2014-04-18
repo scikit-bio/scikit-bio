@@ -31,30 +31,6 @@ class BaseTests(TestCase):
     def setUp(self):
         self.counts = np.array([0, 1, 1, 4, 2, 5, 2, 4, 1, 2])
 
-    def diversity(self, indices, f, step=1, start=None):
-        """Calculate diversity index for each window of size step.
-
-        indices: vector of indices of species
-        f: f(counts) -> diversity measure
-        start: first index to sum up to (default: step)
-        step: step size (default:1)
-
-        """
-        result = []
-        if start is None:
-            start = step
-        freqs = np.zeros(max(indices) + 1, dtype=int)
-        i = 0
-        for j in range(start, len(indices) + 1, step):
-            freqs = _indices_to_counts(indices[i:j], freqs)
-            try:
-                curr = f(freqs)
-            except (ZeroDivisionError, FloatingPointError):
-                curr = 0
-            result.append(curr)
-            i = j
-        return np.array(result)
-
     def test_validate(self):
         # python list
         obs = _validate([0, 2, 1, 3])
@@ -142,10 +118,34 @@ class BaseTests(TestCase):
         self.assertAlmostEqual(equitability(np.array([1, 1, 1, 1, 0])), 1)
 
     def test_esty_ci(self):
+        def _diversity(indices, f, step=1, start=None):
+            """Calculate diversity index for each window of size step.
+
+            indices: vector of indices of species
+            f: f(counts) -> diversity measure
+            start: first index to sum up to (default: step)
+            step: step size (default:1)
+
+            """
+            result = []
+            if start is None:
+                start = step
+            freqs = np.zeros(max(indices) + 1, dtype=int)
+            i = 0
+            for j in range(start, len(indices) + 1, step):
+                freqs = _indices_to_counts(indices[i:j], freqs)
+                try:
+                    curr = f(freqs)
+                except (ZeroDivisionError, FloatingPointError):
+                    curr = 0
+                result.append(curr)
+                i = j
+            return np.array(result)
+
         data = [1, 1, 2, 1, 1, 3, 2, 1, 3, 4]
 
         (observed_upper, observed_lower) = zip(
-            *self.diversity(data, esty_ci, step=1))
+            *_diversity(data, esty_ci, step=1))
 
         expected_upper = np.array([1, 1.38590382, 1.40020259, 0.67434465,
                                    0.55060902, 0.71052858, 0.61613483,
