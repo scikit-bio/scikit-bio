@@ -210,7 +210,6 @@ class NotExecuted(object):
     """Helper object to track if a method was executed"""
     def __init__(self):
         self.msg = None
-        self._ghetto_identity = "doc test does insane things"
 
     def __call__(self, msg):
         self.msg = msg
