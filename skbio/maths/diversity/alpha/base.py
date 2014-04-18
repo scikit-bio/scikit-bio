@@ -131,14 +131,12 @@ def equitability(counts, base=2):
 def esty_ci(counts):
     """Calculate Esty's CI.
 
-    Esty's CI is defined as ``n1 / n  +/- z * sqrt(W)`` where:
-
-    n1 = number of species observed once in n samples;
-    n = sample size;
-    z = a constant that depends on the targeted confidence and based on
-    the Normal distribution. For a 95% CI, z=1.959963985;
-    n2 = number of species observed twice in n samples;
-    W = [ n1*(n - n1)  +  2*n*n2 ] / (n**3).
+    Esty's CI is defined as ``n1/n  +/- z*sqrt(W)`` where ``n1`` is the number
+    of species observed once in ``n`` samples; ``n`` is the sample size; and
+    ``z`` is a constant that depends on the targeted confidence and based on
+    the Normal distribution. For a 95% CI, ``z=1.959963985``; ``n2`` is the
+    number of species observed twice in ``n`` samples; ``W`` is
+    ``[n1*(n-n1) + 2*n*n2] / (n**3)``.
 
     Parameters
     ----------
@@ -152,9 +150,8 @@ def esty_ci(counts):
 
     Notes
     -----
-    Esty's CI is defined in [1]_.
-
-    ``z`` is hardcoded for a 95% confidence interval.
+    Esty's CI is defined in [1]_. ``z`` is hardcoded for a 95% confidence
+    interval.
 
     References
     ----------
@@ -363,24 +360,58 @@ def observed_species(counts):
 
 
 def osd(counts):
-    """Calculate **o**bserved, **s**ingles and **d**oubles from counts."""
+    """Calculate observed species, singles, and doubles.
+
+    Parameters
+    ----------
+    counts : (N,) array_like, int
+        Vector of counts.
+
+    Returns
+    -------
+    osd : tuple
+        Observed species, singles, and doubles.
+
+    See Also
+    --------
+    observed_species
+    singles
+    doubles
+
+    Notes
+    -----
+    This is a convenience function used by many of the other indices that rely
+    on these three measures.
+
+    """
     counts = _validate(counts)
     return observed_species(counts), singles(counts), doubles(counts)
 
 
 def robbins(counts):
-    """Robbins 1968 estimator for Pr(unobserved) at n trials.
+    """Calculate Robbins 1968 estimator for Pr(unobserved) at n trials.
 
-    probability_of_unobserved_colors = S/(n+1),
+    Robbins' estimator is defined as ``S / (n+1)`` where ``S`` is the number of
+    singletons.
+
+    Parameters
+    ----------
+    counts : (N,) array_like, int
+        Vector of counts.
+
+    Returns
+    -------
+    robbins : double
+        Robbins' estimate.
 
     Notes
     -----
-    This is the estimate for ``(n-1)`` counts, i.e. x-axis is off by 1.
+    Robbins' estimator is defined in [1]_. The estimate computed here is for
+    ``n-1`` counts, i.e. the x-axis is off by 1.
 
     References
     ----------
-    .. [1] H. E. Robbins (1968, Ann. of Stats. Vol 36, pp. 256-257)
-    (where s = singletons).
+    .. [1] Robbins, H. E (1968). Ann. of Stats. Vol 36, pp. 256-257.
 
     """
     counts = _validate(counts)
