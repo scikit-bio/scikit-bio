@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 """
-Alpha diversity indices (:mod:`skbio.maths.diversity.alpha`)
-============================================================
+Alpha diversity measures (:mod:`skbio.maths.diversity.alpha`)
+=============================================================
 
 .. currentmodule:: skbio.maths.diversity.alpha
 
-This package provides implementations of various alpha diversity indices. Some
-functions also provide the option to generate confidence intervals (CIs).
+This package provides implementations of various alpha diversity measures,
+including measures of richness, dominance, and evenness. Some functions also
+have the ability to generate confidence intervals (CIs).
 
 Functions
 ---------

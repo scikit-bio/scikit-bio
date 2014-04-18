@@ -372,19 +372,41 @@ def heip_e(counts):
 
 
 def kempton_taylor_q(counts, lower_quantile=.25, upper_quantile=.75):
-    """Kempton-Taylor (1976) q index of alpha diversity, by way of SDR-IV.
+    """Calculate Kempton-Taylor Q index of alpha diversity.
 
     Estimates the slope of the cumulative abundance curve in the interquantile
     range. By default, uses lower and upper quartiles, rounding inwards.
 
-    Note: this differs slightly from the results given in Magurran 1998.
-    Specifically, we have 14 in the numerator rather than 15. Magurran
-    recommends counting half of the species with the same # counts as the
-    point where the UQ falls and the point where the LQ falls, but the
+    Parameters
+    ----------
+    counts : (N,) array_like, int
+        Vector of counts.
+
+    Returns
+    -------
+    double
+        Kempton-Taylor Q index of alpha diversity.
+
+    Notes
+    -----
+    The index is defined in [1]_. The implementation here is based on the
+    description given in the SDR-IV online manual [2]_.
+
+    The implementation provided here differs slightly from the results given in
+    Magurran 1998. Specifically, we have 14 in the numerator rather than 15.
+    Magurran recommends counting half of the species with the same # counts as
+    the point where the UQ falls and the point where the LQ falls, but the
     justification for this is unclear (e.g. if there were a very large #
-    species that just overlapped one of the quantiles, the results would
-    be considerably off). Leaving the calculation as-is for now, but consider
+    species that just overlapped one of the quantiles, the results would be
+    considerably off). Leaving the calculation as-is for now, but consider
     changing.
+
+    References
+    ----------
+    .. [1] Kempton, R. A. and Taylor, L. R. (1976) Models and statistics for
+       species diversity. Nature, 262, 818-820.
+    .. [2] http://www.pisces-conservation.com/sdrhelp/index.html
+
     """
     counts = _validate(counts)
     n = len(counts)
@@ -396,11 +418,28 @@ def kempton_taylor_q(counts, lower_quantile=.25, upper_quantile=.75):
 
 
 def margalef(counts):
-    """Margalef's index, assumes log accumulation.
+    """Calculate Margalef's richness index.
+
+    Assumes log accumulation.
+
+    Parameters
+    ----------
+    counts : (N,) array_like, int
+        Vector of counts.
+
+    Returns
+    -------
+    double
+        Margalef's richness index.
+
+    Notes
+    -----
+    Based on the description in [1]_.
 
     References
     ----------
-    Magurran 2004, p 77.
+    .. [1] Magurran, A E 2004. Measuring biological diversity. Blackwell. pp.
+       76-77.
 
     """
     counts = _validate(counts)
@@ -408,11 +447,32 @@ def margalef(counts):
 
 
 def mcintosh_d(counts):
-    """Calculate McIntosh index of alpha diversity.
+    """Calculate McIntosh dominance index D.
+
+    Parameters
+    ----------
+    counts : (N,) array_like, int
+        Vector of counts.
+
+    Returns
+    -------
+    double
+        McIntosh dominance index D.
+
+    See Also
+    --------
+    mcintosh_e
+
+    Notes
+    -----
+    The index was proposed in [1]_. The implementation here is based on the
+    description given in the SDR-IV online manual [2]_.
 
     References
     ----------
-    .. [1] McIntosh 1967, by way of SDR-IV.
+    .. [1] McIntosh, R. P. 1967 An index of diversity and the relation of
+       certain concepts to diversity. Ecology 48, 1115-1126.
+    .. [2] http://www.pisces-conservation.com/sdrhelp/index.html
 
     """
     counts = _validate(counts)
@@ -422,11 +482,30 @@ def mcintosh_d(counts):
 
 
 def mcintosh_e(counts):
-    """Calculate McIntosh's evenness measure.
+    """Calculate McIntosh's evenness measure E.
+
+    Parameters
+    ----------
+    counts : (N,) array_like, int
+        Vector of counts.
+
+    Returns
+    -------
+    double
+        McIntosh evenness measure E.
+
+    See Also
+    --------
+    mcintosh_d
+
+    Notes
+    -----
+    The implementation here is based on the description given in [1]_, *NOT*
+    the one in the SDR-IV online manual, which is wrong.
 
     References
     ----------
-    .. [1] Heip & Engels 1974 p 560 (wrong in SDR-IV).
+    .. [1] Heip & Engels 1974 p 560.
 
     """
     counts = _validate(counts)
@@ -438,11 +517,28 @@ def mcintosh_e(counts):
 
 
 def menhinick(counts):
-    """Menhinick's index, assumes sqrt accumulation.
+    """Calculate Menhinick's richness index.
+
+    Assumes square-root accumulation.
+
+    Parameters
+    ----------
+    counts : (N,) array_like, int
+        Vector of counts.
+
+    Returns
+    -------
+    double
+        Menhinick's richness index.
+
+    Notes
+    -----
+    Based on the description in [1]_.
 
     References
     ----------
-    .. [1] Magurran 2004, p 77.
+    .. [1] Magurran, A E 2004. Measuring biological diversity. Blackwell. pp.
+       76-77.
 
     """
     counts = _validate(counts)
