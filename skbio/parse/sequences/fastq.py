@@ -103,7 +103,7 @@ def parse_fastq(data, strict=False, force_phred_offset=None):
      35 32 28 33 20 32 32 34 34 34]
 
     """
-    # line number modulus
+    # line number for modulus operation
     SEQUENCEID = 0
     SEQUENCE = 1
     QUALID = 2
