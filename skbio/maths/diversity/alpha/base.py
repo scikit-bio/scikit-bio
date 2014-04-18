@@ -17,7 +17,7 @@ from skbio.maths.subsample import subsample
 
 
 def _validate(counts, suppress_cast=False):
-    """Validate and convert input to counts vector.
+    """Validate and convert input to an acceptable counts vector type.
 
     Note: may not always return a copy of `counts`!
 
@@ -36,9 +36,13 @@ def _validate(counts, suppress_cast=False):
 def _indices_to_counts(indices, result=None):
     """Converts vector of indices to counts of each index.
 
-    WARNING: does not check that 'result' array is big enough to store new
-    counts, suggest preallocating based on whole dataset if doing cumulative
-    analysis.
+    This function can also be used to convert a counts vector to a vector of
+    count frequencies (e.g., a vector containing the number of singletons,
+    doubletons, tripletons, etc.).
+
+    Notes
+    -----
+    Does not check that `result` is big enough to store new counts.
 
     """
     indices = _validate(indices)
@@ -51,11 +55,30 @@ def _indices_to_counts(indices, result=None):
 
 
 def berger_parker_d(counts):
-    """Fraction of the sample that belongs to the most abundant species.
+    """Calculate Berger-Parker dominance.
+
+    Berger-Parker dominance is defined as the fraction of the sample that
+    belongs to the most abundant species.
+
+    Parameters
+    ----------
+    counts : (N,) array_like, int
+        Vector of counts.
+
+    Returns
+    -------
+    double
+        Berger-Parker dominance.
+
+    Notes
+    -----
+    Berger-Parker dominance is defined in [1]_. The implementation here is
+    based on the description given in the SDR-IV online manual [2]_.
 
     References
     ----------
-    .. [1] Berger & Parker 1970, by way of SDR-IV online help.
+    .. [1] Berger & Parker (1970). SDR-IV online help.
+    .. [2] http://www.pisces-conservation.com/sdrhelp/index.html
 
     """
     counts = _validate(counts)
@@ -63,11 +86,26 @@ def berger_parker_d(counts):
 
 
 def brillouin_d(counts):
-    """Calculate Brilloun index of alpha diversity.
+    """Calculate Brillouin index of alpha diversity.
+
+    Parameters
+    ----------
+    counts : (N,) array_like, int
+        Vector of counts.
+
+    Returns
+    -------
+    double
+        Brillouin index.
+
+    Notes
+    -----
+    The implementation here is based on the description given in the SDR-IV
+    online manual [1]_.
 
     References
     ----------
-    .. [1] Pielou 1975, by way of SDR-IV.
+    .. [1] http://www.pisces-conservation.com/sdrhelp/index.html
 
     """
     counts = _validate(counts)
@@ -77,9 +115,27 @@ def brillouin_d(counts):
 
 
 def dominance(counts):
-    """Calculate probability that two species sampled are the same.
+    """Calculate dominance.
 
-    Dominance = 1 - Simpson's index, sum of squares of probabilities.
+    Dominance is defined as 1 - Simpson's index and ranges between 0 and 1.
+
+    Parameters
+    ----------
+    counts : (N,) array_like, int
+        Vector of counts.
+
+    Returns
+    -------
+    double
+        Dominance.
+
+    Notes
+    -----
+    The implementation here is based on the description given in [1]_.
+
+    References
+    ----------
+    .. [1] http://folk.uio.no/ohammer/past/diversity.html
 
     """
     counts = _validate(counts)
@@ -88,7 +144,19 @@ def dominance(counts):
 
 
 def doubles(counts):
-    """Return count of double occurrences."""
+    """Calculate number of double occurrences (doubletons).
+
+    Parameters
+    ----------
+    counts : (N,) array_like, int
+        Vector of counts.
+
+    Returns
+    -------
+    int
+        Doubleton count.
+
+    """
     counts = _validate(counts)
     return (counts == 2).sum()
 
@@ -96,19 +164,33 @@ def doubles(counts):
 def enspie(counts):
     """Calculate ENS_pie alpha diversity measure.
 
-    ENS_pie = 1 / sum(pi ^ 2) with the sum occurring over all ``S`` species in
-    the pool. ``pi`` is the proportion of the entire community that species
-    ``i`` represents.
+    ENS_pie is defined as ``1 / sum(pi ^ 2)`` with the sum occurring over all
+    ``S`` species in the pool. ``pi`` is the proportion of the entire community
+    that species ``i`` represents.
+
+    Parameters
+    ----------
+    counts : (N,) array_like, int
+        Vector of counts.
+
+    Returns
+    -------
+    double
+        ENS_pie alpha diversity measure.
+
+    See Also
+    --------
+    dominance
 
     Notes
     -----
-    For more information about ENS_pie, see [1]_.
+    ENS_pie is defined in [1]_. ENS_pie is equivalent to ``1 / dominance``.
 
     References
     ----------
-    .. [1] "Scale-dependent effect sizes of ecological drivers on biodiversity:
-       why standardised sampling is not enough". Chase and Knight. Ecology
-       Letters, Volume 16, Issue Supplement s1, pgs 17-26 May 2013.
+    .. [1] Chase and Knight (2013). "Scale-dependent effect sizes of ecological
+       drivers on biodiversity: why standardised sampling is not enough".
+       Ecology Letters, Volume 16, Issue Supplement s1, pgs 17-26.
 
     """
     counts = _validate(counts)
@@ -119,7 +201,30 @@ simpson_reciprocal = enspie
 
 
 def equitability(counts, base=2):
-    """Calculate Shannon index corrected for number of species, pure evenness.
+    """Calculate equitability (Shannon index corrected for number of species).
+
+    Parameters
+    ----------
+    counts : (N,) array_like, int
+        Vector of counts.
+
+    Returns
+    -------
+    double
+        Measure of equitability.
+
+    See Also
+    --------
+    shannon
+
+    Notes
+    -----
+    The implementation here is based on the description given in the SDR-IV
+    online manual [1]_.
+
+    References
+    ----------
+    .. [1] http://www.pisces-conservation.com/sdrhelp/index.html
 
     """
     counts = _validate(counts)
@@ -134,7 +239,7 @@ def esty_ci(counts):
     Esty's CI is defined as ``n1/n  +/- z*sqrt(W)`` where ``n1`` is the number
     of species observed once in ``n`` samples; ``n`` is the sample size; and
     ``z`` is a constant that depends on the targeted confidence and based on
-    the Normal distribution. For a 95% CI, ``z=1.959963985``; ``n2`` is the
+    the Normal distribution. For a 95% CI, z=1.959963985; ``n2`` is the
     number of species observed twice in ``n`` samples; ``W`` is
     ``[n1*(n-n1) + 2*n*n2] / (n**3)``.
 
@@ -145,7 +250,7 @@ def esty_ci(counts):
 
     Returns
     -------
-    ci : tuple
+    tuple
         Esty's confidence interval as ``(upper_bound, lower_bound)``.
 
     Notes
@@ -171,11 +276,30 @@ def esty_ci(counts):
 
 
 def fisher_alpha(counts, bounds=(1e-3, 1e12)):
-    """Fisher's alpha: S = alpha ln(1+N/alpha) where S=species, N=individuals
+    """Calculate Fisher's alpha.
 
-    bounds are guess for Powell optimizer bracket search.
+    Parameters
+    ----------
+    counts : (N,) array_like, int
+        Vector of counts.
+    bounds : tuple
+        Bounds for Powell optimizer (may need to adjust bounds for some
+        datasets).
 
-    WARNING: may need to adjust bounds for some datasets.
+    Returns
+    -------
+    double
+        Fisher's alpha.
+
+    Notes
+    -----
+    The implementation here is based on the description given in the SDR-IV
+    online manual [1]_.
+
+    References
+    ----------
+    .. [1] http://www.pisces-conservation.com/sdrhelp/index.html
+
     """
     counts = _validate(counts)
     n = counts.sum()
@@ -196,11 +320,21 @@ def fisher_alpha(counts, bounds=(1e-3, 1e12)):
 
 
 def goods_coverage(counts):
-    """Return Good's Coverage of counts.
+    """Calculate Good's coverage of counts.
 
-    C = 1 - (n1/N)
-    n1 = number of OTUs with abundance of 1
-    N = number of individuals (sum of abundances for all OTUs)
+    Good's coverage estimator is defined as ``1 - (n1/N)`` where ``n1`` is
+    the number of singletons and ``N`` is the number of individuals (sum of
+    abundances for all species).
+
+    Parameters
+    ----------
+    counts : (N,) array_like, int
+        Vector of counts.
+
+    Returns
+    -------
+    double
+        Good's coverage estimator.
 
     """
     counts = _validate(counts)
@@ -212,9 +346,24 @@ def goods_coverage(counts):
 def heip_e(counts):
     """Calculate Heip's evenness measure.
 
+    Parameters
+    ----------
+    counts : (N,) array_like, int
+        Vector of counts.
+
+    Returns
+    -------
+    double
+        Heip's evenness measure.
+
+    Notes
+    -----
+    The implementation here is based on the description in [1]_.
+
     References
     ----------
-    .. [1] Heip & Engels 1974.
+    .. [1] Heip, C. 1974. A new index measuring evenness. J. Mar. Biol. Ass.
+       UK., 54, 555-557.
 
     """
     counts = _validate(counts)
