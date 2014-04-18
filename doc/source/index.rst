@@ -17,6 +17,7 @@ API Reference
    core.exception
    core.tree
    draw.distributions
+   maths.diversity.alpha
    maths.stats.distance
    maths.stats.spatial
    maths.stats.ordination

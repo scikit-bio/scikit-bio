@@ -15,7 +15,36 @@ Functions
    :toctree: generated/
 
    ace
+   berger_parker_d
+   brillouin_d
+   chao1
+   chao1_confidence
+   dominance
+   doubles
+   enspie
+   equitability
+   esty_ci
+   fisher_alpha
+   gini_index
+   goods_coverage
+   heip_e
+   kempton_taylor_q
+   lladser_ci
+   lladser_pe
+   margalef
+   mcintosh_d
+   mcintosh_e
+   menhinick
+   michaelis_menten_fit
    observed_species
+   osd
+   robbins
+   shannon
+   simpson
+   simpson_e
+   simpson_reciprocal
+   singles
+   strong
 
 """
 
@@ -29,12 +58,16 @@ Functions
 
 from .ace import ace
 from .chao1 import chao1, chao1_confidence
-from .base import observed_species
+from .base import (
+    berger_parker_d, brillouin_d, dominance, doubles, enspie, equitability,
+    esty_ci, fisher_alpha, goods_coverage, heip_e, kempton_taylor_q, margalef,
+    mcintosh_d, mcintosh_e, menhinick, michaelis_menten_fit, observed_species,
+    osd, robbins, shannon, simpson, simpson_e, simpson_reciprocal, singles,
+    strong)
 from .gini import gini_index
 from .lladser import lladser_pe, lladser_ci
 
-# Need a better way to handle __all__ than updating by hand
-# __all__ = ['ace', 'observed_species']
+__all__ = [m for m in dir() if not m.startswith('_')]
 
 from numpy.testing import Tester
 test = Tester().test

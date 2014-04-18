@@ -129,30 +129,41 @@ def equitability(counts, base=2):
 
 
 def esty_ci(counts):
-    """Esty's CI for (1-m).
+    """Calculate Esty's CI.
 
-    counts: Vector of counts (NOT the sample)
+    Esty's CI is defined as ``n1 / n  +/- z * sqrt(W)`` where:
 
-    Esty's CI is defined in
-    Esty WW (1983) A Normal limit law for a nonparametric estimator of the
-    coverage of a random sample. Ann Statist 11: 905-912.
-
-    n1 / n  +/- z * square-root(W);
-
-    where
     n1 = number of species observed once in n samples;
     n = sample size;
     z = a constant that depends on the targeted confidence and based on
-        the Normal distribution. For a 95% CI, z=1.959963985;
+    the Normal distribution. For a 95% CI, z=1.959963985;
     n2 = number of species observed twice in n samples;
     W = [ n1*(n - n1)  +  2*n*n2 ] / (n**3).
 
-    Note: for other confidence levels we first need the appropriate z,
-          Not yet hooked up to CLI.
+    Parameters
+    ----------
+    counts : (N,) array_like, int
+        Vector of counts.
 
-    Returns: (upper bound, lower bound)
+    Returns
+    -------
+    ci : tuple
+        Esty's confidence interval as ``(upper_bound, lower_bound)``.
+
+    Notes
+    -----
+    Esty's CI is defined in [1]_.
+
+    ``z`` is hardcoded for a 95% confidence interval.
+
+    References
+    ----------
+    .. [1] Esty, W. W. (1983). "A normal limit law for a nonparametric
+       estimator of the coverage of a random sample". Ann Statist 11: 905-912.
+
     """
     counts = _validate(counts)
+
     n1 = singles(counts)
     n2 = doubles(counts)
     n = counts.sum()
