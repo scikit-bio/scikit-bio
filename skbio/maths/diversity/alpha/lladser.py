@@ -21,6 +21,7 @@ def lladser_pe(counts, r=10, **args):
     This function is just a wrapper around the full point estimator,
     intended to be called fo a single best estimate on a complete sample.
     """
+    counts = _validate(counts)
     sample = _expand_counts(counts)
     np.random.shuffle(sample)
     try:
@@ -37,7 +38,7 @@ def lladser_ci(counts, r, alpha=0.95, f=10, ci_type='ULCL', **args):
     This function is just a wrapper around the full point estimator,
     intended to be called for a single best estimate on a complete sample.
     """
-
+    counts = _validate(counts)
     sample = _expand_counts(counts)
     np.random.shuffle(sample)
     try:
@@ -69,7 +70,6 @@ def _lladser_point_estimates(sample, r=10):
          - position in sample of prediction
          - random variable from poisson process (mostly to make testing easier)
     """
-
     if(r <= 2):
         raise ValueError("r must be >=3")
     for count, seen, cost, i in _get_interval_for_r_new_species(sample, r):

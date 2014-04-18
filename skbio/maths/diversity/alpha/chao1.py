@@ -41,6 +41,7 @@ def chao1(counts, bias_corrected=True):
     EstimateS manual.
 
     """
+    counts = _validate(counts)
     o, s, d = osd(counts)
 
     if not bias_corrected and s and d:
@@ -51,6 +52,7 @@ def chao1(counts, bias_corrected=True):
 
 def chao1_confidence(counts, bias_corrected=True, zscore=1.96):
     """Returns chao1 confidence (lower, upper) from counts."""
+    counts = _validate(counts)
     o, s, d = osd(counts)
     if s:
         chao = chao1(counts, bias_corrected)
