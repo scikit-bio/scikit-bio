@@ -110,7 +110,7 @@ def parse_fastq(data, strict=False, force_phred_offset=None):
     QUAL = 3
 
     data = iter(data)
-    first_line = data.next().strip()
+    first_line = next(data).strip()
 
     if force_phred_offset is None:
         if is_casava_v180_or_later(first_line):
