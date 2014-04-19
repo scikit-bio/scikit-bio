@@ -41,7 +41,7 @@ def is_casava_v180_or_later(header_line):
 
     Parameters
     ----------
-    header_line : str
+    header_line : bytes
         A header line
 
     Returns
@@ -58,11 +58,11 @@ def is_casava_v180_or_later(header_line):
     >>> print is_casava_v180_or_later(id_)
     True
     """
-    if not header_line.startswith('@'):
+    if not header_line.startswith(b'@'):
         raise ValueError("Non-header line passed in!")
-    fields = header_line.split(':')
+    fields = header_line.split(b':')
 
-    return len(fields) == 10 and fields[7] in 'YN'
+    return len(fields) == 10 and fields[7] in b'YN'
 
 
 def safe_md5(open_file, block_size=2 ** 20):

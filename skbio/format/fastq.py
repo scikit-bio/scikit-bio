@@ -32,9 +32,9 @@ def format_fastq_record(seqid, seq, qual):
     Parameters
     ----------
 
-    seqid : str
+    seqid : bytes
         The sequence ID
-    seq : str or subclass of BiologicalSequence
+    seq : bytes or subclass of BiologicalSequence
         The sequence
     qual : np.array of int8
         The quality scores
@@ -42,7 +42,7 @@ def format_fastq_record(seqid, seq, qual):
     Returns
     -------
 
-    str : a string representation of a single FASTQ record
+    bytes : a string representation of a single FASTQ record
 
     Examples
     --------
@@ -57,9 +57,9 @@ def format_fastq_record(seqid, seq, qual):
     +
     ffgghh
     """
-    if is_casava_v180_or_later("@%s" % seqid):
+    if is_casava_v180_or_later(b"@" + seqid):
         phred_f = _phred_to_ascii33
     else:
         phred_f = _phred_to_ascii64
 
-    return "@%s\n%s\n+\n%s\n" % (seqid, seq, phred_f(qual))
+    return b'\n'.join([b"@" + seqid, seq, b'+', phred_f(qual), b''])

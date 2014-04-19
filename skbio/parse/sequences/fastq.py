@@ -61,7 +61,7 @@ def parse_fastq(data, strict=False, force_phred_offset=None):
 
     Returns
     -------
-    label, seq, qual : (str, str, np.array)
+    label, seq, qual : (bytes, bytes, np.array)
         yields the label, sequence and quality for each entry
 
     Examples
@@ -149,8 +149,9 @@ def parse_fastq(data, strict=False, force_phred_offset=None):
             qualid = _drop_id_marker(line)
             if strict:
                 if seqid != qualid:
-                    raise FastqParseError('ID mismatch: %s != %s' % (seqid,
-                                                                     qualid))
+                    raise FastqParseError('ID mismatch: {} != {}'.format(
+                        seqid.decode('utf-8'),
+                        qualid.decode('utf-8')))
         elif linetype == QUAL:
             qual = phred_f(line)
 

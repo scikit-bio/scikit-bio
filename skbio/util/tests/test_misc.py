@@ -33,12 +33,12 @@ class MiscTests(TestCase):
 
     def test_is_casava_v180_or_later(self):
         """Attempt to determine casava version"""
-        self.assertFalse(is_casava_v180_or_later('@foo'))
-        id_ = '@M00176:17:000000000-A0CNA:1:1:15487:1773 1:N:0:0'
+        self.assertFalse(is_casava_v180_or_later(b'@foo'))
+        id_ = b'@M00176:17:000000000-A0CNA:1:1:15487:1773 1:N:0:0'
         self.assertTrue(is_casava_v180_or_later(id_))
 
         with self.assertRaises(ValueError):
-            _ = is_casava_v180_or_later('foo')
+            _ = is_casava_v180_or_later(b'foo')
 
     def test_safe_md5(self):
         """Make sure we have the expected md5"""
