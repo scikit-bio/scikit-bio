@@ -1297,5 +1297,5 @@ class ParameterCombinationsApp(CommandLineApplication):
                    '-output': ValuedParameter(Prefix='-', Name='output',
                                               Delimiter='=')}
 if __name__ == '__main__':
-
-    main()
+    from nose import runmodule
+    runmodule()
