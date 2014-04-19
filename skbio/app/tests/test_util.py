@@ -1131,7 +1131,9 @@ script = """#!/usr/bin/env python
 #This is a test script intended to test the CommandLineApplication
 #class and CommandLineAppResult class
 
-from sys import argv, stderr,stdin
+from __future__ import print_function
+
+from sys import argv, stderr, stdin
 from os import isatty
 
 out_file_name = None
@@ -1184,10 +1186,10 @@ if out_file_name:
     f.writelines(out)
     f.close()
 else:
-    print out
+    print(out)
 
 #generate some stderr
-print >> stderr, 'I am stderr'
+print('I am stderr', file=stderr)
 
 # Write the fixed file
 f = open('/tmp/fixed.txt','w')
