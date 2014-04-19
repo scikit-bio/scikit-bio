@@ -275,7 +275,7 @@ class DissimilarityMatrix(object):
 
         ids = cls._parse_ids(dm_f, delimiter)
         num_ids = len(ids)
-        data = np.empty((num_ids, num_ids), dtype='float')
+        data = np.empty((num_ids, num_ids), dtype=np.float64)
 
         # curr_row_idx keeps track of the row index within the data matrix.
         # We're not using enumerate() because there may be
