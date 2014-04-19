@@ -3,7 +3,7 @@
 language: python
 env:
   - PYTHON_VERSION=3.4 NUMPY_VERSION=1.8
-  - PYTHON_VERSION=2.7 NUMPY_VERSION=1.8
+  - PYTHON_VERSION=2.7 NUMPY_VERSION=1.8 WITH_DOCTEST=True
   - PYTHON_VERSION=2.7 NUMPY_VERSION=1.7
 before_install:
   - wget http://repo.continuum.io/miniconda/Miniconda-2.2.2-Linux-x86_64.sh -O miniconda.sh
@@ -18,7 +18,7 @@ install:
   - pip install sphinx-bootstrap-theme future
   - pip install . --no-deps
 script:
-  - nosetests --with-doctest
+  - if [ ${WITH_DOCTEST} ]; then nosetests --with-doctest; else nosetests; fi
   - pep8 skbio setup.py
   - pushd doc
   - make clean
