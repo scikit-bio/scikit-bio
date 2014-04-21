@@ -183,11 +183,39 @@ String literals that are to be treated as bytes need the `b`
 prefix. String literals that are text need either the `u` prefix or
 `from __future__ import unicode_literals` at the top.
 
+A brief introduction: Unicode, UTF-8, ASCII...
+----------------------------------------------
+
+A string can be seen as a sequence of characters. According to the
+Unicode standard, each character is represented by a code point (a
+number). Code points are still abstract (e.g., they could be stored in
+little or big endian formats) and there are many encodings to map code
+points to byte values (encode) and back (decode). Three important ones
+are ASCII, UTF-8 and latin-1:
+
+- ASCII is a 7 bit encoding that can handle a very limited range of
+  Unicode code points.
+
+- UTF-8 is an encoding that can represent every Unicode character. It
+  is ASCII-compatible because code points that can also be represented
+  by ASCII are mapped to the same byte value by UTF-8 and ASCII.
+
+- latin-1 is an ASCII-compatible 8 bit encoding that matches UTF-8 for
+  the first 256 code points. The Py2 `str` type loosely worked by
+  assuming everything was encoded in latin-1.
+
+
 Text processing
 ---------------
 
-After going through Nick Coghlan's "Processing Text Files in Python 3"
-(https://ncoghlan_devs-python-notes.readthedocs.org/en/latest/python3/text_file_processing.html)
+    There Ain't No Such Thing As Plain Text.  -- Joel Spolsky, `The
+    Absolute Minimum Every Software Developer Absolutely, Positively
+    Must Know About Unicode and Character Sets (No Excuses!)
+    <http://www.joelonsoftware.com/articles/Unicode.html>`_, 2003.
+
+After going through Nick Coghlan's `"Processing Text Files in Python
+3"
+<https://ncoghlan_devs-python-notes.readthedocs.org/en/latest/python3/text_file_processing.html>`_
 I think the way forward is to process ASCII-like files (fasta, fastq)
 as binary files, and decode to strings some parts, if necessary. This
 is faster than processing them as text files, especially in Py3. In
@@ -201,9 +229,10 @@ arrives, which will `reintroduce binary string interpolation
 
 Gotchas
 -------
-Comparing bytes and text strings always returns `False` in Pyhon 3 (as
-they're incompatible types, and comparisons are required to succeed by
-the language)::
+
+Comparing bytes and text strings always returns `False` in Python 3
+(as they're incompatible types, and comparisons are required to
+succeed by the language)::
 
     >>> b'GATCAT' == 'GATCAT'
     False
