@@ -112,19 +112,33 @@ class OrdinationResults(namedtuple('OrdinationResults',
         # Now we should find the proportion explained section
         prop_expl, curr_line = cls._parse_proportion_explained(orf, curr_line)
 
-        if prop_expl is not None and len(prop_expl) != len(eigvals):
-            raise ValueError('There should be as many proportion explained '
-                             'values as eigvals: %d != %d' % (len(prop_expl),
-                                                              len(eigvals)))
+        if prop_expl is not None:
+            if len(prop_expl) != len(eigvals):
+                raise ValueError('There should be as many proportion explained'
+                                 ' values as eigvals: %d != %d' %
+                                 (len(prop_expl), len(eigvals)))
+
         # The next line should be an empty line
         curr_line = cls._check_empty_line(orf, curr_line)
         # Next section should be the species section
         species, species_ids, curr_line = cls._parse_coords(orf, curr_line,
                                                             'Species')
+        if species is not None:
+            if len(species[0]) != len(eigvals):
+                raise ValueError('There should be as many coordinates per '
+                                 'species as eigvals: %d != %d' %
+                                 (len(species[0]), len(eigvals)))
+
         # The next line should be an empty line
         curr_line = cls._check_empty_line(orf, curr_line)
         # Next section should be the site section
         site, site_ids, curr_line = cls._parse_coords(orf, curr_line, 'Site')
+        if site is not None:
+            if len(site[0]) != len(eigvals):
+                raise ValueError('There should be as many coordinates per '
+                                 'site as eigvals: %d != %d' %
+                                 (len(site[0]), len(eigvals)))
+
         # The next line should be an empty line
         curr_line = cls._check_empty_line(orf, curr_line)
         # Next section should be the biplot section
