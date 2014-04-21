@@ -11,7 +11,11 @@ from __future__ import print_function, absolute_import
 
 from collections import namedtuple
 from itertools import izip
+from os.path import exists
+
 import numpy as np
+
+from skbio.core.exception import FileFormatError
 
 
 class OrdinationResults(namedtuple('OrdinationResults',
@@ -75,9 +79,10 @@ class OrdinationResults(namedtuple('OrdinationResults',
 
         Parameters
         ----------
-        ord_res_f : iterable of str
+        ord_res_f : iterable of str or str
             Iterable of strings (e.g., open file handle, file-like object, list
-            of strings, etc.) containing the serialized ordination results.
+            of strings, etc.) or a file path (a string) containing the
+            serialized ordination results.
 
         Returns
         -------
@@ -86,65 +91,183 @@ class OrdinationResults(namedtuple('OrdinationResults',
             `ord_res_f`.
 
         """
-        # We aren't using np.loadtxt because it uses *way* too much memory
-        # (e.g, a 2GB matrix eats up 10GB, which then isn't freed after parsing
-        # has finished). See:
-        # http://mail.scipy.org/pipermail/numpy-tickets/2012-August/006749.html
+        # Currently we support either a file or a filepath.
+        # This will change once we have a centralized function that
+        # takes care of this.
+        # Adapted from skbio.core.distance.DissimilarityMatrix.from_file
+        if isinstance(ord_res_f, str) and exists(ord_res_f):
+            # Check if it's a valid path, if so read the contents
+            fd = open(ord_res_f, 'U')
+            orf = fd.readlines()
+            fd.close()
+        elif hasattr(ord_res_f, 'readlines'):
+            orf = ord_res_f.readlines()
+        else:
+            orf = ord_res_f
 
-        # Strategy:
-        #     - find the header
-        #     - initialize an empty ndarray
-        #     - for each row of data in the input file:
-        #         - populate the corresponding row in the ndarray with floats
+        # Starting at line 0, we should find the eigvals
+        eigvals, curr_line = cls._parse_eigvals(orf)
+        # The next line should be an empty line
+        curr_line = cls._check_empty_line(orf, curr_line)
+        # Now we should find the proportion explained section
+        prop_expl, curr_line = cls._parse_proportion_explained(orf, curr_line,
+                                                               len(eigvals))
+        if len(prop_expl) != len(eigvals):
+            raise ValueError('There should be as many proportion explained '
+                             'values as eigvals: %d != %d' % (len(prop_expl),
+                                                              len(eigvals)))
+        # The next line should be an empty line
+        curr_line = cls._check_empty_line(orf, curr_line)
+        # Next section should be the species section
+        species, species_ids, curr_line = cls._parse_coords(orf, curr_line,
+                                                            'Species')
+        # The next line should be an empty line
+        curr_line = cls._check_empty_line(orf, curr_line)
+        # Next section should be the site section
+        site, site_ids, curr_line = cls._parse_coords(orf, curr_line, 'Site')
+        # The next line should be an empty line
+        curr_line = cls._check_empty_line(orf, curr_line)
+        # Next section should be the biplot section
+        biplot, curr_line = cls._parse_biplot(orf, curr_line)
+        # The next line should be an empty line
+        curr_line = cls._check_empty_line(orf, curr_line)
+        # Next section should be the site constraints section
+        cons, cons_ids, curr_line = cls._parse_coords(orf, curr_line,
+                                                      'Site constraints')
+        # The last line should be an empty line
+        curr_line = cls._check_empty_line(orf, curr_line)
 
-        # We use iter() as we want to take a single pass over the iterable and
-        # maintain our current position after finding the header (mainly
-        # necessary for something like a list of strings).
-        dm_f = iter(dm_f)
-        ids = cls._parse_ids(dm_f, delimiter)
-        num_ids = len(ids)
-        data = np.empty((num_ids, num_ids), dtype='float')
+        return cls(eigvals=eigvals, species=species, site=site, biplot=biplot,
+                   site_constraints=cons, proportion_explained=prop_expl,
+                   species_ids=species_ids, site_ids=site_ids)
 
-        # curr_row_idx keeps track of the row index within the data matrix.
-        # We're not using enumerate() because there may be
-        # empty/whitespace-only lines throughout the data matrix. We want to
-        # ignore those and only count the actual rows of data.
-        curr_row_idx = 0
-        for line in dm_f:
-            line = line.strip()
+    @staticmethod
+    def _parse_eigvals(lines):
+        curr_line = 0
+        # The first line should contain the Eigvals header:
+        # Eigvals<tab>NumEigvals
+        header = lines[curr_line].strip().split('\t')
+        if len(header) != 2 or header[0] != 'Eigvals':
+            raise FileFormatError('Eigvals header not found')
 
-            if not line:
-                continue
-            elif curr_row_idx >= num_ids:
-                # We've hit a nonempty line after we already filled the data
-                # matrix. Raise an error because we shouldn't ignore extra
-                # data.
-                raise DistanceMatrixFormatError(
-                    "Encountered extra rows without corresponding IDs in the "
-                    "header.")
+        # Parse how many eigvals are we waiting for
+        num_eigvals = int(header[1])
+        if num_eigvals == 0:
+            raise ValueError('At least one eigval should be present')
 
-            tokens = line.split(delimiter)
+        # Parse the eigvals, present on the next line
+        # Eigval_1<tab>Eigval_2<tab>Eigval_3<tab>...
+        curr_line += 1
+        eigvals = np.asarray(lines[curr_line], dtype=np.float64)
+        if len(eigvals) != num_eigvals:
+            raise ValueError('Expected %d eigvals, but found %d.' %
+                             (num_eigvals, len(eigvals)))
 
-            # -1 because the first element contains the current ID.
-            if len(tokens) - 1 != num_ids:
-                raise DistanceMatrixFormatError(
-                    "There are %d values in row number %d, which is not equal "
-                    "to the number of IDs in the header (%d)."
-                    % (len(tokens) - 1, curr_row_idx + 1, num_ids))
+        # Update the line cunter to left it after the eigvals section
+        return eigvals, curr_line + 1
 
-            curr_id = tokens[0].strip()
-            expected_id = ids[curr_row_idx]
-            if curr_id == expected_id:
-                data[curr_row_idx, :] = np.asarray(tokens[1:], dtype='float')
-            else:
-                raise IDMismatchError(curr_id, expected_id)
+    @staticmethod
+    def _check_empty_line(lines, curr_line):
+        if lines[curr_line].strip():
+            raise FileFormatError('Expected an empty line')
+        # Update the line cunter to left it after the empty line
+        return curr_line + 1
 
-            curr_row_idx += 1
+    @staticmethod
+    def _parse_proportion_explained(lines, curr_line):
+        # Parse the proportion explained header:
+        # Proportion explained<tab>NumPropExpl
+        header = lines[curr_line].strip().split('\t')
+        if (len(header) != 2 or
+                header[0] != 'Proportion explained'):
+            raise FileFormatError('Proportion explained header not found')
 
-        if curr_row_idx != num_ids:
-            raise MissingDataError(curr_row_idx, num_ids)
+        # Parse how many prop expl values are we waiting for
+        num_prop_expl = int(header[1])
+        if num_prop_expl == 0:
+            # The ordination method didn't generate the prop explained vector
+            # set it to None
+            prop_expl = None
+        else:
+            # Parse the line with the proportion explained values
+            curr_line += 1
+            prop_expl = np.asarray(lines[curr_line], dtype=np.float64)
+            if len(prop_expl) != num_prop_expl:
+                raise ValueError('Expected %d proportion explained values, but'
+                                 ' found %d.' % (num_prop_expl,
+                                                 len(prop_expl)))
+        # Update the line cunter to left it after the prop expl section
+        return prop_expl, curr_line + 1
 
-        return cls(data, ids)
+    @staticmethod
+    def _parse_coords(lines, curr_line, header):
+        # Parse the coords header
+        header = lines[curr_line].strip().split('\t')
+        if len(header) != 3 or header[0] != header:
+            raise FileFormatError('%s header not found.' % header)
+
+        # Parse the dimensions of the coord matrix
+        rows = int(header[1])
+        cols = int(header[2])
+
+        if rows == 0 and cols == 0:
+            # The ordination method didn't generate the coords for 'header'
+            # Set the results to None
+            coords = None
+            ids = None
+        elif (rows == 0 and cols != 0) or (rows != 0 and cols == 0):
+            # Both dimensions should be 0 or none of them are zero
+            raise ValueError('One dimension of %s is 0: %d x %d' %
+                             (header, rows, cols))
+        else:
+            # Parse the coord lines
+            coords = np.empty((rows, cols), dtype=np.float64)
+            ids = []
+            for i in range(rows):
+                # Parse the next row of data
+                curr_line += 1
+                vals = lines[curr_line].strip().split('\t')
+                # The +1 comes from the row header (which contains the row id)
+                if len(vals) != cols + 1:
+                    raise ValueError('Expected %d values, but found %d in row '
+                                     '%d.' % (cols, len(vals) - 1, i))
+                ids.append(vals[0])
+                coords[i, :] = np.asarray(vals[1:], dtype=np.float64)
+        # Update the line cunter to left it after the coords section
+        return coords, ids, curr_line + 1
+
+    @staticmethod
+    def _parse_biplot(lines, curr_line):
+        # Parse the biplot header
+        header = lines[curr_line].strip().split('\t')
+        if len(header) != 3 or header[0] != 'Biplot':
+            raise FileFormatError('Biplot header not found.')
+
+        # Parse the dimensions of the Biplot matrix
+        rows = int(header[1])
+        cols = int(header[2])
+
+        if rows == 0 and cols == 0:
+            # The ordination method didn't generate the biplot matrix
+            # Set the results to None
+            biplot = None
+        elif (rows == 0 and cols != 0) or (rows != 0 and cols == 0):
+            # Both dimensions should be 0 or none of them are zero
+            raise ValueError('One dimension of %s is 0: %d x %d' %
+                             (header, rows, cols))
+        else:
+            # Parse the biplot matrix
+            biplot = np.empty((rows, cols), dtype=np.float64)
+            for i in range(rows):
+                # Parse the next row of data
+                curr_line += 1
+                vals = lines[curr_line].strip().split('\t')
+                if len(vals) != cols:
+                    raise ValueError('Expected %d values, but founf %d in row '
+                                     '%d.' % (cols, len(vals), i))
+                biplot[i, :] = np.asarray(vals, dtype=np.float64)
+        # Update the line cunter to left it after the coords section
+        return biplot, curr_line + 1
 
     def to_file(self, out_f):
         """Save the ordination results to file in text format.
@@ -210,8 +333,8 @@ class OrdinationResults(namedtuple('OrdinationResults',
         else:
             out_f.write("Site constraints\t%d\t%d\n" %
                         self.site_constraints.shape)
-            for vals in self.site_constraints:
-                out_f.write("%s\n" % ('\t'.join(np.asarray(vals,
+            for id_, vals in izip(self.site_ids, self.site_constraints):
+                out_f.write("%s\t%s\n" % (id_, '\t'.join(np.asarray(vals,
                             dtype=np.str))))
 
 
