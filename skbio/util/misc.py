@@ -18,7 +18,7 @@ Functions
    flatten
    remove_files
    safe_md5
-
+   is_casava_v180_or_later
 """
 from __future__ import division
 
@@ -34,6 +34,35 @@ import hashlib
 from os import remove, makedirs
 from os.path import exists, isdir
 from functools import partial
+
+
+def is_casava_v180_or_later(header_line):
+    """Check if the header looks like it is Illumina software post-casava v1.8
+
+    Parameters
+    ----------
+    header_line : str
+        A header line
+
+    Returns
+    -------
+    bool
+        ``True`` for if casava v1.8+, otherwise ``False``
+
+    Examples
+    --------
+    >>> from skbio.util.misc import is_casava_v180_or_later
+    >>> print is_casava_v180_or_later('@foo')
+    False
+    >>> id_ = '@M00176:17:000000000-A0CNA:1:1:15487:1773 1:N:0:0'
+    >>> print is_casava_v180_or_later(id_)
+    True
+    """
+    if not header_line.startswith('@'):
+        raise ValueError("Non-header line passed in!")
+    fields = header_line.split(':')
+
+    return len(fields) == 10 and fields[7] in 'YN'
 
 
 def safe_md5(open_file, block_size=2 ** 20):
