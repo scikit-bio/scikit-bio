@@ -215,6 +215,17 @@ formatting::
     >>> "Sequence {}".format(b'GATCAT')
     "Sequence b'GATCAT'"
 
+If you actually want to construct a text string, bytes objects need to
+be *decoded* into text. For example::
+
+    >>> "Sequence {}".format(b'GATCAT'.decode('utf-8'))
+
+If you want to efficiently construct a byte string, the most
+convenient way may be to call `b''.join(iterable of byte strings)`,
+though there are other options like using `io.BytesIO` or
+`bytearray`. For a very small number of byte strings, it may be OK to
+use the `+` operator.
+
 Run python with the `-b` flag to detect these two bug-prone usages,
 and `-bb` to turn them into exceptions.
 
