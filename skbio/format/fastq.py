@@ -26,7 +26,7 @@ def _phred_to_ascii64(a):
     return _phred_to_ascii(a, 64)
 
 
-def format_fastq_record(seqid, seq, qual):
+def format_fastq_record(seqid, seq, qual, phred_offset=33):
     """Format a FASTQ record
 
     Parameters
@@ -38,6 +38,8 @@ def format_fastq_record(seqid, seq, qual):
         The sequence
     qual : np.array of int8
         The quality scores
+    phred_offset : int, either 33 or 64
+        Set a phred offset
 
     Returns
     -------
@@ -57,9 +59,11 @@ def format_fastq_record(seqid, seq, qual):
     +
     ffgghh
     """
-    if is_casava_v180_or_later("@%s" % seqid):
+    if phred_offset == 33:
         phred_f = _phred_to_ascii33
-    else:
+    elif phred_offset == 64:
         phred_f = _phred_to_ascii64
+    else:
+        raise ValueError("Unknown phred offset: %d" % phred_offset)
 
     return "@%s\n%s\n+\n%s\n" % (seqid, seq, phred_f(qual))
