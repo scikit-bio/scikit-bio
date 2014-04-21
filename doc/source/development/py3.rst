@@ -235,14 +235,18 @@ The `long` type no longer exists in Py2. To test if a number is an
 integer (`int` or `long` in Py2, `int` in Py3), compare it to
 `future.builtins.int`.
 
-Third party modules
-===================
+Other modules
+=============
 
 Numpy
 -----
 
-Try to avoid setting dtypes to a string (i.e., use `np.float64`
-instead of `'float'`, etc).
+Try to avoid setting dtypes to a string (i.e., use `dtype=np.float64`
+instead of `dtype='float'`, etc). It is may be safe, but some warnings
+were raised when running Python with the `-b` flag. Also, field names
+in structured dtypes need to be bytes (`str` type) in Py2, but text
+(`str` type) in Py3 (`issue #2407
+<https://github.com/numpy/numpy/issues/2407>`_).
 
 Testing
 =======
