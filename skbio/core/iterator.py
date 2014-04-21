@@ -102,7 +102,9 @@ CCGGTTAA
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from itertools import chain, izip
+from itertools import chain
+
+from future.builtins import zip
 
 from skbio.parse.sequences import parse_fasta, parse_fastq, parse_qual
 from skbio.core.workflow import Workflow, not_none, method, requires

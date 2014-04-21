@@ -8,7 +8,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from StringIO import StringIO
+from future.utils.six import StringIO
 from unittest import TestCase, main
 
 from numpy import arange, array
