@@ -15,25 +15,50 @@ from .base import _indices_to_counts, _validate
 
 
 def ace(counts, rare_threshold=10):
-    """Implements the ACE metric from EstimateS. Based on the equations
-    given under ACE:Abundance-based Coverage Estimator.
+    """Calculate the ACE metric (Abundance-based Coverage Estimator).
 
-    counts = an OTU by sample vector
-    rare_threshold = threshold at which a species containing as many or
-    fewer individuals will be considered rare.
+    Parameters
+    ----------
+    counts : (N,) array_like, int
+        Vector of counts.
+    rare_threshold : int, optional
+        Threshold at which a species containing as many or fewer individuals
+        will be considered rare.
 
-    IMPORTANT NOTES:
+    Returns
+    -------
+    double
+        Computed ACE metric.
 
-    Raises a value error if every rare species is a singleton.
+    Raises
+    ------
+    ValueError
+        If every rare species is a singleton.
 
-    if no rare species exist, just returns the number of abundant species
+    Notes
+    -----
+    ACE was first introduced in [1]_ and [2]_. The implementation here is based
+    on the description given in the EstimateS manual [3]_.
 
-    rare_threshold default value is 10. Based on Chao 2000 in Statistica
-    Sinica pg. 229 citing empirical observations by Chao, Ma, Yang 1993.
+    If no rare species exist, returns the number of abundant species. The
+    default value of 10 for `rare_threshold` is based on [4]_.
 
-    If counts contains 0's, indicating species which are known
-    to exist in the environment but did not appear in the sample, they
-    will be ignored for the purpose of calculating s_rare.
+    If `counts` contains zeros, indicating species which are known to exist in
+    the environment but did not appear in the sample, they will be ignored for
+    the purpose of calculating the number of rare species.
+
+    References
+    ----------
+    .. [1] Chao, A. & S.-M Lee. 1992 Estimating the number of classes via
+       sample coverage. Journal of the American Statistical Association 87,
+       210-217.
+    .. [2] Chao, A., M.-C. Ma, & M. C. K. Yang. 1993. Stopping rules and
+       estimation for recapture debugging with unequal failure rates.
+       Biometrika 80, 193-201.
+    .. [3] http://viceroy.eeb.uconn.edu/estimates/
+    .. [4] Chao, A., W.-H. Hwang, Y.-C. Chen, and C.-Y. Kuo. 2000. Estimating
+       the number of shared species in two communities. Statistica Sinica
+       10:227-246.
 
     """
     counts = _validate(counts)
