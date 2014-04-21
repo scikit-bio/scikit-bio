@@ -99,7 +99,7 @@ def parse_fasta(infile, strict=True, label_to_name=str, finder=FastaFinder,
         yield label, seq
 
 
-def parse_qual(infile, value_cast_f=int, full_header=False):
+def parse_qual(infile, full_header=False):
     r"""yields label and qual from a qual file.
 
 
@@ -107,9 +107,6 @@ def parse_qual(infile, value_cast_f=int, full_header=False):
     ----------
     infile : open file object
         An open fasta file.
-
-    value_cast_f : function
-        Type to cast to
 
     full_header : bool
         Return the full header or just the id
@@ -149,7 +146,7 @@ def parse_qual(infile, value_cast_f=int, full_header=False):
         curr_id = rec[0][1:]
         curr_qual = ' '.join(rec[1:])
         try:
-            parts = np.asarray(curr_qual.split(), dtype=value_cast_f)
+            parts = np.asarray(curr_qual.split(), dtype=int)
         except ValueError:
             raise RecordError(
                 "Invalid qual file. Check the format of the qual files.")

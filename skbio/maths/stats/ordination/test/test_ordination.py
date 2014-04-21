@@ -10,7 +10,6 @@
 
 from __future__ import division
 
-import os
 import warnings
 
 import numpy as np
@@ -19,13 +18,7 @@ from scipy.spatial.distance import pdist
 
 from skbio.maths.stats.ordination import CA, RDA, CCA, PCoA
 from skbio.core.distance import DistanceMatrix
-
-
-def get_data_path(fn):
-    """Return path to filename `fn` in the data folder."""
-    path = os.path.dirname(os.path.abspath(__file__))
-    data_path = os.path.join(path, 'data', fn)
-    return data_path
+from skbio.util.testing import get_data_path
 
 
 def normalize_signs(arr1, arr2):
