@@ -145,6 +145,9 @@ class SequenceIterator(Workflow):
     an individual record needs to be tracked over time, then it is recommended
     that copies of the yielded data are made.
 
+    *WARNING*: The yielded obj is not safe for use with Python 2.7's builtin
+    `zip` method as the state is updated in place.
+
     Parameters
     ----------
 
