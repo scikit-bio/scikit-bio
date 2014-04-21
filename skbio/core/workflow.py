@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 r"""
-Workflow (:mod:`skbio.core.workflow`)
-=====================================
+Constructing workflows (:mod:`skbio.core.workflow`)
+===================================================
 
 .. currentmodule:: skbio.core.workflow
 
@@ -18,18 +18,27 @@ Classes
 
     Workflow
 
+Decorators
+----------
+
+.. autosummary::
+    :toctree: generated/
+
+    requires
+    method
+
 Examples
 --------
 >>> from skbio.core.workflow import Workflow
 
-As an example of the ``Workflow`` object, lets construct a sequence processor
-that will filter sequences that are < 10 nucleotides, reversse the sequence
-if the runtime options indicate to, and truncate if a specific nucleotide 5
+As an example of the ``Workflow`` object, let's construct a sequence processor
+that will filter sequences that are < 10 nucleotides, reverse the sequence
+if the runtime options indicate to, and truncate if a specific nucleotide
 pattern is observed. The ``Workflow`` object will only short circuit, and
-evaluate requirements on methods decorated by ``Workflow.method``. Developers
-are free to define as many methods as they'd like within the object
-definition, and which can be called from workflow methods, but they will not
-be subjected directly to workflow checks.
+evaluate requirements on methods decorated by ``method``. Developers are free
+to define as many methods as they'd like within the object definition, and
+which can be called from workflow methods, but they will not be subjected
+directly to workflow checks.
 
 >>> nuc_pattern = 'AATTG'
 >>> has_nuc_pattern = lambda s: s[:len(nuc_pattern)] == nuc_pattern
@@ -66,7 +75,7 @@ iterable. So, lets create a ``list`` of sequences.
 
 >>> seqs = ['AAAAAAATTTTTTT', 'ATAGACC', 'AATTGCCGGAC', 'ATATGAACAAA']
 
-Beforw we run these sequences through, we're going to also define callbacks
+Before we run these sequences through, we're going to also define callbacks
 that are applied to the result of an single pass through the ``Workflow``.
 Callbacks are optional -- by default, a success will simply yield the state
 member variable while failures are ignored -- but, depending on your workflow,
@@ -88,13 +97,13 @@ SUCCESS: CCGGAC
 SUCCESS: ATATGAACAAA
 
 A few things of note just happened. First off, none of the sequences were
-not reveresed as the ``SequenceProcessor`` did not have option "reverse"
+reversed as the ``SequenceProcessor`` did not have option "reverse"
 set to ``True``. Second, you'll notice that the 3rd sequence was truncated,
 which is expected as it matched our nucleotide pattern of interest. Finally,
 of the sequences we processed, only a single sequence failed.
 
 To assist in constructing workflows, debug information is available but it
-must be turned on at instantiation. Lets do that, and while were at it, lets
+must be turned on at instantiation. Let's do that, and while we're at it, let's
 go ahead and enable the reversal method. This time through though, were going
 to walk through an item at a time so we can examine the debug information.
 
@@ -161,11 +170,11 @@ nucleotide pattern of interest. Awesome, right?
 There is one final piece of debug output, ``wf.debug_runtime``, which can
 be useful when diagnosing the amount of time required for individual methods
 on a particular piece of state (as opposed to the aggregate as provided by
-cProfile.
+cProfile).
 
 Three final components of the workflow that are quite handy are objects that
-allow you to indicate ``anything`` as an option value,anything that is
-not_none, and a mechanism to define a range of valid values.
+allow you to indicate ``anything`` as an option value, anything that is
+``not_none``, and a mechanism to define a range of valid values.
 
 >>> from skbio.core.workflow import not_none, anything
 >>> class Ex(Workflow):
@@ -204,7 +213,6 @@ class NotExecuted(object):
     """Helper object to track if a method was executed"""
     def __init__(self):
         self.msg = None
-        self._ghetto_identity = "doc test does insane things"
 
     def __call__(self, msg):
         self.msg = msg
@@ -442,10 +450,6 @@ class method(object):
         Specify a priority for the method, the higher the value the higher
         the priority. Priorities are relative to a given workflow
 
-    Returns
-    -------
-    Method
-        A decorated method
     """
     highest_priority = sys.maxsize
 
@@ -465,14 +469,14 @@ class requires(object):
     option : any Hashable object
         An option that is required for the decorated method to execute.
         This option will be looked up within the containing ``Workflow``s'
-        ``options``,
-    values : literally anything
+        ``options``.
+    values : object
         A required value. This defaults to ``anything`` indicating that
         the only requirement is that the ``option`` exists. It can be
         useful to specify ``not_none`` which indicates that the
         requirement is satisfied if the ``option`` exists and it holds
         a value that is not ``None``. Values also supports iterables
-        or singular values
+        or singular values.
     state : Function
         A requirement on workflow state. This must be a function that
         accepts a single argument, and returns ``True`` to indicate
