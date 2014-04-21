@@ -11,9 +11,10 @@ with minimal overhead". It includes functionality from "six, IPython,
 Jinja2, Django, and Pandas".
 
 So far, this notes are based on issues that have appeared when porting
-skbio, so it is not a complete guide. Refer to the official porting
-guide (https://docs.python.org/3/howto/pyporting.html) and the
-python-future docs (http://python-future.org/) for more information.
+skbio, so it is not a complete guide. Refer to the `official porting
+guide <https://docs.python.org/3/howto/pyporting.html>`_ and the
+`python-future docs <http://python-future.org/>`_ for more
+information.
 
 Iterators
 =========
@@ -163,10 +164,11 @@ as binary files, and decode to strings some parts, if necessary. This
 is faster than processing them as text files, especially in Py3. In
 fact, it seems (from functions like `_phred_to_ascii*`) that these
 formats are in fact mixed binary and ASCII, which I think puts us in
-the same place as people dealing with network protocols
-(https://ncoghlan_devs-python-notes.readthedocs.org/en/latest/python3/binary_protocols.html):
+the same place as people dealing with `network protocols
+<https://ncoghlan_devs-python-notes.readthedocs.org/en/latest/python3/binary_protocols.html>`_:
 it's more cumbersome to do in Py3, especially before Python 3.5
-arrives, which will reintroduce binary string interpolation).
+arrives, which will `reintroduce binary string interpolation
+<http://legacy.python.org/dev/peps/pep-0460/>`_).
 
 Gotchas
 -------
@@ -217,5 +219,5 @@ Testing
 =======
 
 `unittest.assertEquals` is deprecated. Use `unittest.assertEqual`
-instead. The complete list of deprecated testing methods is here:
-https://docs.python.org/3.4/library/unittest.html#deprecated-aliases
+instead. The complete list of deprecated testing methods is `here
+<https://docs.python.org/3.4/library/unittest.html#deprecated-aliases>`_
