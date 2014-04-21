@@ -37,44 +37,58 @@ depends on efficiency concerns:
 - If the number of iterations can be large and efficiency is
   important, use the future package.
 
-+--------------------+--------------------------+--------------------+
-|Small # of          |Efficient versions        |Notes               |
-|iterations (returns |(always iterators)        |                    |
-|lists in py2,       |                          |                    |
-|iterators in py3)   |                          |                    |
-+--------------------+--------------------------+--------------------+
-|zip                 |future.builtins.zip       |                    |
-+--------------------+--------------------------+--------------------+
-|range               |future.builtins.range     |                    |
-+--------------------+--------------------------+--------------------+
-|map                 |future.builtins.map       |Prefer lists        |
-|                    |                          |comprehensions or   |
-|                    |                          |for loops in        |
-|                    |                          |general, and avoid  |
-|                    |                          |side effects when   |
-|                    |                          |using map.          |
-+--------------------+--------------------------+--------------------+
-|filter              |future.builtins.filter    |                    |
-|                    |                          |                    |
-|                    |                          |                    |
-+--------------------+--------------------------+--------------------+
-|functools.reduce    |functools.reduce          |Don't use the global|
-|                    |                          |reduce available in |
-|                    |                          |Py2.                |
-+--------------------+--------------------------+--------------------+
-|d.items()           |future.utils.viewitems(d) |Efficient iteration |
-|                    |                          |over d *and*        |
-|                    |                          |set-like behaviour  |
-+--------------------+--------------------------+--------------------+
-|d.values()          |future.utils.viewvalues(d)|Idem                |
-+--------------------+--------------------------+--------------------+
-|d.keys()            |future.utils.viewkeys(d)  |Hardly ever needed, |
-|                    |                          |as iterating over a |
-|                    |                          |dictionary yields   |
-|                    |                          |keys (thus sorted(d)|
-|                    |                          |returns the sorted  |
-|                    |                          |keys).              |
-+--------------------+--------------------------+--------------------+
++--------------------+----------------------------+--------------------+
+|Small # of          |Efficient versions          |Notes               |
+|iterations (returns |(always iterators)          |                    |
+|lists in py2,       |                            |                    |
+|iterators in py3)   |                            |                    |
++--------------------+----------------------------+--------------------+
+|`zip`               |`future.builtins.zip`       |                    |
++--------------------+----------------------------+--------------------+
+|`range`             |`future.builtins.range`     |                    |
++--------------------+----------------------------+--------------------+
+|`map`               |`future.builtins.map`       |Prefer lists        |
+|                    |                            |comprehensions or   |
+|                    |                            |for loops in        |
+|                    |                            |general. Avoid      |
+|                    |                            |calling functions   |
+|                    |                            |that cause side     |
+|                    |                            |effects when using  |
+|                    |                            |map. Gotcha: Py3's  |
+|                    |                            |`map` stops when the|
+|                    |                            |shortest iterable is|
+|                    |                            |exhausted, but Py2's|
+|                    |                            |pads them with      |
+|                    |                            |`None` till the     |
+|                    |                            |longest iterable is |
+|                    |                            |exhausted.          |
+|                    |                            |                    |
++--------------------+----------------------------+--------------------+
+|`filter`            |`future.builtins.filter`    |                    |
+|                    |                            |                    |
+|                    |                            |                    |
++--------------------+----------------------------+--------------------+
+|`functools.reduce`  |`functools.reduce`          |Avoid using the     |
+|                    |                            |global reduce       |
+|                    |                            |available in Py2 (it|
+|                    |                            |is the same as the  |
+|                    |                            |`functools` one)    |
++--------------------+----------------------------+--------------------+
+|`d.items()`         |`future.utils.viewitems(d)` |Efficient iteration |
+|                    |                            |over d *and*        |
+|                    |                            |set-like behaviour  |
++--------------------+----------------------------+--------------------+
+|`d.values()`        |`future.utils.viewvalues(d)`|Efficient iteration |
+|                    |                            |over d *and*        |
+|                    |                            |set-like behaviour  |
++--------------------+----------------------------+--------------------+
+|`d.keys()`          |`future.utils.viewkeys(d)`  |Hardly ever needed, |
+|                    |                            |as iterating over a |
+|                    |                            |dictionary yields   |
+|                    |                            |keys (thus sorted(d)|
+|                    |                            |returns the sorted  |
+|                    |                            |keys).              |
++--------------------+----------------------------+--------------------+
 
 
 When not directly iterating over an iterator, don't write code that
