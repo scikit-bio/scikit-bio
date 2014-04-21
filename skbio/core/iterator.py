@@ -256,7 +256,7 @@ class FastaIterator(SequenceIterator):
 
     def _fasta_qual_gen(self, fasta_gen, qual_gen):
         """Yield fasta and qual together"""
-        _iter = izip(fasta_gen, qual_gen)
+        _iter = zip(fasta_gen, qual_gen)
         for (seq_id, seq), (qual_id, qual) in _iter:
             self.state['SequenceID'] = seq_id
             self.state['Sequence'] = seq
