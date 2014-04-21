@@ -15,30 +15,54 @@ from .base import _indices_to_counts, _validate, osd
 
 
 def chao1(counts, bias_corrected=True):
-    """Calculates chao1 according to table in EstimateS manual.
+    """Calculate chao1 richness estimator.
 
-    Specifically, uses bias-corrected version unless bias_corrected is set
-    to False _and_ there are both singletons and doubletons.
+    Uses the bias-corrected version unless `bias_corrected` is ``False`` *and*
+    there are both singletons and doubletons.
 
-    Uncorrected:
+    Parameters
+    ----------
+    counts : (N,) array_like, int
+        Vector of counts.
+    bias_corrected : bool, optional
+        Indicates whether or not to use the bias-corrected version of the
+        equation. If ``False`` *and* there are both singletons and doubletons,
+        the uncorrected version will be used. The biased-corrected version will
+        be used otherwise.
 
-    Calculates chao1 given counts. Eq. 1 in EstimateS manual.
+    Returns
+    -------
+    double
+        Computed chao1 richness estimator.
 
-    Formula: chao1 = S_obs + N_1^2/(2*N_2) where N_1 and N_2 are
-    count of singletons and doubletons respectively.
+    See Also
+    --------
+    chao1_confidence
 
-    Note: this is the original formula from Chao 1984, not bias-corrected,
-    and is Equation 1 in the EstimateS manual.
+    Notes
+    -----
+    The implementation here is based on the equations in the EstimateS manual
+    [1]_.
 
-    Corrected:
+    The uncorrected version is based on Equation 1 in the EstimateS manual (
+    defined in [2]_):
 
-    Calculates bias-corrected chao1 given counts: Eq. 2 in EstimateS manual.
+    ``chao1 = S_obs + N_1^2/(2*N_2)`` where ``N_1`` and ``N_2`` are the count
+    of singletons and doubletons respectively.
 
-    Formula: chao1 = S_obs + N_1(N_1-1)/(2*(N_2+1)) where N_1 and N_2 are
-    count of singletons and doubletons respectively.
+    The bias-corrected version is based on Equation 2 in the EstimateS manual (
+    defined in [3]_):
 
-    Note: this is the bias-corrected formulat from Chao 1987, Eq. 2 in the
-    EstimateS manual.
+    ``chao1 = S_obs + N_1(N_1-1)/(2*(N_2+1))`` where ``N_1`` and ``N_2`` are
+    the count of singletons and doubletons respectively.
+
+    References
+    ----------
+    .. [1] http://viceroy.eeb.uconn.edu/estimates/
+    .. [2] Chao, A. 1984. Non-parametric estimation of the number of classes in
+       a population. Scandinavian Journal of Statistics 11, 265-270.
+    .. [3] Chao, A. 1987. Estimating the population size for capture-recapture
+       data with unequal catchability. Biometrics 43, 783-791.
 
     """
     counts = _validate(counts)
@@ -51,7 +75,49 @@ def chao1(counts, bias_corrected=True):
 
 
 def chao1_confidence(counts, bias_corrected=True, zscore=1.96):
-    """Returns chao1 confidence (lower, upper) from counts."""
+    """Calculate chao1 confidence interval.
+
+    Parameters
+    ----------
+    counts : (N,) array_like, int
+        Vector of counts.
+    bias_corrected : bool, optional
+        Indicates whether or not to use the bias-corrected version of the
+        equation. If ``False`` *and* there are both singletons and doubletons,
+        the uncorrected version will be used. The biased-corrected version will
+        be used otherwise.
+    zscore : scalar, optional
+        Score to use for confidence. Default of 1.96 is for a 95% confidence
+        interval.
+
+    Returns
+    -------
+    tuple
+        chao1 confidence interval as ``(lower_bound, upper_bound)``.
+
+    See Also
+    --------
+    chao1
+
+    Notes
+    -----
+    The implementation here is based on the equations in the EstimateS manual
+    [1]_. Different equations are employed to calculate the chao1 variance and
+    confidence interval depending on `bias_corrected` and the presence/absence
+    of singletons and/or doubletons.
+
+    Specifically, the following EstimateS equations are used:
+
+    1. No singletons, Equation 14.
+    2. Singletons but no doubletons, Equations 7, 13.
+    3. Singletons and doubletons, ``bias_corrected=True``, Equations 6, 13.
+    4. Singletons and doubletons, ``bias_corrected=False``, Equations 5, 13.
+
+    References
+    ----------
+    .. [1] http://viceroy.eeb.uconn.edu/estimates/
+
+    """
     counts = _validate(counts)
     o, s, d = osd(counts)
     if s:
