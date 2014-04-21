@@ -44,7 +44,7 @@ if on_rtd:
     install_requires = []
 else:
     install_requires = ['numpy >= 1.7', 'matplotlib >= 1.1.0',
-                        'scipy >= 0.13.0']
+                        'scipy >= 0.13.0', 'future']
 
 setup(name='scikit-bio',
       cmdclass={'build_py': build_py},
