@@ -93,7 +93,7 @@ depends on efficiency concerns:
 
 When not directly iterating over an iterator, don't write code that
 relies on list-like behaviour: you may need to cast it explicitly. The
-two following snippets show some possible issues::
+following snippets show some possible issues::
 
     a = zip(...)
     b = zip(...)
@@ -104,6 +104,21 @@ two following snippets show some possible issues::
     s = map(int, range(2))
     1 in s  # True (membership testing in a list is an O(n) bad idea)
     0 in s  # True in Py2, False in Py3
+
+In Py2, `s` is a list, so clearly `(1 in [0, 1]) == True` and `(0 in
+[0, 1]) == True`. In Py3, `s` is an iterator and the items it yields
+are discarded. Let's see an example with a generator to try and make
+it more clear::
+
+    >>> s = ((i, print(i)) for i in [0, 1, 2])  # print will let us see the iteration
+    >>> (1, None) in s  # Starts iterating over s...
+    0
+    1                   # ...till it finds (1, None)
+    True
+    >>> (0, None) in s  # Continues iterating over s
+    2                   # s is exhausted
+    False               # but (0, None) isn't there
+
 
 Advancing an iterator
 ---------------------
