@@ -15,11 +15,38 @@ from .base import _validate
 
 
 # NOT TESTED: NEED TEST DATA!
-def lladser_pe(counts, r=10, **args):
-    """Single point estimate of the conditional uncovered probability
+def lladser_pe(counts, r=10):
+    """Calculate single point estimate of conditional uncovered probability.
 
-    This function is just a wrapper around the full point estimator,
-    intended to be called fo a single best estimate on a complete sample.
+    Parameters
+    ----------
+    counts : (N,) array_like, int
+        Vector of counts.
+    r : int, optional
+        Number of new colors that are required for the next prediction.
+
+    Returns
+    -------
+    double or str
+        Single point estimate of the conditional uncovered probability, or
+        ``'NaN'`` if no point estimate could be computed.
+
+    See Also
+    --------
+    lladser_ci
+
+    Notes
+    -----
+    This function is just a wrapper around the full point estimator described
+    in Theorem 2 (i) in [1]_, intended to be called for a single best estimate
+    on a complete sample.
+
+    References
+    ----------
+    .. [1] Lladser, Gouet, and Reeder, "Extrapolation of Urn Models via
+       Poissonization: Accurate Measurements of the Microbial Unknown" PLoS
+       2011.
+
     """
     counts = _validate(counts)
     sample = _expand_counts(counts)
@@ -32,11 +59,37 @@ def lladser_pe(counts, r=10, **args):
 
 
 # NOT TESTED: NEED TEST DATA!
-def lladser_ci(counts, r, alpha=0.95, f=10, ci_type='ULCL', **args):
-    """Single CI of the conditional uncovered probability
+def lladser_ci(counts, r):
+    """Calculate single CI of the conditional uncovered probability.
 
-    This function is just a wrapper around the full point estimator,
-    intended to be called for a single best estimate on a complete sample.
+    Parameters
+    ----------
+    counts : (N,) array_like, int
+        Vector of counts.
+    r : int
+        Number of new colors that are required for the next prediction.
+
+    Returns
+    -------
+    tuple
+        Confidence interval as ``(lower_bound, upper_bound)``.
+
+    See Also
+    --------
+    lladser_pe
+
+    Notes
+    -----
+    This function is just a wrapper around the full CI estimator described
+    in Theorem 2 (iii) in [1]_, intended to be called for a single best CI
+    estimate on a complete sample.
+
+    References
+    ----------
+    .. [1] Lladser, Gouet, and Reeder, "Extrapolation of Urn Models via
+       Poissonization: Accurate Measurements of the Microbial Unknown" PLoS
+       2011.
+
     """
     counts = _validate(counts)
     sample = _expand_counts(counts)
@@ -49,7 +102,7 @@ def lladser_ci(counts, r, alpha=0.95, f=10, ci_type='ULCL', **args):
 
 
 def _expand_counts(counts):
-    """Converts vector of counts at each index to vector of indices."""
+    """Convert vector of counts at each index to vector of indices."""
     result = []
     for i, c in enumerate(counts):
         result.append(np.zeros(c, int) + i)
@@ -57,18 +110,32 @@ def _expand_counts(counts):
 
 
 def _lladser_point_estimates(sample, r=10):
-    """Series of point estimates of the conditional uncovered probability
+    """Series of point estimates of the conditional uncovered probability.
 
-    sample: series of random observations
-    r: Number of new colors that are required for the next prediction
+    Parameters
+    ----------
+    sample : (N,) array_like, int
+        Series of random observations.
+    r : int, optional
+        Number of new colors that are required for the next prediction.
 
-    This is the point estimator described in Theorem 2 (i):
-    Lladser, Gouet, and Reeder, "Extrapolation of Urn Models via
-    Poissonization: Accurate Measurements of the Microbial Unknown" PLoS 2011.
-    Returns: Each new color yields 3-tuple:
-         - point estimate
-         - position in sample of prediction
-         - random variable from poisson process (mostly to make testing easier)
+    Returns
+    -------
+    generator
+        Each new color yields a tuple of three elements: the point estimate,
+        position in sample of prediction, and random variable from Poisson
+        process (mostly to make testing easier).
+
+    Notes
+    -----
+    This is the point estimator described in Theorem 2 (i) in [1]_.
+
+    References
+    ----------
+    .. [1] Lladser, Gouet, and Reeder, "Extrapolation of Urn Models via
+       Poissonization: Accurate Measurements of the Microbial Unknown" PLoS
+       2011.
+
     """
     if(r <= 2):
         raise ValueError("r must be >=3")
@@ -79,20 +146,27 @@ def _lladser_point_estimates(sample, r=10):
 
 
 def _get_interval_for_r_new_species(seq, r):
-    """For seq of samples compute interval between r new species.
-
-    seq: series of observations (the actual sample, not the frequencies)
-    r: Number of new colors to that need to be observed for a new interval
+    """Compute interval between r new species for seq of samples.
 
     Imagine an urn with colored balls. Given a drawing of balls from the urn,
     compute how many balls need to be looked at to discover r new colors.
     Colors can be repeated.
 
-    Returns: for each new color seen for the first time, yield:
-             - length of interval, i.e. number of observations looked at
-             - the set of seen colors
-             - position in seq after seeing last new color (end of interval)
-             - position in seq where interval is started
+    Parameters
+    ----------
+    seq : sequence
+        Series of observations (the actual sample, not the frequencies).
+    r : int
+        Number of new colors that need to be observed for a new interval.
+
+    Returns
+    -------
+    generator
+        For each new color seen for the first time, yields a tuple of four
+        elements: the length of interval (i.e. number of observations looked
+        at), the set of seen colors, position in seq after seeing last new
+        color (end of interval), and position in seq where interval is started.
+
     """
     seen = set()
     seq_len = len(seq)
@@ -122,19 +196,26 @@ def _get_interval_for_r_new_species(seq, r):
 def _lladser_ci_series(seq, r, alpha=0.95, f=10, ci_type='ULCL'):
     """Construct r-color confidence intervals for uncovered conditional prob.
 
-    seq: Input is a sequence of colors (the actual sample, not the counts)
-    r  : Number of new colors that are required for the next prediction
-    alpha: desired confidence level
-    f: ratio between upper and lower bound
-    ci_type: type of confidence interval. One of:
-             ULCL: upper and lower bounds with conservative lower bound
-             ULCU: upper and lower woth conservative upper bound
-             U: Upper bound only, lower bound fixed to 0
-             L: Lower bound only, upper bound fixed to 1
+    Parameters
+    ----------
+    seq : sequence
+        Sequence of colors (the actual sample, not the counts).
+    r : int
+        Number of new colors that are required for the next prediction.
+    alpha : float, optional
+        Desired confidence level.
+    f : float, optional
+        Ratio between upper and lower bound.
+    ci_type : {'ULCL', 'ULCU', 'U', 'L'}
+        Type of confidence interval. If ``'ULCL'``, upper and lower bounds with
+        conservative lower bound. If ``'ULCU'``, upper and lower bounds with
+        conservative upper bound. If ``'U'``, upper bound only, lower bound
+        fixed to 0. If ``'L'``, lower bound only, upper bound fixed to 1.
 
-    Returns: One CI prediction for each new color that is detected and where.
-    Lladser, Gouet, and Reeder, "Extrapolation of Urn Models via
-    Poissonization: Accurate Measurements of the Microbial Unknown" PLoS 2011.
+    Returns
+    -------
+    generator
+        Yields one CI prediction for each new color that is detected and where.
 
     """
     for count, seen, cost, i in _get_interval_for_r_new_species(seq, r):
@@ -143,24 +224,14 @@ def _lladser_ci_series(seq, r, alpha=0.95, f=10, ci_type='ULCL'):
 
 
 def _lladser_ci_from_r(r, t, alpha=0.95, f=10, ci_type='ULCL'):
-    """Construct r-color confidence intervals for uncovered conditional prob.
+    """Construct r-color confidence interval for uncovered conditional prob.
 
-    r: Number of new colors that are required for the next prediction
-    t: A value from the gamma distribution gamma (count,1)
-    alpha: desired confidence level
-    f: ratio between upper and lower bound
-    ci_type: type of confidence interval. One of:
-             ULCL: upper and lower bounds with conservative lower bound
-             ULCU: upper and lower woth conservative upper bound
-             U: Upper bound only, lower bound fixed to 0
-             L: Lower bound only, upper bound fixed to 1
+    Returns
+    -------
+    tuple
+        Confidence interval that contains the true conditional uncovered
+        probability with a probability of 100% * `alpha`.
 
-    This is the formula that is described in Theorem 2 iii
-    Lladser, Gouet, and Reeder, "Extrapolation of Urn Models via
-    Poissonization: Accurate Measurements of the Microbial Unknown" PLoS 2011.
-
-    Returns: A confidence interval that contains the true conditional
-             uncovered probability with a probability of 100% * alpha.
     """
     if ci_type == 'U':
         upper_bound = _upper_confidence_bound(r, alpha) / t
@@ -188,17 +259,30 @@ def _lladser_ci_from_r(r, t, alpha=0.95, f=10, ci_type='ULCL'):
 
 
 def _upper_confidence_bound(r, alpha):
-    """Get constant for confidence interval with lower bound fixed to 0
+    """Get constant for confidence interval with lower bound fixed to 0.
 
-    r: number of new colors
-    alpha: Confidence interval (for 95% conf use 0.95)
+    Parameters
+    ----------
+    r : int
+        Number of new colors.
+    alpha : float
+        Confidence interval (for 95% confidence use 0.95).
 
-    Compute constant b according to Theorem 2 iii with a=0
-    aka c_0 from Table 3
-    Lladser, Gouet, and Reeder, "Extrapolation of Urn Models via
-    Poissonization: Accurate Measurements of the Microbial Unknown" PLoS 2011.
+    Returns
+    -------
+    float
+        Constant c such that the confidence interval is ``[0,c/T_r]``.
 
-    Returns: Constant c such that the confidence interval is [0,c/T_r]
+    Notes
+    -----
+    Computes constant b according to Theorem 2 (iii) in [1]_ with a=0, aka c_0
+    from Table 3.
+
+    References
+    ----------
+    .. [1] Lladser, Gouet, and Reeder, "Extrapolation of Urn Models via
+       Poissonization: Accurate Measurements of the Microbial Unknown" PLoS
+       2011.
 
     """
     alpha = round(alpha, 2)
@@ -239,16 +323,30 @@ def _upper_confidence_bound(r, alpha):
 
 
 def _lower_confidence_bound(r, alpha):
-    """Get constant for confidence interval with upper bound fixed to 1
+    """Get constant for confidence interval with upper bound fixed to 1.
 
-    r: number of new colors
-    alpha: Confidence interval (for 95% conf use 0.95)
+    Parameters
+    ----------
+    r : int
+        Number of new colors.
+    alpha : float
+        Confidence interval (for 95% confidence use 0.95).
 
-    Compute constant b according to Theorem 2 iii with b=1
-    aka c_3 from Table 3
-    Lladser, Gouet, and Reeder, "Extrapolation of Urn Models via
-    Poissonization: Accurate Measurements of the Microbial Unknown" PLoS 2011.
-    Returns: Constant c such that the confidence interval is [c/T_r, 1]
+    Returns
+    -------
+    float
+        Constant c such that the confidence interval is ``[c/T_r, 1]``.
+
+    Notes
+    -----
+    Computes constant b according to Theorem 2 (iii) in [1]_ with b=1, aka c_3
+    from Table 3.
+
+    References
+    ----------
+    .. [1] Lladser, Gouet, and Reeder, "Extrapolation of Urn Models via
+       Poissonization: Accurate Measurements of the Microbial Unknown" PLoS
+       2011.
 
     """
     alpha = round(alpha, 2)
@@ -287,17 +385,26 @@ def _lower_confidence_bound(r, alpha):
 
 
 def _ul_confidence_bounds(f, r, alpha):
-    """returns confidence bounds based on ratio f and alpha
-
-    f: desired ratio of upper to lower bound
-    r: number of new colors
-    alpha: Confidence interval (for 95% conf use 0.95)
+    """Return confidence bounds based on ratio and alpha.
 
     This function is just a lookup of some precomputed values.
 
-    Returns: Constant c_1,c_2 such that the confidence interval is:
-             [c_1/T_r, c_1*f/T_r] for conservative lower bound intervals and
-             [c_2/T_r, c_2*f/T_r] for conservative upper bound intervals
+    Parameters
+    ----------
+    f : float
+        Desired ratio of upper to lower bound.
+    r : int
+        Number of new colors.
+    alpha : float
+        Confidence interval (for 95% confidence use 0.95).
+
+    Returns
+    -------
+    tuple
+        Constants ``(c_1, c_2)`` such that the confidence interval is
+        ``[c_1/T_r, c_1*f/T_r]`` for conservative lower bound intervals and
+        ``[c_2/T_r, c_2*f/T_r]`` for conservative upper bound intervals.
+
     """
     alpha = round(alpha, 2)
     a = None

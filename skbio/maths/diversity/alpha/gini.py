@@ -89,7 +89,7 @@ def _lorenz_curve_integrator(lc_pts, method):
     Notes
     -----
     Could be utilized for integrating other simple, non-pathological
-    'functions' where width of the trapezoids is constant.
+    "functions" where width of the trapezoids is constant.
 
     """
     if method == 'trapezoids':
