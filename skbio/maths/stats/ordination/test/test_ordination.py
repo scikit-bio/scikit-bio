@@ -619,3 +619,39 @@ class TestOrdinationResults(object):
                 exp = f.read()
 
             npt.assert_equal(obs, exp)
+
+    def test_from_file(self):
+        for scores, test_path in izip(self.scores, self.test_paths):
+            with open(get_data_path(test_path), 'U') as f:
+                obs = OrdinationResults.from_file(f)
+
+            npt.assert_almost_equal(obs.eigvals, scores.eigvals)
+            if scores.species is not None:
+                npt.assert_almost_equal(obs.species, scores.species)
+            else:
+                npt.assert_equal(obs.species, scores.species)
+            npt.assert_equal(obs.species_ids, scores.species_ids)
+
+            if scores.site is not None:
+                npt.assert_almost_equal(obs.site, scores.site)
+            else:
+                npt.assert_equal(obs.site, scores.site)
+            npt.assert_equal(obs.site_ids, scores.site_ids)
+
+            if scores.biplot is not None:
+                npt.assert_almost_equal(obs.biplot, scores.biplot)
+            else:
+                npt.assert_equal(obs.biplot, scores.biplot)
+
+            if scores.site_constraints is not None:
+                npt.assert_almost_equal(obs.site_constraints,
+                                        scores.site_constraints)
+            else:
+                npt.assert_equal(obs.site_constraints, scores.site_constraints)
+
+            if scores.proportion_explained is not None:
+                npt.assert_almost_equal(obs.proportion_explained,
+                                        scores.proportion_explained)
+            else:
+                npt.assert_equal(obs.proportion_explained,
+                                 scores.proportion_explained)

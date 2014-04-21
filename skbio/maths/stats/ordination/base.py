@@ -73,7 +73,7 @@ class OrdinationResults(namedtuple('OrdinationResults',
             Site3<tab>1.666<tab>0.470
 
         If a given result attribute is not present (e.g. Biplot), it should be
-        still defined and declare its size as 0::
+        still defined and declare its dimensions as 0::
 
             Biplot<tab>0<tab>0
 
@@ -110,9 +110,9 @@ class OrdinationResults(namedtuple('OrdinationResults',
         # The next line should be an empty line
         curr_line = cls._check_empty_line(orf, curr_line)
         # Now we should find the proportion explained section
-        prop_expl, curr_line = cls._parse_proportion_explained(orf, curr_line,
-                                                               len(eigvals))
-        if len(prop_expl) != len(eigvals):
+        prop_expl, curr_line = cls._parse_proportion_explained(orf, curr_line)
+
+        if prop_expl is not None and len(prop_expl) != len(eigvals):
             raise ValueError('There should be as many proportion explained '
                              'values as eigvals: %d != %d' % (len(prop_expl),
                                                               len(eigvals)))
@@ -134,8 +134,11 @@ class OrdinationResults(namedtuple('OrdinationResults',
         # Next section should be the site constraints section
         cons, cons_ids, curr_line = cls._parse_coords(orf, curr_line,
                                                       'Site constraints')
-        # The last line should be an empty line
-        curr_line = cls._check_empty_line(orf, curr_line)
+
+        if cons_ids is not None and site_ids is not None:
+            if cons_ids != site_ids:
+                raise ValueError('Site constraints ids and site ids must be '
+                                 'equal: %s != %s' % (cons_ids, site_ids))
 
         return cls(eigvals=eigvals, species=species, site=site, biplot=biplot,
                    site_constraints=cons, proportion_explained=prop_expl,
@@ -158,7 +161,8 @@ class OrdinationResults(namedtuple('OrdinationResults',
         # Parse the eigvals, present on the next line
         # Eigval_1<tab>Eigval_2<tab>Eigval_3<tab>...
         curr_line += 1
-        eigvals = np.asarray(lines[curr_line], dtype=np.float64)
+        eigvals = np.asarray(lines[curr_line].strip().split('\t'),
+                             dtype=np.float64)
         if len(eigvals) != num_eigvals:
             raise ValueError('Expected %d eigvals, but found %d.' %
                              (num_eigvals, len(eigvals)))
@@ -191,7 +195,8 @@ class OrdinationResults(namedtuple('OrdinationResults',
         else:
             # Parse the line with the proportion explained values
             curr_line += 1
-            prop_expl = np.asarray(lines[curr_line], dtype=np.float64)
+            prop_expl = np.asarray(lines[curr_line].strip().split('\t'),
+                                   dtype=np.float64)
             if len(prop_expl) != num_prop_expl:
                 raise ValueError('Expected %d proportion explained values, but'
                                  ' found %d.' % (num_prop_expl,
@@ -200,11 +205,11 @@ class OrdinationResults(namedtuple('OrdinationResults',
         return prop_expl, curr_line + 1
 
     @staticmethod
-    def _parse_coords(lines, curr_line, header):
+    def _parse_coords(lines, curr_line, header_id):
         # Parse the coords header
         header = lines[curr_line].strip().split('\t')
-        if len(header) != 3 or header[0] != header:
-            raise FileFormatError('%s header not found.' % header)
+        if len(header) != 3 or header[0] != header_id:
+            raise FileFormatError('%s header not found.' % header_id)
 
         # Parse the dimensions of the coord matrix
         rows = int(header[1])
