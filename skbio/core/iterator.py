@@ -273,9 +273,19 @@ class FastqIterator(SequenceIterator):
 
     Note: thq 'qual' keyword argument is ignored by this object.
     """
+    def __init__(self, *args, **kwargs):
+        if 'force_phred_offset' in kwargs:
+            self._fpo = kwargs.pop('force_phred_offset')
+        else:
+            # force to an offset of 33
+            self._fpo = 33
+
+        super(FastqIterator, self).__init__(*args, **kwargs)
+
     def _gen(self):
         """Construct internal iterators"""
-        fastq_gens = chain(*[parse_fastq(f) for f in self.seq])
+        fastq_gens = chain(*[parse_fastq(f, force_phred_offset=self._fpo)
+                             for f in self.seq])
         return self._fastq_gen(fastq_gens)
 
     def _fastq_gen(self, fastq_gens):

@@ -245,11 +245,11 @@ class FastqTests(TestCase):
         gen = wk()
 
         exp1 = {'SequenceID': '1', 'Sequence': 'atat', 'QualID': '1',
-                'Qual': array([1, 2, 3, 4])}
+                'Qual': array([32, 33, 34, 35])}
         exp2 = {'SequenceID': '2', 'Sequence': 'atgc', 'QualID': '2',
-                'Qual': array([2, 3, 4, 5])}
+                'Qual': array([33, 34, 35, 36])}
         exp3 = {'SequenceID': '3', 'Sequence': 'taa', 'QualID': '3',
-                'Qual': array([5, 6, 7])}
+                'Qual': array([36, 37, 38])}
 
         obs1 = gen.next()
         self.assertTrue((obs1['Qual'] == exp1['Qual']).all())
