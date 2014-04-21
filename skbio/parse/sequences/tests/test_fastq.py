@@ -24,7 +24,8 @@ class ParseFastqTests(TestCase):
 
     def test_parse(self):
         """sequence and info objects should correctly match"""
-        for label, seq, qual in parse_fastq(self.FASTQ_EXAMPLE):
+        for label, seq, qual in parse_fastq(self.FASTQ_EXAMPLE,
+                                            force_phred_offset=64):
             self.assertTrue(label in DATA)
             self.assertEqual(seq, DATA[label]["seq"])
             self.assertTrue((qual == DATA[label]["qual"]).all())
