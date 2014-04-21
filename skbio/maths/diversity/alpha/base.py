@@ -129,6 +129,10 @@ def dominance(counts):
     double
         Dominance.
 
+    See Also
+    --------
+    simpson
+
     Notes
     -----
     The implementation here is based on the description given in [1]_.
@@ -705,7 +709,31 @@ def robbins(counts):
 
 
 def shannon(counts, base=2):
-    """Calculate Shannon entropy of counts, default in bits."""
+    """Calculate Shannon entropy of counts (H), default in bits.
+
+    Parameters
+    ----------
+    counts : (N,) array_like, int
+        Vector of counts.
+    base : scalar, optional
+        Logarithm base to use in the calculations.
+
+    Returns
+    -------
+    double
+        Shannon diversity index H.
+
+    Notes
+    -----
+    The implementation here is based on the description given in the SDR-IV
+    online manual [1]_, except that the default logarithm base used here is 2
+    instead of e.
+
+    References
+    ----------
+    .. [1] http://www.pisces-conservation.com/sdrhelp/index.html
+
+    """
     counts = _validate(counts)
     freqs = counts / counts.sum()
     nonzero_freqs = freqs[freqs.nonzero()]
@@ -717,25 +745,112 @@ def simpson(counts):
 
     Simpson's index = 1 - dominance.
 
+    Parameters
+    ----------
+    counts : (N,) array_like, int
+        Vector of counts.
+
+    Returns
+    -------
+    double
+        Simpson's index.
+
+    See Also
+    --------
+    dominance
+
+    Notes
+    -----
+    The implementation here is ``1 - dominance`` as described in [1]_. Other
+    references (such as [2]_) define Simpson's index as ``1 / dominance``.
+
+    References
+    ----------
+    .. [1] http://folk.uio.no/ohammer/past/diversity.html
+    .. [2] http://www.pisces-conservation.com/sdrhelp/index.html
+
     """
     counts = _validate(counts)
     return 1 - dominance(counts)
 
 
 def simpson_e(counts):
-    """Calculate Simpson's evenness."""
+    """Calculate Simpson's evenness measure E.
+
+    Simpson's E = ``(1 / dominance) / observed_species``.
+
+    Parameters
+    ----------
+    counts : (N,) array_like, int
+        Vector of counts.
+
+    Returns
+    -------
+    double
+        Simpson's evenness measure E.
+
+    See Also
+    --------
+    dominance
+    enspie
+    simpson
+
+    Notes
+    -----
+    The implementation here is based on the description given in [1]_.
+
+    References
+    ----------
+    .. [1] http://www.tiem.utk.edu/~gross/bioed/bealsmodules/simpsonDI.html
+
+    """
     counts = _validate(counts)
     return enspie(counts) / observed_species(counts)
 
 
 def singles(counts):
-    """Return count of single occurrences."""
+    """Calculate number of single occurrences (singletons).
+
+    Parameters
+    ----------
+    counts : (N,) array_like, int
+        Vector of counts.
+
+    Returns
+    -------
+    int
+        Singleton count.
+
+    """
     counts = _validate(counts)
     return (counts == 1).sum()
 
 
 def strong(counts):
-    """Calculate Strong's 2002 dominance index, by way of SDR-IV."""
+    """Calculate Strong's dominance index (Dw).
+
+    Parameters
+    ----------
+    counts : (N,) array_like, int
+        Vector of counts.
+
+    Returns
+    -------
+    double
+        Strong's dominance index (Dw).
+
+    Notes
+    -----
+    Strong's dominance index is defined in [1]_. The implementation here is
+    based on the description given in the SDR-IV online manual [2]_.
+
+    References
+    ----------
+    .. [1] Strong, W. L., 2002 Assessing species abundance uneveness within and
+       between plant communities. Community Ecology, 3, 237-246.
+    .. [2] http://www.pisces-conservation.com/sdrhelp/index.html
+
+    """
     counts = _validate(counts)
     n = counts.sum()
     s = observed_species(counts)
