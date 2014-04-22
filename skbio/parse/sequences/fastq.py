@@ -148,7 +148,9 @@ def parse_fastq(data, strict=False, phred_offset=33):
                                                                      qualid))
         elif linetype == QUAL:
             qual = phred_f(line)
-            if (qual < 0).any() or (qual > 40).any():
+            # bounds based on illumina limits, see:
+            # http://nar.oxfordjournals.org/content/38/6/1767/T1.expansion.html
+            if (qual < 0).any() or (qual > 62).any():
                 raise FastqParseError("Failed qual conversion for seq id: %s. "
                                       "This may be because you passed an "
                                       "incorrect value for phred_offset."
