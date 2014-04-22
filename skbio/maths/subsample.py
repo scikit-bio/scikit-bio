@@ -118,12 +118,12 @@ def subsample(counts, n, replace=False):
         probs = counts / counts_sum
         result = np.random.multinomial(n, probs)
     else:
-        try:
-            result = _subsample_without_replacement(counts, n, counts_sum)
-        except NameError:
-            if counts_sum == n:
-                result = counts
-            else:
+        if counts_sum == n:
+            result = counts
+        else:
+            try:
+                result = _subsample_without_replacement(counts, n, counts_sum)
+            except NameError:
                 nz = counts.nonzero()[0]
                 unpacked = np.concatenate([np.repeat(np.array(i,), counts[i])
                                            for i in nz])
