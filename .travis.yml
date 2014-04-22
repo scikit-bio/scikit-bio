@@ -4,7 +4,7 @@ language: python
 env:
   - PYTHON_VERSION=3.4 NUMPY_VERSION=1.8
   - PYTHON_VERSION=2.7 NUMPY_VERSION=1.8 WITH_DOCTEST=True
-  - PYTHON_VERSION=2.7 NUMPY_VERSION=1.7
+  - PYTHON_VERSION=2.7 NUMPY_VERSION=1.7 WITH_DOCTEST=True
 before_install:
   - wget http://repo.continuum.io/miniconda/Miniconda-2.2.2-Linux-x86_64.sh -O miniconda.sh
   - chmod +x miniconda.sh
