@@ -8,8 +8,6 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from skbio.util.misc import is_casava_v180_or_later
-
 
 def _phred_to_ascii(a, offset):
     """Convert Phred quality score to ASCII character with specified offset"""
