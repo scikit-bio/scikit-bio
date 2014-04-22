@@ -16,7 +16,6 @@ Functions
    subsample
 
 """
-from __future__ import division
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -26,7 +25,13 @@ from __future__ import division
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from __future__ import division
+
 import numpy as np
+try:
+    from _subsample import _subsample_without_replacement
+except ImportError:
+    pass
 
 
 def subsample(counts, n, replace=False):
@@ -113,21 +118,19 @@ def subsample(counts, n, replace=False):
         probs = counts / counts_sum
         result = np.random.multinomial(n, probs)
     else:
-        if counts_sum == n:
-            result = counts
-        else:
-            nz = counts.nonzero()[0]
-            unpacked = np.concatenate([np.repeat(np.array(i,), counts[i])
-                                       for i in nz])
-            permuted = np.random.permutation(unpacked)[:n]
+        try:
+            result = _subsample_without_replacement(counts, n, counts_sum)
+        except NameError:
+            if counts_sum == n:
+                result = counts
+            else:
+                nz = counts.nonzero()[0]
+                unpacked = np.concatenate([np.repeat(np.array(i,), counts[i])
+                                           for i in nz])
+                permuted = np.random.permutation(unpacked)[:n]
 
-            result = np.zeros(len(counts), dtype=int)
-            for p in permuted:
-                result[p] += 1
+                result = np.zeros(len(counts), dtype=int)
+                for p in permuted:
+                    result[p] += 1
 
     return result
-
-try:
-    from _subsample import *
-except ImportError:
-    pass
