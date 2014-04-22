@@ -29,7 +29,6 @@ def format_fastq_record(seqid, seq, qual, phred_offset=33):
 
     Parameters
     ----------
-
     seqid : str
         The sequence ID
     seq : str or subclass of BiologicalSequence
@@ -41,7 +40,6 @@ def format_fastq_record(seqid, seq, qual, phred_offset=33):
 
     Returns
     -------
-
     str : a string representation of a single FASTQ record
 
     Examples
@@ -56,6 +54,7 @@ def format_fastq_record(seqid, seq, qual, phred_offset=33):
     AATTGG
     +
     GGHHII
+
     """
     if phred_offset == 33:
         phred_f = _phred_to_ascii33
