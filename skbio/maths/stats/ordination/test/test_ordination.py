@@ -610,6 +610,10 @@ class TestOrdinationResults(object):
                            'PCoA_sample_data_3_scores', 'example2_scores']
         self.fferror_test_paths = ['error1', 'error2', 'error3', 'error4',
                                    'error5', 'error6']
+        self.verror_test_paths = ['v_error1', 'v_error2', 'v_error3',
+                                  'v_error4', 'v_error5', 'v_error6',
+                                  'v_error7', 'v_error8', 'v_error9',
+                                  'v_error10']
 
     def test_to_file(self):
         for scores, test_path in izip(self.scores, self.test_paths):
@@ -663,4 +667,9 @@ class TestOrdinationResults(object):
         for test_path in self.fferror_test_paths:
             with open(get_data_path(test_path), 'U') as f:
                 with npt.assert_raises(FileFormatError):
+                    OrdinationResults.from_file(f)
+
+        for test_path in self.verror_test_paths:
+            with open(get_data_path(test_path), 'U') as f:
+                with npt.assert_raises(ValueError):
                     OrdinationResults.from_file(f)
