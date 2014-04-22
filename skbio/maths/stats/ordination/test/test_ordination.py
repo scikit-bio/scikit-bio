@@ -10,7 +10,6 @@
 
 from __future__ import division
 
-import os
 import warnings
 
 import numpy as np
@@ -18,14 +17,8 @@ import numpy.testing as npt
 from scipy.spatial.distance import pdist
 
 from skbio.maths.stats.ordination import CA, RDA, CCA, PCoA
-from skbio.core.distance import SymmetricDistanceMatrix
-
-
-def get_data_path(fn):
-    """Return path to filename `fn` in the data folder."""
-    path = os.path.dirname(os.path.abspath(__file__))
-    data_path = os.path.join(path, 'data', fn)
-    return data_path
+from skbio.core.distance import DistanceMatrix
+from skbio.util.testing import get_data_path
 
 
 def normalize_signs(arr1, arr2):
@@ -426,8 +419,7 @@ class TestPCoAResults(object):
         """Sample data set from page 111 of W.J Krzanowski. Principles
         of multivariate analysis, 2000, Oxford University Press."""
         matrix = np.loadtxt(get_data_path('PCoA_sample_data'))
-        dist_matrix = SymmetricDistanceMatrix(matrix,
-                                              map(str, range(matrix.shape[0])))
+        dist_matrix = DistanceMatrix(matrix, map(str, range(matrix.shape[0])))
         self.dist_matrix = dist_matrix
 
     def test_negative_eigenvalue_warning(self):
@@ -456,25 +448,93 @@ class TestPCoAResults(object):
 class TestPCoAResultsExtensive(object):
     def setup(self):
         matrix = np.loadtxt(get_data_path('PCoA_sample_data_2'))
-        dist_matrix = SymmetricDistanceMatrix(matrix,
-                                              map(str, range(matrix.shape[0])))
+        self.ids = map(str, range(matrix.shape[0]))
+        dist_matrix = DistanceMatrix(matrix, self.ids)
         self.ordination = PCoA(dist_matrix)
 
     def test_values(self):
+        results = self.ordination.scores()
+
+        npt.assert_almost_equal(len(results.eigvals), len(results.species[0]))
+
         expected = np.array([[-0.028597, 0.22903853, 0.07055272,
-                              0.26163576, 0.28398669],
+                              0.26163576, 0.28398669, 0.0],
                              [0.37494056, 0.22334055, -0.20892914,
-                              0.05057395, -0.18710366],
+                              0.05057395, -0.18710366, 0.0],
                              [-0.33517593, -0.23855979, -0.3099887,
-                              0.11521787, -0.05021553],
+                              0.11521787, -0.05021553, 0.0],
                              [0.25412394, -0.4123464, 0.23343642,
-                              0.06403168, -0.00482608],
+                              0.06403168, -0.00482608, 0.0],
                              [-0.28256844, 0.18606911, 0.28875631,
-                              -0.06455635, -0.21141632],
+                              -0.06455635, -0.21141632, 0.0],
                              [0.01727687, 0.012458, -0.07382761,
-                              -0.42690292, 0.1695749]])
-        actual = self.ordination.scores().species
-        npt.assert_almost_equal(*normalize_signs(expected, actual))
+                              -0.42690292, 0.1695749, 0.0]])
+        npt.assert_almost_equal(*normalize_signs(expected, results.species))
+
+        expected = np.array([0.3984635, 0.36405689, 0.28804535, 0.27479983,
+                            0.19165361, 0.0])
+        npt.assert_almost_equal(results.eigvals, expected)
+
+        expected = np.array([0.2626621381, 0.2399817314, 0.1898758748,
+                             0.1811445992, 0.1263356565, 0.0])
+        npt.assert_almost_equal(results.proportion_explained, expected)
+
+        npt.assert_equal(results.ids, self.ids)
+
+
+class TestPCoAEigenResults(object):
+    def setup(self):
+        with open(get_data_path('PCoA_sample_data_3'), 'U') as lines:
+            dist_matrix = DistanceMatrix.from_file(lines)
+        self.ordination = PCoA(dist_matrix)
+        self.ids = ['PC.636', 'PC.635', 'PC.356', 'PC.481', 'PC.354', 'PC.593',
+                    'PC.355', 'PC.607', 'PC.634']
+
+    def test_values(self):
+        results = self.ordination.scores()
+
+        npt.assert_almost_equal(len(results.eigvals), len(results.species[0]))
+
+        expected = np.array([[-0.25846546, 0.17399955, 0.03828758, -0.19447751,
+                              0.0831176, 0.26243033, -0.02316364, -0.0184794,
+                              0.0],
+                             [-0.27100114, -0.01859513, -0.08648419,
+                              0.11806425, -0.19880836, -0.02117236,
+                              -0.19102403, 0.15564659, 0.0],
+                             [0.2350779, 0.09625193, -0.34579273, -0.00320863,
+                              -0.09637777, 0.04570254, 0.18547281, 0.0404094,
+                              0.0],
+                             [0.02614077, -0.01114597, 0.1476606, 0.29087661,
+                              0.20394547, 0.06197124, 0.10164133, 0.105691,
+                              0.0],
+                             [0.28500755, -0.01925499, 0.06232634, 0.1381268,
+                              -0.1047986, 0.09517207, -0.1296361, -0.22068717,
+                              0.0],
+                             [0.20463633, -0.13936115, 0.29151382, -0.18156679,
+                              -0.15958013, -0.02464121, 0.08662524,
+                              0.09962215, 0.0],
+                             [0.2334824, 0.22525797, -0.01886231, -0.10772998,
+                              0.177109, -0.19290584, -0.14981947, 0.0383549,
+                              0.0],
+                             [-0.09496319, -0.4209748, -0.15486945,
+                              -0.08984275, 0.15261819, -0.03342327,
+                              -0.02512248, -0.05089885, 0.0],
+                             [-0.35991516, 0.1138226, 0.06622034, 0.029758,
+                              -0.05722541, -0.19313351, 0.14502633,
+                              -0.14965861, 0.0]])
+        npt.assert_almost_equal(*normalize_signs(expected, results.species))
+
+        expected = np.array([0.51236726, 0.30071909, 0.26791207, 0.20898868,
+                             0.19169895, 0.16054235,  0.15017696,  0.12245775,
+                             0.0])
+        npt.assert_almost_equal(results.eigvals, expected)
+
+        expected = np.array([0.2675738328, 0.157044696, 0.1399118638,
+                             0.1091402725, 0.1001110485, 0.0838401162,
+                             0.0784269939, 0.0639511764, 0.0])
+        npt.assert_almost_equal(results.proportion_explained, expected)
+
+        npt.assert_equal(results.ids, self.ids)
 
 
 class TestPCoAPrivateMethods(object):

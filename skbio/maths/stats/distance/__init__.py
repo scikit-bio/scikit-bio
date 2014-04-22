@@ -22,12 +22,12 @@ Examples
 Load a 4x4 distance matrix and grouping vector denoting 2 groups of objects.
 Note that these statistical methods require symmetric distances:
 
->>> from skbio.core.distance import SymmetricDistanceMatrix
->>> dm = SymmetricDistanceMatrix([[0, 1, 1, 4],
-...                               [1, 0, 3, 2],
-...                               [1, 3, 0, 3],
-...                               [4, 2, 3, 0]],
-...                              ['s1', 's2', 's3', 's4'])
+>>> from skbio.core.distance import DistanceMatrix
+>>> dm = DistanceMatrix([[0, 1, 1, 4],
+...                      [1, 0, 3, 2],
+...                      [1, 3, 0, 3],
+...                      [4, 2, 3, 0]],
+...                     ['s1', 's2', 's3', 's4'])
 >>> grouping = ['Group1', 'Group1', 'Group2', 'Group2']
 
 Create an ANOSIM instance and run the method with 99 permutations:
@@ -102,3 +102,6 @@ from .anosim import ANOSIM
 from .permanova import PERMANOVA
 
 __all__ = ['ANOSIM', 'PERMANOVA', 'CategoricalStatsResults']
+
+from numpy.testing import Tester
+test = Tester().test

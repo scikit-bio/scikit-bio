@@ -66,7 +66,7 @@ import numpy as np
 from scipy.stats import entropy
 
 from skbio.core.exception import SequenceCollectionError
-from skbio.core.distance import SymmetricDistanceMatrix
+from skbio.core.distance import DistanceMatrix
 
 
 class SequenceCollection(object):
@@ -430,9 +430,13 @@ class SequenceCollection(object):
         (2, 6.0, 1.0)
 
         """
-        sequence_lengths = self.sequence_lengths()
-        return (len(sequence_lengths), center_f(sequence_lengths),
-                spread_f(sequence_lengths))
+        if self.is_empty():
+            return (0, 0.0, 0.0)
+        else:
+            sequence_count = self.sequence_count()
+            sequence_lengths = self.sequence_lengths()
+            return (sequence_count, center_f(sequence_lengths),
+                    spread_f(sequence_lengths))
 
     def degap(self):
         r"""Return a new `SequenceCollection` with all gap characters removed.
@@ -566,6 +570,18 @@ class SequenceCollection(object):
             int_keys.append((k, seq.identifier))
         return dict(int_map), dict(int_keys)
 
+    def is_empty(self):
+        """Return True if the SequenceCollection is empty
+
+        Returns
+        -------
+        bool
+            ``True`` if `self` contains zero sequences, and ``False``
+            otherwise.
+
+        """
+        return self.sequence_count() == 0
+
     def is_valid(self):
         """Return True if the SequenceCollection is valid
 
@@ -648,6 +664,56 @@ class SequenceCollection(object):
 
         """
         return len(self._data)
+
+    def k_word_frequencies(self, k, overlapping=True, constructor=str):
+        """Return frequencies of length k words for sequences in Alignment
+
+        Parameters
+        ----------
+        k : int
+            The word length.
+        overlapping : bool, optional
+            Defines whether the k-words should be overlapping or not
+            overlapping. This is only relevant when k > 1.
+        constructor : type, optional
+            The constructor for the returned k-words.
+
+        Returns
+        -------
+        list
+            List of ``collections.defaultdict`` objects, one for each sequence
+            in the `Alignment`, representing the frequency of each character in
+            each sequence of the `Alignment`.
+
+        See Also
+        --------
+        position_frequencies
+
+        Examples
+        --------
+        >>> from skbio.core.alignment import Alignment
+        >>> from skbio.core.sequence import DNA
+        >>> sequences = [DNA('A', identifier="seq1"),
+        ...              DNA('AT', identifier="seq2"),
+        ...              DNA('TTTT', identifier="seq3")]
+        >>> s1 = SequenceCollection(sequences)
+        >>> for freqs in s1.k_word_frequencies(1):
+        ...     print freqs
+        defaultdict(<type 'int'>, {'A': 1.0})
+        defaultdict(<type 'int'>, {'A': 0.5, 'T': 0.5})
+        defaultdict(<type 'int'>, {'T': 1.0})
+        >>> for freqs in s1.k_word_frequencies(2):
+        ...     print freqs
+        defaultdict(<type 'int'>, {})
+        defaultdict(<type 'int'>, {'AT': 1.0})
+        defaultdict(<type 'int'>, {'TT': 1.0})
+
+        """
+        result = []
+
+        for s in self:
+            result.append(s.k_word_frequencies(k, overlapping, constructor))
+        return result
 
     def sequence_lengths(self):
         """Return lengths of the sequences in the `SequenceCollection`
@@ -742,7 +808,7 @@ class Alignment(SequenceCollection):
 
         Returns
         -------
-        skbio.core.distance.SymmetricDistanceMatrix
+        skbio.core.distance.DistanceMatrix
             Matrix containing the distances between all pairs of sequences.
 
         Raises
@@ -785,7 +851,7 @@ class Alignment(SequenceCollection):
             identifiers.append(self_i.identifier)
             for j in xrange(i):
                 dm[i, j] = dm[j, i] = self_i.distance(self[j])
-        return SymmetricDistanceMatrix(dm, identifiers)
+        return DistanceMatrix(dm, identifiers)
 
     def subalignment(self, seqs_to_keep=None, positions_to_keep=None,
                      invert_seqs_to_keep=False,
@@ -1056,6 +1122,10 @@ class Alignment(SequenceCollection):
         'AT-C'
 
         """
+        # handle empty Alignment case
+        if self.is_empty():
+            return ''
+
         if constructor is None:
             constructor = self[0].__class__
         result = []
@@ -1102,6 +1172,10 @@ class Alignment(SequenceCollection):
         TTC
 
         """
+        # handle empty Alignment case
+        if self.is_empty():
+            return self.__class__([])
+
         position_frequencies = self.position_frequencies()
         gap_alphabet = self[0].gap_alphabet()
 
@@ -1145,10 +1219,14 @@ class Alignment(SequenceCollection):
         TT-C
 
         """
-        sequence_frequencies = self.sequence_frequencies()
+        # handle empty Alignment case
+        if self.is_empty():
+            return self.__class__([])
+
+        base_frequencies = self.k_word_frequencies(k=1)
         gap_alphabet = self[0].gap_alphabet()
         seqs_to_keep = []
-        for seq, f in izip(self, sequence_frequencies):
+        for seq, f in izip(self, base_frequencies):
             gap_frequency = sum([f[c] for c in gap_alphabet])
             if gap_frequency <= maximum_gap_frequency:
                 seqs_to_keep.append(seq.identifier)
@@ -1200,7 +1278,7 @@ class Alignment(SequenceCollection):
         --------
         position_counters
         position_entropies
-        sequence_frequencies
+        k_word_frequencies
 
         Examples
         --------
@@ -1218,6 +1296,10 @@ class Alignment(SequenceCollection):
 
         """
         result = []
+        # handle the empty Alignment case
+        if self.is_empty():
+            return result
+
         count = 1 / self.sequence_count()
         for p in self.iter_positions(constructor=str):
             current_freqs = defaultdict(float)
@@ -1276,6 +1358,10 @@ class Alignment(SequenceCollection):
 
         """
         result = []
+        # handle empty Alignment case
+        if self.is_empty():
+            return result
+
         iupac_standard_characters = self[0].iupac_standard_characters()
         for f in self.position_frequencies():
             if (nan_on_non_standard_chars and
@@ -1283,44 +1369,6 @@ class Alignment(SequenceCollection):
                 result.append(np.nan)
             else:
                 result.append(entropy(f.values(), base=base))
-        return result
-
-    def sequence_frequencies(self):
-        """Return frequencies of characters for sequences in Alignment
-
-        Returns
-        -------
-        list
-            List of ``collections.defaultdict`` objects, one for each sequence
-            in the `Alignment`, representing the frequency of each character in
-            each sequence of the `Alignment`.
-
-        See Also
-        --------
-        position_frequencies
-
-        Examples
-        --------
-        >>> from skbio.core.alignment import Alignment
-        >>> from skbio.core.sequence import DNA
-        >>> sequences = [DNA('AC--', identifier="seq1"),
-        ...              DNA('AT-C', identifier="seq2"),
-        ...              DNA('TT-C', identifier="seq3")]
-        >>> a1 = Alignment(sequences)
-        >>> for freqs in a1.sequence_frequencies():
-        ...     print freqs
-        defaultdict(<type 'int'>, {'A': 0.25, 'C': 0.25, '-': 0.5})
-        defaultdict(<type 'int'>, {'A': 0.25, 'C': 0.25, '-': 0.25, 'T': 0.25})
-        defaultdict(<type 'int'>, {'C': 0.25, '-': 0.25, 'T': 0.5})
-
-        """
-        result = []
-        count = 1 / self.sequence_length()
-        for s in self:
-            current_freqs = defaultdict(int)
-            for c in s:
-                current_freqs[c] += count
-            result.append(current_freqs)
         return result
 
     def sequence_length(self):
@@ -1348,7 +1396,11 @@ class Alignment(SequenceCollection):
         4
 
         """
-        return len(self._data[0])
+        # handle the empty Alignment case
+        if self.is_empty():
+            return 0
+        else:
+            return len(self._data[0])
 
     def to_phylip(self, map_labels=False, label_prefix=""):
         """Return phylip-formatted string representing the `SequenceCollection`
@@ -1364,8 +1416,7 @@ class Alignment(SequenceCollection):
                                           "be generated if all sequences are "
                                           "of equal length.")
 
-        sequence_count = self.sequence_count()
-        if sequence_count == 0:
+        if self.is_empty():
             raise SequenceCollectionError("PHYLIP-formatted string can only "
                                           "be generated if there is at least "
                                           "one sequence in the Alignment.")
@@ -1377,6 +1428,7 @@ class Alignment(SequenceCollection):
                                           "one position in the Alignment.")
 
         identifiers = self.identifiers()
+        sequence_count = self.sequence_count()
         result = ["%d %d" % (sequence_count, sequence_length)]
         if map_labels:
             seq_id_to_seqs, new_id_to_old_id =\
@@ -1397,8 +1449,8 @@ class Alignment(SequenceCollection):
     def _validate_lengths(self):
         """Return ``True`` if all sequences same length, ``False`` otherwise
         """
-        seq1_length = len(self[0])
-        for seq in self[1:]:
+        seq1_length = self.sequence_length()
+        for seq in self:
             if seq1_length != len(seq):
                 return False
         return True

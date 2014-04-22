@@ -12,8 +12,9 @@ from __future__ import division
 from unittest import TestCase, main
 
 import numpy as np
+import numpy.testing as npt
 
-from skbio.core.distance import DistanceMatrix, SymmetricDistanceMatrix
+from skbio.core.distance import DistanceMatrix
 from skbio.maths.stats.distance.anosim import ANOSIM
 
 
@@ -26,22 +27,22 @@ class ANOSIMTests(TestCase):
         dm_ids = ['s1', 's2', 's3', 's4']
         grouping_equal = ['Control', 'Control', 'Fast', 'Fast']
 
-        self.dm_ties = SymmetricDistanceMatrix([[0, 1, 1, 4],
-                                                [1, 0, 3, 2],
-                                                [1, 3, 0, 3],
-                                                [4, 2, 3, 0]], dm_ids)
+        self.dm_ties = DistanceMatrix([[0, 1, 1, 4],
+                                       [1, 0, 3, 2],
+                                       [1, 3, 0, 3],
+                                       [4, 2, 3, 0]], dm_ids)
 
-        self.dm_no_ties = SymmetricDistanceMatrix([[0, 1, 5, 4],
-                                                   [1, 0, 3, 2],
-                                                   [5, 3, 0, 3],
-                                                   [4, 2, 3, 0]], dm_ids)
+        self.dm_no_ties = DistanceMatrix([[0, 1, 5, 4],
+                                          [1, 0, 3, 2],
+                                          [5, 3, 0, 3],
+                                          [4, 2, 3, 0]], dm_ids)
 
         # Test with 3 groups of unequal size. This data also generates a
         # negative R statistic.
         grouping_unequal = ['Control', 'Treatment1', 'Treatment2',
                             'Treatment1', 'Control', 'Control']
 
-        self.dm_unequal = SymmetricDistanceMatrix(
+        self.dm_unequal = DistanceMatrix(
             [[0.0, 1.0, 0.1, 0.5678, 1.0, 1.0],
              [1.0, 0.0, 0.002, 0.42, 0.998, 0.0],
              [0.1, 0.002, 0.0, 1.0, 0.123, 1.0],
@@ -61,8 +62,8 @@ class ANOSIMTests(TestCase):
             np.random.seed(0)
             obs = self.anosim_ties()
             self.assertEqual(obs.sample_size, 4)
-            self.assertTrue(np.array_equal(obs.groups,
-                                           np.asarray(['Control', 'Fast'])))
+            npt.assert_array_equal(obs.groups,
+                                   ['Control', 'Fast'])
             self.assertAlmostEqual(obs.statistic, 0.25)
             self.assertAlmostEqual(obs.p_value, 0.671)
             self.assertEqual(obs.permutations, 999)
@@ -71,8 +72,7 @@ class ANOSIMTests(TestCase):
         np.random.seed(0)
         obs = self.anosim_no_ties()
         self.assertEqual(obs.sample_size, 4)
-        self.assertTrue(np.array_equal(obs.groups,
-                                       np.asarray(['Control', 'Fast'])))
+        npt.assert_array_equal(obs.groups, ['Control', 'Fast'])
         self.assertAlmostEqual(obs.statistic, 0.625)
         self.assertAlmostEqual(obs.p_value, 0.332)
         self.assertEqual(obs.permutations, 999)
@@ -80,8 +80,7 @@ class ANOSIMTests(TestCase):
     def test_call_no_permutations(self):
         obs = self.anosim_no_ties(0)
         self.assertEqual(obs.sample_size, 4)
-        self.assertTrue(np.array_equal(obs.groups,
-                                       np.asarray(['Control', 'Fast'])))
+        npt.assert_array_equal(obs.groups, ['Control', 'Fast'])
         self.assertAlmostEqual(obs.statistic, 0.625)
         self.assertEqual(obs.p_value, None)
         self.assertEqual(obs.permutations, 0)
@@ -90,9 +89,8 @@ class ANOSIMTests(TestCase):
         np.random.seed(0)
         obs = self.anosim_unequal()
         self.assertEqual(obs.sample_size, 6)
-        self.assertTrue(np.array_equal(obs.groups,
-                                       np.asarray(['Control', 'Treatment1',
-                                                   'Treatment2'])))
+        npt.assert_array_equal(obs.groups,
+                               ['Control', 'Treatment1', 'Treatment2'])
         self.assertAlmostEqual(obs.statistic, -0.363636, 6)
         self.assertAlmostEqual(obs.p_value, 0.878)
         self.assertEqual(obs.permutations, 999)
