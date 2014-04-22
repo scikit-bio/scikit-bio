@@ -11,7 +11,7 @@ class FASTQFormatTests(TestCase):
         """Construt a FASTQ record"""
         exp = b"@abc\ndef\n+\nfgh\n"
         obs = format_fastq_record(b'abc', b'def',
-                                  np.array([38, 39, 40], dtype=np.int8))
+                                  np.array([38, 39, 40], dtype=np.int8), 64)
         self.assertEqual(obs, exp)
 
     def test_phred_to_ascii33(self):
