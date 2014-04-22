@@ -21,6 +21,7 @@ from scipy.spatial.distance import pdist
 from skbio.maths.stats.ordination import CA, RDA, CCA, PCoA, OrdinationResults
 from skbio.core.distance import DistanceMatrix
 from skbio.util.testing import get_data_path
+from skbio.core.exception import FileFormatError
 
 
 def normalize_signs(arr1, arr2):
@@ -607,6 +608,8 @@ class TestOrdinationResults(object):
         self.scores = [ca_scores, cca_scores, pcoa_scores, rda_scores]
         self.test_paths = ['L&L_CA_data_scores', 'example3_scores',
                            'PCoA_sample_data_3_scores', 'example2_scores']
+        self.fferror_test_paths = ['error1', 'error2', 'error3', 'error4',
+                                   'error5', 'error6']
 
     def test_to_file(self):
         for scores, test_path in izip(self.scores, self.test_paths):
@@ -655,3 +658,9 @@ class TestOrdinationResults(object):
             else:
                 npt.assert_equal(obs.proportion_explained,
                                  scores.proportion_explained)
+
+    def test_from_file_error(self):
+        for test_path in self.fferror_test_paths:
+            with open(get_data_path(test_path), 'U') as f:
+                with npt.assert_raises(FileFormatError):
+                    OrdinationResults.from_file(f)
