@@ -5,6 +5,7 @@ python:
   - "2.7"
 env:
   - NUMPY_VERSION=1.8
+  - NUMPY_VERSION=1.8 USE_CYTHON=True
   - NUMPY_VERSION=1.7
 before_install:
   - wget http://repo.continuum.io/miniconda/Miniconda-2.2.2-Linux-x86_64.sh -O miniconda.sh
@@ -15,9 +16,10 @@ before_install:
   - conda update --yes conda
 install:
   - conda create --yes -n env_name python=$TRAVIS_PYTHON_VERSION pip numpy=$NUMPY_VERSION scipy matplotlib nose pep8 Sphinx
+  - if [ ${USE_CYTHON} ]; then conda install --yes -n env_name cython; fi
   - source activate env_name
-  - pip install sphinx-bootstrap-theme
-  - pip install . --no-deps
+  - pip install sphinx-bootstrap-theme future
+  - pip install -e . --no-deps
 script:
   - nosetests --with-doctest
   - pep8 skbio setup.py
