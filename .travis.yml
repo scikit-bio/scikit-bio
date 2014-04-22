@@ -23,5 +23,6 @@ script:
   - pushd doc
   - make clean
   - make html
-  - make linkcheck
+  # linkcheck disabled in Py3 (bug in Sphinx)
+  - if [ $(PYTHON_VERSION) ==  2.7 ]; then make linkcheck; fi
   - popd
