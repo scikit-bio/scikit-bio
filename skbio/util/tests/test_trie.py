@@ -12,7 +12,8 @@
 from __future__ import division
 from future.builtins import zip
 
-from unittest import TestCase, main
+from sys import version_info
+from unittest import TestCase, main, skipUnless
 
 from skbio.util.trie import CompressedTrie, _CompressedNode, fasta_to_pairlist
 
@@ -142,6 +143,8 @@ class CompressedTrieTests(TestCase):
         self.assertEqual(self.empty_trie.size, 1)
         self.assertEqual(self.trie.size, 10)
 
+    @skipUnless(version_info.major < 3,
+                "See https://github.com/biocore/scikit-bio/issues/270")
     def test_prefix_map(self):
         """Should map prefix to values"""
         exp = {"1": ["6", "2", "0", "5"],
@@ -150,6 +153,8 @@ class CompressedTrieTests(TestCase):
                "4": []}
         self.assertEqual(exp, self.trie.prefix_map)
 
+    @skipUnless(version_info.major < 3,
+                "See https://github.com/biocore/scikit-bio/issues/270")
     def test_insert(self):
         """Correctly inserts a new key into the trie"""
         t = CompressedTrie(self.data)
