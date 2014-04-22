@@ -57,7 +57,7 @@ def format_fastq_record(seqid, seq, qual, phred_offset=33):
     @seq1
     AATTGG
     +
-    ffgghh
+    GGHHII
     """
     if phred_offset == 33:
         phred_f = _phred_to_ascii33
