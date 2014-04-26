@@ -1,4 +1,4 @@
-// This code was taken from scikit-learn
+// originally taken from scikit-learn's Sphinx theme
 $(document).ready(function() {
     /* Add a [>>>] button on the top-right corner of code samples to hide
      * the >>> and ... prompts and the output and thus make the code
