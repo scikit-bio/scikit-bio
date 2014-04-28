@@ -28,28 +28,54 @@ from __future__ import division
 
 from copy import deepcopy
 import numpy as np
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 
 from skbio.util.sort import signed_natsort
 
 
 def make_groups(ord_res, metamap, vector_category, sort_category=None):
+    """Groups the sample ids in metamap by the values in vector_category
+    Parameters
+    ----------
+    ord_res : skbio.maths.stats.ordination.OrdinationResults
+        The ordination results namedtuple
+    metamap :
+        The metadata map
+    vector_category : str
+        The category from metamap to use to create the groups
+    sort_category : str, optional
+        The category from metamap to use to sort groups
+
+    Returns
+    -------
+    dictionary
+        A dictionary in which the keys represent the group label and values are
+        ordered lists of (sort_value, sample id) tuples
     """
-    """
-    # Getting the index of the columns in the mapping file
-    ind_group = mapping[0].index(vector_category)
-    ind_sort = mapping[0].index(sort_category) if sort_category else 0
+
     # Creating groups
-    groups = {}
-    for row in mapping[1:]:
-        if row[0] not in coord_header:
+    groups = defaultdict([])
+
+    # If sort_category is provided, we used the value of such category to sort
+    # otherwise we use the sample id
+    if sort_category:
+        sort_f = lambda sid: metamap.get_category_value(sid, sort_category)
+    else:
+        sort_f = lambda sid: sid
+
+    # Loop through all the sample ids present on the mapping file
+    for sid in metamap.sample_ids:
+        if sid not in ord_res.site_ids:
             continue
-        if row[ind_group] not in groups:
-            groups[row[ind_group]] = [(row[ind_sort], row[0])]
-        else:
-            groups[row[ind_group]].append((row[ind_sort], row[0]))
+        # Get the group for the current sample
+        g = metamap.get_category_value(sid, vector_category)
+        # Add the current sample to the group
+        groups[g].append((sort_f(sid), sid))
+
+    # Sort the groups
     for g in groups:
         groups[g] = signed_natsort(groups[g])
+
     return groups
 
 

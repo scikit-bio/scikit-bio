@@ -13,14 +13,37 @@ from unittest import TestCase, main
 import numpy as np
 from numpy.testing import assert_almost_equal
 
-from skbio.maths.gradient import (weight_by_vector, windowed_diff,
+from skbio.core.metadata_map import MetadataMap
+from skbio.math.stats.ordination import OrdinationResults
+from skbio.maths.gradient import (make_groups, weight_by_vector, windowed_diff,
                                   AverageVectors, TrajectoryVectors,
                                   DifferenceVectors, WindowDifferenceVectors,
                                   VectorResults)
 
 
+class MakeGroupsTests(TestCase):
+    """"""
+
+    def setUp(self):
+        self.ord_res = OrdinationResults(None)
+        self.metamap = MetadataMap()
+
+    def test_make_groups(self):
+        """Correctly groups samples"""
+        obs = make_groups(self.ord_res, self.metamap, 'VecCat')
+        exp = None
+        self.assertEqual(obs, exp)
+
+    def test_make_groups_sorted(self):
+        """Correctly groups and sorts samples"""
+        obs = make_groups(self.ord_res, self.metamap, 'VecCat', 'SortCat')
+        exp = None
+        self.assertEqual(obs, exp)
+
+
 class GradientTests(TestCase):
     """"""
+
     def test_weight_by_vector_error(self):
         """Raises an error with erroneous inputs"""
         with self.assertRaises(ValueError):
