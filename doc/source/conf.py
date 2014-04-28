@@ -432,3 +432,9 @@ def linkcode_resolve(domain, info):
 
 # Link-checking on Travis sometimes times out.
 linkcheck_timeout = 30
+
+
+# Add the 'copybutton' javascript, to hide/show the prompt in code
+# examples, originally taken from scikit-learn's doc/conf.py
+def setup(app):
+    app.add_javascript('copybutton.js')
