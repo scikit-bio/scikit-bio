@@ -56,7 +56,23 @@ See the [list of all of scikit-bio's contributors](https://github.com/biocore/sc
 The pre-history of scikit-bio
 -----------------------------
 
-scikit-bio began from code derived from [PyCogent](http://www.pycogent.org) and [QIIME](http://www.qiime.org), and the contributors and/or copyright holders have agreed to make the code they wrote for PyCogent and/or QIIME available under the BSD license. The contributors to PyCogent and/or QIIME modules that have been ported to scikit-bio are: Rob Knight ([@rob-knight]((https://github.com/rob-knight)), Gavin Huttley ([@gavin-huttley]((https://github.com/gavin-huttley)), Daniel McDonald ([@wasade]((https://github.com/wasade)), Micah Hamady, Antonio Gonzalez ([@antgonza]((https://github.com/antgonza)), Sandra Smit, Greg Caporaso ([@gregcaporaso]((https://github.com/gregcaporaso)), Jai Ram Rideout ([@ElBrogrammer]((https://github.com/ElBrogrammer)), Cathy Lozupone ([@clozupone](clozupone)), Mike Robeson ([@mikerobeson]((https://github.com/mikerobeson)), Marcin Cieslik, Peter Maxwell, Jeremy Widmann, Zongzhi Liu, Michael Dwan, Logan Knecht ([@loganknecht]((https://github.com/loganknecht)), Andrew Cochran, Jose Carlos Clemente ([@cleme]((https://github.com/cleme)), Damien Coy, Levi McCracken, and Andrew Butterfield.
+scikit-bio began from code derived from [PyCogent](http://www.pycogent.org) and
+[QIIME](http://www.qiime.org), and the contributors and/or copyright holders
+have agreed to make the code they wrote for PyCogent and/or QIIME available
+under the BSD license. The contributors to PyCogent and/or QIIME modules that
+have been ported to scikit-bio are: Rob Knight
+([@rob-knight](https://github.com/rob-knight)), Gavin Huttley
+([@gavin-huttley](https://github.com/gavin-huttley)), Daniel McDonald
+([@wasade](https://github.com/wasade)), Micah Hamady, Antonio Gonzalez
+([@antgonza](https://github.com/antgonza)), Sandra Smit, Greg Caporaso
+([@gregcaporaso](https://github.com/gregcaporaso)), Jai Ram Rideout
+([@ElBrogrammer](https://github.com/ElBrogrammer)), Cathy Lozupone
+([@clozupone](clozupone)), Mike Robeson
+([@mikerobeson](https://github.com/mikerobeson)), Marcin Cieslik, Peter
+Maxwell, Jeremy Widmann, Zongzhi Liu, Michael Dwan, Logan Knecht
+([@loganknecht](https://github.com/loganknecht)), Andrew Cochran, Jose Carlos
+Clemente ([@cleme](https://github.com/cleme)), Damien Coy, Levi McCracken, and
+Andrew Butterfield.
 
 Logo
 ----
