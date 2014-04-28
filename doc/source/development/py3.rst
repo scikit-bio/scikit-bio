@@ -188,21 +188,26 @@ A brief introduction: Unicode, UTF-8, ASCII...
 
 A string can be seen as a sequence of characters. According to the
 Unicode standard, each character is represented by a code point (a
-number). Code points are still abstract (e.g., they could be stored in
-little or big endian formats) and there are many encodings to map code
-points to byte values (encode) and back (decode). Three important ones
-are ASCII, UTF-8 and latin-1:
+number). For example, character `ñ` is represented by the Unicode code
+point `U+00F1`. Code points are still abstract and can be stored in a
+number of ways, including even little or big endian formats. There are
+many encodings that map code points to byte values (encode) and back
+(decode). Three important ones are ASCII, UTF-8 and latin-1:
 
 - ASCII is a 7 bit encoding that can handle a very limited range of
-  Unicode code points.
+  Unicode code points (not even the one corresponding to character
+  `ñ`).
 
 - UTF-8 is an encoding that can represent every Unicode character. It
   is ASCII-compatible because code points that can also be represented
-  by ASCII are mapped to the same byte value by UTF-8 and ASCII.
+  by ASCII are mapped to the same byte value by UTF-8 and ASCII. `ñ`
+  is represented by the byte sequence `\xC3\xB1`.
 
-- latin-1 is an ASCII-compatible 8 bit encoding that matches UTF-8 for
-  the first 256 code points. The Py2 `str` type loosely worked by
-  assuming everything was encoded in latin-1.
+- latin-1 is an ASCII-compatible 8 bit encoding that maps the first
+  256 Unicode code points to their byte values. That is, the Unicode
+  code point `U+00F1` (character `ñ`) is directly encoded as `0xF1` in
+  latin-1. The Py2 `str` type loosely worked by assuming everything
+  was encoded in latin-1.
 
 
 Text processing
