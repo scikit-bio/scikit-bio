@@ -33,7 +33,7 @@ from collections import namedtuple
 from skbio.util.sort import signed_natsort
 
 
-def make_groups(coord_header, mapping, vector_category, sort_category=None):
+def make_groups(ord_res, metamap, vector_category, sort_category=None):
     """
     """
     # Getting the index of the columns in the mapping file
