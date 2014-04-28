@@ -200,9 +200,6 @@ def enspie(counts):
     counts = _validate(counts)
     return 1 / dominance(counts)
 
-# For backwards-compatibility with QIIME.
-simpson_reciprocal = enspie
-
 
 def equitability(counts, base=2):
     """Calculate equitability (Shannon index corrected for number of species).

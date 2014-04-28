@@ -18,8 +18,8 @@ from skbio.maths.diversity.alpha.base import (
     berger_parker_d, brillouin_d, dominance, doubles, enspie, equitability,
     esty_ci, fisher_alpha, goods_coverage, heip_e, kempton_taylor_q, margalef,
     mcintosh_d, mcintosh_e, menhinick, michaelis_menten_fit, observed_species,
-    osd, robbins, shannon, simpson, simpson_e, simpson_reciprocal, singles,
-    strong, _indices_to_counts, _validate)
+    osd, robbins, shannon, simpson, simpson_e, singles, strong,
+    _indices_to_counts, _validate)
 
 
 class BaseTests(TestCase):
@@ -104,9 +104,9 @@ class BaseTests(TestCase):
         exp = 1 / dominance(arr)
         self.assertAlmostEqual(enspie(arr), exp)
 
-    def test_simpson_reciprocal(self):
         arr = np.array([1, 0, 2, 5, 2])
-        self.assertAlmostEqual(simpson_reciprocal(arr), 1 / dominance(arr))
+        exp = 1 / dominance(arr)
+        self.assertAlmostEqual(enspie(arr), exp)
 
     def test_equitability(self):
         self.assertAlmostEqual(equitability(np.array([5, 5])), 1)

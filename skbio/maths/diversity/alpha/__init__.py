@@ -43,7 +43,6 @@ Functions
    shannon
    simpson
    simpson_e
-   simpson_reciprocal
    singles
    strong
 
@@ -63,8 +62,7 @@ from .base import (
     berger_parker_d, brillouin_d, dominance, doubles, enspie, equitability,
     esty_ci, fisher_alpha, goods_coverage, heip_e, kempton_taylor_q, margalef,
     mcintosh_d, mcintosh_e, menhinick, michaelis_menten_fit, observed_species,
-    osd, robbins, shannon, simpson, simpson_e, simpson_reciprocal, singles,
-    strong)
+    osd, robbins, shannon, simpson, simpson_e, singles, strong)
 from .gini import gini_index
 from .lladser import lladser_pe, lladser_ci
 
