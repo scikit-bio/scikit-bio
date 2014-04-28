@@ -62,7 +62,7 @@ have agreed to make the code they wrote for PyCogent and/or QIIME available
 under the BSD license. The contributors to PyCogent and/or QIIME modules that
 have been ported to scikit-bio are: Rob Knight
 ([@rob-knight](https://github.com/rob-knight)), Gavin Huttley
-([@gavin-huttley](https://github.com/gavin-huttley(), Daniel McDonald
+([@gavin-huttley](https://github.com/gavin-huttley)), Daniel McDonald
 ([@wasade](https://github.com/wasade)), Micah Hamady, Antonio Gonzalez
 ([@antgonza](https://github.com/antgonza)), Sandra Smit, Greg Caporaso
 ([@gregcaporaso](https://github.com/gregcaporaso)), Jai Ram Rideout
