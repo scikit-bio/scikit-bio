@@ -161,10 +161,16 @@ class BaseTests(TestCase):
         self.assertAlmostEqual(obs, 0.23469387755)
 
     def test_heip_e(self):
+        # Calculate "by hand".
         arr = np.array([1, 2, 3, 1])
         h = shannon(arr, base=np.e)
-        expected = np.exp(h - 1) / 3
+        expected = (np.exp(h) - 1) / 3
         self.assertEqual(heip_e(arr), expected)
+
+        # From Statistical Ecology: A Primer in Methods and Computing, page 94,
+        # table 8.1.
+        self.assertAlmostEqual(heip_e([500, 300, 200]), 0.90, places=2)
+        self.assertAlmostEqual(heip_e([500, 299, 200, 1]), 0.61, places=2)
 
     def test_kempton_taylor_q(self):
         # Approximate Magurran 1998 calculation p143.

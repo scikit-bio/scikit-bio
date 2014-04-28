@@ -368,7 +368,7 @@ def heip_e(counts):
 
     """
     counts = _validate(counts)
-    return (np.exp(shannon(counts, base=np.e) - 1) /
+    return ((np.exp(shannon(counts, base=np.e)) - 1) /
             (observed_species(counts) - 1))
 
 
