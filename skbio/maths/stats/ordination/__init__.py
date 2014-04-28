@@ -15,7 +15,6 @@ Classes
    :toctree: generated/
 
    PCoA
-   PCoAScores
    CA
    RDA
    CCA
