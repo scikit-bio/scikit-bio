@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------------
-    The file copybutton.js has the following license:
+    The file doc/source/_static/copybutton.js has the following license:
 
 New BSD License
 
