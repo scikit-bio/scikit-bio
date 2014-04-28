@@ -16,6 +16,7 @@ API Reference
    core.distance
    core.exception
    core.tree
+   core.workflow
    draw.distributions
    maths.diversity.alpha
    maths.stats.distance
@@ -25,3 +26,4 @@ API Reference
    parse.sequences
    util.misc
    util.trie
+   util.testing

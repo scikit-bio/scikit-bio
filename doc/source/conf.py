@@ -181,7 +181,8 @@ html_theme_options = {
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-#html_static_path = ['_static']
+html_static_path = ['_static/']
+html_style = 'skbio.css'
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
@@ -431,3 +432,9 @@ def linkcode_resolve(domain, info):
 
 # Link-checking on Travis sometimes times out.
 linkcheck_timeout = 30
+
+
+# Add the 'copybutton' javascript, to hide/show the prompt in code
+# examples, originally taken from scikit-learn's doc/conf.py
+def setup(app):
+    app.add_javascript('copybutton.js')
