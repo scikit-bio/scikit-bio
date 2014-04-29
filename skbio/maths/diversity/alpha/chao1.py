@@ -148,38 +148,45 @@ def _chao1_var_uncorrected(singles, doubles):
     """Calculates chao1, uncorrected.
 
     From EstimateS manual, equation 5.
+
     """
-    r = float(singles) / doubles
+    r = singles / doubles
     return doubles * (.5 * r ** 2 + r ** 3 + .24 * r ** 4)
 
 
-def _chao1_var_bias_corrected(singles, doubles):
+def _chao1_var_bias_corrected(s, d):
     """Calculates chao1 variance, bias-corrected.
 
+    `s` is the number of singletons and `d` is the number of doubletons.
+
     From EstimateS manual, equation 6.
+
     """
-    s, d = float(singles), float(doubles)
-    return s * (s - 1) / (2 * (d + 1)) + (s * (2 * s - 1) ** 2) / (4 * (d + 1) ** 2) + \
-        (s ** 2 * d * (s - 1) ** 2) / (4 * (d + 1) ** 4)
+    return (s * (s - 1) / (2 * (d + 1)) + (s * (2 * s - 1) ** 2) /
+            (4 * (d + 1) ** 2) + (s ** 2 * d * (s - 1) ** 2) /
+            (4 * (d + 1) ** 4))
 
 
-def _chao1_var_no_doubletons(singles, chao1):
+def _chao1_var_no_doubletons(s, chao1):
     """Calculates chao1 variance in absence of doubletons.
 
     From EstimateS manual, equation 7.
 
-    chao1 is the estimate of the mean of Chao1 from the same dataset.
+    `s` is the number of singletons, and `chao1` is the estimate of the mean of
+    Chao1 from the same dataset.
+
     """
-    s = float(singles)
     return s * (s - 1) / 2 + s * (2 * s - 1) ** 2 / 4 - s ** 4 / (4 * chao1)
 
 
-def _chao1_var_no_singletons(n, observed):
-    """Calculates chao1 variance in absence of singletons. n = # individuals.
+def _chao1_var_no_singletons(n, o):
+    """Calculates chao1 variance in absence of singletons.
+
+    `n` is the number of individuals and `o` is the number of observed species.
 
     From EstimateS manual, equation 8.
+
     """
-    o = float(observed)
     return o * np.exp(-n / o) * (1 - np.exp(-n / o))
 
 
@@ -188,9 +195,11 @@ def _chao_confidence_with_singletons(chao, observed, var_chao, zscore=1.96):
 
     Uses Eq. 13 of EstimateS manual.
 
-    zscore = score to use for confidence, default = 1.96 for 95% confidence.
+    `zscore` is the score to use for confidence. The default of 1.96 is for 95%
+    confidence.
+
     """
-    T = float(chao - observed)
+    T = chao - observed
     # if no diff betweeh chao and observed, CI is just point estimate of
     # observed
     if T == 0:
@@ -199,14 +208,14 @@ def _chao_confidence_with_singletons(chao, observed, var_chao, zscore=1.96):
     return observed + T / K, observed + T * K
 
 
-def _chao_confidence_no_singletons(n, observed, zscore=1.96):
+def _chao_confidence_no_singletons(n, s, zscore=1.96):
     """Calculates confidence bounds for chao1/chao2 in absence of singletons.
 
     Uses Eq. 14 of EstimateS manual.
 
-    n = number of individuals, observed = number of species.
+    `n` is the number of individuals and `s` is the number of species.
+
     """
-    s = float(observed)
     P = np.exp(-n / s)
-    return max(s, s / (1 - P) - zscore * np.sqrt((s * P / (1 - P)))), \
-        s / (1 - P) + zscore * np.sqrt(s * P / (1 - P))
+    return (max(s, s / (1 - P) - zscore * np.sqrt((s * P / (1 - P)))),
+            s / (1 - P) + zscore * np.sqrt(s * P / (1 - P)))
