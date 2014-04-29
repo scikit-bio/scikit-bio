@@ -912,8 +912,7 @@ class TestOrdinationResults(object):
 
     def test_from_file(self):
         for scores, test_path in izip(self.scores, self.test_paths):
-            with open(get_data_path(test_path), 'U') as f:
-                obs = OrdinationResults.from_file(f)
+            obs = OrdinationResults.from_file(get_data_path(test_path))
 
             npt.assert_almost_equal(obs.eigvals, scores.eigvals)
             if scores.species is not None:

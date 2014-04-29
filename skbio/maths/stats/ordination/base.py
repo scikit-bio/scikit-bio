@@ -91,6 +91,7 @@ class OrdinationResults(namedtuple('OrdinationResults',
             `ord_res_f`.
 
         """
+        fd = None
         # Currently we support either a file or a filepath.
         # This will change once we have a centralized function that
         # takes care of this.
@@ -98,19 +99,16 @@ class OrdinationResults(namedtuple('OrdinationResults',
         if isinstance(ord_res_f, str) and exists(ord_res_f):
             # Check if it's a valid path, if so read the contents
             fd = open(ord_res_f, 'U')
-            orf = fd.readlines()
-            fd.close()
-        elif hasattr(ord_res_f, 'readlines'):
-            orf = ord_res_f.readlines()
+            orf = iter(fd)
         else:
-            orf = ord_res_f
+            orf = iter(ord_res_f)
 
         # Starting at line 0, we should find the eigvals
-        eigvals, curr_line = cls._parse_eigvals(orf)
+        eigvals = cls._parse_eigvals(orf)
         # The next line should be an empty line
-        curr_line = cls._check_empty_line(orf, curr_line)
+        cls._check_empty_line(orf)
         # Now we should find the proportion explained section
-        prop_expl, curr_line = cls._parse_proportion_explained(orf, curr_line)
+        prop_expl = cls._parse_proportion_explained(orf)
 
         if prop_expl is not None:
             if len(prop_expl) != len(eigvals):
@@ -119,10 +117,9 @@ class OrdinationResults(namedtuple('OrdinationResults',
                                  (len(prop_expl), len(eigvals)))
 
         # The next line should be an empty line
-        curr_line = cls._check_empty_line(orf, curr_line)
+        cls._check_empty_line(orf)
         # Next section should be the species section
-        species, species_ids, curr_line = cls._parse_coords(orf, curr_line,
-                                                            'Species')
+        species, species_ids = cls._parse_coords(orf, 'Species')
         if species is not None:
             if len(species[0]) != len(eigvals):
                 raise ValueError('There should be as many coordinates per '
@@ -130,9 +127,9 @@ class OrdinationResults(namedtuple('OrdinationResults',
                                  (len(species[0]), len(eigvals)))
 
         # The next line should be an empty line
-        curr_line = cls._check_empty_line(orf, curr_line)
+        cls._check_empty_line(orf)
         # Next section should be the site section
-        site, site_ids, curr_line = cls._parse_coords(orf, curr_line, 'Site')
+        site, site_ids = cls._parse_coords(orf, 'Site')
         if site is not None:
             if len(site[0]) != len(eigvals):
                 raise ValueError('There should be as many coordinates per '
@@ -140,19 +137,22 @@ class OrdinationResults(namedtuple('OrdinationResults',
                                  (len(site[0]), len(eigvals)))
 
         # The next line should be an empty line
-        curr_line = cls._check_empty_line(orf, curr_line)
+        cls._check_empty_line(orf)
         # Next section should be the biplot section
-        biplot, curr_line = cls._parse_biplot(orf, curr_line)
+        biplot = cls._parse_biplot(orf)
         # The next line should be an empty line
-        curr_line = cls._check_empty_line(orf, curr_line)
+        cls._check_empty_line(orf)
         # Next section should be the site constraints section
-        cons, cons_ids, curr_line = cls._parse_coords(orf, curr_line,
-                                                      'Site constraints')
+        cons, cons_ids = cls._parse_coords(orf, 'Site constraints')
 
         if cons_ids is not None and site_ids is not None:
             if cons_ids != site_ids:
                 raise ValueError('Site constraints ids and site ids must be '
                                  'equal: %s != %s' % (cons_ids, site_ids))
+
+        # if the input was a file path close the file
+        if fd is not None:
+            fd.close()
 
         return cls(eigvals=eigvals, species=species, site=site, biplot=biplot,
                    site_constraints=cons, proportion_explained=prop_expl,
@@ -160,10 +160,9 @@ class OrdinationResults(namedtuple('OrdinationResults',
 
     @staticmethod
     def _parse_eigvals(lines):
-        curr_line = 0
         # The first line should contain the Eigvals header:
         # Eigvals<tab>NumEigvals
-        header = lines[curr_line].strip().split('\t')
+        header = lines.next().strip().split('\t')
         if len(header) != 2 or header[0] != 'Eigvals':
             raise FileFormatError('Eigvals header not found')
 
@@ -174,28 +173,25 @@ class OrdinationResults(namedtuple('OrdinationResults',
 
         # Parse the eigvals, present on the next line
         # Eigval_1<tab>Eigval_2<tab>Eigval_3<tab>...
-        curr_line += 1
-        eigvals = np.asarray(lines[curr_line].strip().split('\t'),
+        eigvals = np.asarray(lines.next().strip().split('\t'),
                              dtype=np.float64)
         if len(eigvals) != num_eigvals:
             raise ValueError('Expected %d eigvals, but found %d.' %
                              (num_eigvals, len(eigvals)))
 
         # Update the line cunter to left it after the eigvals section
-        return eigvals, curr_line + 1
+        return eigvals
 
     @staticmethod
-    def _check_empty_line(lines, curr_line):
-        if lines[curr_line].strip():
+    def _check_empty_line(lines):
+        if lines.next().strip():
             raise FileFormatError('Expected an empty line')
-        # Update the line cunter to left it after the empty line
-        return curr_line + 1
 
     @staticmethod
-    def _parse_proportion_explained(lines, curr_line):
+    def _parse_proportion_explained(lines):
         # Parse the proportion explained header:
         # Proportion explained<tab>NumPropExpl
-        header = lines[curr_line].strip().split('\t')
+        header = lines.next().strip().split('\t')
         if (len(header) != 2 or
                 header[0] != 'Proportion explained'):
             raise FileFormatError('Proportion explained header not found')
@@ -208,20 +204,19 @@ class OrdinationResults(namedtuple('OrdinationResults',
             prop_expl = None
         else:
             # Parse the line with the proportion explained values
-            curr_line += 1
-            prop_expl = np.asarray(lines[curr_line].strip().split('\t'),
+            prop_expl = np.asarray(lines.next().strip().split('\t'),
                                    dtype=np.float64)
             if len(prop_expl) != num_prop_expl:
                 raise ValueError('Expected %d proportion explained values, but'
                                  ' found %d.' % (num_prop_expl,
                                                  len(prop_expl)))
         # Update the line cunter to left it after the prop expl section
-        return prop_expl, curr_line + 1
+        return prop_expl
 
     @staticmethod
-    def _parse_coords(lines, curr_line, header_id):
+    def _parse_coords(lines, header_id):
         # Parse the coords header
-        header = lines[curr_line].strip().split('\t')
+        header = lines.next().strip().split('\t')
         if len(header) != 3 or header[0] != header_id:
             raise FileFormatError('%s header not found.' % header_id)
 
@@ -244,8 +239,7 @@ class OrdinationResults(namedtuple('OrdinationResults',
             ids = []
             for i in range(rows):
                 # Parse the next row of data
-                curr_line += 1
-                vals = lines[curr_line].strip().split('\t')
+                vals = lines.next().strip().split('\t')
                 # The +1 comes from the row header (which contains the row id)
                 if len(vals) != cols + 1:
                     raise ValueError('Expected %d values, but found %d in row '
@@ -253,12 +247,12 @@ class OrdinationResults(namedtuple('OrdinationResults',
                 ids.append(vals[0])
                 coords[i, :] = np.asarray(vals[1:], dtype=np.float64)
         # Update the line cunter to left it after the coords section
-        return coords, ids, curr_line + 1
+        return coords, ids
 
     @staticmethod
-    def _parse_biplot(lines, curr_line):
+    def _parse_biplot(lines):
         # Parse the biplot header
-        header = lines[curr_line].strip().split('\t')
+        header = lines.next().strip().split('\t')
         if len(header) != 3 or header[0] != 'Biplot':
             raise FileFormatError('Biplot header not found.')
 
@@ -279,14 +273,13 @@ class OrdinationResults(namedtuple('OrdinationResults',
             biplot = np.empty((rows, cols), dtype=np.float64)
             for i in range(rows):
                 # Parse the next row of data
-                curr_line += 1
-                vals = lines[curr_line].strip().split('\t')
+                vals = lines.next().strip().split('\t')
                 if len(vals) != cols:
                     raise ValueError('Expected %d values, but founf %d in row '
                                      '%d.' % (cols, len(vals), i))
                 biplot[i, :] = np.asarray(vals, dtype=np.float64)
         # Update the line cunter to left it after the coords section
-        return biplot, curr_line + 1
+        return biplot
 
     def to_file(self, out_f):
         """Save the ordination results to file in text format.
