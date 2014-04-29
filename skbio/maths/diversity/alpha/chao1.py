@@ -11,7 +11,7 @@ from __future__ import division
 
 import numpy as np
 
-from .base import _indices_to_counts, _validate, osd
+from .base import _validate, osd
 
 
 def chao1(counts, bias_corrected=True):
