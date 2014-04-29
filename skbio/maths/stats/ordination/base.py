@@ -91,11 +91,11 @@ class OrdinationResults(namedtuple('OrdinationResults',
             `ord_res_f`.
 
         """
-        fd = None
         # Currently we support either a file or a filepath.
         # This will change once we have a centralized function that
         # takes care of this.
         # Adapted from skbio.core.distance.DissimilarityMatrix.from_file
+        fd = None
         if isinstance(ord_res_f, str) and exists(ord_res_f):
             # Check if it's a valid path, if so read the contents
             fd = open(ord_res_f, 'U')
@@ -144,7 +144,6 @@ class OrdinationResults(namedtuple('OrdinationResults',
         cls._check_empty_line(orf)
         # Next section should be the site constraints section
         cons, cons_ids = cls._parse_coords(orf, 'Site constraints')
-
         if cons_ids is not None and site_ids is not None:
             if cons_ids != site_ids:
                 raise ValueError('Site constraints ids and site ids must be '
@@ -179,7 +178,6 @@ class OrdinationResults(namedtuple('OrdinationResults',
             raise ValueError('Expected %d eigvals, but found %d.' %
                              (num_eigvals, len(eigvals)))
 
-        # Update the line cunter to left it after the eigvals section
         return eigvals
 
     @staticmethod
@@ -210,7 +208,6 @@ class OrdinationResults(namedtuple('OrdinationResults',
                 raise ValueError('Expected %d proportion explained values, but'
                                  ' found %d.' % (num_prop_expl,
                                                  len(prop_expl)))
-        # Update the line cunter to left it after the prop expl section
         return prop_expl
 
     @staticmethod
@@ -246,7 +243,6 @@ class OrdinationResults(namedtuple('OrdinationResults',
                                      '%d.' % (cols, len(vals) - 1, i))
                 ids.append(vals[0])
                 coords[i, :] = np.asarray(vals[1:], dtype=np.float64)
-        # Update the line cunter to left it after the coords section
         return coords, ids
 
     @staticmethod
@@ -278,7 +274,6 @@ class OrdinationResults(namedtuple('OrdinationResults',
                     raise ValueError('Expected %d values, but founf %d in row '
                                      '%d.' % (cols, len(vals), i))
                 biplot[i, :] = np.asarray(vals, dtype=np.float64)
-        # Update the line cunter to left it after the coords section
         return biplot
 
     def to_file(self, out_f):
