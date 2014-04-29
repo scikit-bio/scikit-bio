@@ -90,6 +90,13 @@ class OrdinationResults(namedtuple('OrdinationResults',
             Instance of type `cls` containing the parsed contents of
             `ord_res_f`.
 
+        Raises
+        ------
+        ValueError
+            if the shapes of the different sections of the file are not
+            consistent
+        FileFormatError
+            if the format of the file is not recognized
         """
         # Currently we support either a file or a filepath.
         # This will change once we have a centralized function that
