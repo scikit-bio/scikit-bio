@@ -145,26 +145,26 @@ class OrdinationResults(namedtuple('OrdinationResults',
 
         Load the ordination results from the file:
 
-        >>> from StrinIO import StrinIO
+        >>> from StringIO import StringIO
         >>> from skbio.maths.stats.ordination import OrdinationResults
-        >>> or_f = StrinIO("Eigvals\t2\n"
-...                        "0.0961330159181\t0.0409418140138\n"
-...                        "\n"
-...                        "Proportion explained\t0\n"
-...                        "\n"
-...                        "Species\t3\t2\n"
-...                        "Species1\t0.408869425742\t0.0695518116298\n"
-...                        "Species2\t-0.1153860437\t-0.299767683538\n"
-...                        "Species3\t-0.309967102571\t0.187391917117\n"
-...                        "\n"
-...                        "Site\t3\t2\n"
-...                        "Site1\t-0.848956053187\t0.882764759014\n"
-...                        "Site2\t-0.220458650578\t-1.34482000302\n"
-...                        "Site3\t1.66697179591\t0.470324389808\n"
-...                        "\n"
-...                        "Biplot\t0\t0\n"
-...                        "\n"
-...                        "Site constraints\t0\t0\n")
+        >>> or_f = StringIO("Eigvals\t2\n"
+        ...                 "0.0961330159181\t0.0409418140138\n"
+        ...                 "\n"
+        ...                 "Proportion explained\t0\n"
+        ...                 "\n"
+        ...                 "Species\t3\t2\n"
+        ...                 "Species1\t0.408869425742\t0.0695518116298\n"
+        ...                 "Species2\t-0.1153860437\t-0.299767683538\n"
+        ...                 "Species3\t-0.309967102571\t0.187391917117\n"
+        ...                 "\n"
+        ...                 "Site\t3\t2\n"
+        ...                 "Site1\t-0.848956053187\t0.882764759014\n"
+        ...                 "Site2\t-0.220458650578\t-1.34482000302\n"
+        ...                 "Site3\t1.66697179591\t0.470324389808\n"
+        ...                 "\n"
+        ...                 "Biplot\t0\t0\n"
+        ...                 "\n"
+        ...                 "Site constraints\t0\t0\n")
         >>> ord_res = OrdinationResults.from_file(or_f)
         """
         # Currently we support either a file or a filepath.
