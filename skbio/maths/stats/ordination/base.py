@@ -166,6 +166,7 @@ class OrdinationResults(namedtuple('OrdinationResults',
 
     @staticmethod
     def _parse_eigvals(lines):
+        """Parse the eigvals section of lines"""
         # The first line should contain the Eigvals header:
         # Eigvals<tab>NumEigvals
         header = lines.next().strip().split('\t')
@@ -189,11 +190,13 @@ class OrdinationResults(namedtuple('OrdinationResults',
 
     @staticmethod
     def _check_empty_line(lines):
+        """Checks that the next line in lines is empty"""
         if lines.next().strip():
             raise FileFormatError('Expected an empty line')
 
     @staticmethod
     def _parse_proportion_explained(lines):
+        """Parse the proportion explained section of lines"""
         # Parse the proportion explained header:
         # Proportion explained<tab>NumPropExpl
         header = lines.next().strip().split('\t')
@@ -219,6 +222,7 @@ class OrdinationResults(namedtuple('OrdinationResults',
 
     @staticmethod
     def _parse_coords(lines, header_id):
+        """Parse a coordinate section of lines, with header=header_id"""
         # Parse the coords header
         header = lines.next().strip().split('\t')
         if len(header) != 3 or header[0] != header_id:
@@ -254,6 +258,7 @@ class OrdinationResults(namedtuple('OrdinationResults',
 
     @staticmethod
     def _parse_biplot(lines):
+        """Parse the biplot section of lines"""
         # Parse the biplot header
         header = lines.next().strip().split('\t')
         if len(header) != 3 or header[0] != 'Biplot':
