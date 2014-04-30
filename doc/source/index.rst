@@ -17,6 +17,7 @@ API Reference
    core.exception
    core.tree
    core.workflow
+   core.ssw
    draw.distributions
    maths.stats.distance
    maths.stats.spatial

@@ -53,7 +53,10 @@ else:
 USE_CYTHON = os.environ.get('USE_CYTHON', False)
 ext = '.pyx' if USE_CYTHON else '.c'
 extensions = [Extension("skbio.maths._subsample",
-                        ["skbio/maths/_subsample" + ext])]
+                        ["skbio/maths/_subsample" + ext]),
+              Extension("skbio.core.ssw",
+                        ["skbio/core/ssw/__init__" + ext,
+                         "skbio/core/ssw/ssw.c"])]
 
 if USE_CYTHON:
     from Cython.Build import cythonize
