@@ -57,7 +57,7 @@ class OrdinationResults(namedtuple('OrdinationResults',
 
     @classmethod
     def from_file(cls, ord_res_f):
-        """Load ordination results from text file.
+        r"""Load ordination results from text file.
 
         Creates a `OrdinationResults` instance from serialized results
         stored as text.
