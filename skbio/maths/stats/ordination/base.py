@@ -291,16 +291,16 @@ class OrdinationResults(namedtuple('OrdinationResults',
     def to_file(self, out_f):
         """Save the ordination results to file in text format.
 
-        See Also
-        --------
-        from_file
-
         Parameters
         ----------
         out_f : file-like object
             File-like object to write serialized data to. Must have a ``write``
             method. It is the caller's responsibility to close `out_f` when
             done (if necessary).
+
+        See Also
+        --------
+        from_file
         """
 
         # Write eigvals
