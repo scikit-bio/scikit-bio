@@ -22,6 +22,27 @@ class OrdinationResults(namedtuple('OrdinationResults',
                                    ('eigvals', 'species', 'site', 'biplot',
                                     'site_constraints', 'proportion_explained',
                                     'species_ids', 'site_ids'))):
+    """Store ordination results
+
+    Attributes
+    ----------
+    eigvals : 1-D numpy array
+        The result eigenvalues
+    species : 2-D numpy array
+        The result coordinates for each species
+    site : 2-D numpy array
+        The results coordinates for each site
+    biplot : 2-D numpy array
+        The result biplot coordinates
+    site_constraints : 2-D numpy array
+        The result coordinates for each site constraint
+    proportion_explained : 1-D numpy array
+        The proportion explained by each eigenvector
+    species_ids : list of str
+        The species identifiers
+    site_ids : list of str
+        The site identifiers
+    """
     # To avoid creating a dict, as a namedtuple doesn't have it:
     __slots__ = ()
 
@@ -97,6 +118,54 @@ class OrdinationResults(namedtuple('OrdinationResults',
             consistent
         FileFormatError
             if the format of the file is not recognized
+
+        Examples
+        --------
+        Assume we have the following tab-delimited text file storing the
+        ordination results::
+
+            Eigvals\t2
+            0.0961330159181\t0.0409418140138
+
+            Proportion explained\t0
+
+            Species\t3\t2
+            Species1\t0.408869425742\t0.0695518116298
+            Species2\t-0.1153860437\t-0.299767683538
+            Species3\t-0.309967102571\t0.187391917117
+
+            Site\t3\t2
+            Site1\t-0.848956053187\t0.882764759014
+            Site2\t-0.220458650578\t-1.34482000302
+            Site3\t1.66697179591\t0.470324389808
+
+            Biplot\t0\t0
+
+            Site constraints\t0\t0
+
+        Load the ordination results from the file:
+
+        >>> from StrinIO import StrinIO
+        >>> from skbio.maths.stats.ordination import OrdinationResults
+        >>> or_f = StrinIO("Eigvals\t2\n"
+        ...                "0.0961330159181\t0.0409418140138\n"
+        ...                "\n"
+        ...                "Proportion explained\t0\n"
+        ...                "\n"
+        ...                "Species\t3\t2\n"
+        ...                "Species1\t0.408869425742\t0.0695518116298\n"
+        ...                "Species2\t-0.1153860437\t-0.299767683538\n"
+        ...                "Species3\t-0.309967102571\t0.187391917117\n"
+        ...                "\n"
+        ...                "Site\t3\t2\n"
+        ...                "Site1\t-0.848956053187\t0.882764759014\n"
+        ...                "Site2\t-0.220458650578\t-1.34482000302\n"
+        ...                "Site3\t1.66697179591\t0.470324389808\n"
+        ...                "\n"
+        ...                "Biplot\t0\t0\n"
+        ...                "\n"
+        ...                "Site constraints\t0\t0\n")
+        >>> ord_res = OrdinationResults.from_file(or_f)
         """
         # Currently we support either a file or a filepath.
         # This will change once we have a centralized function that
