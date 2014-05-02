@@ -29,6 +29,8 @@ def _validate(counts, suppress_cast=False):
 
     if counts.ndim != 1:
         raise ValueError("Only 1-D vectors are supported.")
+    elif (counts < 0).any():
+        raise ValueError("Counts vector cannot contain negative values.")
 
     return counts
 

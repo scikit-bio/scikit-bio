@@ -50,6 +50,7 @@ class BaseTests(TestCase):
         npt.assert_array_equal(obs, np.array([42.2, 42.1, 0]))
         self.assertEqual(obs.dtype, float)
 
+    def test_validate_invalid_input(self):
         # wrong dtype
         with self.assertRaises(TypeError):
             _ = _validate([0, 2, 1.2, 3])
@@ -61,6 +62,10 @@ class BaseTests(TestCase):
         # wrong number of dimensions (scalar)
         with self.assertRaises(ValueError):
             _ = _validate(1)
+
+        # negative values
+        with self.assertRaises(ValueError):
+            _ = _validate([0, 0, 2, -1, 3])
 
     def test_indices_to_counts(self):
         exp = np.array([1, 2, 0, 0, 0, 3])
