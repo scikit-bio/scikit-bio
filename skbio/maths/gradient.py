@@ -34,7 +34,7 @@ from skbio.util.sort import signed_natsort
 
 
 def make_groups(ord_res, metamap, vector_category, sort_category=None):
-    """Groups the sample ids in metamap by the values in vector_category
+    r"""Groups the sample ids in metamap by the values in vector_category
     Parameters
     ----------
     ord_res : skbio.maths.stats.ordination.OrdinationResults
@@ -56,13 +56,12 @@ def make_groups(ord_res, metamap, vector_category, sort_category=None):
     # If sort_category is provided, we used the value of such category to sort
     # otherwise we use the sample id
     if sort_category:
-        sort_val = lambda sid: metamap[sid][sort_category]
+        sort_val = lambda sid: metamap[sort_category][sid]
     else:
         sort_val = lambda sid: sid
 
     # Group by vector_category
-    metamap_t = metamap.transpose()
-    gb = metamap_t.groupby(vector_category)
+    gb = metamap.groupby(vector_category)
     groups = {}
     for g, df in gb:
         groups[g] = signed_natsort([(sort_val(sid), sid) for sid in df.index])
