@@ -228,6 +228,13 @@ class BaseTests(TestCase):
         obs = michaelis_menten_fit([70, 70], num_repeats=5)
         self.assertAlmostEqual(obs, 2.0, places=1)
 
+        obs_few = michaelis_menten_fit(np.arange(4) * 2, num_repeats=10)
+        obs_many = michaelis_menten_fit(np.arange(4) * 100, num_repeats=10)
+        # [0,100,200,300] looks like only 3 species.
+        self.assertAlmostEqual(obs_many, 3.0, places=1)
+        # [0,2,4,6] looks like 3 species with maybe more to be found.
+        self.assertTrue(obs_few > obs_many)
+
     def test_observed_species(self):
         obs = observed_species(np.array([4, 3, 4, 0, 1, 0, 2]))
         self.assertEqual(obs, 5)
