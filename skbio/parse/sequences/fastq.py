@@ -38,8 +38,8 @@ def _ascii_to_phred64(s):
 
 
 def _drop_id_marker(s):
-    """Drop the first character of str"""
-    return s[1:]
+    """Drop the first character and decode bytes to text"""
+    return s[1:].decode('utf-8')
 
 
 def parse_fastq(data, strict=False, phred_offset=33):
@@ -60,7 +60,7 @@ def parse_fastq(data, strict=False, phred_offset=33):
 
     Returns
     -------
-    label, seq, qual : (bytes, bytes, np.array)
+    label, seq, qual : (str, bytes, np.array)
         yields the label, sequence and quality for each entry
 
     Examples
@@ -143,8 +143,7 @@ def parse_fastq(data, strict=False, phred_offset=33):
             if strict:
                 if seqid != qualid:
                     raise FastqParseError('ID mismatch: {} != {}'.format(
-                        seqid.decode('utf-8'),
-                        qualid.decode('utf-8')))
+                        seqid, qualid))
         elif linetype == QUAL:
             qual = phred_f(line)
             # bounds based on illumina limits, see:
