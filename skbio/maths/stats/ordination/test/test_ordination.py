@@ -11,14 +11,17 @@
 from __future__ import division
 
 import warnings
+from StringIO import StringIO
+from itertools import izip
 
 import numpy as np
 import numpy.testing as npt
 from scipy.spatial.distance import pdist
 
-from skbio.maths.stats.ordination import CA, RDA, CCA, PCoA
+from skbio.maths.stats.ordination import CA, RDA, CCA, PCoA, OrdinationResults
 from skbio.core.distance import DistanceMatrix
 from skbio.util.testing import get_data_path
+from skbio.core.exception import FileFormatError
 
 
 def normalize_signs(arr1, arr2):
@@ -257,7 +260,8 @@ class TestCAResults(object):
     def setup(self):
         """Data from table 9.11 in Legendre & Legendre 1998."""
         self.X = np.loadtxt(get_data_path('L&L_CA_data'))
-        self.ordination = CA(self.X)
+        self.ordination = CA(self.X, ['Site1', 'Site2', 'Site3'],
+                             ['Species1', 'Species2', 'Species3'])
 
     def test_scaling2(self):
         scores = self.ordination.scores(scaling=2)
@@ -308,7 +312,7 @@ class TestCAErrors(object):
     def test_negative(self):
         X = np.array([[1, 2], [-0.1, -2]])
         with npt.assert_raises(ValueError):
-            CA(X)
+            CA(X, None, None)
 
 
 class TestRDAErrors(object):
@@ -316,7 +320,7 @@ class TestRDAErrors(object):
         for n, p, n_, m in [(3, 4, 2, 1), (3, 4, 3, 10)]:
             Y = np.random.randn(n, p)
             X = np.random.randn(n_, m)
-            yield npt.assert_raises, ValueError, RDA, Y, X
+            yield npt.assert_raises, ValueError, RDA, Y, X, None, None
 
 
 class TestRDAResults(object):
@@ -328,7 +332,11 @@ class TestRDAResults(object):
         """Data from table 11.3 in Legendre & Legendre 1998."""
         Y = np.loadtxt(get_data_path('example2_Y'))
         X = np.loadtxt(get_data_path('example2_X'))
-        self.ordination = RDA(Y, X)
+        self.ordination = RDA(Y, X,
+                              ['Site0', 'Site1', 'Site2', 'Site3', 'Site4',
+                               'Site5', 'Site6', 'Site7', 'Site8', 'Site9'],
+                              ['Species0', 'Species1', 'Species2', 'Species3',
+                               'Species4', 'Species5'])
 
     def test_scaling1(self):
         scores = self.ordination.scores(1)
@@ -364,16 +372,16 @@ class TestCCAErrors(object):
     def test_shape(self):
         X, Y = self.X, self.Y
         with npt.assert_raises(ValueError):
-            CCA(Y, X[:-1])
+            CCA(Y, X[:-1], None, None)
 
     def test_Y_values(self):
         X, Y = self.X, self.Y
         Y[0, 0] = -1
         with npt.assert_raises(ValueError):
-            CCA(Y, X)
+            CCA(Y, X, None, None)
         Y[0] = 0
         with npt.assert_raises(ValueError):
-            CCA(Y, X)
+            CCA(Y, X, None, None)
 
 
 class TestCCAResults(object):
@@ -383,7 +391,12 @@ class TestCCAResults(object):
         compared with table 11.5 if also there."""
         Y = np.loadtxt(get_data_path('example3_Y'))
         X = np.loadtxt(get_data_path('example3_X'))
-        self.ordination = CCA(Y, X[:, :-1])
+        self.ordination = CCA(Y, X[:, :-1],
+                              ['Site0', 'Site1', 'Site2', 'Site3', 'Site4',
+                               'Site5', 'Site6', 'Site7', 'Site8', 'Site9'],
+                              ['Species0', 'Species1', 'Species2', 'Species3',
+                               'Species4', 'Species5', 'Species6', 'Species7',
+                               'Species8'])
 
     def test_scaling1_species(self):
         scores = self.ordination.scores(1)
@@ -437,11 +450,11 @@ class TestPCoAResults(object):
         scores = ordination.scores()
 
         # Note the absolute value because column can have signs swapped
-        npt.assert_almost_equal(np.abs(scores.species[0, 0]),
+        npt.assert_almost_equal(np.abs(scores.site[0, 0]),
                                 0.24078813304509292)
 
         # cogent returned the scores transposed
-        npt.assert_almost_equal(np.abs(scores.species[0, 1]),
+        npt.assert_almost_equal(np.abs(scores.site[0, 1]),
                                 0.23367716219400031)
 
 
@@ -455,7 +468,7 @@ class TestPCoAResultsExtensive(object):
     def test_values(self):
         results = self.ordination.scores()
 
-        npt.assert_almost_equal(len(results.eigvals), len(results.species[0]))
+        npt.assert_almost_equal(len(results.eigvals), len(results.site[0]))
 
         expected = np.array([[-0.028597, 0.22903853, 0.07055272,
                               0.26163576, 0.28398669, 0.0],
@@ -469,7 +482,7 @@ class TestPCoAResultsExtensive(object):
                               -0.06455635, -0.21141632, 0.0],
                              [0.01727687, 0.012458, -0.07382761,
                               -0.42690292, 0.1695749, 0.0]])
-        npt.assert_almost_equal(*normalize_signs(expected, results.species))
+        npt.assert_almost_equal(*normalize_signs(expected, results.site))
 
         expected = np.array([0.3984635, 0.36405689, 0.28804535, 0.27479983,
                             0.19165361, 0.0])
@@ -479,7 +492,7 @@ class TestPCoAResultsExtensive(object):
                              0.1811445992, 0.1263356565, 0.0])
         npt.assert_almost_equal(results.proportion_explained, expected)
 
-        npt.assert_equal(results.ids, self.ids)
+        npt.assert_equal(results.site_ids, self.ids)
 
 
 class TestPCoAEigenResults(object):
@@ -493,36 +506,10 @@ class TestPCoAEigenResults(object):
     def test_values(self):
         results = self.ordination.scores()
 
-        npt.assert_almost_equal(len(results.eigvals), len(results.species[0]))
+        npt.assert_almost_equal(len(results.eigvals), len(results.site[0]))
 
-        expected = np.array([[-0.25846546, 0.17399955, 0.03828758, -0.19447751,
-                              0.0831176, 0.26243033, -0.02316364, -0.0184794,
-                              0.0],
-                             [-0.27100114, -0.01859513, -0.08648419,
-                              0.11806425, -0.19880836, -0.02117236,
-                              -0.19102403, 0.15564659, 0.0],
-                             [0.2350779, 0.09625193, -0.34579273, -0.00320863,
-                              -0.09637777, 0.04570254, 0.18547281, 0.0404094,
-                              0.0],
-                             [0.02614077, -0.01114597, 0.1476606, 0.29087661,
-                              0.20394547, 0.06197124, 0.10164133, 0.105691,
-                              0.0],
-                             [0.28500755, -0.01925499, 0.06232634, 0.1381268,
-                              -0.1047986, 0.09517207, -0.1296361, -0.22068717,
-                              0.0],
-                             [0.20463633, -0.13936115, 0.29151382, -0.18156679,
-                              -0.15958013, -0.02464121, 0.08662524,
-                              0.09962215, 0.0],
-                             [0.2334824, 0.22525797, -0.01886231, -0.10772998,
-                              0.177109, -0.19290584, -0.14981947, 0.0383549,
-                              0.0],
-                             [-0.09496319, -0.4209748, -0.15486945,
-                              -0.08984275, 0.15261819, -0.03342327,
-                              -0.02512248, -0.05089885, 0.0],
-                             [-0.35991516, 0.1138226, 0.06622034, 0.029758,
-                              -0.05722541, -0.19313351, 0.14502633,
-                              -0.14965861, 0.0]])
-        npt.assert_almost_equal(*normalize_signs(expected, results.species))
+        expected = np.loadtxt(get_data_path('exp_PCoAEigenResults_site'))
+        npt.assert_almost_equal(*normalize_signs(expected, results.site))
 
         expected = np.array([0.51236726, 0.30071909, 0.26791207, 0.20898868,
                              0.19169895, 0.16054235,  0.15017696,  0.12245775,
@@ -534,7 +521,7 @@ class TestPCoAEigenResults(object):
                              0.0784269939, 0.0639511764, 0.0])
         npt.assert_almost_equal(results.proportion_explained, expected)
 
-        npt.assert_equal(results.ids, self.ids)
+        npt.assert_equal(results.site_ids, self.ids)
 
 
 class TestPCoAPrivateMethods(object):
@@ -559,3 +546,164 @@ class TestPCoAErrors(object):
     def test_input(self):
         with npt.assert_raises(TypeError):
             PCoA([[1, 2], [3, 4]])
+
+
+class TestOrdinationResults(object):
+    def setup(self):
+        # CA results
+        eigvals = np.array([0.0961330159181, 0.0409418140138])
+        species = np.array([[0.408869425742, 0.0695518116298],
+                            [-0.1153860437, -0.299767683538],
+                            [-0.309967102571, 0.187391917117]])
+        site = np.array([[-0.848956053187, 0.882764759014],
+                         [-0.220458650578, -1.34482000302],
+                         [1.66697179591, 0.470324389808]])
+        biplot = None
+        site_constraints = None
+        prop_explained = None
+        species_ids = ['Species1', 'Species2', 'Species3']
+        site_ids = ['Site1', 'Site2', 'Site3']
+        ca_scores = OrdinationResults(eigvals=eigvals, species=species,
+                                      site=site, biplot=biplot,
+                                      site_constraints=site_constraints,
+                                      proportion_explained=prop_explained,
+                                      species_ids=species_ids,
+                                      site_ids=site_ids)
+        # CCA results
+        eigvals = np.array([0.366135830393, 0.186887643052, 0.0788466514249,
+                            0.082287840501, 0.0351348475787, 0.0233265839374,
+                            0.0099048981912, 0.00122461669234,
+                            0.000417454724117])
+        species = np.loadtxt(get_data_path('exp_OrdRes_CCA_species'))
+        site = np.loadtxt(get_data_path('exp_OrdRes_CCA_site'))
+        biplot = np.array([[-0.169746767979, 0.63069090084, 0.760769036049],
+                           [-0.994016563505, 0.0609533148724,
+                            -0.0449369418179],
+                           [0.184352565909, -0.974867543612, 0.0309865007541]])
+        site_constraints = np.loadtxt(
+            get_data_path('exp_OrdRes_CCA_site_constraints'))
+        prop_explained = None
+        species_ids = ['Species0', 'Species1', 'Species2', 'Species3',
+                       'Species4', 'Species5', 'Species6', 'Species7',
+                       'Species8']
+        site_ids = ['Site0', 'Site1', 'Site2', 'Site3', 'Site4', 'Site5',
+                    'Site6', 'Site7', 'Site8', 'Site9']
+        cca_scores = OrdinationResults(eigvals=eigvals, species=species,
+                                       site=site, biplot=biplot,
+                                       site_constraints=site_constraints,
+                                       proportion_explained=prop_explained,
+                                       species_ids=species_ids,
+                                       site_ids=site_ids)
+        # PCoA results
+        eigvals = np.array([0.512367260461, 0.300719094427, 0.267912066004,
+                            0.208988681078, 0.19169895326, 0.16054234528,
+                            0.15017695712, 0.122457748167, 0.0])
+        species = None
+        site = np.loadtxt(get_data_path('exp_OrdRes_PCoA_site'))
+        biplot = None
+        site_constraints = None
+        prop_explained = np.array([0.267573832777, 0.15704469605,
+                                   0.139911863774, 0.109140272454,
+                                   0.100111048503, 0.0838401161912,
+                                   0.0784269939011, 0.0639511763509, 0.0])
+        species_ids = None
+        site_ids = ['PC.636', 'PC.635', 'PC.356', 'PC.481', 'PC.354', 'PC.593',
+                    'PC.355', 'PC.607', 'PC.634']
+        pcoa_scores = OrdinationResults(eigvals=eigvals, species=species,
+                                        site=site, biplot=biplot,
+                                        site_constraints=site_constraints,
+                                        proportion_explained=prop_explained,
+                                        species_ids=species_ids,
+                                        site_ids=site_ids)
+        # RDA results
+        eigvals = np.array([25.8979540892, 14.9825779819, 8.93784077262,
+                            6.13995623072, 1.68070536498, 0.57735026919,
+                            0.275983624351])
+        species = np.loadtxt(get_data_path('exp_OrdRes_RDA_species'))
+        site = np.loadtxt(get_data_path('exp_OrdRes_RDA_site'))
+        biplot = np.array([[0.422650019179, -0.559142585857, -0.713250678211],
+                           [0.988495963777, 0.150787422017, -0.0117848614073],
+                           [-0.556516618887, 0.817599992718, 0.147714267459],
+                           [-0.404079676685, -0.9058434809, -0.127150316558]])
+        site_constraints = np.loadtxt(
+            get_data_path('exp_OrdRes_RDA_site_constraints'))
+        prop_explained = None
+        species_ids = ['Species0', 'Species1', 'Species2', 'Species3',
+                       'Species4', 'Species5']
+        site_ids = ['Site0', 'Site1', 'Site2', 'Site3', 'Site4', 'Site5',
+                    'Site6', 'Site7', 'Site8', 'Site9']
+        rda_scores = OrdinationResults(eigvals=eigvals, species=species,
+                                       site=site, biplot=biplot,
+                                       site_constraints=site_constraints,
+                                       proportion_explained=prop_explained,
+                                       species_ids=species_ids,
+                                       site_ids=site_ids)
+
+        self.scores = [ca_scores, cca_scores, pcoa_scores, rda_scores]
+        self.test_paths = ['L&L_CA_data_scores', 'example3_scores',
+                           'PCoA_sample_data_3_scores', 'example2_scores']
+
+        self.fferror_test_paths = ['error1', 'error2', 'error3', 'error4',
+                                   'error5', 'error6']
+        self.verror_test_paths = ['v_error1', 'v_error2', 'v_error3',
+                                  'v_error4', 'v_error5', 'v_error6',
+                                  'v_error7', 'v_error8', 'v_error9',
+                                  'v_error10']
+
+    def test_to_file(self):
+        for scores, test_path in izip(self.scores, self.test_paths):
+            obs_f = StringIO()
+            scores.to_file(obs_f)
+            obs = obs_f.getvalue()
+            obs_f.close()
+
+            with open(get_data_path(test_path), 'U') as f:
+                exp = f.read()
+
+            npt.assert_equal(obs, exp)
+
+    def test_from_file(self):
+        for scores, test_path in izip(self.scores, self.test_paths):
+            obs = OrdinationResults.from_file(get_data_path(test_path))
+
+            npt.assert_almost_equal(obs.eigvals, scores.eigvals)
+            if scores.species is not None:
+                npt.assert_almost_equal(obs.species, scores.species)
+            else:
+                npt.assert_equal(obs.species, scores.species)
+            npt.assert_equal(obs.species_ids, scores.species_ids)
+
+            if scores.site is not None:
+                npt.assert_almost_equal(obs.site, scores.site)
+            else:
+                npt.assert_equal(obs.site, scores.site)
+            npt.assert_equal(obs.site_ids, scores.site_ids)
+
+            if scores.biplot is not None:
+                npt.assert_almost_equal(obs.biplot, scores.biplot)
+            else:
+                npt.assert_equal(obs.biplot, scores.biplot)
+
+            if scores.site_constraints is not None:
+                npt.assert_almost_equal(obs.site_constraints,
+                                        scores.site_constraints)
+            else:
+                npt.assert_equal(obs.site_constraints, scores.site_constraints)
+
+            if scores.proportion_explained is not None:
+                npt.assert_almost_equal(obs.proportion_explained,
+                                        scores.proportion_explained)
+            else:
+                npt.assert_equal(obs.proportion_explained,
+                                 scores.proportion_explained)
+
+    def test_from_file_error(self):
+        for test_path in self.fferror_test_paths:
+            with open(get_data_path(test_path), 'U') as f:
+                with npt.assert_raises(FileFormatError):
+                    OrdinationResults.from_file(f)
+
+        for test_path in self.verror_test_paths:
+            with open(get_data_path(test_path), 'U') as f:
+                with npt.assert_raises(ValueError):
+                    OrdinationResults.from_file(f)
