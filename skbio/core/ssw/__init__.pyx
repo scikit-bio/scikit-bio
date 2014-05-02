@@ -35,11 +35,11 @@ Use the ``StripedSmithWaterman`` object:
 {
     'optimal_alignment_score': 49,
     'suboptimal_alignment_score': 24,
+    'query_begin': 0,
+    'query_end': 26,
     'target_begin': 18,
     'target_end_optimal': 45,
     'target_end_suboptimal': 29,
-    'query_begin': 0,
-    'query_end': 26,
     'cigar': '20M1D7M',
     'query_sequence': 'ACTAAGGCTCTCTACCCCTCTCAGAGA',
     'target_sequence': 'AAAAAACTCTCTAAACTCACTAAGGCTCTCTACCCCTCTTCAGAGAAGTCGA'
