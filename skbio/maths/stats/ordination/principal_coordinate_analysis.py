@@ -118,11 +118,15 @@ class PCoA(Ordination):
         # least one eigenvalue is zero because only n-1 axes are
         # needed to represent n points in an euclidean space.
 
-        # We only return coordinates that make sense (i.e., that have
-        # a corresponding positive eigenvalue)
+        # Returning only coordinates that make sense (i.e., that have
+        # a corresponding positive eigenvalue) breaks Jackknifed Beta Diversity
+        # In order to solve this, we change the eigvecs for the negative
+        # eigenvalue to 0
         num_positive = (self.eigvals >= 0).sum()
-        eigvecs = self.eigvecs[:, :num_positive]
-        eigvals = self.eigvals[:num_positive]
+        eigvecs = self.eigvecs
+        eigvecs[:, num_positive:] = np.zeros(eigvecs[:, num_positive:].shape)
+        eigvals = self.eigvals
+        eigvals[num_positive:] = np.zeros(eigvals[num_positive:].shape)
 
         coordinates = eigvecs * np.sqrt(eigvals)
 
