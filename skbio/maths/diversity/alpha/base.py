@@ -615,15 +615,11 @@ def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
     ymtx = np.asarray(ymtx)
     yvals = ymtx.mean(0)
 
-    # fit to obs_sp = max_sp * num_idiv / (num_indiv + B)
-    # return max_sp
-    def fitfn(p, n):  # works with vectors of n, returns vector of S
-        return p[0] * n / (p[1] + n)
+    # Vectors of actual vals y and number of individuals n.
+    def errfn(p, n, y):
+        return (((p[0] * n / (p[1] + n)) - y) ** 2).sum()
 
-    def errfn(p, n, y):  # vectors of actual vals y and number of individuals n
-        return ((fitfn(p, n) - y) ** 2).sum()
-
-    # Return S_max
+    # Return S_max.
     return fmin_powell(errfn, params_guess, ftol=1e-5, args=(xvals, yvals),
                        disp=False)[0]
 
