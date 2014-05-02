@@ -205,7 +205,7 @@ cdef class AlignmentStructure:
         -----
         The result is a 0 based index by default
         """
-        return self.p.ref_begin1 + self.index_starts_at if self.p.ref_begin1 > 0 else self.p.ref_begin1
+        return self.p.ref_begin1 + self.index_starts_at if self.p.ref_begin1 >= 0 else -1
 
     @property
     def target_end_optimal(self):
@@ -250,7 +250,7 @@ cdef class AlignmentStructure:
         -----
         The result is a 0 based index by default
         """
-        return self.p.read_begin1 + self.index_starts_at if self.p.read_begin1 > 0 else self.p.read_begin1
+        return self.p.read_begin1 + self.index_starts_at if self.p.read_begin1 >= 0 else -1
 
     @property 
     def query_end(self):
