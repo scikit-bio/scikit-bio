@@ -12,7 +12,6 @@ from __future__ import division
 
 import warnings
 from StringIO import StringIO
-from itertools import izip
 
 import numpy as np
 import numpy.testing as npt
@@ -651,7 +650,7 @@ class TestOrdinationResults(object):
                                   'v_error10']
 
     def test_to_file(self):
-        for scores, test_path in izip(self.scores, self.test_paths):
+        for scores, test_path in zip(self.scores, self.test_paths):
             obs_f = StringIO()
             scores.to_file(obs_f)
             obs = obs_f.getvalue()
@@ -663,7 +662,7 @@ class TestOrdinationResults(object):
             npt.assert_equal(obs, exp)
 
     def test_from_file(self):
-        for scores, test_path in izip(self.scores, self.test_paths):
+        for scores, test_path in zip(self.scores, self.test_paths):
             obs = OrdinationResults.from_file(get_data_path(test_path))
 
             npt.assert_almost_equal(obs.eigvals, scores.eigvals)
