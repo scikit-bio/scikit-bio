@@ -167,7 +167,7 @@ memory and performance characteristics. So far, we're using::
 
     from future.utils.six import StringIO
 
-It refers to `io.StringIO` in Py3, and `StringIO.StringIO` in Py3.
+It refers to `io.StringIO` in Py3, and `StringIO.StringIO` in Py2.
 
 If you need a binary file-like object (see the Text vs bytes section),
 use `future.utils.six.BytesIO`, which refers to `io.BytesIO` in Py3,
