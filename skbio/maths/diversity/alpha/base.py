@@ -553,14 +553,12 @@ def menhinick(counts):
     return observed_species(counts) / np.sqrt(counts.sum())
 
 
-def michaelis_menten_fit(counts, num_repeats=1, params_guess=None,
-                         return_b=False):
+def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
     """Calculate Michaelis-Menten fit to rarefaction curve of observed species.
 
     The Michaelis-Menten equation is defined as ``S = (S_max*n) / (B+n)``,
     where ``n`` is the number of individuals and ``S`` is the number of
-    species. This function estimates the ``S_max`` parameter, and also provides
-    an option to return ``B``.
+    species. This function estimates the ``S_max`` parameter.
 
     The fit is made to datapoints where n = 1, 2, ..., counts.sum(), and ``S``
     is the number of species represented in a random sample of ``n``
@@ -577,17 +575,11 @@ def michaelis_menten_fit(counts, num_repeats=1, params_guess=None,
         Initial guess of ``S_max`` and ``B``. If ``None``, default guess for
         ``S_max`` is ``S`` (as ``S_max`` should be >= ``S``) and default guess
         for ``B`` is ``round(n / 2)``.
-    return_b : bool, optional
-        If ``True``, return the estimate for both ``S_max`` and ``B``. The
-        default is to just return ``S_max``.
 
     Returns
     -------
     S_max : double
         Estimate of the ``S_max`` parameter in the Michaelis-Menten equation.
-    B : double
-        If ``return_b`` is ``True``, will also return the estimate for ``B`` in
-        the Michaelis-Menten equation.
 
     See Also
     --------
@@ -631,12 +623,9 @@ def michaelis_menten_fit(counts, num_repeats=1, params_guess=None,
     def errfn(p, n, y):  # vectors of actual vals y and number of individuals n
         return ((fitfn(p, n) - y) ** 2).sum()
 
-    p1 = fmin_powell(errfn, params_guess, ftol=1e-5, args=(xvals, yvals),
-                     disp=False)
-    if return_b:
-        return p1
-    else:
-        return p1[0]  # return only S_max, not the K_m (B) param
+    # Return S_max
+    return fmin_powell(errfn, params_guess, ftol=1e-5, args=(xvals, yvals),
+                       disp=False)[0]
 
 
 def observed_species(counts):
