@@ -151,9 +151,25 @@ class BaseTests(TestCase):
         npt.assert_array_almost_equal(observed_lower, expected_lower)
 
     def test_fisher_alpha(self):
+        exp = 2.7823795367398798
         arr = np.array([4, 3, 4, 0, 1, 0, 2])
         obs = fisher_alpha(arr)
-        self.assertAlmostEqual(obs, 2.7823795367398798)
+        self.assertAlmostEqual(obs, exp)
+
+        # Should depend only on S and N (number of species, number of
+        # individuals / seqs), so we should obtain the same output as above.
+        obs = fisher_alpha([1, 6, 1, 0, 1, 0, 5])
+        self.assertAlmostEqual(obs, exp)
+
+        # Should match another by hand:
+        # 2 species, 62 seqs, alpha is 0.39509
+        obs = fisher_alpha([61, 0, 0, 1])
+        self.assertAlmostEqual(obs, 0.39509, delta=0.0001)
+
+        # Test case where we have >1000 individuals (SDR-IV makes note of this
+        # case). Verified against R's vegan::fisher.alpha.
+        obs = fisher_alpha([999, 0, 10])
+        self.assertAlmostEqual(obs, 0.2396492)
 
     def test_goods_coverage(self):
         counts = [1] * 75 + [2, 2, 2, 2, 2, 2, 3, 4, 4]

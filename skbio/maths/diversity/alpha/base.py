@@ -11,7 +11,7 @@ from __future__ import division
 
 import numpy as np
 from scipy.special import gammaln
-from scipy.optimize import fmin_powell
+from scipy.optimize import fmin_powell, minimize_scalar
 
 from skbio.maths.subsample import subsample
 
@@ -276,26 +276,29 @@ def esty_ci(counts):
     return n1 / n + z * np.sqrt(W), n1 / n - z * np.sqrt(W)
 
 
-def fisher_alpha(counts, bounds=(1e-3, 1e12)):
+def fisher_alpha(counts):
     """Calculate Fisher's alpha.
 
     Parameters
     ----------
     counts : (N,) array_like, int
         Vector of counts.
-    bounds : tuple, optional
-        Bounds for Powell optimizer (may need to adjust bounds for some
-        datasets).
 
     Returns
     -------
     double
         Fisher's alpha.
 
+    Raises
+    ------
+    RuntimeError
+        If the optimizer fails to converge (error > 1.0).
+
     Notes
     -----
     The implementation here is based on the description given in the SDR-IV
-    online manual [1]_.
+    online manual [1]_. Uses ``scipy.optimize.minimize_scalar`` to find
+    Fisher's alpha.
 
     References
     ----------
@@ -307,12 +310,16 @@ def fisher_alpha(counts, bounds=(1e-3, 1e12)):
     s = observed_species(counts)
 
     def f(alpha):
-        if alpha >= bounds[0] and alpha <= bounds[1]:
-            return (alpha * np.log(1 + (n / alpha)) - s) ** 2
-        else:
-            return np.inf
+        return (alpha * np.log(1 + (n / alpha)) - s) ** 2
 
-    alpha = fmin_powell(f, 1.0, disp=False)
+    # Temporarily silence RuntimeWarnings (invalid and division by zero) during
+    # optimization in case invalid input is provided to the objective function
+    # (e.g. alpha=0).
+    orig_settings = np.seterr(divide='ignore', invalid='ignore')
+    try:
+        alpha = minimize_scalar(f).x
+    finally:
+        np.seterr(**orig_settings)
 
     if f(alpha) > 1.0:
         raise RuntimeError("Optimizer failed to converge (error > 1.0), so "
