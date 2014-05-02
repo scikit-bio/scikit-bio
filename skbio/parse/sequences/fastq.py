@@ -10,7 +10,6 @@ from __future__ import division
 import numpy as np
 
 from skbio.core.exception import FastqParseError
-from skbio.util.misc import is_casava_v180_or_later
 
 
 def _ascii_to_phred(s, offset):
