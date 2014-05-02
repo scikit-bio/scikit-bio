@@ -601,13 +601,14 @@ def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
     """
     counts = _validate(counts)
 
+    n_indiv = counts.sum()
     if params_guess is None:
         S_max_guess = observed_species(counts)
-        B_guess = int(round(counts.sum() / 2))
+        B_guess = int(round(n_indiv / 2))
         params_guess = (S_max_guess, B_guess)
 
     # observed # of species vs # of individuals sampled, S vs n
-    xvals = np.arange(1, counts.sum() + 1)
+    xvals = np.arange(1, n_indiv + 1)
     ymtx = []
     for i in range(num_repeats):
         ymtx.append(np.array([observed_species(subsample(counts, n))
