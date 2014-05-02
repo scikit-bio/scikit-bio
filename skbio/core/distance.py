@@ -123,7 +123,6 @@ Data:
 True
 
 """
-from __future__ import division
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -133,8 +132,11 @@ from __future__ import division
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from __future__ import division
+from future.builtins import zip
+from future.utils.six import string_types
+
 from copy import deepcopy
-from itertools import izip
 from os.path import exists
 
 import numpy as np
@@ -273,7 +275,7 @@ class DissimilarityMatrix(object):
 
         ids = cls._parse_ids(dm_f, delimiter)
         num_ids = len(ids)
-        data = np.empty((num_ids, num_ids), dtype='float')
+        data = np.empty((num_ids, num_ids), dtype=np.float64)
 
         # curr_row_idx keeps track of the row index within the data matrix.
         # We're not using enumerate() because there may be
@@ -599,7 +601,7 @@ class DissimilarityMatrix(object):
         .. shownumpydoc
 
         """
-        if isinstance(index, basestring):
+        if isinstance(index, string_types):
             if index in self._id_index:
                 return self.data[self._id_index[index]]
             else:
@@ -634,7 +636,7 @@ class DissimilarityMatrix(object):
         out_f.write(formatted_ids)
         out_f.write('\n')
 
-        for id_, vals in izip(self.ids, self.data):
+        for id_, vals in zip(self.ids, self.data):
             out_f.write(id_)
             out_f.write(delimiter)
             out_f.write(delimiter.join(np.asarray(vals, dtype=np.str)))
@@ -657,7 +659,7 @@ class DissimilarityMatrix(object):
                 "dissimilarity matrix file. Please verify that the file is "
                 "not empty.")
         else:
-            return map(lambda e: e.strip(), header_line.split(delimiter))
+            return [e.strip() for e in header_line.split(delimiter)]
 
     def _validate(self, data, ids):
         """Validate the data array and IDs.
@@ -708,7 +710,7 @@ class DissimilarityMatrix(object):
     def _is_id_pair(self, index):
         return (isinstance(index, tuple) and
                 len(index) == 2 and
-                all(map(lambda e: isinstance(e, basestring), index)))
+                all(map(lambda e: isinstance(e, string_types), index)))
 
     def _format_ids(self, delimiter):
         return delimiter.join([''] + list(self.ids))

@@ -62,7 +62,7 @@ def fasta_from_sequences(seqs, make_seqlabel=None, line_wrap=None):
     return '\n'.join(fasta_list)
 
 
-def fasta_from_alignment(aln, make_seqlabel=None, line_wrap=None, sorted=True):
+def fasta_from_alignment(aln, make_seqlabel=None, line_wrap=None, sort=True):
     """Returns a FASTA string given an alignment.
 
         - aln can be an Alignment object or dict.
@@ -76,8 +76,8 @@ def fasta_from_alignment(aln, make_seqlabel=None, line_wrap=None, sorted=True):
     except AttributeError:
         order = aln.keys()
 
-    if sorted:
-        order.sort()
+    if sort:
+        order = sorted(order)
 
     try:
         seq_dict = aln.NamedSeqs

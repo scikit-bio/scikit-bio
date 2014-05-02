@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 from __future__ import print_function, absolute_import
+from future.builtins import zip
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -10,7 +11,7 @@ from __future__ import print_function, absolute_import
 # ----------------------------------------------------------------------------
 
 from collections import namedtuple
-from itertools import izip
+
 from os.path import exists
 
 import numpy as np
@@ -238,7 +239,7 @@ class OrdinationResults(namedtuple('OrdinationResults',
         """Parse the eigvals section of lines"""
         # The first line should contain the Eigvals header:
         # Eigvals<tab>NumEigvals
-        header = lines.next().strip().split('\t')
+        header = next(lines).strip().split('\t')
         if len(header) != 2 or header[0] != 'Eigvals':
             raise FileFormatError('Eigvals header not found')
 
@@ -249,7 +250,7 @@ class OrdinationResults(namedtuple('OrdinationResults',
 
         # Parse the eigvals, present on the next line
         # Eigval_1<tab>Eigval_2<tab>Eigval_3<tab>...
-        eigvals = np.asarray(lines.next().strip().split('\t'),
+        eigvals = np.asarray(next(lines).strip().split('\t'),
                              dtype=np.float64)
         if len(eigvals) != num_eigvals:
             raise ValueError('Expected %d eigvals, but found %d.' %
@@ -260,7 +261,7 @@ class OrdinationResults(namedtuple('OrdinationResults',
     @staticmethod
     def _check_empty_line(lines):
         """Checks that the next line in lines is empty"""
-        if lines.next().strip():
+        if next(lines).strip():
             raise FileFormatError('Expected an empty line')
 
     @staticmethod
@@ -268,7 +269,7 @@ class OrdinationResults(namedtuple('OrdinationResults',
         """Parse the proportion explained section of lines"""
         # Parse the proportion explained header:
         # Proportion explained<tab>NumPropExpl
-        header = lines.next().strip().split('\t')
+        header = next(lines).strip().split('\t')
         if (len(header) != 2 or
                 header[0] != 'Proportion explained'):
             raise FileFormatError('Proportion explained header not found')
@@ -281,7 +282,7 @@ class OrdinationResults(namedtuple('OrdinationResults',
             prop_expl = None
         else:
             # Parse the line with the proportion explained values
-            prop_expl = np.asarray(lines.next().strip().split('\t'),
+            prop_expl = np.asarray(next(lines).strip().split('\t'),
                                    dtype=np.float64)
             if len(prop_expl) != num_prop_expl:
                 raise ValueError('Expected %d proportion explained values, but'
@@ -293,7 +294,7 @@ class OrdinationResults(namedtuple('OrdinationResults',
     def _parse_coords(lines, header_id):
         """Parse a coordinate section of lines, with header=header_id"""
         # Parse the coords header
-        header = lines.next().strip().split('\t')
+        header = next(lines).strip().split('\t')
         if len(header) != 3 or header[0] != header_id:
             raise FileFormatError('%s header not found.' % header_id)
 
@@ -316,7 +317,7 @@ class OrdinationResults(namedtuple('OrdinationResults',
             ids = []
             for i in range(rows):
                 # Parse the next row of data
-                vals = lines.next().strip().split('\t')
+                vals = next(lines).strip().split('\t')
                 # The +1 comes from the row header (which contains the row id)
                 if len(vals) != cols + 1:
                     raise ValueError('Expected %d values, but found %d in row '
@@ -329,7 +330,7 @@ class OrdinationResults(namedtuple('OrdinationResults',
     def _parse_biplot(lines):
         """Parse the biplot section of lines"""
         # Parse the biplot header
-        header = lines.next().strip().split('\t')
+        header = next(lines).strip().split('\t')
         if len(header) != 3 or header[0] != 'Biplot':
             raise FileFormatError('Biplot header not found.')
 
@@ -350,7 +351,7 @@ class OrdinationResults(namedtuple('OrdinationResults',
             biplot = np.empty((rows, cols), dtype=np.float64)
             for i in range(rows):
                 # Parse the next row of data
-                vals = lines.next().strip().split('\t')
+                vals = next(lines).strip().split('\t')
                 if len(vals) != cols:
                     raise ValueError('Expected %d values, but founf %d in row '
                                      '%d.' % (cols, len(vals), i))
@@ -391,7 +392,7 @@ class OrdinationResults(namedtuple('OrdinationResults',
             out_f.write("Species\t0\t0\n\n")
         else:
             out_f.write("Species\t%d\t%d\n" % self.species.shape)
-            for id_, vals in izip(self.species_ids, self.species):
+            for id_, vals in zip(self.species_ids, self.species):
                 out_f.write("%s\t%s\n" % (id_, '\t'.join(np.asarray(vals,
                             dtype=np.str))))
             out_f.write("\n")
@@ -401,7 +402,7 @@ class OrdinationResults(namedtuple('OrdinationResults',
             out_f.write("Site\t0\t0\n\n")
         else:
             out_f.write("Site\t%d\t%d\n" % self.site.shape)
-            for id_, vals in izip(self.site_ids, self.site):
+            for id_, vals in zip(self.site_ids, self.site):
                 out_f.write("%s\t%s\n" % (id_, '\t'.join(np.asarray(vals,
                             dtype=np.str))))
             out_f.write("\n")
@@ -421,7 +422,7 @@ class OrdinationResults(namedtuple('OrdinationResults',
         else:
             out_f.write("Site constraints\t%d\t%d\n" %
                         self.site_constraints.shape)
-            for id_, vals in izip(self.site_ids, self.site_constraints):
+            for id_, vals in zip(self.site_ids, self.site_constraints):
                 out_f.write("%s\t%s\n" % (id_, '\t'.join(np.asarray(vals,
                             dtype=np.str))))
 

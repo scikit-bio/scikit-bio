@@ -9,10 +9,10 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import division
+from future.utils.six import StringIO
+from future.builtins import zip
 
 import warnings
-from StringIO import StringIO
-from itertools import izip
 
 import numpy as np
 import numpy.testing as npt
@@ -461,7 +461,7 @@ class TestPCoAResults(object):
 class TestPCoAResultsExtensive(object):
     def setup(self):
         matrix = np.loadtxt(get_data_path('PCoA_sample_data_2'))
-        self.ids = map(str, range(matrix.shape[0]))
+        self.ids = [str(i) for i in range(matrix.shape[0])]
         dist_matrix = DistanceMatrix(matrix, self.ids)
         self.ordination = PCoA(dist_matrix)
 
@@ -651,7 +651,7 @@ class TestOrdinationResults(object):
                                   'v_error10']
 
     def test_to_file(self):
-        for scores, test_path in izip(self.scores, self.test_paths):
+        for scores, test_path in zip(self.scores, self.test_paths):
             obs_f = StringIO()
             scores.to_file(obs_f)
             obs = obs_f.getvalue()
@@ -663,7 +663,7 @@ class TestOrdinationResults(object):
             npt.assert_equal(obs, exp)
 
     def test_from_file(self):
-        for scores, test_path in izip(self.scores, self.test_paths):
+        for scores, test_path in zip(self.scores, self.test_paths):
             obs = OrdinationResults.from_file(get_data_path(test_path))
 
             npt.assert_almost_equal(obs.eigvals, scores.eigvals)

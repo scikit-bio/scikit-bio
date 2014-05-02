@@ -29,9 +29,9 @@ def format_fastq_record(seqid, seq, qual, phred_offset=33):
 
     Parameters
     ----------
-    seqid : str
+    seqid : bytes
         The sequence ID
-    seq : str or subclass of BiologicalSequence
+    seq : bytes or subclass of BiologicalSequence
         The sequence
     qual : np.array of int8
         The quality scores
@@ -40,7 +40,7 @@ def format_fastq_record(seqid, seq, qual, phred_offset=33):
 
     Returns
     -------
-    str : a string representation of a single FASTQ record
+    bytes : a string representation of a single FASTQ record
 
     Examples
     --------
@@ -63,4 +63,4 @@ def format_fastq_record(seqid, seq, qual, phred_offset=33):
     else:
         raise ValueError("Unknown phred offset: %d" % phred_offset)
 
-    return "@%s\n%s\n+\n%s\n" % (seqid, seq, phred_f(qual))
+    return b'\n'.join([b"@" + seqid, seq, b'+', phred_f(qual), b''])
