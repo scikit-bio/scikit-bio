@@ -609,11 +609,10 @@ def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
 
     # observed # of species vs # of individuals sampled, S vs n
     xvals = np.arange(1, n_indiv + 1)
-    ymtx = []
+    ymtx = np.empty((num_repeats, len(xvals)), dtype=int)
     for i in range(num_repeats):
-        ymtx.append(np.array([observed_species(subsample(counts, n))
-                              for n in xvals]))
-    ymtx = np.asarray(ymtx)
+        ymtx[i] = np.asarray([observed_species(subsample(counts, n))
+                              for n in xvals], dtype=int)
     yvals = ymtx.mean(0)
 
     # Vectors of actual vals y and number of individuals n.
