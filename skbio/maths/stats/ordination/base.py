@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 from __future__ import print_function, absolute_import
+from future.builtins import zip
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -10,7 +11,7 @@ from __future__ import print_function, absolute_import
 # ----------------------------------------------------------------------------
 
 from collections import namedtuple
-from itertools import izip
+
 from os.path import exists
 
 import numpy as np
@@ -391,7 +392,7 @@ class OrdinationResults(namedtuple('OrdinationResults',
             out_f.write("Species\t0\t0\n\n")
         else:
             out_f.write("Species\t%d\t%d\n" % self.species.shape)
-            for id_, vals in izip(self.species_ids, self.species):
+            for id_, vals in zip(self.species_ids, self.species):
                 out_f.write("%s\t%s\n" % (id_, '\t'.join(np.asarray(vals,
                             dtype=np.str))))
             out_f.write("\n")
@@ -401,7 +402,7 @@ class OrdinationResults(namedtuple('OrdinationResults',
             out_f.write("Site\t0\t0\n\n")
         else:
             out_f.write("Site\t%d\t%d\n" % self.site.shape)
-            for id_, vals in izip(self.site_ids, self.site):
+            for id_, vals in zip(self.site_ids, self.site):
                 out_f.write("%s\t%s\n" % (id_, '\t'.join(np.asarray(vals,
                             dtype=np.str))))
             out_f.write("\n")
@@ -421,7 +422,7 @@ class OrdinationResults(namedtuple('OrdinationResults',
         else:
             out_f.write("Site constraints\t%d\t%d\n" %
                         self.site_constraints.shape)
-            for id_, vals in izip(self.site_ids, self.site_constraints):
+            for id_, vals in zip(self.site_ids, self.site_constraints):
                 out_f.write("%s\t%s\n" % (id_, '\t'.join(np.asarray(vals,
                             dtype=np.str))))
 
