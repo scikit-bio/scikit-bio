@@ -222,7 +222,7 @@ class BaseTests(TestCase):
         obs = michaelis_menten_fit([42])
         self.assertAlmostEqual(obs, 1.0)
 
-        obs = michaelis_menten_fit([34], num_repeats=3, params_guess=[13, 13])
+        obs = michaelis_menten_fit([34], num_repeats=3, params_guess=(13, 13))
         self.assertAlmostEqual(obs, 1.0)
 
         obs = michaelis_menten_fit([70, 70], num_repeats=5)

@@ -574,7 +574,9 @@ def michaelis_menten_fit(counts, num_repeats=1, params_guess=None,
         The number of times to perform rarefaction (subsampling without
         replacement) at each value of ``n``.
     params_guess : tuple, optional
-        Initial guess of ``S_max`` and ``B``. Default is ``(100, 500)``.
+        Initial guess of ``S_max`` and ``B``. If ``None``, default guess for
+        ``S_max`` is ``S`` (as ``S_max`` should be >= ``S``) and default guess
+        for ``B`` is ``round(n / 2)``.
     return_b : bool, optional
         If ``True``, return the estimate for both ``S_max`` and ``B``. The
         default is to just return ``S_max``.
@@ -608,7 +610,9 @@ def michaelis_menten_fit(counts, num_repeats=1, params_guess=None,
     counts = _validate(counts)
 
     if params_guess is None:
-        params_guess = np.array([100, 500])
+        S_max_guess = observed_species(counts)
+        B_guess = int(round(counts.sum() / 2))
+        params_guess = (S_max_guess, B_guess)
 
     # observed # of species vs # of individuals sampled, S vs n
     xvals = np.arange(1, counts.sum() + 1)
