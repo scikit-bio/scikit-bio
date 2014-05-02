@@ -9,9 +9,10 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import division
+from future.utils.six import StringIO
+from future.builtins import zip
 
 import warnings
-from StringIO import StringIO
 
 import numpy as np
 import numpy.testing as npt
