@@ -23,12 +23,6 @@ from skbio.core.distance import DistanceMatrix
 #   that case dropping the imaginary part means they'd no longer be
 #   so, so I'm not doing that.
 
-# - The rest of the ordination files works from a data table (sites x
-#   species), but PCoA works from a distance matrix, so the ordination
-#   results from the former (i.e., site scores, species scores, etc)
-#   don't map very well to PCoA ordination results (i.e., "object"
-#   scores). See also base.py
-
 
 class PCoA(Ordination):
     r"""Perform Principal Coordinate Analysis.
@@ -134,9 +128,9 @@ class PCoA(Ordination):
 
         proportion_explained = eigvals / eigvals.sum()
 
-        return OrdinationResults(eigvals=eigvals, species=coordinates,
+        return OrdinationResults(eigvals=eigvals, site=coordinates,
                                  proportion_explained=proportion_explained,
-                                 ids=self.ids)
+                                 site_ids=self.ids)
 
     @staticmethod
     def _E_matrix(distance_matrix):
