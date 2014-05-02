@@ -39,12 +39,12 @@ class GiniTests(TestCase):
         obs = gini_index(self.data, 'rectangles')
         self.assertAlmostEqual(obs, exp)
 
-    def test_lorenz_curve(self):
-        self.assertEqual(_lorenz_curve(self.data), self.lorenz_curve_points)
-
         # Raises error on negative data.
         with self.assertRaises(ValueError):
-            _lorenz_curve([1.0, -3.1, 4.5])
+            gini_index([1.0, -3.1, 4.5])
+
+    def test_lorenz_curve(self):
+        self.assertEqual(_lorenz_curve(self.data), self.lorenz_curve_points)
 
     def test_lorenz_curve_integrator(self):
         exp = 0.33614394993045893

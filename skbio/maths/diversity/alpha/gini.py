@@ -43,6 +43,12 @@ def gini_index(data, method='rectangles'):
     double
         Gini index.
 
+    Raises
+    ------
+    ValueError
+        If `method` isn't one of the supported methods for calculating the area
+        under the curve.
+
     Notes
     -----
     The Gini index was introduced in [1]_.
@@ -69,18 +75,10 @@ def _lorenz_curve(data):
     Formula available on wikipedia.
 
     """
-    if any(np.array(data) < 0):
-        raise ValueError("Lorenz curves aren't meaningful for non-positive "
-                         "data.")
-
-    # dont wan't to change input, copy and sort
-    sdata = np.array(sorted((data[:])))
-    n = float(len(sdata))
-    Sn = sdata.sum()
-    # ind+1 because must sum first point, eg. x[:0] = []
-    lorenz_points = [((ind + 1) / n, sdata[:ind + 1].sum() / Sn)
-                     for ind in range(int(n))]
-    return lorenz_points
+    sorted_data = np.sort(data)
+    Sn = sorted_data.sum()
+    n = sorted_data.shape[0]
+    return zip(np.arange(1, n + 1) / n, sorted_data.cumsum() / Sn)
 
 
 def _lorenz_curve_integrator(lc_pts, method):
