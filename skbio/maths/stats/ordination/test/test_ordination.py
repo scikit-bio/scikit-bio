@@ -449,13 +449,20 @@ class TestPCoAResults(object):
             ordination = PCoA(self.dist_matrix)
         scores = ordination.scores()
 
+        exp_eigvals = np.array([0.73599103, 0.26260032, 0.14926222, 0.06990457,
+                                0.02956972, 0.01931184, 0., 0., 0., 0., 0., 0.,
+                                0., 0.])
+        exp_site = np.loadtxt(get_data_path('exp_PCoAzeros_site'))
+        exp_prop_expl = np.array([0.58105792, 0.20732046, 0.1178411,
+                                  0.05518899, 0.02334502, 0.01524651, 0., 0.,
+                                  0., 0., 0., 0., 0., 0.])
+        exp_site_ids = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+                        '10', '11', '12', '13']
         # Note the absolute value because column can have signs swapped
-        npt.assert_almost_equal(np.abs(scores.site[0, 0]),
-                                0.24078813304509292)
-
-        # cogent returned the scores transposed
-        npt.assert_almost_equal(np.abs(scores.site[0, 1]),
-                                0.23367716219400031)
+        npt.assert_almost_equal(scores.eigvals, exp_eigvals)
+        npt.assert_almost_equal(np.abs(scores.site), exp_site)
+        npt.assert_almost_equal(scores.proportion_explained, exp_prop_expl)
+        npt.assert_equal(scores.site_ids, exp_site_ids)
 
 
 class TestPCoAResultsExtensive(object):
