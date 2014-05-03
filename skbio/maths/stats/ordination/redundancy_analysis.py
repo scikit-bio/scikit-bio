@@ -38,6 +38,22 @@ class RDA(Ordination):
     scale_Y : bool, optional
         Controls whether the response matrix columns are scaled to
         have unit standard deviation. Defaults to `False`.
+
+    Notes
+    -----
+    The algorithm is based on [1]_, \S 11.1, and is expected to
+    give the same results as ``rda(Y, X)`` in R's package vegan.
+
+    See Also
+    --------
+    CCA
+    OrdinationResults
+
+    References
+    ----------
+    .. [1] Legendre P. and Legendre L. 1998. Numerical
+       Ecology. Elsevier, Amsterdam.
+
     """
 
     short_method_name = 'RDA'
@@ -148,8 +164,6 @@ class RDA(Ordination):
         ----------
         scaling : int
 
-            TODO: improve explanation based on p. 403 L&L.
-
             Scaling type 1 produces a distance biplot. It focuses on
             the ordination of rows (sites) because their transformed
             distances approximate their original euclidean
@@ -161,12 +175,30 @@ class RDA(Ordination):
             is interpreted like scaling type 1, but taking into
             account that distances between objects don't approximate
             their euclidean distances.
+
+            See more details about distance and correlation biplots in
+            [1]_, \S 9.1.4.
+
+        Returns
+        -------
+        OrdinationResults
+            Object that stores the computed eigenvalues, the
+            proportion explained by each of them (per unit),
+            transformed coordinates for species and sites, biplot
+            scores, site constraints, etc.
+
+        References
+        ----------
+
+        .. [1] Legendre P. and Legendre L. 1998. Numerical
+           Ecology. Elsevier, Amsterdam.
+
         """
         if scaling not in {1, 2}:
             raise NotImplementedError("Only scalings 1, 2 available for RDA.")
         # According to the vegan-FAQ.pdf, the scaling factor for scores
         # is (notice that L&L 1998 says in p. 586 that such scaling
-        # doesn't affect the interpretation of a biplot)
+        # doesn't affect the interpretation of a biplot):
         eigvals = self.eigenvalues
         const = np.sum(eigvals**2)**0.25
         if scaling == 1:
