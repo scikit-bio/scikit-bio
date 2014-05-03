@@ -12,8 +12,8 @@ import unittest
 import tempfile
 
 from skbio.util.io import open_filepath_or, _is_string_or_bytes
- 
- 
+
+
 class TestFilePathOpening(unittest.TestCase):
     def test_is_string_or_bytes(self):
         self.assertTrue(_is_string_or_bytes('foo'))
@@ -21,7 +21,7 @@ class TestFilePathOpening(unittest.TestCase):
         self.assertTrue(_is_string_or_bytes(b'foo'))
         self.assertFalse(_is_string_or_bytes(StringIO('bar')))
         self.assertFalse(_is_string_or_bytes([1]))
- 
+
     def test_file_closed(self):
         """File gets closed in decorator"""
         f = tempfile.NamedTemporaryFile('r')
@@ -29,7 +29,7 @@ class TestFilePathOpening(unittest.TestCase):
         with open_filepath_or(filepath) as fh:
             pass
         self.assertTrue(fh.closed)
- 
+
     def test_file_closed_harder(self):
         """File gets closed in decorator, even if exceptions happen."""
         f = tempfile.NamedTemporaryFile('r')
@@ -44,7 +44,7 @@ class TestFilePathOpening(unittest.TestCase):
             # try clause, so the context manager swallowed them. No
             # good.
             raise Exception("`open_filepath_or` didn't propagate exceptions")
- 
+
     def test_filehandle(self):
         """Filehandles slip through untouched"""
         with tempfile.TemporaryFile('r') as fh:
@@ -52,7 +52,7 @@ class TestFilePathOpening(unittest.TestCase):
                 self.assertTrue(fh is ffh)
             # And it doesn't close the file-handle
             self.assertFalse(fh.closed)
- 
+
     def test_StringIO(self):
         """StringIO (useful e.g. for testing) slips through."""
         f = StringIO("File contents")
