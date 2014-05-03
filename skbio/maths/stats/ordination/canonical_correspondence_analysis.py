@@ -44,6 +44,13 @@ class CCA(Ordination):
 
     Notes
     -----
+
+    The algorithm is based on [3]_, \S 11.2, and is expected to give
+    the same results as ``cca(Y, X)`` in R's package vegan, except
+    that this implementation won't drop constraining variables due to
+    perfect collinearity: the user needs to choose which ones to
+    input.
+    
     Canonical *correspondence* analysis shouldn't be confused with
     canonical *correlation* analysis (CCorA, but sometimes called
     CCA), a different technique to search for multivariate
@@ -73,6 +80,10 @@ class CCA(Ordination):
     .. [2] Cajo J.F. Braak and Piet F.M. Verdonschot, "Canonical
         correspondence analysis and related multivariate methods in
         aquatic ecology", Aquatic Sciences 57.3 (1995), pp. 255-289.
+
+    .. [3] Legendre P. and Legendre L. 1998. Numerical
+       Ecology. Elsevier, Amsterdam.
+
     """
     short_method_name = 'CCA'
     long_method_name = 'Canonical Correspondence Analysis'
