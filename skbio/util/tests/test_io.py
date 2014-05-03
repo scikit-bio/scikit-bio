@@ -64,3 +64,6 @@ class TestFilePathOpening(unittest.TestCase):
         f = BytesIO(b"File contents")
         with open_filepath_or(f) as fh:
             self.assertTrue(fh is f)
+
+if __name__ == '__main__':
+    unittest.main()
