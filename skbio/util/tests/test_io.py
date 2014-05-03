@@ -6,7 +6,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from future.utils.six import StringIO
+from future.utils.six import StringIO, BytesIO
 
 import unittest
 import tempfile
@@ -56,5 +56,11 @@ class TestFilePathOpening(unittest.TestCase):
     def test_StringIO(self):
         """StringIO (useful e.g. for testing) slips through."""
         f = StringIO("File contents")
+        with open_filepath_or(f) as fh:
+            self.assertTrue(fh is f)
+
+    def test_BytesIO(self):
+        """BytesIO (useful e.g. for testing) slips through."""
+        f = BytesIO(b"File contents")
         with open_filepath_or(f) as fh:
             self.assertTrue(fh is f)
