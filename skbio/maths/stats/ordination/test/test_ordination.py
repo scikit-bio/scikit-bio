@@ -468,7 +468,7 @@ class TestPCoAResultsExtensive(object):
     def test_values(self):
         results = self.ordination.scores()
 
-        npt.assert_almost_equal(len(results.eigvals), len(results.site[0]))
+        npt.assert_equal(len(results.eigvals), len(results.site[0]))
 
         expected = np.array([[-0.028597, 0.22903853, 0.07055272,
                               0.26163576, 0.28398669, 0.0],
