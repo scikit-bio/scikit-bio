@@ -78,7 +78,7 @@ def _lorenz_curve(data):
     sorted_data = np.sort(data)
     Sn = sorted_data.sum()
     n = sorted_data.shape[0]
-    return zip(np.arange(1, n + 1) / n, sorted_data.cumsum() / Sn)
+    return np.arange(1, n + 1) / n, sorted_data.cumsum() / Sn
 
 
 def _lorenz_curve_integrator(lc_pts, method):
@@ -90,16 +90,20 @@ def _lorenz_curve_integrator(lc_pts, method):
     "functions" where width of the trapezoids is constant.
 
     """
+    x, y = lc_pts
+
+    # each point differs by 1/n
+    dx = 1 / x.shape[0]
+
     if method == 'trapezoids':
-        dx = 1. / len(lc_pts)  # each point differs by 1/n
-        h_0 = 0.0  # 0 percent of the population has zero percent of the goods
-        h_n = lc_pts[-1][1]
-        sum_hs = sum([pt[1] for pt in lc_pts[:-1]])  # the 0th entry is at x=
-        # 1/n
-        return dx * ((h_0 + h_n) / 2. + sum_hs)
+        # 0 percent of the population has zero percent of the goods
+        h_0 = 0.0
+        h_n = y[-1]
+        # the 0th entry is at x=1/n
+        sum_hs = y[:-1].sum()
+        return dx * ((h_0 + h_n) / 2 + sum_hs)
     elif method == 'rectangles':
-        dx = 1. / len(lc_pts)  # each point differs by 1/n
-        return dx * sum([pt[1] for pt in lc_pts])
+        return dx * y.sum()
     else:
         raise ValueError("Method '%s' not implemented. Available methods: "
                          "'rectangles', 'trapezoids'." % method)
