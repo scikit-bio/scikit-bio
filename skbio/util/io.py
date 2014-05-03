@@ -6,11 +6,10 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
+from future.builtins import bytes, str
 
 from contextlib import contextmanager
-from future.builtins import bytes, str
- 
+
  
 def _is_string_or_bytes(s):
     """Returns True if input argument is string (unicode or not) or bytes.

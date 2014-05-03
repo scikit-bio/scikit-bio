@@ -6,11 +6,12 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from future.utils.six import StringIO
+
 import unittest
 import tempfile
-from StringIO import StringIO
- 
-from util import open_filepath_or, _is_string_or_bytes
+
+from skbio.util.io import open_filepath_or, _is_string_or_bytes
  
  
 class TestFilePathOpening(unittest.TestCase):
