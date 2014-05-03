@@ -50,7 +50,7 @@ class CCA(Ordination):
     that this implementation won't drop constraining variables due to
     perfect collinearity: the user needs to choose which ones to
     input.
-    
+
     Canonical *correspondence* analysis shouldn't be confused with
     canonical *correlation* analysis (CCorA, but sometimes called
     CCA), a different technique to search for multivariate
