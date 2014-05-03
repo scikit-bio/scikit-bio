@@ -4,7 +4,8 @@ Performing Striped Smith Waterman Alignments (:mod:`skbio.core.ssw`)
 ====================================================================
 .. currentmodule:: skbio.core.ssw
 
-This module is a wrapper for a native c implementation of Striped Smith Waterman Alignment
+This module is a wrapper for a native c implementation of
+ Striped Smith Waterman Alignment
 
 Classes
 -------
@@ -45,13 +46,13 @@ Use the ``StripedSmithWaterman`` object:
     'target_sequence': 'AAAAAACTCTCTAAACTCACTAAGGCTCTCTACCCCTCTTCAGAGAAGTCGA'
 }
 """
-#-----------------------------------------------------------------------------
-# Copyright (c) 2014--, biocore team.
+# -----------------------------------------------------------------------------
+#  Copyright (c) 2014--, biocore team.
 #
-# Distributed under the terms of the Modified BSD License.
+#  Distributed under the terms of the Modified BSD License.
 #
-# The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+#  The full license is in the file COPYING.txt, distributed with this software.
+# -----------------------------------------------------------------------------
 
 from cpython cimport bool
 import numpy as np
@@ -73,20 +74,20 @@ cdef extern from "ssw.h":
     ctypedef struct s_profile:
         pass
 
-    cdef s_profile* ssw_init(const np.int8_t* read, 
-                             const np.int32_t readLen, 
+    cdef s_profile* ssw_init(const np.int8_t* read,
+                             const np.int32_t readLen,
                              const np.int8_t* mat,
-                             const np.int32_t n, 
+                             const np.int32_t n,
                              const np.int8_t score_size)
 
     cdef void init_destroy(s_profile* p)
 
-    cdef s_align* ssw_align(const s_profile* prof, 
-                            const np.int8_t* ref, 
-                            np.int32_t refLen, 
-                            const np.uint8_t weight_gapO, 
-                            const np.uint8_t weight_gapE, 
-                            const np.uint8_t flag, 
+    cdef s_align* ssw_align(const s_profile* prof,
+                            const np.int8_t* ref,
+                            np.int32_t refLen,
+                            const np.uint8_t weight_gapO,
+                            const np.uint8_t weight_gapE,
+                            const np.uint8_t flag,
                             const np.uint16_t filters,
                             const np.int32_t filterd,
                             const np.int32_t maskLen)
@@ -114,6 +115,7 @@ np_nt_table = np.array([
          4,  4,  4,  4,  3,  0,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4])
 
 mid_table = np.array(['M','I','D'])
+
 
 cdef class AlignmentStructure:
     """Wraps the result of an alignment c struct so it is accessible to Python
@@ -160,17 +162,19 @@ cdef class AlignmentStructure:
 
     def __str__(self):
         data = ['optimal_alignment_score', 'suboptimal_alignment_score',
-                'query_begin', 'query_end', 'target_begin', 'target_end_optimal', 
-                'target_end_suboptimal', 'cigar', 'query_sequence', 'target_sequence']
+                'query_begin', 'query_end', 'target_begin',
+                'target_end_optimal', 'target_end_suboptimal', 'cigar',
+                'query_sequence', 'target_sequence']
         def make_str_tuple(k):
             r = self[k]
             if type(r) is int:
                 return (k, str(r))
             else:
                 return (k, "'"+r+"'")
-        return "{\n%s\n}" % ',\n'.join(["    '%s': %s" % make_str_tuple(k) for k in data])
+        return "{\n%s\n}" % ',\n'.join([
+            "    '%s': %s" % make_str_tuple(k) for k in data])
         
-    @property 
+    @property
     def optimal_alignment_score(self):
         """Returns the optimal alignment score
 
@@ -190,11 +194,12 @@ cdef class AlignmentStructure:
         int
             The suboptimal alignment score
         """
-        return self.p.score2   
+        return self.p.score2
 
     @property
     def target_begin(self):
-        """Returns in character index at which the target sequence's alignment begins
+        """Returns in character index at which the target sequence's alignment
+         begins
 
         Returns
         -------
@@ -205,16 +210,19 @@ cdef class AlignmentStructure:
         -----
         The result is a 0 based index by default
         """
-        return self.p.ref_begin1 + self.index_starts_at if self.p.ref_begin1 >= 0 else -1
+        return self.p.ref_begin1 + self.index_starts_at if (self.p.ref_begin1
+            >= 0) else -1
 
     @property
     def target_end_optimal(self):
-        """Returns the character index at which the target sequence's optimal alignment ends
+        """Returns the character index at which the target sequence's optimal
+         alignment ends
 
         Returns
         -------
         int
-            The character index of the target sequence's optimal alignment's end
+            The character index of the target sequence's optimal alignment's
+             end
 
         Notes
         -----
@@ -224,12 +232,14 @@ cdef class AlignmentStructure:
 
     @property
     def target_end_suboptimal(self):
-        """Returns the character index at which the target sequence's suboptimal alignment ends
+        """Returns the character index at which the target sequence's
+         suboptimal alignment ends
 
         Returns
         -------
         int
-            The character index of the target sequence's suboptimal alignment's end
+            The character index of the target sequence's suboptimal alignment's
+             end
 
         Notes
         -----
@@ -250,9 +260,10 @@ cdef class AlignmentStructure:
         -----
         The result is a 0 based index by default
         """
-        return self.p.read_begin1 + self.index_starts_at if self.p.read_begin1 >= 0 else -1
+        return self.p.read_begin1 + self.index_starts_at if (self.p.read_begin1
+         >= 0) else -1
 
-    @property 
+    @property
     def query_end(self):
         """Returns the character index at which the query sequence ends
 
@@ -267,10 +278,10 @@ cdef class AlignmentStructure:
         """
         return self.p.read_end1 + self.index_starts_at
 
-    @property 
+    @property
     def cigar(self):
-        """Returns a cigar formatted string for the optimal alignment of the 
-        query and target sequences
+        """Returns a cigar formatted string for the optimal alignment of the
+         query and target sequences
 
         Returns
         -------
@@ -279,7 +290,8 @@ cdef class AlignmentStructure:
 
         Notes
         -----
-        If there is no cigar or optimal alignment, this will return an empty string
+        If there is no cigar or optimal alignment, this will return an empty
+         string
         """
         cigar_string = ""
         cigar_list = [];
@@ -288,9 +300,9 @@ cdef class AlignmentStructure:
             # high 28 bits: length, low 4 bits: M/I/D (0/1/2)
 
             # Length, remove first 4 bits
-            cigar_list.append(str(self.p.cigar[i]>>4)) 
+            cigar_list.append(str(self.p.cigar[i]>>4))
             # M/I/D, lookup first 4 bits in the mid_table
-            cigar_list.append(mid_table[self.p.cigar[i]&0xf]) 
+            cigar_list.append(mid_table[self.p.cigar[i]&0xf])
         return "".join(cigar_list)
 
     @property
@@ -333,77 +345,110 @@ cdef class AlignmentStructure:
         """
         return self.index_starts_at == 0
 
+
 cdef class StripedSmithWaterman:
     """Performs a striped (banded) Smith Waterman Alignment.
-    First a StripedSmithWaterman object must be instantiated with a query sequence. 
-    The resulting object is then callable with a target sequence and 
-    may be reused on a large collection of target sequences. 
+    First a StripedSmithWaterman object must be instantiated with a query
+     sequence. The resulting object is then callable with a target sequence and
+     may be reused on a large collection of target sequences.
 
     Parameters
     ----------
     query_sequence : string
-        The query sequence, this may be upper or lowercase from the set of {A,C,G,T,N} (nucleotide)
-        or from the set of {A,R,N,D,C,Q,E,G,H,I,L,K,M,F,P,S,T,W,Y,V,B,Z,X,*} (protein)
+        The query sequence, this may be upper or lowercase from the set of
+         {A,C,G,T,N} (nucleotide) or from the set of
+         {A,R,N,D,C,Q,E,G,H,I,L,K,M,F,P,S,T,W,Y,V,B,Z,X,*} (protein)
     weight_gap_open : int, optional
-        The penalty applied to creating a gap in the alignment. Default is 5.
+        The penalty applied to creating a gap in the alignment.
+         Default is 5.
     weight_gap_extension : int, optional
-        The penalty applied to extending a gap in the alignment. Default is 2.
+        The penalty applied to extending a gap in the alignment.
+         Default is 2.
     score_size : int, optional
-        If your estimated best alignment score is surely < 255 this should be 0. 
-        If your estimated best alignment score >= 255, this should be 1.
-        If you don't know, this should be 2. Default is 2.
+        If your estimated best alignment score is < 255 this should be 0.
+         If your estimated best alignment score is >= 255, this should be 1.
+         If you don't know, this should be 2.
+         Default is 2.
     mask_length : int, optional
-        The distance between the optimal and suboptimal alignment ending position >= mask_length. We suggest to use 
-        len(query_sequence)/2, if you don't have special concerns. Detailed description of mask_length: After locating the optimal
-        alignment ending position, the suboptimal alignment score can be heuristically found by checking the second 
-        largest score in the array that contains the maximal score of each column of the SW matrix. In order to avoid 
-        picking the scores that belong to the alignments sharing the partial best alignment, SSW C library masks the 
-        reference loci nearby (mask length = mask_length) the best alignment ending position and locates the second largest 
-        score from the unmasked elements. Default is 15.
+        The distance between the optimal and suboptimal alignment ending
+         position >= mask_length. We suggest to use len(query_sequence)/2, if
+         you don't have special concerns. Detailed description of mask_length:
+         After locating the optimal
+         alignment ending position, the suboptimal alignment score can be
+         heuristically found by checking the second largest score in the array
+         that contains the maximal score of each column of the SW matrix. In
+         order to avoid picking the scores that belong to the alignments
+         sharing the partial best alignment, SSW C library masks the reference
+         loci nearby (mask length = mask_length) the best alignment ending
+         position and locates the second largest score from the unmasked
+         elements.
+         Default is 15.
     mask_auto : bool, optional
-        This will automatically set the used mask length to be MAX(len(query_sequence)/2, mask_length). Default is True.
+        This will automatically set the used mask length to be
+         MAX(len(query_sequence)/2, mask_length).
+         Default is True.
     score_only : bool, optional
-        This will prevent the Best Alignment Beginning Positions and the cigar from being returned as a result. 
-        This overrides any setting on `score_filter`, `distance_filter`, and `override_skip_babp`.
-        Default is False.
+        This will prevent the Best Alignment Beginning Positions and the cigar
+         from being returned as a result. This overrides any setting on
+         `score_filter`, `distance_filter`, and `override_skip_babp`.
+         Default is False.
     score_filter : int, optional
-        If set, this will prevent the cigar and Best Alignment Beginning Positions from being returned if the optimal alignment score is less than score_filter 
-        saving some time computationally.
-        This filter may be overridden by `score_only`, `distance_filter`, and `override_skip_babp` resulting in both/one of the 
-        cigar and BABP being returned. Default is None.
+        If set, this will prevent the cigar and Best Alignment Beginning
+         Positions from being returned if the optimal alignment score is less
+         than score_filter saving some time computationally. This filter may be
+         overridden by `score_only`, `distance_filter`, and
+         `override_skip_babp` resulting in both/one of the cigar and BABP being
+         returned.
+         Default is None.
     distance_filter : int, optional
-        If set, this will prevent the cigar from being returned if the length of the query_sequence or the target_sequence 
-        is less than distance_filter saving some time computationally. 
-        This filter may be overridden by `score_only`, `score_filter`, and `override_skip_babp` resulting in both/one of the 
-        cigar and BABP being returned. Default is None.
+        If set, this will prevent the cigar from being returned if the length
+         of the query_sequence or the target_sequence is less than
+         distance_filter saving some time computationally. This filter may be
+         overridden by `score_only`, `score_filter`, and `override_skip_babp`
+         resulting in both/one of the cigar and BABP being returned.
+         Default is None.
     override_skip_babp : bool, optional
-        When true, the best alignment beginning positions will always be returned. Default is False.
+        When true, the best alignment beginning positions will always be
+         returned.
+         Default is False.
     protein : bool, optional
-        When True, the `query_sequence` and `target_sequence` will be read as a protein sequence. 
-        When False, the `query_sequence` and `target_sequence` will be read as a nucleotide sequence. 
-        Default is False.
+        When True, the `query_sequence` and `target_sequence` will be read as a
+         protein sequence. When False, the `query_sequence` and
+         `target_sequence` will be read as a nucleotide sequence.
+         Default is False.
     match : int, optional
-        When using a nucleotide sequence, the match is the score provided when a match occurs.
-        This is ignored if `substitution_matrix` is provided. Default is 2.
+        When using a nucleotide sequence, the match is the score provided when
+         a match occurs. This is ignored if `substitution_matrix` is provided.
+         Default is 2.
     mismatch : int, optional
-        When using a nucleotide sequence, the mismatch is the score removed when a mismatch occurs.
-        This is ignored if `substitution_matrix` is provided. Default is 3.
+        When using a nucleotide sequence, the mismatch is the score removed
+         when a mismatch occurs. This is ignored if `substitution_matrix` is
+         provided. Default is 3.
     substitution_matrix : dict[dict], optional
-        Provides the score for each possible combination of sequence letters. This may be used for protein or nucleotide sequences.
-        The entire set of possible combinations for the relevant sequence type MUST be enumerated in the dict of dicts.
-        This will override `match` and `mismatch`. Default is None.
+        Provides the score for each possible combination of sequence letters.
+         This may be used for protein or nucleotide sequences. The entire set
+         of possible combinations for the relevant sequence type MUST be
+         enumerated in the dict of dicts. This will override `match` and
+         `mismatch`.
+         Default is None.
     suppress_sequences : bool, optional
-        If True, the query and target sequences will not be returned for convenience. Default is False.
+        If True, the query and target sequences will not be returned for
+         convenience.
+         Default is False.
     zero_index : bool, optional
-        If True, all indicies will start at 0. If False, all indicies will start at 1. Default is True.
+        If True, all indicies will start at 0. If False, all indicies will
+         start at 1.
+         Default is True.
 
     Notes
     -----
-    mask_length has to be >= 15, otherwise the suboptimal alignment information will NOT be returned.
+    mask_length has to be >= 15, otherwise the suboptimal alignment information
+     will NOT be returned.
 
     match and mismatch should both be positive integers.
 
-    match and mismatch are only meaningful in the context of nucleotide sequences
+    match and mismatch are only meaningful in the context of nucleotide
+     sequences
 
     A substitution matrix must be provided when working with protein sequences
     """
@@ -421,14 +466,14 @@ cdef class StripedSmithWaterman:
     cdef np.ndarray __KEEP_IT_IN_SCOPE_read
     cdef np.ndarray __KEEP_IT_IN_SCOPE_matrix
 
-    def __init__(self, query_sequence, 
+    def __init__(self, query_sequence,
                  weight_gap_open=5, # BLASTN Default
-                 weight_gap_extension=2, # BLASTN Default 
+                 weight_gap_extension=2, # BLASTN Default
                  score_size=2, # BLASTN Default
                  mask_length=15, # Minimum length for a suboptimal alignment
                  mask_auto=True,
                  score_only=False,
-                 score_filter=None, 
+                 score_filter=None,
                  distance_filter=None,
                  override_skip_babp=False,
                  protein=False,
@@ -441,18 +486,20 @@ cdef class StripedSmithWaterman:
         self.read_sequence = query_sequence
         self.weight_gap_open = weight_gap_open
         self.weight_gap_extension = weight_gap_extension
-        self.distance_filter = 0 if distance_filter is None else distance_filter
+        self.distance_filter = 0 if distance_filter is None else \
+            distance_filter
         self.score_filter = 0 if score_filter is None else score_filter
         self.suppress_sequences = suppress_sequences
         self.is_protein = protein
         self.bit_flag = self._get_bit_flag(override_skip_babp, score_only)
-        # https://www.cs.utexas.edu/users/EWD/transcriptions/EWD08xx/EWD831.html
-        self.index_starts_at = 0 if zero_index else 1 # Dijkstra knows what's up
+        # http://www.cs.utexas.edu/users/EWD/transcriptions/EWD08xx/EWD831.html
+        self.index_starts_at = 0 if zero_index else 1# Dijkstra knows what's up
         #set up our matrix
         cdef np.ndarray[np.int8_t, ndim=1, mode="c"] matrix
         if substitution_matrix is None:
             if protein:
-                raise Exception("Must provide a substitution matrix for protein sequences")
+                raise Exception("Must provide a substitution matrix for \
+                    protein sequences")
             matrix = self._build_match_matrix(match, mismatch)
         else:
             matrix = self._convert_dict2d_to_matrix(substitution_matrix)
@@ -478,10 +525,10 @@ cdef class StripedSmithWaterman:
         m_width = 24 if self.is_protein else 5
 
         cdef s_profile* p
-        self.profile = ssw_init(<np.int8_t*> read_seq.data, 
-                                read_length, 
-                                <np.int8_t*> matrix.data, 
-                                m_width, 
+        self.profile = ssw_init(<np.int8_t*> read_seq.data,
+                                read_length,
+                                <np.int8_t*> matrix.data,
+                                m_width,
                                 s_size)
 
         # A hack to keep the python GC from eating our data
@@ -507,9 +554,10 @@ cdef class StripedSmithWaterman:
         ref_length = len(reference_sequence)
 
         cdef s_align *align
-        align = ssw_align(self.profile, <np.int8_t*> reference.data, ref_length, 
-                          self.weight_gap_open, self.weight_gap_extension, 
-                          self.bit_flag, self.score_filter, self.distance_filter, 
+        align = ssw_align(self.profile, <np.int8_t*> reference.data,
+                          ref_length, self.weight_gap_open,
+                          self.weight_gap_extension, self.bit_flag,
+                          self.score_filter, self.distance_filter,
                           self.mask_length)
 
         #Cython won't let me do this correctly, so duplicate code ahoy:
@@ -518,7 +566,8 @@ cdef class StripedSmithWaterman:
             alignment.__constructor__(align) # Hack to get a pointer through
             return alignment
         else:
-            alignment = AlignmentStructure(self.read_sequence, reference_sequence, 
+            alignment = AlignmentStructure(self.read_sequence,
+                                           reference_sequence,
                                            self.index_starts_at)
             alignment.__constructor__(align) # Hack to get a pointer through
             return alignment
@@ -527,7 +576,7 @@ cdef class StripedSmithWaterman:
         if self.profile is not NULL:
             init_destroy(self.profile)
 
-    def _get_bit_flag(self, override_skip_babp, score_only):      
+    def _get_bit_flag(self, override_skip_babp, score_only):
         bit_flag = 0
         if score_only:
             return bit_flag
@@ -541,8 +590,10 @@ cdef class StripedSmithWaterman:
             bit_flag = bit_flag | 0x1
         return bit_flag
 
-    cdef np.ndarray[np.int8_t, ndim=1, mode="c"] _seq_converter(self, sequence):
-        cdef np.ndarray[np.int8_t, ndim=1, mode="c"] seq = np.empty(len(sequence), dtype=np.int8)
+    cdef np.ndarray[np.int8_t, ndim=1, mode="c"] _seq_converter(self,
+                                                                sequence):
+        cdef np.ndarray[np.int8_t, ndim=1, mode="c"] seq = \
+            np.empty(len(sequence), dtype=np.int8)
         if self.is_protein:
             for i, char in enumerate(sequence):
                 seq[i] = np_aa_table[ord(char)]
@@ -551,7 +602,9 @@ cdef class StripedSmithWaterman:
                 seq[i] = np_nt_table[ord(char)]
         return seq
 
-    cdef np.ndarray[np.int8_t, ndim=1, mode="c"] _build_match_matrix(self, match, mismatch):
+    cdef np.ndarray[np.int8_t, ndim=1, mode="c"] _build_match_matrix(self,
+                                                                     match,
+                                                                     mismatch):
         sequence_order = "ACGTN"
         dict2d = {}
         for row in sequence_order:
@@ -563,22 +616,26 @@ cdef class StripedSmithWaterman:
                     dict2d[row][column] = match if row == column else -mismatch
         return self._convert_dict2d_to_matrix(dict2d)
 
-    cdef np.ndarray[np.int8_t, ndim=1, mode="c"] _convert_dict2d_to_matrix(self, dict2d):
+    cdef np.ndarray[np.int8_t, ndim=1, mode="c"] \
+                                _convert_dict2d_to_matrix(self, dict2d):
         if self.is_protein:
-            sequence_order = "ARNDCQEGHILKMFPSTWYVBZX*"                  
+            sequence_order = "ARNDCQEGHILKMFPSTWYVBZX*"
         else:
             sequence_order = "ACGTN"
         cdef np.int8_t i = 0
         length = len(sequence_order)
-        cdef np.ndarray[np.int8_t, ndim=1, mode="c"] py_list_matrix = np.empty(length*length, dtype=np.int8)
+        cdef np.ndarray[np.int8_t, ndim=1, mode="c"] py_list_matrix = \
+        np.empty(length*length, dtype=np.int8)
         for row in sequence_order:
             for column in sequence_order:
                 py_list_matrix[i] = dict2d[row][column]
                 i+=1
         return py_list_matrix
 
-def striped_smith_waterman_alignment(query_sequence, target_sequence, **kwargs):
-    """Perform as Striped (Banded) Smith Waterman alignment on a query and target sequence. 
+def striped_smith_waterman_alignment(query_sequence, target_sequence,
+                                     **kwargs):
+    """Perform as Striped (Banded) Smith Waterman alignment on a query and
+     target sequence.
 
     Parameters
     ----------
