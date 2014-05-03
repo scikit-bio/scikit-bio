@@ -5,7 +5,7 @@ Performing Striped Smith Waterman Alignments (:mod:`skbio.core.ssw`)
 .. currentmodule:: skbio.core.ssw
 
 This module is a wrapper for a native c implementation of
- Striped Smith Waterman Alignment
+Striped Smith Waterman Alignment
 
 Classes
 -------
@@ -199,7 +199,7 @@ cdef class AlignmentStructure:
     @property
     def target_begin(self):
         """Returns in character index at which the target sequence's alignment
-         begins
+        begins
 
         Returns
         -------
@@ -216,7 +216,7 @@ cdef class AlignmentStructure:
     @property
     def target_end_optimal(self):
         """Returns the character index at which the target sequence's optimal
-         alignment ends
+        alignment ends
 
         Returns
         -------
@@ -233,7 +233,7 @@ cdef class AlignmentStructure:
     @property
     def target_end_suboptimal(self):
         """Returns the character index at which the target sequence's
-         suboptimal alignment ends
+        suboptimal alignment ends
 
         Returns
         -------
@@ -281,7 +281,7 @@ cdef class AlignmentStructure:
     @property
     def cigar(self):
         """Returns a cigar formatted string for the optimal alignment of the
-         query and target sequences
+        query and target sequences
 
         Returns
         -------
@@ -349,106 +349,107 @@ cdef class AlignmentStructure:
 cdef class StripedSmithWaterman:
     """Performs a striped (banded) Smith Waterman Alignment.
     First a StripedSmithWaterman object must be instantiated with a query
-     sequence. The resulting object is then callable with a target sequence and
-     may be reused on a large collection of target sequences.
+    sequence. The resulting object is then callable with a target sequence and
+    may be reused on a large collection of target sequences.
 
     Parameters
     ----------
     query_sequence : string
         The query sequence, this may be upper or lowercase from the set of
-         {A,C,G,T,N} (nucleotide) or from the set of
-         {A,R,N,D,C,Q,E,G,H,I,L,K,M,F,P,S,T,W,Y,V,B,Z,X,*} (protein)
+        {A,C,G,T,N} (nucleotide) or from the set of
+        {A,R,N,D,C,Q,E,G,H,I,L,K,M,F,P,S,T,W,Y,V,B,Z,X,*} (protein)
     weight_gap_open : int, optional
         The penalty applied to creating a gap in the alignment.
-         Default is 5.
+        Default is 5.
     weight_gap_extension : int, optional
         The penalty applied to extending a gap in the alignment.
-         Default is 2.
+        Default is 2.
     score_size : int, optional
         If your estimated best alignment score is < 255 this should be 0.
-         If your estimated best alignment score is >= 255, this should be 1.
-         If you don't know, this should be 2.
-         Default is 2.
+        If your estimated best alignment score is >= 255, this should be 1.
+        If you don't know, this should be 2.
+        Default is 2.
     mask_length : int, optional
         The distance between the optimal and suboptimal alignment ending
-         position >= mask_length. We suggest to use len(query_sequence)/2, if
-         you don't have special concerns. Detailed description of mask_length:
-         After locating the optimal
-         alignment ending position, the suboptimal alignment score can be
-         heuristically found by checking the second largest score in the array
-         that contains the maximal score of each column of the SW matrix. In
-         order to avoid picking the scores that belong to the alignments
-         sharing the partial best alignment, SSW C library masks the reference
-         loci nearby (mask length = mask_length) the best alignment ending
-         position and locates the second largest score from the unmasked
-         elements.
-         Default is 15.
+        position >= mask_length. We suggest to use len(query_sequence)/2, if
+        you don't have special concerns. Detailed description of mask_length:
+        After locating the optimal
+        alignment ending position, the suboptimal alignment score can be
+        heuristically found by checking the second largest score in the array
+        that contains the maximal score of each column of the SW matrix. In
+        order to avoid picking the scores that belong to the alignments
+        sharing the partial best alignment, SSW C library masks the reference
+        loci nearby (mask length = mask_length) the best alignment ending
+        position and locates the second largest score from the unmasked
+        elements.
+        Default is 15.
     mask_auto : bool, optional
         This will automatically set the used mask length to be
-         MAX(len(query_sequence)/2, mask_length).
-         Default is True.
+        MAX(len(query_sequence)/2, mask_length).
+        Default is True.
     score_only : bool, optional
         This will prevent the Best Alignment Beginning Positions and the cigar
-         from being returned as a result. This overrides any setting on
-         `score_filter`, `distance_filter`, and `override_skip_babp`.
-         Default is False.
+        from being returned as a result. This overrides any setting on
+        `score_filter`, `distance_filter`, and `override_skip_babp`.
+        Default is False.
     score_filter : int, optional
         If set, this will prevent the cigar and Best Alignment Beginning
-         Positions from being returned if the optimal alignment score is less
-         than score_filter saving some time computationally. This filter may be
-         overridden by `score_only`, `distance_filter`, and
-         `override_skip_babp` resulting in both/one of the cigar and BABP being
-         returned.
-         Default is None.
+        Positions from being returned if the optimal alignment score is less
+        than score_filter saving some time computationally. This filter may be
+        overridden by `score_only`, `distance_filter`, and
+        `override_skip_babp` resulting in both/one of the cigar and BABP being
+        returned.
+        Default is None.
     distance_filter : int, optional
         If set, this will prevent the cigar from being returned if the length
-         of the query_sequence or the target_sequence is less than
-         distance_filter saving some time computationally. This filter may be
-         overridden by `score_only`, `score_filter`, and `override_skip_babp`
-         resulting in both/one of the cigar and BABP being returned.
-         Default is None.
+        of the query_sequence or the target_sequence is less than
+        distance_filter saving some time computationally. This filter may be
+        overridden by `score_only`, `score_filter`, and `override_skip_babp`
+        resulting in both/one of the cigar and BABP being returned.
+        Default is None.
     override_skip_babp : bool, optional
         When true, the best alignment beginning positions will always be
-         returned.
-         Default is False.
+        returned.
+        Default is False.
     protein : bool, optional
         When True, the `query_sequence` and `target_sequence` will be read as a
-         protein sequence. When False, the `query_sequence` and
-         `target_sequence` will be read as a nucleotide sequence.
-         Default is False.
+        protein sequence. When False, the `query_sequence` and
+        `target_sequence` will be read as a nucleotide sequence.
+        Default is False.
     match : int, optional
         When using a nucleotide sequence, the match is the score provided when
-         a match occurs. This is ignored if `substitution_matrix` is provided.
-         Default is 2.
+        a match occurs. This is ignored if `substitution_matrix` is provided.
+        Default is 2.
     mismatch : int, optional
         When using a nucleotide sequence, the mismatch is the score removed
-         when a mismatch occurs. This is ignored if `substitution_matrix` is
-         provided. Default is 3.
+        when a mismatch occurs. This is ignored if `substitution_matrix` is
+        provided.
+        Default is 3.
     substitution_matrix : dict[dict], optional
         Provides the score for each possible combination of sequence letters.
-         This may be used for protein or nucleotide sequences. The entire set
-         of possible combinations for the relevant sequence type MUST be
-         enumerated in the dict of dicts. This will override `match` and
-         `mismatch`.
-         Default is None.
+        This may be used for protein or nucleotide sequences. The entire set
+        of possible combinations for the relevant sequence type MUST be
+        enumerated in the dict of dicts. This will override `match` and
+        `mismatch`.
+        Default is None.
     suppress_sequences : bool, optional
         If True, the query and target sequences will not be returned for
-         convenience.
-         Default is False.
+        convenience.
+        Default is False.
     zero_index : bool, optional
         If True, all indicies will start at 0. If False, all indicies will
-         start at 1.
-         Default is True.
+        start at 1.
+        Default is True.
 
     Notes
     -----
     mask_length has to be >= 15, otherwise the suboptimal alignment information
-     will NOT be returned.
+    will NOT be returned.
 
     match and mismatch should both be positive integers.
 
     match and mismatch are only meaningful in the context of nucleotide
-     sequences
+    sequences
 
     A substitution matrix must be provided when working with protein sequences
     """
@@ -482,7 +483,7 @@ cdef class StripedSmithWaterman:
                  substitution_matrix=None,
                  suppress_sequences=False,
                  zero_index=True):
-        #initalize our values
+        # initalize our values
         self.read_sequence = query_sequence
         self.weight_gap_open = weight_gap_open
         self.weight_gap_extension = weight_gap_extension
@@ -493,8 +494,8 @@ cdef class StripedSmithWaterman:
         self.is_protein = protein
         self.bit_flag = self._get_bit_flag(override_skip_babp, score_only)
         # http://www.cs.utexas.edu/users/EWD/transcriptions/EWD08xx/EWD831.html
-        self.index_starts_at = 0 if zero_index else 1# Dijkstra knows what's up
-        #set up our matrix
+        self.index_starts_at = 0 if zero_index else 1 # Dijkstra knows what's up
+        # set up our matrix
         cdef np.ndarray[np.int8_t, ndim=1, mode="c"] matrix
         if substitution_matrix is None:
             if protein:
@@ -560,7 +561,7 @@ cdef class StripedSmithWaterman:
                           self.score_filter, self.distance_filter,
                           self.mask_length)
 
-        #Cython won't let me do this correctly, so duplicate code ahoy:
+        # Cython won't let me do this correctly, so duplicate code ahoy:
         if self.suppress_sequences:
             alignment = AlignmentStructure("", "", self.index_starts_at)
             alignment.__constructor__(align) # Hack to get a pointer through
@@ -635,7 +636,7 @@ cdef class StripedSmithWaterman:
 def striped_smith_waterman_alignment(query_sequence, target_sequence,
                                      **kwargs):
     """Perform as Striped (Banded) Smith Waterman alignment on a query and
-     target sequence.
+    target sequence.
 
     Parameters
     ----------
