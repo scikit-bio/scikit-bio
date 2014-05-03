@@ -46,7 +46,7 @@ def open_filepath_or(filepath_or, *args, **kwargs):
     Other parameters
     ----------------
     When `filepath_or` is a string, any extra arguments are passed on to
-    ``open``.
+    the ``open`` builtin.
  
     Examples
     --------
