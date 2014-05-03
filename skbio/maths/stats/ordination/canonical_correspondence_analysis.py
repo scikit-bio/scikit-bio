@@ -178,6 +178,15 @@ class CCA(Ordination):
         scaling : int
             The same options as in `CA` are available, and the
             interpretation is the same.
+
+        Returns
+        -------
+        OrdinationResults
+            Object that stores the computed eigenvalues, the
+            proportion explained by each of them (per unit),
+            transformed coordinates for species and sites, biplot
+            scores, site constraints, etc.
+
         """
         if scaling not in {1, 2}:
             raise NotImplementedError(
