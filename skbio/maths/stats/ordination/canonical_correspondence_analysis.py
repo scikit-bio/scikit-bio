@@ -70,6 +70,8 @@ class CCA(Ordination):
     See Also
     --------
     CA
+    RDA
+    OrdinationResults
 
     References
     ----------
