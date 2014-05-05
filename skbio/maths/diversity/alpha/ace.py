@@ -64,8 +64,8 @@ def ace(counts, rare_threshold=10):
     counts = _validate(counts)
     freq_counts = _indices_to_counts(counts)
     s_rare = _species_rare(freq_counts, rare_threshold)
-
     singles = freq_counts[1]
+
     if singles > 0 and singles == s_rare:
         raise ValueError("The only rare species are singletons, so the ACE "
                          "metric is undefined. EstimateS suggests using "
