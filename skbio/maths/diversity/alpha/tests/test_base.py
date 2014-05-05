@@ -229,6 +229,7 @@ class BaseTests(TestCase):
         self.assertEqual(mcintosh_e(np.array([1, 2, 3, 1])), exp)
 
     def test_menhinick(self):
+        # observed_species = 9, total # of individuals = 22
         self.assertEqual(menhinick(self.counts), 9 / np.sqrt(22))
 
     def test_michaelis_menten_fit(self):
