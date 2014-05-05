@@ -50,6 +50,16 @@ class BaseTests(TestCase):
         npt.assert_array_equal(obs, np.array([42.2, 42.1, 0]))
         self.assertEqual(obs.dtype, float)
 
+        # all zeros
+        obs = _validate([0, 0, 0])
+        npt.assert_array_equal(obs, np.array([0, 0, 0]))
+        self.assertEqual(obs.dtype, int)
+
+        # all zeros (single value)
+        obs = _validate([0])
+        npt.assert_array_equal(obs, np.array([0]))
+        self.assertEqual(obs.dtype, int)
+
     def test_validate_invalid_input(self):
         # wrong dtype
         with self.assertRaises(TypeError):
@@ -94,6 +104,7 @@ class BaseTests(TestCase):
         self.assertEqual(doubles(self.counts), 3)
         self.assertEqual(doubles(np.array([0, 3, 4])), 0)
         self.assertEqual(doubles(np.array([2])), 1)
+        self.assertEqual(doubles(np.array([0, 0])), 0)
 
     def test_enspie(self):
         # Totally even community should have ENS_pie = number of species.
@@ -288,6 +299,7 @@ class BaseTests(TestCase):
         self.assertEqual(singles(self.counts), 3)
         self.assertEqual(singles(np.array([0, 3, 4])), 0)
         self.assertEqual(singles(np.array([1])), 1)
+        self.assertEqual(singles(np.array([0, 0])), 0)
 
     def test_strong(self):
         self.assertAlmostEqual(strong(np.array([1, 2, 3, 1])), 0.214285714)
