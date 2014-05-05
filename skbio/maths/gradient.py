@@ -102,8 +102,9 @@ class BaseVectors(object):
 
         # Restrict coordinates to those axes that we actually need to compute
         self._coords = coords.ix[:, :axes-1]
-        self._eigvals = eigvals
+        self._eigvals = eigvals[:axes]
         self._metamap = metamap
+        self._weighted = weighted
 
         # Remove any samples from coords not present in mapping file
         # and remove any samples from metamap not present in coords
@@ -179,8 +180,9 @@ class BaseVectors(object):
             # Group samples by category
             gb = self._metamap.groupby(cat)
             for g, df in gb:
-                self._groups[cat][g] = signed_natsort([(sort_val(sid), sid)
-                                                       for sid in df.index])
+                sorted_list = signed_natsort([(sort_val(sid), sid)
+                                              for sid in df.index])
+                self._groups[cat][g] = [val[1] for val in sorted_list]
 
     def get_vectors(self):
         """"""
@@ -199,28 +201,28 @@ class BaseVectors(object):
         """"""
         # We multiply the coord values with the value of
         # the eigvals represented
-        vectors = np.asarray([self._coords[sids][row]*self._eigvals
-                              for row in self._coords[sids]])
-        if not vectors:
-            raise TypeError("No samples to process, an empty list cannot "
-                            "be processed")
+        vectors = self._coords.ix[sids] * self._eigvals
 
-        if self._weight:
-            if self._weighting_vector is None:
-                raise ValueError("You must pass a weighting vector if you "
-                                 "want to weight your data")
-            elif len(sids) > 1:
-                # the weighting can only be done over vectors with a length
-                # greater than 1
-                vectors_copy = deepcopy(vectors)
-                try:
-                    vectors = self._weight_by_vector(
-                        vectors_copy, self._weighting_vector[sids])
-                except (FloatingPointError, ValueError):
-                    self._message_buffer.append("Could not weight group, no "
-                                                "gradient in the the "
-                                                "weighting vector.\n")
-                    vectors = vectors_copy
+        if vectors.empty:
+            # Raising a RuntimeError since in a usual execution this should
+            # never happens. The only way this can happen is if the user
+            # directly calls this function, which shouldn't be done
+            # (that's why the function is private)
+            raise RuntimeError("No samples to process, an empty list cannot "
+                               "be processed")
+
+        if self._weighted and len(sids) > 1:
+            # the weighting can only be done over vectors with a length
+            # greater than 1
+            vectors_copy = deepcopy(vectors)
+            try:
+                vectors = self._weight_by_vector(vectors_copy,
+                                                 self._weighting_vector[sids])
+            except (FloatingPointError, ValueError):
+                self._message_buffer.append("Could not weight group, no "
+                                            "gradient in the the "
+                                            "weighting vector.\n")
+                vectors = vectors_copy
 
         return self._compute_vector_results(vectors)
 

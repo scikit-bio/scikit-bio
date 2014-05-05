@@ -23,9 +23,8 @@ from skbio.maths.gradient import (BaseVectors, AverageVectors,
 
 
 class BaseTests(TestCase):
-    """"""
     def setUp(self):
-        """"""
+        """Initializes some data for testing"""
         coord_data = {
             'PC.636': np.array([-0.212230626531, 0.216034194368, 0.03532727349,
                                 -0.254450494129, -0.0687468542543,
@@ -138,7 +137,6 @@ class BaseTests(TestCase):
 
 
 class BaseVectorsTests(BaseTests):
-    """"""
     def test_init(self):
         """Correctly initializes the class attributes"""
         # Note self._groups is tested on test_make_groups
@@ -148,16 +146,19 @@ class BaseVectorsTests(BaseTests):
         bv = BaseVectors(self.coords, self.eigvals, self.metamap)
 
         pdt.assert_frame_equal(bv._coords, self.coords_3axes)
-        npt.assert_equal(bv._eigvals, self.eigvals)
+        exp_eigvals = np.array([0.494208869204, 0.304213438411,
+                                0.272385344185])
+        npt.assert_equal(bv._eigvals, exp_eigvals)
         pdt.assert_frame_equal(bv._metamap, self.metamap)
         self.assertTrue(bv._weighting_vector is None)
+        self.assertFalse(bv._weighted)
 
         # Test with weighted = True
         bv = BaseVectors(self.coords, self.eigvals, self.metamap,
                          sort_category='Weight', weighted=True)
 
         pdt.assert_frame_equal(bv._coords, self.coords_3axes)
-        npt.assert_equal(bv._eigvals, self.eigvals)
+        npt.assert_equal(bv._eigvals, exp_eigvals)
         pdt.assert_frame_equal(bv._metamap, self.metamap)
         exp_weighting_vector = pd.Series(
             np.array([60, 55, 50, 52, 57, 65, 68, 70, 72]),
@@ -165,9 +166,10 @@ class BaseVectorsTests(BaseTests):
              'PC.634', 'PC.635', 'PC.636']
             ).astype(np.float64)
         pdt.assert_series_equal(bv._weighting_vector, exp_weighting_vector)
+        self.assertTrue(bv._weighted)
 
     def test_init_error(self):
-        """Raises an error with bad parameters"""
+        """Raises an error with erroneous inputs"""
         # Raises ValueError if any category in vector_categories is not
         # present in metamap
         with self.assertRaises(ValueError):
@@ -314,91 +316,123 @@ class BaseVectorsTests(BaseTests):
         """Correctly generates the groups for vector_categories"""
         # Test with all categories
         bv = BaseVectors(self.coords, self.eigvals, self.metamap)
-        exp_groups = {'Treatment': {'Control': [('PC.354', 'PC.354'),
-                                                ('PC.355', 'PC.355'),
-                                                ('PC.356', 'PC.356'),
-                                                ('PC.481', 'PC.481'),
-                                                ('PC.593', 'PC.593')],
-                                    'Fast': [('PC.607', 'PC.607'),
-                                             ('PC.634', 'PC.634'),
-                                             ('PC.635', 'PC.635'),
-                                             ('PC.636', 'PC.636')]},
-                      'DOB': {'20061218': [('PC.354', 'PC.354'),
-                                           ('PC.355', 'PC.355')],
-                              '20061126': [('PC.356', 'PC.356')],
-                              '20070314': [('PC.481', 'PC.481')],
-                              '20071210': [('PC.593', 'PC.593')],
-                              '20071112': [('PC.607', 'PC.607')],
-                              '20080116': [('PC.634', 'PC.634'),
-                                           ('PC.635', 'PC.635'),
-                                           ('PC.636', 'PC.636')]},
-                      'Weight': {'60': [('PC.354', 'PC.354')],
-                                 '55': [('PC.355', 'PC.355')],
-                                 '50': [('PC.356', 'PC.356')],
-                                 '52': [('PC.481', 'PC.481')],
-                                 '57': [('PC.593', 'PC.593')],
-                                 '65': [('PC.607', 'PC.607')],
-                                 '68': [('PC.634', 'PC.634')],
-                                 '70': [('PC.635', 'PC.635')],
-                                 '72': [('PC.636', 'PC.636')]},
-                      'Description': {'Control_mouse_I.D._354': [('PC.354',
-                                                                  'PC.354')],
-                                      'Control_mouse_I.D._355': [('PC.355',
-                                                                  'PC.355')],
-                                      'Control_mouse_I.D._356': [('PC.356',
-                                                                  'PC.356')],
-                                      'Control_mouse_I.D._481': [('PC.481',
-                                                                  'PC.481')],
-                                      'Control_mouse_I.D._593': [('PC.593',
-                                                                  'PC.593')],
-                                      'Fasting_mouse_I.D._607': [('PC.607',
-                                                                  'PC.607')],
-                                      'Fasting_mouse_I.D._634': [('PC.634',
-                                                                  'PC.634')],
-                                      'Fasting_mouse_I.D._635': [('PC.635',
-                                                                  'PC.635')],
-                                      'Fasting_mouse_I.D._636': [('PC.636',
-                                                                  'PC.636')]}}
+        exp_groups = {'Treatment': {'Control': ['PC.354', 'PC.355', 'PC.356',
+                                                'PC.481', 'PC.593'],
+                                    'Fast': ['PC.607', 'PC.634',
+                                             'PC.635', 'PC.636']},
+                      'DOB': {'20061218': ['PC.354', 'PC.355'],
+                              '20061126': ['PC.356'],
+                              '20070314': ['PC.481'],
+                              '20071210': ['PC.593'],
+                              '20071112': ['PC.607'],
+                              '20080116': ['PC.634', 'PC.635', 'PC.636']},
+                      'Weight': {'60': ['PC.354'],
+                                 '55': ['PC.355'],
+                                 '50': ['PC.356'],
+                                 '52': ['PC.481'],
+                                 '57': ['PC.593'],
+                                 '65': ['PC.607'],
+                                 '68': ['PC.634'],
+                                 '70': ['PC.635'],
+                                 '72': ['PC.636']},
+                      'Description': {'Control_mouse_I.D._354': ['PC.354'],
+                                      'Control_mouse_I.D._355': ['PC.355'],
+                                      'Control_mouse_I.D._356': ['PC.356'],
+                                      'Control_mouse_I.D._481': ['PC.481'],
+                                      'Control_mouse_I.D._593': ['PC.593'],
+                                      'Fasting_mouse_I.D._607': ['PC.607'],
+                                      'Fasting_mouse_I.D._634': ['PC.634'],
+                                      'Fasting_mouse_I.D._635': ['PC.635'],
+                                      'Fasting_mouse_I.D._636': ['PC.636']}}
         self.assertEqual(bv._groups, exp_groups)
 
         # Test with user-defined categories
         bv = BaseVectors(self.coords, self.eigvals, self.metamap,
                          vector_categories=['Treatment', 'DOB'])
-        exp_groups = {'Treatment': {'Control': [('PC.354', 'PC.354'),
-                                                ('PC.355', 'PC.355'),
-                                                ('PC.356', 'PC.356'),
-                                                ('PC.481', 'PC.481'),
-                                                ('PC.593', 'PC.593')],
-                                    'Fast': [('PC.607', 'PC.607'),
-                                             ('PC.634', 'PC.634'),
-                                             ('PC.635', 'PC.635'),
-                                             ('PC.636', 'PC.636')]},
-                      'DOB': {'20061218': [('PC.354', 'PC.354'),
-                                           ('PC.355', 'PC.355')],
-                              '20061126': [('PC.356', 'PC.356')],
-                              '20070314': [('PC.481', 'PC.481')],
-                              '20071210': [('PC.593', 'PC.593')],
-                              '20071112': [('PC.607', 'PC.607')],
-                              '20080116': [('PC.634', 'PC.634'),
-                                           ('PC.635', 'PC.635'),
-                                           ('PC.636', 'PC.636')]}}
+        exp_groups = {'Treatment': {'Control': ['PC.354', 'PC.355', 'PC.356',
+                                                'PC.481', 'PC.593'],
+                                    'Fast': ['PC.607', 'PC.634',
+                                             'PC.635', 'PC.636']},
+                      'DOB': {'20061218': ['PC.354', 'PC.355'],
+                              '20061126': ['PC.356'],
+                              '20070314': ['PC.481'],
+                              '20071210': ['PC.593'],
+                              '20071112': ['PC.607'],
+                              '20080116': ['PC.634', 'PC.635', 'PC.636']}}
         self.assertEqual(bv._groups, exp_groups)
 
     def test_get_vectors(self):
-        """"""
-        pass
+        """Should raise a NotImplementedError as this is a base class"""
+        bv = BaseVectors(self.coords, self.eigvals, self.metamap)
+        with self.assertRaises(NotImplementedError):
+            bv.get_vectors()
 
     def test_get_subgroup_vectors(self):
-        """"""
-        pass
+        """Should raise a NotImplementedError in usual execution as this is
+        a base class"""
+        bv = BaseVectors(self.coords, self.eigvals, self.metamap)
+        with self.assertRaises(NotImplementedError):
+            bv.get_vectors()
+
+    def test_get_subgroup_vectors_error(self):
+        """Should raise a RuntimeError if the user call _get_subgroup_vectors
+        with erroneous inputs"""
+        bv = BaseVectors(self.coords, self.eigvals, self.metamap)
+        with self.assertRaises(RuntimeError):
+            bv._get_subgroup_vectors(['foo'])
+        with self.assertRaises(RuntimeError):
+            bv._get_subgroup_vectors([])
 
     def test_compute_vector_results(self):
-        """"""
-        pass
+        """Should raise a NotImplementedError as this is a base class"""
+        bv = BaseVectors(self.coords, self.eigvals, self.metamap)
+        with self.assertRaises(NotImplementedError):
+            bv._compute_vector_results([])
 
     def test_weight_by_vector(self):
-        """"""
-        pass
+        """Correctly weights the vectors"""
+        bv = BaseVectors(self.coords, self.eigvals, self.metamap)
+
+        vector = np.array([1, 2, 3, 4, 5, 6, 7, 8])
+        w_vector = np.array([1, 5, 8, 12, 45, 80, 85, 90])
+        exp_vector = np.array([1, 6.3571428571, 12.7142857142,
+                               12.7142857142, 1.9264069264,
+                               2.1795918367, 17.8, 20.3428571428])
+        obs = bv._weight_by_vector(vector, w_vector)
+        npt.assert_almost_equal(obs, exp_vector)
+
+        vector = np.array([1, 2, 3, 4, 5, 6, 7, 8])
+        w_vector = np.array([1, 2, 3, 4, 5, 6, 7, 8])
+        exp_vector = np.array([1, 2, 3, 4, 5, 6, 7, 8])
+        obs = bv._weight_by_vector(vector, w_vector)
+        npt.assert_almost_equal(obs, exp_vector)
+
+        vector = np.array([2, 3, 4, 5, 6])
+        w_vector = np.array([25, 30, 35, 40, 45])
+        exp_vector = np.array([2, 3, 4, 5, 6])
+        obs = bv._weight_by_vector(vector, w_vector)
+        npt.assert_almost_equal(obs, exp_vector)
+
+        vector = np.array([[1, 2, 3], [2, 3, 4], [5, 6, 7], [8, 9, 10]])
+        w_vector = np.array([1, 2, 3, 4])
+        exp_vector = np.array([[1, 2, 3], [2, 3, 4], [5, 6, 7], [8, 9, 10]])
+        obs = bv._weight_by_vector(vector, w_vector)
+        npt.assert_almost_equal(obs, exp_vector)
+
+    def test_weight_by_vector_error(self):
+        """Raises an error with erroneous inputs"""
+        bv = BaseVectors(self.coords, self.eigvals, self.metamap)
+        # Different vector lengths
+        with self.assertRaises(ValueError):
+            bv._weight_by_vector([1, 2, 3, 4], [1, 2, 3])
+
+        # Inputs are not iterables
+        with self.assertRaises(TypeError):
+            bv._weight_by_vector(9, 1)
+
+        # Weighting vector is not a gradient
+        with self.assertRaises(ValueError):
+            bv._weight_by_vector([1, 2, 3, 4], [1, 2, 3, 3])
 
 
 # class AverageVectorsTests(BaseTests):
