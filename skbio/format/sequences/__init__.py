@@ -15,7 +15,7 @@ Functions
 
     fasta_from_sequences
     fasta_from_alignment
-    format_fastq_record'
+    format_fastq_record
 
 """
 #!/usr/bin/env python
