@@ -18,6 +18,7 @@ API Reference
    core.tree
    core.workflow
    draw.distributions
+   format.sequences
    maths.stats.distance
    maths.stats.spatial
    maths.stats.ordination
