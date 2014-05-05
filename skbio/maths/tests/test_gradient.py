@@ -72,34 +72,6 @@ class BaseTests(TestCase):
         self.coords = pd.DataFrame.from_dict(coord_data, orient='index')
 
         coord_data = {
-            'PC.636': np.array([-0.212230626531, 0.216034194368, 0.03532727349,
-                                -0.254450494129, -0.0687468542543,
-                                0.231895596562, 0.00496549154314,
-                                -0.0026246871695, 9.73837390723e-10]),
-            'PC.635': np.array([-0.277487312135, -0.0295483215975,
-                                -0.0744173437992, 0.0957182357964,
-                                0.204714844022, -0.0055407341857,
-                                -0.190287966833, 0.16307126638,
-                                9.73837390723e-10]),
-            'PC.355': np.array([0.236467470907, 0.21863434374,
-                                -0.0301637746424, -0.0225473129718,
-                                -0.205287183891, -0.180224615141,
-                                -0.165277751908, 0.0411933458557,
-                                9.73837390723e-10]),
-            'PC.607': np.array([-0.105517545144, -0.41405687433,
-                                -0.150073017617, -0.116066751485,
-                                -0.158763393475, -0.0223918378516,
-                                -0.0263068046112, -0.0501209518091,
-                                9.73837390723e-10]),
-            'PC.634': np.array([-0.371636765565, 0.115484234741,
-                                0.0721996475289, 0.0898852445906,
-                                0.0212491652909, -0.184183028843,
-                                0.114877153051, -0.164938000185,
-                                9.73837390723e-10])
-            }
-        self.subset_coords = pd.DataFrame.from_dict(coord_data, orient='index')
-
-        coord_data = {
             'PC.636': np.array([-0.212230626531, 0.216034194368,
                                 0.03532727349]),
             'PC.635': np.array([-0.277487312135, -0.0295483215975,
@@ -120,21 +92,6 @@ class BaseTests(TestCase):
                                 0.0721996475289])
             }
         self.coords_3axes = pd.DataFrame.from_dict(coord_data, orient='index')
-
-        coord_data = {
-            'PC.636': np.array([-0.212230626531, 0.216034194368,
-                                0.03532727349]),
-            'PC.635': np.array([-0.277487312135, -0.0295483215975,
-                                -0.0744173437992]),
-            'PC.355': np.array([0.236467470907, 0.21863434374,
-                                -0.0301637746424]),
-            'PC.607': np.array([-0.105517545144, -0.41405687433,
-                                -0.150073017617]),
-            'PC.634': np.array([-0.371636765565, 0.115484234741,
-                                0.0721996475289])
-            }
-        self.subset_coords_3axes = pd.DataFrame.from_dict(coord_data,
-                                                          orient='index')
 
         metamap = {'PC.354': {'Treatment': 'Control',
                               'DOB': '20061218',
@@ -245,12 +202,113 @@ class BaseVectorsTests(BaseTests):
             BaseVectors(self.coords, self.eigvals, self.metamap, axes=-1)
 
     def test_normalize_samples(self):
-        """"""
-        pass
+        """Correctly normalizes the samples between coords and metamap"""
+        coord_data = {
+            'PC.636': np.array([-0.212230626531, 0.216034194368,
+                                0.03532727349]),
+            'PC.635': np.array([-0.277487312135, -0.0295483215975,
+                                -0.0744173437992]),
+            'PC.355': np.array([0.236467470907, 0.21863434374,
+                                -0.0301637746424]),
+            'PC.607': np.array([-0.105517545144, -0.41405687433,
+                                -0.150073017617]),
+            'PC.634': np.array([-0.371636765565, 0.115484234741,
+                                0.0721996475289])
+            }
+        subset_coords = pd.DataFrame.from_dict(coord_data, orient='index')
+
+        metamap = {'PC.355': {'Treatment': 'Control',
+                              'DOB': '20061218',
+                              'Weight': '55',
+                              'Description': 'Control_mouse_I.D._355'},
+                   'PC.607': {'Treatment': 'Fast',
+                              'DOB': '20071112',
+                              'Weight': '65',
+                              'Description': 'Fasting_mouse_I.D._607'},
+                   'PC.634': {'Treatment': 'Fast',
+                              'DOB': '20080116',
+                              'Weight': '68',
+                              'Description': 'Fasting_mouse_I.D._634'},
+                   'PC.635': {'Treatment': 'Fast',
+                              'DOB': '20080116',
+                              'Weight': '70',
+                              'Description': 'Fasting_mouse_I.D._635'},
+                   'PC.636': {'Treatment': 'Fast',
+                              'DOB': '20080116',
+                              'Weight': '72',
+                              'Description': 'Fasting_mouse_I.D._636'}}
+        subset_metamap = pd.DataFrame.from_dict(metamap, orient='index')
+
+        # Takes a subset from metamap
+        bv = BaseVectors(subset_coords, self.eigvals, self.metamap)
+        pdt.assert_frame_equal(bv._coords.sort(axis=0),
+                               subset_coords.sort(axis=0))
+        pdt.assert_frame_equal(bv._metamap.sort(axis=0),
+                               subset_metamap.sort(axis=0))
+
+        # Takes a subset from coords
+        bv = BaseVectors(self.coords, self.eigvals, subset_metamap)
+        pdt.assert_frame_equal(bv._coords.sort(axis=0),
+                               subset_coords.sort(axis=0))
+        pdt.assert_frame_equal(bv._metamap.sort(axis=0),
+                               subset_metamap.sort(axis=0))
+
+        # Takes a subset from metamap and coords at the same time
+        coord_data = {
+            'PC.636': np.array([-0.212230626531, 0.216034194368,
+                                0.03532727349]),
+            'PC.635': np.array([-0.277487312135, -0.0295483215975,
+                                -0.0744173437992]),
+            'PC.355': np.array([0.236467470907, 0.21863434374,
+                                -0.0301637746424])
+            }
+        subset_coords = pd.DataFrame.from_dict(coord_data, orient='index')
+
+        metamap = {'PC.355': {'Treatment': 'Control',
+                              'DOB': '20061218',
+                              'Weight': '55',
+                              'Description': 'Control_mouse_I.D._355'},
+                   'PC.607': {'Treatment': 'Fast',
+                              'DOB': '20071112',
+                              'Weight': '65',
+                              'Description': 'Fasting_mouse_I.D._607'},
+                   'PC.634': {'Treatment': 'Fast',
+                              'DOB': '20080116',
+                              'Weight': '68',
+                              'Description': 'Fasting_mouse_I.D._634'}}
+        subset_metamap = pd.DataFrame.from_dict(metamap, orient='index')
+
+        bv = BaseVectors(subset_coords, self.eigvals, subset_metamap)
+        exp_coords = pd.DataFrame.from_dict(
+            {'PC.355': np.array([0.236467470907, 0.21863434374,
+                                 -0.0301637746424])},
+            orient='index')
+        pdt.assert_frame_equal(bv._coords.sort(axis=0),
+                               exp_coords.sort(axis=0))
+        exp_metamap = pd.DataFrame.from_dict(
+            {'PC.355': {'Treatment': 'Control',
+                        'DOB': '20061218',
+                        'Weight': '55',
+                        'Description': 'Control_mouse_I.D._355'}},
+            orient='index')
+        pdt.assert_frame_equal(bv._metamap.sort(axis=0),
+                               exp_metamap.sort(axis=0))
 
     def test_normalize_samples_error(self):
-        """"""
-        pass
+        """Raises an error if coords and metamap does not have samples in
+        common"""
+        error_metamap = pd.DataFrame.from_dict(
+            {'Foo': {'Treatment': 'Control',
+                     'DOB': '20061218',
+                     'Weight': '55',
+                     'Description': 'Control_mouse_I.D._355'},
+             'Bar': {'Treatment': 'Fast',
+                     'DOB': '20071112',
+                     'Weight': '65',
+                     'Description': 'Fasting_mouse_I.D._607'}},
+            orient='index')
+        with self.assertRaises(ValueError):
+            BaseVectors(self.coords, self.eigvals, error_metamap)
 
     def test_make_groups(self):
         """"""
