@@ -26,13 +26,47 @@ class _fake_seq(str):
 
 
 def fasta_from_sequences(seqs, make_seqlabel=None, line_wrap=None):
-    """Returns a FASTA string given a list of sequences. A sequence.Label
-       attribute takes precedence over sequence.Name.
+    """Returns a FASTA string given a list of sequence objects.
 
-        - seqs can be a list of sequence objects or strings.
-        - make_seqlabel: callback function that takes the seq object and
-          returns a label str
-        - line_wrap: a integer for maximum line width
+    A ``sequence.Label`` attribute takes precedence over ``sequence.Name``.
+
+    Parameters
+    ----------
+    seqs : list
+        seqs can be a list of sequence objects or strings.
+    make_seqlabel : function, optional
+        callback function that takes the seq object and returns a label ``str``
+        . If ``None`` is passed, the following attributes will try to be
+        retrieved in this order and the first to exist will be used:
+        ``identifier``, ``Label`` or ``Name``. In any other case an integer
+        with the position of the sequence object will be used.
+    line_wrap : int, optional
+        line_wrap: a integer for maximum line width, if ``None`` is passed the
+        full sequence will be used.
+
+    Returns
+    -------
+    str
+        FASTA formatted string composed of the objects passed in via `seqs`.
+
+    Examples
+    --------
+    Formatting a list of sequence objects
+
+    >>> from skbio.format.sequences import fasta_from_sequences
+    >>> from skbio.core.sequence import DNASequence
+    >>> seqs = [DNASequence('ACTCGAGATC', 'seq1'),
+    ...         DNASequence('GGCCT', 'seq2')]
+    >>> fasta_from_sequences(seqs)
+    >seq1
+    ACTCGAGATC
+    >seq2
+    GGCCT
+
+    See Also
+    --------
+    skbio.parse.sequences.parse_fasta
+
     """
     fasta_list = []
     for i, seq in enumerate(seqs):
