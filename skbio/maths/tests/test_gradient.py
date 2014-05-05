@@ -311,8 +311,78 @@ class BaseVectorsTests(BaseTests):
             BaseVectors(self.coords, self.eigvals, error_metamap)
 
     def test_make_groups(self):
-        """"""
-        pass
+        """Correctly generates the groups for vector_categories"""
+        # Test with all categories
+        bv = BaseVectors(self.coords, self.eigvals, self.metamap)
+        exp_groups = {'Treatment': {'Control': [('PC.354', 'PC.354'),
+                                                ('PC.355', 'PC.355'),
+                                                ('PC.356', 'PC.356'),
+                                                ('PC.481', 'PC.481'),
+                                                ('PC.593', 'PC.593')],
+                                    'Fast': [('PC.607', 'PC.607'),
+                                             ('PC.634', 'PC.634'),
+                                             ('PC.635', 'PC.635'),
+                                             ('PC.636', 'PC.636')]},
+                      'DOB': {'20061218': [('PC.354', 'PC.354'),
+                                           ('PC.355', 'PC.355')],
+                              '20061126': [('PC.356', 'PC.356')],
+                              '20070314': [('PC.481', 'PC.481')],
+                              '20071210': [('PC.593', 'PC.593')],
+                              '20071112': [('PC.607', 'PC.607')],
+                              '20080116': [('PC.634', 'PC.634'),
+                                           ('PC.635', 'PC.635'),
+                                           ('PC.636', 'PC.636')]},
+                      'Weight': {'60': [('PC.354', 'PC.354')],
+                                 '55': [('PC.355', 'PC.355')],
+                                 '50': [('PC.356', 'PC.356')],
+                                 '52': [('PC.481', 'PC.481')],
+                                 '57': [('PC.593', 'PC.593')],
+                                 '65': [('PC.607', 'PC.607')],
+                                 '68': [('PC.634', 'PC.634')],
+                                 '70': [('PC.635', 'PC.635')],
+                                 '72': [('PC.636', 'PC.636')]},
+                      'Description': {'Control_mouse_I.D._354': [('PC.354',
+                                                                  'PC.354')],
+                                      'Control_mouse_I.D._355': [('PC.355',
+                                                                  'PC.355')],
+                                      'Control_mouse_I.D._356': [('PC.356',
+                                                                  'PC.356')],
+                                      'Control_mouse_I.D._481': [('PC.481',
+                                                                  'PC.481')],
+                                      'Control_mouse_I.D._593': [('PC.593',
+                                                                  'PC.593')],
+                                      'Fasting_mouse_I.D._607': [('PC.607',
+                                                                  'PC.607')],
+                                      'Fasting_mouse_I.D._634': [('PC.634',
+                                                                  'PC.634')],
+                                      'Fasting_mouse_I.D._635': [('PC.635',
+                                                                  'PC.635')],
+                                      'Fasting_mouse_I.D._636': [('PC.636',
+                                                                  'PC.636')]}}
+        self.assertEqual(bv._groups, exp_groups)
+
+        # Test with user-defined categories
+        bv = BaseVectors(self.coords, self.eigvals, self.metamap,
+                         vector_categories=['Treatment', 'DOB'])
+        exp_groups = {'Treatment': {'Control': [('PC.354', 'PC.354'),
+                                                ('PC.355', 'PC.355'),
+                                                ('PC.356', 'PC.356'),
+                                                ('PC.481', 'PC.481'),
+                                                ('PC.593', 'PC.593')],
+                                    'Fast': [('PC.607', 'PC.607'),
+                                             ('PC.634', 'PC.634'),
+                                             ('PC.635', 'PC.635'),
+                                             ('PC.636', 'PC.636')]},
+                      'DOB': {'20061218': [('PC.354', 'PC.354'),
+                                           ('PC.355', 'PC.355')],
+                              '20061126': [('PC.356', 'PC.356')],
+                              '20070314': [('PC.481', 'PC.481')],
+                              '20071210': [('PC.593', 'PC.593')],
+                              '20071112': [('PC.607', 'PC.607')],
+                              '20080116': [('PC.634', 'PC.634'),
+                                           ('PC.635', 'PC.635'),
+                                           ('PC.636', 'PC.636')]}}
+        self.assertEqual(bv._groups, exp_groups)
 
     def test_get_vectors(self):
         """"""
