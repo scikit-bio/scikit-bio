@@ -9,8 +9,6 @@ from __future__ import division
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from itertools import izip
-
 import numpy as np
 import numpy.testing as npt
 from nose.tools import (assert_equal, assert_almost_equal, assert_raises,
@@ -53,7 +51,7 @@ def test_get_interval_for_r_new_species():
     expected = [(3, set([5]), 4, 0),
                 (4, set([5, 1]), 6, 1),
                 (4, set([5, 1, 2]), 9, 4)]
-    for x, y in izip(_get_interval_for_r_new_species(s, 2), expected):
+    for x, y in zip(_get_interval_for_r_new_species(s, 2), expected):
         assert_equal(y, x)
 
     s = [5, 5, 5, 5, 5]
