@@ -60,7 +60,6 @@ def test_get_interval_for_r_new_species():
 
 
 def test_lladser_ci_series_exact():
-    # Values are from Manuel's email of 9/11/09
     # have seen RWB
     urn_1 = 'RWBWWBWRRWRYWRPPZ'
     results = list(_lladser_ci_series(urn_1, r=4))
