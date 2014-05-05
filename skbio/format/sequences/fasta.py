@@ -74,6 +74,8 @@ def fasta_from_sequences(seqs, make_seqlabel=None, line_wrap=None):
         label = str(i)
         if make_seqlabel is not None:
             label = make_seqlabel(seq)
+        elif hasattr(seq, 'identifier') and seq.identifier:
+            label = seq.identifier
         elif hasattr(seq, 'Label') and seq.Label:
             label = seq.Label
         elif hasattr(seq, 'Name') and seq.Name:
