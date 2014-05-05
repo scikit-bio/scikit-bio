@@ -63,19 +63,18 @@ def ace(counts, rare_threshold=10):
     """
     counts = _validate(counts)
     freq_counts = _indices_to_counts(counts)
-    rare_species_count = _species_rare(freq_counts, rare_threshold)
+    s_rare = _species_rare(freq_counts, rare_threshold)
 
     singles = freq_counts[1]
-    if singles > 0 and singles == rare_species_count:
+    if singles > 0 and singles == s_rare:
         raise ValueError("The only rare species are singletons, so the ACE "
                          "metric is undefined. EstimateS suggests using "
                          "bias-corrected Chao1 instead.")
 
     s_abun = _species_abundant(freq_counts, rare_threshold)
-    if rare_species_count == 0:
+    if s_rare == 0:
         return s_abun
 
-    s_rare = freq_counts[1:rare_threshold + 1].sum()
     n_rare = _number_rare(freq_counts, rare_threshold)
     c_ace = 1 - singles / n_rare
 
@@ -91,7 +90,7 @@ def ace(counts, rare_threshold=10):
 
 def _species_rare(freq_counts, rare_threshold):
     """Count number of rare species."""
-    return freq_counts[1:rare_threshold].sum()
+    return freq_counts[1:rare_threshold + 1].sum()
 
 
 def _species_abundant(freq_counts, rare_threshold):

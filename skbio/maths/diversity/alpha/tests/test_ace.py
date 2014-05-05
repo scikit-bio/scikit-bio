@@ -10,7 +10,7 @@ from __future__ import division
 # ----------------------------------------------------------------------------
 
 import numpy as np
-from nose.tools import assert_almost_equal, assert_raises
+from nose.tools import assert_almost_equal, assert_raises, assert_true
 
 from skbio.maths.diversity.alpha.ace import ace
 
@@ -26,6 +26,9 @@ def test_ace():
 
     # Just returns the number of species when all are abundant.
     assert_almost_equal(ace(np.array([12, 12, 13, 14])), 4.0)
+
+    # Border case: only singletons and 10-tons, no abundant species.
+    assert_almost_equal(ace([0, 1, 1, 0, 0, 10, 10, 1, 0, 0]), 9.35681818182)
 
 
 def test_ace_only_rare_singletons():
