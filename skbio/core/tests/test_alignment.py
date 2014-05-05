@@ -134,7 +134,7 @@ class SequenceCollectionTests(TestCase):
             count += 1
             self.assertEqual(actual, expected)
         self.assertEqual(count, len(self.seqs1))
-        self.assertRaises(StopIteration, s1_iter.next)
+        self.assertRaises(StopIteration, lambda: next(s1_iter))
 
     def test_len(self):
         """len functions as expected
@@ -188,7 +188,7 @@ class SequenceCollectionTests(TestCase):
             count += 1
             self.assertEqual(actual, expected)
         self.assertEqual(count, len(self.seqs1))
-        self.assertRaises(StopIteration, s1_iter.next)
+        self.assertRaises(StopIteration, lambda: next(s1_iter))
 
     def test_k_word_frequencies(self):
         """k_word_frequencies functions as expected
@@ -485,11 +485,8 @@ class AlignmentTests(TestCase):
         """iter_positions functions as expected
         """
         actual = list(self.a2.iter_positions())
-        expected = [map(RNASequence, list('UA')),
-                    map(RNASequence, list('UC')),
-                    map(RNASequence, list('AG')),
-                    map(RNASequence, list('UU')),
-                    map(RNASequence, list('-U'))]
+        expected = [[RNASequence(j) for j in i] for i in
+                    ['UA', 'UC', 'AG', 'UU', '-U']]
         self.seqs2_t = [('r1', 'UUAU-'), ('r2', 'ACGUU')]
         self.assertEqual(actual, expected)
 
@@ -602,16 +599,9 @@ class AlignmentTests(TestCase):
                     defaultdict(int, {'A': 1/5, 'C': 1/5, 'G': 1/5, 'U': 2/5})]
         actual = self.a2.k_word_frequencies(k=1)
         for a, e in zip(actual, expected):
-            a_keys = a.keys()
-            a_keys.sort()
-            a_values = a.values()
-            a_values.sort()
-            e_keys = e.keys()
-            e_keys.sort()
-            e_values = e.values()
-            e_values.sort()
-            self.assertEqual(a_keys, e_keys, 5)
-            np.testing.assert_almost_equal(a_values, e_values, 5)
+            self.assertEqual(sorted(a), sorted(e), 5)
+            np.testing.assert_almost_equal(sorted(a.values()),
+                                           sorted(e.values()), 5)
 
     def test_sequence_length(self):
         """sequence_length functions as expected

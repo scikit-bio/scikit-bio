@@ -8,7 +8,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from StringIO import StringIO
+from future.utils.six import BytesIO
 from tempfile import NamedTemporaryFile
 from os.path import exists, join
 from unittest import TestCase, main
@@ -33,18 +33,18 @@ class MiscTests(TestCase):
 
     def test_is_casava_v180_or_later(self):
         """Attempt to determine casava version"""
-        self.assertFalse(is_casava_v180_or_later('@foo'))
-        id_ = '@M00176:17:000000000-A0CNA:1:1:15487:1773 1:N:0:0'
+        self.assertFalse(is_casava_v180_or_later(b'@foo'))
+        id_ = b'@M00176:17:000000000-A0CNA:1:1:15487:1773 1:N:0:0'
         self.assertTrue(is_casava_v180_or_later(id_))
 
         with self.assertRaises(ValueError):
-            _ = is_casava_v180_or_later('foo')
+            _ = is_casava_v180_or_later(b'foo')
 
     def test_safe_md5(self):
         """Make sure we have the expected md5"""
         exp = 'ab07acbb1e496801937adfa772424bf7'
 
-        fd = StringIO('foo bar baz')
+        fd = BytesIO(b'foo bar baz')
         obs = safe_md5(fd)
         self.assertEqual(obs.hexdigest(), exp)
 
@@ -94,8 +94,8 @@ class MiscTests(TestCase):
         # create on existing dir raises OSError if fail_on_exist=True
         self.assertRaises(OSError, create_dir, tmp_dir_path,
                           fail_on_exist=True)
-        self.assertEquals(create_dir(tmp_dir_path, fail_on_exist=True,
-                                     handle_errors_externally=True), 1)
+        self.assertEqual(create_dir(tmp_dir_path, fail_on_exist=True,
+                                    handle_errors_externally=True), 1)
 
         # return should be 1 if dir exist and fail_on_exist=False
         self.assertEqual(create_dir(tmp_dir_path, fail_on_exist=False), 1)

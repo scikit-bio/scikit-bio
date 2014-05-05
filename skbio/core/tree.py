@@ -154,6 +154,7 @@ from operator import or_
 from random import shuffle
 from copy import deepcopy
 from itertools import combinations
+from functools import reduce
 
 import numpy as np
 
@@ -503,7 +504,14 @@ class TreeNode(object):
 
         # clean up the single children nodes
         for node in nodes_to_remove:
-            node.parent.append(node.children[0])
+            child = node.children[0]
+
+            if child.length is None or node.length is None:
+                child.length = child.length or node.length
+            else:
+                child.length += node.length
+
+            node.parent.append(child)
             node.parent.remove(node)
 
 #   def shear(self, names):

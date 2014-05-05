@@ -114,10 +114,10 @@ class ParseFastaTests(GenericFastaTest):
                   '>a', '5 10 5', '12',
                   '>b', '30 40']
         gen = list(parse_qual(scores))
-        self.assertItemsEqual(gen[0][1], [5, 10, 5, 12])
-        self.assertItemsEqual(gen[1][1], [30, 40])
-        self.assertItemsEqual(gen[2][1], [5, 10, 5, 12])
-        self.assertItemsEqual(gen[3][1], [30, 40])
+        self.assertListEqual(list(gen[0][1]), [5, 10, 5, 12])
+        self.assertListEqual(list(gen[1][1]), [30, 40])
+        self.assertListEqual(list(gen[2][1]), [5, 10, 5, 12])
+        self.assertListEqual(list(gen[3][1]), [30, 40])
 
 if __name__ == "__main__":
     main()

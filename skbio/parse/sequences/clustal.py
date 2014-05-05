@@ -7,8 +7,6 @@
 # -----------------------------------------------------------------------------
 from __future__ import division
 
-from string import strip
-
 from skbio.core.exception import RecordError
 from skbio.parse.record import DelimitedSplitter
 

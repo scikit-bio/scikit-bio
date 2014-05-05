@@ -27,3 +27,14 @@ API Reference
    util.misc
    util.trie
    util.testing
+
+Developer Documentation
+-----------------------
+
+The developer documentation contains information for how to contribute
+to scikit-bio.
+
+.. toctree::
+   :maxdepth: 1
+
+   development/py3

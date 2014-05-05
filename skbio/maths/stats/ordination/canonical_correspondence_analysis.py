@@ -77,9 +77,11 @@ class CCA(Ordination):
     short_method_name = 'CCA'
     long_method_name = 'Canonical Correspondence Analysis'
 
-    def __init__(self, Y, X):
+    def __init__(self, Y, X, site_ids, species_ids):
         self.Y = np.asarray(Y, dtype=np.float64)
         self.X = np.asarray(X, dtype=np.float64)
+        self.site_ids = site_ids
+        self.species_ids = species_ids
         self._cca()
 
     def _cca(self):
@@ -218,4 +220,6 @@ class CCA(Ordination):
                                  species=species_scores,
                                  site=site_scores,
                                  biplot=biplot_scores,
-                                 site_constraints=site_constraints)
+                                 site_constraints=site_constraints,
+                                 site_ids=self.site_ids,
+                                 species_ids=self.species_ids)

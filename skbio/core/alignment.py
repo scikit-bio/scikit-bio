@@ -48,7 +48,6 @@ Examples
 <SequenceCollection: n=2; mean +/- std length=26.50 +/- 1.50>
 
 """
-from __future__ import division
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -58,8 +57,11 @@ from __future__ import division
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from __future__ import division
+from future.builtins import zip, range
+from future.utils import viewkeys
+
 from collections import Counter, defaultdict
-from itertools import izip
 from warnings import warn
 
 import numpy as np
@@ -247,7 +249,7 @@ class SequenceCollection(object):
         elif len(self) != len(other):
             return False
         else:
-            for self_seq, other_seq in izip(self, other):
+            for self_seq, other_seq in zip(self, other):
                 if self_seq != other_seq:
                     return False
         return True
@@ -846,10 +848,10 @@ class Alignment(SequenceCollection):
         sequence_count = self.sequence_count()
         dm = np.zeros((sequence_count, sequence_count))
         identifiers = []
-        for i in xrange(sequence_count):
+        for i in range(sequence_count):
             self_i = self[i]
             identifiers.append(self_i.identifier)
-            for j in xrange(i):
+            for j in range(i):
                 dm[i, j] = dm[j, i] = self_i.distance(self[j])
         return DistanceMatrix(dm, identifiers)
 
@@ -1226,7 +1228,7 @@ class Alignment(SequenceCollection):
         base_frequencies = self.k_word_frequencies(k=1)
         gap_alphabet = self[0].gap_alphabet()
         seqs_to_keep = []
-        for seq, f in izip(self, base_frequencies):
+        for seq, f in zip(self, base_frequencies):
             gap_frequency = sum([f[c] for c in gap_alphabet])
             if gap_frequency <= maximum_gap_frequency:
                 seqs_to_keep.append(seq.identifier)
@@ -1365,10 +1367,10 @@ class Alignment(SequenceCollection):
         iupac_standard_characters = self[0].iupac_standard_characters()
         for f in self.position_frequencies():
             if (nan_on_non_standard_chars and
-                    len(set(f.keys()) - iupac_standard_characters) > 0):
+                    len(viewkeys(f) - iupac_standard_characters) > 0):
                 result.append(np.nan)
             else:
-                result.append(entropy(f.values(), base=base))
+                result.append(entropy(list(f.values()), base=base))
         return result
 
     def sequence_length(self):

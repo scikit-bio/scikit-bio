@@ -43,9 +43,11 @@ class RDA(Ordination):
     short_method_name = 'RDA'
     long_method_name = 'Redundancy Analysis'
 
-    def __init__(self, Y, X, scale_Y=False):
+    def __init__(self, Y, X, site_ids, species_ids, scale_Y=False):
         self.Y = np.asarray(Y, dtype=np.float64)
         self.X = np.asarray(X, dtype=np.float64)
+        self.site_ids = site_ids
+        self.species_ids = species_ids
         self._rda(scale_Y)
 
     def _rda(self, scale_Y):
@@ -190,4 +192,6 @@ class RDA(Ordination):
                                  species=species_scores,
                                  site=site_scores,
                                  biplot=biplot_scores,
-                                 site_constraints=site_constraints)
+                                 site_constraints=site_constraints,
+                                 site_ids=self.site_ids,
+                                 species_ids=self.species_ids)

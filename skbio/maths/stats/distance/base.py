@@ -9,7 +9,8 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division
-from StringIO import StringIO
+from future.utils.six import StringIO
+
 import csv
 
 import numpy as np

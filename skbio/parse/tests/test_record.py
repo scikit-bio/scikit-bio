@@ -223,7 +223,7 @@ class MappedRecordTests(TestCase):
         self.assertEqual(s['Required'], None)
         self.assertEqual(s['a'], 3)
         self.assertEqual(s['xyz'], None)
-        self.assertEquals(s[list('abc')], None)
+        self.assertEqual(s[list('abc')], None)
         s.Aliases = {'xyz': 'a'}
         self.assertEqual(s['xyz'], 3)
 
