@@ -2,7 +2,8 @@
 """Tests for FASTA sequence format writer.
 """
 from unittest import TestCase, main
-from skbio.format.fasta import fasta_from_sequences, fasta_from_alignment
+from skbio.format.sequences.fasta import (fasta_from_sequences,
+                                          fasta_from_alignment)
 
 
 class FastaTests(TestCase):
