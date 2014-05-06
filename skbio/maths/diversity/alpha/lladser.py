@@ -27,9 +27,9 @@ def lladser_pe(counts, r=10):
 
     Returns
     -------
-    double or str
-        Single point estimate of the conditional uncovered probability, or
-        ``'NaN'`` if no point estimate could be computed.
+    double
+        Single point estimate of the conditional uncovered probability. May be
+        ``np.nan`` if a point estimate could not be computed.
 
     See Also
     --------
@@ -51,10 +51,12 @@ def lladser_pe(counts, r=10):
     counts = _validate(counts)
     sample = _expand_counts(counts)
     np.random.shuffle(sample)
+
     try:
         pe = list(_lladser_point_estimates(sample, r))[-1][0]
     except IndexError:
-        pe = 'NaN'
+        pe = np.nan
+
     return pe
 
 
@@ -94,19 +96,19 @@ def lladser_ci(counts, r):
     counts = _validate(counts)
     sample = _expand_counts(counts)
     np.random.shuffle(sample)
+
     try:
         pe = list(_lladser_ci_series(sample, r))[-1]
     except IndexError:
-        pe = ('NaN', 'NaN')
+        pe = (np.nan, np.nan)
+
     return pe
 
 
 def _expand_counts(counts):
     """Convert vector of counts at each index to vector of indices."""
-    result = []
-    for i, c in enumerate(counts):
-        result.append(np.zeros(c, int) + i)
-    return np.concatenate(result)
+    # From http://stackoverflow.com/a/22671394
+    return np.repeat(np.arange(counts.size), counts)
 
 
 def _lladser_point_estimates(sample, r=10):
