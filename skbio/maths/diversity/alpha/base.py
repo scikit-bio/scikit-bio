@@ -189,6 +189,8 @@ def equitability(counts, base=2):
     ----------
     counts : (N,) array_like, int
         Vector of counts.
+    base : scalar, optional
+        Logarithm base to use in the calculations.
 
     Returns
     -------
@@ -360,7 +362,7 @@ def heip_e(counts):
             (observed_species(counts) - 1))
 
 
-def kempton_taylor_q(counts, lower_quantile=.25, upper_quantile=.75):
+def kempton_taylor_q(counts, lower_quantile=0.25, upper_quantile=0.75):
     """Calculate Kempton-Taylor Q index of alpha diversity.
 
     Estimates the slope of the cumulative abundance curve in the interquantile
@@ -370,6 +372,10 @@ def kempton_taylor_q(counts, lower_quantile=.25, upper_quantile=.75):
     ----------
     counts : (N,) array_like, int
         Vector of counts.
+    lower_quantile : float, optional
+        Lower bound of the interquantile range. Defaults to lower quartile.
+    upper_quantile : float, optional
+        Upper bound of the interquantile range. Defaults to upper quartile.
 
     Returns
     -------
