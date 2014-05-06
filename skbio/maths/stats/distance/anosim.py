@@ -45,8 +45,8 @@ class ANOSIM(CategoricalStats):
     long_method_name = 'Analysis of Similarities'
     test_statistic_name = 'R statistic'
 
-    def __init__(self, distance_matrix, grouping):
-        super(ANOSIM, self).__init__(distance_matrix, grouping)
+    def __init__(self, distance_matrix, grouping, column=None):
+        super(ANOSIM, self).__init__(distance_matrix, grouping, column=column)
 
         self._divisor = self._dm.shape[0] * ((self._dm.shape[0] - 1) / 4)
         self._ranked_dists = rankdata(self._dm.condensed_form(),

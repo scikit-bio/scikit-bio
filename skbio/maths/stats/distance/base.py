@@ -14,6 +14,7 @@ from future.utils.six import StringIO
 import csv
 
 import numpy as np
+import pandas as pd
 
 from skbio.core.distance import DistanceMatrix
 
@@ -35,9 +36,21 @@ class CategoricalStats(object):
     long_method_name = ''
     test_statistic_name = ''
 
-    def __init__(self, distance_matrix, grouping):
+    def __init__(self, distance_matrix, grouping, column=None):
         if not isinstance(distance_matrix, DistanceMatrix):
             raise TypeError("Input must be a DistanceMatrix.")
+
+        if isinstance(grouping, pd.DataFrame):
+            if column is None:
+                raise ValueError("Must provide a column name if supplying a "
+                                 "data frame.")
+            else:
+                grouping = self._df_to_vector(distance_matrix, grouping,
+                                              column)
+        elif column is not None:
+            raise ValueError("Must provide a data frame if supplying a column "
+                             "name.")
+
         if len(grouping) != distance_matrix.shape[0]:
             raise ValueError("Grouping vector size must match the number of "
                              "IDs in the distance matrix.")
@@ -63,6 +76,20 @@ class CategoricalStats(object):
         self._grouping = grouping
         self._groups = groups
         self._tri_idxs = np.triu_indices(self._dm.shape[0], k=1)
+
+    def _df_to_vector(self, distance_matrix, df, column):
+        grouping = []
+
+        if column not in df:
+            raise ValueError("Column '%s' not in data frame." % column)
+
+        for id_ in distance_matrix.ids:
+            if id_ not in df[column]:
+                raise ValueError("Distance matrix ID '%s' not in data frame." %
+                                 id_)
+            grouping.append(df[column][id_])
+
+        return grouping
 
     def __call__(self, permutations=999):
         """Execute the statistical method.

@@ -9,7 +9,10 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import division
+from future.utils.six import StringIO
 from unittest import TestCase, main
+
+import pandas as pd
 
 from skbio.core.distance import DissimilarityMatrix, DistanceMatrix
 from skbio.maths.stats.distance.base import (CategoricalStats,
@@ -17,17 +20,41 @@ from skbio.maths.stats.distance.base import (CategoricalStats,
 
 
 class CategoricalStatsTests(TestCase):
-
     def setUp(self):
         self.dm = DistanceMatrix([[0.0, 1.0, 2.0], [1.0, 0.0, 3.0],
                                   [2.0, 3.0, 0.0]], ['a', 'b', 'c'])
-        self.categorical_stats = CategoricalStats(self.dm, [1, 2, 1])
+        self.grouping = [1, 2, 1]
+        # Ordering of IDs shouldn't matter, nor should extra IDs.
+        self.df = pd.read_csv(
+            StringIO('ID,Group\nb,Group1\na,Group2\nc,Group1\nd,Group3'),
+            index_col=0)
+        self.df_missing_id = pd.read_csv(
+            StringIO('ID,Group\nb,Group1\nc,Group1'), index_col=0)
+        self.categorical_stats = CategoricalStats(self.dm, self.grouping)
+        self.categorical_stats_from_df = CategoricalStats(self.dm, self.df,
+                                                          column='Group')
 
     def test_init_invalid_input(self):
         # Requires a DistanceMatrix.
         with self.assertRaises(TypeError):
             _ = CategoricalStats(DissimilarityMatrix([[0, 2], [3, 0]],
                                                      ['a', 'b']), [1, 2])
+
+        # Requires column if DataFrame.
+        with self.assertRaises(ValueError):
+            _ = CategoricalStats(self.dm, self.df)
+
+        # Cannot provide column if not data frame.
+        with self.assertRaises(ValueError):
+            _ = CategoricalStats(self.dm, self.grouping, column='Group')
+
+        # Column must exist in data frame.
+        with self.assertRaises(ValueError):
+            _ = CategoricalStats(self.dm, self.df, column='foo')
+
+        # All distance matrix IDs must be in data frame.
+        with self.assertRaises(ValueError):
+            _ = CategoricalStats(self.dm, self.df_missing_id, column='Group')
 
         # Grouping vector length must match number of objects in dm.
         with self.assertRaises(ValueError):
