@@ -18,8 +18,7 @@ from skbio.maths.diversity.alpha.base import (
     berger_parker_d, brillouin_d, dominance, doubles, enspie, equitability,
     esty_ci, fisher_alpha, goods_coverage, heip_e, kempton_taylor_q, margalef,
     mcintosh_d, mcintosh_e, menhinick, michaelis_menten_fit, observed_species,
-    osd, robbins, shannon, simpson, simpson_e, singles, strong,
-    _indices_to_counts, _validate)
+    osd, robbins, shannon, simpson, simpson_e, singles, strong, _validate)
 
 
 class BaseTests(TestCase):
@@ -77,15 +76,6 @@ class BaseTests(TestCase):
         with self.assertRaises(ValueError):
             _ = _validate([0, 0, 2, -1, 3])
 
-    def test_indices_to_counts(self):
-        exp = np.array([1, 2, 0, 0, 0, 3])
-        obs = _indices_to_counts(np.array([5, 0, 1, 1, 5, 5]))
-        npt.assert_array_equal(obs, exp)
-
-        exp = np.array([2, 3, 2, 0, 0, 3])
-        obs = _indices_to_counts(np.array([2, 2, 1, 0]), obs)
-        npt.assert_array_equal(obs, exp)
-
     def test_berger_parker_d(self):
         self.assertEqual(berger_parker_d(np.array([5])), 1)
         self.assertEqual(berger_parker_d(np.array([5, 5])), 0.5)
@@ -129,32 +119,28 @@ class BaseTests(TestCase):
         self.assertAlmostEqual(equitability(np.array([1, 1, 1, 1, 0])), 1)
 
     def test_esty_ci(self):
-        def _diversity(indices, f, step):
-            """Calculate diversity index for each window of size step.
+        def _diversity(indices, f):
+            """Calculate diversity index for each window of size 1.
 
             indices: vector of indices of species
             f: f(counts) -> diversity measure
-            start: first index to sum up to (default: step)
-            step: step size (default:1)
 
             """
             result = []
-            start = step
-            freqs = np.zeros(max(indices) + 1, dtype=int)
-            i = 0
-            for j in range(start, len(indices) + 1, step):
-                freqs = _indices_to_counts(indices[i:j], freqs)
+            max_size = max(indices) + 1
+            freqs = np.zeros(max_size, dtype=int)
+            for i in range(len(indices)):
+                freqs += np.bincount(indices[i:i + 1], minlength=max_size)
                 try:
                     curr = f(freqs)
                 except (ZeroDivisionError, FloatingPointError):
                     curr = 0
                 result.append(curr)
-                i = j
             return np.array(result)
 
         data = [1, 1, 2, 1, 1, 3, 2, 1, 3, 4]
 
-        (observed_upper, observed_lower) = zip(*_diversity(data, esty_ci, 1))
+        observed_upper, observed_lower = zip(*_diversity(data, esty_ci))
 
         expected_upper = np.array([1, 1.38590382, 1.40020259, 0.67434465,
                                    0.55060902, 0.71052858, 0.61613483,

@@ -35,27 +35,6 @@ def _validate(counts, suppress_cast=False):
     return counts
 
 
-def _indices_to_counts(indices, result=None):
-    """Converts vector of indices to counts of each index.
-
-    This function can also be used to convert a counts vector to a vector of
-    count frequencies (e.g., a vector containing the number of singletons,
-    doubletons, tripletons, etc.).
-
-    Notes
-    -----
-    Does not check that `result` is big enough to store new counts.
-
-    """
-    indices = _validate(indices)
-    if result is None:
-        max_val = indices.max()
-        result = np.zeros(max_val + 1)
-    for i in indices:
-        result[i] += 1
-    return result
-
-
 def berger_parker_d(counts):
     """Calculate Berger-Parker dominance.
 

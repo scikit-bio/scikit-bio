@@ -11,7 +11,7 @@ from __future__ import division
 
 import numpy as np
 
-from .base import _indices_to_counts, _validate
+from .base import _validate
 
 
 def ace(counts, rare_threshold=10):
@@ -62,7 +62,7 @@ def ace(counts, rare_threshold=10):
 
     """
     counts = _validate(counts)
-    freq_counts = _indices_to_counts(counts)
+    freq_counts = np.bincount(counts)
     s_rare = _species_rare(freq_counts, rare_threshold)
     singles = freq_counts[1]
 
