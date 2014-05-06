@@ -13,7 +13,11 @@ from unittest import TestCase, main
 
 import numpy as np
 
-from future.standard_library.test.support import import_fresh_module
+try:
+    # future >= 0.12
+    from future.backports.test.support import import_fresh_module
+except ImportError:
+    from future.standard_library.test.support import import_fresh_module
 
 cy_subsample = import_fresh_module('skbio.maths.subsample',
                                    fresh=['skbio.maths._subsample'])
