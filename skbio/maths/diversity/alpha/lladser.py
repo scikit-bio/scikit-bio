@@ -128,6 +128,11 @@ def _lladser_point_estimates(sample, r=10):
         position in sample of prediction, and random variable from Poisson
         process (mostly to make testing easier).
 
+    Raises
+    ------
+    ValueError
+        If `r` is less than or equal to 2.
+
     Notes
     -----
     This is the point estimator described in Theorem 2 (i) in [1]_.
@@ -139,8 +144,9 @@ def _lladser_point_estimates(sample, r=10):
        2011.
 
     """
-    if(r <= 2):
-        raise ValueError("r must be >=3")
+    if r <= 2:
+        raise ValueError("r must be greater than or equal to 3.")
+
     for count, seen, cost, i in _get_interval_for_r_new_species(sample, r):
         t = np.random.gamma(count, 1)
         point_est = (r - 1) / t
@@ -412,14 +418,14 @@ def _ul_confidence_bounds(f, r, alpha):
     a = None
     b = None
 
-    if (f, r, alpha) in PRECOMPUTED_TABLE:
-        return PRECOMPUTED_TABLE[(f, r, alpha)]
+    if (f, r, alpha) in _PRECOMPUTED_TABLE:
+        return _PRECOMPUTED_TABLE[(f, r, alpha)]
 
     # all others combination are only computed for f=10
     # and alpha = 0.90, 0.95 and 0.99
     if f == 10 and r <= 50:
-        if alpha in CBS and r < len(CBS[alpha]):
-            (a, b) = CBS[alpha][r]
+        if alpha in _CBS and r < len(_CBS[alpha]):
+            (a, b) = _CBS[alpha][r]
 
     if a is None or b is None:
         raise ValueError("No constants are precomputed for the combination of "
@@ -433,7 +439,7 @@ def _ul_confidence_bounds(f, r, alpha):
 # using Maple, we pre-calculate only a few common ones
 
 # precomputed table is {(f, r, alpha):(c_1, c_2)}
-PRECOMPUTED_TABLE = {
+_PRECOMPUTED_TABLE = {
     (2, 50, 0.95): (31.13026306, 38.94718565),
     (2, 33, 0.95): (22.3203508, 23.4487304),
     (1.5, 100, 0.95): (79.0424349, 83.22790086),
@@ -462,7 +468,7 @@ PRECOMPUTED_TABLE = {
 # Below are the values used for Theorem 3 iii
 # Values hand computed by Manuel Lladser using Maple
 
-CB_90 = [
+_CB_90 = [
     (None, None),  # 0, makes indexing easier
     (None, None),  # no feasible solution
     (None, None),  # no feasible solution
@@ -516,7 +522,7 @@ CB_90 = [
     (5.924900191, 41.17906791)  # 50
 ]
 
-CB_95 = [
+_CB_95 = [
     (None, None),  # 0
     (None, None),
     (None, None),
@@ -570,7 +576,7 @@ CB_95 = [
     (6.217105673, 38.96473258)  # 50
 ]
 
-CB_99 = [
+_CB_99 = [
     (None, None),
     (None, None),
     (None, None),
@@ -624,6 +630,6 @@ CB_99 = [
     (6.79033616, 35.0324474)  # 50
 ]
 
-CBS = {0.90: CB_90,
-       0.95: CB_95,
-       0.99: CB_99}
+_CBS = {0.90: _CB_90,
+        0.95: _CB_95,
+        0.99: _CB_99}
