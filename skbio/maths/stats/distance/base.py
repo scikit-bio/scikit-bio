@@ -78,6 +78,31 @@ class CategoricalStats(object):
         self._tri_idxs = np.triu_indices(self._dm.shape[0], k=1)
 
     def _df_to_vector(self, distance_matrix, df, column):
+        """Return a grouping vector from a data frame column.
+
+        Parameters
+        ----------
+        distance_marix : DistanceMatrix
+            Distance matrix whose IDs will be mapped to group labels.
+        df : pandas.DataFrame
+            Data frame (indexed by distance matrix ID).
+        column : str
+            Column name in `df` containing group labels.
+
+        Returns
+        -------
+        list
+            Grouping vector (vector of labels) based on the IDs in
+            `distance_matrix`. Each ID's label is looked up in the data frame
+            under the column specified by `column`.
+
+        Raises
+        ------
+        ValueError
+            If `column` is not in the data frame, or a distance matrix ID is
+            not in the data frame.
+
+        """
         grouping = []
 
         if column not in df:
