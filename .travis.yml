@@ -27,5 +27,4 @@ script:
   # linkcheck disabled in Py3 (bug in Sphinx)
   - if [ $PYTHON_VERSION ==  2.7 ]; then make linkcheck; fi
   - popd
-after_success:
   - coveralls
