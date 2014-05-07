@@ -127,7 +127,7 @@ def test_lladser_ci_from_r():
 
     # Requesting CI for not precomputed values raises error
     with assert_raises(ValueError):
-        _ = _lladser_ci_from_r(r=500, t=t, f=f, alpha=alpha, ci_type=ci_type)
+        _lladser_ci_from_r(r=500, t=t, f=f, alpha=alpha, ci_type=ci_type)
 
 
 if __name__ == '__main__':

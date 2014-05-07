@@ -227,7 +227,7 @@ def _lladser_ci_series(seq, r, alpha=0.95, f=10, ci_type='ULCL'):
         Type of confidence interval. If ``'ULCL'``, upper and lower bounds with
         conservative lower bound. If ``'ULCU'``, upper and lower bounds with
         conservative upper bound. If ``'U'``, upper bound only, lower bound
-        fixed to 0. If ``'L'``, lower bound only, upper bound fixed to 1.
+        fixed to 0.0. If ``'L'``, lower bound only, upper bound fixed to 1.0.
 
     Returns
     -------
@@ -252,10 +252,10 @@ def _lladser_ci_from_r(r, t, alpha=0.95, f=10, ci_type='ULCL'):
     """
     if ci_type == 'U':
         upper_bound = _upper_confidence_bound(r, alpha) / t
-        return (0, upper_bound)
+        return (0.0, upper_bound)
     elif ci_type == 'L':
         lower_bound = _lower_confidence_bound(r, alpha) / t
-        return (lower_bound, 1)
+        return (lower_bound, 1.0)
 
     bound_params = _ul_confidence_bounds(f, r, alpha)
     if ci_type == 'ULCL':
@@ -270,7 +270,7 @@ def _lladser_ci_from_r(r, t, alpha=0.95, f=10, ci_type='ULCL'):
 
     # make sure upper bound is at most 1
     if (upper_bound > 1):
-        upper_bound = 1
+        upper_bound = 1.0
 
     return lower_bound, upper_bound
 
@@ -336,7 +336,7 @@ def _upper_confidence_bound(r, alpha):
     try:
         return (data[r])
     except KeyError:
-        raise ValueError("r must be between 1,..,25 or 50")
+        raise ValueError("r must be between 1-25 or 50.")
 
 
 def _lower_confidence_bound(r, alpha):
