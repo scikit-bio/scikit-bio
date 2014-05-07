@@ -25,14 +25,15 @@ class FastaTests(TestCase):
         self.fasta_with_label_species =\
             '>1st:Dog\nAAAA\n>2nd:Cat\nCCCC\n>3rd:Mouse\nGGGG\n>4th:Rat\nUUUU'
 
-    def test_fastaFromSequence(self):
+
+    def test_fasta_from_sequence(self):
         """should return correct fasta string."""
         self.assertEqual(fasta_from_sequences(''), '')
         self.assertEqual(fasta_from_sequences(self.strings),
                          self.fasta_no_label)
 
-    def test_fasta_from_alignment(self):
-        """should return correct fasta string."""
+    def test_fasta_from_alignment_dict(self):
+        """should return correct fasta string for a dictionary"""
         self.assertEqual(fasta_from_alignment({}), '')
         self.assertEqual(fasta_from_alignment(self.alignment_dict),
                          self.fasta_with_label)
