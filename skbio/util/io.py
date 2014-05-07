@@ -13,7 +13,7 @@ Functions
 .. autosummary::
     :toctree: generated/
 
-    open_filepath_or
+    open_file
 
 """
 
@@ -48,7 +48,7 @@ def _get_filehandle(filepath_or, *args, **kwargs):
 
 
 @contextmanager
-def open_filepath_or(filepath_or, *args, **kwargs):
+def open_file(filepath_or, *args, **kwargs):
     """Context manager, like ``open``, but lets file handles and file like
     objects pass untouched.
 
@@ -69,14 +69,14 @@ def open_filepath_or(filepath_or, *args, **kwargs):
 
     Examples
     --------
-    >>> with open_filepath_or('filename') as f:  # doctest: +SKIP
+    >>> with open_file('filename') as f:  # doctest: +SKIP
     ...     pass
-    >>> fh = open('filename')                    # doctest: +SKIP
-    >>> with open_filepath_or(fh) as f:          # doctest: +SKIP
+    >>> fh = open('filename')             # doctest: +SKIP
+    >>> with open_file(fh) as f:          # doctest: +SKIP
     ...     pass
-    >>> fh.closed                                # doctest: +SKIP
+    >>> fh.closed                         # doctest: +SKIP
     False
-    >>> fh.close()                               # doctest: +SKIP
+    >>> fh.close()                        # doctest: +SKIP
 
     """
     fh, own_fh = _get_filehandle(filepath_or, *args, **kwargs)
