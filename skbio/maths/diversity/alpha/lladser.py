@@ -150,7 +150,7 @@ def _lladser_point_estimates(sample, r=10):
     for count, seen, cost, i in _get_interval_for_r_new_species(sample, r):
         t = np.random.gamma(count, 1)
         point_est = (r - 1) / t
-        yield(point_est, i, t)
+        yield point_est, i, t
 
 
 def _get_interval_for_r_new_species(seq, r):
@@ -178,8 +178,9 @@ def _get_interval_for_r_new_species(seq, r):
     """
     seen = set()
     seq_len = len(seq)
-    for i in range(seq_len):
-        curr = seq[i]  # note: first iteration is after looking at first char
+
+    # note: first iteration is after looking at first char
+    for i, curr in enumerate(seq):
         # bail out if there's nothing new
         if curr in seen:
             continue
@@ -192,12 +193,20 @@ def _get_interval_for_r_new_species(seq, r):
         while unseen < r and j < seq_len:
             if seq[j] not in seen:
                 unseen += 1
-            j += 1  # note: increments after termination condition
+            # note: increments after termination condition
+            j += 1
 
-        count = j - i - 1  # the interval to see r new colors
-        cost = j  # the position in seq after seeing r new ones
-        if (not count) or (unseen < r):  # bail out if not enough unseen
+        # the interval to see r new colors
+        count = j - i - 1
+        # the position in seq after seeing r new ones
+        cost = j
+
+        # bail out if not enough unseen
+        if not count or (unseen < r):
             raise StopIteration
+
+        # make a copy of seen before yielding, as we'll continue to add to the
+        # set in subsequent iterations
         yield count, set(seen), cost, i
 
 

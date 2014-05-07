@@ -52,7 +52,7 @@ def test_get_interval_for_r_new_species():
                 (4, set([5, 1]), 6, 1),
                 (4, set([5, 1, 2]), 9, 4)]
     for x, y in zip(_get_interval_for_r_new_species(s, 2), expected):
-        assert_equal(y, x)
+        assert_equal(x, y)
 
     s = [5, 5, 5, 5, 5]
     # never saw new one
