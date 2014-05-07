@@ -3,6 +3,8 @@
 """
 from unittest import TestCase, main
 from skbio.format.fasta import fasta_from_sequences, fasta_from_alignment
+from skbio.core.alignment import Alignment
+from skbio.core.sequence import DNA
 
 
 class FastaTests(TestCase):
@@ -24,6 +26,9 @@ class FastaTests(TestCase):
                                '4th': 'UUUU'}
         self.fasta_with_label_species =\
             '>1st:Dog\nAAAA\n>2nd:Cat\nCCCC\n>3rd:Mouse\nGGGG\n>4th:Rat\nUUUU'
+        seqs = [DNA("ACC--G-GGTA..", identifier="seq1"),
+                DNA("TCC--G-GGCA..", identifier="seqs2")]
+        self.alignment = Alignment(seqs)
 
 
     def test_fasta_from_sequence(self):
@@ -40,6 +45,22 @@ class FastaTests(TestCase):
         self.assertEqual(fasta_from_alignment(self.alignment_dict,
                                               line_wrap=2),
                          self.fasta_with_label_lw2)
+
+    def test_fasta_from_alignment_from_alignment(self):
+        """should return correct fasta string for alignment object"""
+        # alignment with a few sequences
+        obs = fasta_from_sequences(seqs)
+        self.assertEquals('>seq1\nACC--G-GGTA..\n>seqs2\nTCC--G-GGCA..', obs)
+
+        # empty alginment
+        obs = fasta_from_sequences(Alignment([]))
+        self.assertEquals('', obs)
+
+        # alignment with a few sequences
+        obs = fasta_from_sequences(seqs, sorted=False)
+        self.assertEquals('>seq1\nACC--G-GGTA..\n>seqs2\nTCC--G-GGCA..', obs)
+
+
 
 if __name__ == "__main__":
     main()
