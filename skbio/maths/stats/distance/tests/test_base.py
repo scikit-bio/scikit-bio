@@ -37,44 +37,44 @@ class CategoricalStatsTests(TestCase):
     def test_init_invalid_input(self):
         # Requires a DistanceMatrix.
         with self.assertRaises(TypeError):
-            _ = CategoricalStats(DissimilarityMatrix([[0, 2], [3, 0]],
-                                                     ['a', 'b']), [1, 2])
+            CategoricalStats(DissimilarityMatrix([[0, 2], [3, 0]], ['a', 'b']),
+                             [1, 2])
 
         # Requires column if DataFrame.
         with self.assertRaises(ValueError):
-            _ = CategoricalStats(self.dm, self.df)
+            CategoricalStats(self.dm, self.df)
 
         # Cannot provide column if not data frame.
         with self.assertRaises(ValueError):
-            _ = CategoricalStats(self.dm, self.grouping, column='Group')
+            CategoricalStats(self.dm, self.grouping, column='Group')
 
         # Column must exist in data frame.
         with self.assertRaises(ValueError):
-            _ = CategoricalStats(self.dm, self.df, column='foo')
+            CategoricalStats(self.dm, self.df, column='foo')
 
         # All distance matrix IDs must be in data frame.
         with self.assertRaises(ValueError):
-            _ = CategoricalStats(self.dm, self.df_missing_id, column='Group')
+            CategoricalStats(self.dm, self.df_missing_id, column='Group')
 
         # Grouping vector length must match number of objects in dm.
         with self.assertRaises(ValueError):
-            _ = CategoricalStats(self.dm, [1, 2])
+            CategoricalStats(self.dm, [1, 2])
 
         # Grouping vector cannot have only unique values.
         with self.assertRaises(ValueError):
-            _ = CategoricalStats(self.dm, [1, 2, 3])
+            CategoricalStats(self.dm, [1, 2, 3])
 
         # Grouping vector cannot have only a single group.
         with self.assertRaises(ValueError):
-            _ = CategoricalStats(self.dm, [1, 1, 1])
+            CategoricalStats(self.dm, [1, 1, 1])
 
     def test_call(self):
         with self.assertRaises(NotImplementedError):
-            _ = self.categorical_stats()
+            self.categorical_stats()
 
     def test_call_invalid_permutations(self):
         with self.assertRaises(ValueError):
-            _ = self.categorical_stats(-1)
+            self.categorical_stats(-1)
 
 
 class CategoricalStatsResultsTests(TestCase):
