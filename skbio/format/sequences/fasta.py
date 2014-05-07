@@ -37,6 +37,10 @@ def fasta_from_sequences(seqs, make_seqlabel=None, line_wrap=None):
     str
         FASTA formatted string composed of the objects passed in via `seqs`.
 
+    See Also
+    --------
+    skbio.parse.sequences.parse_fasta
+
     Examples
     --------
     Formatting a list of sequence objects
@@ -45,15 +49,11 @@ def fasta_from_sequences(seqs, make_seqlabel=None, line_wrap=None):
     >>> from skbio.core.sequence import DNASequence
     >>> seqs = [DNASequence('ACTCGAGATC', 'seq1'),
     ...         DNASequence('GGCCT', 'seq2')]
-    >>> fasta_from_sequences(seqs)
+    >>> print fasta_from_sequences(seqs)
     >seq1
     ACTCGAGATC
     >seq2
     GGCCT
-
-    See Also
-    --------
-    skbio.parse.sequences.parse_fasta
 
     """
     fasta_list = []
@@ -120,16 +120,17 @@ def fasta_from_alignment(aln, make_seqlabel=None, line_wrap=None, sort=True):
     Examples
     --------
     Formatting a sequence alignment object into a FASTA file.
-
     >>> from skbio.core.alignment import Alignment
     >>> from skbio.core.sequence import DNA
     >>> from skbio.format.sequences import fasta_from_alignment
     >>> seqs = [DNA("ACC--G-GGTA..", identifier="seq1"),
-    ...         DNA("TCC--G-GGCA..", identifier="seqs2")]
+    ...     DNA("TCC--G-GGCA..", identifier="seqs2")]
     >>> a1 = Alignment(seqs)
-    >>> fasta_from_alignment(a1)
-    '>seq1\nACC--G-GGTA..\n>seqs2\nTCC--G-GGCA..'
-
+    >>> print fasta_from_alignment(a1)
+    >seq1
+    ACC--G-GGTA..
+    >seqs2
+    TCC--G-GGCA..
 
     """
     # check if it's an Alignment object or a dictionary
