@@ -5,17 +5,12 @@ NOTE: * is used to denote termination (as per NCBI standard).
 NOTE: Although the genetic code objects convert DNA to RNA and vice
 versa, lists of codons that they produce will be provided in DNA format.
 """
-from string import maketrans
 import re
 
-class GeneticCodeError(Exception):
-    pass
+from string import maketrans
 
-class GeneticCodeInitError(ValueError, GeneticCodeError):
-    pass
+from skbio.core.exception import GeneticCodeInitError, InvalidCodonError
 
-class InvalidCodonError(KeyError, GeneticCodeError):
-    pass
 
 _dna_trans = maketrans('TCAG','AGTC')
 

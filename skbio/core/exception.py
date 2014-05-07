@@ -31,6 +31,9 @@ Exceptions
    FileFormatError
    RecordError
    FastqParseError
+   GeneticCodeError
+   GeneticCodeInitError
+   InvalidCodonError
 
 """
 from __future__ import division
@@ -133,4 +136,19 @@ class RecordError(FileFormatError):
 
 
 class FastqParseError(FileFormatError):
+    pass
+
+
+class GeneticCodeError(Exception):
+    """Base class exception used by the GeneticCode class"""
+    pass
+
+
+class GeneticCodeInitError(ValueError, GeneticCodeError):
+    """Exception raised by the GeneticCode class upon a bad initialization"""
+    pass
+
+
+class InvalidCodonError(KeyError, GeneticCodeError):
+    """Exception raised by the GeneticCode class if __getitem__ fails"""
     pass

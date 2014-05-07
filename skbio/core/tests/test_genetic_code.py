@@ -2,8 +2,8 @@
 """ Unit tests for Genetic Code classes.
 """
 from skbio.core.sequence import DNA, RNA
-from skbio.core.genetic_code import (GeneticCode, GeneticCodeInitError,
-                                     InvalidCodonError, GeneticCodes)
+from skbio.core.genetic_code import GeneticCode, GeneticCodes
+from skbio.core.exception import GeneticCodeInitError, InvalidCodonError
 from unittest import TestCase, main
 
 
