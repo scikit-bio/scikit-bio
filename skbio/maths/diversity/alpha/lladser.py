@@ -14,7 +14,6 @@ import numpy as np
 from .base import _validate
 
 
-# NOT TESTED: NEED TEST DATA!
 def lladser_pe(counts, r=10):
     """Calculate single point estimate of conditional uncovered probability.
 
@@ -60,7 +59,6 @@ def lladser_pe(counts, r=10):
     return pe
 
 
-# NOT TESTED: NEED TEST DATA!
 def lladser_ci(counts, r):
     """Calculate single CI of the conditional uncovered probability.
 
@@ -98,11 +96,11 @@ def lladser_ci(counts, r):
     np.random.shuffle(sample)
 
     try:
-        pe = list(_lladser_ci_series(sample, r))[-1]
+        ci = list(_lladser_ci_series(sample, r))[-1]
     except IndexError:
-        pe = (np.nan, np.nan)
+        ci = (np.nan, np.nan)
 
-    return pe
+    return ci
 
 
 def _expand_counts(counts):

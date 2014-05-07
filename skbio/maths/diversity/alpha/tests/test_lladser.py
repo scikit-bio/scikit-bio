@@ -15,8 +15,18 @@ from nose.tools import (assert_equal, assert_almost_equal, assert_raises,
                         assert_true)
 
 from skbio.maths.diversity.alpha.lladser import (
-    _expand_counts, _lladser_point_estimates, _get_interval_for_r_new_species,
-    _lladser_ci_series, _lladser_ci_from_r)
+    lladser_pe, lladser_ci, _expand_counts, _lladser_point_estimates,
+    _get_interval_for_r_new_species, _lladser_ci_series, _lladser_ci_from_r)
+
+
+def test_lladser_pe():
+    obs = lladser_pe([3], r=4)
+    assert_true(np.isnan(obs))
+
+
+def test_lladser_ci():
+    obs = lladser_ci([3], r=4)
+    assert_true(len(obs) == 2 and np.isnan(obs[0]) and np.isnan(obs[1]))
 
 
 def test_expand_counts():
@@ -30,7 +40,7 @@ def test_lladser_point_estimates():
     observed = list(_lladser_point_estimates(s, r))
     assert_equal(len(observed), 3)
 
-    for k in (range(3)):
+    for k in range(3):
         x = observed[k]
         t = x[2]
         assert_equal(x[0], (r - 1) / t)
