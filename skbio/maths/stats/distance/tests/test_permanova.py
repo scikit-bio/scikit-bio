@@ -9,10 +9,12 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import division
+from future.utils.six import StringIO
 from unittest import TestCase, main
 
 import numpy as np
 import numpy.testing as npt
+import pandas as pd
 
 from skbio.core.distance import DistanceMatrix
 from skbio.maths.stats.distance.permanova import PERMANOVA
@@ -26,6 +28,9 @@ class PERMANOVATests(TestCase):
         # of equal size.
         dm_ids = ['s1', 's2', 's3', 's4']
         grouping_equal = ['Control', 'Control', 'Fast', 'Fast']
+        df = pd.read_csv(
+            StringIO('ID,Group\ns2,Control\ns3,Fast\ns4,Fast\ns5,Control\n'
+                     's1,Control'), index_col=0)
 
         self.dm_ties = DistanceMatrix([[0, 1, 1, 4],
                                        [1, 0, 3, 2],
@@ -52,19 +57,22 @@ class PERMANOVATests(TestCase):
 
         self.permanova_ties = PERMANOVA(self.dm_ties, grouping_equal)
         self.permanova_no_ties = PERMANOVA(self.dm_no_ties, grouping_equal)
+        self.permanova_ties_df = PERMANOVA(self.dm_ties, df, column='Group')
         self.permanova_unequal = PERMANOVA(self.dm_unequal, grouping_unequal)
 
     def test_call_ties(self):
         # Ensure we get the same results if we rerun the method on the same
-        # object.
-        for trial in range(2):
-            np.random.seed(0)
-            obs = self.permanova_ties()
-            self.assertEqual(obs.sample_size, 4)
-            npt.assert_array_equal(obs.groups, ['Control', 'Fast'])
-            self.assertAlmostEqual(obs.statistic, 2.0)
-            self.assertAlmostEqual(obs.p_value, 0.671)
-            self.assertEqual(obs.permutations, 999)
+        # object. Also ensure we get the same results if we run the method
+        # using a grouping vector or a data frame with equivalent groupings.
+        for inst in self.permanova_ties, self.permanova_ties_df:
+            for trial in range(2):
+                np.random.seed(0)
+                obs = inst()
+                self.assertEqual(obs.sample_size, 4)
+                npt.assert_array_equal(obs.groups, ['Control', 'Fast'])
+                self.assertAlmostEqual(obs.statistic, 2.0)
+                self.assertAlmostEqual(obs.p_value, 0.671)
+                self.assertEqual(obs.permutations, 999)
 
     def test_call_no_ties(self):
         np.random.seed(0)

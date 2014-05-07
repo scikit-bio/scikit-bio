@@ -43,8 +43,9 @@ class PERMANOVA(CategoricalStats):
     long_method_name = 'Permutational Multivariate Analysis of Variance'
     test_statistic_name = 'pseudo-F statistic'
 
-    def __init__(self, distance_matrix, grouping):
-        super(PERMANOVA, self).__init__(distance_matrix, grouping)
+    def __init__(self, distance_matrix, grouping, column=None):
+        super(PERMANOVA, self).__init__(distance_matrix, grouping,
+                                        column=column)
 
         # Calculate number of objects in each group.
         self._group_sizes = np.bincount(self._grouping)
