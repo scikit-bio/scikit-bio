@@ -10,21 +10,7 @@
 # ----------------------------------------------------------------------------
 
 from skbio.core.alignment import Alignment
-
-
-class _fake_seq(str):
-
-    """a holder for string sequences that allows provision of a seq.Label
-    attribute, required by fasta formatting funcs."""
-
-    def __new__(cls, Label, Seq):
-        new = str.__new__(cls, Seq)
-        new.Label = Label
-        return new
-
-    def __getslice__(self, *args, **kwargs):
-        new_seq = str.__getslice__(self, *args, **kwargs)
-        return self.__new__(self.__class__, self.Label, new_seq)
+from skbio.core.sequence import BiologicalSequence
 
 
 def fasta_from_sequences(seqs, make_seqlabel=None, line_wrap=None):
@@ -159,7 +145,7 @@ def fasta_from_alignment(aln, make_seqlabel=None, line_wrap=None, sort=True):
     for label in order:
         seq = aln[label]
         if isinstance(seq, str):
-            seq = _fake_seq(label, seq)
+            seq = BiologicalSequence(seq, label)
         ordered_seqs.append(seq)
     return fasta_from_sequences(ordered_seqs, make_seqlabel=make_seqlabel,
                                 line_wrap=line_wrap)
