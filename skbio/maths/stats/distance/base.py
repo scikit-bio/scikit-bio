@@ -189,6 +189,18 @@ class CategoricalStatsResults(object):
 
         return '\n'.join(results) + '\n'
 
+    def _repr_html_(self):
+        """Return a string containing an HTML table of results.
+
+        This method will be called within the IPython Notebook instead of
+        __repr__ to display results.
+
+        """
+        header = self._format_header()
+        data = self._format_data()
+        return pd.DataFrame([data[1:]], columns=header[1:],
+                            index=[data[0]])._repr_html_()
+
     def summary(self, delimiter='\t'):
         """Return a formatted summary of results as a string.
 

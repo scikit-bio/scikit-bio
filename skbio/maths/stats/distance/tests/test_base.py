@@ -93,6 +93,20 @@ class CategoricalStatsResultsTests(TestCase):
         obs = str(self.results)
         self.assertEqual(obs, exp)
 
+    def test_repr_html(self):
+        # Not going to test against exact HTML that we expect, as this could
+        # easily break and be annoying to constantly update. Do some light
+        # sanity-checking to ensure there are some of the expected HTML tags.
+        obs = self.results._repr_html_()
+        self.assertTrue('<table' in obs)
+        self.assertTrue('<thead' in obs)
+        self.assertTrue('<tr' in obs)
+        self.assertTrue('<th' in obs)
+        self.assertTrue('<tbody' in obs)
+        self.assertTrue('<td' in obs)
+        self.assertTrue('1 rows' in obs)
+        self.assertTrue('5 columns' in obs)
+
     def test_summary(self):
         exp = ('Method name\tSample size\tNumber of groups\tmy stat\tp-value\t'
                'Number of permutations\nfoo\t42\t4\t0.0123456789\t0.12\t99\n')
