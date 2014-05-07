@@ -106,11 +106,11 @@ class CategoricalStats(object):
         if column not in df:
             raise ValueError("Column '%s' not in data frame." % column)
 
-        grouping = df[column][list(distance_matrix.ids)]
+        grouping = df.loc[distance_matrix.ids, column]
         if grouping.isnull().any():
             raise ValueError("One or more IDs in the distance matrix are not "
                              "in the data frame.")
-        return grouping
+        return grouping.tolist()
 
     def __call__(self, permutations=999):
         """Execute the statistical method.
