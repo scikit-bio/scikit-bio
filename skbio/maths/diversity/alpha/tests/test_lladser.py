@@ -74,7 +74,7 @@ def test_lladser_ci_series_random():
     for i in range(reps):
         obs = list(_lladser_ci_series(seq, r=4, alpha=alpha))[0]
         observations.append(obs)
-    tps = filter(lambda a_b: a_b[0] < 0.5 and 0.5 < a_b[1], observations)
+    tps = list(filter(lambda a_b: a_b[0] < 0.5 and 0.5 < a_b[1], observations))
     assert_true(len(tps) >= alpha * reps)  # 100%-95%
 
 
