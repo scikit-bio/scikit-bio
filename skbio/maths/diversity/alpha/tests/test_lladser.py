@@ -125,9 +125,31 @@ def test_lladser_ci_from_r():
     assert_almost_equal(obs_low, 0.0817691447)
     assert_almost_equal(obs_high, 1)
 
-    # Requesting CI for not precomputed values raises error
+
+def test_lladser_ci_from_r_invalid_input():
+    # unsupported alpha for ci_type='U'
     with assert_raises(ValueError):
-        _lladser_ci_from_r(r=500, t=t, f=f, alpha=alpha, ci_type=ci_type)
+        _lladser_ci_from_r(r=3, t=10, f=10, alpha=0.90, ci_type='U')
+
+    # unsupported r for ci_type='U'
+    with assert_raises(ValueError):
+        _lladser_ci_from_r(r=42, t=10, f=10, alpha=0.95, ci_type='U')
+
+    # unsupported alpha for ci_type='L'
+    with assert_raises(ValueError):
+        _lladser_ci_from_r(r=3, t=10, f=10, alpha=0.90, ci_type='L')
+
+    # unsupported r for ci_type='L'
+    with assert_raises(ValueError):
+        _lladser_ci_from_r(r=50, t=10, f=10, alpha=0.95, ci_type='L')
+
+    # unknown ci_type
+    with assert_raises(ValueError):
+        _lladser_ci_from_r(r=4, t=10, f=10, alpha=0.95, ci_type='brofist')
+
+    # requesting CI for not precomputed values
+    with assert_raises(ValueError):
+        _lladser_ci_from_r(r=500, t=10, f=10)
 
 
 if __name__ == '__main__':
