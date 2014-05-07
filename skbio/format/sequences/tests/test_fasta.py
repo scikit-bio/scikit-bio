@@ -5,6 +5,7 @@ from unittest import TestCase, main
 from skbio.format.sequences.fasta import (fasta_from_sequences,
                                           fasta_from_alignment)
 from skbio.core.sequence import DNASequence, BiologicalSequence
+from skbio.core.alignment import Alignment
 
 
 class FastaTests(TestCase):
@@ -26,6 +27,11 @@ class FastaTests(TestCase):
                                    DNASequence('GGCCT', 'seq2')]
         self.sequence_objects_b = [BiologicalSequence('ACTCGAGATC', 'seq1'),
                                    BiologicalSequence('GGCCT', 'seq2')]
+        seqs = [DNASequence("ACC--G-GGTA..", identifier="seq1"),
+                DNASequence("TCC--G-GGCA..", identifier="seqs2")]
+        self.alignment = Alignment(seqs)
+
+
 
     def test_fasta_from_sequence_objects(self):
         """Check FASTA files are created correctly off of sequence objects"""
@@ -49,6 +55,22 @@ class FastaTests(TestCase):
         self.assertEqual(fasta_from_alignment(self.alignment_dict,
                                               line_wrap=2),
                          self.fasta_with_label_lw2)
+
+    def test_fasta_from_alignment_from_alignment(self):
+        """should return correct fasta string for alignment object"""
+        # alignment with a few sequences
+        obs = fasta_from_alignment(self.alignment)
+        self.assertEquals('>seq1\nACC--G-GGTA..\n>seqs2\nTCC--G-GGCA..', obs)
+
+        # empty alginment
+        obs = fasta_from_alignment(Alignment([]))
+        self.assertEquals('', obs)
+
+        # alignment with a few sequences
+        obs = fasta_from_alignment(self.alignment, sort=False)
+        self.assertEquals('>seq1\nACC--G-GGTA..\n>seqs2\nTCC--G-GGCA..', obs)
+
+
 
 FASTA_STRING = '>seq1\nACTCGAGATC\n>seq2\nGGCCT'
 
