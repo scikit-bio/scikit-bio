@@ -103,17 +103,13 @@ class CategoricalStats(object):
             not in the data frame.
 
         """
-        grouping = []
-
         if column not in df:
             raise ValueError("Column '%s' not in data frame." % column)
 
-        for id_ in distance_matrix.ids:
-            if id_ not in df[column]:
-                raise ValueError("Distance matrix ID '%s' not in data frame." %
-                                 id_)
-            grouping.append(df[column][id_])
-
+        grouping = df[column][list(distance_matrix.ids)]
+        if grouping.isnull().any():
+            raise ValueError("One or more IDs in the distance matrix are not "
+                             "in the data frame.")
         return grouping
 
     def __call__(self, permutations=999):
