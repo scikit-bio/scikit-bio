@@ -13,10 +13,10 @@ before_install:
   # Update conda itself
   - conda update --yes conda
 install:
-  - conda create --yes -n env_name python=$PYTHON_VERSION pip numpy=$NUMPY_VERSION scipy matplotlib nose pep8 Sphinx
+  - conda create --yes -n env_name python=$PYTHON_VERSION pip numpy=$NUMPY_VERSION scipy matplotlib pandas nose pep8 Sphinx
   - if [ ${USE_CYTHON} ]; then conda install --yes -n env_name cython; fi
   - source activate env_name
-  - pip install sphinx-bootstrap-theme future
+  - pip install sphinx-bootstrap-theme future coverage coveralls
   - pip install -e . --no-deps
 script:
   - if [ ${WITH_DOCTEST} ]; then nosetests --with-doctest; else nosetests; fi
@@ -27,3 +27,7 @@ script:
   # linkcheck disabled in Py3 (bug in Sphinx)
   - if [ $PYTHON_VERSION ==  2.7 ]; then make linkcheck; fi
   - popd
+  # we need to run the test suite from setup.py for coveralls to grab the info
+  - coverage run setup.py test
+  - coverage report -m
+  - coveralls
