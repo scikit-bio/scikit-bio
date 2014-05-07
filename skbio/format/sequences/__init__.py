@@ -18,7 +18,6 @@ Functions
     format_fastq_record
 
 """
-#!/usr/bin/env python
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
