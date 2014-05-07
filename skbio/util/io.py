@@ -32,7 +32,6 @@ from contextlib import contextmanager
 
 def _is_string_or_bytes(s):
     """Returns True if input argument is string (unicode or not) or bytes.
-
     """
     return isinstance(s, str) or isinstance(s, bytes)
 
@@ -40,7 +39,6 @@ def _is_string_or_bytes(s):
 def _get_filehandle(filepath_or, *args, **kwargs):
     """Open file if `filepath_or` looks like a string/unicode/bytes, else
     pass through.
-
     """
     if _is_string_or_bytes(filepath_or):
         fh, own_fh = open(filepath_or, *args, **kwargs), True
@@ -51,8 +49,8 @@ def _get_filehandle(filepath_or, *args, **kwargs):
 
 @contextmanager
 def open_filepath_or(filepath_or, *args, **kwargs):
-    """Context manager, like ``open``, but let's file handles and file
-    like objects pass untouched.
+    """Context manager, like ``open``, but lets file handles and file like
+    objects pass untouched.
 
     It is useful when implementing a function that can accept both
     strings and file-like objects (like numpy.loadtxt, etc).
@@ -65,8 +63,9 @@ def open_filepath_or(filepath_or, *args, **kwargs):
 
     Other parameters
     ----------------
-    When `filepath_or` is a string, any extra arguments are passed on to
-    the ``open`` builtin.
+    args, kwargs : tuple, dict
+        When `filepath_or` is a string, any extra arguments are passed
+        on to the ``open`` builtin.
 
     Examples
     --------
