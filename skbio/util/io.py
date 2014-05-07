@@ -1,3 +1,22 @@
+r"""
+I/O utils (:mod:`skbio.util.io`)
+================================
+
+.. currentmodule:: skbio.util.io
+
+This module provides utility functions to deal with files and I/O in
+general.
+
+Functions
+---------
+
+.. autosummary::
+    :toctree: generated/
+
+    open_filepath_or
+
+"""
+
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #

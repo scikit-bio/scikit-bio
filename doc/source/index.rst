@@ -23,9 +23,11 @@ API Reference
    maths.stats.ordination
    maths.subsample
    parse.sequences
+   util.io
    util.misc
-   util.trie
    util.testing
+   util.trie
+
 
 Developer Documentation
 -----------------------
