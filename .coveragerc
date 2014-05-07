@@ -6,6 +6,7 @@ omit =
     */__init__.py
 source = skbio
 branch = True
+include = */skbio/*
 
 [report]
 exclude_lines =
@@ -13,3 +14,7 @@ exclude_lines =
     def __repr__
     raise NotImplementedError
     if __name__ == .__main__.:
+omit =
+    */tests*
+    */__init__.py
+
