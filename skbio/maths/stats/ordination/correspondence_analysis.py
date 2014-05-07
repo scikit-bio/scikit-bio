@@ -45,7 +45,6 @@ class CA(Ordination):
     See Also
     --------
     CCA
-    OrdinationResults
 
     References
     ----------
@@ -138,6 +137,10 @@ class CA(Ordination):
             Object that stores the computed eigenvalues, the
             proportion explained by each of them (per unit),
             transformed coordinates, etc.
+
+        See Also
+        --------
+        OrdinationResults
         """
 
         if scaling not in {1, 2}:

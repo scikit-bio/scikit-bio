@@ -119,6 +119,10 @@ class PCoA(Ordination):
             Object that stores the computed eigenvalues, the
             proportion explained by each of them (per unit) and
             transformed coordinates, etc.
+
+        See Also
+        --------
+        OrdinationResults
         """
         # Scale eigenvalues to have lenght = sqrt(eigenvalue). This
         # works because np.linalg.eigh returns normalized

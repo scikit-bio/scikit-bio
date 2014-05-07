@@ -47,7 +47,6 @@ class RDA(Ordination):
     See Also
     --------
     CCA
-    OrdinationResults
 
     References
     ----------
@@ -186,6 +185,10 @@ class RDA(Ordination):
             proportion explained by each of them (per unit),
             transformed coordinates for species and sites, biplot
             scores, site constraints, etc.
+
+        See Also
+        --------
+        OrdinationResults
 
         References
         ----------

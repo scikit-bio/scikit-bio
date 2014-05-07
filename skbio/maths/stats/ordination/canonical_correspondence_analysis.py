@@ -71,7 +71,6 @@ class CCA(Ordination):
     --------
     CA
     RDA
-    OrdinationResults
 
     References
     ----------
@@ -189,6 +188,9 @@ class CCA(Ordination):
             transformed coordinates for species and sites, biplot
             scores, site constraints, etc.
 
+        See Also
+        --------
+        OrdinationResults
         """
         if scaling not in {1, 2}:
             raise NotImplementedError(
