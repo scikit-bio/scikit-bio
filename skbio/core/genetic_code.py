@@ -65,7 +65,7 @@ class GeneticCode(object):
     _nt = "TCAG"
     _codons = [a + b + c for a in _nt for b in _nt for c in _nt]
 
-    def __init__(self, code_sequence, ID=None, name=None, start_codon_sequence=None):
+    def __init__(self, code_sequence, id=None, name=None, start_codon_sequence=None):
         """Returns new GeneticCode object.
 
         code_sequence : 64-character string containing NCBI representation 
@@ -77,7 +77,7 @@ class GeneticCode(object):
                 % (code_sequence, len(code_sequence))
 
         self.code_sequence = code_sequence
-        self.ID = ID
+        self.id = id
         self.name = name
         self.start_codon_sequence = start_codon_sequence
         start_codons = {}
@@ -383,7 +383,7 @@ NcbiGeneticCodeData = [GeneticCode(*data) for data in [
 ]]
 
 # build dict of GeneticCodes keyed by ID (as int, not str)
-GeneticCodes = dict([(i.ID, i) for i in NcbiGeneticCodeData])
+GeneticCodes = dict([(i.id, i) for i in NcbiGeneticCodeData])
 # add str versions for convenience
 for key, value in GeneticCodes.items():
     GeneticCodes[str(key)] = value

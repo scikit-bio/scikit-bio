@@ -52,7 +52,7 @@ class GeneticCodeTests(TestCase):
         self.assertEqual(sgc.start_codon_sequence, '---M---------------M--------'
                          '-------M----------------------------')
         self.assertEqual(sgc.StartCodons, {'TTG': 'M', 'CTG': 'M', 'ATG': 'M'})
-        self.assertEqual(sgc.ID, 1)
+        self.assertEqual(sgc.id, 1)
         self.assertEqual(sgc.name, 'Standard Nuclear')
         self.assertEqual(sgc['UUU'], 'F')
         self.assertEqual(sgc.isStart('ATG'), True)
@@ -75,7 +75,7 @@ class GeneticCodeTests(TestCase):
                              '-----------M----------------------------')
             self.assertEqual(
                 sgc.StartCodons, {'TTG': 'M', 'CTG': 'M', 'ATG': 'M'})
-            self.assertEqual(sgc.ID, 1)
+            self.assertEqual(sgc.id, 1)
             self.assertEqual(sgc.name, 'Standard Nuclear')
             self.assertEqual(sgc['TTT'], 'F')
             self.assertEqual(sgc.isStart('ATG'), True)
