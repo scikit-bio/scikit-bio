@@ -2491,7 +2491,7 @@ class TreeNode(object):
         for idx, n in enumerate(self.postorder(include_self=True)):
             n.id = idx
 
-    def descending_branchlength(self, tip_subset=None):
+    def descending_branch_length(self, tip_subset=None):
         """Find total descending branchlength from self or subset of self tips
 
         This function replicates cogent's totalDescendingBranchLength method

@@ -606,35 +606,35 @@ class TreeTests(TestCase):
 
         self.assertEqual(t_ids.intersection(obs_ids), set())
 
-    def test_descending_branchlength(self):
-        """Calculate descending branchlength"""
+    def test_descending_branch_length(self):
+        """Calculate descending branch_length"""
         tr = TreeNode.from_newick("(((A:.1,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,(H"
                                   ":.4,I:.5)J:1.3)K;")
-        tdbl = tr.descending_branchlength()
-        sdbl = tr.descending_branchlength(['A', 'E'])
+        tdbl = tr.descending_branch_length()
+        sdbl = tr.descending_branch_length(['A', 'E'])
         nptest.assert_almost_equal(tdbl, 8.9)
         nptest.assert_almost_equal(sdbl, 2.2)
-        self.assertRaises(ValueError, tr.descending_branchlength, ['A', 'DNE'])
-        self.assertRaises(ValueError, tr.descending_branchlength, ['A', 'C'])
+        self.assertRaises(ValueError, tr.descending_branch_length, ['A', 'DNE'])
+        self.assertRaises(ValueError, tr.descending_branch_length, ['A', 'C'])
 
         tr = TreeNode.from_newick("(((A,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,(H:.4"
                                   ",I:.5)J:1.3)K;")
-        tdbl = tr.descending_branchlength()
+        tdbl = tr.descending_branch_length()
         nptest.assert_almost_equal(tdbl, 8.8)
 
         tr = TreeNode.from_newick("(((A,B:1.2)C:.6,(D:.9,E:.6)F)G:2.4,(H:.4,I:"
                                   ".5)J:1.3)K;")
-        tdbl = tr.descending_branchlength()
+        tdbl = tr.descending_branch_length()
         nptest.assert_almost_equal(tdbl, 7.9)
 
         tr = TreeNode.from_newick("(((A,B:1.2)C:.6,(D:.9,E:.6)F)G:2.4,(H:.4,I:"
                                   ".5)J:1.3)K;")
-        tdbl = tr.descending_branchlength(['A', 'D', 'E'])
+        tdbl = tr.descending_branch_length(['A', 'D', 'E'])
         nptest.assert_almost_equal(tdbl, 2.1)
 
         tr = TreeNode.from_newick("(((A,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,(H:."
                                   "4,I:.5)J:1.3)K;")
-        tdbl = tr.descending_branchlength(['I', 'D', 'E'])
+        tdbl = tr.descending_branch_length(['I', 'D', 'E'])
         nptest.assert_almost_equal(tdbl, 6.6)
 
 
