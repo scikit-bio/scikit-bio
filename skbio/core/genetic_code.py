@@ -425,6 +425,16 @@ class GeneticCode(object):
         bool
             ``True`` if codon is a start codon, ``False`` otherwise
 
+        Examples
+        --------
+        >>> from skbio.core.genetic_code import GeneticCode
+        >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSS'
+        ...                   'RRVVVVAAAADDEEGGGG')
+        >>> sgc.is_start('ATG')
+        True
+        >>> sgc.is_start('AAA')
+        False
+
         """
         fixed_codon = codon.upper().replace('U', 'T')
         return fixed_codon in self.start_codons
@@ -441,6 +451,16 @@ class GeneticCode(object):
         -------
         bool
             ``True`` if codon is a stop codon, ``False`` otherwise
+
+        Examples
+        --------
+        >>> from skbio.core.genetic_code import GeneticCode
+        >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSS'
+        ...                   'RRVVVVAAAADDEEGGGG')
+        >>> sgc.is_stop('UAA')
+        True
+        >>> sgc.is_stop('AAA')
+        False
 
         """
         return self[codon] == '*'
