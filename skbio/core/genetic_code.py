@@ -20,7 +20,16 @@ Classes
 
 Examples
 --------
-Coming soon ...
+Creating and using a ``GeneticCode`` object:
+>>> from skbio.core.genetic_code import GeneticCode
+>>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAA'
+...                   'ADDEEGGGG')
+>>> sgc['UUU'] == 'F'
+>>> sgc['TTT'] == 'F'
+>>> sgc['F'] == ['TTT', 'TTC']          #in arbitrary order
+>>> sgc['*'] == ['TAA', 'TAG', 'TGA']   #in arbitrary order
+
+Note that ``GeneticCode`` is immutable once created.
 
 """
 
@@ -47,20 +56,7 @@ def _simple_rc(seq):
 
 
 class GeneticCode(object):
-
-    """Holds codon to amino acid mapping, and vice versa.
-
-    Usage:  gc = GeneticCode(CodeSequence)
-            sgc = GeneticCode(
-            'FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG')
-            sgc['UUU'] == 'F'
-            sgc['TTT'] == 'F'
-            sgc['F'] == ['TTT', 'TTC']          #in arbitrary order
-            sgc['*'] == ['TAA', 'TAG', 'TGA']   #in arbitrary order
-
-    CodeSequence : 64 character string containing NCBI genetic code translation
-
-    GeneticCode is immutable once created.
+    """Class to hold codon to amino acid mapping, and vice versa.
     """
     # class data: need the bases, the list of codons in UUU -> GGG order, and
     # a mapping from positions in the list back to codons. These should be the
