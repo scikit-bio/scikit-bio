@@ -611,12 +611,12 @@ class TreeTests(TestCase):
         tr = TreeNode.from_newick("(((A:.1,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,(H"
                                   ":.4,I:.5)J:1.3)K;")
         tdbl = tr.descending_branchlength()
-        sdbl = tr.descending_branchlength(['A','E'])
+        sdbl = tr.descending_branchlength(['A', 'E'])
         nptest.assert_almost_equal(tdbl, 8.9)
         nptest.assert_almost_equal(sdbl, 4.6)
         self.assertRaises(ValueError, tr.descending_branchlength, ['A', 'DNE'])
         self.assertRaises(ValueError, tr.descending_branchlength, ['A', 'C'])
-        
+
         tr = TreeNode.from_newick("(((A,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,(H:.4"
                                   ",I:.5)J:1.3)K;")
         tdbl = tr.descending_branchlength()

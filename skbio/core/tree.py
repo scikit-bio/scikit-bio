@@ -2494,33 +2494,33 @@ class TreeNode(object):
     def descending_branchlength(self, tip_subset=None):
         """Find total descending branchlength from self or subset of self tips
 
-        This function replicates cogent's totalDescendingBranchLength method 
-        and extends that method to allow the calculation of total descending 
-        branchlength of a subset of the tips if requested. The postorder 
-        guarantees that the function will always be able to add the descending 
-        branchlength if the node is not a tip. 
+        This function replicates cogent's totalDescendingBranchLength method
+        and extends that method to allow the calculation of total descending
+        branchlength of a subset of the tips if requested. The postorder
+        guarantees that the function will always be able to add the descending
+        branchlength if the node is not a tip.
 
-        Nodes with no length will have their length set to 0. The root length 
+        Nodes with no length will have their length set to 0. The root length
         (if it exists) is ignored.
 
         Parameters
         ----------
         tip_subset : list or None
-            If None, the total descending branchlength for all tips in the tree 
-            will be returned. If a list of tips is provided then only the 
-            total descending branchlength associated with those tips will be 
+            If None, the total descending branchlength for all tips in the tree
+            will be returned. If a list of tips is provided then only the
+            total descending branchlength associated with those tips will be
             returned.
 
         Returns
         -------
         float
-            The total descending branchlength for the specified set of tips. 
+            The total descending branchlength for the specified set of tips.
 
         Raises
         ------
         ValueError
-            A ValueError is raised if the list of tips supplied to tip_subset 
-            contains internal nodes or non-tips. 
+            A ValueError is raised if the list of tips supplied to tip_subset
+            contains internal nodes or non-tips.
 
         Examples
         --------
@@ -2535,7 +2535,7 @@ class TreeNode(object):
         """
         tr = self.root().copy()  # set .dbl attribute without altering self
         for node in tr.postorder(include_self=False):
-            if node.length == None:
+            if node.length is None:
                 node.length = 0.0
 
         if tip_subset is not None:
