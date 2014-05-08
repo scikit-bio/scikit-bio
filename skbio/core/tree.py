@@ -2562,6 +2562,7 @@ class TreeNode(object):
         else:
             return sum(n.length for n in tr.postorder(include_self=False))
 
+
 def _dnd_tokenizer(data):
     r"""Tokenizes data into a stream of punctuation, labels and lengths.
 

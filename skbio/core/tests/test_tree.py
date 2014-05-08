@@ -632,6 +632,7 @@ class TreeTests(TestCase):
         tdbl = tr.descending_branchlength(['A', 'D', 'E'])
         nptest.assert_almost_equal(tdbl, 4.5)
 
+
 class DndTokenizerTests(TestCase):
 
     """Tests of the DndTokenizer factory function."""
