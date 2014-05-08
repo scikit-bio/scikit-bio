@@ -668,7 +668,7 @@ class TestOrdinationResults(object):
                     obs = obs_f.getvalue()
                     obs_f.close()
                 elif file_type == 'file name':
-                    with tempfile.NamedTemporaryFile('rw') as temp_file:
+                    with tempfile.NamedTemporaryFile('r+') as temp_file:
                         scores.to_file(temp_file.name)
                         temp_file.flush()
                         temp_file.seek(0)
