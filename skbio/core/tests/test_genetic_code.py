@@ -51,17 +51,17 @@ class GeneticCodeTests(TestCase):
                          'IMTTTTNNKKSSRRVVVVAAAADDEEGGGG')
         self.assertEqual(sgc.start_codon_sequence, '---M---------------M--------'
                          '-------M----------------------------')
-        self.assertEqual(sgc.StartCodons, {'TTG': 'M', 'CTG': 'M', 'ATG': 'M'})
+        self.assertEqual(sgc.start_codons, {'TTG': 'M', 'CTG': 'M', 'ATG': 'M'})
         self.assertEqual(sgc.id, 1)
         self.assertEqual(sgc.name, 'Standard Nuclear')
         self.assertEqual(sgc['UUU'], 'F')
-        self.assertEqual(sgc.isStart('ATG'), True)
-        self.assertEqual(sgc.isStart('AAA'), False)
-        self.assertEqual(sgc.isStop('UAA'), True)
-        self.assertEqual(sgc.isStop('AAA'), False)
-        self.assertEqual(len(sgc.SenseCodons), 61)
-        self.assertTrue('AAA' in sgc.SenseCodons)
-        self.assertFalse('TGA' in sgc.SenseCodons)
+        self.assertEqual(sgc.is_start('ATG'), True)
+        self.assertEqual(sgc.is_start('AAA'), False)
+        self.assertEqual(sgc.is_stop('UAA'), True)
+        self.assertEqual(sgc.is_stop('AAA'), False)
+        self.assertEqual(len(sgc.sense_codons), 61)
+        self.assertTrue('AAA' in sgc.sense_codons)
+        self.assertFalse('TGA' in sgc.sense_codons)
 
     def test_standard_code_lookup(self):
         """GeneticCodes should hold codes keyed by id as string and number"""
@@ -74,19 +74,19 @@ class GeneticCodeTests(TestCase):
             self.assertEqual(sgc.start_codon_sequence, '---M---------------M----'
                              '-----------M----------------------------')
             self.assertEqual(
-                sgc.StartCodons, {'TTG': 'M', 'CTG': 'M', 'ATG': 'M'})
+                sgc.start_codons, {'TTG': 'M', 'CTG': 'M', 'ATG': 'M'})
             self.assertEqual(sgc.id, 1)
             self.assertEqual(sgc.name, 'Standard Nuclear')
             self.assertEqual(sgc['TTT'], 'F')
-            self.assertEqual(sgc.isStart('ATG'), True)
-            self.assertEqual(sgc.isStart('AAA'), False)
-            self.assertEqual(sgc.isStop('TAA'), True)
-            self.assertEqual(sgc.isStop('AAA'), False)
+            self.assertEqual(sgc.is_start('ATG'), True)
+            self.assertEqual(sgc.is_start('AAA'), False)
+            self.assertEqual(sgc.is_stop('TAA'), True)
+            self.assertEqual(sgc.is_stop('AAA'), False)
 
         mtgc = GeneticCodes[2]
         self.assertEqual(mtgc.name, 'Vertebrate Mitochondrial')
-        self.assertEqual(mtgc.isStart('AUU'), True)
-        self.assertEqual(mtgc.isStop('UGA'), False)
+        self.assertEqual(mtgc.is_start('AUU'), True)
+        self.assertEqual(mtgc.is_stop('UGA'), False)
 
         self.assertEqual(sgc_new.changes(mtgc), {'AGA': 'R*', 'AGG': 'R*',
                                                  'ATA': 'IM', 'TGA': '*W'})
@@ -299,7 +299,7 @@ class GeneticCodeTests(TestCase):
         seq = DNA('ATGCTAACATAAA')
         expected = [[9], [4], []]
         for frame, expect in enumerate(expected):
-            got = sgc.getStopIndices(seq, start=frame)
+            got = sgc.get_stop_indices(seq, start=frame)
             self.assertEqual(got, expect)
 
     def test_synonyms(self):

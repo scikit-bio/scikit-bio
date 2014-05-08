@@ -85,7 +85,7 @@ class GeneticCode(object):
             for codon, aa in zip(self._codons, start_codon_sequence):
                 if aa != '-':
                     start_codons[codon] = aa
-        self.StartCodons = start_codons
+        self.start_codons = start_codons
         codon_lookup = dict(zip(self._codons, code_sequence))
         self.Codons = codon_lookup
         # create synonyms for each aa
@@ -102,7 +102,7 @@ class GeneticCode(object):
         stop_codons = self['*']
         for c in stop_codons:
             del sense_codons[c]
-        self.SenseCodons = sense_codons
+        self.sense_codons = sense_codons
         # create anticodons
         ac = {}
         for aa, codons in self.Synonyms.items():
@@ -234,7 +234,7 @@ class GeneticCode(object):
             raise ValueError, "Translation starts after end of RNA"
         return ''.join([self[dna[i:i + 3]] for i in range(start, len(dna) - 2, 3)])
 
-    def getStopIndices(self, dna, start=0):
+    def get_stop_indices(self, dna, start=0):
         """returns indexes for stop codons in the specified frame"""
         stops = self['*']
         stop_pattern = '(%s)' % '|'.join(stops)
@@ -251,12 +251,12 @@ class GeneticCode(object):
         return [self.translate(dna, start) for start in range(3)] + \
                [self.translate(reverse, start) for start in range(3)]
 
-    def isStart(self, codon):
+    def is_start(self, codon):
         """Returns True if codon is a start codon, False otherwise."""
         fixed_codon = codon.upper().replace('U', 'T')
-        return fixed_codon in self.StartCodons
+        return fixed_codon in self.start_codons
 
-    def isStop(self, codon):
+    def is_stop(self, codon):
         """Returns True if codon is a stop codon, False otherwise."""
         return self[codon] == '*'
 
