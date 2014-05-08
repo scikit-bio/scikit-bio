@@ -82,6 +82,61 @@ def _simple_rc(seq):
 class GeneticCode(object):
 
     """Class to hold codon to amino acid mapping, and vice versa.
+
+    Attributes
+    ----------
+    code_sequence
+    id
+    name
+    start_codon_sequence
+    start_codons
+    codons
+    synonyms
+    sense_codons
+    anticodons
+    blocks
+
+    Parameters
+    ----------
+    code_sequence : str
+        64-character string containing NCBI representation.
+    id : str, optional
+        identifier for the object.
+    name : str, optional
+        name for the object.
+    start_codon_sequence : str, optional
+        starting point for the codon sequence.
+
+    Returns
+    -------
+    GeneticCode
+        initialized ``GeneticCode`` object.
+
+    Raises
+    ------
+    GeneticCodeInitError
+        If the length of `code_sequence` is different to `64`.
+
+    Methods
+    -------
+    changes
+    get_stop_indices
+    is_start
+    is_stop
+    sixframes
+    translate
+
+
+    Examples
+    --------
+    >>> from skbio.core.genetic_code import GeneticCode
+    >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSR'
+    ...                   'RVVVVAAAADDEEGGGG')
+
+    .. note:: `*` is used to denote termination as per the NCBI standard. Although
+        the genetic code objecs convert DNA to RNA and vice versa, lists of codons
+        that they produce will be provided in DNA format.
+
     """
     # class data: need the bases, the list of codons in UUU -> GGG order, and
     # a mapping from positions in the list back to codons. These should be the
@@ -92,11 +147,6 @@ class GeneticCode(object):
 
     def __init__(self, code_sequence, id=None, name=None,
                  start_codon_sequence=None):
-        """Returns new GeneticCode object.
-
-        code_sequence : 64-character string containing NCBI representation
-        of the genetic code. Raises GeneticCodeInitError if length != 64.
-        """
         if len(code_sequence) != 64:
             raise GeneticCodeInitError("code_sequence: %s has length %d, but "
                                        "expected 64" % (code_sequence,
