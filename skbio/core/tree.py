@@ -2528,8 +2528,8 @@ class TreeNode(object):
         >>> from skbio.core.tree import TreeNode
         >>> tr = TreeNode.from_newick("(((A:.1,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2."
         ...                           "4,(H:.4,I:.5)J:1.3)K;")
-        >>> tdbl = tr.descending_branchlength()
-        >>> sdbl = tr.descending_branchlength(['A','E'])
+        >>> tdbl = tr.descending_branch_length()
+        >>> sdbl = tr.descending_branch_length(['A','E'])
         >>> print tdbl, sdbl
         8.9 4.6
         """
