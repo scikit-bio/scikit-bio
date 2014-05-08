@@ -613,7 +613,7 @@ class TreeTests(TestCase):
         tdbl = tr.descending_branchlength()
         sdbl = tr.descending_branchlength(['A', 'E'])
         nptest.assert_almost_equal(tdbl, 8.9)
-        nptest.assert_almost_equal(sdbl, 4.6)
+        nptest.assert_almost_equal(sdbl, 2.2)
         self.assertRaises(ValueError, tr.descending_branchlength, ['A', 'DNE'])
         self.assertRaises(ValueError, tr.descending_branchlength, ['A', 'C'])
 
@@ -630,7 +630,12 @@ class TreeTests(TestCase):
         tr = TreeNode.from_newick("(((A,B:1.2)C:.6,(D:.9,E:.6)F)G:2.4,(H:.4,I:"
                                   ".5)J:1.3)K;")
         tdbl = tr.descending_branchlength(['A', 'D', 'E'])
-        nptest.assert_almost_equal(tdbl, 4.5)
+        nptest.assert_almost_equal(tdbl, 2.1)
+
+        tr = TreeNode.from_newick("(((A,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,(H:."
+                                  "4,I:.5)J:1.3)K;")
+        tdbl = tr.descending_branchlength(['I', 'D', 'E'])
+        nptest.assert_almost_equal(tdbl, 6.6)
 
 
 class DndTokenizerTests(TestCase):

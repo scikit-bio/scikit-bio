@@ -2533,34 +2533,25 @@ class TreeNode(object):
         >>> print tdbl, sdbl
         8.9 4.6
         """
-        tr = self.root().copy()  # set .dbl attribute without altering self
-        for node in tr.postorder(include_self=False):
-            if node.length is None:
-                node.length = 0.0
-
         if tip_subset is not None:
-            all_tips = tr.subset()
-            if not all([i in all_tips for i in tip_subset]):
+            all_tips = self.subset()
+            if not set(tip_subset).issubset(all_tips):
                 raise ValueError('tip_subset contains ids that arent tip '
                                  'names.')
 
-            # reset the internal node names to avoid a DuplicateNodeError
-            for node in tr.non_tips():
-                node.name = None
-
-            for node in tr.postorder(include_self=False):
-                if node.is_tip():
-                    if node.name in tip_subset:
-                        node.dbl = node.length
-                    else:
-                        node.dbl = 0.
-                else:
-                    node.dbl = sum(n.dbl for n in node.children) + node.length
-
-            return tr.lowest_common_ancestor(tip_subset).dbl
+            lca = self.lowest_common_ancestor(tip_subset)
+            ancestors = {}
+            for tip in tip_subset:
+                curr = self.find(tip)
+                while curr is not lca:
+                    ancestors[curr.name] = curr.length if curr.length is not \
+                        None else 0.0
+                    curr = curr.parent
+            return sum(ancestors.values())
 
         else:
-            return sum(n.length for n in tr.postorder(include_self=False))
+            return sum(n.length for n in self.postorder(include_self=True) if
+                n.length is not None)
 
 
 def _dnd_tokenizer(data):
