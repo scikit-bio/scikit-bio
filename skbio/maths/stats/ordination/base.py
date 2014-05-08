@@ -12,11 +12,10 @@ from future.builtins import zip
 
 from collections import namedtuple
 
-from os.path import exists
-
 import numpy as np
 
 from skbio.core.exception import FileFormatError
+from skbio.util.io import open_file
 
 
 class OrdinationResults(namedtuple('OrdinationResults',
@@ -168,67 +167,57 @@ class OrdinationResults(namedtuple('OrdinationResults',
         ...                 "Site constraints\t0\t0\n")
         >>> ord_res = OrdinationResults.from_file(or_f)
         """
-        # Currently we support either a file or a filepath.
-        # This will change once we have a centralized function that
-        # takes care of this.
-        # Adapted from skbio.core.distance.DissimilarityMatrix.from_file
-        fd = None
-        if isinstance(ord_res_f, str) and exists(ord_res_f):
-            # Check if it's a valid path, if so read the contents
-            fd = open(ord_res_f, 'U')
-            orf = iter(fd)
-        else:
-            orf = iter(ord_res_f)
 
-        # Starting at line 0, we should find the eigvals
-        eigvals = cls._parse_eigvals(orf)
-        # The next line should be an empty line
-        cls._check_empty_line(orf)
-        # Now we should find the proportion explained section
-        prop_expl = cls._parse_proportion_explained(orf)
+        with open_file(ord_res_f) as orf:
+            # Starting at line 0, we should find the eigvals
+            eigvals = cls._parse_eigvals(orf)
+            # The next line should be an empty line
+            cls._check_empty_line(orf)
+            # Now we should find the proportion explained section
+            prop_expl = cls._parse_proportion_explained(orf)
 
-        if prop_expl is not None:
-            if len(prop_expl) != len(eigvals):
-                raise ValueError('There should be as many proportion explained'
-                                 ' values as eigvals: %d != %d' %
-                                 (len(prop_expl), len(eigvals)))
+            if prop_expl is not None:
+                if len(prop_expl) != len(eigvals):
+                    raise ValueError(
+                        'There should be as many proportion explained'
+                        ' values as eigvals: %d != %d' %
+                        (len(prop_expl), len(eigvals)))
 
-        # The next line should be an empty line
-        cls._check_empty_line(orf)
-        # Next section should be the species section
-        species, species_ids = cls._parse_coords(orf, 'Species')
-        if species is not None:
-            if len(species[0]) != len(eigvals):
-                raise ValueError('There should be as many coordinates per '
-                                 'species as eigvals: %d != %d' %
-                                 (len(species[0]), len(eigvals)))
+            # The next line should be an empty line
+            cls._check_empty_line(orf)
+            # Next section should be the species section
+            species, species_ids = cls._parse_coords(orf, 'Species')
+            if species is not None:
+                if len(species[0]) != len(eigvals):
+                    raise ValueError(
+                        'There should be as many coordinates per'
+                        ' species as eigvals: %d != %d' %
+                        (len(species[0]), len(eigvals)))
 
-        # The next line should be an empty line
-        cls._check_empty_line(orf)
-        # Next section should be the site section
-        site, site_ids = cls._parse_coords(orf, 'Site')
-        if site is not None:
-            if len(site[0]) != len(eigvals):
-                raise ValueError('There should be as many coordinates per '
-                                 'site as eigvals: %d != %d' %
-                                 (len(site[0]), len(eigvals)))
+            # The next line should be an empty line
+            cls._check_empty_line(orf)
+            # Next section should be the site section
+            site, site_ids = cls._parse_coords(orf, 'Site')
+            if site is not None:
+                if len(site[0]) != len(eigvals):
+                    raise ValueError(
+                        'There should be as many coordinates per'
+                        ' site as eigvals: %d != %d' %
+                        (len(site[0]), len(eigvals)))
 
-        # The next line should be an empty line
-        cls._check_empty_line(orf)
-        # Next section should be the biplot section
-        biplot = cls._parse_biplot(orf)
-        # The next line should be an empty line
-        cls._check_empty_line(orf)
-        # Next section should be the site constraints section
-        cons, cons_ids = cls._parse_coords(orf, 'Site constraints')
-        if cons_ids is not None and site_ids is not None:
-            if cons_ids != site_ids:
-                raise ValueError('Site constraints ids and site ids must be '
-                                 'equal: %s != %s' % (cons_ids, site_ids))
-
-        # if the input was a file path close the file
-        if fd is not None:
-            fd.close()
+            # The next line should be an empty line
+            cls._check_empty_line(orf)
+            # Next section should be the biplot section
+            biplot = cls._parse_biplot(orf)
+            # The next line should be an empty line
+            cls._check_empty_line(orf)
+            # Next section should be the site constraints section
+            cons, cons_ids = cls._parse_coords(orf, 'Site constraints')
+            if cons_ids is not None and site_ids is not None:
+                if cons_ids != site_ids:
+                    raise ValueError(
+                        'Site constraints ids and site ids must be'
+                        ' equal: %s != %s' % (cons_ids, site_ids))
 
         return cls(eigvals=eigvals, species=species, site=site, biplot=biplot,
                    site_constraints=cons, proportion_explained=prop_expl,
@@ -285,9 +274,9 @@ class OrdinationResults(namedtuple('OrdinationResults',
             prop_expl = np.asarray(next(lines).strip().split('\t'),
                                    dtype=np.float64)
             if len(prop_expl) != num_prop_expl:
-                raise ValueError('Expected %d proportion explained values, but'
-                                 ' found %d.' % (num_prop_expl,
-                                                 len(prop_expl)))
+                raise ValueError(
+                    'Expected %d proportion explained values, but'
+                    ' found %d.' % (num_prop_expl, len(prop_expl)))
         return prop_expl
 
     @staticmethod
