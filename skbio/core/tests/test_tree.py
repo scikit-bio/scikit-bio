@@ -606,6 +606,21 @@ class TreeTests(TestCase):
 
         self.assertEqual(t_ids.intersection(obs_ids), set())
 
+    def test_descending_branchlength(self):
+        """Calculate descending branchlength"""
+        tr = TreeNode.from_newick("(((A:.1,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,(H:"
+                                  ".4,I:.5)J:1.3)K;")
+        tdbl = tr.descending_branchlength()
+        sdbl = tr.descending_branchlength(['A','E'])
+        self.assertEqual(tbdl, 8.9)
+        self.assertEqual(sbdl, 4.6)
+        self.assertRaises(ValueError, tr.descending_branchlength, ['A', 'DNE'])
+        self.assertRaises(ValueError, tr.descending_branchlength, ['A', 'C'])
+        
+        tr = TreeNode.from_newick("(((A:.1,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,(H:"
+                                  ".4,I:.5)J:1.3)K;")
+        self.assertRaises(NoLengthError, tr.descending_branchlength)
+
 
 class DndTokenizerTests(TestCase):
 

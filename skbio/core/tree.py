@@ -2528,20 +2528,21 @@ class TreeNode(object):
         --------
 
         >>> from skbio.core.tree import TreeNode
-        >>> tr = TreeNode.from_newick("(((A:.1,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,(H:.4,I:.5)J:1.3)K;")
+        >>> tr = TreeNode.from_newick("(((A:.1,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4"
+        ...                           ",(H:.4,I:.5)J:1.3)K;")
         >>> tdbl = tr.descending_branchlength()
         >>> sdbl = tr.descending_branchlength(['A','E'])
         >>> print tdbl, sdbl
         8.9 4.6
         """
-        tr = self.root().copy() # set .dbl attribute without altering self
+        tr = self.root().copy()  # set .dbl attribute without altering self
 
         if tip_subset is not None:
             all_tips = tr.subset()
             if not all([i in all_tips for i in tip_subset]):
-                raise ValueError('tip_subset contains ids that arent tip ' +\
-                    'names.')
-            
+                raise ValueError('tip_subset contains ids that arent tip '
+                                 'names.')
+
             # reset the internal node names to avoid a DuplicateNodeError
             for node in tr.non_tips():
                 node.name = None
@@ -2559,9 +2560,6 @@ class TreeNode(object):
 
         else:
             return sum(node.length for node in tr.postorder(include_self=False))
-
-
-
 
 def _dnd_tokenizer(data):
     r"""Tokenizes data into a stream of punctuation, labels and lengths.
