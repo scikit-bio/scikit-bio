@@ -2551,7 +2551,7 @@ class TreeNode(object):
 
         else:
             return sum(n.length for n in self.postorder(include_self=True) if
-                n.length is not None)
+                       n.length is not None)
 
 
 def _dnd_tokenizer(data):
