@@ -327,7 +327,7 @@ class GeneticCodeTests(TestCase):
             'Y': ['TAT', 'TAC'],
             '*': ['TAA', 'TAG', 'TGA'],
         }
-        obs_synonyms = GeneticCode(self.sgc).Synonyms
+        obs_synonyms = GeneticCode(self.sgc).synonyms
         # note that the lists will be arbitrary-order
         for i in expected_synonyms:
             self.assertItemsEqual(obs_synonyms[i], expected_synonyms[i])

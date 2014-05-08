@@ -96,7 +96,7 @@ class GeneticCode(object):
                 aa_lookup[aa] = [codon]
             else:
                 aa_lookup[aa].append(codon)
-        self.Synonyms = aa_lookup
+        self.synonyms = aa_lookup
         sense_codons = codon_lookup.copy()
         # create sense codons
         stop_codons = self['*']
@@ -105,7 +105,7 @@ class GeneticCode(object):
         self.sense_codons = sense_codons
         # create anticodons
         ac = {}
-        for aa, codons in self.Synonyms.items():
+        for aa, codons in self.synonyms.items():
             ac[aa] = map(_simple_rc, codons)
         self.Anticodons = ac
 
@@ -209,7 +209,7 @@ class GeneticCode(object):
         """
         item = str(item)
         if len(item) == 1:  # amino acid
-            return self.Synonyms.get(item, [])
+            return self.synonyms.get(item, [])
         elif len(item) == 3:  # codon
             key = item.upper()
             key = key.replace('U', 'T')
