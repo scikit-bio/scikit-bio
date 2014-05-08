@@ -365,6 +365,16 @@ class GeneticCode(object):
         list
             indices of the stop codons.
 
+        Examples
+        --------
+        >>> from skbio.core.genetic_code import GeneticCode
+        >>> from skbio.core.sequence import DNA
+        >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSS'
+        ...                   'RRVVVVAAAADDEEGGGG')
+        >>> seq = DNA('ATGCTAACATAAA')
+        >>> sgc.get_stop_indices(seq, 0)
+        [9]
+
         """
         stops = self['*']
         stop_pattern = '(%s)' % '|'.join(stops)
