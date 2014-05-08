@@ -255,7 +255,7 @@ class DissimilarityMatrix(object):
         # has finished). See:
         # http://mail.scipy.org/pipermail/numpy-tickets/2012-August/006749.html
 
-        with open_file(dm_f) as dm_f:
+        with open_file(dm_f, 'U') as dm_f:
 
             # We use iter() as we want to take a single pass over the
             # iterable and maintain our current position after finding

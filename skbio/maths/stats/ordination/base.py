@@ -168,7 +168,7 @@ class OrdinationResults(namedtuple('OrdinationResults',
         >>> ord_res = OrdinationResults.from_file(or_f)
         """
 
-        with open_file(ord_res_f) as fd:
+        with open_file(ord_res_f, 'U') as fd:
             orf = iter(fd)
 
             # Starting at line 0, we should find the eigvals
