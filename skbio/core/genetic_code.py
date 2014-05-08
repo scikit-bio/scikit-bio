@@ -481,6 +481,15 @@ class GeneticCode(object):
             object calling this method, Y is the string representation of the
             amino acid in `other`. Always returns a 2-character string.
 
+        Examples
+        --------
+        >>> from skbio.core.genetic_code import GeneticCode
+        >>> sgc = GeneticCode('FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIMMTTTTNNKKSS*'
+        ...                   '*VVVVAAAADDEEGGGG')
+        >>> sgc.changes('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTT'
+        ...              'TNNKKSSRRVVVVAAAADDEEGGGG')
+        {'AGA': '*R', 'AGG': '*R', 'ATA': 'MI', 'TGA': 'W*'})
+
         """
         changes = {}
         try:
