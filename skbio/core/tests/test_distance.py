@@ -180,12 +180,19 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
     def test_to_file(self):
         """Should serialize a DissimilarityMatrix to file."""
         for dm_f_line, dm in zip(self.dm_f_lines, self.dms):
-            obs_f = StringIO()
-            dm.to_file(obs_f)
-            obs = obs_f.getvalue()
-            obs_f.close()
-
-            self.assertEqual(obs, dm_f_line)
+            for file_type in ('file like', 'file name'):
+                if file_type == 'file like':
+                    obs_f = StringIO()
+                    dm.to_file(obs_f)
+                    obs = obs_f.getvalue()
+                    obs_f.close()
+                elif file_type == 'file name':
+                    with tempfile.NamedTemporaryFile('rw') as temp_file:
+                        dm.to_file(temp_file.name)
+                        temp_file.flush()
+                        temp_file.seek(0)
+                        obs = temp_file.read()
+                self.assertEqual(obs, dm_f_line)
 
     def test_init_from_dm(self):
         """Constructs a dm from a dm."""
