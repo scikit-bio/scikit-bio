@@ -265,7 +265,19 @@ class GeneticCode(object):
                [self.translate(reverse, start) for start in range(3)]
 
     def is_start(self, codon):
-        """Returns True if codon is a start codon, False otherwise."""
+        """Checks if codon is a start codon
+
+        Parameters
+        ----------
+        codon : str
+            codon string
+
+        Returns
+        -------
+        bool
+            ``True`` if codon is a start codon, ``False`` otherwise
+
+        """
         fixed_codon = codon.upper().replace('U', 'T')
         return fixed_codon in self.start_codons
 
