@@ -2505,7 +2505,7 @@ class TreeNode(object):
 
         Parameters
         ----------
-        tip_subset : list or None
+        tip_subset : Iterable, or None
             If None, the total descending branchlength for all tips in the tree
             will be returned. If a list of tips is provided then only the
             total descending branchlength associated with those tips will be
