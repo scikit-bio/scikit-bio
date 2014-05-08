@@ -230,7 +230,7 @@ class GeneticCodeTests(TestCase):
             'E': ['TTC', 'CTC'],
             'G': ['ACC', 'GCC', 'TCC', 'CCC'],
         }
-        self.assertEqual(sgc.Anticodons, exp_anticodons)
+        self.assertEqual(sgc.anticodons, exp_anticodons)
 
     def test_translate(self):
         """GeneticCode translate should return correct amino acid string"""

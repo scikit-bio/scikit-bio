@@ -87,7 +87,7 @@ class GeneticCode(object):
                     start_codons[codon] = aa
         self.start_codons = start_codons
         codon_lookup = dict(zip(self._codons, code_sequence))
-        self.Codons = codon_lookup
+        self.codons = codon_lookup
         # create synonyms for each aa
         aa_lookup = {}
         for codon in self._codons:
@@ -107,7 +107,7 @@ class GeneticCode(object):
         ac = {}
         for aa, codons in self.synonyms.items():
             ac[aa] = map(_simple_rc, codons)
-        self.Anticodons = ac
+        self.anticodons = ac
 
     def _analyze_quartet(self, codons, aa):
         """Analyzes a quartet of codons and amino acids: returns list of lists.
@@ -213,7 +213,7 @@ class GeneticCode(object):
         elif len(item) == 3:  # codon
             key = item.upper()
             key = key.replace('U', 'T')
-            return self.Codons.get(key, 'X')
+            return self.codons.get(key, 'X')
         else:
             raise InvalidCodonError, "Codon or aa %s has wrong length" % item
 
