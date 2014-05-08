@@ -2495,10 +2495,13 @@ class TreeNode(object):
         """Find total descending branchlength from self or subset of self tips
 
         This function replicates cogent's totalDescendingBranchLength method 
-        and extends that method to allow the calculation of the total descending 
+        and extends that method to allow the calculation of total descending 
         branchlength of a subset of the tips if requested. The postorder 
         guarantees that the function will always be able to add the descending 
         branchlength if the node is not a tip. 
+
+        Nodes with no length will have their length set to 0. The root length 
+        (if it exists) is ignored.
 
         Parameters
         ----------
@@ -2515,11 +2518,6 @@ class TreeNode(object):
 
         Raises
         ------
-        NoLengthError
-            A NoLengthError is raised if one or more nodes (excluding the root)
-            does not have length information associated with it and is included
-            in the list of tips to sum over. 
-
         ValueError
             A ValueError is raised if the list of tips supplied to tip_subset 
             contains internal nodes or non-tips. 
@@ -2528,14 +2526,17 @@ class TreeNode(object):
         --------
 
         >>> from skbio.core.tree import TreeNode
-        >>> tr = TreeNode.from_newick("(((A:.1,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4"
-        ...                           ",(H:.4,I:.5)J:1.3)K;")
+        >>> tr = TreeNode.from_newick("(((A:.1,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2."
+                                      "4,(H:.4,I:.5)J:1.3)K;")
         >>> tdbl = tr.descending_branchlength()
         >>> sdbl = tr.descending_branchlength(['A','E'])
         >>> print tdbl, sdbl
         8.9 4.6
         """
         tr = self.root().copy()  # set .dbl attribute without altering self
+        for node in tr.postorder(include_self=False):
+            if node.length == None:
+                node.length = 0.0
 
         if tip_subset is not None:
             all_tips = tr.subset()
@@ -2559,7 +2560,7 @@ class TreeNode(object):
             return tr.lowest_common_ancestor(tip_subset).dbl
 
         else:
-            return sum(node.length for node in tr.postorder(include_self=False))
+            return sum(n.length for n in tr.postorder(include_self=False))
 
 def _dnd_tokenizer(data):
     r"""Tokenizes data into a stream of punctuation, labels and lengths.
