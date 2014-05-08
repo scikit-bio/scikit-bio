@@ -367,7 +367,19 @@ class GeneticCode(object):
         return found
 
     def sixframes(self, dna):
-        """Returns six-frame translation as dict containing {frame:translation}
+        """Returns six-frame translation as a dictionary object
+
+        Parameters
+        ----------
+        dna : str
+            a string of nucleotides.
+
+        Returns
+        -------
+        dict
+            dictionary of where the keys are the frames and the values are the
+            translations i. e. ``{frame:translation}``.
+
         """
         reverse = dna.rc()
         return [self.translate(dna, start) for start in range(3)] + \
