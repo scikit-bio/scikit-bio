@@ -282,7 +282,19 @@ class GeneticCode(object):
         return fixed_codon in self.start_codons
 
     def is_stop(self, codon):
-        """Returns True if codon is a stop codon, False otherwise."""
+        """Checks if codon is a stop codon
+
+        Parameters
+        ----------
+        codon : str
+            codon string
+
+        Returns
+        -------
+        bool
+            ``True`` if codon is a stop codon, ``False`` otherwise
+
+        """
         return self[codon] == '*'
 
     def changes(self, other):
