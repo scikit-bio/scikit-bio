@@ -56,6 +56,7 @@ def _simple_rc(seq):
 
 
 class GeneticCode(object):
+
     """Class to hold codon to amino acid mapping, and vice versa.
     """
     # class data: need the bases, the list of codons in UUU -> GGG order, and
@@ -65,7 +66,8 @@ class GeneticCode(object):
     _nt = "TCAG"
     _codons = [a + b + c for a in _nt for b in _nt for c in _nt]
 
-    def __init__(self, code_sequence, id=None, name=None, start_codon_sequence=None):
+    def __init__(self, code_sequence, id=None, name=None,
+                 start_codon_sequence=None):
         """Returns new GeneticCode object.
 
         code_sequence : 64-character string containing NCBI representation 
@@ -171,7 +173,8 @@ class GeneticCode(object):
             blocks = []
             curr_codons = []
             curr_aa = []
-            for index, codon, aa in zip(range(64), self._codons, self.code_sequence):
+            for index, codon, aa in zip(range(64), self._codons,
+                                        self.code_sequence):
                 # we're in a new block if it's a new quartet or a different aa
                 new_quartet = not index % 4
                 if new_quartet and curr_codons:
@@ -186,7 +189,7 @@ class GeneticCode(object):
             self._blocks = blocks
             return self._blocks
 
-    Blocks = property(_get_blocks)
+    blocks = property(_get_blocks)
 
     def __str__(self):
         """Returns code_sequence that constructs the GeneticCode."""
@@ -232,7 +235,8 @@ class GeneticCode(object):
             return ''
         if start + 1 > len(dna):
             raise ValueError, "Translation starts after end of RNA"
-        return ''.join([self[dna[i:i + 3]] for i in range(start, len(dna) - 2, 3)])
+        return ''.join([self[dna[i:i + 3]] for i in
+                        range(start, len(dna) - 2, 3)])
 
     def get_stop_indices(self, dna, start=0):
         """returns indexes for stop codons in the specified frame"""
@@ -272,7 +276,8 @@ class GeneticCode(object):
             other_code = other.code_sequence
         except AttributeError:  # try using other directly as sequence
             other_code = other
-        for codon, old, new in zip(self._codons, self.code_sequence, other_code):
+        for codon, old, new in zip(self._codons, self.code_sequence,
+                                   other_code):
             if old != new:
                 changes[codon] = old + new
         return changes
@@ -300,7 +305,8 @@ NcbiGeneticCodeData = [GeneticCode(*data) for data in [
     [
         'FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG',
         4,
-        'Mold, Protozoan, and Coelenterate Mitochondrial, and Mycoplasma/Spiroplasma Nuclear',
+        'Mold, Protozoan, and Coelenterate Mitochondrial, and Mycoplasma/'
+        'Spiroplasma Nuclear',
         '--MM---------------M------------MMMM---------------M------------',
     ],
     [
