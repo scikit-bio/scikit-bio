@@ -2491,6 +2491,77 @@ class TreeNode(object):
         for idx, n in enumerate(self.postorder(include_self=True)):
             n.id = idx
 
+    def descending_branchlength(self, tip_subset=None):
+        """Find total descending branchlength from self or subset of self tips
+
+        This function replicates cogent's totalDescendingBranchLength method 
+        and extends that method to allow the calculation of the total descending 
+        branchlength of a subset of the tips if requested. The postorder 
+        guarantees that the function will always be able to add the descending 
+        branchlength if the node is not a tip. 
+
+        Parameters
+        ----------
+        tip_subset : list or None
+            If None, the total descending branchlength for all tips in the tree 
+            will be returned. If a list of tips is provided then only the 
+            total descending branchlength associated with those tips will be 
+            returned.
+
+        Returns
+        -------
+        float
+            The total descending branchlength for the specified set of tips. 
+
+        Raises
+        ------
+        NoLengthError
+            A NoLengthError is raised if one or more nodes (excluding the root)
+            does not have length information associated with it and is included
+            in the list of tips to sum over. 
+
+        ValueError
+            A ValueError is raised if the list of tips supplied to tip_subset 
+            contains internal nodes or non-tips. 
+
+        Examples
+        --------
+
+        >>> from skbio.core.tree import TreeNode
+        >>> tr = TreeNode.from_newick("(((A:.1,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,(H:.4,I:.5)J:1.3)K;")
+        >>> tdbl = tr.descending_branchlength()
+        >>> sdbl = tr.descending_branchlength(['A','E'])
+        >>> print tdbl, sdbl
+        8.9 4.6
+        """
+        tr = self.root().copy() # set .dbl attribute without altering self
+
+        if tip_subset is not None:
+            all_tips = tr.subset()
+            if not all([i in all_tips for i in tip_subset]):
+                raise ValueError('tip_subset contains ids that arent tip ' +\
+                    'names.')
+            
+            # reset the internal node names to avoid a DuplicateNodeError
+            for node in tr.non_tips():
+                node.name = None
+
+            for node in tr.postorder(include_self=False):
+                if node.is_tip():
+                    if node.name in tip_subset:
+                        node.dbl = node.length
+                    else:
+                        node.dbl = 0.
+                else:
+                    node.dbl = sum(n.dbl for n in node.children) + node.length
+
+            return tr.lowest_common_ancestor(tip_subset).dbl
+
+        else:
+            return sum(node.length for node in tr.postorder(include_self=False))
+
+
+
 
 def _dnd_tokenizer(data):
     r"""Tokenizes data into a stream of punctuation, labels and lengths.
