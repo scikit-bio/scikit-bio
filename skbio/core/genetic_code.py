@@ -65,7 +65,7 @@ class GeneticCode(object):
     _nt = "TCAG"
     _codons = [a + b + c for a in _nt for b in _nt for c in _nt]
 
-    def __init__(self, code_sequence, ID=None, Name=None, start_codon_sequence=None):
+    def __init__(self, code_sequence, ID=None, name=None, start_codon_sequence=None):
         """Returns new GeneticCode object.
 
         code_sequence : 64-character string containing NCBI representation 
@@ -78,7 +78,7 @@ class GeneticCode(object):
 
         self.code_sequence = code_sequence
         self.ID = ID
-        self.Name = Name
+        self.name = name
         self.start_codon_sequence = start_codon_sequence
         start_codons = {}
         if start_codon_sequence:
