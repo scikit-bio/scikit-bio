@@ -23,8 +23,8 @@ def fasta_from_sequences(seqs, make_seqlabel=None, line_wrap=None):
     seqs : list
         seqs can be a list of sequence objects or strings.
     make_seqlabel : function, optional
-        callback function that takes the seq object and returns a label ``str``
-        . If ``None`` is passed, the following attributes will try to be
+        callback function that takes the seq object and returns a label
+        ``str``. If ``None`` is passed, the following attributes will try to be
         retrieved in this order and the first to exist will be used:
         ``identifier``, ``Label`` or ``Name``. In any other case an integer
         with the position of the sequence object will be used.
@@ -75,10 +75,10 @@ def fasta_from_sequences(seqs, make_seqlabel=None, line_wrap=None):
             numlines, remainder = divmod(len(seq_str), line_wrap)
             if remainder:
                 numlines += 1
-            body = ["%s" % seq_str[j * line_wrap:(j + 1) * line_wrap]
+            body = [seq_str[j * line_wrap:(j + 1) * line_wrap]
                     for j in range(numlines)]
         else:
-            body = ["%s" % seq_str]
+            body = [seq_str]
 
         fasta_list.append('>' + label)
         fasta_list += body
@@ -95,8 +95,8 @@ def fasta_from_alignment(aln, make_seqlabel=None, line_wrap=None, sort=True):
         alignment or dictionary where the keys are the sequence identifiers and
         the values are the sequences themselves.
     make_seqlabel : function, optional
-        callback function that takes the seq object and returns a label ``str``
-        . If ``None`` is passed, the following attributes will try to be
+        callback function that takes the seq object and returns a label
+        ``str``. If ``None`` is passed, the following attributes will try to be
         retrieved in this order and the first to exist will be used:
         ``identifier``, ``Label`` or ``Name``. In any other case an integer
         with the position of the sequence object will be used.
