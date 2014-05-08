@@ -70,13 +70,13 @@ class GeneticCode(object):
                  start_codon_sequence=None):
         """Returns new GeneticCode object.
 
-        code_sequence : 64-character string containing NCBI representation 
+        code_sequence : 64-character string containing NCBI representation
         of the genetic code. Raises GeneticCodeInitError if length != 64.
         """
-        if (len(code_sequence) != 64):
-            raise GeneticCodeInitError,\
-                "code_sequence: %s has length %d, but expected 64"\
-                % (code_sequence, len(code_sequence))
+        if len(code_sequence) != 64:
+            raise GeneticCodeInitError("code_sequence: %s has length %d, but "
+                                       "expected 64" % (code_sequence,
+                                       len(code_sequence)))
 
         self.code_sequence = code_sequence
         self.id = id
@@ -127,7 +127,7 @@ class GeneticCode(object):
 
         Note: codon blocks like Ile in the standard code (AUU, AUC, AUA) will
         be split when they cross the R/Y boundary, so [[AUU, AUC], [AUA]]. This
-        would also apply to a block like AUC AUA AUG -> [[AUC],[AUA,AUG]], 
+        would also apply to a block like AUC AUA AUG -> [[AUC],[AUA,AUG]],
         although this latter pattern is not observed in the standard code.
         """
         if aa[0] == aa[1]:
@@ -163,7 +163,7 @@ class GeneticCode(object):
         Returns a list of the quartets, doublets, and singlets in the order
         UUU -> GGG.
 
-        Note that a doublet cannot span the purine/pyrimidine boundary, and 
+        Note that a doublet cannot span the purine/pyrimidine boundary, and
         a quartet cannot span the boundary between two codon blocks whose first
         two bases differ.
         """
@@ -218,7 +218,7 @@ class GeneticCode(object):
             key = key.replace('U', 'T')
             return self.codons.get(key, 'X')
         else:
-            raise InvalidCodonError, "Codon or aa %s has wrong length" % item
+            raise InvalidCodonError("Codon or aa %s has wrong length" % item)
 
     def translate(self, dna, start=0):
         """ Translates DNA to protein with current GeneticCode.
@@ -234,7 +234,7 @@ class GeneticCode(object):
         if not dna:
             return ''
         if start + 1 > len(dna):
-            raise ValueError, "Translation starts after end of RNA"
+            raise ValueError("Translation starts after end of RNA")
         return ''.join([self[dna[i:i + 3]] for i in
                         range(start, len(dna) - 2, 3)])
 
