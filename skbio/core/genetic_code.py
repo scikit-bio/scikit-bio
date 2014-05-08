@@ -1,10 +1,36 @@
 #!/usr/bin/env python
-"""Translates RNA or DNA string to amino acid sequence.
+r"""
+Genetic Code (:mod:`skbio.core.genetic_code`)
+=============================================
 
-NOTE: * is used to denote termination (as per NCBI standard).
-NOTE: Although the genetic code objects convert DNA to RNA and vice
-versa, lists of codons that they produce will be provided in DNA format.
+.. currentmodule:: skbio.core.genetic_code
+Translates RNA or DNA string to amino acid sequences.
+
+.. note:: `*` is used to denote termination as per the NCBI standard. Although
+    the genetic code objecs convert DNA to RNA and vice versa, lists of codons
+    that they produce will be provided in DNA format.
+
+Classes
+-------
+
+.. autosummary::
+   :toctree: generated/
+
+   GeneticCode
+
+Examples
+--------
+Coming soon ...
+
 """
+
+# ----------------------------------------------------------------------------
+# Copyright (c) 2013--, scikit-bio development team.
+#
+# Distributed under the terms of the Modified BSD License.
+#
+# The full license is in the file COPYING.txt, distributed with this software.
+# ----------------------------------------------------------------------------
 import re
 
 from string import maketrans
