@@ -65,18 +65,18 @@ class GeneticCode(object):
     _nt = "TCAG"
     _codons = [a + b + c for a in _nt for b in _nt for c in _nt]
 
-    def __init__(self, CodeSequence, ID=None, Name=None, StartCodonSequence=None):
+    def __init__(self, code_sequence, ID=None, Name=None, StartCodonSequence=None):
         """Returns new GeneticCode object.
 
-        CodeSequence : 64-character string containing NCBI representation 
+        code_sequence : 64-character string containing NCBI representation 
         of the genetic code. Raises GeneticCodeInitError if length != 64.
         """
-        if (len(CodeSequence) != 64):
+        if (len(code_sequence) != 64):
             raise GeneticCodeInitError,\
-                "CodeSequence: %s has length %d, but expected 64"\
-                % (CodeSequence, len(CodeSequence))
+                "code_sequence: %s has length %d, but expected 64"\
+                % (code_sequence, len(code_sequence))
 
-        self.CodeSequence = CodeSequence
+        self.code_sequence = code_sequence
         self.ID = ID
         self.Name = Name
         self.StartCodonSequence = StartCodonSequence
@@ -86,7 +86,7 @@ class GeneticCode(object):
                 if aa != '-':
                     start_codons[codon] = aa
         self.StartCodons = start_codons
-        codon_lookup = dict(zip(self._codons, CodeSequence))
+        codon_lookup = dict(zip(self._codons, code_sequence))
         self.Codons = codon_lookup
         # create synonyms for each aa
         aa_lookup = {}
@@ -171,7 +171,7 @@ class GeneticCode(object):
             blocks = []
             curr_codons = []
             curr_aa = []
-            for index, codon, aa in zip(range(64), self._codons, self.CodeSequence):
+            for index, codon, aa in zip(range(64), self._codons, self.code_sequence):
                 # we're in a new block if it's a new quartet or a different aa
                 new_quartet = not index % 4
                 if new_quartet and curr_codons:
@@ -189,8 +189,8 @@ class GeneticCode(object):
     Blocks = property(_get_blocks)
 
     def __str__(self):
-        """Returns CodeSequence that constructs the GeneticCode."""
-        return self.CodeSequence
+        """Returns code_sequence that constructs the GeneticCode."""
+        return self.code_sequence
 
     def __repr__(self):
         """Returns reconstructable representation of the GeneticCode."""
@@ -198,7 +198,7 @@ class GeneticCode(object):
 
     def __cmp__(self, other):
         """ Allows two GeneticCode objects to be compared to each other.
-        Two GeneticCode objects are equal if they have equal CodeSequences.
+        Two GeneticCode objects are equal if they have equal code_sequences.
         """
         return cmp(str(self), str(other))
 
@@ -269,10 +269,10 @@ class GeneticCode(object):
         """
         changes = {}
         try:
-            other_code = other.CodeSequence
+            other_code = other.code_sequence
         except AttributeError:  # try using other directly as sequence
             other_code = other
-        for codon, old, new in zip(self._codons, self.CodeSequence, other_code):
+        for codon, old, new in zip(self._codons, self.code_sequence, other_code):
             if old != new:
                 changes[codon] = old + new
         return changes
