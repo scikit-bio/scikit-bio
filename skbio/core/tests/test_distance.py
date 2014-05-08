@@ -10,9 +10,9 @@
 
 from __future__ import division
 from future.builtins import zip
-
 from future.utils.six import StringIO
-from tempfile import TemporaryFile
+
+import tempfile
 from unittest import TestCase, main
 
 import numpy as np
@@ -138,8 +138,9 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
 
     def test_from_file_real_file(self):
         """Should correctly parse a real on-disk file."""
-        with TemporaryFile(mode='r+', prefix='skbio.core.tests.test_distance',
-                           suffix='.txt') as fh:
+        with tempfile.TemporaryFile(mode='r+',
+                                    prefix='skbio.core.tests.test_distance',
+                                    suffix='.txt') as fh:
             fh.write('\n'.join(DM_3x3_WHITESPACE_F))
             fh.seek(0)
 
