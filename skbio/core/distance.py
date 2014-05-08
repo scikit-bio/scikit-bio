@@ -616,23 +616,25 @@ class DissimilarityMatrix(object):
 
         Parameters
         ----------
-        out_f : file-like object
-            File-like object to write serialized data to. Must have a ``write``
-            method. It is the caller's responsibility to close `out_f` when
-            done (if necessary).
+        out_f : file-like object or filename
+            File-like object to write serialized data to, or name of
+            file. If it's a file-like object, it must have a ``write``
+            method, and it won't be closed. Else, it is opened and
+            closed after writing.
         delimiter : str, optional
             Delimiter used to separate elements in output format.
 
         """
-        formatted_ids = self._format_ids(delimiter)
-        out_f.write(formatted_ids)
-        out_f.write('\n')
-
-        for id_, vals in zip(self.ids, self.data):
-            out_f.write(id_)
-            out_f.write(delimiter)
-            out_f.write(delimiter.join(np.asarray(vals, dtype=np.str)))
+        with open_file(out_f, 'w') as out_f:
+            formatted_ids = self._format_ids(delimiter)
+            out_f.write(formatted_ids)
             out_f.write('\n')
+
+            for id_, vals in zip(self.ids, self.data):
+                out_f.write(id_)
+                out_f.write(delimiter)
+                out_f.write(delimiter.join(np.asarray(vals, dtype=np.str)))
+                out_f.write('\n')
 
     @staticmethod
     def _parse_ids(dm_f, delimiter):

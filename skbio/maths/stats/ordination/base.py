@@ -354,68 +354,70 @@ class OrdinationResults(namedtuple('OrdinationResults',
 
         Parameters
         ----------
-        out_f : file-like object
-            File-like object to write serialized data to. Must have a ``write``
-            method. It is the caller's responsibility to close `out_f` when
-            done (if necessary).
-
+        out_f : file-like object or filename
+            File-like object to write serialized data to, or name of
+            file. If it's a file-like object, it must have a ``write``
+            method, and it won't be closed. Else, it is opened and
+            closed after writing.
         See Also
         --------
         from_file
+
         """
+        with open_file(out_f, 'w') as out_f:
+            # Write eigvals
+            out_f.write("Eigvals\t%d\n" % self.eigvals.shape)
+            out_f.write("%s\n\n" % '\t'.join(np.asarray(self.eigvals,
+                                                        dtype=np.str)))
 
-        # Write eigvals
-        out_f.write("Eigvals\t%d\n" % self.eigvals.shape)
-        out_f.write("%s\n\n" % '\t'.join(np.asarray(self.eigvals,
-                    dtype=np.str)))
+            # Write proportion explained
+            if self.proportion_explained is None:
+                out_f.write("Proportion explained\t0\n\n")
+            else:
+                out_f.write("Proportion explained\t%d\n" %
+                            self.proportion_explained.shape)
+                out_f.write("%s\n\n" % '\t'.join(
+                    np.asarray(self.proportion_explained, dtype=np.str)))
 
-        # Write proportion explained
-        if self.proportion_explained is None:
-            out_f.write("Proportion explained\t0\n\n")
-        else:
-            out_f.write("Proportion explained\t%d\n" %
-                        self.proportion_explained.shape)
-            out_f.write("%s\n\n" % '\t'.join(np.asarray(
-                        self.proportion_explained, dtype=np.str)))
+            # Write species
+            if self.species is None:
+                out_f.write("Species\t0\t0\n\n")
+            else:
+                out_f.write("Species\t%d\t%d\n" % self.species.shape)
+                for id_, vals in zip(self.species_ids, self.species):
+                    out_f.write("%s\t%s\n" % (id_, '\t'.join(np.asarray(vals,
+                                dtype=np.str))))
+                out_f.write("\n")
 
-        # Write species
-        if self.species is None:
-            out_f.write("Species\t0\t0\n\n")
-        else:
-            out_f.write("Species\t%d\t%d\n" % self.species.shape)
-            for id_, vals in zip(self.species_ids, self.species):
-                out_f.write("%s\t%s\n" % (id_, '\t'.join(np.asarray(vals,
-                            dtype=np.str))))
-            out_f.write("\n")
+            # Write site
+            if self.site is None:
+                out_f.write("Site\t0\t0\n\n")
+            else:
+                out_f.write("Site\t%d\t%d\n" % self.site.shape)
+                for id_, vals in zip(self.site_ids, self.site):
+                    out_f.write("%s\t%s\n" % (id_, '\t'.join(
+                        np.asarray(vals, dtype=np.str))))
+                out_f.write("\n")
 
-        # Write site
-        if self.site is None:
-            out_f.write("Site\t0\t0\n\n")
-        else:
-            out_f.write("Site\t%d\t%d\n" % self.site.shape)
-            for id_, vals in zip(self.site_ids, self.site):
-                out_f.write("%s\t%s\n" % (id_, '\t'.join(np.asarray(vals,
-                            dtype=np.str))))
-            out_f.write("\n")
+            # Write biplot
+            if self.biplot is None:
+                out_f.write("Biplot\t0\t0\n\n")
+            else:
+                out_f.write("Biplot\t%d\t%d\n" % self.biplot.shape)
+                for vals in self.biplot:
+                    out_f.write("%s\n" % '\t'.join(
+                        np.asarray(vals, dtype=np.str)))
+                out_f.write("\n")
 
-        # Write biplot
-        if self.biplot is None:
-            out_f.write("Biplot\t0\t0\n\n")
-        else:
-            out_f.write("Biplot\t%d\t%d\n" % self.biplot.shape)
-            for vals in self.biplot:
-                out_f.write("%s\n" % '\t'.join(np.asarray(vals, dtype=np.str)))
-            out_f.write("\n")
-
-        # Write site-constraints
-        if self.site_constraints is None:
-            out_f.write("Site constraints\t0\t0\n")
-        else:
-            out_f.write("Site constraints\t%d\t%d\n" %
-                        self.site_constraints.shape)
-            for id_, vals in zip(self.site_ids, self.site_constraints):
-                out_f.write("%s\t%s\n" % (id_, '\t'.join(np.asarray(vals,
-                            dtype=np.str))))
+            # Write site-constraints
+            if self.site_constraints is None:
+                out_f.write("Site constraints\t0\t0\n")
+            else:
+                out_f.write("Site constraints\t%d\t%d\n" %
+                            self.site_constraints.shape)
+                for id_, vals in zip(self.site_ids, self.site_constraints):
+                    out_f.write("%s\t%s\n" % (id_, '\t'.join(
+                        np.asarray(vals, dtype=np.str))))
 
 
 class Ordination(object):
