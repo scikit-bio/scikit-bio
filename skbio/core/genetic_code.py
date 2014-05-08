@@ -343,7 +343,21 @@ class GeneticCode(object):
                         range(start, len(dna) - 2, 3)])
 
     def get_stop_indices(self, dna, start=0):
-        """returns indexes for stop codons in the specified frame"""
+        """returns indexes for stop codons in the specified frame
+
+        Parameters
+        ----------
+        dna : str
+            a string of nucleotides.
+        start : int, optional
+            position where the search begins.
+
+        Returns
+        -------
+        list
+            indices of the stop codons.
+
+        """
         stops = self['*']
         stop_pattern = '(%s)' % '|'.join(stops)
         stop_pattern = re.compile(stop_pattern)
