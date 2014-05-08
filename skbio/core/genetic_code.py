@@ -315,7 +315,7 @@ class GeneticCode(object):
         return changes
 
 
-NcbiGeneticCodeData = [GeneticCode(*data) for data in [
+NCBIGeneticCodeData = [GeneticCode(*data) for data in [
     [
         'FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG',
         1,
@@ -421,7 +421,7 @@ NcbiGeneticCodeData = [GeneticCode(*data) for data in [
 ]]
 
 # build dict of GeneticCodes keyed by ID (as int, not str)
-GeneticCodes = dict([(i.id, i) for i in NcbiGeneticCodeData])
+GeneticCodes = dict([(i.id, i) for i in NCBIGeneticCodeData])
 # add str versions for convenience
 for key, value in GeneticCodes.items():
     GeneticCodes[str(key)] = value
