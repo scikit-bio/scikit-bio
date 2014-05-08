@@ -2534,7 +2534,7 @@ class TreeNode(object):
         >>> tdbl = tr.descending_branch_length()
         >>> sdbl = tr.descending_branch_length(['A','E'])
         >>> print tdbl, sdbl
-        8.9 2.4
+        8.9 2.2
         """
         if tip_subset is not None:
             all_tips = self.subset()
