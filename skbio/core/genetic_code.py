@@ -154,7 +154,7 @@ class GeneticCode(object):
         if len(code_sequence) != 64:
             raise GeneticCodeInitError("code_sequence: %s has length %d, but "
                                        "expected 64" % (code_sequence,
-                                       len(code_sequence)))
+                                                        len(code_sequence)))
 
         self.code_sequence = code_sequence
         self.id = id
