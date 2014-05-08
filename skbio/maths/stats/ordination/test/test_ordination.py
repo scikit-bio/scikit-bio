@@ -13,6 +13,7 @@ from future.utils.six import StringIO
 from future.builtins import zip
 
 import warnings
+import tempfile
 
 import numpy as np
 import numpy.testing as npt
@@ -556,7 +557,8 @@ class TestPCoAErrors(object):
 
 
 class TestOrdinationResults(object):
-    def setup(self):
+    @classmethod
+    def setup_class(cls):
         # CA results
         eigvals = np.array([0.0961330159181, 0.0409418140138])
         species = np.array([[0.408869425742, 0.0695518116298],
@@ -646,63 +648,81 @@ class TestOrdinationResults(object):
                                        species_ids=species_ids,
                                        site_ids=site_ids)
 
-        self.scores = [ca_scores, cca_scores, pcoa_scores, rda_scores]
-        self.test_paths = ['L&L_CA_data_scores', 'example3_scores',
-                           'PCoA_sample_data_3_scores', 'example2_scores']
+        cls.scores = [ca_scores, cca_scores, pcoa_scores, rda_scores]
+        cls.test_paths = ['L&L_CA_data_scores', 'example3_scores',
+                          'PCoA_sample_data_3_scores', 'example2_scores']
 
-        self.fferror_test_paths = ['error1', 'error2', 'error3', 'error4',
-                                   'error5', 'error6']
-        self.verror_test_paths = ['v_error1', 'v_error2', 'v_error3',
-                                  'v_error4', 'v_error5', 'v_error6',
-                                  'v_error7', 'v_error8', 'v_error9',
-                                  'v_error10']
+        cls.fferror_test_paths = ['error1', 'error2', 'error3', 'error4',
+                                  'error5', 'error6']
+        cls.verror_test_paths = ['v_error1', 'v_error2', 'v_error3',
+                                 'v_error4', 'v_error5', 'v_error6',
+                                 'v_error7', 'v_error8', 'v_error9',
+                                 'v_error10']
 
     def test_to_file(self):
         for scores, test_path in zip(self.scores, self.test_paths):
-            obs_f = StringIO()
-            scores.to_file(obs_f)
-            obs = obs_f.getvalue()
-            obs_f.close()
+            for file_type in ('file like', 'file name'):
+                if file_type == 'file like':
+                    obs_f = StringIO()
+                    scores.to_file(obs_f)
+                    obs = obs_f.getvalue()
+                    obs_f.close()
+                elif file_type == 'file name':
+                    with tempfile.NamedTemporaryFile('rw') as temp_file:
+                        scores.to_file(temp_file.name)
+                        temp_file.flush()
+                        temp_file.seek(0)
+                        obs = temp_file.read()
 
-            with open(get_data_path(test_path), 'U') as f:
-                exp = f.read()
+                with open(get_data_path(test_path), 'U') as f:
+                    exp = f.read()
 
-            npt.assert_equal(obs, exp)
+                yield npt.assert_equal, obs, exp
 
     def test_from_file(self):
-        for scores, test_path in zip(self.scores, self.test_paths):
-            obs = OrdinationResults.from_file(get_data_path(test_path))
+        for exp_scores, test_path in zip(self.scores, self.test_paths):
+            for file_type in ('file like', 'file name'):
+                fname = get_data_path(test_path)
+                if file_type == 'file like':
+                    with open(fname) as fh:
+                        obs = OrdinationResults.from_file(fh)
+                elif file_type == 'file name':
+                    obs = OrdinationResults.from_file(fname)
 
-            npt.assert_almost_equal(obs.eigvals, scores.eigvals)
-            if scores.species is not None:
-                npt.assert_almost_equal(obs.species, scores.species)
-            else:
-                npt.assert_equal(obs.species, scores.species)
-            npt.assert_equal(obs.species_ids, scores.species_ids)
+                yield self.check_OrdinationResults_equal, obs, exp_scores
 
-            if scores.site is not None:
-                npt.assert_almost_equal(obs.site, scores.site)
-            else:
-                npt.assert_equal(obs.site, scores.site)
-            npt.assert_equal(obs.site_ids, scores.site_ids)
+    def check_OrdinationResults_equal(self, obs_scores, exp_scores):
+        npt.assert_almost_equal(obs_scores.eigvals, exp_scores.eigvals)
+        if exp_scores.species is not None:
+            npt.assert_almost_equal(obs_scores.species, exp_scores.species)
+        else:
+            npt.assert_equal(obs_scores.species, exp_scores.species)
+        npt.assert_equal(obs_scores.species_ids, exp_scores.species_ids)
 
-            if scores.biplot is not None:
-                npt.assert_almost_equal(obs.biplot, scores.biplot)
-            else:
-                npt.assert_equal(obs.biplot, scores.biplot)
+        if exp_scores.site is not None:
+            npt.assert_almost_equal(obs_scores.site, exp_scores.site)
+        else:
+            npt.assert_equal(obs_scores.site, exp_scores.site)
+        npt.assert_equal(obs_scores.site_ids, exp_scores.site_ids)
 
-            if scores.site_constraints is not None:
-                npt.assert_almost_equal(obs.site_constraints,
-                                        scores.site_constraints)
-            else:
-                npt.assert_equal(obs.site_constraints, scores.site_constraints)
+        if exp_scores.biplot is not None:
+            npt.assert_almost_equal(obs_scores.biplot, exp_scores.biplot)
+        else:
+            npt.assert_equal(obs_scores.biplot, exp_scores.biplot)
 
-            if scores.proportion_explained is not None:
-                npt.assert_almost_equal(obs.proportion_explained,
-                                        scores.proportion_explained)
-            else:
-                npt.assert_equal(obs.proportion_explained,
-                                 scores.proportion_explained)
+        if exp_scores.site_constraints is not None:
+            npt.assert_almost_equal(obs_scores.site_constraints,
+                                    exp_scores.site_constraints)
+        else:
+            npt.assert_equal(obs_scores.site_constraints,
+                             exp_scores.site_constraints)
+
+        if exp_scores.proportion_explained is not None:
+            npt.assert_almost_equal(obs_scores.proportion_explained,
+                                    exp_scores.proportion_explained)
+        else:
+            npt.assert_equal(obs_scores.proportion_explained,
+                             exp_scores.proportion_explained)
 
     def test_from_file_error(self):
         for test_path in self.fferror_test_paths:
