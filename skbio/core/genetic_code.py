@@ -133,9 +133,9 @@ class GeneticCode(object):
     >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSR'
     ...                   'RVVVVAAAADDEEGGGG')
 
-    .. note:: `*` is used to denote termination as per the NCBI standard. Although
-        the genetic code objecs convert DNA to RNA and vice versa, lists of codons
-        that they produce will be provided in DNA format.
+    .. note:: `*` is used to denote termination as per the NCBI standard.
+        Although the genetic code objecs convert DNA to RNA and vice versa,
+        lists of codons that they produce will be provided in DNA format.
 
     """
     # class data: need the bases, the list of codons in UUU -> GGG order, and
