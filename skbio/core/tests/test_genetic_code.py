@@ -13,19 +13,20 @@ class GeneticCodeTests(TestCase):
 
     def setUp(self):
         """Set up some standard genetic code representations."""
-        self.SGC = \
-            "FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG"
-        self.mt = \
-            "FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIMMTTTTNNKKSS**VVVVAAAADDEEGGGG"
-        self.AllG = \
-            "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG"
+        self.sgc = ("FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAAD"
+                    "DEEGGGG")
+        self.mt = ("FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIMMTTTTNNKKSS**VVVVAAAADD"
+                   "EEGGGG")
+        self.allg = ("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG"
+                     "GGGGGGGG")
 
-        self.WrongLength = [
+        self.wrong_length = [
             "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG"
             "",
-            "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG",
+            "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG"
+            "G",
         ]
-        self.NcbiStandard = [
+        self.ncbi_standard = [
             'FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG',
             1,
             'Standard Nuclear',
@@ -34,22 +35,22 @@ class GeneticCodeTests(TestCase):
 
     def test_init(self):
         """GeneticCode init should work with correct-length sequences"""
-        sgc = GeneticCode(self.SGC)
+        sgc = GeneticCode(self.sgc)
         self.assertEqual(sgc['UUU'], 'F')
         mt = GeneticCode(self.mt)
         self.assertEqual(mt['UUU'], 'F')
-        allg = GeneticCode(self.AllG)
+        allg = GeneticCode(self.allg)
         self.assertEqual(allg['UUU'], 'G')
-        for i in self.WrongLength:
+        for i in self.wrong_length:
             self.assertRaises(GeneticCodeInitError, GeneticCode, i)
 
     def test_standard_code(self):
         """Standard genetic code from NCBI should have correct properties"""
-        sgc = GeneticCode(*self.NcbiStandard)
-        self.assertEqual(sgc.CodeSequence,
-                         'FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG')
-        self.assertEqual(sgc.StartCodonSequence,
-                         '---M---------------M---------------M----------------------------')
+        sgc = GeneticCode(*self.ncbi_standard)
+        self.assertEqual(sgc.CodeSequence, 'FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRII'
+                         'IMTTTTNNKKSSRRVVVVAAAADDEEGGGG')
+        self.assertEqual(sgc.StartCodonSequence, '---M---------------M--------'
+                         '-------M----------------------------')
         self.assertEqual(sgc.StartCodons, {'TTG': 'M', 'CTG': 'M', 'ATG': 'M'})
         self.assertEqual(sgc.ID, 1)
         self.assertEqual(sgc.Name, 'Standard Nuclear')
@@ -64,14 +65,14 @@ class GeneticCodeTests(TestCase):
 
     def test_standard_code_lookup(self):
         """GeneticCodes should hold codes keyed by id as string and number"""
-        sgc_new = GeneticCode(*self.NcbiStandard)
+        sgc_new = GeneticCode(*self.ncbi_standard)
         sgc_number = GeneticCodes[1]
         sgc_string = GeneticCodes['1']
         for sgc in sgc_new, sgc_number, sgc_string:
-            self.assertEqual(sgc.CodeSequence,
-                             'FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG')
-            self.assertEqual(sgc.StartCodonSequence,
-                             '---M---------------M---------------M----------------------------')
+            self.assertEqual(sgc.CodeSequence, 'FFLLSSSSYY**CC*WLLLLPPPPHHQQRR'
+                             'RRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG')
+            self.assertEqual(sgc.StartCodonSequence, '---M---------------M----'
+                             '-----------M----------------------------')
             self.assertEqual(
                 sgc.StartCodons, {'TTG': 'M', 'CTG': 'M', 'ATG': 'M'})
             self.assertEqual(sgc.ID, 1)
@@ -92,24 +93,24 @@ class GeneticCodeTests(TestCase):
         self.assertEqual(mtgc.changes(sgc_new), {'AGA': '*R', 'AGG': '*R',
                                                  'ATA': 'MI', 'TGA': 'W*'})
         self.assertEqual(mtgc.changes(mtgc), {})
-        self.assertEqual(mtgc.changes(
-            'FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG'),
-            {'AGA': '*R', 'AGG': '*R', 'ATA': 'MI', 'TGA': 'W*'})
+        self.assertEqual(mtgc.changes('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTT'
+                         'TNNKKSSRRVVVVAAAADDEEGGGG'), {'AGA': '*R',
+                         'AGG': '*R', 'ATA': 'MI', 'TGA': 'W*'})
 
     def test_str(self):
         """GeneticCode str() should return its code string"""
-        code_strings = self.SGC, self.mt, self.AllG
+        code_strings = self.sgc, self.mt, self.allg
         codes = map(GeneticCode, code_strings)
         for code, string in zip(codes, code_strings):
             self.assertEqual(str(code), string)
         # check an example directly in case strings are bad
-        self.assertEqual(str(self.SGC),
-                         "FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG")
+        self.assertEqual(str(self.sgc), "FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMT"
+                         "TTTNNKKSSRRVVVVAAAADDEEGGGG")
 
     def test_cmp(self):
         """GeneticCode cmp() should act on code strings"""
-        sgc_1 = GeneticCode(self.SGC)
-        sgc_2 = GeneticCode(self.SGC)
+        sgc_1 = GeneticCode(self.sgc)
+        sgc_2 = GeneticCode(self.sgc)
         self.assertEqual(sgc_1 is sgc_2, False)  # ensure different objects
         # self.assertNotEqual(sgc_1, sgc_2) # GREG
         self.assertEqual(sgc_1, sgc_2)
@@ -120,16 +121,16 @@ class GeneticCodeTests(TestCase):
         """GeneticCode getitem should return amino acid for codon"""
         # specific checks of a particular codon in the standard code
         variant_codons = ['AUU', 'AUU', 'AUU', 'ATT', 'ATU', 'ATU']
-        sgc = GeneticCode(self.SGC)
+        sgc = GeneticCode(self.sgc)
         for i in variant_codons:
             self.assertEqual(sgc[i], 'I')
         # full check for the standard code
         codons = [a + b + c for a in 'UCAG' for b in 'TCAG' for c in 'UCAG']
-        for codon, aa in zip(codons, self.SGC):
+        for codon, aa in zip(codons, self.sgc):
             self.assertEqual(sgc[codon], aa)
         # full check for another code
-        allg = GeneticCode(self.AllG)
-        for codon, aa in zip(codons, self.AllG):
+        allg = GeneticCode(self.allg)
+        for codon, aa in zip(codons, self.allg):
             self.assertEqual(allg[codon], aa)
         # check that degenerate codon returns X
         self.assertEqual(sgc['NNN'], 'X')
@@ -137,14 +138,14 @@ class GeneticCodeTests(TestCase):
     def test_getitem_aa(self):
         """GeneticCode getitem should return codon set for aa"""
         # for all G, should return all the codons (in some order)
-        allg = GeneticCode(self.AllG)
+        allg = GeneticCode(self.allg)
         codons = [a + b + c for a in 'TCAG' for b in 'TCAG' for c in 'TCAG']
         g_codons = allg['G']
         codons_copy = codons[:]
         self.assertEqual(g_codons, codons_copy)
 
         # check some known cases in the standard genetic code
-        sgc = GeneticCode(self.SGC)
+        sgc = GeneticCode(self.sgc)
         exp_ile = ['ATT', 'ATC', 'ATA']
         obs_ile = sgc['I']
         self.assertEqual(obs_ile, exp_ile)
@@ -165,14 +166,14 @@ class GeneticCodeTests(TestCase):
         self.assertEqual(sgc['U'], [])
 
     def test_getitem_invalid_length(self):
-        """GeneticCode getitem should raise InvalidCodonError on wrong length"""
-        sgc = GeneticCode(self.SGC)
+        """GeneticCode getitem raises InvalidCodonError on wrong length"""
+        sgc = GeneticCode(self.sgc)
         self.assertRaises(InvalidCodonError, sgc.__getitem__, 'AAAA')
         self.assertRaises(InvalidCodonError, sgc.__getitem__, 'AA')
 
     def test_blocks(self):
         """GeneticCode Blocks should return correct list"""
-        sgc = GeneticCode(self.SGC)
+        sgc = GeneticCode(self.sgc)
         exp_blocks = [
             ['TTT', 'TTC', ],
             ['TTA', 'TTG', ],
@@ -205,7 +206,7 @@ class GeneticCodeTests(TestCase):
 
     def test_anticodons(self):
         """GeneticCode Anticodons should return correct list"""
-        sgc = GeneticCode(self.SGC)
+        sgc = GeneticCode(self.sgc)
         exp_anticodons = {
             'F': ['AAA', 'GAA', ],
             'L': ['TAA', 'CAA', 'AAG', 'GAG', 'TAG', 'CAG'],
@@ -233,8 +234,8 @@ class GeneticCodeTests(TestCase):
 
     def test_translate(self):
         """GeneticCode translate should return correct amino acid string"""
-        allg = GeneticCode(self.AllG)
-        sgc = GeneticCode(self.SGC)
+        allg = GeneticCode(self.allg)
+        sgc = GeneticCode(self.sgc)
         mt = GeneticCode(self.mt)
 
         seq = 'AUGCAUGACUUUUGA'
@@ -283,7 +284,7 @@ class GeneticCodeTests(TestCase):
 
         test_rna = fake_rna('AUGCUAACAUAAA', 'UUUAUGUUAGCAU')
         #                    .  .  .  .  .    .  .  .  .  .
-        sgc = GeneticCode(self.SGC)
+        sgc = GeneticCode(self.sgc)
         self.assertEqual(sgc.sixframes(test_rna), [
             'MLT*', 'C*HK', 'ANI', 'FMLA', 'LC*H', 'YVS'])
 
@@ -294,7 +295,7 @@ class GeneticCodeTests(TestCase):
 
     def test_stop_indexes(self):
         """should return stop codon indexes for a specified frame"""
-        sgc = GeneticCode(self.SGC)
+        sgc = GeneticCode(self.sgc)
         seq = DNA('ATGCTAACATAAA')
         expected = [[9], [4], []]
         for frame, expect in enumerate(expected):
@@ -326,7 +327,7 @@ class GeneticCodeTests(TestCase):
             'Y': ['TAT', 'TAC'],
             '*': ['TAA', 'TAG', 'TGA'],
         }
-        obs_synonyms = GeneticCode(self.SGC).Synonyms
+        obs_synonyms = GeneticCode(self.sgc).Synonyms
         # note that the lists will be arbitrary-order
         for i in expected_synonyms:
             self.assertItemsEqual(obs_synonyms[i], expected_synonyms[i])
