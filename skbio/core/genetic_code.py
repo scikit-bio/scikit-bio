@@ -234,12 +234,18 @@ class GeneticCode(object):
             - a doublet, if XYt and XYc or XYa and XYg have the same aa.
             - a singlet, otherwise.
 
-        Returns a list of the quartets, doublets, and singlets in the order
-        UUU -> GGG.
+        Returns
+        -------
+        list
+            Returns a list of the quartets, doublets, and singlets in the order
+            UUU -> GGG.
 
-        Note that a doublet cannot span the purine/pyrimidine boundary, and
-        a quartet cannot span the boundary between two codon blocks whose first
-        two bases differ.
+        Notes
+        -----
+        A doublet cannot span the purine/pyrimidine boundary, and a quartet
+        cannot span the boundary between two codon blocks whose first two bases
+        differ.
+
         """
         if hasattr(self, '_blocks'):
             return self._blocks
