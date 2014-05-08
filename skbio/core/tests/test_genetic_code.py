@@ -58,8 +58,8 @@ class GeneticCodeTests(TestCase):
         self.assertEqual(sgc.isStop('UAA'), True)
         self.assertEqual(sgc.isStop('AAA'), False)
         self.assertEqual(len(sgc.SenseCodons), 61)
-        self.assertContains(sgc.SenseCodons, 'AAA')
-        self.assertNotContains(sgc.SenseCodons, 'TGA')
+        self.assertTrue('AAA' in sgc.SenseCodons)
+        self.assertFalse('TGA' in sgc.SenseCodons)
 
     def test_standard_code_lookup(self):
         """GeneticCodes should hold codes keyed by id as string and number"""
