@@ -333,6 +333,14 @@ class GeneticCode(object):
         str
             string containing amino acid sequence.
 
+        Examples
+        --------
+        >>> from skbio.core.genetic_code import GeneticCode
+        >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSS'
+        ...                   'RRVVVVAAAADDEEGGGG')
+        >>> sgc.translate('AUGCAUGACUUUUGA', 1)
+        GGGG
+
         """
         # NOTE: should return Protein object when we have a class for it.
         if not dna:
