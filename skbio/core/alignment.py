@@ -83,11 +83,6 @@ class SequenceCollection(object):
         If True, runs the `is_valid` method after construction and raises
         `SequenceCollectionError` if ``is_valid == False``.
 
-    Returns
-    -------
-    SequenceCollection (or a derived class)
-        The new `SequenceCollection` object.
-
     Raises
     ------
     skbio.core.exception.SequenceCollectionError
