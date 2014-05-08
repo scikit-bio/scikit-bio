@@ -93,7 +93,7 @@ class GeneticCodeTests(TestCase):
         self.assertEqual(mtgc.changes(
             'FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG'),
             {'AGA':'*R', 'AGG':'*R', 'ATA':'MI', 'TGA':'W*'})
-    
+
     def test_str(self):
         """GeneticCode str() should return its code string"""
         code_strings = self.SGC, self.mt, self.AllG
@@ -168,7 +168,7 @@ class GeneticCodeTests(TestCase):
         self.assertRaises(InvalidCodonError, sgc.__getitem__, 'AAAA')
         self.assertRaises(InvalidCodonError, sgc.__getitem__, 'AA')
 
-    def test_Blocks(self):
+    def test_blocks(self):
         """GeneticCode Blocks should return correct list"""
         sgc = GeneticCode(self.SGC)
         exp_blocks = [
@@ -201,7 +201,7 @@ class GeneticCodeTests(TestCase):
         ]
         self.assertEqual(sgc.Blocks, exp_blocks)
 
-    def test_Anticodons(self):
+    def test_anticodons(self):
         """GeneticCode Anticodons should return correct list"""
         sgc = GeneticCode(self.SGC)
         exp_anticodons = {
@@ -257,16 +257,16 @@ class GeneticCodeTests(TestCase):
         #check shortest translatable sequences
         self.assertEqual(sgc.translate('AAA'), 'K')
         self.assertEqual(sgc.translate(''), '')
-        
+
         #check that different code gives different results
         self.assertEqual(mt.translate(seq), 'MHDFW')
 
         #check translation with invalid codon(s)
         self.assertEqual(sgc.translate('AAANNNCNC123UUU'), 'KXXXF')
-        
+
     def test_sixframes(self):
         """GeneticCode sixframes should provide six-frame translation"""
-        
+
         class fake_rna(str):
             """Fake RNA class with reverse-complement"""
             def __new__(cls, seq, rev):
@@ -282,13 +282,13 @@ class GeneticCodeTests(TestCase):
         sgc = GeneticCode(self.SGC)
         self.assertEqual(sgc.sixframes(test_rna), [
             'MLT*', 'C*HK', 'ANI', 'FMLA', 'LC*H', 'YVS'])
-        
+
         # should also actually work with an RNA or DNA sequence!!!
         test_rna = RNA('AUGCUAACAUAAA')
         self.assertEqual(sgc.sixframes(test_rna), [
             'MLT*', 'C*HK', 'ANI', 'FMLA', 'LC*H', 'YVS'])
-        
-    
+
+
     def test_stop_indexes(self):
         """should return stop codon indexes for a specified frame"""
         sgc = GeneticCode(self.SGC)
@@ -297,8 +297,8 @@ class GeneticCodeTests(TestCase):
         for frame, expect in enumerate(expected):
             got = sgc.getStopIndices(seq, start=frame)
             self.assertEqual(got, expect)
-    
-    def test_Synonyms(self):
+
+    def test_synonyms(self):
         """GeneticCode Synonyms should return aa -> codon set mapping."""
         expected_synonyms = {
             'A':['GCT','GCC','GCA','GCG'],
@@ -328,8 +328,6 @@ class GeneticCodeTests(TestCase):
         for i in expected_synonyms:
             self.assertItemsEqual(obs_synonyms[i], expected_synonyms[i])
 
-#Run tests if called from command line
+
 if __name__ == '__main__':
     main()
-
-
