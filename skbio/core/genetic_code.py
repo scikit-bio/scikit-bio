@@ -419,11 +419,21 @@ class GeneticCode(object):
         return self[codon] == '*'
 
     def changes(self, other):
-        """Returns dict of {codon:'XY'} for codons that differ.
+        """Returns dictionary of coddons that differ
 
-        X is the string representation of the amino acid in self, Y is the
-        string representation of the amino acid in other. Always returns a
-        2-character string.
+        Parameters
+        ----------
+        other : GeneticCode
+           genetic code object
+
+        Returns
+        -------
+        dict
+            Returns a dictionary of the form ``{codon:'XY'}`` for codons that
+            differ. X is the string representation of the amino acid in the
+            object calling this method, Y is the string representation of the
+            amino acid in `other`. Always returns a 2-character string.
+
         """
         changes = {}
         try:
