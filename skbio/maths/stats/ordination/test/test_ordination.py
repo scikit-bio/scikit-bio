@@ -714,3 +714,8 @@ class TestOrdinationResults(object):
             with open(get_data_path(test_path), 'U') as f:
                 with npt.assert_raises(ValueError):
                     OrdinationResults.from_file(f)
+
+
+if __name__ == '__main__':
+    import nose
+    nose.runmodule()
