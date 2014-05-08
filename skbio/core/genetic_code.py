@@ -19,7 +19,9 @@ Classes
 
 Examples
 --------
-Creating and using a ``GeneticCode`` object:
+
+Creating and using a ``GeneticCode`` object
+
 >>> from skbio.core.genetic_code import GeneticCode
 >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAA'
 ...                   'ADDEEGGGG')
@@ -28,7 +30,30 @@ Creating and using a ``GeneticCode`` object:
 >>> sgc['F'] == ['TTT', 'TTC']          #in arbitrary order
 >>> sgc['*'] == ['TAA', 'TAG', 'TGA']   #in arbitrary order
 
-Note that ``GeneticCode`` is immutable once created.
+Retrieving the anticodons of the object
+
+>>> sgc.anticodons
+{'*': ['TTA', 'CTA', 'TCA'],
+ 'A': ['AGC', 'GGC', 'TGC', 'CGC'],
+ 'C': ['ACA', 'GCA'],
+ 'D': ['ATC', 'GTC'],
+ 'E': ['TTC', 'CTC'],
+ 'F': ['AAA', 'GAA'],
+ 'G': ['ACC', 'GCC', 'TCC', 'CCC'],
+ 'H': ['ATG', 'GTG'],
+ 'I': ['AAT', 'GAT', 'TAT'],
+ 'K': ['TTT', 'CTT'],
+ 'L': ['TAA', 'CAA', 'AAG', 'GAG', 'TAG', 'CAG'],
+ 'M': ['CAT'],
+ 'N': ['ATT', 'GTT'],
+ 'P': ['AGG', 'GGG', 'TGG', 'CGG'],
+ 'Q': ['TTG', 'CTG'],
+ 'R': ['ACG', 'GCG', 'TCG', 'CCG', 'TCT', 'CCT'],
+ 'S': ['AGA', 'GGA', 'TGA', 'CGA', 'ACT', 'GCT'],
+ 'T': ['AGT', 'GGT', 'TGT', 'CGT'],
+ 'V': ['AAC', 'GAC', 'TAC', 'CAC'],
+ 'W': ['CCA'],
+ 'Y': ['ATA', 'GTA']}
 
 """
 
