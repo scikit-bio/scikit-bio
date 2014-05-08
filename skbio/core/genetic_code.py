@@ -398,6 +398,15 @@ class GeneticCode(object):
             dictionary of where the keys are the frames and the values are the
             translations i. e. ``{frame:translation}``.
 
+        Examples
+        --------
+        >>> from skbio.core.genetic_code import GeneticCode
+        >>> from skbio.core.sequence import RNA
+        >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSS'
+        ...                   'RRVVVVAAAADDEEGGGG')
+        >>> sgc.sixframes(RNA('AUGCUAACAUAAA'))
+        ['MLT*', 'C*HK', 'ANI', 'FMLA', 'LC*H', 'YVS']
+
         """
         reverse = dna.rc()
         return [self.translate(dna, start) for start in range(3)] + \
