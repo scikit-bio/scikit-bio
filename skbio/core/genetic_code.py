@@ -4,11 +4,10 @@ Genetic Code (:mod:`skbio.core.genetic_code`)
 =============================================
 
 .. currentmodule:: skbio.core.genetic_code
-Translates RNA or DNA string to amino acid sequences.
 
-.. note:: `*` is used to denote termination as per the NCBI standard. Although
-    the genetic code objecs convert DNA to RNA and vice versa, lists of codons
-    that they produce will be provided in DNA format.
+This module defines the ``GeneticCode`` class, which represents an immutable
+object that translates RNA or DNA strings to amino acid sequences.
+
 
 Classes
 -------
