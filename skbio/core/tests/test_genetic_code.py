@@ -326,7 +326,7 @@ class GeneticCodeTests(TestCase):
         obs_synonyms = GeneticCode(self.SGC).Synonyms
         #note that the lists will be arbitrary-order
         for i in expected_synonyms:
-            self.assertEqualItems(obs_synonyms[i], expected_synonyms[i])
+            self.assertItemsEqual(obs_synonyms[i], expected_synonyms[i])
 
 #Run tests if called from command line
 if __name__ == '__main__':
