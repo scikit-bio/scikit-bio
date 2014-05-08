@@ -47,9 +47,9 @@ class GeneticCodeTests(TestCase):
     def test_standard_code(self):
         """Standard genetic code from NCBI should have correct properties"""
         sgc = GeneticCode(*self.ncbi_standard)
-        self.assertEqual(sgc.CodeSequence, 'FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRII'
+        self.assertEqual(sgc.code_sequence, 'FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRII'
                          'IMTTTTNNKKSSRRVVVVAAAADDEEGGGG')
-        self.assertEqual(sgc.StartCodonSequence, '---M---------------M--------'
+        self.assertEqual(sgc.start_codon_sequence, '---M---------------M--------'
                          '-------M----------------------------')
         self.assertEqual(sgc.StartCodons, {'TTG': 'M', 'CTG': 'M', 'ATG': 'M'})
         self.assertEqual(sgc.ID, 1)
@@ -69,9 +69,9 @@ class GeneticCodeTests(TestCase):
         sgc_number = GeneticCodes[1]
         sgc_string = GeneticCodes['1']
         for sgc in sgc_new, sgc_number, sgc_string:
-            self.assertEqual(sgc.CodeSequence, 'FFLLSSSSYY**CC*WLLLLPPPPHHQQRR'
+            self.assertEqual(sgc.code_sequence, 'FFLLSSSSYY**CC*WLLLLPPPPHHQQRR'
                              'RRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG')
-            self.assertEqual(sgc.StartCodonSequence, '---M---------------M----'
+            self.assertEqual(sgc.start_codon_sequence, '---M---------------M----'
                              '-----------M----------------------------')
             self.assertEqual(
                 sgc.StartCodons, {'TTG': 'M', 'CTG': 'M', 'ATG': 'M'})
