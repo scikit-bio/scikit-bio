@@ -125,6 +125,10 @@ class GeneticCode(object):
     is_stop
     sixframes
     translate
+    __repr__
+    __getitem__
+    __cmp__
+    __str__
 
 
     Examples
@@ -272,16 +276,25 @@ class GeneticCode(object):
     blocks = property(_get_blocks)
 
     def __str__(self):
-        """Returns code_sequence that constructs the GeneticCode."""
+        """Returns code_sequence that constructs the GeneticCode
+
+        .. shownumpydoc
+        """
         return self.code_sequence
 
     def __repr__(self):
-        """Returns reconstructable representation of the GeneticCode."""
+        """Returns reconstructable representation of the GeneticCode
+
+        .. shownumpydoc
+        """
         return 'GeneticCode(%s)' % str(self)
 
     def __cmp__(self, other):
         """ Allows two GeneticCode objects to be compared to each other.
+
         Two GeneticCode objects are equal if they have equal code_sequences.
+
+        .. shownumpydoc
         """
         return cmp(str(self), str(other))
 
@@ -289,6 +302,8 @@ class GeneticCode(object):
         """Returns amino acid corresponding to codon, or codons for an aa.
 
         Returns [] for empty list of codons, 'X' for unknown amino acid.
+
+        .. shownumpydoc
         """
         item = str(item)
         if len(item) == 1:  # amino acid
