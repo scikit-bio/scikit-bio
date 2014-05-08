@@ -501,14 +501,14 @@ class TreeTests(TestCase):
 
         id_1, child_1 = t1.index_tree()
         nodes_1 = [n._leaf_index for n in t1.traverse(self_before=False,
-                   self_after=True)]
+                                                      self_after=True)]
         self.assertEqual(nodes_1, [0, 1, 2, 3, 6, 4, 5, 7, 8])
         self.assertEqual(child_1, [(2, 0, 1), (6, 2, 3), (7, 4, 5), (8, 6, 7)])
 
         # test for second tree: strictly bifurcating
         id_2, child_2 = t2.index_tree()
         nodes_2 = [n._leaf_index for n in t2.traverse(self_before=False,
-                   self_after=True)]
+                                                      self_after=True)]
         self.assertEqual(nodes_2, [0, 1, 4, 2, 3, 5, 8, 6, 7, 9, 10])
         self.assertEqual(child_2, [(4, 0, 1), (5, 2, 3), (8, 4, 5), (9, 6, 7),
                                    (10, 8, 9)])
@@ -516,7 +516,7 @@ class TreeTests(TestCase):
         # test for third tree: contains trifurcation and single-child parent
         id_3, child_3 = t3.index_tree()
         nodes_3 = [n._leaf_index for n in t3.traverse(self_before=False,
-                   self_after=True)]
+                                                      self_after=True)]
 
         self.assertEqual(nodes_3, [0, 1, 2, 4, 3, 5, 8, 6, 7, 9, 10])
         self.assertEqual(child_3, [(4, 0, 2), (5, 3, 3), (8, 4, 5), (9, 6, 7),
@@ -614,7 +614,7 @@ class TreeTests(TestCase):
         sdbl = tr.descending_branch_length(['A', 'E'])
         nptest.assert_almost_equal(tdbl, 8.9)
         nptest.assert_almost_equal(sdbl, 2.2)
-        self.assertRaises(ValueError, tr.descending_branch_length, 
+        self.assertRaises(ValueError, tr.descending_branch_length,
                           ['A', 'DNE'])
         self.assertRaises(ValueError, tr.descending_branch_length, ['A', 'C'])
 

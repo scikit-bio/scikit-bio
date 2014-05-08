@@ -180,10 +180,11 @@ def distance_from_r(m1, m2):
     float
         The distance between m1 and m2
     """
-    return (1-correlation_t(m1.flat, m2.flat)[0])/2
+    return (1 - correlation_t(m1.flat, m2.flat)[0]) / 2
 
 
 class TreeNode(object):
+
     r"""Representation of a node within a tree
 
     A `TreeNode` instance stores links to its parent and optional children
@@ -839,7 +840,7 @@ class TreeNode(object):
         """
         tree = self.copy()
         max_dist, tips = tree.get_max_distance()
-        half_max_dist = max_dist/2.0
+        half_max_dist = max_dist / 2.0
 
         if max_dist == 0.0:  # only pathological cases with no lengths
             return tree
@@ -1939,7 +1940,7 @@ class TreeNode(object):
     def _ascii_art(self, char1='-', show_internal=True, compact=False):
         LEN = 10
         PAD = ' ' * LEN
-        PA = ' ' * (LEN-1)
+        PA = ' ' * (LEN - 1)
         namestr = self.name or ''  # prevents name of NoneType
         if self.children:
             mids = []
@@ -1952,20 +1953,21 @@ class TreeNode(object):
                 else:
                     char2 = '-'
                 (clines, mid) = c._ascii_art(char2, show_internal, compact)
-                mids.append(mid+len(result))
+                mids.append(mid + len(result))
                 result.extend(clines)
                 if not compact:
                     result.append('')
             if not compact:
                 result.pop()
             (lo, hi, end) = (mids[0], mids[-1], len(result))
-            prefixes = [PAD] * (lo+1) + [PA+'|'] * (hi-lo-1) + [PAD] * (end-hi)
+            prefixes = [PAD] * (lo + 1) + [PA + '|'] * \
+                (hi - lo - 1) + [PAD] * (end - hi)
             mid = np.int(np.trunc((lo + hi) / 2))
-            prefixes[mid] = char1 + '-'*(LEN-2) + prefixes[mid][-1]
-            result = [p+l for (p, l) in zip(prefixes, result)]
+            prefixes[mid] = char1 + '-' * (LEN - 2) + prefixes[mid][-1]
+            result = [p + l for (p, l) in zip(prefixes, result)]
             if show_internal:
                 stem = result[mid]
-                result[mid] = stem[0] + namestr + stem[len(namestr)+1:]
+                result[mid] = stem[0] + namestr + stem[len(namestr) + 1:]
             return (result, mid)
         else:
             return ([char1 + '-' + namestr], 0)
@@ -2242,7 +2244,7 @@ class TreeNode(object):
         # linearize all tips in postorder
         # .__start, .__stop compose the slice in tip_order.
         for i, node in enumerate(all_tips):
-            node.__start, node.__stop = i, i+1
+            node.__start, node.__stop = i, i + 1
 
         # the result map provides index in the result matrix
         result_map = {n.__start: i for i, n in enumerate(tip_order)}
@@ -2262,7 +2264,8 @@ class TreeNode(object):
                         if tip2 not in result_map:
                             continue
                         t2idx = result_map[tip2]
-                        result[t1idx, t2idx] = distances[tip1]+distances[tip2]
+                        result[t1idx, t2idx] = distances[
+                            tip1] + distances[tip2]
 
         for node in self.postorder():
             if not node.children:
@@ -2360,7 +2363,7 @@ class TreeNode(object):
         if not total_subsets:  # no common subsets after filtering, so max dist
             return 1
 
-        return 1 - (2*intersection_length / float(total_subsets))
+        return 1 - (2 * intersection_length / float(total_subsets))
 
     def compare_tip_distances(self, other, sample=None, dist_f=distance_from_r,
                               shuffle_f=shuffle):
@@ -2531,7 +2534,7 @@ class TreeNode(object):
         >>> tdbl = tr.descending_branch_length()
         >>> sdbl = tr.descending_branch_length(['A','E'])
         >>> print tdbl, sdbl
-        8.9 4.6
+        8.9 2.4
         """
         if tip_subset is not None:
             all_tips = self.subset()
