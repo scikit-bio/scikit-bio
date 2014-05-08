@@ -23,16 +23,21 @@ Examples
 Creating and using a ``GeneticCode`` object
 
 >>> from skbio.core.genetic_code import GeneticCode
+>>> from pprint import pprint
 >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAA'
 ...                   'ADDEEGGGG')
 >>> sgc['UUU'] == 'F'
+True
 >>> sgc['TTT'] == 'F'
+True
 >>> sgc['F'] == ['TTT', 'TTC']          #in arbitrary order
+True
 >>> sgc['*'] == ['TAA', 'TAG', 'TGA']   #in arbitrary order
+True
 
 Retrieving the anticodons of the object
 
->>> sgc.anticodons
+>>> pprint(sgc.anticodons)
 {'*': ['TTA', 'CTA', 'TCA'],
  'A': ['AGC', 'GGC', 'TGC', 'CGC'],
  'C': ['ACA', 'GCA'],
@@ -339,7 +344,7 @@ class GeneticCode(object):
         >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSS'
         ...                   'RRVVVVAAAADDEEGGGG')
         >>> sgc.translate('AUGCAUGACUUUUGA', 1)
-        GGGG
+        'CMTF'
 
         """
         # NOTE: should return Protein object when we have a class for it.
@@ -431,7 +436,7 @@ class GeneticCode(object):
         >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSS'
         ...                   'RRVVVVAAAADDEEGGGG')
         >>> sgc.is_start('ATG')
-        True
+        False
         >>> sgc.is_start('AAA')
         False
 
@@ -484,11 +489,12 @@ class GeneticCode(object):
         Examples
         --------
         >>> from skbio.core.genetic_code import GeneticCode
+        >>> from pprint import pprint
         >>> sgc = GeneticCode('FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIMMTTTTNNKKSS*'
         ...                   '*VVVVAAAADDEEGGGG')
-        >>> sgc.changes('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTT'
-        ...              'TNNKKSSRRVVVVAAAADDEEGGGG')
-        {'AGA': '*R', 'AGG': '*R', 'ATA': 'MI', 'TGA': 'W*'})
+        >>> pprint(sgc.changes('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTT'
+        ...                    'TNNKKSSRRVVVVAAAADDEEGGGG'))
+        {'AGA': '*R', 'AGG': '*R', 'ATA': 'MI', 'TGA': 'W*'}
 
         """
         changes = {}
