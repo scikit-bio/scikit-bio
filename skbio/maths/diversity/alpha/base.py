@@ -98,7 +98,17 @@ def brillouin_d(counts):
 def dominance(counts):
     """Calculate dominance.
 
-    Dominance is defined as 1 - Simpson's index and ranges between 0 and 1.
+    Dominance is defined as
+
+    .. math::
+
+       \\sum{p_i^2}
+
+    where :math:`p_i` is the proportion of the entire community that species
+    :math:`i` represents.
+
+    Dominance can also be defined as 1 - Simpson's index. It ranges between
+    0 and 1.
 
     Parameters
     ----------
@@ -149,9 +159,7 @@ def doubles(counts):
 def enspie(counts):
     """Calculate ENS_pie alpha diversity measure.
 
-    ENS_pie is defined as ``1 / sum(pi ^ 2)`` with the sum occurring over all
-    ``S`` species in the pool. ``pi`` is the proportion of the entire community
-    that species ``i`` represents.
+    ENS_pie is equivalent to ``1 / dominance``.
 
     Parameters
     ----------
@@ -169,7 +177,7 @@ def enspie(counts):
 
     Notes
     -----
-    ENS_pie is defined in [1]_. ENS_pie is equivalent to ``1 / dominance``.
+    ENS_pie is defined in [1]_.
 
     References
     ----------
@@ -220,12 +228,24 @@ def equitability(counts, base=2):
 def esty_ci(counts):
     """Calculate Esty's CI.
 
-    Esty's CI is defined as ``n1/n  +/- z*sqrt(W)`` where ``n1`` is the number
-    of species observed once in ``n`` samples; ``n`` is the sample size; and
-    ``z`` is a constant that depends on the targeted confidence and based on
-    the Normal distribution. For a 95% CI, z=1.959963985; ``n2`` is the
-    number of species observed twice in ``n`` samples; ``W`` is
-    ``[n1*(n-n1) + 2*n*n2] / (n**3)``.
+    Esty's CI is defined as
+
+    .. math::
+
+       F_1/N \\pm z\\sqrt{W}
+
+    where :math:`F_1` is the number of singleton species, :math:`N` is the
+    total number of individuals (sum of abundances for all species), and
+    :math:`z` is a constant that depends on the targeted confidence and based
+    on the normal distribution.
+
+    :math:`W` is defined as
+
+    .. math::
+
+       \\frac{F_1(N-F_1)+2NF_2}{N^3}
+
+    where :math:`F_2` is the number of doubleton species.
 
     Parameters
     ----------
@@ -239,7 +259,7 @@ def esty_ci(counts):
 
     Notes
     -----
-    Esty's CI is defined in [1]_. ``z`` is hardcoded for a 95% confidence
+    Esty's CI is defined in [1]_. :math:`z` is hardcoded for a 95% confidence
     interval.
 
     References
@@ -250,13 +270,13 @@ def esty_ci(counts):
     """
     counts = _validate(counts)
 
-    n1 = singles(counts)
-    n2 = doubles(counts)
+    f1 = singles(counts)
+    f2 = doubles(counts)
     n = counts.sum()
     z = 1.959963985
-    W = (n1 * (n - n1) + 2 * n * n2) / (n ** 3)
+    W = (f1 * (n - f1) + 2 * n * f2) / (n ** 3)
 
-    return n1 / n + z * np.sqrt(W), n1 / n - z * np.sqrt(W)
+    return f1 / n + z * np.sqrt(W), f1 / n - z * np.sqrt(W)
 
 
 def fisher_alpha(counts):
@@ -313,9 +333,14 @@ def fisher_alpha(counts):
 def goods_coverage(counts):
     """Calculate Good's coverage of counts.
 
-    Good's coverage estimator is defined as ``1 - (n1/N)`` where ``n1`` is
-    the number of singletons and ``N`` is the number of individuals (sum of
-    abundances for all species).
+    Good's coverage estimator is defined as
+
+    .. math::
+
+       1-\\frac{F_1}{N}
+
+    where :math:`F_1` is the number of singleton species and :math:`N` is the
+    total number of individuals (sum of abundances for all species).
 
     Parameters
     ----------
@@ -329,9 +354,9 @@ def goods_coverage(counts):
 
     """
     counts = _validate(counts)
-    n1 = singles(counts)
+    f1 = singles(counts)
     N = counts.sum()
-    return 1 - (n1 / N)
+    return 1 - (f1 / N)
 
 
 def heip_e(counts):
