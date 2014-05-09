@@ -127,7 +127,7 @@ class BiologicalSequenceTests(TestCase):
         for actual, expected in zip(b1_iter, "GATTACA"):
             self.assertEqual(actual, expected)
 
-        self.assertRaises(StopIteration, b1_iter.next)
+        self.assertRaises(StopIteration, lambda: next(b1_iter))
 
     def test_k_words(self):
         """ k_words functions as expected
@@ -242,7 +242,7 @@ class BiologicalSequenceTests(TestCase):
         for actual, expected in zip(b1_reversed, "ACATTAG"):
             self.assertEqual(actual, expected)
 
-        self.assertRaises(StopIteration, b1_reversed.next)
+        self.assertRaises(StopIteration, lambda: next(b1_reversed))
 
     def test_str(self):
         """ str functions as expected

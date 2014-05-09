@@ -10,7 +10,6 @@ from __future__ import division
 import numpy as np
 
 from skbio.core.exception import FastqParseError
-from skbio.util.misc import is_casava_v180_or_later
 
 
 def _ascii_to_phred(s, offset):
@@ -39,8 +38,8 @@ def _ascii_to_phred64(s):
 
 
 def _drop_id_marker(s):
-    """Drop the first character of str"""
-    return s[1:]
+    """Drop the first character and decode bytes to text"""
+    return s[1:].decode('utf-8')
 
 
 def parse_fastq(data, strict=False, phred_offset=33):
@@ -61,7 +60,7 @@ def parse_fastq(data, strict=False, phred_offset=33):
 
     Returns
     -------
-    label, seq, qual : (str, str, np.array)
+    label, seq, qual : (str, bytes, np.array)
         yields the label, sequence and quality for each entry
 
     Examples
@@ -110,7 +109,7 @@ def parse_fastq(data, strict=False, phred_offset=33):
     QUAL = 3
 
     data = iter(data)
-    first_line = data.next().strip()
+    first_line = next(data).strip()
 
     if phred_offset == 33:
         phred_f = _ascii_to_phred33
@@ -141,11 +140,10 @@ def parse_fastq(data, strict=False, phred_offset=33):
             seq = line
         elif linetype == QUALID:
             qualid = _drop_id_marker(line)
-
             if strict:
                 if seqid != qualid:
-                    raise FastqParseError('ID mismatch: %s != %s' % (seqid,
-                                                                     qualid))
+                    raise FastqParseError('ID mismatch: {} != {}'.format(
+                        seqid, qualid))
         elif linetype == QUAL:
             qual = phred_f(line)
             # bounds based on illumina limits, see:

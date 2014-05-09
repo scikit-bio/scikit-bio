@@ -154,6 +154,7 @@ from operator import or_
 from random import shuffle
 from copy import deepcopy
 from itertools import combinations
+from functools import reduce
 
 import numpy as np
 

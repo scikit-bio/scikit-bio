@@ -39,13 +39,18 @@ class CA(Ordination):
 
     Notes
     -----
-    The algorithm is based on Legendre & Legendre (1998) 9.4.1. and is
-    expected to give the same results as ``cca(X)`` in R's package
-    vegan.
+    The algorithm is based on [1]_, \S 9.4.1., and is expected to give
+    the same results as ``cca(X)`` in R's package vegan.
 
     See Also
     --------
     CCA
+
+    References
+    ----------
+    .. [1] Legendre P. and Legendre L. 1998. Numerical
+       Ecology. Elsevier, Amsterdam.
+
     """
     short_method_name = 'CA'
     long_method_name = 'Canonical Analysis'
@@ -125,6 +130,17 @@ class CA(Ordination):
             relationships than species either in the center (may be
             multimodal species, not related to the shown ordination
             axes...) or the edges (sparse species...).
+
+        Returns
+        -------
+        OrdinationResults
+            Object that stores the computed eigenvalues, the
+            proportion explained by each of them (per unit),
+            transformed coordinates, etc.
+
+        See Also
+        --------
+        OrdinationResults
         """
 
         if scaling not in {1, 2}:
