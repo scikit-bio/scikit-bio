@@ -71,10 +71,13 @@ Retrieving the anticodons of the object
 # ----------------------------------------------------------------------------
 import re
 
-from string import maketrans
-
 from skbio.core.exception import GeneticCodeInitError, InvalidCodonError
 
+# py3k compatibility
+try:
+    from string import maketrans
+except ImportError:
+    maketrans = str.maketrans
 
 _dna_trans = maketrans('TCAG', 'AGTC')
 
