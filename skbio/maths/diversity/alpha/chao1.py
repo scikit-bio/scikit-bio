@@ -41,28 +41,25 @@ def chao1(counts, bias_corrected=True):
 
     Notes
     -----
-    The implementation here is based on the equations in the EstimateS manual
-    [1]_.
+    The uncorrected version is based on Equation 6 in [1]_:
 
-    The uncorrected version is based on Equation 1 in the EstimateS manual (
-    defined in [2]_):
+    .. math::
 
-    ``chao1 = S_obs + N_1^2/(2*N_2)`` where ``N_1`` and ``N_2`` are the count
-    of singletons and doubletons respectively.
+       chao1=S_{obs}+\\frac{F_1^2}{2F_2}
 
-    The bias-corrected version is based on Equation 2 in the EstimateS manual (
-    defined in [3]_):
+    where :math:`F_1` and :math:`F_2` are the count of singletons and
+    doubletons, respectively.
 
-    ``chao1 = S_obs + N_1(N_1-1)/(2*(N_2+1))`` where ``N_1`` and ``N_2`` are
-    the count of singletons and doubletons respectively.
+    The bias-corrected version is defined as
+
+    .. math::
+
+       chao1=S_{obs}+\\frac{F_1(F_1-1)}{2(F_2+1)}
 
     References
     ----------
-    .. [1] http://viceroy.eeb.uconn.edu/estimates/
-    .. [2] Chao, A. 1984. Non-parametric estimation of the number of classes in
+    .. [1] Chao, A. 1984. Non-parametric estimation of the number of classes in
        a population. Scandinavian Journal of Statistics 11, 265-270.
-    .. [3] Chao, A. 1987. Estimating the population size for capture-recapture
-       data with unequal catchability. Biometrics 43, 783-791.
 
     """
     counts = _validate(counts)
