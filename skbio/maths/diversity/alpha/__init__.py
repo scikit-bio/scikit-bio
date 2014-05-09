@@ -96,8 +96,6 @@ Functions
 Examples
 --------
 
-Import a few of the alpha diversity measures we'll be using in the examples:
-
 >>> import numpy as np
 
 Assume we have the following abundance data for a sample, represented as a
@@ -128,11 +126,6 @@ Let's see how many singletons and doubletons there are in the sample:
 2
 >>> doubles(counts)
 1
-
-Let's calculate Menhinick's richness index:
-
->>> menhinick(counts)
-1.507556722888818
 
 """
 
