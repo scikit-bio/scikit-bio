@@ -568,13 +568,19 @@ def menhinick(counts):
 def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
     """Calculate Michaelis-Menten fit to rarefaction curve of observed species.
 
-    The Michaelis-Menten equation is defined as ``S = (S_max*n) / (B+n)``,
-    where ``n`` is the number of individuals and ``S`` is the number of
-    species. This function estimates the ``S_max`` parameter.
+    The Michaelis-Menten equation is defined as
 
-    The fit is made to datapoints where n = 1, 2, ..., counts.sum(), and ``S``
-    is the number of species represented in a random sample of ``n``
-    individuals.
+    .. math::
+
+       S=\\frac{nS_{max}}{n+B}
+
+    where :math:`n` is the number of individuals and :math:`S` is the number of
+    species. This function estimates the :math:`S_{max}` parameter.
+
+    The fit is made to datapoints for :math:`n=1,2,...,N`, where :math:`N` is
+    the total number of individuals (sum of abundances for all species).
+    :math:`S` is the number of species represented in a random sample of
+    :math:`n` individuals.
 
     Parameters
     ----------
@@ -582,16 +588,17 @@ def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
         Vector of counts.
     num_repeats : int, optional
         The number of times to perform rarefaction (subsampling without
-        replacement) at each value of ``n``.
+        replacement) at each value of :math:`n`.
     params_guess : tuple, optional
-        Initial guess of ``S_max`` and ``B``. If ``None``, default guess for
-        ``S_max`` is ``S`` (as ``S_max`` should be >= ``S``) and default guess
-        for ``B`` is ``round(n / 2)``.
+        Initial guess of :math:`S_{max}` and :math:`B`. If ``None``, default
+        guess for :math:`S_{max}` is :math:`S` (as :math:`S_{max}` should
+        be >= :math:`S`) and default guess for :math:`B` is ``round(N / 2)``.
 
     Returns
     -------
     S_max : double
-        Estimate of the ``S_max`` parameter in the Michaelis-Menten equation.
+        Estimate of the :math:`S_{max}` parameter in the Michaelis-Menten
+        equation.
 
     See Also
     --------
@@ -686,8 +693,13 @@ def osd(counts):
 def robbins(counts):
     """Calculate Robbins' estimator for the probability of unobserved outcomes.
 
-    Robbins' estimator is defined as ``S / (n+1)`` where ``S`` is the number of
-    singletons.
+    Robbins' estimator is defined as
+
+    .. math::
+
+       \\frac{F_1}{n+1}
+
+    where :math:`F_1` is the number of singleton species.
 
     Parameters
     ----------
@@ -702,7 +714,7 @@ def robbins(counts):
     Notes
     -----
     Robbins' estimator is defined in [1]_. The estimate computed here is for
-    ``n-1`` counts, i.e. the x-axis is off by 1.
+    :math:`n-1` counts, i.e. the x-axis is off by 1.
 
     References
     ----------
@@ -732,7 +744,7 @@ def shannon(counts, base=2):
     -----
     The implementation here is based on the description given in the SDR-IV
     online manual [1]_, except that the default logarithm base used here is 2
-    instead of e.
+    instead of :math:`e`.
 
     References
     ----------
