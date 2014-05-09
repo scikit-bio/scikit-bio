@@ -760,7 +760,7 @@ def shannon(counts, base=2):
 def simpson(counts):
     """Calculate Simpson's index.
 
-    Simpson's index = 1 - dominance.
+    Simpson's index is defined as 1 - dominance.
 
     Parameters
     ----------
@@ -794,7 +794,14 @@ def simpson(counts):
 def simpson_e(counts):
     """Calculate Simpson's evenness measure E.
 
-    Simpson's E = ``(1 / dominance) / observed_species``.
+    Simpson's E is defined as
+
+    .. math::
+
+       E=\\frac{1 / D}{S_{obs}}
+
+    where :math:`D` is dominance and :math:`S_{obs}` is the number of observed
+    species.
 
     Parameters
     ----------
