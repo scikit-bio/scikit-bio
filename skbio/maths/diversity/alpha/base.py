@@ -43,7 +43,7 @@ def berger_parker_d(counts):
 
     Parameters
     ----------
-    counts : (N,) array_like, int
+    counts : 1-D array_like, int
         Vector of counts.
 
     Returns
@@ -71,7 +71,7 @@ def brillouin_d(counts):
 
     Parameters
     ----------
-    counts : (N,) array_like, int
+    counts : 1-D array_like, int
         Vector of counts.
 
     Returns
@@ -112,7 +112,7 @@ def dominance(counts):
 
     Parameters
     ----------
-    counts : (N,) array_like, int
+    counts : 1-D array_like, int
         Vector of counts.
 
     Returns
@@ -143,7 +143,7 @@ def doubles(counts):
 
     Parameters
     ----------
-    counts : (N,) array_like, int
+    counts : 1-D array_like, int
         Vector of counts.
 
     Returns
@@ -163,7 +163,7 @@ def enspie(counts):
 
     Parameters
     ----------
-    counts : (N,) array_like, int
+    counts : 1-D array_like, int
         Vector of counts.
 
     Returns
@@ -195,7 +195,7 @@ def equitability(counts, base=2):
 
     Parameters
     ----------
-    counts : (N,) array_like, int
+    counts : 1-D array_like, int
         Vector of counts.
     base : scalar, optional
         Logarithm base to use in the calculations.
@@ -249,7 +249,7 @@ def esty_ci(counts):
 
     Parameters
     ----------
-    counts : (N,) array_like, int
+    counts : 1-D array_like, int
         Vector of counts.
 
     Returns
@@ -284,7 +284,7 @@ def fisher_alpha(counts):
 
     Parameters
     ----------
-    counts : (N,) array_like, int
+    counts : 1-D array_like, int
         Vector of counts.
 
     Returns
@@ -344,7 +344,7 @@ def goods_coverage(counts):
 
     Parameters
     ----------
-    counts : (N,) array_like, int
+    counts : 1-D array_like, int
         Vector of counts.
 
     Returns
@@ -364,7 +364,7 @@ def heip_e(counts):
 
     Parameters
     ----------
-    counts : (N,) array_like, int
+    counts : 1-D array_like, int
         Vector of counts.
 
     Returns
@@ -395,7 +395,7 @@ def kempton_taylor_q(counts, lower_quantile=0.25, upper_quantile=0.75):
 
     Parameters
     ----------
-    counts : (N,) array_like, int
+    counts : 1-D array_like, int
         Vector of counts.
     lower_quantile : float, optional
         Lower bound of the interquantile range. Defaults to lower quartile.
@@ -444,7 +444,7 @@ def margalef(counts):
 
     Parameters
     ----------
-    counts : (N,) array_like, int
+    counts : 1-D array_like, int
         Vector of counts.
 
     Returns
@@ -471,7 +471,7 @@ def mcintosh_d(counts):
 
     Parameters
     ----------
-    counts : (N,) array_like, int
+    counts : 1-D array_like, int
         Vector of counts.
 
     Returns
@@ -506,7 +506,7 @@ def mcintosh_e(counts):
 
     Parameters
     ----------
-    counts : (N,) array_like, int
+    counts : 1-D array_like, int
         Vector of counts.
 
     Returns
@@ -543,7 +543,7 @@ def menhinick(counts):
 
     Parameters
     ----------
-    counts : (N,) array_like, int
+    counts : 1-D array_like, int
         Vector of counts.
 
     Returns
@@ -584,7 +584,7 @@ def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
 
     Parameters
     ----------
-    counts : (N,) array_like, int
+    counts : 1-D array_like, int
         Vector of counts.
     num_repeats : int, optional
         The number of times to perform rarefaction (subsampling without
@@ -648,7 +648,7 @@ def observed_species(counts):
 
     Parameters
     ----------
-    counts : (N,) array_like, int
+    counts : 1-D array_like, int
         Vector of counts.
 
     Returns
@@ -666,7 +666,7 @@ def osd(counts):
 
     Parameters
     ----------
-    counts : (N,) array_like, int
+    counts : 1-D array_like, int
         Vector of counts.
 
     Returns
@@ -703,7 +703,7 @@ def robbins(counts):
 
     Parameters
     ----------
-    counts : (N,) array_like, int
+    counts : 1-D array_like, int
         Vector of counts.
 
     Returns
@@ -730,7 +730,7 @@ def shannon(counts, base=2):
 
     Parameters
     ----------
-    counts : (N,) array_like, int
+    counts : 1-D array_like, int
         Vector of counts.
     base : scalar, optional
         Logarithm base to use in the calculations.
@@ -764,7 +764,7 @@ def simpson(counts):
 
     Parameters
     ----------
-    counts : (N,) array_like, int
+    counts : 1-D array_like, int
         Vector of counts.
 
     Returns
@@ -805,7 +805,7 @@ def simpson_e(counts):
 
     Parameters
     ----------
-    counts : (N,) array_like, int
+    counts : 1-D array_like, int
         Vector of counts.
 
     Returns
@@ -837,7 +837,7 @@ def singles(counts):
 
     Parameters
     ----------
-    counts : (N,) array_like, int
+    counts : 1-D array_like, int
         Vector of counts.
 
     Returns
@@ -855,7 +855,7 @@ def strong(counts):
 
     Parameters
     ----------
-    counts : (N,) array_like, int
+    counts : 1-D array_like, int
         Vector of counts.
 
     Returns

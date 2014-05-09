@@ -22,7 +22,7 @@ def chao1(counts, bias_corrected=True):
 
     Parameters
     ----------
-    counts : (N,) array_like, int
+    counts : 1-D array_like, int
         Vector of counts.
     bias_corrected : bool, optional
         Indicates whether or not to use the bias-corrected version of the
@@ -76,7 +76,7 @@ def chao1_confidence(counts, bias_corrected=True, zscore=1.96):
 
     Parameters
     ----------
-    counts : (N,) array_like, int
+    counts : 1-D array_like, int
         Vector of counts.
     bias_corrected : bool, optional
         Indicates whether or not to use the bias-corrected version of the

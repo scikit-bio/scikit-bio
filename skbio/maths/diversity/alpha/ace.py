@@ -19,7 +19,7 @@ def ace(counts, rare_threshold=10):
 
     Parameters
     ----------
-    counts : (N,) array_like, int
+    counts : 1-D array_like, int
         Vector of counts.
     rare_threshold : int, optional
         Threshold at which a species containing as many or fewer individuals

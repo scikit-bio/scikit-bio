@@ -19,7 +19,7 @@ def lladser_pe(counts, r=10):
 
     Parameters
     ----------
-    counts : (N,) array_like, int
+    counts : 1-D array_like, int
         Vector of counts.
     r : int, optional
         Number of new colors that are required for the next prediction.
@@ -64,7 +64,7 @@ def lladser_ci(counts, r):
 
     Parameters
     ----------
-    counts : (N,) array_like, int
+    counts : 1-D array_like, int
         Vector of counts.
     r : int
         Number of new colors that are required for the next prediction.
@@ -114,7 +114,7 @@ def _lladser_point_estimates(sample, r=10):
 
     Parameters
     ----------
-    sample : (N,) array_like, int
+    sample : 1-D array_like, int
         Series of random observations.
     r : int, optional
         Number of new colors that are required for the next prediction.

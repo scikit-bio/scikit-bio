@@ -29,7 +29,7 @@ def gini_index(data, method='rectangles'):
 
     Parameters
     ----------
-    data : (N,) array_like
+    data : 1-D array_like
         Vector of counts, abundances, proportions, etc. All entries must be
         non-negative.
     method : {'rectangles', 'trapezoids'}
