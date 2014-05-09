@@ -193,7 +193,7 @@ class GeneticCode(object):
         # create anticodons
         ac = {}
         for aa, codons in self.synonyms.items():
-            ac[aa] = map(_simple_rc, codons)
+            ac[aa] = [_simple_rc(element) for element in codons]
         self.anticodons = ac
 
     def _analyze_quartet(self, codons, aa):
