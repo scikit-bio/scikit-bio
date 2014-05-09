@@ -51,7 +51,7 @@ if on_rtd:
     install_requires = []
 else:
     install_requires = ['numpy >= 1.7', 'matplotlib >= 1.1.0',
-                        'scipy >= 0.13.0', 'future']
+                        'scipy >= 0.13.0', 'pandas', 'future']
 
 # Dealing with Cython
 USE_CYTHON = os.environ.get('USE_CYTHON', False)
@@ -74,6 +74,7 @@ setup(name='scikit-bio',
       maintainer="scikit-bio development team",
       maintainer_email="gregcaporaso@gmail.com",
       url='https://github.com/biocore/scikit-bio',
+      test_suite='nose.collector',
       packages=find_packages(),
       ext_modules=extensions,
       include_dirs=[np.get_include()],

@@ -25,7 +25,7 @@
     
     
 ---
-[![Build Status](https://travis-ci.org/biocore/scikit-bio.png?branch=master)](https://travis-ci.org/biocore/scikit-bio)
+[![Build Status](https://travis-ci.org/biocore/scikit-bio.png?branch=master)](https://travis-ci.org/biocore/scikit-bio) [![Coverage Status](https://coveralls.io/repos/biocore/scikit-bio/badge.png)](https://coveralls.io/r/biocore/scikit-bio)
 
 Core objects, functions and statistics for working with biological data in Python.
 

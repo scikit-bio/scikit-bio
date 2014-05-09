@@ -111,6 +111,19 @@ class PCoA(Ordination):
         self.eigvecs = eigvecs[:, idxs_descending]
 
     def scores(self):
+        """Compute coordinates in transformed space.
+
+        Returns
+        -------
+        OrdinationResults
+            Object that stores the computed eigenvalues, the
+            proportion explained by each of them (per unit) and
+            transformed coordinates, etc.
+
+        See Also
+        --------
+        OrdinationResults
+        """
         # Scale eigenvalues to have lenght = sqrt(eigenvalue). This
         # works because np.linalg.eigh returns normalized
         # eigenvectors. Each row contains the coordinates of the

@@ -14,6 +14,7 @@ from future.utils.six import StringIO
 import csv
 
 import numpy as np
+import pandas as pd
 
 from skbio.core.distance import DistanceMatrix
 
@@ -35,9 +36,21 @@ class CategoricalStats(object):
     long_method_name = ''
     test_statistic_name = ''
 
-    def __init__(self, distance_matrix, grouping):
+    def __init__(self, distance_matrix, grouping, column=None):
         if not isinstance(distance_matrix, DistanceMatrix):
             raise TypeError("Input must be a DistanceMatrix.")
+
+        if isinstance(grouping, pd.DataFrame):
+            if column is None:
+                raise ValueError("Must provide a column name if supplying a "
+                                 "data frame.")
+            else:
+                grouping = self._df_to_vector(distance_matrix, grouping,
+                                              column)
+        elif column is not None:
+            raise ValueError("Must provide a data frame if supplying a column "
+                             "name.")
+
         if len(grouping) != distance_matrix.shape[0]:
             raise ValueError("Grouping vector size must match the number of "
                              "IDs in the distance matrix.")
@@ -63,6 +76,41 @@ class CategoricalStats(object):
         self._grouping = grouping
         self._groups = groups
         self._tri_idxs = np.triu_indices(self._dm.shape[0], k=1)
+
+    def _df_to_vector(self, distance_matrix, df, column):
+        """Return a grouping vector from a data frame column.
+
+        Parameters
+        ----------
+        distance_marix : DistanceMatrix
+            Distance matrix whose IDs will be mapped to group labels.
+        df : pandas.DataFrame
+            Data frame (indexed by distance matrix ID).
+        column : str
+            Column name in `df` containing group labels.
+
+        Returns
+        -------
+        list
+            Grouping vector (vector of labels) based on the IDs in
+            `distance_matrix`. Each ID's label is looked up in the data frame
+            under the column specified by `column`.
+
+        Raises
+        ------
+        ValueError
+            If `column` is not in the data frame, or a distance matrix ID is
+            not in the data frame.
+
+        """
+        if column not in df:
+            raise ValueError("Column '%s' not in data frame." % column)
+
+        grouping = df.loc[distance_matrix.ids, column]
+        if grouping.isnull().any():
+            raise ValueError("One or more IDs in the distance matrix are not "
+                             "in the data frame.")
+        return grouping.tolist()
 
     def __call__(self, permutations=999):
         """Execute the statistical method.
@@ -161,6 +209,18 @@ class CategoricalStatsResults(object):
             results.append('  '.join(padded_row))
 
         return '\n'.join(results) + '\n'
+
+    def _repr_html_(self):
+        """Return a string containing an HTML table of results.
+
+        This method will be called within the IPython Notebook instead of
+        __repr__ to display results.
+
+        """
+        header = self._format_header()
+        data = self._format_data()
+        return pd.DataFrame([data[1:]], columns=header[1:],
+                            index=[data[0]])._repr_html_()
 
     def summary(self, delimiter='\t'):
         """Return a formatted summary of results as a string.
