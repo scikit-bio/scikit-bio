@@ -217,13 +217,13 @@ class TreeNode(object):
 
     """
 
-    _exclude_from_copy = set(['parent', 'children', '_node_cache'])
+    _exclude_from_copy = set(['parent', 'children', '_tip_cache'])
 
     def __init__(self, name=None, length=None, parent=None, children=None):
         self.name = name
         self.length = length
         self.parent = parent
-        self._node_cache = {}
+        self._tip_cache = {}
         self.children = []
         self.id = None
 
@@ -299,7 +299,7 @@ class TreeNode(object):
 
     def _adopt(self, node):
         r"""Update parent references but does NOT update self.children"""
-        self.invalidate_node_cache()
+        self.invalidate_caches()
         if node.parent is not None:
             node.parent.remove(node)
         node.parent = self
@@ -396,7 +396,7 @@ class TreeNode(object):
 
     def _remove_node(self, idx):
         r"""The actual (and only) method that performs node removal"""
-        self.invalidate_node_cache()
+        self.invalidate_caches()
         node = self.children.pop(idx)
         node.parent = None
         return node
@@ -1319,22 +1319,22 @@ class TreeNode(object):
             if not n.is_tip():
                 yield n
 
-    def invalidate_node_cache(self):
-        r"""Delete the node cache
+    def invalidate_caches(self):
+        r"""Delete lookup caches
 
         See Also
         --------
-        create_node_cache
+        create_tip_cache
         find
 
         """
         if not self.is_root():
-            self.root().invalidate_node_cache()
+            self.root().invalidate_caches()
         else:
-            self._node_cache = {}
+            self._tip_cache = {}
 
-    def create_node_cache(self):
-        r"""Construct an internal lookup keyed by node name, valued by node
+    def create_tip_cache(self):
+        r"""Construct an internal lookup keyed by tip name, valued by node
 
         This method will not cache nodes in which the .name is None. This
         method will raise DuplicateNodeError if a name conflict is discovered.
@@ -1347,29 +1347,32 @@ class TreeNode(object):
 
         See Also
         --------
-        invalidate_node_cache
+        invalidate_caches
         find
 
         """
         if not self.is_root():
-            self.root().create_node_cache()
+            self.root().create_tip_cache()
         else:
-            if self._node_cache:
+            if self._tip_cache:
                 return
 
-            for node in self.traverse():
+            cache = {}
+            for node in self.tips():
                 name = node.name
                 if name is None:
                     continue
 
-                if name in self._node_cache:
+                if name in self._tip_cache:
                     raise DuplicateNodeError("%s already exists!" % name)
-                self._node_cache[name] = node
+
+                cache[name] = node
+            self._tip_cache = cache
 
     def find(self, name):
-        r"""Find a node by name
+        r"""Find a tip by name
 
-        The first call to find will cache all nodes in the tree on the
+        The first call to find will cache all tips in the tree on the
         assumption that additional calls to `find` will be made.
 
         Parameters
@@ -1406,8 +1409,8 @@ class TreeNode(object):
         if isinstance(name, root.__class__):
             return name
 
-        root.create_node_cache()
-        node = root._node_cache.get(name, None)
+        root.create_tip_cache()
+        node = root._tip_cache.get(name, None)
 
         if node is None:
             raise MissingNodeError("Node %s is not in self" % name)
