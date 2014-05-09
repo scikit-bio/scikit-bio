@@ -31,14 +31,109 @@ import numpy as np
 from collections import namedtuple, defaultdict
 
 from skbio.util.sort import signed_natsort
+from skbio.maths.stats.test import ANOVA_one_way
 
 
-class VectorResults(namedtuple('VectorResults', ('vector', 'calc',
-                                                 'message'))):
+class GroupResults(namedtuple('GroupResults', ('name', 'vector', 'mean',
+                                               'info', 'message'))):
     __slots__ = ()  # To avoid creating a dict, as a namedtuple doesn't have it
 
-    def __new__(cls, vector, calc, message):
-        return super(VectorResults, cls).__new__(cls, vector, calc, message)
+    def __new__(cls, name, vector, mean, info, message):
+        return super(GroupResults, cls).__new__(cls, name, vector, mean,
+                                                info, message)
+
+    def to_files(self, out_f, raw_f):
+        """Save the vector analysis results for a category group to files in
+        text format.
+
+        Parameters
+        ----------
+        out_f : file-like object
+            File-like object to write vectors analysis data to. Must have a
+            ``write`` method. It is the caller's responsibility to close
+            `out_f` when done (if necessary).
+        raw_f : file-like object
+            File-like object to write vectors raw values. Must have a ``write``
+            method. It is the caller's responsibility to close `out_f` when
+            done (if necessary).
+        """
+        out_f.write('For group "%s", the group means is: %f\n'
+                    % (self.name, self.mean))
+        raw_f.write('For group "%s":\n'
+                    % (self.name, self.vector))
+
+        if self.message:
+            out_f.write('%s\n' % self.message)
+            raw_f.write('%s\n' % self.message)
+
+        out_f.write('The info is:%s\n' % self.info)
+        raw_f.write('The vector is:\n%s\n' % self.vector)
+
+
+class CategoryResults(namedtuple('CategoryResults', ('category', 'probability',
+                                                     'groups', 'message'))):
+    __slots__ = ()  # To avoid creating a dict, as a namedtuple doesn't have it
+
+    def __new__(cls, category, probability, groups, message):
+        return super(CategoryResults, cls).__new__(cls, category, probability,
+                                                   groups, message)
+
+    def to_files(self, out_f, raw_f):
+        """Save the vector analysis results for a category to files in
+        text format.
+
+        Parameters
+        ----------
+        out_f : file-like object
+            File-like object to write vectors analysis data to. Must have a
+            ``write`` method. It is the caller's responsibility to close
+            `out_f` when done (if necessary).
+        raw_f : file-like object
+            File-like object to write vectors raw values. Must have a ``write``
+            method. It is the caller's responsibility to close `out_f` when
+            done (if necessary).
+        """
+        if self.probability is None:
+            out_f.write('Grouped by "%s" %s\n' % (self.category, self.message))
+        else:
+            out_f.write('Grouped by "%s", probability: %f\n'
+                        % (self.category, self.probability))
+            raw_f.write('Grouped by "%s"\n' % self.category)
+            for group in self.groups:
+                group.to_files(out_f, raw_f)
+
+
+class VectorsResults(namedtuple('VectorsResults', ('algorithm', 'weighted',
+                                                   'categories'))):
+    __slots__ = ()  # To avoid creating a dict, as a namedtuple doesn't have it
+
+    def __new__(cls, algorithm, weighted, categories):
+        return super(VectorsResults, cls).__new__(cls, algorithm, weighted,
+                                                  categories)
+
+    def to_files(self, out_f, raw_f):
+        """Save the vector analysis results to files in text format.
+
+        Parameters
+        ----------
+        out_f : file-like object
+            File-like object to write vectors analysis data to. Must have a
+            ``write`` method. It is the caller's responsibility to close
+            `out_f` when done (if necessary).
+        raw_f : file-like object
+            File-like object to write vectors raw values. Must have a ``write``
+            method. It is the caller's responsibility to close `out_f` when
+            done (if necessary).
+        """
+        out_f.write('Vectors algorithm: %s\n' % self.algorithm)
+        raw_f.write('Vectors algorithm: %s\n' % self.algorithm)
+
+        if self.weighted:
+            out_f.write('** This output is weighted **\n')
+            raw_f.write('** This output is weighted **\n')
+
+        for cat_results in self.categories:
+            cat_results.to_files(out_f, raw_f)
 
 
 class BaseVectors(object):
@@ -48,8 +143,8 @@ class BaseVectors(object):
     ----------
     coords : pandas.DataFrame
         The coordinates for each sample id
-    eigvals : numpy 1-D array
-        The eigenvalues for coords
+    prop_expl : numpy 1-D array
+        The proportion explained by each axis in coords
     metamap : pandas.DataFrame
         The metadata map, indexed by sample ids and columns are metadata
         categories
@@ -66,7 +161,10 @@ class BaseVectors(object):
         If true, the output is weighted by the space between samples in the
         `sort_category` column
     """
-    def __init__(self, coords, eigvals, metamap, vector_categories=None,
+    # Should be defined by the derived classes
+    _alg_name = None
+
+    def __init__(self, coords, prop_expl, metamap, vector_categories=None,
                  sort_category=None, axes=3, weighted=False):
         """
         Raises
@@ -93,16 +191,16 @@ class BaseVectors(object):
 
         if axes == 0:
             # If axes == 0, we should compute the vectors for all axes
-            axes = len(eigvals)
-        elif axes > len(eigvals) or axes < 0:
-            # Axes should be 0 <= axes <= len(eigvals)
+            axes = len(prop_expl)
+        elif axes > len(prop_expl) or axes < 0:
+            # Axes should be 0 <= axes <= len(prop_expl)
             raise ValueError("axes should be between 0 and the max number of "
                              "axes available (%d), found: %d "
-                             % (len(eigvals), axes))
+                             % (len(prop_expl), axes))
 
         # Restrict coordinates to those axes that we actually need to compute
         self._coords = coords.ix[:, :axes-1]
-        self._eigvals = eigvals[:axes]
+        self._prop_expl = prop_expl[:axes]
         self._metamap = metamap
         self._weighted = weighted
 
@@ -186,22 +284,61 @@ class BaseVectors(object):
 
     def get_vectors(self):
         """"""
-        vector_results = defaultdict(dict)
+        result = VectorsResults(self._alg_name, self._weighted, [])
         # Loop through all the categories that we should compute the vectors
         for cat, cat_groups in self._groups.iteritems():
             # Loop through all the category values present
             # in the current category
+            res_by_group = []
             for cat_value, sample_ids in cat_groups.iteritems():
                 # Compute the vector for the current category value
-                vector_results[cat][cat_value] = self._get_subgroup_vectors(
-                    sample_ids)
-        return vector_results
+                res_by_group.append(self._get_group_vectors(cat_value,
+                                                            sample_ids))
+                # result[cat][cat_value] = self._get_group_vectors(
+                #     sample_ids)
+            result.categories.append(self._test_vectors(cat, res_by_group))
 
-    def _get_subgroup_vectors(self, sids):
+        return result
+
+    def _test_vectors(self, category, res_by_group):
+        """"""
+        if len(res_by_group) == 1:
+            return CategoryResults(category, None, res_by_group,
+                                   'Only one value in the group.')
+
+        # Check if groups can be tested using ANOVA. ANOVA testing requires
+        # for at least one element to have a size different to one. When a
+        # dictionary of size N by 1 is passed, a division by zero will
+        # happen
+        values = [res.vector for res in res_by_group]
+        total_values = sum(len(value) for value in values)
+        if total_values == len(res_by_group):
+            return CategoryResults(category, None, res_by_group,
+                                   'This value can not be used.')
+
+        try:
+            F, p_val = ANOVA_one_way(values)
+        except ValueError:
+            # Compute all the group means
+            group_means = list(set([res.mean for res in res_by_group]))
+
+            if len(group_means) != len(res_by_group):
+                return CategoryResults(category, None, res_by_group,
+                                       'This value can not be used.')
+            # Set the p-value to 'diff' if the variances are 0.0
+            # (within rounding error) and the means are not all the
+            # same (which we now its true at this point). If the variances
+            # are not 0.0, set the p-value to 1
+            group_variances = [np.var(val) for val in values]
+            p_val = 0.0 if sum(group_variances) < 1e-21 else 1.0
+
+        return CategoryResults(category, p_val, res_by_group, None)
+
+    def _get_group_vectors(self, group_name, sids):
         """"""
         # We multiply the coord values with the value of
-        # the eigvals represented
-        vectors = self._coords.ix[sids] * self._eigvals
+        # the prop_expl represented
+        vectors = self._coords.ix[sids] * self._prop_expl
 
         if vectors.empty:
             # Raising a RuntimeError since in a usual execution this should
@@ -224,9 +361,9 @@ class BaseVectors(object):
                                             "weighting vector.\n")
                 vectors = vectors_copy
 
-        return self._compute_vector_results(vectors)
+        return self._compute_vector_results(group_name, vectors)
 
-    def _compute_vector_results(self, vectors):
+    def _compute_vector_results(self, group_name, vectors):
         raise NotImplementedError("No algorithm is implemented on the base "
                                   "class.")
 
@@ -240,14 +377,14 @@ class BaseVectors(object):
 
         Parameters
         ----------
-        vector: numpy array
+        vector: pandas.DataFrame
             Values to weight
-        w_vector: numpy array
+        w_vector: pandas.Series
             Values used to weight 'vector'
 
         Returns
         -------
-        numpy array
+        pandas.DataFrame
             A weighted version of 'vector'.
 
         Raises
@@ -273,8 +410,6 @@ class BaseVectors(object):
         if len(w_vector) == 1:
             return vector
 
-        op_vector = []
-
         # Cast to float so divisions have a floating point resolution
         total_length = float(max(w_vector) - min(w_vector))
 
@@ -284,39 +419,43 @@ class BaseVectors(object):
         optimal_gradient = total_length/(len(w_vector)-1)
 
         # for all elements apply the weighting function
-        for n, vector_value in enumerate(vector):
-            if n == 0:
-                # if it's the first element, just return it as is,
-                # no weighting to do
-                op_vector.append(vector_value)
-            else:
-                op_vector.append(vector_value * (optimal_gradient) /
-                                 np.abs((w_vector[n]-w_vector[n-1])))
-        return op_vector
+        for i, idx in enumerate(vector.index):
+            # if it's the first element, no weighting to do
+            if i != 0:
+                vector.ix[idx] = (vector.ix[idx] * optimal_gradient /
+                                  (np.abs((w_vector[i] - w_vector[i-1]))))
+
+        return vector
 
 
 class AverageVectors(BaseVectors):
     """docstring for AverageVectors"""
 
-    def _compute_vector_results(self, vectors):
+    _alg_name = 'avg'
+
+    def _compute_vector_results(self, group_name, vectors):
         """"""
         center = np.average(vectors, axis=0)
         if len(vectors) == 1:
-            vector = [np.linalg.norm(center)]
+            vector = np.array([np.linalg.norm(center)])
             calc = {'avg': vector}
         else:
-            vector = [np.linalg.norm(i) for i in vectors - center]
+            vector = np.array([np.linalg.norm(row[1].get_values())
+                               for row in (vectors - center).iterrows()])
             calc = {'avg': np.average(vector)}
 
         msg = ''.join(self._message_buffer) if self._message_buffer else None
         # Reset the message buffer
         self._message_buffer = []
-        return VectorResults(vector, calc, msg)
+        return GroupResults(group_name, vector, np.mean(vector), calc, msg)
 
 
 class TrajectoryVectors(BaseVectors):
     """"""
-    def _compute_vector_results(self, vectors):
+
+    _alg_name = 'trajectory'
+
+    def _compute_vector_results(self, group_name, vectors):
         """"""
         if len(vectors) == 1:
             vector = [np.linalg.norm(vectors)]
@@ -329,12 +468,15 @@ class TrajectoryVectors(BaseVectors):
         msg = ''.join(self._message_buffer) if self._message_buffer else None
         # Reset the message buffer
         self._message_buffer = []
-        return VectorResults(vector, calc, msg)
+        return GroupResults(group_name, vector, np.mean(vector), calc, msg)
 
 
 class DifferenceVectors(BaseVectors):
     """"""
-    def _compute_vector_results(self, vectors):
+
+    _alg_name = 'diff'
+
+    def _compute_vector_results(self, group_name, vectors):
         """"""
         if len(vectors) == 1:
             vector = [np.linalg.norm(vectors)]
@@ -351,11 +493,13 @@ class DifferenceVectors(BaseVectors):
         msg = ''.join(self._message_buffer) if self._message_buffer else None
         # Reset the message buffer
         self._message_buffer = []
-        return VectorResults(vector, calc, msg)
+        return GroupResults(group_name, vector, np.mean(vector), calc, msg)
 
 
 class WindowDifferenceVectors(BaseVectors):
     """docstring for WindowDifferenceVectors"""
+
+    _alg_name = 'wdiff'
 
     def __init__(self, ord_res, metamap, vector_categories, window_size,
                  **kwargs):
@@ -364,7 +508,7 @@ class WindowDifferenceVectors(BaseVectors):
                                                       **kwargs)
         self.window_size = window_size
 
-    def _compute_vector_results(self, vectors):
+    def _compute_vector_results(self, group_name, vectors):
         """"""
         if len(vectors) == 1:
             vector = [np.linalg.norm(vectors)]
@@ -383,14 +527,14 @@ class WindowDifferenceVectors(BaseVectors):
             except ValueError:
                 vector = vec_norm
                 self._message_buffer.append("Cannot calculate the first "
-                                           "difference with a window of size "
-                                           "(%d).\n" % self.window_size)
+                                            "difference with a window of size "
+                                            "(%d).\n" % self.window_size)
             calc = {'mean': np.mean(vector), 'std': np.std(vector)}
 
         msg = ''.join(self._message_buffer) if self._message_buffer else None
         # Reset the message buffer
         self._message_buffer = []
-        return VectorResults(vector, calc, msg)
+        return GroupResults(group_name, vector, np.mean(vector), calc, msg)
 
     def _windowed_diff(self, vector, window_size):
         """Perform the first difference algorithm between windows of values in a

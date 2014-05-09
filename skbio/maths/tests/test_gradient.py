@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-from __future__ import division
 
 # -----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -8,6 +7,8 @@ from __future__ import division
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # -----------------------------------------------------------------------------
+from __future__ import division
+from future.builtins import zip
 
 from unittest import TestCase, main
 
@@ -19,7 +20,8 @@ import pandas.util.testing as pdt
 
 from skbio.maths.gradient import (BaseVectors, AverageVectors,
                                   TrajectoryVectors, DifferenceVectors,
-                                  WindowDifferenceVectors, VectorResults)
+                                  WindowDifferenceVectors, GroupResults,
+                                  CategoryResults, VectorsResults)
 
 
 class BaseTests(TestCase):
@@ -130,10 +132,37 @@ class BaseTests(TestCase):
                               'Description': 'Fasting_mouse_I.D._636'}}
         self.metamap = pd.DataFrame.from_dict(metamap, orient='index')
 
-        self.eigvals = np.array([0.494208869204, 0.304213438411,
-                                 0.272385344185, 0.22551158501, 0.18961649413,
-                                 0.164195653585, 0.152144472132,
-                                 0.126593271547, 8.53523337213e-18])
+        self.prop_expl = np.array([25.6216900347, 15.7715955926,
+                                   14.1215046787, 11.6913885817, 9.83044890697,
+                                   8.51253468595, 7.88775505332, 6.56308246609,
+                                   4.42499350906e-16])
+
+    # This function makes the comparisons between the results classes easier
+    def assert_group_results_almost_equal(self, obs, exp):
+        """Tests that obs and exp are almost equal"""
+        self.assertEqual(obs.name, exp.name)
+        npt.assert_almost_equal(obs.vector, exp.vector)
+        npt.assert_almost_equal(obs.mean, exp.mean)
+        self.assertEqual(obs.info.keys(), exp.info.keys())
+        for key in obs.info:
+            npt.assert_almost_equal(obs.info[key], exp.info[key])
+        self.assertEqual(obs.message, exp.message)
+
+    def assert_category_results_almost_equal(self, obs, exp):
+        """Tests that obs and exp are almost equal"""
+        self.assertEqual(obs.category, exp.category)
+        npt.assert_almost_equal(obs.probability, exp.probability)
+
+        for o, e in zip(sorted(obs.groups), sorted(exp.groups)):
+            self.assert_group_results_almost_equal(o, e)
+
+    def assert_vectors_results_almost_equal(self, obs, exp):
+        """Tests that obs and exp are almost equal"""
+        self.assertEqual(obs.algorithm, exp.algorithm)
+        self.assertEqual(obs.weighted, exp.weighted)
+
+        for o, e in zip(sorted(obs.categories), sorted(exp.categories)):
+            self.assert_category_results_almost_equal(o, e)
 
 
 class BaseVectorsTests(BaseTests):
@@ -143,22 +172,22 @@ class BaseVectorsTests(BaseTests):
         # so we are not testing it here
 
         # Test with weighted = False
-        bv = BaseVectors(self.coords, self.eigvals, self.metamap)
+        bv = BaseVectors(self.coords, self.prop_expl, self.metamap)
 
         pdt.assert_frame_equal(bv._coords, self.coords_3axes)
-        exp_eigvals = np.array([0.494208869204, 0.304213438411,
-                                0.272385344185])
-        npt.assert_equal(bv._eigvals, exp_eigvals)
+        exp_prop_expl = np.array([25.6216900347, 15.7715955926,
+                                  14.1215046787])
+        npt.assert_equal(bv._prop_expl, exp_prop_expl)
         pdt.assert_frame_equal(bv._metamap, self.metamap)
         self.assertTrue(bv._weighting_vector is None)
         self.assertFalse(bv._weighted)
 
         # Test with weighted = True
-        bv = BaseVectors(self.coords, self.eigvals, self.metamap,
+        bv = BaseVectors(self.coords, self.prop_expl, self.metamap,
                          sort_category='Weight', weighted=True)
 
         pdt.assert_frame_equal(bv._coords, self.coords_3axes)
-        npt.assert_equal(bv._eigvals, exp_eigvals)
+        npt.assert_equal(bv._prop_expl, exp_prop_expl)
         pdt.assert_frame_equal(bv._metamap, self.metamap)
         exp_weighting_vector = pd.Series(
             np.array([60, 55, 50, 52, 57, 65, 68, 70, 72]),
@@ -173,35 +202,35 @@ class BaseVectorsTests(BaseTests):
         # Raises ValueError if any category in vector_categories is not
         # present in metamap
         with self.assertRaises(ValueError):
-            BaseVectors(self.coords, self.eigvals, self.metamap,
+            BaseVectors(self.coords, self.prop_expl, self.metamap,
                         vector_categories=['foo'])
         with self.assertRaises(ValueError):
-            BaseVectors(self.coords, self.eigvals, self.metamap,
+            BaseVectors(self.coords, self.prop_expl, self.metamap,
                         vector_categories=['Weight', 'Treatment', 'foo'])
 
         # Raises ValueError if sort_category is not present in metamap
         with self.assertRaises(ValueError):
-            BaseVectors(self.coords, self.eigvals, self.metamap,
+            BaseVectors(self.coords, self.prop_expl, self.metamap,
                         sort_category='foo')
 
         # Raises ValueError if weighted == True and sort_category == None
         with self.assertRaises(ValueError):
-            BaseVectors(self.coords, self.eigvals, self.metamap,
+            BaseVectors(self.coords, self.prop_expl, self.metamap,
                         weighted=True)
 
         # Raises ValueError if weighted == True and the values under
         # sort_category are not numerical
         with self.assertRaises(ValueError):
-            BaseVectors(self.coords, self.eigvals, self.metamap,
+            BaseVectors(self.coords, self.prop_expl, self.metamap,
                         sort_category='Treatment', weighted=True)
 
-        # Raises ValueError if axes > len(eigvals)
+        # Raises ValueError if axes > len(prop_expl)
         with self.assertRaises(ValueError):
-            BaseVectors(self.coords, self.eigvals, self.metamap, axes=10)
+            BaseVectors(self.coords, self.prop_expl, self.metamap, axes=10)
 
         # Raises ValueError if axes < 0
         with self.assertRaises(ValueError):
-            BaseVectors(self.coords, self.eigvals, self.metamap, axes=-1)
+            BaseVectors(self.coords, self.prop_expl, self.metamap, axes=-1)
 
     def test_normalize_samples(self):
         """Correctly normalizes the samples between coords and metamap"""
@@ -242,14 +271,14 @@ class BaseVectorsTests(BaseTests):
         subset_metamap = pd.DataFrame.from_dict(metamap, orient='index')
 
         # Takes a subset from metamap
-        bv = BaseVectors(subset_coords, self.eigvals, self.metamap)
+        bv = BaseVectors(subset_coords, self.prop_expl, self.metamap)
         pdt.assert_frame_equal(bv._coords.sort(axis=0),
                                subset_coords.sort(axis=0))
         pdt.assert_frame_equal(bv._metamap.sort(axis=0),
                                subset_metamap.sort(axis=0))
 
         # Takes a subset from coords
-        bv = BaseVectors(self.coords, self.eigvals, subset_metamap)
+        bv = BaseVectors(self.coords, self.prop_expl, subset_metamap)
         pdt.assert_frame_equal(bv._coords.sort(axis=0),
                                subset_coords.sort(axis=0))
         pdt.assert_frame_equal(bv._metamap.sort(axis=0),
@@ -280,7 +309,7 @@ class BaseVectorsTests(BaseTests):
                               'Description': 'Fasting_mouse_I.D._634'}}
         subset_metamap = pd.DataFrame.from_dict(metamap, orient='index')
 
-        bv = BaseVectors(subset_coords, self.eigvals, subset_metamap)
+        bv = BaseVectors(subset_coords, self.prop_expl, subset_metamap)
         exp_coords = pd.DataFrame.from_dict(
             {'PC.355': np.array([0.236467470907, 0.21863434374,
                                  -0.0301637746424])},
@@ -310,12 +339,12 @@ class BaseVectorsTests(BaseTests):
                      'Description': 'Fasting_mouse_I.D._607'}},
             orient='index')
         with self.assertRaises(ValueError):
-            BaseVectors(self.coords, self.eigvals, error_metamap)
+            BaseVectors(self.coords, self.prop_expl, error_metamap)
 
     def test_make_groups(self):
         """Correctly generates the groups for vector_categories"""
         # Test with all categories
-        bv = BaseVectors(self.coords, self.eigvals, self.metamap)
+        bv = BaseVectors(self.coords, self.prop_expl, self.metamap)
         exp_groups = {'Treatment': {'Control': ['PC.354', 'PC.355', 'PC.356',
                                                 'PC.481', 'PC.593'],
                                     'Fast': ['PC.607', 'PC.634',
@@ -347,7 +376,7 @@ class BaseVectorsTests(BaseTests):
         self.assertEqual(bv._groups, exp_groups)
 
         # Test with user-defined categories
-        bv = BaseVectors(self.coords, self.eigvals, self.metamap,
+        bv = BaseVectors(self.coords, self.prop_expl, self.metamap,
                          vector_categories=['Treatment', 'DOB'])
         exp_groups = {'Treatment': {'Control': ['PC.354', 'PC.355', 'PC.356',
                                                 'PC.481', 'PC.593'],
@@ -363,35 +392,35 @@ class BaseVectorsTests(BaseTests):
 
     def test_get_vectors(self):
         """Should raise a NotImplementedError as this is a base class"""
-        bv = BaseVectors(self.coords, self.eigvals, self.metamap)
+        bv = BaseVectors(self.coords, self.prop_expl, self.metamap)
         with self.assertRaises(NotImplementedError):
             bv.get_vectors()
 
-    def test_get_subgroup_vectors(self):
+    def test_get_group_vectors(self):
         """Should raise a NotImplementedError in usual execution as this is
         a base class"""
-        bv = BaseVectors(self.coords, self.eigvals, self.metamap)
+        bv = BaseVectors(self.coords, self.prop_expl, self.metamap)
         with self.assertRaises(NotImplementedError):
             bv.get_vectors()
 
-    def test_get_subgroup_vectors_error(self):
-        """Should raise a RuntimeError if the user call _get_subgroup_vectors
+    def test_get_group_vectors_error(self):
+        """Should raise a RuntimeError if the user call _get_group_vectors
         with erroneous inputs"""
-        bv = BaseVectors(self.coords, self.eigvals, self.metamap)
+        bv = BaseVectors(self.coords, self.prop_expl, self.metamap)
         with self.assertRaises(RuntimeError):
-            bv._get_subgroup_vectors(['foo'])
+            bv._get_group_vectors("foo", ['foo'])
         with self.assertRaises(RuntimeError):
-            bv._get_subgroup_vectors([])
+            bv._get_group_vectors("bar", [])
 
     def test_compute_vector_results(self):
         """Should raise a NotImplementedError as this is a base class"""
-        bv = BaseVectors(self.coords, self.eigvals, self.metamap)
+        bv = BaseVectors(self.coords, self.prop_expl, self.metamap)
         with self.assertRaises(NotImplementedError):
-            bv._compute_vector_results([])
+            bv._compute_vector_results("foo", [])
 
     def test_weight_by_vector(self):
         """Correctly weights the vectors"""
-        bv = BaseVectors(self.coords, self.eigvals, self.metamap)
+        bv = BaseVectors(self.coords, self.prop_expl, self.metamap)
 
         vector = np.array([1, 2, 3, 4, 5, 6, 7, 8])
         w_vector = np.array([1, 5, 8, 12, 45, 80, 85, 90])
@@ -421,7 +450,7 @@ class BaseVectorsTests(BaseTests):
 
     def test_weight_by_vector_error(self):
         """Raises an error with erroneous inputs"""
-        bv = BaseVectors(self.coords, self.eigvals, self.metamap)
+        bv = BaseVectors(self.coords, self.prop_expl, self.metamap)
         # Different vector lengths
         with self.assertRaises(ValueError):
             bv._weight_by_vector([1, 2, 3, 4], [1, 2, 3])
@@ -435,25 +464,128 @@ class BaseVectorsTests(BaseTests):
             bv._weight_by_vector([1, 2, 3, 4], [1, 2, 3, 3])
 
 
-# class AverageVectorsTests(BaseTests):
-#     """"""
-#     def test_results(self):
-#         av = AverageVectors(self.coord_dict, self.eigvals, self.ids)
-#         obs = av.results()
-#         exp_vector = [6.9954747524, 1.5180408981, 7.4608959440]
-#         exp_calc = {'avg': 5.3248038648}
+class AverageVectorsTests(BaseTests):
+    def test_get_vectors_all(self):
+        """get_vectors returns the results of all categories"""
+        av = AverageVectors(self.coords, self.prop_expl, self.metamap)
+        obs = av.get_vectors()
 
-#         self.assertEqual(type(obs), VectorResults)
-#         assert_almost_equal(obs.vector, exp_vector)
-#         self.assertEqual(obs.calc.keys(), exp_calc.keys())
-#         for key in obs.calc:
-#             assert_almost_equal(obs.calc[key], exp_calc[key])
-#         self.assertEqual(obs.message, None)
+        exp_description = CategoryResults('Description', None, None,
+                                          "This value can not be used.")
+        exp_weight = CategoryResults('Weight', None, None,
+                                     "This value can not be used.")
+        exp_20070314_group = GroupResults('20070314',
+                                          np.array([2.1685208937828686]),
+                                          2.16852089378,
+                                          {'avg': 2.1685208937828686}, None)
+        exp_20071112_group = GroupResults('20071112',
+                                          np.array([7.3787312682853168]),
+                                          7.37873126829,
+                                          {'avg': [7.3787312682853168]}, None)
+        exp_20080116_group = GroupResults('20080116',
+                                          np.array([2.3430994255305362,
+                                                    2.3946056125630912,
+                                                    2.666555024970267]),
+                                          2.46808668769,
+                                          {'avg': 2.4680866876879648}, None)
+        exp_20061126_group = GroupResults('20061126',
+                                          np.array([7.6577228425502213]),
+                                          7.65772284255,
+                                          {'avg': [7.6577228425502213]}, None)
+        exp_20061218_group = GroupResults('20061218',
+                                          np.array([2.1607848468202744,
+                                                    2.1607848468202744]),
+                                          2.16078484682,
+                                          {'avg': 2.1607848468202744}, None)
+        exp_20071210_group = GroupResults('20071210',
+                                          np.array([6.9553100288582872]),
+                                          6.95531002886,
+                                          {'avg': [6.9553100288582872]}, None)
+        exp_dob = CategoryResults('DOB', 0.000139, [exp_20070314_group,
+                                                    exp_20071112_group,
+                                                    exp_20080116_group,
+                                                    exp_20061126_group,
+                                                    exp_20061218_group,
+                                                    exp_20071210_group], None)
+        exp_control_group = GroupResults('Control',
+                                         np.array([2.3694943596755276,
+                                                   3.3716388181385781,
+                                                   5.4452089176253367,
+                                                   4.5704258453173559,
+                                                   4.4972603724478377]),
+                                         4.05080566264,
+                                         {'avg': 4.0508056626409275}, None)
+        exp_fast_group = GroupResults('Fast', np.array([7.2220488239279126,
+                                                        4.2726021564374372,
+                                                        1.1169097274372082,
+                                                        4.02717600030876]),
+                                      4.15968417703,
+                                      {'avg': 4.1596841770278292}, None)
+        exp_treatment = CategoryResults('Treatment', 0.93311555,
+                                        [exp_control_group, exp_fast_group],
+                                        None)
+        exp = VectorsResults('avg', False, [exp_description, exp_weight,
+                                            exp_dob, exp_treatment])
+        self.assert_vectors_results_almost_equal(obs, exp)
 
+    def test_get_vectors_single(self):
+        """get_vectors returns the results of the provided category"""
+        av = AverageVectors(self.coords, self.prop_expl, self.metamap,
+                            vector_categories=['Treatment'])
+        obs = av.get_vectors()
+
+        exp_control_group = GroupResults('Control',
+                                         np.array([2.3694943596755276,
+                                                   3.3716388181385781,
+                                                   5.4452089176253367,
+                                                   4.5704258453173559,
+                                                   4.4972603724478377]),
+                                         4.05080566264,
+                                         {'avg': 4.0508056626409275}, None)
+        exp_fast_group = GroupResults('Fast', np.array([7.2220488239279126,
+                                                        4.2726021564374372,
+                                                        1.1169097274372082,
+                                                        4.02717600030876]),
+                                      4.15968417703,
+                                      {'avg': 4.1596841770278292}, None)
+        exp_treatment = CategoryResults('Treatment', 0.93311555,
+                                        [exp_control_group, exp_fast_group],
+                                        None)
+        exp = VectorsResults('avg', False, [exp_treatment])
+
+        self.assert_vectors_results_almost_equal(obs, exp)
+
+    def test_get_vectors_weighted(self):
+        """get_vectors returns the correct weighted results"""
+        av = AverageVectors(self.coords, self.prop_expl, self.metamap,
+                            vector_categories=['Treatment'],
+                            sort_category='Weight', weighted=True)
+        obs = av.get_vectors()
+
+        exp_control_group = GroupResults('Control',
+                                         np.array([3.8296365043700837,
+                                                   1.8849504232819798,
+                                                   3.133650469739389,
+                                                   3.0818770261785962,
+                                                   1.9743045285131615]),
+                                         2.78088379042,
+                                         {'avg': 2.7808837904166421}, None)
+        exp_fast_group = GroupResults('Fast', np.array([7.2187223309514401,
+                                                        2.5522161259650256,
+                                                        2.2349795833225015,
+                                                        4.527821517691037]),
+                                      4.13343488948,
+                                      {'avg': 4.1334348894825013}, None)
+        exp_treatment = CategoryResults('Treatment', 0.255388,
+                                        [exp_control_group, exp_fast_group],
+                                        None)
+        exp = VectorsResults('avg', True, [exp_treatment])
+
+        self.assert_vectors_results_almost_equal(obs, exp)
 
 # class TrajectoryVectorsTests(BaseTests):
 #     def test_results(self):
-#         tv = TrajectoryVectors(self.coord_dict, self.eigvals, self.ids)
+#         tv = TrajectoryVectors(self.coord_dict, self.prop_expl, self.ids)
 #         obs = tv.results()
 #         exp_vector = [14.3839779766, 6.8423140875]
 #         exp_calc = {'trajectory': 15.9284677387}
@@ -468,7 +600,7 @@ class BaseVectorsTests(BaseTests):
 
 # class DifferenceVectorsTests(BaseTests):
 #     def test_results(self):
-#         dv = DifferenceVectors(self.coord_dict, self.eigvals, self.ids)
+#         dv = DifferenceVectors(self.coord_dict, self.prop_expl, self.ids)
 #         obs = dv.results()
 #         exp_vector = np.array([-7.54166389])
 #         exp_calc = {'mean': [-7.541663889], 'std': [0.0]}
@@ -483,7 +615,7 @@ class BaseVectorsTests(BaseTests):
 
 # class WindowDifferenceVectorsTests(BaseTests):
 #     def test_results(self):
-#         wdv = WindowDifferenceVectors(self.coord_dict, self.eigvals,
+#         wdv = WindowDifferenceVectors(self.coord_dict, self.prop_expl,
 #                                       self.ids, 1)
 #         obs = wdv.results()
 #         exp_vector = [-7.5416638890, 0.0]
