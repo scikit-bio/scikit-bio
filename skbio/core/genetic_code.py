@@ -154,8 +154,7 @@ class GeneticCode(object):
     # a mapping from positions in the list back to codons. These should be the
     # same for all GeneticCode instances, and are immutable (therefore
     # private).
-    _nt = "TCAG"
-    _codons = [a + b + c for a in _nt for b in _nt for c in _nt]
+    _codons = [a + b + c for a in "TCAG" for b in "TCAG" for c in "TCAG"]
 
     def __init__(self, code_sequence, id=None, name=None,
                  start_codon_sequence=None):
@@ -620,7 +619,7 @@ NCBIGeneticCodeData = [GeneticCode(*data) for data in [
 # build dict of GeneticCodes keyed by ID (as int, not str)
 GeneticCodes = dict([(i.id, i) for i in NCBIGeneticCodeData])
 # add str versions for convenience
-for key, value in GeneticCodes.items():
+for key, value in list(GeneticCodes.items()):
     GeneticCodes[str(key)] = value
 
 DEFAULT = GeneticCodes[1]
