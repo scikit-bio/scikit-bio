@@ -17,9 +17,15 @@ from .base import _validate
 def gini_index(data, method='rectangles'):
     """Calculate the Gini index.
 
-    Formula is ``G = A/(A+B)`` where ``A`` is the area between ``y=x`` and the
-    Lorenz curve and ``B`` is the area under the Lorenz curve. Simplifies to
-    ``1-2B`` since ``A+B=0.5``.
+    The Gini index is defined as
+
+    .. math::
+
+       G=\\frac{A}{A+B}
+
+    where :math:`A` is the area between :math:`y=x` and the Lorenz curve and
+    :math:`B` is the area under the Lorenz curve. Simplifies to :math:`1-2B`
+    since :math:`A+B=0.5`.
 
     Parameters
     ----------
@@ -30,13 +36,11 @@ def gini_index(data, method='rectangles'):
         Method for calculating the area under the Lorenz curve. If
         ``'rectangles'``, connects the Lorenz curve points by lines parallel to
         the x axis. This is the correct method (in our opinion) though
-        trapezoids might be desirable in some circumstances. Forumla is:
-        ``dx(sum(i=1,i=n,h_i))``.
-        If ``'trapezoids'``, connects the Lorenz curve points by linear
-        segments between them. Basically assumes that the given sampling is
-        accurate and that more features of given data would fall on linear
-        gradients between the values of this data. Formula is:
-        ``dx[(h_0+h_n)/2 + sum(i=1,i=n-1,h_i)]``.
+        ``'trapezoids'`` might be desirable in some circumstances. If
+        ``'trapezoids'``, connects the Lorenz curve points by linear segments
+        between them. Basically assumes that the given sampling is accurate and
+        that more features of given data would fall on linear gradients between
+        the values of this data.
 
     Returns
     -------
@@ -51,7 +55,18 @@ def gini_index(data, method='rectangles'):
 
     Notes
     -----
-    The Gini index was introduced in [1]_.
+    The Gini index was introduced in [1]_. The formula for
+    ``method='rectangles'`` is
+
+    .. math::
+
+       dx\\sum_{i=1}^n h_i
+
+    The formula for ``method='trapezoids'`` is
+
+    .. math::
+
+       dx(\\frac{h_0+h_n}{2}+\sum_{i=1}^{n-1} h_i)
 
     References
     ----------
