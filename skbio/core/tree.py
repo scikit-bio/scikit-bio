@@ -529,6 +529,11 @@ class TreeNode(object):
         TreeNode
             The resulting tree
 
+        Raises
+        ------
+        ValueError
+            If the names do not exist in the tree
+
         See Also
         --------
         prune
