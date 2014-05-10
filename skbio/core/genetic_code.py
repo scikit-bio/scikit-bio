@@ -137,7 +137,7 @@ class GeneticCode(object):
     __getitem__
     __cmp__
     __str__
-
+    __eq__
 
     Examples
     --------
@@ -304,6 +304,17 @@ class GeneticCode(object):
         .. shownumpydoc
         """
         return cmp(str(self), str(other))
+
+    def __eq__(self, other):
+        """ Allows two GeneticCode objects to be compared to each other.
+
+        Two GeneticCode objects are equal if they have equal code_sequences.
+
+        .. shownumpydoc
+        """
+        if not isinstance(other, GeneticCode):
+            return False
+        return self.code_sequence == other.code_sequence
 
     def __getitem__(self, item):
         """Returns amino acid corresponding to codon, or codons for an aa.
