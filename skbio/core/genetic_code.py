@@ -307,6 +307,7 @@ class GeneticCode(object):
         return self.code_sequence == other.code_sequence
 
     def __ne__(self, other):
+        """Required in Py2."""
         return not self == other
 
     def __getitem__(self, item):
