@@ -603,6 +603,8 @@ class TreeTests(TestCase):
         exp = 2.0
         self.assertEqual(obs, exp)
 
+        self.assertEqual(t.compare_rfd(t2), t2.compare_rfd(t))
+
         obs = t.compare_rfd(t2, proportion=True)
         exp = 0.5
         self.assertEqual(obs, exp)
