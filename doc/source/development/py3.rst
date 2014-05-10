@@ -285,7 +285,7 @@ Implementing comparisons
 
 If the class you're defining has a `total ordering
 <http://en.wikipedia.org/wiki/Total_order>`_, either use
-``functools.total_ordering`
+`functools.total_ordering
 <https://docs.python.org/2.7/library/functools.html#functools.total_ordering>`_
 or implement all rich comparison methods if comparison performance is
 a bottleneck. Don't implement `__cmp__`, which was removed in Py3.
