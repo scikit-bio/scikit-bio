@@ -153,7 +153,10 @@ class GeneticCodeTests(TestCase):
 
         exp_arg = ['AGA', 'AGG', 'CGT', 'CGC', 'CGA', 'CGG']
         obs_arg = sgc['R']
-        self.assertEqual(obs_ile, exp_ile)
+        if hasattr(self, 'assertItemsEqual'):
+            self.assertItemsEqual(obs_arg, exp_arg)
+        else:
+            self.assertCountEqual(obs_arg, exp_arg)
 
         exp_leu = ['TTA', 'TTG', 'CTT', 'CTC', 'CTA', 'CTG']
         obs_leu = sgc['L']
