@@ -14,6 +14,7 @@ import numpy as np
 import numpy.testing as nptest
 from unittest import TestCase, main
 from skbio.core.tree import TreeNode, _dnd_tokenizer
+from skbio.core.distance import DistanceMatrix
 from skbio.core.exception import (NoLengthError, TreeError, RecordError,
                                   MissingNodeError)
 from skbio.maths.stats.test import correlation_t
@@ -451,16 +452,15 @@ class TreeTests(TestCase):
         t = TreeNode.from_newick('((H:1,G:1):2,(R:0.5,M:0.7):3);')
         nodes = [t.find('H'), t.find('G'), t.find('M')]
         names = ['H', 'G', 'M']
-        exp = np.array([[0, 2.0, 6.7], [2.0, 0, 6.7], [6.7, 6.7, 0.0]])
-        exp_order = nodes
+        exp = DistanceMatrix(np.array([[0, 2.0, 6.7],
+                                       [2.0, 0, 6.7],
+                                       [6.7, 6.7, 0.0]]), ['H', 'G', 'M'])
 
-        obs, obs_order = t.tip_tip_distances(endpoints=names)
-        nptest.assert_almost_equal(obs, exp)
-        self.assertEqual(obs_order, exp_order)
+        obs = t.tip_tip_distances(endpoints=names)
+        self.assertEqual(obs, exp)
 
-        obs, obs_order = t.tip_tip_distances(endpoints=nodes)
-        nptest.assert_almost_equal(obs, exp)
-        self.assertEqual(obs_order, exp_order)
+        obs = t.tip_tip_distances(endpoints=nodes)
+        self.assertEqual(obs, exp)
 
     def test_neighbors(self):
         """Get neighbors of a node"""
@@ -542,11 +542,9 @@ class TreeTests(TestCase):
         result = tree1.root_at_midpoint()
         self.assertEqual(result.distance(result.find('e')), 1.5)
         self.assertEqual(result.distance(result.find('g')), 2.5)
-        exp_dist, exp_order = tree1.tip_tip_distances()
-        obs_dist, obs_order = result.tip_tip_distances()
-        nptest.assert_almost_equal(obs_dist, exp_dist)
-        self.assertEqual([n.name for n in obs_order],
-                         [n.name for n in exp_order])
+        exp_dist = tree1.tip_tip_distances()
+        obs_dist = result.tip_tip_distances()
+        self.assertEqual(obs_dist, exp_dist)
 
     def test_compare_subsets(self):
         """compare_subsets should return the fraction of shared subsets"""

@@ -158,10 +158,11 @@ from functools import reduce
 
 import numpy as np
 
-from skbio.maths.stats.test import correlation_t
+from skbio.core.distance import DistanceMatrix
 from skbio.core.exception import (NoLengthError, DuplicateNodeError,
-                                  NoParentError, MissingNodeError,
-                                  TreeError, RecordError)
+                                  NoParentError, MissingNodeError, TreeError,
+                                  RecordError)
+from skbio.maths.stats.test import correlation_t
 
 
 def distance_from_r(m1, m2):
@@ -180,7 +181,7 @@ def distance_from_r(m1, m2):
     float
         The distance between m1 and m2
     """
-    return (1-correlation_t(m1.flat, m2.flat)[0])/2
+    return (1-correlation_t(m1.data.flat, m2.data.flat)[0])/2
 
 
 class TreeNode(object):
@@ -2130,9 +2131,9 @@ class TreeNode(object):
         """returns the max distance between any pair of tips
 
         Also returns the tip names  that it is between as a tuple"""
-        distmtx, tip_order = self.tip_tip_distances()
-        idx_max = divmod(distmtx.argmax(), distmtx.shape[1])
-        max_pair = (tip_order[idx_max[0]].name, tip_order[idx_max[1]].name)
+        distmtx = self.tip_tip_distances()
+        idx_max = divmod(distmtx.data.argmax(), distmtx.shape[1])
+        max_pair = (distmtx.ids[idx_max[0]], distmtx.ids[idx_max[1]])
         return distmtx[idx_max], max_pair
 
     def get_max_distance(self):
@@ -2200,10 +2201,8 @@ class TreeNode(object):
 
         Returns
         -------
-        ndarray(dtype=float)
+        DistanceMatrix
             The distance matrix
-        list of TreeNode
-            The tip order in the distance matrix
 
         Raises
         ------
@@ -2221,14 +2220,17 @@ class TreeNode(object):
         --------
         >>> from skbio.core.tree import TreeNode
         >>> tree = TreeNode.from_newick("((a:1,b:2)c:3,(d:4,e:5)f:6)root;")
-        >>> mat, tips = tree.tip_tip_distances()
-        >>> mat
-        array([[  0.,   3.,  14.,  15.],
-               [  3.,   0.,  15.,  16.],
-               [ 14.,  15.,   0.,   9.],
-               [ 15.,  16.,   9.,   0.]])
-        >>> [n.name for n in tips]
-        ['a', 'b', 'd', 'e']
+        >>> mat = tree.tip_tip_distances()
+        >>> print mat
+        4x4 distance matrix
+        IDs:
+        a, b, d, e
+        Data:
+        [[  0.   3.  14.  15.]
+         [  3.   0.  15.  16.]
+         [ 14.  15.   0.   9.]
+         [ 15.  16.   9.   0.]]
+
         """
         all_tips = list(self.tips())
         if endpoints is None:
@@ -2284,7 +2286,7 @@ class TreeNode(object):
             if len(node.children) > 1:
                 update_result()
 
-        return result + result.T, tip_order
+        return DistanceMatrix(result + result.T, [n.name for n in tip_order])
 
 #   def compare_rfd(self, other, proportion=False):
 #       """Calculates the Robinson and Foulds symmetric difference
@@ -2435,8 +2437,8 @@ class TreeNode(object):
         self_nodes = [self_names[k] for k in common_names]
         other_nodes = [other_names[k] for k in common_names]
 
-        self_matrix = self.tip_tip_distances(endpoints=self_nodes)[0]
-        other_matrix = other.tip_tip_distances(endpoints=other_nodes)[0]
+        self_matrix = self.tip_tip_distances(endpoints=self_nodes)
+        other_matrix = other.tip_tip_distances(endpoints=other_nodes)
 
         return dist_f(self_matrix, other_matrix)
 
