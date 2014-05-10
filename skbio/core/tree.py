@@ -1676,6 +1676,11 @@ class TreeNode(object):
         TreeNode
             The lowest common ancestor of the passed in nodes
 
+        Raises
+        ------
+        ValueError
+            If no tips could be found in the tree
+
         Examples
         --------
         >>> from skbio.core.tree import TreeNode
@@ -1695,7 +1700,7 @@ class TreeNode(object):
         tips = [self.find(name) for name in tipnames]
 
         if len(tips) == 0:
-            return None
+            raise ValueError("No tips found!")
 
         nodes_to_scrub = []
 

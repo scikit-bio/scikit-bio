@@ -420,6 +420,10 @@ class TreeTests(TestCase):
         self.assertEqual(obs_1, exp_1)
         self.assertEqual(obs_2, exp_2)
 
+        # empty case
+        with self.assertRaises(ValueError):
+            t1.lowest_common_ancestor([])
+
     def test_get_max_distance(self):
         """get_max_distance should get max tip distance across tree"""
         tree = TreeNode.from_newick(
