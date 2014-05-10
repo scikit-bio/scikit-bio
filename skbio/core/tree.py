@@ -515,23 +515,43 @@ class TreeNode(object):
             node.parent.append(child)
             node.parent.remove(node)
 
-#   def shear(self, names):
-#       """Lop off tips until the tree just has the desired tip names"""
-#       tcopy = self.deepcopy()
-#       all_tips = set([n.name for n in tcopy.tips()])
-#       ids = set(names)
-#
-#       if not ids.issubset(all_tips):
-#           raise ValueError("ids are not a subset of the tree!")
-#
-#       while len(tcopy.tips()) != len(ids):
-#           for n in tcopy.tips():
-#               if n.name not in ids:
-#                   n.parent.removeNode(n)
-#
-#       tcopy.prune()
-#       return tcopy
-#
+    def shear(self, names):
+        """Lop off tips until the tree just has the desired tip names.
+
+        Parameters
+        ----------
+        names : Iterable of str
+            The tip names on the tree to keep
+
+        Returns
+        -------
+        TreeNode
+            The resulting tree
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> t = TreeNode.from_newick('((H:1,G:1):2,(R:0.5,M:0.7):3);')
+        >>> sheared = t.shear(['G', 'M'])
+        >>> print t.to_newick(with_distances=True)
+        (G:3.0,M:3.7);
+
+        """
+        tcopy = self.deepcopy()
+        all_tips = {n.name for n in tcopy.tips()}
+        ids = set(names)
+
+        if not ids.issubset(all_tips):
+            raise ValueError("ids are not a subset of the tree!")
+
+        while len(list(tcopy.tips())) != len(ids):
+            for n in list(tcopy.tips()):
+                if n.name not in ids:
+                    n.parent.remove(n)
+
+        tcopy.prune()
+
+        return tcopy
 
     def copy(self):
         r"""Returns a copy of self using an iterative approach
@@ -2288,32 +2308,32 @@ class TreeNode(object):
 
         return DistanceMatrix(result + result.T, [n.name for n in tip_order])
 
-#   def compare_rfd(self, other, proportion=False):
-#       """Calculates the Robinson and Foulds symmetric difference
-#
-#       Implementation based off of code by Julia Goodrich
-#       """
-#       t1names = {n.name for n in self.tips()}
-#       t2names = {n.name for n in other.tips()}
-#
-#       if t1names != t2names:
-#           if t1names < t2names:
-#               tree2 = other.shear(t1names)
-#           else:
-#               tree1 = self.shear(t2names)
-#
-#       tree1_sets = tree1.subsets()
-#       tree2_sets = tree2.subsets()
-#
-#       not_in_both = tree1_sets ^ tree2_sets
-#       total_subsets = len(tree1_sets) + len(tree2_sets)
-#
-#       dist = len(not_in_both)
-#
-#       if proportion:
-#           dist = dist/float(total_subsets)
-#
-#       return dist
+    def compare_rfd(self, other, proportion=False):
+        """Calculates the Robinson and Foulds symmetric difference
+
+        Implementation based off of code by Julia Goodrich
+        """
+        t1names = {n.name for n in self.tips()}
+        t2names = {n.name for n in other.tips()}
+
+        if t1names != t2names:
+            if t1names < t2names:
+                tree2 = other.shear(t1names)
+            else:
+                tree1 = self.shear(t2names)
+
+        tree1_sets = tree1.subsets()
+        tree2_sets = tree2.subsets()
+
+        not_in_both = tree1_sets ^ tree2_sets
+        total_subsets = len(tree1_sets) + len(tree2_sets)
+
+        dist = len(not_in_both)
+
+        if proportion:
+            dist = dist / float(total_subsets)
+
+        return dist
 
     def compare_subsets(self, other, exclude_absent_taxa=False):
         """Returns fraction of overlapping subsets where self and other differ.

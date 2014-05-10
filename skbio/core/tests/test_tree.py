@@ -420,6 +420,13 @@ class TreeTests(TestCase):
         self.assertEqual(tip_a[0] + tip_b[0], 1.6)
         self.assertEqual(sorted([tip_a[1].name, tip_b[1].name]), ['b', 'e'])
 
+    def test_shear(self):
+        """Shear the nodes"""
+        t = TreeNode.from_newick('((H:1,G:1):2,(R:0.5,M:0.7):3);')
+        obs = t.shear(['G', 'M']).to_newick(with_distances=True)
+        exp = '(G:3.0,M:3.7);'
+        self.assertEqual(obs, exp)
+
     def test_compare_tip_distances(self):
         t = TreeNode.from_newick('((H:1,G:1):2,(R:0.5,M:0.7):3);')
         t2 = TreeNode.from_newick('(((H:1,G:1,O:1):2,R:3):1,X:4);')
