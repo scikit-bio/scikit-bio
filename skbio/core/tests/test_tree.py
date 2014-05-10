@@ -10,9 +10,12 @@
 
 from __future__ import division
 
+from StringIO import StringIO
+from unittest import TestCase, main
+
 import numpy as np
 import numpy.testing as nptest
-from unittest import TestCase, main
+
 from skbio.core.tree import TreeNode, _dnd_tokenizer
 from skbio.core.distance import DistanceMatrix
 from skbio.core.exception import (NoLengthError, TreeError, RecordError,
@@ -637,6 +640,12 @@ class TreeTests(TestCase):
         obs_ids = {id(n) for n in obs.traverse()}
 
         self.assertEqual(t_ids.intersection(obs_ids), set())
+
+    def test_from_file(self):
+        """Parse a tree from a file"""
+        t_io = StringIO("((a,b)c,(d,e)f)g;")
+        t = TreeNode.from_file(t_io)
+        self.assertEqual(list('abcdefg'), [n.name for n in t.postorder()])
 
 
 class DndTokenizerTests(TestCase):

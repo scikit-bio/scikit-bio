@@ -163,6 +163,7 @@ from skbio.core.exception import (NoLengthError, DuplicateNodeError,
                                   NoParentError, MissingNodeError, TreeError,
                                   RecordError)
 from skbio.maths.stats.test import correlation_t
+from skbio.util.io import open_file
 
 
 def distance_from_r(m1, m2):
@@ -1722,6 +1723,13 @@ class TreeNode(object):
         return curr
 
     lca = lowest_common_ancestor  # for convenience
+
+    @classmethod
+    def from_file(cls, tree_f):
+        """Load a tree from a file or file-like object"""
+        with open_file(tree_f) as data:
+            tree = cls.from_newick(data)
+        return tree
 
     @classmethod
     def from_newick(cls, lines, unescape_name=True):
