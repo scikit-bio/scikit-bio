@@ -12,11 +12,10 @@ from future.builtins import zip
 
 from collections import namedtuple
 
-from os.path import exists
-
 import numpy as np
 
 from skbio.core.exception import FileFormatError
+from skbio.util.io import open_file
 
 
 class OrdinationResults(namedtuple('OrdinationResults',
@@ -168,67 +167,59 @@ class OrdinationResults(namedtuple('OrdinationResults',
         ...                 "Site constraints\t0\t0\n")
         >>> ord_res = OrdinationResults.from_file(or_f)
         """
-        # Currently we support either a file or a filepath.
-        # This will change once we have a centralized function that
-        # takes care of this.
-        # Adapted from skbio.core.distance.DissimilarityMatrix.from_file
-        fd = None
-        if isinstance(ord_res_f, str) and exists(ord_res_f):
-            # Check if it's a valid path, if so read the contents
-            fd = open(ord_res_f, 'U')
+
+        with open_file(ord_res_f, 'U') as fd:
             orf = iter(fd)
-        else:
-            orf = iter(ord_res_f)
 
-        # Starting at line 0, we should find the eigvals
-        eigvals = cls._parse_eigvals(orf)
-        # The next line should be an empty line
-        cls._check_empty_line(orf)
-        # Now we should find the proportion explained section
-        prop_expl = cls._parse_proportion_explained(orf)
+            # Starting at line 0, we should find the eigvals
+            eigvals = cls._parse_eigvals(orf)
+            # The next line should be an empty line
+            cls._check_empty_line(orf)
+            # Now we should find the proportion explained section
+            prop_expl = cls._parse_proportion_explained(orf)
 
-        if prop_expl is not None:
-            if len(prop_expl) != len(eigvals):
-                raise ValueError('There should be as many proportion explained'
-                                 ' values as eigvals: %d != %d' %
-                                 (len(prop_expl), len(eigvals)))
+            if prop_expl is not None:
+                if len(prop_expl) != len(eigvals):
+                    raise ValueError(
+                        'There should be as many proportion explained'
+                        ' values as eigvals: %d != %d' %
+                        (len(prop_expl), len(eigvals)))
 
-        # The next line should be an empty line
-        cls._check_empty_line(orf)
-        # Next section should be the species section
-        species, species_ids = cls._parse_coords(orf, 'Species')
-        if species is not None:
-            if len(species[0]) != len(eigvals):
-                raise ValueError('There should be as many coordinates per '
-                                 'species as eigvals: %d != %d' %
-                                 (len(species[0]), len(eigvals)))
+            # The next line should be an empty line
+            cls._check_empty_line(orf)
+            # Next section should be the species section
+            species, species_ids = cls._parse_coords(orf, 'Species')
+            if species is not None:
+                if len(species[0]) != len(eigvals):
+                    raise ValueError(
+                        'There should be as many coordinates per'
+                        ' species as eigvals: %d != %d' %
+                        (len(species[0]), len(eigvals)))
 
-        # The next line should be an empty line
-        cls._check_empty_line(orf)
-        # Next section should be the site section
-        site, site_ids = cls._parse_coords(orf, 'Site')
-        if site is not None:
-            if len(site[0]) != len(eigvals):
-                raise ValueError('There should be as many coordinates per '
-                                 'site as eigvals: %d != %d' %
-                                 (len(site[0]), len(eigvals)))
+            # The next line should be an empty line
+            cls._check_empty_line(orf)
+            # Next section should be the site section
+            site, site_ids = cls._parse_coords(orf, 'Site')
+            if site is not None:
+                if len(site[0]) != len(eigvals):
+                    raise ValueError(
+                        'There should be as many coordinates per'
+                        ' site as eigvals: %d != %d' %
+                        (len(site[0]), len(eigvals)))
 
-        # The next line should be an empty line
-        cls._check_empty_line(orf)
-        # Next section should be the biplot section
-        biplot = cls._parse_biplot(orf)
-        # The next line should be an empty line
-        cls._check_empty_line(orf)
-        # Next section should be the site constraints section
-        cons, cons_ids = cls._parse_coords(orf, 'Site constraints')
-        if cons_ids is not None and site_ids is not None:
-            if cons_ids != site_ids:
-                raise ValueError('Site constraints ids and site ids must be '
-                                 'equal: %s != %s' % (cons_ids, site_ids))
-
-        # if the input was a file path close the file
-        if fd is not None:
-            fd.close()
+            # The next line should be an empty line
+            cls._check_empty_line(orf)
+            # Next section should be the biplot section
+            biplot = cls._parse_biplot(orf)
+            # The next line should be an empty line
+            cls._check_empty_line(orf)
+            # Next section should be the site constraints section
+            cons, cons_ids = cls._parse_coords(orf, 'Site constraints')
+            if cons_ids is not None and site_ids is not None:
+                if cons_ids != site_ids:
+                    raise ValueError(
+                        'Site constraints ids and site ids must be'
+                        ' equal: %s != %s' % (cons_ids, site_ids))
 
         return cls(eigvals=eigvals, species=species, site=site, biplot=biplot,
                    site_constraints=cons, proportion_explained=prop_expl,
@@ -285,9 +276,9 @@ class OrdinationResults(namedtuple('OrdinationResults',
             prop_expl = np.asarray(next(lines).strip().split('\t'),
                                    dtype=np.float64)
             if len(prop_expl) != num_prop_expl:
-                raise ValueError('Expected %d proportion explained values, but'
-                                 ' found %d.' % (num_prop_expl,
-                                                 len(prop_expl)))
+                raise ValueError(
+                    'Expected %d proportion explained values, but'
+                    ' found %d.' % (num_prop_expl, len(prop_expl)))
         return prop_expl
 
     @staticmethod
@@ -363,68 +354,70 @@ class OrdinationResults(namedtuple('OrdinationResults',
 
         Parameters
         ----------
-        out_f : file-like object
-            File-like object to write serialized data to. Must have a ``write``
-            method. It is the caller's responsibility to close `out_f` when
-            done (if necessary).
-
+        out_f : file-like object or filename
+            File-like object to write serialized data to, or name of
+            file. If it's a file-like object, it must have a ``write``
+            method, and it won't be closed. Else, it is opened and
+            closed after writing.
         See Also
         --------
         from_file
+
         """
+        with open_file(out_f, 'w') as out_f:
+            # Write eigvals
+            out_f.write("Eigvals\t%d\n" % self.eigvals.shape)
+            out_f.write("%s\n\n" % '\t'.join(np.asarray(self.eigvals,
+                                                        dtype=np.str)))
 
-        # Write eigvals
-        out_f.write("Eigvals\t%d\n" % self.eigvals.shape)
-        out_f.write("%s\n\n" % '\t'.join(np.asarray(self.eigvals,
-                    dtype=np.str)))
+            # Write proportion explained
+            if self.proportion_explained is None:
+                out_f.write("Proportion explained\t0\n\n")
+            else:
+                out_f.write("Proportion explained\t%d\n" %
+                            self.proportion_explained.shape)
+                out_f.write("%s\n\n" % '\t'.join(
+                    np.asarray(self.proportion_explained, dtype=np.str)))
 
-        # Write proportion explained
-        if self.proportion_explained is None:
-            out_f.write("Proportion explained\t0\n\n")
-        else:
-            out_f.write("Proportion explained\t%d\n" %
-                        self.proportion_explained.shape)
-            out_f.write("%s\n\n" % '\t'.join(np.asarray(
-                        self.proportion_explained, dtype=np.str)))
+            # Write species
+            if self.species is None:
+                out_f.write("Species\t0\t0\n\n")
+            else:
+                out_f.write("Species\t%d\t%d\n" % self.species.shape)
+                for id_, vals in zip(self.species_ids, self.species):
+                    out_f.write("%s\t%s\n" % (id_, '\t'.join(np.asarray(vals,
+                                dtype=np.str))))
+                out_f.write("\n")
 
-        # Write species
-        if self.species is None:
-            out_f.write("Species\t0\t0\n\n")
-        else:
-            out_f.write("Species\t%d\t%d\n" % self.species.shape)
-            for id_, vals in zip(self.species_ids, self.species):
-                out_f.write("%s\t%s\n" % (id_, '\t'.join(np.asarray(vals,
-                            dtype=np.str))))
-            out_f.write("\n")
+            # Write site
+            if self.site is None:
+                out_f.write("Site\t0\t0\n\n")
+            else:
+                out_f.write("Site\t%d\t%d\n" % self.site.shape)
+                for id_, vals in zip(self.site_ids, self.site):
+                    out_f.write("%s\t%s\n" % (id_, '\t'.join(
+                        np.asarray(vals, dtype=np.str))))
+                out_f.write("\n")
 
-        # Write site
-        if self.site is None:
-            out_f.write("Site\t0\t0\n\n")
-        else:
-            out_f.write("Site\t%d\t%d\n" % self.site.shape)
-            for id_, vals in zip(self.site_ids, self.site):
-                out_f.write("%s\t%s\n" % (id_, '\t'.join(np.asarray(vals,
-                            dtype=np.str))))
-            out_f.write("\n")
+            # Write biplot
+            if self.biplot is None:
+                out_f.write("Biplot\t0\t0\n\n")
+            else:
+                out_f.write("Biplot\t%d\t%d\n" % self.biplot.shape)
+                for vals in self.biplot:
+                    out_f.write("%s\n" % '\t'.join(
+                        np.asarray(vals, dtype=np.str)))
+                out_f.write("\n")
 
-        # Write biplot
-        if self.biplot is None:
-            out_f.write("Biplot\t0\t0\n\n")
-        else:
-            out_f.write("Biplot\t%d\t%d\n" % self.biplot.shape)
-            for vals in self.biplot:
-                out_f.write("%s\n" % '\t'.join(np.asarray(vals, dtype=np.str)))
-            out_f.write("\n")
-
-        # Write site-constraints
-        if self.site_constraints is None:
-            out_f.write("Site constraints\t0\t0\n")
-        else:
-            out_f.write("Site constraints\t%d\t%d\n" %
-                        self.site_constraints.shape)
-            for id_, vals in zip(self.site_ids, self.site_constraints):
-                out_f.write("%s\t%s\n" % (id_, '\t'.join(np.asarray(vals,
-                            dtype=np.str))))
+            # Write site-constraints
+            if self.site_constraints is None:
+                out_f.write("Site constraints\t0\t0\n")
+            else:
+                out_f.write("Site constraints\t%d\t%d\n" %
+                            self.site_constraints.shape)
+                for id_, vals in zip(self.site_ids, self.site_constraints):
+                    out_f.write("%s\t%s\n" % (id_, '\t'.join(
+                        np.asarray(vals, dtype=np.str))))
 
 
 class Ordination(object):

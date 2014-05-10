@@ -28,8 +28,6 @@ Exceptions
    DuplicateNodeError
    MissingNodeError
    NoParentError
-   FileFormatError
-   RecordError
    FastqParseError
    GeneticCodeError
    GeneticCodeInitError
@@ -125,17 +123,8 @@ class NoParentError(MissingNodeError):
     pass
 
 
-class FileFormatError(Exception):
-    """Exception raised when a file can not be parsed."""
-    pass
-
-
-class RecordError(FileFormatError):
-    """Exception raised when a record is bad."""
-    pass
-
-
 class FastqParseError(FileFormatError):
+    """Exception raised when a FASTQ formatted file cannot be parsed"""
     pass
 
 
