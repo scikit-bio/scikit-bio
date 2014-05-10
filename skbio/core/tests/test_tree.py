@@ -19,7 +19,7 @@ import numpy.testing as nptest
 from skbio.core.tree import TreeNode, _dnd_tokenizer
 from skbio.core.distance import DistanceMatrix
 from skbio.core.exception import (NoLengthError, TreeError, RecordError,
-                                  MissingNodeError)
+                                  MissingNodeError, NoParentError)
 from skbio.maths.stats.test import correlation_t
 
 
@@ -357,9 +357,13 @@ class TreeTests(TestCase):
         """Get the distance from a node to its ancestor"""
         t = TreeNode.from_newick("((a:0.1,b:0.2)c:0.3,(d:0.4,e)f:0.5)root;")
         a = t.find('a')
+        b = t.find('b')
         exp_to_root = 0.1 + 0.3
         obs_to_root = a.accumulate_to_ancestor(t)
         self.assertEqual(obs_to_root, exp_to_root)
+
+        with self.assertRaises(NoParentError):
+            a.accumulate_to_ancestor(b)
 
     def test_distance(self):
         """Get the distance between two nodes"""
