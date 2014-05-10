@@ -100,6 +100,12 @@ class TreeTests(TestCase):
         self.assertEqual(self.simple_t.children[1].name, 'i2')
         self.assertEqual(len(self.simple_t.children), 2)
 
+    def test_iter(self):
+        """iter wraps children"""
+        exp = ['i1', 'i2']
+        obs = [n.name for n in self.simple_t]
+        self.assertEqual(obs, exp)
+
     def test_gops(self):
         """Basic TreeNode operations should work as expected"""
         p = TreeNode()
