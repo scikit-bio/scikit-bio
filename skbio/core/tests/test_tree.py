@@ -520,6 +520,12 @@ class TreeTests(TestCase):
         self.assertFalse(t.children[1].children[0].has_children())
         self.assertFalse(t.children[1].children[1].has_children())
 
+    def test_levelorder(self):
+        """Test level order traversal of the tree"""
+        exp = ['root', 'i1', 'i2', 'a', 'b', 'c', 'd']
+        obs = [n.name for n in self.simple_t.levelorder()]
+        self.assertEqual(obs, exp)
+
     def test_index_tree(self):
         """index_tree should produce correct index and node map"""
         # test for first tree: contains singleton outgroup
