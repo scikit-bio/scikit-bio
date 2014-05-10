@@ -44,6 +44,17 @@ class GeneticCodeTests(TestCase):
         for i in self.wrong_length:
             self.assertRaises(GeneticCodeInitError, GeneticCode, i)
 
+    def test_eq(self):
+        gc_1 = GeneticCode(self.sgc)
+        gc_2 = GeneticCode(self.sgc)
+        self.assertEqual(gc_1, gc_2)
+
+    def test_ne(self):
+        gc_1 = GeneticCode(self.sgc)
+        gc_2 = GeneticCode(self.sgc)
+        # Explicitly using !=
+        self.assertFalse(gc_1 != gc_2)
+
     def test_standard_code(self):
         """Standard genetic code from NCBI should have correct properties"""
         sgc = GeneticCode(*self.ncbi_standard)
