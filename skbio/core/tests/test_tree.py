@@ -36,6 +36,16 @@ class TreeTests(TestCase):
         self.TreeNode = nodes
         self.TreeRoot = nodes['a']
 
+    def test_count(self):
+        """Get node counts"""
+        exp = 7
+        obs = self.simple_t.count()
+        self.assertEqual(obs, exp)
+
+        exp = 4
+        obs = self.simple_t.count(tips=True)
+        self.assertEqual(obs, exp)
+
     def test_copy(self):
         """copy a tree"""
         self.simple_t.children[0].length = 1.2

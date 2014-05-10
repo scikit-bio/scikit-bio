@@ -528,6 +528,13 @@ class TreeNode(object):
         TreeNode
             The resulting tree
 
+        See Also
+        --------
+        prune
+        remove
+        pop
+        remove_deleted
+
         Examples
         --------
         >>> from skbio.core.tree import TreeNode
@@ -717,6 +724,34 @@ class TreeNode(object):
             result.name = "root"
 
         return result
+
+    def count(self, tips=False):
+        """Get the count of nodes in the tree
+
+        Parameters
+        ----------
+        tips : bool
+            If `True`, only return the count of the number of tips
+
+        Returns
+        -------
+        int
+            The number of nodes or tips
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree = TreeNode.from_newick("((a,(b,c)d)e,(f,g)h)i;")
+        >>> print tree.count()
+        9
+        >>> print tree.count(tips=True)
+        5
+
+        """
+        if tips:
+            return len(list(self.tips()))
+        else:
+            return len(list(self.traverse(include_self=True)))
 
     def subtree(self, tip_list=None):
         r"""Make a copy of the subtree"""
