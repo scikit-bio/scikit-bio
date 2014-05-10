@@ -135,7 +135,6 @@ class GeneticCode(object):
     translate
     __repr__
     __getitem__
-    __cmp__
     __str__
     __eq__
 
@@ -296,15 +295,6 @@ class GeneticCode(object):
         """
         return 'GeneticCode(%s)' % str(self)
 
-    def __cmp__(self, other):
-        """ Allows two GeneticCode objects to be compared to each other.
-
-        Two GeneticCode objects are equal if they have equal code_sequences.
-
-        .. shownumpydoc
-        """
-        return cmp(str(self), str(other))
-
     def __eq__(self, other):
         """ Allows two GeneticCode objects to be compared to each other.
 
@@ -315,6 +305,9 @@ class GeneticCode(object):
         if not isinstance(other, GeneticCode):
             return False
         return self.code_sequence == other.code_sequence
+
+    def __ne__(self, other):
+        return not self == other
 
     def __getitem__(self, item):
         """Returns amino acid corresponding to codon, or codons for an aa.
