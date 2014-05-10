@@ -818,6 +818,19 @@ class DndParserTests(TestCase):
         self.assertEqual(obs.to_newick(with_distances=True),
                          tree_unesc.to_newick(with_distances=True))
 
+    def test_DndParser_list(self):
+        """Make sure TreeNode.from_newick can handle list of strings"""
+        t_str = ["(A_a,(B:1.0,C)", ",'D_e':0.5)E;"]
+        tree_unesc = TreeNode.from_newick(t_str, unescape_name=True)
+
+        self.assertEqual(tree_unesc.name, 'E')
+        self.assertEqual(tree_unesc.children[0].name, 'A a')
+        self.assertEqual(tree_unesc.children[1].children[0].name, 'B')
+        self.assertEqual(tree_unesc.children[1].children[0].length, 1.0)
+        self.assertEqual(tree_unesc.children[1].children[1].name, 'C')
+        self.assertEqual(tree_unesc.children[2].name, 'D_e')
+        self.assertEqual(tree_unesc.children[2].length, 0.5)
+
 sample = """
 (
 (
