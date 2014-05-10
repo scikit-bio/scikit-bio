@@ -580,6 +580,23 @@ class TreeTests(TestCase):
         result = t.compare_subsets(self.TreeRoot)
         self.assertEqual(result, 1)
 
+    def test_compare_rfd(self):
+        """compare_rfd should return the Robinson Foulds distance"""
+        t = TreeNode.from_newick('((H,G),(R,M));')
+        t2 = TreeNode.from_newick('(((H,G),R),M);')
+        t4 = TreeNode.from_newick('(((H,G),(O,R)),X);')
+
+        obs = t.compare_rfd(t2)
+        exp = 2.0
+        self.assertEqual(obs, exp)
+
+        obs = t.compare_rfd(t2, proportion=True)
+        exp = 0.5
+        self.assertEqual(obs, exp)
+
+        with self.assertRaises(ValueError):
+            t.compare_rfd(t4)
+
     def test_assign_ids(self):
         """Assign IDs to the tree"""
         t1 = TreeNode.from_newick("(((a,b),c),(e,f),(g));")

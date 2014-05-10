@@ -533,7 +533,7 @@ class TreeNode(object):
         >>> from skbio.core.tree import TreeNode
         >>> t = TreeNode.from_newick('((H:1,G:1):2,(R:0.5,M:0.7):3);')
         >>> sheared = t.shear(['G', 'M'])
-        >>> print t.to_newick(with_distances=True)
+        >>> print sheared.to_newick(with_distances=True)
         (G:3.0,M:3.7);
 
         """
@@ -2101,7 +2101,7 @@ class TreeNode(object):
         --------
         tip_tip_distances
         accumulate_to_ancestor
-        compare_by_distances
+        compare_tip_distances
         get_max_distance
 
         Examples
@@ -2176,7 +2176,7 @@ class TreeNode(object):
         --------
         distance
         tip_tip_distances
-        compare_by_distances
+        compare_tip_distances
 
         Examples
         --------
@@ -2234,7 +2234,7 @@ class TreeNode(object):
         See Also
         --------
         distance
-        compare_by_distances
+        compare_tip_distances
 
         Examples
         --------
@@ -2311,27 +2311,65 @@ class TreeNode(object):
     def compare_rfd(self, other, proportion=False):
         """Calculates the Robinson and Foulds symmetric difference
 
+        Parameters
+        ----------
+        other : TreeNode
+            A tree to compare against
+        proportion : bool
+            Return a proportional difference
+
+        Returns
+        -------
+        float
+            The distance between the trees
+
+        Notes
+        -----
         Implementation based off of code by Julia Goodrich
+
+        Raises
+        ------
+        ValueError
+            If the tip names between `self` and `other` are equal.
+
+        See Also
+        --------
+        compare_subsets
+        compare_tip_distances
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree1 = TreeNode.from_newick("((a,b),(c,d));")
+        >>> tree2 = TreeNode.from_newick("(((a,b),c),d);")
+        >>> tree1.compare_rfd(tree2)
+        2.0
+
         """
         t1names = {n.name for n in self.tips()}
         t2names = {n.name for n in other.tips()}
 
         if t1names != t2names:
             if t1names < t2names:
+                tree1 = self
                 tree2 = other.shear(t1names)
             else:
                 tree1 = self.shear(t2names)
+                tree2 = other
+        else:
+            tree1 = self
+            tree2 = other
 
         tree1_sets = tree1.subsets()
         tree2_sets = tree2.subsets()
 
-        not_in_both = tree1_sets ^ tree2_sets
-        total_subsets = len(tree1_sets) + len(tree2_sets)
+        not_in_both = tree1_sets.symmetric_difference(tree2_sets)
 
-        dist = len(not_in_both)
+        dist = float(len(not_in_both))
 
         if proportion:
-            dist = dist / float(total_subsets)
+            total_subsets = len(tree1_sets) + len(tree2_sets)
+            dist = dist / total_subsets
 
         return dist
 
@@ -2355,7 +2393,8 @@ class TreeNode(object):
 
         See Also
         --------
-        compare_by_distances
+        compare_rfd
+        compare_tip_distances
         subsets
 
         Examples
@@ -2428,6 +2467,7 @@ class TreeNode(object):
         See Also
         --------
         compare_subsets
+        compare_rfd
 
         Examples
         --------
