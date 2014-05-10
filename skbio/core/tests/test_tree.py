@@ -146,6 +146,14 @@ class TreeTests(TestCase):
         n = TreeNode()
         self.assertFalse(self.simple_t.remove(n))
 
+    def test_remove_deleted(self):
+        """Remove nodes by function"""
+        f = lambda node: node.name in ['b', 'd']
+        self.simple_t.remove_deleted(f)
+        exp = "((a)i1,(c)i2)root;"
+        obs = self.simple_t.to_newick()
+        self.assertEqual(obs, exp)
+
     def test_adopt(self):
         """Adopt a node!"""
         n1 = TreeNode(name='n1')
