@@ -94,7 +94,7 @@ Node name: C, Is a tip: False
 
 Note, by default, `non_tips` will ignore `self` (which is the root in this
 case).  You can pass the `include_self` flag to `non_tips` if you wish to
-include `self.`
+include `self`.
 
 The `TreeNode` provides a few ways to compare trees. First, let's create two
 similar trees and compare their topologies using `compare_subsets`. This
@@ -187,7 +187,7 @@ def distance_from_r(m1, m2):
 class TreeNode(object):
     r"""Representation of a node within a tree
 
-    A `TreeNode` instance stores links to its `parent` and optional `children`
+    A `TreeNode` instance stores links to its parent and optional children
     nodes. In addition, the `TreeNode` can represent a `length` (e.g., a
     branch length) between itself and its parent. Within this object, the use
     of "children" and "descendants" is frequent in the documentation. A child
@@ -295,11 +295,11 @@ class TreeNode(object):
         return len(self.children)
 
     def __getitem__(self, i):
-        r"""Node delegates slicing to `children`"""
+        r"""Node delegates slicing to `children`."""
         return self.children[i]
 
     def _adopt(self, node):
-        r"""Update `parent` references but does NOT update `children`"""
+        r"""Update `parent` references but does NOT update `children`."""
         self.invalidate_node_cache()
         if node.parent is not None:
             node.parent.remove(node)
@@ -310,8 +310,8 @@ class TreeNode(object):
         r"""Appends a node to `children`, in-place, cleaning up refs
 
         `append` will invalidate any node lookup caches, remove an existing
-        parent on `node` if one exists, set the parent of `node` to `self`
-        and add the `node` to `self`s `children`.
+        parent on `node` if one exists, set the parent of `node` to self
+        and add the `node` to `self` `children`.
 
         Parameters
         ----------
@@ -337,11 +337,11 @@ class TreeNode(object):
         self.children.append(self._adopt(node))
 
     def extend(self, nodes):
-        r"""Append a `list` of `TreeNode` to `self`
+        r"""Append a `list` of `TreeNode` to `self`.
 
         `extend` will invalidate any node lookup caches, remove existing
-        parents of the `nodes` if they have any, set their parents to `self`
-        and add the nodes to `self`s `children`.
+        parents of the `nodes` if they have any, set their parents to self
+        and add the nodes to `self` `children`.
 
         Parameters
         ----------
@@ -364,7 +364,7 @@ class TreeNode(object):
         self.children.extend([self._adopt(n) for n in nodes])
 
     def pop(self, index=-1):
-        r"""Remove a `TreeNode` from `self`
+        r"""Remove a `TreeNode` from `self`.
 
         Remove a child node by its index position. All node lookup caches
         are invalidated, and the parent reference for the popped node will be
@@ -373,7 +373,7 @@ class TreeNode(object):
         Parameters
         ----------
         index : int
-            The index position in children to pop
+            The index position in `children` to pop
 
         Returns
         -------
@@ -437,10 +437,10 @@ class TreeNode(object):
         return False
 
     def remove_deleted(self, func):
-        r"""Delete nodes in which `func(node)` evaluates `True`
+        r"""Delete nodes in which `func(node)` evaluates `True`.
 
-        Remove all descendants from self that evaluate `True` from `func`. This
-        has the potential to drop clades.
+        Remove all descendants from `self` that evaluate `True` from `func`.
+        This has the potential to drop clades.
 
         Parameters
         ----------
@@ -709,12 +709,12 @@ class TreeNode(object):
     def subset(self):
         r"""Returns set of names that descend from specified node
 
-        Get the set of `name`s on tips that descend from this node.
+        Get the set of `name` on tips that descend from this node.
 
         Returns
         -------
         frozenset
-            The set of names at the tips of the clade that descends from `self`
+            The set of names at the tips of the clade that descends from self
 
         See Also
         --------
@@ -827,7 +827,7 @@ class TreeNode(object):
             A tree rooted at its midpoint
         LengthError
             Midpoint rooting requires `length` and will raise (indirectly) if
-            evaluated nodes don't have `length`
+            evaluated nodes don't have length.
 
         See Also
         --------
@@ -887,7 +887,7 @@ class TreeNode(object):
             return new_root.unrooted_copy()
 
     def is_tip(self):
-        r"""Returns True if the current node is a tip, i.e. has no `children`.
+        r"""Returns `True` if the current node has no `children`.
 
         Returns
         -------
@@ -937,12 +937,12 @@ class TreeNode(object):
         return self.parent is None
 
     def has_children(self):
-        r"""Returns `True if the node has `children`.
+        r"""Returns `True` if the node has `children`.
 
         Returns
         -------
         bool
-            `True` if the node has `children`
+            `True` if the node has children.
 
         See Also
         --------
@@ -1253,7 +1253,7 @@ class TreeNode(object):
                 queue.extend(curr.children)
 
     def tips(self, include_self=False):
-        r"""Iterates over tips descended from `self`
+        r"""Iterates over tips descended from `self`.
 
         Node order is consistent between calls and is ordered by a
         postorder traversal of the tree.
@@ -1382,7 +1382,7 @@ class TreeNode(object):
                 self._node_cache[name] = node
 
     def find(self, name):
-        r"""Find a node by `name`
+        r"""Find a node by `name`.
 
         The first call to find will cache all nodes in the tree on the
         assumption that additional calls to `find` will be made.
@@ -1430,14 +1430,14 @@ class TreeNode(object):
             return node
 
     def find_by_id(self, node_id):
-        r"""Find a node by `id`
+        r"""Find a node by `id`.
 
         This search method is based from the root.
 
         Parameters
         ----------
         node_id : int
-            The id of a node in the tree
+            The `id` of a node in the tree
 
         Returns
         -------
@@ -1447,7 +1447,7 @@ class TreeNode(object):
         Raises
         ------
         MissingNodeError
-            This method will raise if the id cannot be found
+            This method will raise if the `id` cannot be found
 
         See Also
         --------
@@ -1485,8 +1485,8 @@ class TreeNode(object):
         Parameters
         ----------
         func : a function
-            A function that accepts a TreeNode and returns True or False,
-            where True indicates the node is to be yielded
+            A function that accepts a TreeNode and returns `True` or `Fals`,
+            where `True` indicates the node is to be yielded
 
         Returns
         -------
@@ -1561,7 +1561,7 @@ class TreeNode(object):
         return curr
 
     def siblings(self):
-        r"""Returns all nodes that are `children` of `self`'s `parent`
+        r"""Returns all nodes that are `children` of `self` `parent`.
 
         This call excludes `self` from the list.
 
@@ -2507,7 +2507,7 @@ class TreeNode(object):
     def assign_ids(self):
         """Assign topologically stable unique ids to self
 
-        Following the call, all nodes in the tree will have their `id`
+        Following the call, all nodes in the tree will have their id
         attribute set
         """
         for idx, n in enumerate(self.postorder(include_self=True)):
