@@ -183,7 +183,7 @@ class GeneticCode(object):
         for codon in self._codons:
             aa = codon_lookup[codon]
             aa_lookup[aa].append(codon)
-        self.synonyms = aa_lookup
+        self.synonyms = dict(aa_lookup)
         sense_codons = codon_lookup.copy()
 
         # create sense codons
