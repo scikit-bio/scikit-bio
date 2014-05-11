@@ -172,7 +172,8 @@ class GeneticCode(object):
                 if aa != '-':
                     start_codons[codon] = aa
         self.start_codons = start_codons
-        codon_lookup = dict(zip(self._codons, code_sequence))
+        codon_lookup = {key:value for (key, value) in zip(self._codons,
+                                                          code_sequence)}
         self.codons = codon_lookup
         # create synonyms for each aa
         aa_lookup = {}
