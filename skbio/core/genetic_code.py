@@ -167,7 +167,7 @@ class GeneticCode(object):
         self.name = name
         self.start_codon_sequence = start_codon_sequence
         start_codons = {}
-        if start_codon_sequence:
+        if start_codon_sequence is not None:
             for codon, aa in zip(self._codons, start_codon_sequence):
                 if aa != '-':
                     start_codons[codon] = aa
