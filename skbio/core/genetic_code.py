@@ -71,6 +71,8 @@ Retrieving the anticodons of the object
 # ----------------------------------------------------------------------------
 import re
 
+from collections import defaultdict
+
 from skbio.core.exception import GeneticCodeInitError, InvalidCodonError
 
 # py3k compatibility
@@ -175,21 +177,21 @@ class GeneticCode(object):
         codon_lookup = {key:value for (key, value) in zip(self._codons,
                                                           code_sequence)}
         self.codons = codon_lookup
+
         # create synonyms for each aa
-        aa_lookup = {}
+        aa_lookup = defaultdict(list)
         for codon in self._codons:
             aa = codon_lookup[codon]
-            if aa not in aa_lookup:
-                aa_lookup[aa] = [codon]
-            else:
-                aa_lookup[aa].append(codon)
+            aa_lookup[aa].append(codon)
         self.synonyms = aa_lookup
         sense_codons = codon_lookup.copy()
+
         # create sense codons
         stop_codons = self['*']
         for c in stop_codons:
             del sense_codons[c]
         self.sense_codons = sense_codons
+
         # create anticodons
         ac = {}
         for aa, codons in self.synonyms.items():
@@ -199,7 +201,8 @@ class GeneticCode(object):
     def _analyze_quartet(self, codons, aa):
         """Analyzes a quartet of codons and amino acids: returns list of lists.
 
-        Each list contains one block, splitting at R/Y if necessary.
+        Each list contains one block, splitting at purine/pyrimidine boundary
+        if necessary.
 
         codons should be a list of 4 codons.
         aa should be a list of 4 amino acid symbols.
