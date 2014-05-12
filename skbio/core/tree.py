@@ -159,10 +159,12 @@ from functools import reduce
 
 import numpy as np
 
-from skbio.math.stats.test import correlation_t
+from skbio.core.distance import DistanceMatrix
 from skbio.core.exception import (NoLengthError, DuplicateNodeError,
-                                  NoParentError, MissingNodeError,
-                                  TreeError, RecordError)
+                                  NoParentError, MissingNodeError, TreeError,
+                                  RecordError)
+from skbio.math.stats.test import correlation_t
+from skbio.util.io import open_file
 
 
 def distance_from_r(m1, m2):
@@ -181,7 +183,7 @@ def distance_from_r(m1, m2):
         The distance between m1 and m2
 
     """
-    return (1 - correlation_t(m1.flat, m2.flat)[0]) / 2
+    return (1-correlation_t(m1.data.flat, m2.data.flat)[0])/2
 
 
 class TreeNode(object):
@@ -517,23 +519,55 @@ class TreeNode(object):
             node.parent.append(child)
             node.parent.remove(node)
 
-#   def shear(self, names):
-#       """Lop off tips until the tree just has the desired tip names"""
-#       tcopy = self.deepcopy()
-#       all_tips = set([n.name for n in tcopy.tips()])
-#       ids = set(names)
-#
-#       if not ids.issubset(all_tips):
-#           raise ValueError("ids are not a subset of the tree!")
-#
-#       while len(tcopy.tips()) != len(ids):
-#           for n in tcopy.tips():
-#               if n.name not in ids:
-#                   n.parent.removeNode(n)
-#
-#       tcopy.prune()
-#       return tcopy
-#
+    def shear(self, names):
+        """Lop off tips until the tree just has the desired tip names.
+
+        Parameters
+        ----------
+        names : Iterable of str
+            The tip names on the tree to keep
+
+        Returns
+        -------
+        TreeNode
+            The resulting tree
+
+        Raises
+        ------
+        ValueError
+            If the names do not exist in the tree
+
+        See Also
+        --------
+        prune
+        remove
+        pop
+        remove_deleted
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> t = TreeNode.from_newick('((H:1,G:1):2,(R:0.5,M:0.7):3);')
+        >>> sheared = t.shear(['G', 'M'])
+        >>> print sheared.to_newick(with_distances=True)
+        (G:3.0,M:3.7);
+
+        """
+        tcopy = self.deepcopy()
+        all_tips = {n.name for n in tcopy.tips()}
+        ids = set(names)
+
+        if not ids.issubset(all_tips):
+            raise ValueError("ids are not a subset of the tree!")
+
+        while len(list(tcopy.tips())) != len(ids):
+            for n in list(tcopy.tips()):
+                if n.name not in ids:
+                    n.parent.remove(n)
+
+        tcopy.prune()
+
+        return tcopy
 
     def copy(self):
         r"""Returns a copy of self using an iterative approach
@@ -702,6 +736,34 @@ class TreeNode(object):
             result.name = "root"
 
         return result
+
+    def count(self, tips=False):
+        """Get the count of nodes in the tree
+
+        Parameters
+        ----------
+        tips : bool
+            If `True`, only return the count of the number of tips
+
+        Returns
+        -------
+        int
+            The number of nodes or tips
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree = TreeNode.from_newick("((a,(b,c)d)e,(f,g)h)i;")
+        >>> print tree.count()
+        9
+        >>> print tree.count(tips=True)
+        5
+
+        """
+        if tips:
+            return len(list(self.tips()))
+        else:
+            return len(list(self.traverse(include_self=True)))
 
     def subtree(self, tip_list=None):
         r"""Make a copy of the subtree"""
@@ -1635,6 +1697,11 @@ class TreeNode(object):
         TreeNode
             The lowest common ancestor of the passed in nodes
 
+        Raises
+        ------
+        ValueError
+            If no tips could be found in the tree
+
         Examples
         --------
         >>> from skbio.core.tree import TreeNode
@@ -1655,7 +1722,7 @@ class TreeNode(object):
         tips = [self.find(name) for name in tipnames]
 
         if len(tips) == 0:
-            return None
+            raise ValueError("No tips found!")
 
         nodes_to_scrub = []
 
@@ -1688,6 +1755,13 @@ class TreeNode(object):
         return curr
 
     lca = lowest_common_ancestor  # for convenience
+
+    @classmethod
+    def from_file(cls, tree_f):
+        """Load a tree from a file or file-like object"""
+        with open_file(tree_f) as data:
+            tree = cls.from_newick(data)
+        return tree
 
     @classmethod
     def from_newick(cls, lines, unescape_name=True):
@@ -2103,7 +2177,7 @@ class TreeNode(object):
         --------
         tip_tip_distances
         accumulate_to_ancestor
-        compare_by_distances
+        compare_tip_distances
         get_max_distance
 
         Examples
@@ -2153,9 +2227,9 @@ class TreeNode(object):
         """returns the max distance between any pair of tips
 
         Also returns the tip names  that it is between as a tuple"""
-        distmtx, tip_order = self.tip_tip_distances()
-        idx_max = divmod(distmtx.argmax(), distmtx.shape[1])
-        max_pair = (tip_order[idx_max[0]].name, tip_order[idx_max[1]].name)
+        distmtx = self.tip_tip_distances()
+        idx_max = divmod(distmtx.data.argmax(), distmtx.shape[1])
+        max_pair = (distmtx.ids[idx_max[0]], distmtx.ids[idx_max[1]])
         return distmtx[idx_max], max_pair
 
     def get_max_distance(self):
@@ -2178,7 +2252,7 @@ class TreeNode(object):
         --------
         distance
         tip_tip_distances
-        compare_by_distances
+        compare_tip_distances
 
         Examples
         --------
@@ -2223,10 +2297,8 @@ class TreeNode(object):
 
         Returns
         -------
-        ndarray(dtype=float)
+        DistanceMatrix
             The distance matrix
-        list of TreeNode
-            The tip order in the distance matrix
 
         Raises
         ------
@@ -2238,20 +2310,23 @@ class TreeNode(object):
         See Also
         --------
         distance
-        compare_by_distances
+        compare_tip_distances
 
         Examples
         --------
         >>> from skbio.core.tree import TreeNode
         >>> tree = TreeNode.from_newick("((a:1,b:2)c:3,(d:4,e:5)f:6)root;")
-        >>> mat, tips = tree.tip_tip_distances()
-        >>> mat
-        array([[  0.,   3.,  14.,  15.],
-               [  3.,   0.,  15.,  16.],
-               [ 14.,  15.,   0.,   9.],
-               [ 15.,  16.,   9.,   0.]])
-        >>> [n.name for n in tips]
-        ['a', 'b', 'd', 'e']
+        >>> mat = tree.tip_tip_distances()
+        >>> print mat
+        4x4 distance matrix
+        IDs:
+        a, b, d, e
+        Data:
+        [[  0.   3.  14.  15.]
+         [  3.   0.  15.  16.]
+         [ 14.  15.   0.   9.]
+         [ 15.  16.   9.   0.]]
+
         """
         all_tips = list(self.tips())
         if endpoints is None:
@@ -2308,34 +2383,78 @@ class TreeNode(object):
             if len(node.children) > 1:
                 update_result()
 
-        return result + result.T, tip_order
+        return DistanceMatrix(result + result.T, [n.name for n in tip_order])
 
-#   def compare_rfd(self, other, proportion=False):
-#       """Calculates the Robinson and Foulds symmetric difference
-#
-#       Implementation based off of code by Julia Goodrich
-#       """
-#       t1names = {n.name for n in self.tips()}
-#       t2names = {n.name for n in other.tips()}
-#
-#       if t1names != t2names:
-#           if t1names < t2names:
-#               tree2 = other.shear(t1names)
-#           else:
-#               tree1 = self.shear(t2names)
-#
-#       tree1_sets = tree1.subsets()
-#       tree2_sets = tree2.subsets()
-#
-#       not_in_both = tree1_sets ^ tree2_sets
-#       total_subsets = len(tree1_sets) + len(tree2_sets)
-#
-#       dist = len(not_in_both)
-#
-#       if proportion:
-#           dist = dist/float(total_subsets)
-#
-#       return dist
+    def compare_rfd(self, other, proportion=False):
+        """Calculates the Robinson and Foulds symmetric difference
+
+        Parameters
+        ----------
+        other : TreeNode
+            A tree to compare against
+        proportion : bool
+            Return a proportional difference
+
+        Returns
+        -------
+        float
+            The distance between the trees
+
+        Notes
+        -----
+        Implementation based off of code by Julia Goodrich. The original
+        description of the algorithm can be found in [1]_.
+
+        Raises
+        ------
+        ValueError
+            If the tip names between `self` and `other` are equal.
+
+        See Also
+        --------
+        compare_subsets
+        compare_tip_distances
+
+        References
+        ----------
+        .. [1] Comparison of phylogenetic trees. Robinson and Foulds.
+           Mathematical Biosciences. 1981. 53:131-141
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tree1 = TreeNode.from_newick("((a,b),(c,d));")
+        >>> tree2 = TreeNode.from_newick("(((a,b),c),d);")
+        >>> tree1.compare_rfd(tree2)
+        2.0
+
+        """
+        t1names = {n.name for n in self.tips()}
+        t2names = {n.name for n in other.tips()}
+
+        if t1names != t2names:
+            if t1names < t2names:
+                tree1 = self
+                tree2 = other.shear(t1names)
+            else:
+                tree1 = self.shear(t2names)
+                tree2 = other
+        else:
+            tree1 = self
+            tree2 = other
+
+        tree1_sets = tree1.subsets()
+        tree2_sets = tree2.subsets()
+
+        not_in_both = tree1_sets.symmetric_difference(tree2_sets)
+
+        dist = float(len(not_in_both))
+
+        if proportion:
+            total_subsets = len(tree1_sets) + len(tree2_sets)
+            dist = dist / total_subsets
+
+        return dist
 
     def compare_subsets(self, other, exclude_absent_taxa=False):
         """Returns fraction of overlapping subsets where self and other differ.
@@ -2357,7 +2476,8 @@ class TreeNode(object):
 
         See Also
         --------
-        compare_by_distances
+        compare_rfd
+        compare_tip_distances
         subsets
 
         Examples
@@ -2430,6 +2550,7 @@ class TreeNode(object):
         See Also
         --------
         compare_subsets
+        compare_rfd
 
         Examples
         --------
@@ -2460,8 +2581,8 @@ class TreeNode(object):
         self_nodes = [self_names[k] for k in common_names]
         other_nodes = [other_names[k] for k in common_names]
 
-        self_matrix = self.tip_tip_distances(endpoints=self_nodes)[0]
-        other_matrix = other.tip_tip_distances(endpoints=other_nodes)[0]
+        self_matrix = self.tip_tip_distances(endpoints=self_nodes)
+        other_matrix = other.tip_tip_distances(endpoints=other_nodes)
 
         return dist_f(self_matrix, other_matrix)
 
