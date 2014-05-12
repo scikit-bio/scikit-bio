@@ -22,10 +22,11 @@ Examples
 
 Creating and using a ``GeneticCode`` object
 
->>> from skbio.core.genetic_code import GeneticCode
+>>> from skbio.core.genetic_code import GeneticCodes
 >>> from pprint import pprint
->>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAA'
-...                   'ADDEEGGGG')
+>>> sgc = GeneticCodes[1]
+>>> sgc
+GeneticCode(FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG)
 >>> sgc['UUU'] == 'F'
 True
 >>> sgc['TTT'] == 'F'
