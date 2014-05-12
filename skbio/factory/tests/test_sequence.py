@@ -41,8 +41,7 @@ class SequenceFactoryTests(TestCase):
                {'Sequence': 'AATTGG', 'SequenceID': 's2',
                 'QualID': None, 'Qual': None}]
         self.assertEqual(obs, exp)
-
-        it = factory(self.fq1)
+        it = factory(self.fq1, phred_offset=64)
         obs = [rec.copy() for rec in it]
         exp = [{'Sequence': 'ATGC', 'SequenceID': 's1',
                 'QualID': 's1', 'Qual': array([40, 40, 40, 40])},
@@ -62,7 +61,7 @@ class SequenceFactoryTests(TestCase):
                 'QualID': None, 'Qual': None}]
         self.assertEqual(obs, exp)
 
-        it = factory(self.fq1gz)
+        it = factory(self.fq1gz, phred_offset=64)
         obs = [rec.copy() for rec in it]
         exp = [{'Sequence': 'ATGC', 'SequenceID': 's1',
                 'QualID': 's1', 'Qual': array([40, 40, 40, 40])},
@@ -76,7 +75,7 @@ class SequenceFactoryTests(TestCase):
 
     def test_multiple_files(self):
         """Factory should handle multiple files of different types"""
-        it = factory([self.fq1, self.fna1])
+        it = factory([self.fq1, self.fna1], phred_offset=64)
         obs = [rec.copy() for rec in it]
         exp = [{'Sequence': 'ATGC', 'SequenceID': 's1',
                 'QualID': 's1', 'Qual': array([40, 40, 40, 40])},
@@ -121,7 +120,7 @@ class SequenceFactoryTests(TestCase):
             st['Sequence'] = st['Sequence'][::-1]
             st['Qual'] = st['Qual'][::-1] if st['Qual'] is not None else None
 
-        it = factory([self.fq1gz, self.fna1], transform=rev_f)
+        it = factory([self.fq1gz, self.fna1], transform=rev_f, phred_offset=64)
         obs = [rec.copy() for rec in it]
         exp = [{'Sequence': 'CGTA', 'SequenceID': 's1',
                 'QualID': 's1', 'Qual': array([40, 40, 40, 40])},

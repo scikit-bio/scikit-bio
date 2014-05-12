@@ -171,7 +171,7 @@ class SequenceIterator(Workflow):
 
     """
     def __init__(self, seq, qual=None, transform=None, valid_id=True,
-                 valid_length=True):
+                 valid_length=True, **kwargs):
         self.seq = seq
         self.qual = qual
 
@@ -274,8 +274,8 @@ class FastqIterator(SequenceIterator):
     Note: thq 'qual' keyword argument is ignored by this object.
     """
     def __init__(self, *args, **kwargs):
-        if 'force_phred_offset' in kwargs:
-            self._fpo = kwargs.pop('force_phred_offset')
+        if 'phred_offset' in kwargs:
+            self._fpo = kwargs.pop('phred_offset')
         else:
             # force to an offset of 33
             self._fpo = 33
@@ -284,7 +284,7 @@ class FastqIterator(SequenceIterator):
 
     def _gen(self):
         """Construct internal iterators"""
-        fastq_gens = chain(*[parse_fastq(f, force_phred_offset=self._fpo)
+        fastq_gens = chain(*[parse_fastq(f, phred_offset=self._fpo)
                              for f in self.seq])
         return self._fastq_gen(fastq_gens)
 
