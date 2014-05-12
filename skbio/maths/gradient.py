@@ -44,6 +44,22 @@ from skbio.maths.stats.test import ANOVA_one_way
 
 class GroupResults(namedtuple('GroupResults', ('name', 'vector', 'mean',
                                                'info', 'message'))):
+    r"""Store the vector results of a group of a metadata category
+
+    Attributes
+    ----------
+    name : str
+        The name of the group within the metadata category
+    vector : 1-D numpy array
+        The result vector
+    mean : float
+        The mean of the vector
+    info : dict
+        Any extra information computed by the vector algorithm. Depends on the
+        algorithm
+    message : str
+        A message with information of the execution of the algorithm
+    """
     __slots__ = ()  # To avoid creating a dict, as a namedtuple doesn't have it
 
     def __new__(cls, name, vector, mean, info, message):
@@ -59,11 +75,11 @@ class GroupResults(namedtuple('GroupResults', ('name', 'vector', 'mean',
         out_f : file-like object
             File-like object to write vectors analysis data to. Must have a
             ``write`` method. It is the caller's responsibility to close
-            `out_f` when done (if necessary).
+            `out_f` when done (if necessary)
         raw_f : file-like object
             File-like object to write vectors raw values. Must have a ``write``
             method. It is the caller's responsibility to close `out_f` when
-            done (if necessary).
+            done (if necessary)
         """
         out_f.write('For group "%s", the group means is: %f\n'
                     % (self.name, self.mean))
@@ -80,6 +96,19 @@ class GroupResults(namedtuple('GroupResults', ('name', 'vector', 'mean',
 
 class CategoryResults(namedtuple('CategoryResults', ('category', 'probability',
                                                      'groups', 'message'))):
+    r"""Store the vector results of a metadata category
+
+    Attributes
+    ----------
+    category : str
+        The name of the category
+    probability : float
+        The ANOVA probability that the category groups are independent
+    groups : list of GroupResults
+        The vector results for each group in the category
+    message : str
+        A message with information of the execution of the algorithm
+    """
     __slots__ = ()  # To avoid creating a dict, as a namedtuple doesn't have it
 
     def __new__(cls, category, probability, groups, message):
@@ -95,11 +124,11 @@ class CategoryResults(namedtuple('CategoryResults', ('category', 'probability',
         out_f : file-like object
             File-like object to write vectors analysis data to. Must have a
             ``write`` method. It is the caller's responsibility to close
-            `out_f` when done (if necessary).
+            `out_f` when done (if necessary)
         raw_f : file-like object
             File-like object to write vectors raw values. Must have a ``write``
             method. It is the caller's responsibility to close `out_f` when
-            done (if necessary).
+            done (if necessary)
         """
         if self.probability is None:
             out_f.write('Grouped by "%s" %s\n' % (self.category, self.message))
@@ -113,6 +142,17 @@ class CategoryResults(namedtuple('CategoryResults', ('category', 'probability',
 
 class VectorsResults(namedtuple('VectorsResults', ('algorithm', 'weighted',
                                                    'categories'))):
+    r"""Store the vector results
+
+    Attributes
+    ----------
+    algorithm : str
+        The algorithm used to compute vectors
+    weighted : bool
+        If true, a weighting vector was used
+    categories : list of CategoryResults
+        The vector results for each metadata category
+    """
     __slots__ = ()  # To avoid creating a dict, as a namedtuple doesn't have it
 
     def __new__(cls, algorithm, weighted, categories):
@@ -127,11 +167,11 @@ class VectorsResults(namedtuple('VectorsResults', ('algorithm', 'weighted',
         out_f : file-like object
             File-like object to write vectors analysis data to. Must have a
             ``write`` method. It is the caller's responsibility to close
-            `out_f` when done (if necessary).
+            `out_f` when done (if necessary)
         raw_f : file-like object
             File-like object to write vectors raw values. Must have a ``write``
             method. It is the caller's responsibility to close `out_f` when
-            done (if necessary).
+            done (if necessary)
         """
         out_f.write('Vectors algorithm: %s\n' % self.algorithm)
         raw_f.write('Vectors algorithm: %s\n' % self.algorithm)
@@ -168,22 +208,26 @@ class BaseVectors(object):
     weighted : bool, optional
         If true, the output is weighted by the space between samples in the
         `sort_category` column
+
+    Raises
+    ------
+    ValueError
+        If any category of `vector_categories` is not present in `metamap`
+        If `sort_category` is not present in `metamap`
+        If `axes` is not between 0 and the maximum number of axes available
+        If `weighted` is True and no `sort_category` is provided
+        If `weighted` is True and the values under `sort_category` are not
+            numerical
+        If `coords` and `metamap` does not have samples in common
     """
     # Should be defined by the derived classes
     _alg_name = None
 
     def __init__(self, coords, prop_expl, metamap, vector_categories=None,
                  sort_category=None, axes=3, weighted=False):
-        """
-        Raises
-        ------
-        ValueError
-            If vector_categories or sort_category are not in metamap
-            If the values under sort_category are not numeric
-        """
         if not vector_categories:
             # If vector_categories is not provided, use all the categories
-            # present in self._metamap
+            # present in the metadata map
             vector_categories = metamap.keys()
         else:
             # Check that vector_categories are in metamap
@@ -235,7 +279,8 @@ class BaseVectors(object):
         self._message_buffer = []
 
     def _normalize_samples(self):
-        """Ensures that self._coords and self._metamap have the same sample_ids
+        """Ensures that `self._coords` and `self._metamap` have the same
+        sample ids
 
         Raises
         ------
@@ -260,22 +305,27 @@ class BaseVectors(object):
             self._metamap = self._metamap.ix[sample_ids]
 
     def _make_groups(self, vector_categories, sort_category):
-        """Groups the sample ids in metamap by the values in vector_categories
+        """Groups the sample ids in `self._metamap` by the values in
+        `vector_categories`
 
-        Creates self._groups a dictionary in which the keys represent the group
-        label and values are ordered lists of (sort_value, sample id) tuples
+        Creates `self._groups`, a dictionary keyed by category and values are
+        dictionaries in which the keys represent the group name within the
+        category and values are ordered lists of sample ids
+
+        If `sort_category` is not None, the sample ids are sorted based on the
+        values under this category in the metadata map. Otherwise, they are
+        sorted using the sample id.
 
         Parameters
         ----------
         vector_categories : list of str
-            A list of metadata categories to use to create the groups. If None
-            is passed, the groups for all metadata categories are computed.
+            A list of metadata categories to use to create the groups.
             Default: None, compute all of them
-        sort_category : str
+        sort_category : str or None
             The category from self._metamap to use to sort groups
         """
         # If sort_category is provided, we used the value of such category to
-        # otherwise we use the sample id
+        # sort. Otherwise, we use the sample id.
         if sort_category:
             sort_val = lambda sid: self._metamap[sort_category][sid]
         else:
@@ -291,45 +341,31 @@ class BaseVectors(object):
                 self._groups[cat][g] = [val[1] for val in sorted_list]
 
     def get_vectors(self):
-        """"""
+        """Compute the vectors for each group in each category and run ANOVA
+        over the results to test group independence.
+
+        Returns
+        -------
+        VectorsResults
+            An instance of VectorsResults holding the results of the vector
+            analysis.
+        """
         result = VectorsResults(self._alg_name, self._weighted, [])
         # Loop through all the categories that we should compute the vectors
         for cat, cat_groups in self._groups.iteritems():
-            # Loop through all the category values present
-            # in the current category
-            res_by_group = []
-            for cat_value, sample_ids in cat_groups.iteritems():
-                # Compute the vector for the current category value
-                res_by_group.append(self._get_group_vectors(cat_value,
-                                                            sample_ids))
-                # result[cat][cat_value] = self._get_group_vectors(
-                #     sample_ids)
+            # Loop through all the category values present in the current
+            # category and compute the vector for each of the category value
+            # present in
+            res_by_group = [self._get_group_vectors(group, sample_ids)
+                            for group, sample_ids in cat_groups.iteritems()]
+
             result.categories.append(self._test_vectors(cat, res_by_group))
 
         return result
 
-    def _test_vectors(self, category, res_by_group):
-        """"""
-        if len(res_by_group) == 1:
-            return CategoryResults(category, None, None,
-                                   'Only one value in the group.')
-
-        # Check if groups can be tested using ANOVA. ANOVA testing requires
-        # all elements to have at least size greater to one.
-        values = [res.vector for res in res_by_group]
-        if any([len(value) == 1 for value in values]):
-            return CategoryResults(category, None, None,
-                                   'This group can not be used. All groups '
-                                   'should have more than 1 element.')
-
-        F, p_val = ANOVA_one_way(values)
-
-        return CategoryResults(category, p_val, res_by_group, None)
-
     def _get_group_vectors(self, group_name, sids):
         """"""
-        # We multiply the coord values with the value of
-        # the prop_expl represented
+        # We multiply the coord values with the prop_expl
         vectors = self._coords.ix[sids] * self._prop_expl
 
         if vectors.empty:
@@ -340,9 +376,9 @@ class BaseVectors(object):
             raise RuntimeError("No samples to process, an empty list cannot "
                                "be processed")
 
+        # The weighting can only be done over vectors with a length greater
+        # than 1
         if self._weighted and len(sids) > 1:
-            # the weighting can only be done over vectors with a length
-            # greater than 1
             vectors_copy = deepcopy(vectors)
             try:
                 vectors = self._weight_by_vector(vectors_copy,
@@ -418,6 +454,35 @@ class BaseVectors(object):
                                   (np.abs((w_vector[i] - w_vector[i-1]))))
 
         return vector
+
+    def _test_vectors(self, category, res_by_group):
+        """Run ANOVA over `res_by_group`
+
+        If ANOVA cannot be run in the current category (because either there is
+        only one group in category or there is a group with only one member)
+        the result CategoryResults instance has `probability` and `groups` set
+        to None and message is set to a string explaining why ANOVA was not run
+
+        Returns
+        -------
+        CategoryResults
+            An instance of CategoryResults holding the results of the vector
+            analysis applied on `category`
+        """
+        # If there is only one group under category we cannot run ANOVA
+        if len(res_by_group) == 1:
+            return CategoryResults(category, None, None,
+                                   'Only one value in the group.')
+        # Check if groups can be tested using ANOVA. ANOVA testing requires
+        # all elements to have at least size greater to one.
+        values = [res.vector for res in res_by_group]
+        if any([len(value) == 1 for value in values]):
+            return CategoryResults(category, None, None,
+                                   'This group can not be used. All groups '
+                                   'should have more than 1 element.')
+        # We are ok to run ANOVA
+        F, p_val = ANOVA_one_way(values)
+        return CategoryResults(category, p_val, res_by_group, None)
 
 
 class AverageVectors(BaseVectors):
