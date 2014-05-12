@@ -148,7 +148,8 @@ class GroupResults(namedtuple('GroupResults', ('name', 'vector', 'mean',
 
         out_f.write('The info is: %s\n'
                     % sorted(((k, v) for k, v in self.info.iteritems())))
-        raw_f.write('The vector is:\n[%s]\n' % ", ".join(map(str, self.vector)))
+        raw_f.write('The vector is:\n[%s]\n'
+                    % ", ".join(map(str, self.vector)))
 
 
 class CategoryResults(namedtuple('CategoryResults', ('category', 'probability',
@@ -188,7 +189,8 @@ class CategoryResults(namedtuple('CategoryResults', ('category', 'probability',
             done (if necessary)
         """
         if self.probability is None:
-            out_f.write('Grouped by "%s": %s\n' % (self.category, self.message))
+            out_f.write('Grouped by "%s": %s\n'
+                        % (self.category, self.message))
         else:
             out_f.write('Grouped by "%s", probability: %f\n'
                         % (self.category, self.probability))
