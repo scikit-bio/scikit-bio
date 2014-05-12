@@ -51,7 +51,7 @@ class GroupResults(namedtuple('GroupResults', ('name', 'vector', 'mean',
                                                 info, message)
 
     def to_files(self, out_f, raw_f):
-        """Save the vector analysis results for a category group to files in
+        r"""Save the vector analysis results for a category group to files in
         text format.
 
         Parameters
@@ -87,7 +87,7 @@ class CategoryResults(namedtuple('CategoryResults', ('category', 'probability',
                                                    groups, message)
 
     def to_files(self, out_f, raw_f):
-        """Save the vector analysis results for a category to files in
+        r"""Save the vector analysis results for a category to files in
         text format.
 
         Parameters
@@ -120,7 +120,7 @@ class VectorsResults(namedtuple('VectorsResults', ('algorithm', 'weighted',
                                                   categories)
 
     def to_files(self, out_f, raw_f):
-        """Save the vector analysis results to files in text format.
+        r"""Save the vector analysis results to files in text format.
 
         Parameters
         ----------
@@ -498,37 +498,13 @@ class WindowDifferenceVectors(BaseVectors):
     def __init__(self, coords, prop_expl, metamap, window_size, **kwargs):
         super(WindowDifferenceVectors, self).__init__(coords, prop_expl,
                                                       metamap, **kwargs)
+
+        if window_size < 1 or not isinstance(window_size, (long, int)):
+            raise ValueError("The window_size must be a positive integer")
+
         self._window_size = window_size
 
     def _compute_vector_results(self, group_name, vectors):
-        """"""
-        if len(vectors) == 1:
-            vector = [np.linalg.norm(vectors)]
-            calc = {'mean': vector, 'std': 0}
-        elif len(vectors) == 2:
-            vector = [np.linalg.norm(vectors[1] - vectors[0])]
-            calc = {'mean': vector, 'std': 0}
-        else:
-            vec_norm = np.array([np.linalg.norm(vectors.ix[i+1].get_values() -
-                                                vectors.ix[i].get_values())
-                                 for i in range(len(vectors) - 1)])
-            # windowed first differences won't be able on every group,
-            # specially given the variation of size that a vector tends to have
-            try:
-                vector = self._windowed_diff(vec_norm, self._window_size)
-            except ValueError:
-                vector = vec_norm
-                self._message_buffer.append("Cannot calculate the first "
-                                            "difference with a window of size "
-                                            "(%d)." % self._window_size)
-            calc = {'mean': np.mean(vector), 'std': np.std(vector)}
-
-        msg = ''.join(self._message_buffer) if self._message_buffer else None
-        # Reset the message buffer
-        self._message_buffer = []
-        return GroupResults(group_name, vector, np.mean(vector), calc, msg)
-
-    def _windowed_diff(self, vector, window_size):
         """Perform the first difference algorithm between windows of values in a
         vector and each value.
 
@@ -552,22 +528,39 @@ class WindowDifferenceVectors(BaseVectors):
             If the window_size is not a positive integer
             If the window_size is greater than the vector length
         """
-        # check for consistency in window size and vector size
-        if window_size < 1 or not isinstance(window_size, (long, int)):
-            raise ValueError("The window_size must be a positive integer")
+        if len(vectors) == 1:
+            vector = [np.linalg.norm(vectors)]
+            calc = {'mean': vector, 'std': 0}
+        elif len(vectors) == 2:
+            vector = [np.linalg.norm(vectors[1] - vectors[0])]
+            calc = {'mean': vector, 'std': 0}
+        else:
+            vec_norm = np.array([np.linalg.norm(vectors.ix[i+1].get_values() -
+                                                vectors.ix[i].get_values())
+                                 for i in range(len(vectors) - 1)])
+            # windowed first differences won't be able on every group,
+            # specially given the variation of size that a vector tends to have
+            if len(vec_norm) <= self._window_size:
+                vector = vec_norm
+                self._message_buffer.append("Cannot calculate the first "
+                                            "difference with a window of size "
+                                            "(%d)." % self._window_size)
+            else:
+                # Replicate the last element as many times as required
+                for idx in range(0, self._window_size):
+                    vec_norm = np.append(vec_norm, vec_norm[-1:], axis=0)
+                vector = []
+                for idx in range(0, len(vec_norm) - self._window_size):
+                    # Meas has to be over axis 0 so it handles arrays of arrays
+                    element = np.mean(vec_norm[(idx + 1):
+                                               (idx + 1 + self._window_size)],
+                                      axis=0)
+                    vector.append(element - vec_norm[idx])
+                vector = np.array(vector)
 
-        if len(vector) <= window_size:
-            raise ValueError("The window_size must be smaller than the vector")
+            calc = {'mean': np.mean(vector), 'std': np.std(vector)}
 
-        # replicate the last element as many times as required
-        for index in range(0, window_size):
-            vector = np.append(vector, vector[-1:], axis=0)
-
-        op_vector = []
-
-        for index in range(0, len(vector)-window_size):
-            # mean has to be over axis 0 so it handles vectors of vectors
-            element = np.mean(vector[(index+1):(index+1+window_size)], axis=0)
-            op_vector.append(element - vector[index])
-
-        return np.array(op_vector)
+        msg = ''.join(self._message_buffer) if self._message_buffer else None
+        # Reset the message buffer
+        self._message_buffer = []
+        return GroupResults(group_name, vector, np.mean(vector), calc, msg)
