@@ -20,7 +20,7 @@ from skbio.core.tree import TreeNode, _dnd_tokenizer
 from skbio.core.distance import DistanceMatrix
 from skbio.core.exception import (NoLengthError, TreeError, RecordError,
                                   MissingNodeError, NoParentError)
-from skbio.maths.stats.test import correlation_t
+from skbio.math.stats.test import correlation_t
 
 
 class TreeTests(TestCase):

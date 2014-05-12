@@ -163,7 +163,7 @@ from skbio.core.distance import DistanceMatrix
 from skbio.core.exception import (NoLengthError, DuplicateNodeError,
                                   NoParentError, MissingNodeError, TreeError,
                                   RecordError)
-from skbio.maths.stats.test import correlation_t
+from skbio.math.stats.test import correlation_t
 from skbio.util.io import open_file
 
 
@@ -2399,7 +2399,8 @@ class TreeNode(object):
 
         Notes
         -----
-        Implementation based off of code by Julia Goodrich
+        Implementation based off of code by Julia Goodrich. The original
+        description of the algorithm can be found in [1]_.
 
         Raises
         ------
@@ -2410,6 +2411,11 @@ class TreeNode(object):
         --------
         compare_subsets
         compare_tip_distances
+
+        References
+        ----------
+        .. [1] Comparison of phylogenetic trees. Robinson and Foulds.
+           Mathematical Biosciences. 1981. 53:131-141
 
         Examples
         --------
