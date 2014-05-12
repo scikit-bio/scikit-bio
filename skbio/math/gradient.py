@@ -147,7 +147,7 @@ class GroupResults(namedtuple('GroupResults', ('name', 'vector', 'mean',
             raw_f.write('%s\n' % self.message)
 
         out_f.write('The info is: %s\n'
-                    % sorted(((k, v) for k, v in self.info.iteritems())))
+                    % sorted(((k, v) for k, v in self.info.items())))
         raw_f.write('The vector is:\n[%s]\n'
                     % ", ".join(map(str, self.vector)))
 
@@ -416,12 +416,12 @@ class BaseVectors(object):
         """
         result = VectorsResults(self._alg_name, self._weighted, [])
         # Loop through all the categories that we should compute the vectors
-        for cat, cat_groups in self._groups.iteritems():
+        for cat, cat_groups in self._groups.items():
             # Loop through all the category values present in the current
             # category and compute the vector for each of the category value
             # present in
             res_by_group = [self._get_group_vectors(group, sample_ids)
-                            for group, sample_ids in cat_groups.iteritems()]
+                            for group, sample_ids in cat_groups.items()]
 
             result.categories.append(self._test_vectors(cat, res_by_group))
 
@@ -738,7 +738,7 @@ class WindowDifferenceVectors(BaseVectors):
         super(WindowDifferenceVectors, self).__init__(coords, prop_expl,
                                                       metamap, **kwargs)
 
-        if window_size < 1 or not isinstance(window_size, (long, int)):
+        if not isinstance(window_size, int) or window_size < 1:
             raise ValueError("The window_size must be a positive integer")
 
         self._window_size = window_size
