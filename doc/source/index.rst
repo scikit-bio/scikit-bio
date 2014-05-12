@@ -15,9 +15,11 @@ API Reference
    core.sequence
    core.distance
    core.exception
+   core.genetic_code
    core.tree
    core.workflow
    draw.distributions
+   format.sequences
    maths.diversity.alpha
    maths.stats.distance
    maths.stats.spatial

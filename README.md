@@ -53,6 +53,8 @@ If you're interested in getting involved in or learning about scikit-bio develop
 
 See the [list of all of scikit-bio's contributors](https://github.com/biocore/scikit-bio/graphs/contributors).
 
+Summaries of our weekly developer meetings are posted on HackPad. Click [here](https://hackpad.com/2014-scikit-bio-developer-meeting-notes-1S2RbMqy0iM) to view the meeting notes for 2014.
+
 The pre-history of scikit-bio
 -----------------------------
 
