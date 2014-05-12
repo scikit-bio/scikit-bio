@@ -22,10 +22,10 @@ API Reference
    factory.sequence
    core.genetic_code
    format.sequences
-   maths.stats.distance
-   maths.stats.spatial
-   maths.stats.ordination
-   maths.subsample
+   math.stats.distance
+   math.stats.spatial
+   math.stats.ordination
+   math.subsample
    parse.sequences
    util.io
    util.misc

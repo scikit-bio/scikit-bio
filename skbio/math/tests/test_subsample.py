@@ -19,10 +19,10 @@ try:
 except ImportError:
     from future.standard_library.test.support import import_fresh_module
 
-cy_subsample = import_fresh_module('skbio.maths.subsample',
-                                   fresh=['skbio.maths._subsample'])
-py_subsample = import_fresh_module('skbio.maths.subsample',
-                                   blocked=['skbio.maths._subsample'])
+cy_subsample = import_fresh_module('skbio.math.subsample',
+                                   fresh=['skbio.math._subsample'])
+py_subsample = import_fresh_module('skbio.math.subsample',
+                                   blocked=['skbio.math._subsample'])
 
 
 class SubsampleTests(object):

@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 r"""
-Subsampling (:mod:`skbio.maths.subsample`)
-==========================================
+Subsampling (:mod:`skbio.math.subsample`)
+=========================================
 
-.. currentmodule:: skbio.maths.subsample
+.. currentmodule:: skbio.math.subsample
 
 This module provides functionality for subsampling from vectors of counts.
 
@@ -77,7 +77,7 @@ def subsample(counts, n, replace=False):
     Subsample 4 items (without replacement) from a vector of counts:
 
     >>> import numpy as np
-    >>> from skbio.maths.subsample import subsample
+    >>> from skbio.math.subsample import subsample
     >>> a = np.array([4, 5, 0, 2, 1])
     >>> sub = subsample(a, 4)
     >>> sub.sum()
