@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 Performing Striped Smith Waterman Alignments (:mod:`skbio.core.ssw`)
 ====================================================================
@@ -95,26 +94,26 @@ cdef extern from "ssw.h":
     cdef void align_destroy(s_align* a)
 
 np_aa_table = np.array([
-        23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
-        23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
-        23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
-        23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
-        23,  0, 20,  4,  3,  6, 13,  7,  8,  9, 23, 11, 10, 12,  2, 23,
-        14,  5,  1, 15, 16, 23, 19, 17, 22, 18, 21, 23, 23, 23, 23, 23,
-        23,  0, 20,  4,  3,  6, 13,  7,  8,  9, 23, 11, 10, 12,  2, 23,
-        14,  5,  1, 15, 16, 23, 19, 17, 22, 18, 21, 23, 23, 23, 23, 23])
+    23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
+    23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
+    23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
+    23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
+    23,  0, 20,  4,  3,  6, 13,  7,  8,  9, 23, 11, 10, 12,  2, 23,
+    14,  5,  1, 15, 16, 23, 19, 17, 22, 18, 21, 23, 23, 23, 23, 23,
+    23,  0, 20,  4,  3,  6, 13,  7,  8,  9, 23, 11, 10, 12,  2, 23,
+    14,  5,  1, 15, 16, 23, 19, 17, 22, 18, 21, 23, 23, 23, 23, 23])
 
 np_nt_table = np.array([
-         4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,
-         4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,
-         4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,
-         4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,
-         4,  0,  4,  1,  4,  4,  4,  2,  4,  4,  4,  4,  4,  4,  4,  4,
-         4,  4,  4,  4,  3,  0,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,
-         4,  0,  4,  1,  4,  4,  4,  2,  4,  4,  4,  4,  4,  4,  4,  4,
-         4,  4,  4,  4,  3,  0,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4])
+    4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,
+    4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,
+    4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,
+    4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,
+    4,  0,  4,  1,  4,  4,  4,  2,  4,  4,  4,  4,  4,  4,  4,  4,
+    4,  4,  4,  4,  3,  0,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,
+    4,  0,  4,  1,  4,  4,  4,  2,  4,  4,  4,  4,  4,  4,  4,  4,
+    4,  4,  4,  4,  3,  0,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4])
 
-mid_table = np.array(['M','I','D'])
+mid_table = np.array(['M', 'I', 'D'])
 
 
 cdef class AlignmentStructure:
@@ -152,7 +151,7 @@ cdef class AlignmentStructure:
     cdef __constructor__(self, s_align* pointer):
         self.p = pointer
         print self.p.ref_begin1
-    
+
     def __dealloc__(self):
         if self.p is not NULL:
             align_destroy(self.p)
@@ -165,6 +164,7 @@ cdef class AlignmentStructure:
                 'query_begin', 'query_end', 'target_begin',
                 'target_end_optimal', 'target_end_suboptimal', 'cigar',
                 'query_sequence', 'target_sequence']
+
         def make_str_tuple(k):
             r = self[k]
             if type(r) is int:
@@ -173,7 +173,7 @@ cdef class AlignmentStructure:
                 return (k, "'"+r+"'")
         return "{\n%s\n}" % ',\n'.join([
             "    '%s': %s" % make_str_tuple(k) for k in data])
-        
+
     @property
     def optimal_alignment_score(self):
         """Returns the optimal alignment score
@@ -211,7 +211,7 @@ cdef class AlignmentStructure:
         The result is a 0 based index by default
         """
         return self.p.ref_begin1 + self.index_starts_at if (self.p.ref_begin1
-            >= 0) else -1
+                                                            >= 0) else -1
 
     @property
     def target_end_optimal(self):
@@ -261,7 +261,7 @@ cdef class AlignmentStructure:
         The result is a 0 based index by default
         """
         return self.p.read_begin1 + self.index_starts_at if (self.p.read_begin1
-         >= 0) else -1
+                                                             >= 0) else -1
 
     @property
     def query_end(self):
@@ -294,15 +294,15 @@ cdef class AlignmentStructure:
          string
         """
         cigar_string = ""
-        cigar_list = [];
+        cigar_list = []
         for i in range(self.p.cigarLen):
-            # stored the same as that in BAM format, 
+            # stored the same as that in BAM format,
             # high 28 bits: length, low 4 bits: M/I/D (0/1/2)
 
             # Length, remove first 4 bits
-            cigar_list.append(str(self.p.cigar[i]>>4))
+            cigar_list.append(str(self.p.cigar[i] >> 4))
             # M/I/D, lookup first 4 bits in the mid_table
-            cigar_list.append(mid_table[self.p.cigar[i]&0xf])
+            cigar_list.append(mid_table[self.p.cigar[i] & 0xf])
         return "".join(cigar_list)
 
     @property
@@ -468,18 +468,18 @@ cdef class StripedSmithWaterman:
     cdef np.ndarray __KEEP_IT_IN_SCOPE_matrix
 
     def __init__(self, query_sequence,
-                 weight_gap_open=5, # BLASTN Default
-                 weight_gap_extension=2, # BLASTN Default
-                 score_size=2, # BLASTN Default
-                 mask_length=15, # Minimum length for a suboptimal alignment
+                 weight_gap_open=5,  # BLASTN Default
+                 weight_gap_extension=2,  # BLASTN Default
+                 score_size=2,  # BLASTN Default
+                 mask_length=15,  # Minimum length for a suboptimal alignment
                  mask_auto=True,
                  score_only=False,
                  score_filter=None,
                  distance_filter=None,
                  override_skip_babp=False,
                  protein=False,
-                 match=2, # BLASTN Default
-                 mismatch=3, # BLASTN Default
+                 match=2,  # BLASTN Default
+                 mismatch=3,  # BLASTN Default
                  substitution_matrix=None,
                  suppress_sequences=False,
                  zero_index=True):
@@ -494,9 +494,10 @@ cdef class StripedSmithWaterman:
         self.is_protein = protein
         self.bit_flag = self._get_bit_flag(override_skip_babp, score_only)
         # http://www.cs.utexas.edu/users/EWD/transcriptions/EWD08xx/EWD831.html
-        self.index_starts_at = 0 if zero_index else 1 # Dijkstra knows what's up
+        # Dijkstra knows what's up:
+        self.index_starts_at = 0 if zero_index else 1
         # set up our matrix
-        cdef np.ndarray[np.int8_t, ndim=1, mode="c"] matrix
+        cdef np.ndarray[np.int8_t, ndim = 1, mode = "c"] matrix
         if substitution_matrix is None:
             if protein:
                 raise Exception("Must provide a substitution matrix for \
@@ -505,20 +506,20 @@ cdef class StripedSmithWaterman:
         else:
             matrix = self._convert_dict2d_to_matrix(substitution_matrix)
         # Set up our mask_length
-        # Mask is recommended to be max(query_sequence/2, 15) 
+        # Mask is recommended to be max(query_sequence/2, 15)
         if mask_auto:
-            self.mask_length = len(query_sequence)/2
+            self.mask_length = len(query_sequence) / 2
             if self.mask_length < mask_length:
                 self.mask_length = mask_length
         else:
             self.mask_length = mask_length
 
-        cdef np.ndarray[np.int8_t, ndim=1, mode="c"] read_seq
+        cdef np.ndarray[np.int8_t, ndim = 1, mode = "c"] read_seq
         read_seq = self._seq_converter(query_sequence)
 
         cdef np.int32_t read_length
         read_length = len(query_sequence)
-        
+
         cdef np.int8_t s_size
         s_size = score_size
 
@@ -548,7 +549,7 @@ cdef class StripedSmithWaterman:
         ``skbio.core.ssw.AlignmentStructure``
             The resulting alignment.
         """
-        cdef np.ndarray[np.int8_t, ndim=1, mode="c"] reference
+        cdef np.ndarray[np.int8_t, ndim = 1, mode = "c"] reference
         reference = self._seq_converter(reference_sequence)
 
         cdef np.int32_t ref_length
@@ -564,13 +565,13 @@ cdef class StripedSmithWaterman:
         # Cython won't let me do this correctly, so duplicate code ahoy:
         if self.suppress_sequences:
             alignment = AlignmentStructure("", "", self.index_starts_at)
-            alignment.__constructor__(align) # Hack to get a pointer through
+            alignment.__constructor__(align)  # Hack to get a pointer through
             return alignment
         else:
             alignment = AlignmentStructure(self.read_sequence,
                                            reference_sequence,
                                            self.index_starts_at)
-            alignment.__constructor__(align) # Hack to get a pointer through
+            alignment.__constructor__(align)  # Hack to get a pointer through
             return alignment
 
     def __dealloc__(self):
@@ -591,10 +592,10 @@ cdef class StripedSmithWaterman:
             bit_flag = bit_flag | 0x1
         return bit_flag
 
-    cdef np.ndarray[np.int8_t, ndim=1, mode="c"] _seq_converter(self,
-                                                                sequence):
-        cdef np.ndarray[np.int8_t, ndim=1, mode="c"] seq = \
-            np.empty(len(sequence), dtype=np.int8)
+    cdef np.ndarray[np.int8_t, ndim = 1, mode = "c"] _seq_converter(self,
+                                                                    sequence):
+        cdef np.ndarray[np.int8_t, ndim = 1, mode = "c"] seq
+        seq = np.empty(len(sequence), dtype=np.int8)
         if self.is_protein:
             for i, char in enumerate(sequence):
                 seq[i] = np_aa_table[ord(char)]
@@ -603,9 +604,8 @@ cdef class StripedSmithWaterman:
                 seq[i] = np_nt_table[ord(char)]
         return seq
 
-    cdef np.ndarray[np.int8_t, ndim=1, mode="c"] _build_match_matrix(self,
-                                                                     match,
-                                                                     mismatch):
+    cdef np.ndarray[np.int8_t, ndim = 1, mode = "c"] \
+            _build_match_matrix(self, match, mismatch):
         sequence_order = "ACGTN"
         dict2d = {}
         for row in sequence_order:
@@ -617,21 +617,22 @@ cdef class StripedSmithWaterman:
                     dict2d[row][column] = match if row == column else -mismatch
         return self._convert_dict2d_to_matrix(dict2d)
 
-    cdef np.ndarray[np.int8_t, ndim=1, mode="c"] \
-                                _convert_dict2d_to_matrix(self, dict2d):
+    cdef np.ndarray[np.int8_t, ndim = 1, mode = "c"] \
+            _convert_dict2d_to_matrix(self, dict2d):
         if self.is_protein:
             sequence_order = "ARNDCQEGHILKMFPSTWYVBZX*"
         else:
             sequence_order = "ACGTN"
         cdef np.int8_t i = 0
         length = len(sequence_order)
-        cdef np.ndarray[np.int8_t, ndim=1, mode="c"] py_list_matrix = \
-        np.empty(length*length, dtype=np.int8)
+        cdef np.ndarray[np.int8_t, ndim = 1, mode = "c"] py_list_matrix = \
+            np.empty(length*length, dtype=np.int8)
         for row in sequence_order:
             for column in sequence_order:
                 py_list_matrix[i] = dict2d[row][column]
-                i+=1
+                i += 1
         return py_list_matrix
+
 
 def striped_smith_waterman_alignment(query_sequence, target_sequence,
                                      **kwargs):

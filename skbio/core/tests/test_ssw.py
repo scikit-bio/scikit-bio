@@ -10,6 +10,9 @@
 # Special thanks to http://www.faculty.ucr.edu/~mmaduro/random.htm for the
 # random DNA generator
 
+# These really only test against regression, not correctness.
+# It is assumed that ssw.c and ssw.h are correct.
+
 from unittest import TestCase, main
 from skbio.core.ssw import (StripedSmithWaterman,
                             striped_smith_waterman_alignment)
