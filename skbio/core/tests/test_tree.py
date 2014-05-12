@@ -10,11 +10,11 @@
 
 from __future__ import division
 
-from StringIO import StringIO
 from unittest import TestCase, main
 
 import numpy as np
 import numpy.testing as nptest
+from future.utils.six import StringIO
 
 from skbio.core.tree import TreeNode, _dnd_tokenizer
 from skbio.core.distance import DistanceMatrix
