@@ -279,7 +279,7 @@ class BaseVectors(object):
         self._message_buffer = []
 
     def _normalize_samples(self):
-        """Ensures that `self._coords` and `self._metamap` have the same
+        r"""Ensures that `self._coords` and `self._metamap` have the same
         sample ids
 
         Raises
@@ -305,7 +305,7 @@ class BaseVectors(object):
             self._metamap = self._metamap.ix[sample_ids]
 
     def _make_groups(self, vector_categories, sort_category):
-        """Groups the sample ids in `self._metamap` by the values in
+        r"""Groups the sample ids in `self._metamap` by the values in
         `vector_categories`
 
         Creates `self._groups`, a dictionary keyed by category and values are
@@ -341,7 +341,7 @@ class BaseVectors(object):
                 self._groups[cat][g] = [val[1] for val in sorted_list]
 
     def get_vectors(self):
-        """Compute the vectors for each group in each category and run ANOVA
+        r"""Compute the vectors for each group in each category and run ANOVA
         over the results to test group independence.
 
         Returns
@@ -364,7 +364,28 @@ class BaseVectors(object):
         return result
 
     def _get_group_vectors(self, group_name, sids):
-        """"""
+        r"""Compute the vector results for `group_name` containing the samples
+        `sids`.
+
+        Weights the data if `self._weighted` is True and len(sids) > 1
+
+        Parameters
+        ----------
+        group_name : str
+            The name of the group
+        sids : list of str
+            The sample ids in the group
+
+        Returns
+        -------
+        GroupResults
+            The vector results for the given group
+
+        Raises
+        ------
+        RuntimeError
+            If sids is an empty list
+        """
         # We multiply the coord values with the prop_expl
         vectors = self._coords.ix[sids] * self._prop_expl
 
@@ -392,11 +413,25 @@ class BaseVectors(object):
         return self._compute_vector_results(group_name, vectors.ix[sids])
 
     def _compute_vector_results(self, group_name, vectors):
+        r"""Do the actual vector computation over vectors
+
+        Parameters
+        ----------
+        group_name : str
+            The name of the group
+        vectors : pandas.DataFrame
+            The sorted vectors for each sample in the group
+
+        Raises
+        ------
+        NotImplementedError
+            This is the base class
+        """
         raise NotImplementedError("No algorithm is implemented on the base "
                                   "class.")
 
     def _weight_by_vector(self, vector, w_vector):
-        """weights the values of 'vector' given a weighting vector 'w_vector'.
+        r"""weights the values of 'vector' given a weighting vector 'w_vector'.
 
         Each value in 'vector' will be weighted by the 'rate of change'
         to 'optimal rate of change' ratio, meaning that when calling this
@@ -441,14 +476,14 @@ class BaseVectors(object):
         # Cast to float so divisions have a floating point resolution
         total_length = float(max(w_vector) - min(w_vector))
 
-        # reflects the expected gradient between subsequent values in w_vector
+        # Reflects the expected gradient between subsequent values in w_vector
         # the first value isn't weighted so subtract one from the number of
         # elements
         optimal_gradient = total_length/(len(w_vector)-1)
 
         # for all elements apply the weighting function
         for i, idx in enumerate(vector.index):
-            # if it's the first element, no weighting to do
+            # Skipping the first element is it doesn't need to be weighted
             if i != 0:
                 vector.ix[idx] = (vector.ix[idx] * optimal_gradient /
                                   (np.abs((w_vector[i] - w_vector[i-1]))))
@@ -456,7 +491,7 @@ class BaseVectors(object):
         return vector
 
     def _test_vectors(self, category, res_by_group):
-        """Run ANOVA over `res_by_group`
+        r"""Run ANOVA over `res_by_group`
 
         If ANOVA cannot be run in the current category (because either there is
         only one group in category or there is a group with only one member)
@@ -486,12 +521,30 @@ class BaseVectors(object):
 
 
 class AverageVectors(BaseVectors):
-    """docstring for AverageVectors"""
+    r"""Perform vector analysis using the RMS average algorithm
+
+    It calculates the average at each timepoint (averaging within a group),
+    then calculates the norm of each point
+    """
 
     _alg_name = 'avg'
 
     def _compute_vector_results(self, group_name, vectors):
-        """"""
+        r"""Do the actual vector computation over vectors
+
+        Parameters
+        ----------
+        group_name : str
+            The name of the group
+        vectors : pandas.DataFrame
+            The sorted vectors for each sample in the group
+
+        Returns
+        -------
+        GroupResults
+            The vector results for `group_name` using the average vectors
+            method
+        """
         center = np.average(vectors, axis=0)
         if len(vectors) == 1:
             vector = np.array([np.linalg.norm(center)])
@@ -508,12 +561,29 @@ class AverageVectors(BaseVectors):
 
 
 class TrajectoryVectors(BaseVectors):
-    """"""
+    r"""Perform vector analysis using the RMS trajectory algorithm
+
+    It calculates the norm got the 1st-2nd, 2nd-rd, etc.
+    """
 
     _alg_name = 'trajectory'
 
     def _compute_vector_results(self, group_name, vectors):
-        """"""
+        r"""Do the actual vector computation over vectors
+
+        Parameters
+        ----------
+        group_name : str
+            The name of the group
+        vectors : pandas.DataFrame
+            The sorted vectors for each sample in the group
+
+        Returns
+        -------
+        GroupResults
+            The vector results for `group_name` using the trajectory vectors
+            method
+        """
         if len(vectors) == 1:
             vector = [np.linalg.norm(vectors)]
             calc = {'trajectory': vector[0]}
@@ -530,12 +600,30 @@ class TrajectoryVectors(BaseVectors):
 
 
 class DifferenceVectors(BaseVectors):
-    """"""
+    r"""Perform vector analysis using the first difference algorithm
+
+    It calculates the norm for all the time-points and then calculates the
+    first difference for each resulting point
+    """
 
     _alg_name = 'diff'
 
     def _compute_vector_results(self, group_name, vectors):
-        """"""
+        r"""Do the actual vector computation over vectors
+
+        Parameters
+        ----------
+        group_name : str
+            The name of the group
+        vectors : pandas.DataFrame
+            The sorted vectors for each sample in the group
+
+        Returns
+        -------
+        GroupResults
+            The vector results for `group_name` using the difference vectors
+            method
+        """
         if len(vectors) == 1:
             vector = [np.linalg.norm(vectors)]
             calc = {'mean': vector[0], 'std': 0}
@@ -556,7 +644,29 @@ class DifferenceVectors(BaseVectors):
 
 
 class WindowDifferenceVectors(BaseVectors):
-    """docstring for WindowDifferenceVectors"""
+    r"""Perform vector analysis using the modified first difference algorithm
+
+    It calculates the norm for all the time-points and subtracts the mean of
+    the next number of elements specified in `window_size` and the current
+    element.
+
+    Parameters
+    ----------
+    coords : pandas.DataFrame
+        The coordinates for each sample id
+    prop_expl : numpy 1-D array
+        The proportion explained by each axis in coords
+    metamap : pandas.DataFrame
+        The metadata map, indexed by sample ids and columns are metadata
+        categories
+    window_size : int or long
+        The window size to use while computing the differences
+
+    Raises
+    ------
+    ValueError
+        If the window_size is not a positive integer
+    """
 
     _alg_name = 'wdiff'
 
@@ -570,28 +680,23 @@ class WindowDifferenceVectors(BaseVectors):
         self._window_size = window_size
 
     def _compute_vector_results(self, group_name, vectors):
-        """Perform the first difference algorithm between windows of values in a
-        vector and each value.
+        r"""Do the actual vector computation over vectors
+
+        If the first difference cannot be calculated of the provided window
+        size, no difference is applied and a message is added to the results.
 
         Parameters
         ----------
-        vector: numpy array
-            Values to calculate the windowed_diff
-        window_size: int or long
-            Size of the window
+        group_name : str
+            The name of the group
+        vectors : pandas.DataFrame
+            The sorted vectors for each sample in the group
 
         Returns
         -------
-        numpy array
-            Array where the Nth value is the difference between the mean of
-            vector[N+1:N+1+window_size] and vector[N]. By definition this array
-            will have 'window_size' less elements than 'vector'.
-
-        Raises
-        ------
-        ValueError
-            If the window_size is not a positive integer
-            If the window_size is greater than the vector length
+        GroupResults
+            The vector results for `group_name` using the windowed difference
+            vectors method
         """
         if len(vectors) == 1:
             vector = [np.linalg.norm(vectors)]
