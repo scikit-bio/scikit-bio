@@ -44,9 +44,10 @@ Use the ``StripedSmithWaterman`` object:
     'query_sequence': 'ACTAAGGCTCTCTACCCCTCTCAGAGA',
     'target_sequence': 'AAAAAACTCTCTAAACTCACTAAGGCTCTCTACCCCTCTTCAGAGAAGTCGA'
 }
+
 """
 # -----------------------------------------------------------------------------
-#  Copyright (c) 2014--, biocore team.
+#  Copyright (c) 2013--, scikit-bio development team.
 #
 #  Distributed under the terms of the Modified BSD License.
 #
@@ -176,30 +177,31 @@ cdef class AlignmentStructure:
 
     @property
     def optimal_alignment_score(self):
-        """Returns the optimal alignment score
+        """Optimal alignment score
 
         Returns
         -------
         int
             The optimal alignment score
+
         """
         return self.p.score1
 
     @property
     def suboptimal_alignment_score(self):
-        """Returns the suboptimal alignment score
+        """Suboptimal alignment score
 
         Returns
         -------
         int
             The suboptimal alignment score
+
         """
         return self.p.score2
 
     @property
     def target_begin(self):
-        """Returns in character index at which the target sequence's alignment
-        begins
+        """Character index where the target's alignment begins
 
         Returns
         -------
@@ -209,14 +211,14 @@ cdef class AlignmentStructure:
         Notes
         -----
         The result is a 0 based index by default
+
         """
         return self.p.ref_begin1 + self.index_starts_at if (self.p.ref_begin1
                                                             >= 0) else -1
 
     @property
     def target_end_optimal(self):
-        """Returns the character index at which the target sequence's optimal
-        alignment ends
+        """Character index where the target's optimal alignment ends
 
         Returns
         -------
@@ -227,13 +229,13 @@ cdef class AlignmentStructure:
         Notes
         -----
         The result is a 0 based index by default
+
         """
         return self.p.ref_end1 + self.index_starts_at
 
     @property
     def target_end_suboptimal(self):
-        """Returns the character index at which the target sequence's
-        suboptimal alignment ends
+        """Character index where the target's suboptimal alignment ends
 
         Returns
         -------
@@ -259,13 +261,14 @@ cdef class AlignmentStructure:
         Notes
         -----
         The result is a 0 based index by default
+
         """
         return self.p.read_begin1 + self.index_starts_at if (self.p.read_begin1
                                                              >= 0) else -1
 
     @property
     def query_end(self):
-        """Returns the character index at which the query sequence ends
+        """Character index at where query sequence ends
 
         Returns
         -------
@@ -280,8 +283,7 @@ cdef class AlignmentStructure:
 
     @property
     def cigar(self):
-        """Returns a cigar formatted string for the optimal alignment of the
-        query and target sequences
+        """Cigar formatted string for the optimal alignment
 
         Returns
         -------
@@ -291,7 +293,8 @@ cdef class AlignmentStructure:
         Notes
         -----
         If there is no cigar or optimal alignment, this will return an empty
-         string
+        string
+
         """
         cigar_string = ""
         cigar_list = []
@@ -307,28 +310,31 @@ cdef class AlignmentStructure:
 
     @property
     def query_sequence(self):
-        """Returns the query sequence
+        """Query sequence
 
         Returns
         -------
         str
             The query sequence
+
         """
         return self.read_sequence
 
     @property
     def target_sequence(self):
-        """Returns the target sequence
+        """Target sequence
 
         Returns
         -------
         str
             The target sequence
+
         """
         return self.reference_sequence
 
     def set_zero_based(self, is_zero_based):
         """Set the aligment indices to start at 0 if True else 1 if False
+
         """
         if is_zero_based:
             self.index_starts_at = 0
@@ -342,6 +348,7 @@ cdef class AlignmentStructure:
         -------
         bool
             Whether the alignment indicies start at 0
+
         """
         return self.index_starts_at == 0
 
@@ -452,6 +459,7 @@ cdef class StripedSmithWaterman:
     sequences
 
     A substitution matrix must be provided when working with protein sequences
+
     """
     cdef s_profile *profile
     cdef np.uint8_t weight_gap_open
@@ -548,6 +556,7 @@ cdef class StripedSmithWaterman:
         -------
         ``skbio.core.ssw.AlignmentStructure``
             The resulting alignment.
+
         """
         cdef np.ndarray[np.int8_t, ndim = 1, mode = "c"] reference
         reference = self._seq_converter(reference_sequence)
@@ -648,6 +657,7 @@ def striped_smith_waterman_alignment(query_sequence, target_sequence,
     -------
     ``skbio.core.ssw.AlignmentStructure``
         The resulting alignment
+        
     """
     query = StripedSmithWaterman(query_sequence, **kwargs)
     return query(target_sequence)

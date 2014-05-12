@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -----------------------------------------------------------------------------
-#  Copyright (c) 2014--, biocore team.
+#  Copyright (c) 2013--, scikit-bio development team.
 #
 #  Distributed under the terms of the Modified BSD License.
 #
@@ -8,7 +8,7 @@
 # -----------------------------------------------------------------------------
 
 # Special thanks to http://www.faculty.ucr.edu/~mmaduro/random.htm for the
-# random DNA generator
+# random DNA generator.
 
 # These really only test against regression, not correctness.
 # It is assumed that ssw.c and ssw.h are correct.
@@ -38,9 +38,6 @@ class TestSSW(TestCase):
 
 class TestStripedSmithWaterman(TestSSW):
     def test_object_is_reusable(self):
-        """skbio.core.ssw.StripedSmithWaterman: The StripedSmithWaterman object
-        should be reusable
-        """
         q_seq = "AGGGTAATTAGGCGTGTTCACCTA"
         expected_alignments = [
             {
@@ -116,80 +113,42 @@ class TestStripedSmithWaterman(TestSSW):
             self._check_alignment(result, expected)
 
     def test_many_arguments_working_together(self):
-        """skbio.core.ssw.StripedSmithWaterman: Many arguments should work
-        together
-        """
         pass
 
     def test_score_size_is_settable(self):
-        """skbio.core.ssw.StripedSmithWaterman: score_size should work
-        """
         pass
 
     def test_protein_sequence_is_usable(self):
-        """skbio.core.ssw.StripedSmithWaterman: Protein sequences should be
-         valid input
-        """
         pass
 
     def test_substitution_matrix_is_usable(self):
-        """skbio.core.ssw.StripedSmithWaterman: Should be able to provide a
-        substitution_matrix instead of a match/mismatch
-        """
         pass
 
     def test_match_score_is_settable(self):
-        """skbio.core.ssw.StripedSmithWaterman: Should be able to set the match
-        score
-        """
         pass
 
     def test_mismatch_score_is_settable(self):
-        """skbio.core.ssw.StripedSmithWaterman: Should be able to set the
-        mismatch score
-        """
         pass
 
     def test_weight_gap_open_is_settable(self):
-        """skbio.core.ssw.StripedSmithWaterman: Should be able to change the
-        weight gap open
-        """
         pass
 
     def test_weight_gap_extension_is_settable(self):
-        """skbio.core.ssw.StripedSmithWaterman: Should be able to change the
-        weight gap extension
-        """
         pass
 
     def test_score_filter_is_settable_and_used(self):
-        """skbio.core.ssw.StripedSmithWaterman: Should filter alignments that
-        are less than the score_filter
-        """
         pass
 
     def test_distance_filter_is_settable_and_used(self):
-        """skbio.core.ssw.StripedSmithWaterman: Should filter all alignments
-        that are less than the distance_filter
-        """
         pass
 
     def test_mask_length_works(self):
-        """skbio.core.ssw.StripedSmithWaterman: Mask length should do whatever
-        the hell it does
-        """
         pass
 
     def test_matrix_overrides_match_and_mismatch(self):
-        """skbio.core.ssw.StripedSmithWaterman: Providing a substitution_matrix
-        should override match and mismatch
-        """
         pass
 
     def test_zero_index_changes_base_of_index_to_0_or_1(self):
-        """skbio.core.ssw.StripedSmithWaterman: Setting zero_index (True/False)
-        should change the base of the index (0/1)
-        """
         expected_alignments = [
             ({
                 'optimal_alignment_score': 100,
@@ -227,9 +186,6 @@ class TestStripedSmithWaterman(TestSSW):
             self._check_alignment(alignment, expected)
 
     def test_lowercase_is_valid_sequence(self):
-        """skbio.core.ssw.StripedSmithWaterman: Lowercase should be a valid
-        input
-        """
         expected = {
             'optimal_alignment_score': 23,
             'suboptimal_alignment_score': 10,
@@ -249,9 +205,6 @@ class TestStripedSmithWaterman(TestSSW):
 
 class TestStripedSmithWatermanAlignment(TestSSW):
     def test_same_as_using_StripedSmithWaterman_object(self):
-        """skbio.core.ssw.striped_smith_waterman_alignment: Should be identical
-        to using StripedSmithWaterman object
-        """
         query_sequence = 'ATGGAAGCTATAAGCGCGGGTGAG'
         target_sequence = 'AACTTATATAATAAAAATTATATATTCGTTGGGTTCTTTTGATATAAATC'
         query = StripedSmithWaterman(query_sequence)
@@ -261,8 +214,6 @@ class TestStripedSmithWatermanAlignment(TestSSW):
         self._check_alignment(align2, align1)
 
     def test_kwargs_are_usable(self):
-        """skbio.core.ssw.striped_smith_waterman_alignment: Should accept kwargs
-        """
         kwargs = {}
         kwargs['zero_index'] = False
         kwargs['match'] = 5
@@ -277,9 +228,6 @@ class TestStripedSmithWatermanAlignment(TestSSW):
 
 class TestAlignmentStructure(TestSSW):
     def test_works_for_dot_and_square_bracket_access(self):
-        """skbio.core.ssw.AlignmentStructure: The alignment should be accessible
-        by . and []
-        """
         q_seq = "AGGGTAATTAGGCGTGTTCACCTA"
         query = StripedSmithWaterman(q_seq)
         alignment = query("TACTTATAAGATGTCTCAACGGCATGCGCAACTTGTGAAGTG")
@@ -288,9 +236,6 @@ class TestAlignmentStructure(TestSSW):
                              alignment[accessible])
 
     def test_is_zero_based_returns_true_if_index_base_is_zero(self):
-        """skbio.core.ssw.AlignmentStructure: is_zero_based should return True
-        if index base is 0 else False
-        """
         expected_alignments = [
             ({
                 'query_sequence':
@@ -312,9 +257,6 @@ class TestAlignmentStructure(TestSSW):
             self.assertEqual(z, alignment.is_zero_based())
 
     def test_set_zero_based_changes_the_index_base(self):
-        """skbio.core.ssw.AlignmentStructure: set_zero_based should set the
-        index base to 0 if True, 1 if False
-        """
         expected_alignments = [
             ({
                 'query_sequence':
