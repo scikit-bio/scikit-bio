@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-from __future__ import division
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -9,9 +8,11 @@ from __future__ import division
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from itertools import izip
-from StringIO import StringIO
-from tempfile import TemporaryFile
+from __future__ import division
+from future.builtins import zip
+from future.utils.six import StringIO
+
+import tempfile
 from unittest import TestCase, main
 
 import numpy as np
@@ -56,19 +57,12 @@ class DissimilarityMatrixTestData(TestCase):
         self.dm_3x3_f = StringIO(self.dm_3x3_lines)
         self.dm_3x3_whitespace_f = StringIO('\n'.join(DM_3x3_WHITESPACE_F))
 
-        self.tmp_f = TemporaryFile(prefix='skbio.core.tests.test_distance',
-                                   suffix='.txt')
-
         self.bad_dm_f1 = StringIO(BAD_DM_F1)
         self.bad_dm_f2 = StringIO(self.bad_dm_f2_lines)
         self.bad_dm_f3 = StringIO(BAD_DM_F3)
         self.bad_dm_f4 = StringIO(BAD_DM_F4)
         self.bad_dm_f5 = StringIO(BAD_DM_F5)
         self.bad_dm_f6 = StringIO(BAD_DM_F6)
-
-    def tearDown(self):
-        """Delete any temporary files."""
-        self.tmp_f.close()
 
 
 class DissimilarityMatrixTests(DissimilarityMatrixTestData):
@@ -113,7 +107,7 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
 
     def test_from_file(self):
         """Should parse and return a valid DissimilarityMatrix given a file."""
-        for dm_f, dm in izip(self.dm_fs, self.dms):
+        for dm_f, dm in zip(self.dm_fs, self.dms):
             obs = DissimilarityMatrix.from_file(dm_f)
             self.assertEqual(obs, dm)
 
@@ -144,10 +138,13 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
 
     def test_from_file_real_file(self):
         """Should correctly parse a real on-disk file."""
-        self.tmp_f.write('\n'.join(DM_3x3_WHITESPACE_F))
-        self.tmp_f.seek(0)
+        with tempfile.TemporaryFile(mode='r+',
+                                    prefix='skbio.core.tests.test_distance',
+                                    suffix='.txt') as fh:
+            fh.write('\n'.join(DM_3x3_WHITESPACE_F))
+            fh.seek(0)
 
-        obs = DissimilarityMatrix.from_file(self.tmp_f)
+            obs = DissimilarityMatrix.from_file(fh)
         self.assertEqual(obs, self.dm_3x3)
 
     def test_from_file_invalid_input(self):
@@ -182,13 +179,20 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
 
     def test_to_file(self):
         """Should serialize a DissimilarityMatrix to file."""
-        for dm_f_line, dm in izip(self.dm_f_lines, self.dms):
-            obs_f = StringIO()
-            dm.to_file(obs_f)
-            obs = obs_f.getvalue()
-            obs_f.close()
-
-            self.assertEqual(obs, dm_f_line)
+        for dm_f_line, dm in zip(self.dm_f_lines, self.dms):
+            for file_type in ('file like', 'file name'):
+                if file_type == 'file like':
+                    obs_f = StringIO()
+                    dm.to_file(obs_f)
+                    obs = obs_f.getvalue()
+                    obs_f.close()
+                elif file_type == 'file name':
+                    with tempfile.NamedTemporaryFile('r+') as temp_file:
+                        dm.to_file(temp_file.name)
+                        temp_file.flush()
+                        temp_file.seek(0)
+                        obs = temp_file.read()
+                self.assertEqual(obs, dm_f_line)
 
     def test_init_from_dm(self):
         """Constructs a dm from a dm."""
@@ -248,7 +252,7 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
 
     def test_data(self):
         """Test retrieving/setting data matrix."""
-        for dm, exp in izip(self.dms, self.dm_redundant_forms):
+        for dm, exp in zip(self.dms, self.dm_redundant_forms):
             obs = dm.data
             self.assertTrue(np.array_equal(obs, exp))
 
@@ -287,17 +291,17 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
 
     def test_shape(self):
         """Test retrieving shape of data matrix."""
-        for dm, shape in izip(self.dms, self.dm_shapes):
+        for dm, shape in zip(self.dms, self.dm_shapes):
             self.assertEqual(dm.shape, shape)
 
     def test_size(self):
         """Test retrieving size of data matrix."""
-        for dm, size in izip(self.dms, self.dm_sizes):
+        for dm, size in zip(self.dms, self.dm_sizes):
             self.assertEqual(dm.size, size)
 
     def test_transpose(self):
         """Test retrieving transpose of dissimilarity matrix."""
-        for dm, transpose in izip(self.dms, self.dm_transposes):
+        for dm, transpose in zip(self.dms, self.dm_transposes):
             self.assertEqual(dm.T, transpose)
             self.assertEqual(dm.transpose(), transpose)
             # We should get a reference to a different object back, even if the
@@ -306,7 +310,7 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
 
     def test_redundant_form(self):
         """Test retrieving the data matrix in redundant form."""
-        for dm, redundant in izip(self.dms, self.dm_redundant_forms):
+        for dm, redundant in zip(self.dms, self.dm_redundant_forms):
             obs = dm.redundant_form()
             self.assertTrue(np.array_equal(obs, redundant))
 
@@ -502,7 +506,7 @@ class DistanceMatrixTests(DissimilarityMatrixTestData):
 
     def test_condensed_form(self):
         """Test retrieving the data matrix in condensed form."""
-        for dm, condensed in izip(self.dms, self.dm_condensed_forms):
+        for dm, condensed in zip(self.dms, self.dm_condensed_forms):
             obs = dm.condensed_form()
             self.assertTrue(np.array_equal(obs, condensed))
 

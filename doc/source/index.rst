@@ -25,6 +25,19 @@ API Reference
    maths.stats.ordination
    maths.subsample
    parse.sequences
+   util.io
    util.misc
-   util.trie
    util.testing
+   util.trie
+
+
+Developer Documentation
+-----------------------
+
+The developer documentation contains information for how to contribute
+to scikit-bio.
+
+.. toctree::
+   :maxdepth: 1
+
+   development/py3

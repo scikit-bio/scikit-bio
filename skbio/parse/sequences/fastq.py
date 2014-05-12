@@ -10,7 +10,6 @@ from __future__ import division
 import numpy as np
 
 from skbio.core.exception import FastqParseError
-from skbio.util.misc import is_casava_v180_or_later
 
 
 def _ascii_to_phred(s, offset):
@@ -39,11 +38,11 @@ def _ascii_to_phred64(s):
 
 
 def _drop_id_marker(s):
-    """Drop the first character of str"""
-    return s[1:]
+    """Drop the first character and decode bytes to text"""
+    return s[1:].decode('utf-8')
 
 
-def parse_fastq(data, strict=False, force_phred_offset=None):
+def parse_fastq(data, strict=False, phred_offset=33):
     r"""yields label, seq, and qual from a fastq file.
 
     Parameters
@@ -55,13 +54,13 @@ def parse_fastq(data, strict=False, force_phred_offset=None):
         If strict is true a FastqParse error will be raised if the seq and qual
         labels dont' match.
 
-    force_phred_offset : int or None
+    phred_offset : int or None
         Force a Phred offset, currently restricted to either 33 or 64.
         Default behavior is to infer the Phred offset.
 
     Returns
     -------
-    label, seq, qual : (str, str, np.array)
+    label, seq, qual : (str, bytes, np.array)
         yields the label, sequence and quality for each entry
 
     Examples
@@ -89,7 +88,7 @@ def parse_fastq(data, strict=False, force_phred_offset=None):
     ...                     'TATGTATATATAACATATACATATATACATACATA\n'
     ...                     '+\n'
     ...                     ']KZ[PY]_[YY^```ac^\\\`bT``c`\\aT``bbb\n')
-    >>> for label, seq, qual in parse_fastq(fastq_f):
+    >>> for label, seq, qual in parse_fastq(fastq_f, phred_offset=64):
     ...     print label
     ...     print seq
     ...     print qual
@@ -110,20 +109,14 @@ def parse_fastq(data, strict=False, force_phred_offset=None):
     QUAL = 3
 
     data = iter(data)
-    first_line = data.next().strip()
+    first_line = next(data).strip()
 
-    if force_phred_offset is None:
-        if is_casava_v180_or_later(first_line):
-            phred_f = _ascii_to_phred33
-        else:
-            phred_f = _ascii_to_phred64
+    if phred_offset == 33:
+        phred_f = _ascii_to_phred33
+    elif phred_offset == 64:
+        phred_f = _ascii_to_phred64
     else:
-        if force_phred_offset == 33:
-            phred_f = _ascii_to_phred33
-        elif force_phred_offset == 64:
-            phred_f = _ascii_to_phred64
-        else:
-            raise ValueError("Unknown PHRED offset of %s" % force_phred_offset)
+        raise ValueError("Unknown PHRED offset of %s" % phred_offset)
 
     seqid = _drop_id_marker(first_line)
     seq = None
@@ -147,13 +140,18 @@ def parse_fastq(data, strict=False, force_phred_offset=None):
             seq = line
         elif linetype == QUALID:
             qualid = _drop_id_marker(line)
-
             if strict:
                 if seqid != qualid:
-                    raise FastqParseError('ID mismatch: %s != %s' % (seqid,
-                                                                     qualid))
+                    raise FastqParseError('ID mismatch: {} != {}'.format(
+                        seqid, qualid))
         elif linetype == QUAL:
             qual = phred_f(line)
-
+            # bounds based on illumina limits, see:
+            # http://nar.oxfordjournals.org/content/38/6/1767/T1.expansion.html
+            if (qual < 0).any() or (qual > 62).any():
+                raise FastqParseError("Failed qual conversion for seq id: %s. "
+                                      "This may be because you passed an "
+                                      "incorrect value for phred_offset."
+                                      % seqid)
     if seqid:
         yield (seqid, seq, qual)

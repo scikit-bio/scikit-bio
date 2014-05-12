@@ -39,20 +39,27 @@ class CA(Ordination):
 
     Notes
     -----
-    The algorithm is based on Legendre & Legendre (1998) 9.4.1. and is
-    expected to give the same results as ``cca(X)`` in R's package
-    vegan.
+    The algorithm is based on [1]_, \S 9.4.1., and is expected to give
+    the same results as ``cca(X)`` in R's package vegan.
 
     See Also
     --------
     CCA
+
+    References
+    ----------
+    .. [1] Legendre P. and Legendre L. 1998. Numerical
+       Ecology. Elsevier, Amsterdam.
+
     """
     short_method_name = 'CA'
     long_method_name = 'Canonical Analysis'
 
-    def __init__(self, X):
+    def __init__(self, X, row_ids, column_ids):
         self.X = np.asarray(X, dtype=np.float64)
         self._ca()
+        self.row_ids = row_ids
+        self.column_ids = column_ids
 
     def _ca(self):
         X = self.X
@@ -123,6 +130,17 @@ class CA(Ordination):
             relationships than species either in the center (may be
             multimodal species, not related to the shown ordination
             axes...) or the edges (sparse species...).
+
+        Returns
+        -------
+        OrdinationResults
+            Object that stores the computed eigenvalues, the
+            proportion explained by each of them (per unit),
+            transformed coordinates, etc.
+
+        See Also
+        --------
+        OrdinationResults
         """
 
         if scaling not in {1, 2}:
@@ -165,4 +183,5 @@ class CA(Ordination):
         # Site scores (weighted averages of species scores)
         site_scores = [F, V_hat][scaling - 1]
         return OrdinationResults(eigvals=eigvals, species=species_scores,
-                                 site=site_scores)
+                                 site=site_scores, site_ids=self.row_ids,
+                                 species_ids=self.column_ids)

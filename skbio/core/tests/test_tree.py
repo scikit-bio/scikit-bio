@@ -8,6 +8,8 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from __future__ import division
+
 import numpy as np
 import numpy.testing as nptest
 from unittest import TestCase, main
@@ -177,6 +179,33 @@ class TreeTests(TestCase):
         self.assertEqual(len(self.simple_t.children), 2)
         self.assertEqual(self.simple_t.children[0].name, 'i2')
         self.assertEqual(self.simple_t.children[1].name, 'b')
+
+    def test_prune_length(self):
+        """Collapse single descendent nodes"""
+        # check the identity case
+        cp = self.simple_t.copy()
+        self.simple_t.prune()
+
+        gen = zip(cp.traverse(include_self=True),
+                  self.simple_t.traverse(include_self=True))
+
+        for a, b in gen:
+            self.assertIsNot(a, b)
+            self.assertEqual(a.name, b.name)
+            self.assertEqual(a.length, b.length)
+
+        for n in self.simple_t.traverse():
+            n.length = 1.0
+
+        # create a single descendent by removing tip 'a'
+        n = self.simple_t.children[0]
+        n.remove(n.children[0])
+        self.simple_t.prune()
+
+        self.assertEqual(len(self.simple_t.children), 2)
+        self.assertEqual(self.simple_t.children[0].name, 'i2')
+        self.assertEqual(self.simple_t.children[1].name, 'b')
+        self.assertEqual(self.simple_t.children[1].length, 2.0)
 
     def test_subset(self):
         """subset should return set of leaves that descends from node"""

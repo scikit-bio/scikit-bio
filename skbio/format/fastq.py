@@ -8,8 +8,6 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from skbio.util.misc import is_casava_v180_or_later
-
 
 def _phred_to_ascii(a, offset):
     """Convert Phred quality score to ASCII character with specified offset"""
@@ -26,23 +24,23 @@ def _phred_to_ascii64(a):
     return _phred_to_ascii(a, 64)
 
 
-def format_fastq_record(seqid, seq, qual):
+def format_fastq_record(seqid, seq, qual, phred_offset=33):
     """Format a FASTQ record
 
     Parameters
     ----------
-
-    seqid : str
+    seqid : bytes
         The sequence ID
-    seq : str or subclass of BiologicalSequence
+    seq : bytes or subclass of BiologicalSequence
         The sequence
     qual : np.array of int8
         The quality scores
+    phred_offset : int, either 33 or 64
+        Set a phred offset
 
     Returns
     -------
-
-    str : a string representation of a single FASTQ record
+    bytes : a string representation of a single FASTQ record
 
     Examples
     --------
@@ -55,11 +53,14 @@ def format_fastq_record(seqid, seq, qual):
     @seq1
     AATTGG
     +
-    ffgghh
-    """
-    if is_casava_v180_or_later("@%s" % seqid):
-        phred_f = _phred_to_ascii33
-    else:
-        phred_f = _phred_to_ascii64
+    GGHHII
 
-    return "@%s\n%s\n+\n%s\n" % (seqid, seq, phred_f(qual))
+    """
+    if phred_offset == 33:
+        phred_f = _phred_to_ascii33
+    elif phred_offset == 64:
+        phred_f = _phred_to_ascii64
+    else:
+        raise ValueError("Unknown phred offset: %d" % phred_offset)
+
+    return b'\n'.join([b"@" + seqid, seq, b'+', phred_f(qual), b''])

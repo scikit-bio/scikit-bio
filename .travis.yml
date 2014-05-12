@@ -1,11 +1,10 @@
 # Check on http://lint.travis-ci.org/ after modifying it!  Originally
 # modified from https://gist.github.com/dan-blanchard/7045057
 language: python
-python:
-  - "2.7"
 env:
-  - NUMPY_VERSION=1.8
-  - NUMPY_VERSION=1.7
+  - PYTHON_VERSION=3.4 NUMPY_VERSION=1.8
+  - PYTHON_VERSION=2.7 NUMPY_VERSION=1.8 WITH_DOCTEST=True USE_CYTHON=TRUE
+  - PYTHON_VERSION=2.7 NUMPY_VERSION=1.7 WITH_DOCTEST=True
 before_install:
   - wget http://repo.continuum.io/miniconda/Miniconda-2.2.2-Linux-x86_64.sh -O miniconda.sh
   - chmod +x miniconda.sh
@@ -14,15 +13,21 @@ before_install:
   # Update conda itself
   - conda update --yes conda
 install:
-  - conda create --yes -n env_name python=$TRAVIS_PYTHON_VERSION pip numpy=$NUMPY_VERSION scipy matplotlib nose pep8 Sphinx
+  - conda create --yes -n env_name python=$PYTHON_VERSION pip numpy=$NUMPY_VERSION scipy matplotlib pandas nose pep8 Sphinx
+  - if [ ${USE_CYTHON} ]; then conda install --yes -n env_name cython; fi
   - source activate env_name
-  - pip install sphinx-bootstrap-theme future
-  - pip install . --no-deps
+  - pip install sphinx-bootstrap-theme future coverage coveralls
+  - pip install -e . --no-deps
 script:
-  - nosetests --with-doctest
+  - if [ ${WITH_DOCTEST} ]; then nosetests --with-doctest; else nosetests; fi
   - pep8 skbio setup.py
   - pushd doc
   - make clean
   - make html
-  - make linkcheck
+  # linkcheck disabled in Py3 (bug in Sphinx)
+  - if [ $PYTHON_VERSION ==  2.7 ]; then make linkcheck; fi
   - popd
+  # we need to run the test suite from setup.py for coveralls to grab the info
+  - coverage run setup.py test
+  - coverage report -m
+  - coveralls

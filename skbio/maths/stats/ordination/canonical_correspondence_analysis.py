@@ -44,6 +44,13 @@ class CCA(Ordination):
 
     Notes
     -----
+
+    The algorithm is based on [3]_, \S 11.2, and is expected to give
+    the same results as ``cca(Y, X)`` in R's package vegan, except
+    that this implementation won't drop constraining variables due to
+    perfect collinearity: the user needs to choose which ones to
+    input.
+
     Canonical *correspondence* analysis shouldn't be confused with
     canonical *correlation* analysis (CCorA, but sometimes called
     CCA), a different technique to search for multivariate
@@ -63,6 +70,7 @@ class CCA(Ordination):
     See Also
     --------
     CA
+    RDA
 
     References
     ----------
@@ -73,13 +81,19 @@ class CCA(Ordination):
     .. [2] Cajo J.F. Braak and Piet F.M. Verdonschot, "Canonical
         correspondence analysis and related multivariate methods in
         aquatic ecology", Aquatic Sciences 57.3 (1995), pp. 255-289.
+
+    .. [3] Legendre P. and Legendre L. 1998. Numerical
+       Ecology. Elsevier, Amsterdam.
+
     """
     short_method_name = 'CCA'
     long_method_name = 'Canonical Correspondence Analysis'
 
-    def __init__(self, Y, X):
+    def __init__(self, Y, X, site_ids, species_ids):
         self.Y = np.asarray(Y, dtype=np.float64)
         self.X = np.asarray(X, dtype=np.float64)
+        self.site_ids = site_ids
+        self.species_ids = species_ids
         self._cca()
 
     def _cca(self):
@@ -165,6 +179,18 @@ class CCA(Ordination):
         scaling : int
             The same options as in `CA` are available, and the
             interpretation is the same.
+
+        Returns
+        -------
+        OrdinationResults
+            Object that stores the computed eigenvalues, the
+            proportion explained by each of them (per unit),
+            transformed coordinates for species and sites, biplot
+            scores, site constraints, etc.
+
+        See Also
+        --------
+        OrdinationResults
         """
         if scaling not in {1, 2}:
             raise NotImplementedError(
@@ -218,4 +244,6 @@ class CCA(Ordination):
                                  species=species_scores,
                                  site=site_scores,
                                  biplot=biplot_scores,
-                                 site_constraints=site_constraints)
+                                 site_constraints=site_constraints,
+                                 site_ids=self.site_ids,
+                                 species_ids=self.species_ids)
