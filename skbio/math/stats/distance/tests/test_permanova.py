@@ -17,7 +17,7 @@ import numpy.testing as npt
 import pandas as pd
 
 from skbio.core.distance import DistanceMatrix
-from skbio.maths.stats.distance.permanova import PERMANOVA
+from skbio.math.stats.distance.permanova import PERMANOVA
 
 
 class PERMANOVATests(TestCase):

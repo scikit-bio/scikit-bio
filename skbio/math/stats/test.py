@@ -12,9 +12,9 @@ from __future__ import division
 
 import numpy as np
 
-from skbio.maths.stats.special import MACHEP, ndtri
-from skbio.maths.stats.distribution import (chi_high, zprob, f_high, t_high,
-                                            t_low, tprob)
+from skbio.math.stats.special import MACHEP, ndtri
+from skbio.math.stats.distribution import (chi_high, zprob, f_high, t_high,
+                                           t_low, tprob)
 
 np.seterr(divide='raise')
 

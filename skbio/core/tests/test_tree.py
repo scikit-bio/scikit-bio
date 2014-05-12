@@ -16,7 +16,7 @@ from unittest import TestCase, main
 from skbio.core.tree import TreeNode, _dnd_tokenizer
 from skbio.core.exception import (NoLengthError, TreeError, RecordError,
                                   MissingNodeError)
-from skbio.maths.stats.test import correlation_t
+from skbio.math.stats.test import correlation_t
 
 
 class TreeTests(TestCase):

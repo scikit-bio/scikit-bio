@@ -17,8 +17,8 @@ from unittest import TestCase, main
 
 import numpy as np
 
-from skbio.maths.stats.distribution import (chi_high, z_high, zprob, f_high,
-                                            binomial_high, bdtrc, stdtr)
+from skbio.math.stats.distribution import (chi_high, z_high, zprob, f_high,
+                                           binomial_high, bdtrc, stdtr)
 
 
 class DistributionsTests(TestCase):
