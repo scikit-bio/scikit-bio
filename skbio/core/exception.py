@@ -28,9 +28,10 @@ Exceptions
    DuplicateNodeError
    MissingNodeError
    NoParentError
-   FileFormatError
-   RecordError
    FastqParseError
+   GeneticCodeError
+   GeneticCodeInitError
+   InvalidCodonError
 
 """
 from __future__ import division
@@ -122,15 +123,21 @@ class NoParentError(MissingNodeError):
     pass
 
 
-class FileFormatError(Exception):
-    """Exception raised when a file can not be parsed."""
-    pass
-
-
-class RecordError(FileFormatError):
-    """Exception raised when a record is bad."""
-    pass
-
-
 class FastqParseError(FileFormatError):
+    """Exception raised when a FASTQ formatted file cannot be parsed"""
+    pass
+
+
+class GeneticCodeError(Exception):
+    """Base class exception used by the GeneticCode class"""
+    pass
+
+
+class GeneticCodeInitError(ValueError, GeneticCodeError):
+    """Exception raised by the GeneticCode class upon a bad initialization"""
+    pass
+
+
+class InvalidCodonError(KeyError, GeneticCodeError):
+    """Exception raised by the GeneticCode class if __getitem__ fails"""
     pass

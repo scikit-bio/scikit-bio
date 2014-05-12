@@ -10,7 +10,7 @@ collections and alignments. These can be composed of generic sequences,
 nucelotide sequences, DNA sequences, and RNA sequences. By default, input is
 not validated, except that sequence identifiers must be unique, but all
 contructor methods take a validate option which checks different features of
-the input based on `SequenceCollection` type.
+the input based on ``SequenceCollection`` type.
 
 Classes
 -------
@@ -73,6 +73,42 @@ from skbio.core.distance import DistanceMatrix
 
 class SequenceCollection(object):
     """Class for storing collections of biological sequences.
+
+    Parameters
+    ----------
+    seqs : list of `skbio.core.sequence.BiologicalSequence` objects
+        The `skbio.core.sequence.BiologicalSequence` objects to load into
+        a new `SequenceCollection` object.
+    validate : bool, optional
+        If True, runs the `is_valid` method after construction and raises
+        `SequenceCollectionError` if ``is_valid == False``.
+
+    Raises
+    ------
+    skbio.core.exception.SequenceCollectionError
+        If ``validate == True`` and ``is_valid == False``.
+
+    See Also
+    --------
+    skbio.core.sequence.BiologicalSequence
+    skbio.core.sequence.NucelotideSequence
+    skbio.core.sequence.DNASequence
+    skbio.core.sequence.RNASequence
+    SequenceCollection
+    Alignment
+    skbio.parse.sequences
+    skbio.parse.sequences.parse_fasta
+
+    Examples
+    --------
+    >>> from skbio.core.alignment import SequenceCollection
+    >>> from skbio.core.sequence import DNA
+    >>> sequences = [DNA('ACCGT', identifier="seq1"),
+    ...              DNA('AACCGGT', identifier="seq2")]
+    >>> s1 = SequenceCollection(sequences)
+    >>> s1
+    <SequenceCollection: n=2; mean +/- std length=6.00 +/- 1.00>
+
     """
 
     @classmethod
@@ -141,49 +177,6 @@ class SequenceCollection(object):
         return cls(data, validate=validate)
 
     def __init__(self, seqs, validate=False):
-        r"""Initialize a `SequenceCollection` object
-
-        Parameters
-        ----------
-        seqs : list of `skbio.core.sequence.BiologicalSequence` objects
-            The `skbio.core.sequence.BiologicalSequence` objects to load into
-            a new `SequenceCollection` object.
-        validate : bool, optional
-            If True, runs the `is_valid` method after construction and raises
-            `SequenceCollectionError` if ``is_valid == False``.
-
-        Returns
-        -------
-        SequenceCollection (or a derived class)
-            The new `SequenceCollection` object.
-
-        Raises
-        ------
-        skbio.core.exception.SequenceCollectionError
-            If ``validate == True`` and ``is_valid == False``.
-
-        See Also
-        --------
-        skbio.core.sequence.BiologicalSequence
-        skbio.core.sequence.NucelotideSequence
-        skbio.core.sequence.DNASequence
-        skbio.core.sequence.RNASequence
-        SequenceCollection
-        Alignment
-        skbio.parse.sequences
-        skbio.parse.sequences.parse_fasta
-
-        Examples
-        --------
-        >>> from skbio.core.alignment import SequenceCollection
-        >>> from skbio.core.sequence import DNA
-        >>> sequences = [DNA('ACCGT', identifier="seq1"),
-        ...              DNA('AACCGGT', identifier="seq2")]
-        >>> s1 = SequenceCollection(sequences)
-        >>> s1
-        <SequenceCollection: n=2; mean +/- std length=6.00 +/- 1.00>
-
-        """
         self._data = seqs
         self._identifier_to_index = {}
         for i, seq in enumerate(self._data):
@@ -797,11 +790,19 @@ class SequenceCollection(object):
 class Alignment(SequenceCollection):
     """Class for storing alignments of biological sequences.
 
+    The ``Alignment`` class adds convenience methods to the
+    ``SequenceCollection`` class to make it easy to work with alignments of
+    biological sequences.
+
     Notes
     -----
     By definition, all of the sequences in an alignment must be of the same
     length. For this reason, an alignment can be thought of as a matrix of
     sequences (rows) by positions (columns).
+
+    See Also
+    --------
+    SequenceCollection
 
     """
 

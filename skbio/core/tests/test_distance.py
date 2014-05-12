@@ -10,9 +10,9 @@
 
 from __future__ import division
 from future.builtins import zip
-
 from future.utils.six import StringIO
-from tempfile import TemporaryFile
+
+import tempfile
 from unittest import TestCase, main
 
 import numpy as np
@@ -138,8 +138,9 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
 
     def test_from_file_real_file(self):
         """Should correctly parse a real on-disk file."""
-        with TemporaryFile(mode='r+', prefix='skbio.core.tests.test_distance',
-                           suffix='.txt') as fh:
+        with tempfile.TemporaryFile(mode='r+',
+                                    prefix='skbio.core.tests.test_distance',
+                                    suffix='.txt') as fh:
             fh.write('\n'.join(DM_3x3_WHITESPACE_F))
             fh.seek(0)
 
@@ -179,12 +180,19 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
     def test_to_file(self):
         """Should serialize a DissimilarityMatrix to file."""
         for dm_f_line, dm in zip(self.dm_f_lines, self.dms):
-            obs_f = StringIO()
-            dm.to_file(obs_f)
-            obs = obs_f.getvalue()
-            obs_f.close()
-
-            self.assertEqual(obs, dm_f_line)
+            for file_type in ('file like', 'file name'):
+                if file_type == 'file like':
+                    obs_f = StringIO()
+                    dm.to_file(obs_f)
+                    obs = obs_f.getvalue()
+                    obs_f.close()
+                elif file_type == 'file name':
+                    with tempfile.NamedTemporaryFile('r+') as temp_file:
+                        dm.to_file(temp_file.name)
+                        temp_file.flush()
+                        temp_file.seek(0)
+                        obs = temp_file.read()
+                self.assertEqual(obs, dm_f_line)
 
     def test_init_from_dm(self):
         """Constructs a dm from a dm."""

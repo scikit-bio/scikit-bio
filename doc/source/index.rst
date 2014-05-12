@@ -15,17 +15,21 @@ API Reference
    core.sequence
    core.distance
    core.exception
+   core.genetic_code
    core.tree
    core.workflow
    draw.distributions
-   maths.stats.distance
-   maths.stats.spatial
-   maths.stats.ordination
-   maths.subsample
+   format.sequences
+   math.stats.distance
+   math.stats.spatial
+   math.stats.ordination
+   math.subsample
    parse.sequences
+   util.io
    util.misc
-   util.trie
    util.testing
+   util.trie
+
 
 Developer Documentation
 -----------------------
