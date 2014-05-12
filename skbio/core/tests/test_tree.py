@@ -502,14 +502,14 @@ class TreeTests(TestCase):
         t3 = TreeNode.from_newick('(((a,b,c),(d)),(e,f))')
 
         id_1, child_1 = t1.index_tree()
-        nodes_1 = [n._leaf_index for n in t1.traverse(self_before=False,
+        nodes_1 = [n.id for n in t1.traverse(self_before=False,
                    self_after=True)]
         self.assertEqual(nodes_1, [0, 1, 2, 3, 6, 4, 5, 7, 8])
         self.assertEqual(child_1, [(2, 0, 1), (6, 2, 3), (7, 4, 5), (8, 6, 7)])
 
         # test for second tree: strictly bifurcating
         id_2, child_2 = t2.index_tree()
-        nodes_2 = [n._leaf_index for n in t2.traverse(self_before=False,
+        nodes_2 = [n.id for n in t2.traverse(self_before=False,
                    self_after=True)]
         self.assertEqual(nodes_2, [0, 1, 4, 2, 3, 5, 8, 6, 7, 9, 10])
         self.assertEqual(child_2, [(4, 0, 1), (5, 2, 3), (8, 4, 5), (9, 6, 7),
@@ -517,7 +517,7 @@ class TreeTests(TestCase):
 
         # test for third tree: contains trifurcation and single-child parent
         id_3, child_3 = t3.index_tree()
-        nodes_3 = [n._leaf_index for n in t3.traverse(self_before=False,
+        nodes_3 = [n.id for n in t3.traverse(self_before=False,
                    self_after=True)]
 
         self.assertEqual(nodes_3, [0, 1, 2, 4, 3, 5, 8, 6, 7, 9, 10])
@@ -596,6 +596,29 @@ class TreeTests(TestCase):
         self.assertNotEqual([(n.name, n.id) for n in t1.traverse()],
                             [(n.name, n.id) for n in t3.traverse()])
 
+    def test_assign_ids_index_tree(self):
+        """assign_ids and index_tree should assign the same IDs"""
+        t1 = TreeNode.from_newick('(((a,b),c),(d,e))')
+        t2 = TreeNode.from_newick('(((a,b),(c,d)),(e,f))')
+        t3 = TreeNode.from_newick('(((a,b,c),(d)),(e,f))')
+        t1_copy = t1.copy()
+        t2_copy = t2.copy()
+        t3_copy = t3.copy()
+
+        t1.assign_ids()
+        t1_copy.index_tree()
+        t2.assign_ids()
+        t2_copy.index_tree()
+        t3.assign_ids()
+        t3_copy.index_tree()
+
+        self.assertEqual([n.id for n in t1.traverse()],
+                         [n.id for n in t1_copy.traverse()])
+        self.assertEqual([n.id for n in t2.traverse()],
+                         [n.id for n in t2_copy.traverse()])
+        self.assertEqual([n.id for n in t3.traverse()],
+                         [n.id for n in t3_copy.traverse()])
+
     def test_unrooted_deepcopy(self):
         """Do an unrooted_copy"""
         t = TreeNode.from_newick("((a,(b,c)d)e,(f,g)h)i;")
@@ -607,6 +630,29 @@ class TreeTests(TestCase):
         obs_ids = {id(n) for n in obs.traverse()}
 
         self.assertEqual(t_ids.intersection(obs_ids), set())
+
+    def test_to_array(self):
+        """Convert a tree to arrays"""
+        t = TreeNode.from_newick(
+            '(((a:1,b:2,c:3)x:4,(d:5)y:6)z:7,(e:8,f:9)z:10)')
+        id_index, child_index = t.index_tree()
+        arrayed = t.to_array()
+
+        self.assertEqual(id_index, arrayed['id_index'])
+        self.assertEqual(child_index, arrayed['child_index'])
+
+        exp = np.array([1, 2, 3, 5, 4, 6, 8, 9, 7, 10, np.nan])
+        obs = arrayed['length']
+        nptest.assert_equal(obs, exp)
+
+        exp = np.array(['a', 'b', 'c', 'd', 'x',
+                        'y', 'e', 'f', 'z', 'z', None])
+        obs = arrayed['name']
+        nptest.assert_equal(obs, exp)
+
+        exp = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+        obs = arrayed['id']
+        nptest.assert_equal(obs, exp)
 
 
 class DndTokenizerTests(TestCase):
