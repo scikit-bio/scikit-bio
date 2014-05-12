@@ -159,7 +159,7 @@ from functools import reduce
 
 import numpy as np
 
-from skbio.maths.stats.test import correlation_t
+from skbio.math.stats.test import correlation_t
 from skbio.core.exception import (NoLengthError, DuplicateNodeError,
                                   NoParentError, MissingNodeError,
                                   TreeError, RecordError)

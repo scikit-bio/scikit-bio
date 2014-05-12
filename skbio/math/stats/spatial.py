@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 r"""
-Spatial Statistics (:mod:`skbio.maths.stats.spatial`)
-=====================================================
+Spatial Statistics (:mod:`skbio.math.stats.spatial`)
+====================================================
 
-.. currentmodule:: skbio.maths.stats.spatial
+.. currentmodule:: skbio.math.stats.spatial
 
 This module provides functions for spatial analysis.
 
@@ -97,7 +97,7 @@ def procrustes(data1, data2):
     --------
 
     >>> import numpy as np
-    >>> from skbio.maths.stats.spatial import procrustes
+    >>> from skbio.math.stats.spatial import procrustes
     >>> a = np.array([[1, 3], [1, 2], [1, 1], [2, 1]], 'd')
     >>> b = np.array([[4, -2], [4, -4], [4, -6], [2, -6]], 'd')
     >>> p = procrustes(a, b)

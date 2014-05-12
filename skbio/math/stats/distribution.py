@@ -15,9 +15,9 @@ from __future__ import division
 
 from math import atan, sqrt
 
-from skbio.maths.stats.special import (fix_rounding_error, expm1, log1p, betai,
-                                       igamc, erf, erfc, GB, SQRTH, LP, LQ, EQ,
-                                       MACHEP, PI)
+from skbio.math.stats.special import (fix_rounding_error, expm1, log1p, betai,
+                                      igamc, erf, erfc, GB, SQRTH, LP, LQ, EQ,
+                                      MACHEP, PI)
 
 
 def chi_high(x, df):

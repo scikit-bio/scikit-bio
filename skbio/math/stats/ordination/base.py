@@ -146,7 +146,7 @@ class OrdinationResults(namedtuple('OrdinationResults',
         Load the ordination results from the file:
 
         >>> from StringIO import StringIO
-        >>> from skbio.maths.stats.ordination import OrdinationResults
+        >>> from skbio.math.stats.ordination import OrdinationResults
         >>> or_f = StringIO("Eigvals\t2\n"
         ...                 "0.0961330159181\t0.0409418140138\n"
         ...                 "\n"
