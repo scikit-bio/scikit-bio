@@ -151,10 +151,14 @@ class BaseTests(TestCase):
     def assert_category_results_almost_equal(self, obs, exp):
         """Tests that obs and exp are almost equal"""
         self.assertEqual(obs.category, exp.category)
-        npt.assert_almost_equal(obs.probability, exp.probability)
 
-        for o, e in zip(sorted(obs.groups), sorted(exp.groups)):
-            self.assert_group_results_almost_equal(o, e)
+        if exp.probability is None:
+            self.assertTrue(obs.probability is None)
+            self.assertTrue(obs.groups is None)
+        else:
+            npt.assert_almost_equal(obs.probability, exp.probability)
+            for o, e in zip(sorted(obs.groups), sorted(exp.groups)):
+                self.assert_group_results_almost_equal(o, e)
 
     def assert_vectors_results_almost_equal(self, obs, exp):
         """Tests that obs and exp are almost equal"""
@@ -422,31 +426,118 @@ class BaseVectorsTests(BaseTests):
         """Correctly weights the vectors"""
         bv = BaseVectors(self.coords, self.prop_expl, self.metamap)
 
-        vector = np.array([1, 2, 3, 4, 5, 6, 7, 8])
-        w_vector = np.array([1, 5, 8, 12, 45, 80, 85, 90])
-        exp_vector = np.array([1, 6.3571428571, 12.7142857142,
-                               12.7142857142, 1.9264069264,
-                               2.1795918367, 17.8, 20.3428571428])
+        vector = pd.DataFrame.from_dict({'s1': np.array([1]),
+                                         's2': np.array([2]),
+                                         's3': np.array([3]),
+                                         's4': np.array([4]),
+                                         's5': np.array([5]),
+                                         's6': np.array([6]),
+                                         's7': np.array([7]),
+                                         's8': np.array([8])}, orient='index')
+        vector.sort(columns=0, inplace=True)
+        w_vector = pd.Series(np.array([1, 5, 8, 12, 45, 80, 85, 90]),
+                             ['s1', 's2', 's3', 's4',
+                              's5', 's6', 's7', 's8']).astype(np.float64)
+        exp = pd.DataFrame.from_dict({'s1': np.array([1]),
+                                      's2': np.array([6.3571428571]),
+                                      's3': np.array([12.7142857142]),
+                                      's4': np.array([12.7142857142]),
+                                      's5': np.array([1.9264069264]),
+                                      's6': np.array([2.1795918367]),
+                                      's7': np.array([17.8]),
+                                      's8': np.array([20.3428571428])},
+                                     orient='index')
         obs = bv._weight_by_vector(vector, w_vector)
-        npt.assert_almost_equal(obs, exp_vector)
+        pdt.assert_frame_equal(obs.sort(axis=0), exp.sort(axis=0))
 
-        vector = np.array([1, 2, 3, 4, 5, 6, 7, 8])
-        w_vector = np.array([1, 2, 3, 4, 5, 6, 7, 8])
-        exp_vector = np.array([1, 2, 3, 4, 5, 6, 7, 8])
+        vector = pd.DataFrame.from_dict({'s1': np.array([1]),
+                                         's2': np.array([2]),
+                                         's3': np.array([3]),
+                                         's4': np.array([4]),
+                                         's5': np.array([5]),
+                                         's6': np.array([6]),
+                                         's7': np.array([7]),
+                                         's8': np.array([8])}, orient='index')
+        vector.sort(columns=0, inplace=True)
+        w_vector = pd.Series(np.array([1, 2, 3, 4, 5, 6, 7, 8]),
+                             ['s1', 's2', 's3', 's4',
+                              's5', 's6', 's7', 's8']).astype(np.float64)
+        exp = pd.DataFrame.from_dict({'s1': np.array([1]), 's2': np.array([2]),
+                                      's3': np.array([3]), 's4': np.array([4]),
+                                      's5': np.array([5]), 's6': np.array([6]),
+                                      's7': np.array([7]), 's8': np.array([8])
+                                      },
+                                     orient='index')
         obs = bv._weight_by_vector(vector, w_vector)
-        npt.assert_almost_equal(obs, exp_vector)
+        pdt.assert_frame_equal(obs.sort(axis=0), exp.sort(axis=0))
 
-        vector = np.array([2, 3, 4, 5, 6])
-        w_vector = np.array([25, 30, 35, 40, 45])
-        exp_vector = np.array([2, 3, 4, 5, 6])
+        vector = pd.DataFrame.from_dict({'s2': np.array([2]),
+                                         's3': np.array([3]),
+                                         's4': np.array([4]),
+                                         's5': np.array([5]),
+                                         's6': np.array([6])}, orient='index')
+        vector.sort(columns=0, inplace=True)
+        w_vector = pd.Series(np.array([25, 30, 35, 40, 45]),
+                             ['s2', 's3', 's4', 's5', 's6']).astype(np.float64)
+        exp = pd.DataFrame.from_dict({'s2': np.array([2]), 's3': np.array([3]),
+                                      's4': np.array([4]), 's5': np.array([5]),
+                                      's6': np.array([6])}, orient='index')
         obs = bv._weight_by_vector(vector, w_vector)
-        npt.assert_almost_equal(obs, exp_vector)
+        pdt.assert_frame_equal(obs.sort(axis=0), exp.sort(axis=0))
 
-        vector = np.array([[1, 2, 3], [2, 3, 4], [5, 6, 7], [8, 9, 10]])
-        w_vector = np.array([1, 2, 3, 4])
-        exp_vector = np.array([[1, 2, 3], [2, 3, 4], [5, 6, 7], [8, 9, 10]])
+        vector = pd.DataFrame.from_dict({'s1': np.array([1, 2, 3]),
+                                         's2': np.array([2, 3, 4]),
+                                         's3': np.array([5, 6, 7]),
+                                         's4': np.array([8, 9, 10])},
+                                        orient='index')
+        vector.sort(columns=0, inplace=True)
+        w_vector = pd.Series(np.array([1, 2, 3, 4]),
+                             ['s1', 's2', 's3', 's4']).astype(np.float64)
+        exp = pd.DataFrame.from_dict({'s1': np.array([1, 2, 3]),
+                                      's2': np.array([2, 3, 4]),
+                                      's3': np.array([5, 6, 7]),
+                                      's4': np.array([8, 9, 10])},
+                                     orient='index')
         obs = bv._weight_by_vector(vector, w_vector)
-        npt.assert_almost_equal(obs, exp_vector)
+        pdt.assert_frame_equal(obs.sort(axis=0), exp.sort(axis=0))
+
+        sample_ids = ['PC.356', 'PC.481', 'PC.355', 'PC.593', 'PC.354']
+        vector = pd.DataFrame.from_dict({'PC.356': np.array([5.65948525,
+                                                             1.37977545,
+                                                             -4.9706303]),
+                                         'PC.481': np.array([0.79151484,
+                                                             -0.70387996,
+                                                             1.89223152]),
+                                         'PC.355': np.array([6.05869624,
+                                                             3.44821245,
+                                                             -0.42595788]),
+                                         'PC.593': np.array([5.18731945,
+                                                             -1.81714206,
+                                                             4.26216485]),
+                                         'PC.354': np.array([7.07588529,
+                                                             -0.53917873,
+                                                             0.89389158])
+                                         }, orient='index')
+        w_vector = pd.Series(np.array([50, 52, 55, 57, 60]),
+                             sample_ids).astype(np.float64)
+        exp = pd.DataFrame.from_dict({'PC.356': np.array([5.65948525,
+                                                          1.37977545,
+                                                          -4.9706303]),
+                                      'PC.481': np.array([0.98939355,
+                                                          -0.87984995,
+                                                          2.3652894]),
+                                      'PC.355': np.array([5.04891353,
+                                                          2.87351038,
+                                                          -0.3549649]),
+                                      'PC.593': np.array([6.48414931,
+                                                          -2.27142757,
+                                                          5.32770606]),
+                                      'PC.354': np.array([5.89657108,
+                                                          -0.44931561,
+                                                          0.74490965])
+                                      }, orient='index')
+        obs = bv._weight_by_vector(vector.ix[sample_ids], w_vector[sample_ids])
+        pdt.assert_frame_equal(obs.sort(axis=0), exp.sort(axis=0))
 
     def test_weight_by_vector_error(self):
         """Raises an error with erroneous inputs"""
@@ -471,42 +562,15 @@ class AverageVectorsTests(BaseTests):
         obs = av.get_vectors()
 
         exp_description = CategoryResults('Description', None, None,
-                                          "This value can not be used.")
+                                          'This group can not be used. All '
+                                          'groups should have more than 1 '
+                                          'element.')
         exp_weight = CategoryResults('Weight', None, None,
-                                     "This value can not be used.")
-        exp_20070314_group = GroupResults('20070314',
-                                          np.array([2.1685208937828686]),
-                                          2.16852089378,
-                                          {'avg': 2.1685208937828686}, None)
-        exp_20071112_group = GroupResults('20071112',
-                                          np.array([7.3787312682853168]),
-                                          7.37873126829,
-                                          {'avg': [7.3787312682853168]}, None)
-        exp_20080116_group = GroupResults('20080116',
-                                          np.array([2.3430994255305362,
-                                                    2.3946056125630912,
-                                                    2.666555024970267]),
-                                          2.46808668769,
-                                          {'avg': 2.4680866876879648}, None)
-        exp_20061126_group = GroupResults('20061126',
-                                          np.array([7.6577228425502213]),
-                                          7.65772284255,
-                                          {'avg': [7.6577228425502213]}, None)
-        exp_20061218_group = GroupResults('20061218',
-                                          np.array([2.1607848468202744,
-                                                    2.1607848468202744]),
-                                          2.16078484682,
-                                          {'avg': 2.1607848468202744}, None)
-        exp_20071210_group = GroupResults('20071210',
-                                          np.array([6.9553100288582872]),
-                                          6.95531002886,
-                                          {'avg': [6.9553100288582872]}, None)
-        exp_dob = CategoryResults('DOB', 0.000139, [exp_20070314_group,
-                                                    exp_20071112_group,
-                                                    exp_20080116_group,
-                                                    exp_20061126_group,
-                                                    exp_20061218_group,
-                                                    exp_20071210_group], None)
+                                     'This group can not be used. All groups '
+                                     'should have more than 1 element.')
+        exp_dob = CategoryResults('DOB', None, None,
+                                  'This group can not be used. All groups '
+                                  'should have more than 1 element.')
         exp_control_group = GroupResults('Control',
                                          np.array([2.3694943596755276,
                                                    3.3716388181385781,
@@ -561,72 +625,174 @@ class AverageVectorsTests(BaseTests):
                             vector_categories=['Treatment'],
                             sort_category='Weight', weighted=True)
         obs = av.get_vectors()
-
-        exp_control_group = GroupResults('Control',
-                                         np.array([3.8296365043700837,
-                                                   1.8849504232819798,
-                                                   3.133650469739389,
-                                                   3.0818770261785962,
-                                                   1.9743045285131615]),
-                                         2.78088379042,
-                                         {'avg': 2.7808837904166421}, None)
-        exp_fast_group = GroupResults('Fast', np.array([7.2187223309514401,
-                                                        2.5522161259650256,
-                                                        2.2349795833225015,
-                                                        4.527821517691037]),
-                                      4.13343488948,
-                                      {'avg': 4.1334348894825013}, None)
-        exp_treatment = CategoryResults('Treatment', 0.255388,
+        exp_control_group = GroupResults('Control', np.array([5.7926887872,
+                                                              4.3242308936,
+                                                              2.9212403501,
+                                                              5.5400792151,
+                                                              1.2326804315]),
+                                         3.9621839355,
+                                         {'avg': 3.9621839355}, None)
+        exp_fast_group = GroupResults('Fast', np.array([7.2187223286,
+                                                        2.5522161282,
+                                                        2.2349795861,
+                                                        4.5278215248]),
+                                      4.1334348919,
+                                      {'avg': 4.1334348919}, None)
+        exp_treatment = CategoryResults('Treatment', 0.9057666800,
                                         [exp_control_group, exp_fast_group],
                                         None)
         exp = VectorsResults('avg', True, [exp_treatment])
-
         self.assert_vectors_results_almost_equal(obs, exp)
 
-# class TrajectoryVectorsTests(BaseTests):
-#     def test_results(self):
-#         tv = TrajectoryVectors(self.coord_dict, self.prop_expl, self.ids)
-#         obs = tv.results()
-#         exp_vector = [14.3839779766, 6.8423140875]
-#         exp_calc = {'trajectory': 15.9284677387}
 
-#         self.assertEqual(type(obs), VectorResults)
-#         assert_almost_equal(obs.vector, exp_vector)
-#         self.assertEqual(obs.calc.keys(), exp_calc.keys())
-#         for key in obs.calc:
-#             assert_almost_equal(obs.calc[key], exp_calc[key])
-#         self.assertEqual(obs.message, None)
+class TrajectoryVectorsTests(BaseTests):
+
+    def test_get_vectors(self):
+        tv = TrajectoryVectors(self.coords, self.prop_expl, self.metamap,
+                               vector_categories=['Treatment'],
+                               sort_category='Weight')
+        obs = tv.get_vectors()
+        exp_control_group = GroupResults('Control', np.array([8.6681963576,
+                                                              7.0962717982,
+                                                              7.1036434615,
+                                                              4.0675712674]),
+                                         6.73392072123,
+                                         {'trajectory': 13.874494152}, None)
+        exp_fast_group = GroupResults('Fast', np.array([11.2291654905,
+                                                        3.9163741156,
+                                                        4.4943507388]),
+                                      6.5466301150,
+                                      {'trajectory': 12.713431181}, None)
+        exp_treatment = CategoryResults('Treatment', 0.9374500147,
+                                        [exp_control_group, exp_fast_group],
+                                        None)
+        exp = VectorsResults('trajectory', False, [exp_treatment])
+        self.assert_vectors_results_almost_equal(obs, exp)
+
+    def test_get_vectors_weighted(self):
+        tv = TrajectoryVectors(self.coords, self.prop_expl, self.metamap,
+                               vector_categories=['Treatment'],
+                               sort_category='Weight', weighted=True)
+        obs = tv.get_vectors()
+        exp_control_group = GroupResults('Control', np.array([8.9850643421,
+                                                              6.1617529749,
+                                                              7.7989125908,
+                                                              4.9666249268]),
+                                         6.9780887086,
+                                         {'trajectory': 14.2894710091}, None)
+        exp_fast_group = GroupResults('Fast', np.array([9.6823682852,
+                                                        2.9511115209,
+                                                        5.2434091953]),
+                                      5.9589630005,
+                                      {'trajectory': 11.3995901159}, None)
+        exp_treatment = CategoryResults('Treatment', 0.6248157720,
+                                        [exp_control_group, exp_fast_group],
+                                        None)
+        exp = VectorsResults('trajectory', True, [exp_treatment])
+        self.assert_vectors_results_almost_equal(obs, exp)
 
 
-# class DifferenceVectorsTests(BaseTests):
-#     def test_results(self):
-#         dv = DifferenceVectors(self.coord_dict, self.prop_expl, self.ids)
-#         obs = dv.results()
-#         exp_vector = np.array([-7.54166389])
-#         exp_calc = {'mean': [-7.541663889], 'std': [0.0]}
+class DifferenceVectorsTests(BaseTests):
+    def test_get_vectors(self):
+        dv = DifferenceVectors(self.coords, self.prop_expl, self.metamap,
+                               vector_categories=['Treatment'],
+                               sort_category='Weight')
+        obs = dv.get_vectors()
+        exp_control_group = GroupResults('Control', np.array([-1.5719245594,
+                                                              0.0073716633,
+                                                              -3.0360721941]),
+                                         -1.5335416967,
+                                         {'mean': -1.5335416967,
+                                          'std': 1.2427771485}, None)
+        exp_fast_group = GroupResults('Fast', np.array([-7.3127913749,
+                                                        0.5779766231]),
+                                      -3.3674073758,
+                                      {'mean': -3.3674073758,
+                                       'std': 3.9453839990}, None)
+        exp_treatment = CategoryResults('Treatment', 0.6015260608,
+                                        [exp_control_group, exp_fast_group],
+                                        None)
+        exp = VectorsResults('diff', False, [exp_treatment])
+        self.assert_vectors_results_almost_equal(obs, exp)
 
-#         self.assertEqual(type(obs), VectorResults)
-#         assert_almost_equal(obs.vector, exp_vector)
-#         self.assertEqual(obs.calc.keys(), exp_calc.keys())
-#         for key in obs.calc:
-#             assert_almost_equal(obs.calc[key], exp_calc[key])
-#         self.assertEqual(obs.message, None)
+    def test_get_vectors_weighted(self):
+        dv = DifferenceVectors(self.coords, self.prop_expl, self.metamap,
+                               vector_categories=['Treatment'],
+                               sort_category='Weight', weighted=True)
+        obs = dv.get_vectors()
+        exp_control_group = GroupResults('Control', np.array([-2.8233113671,
+                                                              1.6371596158,
+                                                              -2.8322876639]),
+                                         -1.3394798050,
+                                         {'mean': -1.3394798050,
+                                          'std': 2.1048051097}, None)
+        exp_fast_group = GroupResults('Fast', np.array([-6.7312567642,
+                                                        2.2922976743]),
+                                      -2.2194795449,
+                                      {'mean': -2.2194795449,
+                                       'std': 4.5117772193}, None)
+        exp_treatment = CategoryResults('Treatment', 0.8348644420,
+                                        [exp_control_group, exp_fast_group],
+                                        None)
+        exp = VectorsResults('diff', True, [exp_treatment])
+        self.assert_vectors_results_almost_equal(obs, exp)
 
 
-# class WindowDifferenceVectorsTests(BaseTests):
-#     def test_results(self):
-#         wdv = WindowDifferenceVectors(self.coord_dict, self.prop_expl,
-#                                       self.ids, 1)
-#         obs = wdv.results()
-#         exp_vector = [-7.5416638890, 0.0]
-#         exp_calc = {'std': 3.7708319445,  'mean': -3.7708319445}
+class WindowDifferenceVectorsTests(BaseTests):
+    def test_get_vectors(self):
+        wdv = WindowDifferenceVectors(self.coords, self.prop_expl,
+                                      self.metamap, 3,
+                                      vector_categories=['Treatment'],
+                                      sort_category='Weight')
+        obs = wdv.get_vectors()
+        exp_control_group = GroupResults('Control', np.array([-2.5790341819,
+                                                              -2.0166764661,
+                                                              -3.0360721941,
+                                                              0.]),
+                                         -1.9079457105,
+                                         {'mean': -1.9079457105,
+                                          'std': 1.1592139913}, None)
+        exp_fast_group = GroupResults('Fast', np.array([11.2291654905,
+                                                        3.9163741156,
+                                                        4.4943507388]),
+                                      6.5466301150,
+                                      {'mean': 6.5466301150,
+                                       'std': 3.3194494926},
+                                      "Cannot calculate the first difference "
+                                      "with a window of size (3).")
+        exp_treatment = CategoryResults('Treatment', 0.0103976830,
+                                        [exp_control_group, exp_fast_group],
+                                        None)
+        exp = VectorsResults('wdiff', False, [exp_treatment])
+        self.assert_vectors_results_almost_equal(obs, exp)
 
-#         self.assertEqual(type(obs), VectorResults)
-#         assert_almost_equal(obs.vector, exp_vector)
-#         self.assertEqual(obs.calc.keys(), exp_calc.keys())
-#         for key in obs.calc:
-#             assert_almost_equal(obs.calc[key], exp_calc[key])
-#         self.assertEqual(obs.message, None)
+    def test_get_vectors_weighted(self):
+        wdv = WindowDifferenceVectors(self.coords, self.prop_expl,
+                                      self.metamap, 3,
+                                      vector_categories=['Treatment'],
+                                      sort_category='Weight', weighted=True)
+        obs = wdv.get_vectors()
+        exp_control_group = GroupResults('Control', np.array([-2.6759675112,
+                                                              -0.2510321601,
+                                                              -2.8322876639,
+                                                              0.]),
+                                         -1.4398218338,
+                                         {'mean': -1.4398218338,
+                                          'std': 1.31845790844}, None)
+        exp_fast_group = GroupResults('Fast', np.array([9.6823682852,
+                                                        2.9511115209,
+                                                        5.2434091953]),
+                                      5.9589630005,
+                                      {'mean': 5.9589630005,
+                                       'std': 2.7942163293},
+                                      "Cannot calculate the first difference "
+                                      "with a window of size (3).")
+        exp_treatment = CategoryResults('Treatment', 0.0110675605,
+                                        [exp_control_group, exp_fast_group],
+                                        None)
+        exp = VectorsResults('wdiff', True, [exp_treatment])
+        self.assert_vectors_results_almost_equal(obs, exp)
+
 
 if __name__ == '__main__':
     main()

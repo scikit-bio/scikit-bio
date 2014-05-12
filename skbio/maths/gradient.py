@@ -7,16 +7,21 @@ Gradient analyses (:mod:`skbio.maths.gradient`)
 
 This module provides functionality for performing gradient analyses.
 
-Functions
----------
+Classes
+-------
 
 .. autosummary::
    :toctree: generated/
 
-   gradient_analysis
+   AverageVectors
+   TrajectoryVectors
+   DifferenceVectors
+   WindowDifferenceVectors
+   GroupResults
+   CategoryResults
+   VectorsResults
 
 """
-from __future__ import division
 
 # -----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -26,9 +31,12 @@ from __future__ import division
 # The full license is in the file COPYING.txt, distributed with this software.
 # -----------------------------------------------------------------------------
 
+from __future__ import division
+
 from copy import deepcopy
-import numpy as np
 from collections import namedtuple, defaultdict
+
+import numpy as np
 
 from skbio.util.sort import signed_natsort
 from skbio.maths.stats.test import ANOVA_one_way
@@ -303,34 +311,18 @@ class BaseVectors(object):
     def _test_vectors(self, category, res_by_group):
         """"""
         if len(res_by_group) == 1:
-            return CategoryResults(category, None, res_by_group,
+            return CategoryResults(category, None, None,
                                    'Only one value in the group.')
 
         # Check if groups can be tested using ANOVA. ANOVA testing requires
-        # for at least one element to have a size different to one. When a
-        # dictionary of size N by 1 is passed, a division by zero will
-        # happen
+        # all elements to have at least size greater to one.
         values = [res.vector for res in res_by_group]
-        total_values = sum(len(value) for value in values)
-        if total_values == len(res_by_group):
-            return CategoryResults(category, None, res_by_group,
-                                   'This value can not be used.')
+        if any([len(value) == 1 for value in values]):
+            return CategoryResults(category, None, None,
+                                   'This group can not be used. All groups '
+                                   'should have more than 1 element.')
 
-        try:
-            F, p_val = ANOVA_one_way(values)
-        except ValueError:
-            # Compute all the group means
-            group_means = list(set([res.mean for res in res_by_group]))
-
-            if len(group_means) != len(res_by_group):
-                return CategoryResults(category, None, res_by_group,
-                                       'This value can not be used.')
-            # Set the p-value to 'diff' if the variances are 0.0
-            # (within rounding error) and the means are not all the
-            # same (which we now its true at this point). If the variances
-            # are not 0.0, set the p-value to 1
-            group_variances = [np.var(val) for val in values]
-            p_val = 0.0 if sum(group_variances) < 1e-21 else 1.0
+        F, p_val = ANOVA_one_way(values)
 
         return CategoryResults(category, p_val, res_by_group, None)
 
@@ -361,7 +353,7 @@ class BaseVectors(object):
                                             "weighting vector.\n")
                 vectors = vectors_copy
 
-        return self._compute_vector_results(group_name, vectors)
+        return self._compute_vector_results(group_name, vectors.ix[sids])
 
     def _compute_vector_results(self, group_name, vectors):
         raise NotImplementedError("No algorithm is implemented on the base "
@@ -438,10 +430,10 @@ class AverageVectors(BaseVectors):
         center = np.average(vectors, axis=0)
         if len(vectors) == 1:
             vector = np.array([np.linalg.norm(center)])
-            calc = {'avg': vector}
+            calc = {'avg': vector[0]}
         else:
-            vector = np.array([np.linalg.norm(row[1].get_values())
-                               for row in (vectors - center).iterrows()])
+            vector = np.array([np.linalg.norm(row[1].get_values() - center)
+                               for row in vectors.iterrows()])
             calc = {'avg': np.average(vector)}
 
         msg = ''.join(self._message_buffer) if self._message_buffer else None
@@ -459,10 +451,11 @@ class TrajectoryVectors(BaseVectors):
         """"""
         if len(vectors) == 1:
             vector = [np.linalg.norm(vectors)]
-            calc = {'trajectory': vector}
+            calc = {'trajectory': vector[0]}
         else:
-            vector = [np.linalg.norm(vectors[i-1] - vectors[i])
-                      for i in range(len(vectors)-1)]
+            vector = np.array([np.linalg.norm(vectors.ix[i+1].get_values() -
+                                              vectors.ix[i].get_values())
+                               for i in range(len(vectors) - 1)])
             calc = {'trajectory': np.linalg.norm(vector)}
 
         msg = ''.join(self._message_buffer) if self._message_buffer else None
@@ -480,13 +473,14 @@ class DifferenceVectors(BaseVectors):
         """"""
         if len(vectors) == 1:
             vector = [np.linalg.norm(vectors)]
-            calc = {'mean': vector, 'std': 0}
+            calc = {'mean': vector[0], 'std': 0}
         elif len(vectors) == 2:
             vector = [np.linalg.norm(vectors[1] - vectors[0])]
-            calc = {'mean': vector, 'std': 0}
+            calc = {'mean': vector[0], 'std': 0}
         else:
-            vec_norm = [np.linalg.norm(vectors[i-1] - vectors[i])
-                        for i in range(len(vectors) - 1)]
+            vec_norm = np.array([np.linalg.norm(vectors.ix[i+1].get_values() -
+                                                vectors.ix[i].get_values())
+                                 for i in range(len(vectors) - 1)])
             vector = np.diff(vec_norm)
             calc = {'mean': np.mean(vector), 'std': np.std(vector)}
 
@@ -501,12 +495,10 @@ class WindowDifferenceVectors(BaseVectors):
 
     _alg_name = 'wdiff'
 
-    def __init__(self, ord_res, metamap, vector_categories, window_size,
-                 **kwargs):
-        super(WindowDifferenceVectors, self).__init__(ord_res, metamap,
-                                                      vector_categories,
-                                                      **kwargs)
-        self.window_size = window_size
+    def __init__(self, coords, prop_expl, metamap, window_size, **kwargs):
+        super(WindowDifferenceVectors, self).__init__(coords, prop_expl,
+                                                      metamap, **kwargs)
+        self._window_size = window_size
 
     def _compute_vector_results(self, group_name, vectors):
         """"""
@@ -517,18 +509,18 @@ class WindowDifferenceVectors(BaseVectors):
             vector = [np.linalg.norm(vectors[1] - vectors[0])]
             calc = {'mean': vector, 'std': 0}
         else:
-            vec_norm = [np.linalg.norm(vectors[i-1] - vectors[i])
-                        for i in range(len(vectors) - 1)]
-
+            vec_norm = np.array([np.linalg.norm(vectors.ix[i+1].get_values() -
+                                                vectors.ix[i].get_values())
+                                 for i in range(len(vectors) - 1)])
             # windowed first differences won't be able on every group,
             # specially given the variation of size that a vector tends to have
             try:
-                vector = self._windowed_diff(vec_norm, self.window_size)
+                vector = self._windowed_diff(vec_norm, self._window_size)
             except ValueError:
                 vector = vec_norm
                 self._message_buffer.append("Cannot calculate the first "
                                             "difference with a window of size "
-                                            "(%d).\n" % self.window_size)
+                                            "(%d)." % self._window_size)
             calc = {'mean': np.mean(vector), 'std': np.std(vector)}
 
         msg = ''.join(self._message_buffer) if self._message_buffer else None
@@ -578,4 +570,4 @@ class WindowDifferenceVectors(BaseVectors):
             element = np.mean(vector[(index+1):(index+1+window_size)], axis=0)
             op_vector.append(element - vector[index])
 
-        return op_vector
+        return np.array(op_vector)
