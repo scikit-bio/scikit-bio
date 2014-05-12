@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 """
-Alpha diversity measures (:mod:`skbio.maths.diversity.alpha`)
-=============================================================
+Alpha diversity measures (:mod:`skbio.math.diversity.alpha`)
+============================================================
 
-.. currentmodule:: skbio.maths.diversity.alpha
+.. currentmodule:: skbio.math.diversity.alpha
 
 This package provides implementations of various alpha diversity measures,
 including measures of richness, dominance, and evenness. Some functions also

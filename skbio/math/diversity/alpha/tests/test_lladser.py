@@ -14,7 +14,7 @@ import numpy.testing as npt
 from nose.tools import (assert_equal, assert_almost_equal, assert_raises,
                         assert_true)
 
-from skbio.maths.diversity.alpha.lladser import (
+from skbio.math.diversity.alpha.lladser import (
     lladser_pe, lladser_ci, _expand_counts, _lladser_point_estimates,
     _get_interval_for_r_new_species, _lladser_ci_series, _lladser_ci_from_r)
 

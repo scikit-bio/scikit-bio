@@ -13,7 +13,7 @@ import numpy as np
 from scipy.special import gammaln
 from scipy.optimize import fmin_powell, minimize_scalar
 
-from skbio.maths.subsample import subsample
+from skbio.math.subsample import subsample
 
 
 def _validate(counts, suppress_cast=False):
@@ -602,7 +602,7 @@ def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
 
     See Also
     --------
-    skbio.maths.subsample
+    skbio.math.subsample
 
     Notes
     -----

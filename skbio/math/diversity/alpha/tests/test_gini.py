@@ -14,8 +14,8 @@ from unittest import TestCase, main
 import numpy as np
 import numpy.testing as npt
 
-from skbio.maths.diversity.alpha.gini import (gini_index, _lorenz_curve,
-                                              _lorenz_curve_integrator)
+from skbio.math.diversity.alpha.gini import (gini_index, _lorenz_curve,
+                                             _lorenz_curve_integrator)
 
 
 class GiniTests(TestCase):
