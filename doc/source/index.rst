@@ -21,6 +21,7 @@ API Reference
    draw.distributions
    factory.sequence
    core.genetic_code
+   format.sequences
    maths.stats.distance
    maths.stats.spatial
    maths.stats.ordination
