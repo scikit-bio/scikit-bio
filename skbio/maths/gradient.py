@@ -21,6 +21,63 @@ Classes
    CategoryResults
    VectorsResults
 
+Examples
+--------
+Assume we have the following coordinates:
+
+>>> import numpy as np
+>>> import pandas as pd
+>>> from skbio.maths.gradient import AverageVectors
+>>> coord_data = {'PC.354': np.array([0.2761, -0.0341, 0.0633, 0.1004]),
+...               'PC.355': np.array([0.2364, 0.2186, -0.0301, -0.0225]),
+...               'PC.607': np.array([-0.1055, -0.4140, -0.15, -0.116]),
+...               'PC.634': np.array([-0.3716, 0.1154, 0.0721, 0.0898])}
+>>> coords = pd.DataFrame.from_dict(coord_data, orient='index')
+
+the following metadata map:
+
+>>> metamap = {'PC.354': {'Treatment': 'Control', 'Weight': '60'},
+...            'PC.355': {'Treatment': 'Control', 'Weight': '55'},
+...            'PC.607': {'Treatment': 'Fast', 'Weight': '65'},
+...            'PC.634': {'Treatment': 'Fast', 'Weight': '68'}}
+>>> metamap = pd.DataFrame.from_dict(metamap, orient='index')
+
+and the following vector with the proportion explained of each coord:
+
+>>> prop_expl = np.array([25.6216, 15.7715, 14.1215, 11.6913])
+
+Then to compute the average vectors of this data:
+
+>>> av = AverageVectors(coords, prop_expl, metamap,
+...                     vector_categories=['Treatment'],
+...                     sort_category='Weight')
+>>> vectors = av.get_vectors()
+
+Check the algorithm used to compute the vectors:
+
+>>> print vectors.algorithm
+avg
+
+Check if we weighted the data or not:
+
+>>> print vectors.weighted
+False
+
+Check the vectors results of one of the categories:
+
+>>> print vectors.categories[0].category
+Treatment
+>>> print vectors.categories[0].probability
+4.13395163e-32
+
+Check the vectors results of one group of one of the categories:
+
+>>> print vectors.categories[0].groups[0].name
+Control
+>>> print vectors.categories[0].groups[0].vector
+[ 2.15975404  2.15975404]
+>>> print vectors.categories[0].groups[0].info
+{'avg': 2.1597540407414888}
 """
 
 # -----------------------------------------------------------------------------
