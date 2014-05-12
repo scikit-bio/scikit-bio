@@ -44,7 +44,7 @@ def format_fastq_record(seqid, seq, qual, phred_offset=33):
 
     Examples
     --------
-    >>> from skbio.format.fastq import format_fastq_record
+    >>> from skbio.format.sequences import format_fastq_record
     >>> from numpy import array, int8
     >>> seqid = 'seq1'
     >>> seq = 'AATTGG'

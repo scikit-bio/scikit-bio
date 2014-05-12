@@ -20,6 +20,7 @@ API Reference
    core.workflow
    draw.distributions
    factory.sequence
+   core.genetic_code
    maths.stats.distance
    maths.stats.spatial
    maths.stats.ordination

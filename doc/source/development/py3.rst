@@ -280,6 +280,50 @@ The `long` type no longer exists in Py2. To test if a number is an
 integer (`int` or `long` in Py2, `int` in Py3), compare it to
 `future.builtins.int`.
 
+Implementing comparisons
+========================
+
+If the class you're defining has a `total ordering
+<http://en.wikipedia.org/wiki/Total_order>`_, either use
+`functools.total_ordering
+<https://docs.python.org/2.7/library/functools.html#functools.total_ordering>`_
+or implement all rich comparison methods if comparison performance is
+a bottleneck. Don't implement `__cmp__`, which was removed in Py3.
+
+However, usually only equality is important and you should only define
+`__eq__`. While compatibility with Py2 is kept, `__ne__` needs to be
+implemented too::
+
+    def __ne__(self, other):
+        """Required in Py2."""
+        return not self == other
+
+Otherwise, using the operator `!=` will lead to unexpected results in
+Py2 because it will compare identity, not equality::
+
+    class Foo(object):
+        def __eq__(self, other):
+            return True
+
+    print(Foo() != Foo())
+
+That prints `True` in Py2 (because each instance has a different `id`)
+but prints `False` in Py3 (the opposite of what `__eq__` returns,
+which is the desired behaviour).
+
+Always test that both `==` and `!=` are behaving correctly, e.g.::
+
+    def test_eq(self):
+        gc_1 = GeneticCode(self.sgc)
+        gc_2 = GeneticCode(self.sgc)
+        self.assertEqual(gc_1, gc_2)
+
+    def test_ne(self):
+        gc_1 = GeneticCode(self.sgc)
+        gc_2 = GeneticCode(self.sgc)
+        # Explicitly using !=
+        self.assertFalse(gc_1 != gc_2)
+
 Other modules
 =============
 
