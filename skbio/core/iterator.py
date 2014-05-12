@@ -63,7 +63,7 @@ In the next example, we're going to iterate over multiple FASTQ files at once.
 ...                 "AATTGGCC\n"
 ...                 ">seq2\n"
 ...                 "abcdefgh\n")
->>> it = FastqIterator(seq=[seqs1, seqs2])
+>>> it = FastqIterator(seq=[seqs1, seqs2], phred_offset=64)
 >>> for record in it:
 ...     print record['Sequence']
 ...     print record['Qual']
@@ -85,7 +85,7 @@ Finally, we can apply arbitrary transforms to the sequences during iteratation.
 >>> def rev_f(st):
 ...     st['Sequence'] = st['Sequence'][::-1]
 ...     st['Qual'] = st['Qual'][::-1] if st['Qual'] is not None else None
->>> it = FastqIterator(seq=[seqs1, seqs2], transform=rev_f)
+>>> it = FastqIterator(seq=[seqs1, seqs2], transform=rev_f, phred_offset=64)
 >>> for record in it:
 ...     print record['Sequence']
 ...     print record['Qual']
