@@ -28,7 +28,7 @@ Examples
 
 Use the ``StripedSmithWaterman`` object:
 
->>> from skbio.core.sww import StripedSmithWaterman
+>>> from skbio.core.ssw import StripedSmithWaterman
 >>> query = StripedSmithWaterman("ACTAAGGCTCTCTACCCCTCTCAGAGA")
 >>> alignment = query("AAAAAACTCTCTAAACTCACTAAGGCTCTCTACCCCTCTTCAGAGAAGTCGA")
 >>> print alignment
@@ -143,6 +143,7 @@ cdef class AlignmentStructure:
     cdef str read_sequence
     cdef str reference_sequence
     cdef int index_starts_at
+    cdef str _cigar_string
 
     def __cinit__(self, read_sequence, reference_sequence, index_starts_at):
         self.read_sequence = read_sequence
@@ -151,7 +152,6 @@ cdef class AlignmentStructure:
 
     cdef __constructor__(self, s_align* pointer):
         self.p = pointer
-        print self.p.ref_begin1
 
     def __dealloc__(self):
         if self.p is not NULL:
@@ -246,6 +246,7 @@ cdef class AlignmentStructure:
         Notes
         -----
         The result is a 0 based index by default
+
         """
         return self.p.ref_end2 + self.index_starts_at
 
@@ -278,6 +279,7 @@ cdef class AlignmentStructure:
         Notes
         -----
         The result is a 0 based index by default
+
         """
         return self.p.read_end1 + self.index_starts_at
 
@@ -296,7 +298,9 @@ cdef class AlignmentStructure:
         string
 
         """
-        cigar_string = ""
+        # Memoization! (1/2)
+        if self._cigar_string is not None:
+            return self._cigar_string
         cigar_list = []
         for i in range(self.p.cigarLen):
             # stored the same as that in BAM format,
@@ -306,7 +310,9 @@ cdef class AlignmentStructure:
             cigar_list.append(str(self.p.cigar[i] >> 4))
             # M/I/D, lookup first 4 bits in the mid_table
             cigar_list.append(mid_table[self.p.cigar[i] & 0xf])
-        return "".join(cigar_list)
+        # Memoization! (2/2)
+        self._cigar_string = "".join(cigar_list)
+        return self._cigar_string
 
     @property
     def query_sequence(self):
@@ -352,6 +358,78 @@ cdef class AlignmentStructure:
         """
         return self.index_starts_at == 0
 
+    def get_aligned_query_sequence(self):
+        """Returns the query sequence aligned by the cigar
+
+        Returns
+        -------
+        str
+            Aligned query sequence
+
+        Notes
+        -----
+        This will return a None object if suppress_sequences was True when this
+        object was created
+
+        """
+        return self._get_aligned_sequence(self.query_sequence,
+                                          self.query_begin, self.query_end,
+                                          "D")
+
+    def get_aligned_target_sequence(self):
+        """Returns the target sequence aligned by the cigar
+
+        Returns
+        -------
+        str
+            Aligned target sequence
+
+        Notes
+        -----
+        This will return a None object if suppress_sequences was True when this
+        object was created
+
+        """
+        return self._get_aligned_sequence(self.target_sequence,
+                                          self.target_begin,
+                                          self.target_end_optimal,
+                                          "I")
+
+    def _get_aligned_sequence(self, sequence, begin, end, gap_type):
+        # Save the original index scheme and then set it to 0 (1/2)
+        orig_z_base = self.is_zero_based()
+        self.set_zero_based(True)
+
+        if self.query_sequence:
+            seq = sequence[begin : end + 1]
+            index = 0
+            aligned_sequence = []
+            for length, mid in self._tuples_from_cigar():
+                if mid == 'M':
+                    aligned_sequence += [seq[i] \
+                                        for i in range(index, length + index)]
+                    index += length
+                elif mid == gap_type:
+                    aligned_sequence += (['-'] * length)
+                else:
+                    pass
+            # Our sequence end is sometimes beyond the cigar:
+            aligned_sequence += [seq[i] for i in range(index, end - begin + 1)]
+
+        # Revert our index scheme to the original (2/2)
+        self.set_zero_based(orig_z_base)
+        return "".join(aligned_sequence)
+
+    def _tuples_from_cigar(self):
+        tuples = []
+        length_stack = []
+        for character in self.cigar:
+            if character in "1234567890":
+                length_stack.append(character)
+            else:
+                tuples.append((int("".join(length_stack)), character))
+                length_stack = []
+        return tuples
 
 cdef class StripedSmithWaterman:
     """Performs a striped (banded) Smith Waterman Alignment.
@@ -657,7 +735,7 @@ def striped_smith_waterman_alignment(query_sequence, target_sequence,
     -------
     ``skbio.core.ssw.AlignmentStructure``
         The resulting alignment
-        
+
     """
     query = StripedSmithWaterman(query_sequence, **kwargs)
     return query(target_sequence)
