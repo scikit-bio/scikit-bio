@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 r"""
-Gradient analyses (:mod:`skbio.maths.gradient`)
+Gradient analyses (:mod:`skbio.math.gradient`)
 ===============================================
 
-.. currentmodule:: skbio.maths.gradient
+.. currentmodule:: skbio.math.gradient
 
 This module provides functionality for performing gradient analyses.
 
@@ -27,7 +27,7 @@ Assume we have the following coordinates:
 
 >>> import numpy as np
 >>> import pandas as pd
->>> from skbio.maths.gradient import AverageVectors
+>>> from skbio.math.gradient import AverageVectors
 >>> coord_data = {'PC.354': np.array([0.2761, -0.0341, 0.0633, 0.1004]),
 ...               'PC.355': np.array([0.2364, 0.2186, -0.0301, -0.0225]),
 ...               'PC.607': np.array([-0.1055, -0.4140, -0.15, -0.116]),
@@ -96,7 +96,7 @@ from collections import namedtuple, defaultdict
 import numpy as np
 
 from skbio.util.sort import signed_natsort
-from skbio.maths.stats.test import ANOVA_one_way
+from skbio.math.stats.test import ANOVA_one_way
 
 
 class GroupResults(namedtuple('GroupResults', ('name', 'vector', 'mean',

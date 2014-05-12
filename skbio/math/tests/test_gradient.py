@@ -19,10 +19,10 @@ import numpy.testing as npt
 import pandas.util.testing as pdt
 
 from skbio.util.testing import get_data_path
-from skbio.maths.gradient import (BaseVectors, AverageVectors,
-                                  TrajectoryVectors, DifferenceVectors,
-                                  WindowDifferenceVectors, GroupResults,
-                                  CategoryResults, VectorsResults)
+from skbio.math.gradient import (BaseVectors, AverageVectors,
+                                 TrajectoryVectors, DifferenceVectors,
+                                 WindowDifferenceVectors, GroupResults,
+                                 CategoryResults, VectorsResults)
 
 
 class BaseTests(TestCase):
