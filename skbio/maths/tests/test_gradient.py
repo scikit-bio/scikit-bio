@@ -8,16 +8,17 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # -----------------------------------------------------------------------------
 from __future__ import division
+from future.utils.six import StringIO
 from future.builtins import zip
 
 from unittest import TestCase, main
 
 import numpy as np
-import numpy.testing as npt
-
 import pandas as pd
+import numpy.testing as npt
 import pandas.util.testing as pdt
 
+from skbio.util.testing import get_data_path
 from skbio.maths.gradient import (BaseVectors, AverageVectors,
                                   TrajectoryVectors, DifferenceVectors,
                                   WindowDifferenceVectors, GroupResults,
@@ -137,6 +138,47 @@ class BaseTests(TestCase):
                                    8.51253468595, 7.88775505332, 6.56308246609,
                                    4.42499350906e-16])
 
+        gr_wo_msg = GroupResults('Foo', np.array([-2.6750, -0.2510,
+                                                  -2.8322, 0.]),
+                                 -1.4398, {'mean': -1.4398, 'std': 1.3184},
+                                 None)
+        gr_w_msg = GroupResults('Bar', np.array([9.6823, 2.9511, 5.2434]),
+                                5.9589, {'mean': 5.9589, 'std': 2.7942},
+                                "Cannot calculate the first difference "
+                                "with a window of size (3).")
+        self.groups = [gr_wo_msg, gr_w_msg]
+
+        cr_no_data = CategoryResults('foo', None, None,
+                                     'This group can not be used. All groups '
+                                     'should have more than 1 element.')
+        cr_data = CategoryResults('bar', 0.0110, self.groups, None)
+        self.categories = [cr_no_data, cr_data]
+
+        vr = VectorsResults('wdiff', True, self.categories)
+
+        description = CategoryResults('Description', None, None,
+                                      'This group can not be used. All groups '
+                                      'should have more than 1 element.')
+        weight = CategoryResults('Weight', None, None,
+                                 'This group can not be used. All groups '
+                                 'should have more than 1 element.')
+        dob = CategoryResults('DOB', None, None,
+                              'This group can not be used. All groups '
+                              'should have more than 1 element.')
+        control_group = GroupResults('Control', np.array([2.3694, 3.3716,
+                                                          5.4452, 4.5704,
+                                                          4.4972]),
+                                     4.0508, {'avg': 4.0508}, None)
+        fast_group = GroupResults('Fast', np.array([7.2220, 4.2726, 1.1169,
+                                                    4.0271]),
+                                  4.1596, {'avg': 4.1596}, None)
+        treatment = CategoryResults('Treatment', 0.9331,
+                                    [control_group, fast_group], None)
+        vr_real = VectorsResults('avg', False, [description, weight, dob,
+                                                treatment])
+
+        self.vec_results = [vr, vr_real]
+
     # This function makes the comparisons between the results classes easier
     def assert_group_results_almost_equal(self, obs, exp):
         """Tests that obs and exp are almost equal"""
@@ -167,6 +209,78 @@ class BaseTests(TestCase):
 
         for o, e in zip(sorted(obs.categories), sorted(exp.categories)):
             self.assert_category_results_almost_equal(o, e)
+
+
+class GroupResultsTests(BaseTests):
+    def test_to_file(self):
+        out_paths = ['gr_wo_msg_out', 'gr_w_msg_out']
+        raw_paths = ['gr_wo_msg_raw', 'gr_w_msg_raw']
+
+        for gr, out_fp, raw_fp in zip(self.groups, out_paths, raw_paths):
+            obs_out_f = StringIO()
+            obs_raw_f = StringIO()
+            gr.to_files(obs_out_f, obs_raw_f)
+            obs_out = obs_out_f.getvalue()
+            obs_raw = obs_raw_f.getvalue()
+            obs_out_f.close()
+            obs_raw_f.close()
+
+            with open(get_data_path(out_fp), 'U') as f:
+                exp_out = f.read()
+
+            with open(get_data_path(raw_fp), 'U') as f:
+                exp_raw = f.read()
+
+            self.assertEqual(obs_out, exp_out)
+            self.assertEqual(obs_raw, exp_raw)
+
+
+class CategoryResultsTests(BaseTests):
+    def test_to_file(self):
+        out_paths = ['cr_no_data_out', 'cr_data_out']
+        raw_paths = ['cr_no_data_raw', 'cr_data_raw']
+
+        for cat, out_fp, raw_fp in zip(self.categories, out_paths, raw_paths):
+            obs_out_f = StringIO()
+            obs_raw_f = StringIO()
+            cat.to_files(obs_out_f, obs_raw_f)
+            obs_out = obs_out_f.getvalue()
+            obs_raw = obs_raw_f.getvalue()
+            obs_out_f.close()
+            obs_raw_f.close()
+
+            with open(get_data_path(out_fp), 'U') as f:
+                exp_out = f.read()
+
+            with open(get_data_path(raw_fp), 'U') as f:
+                exp_raw = f.read()
+
+            self.assertEqual(obs_out, exp_out)
+            self.assertEqual(obs_raw, exp_raw)
+
+
+class VectorsResultsTests(BaseTests):
+    def test_to_file(self):
+        out_paths = ['vr_out']
+        raw_paths = ['vr_raw']
+
+        for vr, out_fp, raw_fp in zip(self.vec_results, out_paths, raw_paths):
+            obs_out_f = StringIO()
+            obs_raw_f = StringIO()
+            vr.to_files(obs_out_f, obs_raw_f)
+            obs_out = obs_out_f.getvalue()
+            obs_raw = obs_raw_f.getvalue()
+            obs_out_f.close()
+            obs_raw_f.close()
+
+            with open(get_data_path(out_fp), 'U') as f:
+                exp_out = f.read()
+
+            with open(get_data_path(raw_fp), 'U') as f:
+                exp_raw = f.read()
+
+            self.assertEqual(obs_out, exp_out)
+            self.assertEqual(obs_raw, exp_raw)
 
 
 class BaseVectorsTests(BaseTests):

@@ -83,15 +83,15 @@ class GroupResults(namedtuple('GroupResults', ('name', 'vector', 'mean',
         """
         out_f.write('For group "%s", the group means is: %f\n'
                     % (self.name, self.mean))
-        raw_f.write('For group "%s":\n'
-                    % (self.name, self.vector))
+        raw_f.write('For group "%s":\n' % self.name)
 
         if self.message:
             out_f.write('%s\n' % self.message)
             raw_f.write('%s\n' % self.message)
 
-        out_f.write('The info is:%s\n' % self.info)
-        raw_f.write('The vector is:\n%s\n' % self.vector)
+        out_f.write('The info is: %s\n'
+                    % sorted(((k, v) for k, v in self.info.iteritems())))
+        raw_f.write('The vector is:\n[%s]\n' % ", ".join(map(str, self.vector)))
 
 
 class CategoryResults(namedtuple('CategoryResults', ('category', 'probability',
@@ -131,7 +131,7 @@ class CategoryResults(namedtuple('CategoryResults', ('category', 'probability',
             done (if necessary)
         """
         if self.probability is None:
-            out_f.write('Grouped by "%s" %s\n' % (self.category, self.message))
+            out_f.write('Grouped by "%s": %s\n' % (self.category, self.message))
         else:
             out_f.write('Grouped by "%s", probability: %f\n'
                         % (self.category, self.probability))
@@ -180,8 +180,13 @@ class VectorsResults(namedtuple('VectorsResults', ('algorithm', 'weighted',
             out_f.write('** This output is weighted **\n')
             raw_f.write('** This output is weighted **\n')
 
+        out_f.write('\n')
+        raw_f.write('\n')
+
         for cat_results in self.categories:
             cat_results.to_files(out_f, raw_f)
+            out_f.write('\n')
+            raw_f.write('\n')
 
 
 class BaseVectors(object):
