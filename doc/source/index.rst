@@ -15,10 +15,12 @@ API Reference
    core.sequence
    core.distance
    core.exception
-   core.genetic_code
+   core.iterator
    core.tree
    core.workflow
    draw.distributions
+   factory.sequence
+   core.genetic_code
    format.sequences
    maths.stats.distance
    maths.stats.spatial
