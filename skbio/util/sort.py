@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 r"""
-Gradient analyses (:mod:`skbio.maths.gradient`)
-===============================================
+Sort util functions (:mod:`skbio.util.sort`)
+============================================
 
-.. currentmodule:: skbio.maths.gradient
+.. currentmodule:: skbio.util.sort
 
-This module provides functionality for performing gradient analyses.
+This module provides useful functions for sorting.
 
 Functions
 ---------
@@ -13,10 +13,10 @@ Functions
 .. autosummary::
    :toctree: generated/
 
-   gradient_analysis
+   natsort
+   signed_natsort
 
 """
-from __future__ import division
 
 # -----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -26,13 +26,15 @@ from __future__ import division
 # The full license is in the file COPYING.txt, distributed with this software.
 # -----------------------------------------------------------------------------
 
+from __future__ import division
+
 from re import split
 
 
 def _natsort_key(item, case_sensitivity=False):
     """Provides normalized version of item for sorting with digits.
 
-    From:
+    Adapted from:
     http://lists.canonical.org/pipermail/kragen-hacks/2005-October/000419.html
     """
     item = str(item)
@@ -57,9 +59,10 @@ def _natsort_key(item, case_sensitivity=False):
 
 
 def _natsort_key_case_insensitive(item):
-    """Provides normalized version of item for sorting with digits.
+    """Provides normalized version of item for sorting with digits and is case-
+    insensitive.
 
-    From:
+    Adapted from:
     http://lists.canonical.org/pipermail/kragen-hacks/2005-October/000419.html
     """
     # added the lower() call to allow for case-insensitive sorting
@@ -85,10 +88,23 @@ def _natsort_key_case_insensitive(item):
 
 
 def natsort(seq, case_sensitive=True):
-    """Sort a sequence of text strings in a reasonable order.
+    """Sort an iterable in a way that humans expect.
 
-    From:
+    Adapted from:
     http://lists.canonical.org/pipermail/kragen-hacks/2005-October/000419.html
+
+    Parameters
+    ----------
+    seq : iterable
+        The sequence of objects to sort
+    case_sensitive : bool, optional
+        If true, performs case-sensitive sorting. Otherwise, it performs case-
+        insensitive sorting. Default: True.
+
+    Returns
+    -------
+    list
+        The input sequence sorted
     """
     if case_sensitive:
         natsort_key = _natsort_key
@@ -102,18 +118,24 @@ def natsort(seq, case_sensitive=True):
 
 
 def signed_natsort(data):
-    """sort an iterable considering the cases where elements are signed
-
-    data: list of tuples (with two strings as elements) or strings. When a
-    string is provided, the string will try to be type-casted to a float type,
-    if a tuple is provided, the first element will be used to sort the list. If
-    a dict is provided a sorted version of the keys will be returned.
-
-    output: sorted version of data
+    """Sort an iterable considering the cases where elements are signed in a
+    way that humans expect.
 
     The elements will be assumed to be real numbers, if that assumption fails,
     then the elements will be sorted using a natural sorting algorithm.
 
+    Parameters
+    ----------
+    data: iterable
+        When a string is provided, the string will try to be type-casted to a
+        float type, if a tuple is provided, the first element will be used to
+        sort the list. If a dict is provided a sorted version of the keys will
+        be returned.
+
+    Returns
+    -------
+    list
+        sorted version of data
     """
 
     # list is empty, do nothing
