@@ -416,7 +416,7 @@ class GeneticCode(object):
         return found
 
     def translate_six_frames(self, nucleotide_sequence):
-        """Translate nucleotide to protein sequences for six reading frames
+        """Translate nucleotide to protein sequences for all six reading frames
 
         Parameters
         ----------
