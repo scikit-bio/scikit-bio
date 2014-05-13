@@ -49,7 +49,7 @@ def parse_fastq(data, strict=False, phred_offset=33):
     Parameters
     ----------
     data : open file object or str
-        An open fastq file or a path to it.
+        An open fastq file (opened in binary mode) or a path to it.
 
     strict : bool
         If strict is true a FastqParse error will be raised if the seq and qual
@@ -109,7 +109,7 @@ def parse_fastq(data, strict=False, phred_offset=33):
     QUALID = 2
     QUAL = 3
 
-    with open_file(data) as data:
+    with open_file(data, 'rb') as data:
         data = iter(data)
         first_line = next(data).strip()
 
