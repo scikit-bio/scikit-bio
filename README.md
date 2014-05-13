@@ -46,6 +46,23 @@ scikit-bio is available under the new BSD license. See
 directory for the licenses of other software that is (either partially or
 entirely) distributed with scikit-bio.
 
+Installation
+------------
+
+In order to install scikit bio first install numpy:
+
+    pip install numpy
+    pip install scikit-bio
+
+If you'd like to install the dependencies manually (or some other way than using pip), you can find those here:
+
+- [Python](http://www.python.org/) 2.7
+- [numpy](http://www.numpy.org/) >= 1.7
+- [scipy](http://www.scipy.org/) >= 0.13.0
+- [matplotlib](http://www.matplotlib.org/) >= 1.1.0
+- [pandas](http://pandas.pydata.org/)
+- [future](https://pypi.python.org/pypi/future) 
+
 scikit-bio development
 ----------------------
 
