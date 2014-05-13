@@ -841,5 +841,64 @@ class RNASequenceTests(TestCase):
         self.assertEqual(obs, exp)
 
 
+class ProteinSequenceTests(TestCase):
+
+    def setUp(self):
+        self.empty = ProteinSequence('')
+        self.p1 = ProteinSequence('GREG')
+        self.p2 = ProteinSequence(
+            'PRTEINSEQNCE', id="test-seq-2",
+            description="A test sequence")
+        self.p3 = ProteinSequence(
+            'PROTEIN', id="bad-seq-1",
+            description="Not a protein sequence")
+
+    def test_alphabet(self):
+        exp = {
+            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N',
+            'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c',
+            'd', 'e', 'f', 'g', 'h', 'i', 'k', 'l', 'm', 'n', 'p', 'q', 'r',
+            's', 't', 'v', 'w', 'x', 'y', 'z'
+        }
+
+        self.assertEqual(self.p1.alphabet(), exp)
+        self.assertEqual(ProteinSequence.alphabet(), exp)
+
+    def test_gap_alphabet(self):
+        self.assertEqual(self.p1.gap_alphabet(), set('-.'))
+
+    def test_iupac_standard_characters(self):
+        exp = set("ACDEFGHIKLMNPQRSTVWYacdefghiklmnpqrstvwy")
+        self.assertEqual(self.p1.iupac_standard_characters(), exp)
+        self.assertEqual(ProteinSequence.iupac_standard_characters(), exp)
+
+    def test_iupac_degeneracies(self):
+        exp = {
+            'B': set(['D', 'N']), 'Z': set(['E', 'Q']),
+            'X': set(['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M',
+                      'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']),
+            'b': set(['d', 'n']), 'z': set(['e', 'q']),
+            'x': set(['a', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'k', 'l', 'm',
+                      'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'y']),
+        }
+        self.assertEqual(self.p1.iupac_degeneracies(), exp)
+        self.assertEqual(ProteinSequence.iupac_degeneracies(), exp)
+
+    def test_iupac_degenerate_characters(self):
+        exp = set(['B', 'X', 'Z', 'b', 'x', 'z'])
+        self.assertEqual(self.p1.iupac_degenerate_characters(), exp)
+        self.assertEqual(ProteinSequence.iupac_degenerate_characters(), exp)
+
+    def test_iupac_characters(self):
+        exp = {
+            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N',
+            'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b',
+            'c', 'd', 'e', 'f', 'g', 'h', 'i', 'k', 'l', 'm', 'n', 'p', 'q',
+            'r', 's', 't', 'v', 'w', 'x', 'y', 'z'
+        }
+        self.assertEqual(self.p1.iupac_characters(), exp)
+        self.assertEqual(ProteinSequence.iupac_characters(), exp)
+
+
 if __name__ == "__main__":
     main()

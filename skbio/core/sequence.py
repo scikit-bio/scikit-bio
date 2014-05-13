@@ -158,7 +158,7 @@ class BiologicalSequence(Sequence):
         has_unsupported_characters
 
         """
-        return set()
+        return cls.iupac_characters()
 
     @classmethod
     def gap_alphabet(cls):
@@ -180,6 +180,56 @@ class BiologicalSequence(Sequence):
 
         """
         return set('-.')
+
+    @classmethod
+    def iupac_degenerate_characters(cls):
+        """Return the degenerate IUPAC characters.
+
+        Returns
+        -------
+        set
+            Degenerate IUPAC characters.
+
+        """
+        return set(cls.iupac_degeneracies())
+
+    @classmethod
+    def iupac_characters(cls):
+        """Return the non-degenerate and degenerate characters.
+
+        Returns
+        -------
+        set
+            Non-degenerate and degenerate characters.
+
+        """
+        return (cls.iupac_standard_characters() |
+                cls.iupac_degenerate_characters())
+
+    @classmethod
+    def iupac_standard_characters(cls):
+        """Return the non-degenerate IUPAC nucleotide characters.
+
+        Returns
+        -------
+        set
+            Non-degenerate IUPAC nucleotide characters.
+
+        """
+        return set()
+
+    @classmethod
+    def iupac_degeneracies(cls):
+        """Return the mapping of degenerate to non-degenerate characters.
+
+        Returns
+        -------
+        dict of sets
+            Mapping of IUPAC degenerate nucleotide character to the set of
+            non-degenerate IUPAC nucleotide characters it represents.
+
+        """
+        return {}
 
     def __init__(self, sequence, id="", description="",
                  validate=False):
@@ -1118,18 +1168,6 @@ class NucleotideSequence(BiologicalSequence):
     """
 
     @classmethod
-    def alphabet(cls):
-        """Return the set of characters allowed in a `NucleotideSequence`.
-
-        Returns
-        -------
-        set
-            Characters that are allowed in a valid `NucleotideSequence`.
-
-        """
-        return cls.iupac_characters()
-
-    @classmethod
     def complement_map(cls):
         """Return the mapping of characters to their complements.
 
@@ -1184,31 +1222,6 @@ class NucleotideSequence(BiologicalSequence):
                 ''.join(nondegen_chars).lower())
 
         return degen_map
-
-    @classmethod
-    def iupac_degenerate_characters(cls):
-        """Return the degenerate IUPAC nucleotide characters.
-
-        Returns
-        -------
-        set
-            Degenerate IUPAC nucleotide characters.
-
-        """
-        return set(cls.iupac_degeneracies())
-
-    @classmethod
-    def iupac_characters(cls):
-        """Return the non-degenerate and degenerate nucleotide characters.
-
-        Returns
-        -------
-        set
-            Non-degenerate and degenerate nucleotide characters.
-
-        """
-        return (cls.iupac_standard_characters() |
-                cls.iupac_degenerate_characters())
 
     def _complement(self, seq_iterator):
         """Returns `NucleotideSequence` that is complement of `seq_iterator`
@@ -1582,4 +1595,55 @@ RNA = RNASequence
 
 
 class ProteinSequence(BiologicalSequence):
-    pass
+    """Base class for protein sequences.
+
+    A `ProteinSequence` is a `BiologicalSequence` containing only characters
+    used in the IUPAC protein lexicon.
+
+    See Also
+    --------
+    BiologialSequence
+
+    Notes
+    -----
+    All uppercase and lowercase IUPAC protein characters are supported.
+
+    """
+
+    @classmethod
+    def iupac_standard_characters(cls):
+        """Return the non-degenerate IUPAC protein characters.
+
+        Returns
+        -------
+        set
+            Non-degenerate IUPAC protein characters.
+
+        """
+        return set("ACDEFGHIKLMNPQRSTVWYacdefghiklmnpqrstvwy")
+
+    @classmethod
+    def iupac_degeneracies(cls):
+        """Return the mapping of degenerate to non-degenerate characters.
+
+        Returns
+        -------
+        dict of sets
+            Mapping of IUPAC degenerate protein character to the set of
+            non-degenerate IUPAC protein characters it represents.
+
+        """
+        degen_map = {
+            "B": set("DN"), "Z": set("EQ"),
+            "X": set("ACDEFGHIKLMNPQRSTVWY")
+        }
+
+        for degen_char in list(degen_map.keys()):
+            nondegen_chars = degen_map[degen_char]
+            degen_map[degen_char.lower()] = set(
+                ''.join(nondegen_chars).lower())
+
+        return degen_map
+
+# class is accessible with alternative name for convenience
+Protein = ProteinSequence
