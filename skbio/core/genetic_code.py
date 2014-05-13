@@ -334,14 +334,11 @@ class GeneticCode(object):
             raise InvalidCodonError("Codon or aa %s has wrong length" % item)
 
     def translate(self, nucleotide_sequence, start=0):
-        """Translates DNA to protein with current GeneticCode.
-
-        Translates the entire sequence: it is the caller's responsibility to
-        find open reading frames.
+        """Translate nucleotide to protein sequence
 
         Parameters
         ----------
-        nucleotide_sequence : str, NucleotideSequence
+        nucleotide_sequence : NucleotideSequence
             sequence to be translated
         start : int, optional
             position to begin translation (used to implement frames)
@@ -350,6 +347,16 @@ class GeneticCode(object):
         -------
         ProteinSequence
             translation of nucleotide_sequence
+
+        Notes
+        -----
+        ``translate`` returns the translation of the entire sequence, (i.e.,
+        ``nucleotide_sequence[start:]``. It is the user's responsibility to
+        identify trim to the open reading frame if that is desired.
+
+        See Also
+        --------
+        translate_six_frames
 
         Examples
         --------
@@ -408,7 +415,7 @@ class GeneticCode(object):
         return found
 
     def translate_six_frames(self, nucleotide_sequence):
-        """Returns six-frame translation as a dictionary object
+        """Translate nucleotide to protein sequences for six reading frames
 
         Parameters
         ----------
@@ -417,9 +424,12 @@ class GeneticCode(object):
 
         Returns
         -------
-        dict
-            dictionary of where the keys are the frames and the values are the
-            translations i. e. ``{frame:translation}``.
+        list
+            the six translated ProteinSequence objects
+
+        See Also
+        --------
+        translate
 
         Examples
         --------
@@ -428,31 +438,24 @@ class GeneticCode(object):
         >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSS'
         ...                   'RRVVVVAAAADDEEGGGG')
         >>> results = sgc.translate_six_frames(RNA('AUGCUAACAUAAA'))
-        >>> print results[0]
-        MLT*
-        >>> print type(results[0])
-        <class 'skbio.core.sequence.ProteinSequence'>
-        >>> print results[1]
-        C*HK
-        >>> print results[2]
-        ANI
-        >>> print results[3]
-        FMLA
-        >>> print results[4]
-        LC*H
-        >>> print results[5]
-        YVS
+        >>> for e in results: e
+        <ProteinSequence: MLT* (length: 4)>
+        <ProteinSequence: C*HK (length: 4)>
+        <ProteinSequence: ANI (length: 3)>
+        <ProteinSequence: FMLA (length: 4)>
+        <ProteinSequence: LC*H (length: 4)>
+        <ProteinSequence: YVS (length: 3)>
 
         """
         reverse_nucleotide_sequence = nucleotide_sequence.rc()
         results = []
         for start in range(3):
             translation = self.translate(nucleotide_sequence, start)
-            results.append(Protein(translation))
+            results.append(translation)
 
         for start in range(3):
             translation = self.translate(reverse_nucleotide_sequence, start)
-            results.append(Protein(translation))
+            results.append(translation)
 
         return results
 
