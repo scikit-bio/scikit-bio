@@ -11,6 +11,7 @@
 from __future__ import division
 
 import numpy as np
+from numpy.random import shuffle
 
 from skbio.math.stats.special import MACHEP, ndtri
 from skbio.math.stats.distribution import (chi_high, zprob, f_high, t_high,
@@ -401,30 +402,33 @@ def mc_t_two_sample(x_items, y_items, tails=None, permutations=999,
 
     return obs_t, param_p_val, perm_t_stats, nonparam_p_val
 
+def _permute_observations(x, y, num_perms):
+    """Return num_perms pairs of permuted vectors x,y.
 
-def _permute_observations(x_items, y_items, permutations,
-                          permute_f=np.random.permutation):
-    """Returns permuted versions of the sequences of observations.
+    Parameters
+    ----------
+    x,y : array-like
+        Lists or arrays of values to be permuted.
 
-    Values are permuted between x_items and y_items (i.e. shuffled between the
-    two input sequences of observations).
-
-    This code is based on Jeremy Widmann's
-    qiime.make_distance_histograms.permute_between_groups code.
+    Returns
+    -------
+    xs, ys
+        Permuted vectors x and y
     """
-    num_x = len(x_items)
-    num_y = len(y_items)
-    num_total_obs = num_x + num_y
-    combined_obs = np.concatenate((x_items, y_items))
-
-    # Generate a list of all permutations.
-    perms = [permute_f(num_total_obs) for i in range(permutations)]
-
-    # Use random permutations to split into groups.
-    rand_xs = [combined_obs[perm[:num_x]] for perm in perms]
-    rand_ys = [combined_obs[perm[num_x:num_total_obs]] for perm in perms]
-    return rand_xs, rand_ys
-
+    vals = np.hstack([np.array(x), np.array(y)])
+    lenx = len(x)
+    # sorting step is unnecessary for this code, but it ensure that test code
+    # which relies on seeding the prng works (if we dont do this then different
+    # observation orders in x and y for eg. the mc_t_two_sample test will fail
+    # to produce the same results)
+    vals.sort()
+    inds = np.arange(vals.size)
+    xs, ys = [], []
+    for i in range(num_perms):
+        shuffle(inds)
+        xs.append(vals[inds[:lenx]])
+        ys.append(vals[inds[lenx:]])
+    return xs, ys
 
 def t_one_observation(x, sample, tails=None, exp_diff=0,
                       none_on_zero_variance=True):
@@ -751,7 +755,7 @@ def ANOVA_one_way(a):
     # error, but only if the between_Groups value is not zero
     within_Groups = np.sum(group_variances) / dfd
     if within_Groups == 0.:
-        return nan, nan
+        return np.nan, np.nan
     # Get between Group variances (numerator)
     all_vals = np.array(all_vals)
     grand_mean = all_vals.mean()
@@ -1003,3 +1007,104 @@ def tail(prob, test):
         return prob
     else:
         return 1 - prob
+
+
+def bonferroni_correction(pvals):
+    """Adjust pvalues for multiple tests using the Bonferroni method.
+
+    In short: multiply all pvals by the number of comparisons.
+
+    Parameters
+    ----------
+    pvals : list or array
+        List or array of floats.
+
+    Returns
+    -------
+    list of pvals
+        Returns the list of pvals multiplied by their length. Pvals are
+        still unsorted (i.e. order has not changed). 
+
+    See Also
+    --------
+    benjamini_hochberg_step_down
+
+    Examples
+    --------
+    >>> from skbio.math.stats.test import bonferroni_correction
+    >>> bonferroni_correction([0.1, 0.21, 0.5, 0.2, 0.6])
+    array([ 0.5 ,  1.05,  2.5 ,  1.  ,  3.  ])
+    """
+    return np.array(pvals, dtype=float) * len(pvals)  # float conv: Nones->nans
+
+
+def fdr_correction(pvals):
+    """Adjust pvalues for multiple tests using the false discovery rate method.
+
+    In short: ranks the p-values in ascending order and multiplies each p-value
+    by the number of comparisons divided by the rank of the p-value in the
+    sorted list. Input is list of floats.  Does *not* assume pvals is sorted.
+
+    Parameters
+    ----------
+    pvals : list or array
+        List or array of floats.
+
+    Returns
+    -------
+    list of pvals
+        Returns the list of pvals properly adjusted based on the FDR. Pvals are
+        still unsorted (i.e. order has not changed). 
+
+    See Also
+    --------
+    benjamini_hochberg_step_down
+
+    Examples
+    --------
+    >>> from skbio.math.stats.test import fdr_correction
+    >>> fdr_correction([.01, .2, .5, .1, .3])
+    array([ 0.05      ,  0.33333333,  0.5       ,  0.25      ,  0.375     ])
+    """
+    tmp = np.array(pvals).astype(float)  # this converts Nones to nans
+    return tmp * tmp.size / (1. + np.argsort(np.argsort(tmp)).astype(float))
+
+
+def benjamini_hochberg_step_down(pvals):
+    """Perform Benjamini and Hochberg's 1995 FDR step down procedure.
+
+    In short, compute  the fdr adjusted pvals (ap_i's), and working from
+    the largest to smallest, compare ap_i to ap_i-1. If ap_i < ap_i-1 set 
+    ap_i-1 equal to ap_i. Does *not* assume pvals is sorted
+
+    Parameters
+    ----------
+    pvals : list or array
+        List or array of floats.
+
+    Returns
+    -------
+    list of pvals
+        Returns the list of pvals properly adjusted based on the and then 
+        adjusted according to the BH rules. 
+
+    See Also
+    --------
+    fdr_correction
+
+    Examples
+    --------
+    >>> from skbio.math.stats.test import fdr_correction
+    >>> benjamini_hochberg_step_down([0.1, 0.21, 0.5, 0.2, 0.6])
+    array([ 0.35,  0.35,  0.6 ,  0.35,  0.6 ])
+    """
+    tmp = fdr_correction(pvals)
+    corrected_vals = np.empty(len(pvals))
+    max_pval = 1.
+    for i in np.argsort(pvals)[::-1]:
+        if tmp[i] < max_pval:
+            corrected_vals[i] = tmp[i]
+            max_pval = tmp[i]
+        else:
+            corrected_vals[i] = max_pval
+    return corrected_vals

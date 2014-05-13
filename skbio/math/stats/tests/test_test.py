@@ -22,7 +22,9 @@ from skbio.math.stats.test import (G_2_by_2, G_fit, t_paired, t_one_sample,
                                    mantel_t, _flatten_lower_triangle, pearson,
                                    spearman, _get_rank, ANOVA_one_way, mw_t,
                                    mw_boot, is_symmetric_and_hollow,
-                                   reverse_tails, tail)
+                                   reverse_tails, tail, fdr_correction, 
+                                   benjamini_hochberg_step_down, 
+                                   bonferroni_correction)
 
 
 class TestsHelper(TestCase):
@@ -1024,6 +1026,169 @@ class TestDistMatrixPermutationTest(TestCase):
 
         np.testing.assert_allclose(F, 18.565450643776831)
         np.testing.assert_allclose(pval, 0.00015486238993089464)
+
+class PvalueTests(TestCase):
+
+    '''Test that the methods for handling Pvalues return the results we expect.
+
+    Note: eps is being set lower on some of these because Sokal and Rohlf
+    provide only ~5 sig figs and our integrals diverge by that much or more.
+    '''
+
+    def setUp(self):
+        '''Nothing needed for all tests.'''
+        pass
+
+    def test_fdr_correction(self):
+        """Test that the fdr_correction works as anticipated."""
+        pvals = np.array([.1, .7, .5, .3, .9])
+        exp = np.array([.5, .7 * 5 / 4., .5 * 5 / 3., .3 * 5 / 2., .9])
+        obs = fdr_correction(pvals)
+        np.testing.assert_allclose(obs, exp)
+
+    def test_benjamini_hochberg_step_down(self):
+        """Test that the BH step down procedure behaves as it does in R."""
+        # r values
+        # q = c(0.64771481,  0.93517796,  0.7169902 ,  0.18223457,  0.26918556,
+        #  0.1450153 ,  0.22448242,  0.74723508,  0.89061034,  0.74007906)
+        # p.adjust(q, method='BH')
+        #  [1] 0.9340439 0.9351780 0.9340439 0.6729639 0.6729639 0.6729639 0.6729639
+        #  [8] 0.9340439 0.9351780 0.9340439
+        pvals = np.array([0.64771481, 0.93517796, 0.7169902, 0.18223457,
+                       0.26918556, 0.1450153, 0.22448242, 0.74723508, 0.89061034,
+                       0.74007906])
+        exp = np.array([0.9340439, 0.9351780, 0.9340439, 0.6729639, 0.6729639,
+                     0.6729639, 0.6729639, 0.9340439, 0.9351780, 0.9340439])
+        obs = benjamini_hochberg_step_down(pvals)
+        np.testing.assert_allclose(obs, exp)
+        # example 2
+        pvals = np.array([1.32305426, 1.9345059, 0.87129877, 1.89957702,
+                       1.85712616, 0.68757988, 0.41248969, 0.20751712, 1.97658599,
+                       1.06209437])
+        exp = np.array([1., 1., 1., 1., 1., 1., 1., 1., 1., 1.])
+        obs = benjamini_hochberg_step_down(pvals)
+        np.testing.assert_allclose(obs, exp)
+
+    def test_bonferroni_correction(self):
+        """Test that Bonferroni correction behaves correctly."""
+        pvals = np.array([.1, .7, .5, .3, .9])
+        exp = pvals * 5.
+        obs = bonferroni_correction(pvals)
+        np.testing.assert_allclose(obs, exp)
+
+    # def test_fisher_z_transform(self):
+    #     '''Test Fisher Z transform is correct.'''
+    #     r = .657
+    #     exp = .5 * log(1.657 / .343)
+    #     obs = fisher_z_transform(r)
+    #     assert_allclose(exp, obs)
+    #     r = 1
+    #     obs = fisher_z_transform(r)
+    #     assert_allclose(obs, nan)
+    #     r = -1
+    #     obs = fisher_z_transform(r)
+    #     assert_allclose(obs, nan)
+    #     # from sokal and rohlf pg 575
+    #     r = .972
+    #     obs = fisher_z_transform(r)
+    #     exp = 2.12730
+    #     assert_allclose(exp, obs)
+
+    # def test_z_transform_pval(self):
+    #     '''Test that pval associated with Fisher Z is correct.'''
+    #     r = .6
+    #     n = 100
+    #     obs = z_transform_pval(r, n)
+    #     exp = 3.4353390341723208e-09
+    #     assert_allclose(exp, obs)
+    #     r = .5
+    #     n = 3
+    #     obs = z_transform_pval(r, n)
+    #     assert_allclose(obs, nan)
+
+    # def test_inverse_fisher_z_transform(self):
+    #     '''Test that Fisher's Z transform is computed correctly.'''
+    #     z = .65
+    #     exp = 0.5716699660851171
+    #     obs = inverse_fisher_z_transform(z)
+    #     assert_allclose(exp, obs)
+
+    # def test_fisher_population_correlation(self):
+    #     '''Test that the population rho and homogeneity coeff are correct.'''
+    #     # example from Sokal and Rohlf Biometry pg. 580 - 582
+    #     rs = array([.29, .7, .58, .56, .55, .67, .65, .61, .64, .56])
+    #     ns = array([100, 46, 28, 74, 33, 27, 52, 26, 20, 17])
+    #     zbar = .615268
+    #     X2 = 15.26352
+    #     pop_r = .547825
+    #     hval = chisqprob(X2, len(ns) - 1)
+    #     obs_p_rho, obs_hval = fisher_population_correlation(rs, ns)
+    #     assert_allclose(obs_p_rho, pop_r)
+    #     assert_allclose(obs_hval, hval)
+    #     # test with nans
+    #     rs = array([.29, .7, nan, .58, .56, .55, .67, .65, .61, .64, .56])
+    #     ns = array([100, 46, 400, 28, 74, 33, 27, 52, 26, 20, 17])
+    #     obs_p_rho, obs_hval = fisher_population_correlation(rs, ns)
+    #     assert_allclose(obs_p_rho, pop_r)
+    #     assert_allclose(obs_hval, hval)
+    #     # test with short vectors
+    #     rs = [.6, .5, .4, .6, .7]
+    #     ns = [10, 12, 42, 11, 3]
+    #     obs_p_rho, obs_hval = fisher_population_correlation(rs, ns)
+    #     assert_allclose(obs_p_rho, nan)
+    #     assert_allclose(obs_hval, nan)
+
+    # def test_assign_correlation_pval(self):
+    #     '''Test that correlation pvalues are assigned correctly with each meth.
+    #     '''
+    #     # test with parametric t distribution, use example from Sokal and Rohlf
+    #     # Biometry pg 576.
+    #     r = .86519
+    #     n = 12
+    #     ts = 5.45618  # only 5 sig figs in sokal and rohlf
+    #     exp = tprob(ts, n - 2)
+    #     obs = assign_correlation_pval(r, n, 'parametric_t_distribution')
+    #     assert_allclose(exp, obs, eps=10 ** -5)
+    #     # test with too few samples
+    #     n = 3
+    #     self.assertRaises(AssertionError, assign_correlation_pval, r, n,
+    #                       'parametric_t_distribution')
+    #     # test with fisher_z_transform
+    #     r = .29
+    #     n = 100
+    #     z = 0.29856626366017841  # .2981 in biometry
+    #     exp = z_transform_pval(z, n)
+    #     obs = assign_correlation_pval(r, n, 'fisher_z_transform')
+    #     assert_allclose(exp, obs, eps=10 ** -5)
+    #     r = .61
+    #     n = 26
+    #     z = 0.70892135942740819  # .7089 in biometry
+    #     exp = z_transform_pval(z, n)
+    #     obs = assign_correlation_pval(r, n, 'fisher_z_transform')
+    #     assert_allclose(exp, obs, eps=10 ** -5)
+    #     # prove that we can have specify the other options, and as long as we
+    #     # dont have bootstrapped selected we are fine.
+    #     v1 = array([10, 11, 12])
+    #     v2 = array([10, 14, 15])
+    #     obs = assign_correlation_pval(r, n, 'fisher_z_transform',
+    #                                   permutations=1000, perm_test_fn=pearson, v1=v1, v2=v2)
+    #     assert_allclose(exp, obs)
+    #     # test with bootstrapping, seed for reproducibility.
+    #     seed(0)
+    #     v1 = array([54, 71, 60, 54, 42, 64, 43, 89, 96, 38])
+    #     v2 = array([79, 52, 56, 92, 7, 8, 2, 83, 77, 87])
+    #     #c = corrcoef(v1,v2)[0][1]
+    #     exp = .357
+    #     obs = assign_correlation_pval(0.33112494, 20000, 'bootstrapped',
+    #                                   permutations=1000, perm_test_fn=pearson, v1=v1, v2=v2)
+    #     assert_allclose(exp, obs)
+    #     # make sure it throws an error
+    #     self.assertRaises(ValueError, assign_correlation_pval, 7, 20000,
+    #                       'bootstrapped', perm_test_fn=pearson, v1=None, v2=v2)
+    #     # test that it does properly with kendall
+    #     exp = kendall_pval(r, n)
+    #     obs = assign_correlation_pval(r, n, 'kendall')
+    #     assert_allclose(exp, obs)
 
 # execute tests if called from command line
 if __name__ == '__main__':
