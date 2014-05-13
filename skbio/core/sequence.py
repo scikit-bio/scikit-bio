@@ -208,12 +208,12 @@ class BiologicalSequence(Sequence):
 
     @classmethod
     def iupac_standard_characters(cls):
-        """Return the non-degenerate IUPAC nucleotide characters.
+        """Return the non-degenerate IUPAC characters.
 
         Returns
         -------
         set
-            Non-degenerate IUPAC nucleotide characters.
+            Non-degenerate IUPAC characters.
 
         """
         return set()
@@ -225,8 +225,8 @@ class BiologicalSequence(Sequence):
         Returns
         -------
         dict of sets
-            Mapping of IUPAC degenerate nucleotide character to the set of
-            non-degenerate IUPAC nucleotide characters it represents.
+            Mapping of IUPAC degenerate character to the set of
+            non-degenerate IUPAC characters it represents.
 
         """
         return {}
