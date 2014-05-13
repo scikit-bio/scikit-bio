@@ -531,8 +531,8 @@ class SequenceCollection(object):
         This is useful when writing sequences out for use with programs that
         are picky about their sequence ids (e.g., raXML).
 
-        The integer-based ids will be strings, for consistency (e.g.,
-        if prefix is passed) and begin at 1.
+        The integer-based ids will be strings, for consistency (e.g., if prefix
+        is passed) and begin at 1.
 
         References
         ----------
