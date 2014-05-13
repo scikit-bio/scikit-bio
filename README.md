@@ -56,11 +56,11 @@ scikit-bio began from code derived from [PyCogent](http://www.pycogent.org) and 
 Installation
 ------------
 
-In order to install sci-kit bio first install numpy
+In order to install sci-kit bio first install numpy:
 
     pip install numpy
 
-Then install scikit-bio
+Then install scikit-bio:
 
     pip install scikit-bio
 
@@ -68,7 +68,7 @@ If you're using a newer version of pip and scikit-bio fails to install, you may 
 
     pip install --allow-all-external --allow-unverified scikit-bio --process-dependency-links .
 
-If you'd like to install the book's dependencies manually (or some other way than using pip), here's what you'll need:
+If you'd like to install the dependencies manually (or some other way than using pip), you can find those here:
 
 - [Python](http://www.python.org/) 2.7
 - [numpy](http://www.numpy.org/) >= 1.7
