@@ -145,23 +145,23 @@ class FastaTests(TestCase):
         exp5 = {'SequenceID': '5', 'Sequence': 'ggccc', 'Qual': None,
                 'QualID': None}
 
-        obs1 = gen.next()
+        obs1 = next(gen)
         self.assertEqual(obs1, exp1)
         self.assertFalse(wk.failed)
 
-        obs2 = gen.next()
+        obs2 = next(gen)
         self.assertEqual(obs2, exp2)
         self.assertFalse(wk.failed)
 
-        obs3 = gen.next()
+        obs3 = next(gen)
         self.assertEqual(obs3, exp3)
         self.assertFalse(wk.failed)
 
-        obs4 = gen.next()
+        obs4 = next(gen)
         self.assertEqual(obs4, exp4)
         self.assertFalse(wk.failed)
 
-        obs5 = gen.next()
+        obs5 = next(gen)
         self.assertEqual(obs5, exp5)
         self.assertFalse(wk.failed)
 
@@ -180,35 +180,35 @@ class FastaTests(TestCase):
         exp5 = {'SequenceID': '5', 'Sequence': 'ggccc', 'Qual': arange(1, 6),
                 'QualID': '5'}
 
-        obs1 = gen.next()
+        obs1 = next(gen)
         self.assertTrue((obs1['Qual'] == exp1['Qual']).all())
         obs1.pop('Qual')
         exp1.pop('Qual')
         self.assertEqual(obs1, exp1)
         self.assertFalse(wk.failed)
 
-        obs2 = gen.next()
+        obs2 = next(gen)
         self.assertTrue((obs2['Qual'] == exp2['Qual']).all())
         obs2.pop('Qual')
         exp2.pop('Qual')
         self.assertEqual(obs2, exp2)
         self.assertFalse(wk.failed)
 
-        obs3 = gen.next()
+        obs3 = next(gen)
         self.assertTrue((obs3['Qual'] == exp3['Qual']).all())
         obs3.pop('Qual')
         exp3.pop('Qual')
         self.assertEqual(obs3, exp3)
         self.assertFalse(wk.failed)
 
-        obs4 = gen.next()
+        obs4 = next(gen)
         self.assertTrue((obs4['Qual'] == exp4['Qual']).all())
         obs4.pop('Qual')
         exp4.pop('Qual')
         self.assertEqual(obs4, exp4)
         self.assertFalse(wk.failed)
 
-        obs5 = gen.next()
+        obs5 = next(gen)
         self.assertTrue((obs5['Qual'] == exp5['Qual']).all())
         obs5.pop('Qual')
         exp5.pop('Qual')
@@ -251,19 +251,19 @@ class FastqTests(TestCase):
         exp3 = {'SequenceID': '3', 'Sequence': 'taa', 'QualID': '3',
                 'Qual': array([36, 37, 38])}
 
-        obs1 = gen.next()
+        obs1 = next(gen)
         self.assertTrue((obs1['Qual'] == exp1['Qual']).all())
         obs1.pop('Qual')
         exp1.pop('Qual')
         self.assertEqual(obs1, exp1)
 
-        obs2 = gen.next()
+        obs2 = next(gen)
         self.assertTrue((obs2['Qual'] == exp2['Qual']).all())
         obs2.pop('Qual')
         exp2.pop('Qual')
         self.assertEqual(obs2, exp2)
 
-        obs3 = gen.next()
+        obs3 = next(gen)
         self.assertTrue((obs3['Qual'] == exp3['Qual']).all())
         obs3.pop('Qual')
         exp3.pop('Qual')

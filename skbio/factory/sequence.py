@@ -76,8 +76,11 @@ To be polite, lets now remove the files we just created:
 # ----------------------------------------------------------------------------
 
 import os
-from itertools import chain, izip
+from itertools import chain
 from gzip import open as gzip_open
+
+from future.utils.six.moves import zip
+
 from skbio.core.iterator import FastaIterator, FastqIterator
 
 
@@ -192,8 +195,8 @@ def factory(seqs, qual=None, constructor=None, **kwargs):
 
     i_qual, o_qual = _determine_types_and_openers(qual)
 
-    seqs = [_open_or_none(o, f) for f, o in izip(seqs, o_seqs)]
-    qual = [_open_or_none(o, f) for f, o in izip(qual or [], o_qual or [])]
+    seqs = [_open_or_none(o, f) for f, o in zip(seqs, o_seqs)]
+    qual = [_open_or_none(o, f) for f, o in zip(qual or [], o_qual or [])]
 
     if not qual:
         qual = None
@@ -209,6 +212,6 @@ def factory(seqs, qual=None, constructor=None, **kwargs):
         seqs_constructor = i_seqs[0]
         gen = seqs_constructor(seq=seqs, qual=qual, **kwargs)
     else:
-        gen = chain(*[c(seq=[fp], **kwargs) for c, fp in izip(i_seqs, seqs)])
+        gen = chain(*[c(seq=[fp], **kwargs) for c, fp in zip(i_seqs, seqs)])
 
     return gen
