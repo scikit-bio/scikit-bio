@@ -147,7 +147,7 @@ def LabeledRecordFinder(is_label_line, constructor=str.strip, ignore=is_empty):
         curr = []
         for l in lines:
             try:
-                l = l.decode('utf-8')
+                l = str(l.decode('utf-8'))
             except:
                 pass
 

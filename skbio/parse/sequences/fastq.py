@@ -41,7 +41,7 @@ def _drop_id_marker(s):
     """Drop the first character and decode bytes to text"""
     id_ = s[1:]
     try:
-        return id_.decode('utf-8')
+        return str(id_.decode('utf-8'))
     except:
         return id_
 
@@ -142,7 +142,7 @@ def parse_fastq(data, strict=False, phred_offset=33):
         elif linetype == SEQUENCE:
             seq = line
             try:
-                seq = seq.decode("utf-8")
+                seq = str(seq.decode("utf-8"))
             except:
                 pass
         elif linetype == QUALID:
