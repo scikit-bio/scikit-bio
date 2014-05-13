@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 """Unit tests for the skbio.util.trie module"""
-from __future__ import division
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -10,8 +9,11 @@ from __future__ import division
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from unittest import TestCase, main
-from itertools import izip
+from __future__ import division
+from future.builtins import zip
+
+from sys import version_info
+from unittest import TestCase, main, skipUnless
 
 from skbio.util.trie import CompressedTrie, _CompressedNode, fasta_to_pairlist
 
@@ -141,14 +143,18 @@ class CompressedTrieTests(TestCase):
         self.assertEqual(self.empty_trie.size, 1)
         self.assertEqual(self.trie.size, 10)
 
+    @skipUnless(version_info.major < 3,
+                "See https://github.com/biocore/scikit-bio/issues/270")
     def test_prefix_map(self):
         """Should map prefix to values"""
         exp = {"1": ["6", "2", "0", "5"],
                "8": ["7"],
                "3": [],
                "4": []}
-        self.assertEqual(self.trie.prefix_map, exp)
+        self.assertEqual(exp, self.trie.prefix_map)
 
+    @skipUnless(version_info.major < 3,
+                "See https://github.com/biocore/scikit-bio/issues/270")
     def test_insert(self):
         """Correctly inserts a new key into the trie"""
         t = CompressedTrie(self.data)
@@ -160,7 +166,7 @@ class CompressedTrieTests(TestCase):
                "3": [],
                "4": [],
                "8": []}
-        self.assertEqual(t.prefix_map, exp)
+        self.assertEqual(exp, t.prefix_map)
 
     def test_find(self):
         """Correctly founds the values present on the trie"""
@@ -196,7 +202,7 @@ class FastaToPairlistTests(TestCase):
                ("CAA", "sid_7"),
                ("CACCA", "sid_8")]
 
-        for obs, exp in izip(fasta_to_pairlist(self.seqs), exp):
+        for obs, exp in zip(fasta_to_pairlist(self.seqs), exp):
             self.assertEqual(obs, exp)
 
 if __name__ == '__main__':

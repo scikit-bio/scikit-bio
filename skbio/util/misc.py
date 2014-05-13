@@ -18,7 +18,7 @@ Functions
    flatten
    remove_files
    safe_md5
-
+   is_casava_v180_or_later
 """
 from __future__ import division
 
@@ -36,13 +36,43 @@ from os.path import exists, isdir
 from functools import partial
 
 
+def is_casava_v180_or_later(header_line):
+    """Check if the header looks like it is Illumina software post-casava v1.8
+
+    Parameters
+    ----------
+    header_line : bytes
+        A header line
+
+    Returns
+    -------
+    bool
+        ``True`` for if casava v1.8+, otherwise ``False``
+
+    Examples
+    --------
+    >>> from skbio.util.misc import is_casava_v180_or_later
+    >>> print is_casava_v180_or_later('@foo')
+    False
+    >>> id_ = '@M00176:17:000000000-A0CNA:1:1:15487:1773 1:N:0:0'
+    >>> print is_casava_v180_or_later(id_)
+    True
+    """
+    if not header_line.startswith(b'@'):
+        raise ValueError("Non-header line passed in!")
+    fields = header_line.split(b':')
+
+    return len(fields) == 10 and fields[7] in b'YN'
+
+
 def safe_md5(open_file, block_size=2 ** 20):
     """Computes an md5 sum without loading the file into memory
 
     Parameters
     ----------
     open_file : file object
-        open file handle to the archive to compute the checksum
+        open file handle to the archive to compute the checksum. It
+        must be open as a binary file
     block_size : int, optional
         size of the block taken per iteration
 
@@ -68,6 +98,7 @@ def safe_md5(open_file, block_size=2 ** 20):
     >>> x.hexdigest()
     'ab07acbb1e496801937adfa772424bf7'
     >>> fd.close()
+
     """
     md5 = hashlib.md5()
     data = True

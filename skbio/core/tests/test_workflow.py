@@ -8,9 +8,9 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from itertools import izip
+from future.builtins import zip
 from collections import defaultdict
-from skbio.core.workflow import Workflow, not_none
+from skbio.core.workflow import Workflow, not_none, requires, method
 from unittest import TestCase, main
 
 
@@ -23,7 +23,7 @@ def construct_iterator(**kwargs):
     if len(to_gen) == 1:
         return (x for x in to_gen[0])
     else:
-        return izip(*to_gen)
+        return zip(*to_gen)
 
 
 class MockWorkflow(Workflow):
@@ -31,20 +31,20 @@ class MockWorkflow(Workflow):
         self.state[0] = None
         self.state[1] = item
 
-    @Workflow.method(priority=90)
-    @Workflow.requires(option='A', values=True)
+    @method(priority=90)
+    @requires(option='A', values=True)
     def wf_groupA(self):
         self.methodA1()
         self.methodA2()
 
-    @Workflow.method()
-    @Workflow.requires(option='B', values=True)
+    @method()
+    @requires(option='B', values=True)
     def wf_groupB(self):
         self.methodB1()
         self.methodB2()
 
-    @Workflow.method(priority=10)
-    @Workflow.requires(option='C', values=True)
+    @method(priority=10)
+    @requires(option='C', values=True)
     def wf_groupC(self):
         self.methodC1()
         self.methodC2()
@@ -72,7 +72,7 @@ class MockWorkflow(Workflow):
         else:
             self.state = [name, self.state[-1]]
 
-    @Workflow.requires(option='foo', values=[1, 2, 3])
+    @requires(option='foo', values=[1, 2, 3])
     def methodB2(self):
         name = 'B2'
         self.stats[name] += 1
@@ -89,7 +89,7 @@ class MockWorkflow(Workflow):
             self.failed = True
         self.state = [name, self.state[-1]]
 
-    @Workflow.requires(option='C2', values=[1, 2, 3])
+    @requires(option='C2', values=[1, 2, 3])
     def methodC2(self):
         name = 'C2'
         self.stats[name] += 1
@@ -114,7 +114,7 @@ class WorkflowTests(TestCase):
         obj = self.obj_debug(gen)
 
         exp = ['C1', 1]
-        obs = obj.next()
+        obs = next(obj)
         self.assertEqual(obs, exp)
 
         exp_trace = set([('wf_groupA', 0),
@@ -182,24 +182,24 @@ class WorkflowTests(TestCase):
         # pass in a failed callback to capture the result, and pause execution
         gen = self.obj_short(iter_, sf, ff)
 
-        r1 = gen.next()
+        r1 = next(gen)
         self.assertEqual(r1, ['C2', 1])
         self.assertFalse(self.obj_short.failed)
 
-        r2 = gen.next()
+        r2 = next(gen)
         self.assertEqual(r2, ['C2', 2])
         self.assertFalse(self.obj_short.failed)
 
-        r3 = gen.next()
+        r3 = next(gen)
         self.assertEqual(self.obj_short.state, ['A2', 'fail A2'])
         self.assertTrue(self.obj_short.failed)
         self.assertEqual(r3, ['A2', 'fail A2'])
 
-        r4 = gen.next()
+        r4 = next(gen)
         self.assertEqual(r4, ['C2', 4])
         self.assertFalse(self.obj_short.failed)
 
-        r5 = gen.next()
+        r5 = next(gen)
         self.assertEqual(r5, ['C2', 5])
         self.assertFalse(self.obj_short.failed)
 
@@ -215,23 +215,23 @@ class WorkflowTests(TestCase):
         # pass in a failed callback to capture the result, and pause execution
         gen = self.obj_noshort(iter_, sf, ff)
 
-        r1 = gen.next()
+        r1 = next(gen)
         self.assertEqual(r1, ['C1', 1])
         self.assertFalse(self.obj_noshort.failed)
 
-        r2 = gen.next()
+        r2 = next(gen)
         self.assertEqual(r2, ['C1', 2])
         self.assertFalse(self.obj_noshort.failed)
 
-        _ = gen.next()
+        _ = next(gen)
         self.assertEqual(self.obj_noshort.state, ['C1', 'fail A2'])
         self.assertTrue(self.obj_noshort.failed)
 
-        r4 = gen.next()
+        r4 = next(gen)
         self.assertEqual(r4, ['C1', 4])
         self.assertFalse(self.obj_noshort.failed)
 
-        r5 = gen.next()
+        r5 = next(gen)
         self.assertEqual(r5, ['C1', 5])
         self.assertFalse(self.obj_noshort.failed)
 
@@ -245,8 +245,8 @@ class MockWorkflowReqTest(Workflow):
     def initialize_state(self, item):
         self.state = [None, item]
 
-    @Workflow.method(priority=5)
-    @Workflow.requires(state=lambda x: x[-1] < 3)
+    @method(priority=5)
+    @requires(state=lambda x: x[-1] < 3)
     def wf_needs_data(self):
         name = 'needs_data'
         self.stats[name] += 1
@@ -254,7 +254,7 @@ class MockWorkflowReqTest(Workflow):
             self.failed = True
         self.state = [name, self.state[-1]]
 
-    @Workflow.method(priority=10)
+    @method(priority=10)
     def wf_always_run(self):
         name = 'always_run'
         self.stats[name] += 1
@@ -262,8 +262,8 @@ class MockWorkflowReqTest(Workflow):
             self.failed = True
         self.state = [name, self.state[-1]]
 
-    @Workflow.method(priority=20)
-    @Workflow.requires(option='cannot_be_none', values=not_none)
+    @method(priority=20)
+    @requires(option='cannot_be_none', values=not_none)
     def wf_run_if_not_none(self):
         name = 'run_if_not_none'
         self.stats[name] += 1
@@ -355,7 +355,7 @@ class RequiresTests(TestCase):
 
 class PriorityTests(TestCase):
     def test_dec(self):
-        @Workflow.method(priority=10)
+        @method(priority=10)
         def foo(x, y, z):
             """doc check"""
             return x + y + z

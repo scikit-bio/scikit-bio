@@ -19,12 +19,13 @@ class ParseFastqTests(TestCase):
 
     def setUp(self):
         """ Initialize variables to be used by the tests """
-        self.FASTQ_EXAMPLE = FASTQ_EXAMPLE.split('\n')
-        self.FASTQ_EXAMPLE_2 = FASTQ_EXAMPLE_2.split('\n')
+        self.FASTQ_EXAMPLE = FASTQ_EXAMPLE.split(b'\n')
+        self.FASTQ_EXAMPLE_2 = FASTQ_EXAMPLE_2.split(b'\n')
 
     def test_parse(self):
         """sequence and info objects should correctly match"""
-        for label, seq, qual in parse_fastq(self.FASTQ_EXAMPLE):
+        for label, seq, qual in parse_fastq(self.FASTQ_EXAMPLE,
+                                            phred_offset=64):
             self.assertTrue(label in DATA)
             self.assertEqual(seq, DATA[label]["seq"])
             self.assertTrue((qual == DATA[label]["qual"]).all())
@@ -36,52 +37,52 @@ class ParseFastqTests(TestCase):
 
 DATA = {
     "GAPC_0015:6:1:1259:10413#0/1":
-    dict(seq='AACACCAAACTTCTCCACCACGTGAGCTACAAAAG',
+    dict(seq=b'AACACCAAACTTCTCCACCACGTGAGCTACAAAAG',
          qual=array([32, 32, 32, 32, 25, 30, 20, 29, 32, 29, 35, 30, 35, 33,
                      34, 35, 33, 35, 35, 32, 30, 12, 34, 30, 35, 35, 25, 20,
                      28, 20, 28, 25, 28, 23, 6])),
     "GAPC_0015:6:1:1283:11957#0/1":
-    dict(seq='TATGTATATATAACATATACATATATACATACATA',
+    dict(seq=b'TATGTATATATAACATATACATATATACATACATA',
          qual=array([29, 11, 26, 27, 16, 25, 29, 31, 27, 25, 25, 30, 32, 32,
                      32, 33, 35, 30, 28, 28, 32, 34, 20, 32, 32, 35, 32, 28,
                      33, 20, 32, 32, 34, 34, 34])),
     "GAPC_0015:6:1:1284:10484#0/1":
-    dict(seq='TCAGTTTTCCTCGCCATATTTCACGTCCTAAAGCG',
+    dict(seq=b'TCAGTTTTCCTCGCCATATTTCACGTCCTAAAGCG',
          qual=array([21, 13, 31, 29, 29, 21, 31, 29, 26, 31, 25, 30, 28, 30,
                      30, 32, 32, 25, 29, 32, 30, 19, 26, 29, 28, 25, 34, 34,
                      32, 30, 31, 12, 34, 12, 31])),
     "GAPC_0015:6:1:1287:17135#0/1":
-    dict(seq='TGTGCCTATGGAAGCAGTTCTAGGATCCCCTAGAA',
+    dict(seq=b'TGTGCCTATGGAAGCAGTTCTAGGATCCCCTAGAA',
          qual=array([30, 33, 33, 35, 35, 35, 12, 28, 35, 35, 35, 28, 35, 28,
                      35, 20, 11, 20, 19, 29, 11, 26, 28, 29, 29,  9, 28, 27,
                      23, 33, 30, 20, 32, 30, 11])),
     "GAPC_0015:6:1:1293:3171#0/1":
-    dict(seq="AAAGAAAGGAAGAAAAGAAAAAGAAACCCGAGTTA",
+    dict(seq=b"AAAGAAAGGAAGAAAAGAAAAAGAAACCCGAGTTA",
              qual=array([34, 32, 34, 34, 34, 21, 31, 27, 25, 25, 35, 33, 36,
                          35, 36, 33, 31, 12, 34, 33, 33, 33, 34, 23, 34, 33,
                          33, 35, 25, 35, 35, 32, 33, 30, 35])),
     "GAPC_0015:6:1:1297:10729#0/1":
-    dict(seq="TAATGCCAAAGAAATATTTCCAAACTACATGCTTA",
+    dict(seq=b"TAATGCCAAAGAAATATTTCCAAACTACATGCTTA",
              qual=array([20, 28, 35, 35, 12, 34, 34, 32, 32, 34, 33, 35, 35,
                          29, 31, 35, 33, 35, 35, 35, 35, 35, 12, 35, 35, 35,
                          28, 35, 35, 20, 35, 35, 25, 12, 30])),
     "GAPC_0015:6:1:1299:5940#0/1":
-    dict(seq="AATCAAGAAATGAAGATTTATGTATGTGAAGAATA",
+    dict(seq=b"AATCAAGAAATGAAGATTTATGTATGTGAAGAATA",
              qual=array([36, 35, 36, 36, 34, 35, 38, 38, 38, 36, 38, 38, 38,
                          36, 32, 36, 36, 32, 30, 32, 35, 32, 15, 35, 32, 25,
                          34, 34, 32, 30, 37, 37, 35, 36, 37])),
     "GAPC_0015:6:1:1308:6996#0/1":
-    dict(seq="TGGGACACATGTCCATGCTGTGGTTTTAACCGGCA",
+    dict(seq=b"TGGGACACATGTCCATGCTGTGGTTTTAACCGGCA",
              qual=array([33, 29, 32, 33, 12, 25, 32, 25, 30, 30, 35, 35, 25,
                          33, 32, 30, 30, 20, 35, 35, 11, 31, 24, 29, 28, 35,
                          28, 35, 32, 35, 33, 20, 20, 20, 35])),
     "GAPC_0015:6:1:1314:13295#0/1":
-    dict(seq="AATATTGCTTTGTCTGAACGATAGTGCTCTTTGAT",
+    dict(seq=b"AATATTGCTTTGTCTGAACGATAGTGCTCTTTGAT",
          qual=array([35, 12, 35, 35, 28, 28, 36, 36, 36, 36, 36, 33, 33, 25,
                      36, 32, 20, 32, 32, 32, 34, 12, 25, 20, 28, 32, 33, 32,
                      32, 32, 34, 26, 35, 35, 35])),
     "GAPC_0015:6:1:1317:3403#0/1":
-    dict(seq="TTGTTTCCACTTGGTTGATTTCACCCCTGAGTTTG",
+    dict(seq=b"TTGTTTCCACTTGGTTGATTTCACCCCTGAGTTTG",
          # had to add space in qual line
          qual=array([28, 28, 28, 26, 20, 25, 20, 19, 33, 12, 34, 34, 32, 32,
                      28, 31, 21, 26, 31, 34, 34, 35, 35, 32, 35, 35, 30, 27,
@@ -90,7 +91,7 @@ DATA = {
 }
 
 
-FASTQ_EXAMPLE = r"""@GAPC_0015:6:1:1259:10413#0/1
+FASTQ_EXAMPLE = br"""@GAPC_0015:6:1:1259:10413#0/1
 AACACCAAACTTCTCCACCACGTGAGCTACAAAAG
 +GAPC_0015:6:1:1259:10413#0/1
 ````Y^T]`]c^cabcacc`^Lb^ccYT\T\Y\WF
@@ -131,7 +132,7 @@ TTGTTTCCACTTGGTTGATTTCACCCCTGAGTTTG
 +GAPC_0015:6:1:1317:3403#0/1
 \\\ZTYTSaLbb``\_UZ_bbcc`cc^[ac\a\Tc"""
 
-FASTQ_EXAMPLE_2 = r"""@GAPC_0017:6:1:1259:10413#0/1
+FASTQ_EXAMPLE_2 = br"""@GAPC_0017:6:1:1259:10413#0/1
 AACACCAAACTTCTCCACCACGTGAGCTACAAAAG
 +GAPC_0015:6:1:1259:10413#0/1
 ````Y^T]`]c^cabcacc`^Lb^ccYT\T\Y\WF

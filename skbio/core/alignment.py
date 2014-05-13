@@ -10,7 +10,7 @@ collections and alignments. These can be composed of generic sequences,
 nucelotide sequences, DNA sequences, and RNA sequences. By default, input is
 not validated, except that sequence identifiers must be unique, but all
 contructor methods take a validate option which checks different features of
-the input based on `SequenceCollection` type.
+the input based on ``SequenceCollection`` type.
 
 Classes
 -------
@@ -48,7 +48,6 @@ Examples
 <SequenceCollection: n=2; mean +/- std length=26.50 +/- 1.50>
 
 """
-from __future__ import division
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -58,8 +57,11 @@ from __future__ import division
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from __future__ import division
+from future.builtins import zip, range
+from future.utils import viewkeys
+
 from collections import Counter, defaultdict
-from itertools import izip
 from warnings import warn
 
 import numpy as np
@@ -71,6 +73,42 @@ from skbio.core.distance import DistanceMatrix
 
 class SequenceCollection(object):
     """Class for storing collections of biological sequences.
+
+    Parameters
+    ----------
+    seqs : list of `skbio.core.sequence.BiologicalSequence` objects
+        The `skbio.core.sequence.BiologicalSequence` objects to load into
+        a new `SequenceCollection` object.
+    validate : bool, optional
+        If True, runs the `is_valid` method after construction and raises
+        `SequenceCollectionError` if ``is_valid == False``.
+
+    Raises
+    ------
+    skbio.core.exception.SequenceCollectionError
+        If ``validate == True`` and ``is_valid == False``.
+
+    See Also
+    --------
+    skbio.core.sequence.BiologicalSequence
+    skbio.core.sequence.NucelotideSequence
+    skbio.core.sequence.DNASequence
+    skbio.core.sequence.RNASequence
+    SequenceCollection
+    Alignment
+    skbio.parse.sequences
+    skbio.parse.sequences.parse_fasta
+
+    Examples
+    --------
+    >>> from skbio.core.alignment import SequenceCollection
+    >>> from skbio.core.sequence import DNA
+    >>> sequences = [DNA('ACCGT', identifier="seq1"),
+    ...              DNA('AACCGGT', identifier="seq2")]
+    >>> s1 = SequenceCollection(sequences)
+    >>> s1
+    <SequenceCollection: n=2; mean +/- std length=6.00 +/- 1.00>
+
     """
 
     @classmethod
@@ -139,49 +177,6 @@ class SequenceCollection(object):
         return cls(data, validate=validate)
 
     def __init__(self, seqs, validate=False):
-        r"""Initialize a `SequenceCollection` object
-
-        Parameters
-        ----------
-        seqs : list of `skbio.core.sequence.BiologicalSequence` objects
-            The `skbio.core.sequence.BiologicalSequence` objects to load into
-            a new `SequenceCollection` object.
-        validate : bool, optional
-            If True, runs the `is_valid` method after construction and raises
-            `SequenceCollectionError` if ``is_valid == False``.
-
-        Returns
-        -------
-        SequenceCollection (or a derived class)
-            The new `SequenceCollection` object.
-
-        Raises
-        ------
-        skbio.core.exception.SequenceCollectionError
-            If ``validate == True`` and ``is_valid == False``.
-
-        See Also
-        --------
-        skbio.core.sequence.BiologicalSequence
-        skbio.core.sequence.NucelotideSequence
-        skbio.core.sequence.DNASequence
-        skbio.core.sequence.RNASequence
-        SequenceCollection
-        Alignment
-        skbio.parse.sequences
-        skbio.parse.sequences.parse_fasta
-
-        Examples
-        --------
-        >>> from skbio.core.alignment import SequenceCollection
-        >>> from skbio.core.sequence import DNA
-        >>> sequences = [DNA('ACCGT', identifier="seq1"),
-        ...              DNA('AACCGGT', identifier="seq2")]
-        >>> s1 = SequenceCollection(sequences)
-        >>> s1
-        <SequenceCollection: n=2; mean +/- std length=6.00 +/- 1.00>
-
-        """
         self._data = seqs
         self._identifier_to_index = {}
         for i, seq in enumerate(self._data):
@@ -247,7 +242,7 @@ class SequenceCollection(object):
         elif len(self) != len(other):
             return False
         else:
-            for self_seq, other_seq in izip(self, other):
+            for self_seq, other_seq in zip(self, other):
                 if self_seq != other_seq:
                     return False
         return True
@@ -795,11 +790,19 @@ class SequenceCollection(object):
 class Alignment(SequenceCollection):
     """Class for storing alignments of biological sequences.
 
+    The ``Alignment`` class adds convenience methods to the
+    ``SequenceCollection`` class to make it easy to work with alignments of
+    biological sequences.
+
     Notes
     -----
     By definition, all of the sequences in an alignment must be of the same
     length. For this reason, an alignment can be thought of as a matrix of
     sequences (rows) by positions (columns).
+
+    See Also
+    --------
+    SequenceCollection
 
     """
 
@@ -846,10 +849,10 @@ class Alignment(SequenceCollection):
         sequence_count = self.sequence_count()
         dm = np.zeros((sequence_count, sequence_count))
         identifiers = []
-        for i in xrange(sequence_count):
+        for i in range(sequence_count):
             self_i = self[i]
             identifiers.append(self_i.identifier)
-            for j in xrange(i):
+            for j in range(i):
                 dm[i, j] = dm[j, i] = self_i.distance(self[j])
         return DistanceMatrix(dm, identifiers)
 
@@ -1226,7 +1229,7 @@ class Alignment(SequenceCollection):
         base_frequencies = self.k_word_frequencies(k=1)
         gap_alphabet = self[0].gap_alphabet()
         seqs_to_keep = []
-        for seq, f in izip(self, base_frequencies):
+        for seq, f in zip(self, base_frequencies):
             gap_frequency = sum([f[c] for c in gap_alphabet])
             if gap_frequency <= maximum_gap_frequency:
                 seqs_to_keep.append(seq.identifier)
@@ -1365,10 +1368,10 @@ class Alignment(SequenceCollection):
         iupac_standard_characters = self[0].iupac_standard_characters()
         for f in self.position_frequencies():
             if (nan_on_non_standard_chars and
-                    len(set(f.keys()) - iupac_standard_characters) > 0):
+                    len(viewkeys(f) - iupac_standard_characters) > 0):
                 result.append(np.nan)
             else:
-                result.append(entropy(f.values(), base=base))
+                result.append(entropy(list(f.values()), base=base))
         return result
 
     def sequence_length(self):

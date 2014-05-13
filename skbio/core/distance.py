@@ -123,7 +123,6 @@ Data:
 True
 
 """
-from __future__ import division
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -133,9 +132,11 @@ from __future__ import division
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from __future__ import division
+from future.builtins import zip
+from future.utils.six import string_types
+
 from copy import deepcopy
-from itertools import izip
-from os.path import exists
 
 import numpy as np
 from scipy.spatial.distance import squareform
@@ -143,6 +144,7 @@ from scipy.spatial.distance import squareform
 from skbio.core.exception import (DissimilarityMatrixError,
                                   DissimilarityMatrixFormatError,
                                   DistanceMatrixError, MissingIDError)
+from skbio.util.io import open_file
 
 
 class DissimilarityMatrix(object):
@@ -253,77 +255,69 @@ class DissimilarityMatrix(object):
         # has finished). See:
         # http://mail.scipy.org/pipermail/numpy-tickets/2012-August/006749.html
 
-        fd = None
+        with open_file(dm_f, 'U') as dm_f:
 
-        # We use iter() as we want to take a single pass over the iterable and
-        # maintain our current position after finding the header (mainly
-        # necessary for something like a list of strings).
-        if isinstance(dm_f, str) and exists(dm_f):
-            # check if it's a valid path, if so read the contents
-            fd = open(dm_f, 'U')
-            dm_f = iter(fd)
-        else:
+            # We use iter() as we want to take a single pass over the
+            # iterable and maintain our current position after finding
+            # the header (mainly necessary for something like a list
+            # of strings).
             dm_f = iter(dm_f)
 
-        # Strategy:
-        #     - find the header
-        #     - initialize an empty ndarray
-        #     - for each row of data in the input file:
-        #         - populate the corresponding row in the ndarray with floats
+            # Strategy:
+            #   - find the header
+            #   - initialize an empty ndarray
+            #   - for each row of data in the input file:
+            #     - populate the corresponding row in the ndarray with floats
 
-        ids = cls._parse_ids(dm_f, delimiter)
-        num_ids = len(ids)
-        data = np.empty((num_ids, num_ids), dtype='float')
+            ids = cls._parse_ids(dm_f, delimiter)
+            num_ids = len(ids)
+            data = np.empty((num_ids, num_ids), dtype=np.float64)
 
-        # curr_row_idx keeps track of the row index within the data matrix.
-        # We're not using enumerate() because there may be
-        # empty/whitespace-only lines throughout the data matrix. We want to
-        # ignore those and only count the actual rows of data.
-        curr_row_idx = 0
-        for line in dm_f:
-            line = line.strip()
+            # curr_row_idx keeps track of the row index within the data matrix.
+            # We're not using enumerate() because there may be
+            # empty/whitespace-only lines throughout the data matrix. We want
+            # to ignore those and only count the actual rows of data.
+            curr_row_idx = 0
+            for line in dm_f:
+                line = line.strip()
 
-            if not line:
-                continue
-            elif curr_row_idx >= num_ids:
-                # We've hit a nonempty line after we already filled the data
-                # matrix. Raise an error because we shouldn't ignore extra
-                # data.
-                raise DissimilarityMatrixFormatError(
-                    "Encountered extra rows without corresponding IDs in the "
-                    "header.")
+                if not line:
+                    continue
+                elif curr_row_idx >= num_ids:
+                    # We've hit a nonempty line after we already filled the
+                    # data matrix. Raise an error because we shouldn't ignore
+                    # extra data.
+                    raise DissimilarityMatrixFormatError(
+                        "Encountered extra rows without corresponding IDs in"
+                        " the header.")
 
-            tokens = line.split(delimiter)
+                tokens = line.split(delimiter)
 
-            # -1 because the first element contains the current ID.
-            if len(tokens) - 1 != num_ids:
-                raise DissimilarityMatrixFormatError(
-                    "There are %d values in row number %d, which is not equal "
-                    "to the number of IDs in the header (%d)."
-                    % (len(tokens) - 1, curr_row_idx + 1, num_ids))
+                # -1 because the first element contains the current ID.
+                if len(tokens) - 1 != num_ids:
+                    raise DissimilarityMatrixFormatError(
+                        "There are %d values in row number %d, which is not"
+                        " equal to the number of IDs in the header (%d)."
+                        % (len(tokens) - 1, curr_row_idx + 1, num_ids))
 
-            curr_id = tokens[0].strip()
-            expected_id = ids[curr_row_idx]
-            if curr_id == expected_id:
-                data[curr_row_idx, :] = np.asarray(tokens[1:], dtype='float')
-            else:
-                raise DissimilarityMatrixFormatError(
-                    "Encountered mismatched IDs while parsing the "
-                    "dissimilarity matrix file. Found '%s' but expected '%s'. "
-                    "Please ensure that the IDs match between the "
-                    "dissimilarity matrix header (first row) and the row "
-                    "labels (first column)." % (curr_id, expected_id))
+                curr_id = tokens[0].strip()
+                expected_id = ids[curr_row_idx]
+                if curr_id == expected_id:
+                    data[curr_row_idx, :] = np.asarray(tokens[1:], dtype=float)
+                else:
+                    raise DissimilarityMatrixFormatError(
+                        "Encountered mismatched IDs while parsing the "
+                        "dissimilarity matrix file. Found '%s' but expected "
+                        "'%s'. Please ensure that the IDs match between the "
+                        "dissimilarity matrix header (first row) and the row "
+                        "labels (first column)." % (curr_id, expected_id))
 
-            curr_row_idx += 1
+                curr_row_idx += 1
 
         if curr_row_idx != num_ids:
             raise DissimilarityMatrixFormatError(
                 "Expected %d row(s) of data, but found %d." % (num_ids,
                                                                curr_row_idx))
-
-        # if the input was a file path close the file
-        if fd is not None:
-            fd.close()
 
         return cls(data, ids)
 
@@ -599,7 +593,7 @@ class DissimilarityMatrix(object):
         .. shownumpydoc
 
         """
-        if isinstance(index, basestring):
+        if isinstance(index, string_types):
             if index in self._id_index:
                 return self.data[self._id_index[index]]
             else:
@@ -622,23 +616,25 @@ class DissimilarityMatrix(object):
 
         Parameters
         ----------
-        out_f : file-like object
-            File-like object to write serialized data to. Must have a ``write``
-            method. It is the caller's responsibility to close `out_f` when
-            done (if necessary).
+        out_f : file-like object or filename
+            File-like object to write serialized data to, or name of
+            file. If it's a file-like object, it must have a ``write``
+            method, and it won't be closed. Else, it is opened and
+            closed after writing.
         delimiter : str, optional
             Delimiter used to separate elements in output format.
 
         """
-        formatted_ids = self._format_ids(delimiter)
-        out_f.write(formatted_ids)
-        out_f.write('\n')
-
-        for id_, vals in izip(self.ids, self.data):
-            out_f.write(id_)
-            out_f.write(delimiter)
-            out_f.write(delimiter.join(np.asarray(vals, dtype=np.str)))
+        with open_file(out_f, 'w') as out_f:
+            formatted_ids = self._format_ids(delimiter)
+            out_f.write(formatted_ids)
             out_f.write('\n')
+
+            for id_, vals in zip(self.ids, self.data):
+                out_f.write(id_)
+                out_f.write(delimiter)
+                out_f.write(delimiter.join(np.asarray(vals, dtype=np.str)))
+                out_f.write('\n')
 
     @staticmethod
     def _parse_ids(dm_f, delimiter):
@@ -657,7 +653,7 @@ class DissimilarityMatrix(object):
                 "dissimilarity matrix file. Please verify that the file is "
                 "not empty.")
         else:
-            return map(lambda e: e.strip(), header_line.split(delimiter))
+            return [e.strip() for e in header_line.split(delimiter)]
 
     def _validate(self, data, ids):
         """Validate the data array and IDs.
@@ -708,7 +704,7 @@ class DissimilarityMatrix(object):
     def _is_id_pair(self, index):
         return (isinstance(index, tuple) and
                 len(index) == 2 and
-                all(map(lambda e: isinstance(e, basestring), index)))
+                all(map(lambda e: isinstance(e, string_types), index)))
 
     def _format_ids(self, delimiter):
         return delimiter.join([''] + list(self.ids))
