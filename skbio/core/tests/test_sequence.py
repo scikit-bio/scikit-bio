@@ -859,6 +859,11 @@ class ProteinSequenceTests(TestCase):
         self.assertEqual(self.p1.iupac_characters(), exp)
         self.assertEqual(ProteinSequence.iupac_characters(), exp)
 
+    def test_nondegenerates(self):
+        exp = [ProteinSequence('AD'), ProteinSequence('AN')]
+        # Sort based on sequence string, as order is not guaranteed.
+        obs = sorted(ProteinSequence('AB').nondegenerates(), key=str)
+        self.assertEqual(obs, exp)
 
 if __name__ == "__main__":
     main()
