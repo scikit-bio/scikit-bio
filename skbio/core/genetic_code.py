@@ -341,7 +341,7 @@ class GeneticCode(object):
         nucleotide_sequence : NucleotideSequence
             sequence to be translated
         start : int, optional
-            position to begin translation (used to implement frames)
+            position to begin translation
 
         Returns
         -------
@@ -350,9 +350,10 @@ class GeneticCode(object):
 
         Notes
         -----
-        ``translate`` returns the translation of the entire sequence, (i.e.,
-        ``nucleotide_sequence[start:]``. It is the user's responsibility to
-        identify trim to the open reading frame if that is desired.
+        ``translate`` returns the translation of the entire sequence, (i.e., of
+        ``nucleotide_sequence[start:]``). It is the user's responsibility to
+        trim to an open reading frame, either from the input or using the
+        output, if that is desired.
 
         See Also
         --------
@@ -447,14 +448,14 @@ class GeneticCode(object):
         <ProteinSequence: YVS (length: 3)>
 
         """
-        reverse_nucleotide_sequence = nucleotide_sequence.rc()
+        rc_nucleotide_sequence = nucleotide_sequence.rc()
         results = []
         for start in range(3):
             translation = self.translate(nucleotide_sequence, start)
             results.append(translation)
 
         for start in range(3):
-            translation = self.translate(reverse_nucleotide_sequence, start)
+            translation = self.translate(rc_nucleotide_sequence, start)
             results.append(translation)
 
         return results
