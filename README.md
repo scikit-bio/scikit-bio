@@ -49,7 +49,7 @@ entirely) distributed with scikit-bio.
 Installation
 ------------
 
-In order to install scikit bio first install numpy:
+In order to install scikit-bio:
 
     pip install numpy
     pip install scikit-bio
