@@ -289,8 +289,8 @@ class GeneticCodeTests(TestCase):
         # check translation with invalid codon(s)
         self.assertEqual(sgc.translate('AAANNNCNC123UUU'), Protein('KXXXF'))
 
-    def test_sixframes(self):
-        """GeneticCode sixframes should provide six-frame translation"""
+    def test_translate_six_frames(self):
+        """GeneticCode translate_six_frames provides six-frame translation"""
 
         class fake_rna(str):
 
@@ -308,13 +308,13 @@ class GeneticCodeTests(TestCase):
         test_rna = fake_rna('AUGCUAACAUAAA', 'UUUAUGUUAGCAU')
         #                    .  .  .  .  .    .  .  .  .  .
         sgc = GeneticCode(self.sgc)
-        self.assertEqual(sgc.sixframes(test_rna), [
+        self.assertEqual(sgc.translate_six_frames(test_rna), [
             Protein('MLT*'), Protein('C*HK'), Protein('ANI'), Protein('FMLA'),
             Protein('LC*H'), Protein('YVS')])
 
         # should also actually work with an RNA or DNA sequence!!!
         test_rna = RNA('AUGCUAACAUAAA')
-        self.assertEqual(sgc.sixframes(test_rna), [
+        self.assertEqual(sgc.translate_six_frames(test_rna), [
             Protein('MLT*'), Protein('C*HK'), Protein('ANI'), Protein('FMLA'),
             Protein('LC*H'), Protein('YVS')])
 

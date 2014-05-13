@@ -135,7 +135,7 @@ class GeneticCode(object):
     get_stop_indices
     is_start
     is_stop
-    sixframes
+    translate_six_frames
     translate
     __repr__
     __getitem__
@@ -407,7 +407,7 @@ class GeneticCode(object):
         found = [index for index in found if index % 3 == start]
         return found
 
-    def sixframes(self, nucleotide_sequence):
+    def translate_six_frames(self, nucleotide_sequence):
         """Returns six-frame translation as a dictionary object
 
         Parameters
@@ -427,7 +427,7 @@ class GeneticCode(object):
         >>> from skbio.core.sequence import RNA
         >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSS'
         ...                   'RRVVVVAAAADDEEGGGG')
-        >>> results = sgc.sixframes(RNA('AUGCUAACAUAAA'))
+        >>> results = sgc.translate_six_frames(RNA('AUGCUAACAUAAA'))
         >>> print results[0]
         MLT*
         >>> print type(results[0])
