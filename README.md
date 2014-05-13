@@ -25,7 +25,7 @@
     
     
 ---
-[![Build Status](https://travis-ci.org/biocore/scikit-bio.png?branch=master)](https://travis-ci.org/biocore/scikit-bio) [![Coverage Status](https://coveralls.io/repos/biocore/scikit-bio/badge.png)](https://coveralls.io/r/biocore/scikit-bio)
+[![Build Status](https://travis-ci.org/biocore/scikit-bio.png?branch=master)](https://travis-ci.org/biocore/scikit-bio)
 
 Core objects, functions and statistics for working with biological data in Python.
 
@@ -48,29 +48,6 @@ entirely) distributed with scikit-bio.
 
 See the [list of all of scikit-bio's contributors](https://github.com/biocore/scikit-bio/graphs/contributors).
 
-Summaries of our weekly developer meetings are posted on HackPad. Click [here](https://hackpad.com/2014-scikit-bio-developer-meeting-notes-1S2RbMqy0iM) to view the meeting notes for 2014.
-
-The pre-history of scikit-bio
------------------------------
-
-scikit-bio began from code derived from [PyCogent](http://www.pycogent.org) and
-[QIIME](http://www.qiime.org), and the contributors and/or copyright holders
-have agreed to make the code they wrote for PyCogent and/or QIIME available
-under the BSD license. The contributors to PyCogent and/or QIIME modules that
-have been ported to scikit-bio are: Rob Knight
-([@rob-knight](https://github.com/rob-knight)), Gavin Huttley
-([@gavin-huttley](https://github.com/gavin-huttley)), Daniel McDonald
-([@wasade](https://github.com/wasade)), Micah Hamady, Antonio Gonzalez
-([@antgonza](https://github.com/antgonza)), Sandra Smit, Greg Caporaso
-([@gregcaporaso](https://github.com/gregcaporaso)), Jai Ram Rideout
-([@ElBrogrammer](https://github.com/ElBrogrammer)), Cathy Lozupone
-([@clozupone](clozupone)), Mike Robeson
-([@mikerobeson](https://github.com/mikerobeson)), Marcin Cieslik, Peter
-Maxwell, Jeremy Widmann, Zongzhi Liu, Michael Dwan, Logan Knecht
-([@loganknecht](https://github.com/loganknecht)), Andrew Cochran, Jose Carlos
-Clemente ([@cleme](https://github.com/cleme)), Damien Coy, Levi McCracken, and
-Andrew Butterfield.
-
 Installation
 ------------
 
@@ -81,10 +58,6 @@ In order to install scikit bio first install numpy:
 Then install scikit-bio:
 
     pip install scikit-bio
-
-If you're using a newer version of pip and scikit-bio fails to install, you may need to modify the pip command to be:
-
-    pip install --allow-all-external --allow-unverified scikit-bio --process-dependency-links .
 
 If you'd like to install the dependencies manually (or some other way than using pip), you can find those here:
 
@@ -100,6 +73,10 @@ scikit-bio development
 
 If you're interested in getting involved in or learning about scikit-bio development, see [CONTRIBUTING.md](CONTRIBUTING.md), in this directory.
 
+The pre-history of scikit-bio
+-----------------------------
+
+scikit-bio began from code derived from [PyCogent](http://www.pycogent.org) and [QIIME](http://www.qiime.org), and the contributors and/or copyright holders have agreed to make the code they wrote for PyCogent and/or QIIME available under the BSD license. The contributors to PyCogent and/or QIIME modules that have been ported to scikit-bio are: Rob Knight (@rob-knight), Gavin Huttley (@gavin-huttley), Daniel McDonald (@wasade), Micah Hamady, Antonio Gonzalez (@antgonza), Sandra Smit, Greg Caporaso (@gregcaporaso), Jai Ram Rideout (@ElBrogrammer), Cathy Lozupone (@clozupone), Mike Robeson (@mikerobeson), Marcin Cieslik, Peter Maxwell, Jeremy Widmann, Zongzhi Liu, Michael Dwan, Logan Knecht (@loganknecht), Andrew Cochran, Jose Carlos Clemente (@cleme), Damien Coy, Levi McCracken, and Andrew Butterfield.
 
 Logo
 ----
