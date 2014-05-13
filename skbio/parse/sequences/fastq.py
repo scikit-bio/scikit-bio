@@ -45,6 +45,7 @@ def _drop_id_marker(s):
     except:
         return id_
 
+
 def parse_fastq(data, strict=False, phred_offset=33):
     r"""yields label, seq, and qual from a fastq file.
 
