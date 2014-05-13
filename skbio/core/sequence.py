@@ -1423,19 +1423,20 @@ class NucleotideSequence(BiologicalSequence):
         else:
             return self._genetic_code[first_codon] == "M"
 
-    def codons(self, offset=0, constructor=str):
+    def codons(self, start_position=0, constructor=str):
         """
         """
-        return self[offset:].k_words(k=3, overlapping=False,
-                                     constructor=constructor)
+        if start_position < 0:
+            raise IndexError("start_position cannot be less than 0")
+        return self[start_position:].k_words(k=3, overlapping=False,
+                                             constructor=constructor)
 
-    def translate(self):
+    def translate(self, start_position=0):
         """
         """
         result = []
-        for codon in self.codons():
+        for codon in self.codons(start_position=start_position):
             result.append(self._genetic_code[codon])
-        print result
         return ProteinSequence(''.join(result))
 
 
