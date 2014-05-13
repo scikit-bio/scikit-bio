@@ -514,6 +514,17 @@ class NucelotideSequenceTests(TestCase):
         self.assertEqual(self.b1.translate(genetic_code=gc), exp_b1)
         self.assertEqual(self.b2.translate(genetic_code=gc), exp_b2)
 
+    def test_has_terminal_stop(self):
+        self.assertEqual(self.empty.has_terminal_stop(), False)
+        self.assertEqual(self.b1.has_terminal_stop(), False)
+        self.assertEqual(self.b2.has_terminal_stop(), False)
+        self.assertEqual(NucleotideSequence("A").has_terminal_stop(), False)
+        self.assertEqual(NucleotideSequence("GA").has_terminal_stop(), False)
+
+        self.assertEqual(NucleotideSequence("UGA").has_terminal_stop(), True)
+        self.assertEqual(NucleotideSequence("TGA").has_terminal_stop(), True)
+        self.assertEqual(NucleotideSequence("CCUGA").has_terminal_stop(), True)
+
 
 class DNASequenceTests(TestCase):
 

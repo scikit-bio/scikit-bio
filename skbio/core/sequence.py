@@ -1381,17 +1381,31 @@ class NucleotideSequence(BiologicalSequence):
 
         return (cls(nondegen_seq, id_, desc) for nondegen_seq in result)
 
-    def translate(self, genetic_code=None):
+    def has_terminal_stop(self, genetic_code=None):
         """
         """
-        result = []
 
         if genetic_code is None:
             genetic_code = GeneticCodes[11]
 
+        last_codon = self[-3:]
+        print last_codon, len(last_codon)
+        if len(last_codon) != 3:
+            return False
+        else:
+            return genetic_code[last_codon] == "*"
+
+    def translate(self, genetic_code=None):
+        """
+        """
+        if genetic_code is None:
+            genetic_code = GeneticCodes[11]
+
+        result = []
+
         for i in range(0, len(self), 3):
             codon = self[i:i+3]
-            if len(codon) < 3:
+            if len(codon) != 3:
                 break
             else:
                 result.append(genetic_code[codon])
