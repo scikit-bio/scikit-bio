@@ -75,6 +75,7 @@ import re
 from collections import defaultdict
 
 from skbio.core.exception import GeneticCodeInitError, InvalidCodonError
+from skbio.core.sequence import Protein
 
 # py3k compatibility
 try:
@@ -332,7 +333,7 @@ class GeneticCode(object):
         else:
             raise InvalidCodonError("Codon or aa %s has wrong length" % item)
 
-    def translate(self, dna, start=0):
+    def translate(self, nucleotide_sequence, start=0):
         """Translates DNA to protein with current GeneticCode.
 
         Translates the entire sequence: it is the caller's responsibility to
@@ -340,15 +341,15 @@ class GeneticCode(object):
 
         Parameters
         ----------
-        dna : str
-            a string of nucleotides
+        nucleotide_sequence : str, NucleotideSequence
+            sequence to be translated
         start : int, optional
             position to begin translation (used to implement frames)
 
         Returns
         -------
-        str
-            string containing amino acid sequence.
+        ProteinSequence
+            translation of nucleotide_sequence
 
         Examples
         --------
@@ -356,24 +357,29 @@ class GeneticCode(object):
         >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSS'
         ...                   'RRVVVVAAAADDEEGGGG')
         >>> sgc.translate('AUGCAUGACUUUUGA', 1)
-        'CMTF'
+        <ProteinSequence: CMTF (length: 4)>
 
         """
-        # NOTE: should return Protein object when we have a class for it.
-        if not dna:
-            return ''
-        if start + 1 > len(dna):
-            raise ValueError("Translation starts after end of RNA")
-        return ''.join([self[dna[i:i + 3]] for i in
-                        range(start, len(dna) - 2, 3)])
+        if len(nucleotide_sequence) == 0:
+            return Protein('')
+        if start + 1 > len(nucleotide_sequence):
+            raise ValueError("Translation starts after end of"
+                             "NucleotideSequence")
 
-    def get_stop_indices(self, dna, start=0):
+        translation = []
+        for i in range(start, len(nucleotide_sequence) - 2, 3):
+            translation.append(self[nucleotide_sequence[i:i + 3]])
+        translation = Protein(''.join(translation))
+
+        return translation
+
+    def get_stop_indices(self, nucleotide_sequence, start=0):
         """returns indexes for stop codons in the specified frame
 
         Parameters
         ----------
-        dna : str
-            a string of nucleotides.
+        nucleotide_sequence : str, NucleotideSequence
+            sequence to be scanned for stop codons
         start : int, optional
             position where the search begins.
 
@@ -396,18 +402,18 @@ class GeneticCode(object):
         stops = self['*']
         stop_pattern = '(%s)' % '|'.join(stops)
         stop_pattern = re.compile(stop_pattern)
-        seq = str(dna)
+        seq = str(nucleotide_sequence)
         found = [hit.start() for hit in stop_pattern.finditer(seq)]
         found = [index for index in found if index % 3 == start]
         return found
 
-    def sixframes(self, dna):
+    def sixframes(self, nucleotide_sequence):
         """Returns six-frame translation as a dictionary object
 
         Parameters
         ----------
-        dna : str
-            a string of nucleotides.
+        nucleotide_sequence : NucleotideSequence
+            sequence to be scanned for stop codons
 
         Returns
         -------
@@ -421,13 +427,34 @@ class GeneticCode(object):
         >>> from skbio.core.sequence import RNA
         >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSS'
         ...                   'RRVVVVAAAADDEEGGGG')
-        >>> sgc.sixframes(RNA('AUGCUAACAUAAA'))
-        ['MLT*', 'C*HK', 'ANI', 'FMLA', 'LC*H', 'YVS']
+        >>> results = sgc.sixframes(RNA('AUGCUAACAUAAA'))
+        >>> print results[0]
+        MLT*
+        >>> print type(results[0])
+        <class 'skbio.core.sequence.ProteinSequence'>
+        >>> print results[1]
+        C*HK
+        >>> print results[2]
+        ANI
+        >>> print results[3]
+        FMLA
+        >>> print results[4]
+        LC*H
+        >>> print results[5]
+        YVS
 
         """
-        reverse = dna.rc()
-        return [self.translate(dna, start) for start in range(3)] + \
-               [self.translate(reverse, start) for start in range(3)]
+        reverse_nucleotide_sequence = nucleotide_sequence.rc()
+        results = []
+        for start in range(3):
+            translation = self.translate(nucleotide_sequence, start)
+            results.append(Protein(translation))
+
+        for start in range(3):
+            translation = self.translate(reverse_nucleotide_sequence, start)
+            results.append(Protein(translation))
+
+        return results
 
     def is_start(self, codon):
         """Checks if codon is a start codon

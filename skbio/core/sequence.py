@@ -73,7 +73,7 @@ NucleotideSequences can be translated using a GeneticCode object.
 >>> from skbio.core.genetic_code import GeneticCodes
 >>> gc = GeneticCodes[11]
 >>> gc.translate(d6)
-<ProteinSequence: MSK (length: 3)>
+<ProteinSequence: MSK* (length: 4)>
 
 """
 from __future__ import division
@@ -92,7 +92,6 @@ from itertools import product
 from scipy.spatial.distance import hamming
 
 from skbio.core.exception import BiologicalSequenceError
-from skbio.core.genetic_code import GeneticCodes
 
 
 class BiologicalSequence(Sequence):
