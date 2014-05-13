@@ -1223,17 +1223,6 @@ class NucleotideSequence(BiologicalSequence):
 
         return degen_map
 
-    def __init__(self, sequence, id="", description="",
-                 validate=False, genetic_code=None):
-        if genetic_code is None:
-            self._genetic_code = GeneticCodes[11]
-        else:
-            self._genetic_code = genetic_code
-
-        super(NucleotideSequence, self).__init__(sequence=sequence, id=id,
-                                                 description=description,
-                                                 validate=validate)
-
     def _complement(self, seq_iterator):
         """Returns `NucleotideSequence` that is complement of `seq_iterator`
 
@@ -1404,22 +1393,6 @@ class NucleotideSequence(BiologicalSequence):
         cls = self.__class__
 
         return (cls(nondegen_seq, id_, desc) for nondegen_seq in result)
-
-    def codons(self, start_position=0, constructor=str):
-        """
-        """
-        if start_position < 0:
-            raise IndexError("start_position cannot be less than 0")
-        return self[start_position:].k_words(k=3, overlapping=False,
-                                             constructor=constructor)
-
-    def translate(self, start_position=0):
-        """
-        """
-        result = []
-        for codon in self.codons(start_position=start_position):
-            result.append(self._genetic_code[codon])
-        return ProteinSequence(''.join(result))
 
 
 class DNASequence(NucleotideSequence):
