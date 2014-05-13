@@ -18,6 +18,7 @@
 
 from unittest import TestCase, main
 from skbio.core.ssw import (StripedSmithWaterman,
+                            AlignmentStructure,
                             striped_smith_waterman_alignment)
 
 
@@ -362,6 +363,13 @@ class TestStripedSmithWatermanAlignment(TestSSW):
 
 class TestAlignmentStructure(TestSSW):
 
+    def mock_object_factory(self, dictionary):
+        class MockAlignmentStructure(AlignmentStructure):
+            def __init__(self, _a, _b, _c):
+                for key in dictionary:
+                    setattr(self, key, dictionary[key])
+        return MockAlignmentStructure(None, None, 0)
+
     def test_works_for_dot_and_square_bracket_access(self):
         q_seq = "AGGGTAATTAGGCGTGTTCACCTA"
         query = StripedSmithWaterman(q_seq)
@@ -412,6 +420,75 @@ class TestAlignmentStructure(TestSSW):
             alignment = query(expected['target_sequence'])
             alignment.set_zero_based(not z)
             self.assertEqual(not z, alignment.is_zero_based())
+
+    def test__get_aligned_sequences(self):
+        generic_sequence = "123456789abcdefghijklmnopqrstuvwxyz"
+        tests = [  # `end_after_cigar` is how far end extends beyond
+                   # the cigar.
+            {
+                'cigar_tuples': [
+                    (4, 'M'), (3, 'I'), (1, 'D'), (15, 'M')
+                ],
+                'begin': 4,
+                'end_after_cigar': 2,
+                'gap_type': 'I',
+                'expected': "5678---9abcdefghijklmnop"
+            },
+            {
+                'cigar_tuples': [
+                    (12, 'M')
+                ],
+                'begin': 10,
+                'end_after_cigar': 0,
+                'gap_type': 'D',
+                'expected': "bcdefghijklm"
+            },
+            {
+                'cigar_tuples': [
+                    (10, 'D'), (1, 'M'), (3, 'I'), (2, 'M')
+                ],
+                'begin': 0,
+                'end_after_cigar': 5,
+                'gap_type': 'I',
+                'expected': "1---2345678"
+            },
+            {
+                'cigar_tuples': [
+                    (10, 'D'), (1, 'M'), (3, 'I'), (2, 'M')
+                ],
+                'begin': 3,
+                'end_after_cigar': 0,
+                'gap_type': 'D',
+                'expected': "----------456"
+            },
+            {
+                'cigar_tuples': [
+                    (1, 'I'), (4, 'M'), (3, 'I'), (1, 'D'), (8, 'M'), (8, 'D'),
+                    (2, 'I'), (6, 'M'), (1, 'I')
+                ],
+                'begin': 4,
+                'end_after_cigar': 3,
+                'gap_type': 'I',
+                'expected': "-5678---9abcdefg--hijklm-nop"
+            }
+        ]
+        for test in tests:
+            mock_object = self.mock_object_factory({})
+            end = test['end_after_cigar'] - 1 + test['begin'] + \
+                sum([le if t == 'M' else 0 for le, t in test['cigar_tuples']])
+            self.assertEquals(test['expected'],
+                              AlignmentStructure._get_aligned_sequence(
+                                  mock_object, generic_sequence,
+                                  test['cigar_tuples'], test['begin'],
+                                  end, test['gap_type']))
+
+    def test_get_aligned_query_target_sequence(self):
+        query = StripedSmithWaterman("AGGGTAATTAGGCGTGTTCACCTA")
+        alignment = query("AGTCGAAGGGTAATATAGGCGTGTCACCTA")
+        self.assertEqual(alignment.get_aligned_target_sequence(),
+                         "AGGGTAATATAGGCGT-GTCACCTA")
+        self.assertEqual(alignment.get_aligned_query_sequence(),
+                         "AGGGTAAT-TAGGCGTGTTCACCTA")
 
 if __name__ == '__main__':
     main()

@@ -373,6 +373,7 @@ cdef class AlignmentStructure:
 
         """
         return self._get_aligned_sequence(self.query_sequence,
+                                          self._tuples_from_cigar(),
                                           self.query_begin, self.query_end,
                                           "D")
 
@@ -391,31 +392,30 @@ cdef class AlignmentStructure:
 
         """
         return self._get_aligned_sequence(self.target_sequence,
+                                          self._tuples_from_cigar(),
                                           self.target_begin,
                                           self.target_end_optimal,
                                           "I")
 
-    def _get_aligned_sequence(self, sequence, begin, end, gap_type):
+    def _get_aligned_sequence(self, sequence, tuple_cigar, begin, end,
+                              gap_type):
         # Save the original index scheme and then set it to 0 (1/2)
         orig_z_base = self.is_zero_based()
         self.set_zero_based(True)
-
-        if self.query_sequence:
-            seq = sequence[begin : end + 1]
-            index = 0
-            aligned_sequence = []
-            for length, mid in self._tuples_from_cigar():
-                if mid == 'M':
-                    aligned_sequence += [seq[i] \
-                                        for i in range(index, length + index)]
-                    index += length
-                elif mid == gap_type:
-                    aligned_sequence += (['-'] * length)
-                else:
-                    pass
-            # Our sequence end is sometimes beyond the cigar:
-            aligned_sequence += [seq[i] for i in range(index, end - begin + 1)]
-
+        aligned_sequence = []
+        seq = sequence[begin:end + 1]
+        index = 0
+        for length, mid in tuple_cigar:
+            if mid == 'M':
+                aligned_sequence += [seq[i]
+                                     for i in range(index, length + index)]
+                index += length
+            elif mid == gap_type:
+                aligned_sequence += (['-'] * length)
+            else:
+                pass
+        # Our sequence end is sometimes beyond the cigar:
+        aligned_sequence += [seq[i] for i in range(index, end - begin + 1)]
         # Revert our index scheme to the original (2/2)
         self.set_zero_based(orig_z_base)
         return "".join(aligned_sequence)
