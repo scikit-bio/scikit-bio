@@ -8,10 +8,11 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from future.builtins import int
 from future.utils import viewitems
 
+from numbers import Integral
 from copy import deepcopy
+
 from skbio.core.exception import FieldError
 
 
@@ -31,7 +32,7 @@ def DelimitedSplitter(delimiter=None, max_splits=1):
 
     Note: leaves empty fields in place.
     """
-    is_int = isinstance(max_splits, int)
+    is_int = isinstance(max_splits, Integral)
     if is_int and (max_splits > 0):
         def parser(line):
             return [i.strip() for i in line.split(delimiter, max_splits)]
