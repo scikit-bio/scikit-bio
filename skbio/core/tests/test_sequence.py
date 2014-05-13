@@ -23,12 +23,12 @@ class BiologicalSequenceTests(TestCase):
     def setUp(self):
         self.b1 = BiologicalSequence('GATTACA')
         self.b2 = BiologicalSequence(
-            'ACCGGTACC', identifier="test-seq-2",
+            'ACCGGTACC', id="test-seq-2",
             description="A test sequence")
         self.b3 = BiologicalSequence(
-            'GREG', identifier="test-seq-3", description="A protein sequence")
+            'GREG', id="test-seq-3", description="A protein sequence")
         self.b4 = BiologicalSequence(
-            'PRTEIN', identifier="test-seq-4")
+            'PRTEIN', id="test-seq-4")
         self.b5 = BiologicalSequence(
             'LLPRTEIN', description="some description")
         self.b6 = BiologicalSequence('ACGTACGTACGT')
@@ -39,14 +39,14 @@ class BiologicalSequenceTests(TestCase):
         # init as string
         b = BiologicalSequence('ACCGGXZY')
         self.assertEqual(str(b), 'ACCGGXZY')
-        self.assertEqual(b.identifier, "")
+        self.assertEqual(b.id, "")
         self.assertEqual(b.description, "")
 
         # init as string with optional values
         b = BiologicalSequence(
             'ACCGGXZY', 'test-seq-1', 'The first test sequence')
         self.assertEqual(str(b), 'ACCGGXZY')
-        self.assertEqual(b.identifier, "test-seq-1")
+        self.assertEqual(b.id, "test-seq-1")
         self.assertEqual(b.description, "The first test sequence")
 
         # test init as a different string
@@ -56,13 +56,13 @@ class BiologicalSequenceTests(TestCase):
         # init as list
         b = BiologicalSequence(list('ACCGGXZY'))
         self.assertEqual(str(b), 'ACCGGXZY')
-        self.assertEqual(b.identifier, "")
+        self.assertEqual(b.id, "")
         self.assertEqual(b.description, "")
 
         # init as tuple
         b = BiologicalSequence(tuple('ACCGGXZY'))
         self.assertEqual(str(b), 'ACCGGXZY')
-        self.assertEqual(b.identifier, "")
+        self.assertEqual(b.id, "")
         self.assertEqual(b.description, "")
 
     def test_init_with_validation(self):
@@ -85,18 +85,18 @@ class BiologicalSequenceTests(TestCase):
         self.assertTrue(self.b2 != self.b3)
 
         # identicial sequences of the same type are equal, even if they have
-        # different identifiers and/or descriptions
+        # different ids and/or descriptions
         self.assertTrue(
             BiologicalSequence('ACGT') == BiologicalSequence('ACGT'))
         self.assertTrue(
-            BiologicalSequence('ACGT', identifier='a') ==
-            BiologicalSequence('ACGT', identifier='b'))
+            BiologicalSequence('ACGT', id='a') ==
+            BiologicalSequence('ACGT', id='b'))
         self.assertTrue(
             BiologicalSequence('ACGT', description='c') ==
             BiologicalSequence('ACGT', description='d'))
         self.assertTrue(
-            BiologicalSequence('ACGT', identifier='a', description='c') ==
-            BiologicalSequence('ACGT', identifier='b', description='d'))
+            BiologicalSequence('ACGT', id='a', description='c') ==
+            BiologicalSequence('ACGT', id='b', description='d'))
 
         # different type causes sequences to not be equal
         self.assertFalse(
@@ -233,10 +233,10 @@ class BiologicalSequenceTests(TestCase):
     def test_gap_alphabet(self):
         self.assertEqual(self.b1.gap_alphabet(), set('-.'))
 
-    def test_identifier(self):
-        self.assertEqual(self.b1.identifier, "")
-        self.assertEqual(self.b2.identifier, "test-seq-2")
-        self.assertEqual(self.b3.identifier, "test-seq-3")
+    def test_id(self):
+        self.assertEqual(self.b1.id, "")
+        self.assertEqual(self.b2.id, "test-seq-2")
+        self.assertEqual(self.b3.id, "test-seq-3")
 
     def test_count(self):
         self.assertEqual(self.b1.count('A'), 3)
@@ -353,14 +353,14 @@ class BiologicalSequenceTests(TestCase):
             ">test-seq-2:A test sequence\nACCGGTACC!")
 
     def test_upper(self):
-        b = NucleotideSequence('GAt.ACa-', identifier='x', description='42')
-        expected = NucleotideSequence('GAT.ACA-', identifier='x',
+        b = NucleotideSequence('GAt.ACa-', id='x', description='42')
+        expected = NucleotideSequence('GAT.ACA-', id='x',
                                       description='42')
         self.assertEqual(b.upper(), expected)
 
     def test_lower(self):
-        b = NucleotideSequence('GAt.ACa-', identifier='x', description='42')
-        expected = NucleotideSequence('gat.aca-', identifier='x',
+        b = NucleotideSequence('GAt.ACa-', id='x', description='42')
+        expected = NucleotideSequence('gat.aca-', id='x',
                                       description='42')
         self.assertEqual(b.lower(), expected)
 
@@ -371,7 +371,7 @@ class NucelotideSequenceTests(TestCase):
         self.empty = NucleotideSequence('')
         self.b1 = NucleotideSequence('GATTACA')
         self.b2 = NucleotideSequence(
-            'ACCGGUACC', identifier="test-seq-2",
+            'ACCGGUACC', id="test-seq-2",
             description="A test sequence")
 
     def test_alphabet(self):
@@ -501,13 +501,13 @@ class DNASequenceTests(TestCase):
         self.empty = DNASequence('')
         self.b1 = DNASequence('GATTACA')
         self.b2 = DNASequence(
-            'ACCGGTACC', identifier="test-seq-2",
+            'ACCGGTACC', id="test-seq-2",
             description="A test sequence")
         self.b3 = DNASequence(
-            'ACCGGUACC', identifier="bad-seq-1",
+            'ACCGGUACC', id="bad-seq-1",
             description="Not a DNA sequence")
         self.b4 = DNASequence(
-            'MRWSYKVHDBN', identifier="degen",
+            'MRWSYKVHDBN', id="degen",
             description="All of the degenerate bases")
         self.b5 = DNASequence('.G--ATTAC-A...')
 
@@ -653,13 +653,13 @@ class RNASequenceTests(TestCase):
         self.empty = RNASequence('')
         self.b1 = RNASequence('GAUUACA')
         self.b2 = RNASequence(
-            'ACCGGUACC', identifier="test-seq-2",
+            'ACCGGUACC', id="test-seq-2",
             description="A test sequence")
         self.b3 = RNASequence(
-            'ACCGGTACC', identifier="bad-seq-1",
+            'ACCGGTACC', id="bad-seq-1",
             description="Not a RNA sequence")
         self.b4 = RNASequence(
-            'MRWSYKVHDBN', identifier="degen",
+            'MRWSYKVHDBN', id="degen",
             description="All of the degenerate bases")
         self.b5 = RNASequence('.G--AUUAC-A...')
 

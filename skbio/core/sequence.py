@@ -26,11 +26,11 @@ Examples
 --------
 >>> from skbio.core.sequence import DNASequence, RNASequence
 
-New sequences are created with optional identifier and description fields.
+New sequences are created with optional id and description fields.
 
 >>> d1 = DNASequence('ACC--G-GGTA..')
->>> d1 = DNASequence('ACC--G-GGTA..',identifier="seq1")
->>> d1 = DNASequence('ACC--G-GGTA..',identifier="seq1",description="GFP")
+>>> d1 = DNASequence('ACC--G-GGTA..',id="seq1")
+>>> d1 = DNASequence('ACC--G-GGTA..',id="seq1",description="GFP")
 
 New sequences can also be created from existing sequences, for example as their
 reverse complement or degapped (i.e., unaligned) version.
@@ -92,8 +92,8 @@ class BiologicalSequence(Sequence):
     ----------
     sequence : python Sequence (e.g., str, list or tuple)
         The biological sequence.
-    identifier : str, optional
-        The sequence identifier (e.g., an accession number).
+    id : str, optional
+        The sequence id (e.g., an accession number).
     description : str, optional
         A description or comment about the sequence (e.g., "green
         fluorescent protein").
@@ -104,7 +104,7 @@ class BiologicalSequence(Sequence):
     Attributes
     ----------
     description
-    identifier
+    id
 
     Raises
     ------
@@ -180,10 +180,10 @@ class BiologicalSequence(Sequence):
         """
         return set('-.')
 
-    def __init__(self, sequence, identifier="", description="",
+    def __init__(self, sequence, id="", description="",
                  validate=False):
         self._sequence = ''.join(sequence)
-        self._identifier = identifier
+        self._id = id
         self._description = description
 
         if validate and not self.is_valid():
@@ -283,7 +283,7 @@ class BiologicalSequence(Sequence):
         """
         try:
             return self.__class__(self._sequence[i],
-                                  self.identifier, self.description)
+                                  self.id, self.description)
         except IndexError:
             raise IndexError(
                 "Position %d is out of range for %r." % (i, self))
@@ -455,12 +455,12 @@ class BiologicalSequence(Sequence):
         str
             String representation of the `BiologicalSequence`. This will be the
             full sequence, but will not contain information about the type, or
-            `self.identifier` or `self.description`.
+            `self.id` or `self.description`.
 
         See Also
         --------
         to_fasta
-        identifier
+        id
         description
         __repr__
 
@@ -491,16 +491,16 @@ class BiologicalSequence(Sequence):
         return self._description
 
     @property
-    def identifier(self):
-        """Return the identifier of the `BiologicalSequence`
+    def id(self):
+        """Return the id of the `BiologicalSequence`
 
         Returns
         -------
         str
-            The identifier attribute of the `BiologicalSequence`
+            The id attribute of the `BiologicalSequence`
 
         """
-        return self._identifier
+        return self._id
 
     def count(self, subsequence):
         """Returns the number of occurences of subsequence.
@@ -536,7 +536,7 @@ class BiologicalSequence(Sequence):
 
         Notes
         -----
-        The type, identifier, and description of the result will be the
+        The type, id, and description of the result will be the
         same as `self`.
 
         Examples
@@ -552,7 +552,7 @@ class BiologicalSequence(Sequence):
         """
         gaps = self.gap_alphabet()
         result = [e for e in self._sequence if e not in gaps]
-        return self.__class__(result, identifier=self._identifier,
+        return self.__class__(result, id=self._id,
                               description=self._description)
 
     def distance(self, other, distance_fn=None):
@@ -1038,7 +1038,7 @@ class BiologicalSequence(Sequence):
 
         """
         return self.__class__(self._sequence.lower(),
-                              self.identifier, self.description)
+                              self.id, self.description)
 
     def to_fasta(self, field_delimiter=" ", terminal_character="\n"):
         """Return the sequence as a fasta-formatted string
@@ -1047,7 +1047,7 @@ class BiologicalSequence(Sequence):
         ----------
         field_delimiter : str, optional
             The character(s) to use on the header line between the
-            `self.identifier` and `self.description`.
+            `self.id` and `self.description`.
 
         terminal_character : str, optional
             The last character to be included in the result (if you don't want
@@ -1070,17 +1070,17 @@ class BiologicalSequence(Sequence):
         >>> print s.to_fasta(terminal_character="")
         >
         ACACGACGTT
-        >>> t = BiologicalSequence('ACA',identifier='my-seq',description='h')
+        >>> t = BiologicalSequence('ACA',id='my-seq',description='h')
         >>> print t.to_fasta(terminal_character="")
         >my-seq h
         ACA
 
         """
         if self._description:
-            header_line = '%s%s%s' % (self._identifier, field_delimiter,
+            header_line = '%s%s%s' % (self._id, field_delimiter,
                                       self._description)
         else:
-            header_line = self._identifier
+            header_line = self._id
 
         return '>%s\n%s%s' % (
             header_line, str(self), terminal_character)
@@ -1096,7 +1096,7 @@ class BiologicalSequence(Sequence):
 
         """
         return self.__class__(self._sequence.upper(),
-                              self.identifier, self.description)
+                              self.id, self.description)
 
 
 class NucleotideSequence(BiologicalSequence):
@@ -1245,7 +1245,7 @@ class NucleotideSequence(BiologicalSequence):
                 raise BiologicalSequenceError(
                     "Don't know how to complement base %s. Is it in "
                     "%s.complement_map?" % (base, self.__class__.__name__))
-        return self.__class__(result, self._identifier, self._description)
+        return self.__class__(result, self._id, self._description)
 
     def complement(self):
         """Return the complement of the `NucleotideSequence`
@@ -1324,7 +1324,7 @@ class NucleotideSequence(BiologicalSequence):
         -------
         generator
             Generator yielding all possible nondegenerate versions of the
-            sequence. Each sequence will have the same type, identifier, and
+            sequence. Each sequence will have the same type, id, and
             description as `self`.
 
         Raises
@@ -1374,7 +1374,7 @@ class NucleotideSequence(BiologicalSequence):
         # Cache lookups here as there may be a lot of sequences to generate.
         # Could use functools.partial, but it ends up being a little slower
         # than this method.
-        id_ = self.identifier
+        id_ = self.id
         desc = self.description
         cls = self.__class__
 
