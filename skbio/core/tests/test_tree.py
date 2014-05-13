@@ -281,17 +281,19 @@ class TreeTests(TestCase):
         self.assertEqual(obs, exp)
 
         with self.assertRaises(MissingNodeError):
-            _ = t.find('does not exist')
+            t.find('does not exist')
 
     def test_find_cache_bug(self):
         """First implementation did not force the cache to be at the root"""
-        t = TreeNode.from_newick("((a,b)c,(d,e)f);")
+        t = TreeNode.from_newick("((a,b)c,(d,e)f,(g,h)f);")
+        exp_tip_cache_keys = set(['a', 'b', 'd', 'e', 'g', 'h'])
+        exp_non_tip_cache_keys = set(['c', 'f'])
         tip_a = t.children[0].children[0]
-        tip_a.create_node_cache()
-        tip_e = tip_a.find('e')
-        self.assertEqual(tip_a._node_cache, {})
-        self.assertEqual(sorted(t._node_cache.keys()), ['a', 'b', 'c',
-                                                        'd', 'e', 'f'])
+        tip_a.create_caches()
+        self.assertEqual(tip_a._tip_cache, {})
+        self.assertEqual(set(t._tip_cache), exp_tip_cache_keys)
+        self.assertEqual(set(t._non_tip_cache), exp_non_tip_cache_keys)
+        self.assertEqual(t._non_tip_cache['f'], [t.children[1], t.children[2]])
 
     def test_find_by_id(self):
         """Find a node by id"""
@@ -307,7 +309,7 @@ class TreeTests(TestCase):
         self.assertEqual(obs, exp)
 
         with self.assertRaises(MissingNodeError):
-            _ = t1.find_by_id(100)
+            t1.find_by_id(100)
 
     def test_find_by_func(self):
         """Find nodes by a function"""
