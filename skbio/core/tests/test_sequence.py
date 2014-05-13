@@ -507,12 +507,16 @@ class NucelotideSequenceTests(TestCase):
     def test_translate_custom_genetic_code(self):
         gc = GeneticCode("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
                          "AAAAAAAAAAAAAAAAA")
+        empty = NucleotideSequence('', genetic_code=gc)
+        b1 = NucleotideSequence('GATTACA', genetic_code=gc)
+        b2 = NucleotideSequence('ACCGGUACC', id="test-seq-2",
+                                description="A test sequence", genetic_code=gc)
         exp_empty = ProteinSequence('')
         exp_b1 = ProteinSequence('AA')
         exp_b2 = ProteinSequence('AAA')
-        self.assertEqual(self.empty.translate(genetic_code=gc), exp_empty)
-        self.assertEqual(self.b1.translate(genetic_code=gc), exp_b1)
-        self.assertEqual(self.b2.translate(genetic_code=gc), exp_b2)
+        self.assertEqual(empty.translate(), exp_empty)
+        self.assertEqual(b1.translate(), exp_b1)
+        self.assertEqual(b2.translate(), exp_b2)
 
     def test_has_terminal_stop(self):
         self.assertEqual(self.empty.has_terminal_stop(), False)

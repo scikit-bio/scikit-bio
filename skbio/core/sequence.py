@@ -1223,6 +1223,17 @@ class NucleotideSequence(BiologicalSequence):
 
         return degen_map
 
+    def __init__(self, sequence, id="", description="",
+                 validate=False, genetic_code=None):
+        if genetic_code is None:
+            self._genetic_code = GeneticCodes[11]
+        else:
+            self._genetic_code = genetic_code
+
+        super(NucleotideSequence, self).__init__(sequence=sequence, id=id,
+                                                 description=description,
+                                                 validate=validate)
+
     def _complement(self, seq_iterator):
         """Returns `NucleotideSequence` that is complement of `seq_iterator`
 
@@ -1394,49 +1405,38 @@ class NucleotideSequence(BiologicalSequence):
 
         return (cls(nondegen_seq, id_, desc) for nondegen_seq in result)
 
-    def has_terminal_stop(self, genetic_code=None):
+    def has_terminal_stop(self):
         """
         """
-
-        if genetic_code is None:
-            genetic_code = GeneticCodes[11]
-
         last_codon = self[-3:]
         if len(last_codon) != 3:
             return False
         else:
-            return genetic_code[last_codon] == "*"
+            return self._genetic_code[last_codon] == "*"
 
-    def has_leading_start(self, genetic_code=None):
+    def has_leading_start(self):
         """
         """
-
-        if genetic_code is None:
-            genetic_code = GeneticCodes[11]
-
         first_codon = self[:3]
         if len(first_codon) != 3:
             return False
         else:
-            return genetic_code[first_codon] == "M"
+            return self._genetic_code[first_codon] == "M"
 
-    def translate(self, genetic_code=None):
+    def codons(self, offset=0, constructor=str):
         """
         """
-        if genetic_code is None:
-            genetic_code = GeneticCodes[11]
+        return self[offset:].k_words(k=3, overlapping=False,
+                                     constructor=constructor)
 
+    def translate(self):
+        """
+        """
         result = []
-
-        for i in range(0, len(self), 3):
-            codon = self[i:i+3]
-            if len(codon) != 3:
-                break
-            else:
-                result.append(genetic_code[codon])
-
-        result = ''.join(result)
-        return ProteinSequence(result)
+        for codon in self.codons():
+            result.append(self._genetic_code[codon])
+        print result
+        return ProteinSequence(''.join(result))
 
 
 class DNASequence(NucleotideSequence):
