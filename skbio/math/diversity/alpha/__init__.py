@@ -6,8 +6,8 @@ Alpha diversity measures (:mod:`skbio.math.diversity.alpha`)
 .. currentmodule:: skbio.math.diversity.alpha
 
 This package provides implementations of various alpha diversity measures,
-including measures of richness, dominance, and evenness. Some functions also
-have the ability to generate confidence intervals (CIs).
+including measures of richness, dominance, and evenness. Some functions
+generate confidence intervals (CIs). These functions have the suffix ``_ci``.
 
 All alpha diversity measures accept a vector of counts within a single sample,
 where each count is the number of individuals (e.g., biological sequences) that
@@ -66,7 +66,7 @@ Functions
    berger_parker_d
    brillouin_d
    chao1
-   chao1_confidence
+   chao1_ci
    dominance
    doubles
    enspie
@@ -138,7 +138,7 @@ Let's see how many singletons and doubletons there are in the sample:
 # ----------------------------------------------------------------------------
 
 from .ace import ace
-from .chao1 import chao1, chao1_confidence
+from .chao1 import chao1, chao1_ci
 from .base import (
     berger_parker_d, brillouin_d, dominance, doubles, enspie, equitability,
     esty_ci, fisher_alpha, goods_coverage, heip_e, kempton_taylor_q, margalef,

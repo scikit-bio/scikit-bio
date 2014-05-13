@@ -14,8 +14,7 @@ from unittest import TestCase, main
 import numpy as np
 import numpy.testing as npt
 
-from skbio.math.diversity.alpha.chao1 import (chao1, chao1_confidence,
-                                              _chao1_var)
+from skbio.math.diversity.alpha.chao1 import chao1, chao1_ci, _chao1_var
 
 
 class Chao1Tests(TestCase):
@@ -34,25 +33,25 @@ class Chao1Tests(TestCase):
         self.assertEqual(chao1(self.no_doubles), 5)
         self.assertEqual(chao1(self.no_doubles, bias_corrected=False), 5)
 
-    def test_chao1_confidence(self):
+    def test_chao1_ci(self):
         # Should match observed results from EstimateS. NOTE: EstimateS rounds
         # to 2 dp.
-        obs = chao1_confidence(self.counts)
+        obs = chao1_ci(self.counts)
         npt.assert_allclose(obs, (9.07, 17.45), rtol=0.01)
 
-        obs = chao1_confidence(self.counts, bias_corrected=False)
+        obs = chao1_ci(self.counts, bias_corrected=False)
         npt.assert_allclose(obs, (9.17, 21.89), rtol=0.01)
 
-        obs = chao1_confidence(self.no_singles)
+        obs = chao1_ci(self.no_singles)
         npt.assert_array_almost_equal(obs, (4, 4.95), decimal=2)
 
-        obs = chao1_confidence(self.no_singles, bias_corrected=False)
+        obs = chao1_ci(self.no_singles, bias_corrected=False)
         npt.assert_array_almost_equal(obs, (4, 4.95), decimal=2)
 
-        obs = chao1_confidence(self.no_doubles)
+        obs = chao1_ci(self.no_doubles)
         npt.assert_array_almost_equal(obs, (4.08, 17.27), decimal=2)
 
-        obs = chao1_confidence(self.no_doubles, bias_corrected=False)
+        obs = chao1_ci(self.no_doubles, bias_corrected=False)
         npt.assert_array_almost_equal(obs, (4.08, 17.27), decimal=2)
 
     def test_chao1_var(self):

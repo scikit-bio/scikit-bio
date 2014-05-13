@@ -37,7 +37,7 @@ def chao1(counts, bias_corrected=True):
 
     See Also
     --------
-    chao1_confidence
+    chao1_ci
 
     Notes
     -----
@@ -71,7 +71,7 @@ def chao1(counts, bias_corrected=True):
         return o + s * (s - 1) / (2 * (d + 1))
 
 
-def chao1_confidence(counts, bias_corrected=True, zscore=1.96):
+def chao1_ci(counts, bias_corrected=True, zscore=1.96):
     """Calculate chao1 confidence interval.
 
     Parameters
