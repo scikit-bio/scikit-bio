@@ -710,7 +710,7 @@ cdef class StripedSmithWaterman:
             sequence_order = "ARNDCQEGHILKMFPSTWYVBZX*"
         else:
             sequence_order = "ACGTN"
-        cdef np.int8_t i = 0
+        cdef int i = 0
         length = len(sequence_order)
         cdef np.ndarray[np.int8_t, ndim = 1, mode = "c"] py_list_matrix = \
             np.empty(length*length, dtype=np.int8)

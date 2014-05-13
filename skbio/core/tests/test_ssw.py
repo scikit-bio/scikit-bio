@@ -254,7 +254,26 @@ class TestStripedSmithWaterman(TestSSW):
         self._check_alignment(alignment, expected)
 
     def test_protein_sequence_is_usable(self):
-        pass
+        expected = {
+            'optimal_alignment_score': 277,
+            'suboptimal_alignment_score': 153,
+            'query_begin': 0,
+            'query_end': 52,
+            'target_begin': 0,
+            'target_end_optimal': 70,
+            'target_end_suboptimal': 27,
+            'cigar': '15M1D15M1I14M18D8M',
+            'query_sequence':
+                'VHLTGEEKSAVAALWGKVNVDEVGGEALGRXLLVVYPWTQRFFESFSDLSTPDABVMSNP \
+                 KVKAHGK',
+            'target_sequence': 'VHLTPEEKSAVTALWBGKVNVDEVGGEALGRLLVVYPWTQRFFES \
+                 FGDLSTPD*'
+        }
+        query = StripedSmithWaterman(expected['query_sequence'],
+                                     protein=True,
+                                     substitution_matrix=self.blosum50)
+        alignment = query(expected['target_sequence'])
+        self._check_alignment(alignment, expected)
 
     def test_substitution_matrix(self):
         pass
