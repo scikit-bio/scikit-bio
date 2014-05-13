@@ -54,9 +54,6 @@ Installation
 In order to install scikit bio first install numpy:
 
     pip install numpy
-
-Then install scikit-bio:
-
     pip install scikit-bio
 
 If you'd like to install the dependencies manually (or some other way than using pip), you can find those here:
