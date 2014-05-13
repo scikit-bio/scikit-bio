@@ -28,11 +28,13 @@ FASTA_PARSERS_DATA = {
     'empty': '',
     }
 
+
 class IterableData(object):
     """Store fasta data as lists of strings."""
     def setUp(self):
         for attr, val in FASTA_PARSERS_DATA.items():
             setattr(self, attr, val.split('\n'))
+
 
 class FileData(object):
     """Store fasta data as file names pointing to the data."""
