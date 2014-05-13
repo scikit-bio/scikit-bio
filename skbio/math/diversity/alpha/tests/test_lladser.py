@@ -16,7 +16,7 @@ from nose.tools import (assert_equal, assert_almost_equal, assert_raises,
 
 from skbio.math.diversity.alpha.lladser import (
     lladser_pe, lladser_ci, _expand_counts, _lladser_point_estimates,
-    _get_interval_for_r_new_species, _lladser_ci_series, _lladser_ci_from_r)
+    _get_interval_for_r_new_otus, _lladser_ci_series, _lladser_ci_from_r)
 
 
 def test_lladser_pe():
@@ -56,17 +56,17 @@ def test_lladser_point_estimates():
     assert_true(0.45 < sum / reps and sum / reps < 0.55)
 
 
-def test_get_interval_for_r_new_species():
+def test_get_interval_for_r_new_otus():
     s = [5, 1, 5, 1, 2, 3, 1, 5, 3, 2, 5]
     expected = [(3, set([5]), 4, 0),
                 (4, set([5, 1]), 6, 1),
                 (4, set([5, 1, 2]), 9, 4)]
-    for x, y in zip(_get_interval_for_r_new_species(s, 2), expected):
+    for x, y in zip(_get_interval_for_r_new_otus(s, 2), expected):
         assert_equal(x, y)
 
     s = [5, 5, 5, 5, 5]
     # never saw new one
-    assert_equal(list(_get_interval_for_r_new_species(s, 2)), [])
+    assert_equal(list(_get_interval_for_r_new_otus(s, 2)), [])
 
 
 def test_lladser_ci_series_exact():

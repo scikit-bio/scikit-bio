@@ -145,14 +145,14 @@ def _lladser_point_estimates(sample, r=10):
     if r <= 2:
         raise ValueError("r must be greater than or equal to 3.")
 
-    for count, seen, cost, i in _get_interval_for_r_new_species(sample, r):
+    for count, seen, cost, i in _get_interval_for_r_new_otus(sample, r):
         t = np.random.gamma(count, 1)
         point_est = (r - 1) / t
         yield point_est, i, t
 
 
-def _get_interval_for_r_new_species(seq, r):
-    """Compute interval between r new species for seq of samples.
+def _get_interval_for_r_new_otus(seq, r):
+    """Compute interval between r new OTUs for seq of samples.
 
     Imagine an urn with colored balls. Given a drawing of balls from the urn,
     compute how many balls need to be looked at to discover r new colors.
@@ -233,7 +233,7 @@ def _lladser_ci_series(seq, r, alpha=0.95, f=10, ci_type='ULCL'):
         Yields one CI prediction for each new color that is detected and where.
 
     """
-    for count, seen, cost, i in _get_interval_for_r_new_species(seq, r):
+    for count, seen, cost, i in _get_interval_for_r_new_otus(seq, r):
         t = np.random.gamma(count, 1)
         yield _lladser_ci_from_r(r, t, alpha, f, ci_type)
 

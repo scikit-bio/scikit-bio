@@ -17,7 +17,7 @@ import numpy.testing as npt
 from skbio.math.diversity.alpha.base import (
     berger_parker_d, brillouin_d, dominance, doubles, enspie, equitability,
     esty_ci, fisher_alpha, goods_coverage, heip_e, kempton_taylor_q, margalef,
-    mcintosh_d, mcintosh_e, menhinick, michaelis_menten_fit, observed_species,
+    mcintosh_d, mcintosh_e, menhinick, michaelis_menten_fit, observed_otus,
     osd, robbins, shannon, simpson, simpson_e, singles, strong, _validate)
 
 
@@ -97,7 +97,7 @@ class BaseTests(TestCase):
         self.assertEqual(doubles(np.array([0, 0])), 0)
 
     def test_enspie(self):
-        # Totally even community should have ENS_pie = number of species.
+        # Totally even community should have ENS_pie = number of OTUs.
         self.assertAlmostEqual(enspie(np.array([1, 1, 1, 1, 1, 1])), 6)
         self.assertAlmostEqual(enspie(np.array([13, 13, 13, 13])), 4)
 
@@ -122,7 +122,7 @@ class BaseTests(TestCase):
         def _diversity(indices, f):
             """Calculate diversity index for each window of size 1.
 
-            indices: vector of indices of species
+            indices: vector of indices of OTUs
             f: f(counts) -> diversity measure
 
             """
@@ -158,13 +158,13 @@ class BaseTests(TestCase):
         obs = fisher_alpha(arr)
         self.assertAlmostEqual(obs, exp)
 
-        # Should depend only on S and N (number of species, number of
+        # Should depend only on S and N (number of OTUs, number of
         # individuals / seqs), so we should obtain the same output as above.
         obs = fisher_alpha([1, 6, 1, 0, 1, 0, 5])
         self.assertAlmostEqual(obs, exp)
 
         # Should match another by hand:
-        # 2 species, 62 seqs, alpha is 0.39509
+        # 2 OTUs, 62 seqs, alpha is 0.39509
         obs = fisher_alpha([61, 0, 0, 1])
         self.assertAlmostEqual(obs, 0.39509, delta=0.0001)
 
@@ -215,7 +215,7 @@ class BaseTests(TestCase):
         self.assertEqual(mcintosh_e(np.array([1, 2, 3, 1])), exp)
 
     def test_menhinick(self):
-        # observed_species = 9, total # of individuals = 22
+        # observed_otus = 9, total # of individuals = 22
         self.assertEqual(menhinick(self.counts), 9 / np.sqrt(22))
 
     def test_michaelis_menten_fit(self):
@@ -233,19 +233,19 @@ class BaseTests(TestCase):
 
         obs_few = michaelis_menten_fit(np.arange(4) * 2, num_repeats=10)
         obs_many = michaelis_menten_fit(np.arange(4) * 100, num_repeats=10)
-        # [0,100,200,300] looks like only 3 species.
+        # [0,100,200,300] looks like only 3 OTUs.
         self.assertAlmostEqual(obs_many, 3.0, places=1)
-        # [0,2,4,6] looks like 3 species with maybe more to be found.
+        # [0,2,4,6] looks like 3 OTUs with maybe more to be found.
         self.assertTrue(obs_few > obs_many)
 
-    def test_observed_species(self):
-        obs = observed_species(np.array([4, 3, 4, 0, 1, 0, 2]))
+    def test_observed_otus(self):
+        obs = observed_otus(np.array([4, 3, 4, 0, 1, 0, 2]))
         self.assertEqual(obs, 5)
 
-        obs = observed_species(np.array([0, 0, 0]))
+        obs = observed_otus(np.array([0, 0, 0]))
         self.assertEqual(obs, 0)
 
-        obs = observed_species(self.counts)
+        obs = observed_otus(self.counts)
         self.assertEqual(obs, 9)
 
     def test_osd(self):

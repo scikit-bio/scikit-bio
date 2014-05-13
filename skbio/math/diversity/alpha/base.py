@@ -39,7 +39,7 @@ def berger_parker_d(counts):
     """Calculate Berger-Parker dominance.
 
     Berger-Parker dominance is defined as the fraction of the sample that
-    belongs to the most abundant species.
+    belongs to the most abundant OTUs.
 
     Parameters
     ----------
@@ -104,7 +104,7 @@ def dominance(counts):
 
        \\sum{p_i^2}
 
-    where :math:`p_i` is the proportion of the entire community that species
+    where :math:`p_i` is the proportion of the entire community that OTU
     :math:`i` represents.
 
     Dominance can also be defined as 1 - Simpson's index. It ranges between
@@ -191,7 +191,7 @@ def enspie(counts):
 
 
 def equitability(counts, base=2):
-    """Calculate equitability (Shannon index corrected for number of species).
+    """Calculate equitability (Shannon index corrected for number of OTUs).
 
     Parameters
     ----------
@@ -221,7 +221,7 @@ def equitability(counts, base=2):
     """
     counts = _validate(counts)
     numerator = shannon(counts, base)
-    denominator = np.log(observed_species(counts)) / np.log(base)
+    denominator = np.log(observed_otus(counts)) / np.log(base)
     return numerator / denominator
 
 
@@ -234,10 +234,10 @@ def esty_ci(counts):
 
        F_1/N \\pm z\\sqrt{W}
 
-    where :math:`F_1` is the number of singleton species, :math:`N` is the
-    total number of individuals (sum of abundances for all species), and
-    :math:`z` is a constant that depends on the targeted confidence and based
-    on the normal distribution.
+    where :math:`F_1` is the number of singleton OTUs, :math:`N` is the total
+    number of individuals (sum of abundances for all OTUs), and :math:`z` is a
+    constant that depends on the targeted confidence and based on the normal
+    distribution.
 
     :math:`W` is defined as
 
@@ -245,7 +245,7 @@ def esty_ci(counts):
 
        \\frac{F_1(N-F_1)+2NF_2}{N^3}
 
-    where :math:`F_2` is the number of doubleton species.
+    where :math:`F_2` is the number of doubleton OTUs.
 
     Parameters
     ----------
@@ -310,7 +310,7 @@ def fisher_alpha(counts):
     """
     counts = _validate(counts)
     n = counts.sum()
-    s = observed_species(counts)
+    s = observed_otus(counts)
 
     def f(alpha):
         return (alpha * np.log(1 + (n / alpha)) - s) ** 2
@@ -339,8 +339,8 @@ def goods_coverage(counts):
 
        1-\\frac{F_1}{N}
 
-    where :math:`F_1` is the number of singleton species and :math:`N` is the
-    total number of individuals (sum of abundances for all species).
+    where :math:`F_1` is the number of singleton OTUs and :math:`N` is the
+    total number of individuals (sum of abundances for all OTUs).
 
     Parameters
     ----------
@@ -384,7 +384,7 @@ def heip_e(counts):
     """
     counts = _validate(counts)
     return ((np.exp(shannon(counts, base=np.e)) - 1) /
-            (observed_species(counts) - 1))
+            (observed_otus(counts) - 1))
 
 
 def kempton_taylor_q(counts, lower_quantile=0.25, upper_quantile=0.75):
@@ -414,10 +414,10 @@ def kempton_taylor_q(counts, lower_quantile=0.25, upper_quantile=0.75):
 
     The implementation provided here differs slightly from the results given in
     Magurran 1998. Specifically, we have 14 in the numerator rather than 15.
-    Magurran recommends counting half of the species with the same # counts as
-    the point where the UQ falls and the point where the LQ falls, but the
-    justification for this is unclear (e.g. if there were a very large #
-    species that just overlapped one of the quantiles, the results would be
+    Magurran recommends counting half of the OTUs with the same # counts as the
+    point where the UQ falls and the point where the LQ falls, but the
+    justification for this is unclear (e.g. if there were a very large # OTUs
+    that just overlapped one of the quantiles, the results would be
     considerably off). Leaving the calculation as-is for now, but consider
     changing.
 
@@ -463,7 +463,7 @@ def margalef(counts):
 
     """
     counts = _validate(counts)
-    return (observed_species(counts) - 1) / np.log(counts.sum())
+    return (observed_otus(counts) - 1) / np.log(counts.sum())
 
 
 def mcintosh_d(counts):
@@ -531,7 +531,7 @@ def mcintosh_e(counts):
     counts = _validate(counts)
     numerator = np.sqrt((counts * counts).sum())
     n = counts.sum()
-    s = observed_species(counts)
+    s = observed_otus(counts)
     denominator = np.sqrt((n - s + 1) ** 2 + s - 1)
     return numerator / denominator
 
@@ -562,11 +562,11 @@ def menhinick(counts):
 
     """
     counts = _validate(counts)
-    return observed_species(counts) / np.sqrt(counts.sum())
+    return observed_otus(counts) / np.sqrt(counts.sum())
 
 
 def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
-    """Calculate Michaelis-Menten fit to rarefaction curve of observed species.
+    """Calculate Michaelis-Menten fit to rarefaction curve of observed OTUs.
 
     The Michaelis-Menten equation is defined as
 
@@ -575,12 +575,12 @@ def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
        S=\\frac{nS_{max}}{n+B}
 
     where :math:`n` is the number of individuals and :math:`S` is the number of
-    species. This function estimates the :math:`S_{max}` parameter.
+    OTUs. This function estimates the :math:`S_{max}` parameter.
 
     The fit is made to datapoints for :math:`n=1,2,...,N`, where :math:`N` is
-    the total number of individuals (sum of abundances for all species).
-    :math:`S` is the number of species represented in a random sample of
-    :math:`n` individuals.
+    the total number of individuals (sum of abundances for all OTUs).
+    :math:`S` is the number of OTUs represented in a random sample of :math:`n`
+    individuals.
 
     Parameters
     ----------
@@ -622,15 +622,15 @@ def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
 
     n_indiv = counts.sum()
     if params_guess is None:
-        S_max_guess = observed_species(counts)
+        S_max_guess = observed_otus(counts)
         B_guess = int(round(n_indiv / 2))
         params_guess = (S_max_guess, B_guess)
 
-    # observed # of species vs # of individuals sampled, S vs n
+    # observed # of OTUs vs # of individuals sampled, S vs n
     xvals = np.arange(1, n_indiv + 1)
     ymtx = np.empty((num_repeats, len(xvals)), dtype=int)
     for i in range(num_repeats):
-        ymtx[i] = np.asarray([observed_species(subsample(counts, n))
+        ymtx[i] = np.asarray([observed_otus(subsample(counts, n))
                               for n in xvals], dtype=int)
     yvals = ymtx.mean(0)
 
@@ -643,8 +643,8 @@ def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
                        disp=False)[0]
 
 
-def observed_species(counts):
-    """Calculate the number of distinct species.
+def observed_otus(counts):
+    """Calculate the number of distinct OTUs.
 
     Parameters
     ----------
@@ -654,7 +654,7 @@ def observed_species(counts):
     Returns
     -------
     int
-        Distinct species count.
+        Distinct OTU count.
 
     """
     counts = _validate(counts)
@@ -662,7 +662,7 @@ def observed_species(counts):
 
 
 def osd(counts):
-    """Calculate observed species, singles, and doubles.
+    """Calculate observed OTUs, singles, and doubles.
 
     Parameters
     ----------
@@ -672,11 +672,11 @@ def osd(counts):
     Returns
     -------
     osd : tuple
-        Observed species, singles, and doubles.
+        Observed OTUs, singles, and doubles.
 
     See Also
     --------
-    observed_species
+    observed_otus
     singles
     doubles
 
@@ -687,7 +687,7 @@ def osd(counts):
 
     """
     counts = _validate(counts)
-    return observed_species(counts), singles(counts), doubles(counts)
+    return observed_otus(counts), singles(counts), doubles(counts)
 
 
 def robbins(counts):
@@ -699,7 +699,7 @@ def robbins(counts):
 
        \\frac{F_1}{n+1}
 
-    where :math:`F_1` is the number of singleton species.
+    where :math:`F_1` is the number of singleton OTUs.
 
     Parameters
     ----------
@@ -801,7 +801,7 @@ def simpson_e(counts):
        E=\\frac{1 / D}{S_{obs}}
 
     where :math:`D` is dominance and :math:`S_{obs}` is the number of observed
-    species.
+    OTUs.
 
     Parameters
     ----------
@@ -829,7 +829,7 @@ def simpson_e(counts):
 
     """
     counts = _validate(counts)
-    return enspie(counts) / observed_species(counts)
+    return enspie(counts) / observed_otus(counts)
 
 
 def singles(counts):
@@ -877,7 +877,7 @@ def strong(counts):
     """
     counts = _validate(counts)
     n = counts.sum()
-    s = observed_species(counts)
+    s = observed_otus(counts)
     i = np.arange(1, len(counts) + 1)
     sorted_sum = np.sort(counts)[::-1].cumsum()
     return (sorted_sum / n - (i / s)).max()
