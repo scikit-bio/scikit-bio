@@ -27,8 +27,8 @@ class FastaTests(TestCase):
                                    DNASequence('GGCCT', 'seq2')]
         self.sequence_objects_b = [BiologicalSequence('ACTCGAGATC', 'seq1'),
                                    BiologicalSequence('GGCCT', 'seq2')]
-        seqs = [DNASequence("ACC--G-GGTA..", identifier="seq1"),
-                DNASequence("TCC--G-GGCA..", identifier="seqs2")]
+        seqs = [DNASequence("ACC--G-GGTA..", id="seq1"),
+                DNASequence("TCC--G-GGCA..", id="seqs2")]
         self.alignment = Alignment(seqs)
 
     def test_fasta_from_sequence_objects(self):
