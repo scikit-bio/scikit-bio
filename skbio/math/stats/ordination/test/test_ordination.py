@@ -19,7 +19,7 @@ import numpy as np
 import numpy.testing as npt
 from scipy.spatial.distance import pdist
 
-from skbio.maths.stats.ordination import CA, RDA, CCA, PCoA, OrdinationResults
+from skbio.math.stats.ordination import CA, RDA, CCA, PCoA, OrdinationResults
 from skbio.core.distance import DistanceMatrix
 from skbio.util.testing import get_data_path
 from skbio.core.exception import FileFormatError

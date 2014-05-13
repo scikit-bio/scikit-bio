@@ -15,8 +15,8 @@ from unittest import TestCase, main
 import pandas as pd
 
 from skbio.core.distance import DissimilarityMatrix, DistanceMatrix
-from skbio.maths.stats.distance.base import (CategoricalStats,
-                                             CategoricalStatsResults)
+from skbio.math.stats.distance.base import (CategoricalStats,
+                                            CategoricalStatsResults)
 
 
 class CategoricalStatsTests(TestCase):

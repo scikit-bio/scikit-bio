@@ -16,7 +16,7 @@ from unittest import TestCase, main
 
 import numpy as np
 
-from skbio.maths.stats.special import ndtri, log1p
+from skbio.math.stats.special import ndtri, log1p
 
 
 class SpecialTests(TestCase):

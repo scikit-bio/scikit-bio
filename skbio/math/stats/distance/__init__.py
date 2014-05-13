@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 """
-Distance-based statistics (:mod:`skbio.maths.stats.distance`)
-=============================================================
+Distance-based statistics (:mod:`skbio.math.stats.distance`)
+============================================================
 
-.. currentmodule:: skbio.maths.stats.distance
+.. currentmodule:: skbio.math.stats.distance
 
 Distance-based statistical methods package.
 
@@ -34,7 +34,7 @@ Create an ANOSIM instance and run the method with 99 permutations:
 
 >>> import numpy as np
 >>> np.random.seed(0) # Make output deterministic; not necessary for normal use
->>> from skbio.maths.stats.distance import ANOSIM
+>>> from skbio.math.stats.distance import ANOSIM
 >>> anosim = ANOSIM(dm, grouping)
 >>> results = anosim(99)
 >>> print results

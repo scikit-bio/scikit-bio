@@ -13,8 +13,8 @@ from unittest import TestCase, main
 
 import numpy as np
 
-from skbio.maths.stats.spatial import (procrustes, _get_disparity, _center,
-                                       _normalize)
+from skbio.math.stats.spatial import (procrustes, _get_disparity, _center,
+                                      _normalize)
 
 
 class ProcrustesTests(TestCase):

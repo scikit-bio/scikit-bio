@@ -1,8 +1,8 @@
 r"""
-Ordination methods (:mod:`skbio.maths.stats.ordination`)
-========================================================
+Ordination methods (:mod:`skbio.math.stats.ordination`)
+=======================================================
 
-.. currentmodule:: skbio.maths.stats.ordination
+.. currentmodule:: skbio.math.stats.ordination
 
 This module contains several ordination methods, including Principal
 Coordinate Analysis, Correspondence Analysis, Redundancy Analysis and
