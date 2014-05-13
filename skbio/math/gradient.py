@@ -92,6 +92,7 @@ from __future__ import division
 
 from copy import deepcopy
 from collections import namedtuple, defaultdict
+from numbers import Integral
 
 import numpy as np
 
@@ -118,10 +119,6 @@ class GroupResults(namedtuple('GroupResults', ('name', 'vector', 'mean',
         A message with information of the execution of the algorithm
     """
     __slots__ = ()  # To avoid creating a dict, as a namedtuple doesn't have it
-
-    def __new__(cls, name, vector, mean, info, message):
-        return super(GroupResults, cls).__new__(cls, name, vector, mean,
-                                                info, message)
 
     def to_files(self, out_f, raw_f):
         r"""Save the vector analysis results for a category group to files in
@@ -169,10 +166,6 @@ class CategoryResults(namedtuple('CategoryResults', ('category', 'probability',
     """
     __slots__ = ()  # To avoid creating a dict, as a namedtuple doesn't have it
 
-    def __new__(cls, category, probability, groups, message):
-        return super(CategoryResults, cls).__new__(cls, category, probability,
-                                                   groups, message)
-
     def to_files(self, out_f, raw_f):
         r"""Save the vector analysis results for a category to files in
         text format.
@@ -213,10 +206,6 @@ class VectorsResults(namedtuple('VectorsResults', ('algorithm', 'weighted',
         The vector results for each metadata category
     """
     __slots__ = ()  # To avoid creating a dict, as a namedtuple doesn't have it
-
-    def __new__(cls, algorithm, weighted, categories):
-        return super(VectorsResults, cls).__new__(cls, algorithm, weighted,
-                                                  categories)
 
     def to_files(self, out_f, raw_f):
         r"""Save the vector analysis results to files in text format.
@@ -738,7 +727,7 @@ class WindowDifferenceVectors(BaseVectors):
         super(WindowDifferenceVectors, self).__init__(coords, prop_expl,
                                                       metamap, **kwargs)
 
-        if not isinstance(window_size, int) or window_size < 1:
+        if not isinstance(window_size, Integral) or window_size < 1:
             raise ValueError("The window_size must be a positive integer")
 
         self._window_size = window_size
