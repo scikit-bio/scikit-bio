@@ -83,6 +83,7 @@ from itertools import product
 from scipy.spatial.distance import hamming
 
 from skbio.core.exception import BiologicalSequenceError
+from skbio.core.genetic_code import GeneticCodes
 
 
 class BiologicalSequence(Sequence):
@@ -1380,6 +1381,24 @@ class NucleotideSequence(BiologicalSequence):
 
         return (cls(nondegen_seq, id_, desc) for nondegen_seq in result)
 
+    def translate(self, genetic_code=None):
+        """
+        """
+        result = []
+
+        if genetic_code is None:
+            genetic_code = GeneticCodes[11]
+
+        for i in range(0, len(self), 3):
+            codon = self[i:i+3]
+            if len(codon) < 3:
+                break
+            else:
+                result.append(genetic_code[codon])
+
+        result = ''.join(result)
+        return ProteinSequence(result)
+
 
 class DNASequence(NucleotideSequence):
     """Base class for DNA sequences.
@@ -1534,3 +1553,7 @@ class RNASequence(NucleotideSequence):
 
 # class is accessible with alternative name for convenience
 RNA = RNASequence
+
+
+class ProteinSequence(BiologicalSequence):
+    pass

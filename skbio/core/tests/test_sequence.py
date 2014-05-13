@@ -14,8 +14,10 @@ from collections import Counter, defaultdict
 from unittest import TestCase, main
 
 from skbio.core.sequence import (
-    BiologicalSequence, NucleotideSequence, DNASequence, RNASequence)
+    BiologicalSequence, NucleotideSequence, DNASequence, RNASequence,
+    ProteinSequence)
 from skbio.core.exception import BiologicalSequenceError
+from skbio.core.genetic_code import GeneticCode
 
 
 class BiologicalSequenceTests(TestCase):
@@ -493,6 +495,24 @@ class NucelotideSequenceTests(TestCase):
                NucleotideSequence('-C.a'), NucleotideSequence('-C.c')]
         obs = sorted(NucleotideSequence('-M.m').nondegenerates(), key=str)
         self.assertEqual(obs, exp)
+
+    def test_translate(self):
+        exp_empty = ProteinSequence('')
+        exp_b1 = ProteinSequence('DY')
+        exp_b2 = ProteinSequence('TGT')
+        self.assertEqual(self.empty.translate(), exp_empty)
+        self.assertEqual(self.b1.translate(), exp_b1)
+        self.assertEqual(self.b2.translate(), exp_b2)
+
+    def test_translate_custom_genetic_code(self):
+        gc = GeneticCode("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                         "AAAAAAAAAAAAAAAAA")
+        exp_empty = ProteinSequence('')
+        exp_b1 = ProteinSequence('AA')
+        exp_b2 = ProteinSequence('AAA')
+        self.assertEqual(self.empty.translate(genetic_code=gc), exp_empty)
+        self.assertEqual(self.b1.translate(genetic_code=gc), exp_b1)
+        self.assertEqual(self.b2.translate(genetic_code=gc), exp_b2)
 
 
 class DNASequenceTests(TestCase):
