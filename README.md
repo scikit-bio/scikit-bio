@@ -56,7 +56,7 @@ scikit-bio began from code derived from [PyCogent](http://www.pycogent.org) and 
 Installation
 ------------
 
-In order to install sci-kit bio first install numpy:
+In order to install scikit bio first install numpy:
 
     pip install numpy
 
@@ -74,6 +74,8 @@ If you'd like to install the dependencies manually (or some other way than using
 - [numpy](http://www.numpy.org/) >= 1.7
 - [scipy](http://www.scipy.org/) >= 0.13.0
 - [matplotlib](http://www.matplotlib.org/) >= 1.1.0
+- [pandas](http://pandas.pydata.org/)
+- [future](https://pypi.python.org/pypi/future) 
 
 scikit-bio development
 ----------------------
