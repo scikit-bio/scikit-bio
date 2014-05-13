@@ -72,6 +72,8 @@ If you'd like to install the dependencies manually (or some other way than using
 
 - [Python](http://www.python.org/) 2.7
 - [numpy](http://www.numpy.org/) >= 1.7
+- [scipy](http://www.scipy.org/) >= 0.13.0
+- [matplotlib](http://www.matplotlib.org/) >= 1.1.0
 
 scikit-bio development
 ----------------------
