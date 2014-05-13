@@ -525,6 +525,17 @@ class NucelotideSequenceTests(TestCase):
         self.assertEqual(NucleotideSequence("TGA").has_terminal_stop(), True)
         self.assertEqual(NucleotideSequence("CCUGA").has_terminal_stop(), True)
 
+    def test_leading_terminal_start(self):
+        self.assertEqual(self.empty.has_leading_start(), False)
+        self.assertEqual(self.b1.has_leading_start(), False)
+        self.assertEqual(self.b2.has_leading_start(), False)
+        self.assertEqual(NucleotideSequence("A").has_leading_start(), False)
+        self.assertEqual(NucleotideSequence("GA").has_leading_start(), False)
+
+        self.assertEqual(NucleotideSequence("AUG").has_leading_start(), True)
+        self.assertEqual(NucleotideSequence("ATG").has_leading_start(), True)
+        self.assertEqual(NucleotideSequence("ATGCC").has_leading_start(), True)
+
 
 class DNASequenceTests(TestCase):
 

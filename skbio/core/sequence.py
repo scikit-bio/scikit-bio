@@ -1389,11 +1389,23 @@ class NucleotideSequence(BiologicalSequence):
             genetic_code = GeneticCodes[11]
 
         last_codon = self[-3:]
-        print last_codon, len(last_codon)
         if len(last_codon) != 3:
             return False
         else:
             return genetic_code[last_codon] == "*"
+
+    def has_leading_start(self, genetic_code=None):
+        """
+        """
+
+        if genetic_code is None:
+            genetic_code = GeneticCodes[11]
+
+        first_codon = self[:3]
+        if len(first_codon) != 3:
+            return False
+        else:
+            return genetic_code[first_codon] == "M"
 
     def translate(self, genetic_code=None):
         """
