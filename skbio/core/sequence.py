@@ -1405,24 +1405,6 @@ class NucleotideSequence(BiologicalSequence):
 
         return (cls(nondegen_seq, id_, desc) for nondegen_seq in result)
 
-    def has_terminal_stop(self):
-        """
-        """
-        last_codon = self[-3:]
-        if len(last_codon) != 3:
-            return False
-        else:
-            return self._genetic_code[last_codon] == "*"
-
-    def has_leading_start(self):
-        """
-        """
-        first_codon = self[:3]
-        if len(first_codon) != 3:
-            return False
-        else:
-            return self._genetic_code[first_codon] == "M"
-
     def codons(self, start_position=0, constructor=str):
         """
         """
