@@ -21,6 +21,7 @@ Classes
    NucleotideSequence
    DNASequence
    RNASequence
+   ProteinSequence
 
 Examples
 --------
@@ -65,6 +66,14 @@ set(['C', 'U', 'G'])
 
 >>> DNASequence.is_gap('-')
 True
+
+NucleotideSequences can be translated using a GeneticCode object.
+
+>>> d6 = DNASequence('ATGTCTAAATGA')
+>>> from skbio.core.genetic_code import GeneticCodes
+>>> gc = GeneticCodes[11]
+>>> gc.translate(d6)
+<ProteinSequence: MSK (length: 3)>
 
 """
 from __future__ import division
