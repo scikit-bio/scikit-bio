@@ -39,8 +39,11 @@ def _ascii_to_phred64(s):
 
 def _drop_id_marker(s):
     """Drop the first character and decode bytes to text"""
-    return s[1:].decode('utf-8')
-
+    id_ = s[1:]
+    try:
+        return id_.decode('utf-8')
+    except:
+        return id_
 
 def parse_fastq(data, strict=False, phred_offset=33):
     r"""yields label, seq, and qual from a fastq file.
@@ -138,6 +141,10 @@ def parse_fastq(data, strict=False, phred_offset=33):
             qual = None
         elif linetype == SEQUENCE:
             seq = line
+            try:
+                seq = seq.decode("utf-8")
+            except:
+                pass
         elif linetype == QUALID:
             qualid = _drop_id_marker(line)
             if strict:
