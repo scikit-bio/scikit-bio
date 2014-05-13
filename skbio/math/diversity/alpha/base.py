@@ -255,7 +255,7 @@ def esty_ci(counts):
     Returns
     -------
     tuple
-        Esty's confidence interval as ``(upper_bound, lower_bound)``.
+        Esty's confidence interval as ``(lower_bound, upper_bound)``.
 
     Notes
     -----
@@ -276,7 +276,7 @@ def esty_ci(counts):
     z = 1.959963985
     W = (f1 * (n - f1) + 2 * n * f2) / (n ** 3)
 
-    return f1 / n + z * np.sqrt(W), f1 / n - z * np.sqrt(W)
+    return f1 / n - z * np.sqrt(W), f1 / n + z * np.sqrt(W)
 
 
 def fisher_alpha(counts):

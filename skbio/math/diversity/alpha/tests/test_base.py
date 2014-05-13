@@ -140,17 +140,17 @@ class BaseTests(TestCase):
 
         data = [1, 1, 2, 1, 1, 3, 2, 1, 3, 4]
 
-        observed_upper, observed_lower = zip(*_diversity(data, esty_ci))
+        observed_lower, observed_upper = zip(*_diversity(data, esty_ci))
 
-        expected_upper = np.array([1, 1.38590382, 1.40020259, 0.67434465,
-                                   0.55060902, 0.71052858, 0.61613483,
-                                   0.54041008, 0.43554755, 0.53385652])
         expected_lower = np.array([1, -1.38590382, -0.73353593, -0.17434465,
                                    -0.15060902, -0.04386191, -0.33042054,
                                    -0.29041008, -0.43554755, -0.33385652])
+        expected_upper = np.array([1, 1.38590382, 1.40020259, 0.67434465,
+                                   0.55060902, 0.71052858, 0.61613483,
+                                   0.54041008, 0.43554755, 0.53385652])
 
-        npt.assert_array_almost_equal(observed_upper, expected_upper)
         npt.assert_array_almost_equal(observed_lower, expected_lower)
+        npt.assert_array_almost_equal(observed_upper, expected_upper)
 
     def test_fisher_alpha(self):
         exp = 2.7823795367398798
