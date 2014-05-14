@@ -12,7 +12,7 @@ from __future__ import division
 
 import numpy as np
 from numpy.random import shuffle
-from scipy.stats import spearmanr, kruskal, mannwhitneyu
+from scipy.stats import spearmanr, kruskal, mannwhitneyu, kendalltau
 
 from skbio.math.stats.special import MACHEP, ndtri
 from skbio.math.stats.distribution import (chi_high, zprob, f_high, t_high,
@@ -539,32 +539,38 @@ def spearman(v1, v2):
             ' or they have unequal lengths.')
     return spearmanr(v1, v2)[0] # return only the rho-value
 
-def _get_rank(data):
-    """Ranks the elements of a list. Used in Spearman correlation."""
-    indices = list(range(len(data)))
-    ranks = list(range(1, len(data) + 1))
-    indices.sort(key=lambda index: data[index])
-    ranks.sort(key=lambda index: indices[index - 1])
-    data_len = len(data)
-    i = 0
-    ties = 0
-    while i < data_len:
-        j = i + 1
-        val = data[indices[i]]
-        try:
-            val += 0
-        except TypeError:
-            raise(TypeError)
+def kendall(v1, v2):
+    """Compute Kendall's Tau between v1 and v2 using scipy.stats.kendalltau
 
-        while j < data_len and data[indices[j]] == val:
-            j += 1
-        dup_ranks = j - i
-        val = float(ranks[indices[i]]) + (dup_ranks - 1) / 2.0
-        for k in range(i, i + dup_ranks):
-            ranks[indices[k]] = val
-        i += dup_ranks
-        ties += dup_ranks - 1
-    return ranks, ties
+    Parameters
+    ----------
+    v1 : array-like
+        List or array of ints or floats to be correlated. 
+    v2 : array-like
+        List or array of ints or floats to be correlated. 
+
+    Returns
+    -------
+    rho : float
+        Spearman correlation between the vectors.
+
+    Raises
+    ------
+    ValueError
+        If the vectors are not equally sized or if they are only a single 
+        element a ValueError will be returned.
+    """
+    v1, v2 = np.array(v1), np.array(v2)
+    if not (v1.size == v2.size > 1):
+        raise ValueError('One or more vectors isn\'t long enough to correlate '
+            ' or they have unequal lengths.')
+    return kendalltau(v1, v2)[0] # return only the tau correlation coeff
+
+
+def kendall_pval(tau, n):
+    '''Calculate the p-value for the passed tau and vector length n.'''
+    test_stat = tau / ((2 * (2 * n + 5)) / float(9 * n * (n - 1))) ** .5
+    return zprob(test_stat)
 
 
 def correlation_t(x_items, y_items, method='pearson', tails=None,

@@ -20,14 +20,15 @@ from skbio.math.stats.test import (G_2_by_2, G_fit, t_paired, t_one_sample,
                                    correlation_t, ZeroExpectedError, fisher,
                                    safe_sum_p_log_p, permute_2d, mantel,
                                    mantel_t, _flatten_lower_triangle, pearson,
-                                   spearman, _get_rank, ANOVA_one_way, mw_t,
+                                   spearman, ANOVA_one_way, mw_t,
                                    mw_boot, is_symmetric_and_hollow,
                                    reverse_tails, tail, fdr_correction, 
                                    benjamini_hochberg_step_down, 
                                    bonferroni_correction, fisher_z_transform,
                                    fisher_population_correlation,
                                    inverse_fisher_z_transform, 
-                                   z_transform_pval, kruskal_wallis)
+                                   z_transform_pval, kruskal_wallis, kendall,
+                                   kendall_pval)
 
 from skbio.math.stats.distribution import chi_high
 
@@ -786,65 +787,9 @@ class CorrelationTests(TestsHelper):
         self.assertRaises(ValueError, spearman, [], [])
         self.assertRaises(ValueError, spearman, self.a, [])
 
-    def test_get_rank(self):
-        """Test the _get_rank function with valid input."""
-        exp = (
-            [1.5,
-             3.5,
-             7.5,
-             5.5,
-             1.5,
-             9.0,
-             10.0,
-             11.0,
-             12.0,
-             7.5,
-             14.0,
-             3.5,
-             5.5,
-             13.0],
-            4)
-        obs = _get_rank(self.x)
-        np.testing.assert_allclose(exp[0], obs[0])
-        np.testing.assert_allclose(exp[1], obs[1])
-
-        exp = ([1.5, 3.0, 5.5, 4.0, 1.5, 7.0, 8.0, 9.0, 10.0, 5.5], 2)
-        obs = _get_rank(self.a)
-        np.testing.assert_allclose(exp[0], obs[0])
-        np.testing.assert_allclose(exp[1], obs[1])
-
-        exp = ([2, 7, 10, 1, 3, 6, 4, 8, 5, 9], 0)
-        obs = _get_rank(self.b)
-        np.testing.assert_allclose(exp[0], obs[0])
-        np.testing.assert_allclose(exp[1], obs[1])
-
-        exp = ([1.5, 7.0, 10.0, 1.5, 3.0, 6.0, 4.0, 8.0, 5.0, 9.0], 1)
-        obs = _get_rank(self.r)
-        np.testing.assert_allclose(exp[0], obs[0])
-        np.testing.assert_allclose(exp[1], obs[1])
-
-        exp = ([], 0)
-        obs = _get_rank([])
-        self.assertEqual(exp, obs)
-
-    def test_get_rank_invalid_input(self):
-        """Test the _get_rank function with invalid input."""
-        vec = [1, 'a', 3, 2.5, 3, 1]
-        self.assertRaises(TypeError, _get_rank, vec)
-
-        vec = [1, 2, {1: 2}, 2.5, 3, 1]
-        self.assertRaises(TypeError, _get_rank, vec)
-
-        vec = [1, 2, [23, 1], 2.5, 3, 1]
-        self.assertRaises(TypeError, _get_rank, vec)
-
-        vec = [1, 2, (1,), 2.5, 3, 1]
-        self.assertRaises(TypeError, _get_rank, vec)
-
     def test_correlation_test_pearson(self):
         """Test correlation_t using pearson on valid input."""
         # These results were verified with R.
-
         # Test with non-default confidence level and permutations.
         obs = correlation_t(self.data1, self.data2, method='pearson',
                             confidence_level=0.90, permutations=990)
@@ -1014,7 +959,47 @@ class CorrelationTests(TestsHelper):
         self.assertTrue(u == 36.5 or u == 123.5)
         self.assertTrue(0 <= p <= 0.5)
 
-
+    def test_kendall(self):
+        """tests new kendall tau implamentation, returns tau, prob"""
+        # test from pg. 594 Sokal and Rohlf, Box 15.7
+        v1 = [8.7, 8.5, 9.4, 10, 6.3, 7.8, 11.9, 6.5, 6.6, 10.6, 10.2, 7.2, 
+            8.6, 11.1, 11.6]
+        v2 = [5.95, 5.65, 6.00, 5.70, 4.70, 5.53, 6.40, 4.18, 6.15, 5.93, 5.70,
+            5.68, 6.13, 6.30, 6.03]
+        obs_tau = kendall(v1, v2)
+        obs_prob = kendall_pval(obs_tau, len(v1))
+        exp_tau = 0.49761335152811925
+        exp_prob = 0.0097188572446995618
+        np.testing.assert_allclose(obs_tau, exp_tau)
+        np.testing.assert_allclose(obs_prob, exp_prob)
+        # random vectors checked against scipy. v1 has 33 ties, v2 32
+        v1 = np.array(
+            [1.2, 9.7, 8.8, 1.7, 8.6, 9.9, 6.8, 7.3, 5.5, 5.4, 8.3,
+             3.6, 7.5, 2., 9.3, 5.1, 8.4, 0.3, 8.2, 2.4, 9.8, 8.5,
+             2.1, 6., 1.8, 3.7, 1.4, 4.6, 7.6, 5.2, 0.9, 5.2, 4.7,
+             2.9, 5., 6.9, 1.3, 6.7, 5.2, 2.4, 6.9, 2., 7.4, 0.4,
+             8.2, 9.5, 2.9, 5.7, 2.4, 8.8, 1.6, 3.5, 5.1, 3.6, 3.3,
+             7.5, 0.9, 9.3, 5.4, 6.9, 9.3, 2.3, 1.9, 8.1, 3.2, 4.2,
+             8.7, 3., 9.8, 5.3, 6.2, 4.8, 9., 2.8, 5.5, 8.4, 4.1,
+             5.6, 5.4, 6.9, 3.8, 2.7, 0.3, 3.9, 8.2, 6.6, 1.9, 3.9,
+             2., 4.4, 0.8, 6.5, 4.8, 1.5, 9.9, 9.1, 9.9, 6.2, 2.9,
+             2.])
+        v2 = np.array([6.6, 8.6, 3.9, 6.1, 0.9, 8.4, 10., 3.3, 0.4,
+                    3.9, 7.6, 8.2, 8.6, 3., 6.9, 0.6, 8.4, 8.1,
+                    6.3, 0.5, 5.2, 6.4, 8., 9.9, 1.2, 6.7, 8.4,
+                    2.7, 8.4, 4.1, 4.6, 5.1, 5.2, 5.3, 2.2, 2.2,
+                    4.3, 7.1, 1.4, 6.6, 7.6, 4.5, 7.8, 3.5, 7.1,
+                    0.6, 4.6, 3.2, 2.2, 0.2, 3.9, 5.9, 7.7, 8.8,
+                    1.3, 5.1, 5.6, 8.3, 8.8, 1.7, 5.2, 6.9, 1.3,
+                    1.4, 4.9, 9.4, 2.3, 3.7, 9.1, 3.4, 1.6, 4.1,
+                    9.7, 2.8, 9.9, 0.5, 2., 2.7, 3.3, 2.4, 3.6,
+                    7.9, 6.5, 7., 4.2, 1.8, 1.6, 1.9, 5.5, 0.,
+                    1.4, 2.2, 7.2, 8.2, 1.1, 2.5, 5.3, 0.2, 9., 0.2])
+        exp_tau, exp_prob = (0.024867511238807951, 0.71392573687923555)
+        obs_tau = kendall(v1, v2)
+        obs_prob = kendall_pval(obs_tau, len(v1))
+        np.testing.assert_allclose(obs_tau, exp_tau)
+        np.testing.assert_allclose(obs_prob, exp_prob)
 class TestDistMatrixPermutationTest(TestCase):
 
     """Tests of distance_matrix_permutation_test"""
