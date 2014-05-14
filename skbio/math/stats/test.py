@@ -12,7 +12,7 @@ from __future__ import division
 
 import numpy as np
 from numpy.random import shuffle
-from scipy.stats import spearmanr
+from scipy.stats import spearmanr, kruskal
 
 from skbio.math.stats.special import MACHEP, ndtri
 from skbio.math.stats.distribution import (chi_high, zprob, f_high, t_high,
@@ -850,6 +850,49 @@ def mw_boot(x, y, num_reps=1000):
         if sample_stat >= (observed_stat - tol):
             num_greater += 1
     return observed_stat, num_greater / num_reps
+
+
+def kruskal_wallis(data):
+    '''Calculate Kruskal Wallis U stat and pval using scipy.stats.kruskal
+
+    Parameters
+    ----------
+    data : list of array-likes
+        data is a nested list whose elements are arrays of float data. The 
+        different lists correpsond to the groups being tested. 
+
+    Returns
+    -------
+    U stat : float
+        The Kruskal Wallis U statistic.
+    pval : float
+        The pvalue associated with the given U statistic assuming a chi**2 
+        probability distribution.
+
+    Notes
+    -----
+    Implementation taken from Wikipedia and Sokal and Rohlf Biometry pg. 423.
+    H = [12/n(n+1) * sum(T_i^2/n_i)] - 3(n+1) = the Kruskal Wallis value, the
+    expected value of the variance of the sum of the ranks. Summation occurs
+    over all groups (samples)
+    T_i = sum of the ranks (with ties resolved by the Kruskal Wallis procedure)
+    of the values (or variates) in the ith group (sample).
+    n_i = number of values in the ith group.
+    n = total number of samples in all groups being compared.
+    D = 1 - sum(T_j^3-T_j)/(n^3-n) = correction factor for ties.
+    T_j = number of ties in the jth group of ties.
+
+    Examples:
+    >>> from skbio.math.stats.test import kruskal_wallis
+    >>> data = [[1, 4.5, 67, 100, 2], [145, 100, 3, 14.5, -19], [2, 1.1, 5.5, 
+    ...         3.3, 16.7, 18, 100.3]]
+    >>> rho, pval = kruskal_wallis(data)
+    >>> print rho == 0.16848016848016789
+    True
+    >>> print pval == 0.91921054163678728
+    True
+    '''
+    return kruskal(*data)
 
 
 def permute_2d(m, p):

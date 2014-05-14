@@ -27,7 +27,7 @@ from skbio.math.stats.test import (G_2_by_2, G_fit, t_paired, t_one_sample,
                                    bonferroni_correction, fisher_z_transform,
                                    fisher_population_correlation,
                                    inverse_fisher_z_transform, 
-                                   z_transform_pval)
+                                   z_transform_pval, kruskal_wallis)
 
 from skbio.math.stats.distribution import chi_high
 
@@ -1029,6 +1029,26 @@ class TestDistMatrixPermutationTest(TestCase):
 
         np.testing.assert_allclose(F, 18.565450643776831)
         np.testing.assert_allclose(pval, 0.00015486238993089464)
+
+    def test_kruskal_wallis(self):
+        """Test kruskal_wallis on Sokal & Rohlf Box 13.6 dataset"""
+        d_control = [75, 67, 70, 75, 65, 71, 67, 67, 76, 68]
+        d_2_gluc = [57, 58, 60, 59, 62, 60, 60, 57, 59, 61]
+        d_2_fruc = [58, 61, 56, 58, 57, 56, 61, 60, 57, 58]
+        d_1_1 = [58, 59, 58, 61, 57, 56, 58, 57, 57, 59]
+        d_2_sucr = [62, 66, 65, 63, 64, 62, 65, 65, 62, 67]
+        data = [d_control, d_2_gluc, d_2_fruc, d_1_1, d_2_sucr]
+        kw_stat, pval = kruskal_wallis(data)
+        np.testing.assert_allclose(kw_stat, 38.436807439)
+        np.testing.assert_allclose(pval, 9.105424085598766e-08)
+        # test using a random data set against scipy
+        x_0 = np.array([0, 0, 0, 31, 12, 0, 25, 26, 775, 13])
+        x_1 = np.array([14, 15, 0, 15, 12, 13])
+        x_2 = np.array([0, 0, 0, 55, 92, 11, 11, 11, 555])
+        # kruskal(x_0, x_1, x_2) = (0.10761259465923653, 0.94761564440615031)
+        exp = (0.10761259465923653, 0.94761564440615031)
+        obs = kruskal_wallis([x_0, x_1, x_2])
+        np.testing.assert_allclose(obs, exp)
 
 class PvalueTests(TestCase):
 
