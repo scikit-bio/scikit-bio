@@ -307,7 +307,7 @@ class TestStripedSmithWaterman(TestSSW):
                                      override_skip_babp=False,
                                      protein=False,
                                      match=2,
-                                     mismatch=3,
+                                     mismatch=-3,
                                      substitution_matrix=None,
                                      suppress_sequences=False,
                                      zero_index=True)
@@ -386,11 +386,11 @@ class TestStripedSmithWaterman(TestSSW):
             query_sequences=query_sequences,
             target_sequences=target_sequences,
             arg='mismatch',
-            default=3,
-            i_range=range(0, 7),
+            default=-3,
+            i_range=range(6, 1),
             # These are intentionally inverted
-            compare_lt=self.assertGreaterEqual,
-            compare_gt=self.assertLessEqual
+            compare_lt=self.assertLessEqual,
+            compare_gt=self.assertGreaterEqual
         )
         # The above is not a strict bound, so lets use an expected align
         # to plug the hole where every align is exactly equal to default
@@ -406,7 +406,7 @@ class TestStripedSmithWaterman(TestSSW):
             'query_sequence': 'AGAGGGTAATCAGCCGTGTCCACCGGAACACAACGCTATCGGGCGA',
             'target_sequence': 'GTTCGCCCCAGTAAAGTTGCTACCAAATCCGCATG'
         }
-        query = StripedSmithWaterman(expected['query_sequence'], mismatch=8)
+        query = StripedSmithWaterman(expected['query_sequence'], mismatch=-8)
         alignment = query(expected['target_sequence'])
         self._check_alignment(alignment, expected)
 

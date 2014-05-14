@@ -625,7 +625,7 @@ cdef class StripedSmithWaterman:
                   override_skip_babp=False,
                   protein=False,
                   match=2,  # BLASTN Default
-                  mismatch=3,  # BLASTN Default
+                  mismatch=-3,  # BLASTN Default
                   substitution_matrix=None,
                   suppress_sequences=False,
                   zero_index=True):
@@ -760,7 +760,7 @@ cdef class StripedSmithWaterman:
                 if column == '*' or row == '*':
                     dict2d[row][column] = 0
                 else:
-                    dict2d[row][column] = match if row == column else -mismatch
+                    dict2d[row][column] = match if row == column else mismatch
         return self._convert_dict2d_to_matrix(dict2d)
 
     cdef cnp.ndarray[cnp.int8_t, ndim = 1, mode = "c"] \
