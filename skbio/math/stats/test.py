@@ -119,42 +119,113 @@ def safe_sum_p_log_p(a, base=None):
         logs /= np.log(base)
     return np.sum(nz * logs, 0)
 
+def G_stat(data):
+    """Calculate the G statistic for data.
 
-def G_fit(obs, exp, williams=1):
-    """G test for fit between two lists of counts.
+    Parameters
+    ----------
+    data : list of arrays
+        List of arrays, each array is 1D with any length. Each array
+        represents the observed frequencies of a given OTU in one of the sample
+        classes.
 
-    Usage: test, prob = G_fit(obs, exp, williams)
+    Returns
+    -------
+    G : float
+        The G statistic that is additive between all groups. 
 
-    obs and exp are two lists of numbers.
-    williams is a boolean stating whether to do the Williams correction.
-
-    SUM(2 f(obs)ln (f(obs)/f(exp)))
-
-    See Sokal and Rohlf chapter 17.
+    Notes
+    -----
+    For discussion read Sokal and Rohlf Biometry pg. 695-699. The G tests is
+    normally applied to data where you have only one observation of any given
+    sample class (e.g. you observe 90 wildtype and 30 mutants). In microbial
+    ecology it is normal to have multiple samples which contain a given feature
+    where those samples share a metadata class (eg. you observe OTUX at certain
+    frequencies in 12 samples, 6 of which are treatment samples, 6 of which are
+    control samples). To reconcile these approaches this function averages the
+    frequency of the given feature (OTU) across all samples in the metadata
+    class (e.g. in the 6 treatment samples, the value for OTUX is averaged, and
+    this forms the average frequency which represents all treatment samples in
+    aggregate). This means that this version of the G stat cannot detect sample
+    heterogeneity as a replicated goodness of fit test would be able to. In 
+    addition, this function assumes the extrinsic hypothesis is that the
+    mean frequency in all the samples groups is the same.
     """
-    k = len(obs)
-    if k != len(exp):
-        raise ValueError("G_fit requires two lists of equal length.")
-    G = 0
-    n = 0
+    # G = 2*sum(f_i*ln(f_i/f_i_hat)) over all i phenotypes/sample classes
+    # calculate the total number of observations under the consideration that
+    # multiple observations in a given group are averaged.
+    n = sum([arr.mean() for arr in data])
+    a = len(data)  # a is number of phenotypes or sample classes
+    obs_freqs = np.array([sample_type.mean() for sample_type in data])  # f_i's
+    exp_freqs = np.zeros(a) + (n / float(a))  # f_i_hat vals
+    G = 2. * (obs_freqs * np.log(obs_freqs / exp_freqs)).sum()
+    return G
 
-    for o, e in zip(obs, exp):
-        if o < 0:
-            raise ValueError(
-                "G_fit requires all observed values to be positive.")
-        if e <= 0:
-            raise ZeroExpectedError(
-                "G_fit requires all expected values to be positive.")
-        if o:  # if o is zero, o * log(o/e) must be zero as well.
-            G += o * np.log(o / e)
-            n += o
+def G_fit(data, williams=True):
+    """Calculate G statistic and compare to one tailed chi-squared distribution.
 
-    G *= 2
+    Parameters
+    ----------
+    data : list of arrays
+        List of arrays, each array is 1D with any length. Each array
+        represents the observed frequencies of a given OTU in one of the sample
+        classes.
+    williams : boolean
+        Whether or not to apply the Williams correction before comparing to the
+        chi**2 distribution. 
+
+    Returns
+    -------
+    G : float
+        The G statistic that is additive between all groups.
+    pval : float
+        The pvalue associated with the given G statistic. 
+
+    Notes
+    -----
+    For discussion read Sokal and Rohlf Biometry pg. 695-699. This function
+    compares the calculated G statistic (with Williams correction by default) 
+    to the chi-squared distribution with the appropriate number of degrees of
+    freedom.
+    """
+    # sanity checks on the data to return nans if conditions are not met
+    if not all([(i >= 0).all() for i in data]):
+        # G_fit: data contains negative values. G test would be
+        # undefined. Ignoring this OTU.
+        return np.nan, np.nan
+    if not all([i.sum() > 0 for i in data]):
+        # G_fit: data contains sample group with zero only values. This
+        # means that the given OTU was never observed in this sample class
+        # The G test fails in this case because we would be forced to
+        # take log(0). Ignoring this OTU.
+        return np.nan, np.nan
+    G = G_stat(data)
+    a = len(data)  # a is number of phenotypes or sample classes
     if williams:
-        q = 1 + (k + 1) / (6 * n)
-        G /= q
+        # calculate the total number of observations under the consideration
+        # that multiple observations in a given group are averaged.
+        n = sum([arr.mean() for arr in data])  # total observations
+        G = williams_correction(n, a, G)
+    return G, chi_high(G, a - 1) # a-1 degrees of freedom bc of sum constraint
 
-    return G, chi_high(G, k - 1)
+
+def williams_correction(n, a, G):
+    """Return the Williams corrected G statistic for G goodness of fit test.
+
+    For discussion read Sokal and Rohlf Biometry pg 698,699.
+    
+    Parameters
+    ----------
+    n : int
+        Sum of observed frequencies.
+    a : int
+        Number of groups that are being compared.
+    G : float 
+        Uncorrected G statistic
+    """
+    # q = 1. + (a**2 - 1)/(6.*n*a - 6.*n) == 1. + (a+1.)/(6.*n)
+    q = 1. + (a + 1.) / (6. * n)
+    return G / q
 
 
 def t_paired(a, b, tails=None, exp_diff=0):

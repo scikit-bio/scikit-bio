@@ -29,7 +29,7 @@ from skbio.math.stats.test import (G_2_by_2, G_fit, t_paired, t_one_sample,
                                    inverse_fisher_z_transform, 
                                    z_transform_pval, kruskal_wallis, kendall,
                                    kendall_pval, assign_correlation_pval,
-                                   cscore)
+                                   cscore, williams_correction, G_stat)
 
 from skbio.math.stats.distribution import chi_high, tprob
 
@@ -151,52 +151,67 @@ class GTests(TestCase):
         np.testing.assert_allclose(
             G_2_by_2(5, 47, 36, 108), (-6.065167, 0.993106), atol=10e-7)
 
-    def test_Gfit_unequal_lists(self):
-        """Gfit should raise errors if lists unequal"""
-        # lists must be equal
-        self.assertRaises(ValueError, G_fit, [1, 2, 3], [1, 2])
+    def test_G_fit(self):
+        """Test G fit is correct with and without Williams correction."""
+        # test with williams correction
+        data = [np.array(i) for i in [63, 31, 28, 12, 39, 16, 40, 12]]
+        exp_G = 69.030858949133162 / 1.00622406639
+        exp_p = 2.8277381487281706e-12
+        obs_G, obs_p = G_fit(data, williams=True)
+        np.testing.assert_allclose(obs_G, exp_G)
+        np.testing.assert_allclose(obs_p, exp_p)
+        # test with hand computed example and williams correction
+        data = [np.array([75, 65, 48]), np.array([200]), np.array([10, 250, 13,
+                                                                   85])]
+        exp_G = 85.90859811005285 / 1.0018930430667
+        exp_p = 2.4012235241479195e-19
+        obs_G, obs_p = G_fit(data, williams=True)
+        np.testing.assert_allclose(obs_G, exp_G)
+        np.testing.assert_allclose(obs_p, exp_p)
+        # test without williams correction on another hand computed example
+        data = [np.array([10, 12, 15, 7]), np.array([15, 12, 17, 18]),
+                np.array([6, 9, 13])]
+        exp_G = 1.6610421781232
+        exp_p = 0.43582212499949591
+        obs_G, obs_p = G_fit(data, williams=False)
+        np.testing.assert_allclose(obs_G, exp_G)
+        np.testing.assert_allclose(obs_p, exp_p)
 
-    def test_Gfit_negative_observeds(self):
-        """Gfit should raise ValueError if any observeds are negative."""
-        self.assertRaises(ValueError, G_fit, [-1, 2, 3], [1, 2, 3])
+    def test_williams_correction(self):
+        """Test that the Williams correction is correctly computed."""
+        n = 100
+        a = 10
+        G = 10.5783
+        exp = 10.387855973813421
+        np.testing.assert_allclose(williams_correction(n, a, G), exp, 
+                                   rtol=1e-5)
+        # test with an example from Sokal and Rohlf pg 699
+        n = 241
+        a = 8
+        G = 8.82396
+        exp = 8.76938
+        np.testing.assert_allclose(williams_correction(n, a, G), exp,
+                                   rtol=1e-5)
 
-    def test_Gfit_nonpositive_expecteds(self):
-        """Gfit should raise ZeroExpectedError if expecteds are zero/negative
-        """
-        self.assertRaises(ZeroExpectedError, G_fit, [1, 2, 3], [0, 1, 2])
-        self.assertRaises(ZeroExpectedError, G_fit, [1, 2, 3], [-1, 1, 2])
+    def test_G_stat(self):
+        """Test G-stat is correct when extrinsic hypothesis is equal freqs."""
+        # test with equal len=1 vectors
+        data = [np.array(i) for i in [63, 31, 28, 12, 39, 16, 40, 12]]
+        exp = 69.030858949133162
+        np.testing.assert_allclose(G_stat(data), exp, rtol=1e-5)
+        # test with a hand computed example
+        data = [np.array([75, 65, 48]), np.array([200]), np.array([10, 250, 13,
+                                                                   85])]
+        exp = 85.908598110052
+        np.testing.assert_allclose(G_stat(data), exp, rtol=1e-5)
 
-    def test_Gfit_good_data(self):
-        """Gfit tests for fit should match examples in Sokal and Rohlf"""
-        # example from p. 699, Sokal and Rohlf (1995)
-        obs = [63, 31, 28, 12, 39, 16, 40, 12]
-        exp = [67.78125, 22.59375, 22.59375, 7.53125, 45.18750,
-               15.06250, 45.18750, 15.06250]
-        # without correction
-        np.testing.assert_allclose(G_fit(obs, exp, False)[0], 8.82397,
-                                   0.00002)
-        np.testing.assert_allclose(G_fit(obs, exp, False)[1], 0.26554,
-                                   0.00002)
-        # with correction
-        np.testing.assert_allclose(G_fit(obs, exp)[0], 8.76938, 0.00002)
-        np.testing.assert_allclose(G_fit(obs, exp)[1], 0.26964, 0.00002)
-
-        # example from p. 700, Sokal and Rohlf (1995)
-        obs = [130, 46]
-        exp = [132, 44]
-        # without correction
-        np.testing.assert_allclose(G_fit(obs, exp, False)[0], 0.12002,
-                                   0.00002)
-        np.testing.assert_allclose(G_fit(obs, exp, False)[1], 0.72901,
-                                   0.00002)
-        # with correction
-        np.testing.assert_allclose(G_fit(obs, exp)[0], 0.11968, 0.00002)
-        np.testing.assert_allclose(G_fit(obs, exp)[1], 0.72938, 0.00002)
 
     def test_safe_sum_p_log_p(self):
         """safe_sum_p_log_p should ignore zero elements, not raise error"""
         m = np.array([2, 4, 0, 8])
         self.assertEqual(safe_sum_p_log_p(m, 2), 2 * 1 + 4 * 2 + 8 * 3)
+
+
 
 
 class StatTests(TestsHelper):
