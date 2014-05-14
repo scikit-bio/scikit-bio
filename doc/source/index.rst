@@ -22,6 +22,7 @@ API Reference
    factory.sequence
    core.genetic_code
    format.sequences
+   math.diversity.alpha
    math.stats.distance
    math.stats.spatial
    math.stats.ordination

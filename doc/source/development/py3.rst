@@ -278,7 +278,10 @@ Numbers
 
 The `long` type no longer exists in Py2. To test if a number is an
 integer (`int` or `long` in Py2, `int` in Py3), compare it to
-`future.builtins.int`.
+the abstract base class `Integral`::
+
+    from numbers import Integral
+    isinstance(quality, Integral)
 
 Implementing comparisons
 ========================

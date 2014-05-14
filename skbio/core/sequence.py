@@ -21,16 +21,17 @@ Classes
    NucleotideSequence
    DNASequence
    RNASequence
+   ProteinSequence
 
 Examples
 --------
 >>> from skbio.core.sequence import DNASequence, RNASequence
 
-New sequences are created with optional identifier and description fields.
+New sequences are created with optional id and description fields.
 
 >>> d1 = DNASequence('ACC--G-GGTA..')
->>> d1 = DNASequence('ACC--G-GGTA..',identifier="seq1")
->>> d1 = DNASequence('ACC--G-GGTA..',identifier="seq1",description="GFP")
+>>> d1 = DNASequence('ACC--G-GGTA..',id="seq1")
+>>> d1 = DNASequence('ACC--G-GGTA..',id="seq1",description="GFP")
 
 New sequences can also be created from existing sequences, for example as their
 reverse complement or degapped (i.e., unaligned) version.
@@ -66,6 +67,14 @@ set(['C', 'U', 'G'])
 >>> DNASequence.is_gap('-')
 True
 
+NucleotideSequences can be translated using a GeneticCode object.
+
+>>> d6 = DNASequence('ATGTCTAAATGA')
+>>> from skbio.core.genetic_code import GeneticCodes
+>>> gc = GeneticCodes[11]
+>>> gc.translate(d6)
+<ProteinSequence: MSK* (length: 4)>
+
 """
 from __future__ import division
 
@@ -92,8 +101,8 @@ class BiologicalSequence(Sequence):
     ----------
     sequence : python Sequence (e.g., str, list or tuple)
         The biological sequence.
-    identifier : str, optional
-        The sequence identifier (e.g., an accession number).
+    id : str, optional
+        The sequence id (e.g., an accession number).
     description : str, optional
         A description or comment about the sequence (e.g., "green
         fluorescent protein").
@@ -104,7 +113,7 @@ class BiologicalSequence(Sequence):
     Attributes
     ----------
     description
-    identifier
+    id
 
     Raises
     ------
@@ -157,7 +166,7 @@ class BiologicalSequence(Sequence):
         has_unsupported_characters
 
         """
-        return set()
+        return cls.iupac_characters()
 
     @classmethod
     def gap_alphabet(cls):
@@ -180,10 +189,60 @@ class BiologicalSequence(Sequence):
         """
         return set('-.')
 
-    def __init__(self, sequence, identifier="", description="",
+    @classmethod
+    def iupac_degenerate_characters(cls):
+        """Return the degenerate IUPAC characters.
+
+        Returns
+        -------
+        set
+            Degenerate IUPAC characters.
+
+        """
+        return set(cls.iupac_degeneracies())
+
+    @classmethod
+    def iupac_characters(cls):
+        """Return the non-degenerate and degenerate characters.
+
+        Returns
+        -------
+        set
+            Non-degenerate and degenerate characters.
+
+        """
+        return (cls.iupac_standard_characters() |
+                cls.iupac_degenerate_characters())
+
+    @classmethod
+    def iupac_standard_characters(cls):
+        """Return the non-degenerate IUPAC characters.
+
+        Returns
+        -------
+        set
+            Non-degenerate IUPAC characters.
+
+        """
+        return set()
+
+    @classmethod
+    def iupac_degeneracies(cls):
+        """Return the mapping of degenerate to non-degenerate characters.
+
+        Returns
+        -------
+        dict of sets
+            Mapping of IUPAC degenerate character to the set of
+            non-degenerate IUPAC characters it represents.
+
+        """
+        return {}
+
+    def __init__(self, sequence, id="", description="",
                  validate=False):
         self._sequence = ''.join(sequence)
-        self._identifier = identifier
+        self._id = id
         self._description = description
 
         if validate and not self.is_valid():
@@ -283,7 +342,7 @@ class BiologicalSequence(Sequence):
         """
         try:
             return self.__class__(self._sequence[i],
-                                  self.identifier, self.description)
+                                  self.id, self.description)
         except IndexError:
             raise IndexError(
                 "Position %d is out of range for %r." % (i, self))
@@ -455,12 +514,12 @@ class BiologicalSequence(Sequence):
         str
             String representation of the `BiologicalSequence`. This will be the
             full sequence, but will not contain information about the type, or
-            `self.identifier` or `self.description`.
+            `self.id` or `self.description`.
 
         See Also
         --------
         to_fasta
-        identifier
+        id
         description
         __repr__
 
@@ -491,16 +550,16 @@ class BiologicalSequence(Sequence):
         return self._description
 
     @property
-    def identifier(self):
-        """Return the identifier of the `BiologicalSequence`
+    def id(self):
+        """Return the id of the `BiologicalSequence`
 
         Returns
         -------
         str
-            The identifier attribute of the `BiologicalSequence`
+            The id attribute of the `BiologicalSequence`
 
         """
-        return self._identifier
+        return self._id
 
     def count(self, subsequence):
         """Returns the number of occurences of subsequence.
@@ -536,7 +595,7 @@ class BiologicalSequence(Sequence):
 
         Notes
         -----
-        The type, identifier, and description of the result will be the
+        The type, id, and description of the result will be the
         same as `self`.
 
         Examples
@@ -552,7 +611,7 @@ class BiologicalSequence(Sequence):
         """
         gaps = self.gap_alphabet()
         result = [e for e in self._sequence if e not in gaps]
-        return self.__class__(result, identifier=self._identifier,
+        return self.__class__(result, id=self._id,
                               description=self._description)
 
     def distance(self, other, distance_fn=None):
@@ -1038,7 +1097,70 @@ class BiologicalSequence(Sequence):
 
         """
         return self.__class__(self._sequence.lower(),
-                              self.identifier, self.description)
+                              self.id, self.description)
+
+    def nondegenerates(self):
+        """Yield all nondegenerate versions of the sequence.
+
+        Returns
+        -------
+        generator
+            Generator yielding all possible nondegenerate versions of the
+            sequence. Each sequence will have the same type, id, and
+            description as `self`.
+
+        Raises
+        ------
+        BiologicalSequenceError
+            If the sequence contains an invalid character (a character that
+            isn't an IUPAC character or a gap character).
+
+        See Also
+        --------
+        iupac_degeneracies
+
+        Notes
+        -----
+        There is no guaranteed ordering to the generated sequences.
+
+        Examples
+        --------
+        >>> from skbio.core.sequence import NucleotideSequence
+        >>> seq = NucleotideSequence('TRG')
+        >>> seq_generator = seq.nondegenerates()
+        >>> for s in sorted(seq_generator, key=str): print(s)
+        TAG
+        TGG
+
+        """
+        degen_chars = self.iupac_degeneracies()
+        nonexpansion_chars = self.iupac_standard_characters().union(
+            self.gap_alphabet())
+
+        expansions = []
+        for char in self:
+            if char in nonexpansion_chars:
+                expansions.append(char)
+            else:
+                # Use a try/except instead of explicitly checking for set
+                # membership on the assumption that an exception is rarely
+                # thrown.
+                try:
+                    expansions.append(degen_chars[char])
+                except KeyError:
+                    raise BiologicalSequenceError(
+                        "Sequence contains an invalid character: %s" % char)
+
+        result = product(*expansions)
+
+        # Cache lookups here as there may be a lot of sequences to generate.
+        # Could use functools.partial, but it ends up being a little slower
+        # than this method.
+        id_ = self.id
+        desc = self.description
+        cls = self.__class__
+
+        return (cls(nondegen_seq, id_, desc) for nondegen_seq in result)
 
     def to_fasta(self, field_delimiter=" ", terminal_character="\n"):
         """Return the sequence as a fasta-formatted string
@@ -1047,7 +1169,7 @@ class BiologicalSequence(Sequence):
         ----------
         field_delimiter : str, optional
             The character(s) to use on the header line between the
-            `self.identifier` and `self.description`.
+            `self.id` and `self.description`.
 
         terminal_character : str, optional
             The last character to be included in the result (if you don't want
@@ -1070,17 +1192,17 @@ class BiologicalSequence(Sequence):
         >>> print s.to_fasta(terminal_character="")
         >
         ACACGACGTT
-        >>> t = BiologicalSequence('ACA',identifier='my-seq',description='h')
+        >>> t = BiologicalSequence('ACA',id='my-seq',description='h')
         >>> print t.to_fasta(terminal_character="")
         >my-seq h
         ACA
 
         """
         if self._description:
-            header_line = '%s%s%s' % (self._identifier, field_delimiter,
+            header_line = '%s%s%s' % (self._id, field_delimiter,
                                       self._description)
         else:
-            header_line = self._identifier
+            header_line = self._id
 
         return '>%s\n%s%s' % (
             header_line, str(self), terminal_character)
@@ -1096,7 +1218,7 @@ class BiologicalSequence(Sequence):
 
         """
         return self.__class__(self._sequence.upper(),
-                              self.identifier, self.description)
+                              self.id, self.description)
 
 
 class NucleotideSequence(BiologicalSequence):
@@ -1115,18 +1237,6 @@ class NucleotideSequence(BiologicalSequence):
     All uppercase and lowercase IUPAC DNA/RNA characters are supported.
 
     """
-
-    @classmethod
-    def alphabet(cls):
-        """Return the set of characters allowed in a `NucleotideSequence`.
-
-        Returns
-        -------
-        set
-            Characters that are allowed in a valid `NucleotideSequence`.
-
-        """
-        return cls.iupac_characters()
 
     @classmethod
     def complement_map(cls):
@@ -1184,31 +1294,6 @@ class NucleotideSequence(BiologicalSequence):
 
         return degen_map
 
-    @classmethod
-    def iupac_degenerate_characters(cls):
-        """Return the degenerate IUPAC nucleotide characters.
-
-        Returns
-        -------
-        set
-            Degenerate IUPAC nucleotide characters.
-
-        """
-        return set(cls.iupac_degeneracies())
-
-    @classmethod
-    def iupac_characters(cls):
-        """Return the non-degenerate and degenerate nucleotide characters.
-
-        Returns
-        -------
-        set
-            Non-degenerate and degenerate nucleotide characters.
-
-        """
-        return (cls.iupac_standard_characters() |
-                cls.iupac_degenerate_characters())
-
     def _complement(self, seq_iterator):
         """Returns `NucleotideSequence` that is complement of `seq_iterator`
 
@@ -1245,7 +1330,7 @@ class NucleotideSequence(BiologicalSequence):
                 raise BiologicalSequenceError(
                     "Don't know how to complement base %s. Is it in "
                     "%s.complement_map?" % (base, self.__class__.__name__))
-        return self.__class__(result, self._identifier, self._description)
+        return self.__class__(result, self._id, self._description)
 
     def complement(self):
         """Return the complement of the `NucleotideSequence`
@@ -1316,69 +1401,6 @@ class NucleotideSequence(BiologicalSequence):
         """
         return self._complement(reversed(self))
     rc = reverse_complement
-
-    def nondegenerates(self):
-        """Yield all nondegenerate versions of the sequence.
-
-        Returns
-        -------
-        generator
-            Generator yielding all possible nondegenerate versions of the
-            sequence. Each sequence will have the same type, identifier, and
-            description as `self`.
-
-        Raises
-        ------
-        BiologicalSequenceError
-            If the sequence contains an invalid character (a character that
-            isn't an IUPAC character or a gap character).
-
-        See Also
-        --------
-        iupac_degeneracies
-
-        Notes
-        -----
-        There is no guaranteed ordering to the generated sequences.
-
-        Examples
-        --------
-        >>> from skbio.core.sequence import NucleotideSequence
-        >>> seq = NucleotideSequence('TRG')
-        >>> seq_generator = seq.nondegenerates()
-        >>> for s in sorted(seq_generator, key=str): print(s)
-        TAG
-        TGG
-
-        """
-        degen_chars = self.iupac_degeneracies()
-        nonexpansion_chars = self.iupac_standard_characters().union(
-            self.gap_alphabet())
-
-        expansions = []
-        for char in self:
-            if char in nonexpansion_chars:
-                expansions.append(char)
-            else:
-                # Use a try/except instead of explicitly checking for set
-                # membership on the assumption that an exception is rarely
-                # thrown.
-                try:
-                    expansions.append(degen_chars[char])
-                except KeyError:
-                    raise BiologicalSequenceError(
-                        "Sequence contains an invalid character: %s" % char)
-
-        result = product(*expansions)
-
-        # Cache lookups here as there may be a lot of sequences to generate.
-        # Could use functools.partial, but it ends up being a little slower
-        # than this method.
-        id_ = self.identifier
-        desc = self.description
-        cls = self.__class__
-
-        return (cls(nondegen_seq, id_, desc) for nondegen_seq in result)
 
 
 class DNASequence(NucleotideSequence):
@@ -1534,3 +1556,58 @@ class RNASequence(NucleotideSequence):
 
 # class is accessible with alternative name for convenience
 RNA = RNASequence
+
+
+class ProteinSequence(BiologicalSequence):
+    """Base class for protein sequences.
+
+    A `ProteinSequence` is a `BiologicalSequence` containing only characters
+    used in the IUPAC protein lexicon.
+
+    See Also
+    --------
+    BiologialSequence
+
+    Notes
+    -----
+    All uppercase and lowercase IUPAC protein characters are supported.
+
+    """
+
+    @classmethod
+    def iupac_standard_characters(cls):
+        """Return the non-degenerate IUPAC protein characters.
+
+        Returns
+        -------
+        set
+            Non-degenerate IUPAC protein characters.
+
+        """
+        return set("ACDEFGHIKLMNPQRSTVWYacdefghiklmnpqrstvwy")
+
+    @classmethod
+    def iupac_degeneracies(cls):
+        """Return the mapping of degenerate to non-degenerate characters.
+
+        Returns
+        -------
+        dict of sets
+            Mapping of IUPAC degenerate protein character to the set of
+            non-degenerate IUPAC protein characters it represents.
+
+        """
+        degen_map = {
+            "B": set("DN"), "Z": set("EQ"),
+            "X": set("ACDEFGHIKLMNPQRSTVWY")
+        }
+
+        for degen_char in list(degen_map.keys()):
+            nondegen_chars = degen_map[degen_char]
+            degen_map[degen_char.lower()] = set(
+                ''.join(nondegen_chars).lower())
+
+        return degen_map
+
+# class is accessible with alternative name for convenience
+Protein = ProteinSequence

@@ -9,31 +9,52 @@
 # -----------------------------------------------------------------------------
 from __future__ import division
 
+import tempfile
+
 from skbio.parse.sequences.fasta import parse_fasta, parse_qual
 from skbio.core.exception import RecordError
 
 from unittest import TestCase, main
 
 
-class GenericFastaTest(TestCase):
+FASTA_PARSERS_DATA = {
+    'labels': '>abc\n>def\n>ghi\n',
+    'oneseq': '>abc\nUCAG\n',
+    'multiline': '>xyz\nUUUU\nCC\nAAAAA\nG',
+    'threeseq': '>123\na\n> \t abc  \t \ncag\ngac\n>456\nc\ng',
+    'twogood': '>123\n\n> \t abc  \t \ncag\ngac\n>456\nc\ng',
+    'oneX': '>123\nX\n> \t abc  \t \ncag\ngac\n>456\nc\ng',
+    'nolabels': 'GJ>DSJGSJDF\nSFHKLDFS>jkfs\n',
+    'empty': '',
+    }
 
-    """Setup data for all the various FASTA parsers."""
 
+class IterableData(object):
+    """Store fasta data as lists of strings."""
     def setUp(self):
-        """standard files"""
-        self.labels = '>abc\n>def\n>ghi\n'.split('\n')
-        self.oneseq = '>abc\nUCAG\n'.split('\n')
-        self.multiline = '>xyz\nUUUU\nCC\nAAAAA\nG'.split('\n')
-        self.threeseq = '>123\na\n> \t abc  \t \ncag\ngac\n>456\nc\ng'.split(
-            '\n')
-        self.twogood = '>123\n\n> \t abc  \t \ncag\ngac\n>456\nc\ng'.split(
-            '\n')
-        self.oneX = '>123\nX\n> \t abc  \t \ncag\ngac\n>456\nc\ng'.split('\n')
-        self.nolabels = 'GJ>DSJGSJDF\nSFHKLDFS>jkfs\n'.split('\n')
-        self.empty = []
+        for attr, val in FASTA_PARSERS_DATA.items():
+            setattr(self, attr, val.split('\n'))
 
 
-class ParseFastaTests(GenericFastaTest):
+class FileData(object):
+    """Store fasta data as file names pointing to the data."""
+    def setUp(self):
+        tmp_files = []
+        for attr, val in FASTA_PARSERS_DATA.items():
+            tmp_file = tempfile.NamedTemporaryFile('r+')
+            tmp_file.write(val)
+            tmp_file.flush()
+            tmp_file.seek(0)
+            setattr(self, attr, tmp_file.name)
+            tmp_files.append(tmp_file)
+        self._tmp_files = tmp_files
+
+    def tearDown(self):
+        for tmp_file in self._tmp_files:
+            tmp_file.close()
+
+
+class ParseFastaTests(object):
 
     """Tests of parse_fasta: returns (label, seq) tuples."""
 
@@ -118,6 +139,22 @@ class ParseFastaTests(GenericFastaTest):
         self.assertListEqual(list(gen[1][1]), [30, 40])
         self.assertListEqual(list(gen[2][1]), [5, 10, 5, 12])
         self.assertListEqual(list(gen[3][1]), [30, 40])
+
+
+class ParseFastaTestsInputIsIterable(IterableData, ParseFastaTests, TestCase):
+    """Mixin: `parse_fasta` and `parse_qual` in ParseFastaTests gets lists
+    of strings.
+
+    """
+    pass
+
+
+class ParseFastaTestsInputIsFileNames(FileData, ParseFastaTests, TestCase):
+    """Mixin: `parse_fasta` and `parse_qual` in ParseFastaTests gets a
+    file name.
+
+    """
+    pass
 
 if __name__ == "__main__":
     main()

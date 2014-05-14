@@ -46,6 +46,32 @@ scikit-bio is available under the new BSD license. See
 directory for the licenses of other software that is (either partially or
 entirely) distributed with scikit-bio.
 
+Installation
+------------
+
+In order to install scikit-bio:
+
+    pip install numpy
+    pip install scikit-bio
+
+If you'd like to install the dependencies manually (or some other way than using pip), you can find those here:
+
+- [Python](http://www.python.org/) 2.7
+- [numpy](http://www.numpy.org/) >= 1.7
+- [scipy](http://www.scipy.org/) >= 0.13.0
+- [matplotlib](http://www.matplotlib.org/) >= 1.1.0
+- [pandas](http://pandas.pydata.org/)
+- [future](https://pypi.python.org/pypi/future) 
+
+Projects using scikit-bio
+-------------------------
+
+- [QIIME](http://qiime.org/) 
+- [EMPeror](http://biocore.github.io/emperor/)
+- [An Introduction to Applied Bioinformatics](http://caporasolab.us/An-Introduction-To-Applied-Bioinformatics/)
+
+If you're using scikit-bio in your own projects, you should issue a pull request adding them to this list.
+
 scikit-bio development
 ----------------------
 
@@ -73,8 +99,10 @@ have been ported to scikit-bio are: Rob Knight
 ([@mikerobeson](https://github.com/mikerobeson)), Marcin Cieslik, Peter
 Maxwell, Jeremy Widmann, Zongzhi Liu, Michael Dwan, Logan Knecht
 ([@loganknecht](https://github.com/loganknecht)), Andrew Cochran, Jose Carlos
-Clemente ([@cleme](https://github.com/cleme)), Damien Coy, Levi McCracken, and
-Andrew Butterfield.
+Clemente ([@cleme](https://github.com/cleme)), Damien Coy, Levi McCracken,
+Andrew Butterfield, Will Van Treuren ([@wdwvt1](https://github.com/wdwvt1)),
+Justin Kuczynski ([@justin212k](https://github.com/justin212k)), and Jose
+Antonio Navas Molina ([@josenavas](https://github.com/josenavas)).
 
 Logo
 ----

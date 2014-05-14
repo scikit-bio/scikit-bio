@@ -8,19 +8,42 @@
 # -----------------------------------------------------------------------------
 from __future__ import division
 
+from unittest import TestCase, main
+import tempfile
+
 from numpy import array
 
 from skbio.parse.sequences import parse_fastq
 from skbio.core.exception import FastqParseError
-from unittest import TestCase, main
 
 
-class ParseFastqTests(TestCase):
-
+class IterableData(object):
     def setUp(self):
-        """ Initialize variables to be used by the tests """
+        """ Initialize variables to be used by the tests as lists of strings"""
         self.FASTQ_EXAMPLE = FASTQ_EXAMPLE.split('\n')
         self.FASTQ_EXAMPLE_2 = FASTQ_EXAMPLE_2.split('\n')
+
+
+class FileData(object):
+    def setUp(self):
+        """ Initialize variables to be used by the tests as file names"""
+        tmp_files = []
+        for attr, val in [('FASTQ_EXAMPLE', FASTQ_EXAMPLE),
+                          ('FASTQ_EXAMPLE_2', FASTQ_EXAMPLE_2)]:
+            tmp_file = tempfile.NamedTemporaryFile('r+b')
+            tmp_file.write(val)
+            tmp_file.flush()
+            tmp_file.seek(0)
+            setattr(self, attr, tmp_file.name)
+            tmp_files.append(tmp_file)
+        self._tmp_files = tmp_files
+
+    def tearDown(self):
+        for tmp_file in self._tmp_files:
+            tmp_file.close()
+
+
+class ParseFastqTests(object):
 
     def test_parse(self):
         """sequence and info objects should correctly match"""
@@ -34,6 +57,14 @@ class ParseFastqTests(TestCase):
         """Does this raise a FastqParseError with incorrect input?"""
         with self.assertRaises(FastqParseError):
             list(parse_fastq(self.FASTQ_EXAMPLE_2, strict=True))
+
+
+class ParseFastqTestsInputIsIterable(IterableData, ParseFastqTests, TestCase):
+    pass
+
+
+class ParseFastqTestsInputIsFileNames(FileData, ParseFastqTests, TestCase):
+    pass
 
 DATA = {
     "GAPC_0015:6:1:1259:10413#0/1":
