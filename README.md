@@ -70,7 +70,7 @@ Projects using scikit-bio
 - [EMPeror](http://biocore.github.io/emperor/)
 - [An Introduction to Applied Bioinformatics](http://caporasolab.us/An-Introduction-To-Applied-Bioinformatics/)
 
-If you are using scikit-bio in your own projects you can issue a pull request to have them included here.
+If you're using scikit-bio in your own projects, you should issue a pull request adding them to this list.
 
 scikit-bio development
 ----------------------
