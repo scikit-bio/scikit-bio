@@ -12,6 +12,7 @@ from __future__ import division
 
 import numpy as np
 from numpy.random import shuffle
+from scipy.stats import spearmanr
 
 from skbio.math.stats.special import MACHEP, ndtri
 from skbio.math.stats.distribution import (chi_high, zprob, f_high, t_high,
@@ -465,101 +466,78 @@ def t_one_observation(x, sample, tails=None, exp_diff=0,
 
     return result
 
+def pearson(v1, v2):
+    '''Pearson correlation using numpy.corrcoef.
 
-def pearson(x_items, y_items):
-    """Returns Pearson's product moment correlation coefficient.
+    Parameters
+    ----------
+    v1 : array-like
+        List or array of ints or floats to be correlated. 
+    v2 : array-like
+        List or array of ints or floats to be correlated. 
 
-    This will always be a value between -1.0 and +1.0. x_items and y_items must
-    be the same length, and cannot have fewer than 2 elements each. If one or
-    both of the input vectors do not have any variation, the return value will
-    be 0.0.
+    Returns
+    -------
+    corrcoef : float
+        Pearson correlation between the vectors.
 
-    Arguments:
-        x_items - the first list of observations
-        y_items - the second list of observations
-    """
-    x_items, y_items = np.array(x_items), np.array(y_items)
+    Raises
+    ------
+    ValueError
+        If the vectors are not equally sized or if they are only a single 
+        element a ValueError will be returned.
 
-    if len(x_items) != len(y_items):
-        raise ValueError("The length of the two vectors must be the same in "
-                         "order to calculate the Pearson correlation "
-                         "coefficient.")
-    if len(x_items) < 2:
-        raise ValueError("The two vectors must both contain at least 2 "
-                         "elements. The vectors are "
-                         "of length %d." % len(x_items))
+    Examples
+    --------
+    >>> from skbio.math.stats.test import pearson
+    >>> v1 = [.1, .2, .5, .3, .4]
+    >>> v2 = [.9, .01, .5, .6, .7]
+    >>> pearson(v1, v2)
+    -0.052364331421504685
+    '''
+    v1, v2 = np.array(v1), np.array(v2)
+    if not (v1.size == v2.size > 1):
+        raise ValueError('One or more vectors isn\'t long enough to correlate '
+            ' or they have unequal lengths.')
+    return np.corrcoef(v1, v2)[0][1]  # 2x2 symmetric unit matrix
 
-    sum_x = np.sum(x_items)
-    sum_y = np.sum(y_items)
-    sum_x_sq = np.sum(x_items * x_items)
-    sum_y_sq = np.sum(y_items * y_items)
-    sum_xy = np.sum(x_items * y_items)
-    n = len(x_items)
-
-    try:
-        r = 1.0 * ((n * sum_xy) - (sum_x * sum_y)) / \
-            (np.sqrt((n * sum_x_sq) - (sum_x * sum_x))
-             * np.sqrt((n * sum_y_sq) - (sum_y * sum_y)))
-    except (ZeroDivisionError, ValueError, FloatingPointError):
-        # no variation
-        r = 0.0
-    # check we didn't get a naughty value for r due to rounding error
-    if r > 1.0:
-        r = 1.0
-    elif r < -1.0:
-        r = -1.0
-    return r
-
-
-def spearman(x_items, y_items):
+def spearman(v1, v2):
     """Returns Spearman's rho.
 
-    This will always be a value between -1.0 and +1.0. x_items and y_items must
+    Parameters
+    ----------
+    v1 : array-like
+        List or array of ints or floats to be correlated. 
+    v2 : array-like
+        List or array of ints or floats to be correlated. 
+
+    Returns
+    -------
+    rho : float
+        Spearman correlation between the vectors.
+
+    Raises
+    ------
+    ValueError
+        If the vectors are not equally sized or if they are only a single 
+        element a ValueError will be returned.
+
+    See Also
+    --------
+    scipy.stats.spearmanr
+
+    Notes
+    -----
+    This will always be a value between -1.0 and +1.0. v1 and v2 must
     be the same length, and cannot have fewer than 2 elements each. If one or
     both of the input vectors do not have any variation, the return value will
-    be 0.0.
-
-    Arguments:
-        x_items - the first list of observations
-        y_items - the second list of observations
+    be nan.
     """
-    x_items, y_items = np.array(x_items), np.array(y_items)
-
-    if len(x_items) != len(y_items):
-        raise ValueError("The length of the two vectors must be the same in "
-                         "order to calculate Spearman's rho.")
-    if len(x_items) < 2:
-        raise ValueError("The two vectors must both contain "
-                         "at least 2 elements. The vectors are of "
-                         "length %d." % len(x_items))
-
-    # Rank the two input vectors.
-    rank1, ties1 = _get_rank(x_items)
-    rank2, ties2 = _get_rank(y_items)
-
-    if ties1 == 0 and ties2 == 0:
-        n = len(rank1)
-        sum_sqr = np.sum([(x - y) ** 2 for x, y in zip(rank1, rank2)])
-        rho = 1 - (6 * sum_sqr / (n * (n ** 2 - 1)))
-    else:
-        avg = lambda x: np.sum(x) / len(x)
-
-        x_bar = avg(rank1)
-        y_bar = avg(rank2)
-
-        numerator = np.sum([(x - x_bar) * (y - y_bar)
-                            for x, y in zip(rank1, rank2)])
-        denominator = np.sqrt(np.sum([(x - x_bar) ** 2 for x in rank1]) *
-                              np.sum([(y - y_bar) ** 2 for y in rank2]))
-
-        # Calculate rho. Handle the case when there is no variation in one or
-        # both of the input vectors.
-        if denominator == 0.0:
-            rho = 0.0
-        else:
-            rho = numerator / denominator
-    return rho
-
+    v1, v2 = np.array(v1), np.array(v2)
+    if not (v1.size == v2.size > 1):
+        raise ValueError('One or more vectors isn\'t long enough to correlate '
+            ' or they have unequal lengths.')
+    return spearmanr(v1, v2)[0] # return only the rho-value
 
 def _get_rank(data):
     """Ranks the elements of a list. Used in Spearman correlation."""

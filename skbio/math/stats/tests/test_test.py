@@ -767,7 +767,7 @@ class CorrelationTests(TestsHelper):
 
     def test_spearman_no_variation(self):
         """Test the spearman function with a vector having no variation."""
-        exp = 0.0
+        exp = np.nan
         obs = spearman([1, 1, 1], [1, 2, 3])
         np.testing.assert_allclose(obs, exp)
 
@@ -785,7 +785,6 @@ class CorrelationTests(TestsHelper):
         """Test the spearman function with invalid input."""
         self.assertRaises(ValueError, spearman, [], [])
         self.assertRaises(ValueError, spearman, self.a, [])
-        self.assertRaises(TypeError, spearman, {0: 2}, [1, 2, 3])
 
     def test_get_rank(self):
         """Test the _get_rank function with valid input."""
@@ -955,8 +954,7 @@ class CorrelationTests(TestsHelper):
         """Test correlation_t with perfectly-correlated input vectors."""
         # These results were verified with R.
         obs = correlation_t([1, 2, 3, 4], [1, 2, 3, 4])
-        np.testing.assert_allclose(obs[:2], (0.99999999999999978,
-                                             2.2204460492503131e-16))
+        np.testing.assert_allclose(obs[:2], (1.0, 0.0))
         self.assertEqual(len(obs[2]), 999)
         for r in obs[2]:
             self.assertTrue(r >= -1.0 and r <= 1.0)
