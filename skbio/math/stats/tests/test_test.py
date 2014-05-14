@@ -24,7 +24,12 @@ from skbio.math.stats.test import (G_2_by_2, G_fit, t_paired, t_one_sample,
                                    mw_boot, is_symmetric_and_hollow,
                                    reverse_tails, tail, fdr_correction, 
                                    benjamini_hochberg_step_down, 
-                                   bonferroni_correction)
+                                   bonferroni_correction, fisher_z_transform,
+                                   fisher_population_correlation,
+                                   inverse_fisher_z_transform, 
+                                   z_transform_pval)
+
+from skbio.math.stats.distribution import chi_high
 
 
 class TestsHelper(TestCase):
@@ -1076,67 +1081,76 @@ class PvalueTests(TestCase):
         obs = bonferroni_correction(pvals)
         np.testing.assert_allclose(obs, exp)
 
-    # def test_fisher_z_transform(self):
-    #     '''Test Fisher Z transform is correct.'''
-    #     r = .657
-    #     exp = .5 * log(1.657 / .343)
-    #     obs = fisher_z_transform(r)
-    #     assert_allclose(exp, obs)
-    #     r = 1
-    #     obs = fisher_z_transform(r)
-    #     assert_allclose(obs, nan)
-    #     r = -1
-    #     obs = fisher_z_transform(r)
-    #     assert_allclose(obs, nan)
-    #     # from sokal and rohlf pg 575
-    #     r = .972
-    #     obs = fisher_z_transform(r)
-    #     exp = 2.12730
-    #     assert_allclose(exp, obs)
+    def test_fisher_z_transform(self):
+        '''Test Fisher Z transform is correct.'''
+        r = .657
+        exp = .5 * np.log(1.657 / .343)
+        obs = fisher_z_transform(r)
+        np.testing.assert_allclose(exp, obs)
+        r = 1
+        obs = fisher_z_transform(r)
+        np.testing.assert_allclose(obs, np.nan)
+        r = -1
+        obs = fisher_z_transform(r)
+        np.testing.assert_allclose(obs, np.nan)
+        r = -5.6
+        obs = fisher_z_transform(r)
+        np.testing.assert_allclose(obs, np.nan)
+        # from sokal and rohlf pg 575
+        r = .972
+        obs = fisher_z_transform(r)
+        exp = 2.12730
+        np.testing.assert_allclose(exp, obs, rtol=1e-4)
 
-    # def test_z_transform_pval(self):
-    #     '''Test that pval associated with Fisher Z is correct.'''
-    #     r = .6
-    #     n = 100
-    #     obs = z_transform_pval(r, n)
-    #     exp = 3.4353390341723208e-09
-    #     assert_allclose(exp, obs)
-    #     r = .5
-    #     n = 3
-    #     obs = z_transform_pval(r, n)
-    #     assert_allclose(obs, nan)
+    def test_z_transform_pval(self):
+        '''Test that pval associated with Fisher Z is correct.'''
+        r = .6
+        n = 100
+        obs = z_transform_pval(r, n)
+        exp = 3.4353390341723208e-09
+        np.testing.assert_allclose(exp, obs)
+        r = .5
+        n = 3
+        obs = z_transform_pval(r, n)
+        np.testing.assert_allclose(obs, np.nan)
 
-    # def test_inverse_fisher_z_transform(self):
-    #     '''Test that Fisher's Z transform is computed correctly.'''
-    #     z = .65
-    #     exp = 0.5716699660851171
-    #     obs = inverse_fisher_z_transform(z)
-    #     assert_allclose(exp, obs)
+    def test_inverse_fisher_z_transform(self):
+        '''Test that Fisher's Z transform is computed correctly.'''
+        z = .65
+        exp = 0.5716699660851171
+        obs = inverse_fisher_z_transform(z)
+        np.testing.assert_allclose(exp, obs)
 
-    # def test_fisher_population_correlation(self):
-    #     '''Test that the population rho and homogeneity coeff are correct.'''
-    #     # example from Sokal and Rohlf Biometry pg. 580 - 582
-    #     rs = array([.29, .7, .58, .56, .55, .67, .65, .61, .64, .56])
-    #     ns = array([100, 46, 28, 74, 33, 27, 52, 26, 20, 17])
-    #     zbar = .615268
-    #     X2 = 15.26352
-    #     pop_r = .547825
-    #     hval = chisqprob(X2, len(ns) - 1)
-    #     obs_p_rho, obs_hval = fisher_population_correlation(rs, ns)
-    #     assert_allclose(obs_p_rho, pop_r)
-    #     assert_allclose(obs_hval, hval)
-    #     # test with nans
-    #     rs = array([.29, .7, nan, .58, .56, .55, .67, .65, .61, .64, .56])
-    #     ns = array([100, 46, 400, 28, 74, 33, 27, 52, 26, 20, 17])
-    #     obs_p_rho, obs_hval = fisher_population_correlation(rs, ns)
-    #     assert_allclose(obs_p_rho, pop_r)
-    #     assert_allclose(obs_hval, hval)
-    #     # test with short vectors
-    #     rs = [.6, .5, .4, .6, .7]
-    #     ns = [10, 12, 42, 11, 3]
-    #     obs_p_rho, obs_hval = fisher_population_correlation(rs, ns)
-    #     assert_allclose(obs_p_rho, nan)
-    #     assert_allclose(obs_hval, nan)
+    def test_fisher_population_correlation(self):
+        '''Test that the population rho and homogeneity coeff are correct.'''
+        # note: the error tolerances are lower than they would normally be 
+        # because sokal and rolhf don't give many significant figures
+        # example from Sokal and Rohlf Biometry pg. 580 - 582
+        rs = np.array([.29, .7, .58, .56, .55, .67, .65, .61, .64, .56])
+        ns = np.array([100, 46, 28, 74, 33, 27, 52, 26, 20, 17])
+        zbar = .615268
+        X2 = 15.26352
+        pop_r = .547825
+        hval = chi_high(X2, len(ns) - 1)
+        obs_p_rho, obs_hval = fisher_population_correlation(rs, ns)
+        np.testing.assert_allclose(obs_p_rho, pop_r, rtol=1e-5)
+        np.testing.assert_allclose(obs_hval, hval, rtol=1e-5)
+        # test with np.nans
+        rs = np.array([.29, .7, np.nan, .58, .56, .55, .67, .65, .61, .64, .56])
+        ns = np.array([100, 46, 400, 28, 74, 33, 27, 52, 26, 20, 17])
+        obs_p_rho, obs_hval = fisher_population_correlation(rs, ns)
+        np.testing.assert_allclose(obs_p_rho, pop_r, rtol=1e-5)
+        np.testing.assert_allclose(obs_hval, hval, rtol=1e-5)
+        # test with short vectors
+        rs = [.6, .5, .4, .6, .7]
+        ns = [10, 12, 42, 11, 3]
+        obs_p_rho, obs_hval = fisher_population_correlation(rs, ns)
+        np.testing.assert_allclose(obs_p_rho, np.nan)
+        np.testing.assert_allclose(obs_hval, np.nan)
+        # test with data with rs >1
+        rs = [.6, .5, .4, 1.4]
+        ns = [10, 50, 100, 10]
+        self.assertRaises(ValueError, fisher_population_correlation, rs, ns)
 
     # def test_assign_correlation_pval(self):
     #     '''Test that correlation pvalues are assigned correctly with each meth.

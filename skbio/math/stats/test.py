@@ -1042,10 +1042,6 @@ def bonferroni_correction(pvals):
 def fdr_correction(pvals):
     """Adjust pvalues for multiple tests using the false discovery rate method.
 
-    In short: ranks the p-values in ascending order and multiplies each p-value
-    by the number of comparisons divided by the rank of the p-value in the
-    sorted list. Input is list of floats.  Does *not* assume pvals is sorted.
-
     Parameters
     ----------
     pvals : list or array
@@ -1061,6 +1057,12 @@ def fdr_correction(pvals):
     --------
     benjamini_hochberg_step_down
 
+    Notes
+    -----
+    In short: ranks the p-values in ascending order and multiplies each p-value
+    by the number of comparisons divided by the rank of the p-value in the
+    sorted list. Input is list of floats.  Does *not* assume pvals is sorted.
+
     Examples
     --------
     >>> from skbio.math.stats.test import fdr_correction
@@ -1073,10 +1075,6 @@ def fdr_correction(pvals):
 
 def benjamini_hochberg_step_down(pvals):
     """Perform Benjamini and Hochberg's 1995 FDR step down procedure.
-
-    In short, compute  the fdr adjusted pvals (ap_i's), and working from
-    the largest to smallest, compare ap_i to ap_i-1. If ap_i < ap_i-1 set 
-    ap_i-1 equal to ap_i. Does *not* assume pvals is sorted
 
     Parameters
     ----------
@@ -1092,6 +1090,12 @@ def benjamini_hochberg_step_down(pvals):
     See Also
     --------
     fdr_correction
+
+    Notes
+    -----
+    In short, computes the fdr adjusted pvals (ap_i's), and working from
+    the largest to smallest, compare ap_i to ap_i-1. If ap_i < ap_i-1 set 
+    ap_i-1 equal to ap_i. Does *not* assume pvals is sorted
 
     Examples
     --------
@@ -1109,3 +1113,126 @@ def benjamini_hochberg_step_down(pvals):
         else:
             corrected_vals[i] = max_pval
     return corrected_vals
+
+
+def fisher_z_transform(r):
+    """Calculate the Fisher Z transform of a correlation coefficient.
+
+    Relies on formulation in Sokal and Rohlf Biometry pg 575.
+
+    Parameters
+    ----------
+    r : float
+        Correlation coefficient to transform.
+
+    Returns
+    -------
+    z value of r
+    """
+    if abs(r) >= 1:  # fisher z transform is undefined, have to return nan
+        return np.nan
+    return .5 * np.log((1. + r) / (1. - r))
+
+
+def inverse_fisher_z_transform(z):
+    """Calculate the inverse of the Fisher Z transform on a z value.
+
+    Relies on formulation in Sokal and Rohlf Biometry pg 576.
+
+    Parameters
+    ----------
+    z : float
+        z value of a correlation coefficient that has undergone transformation.
+
+    Returns
+    -------
+    r : float
+        Rho or correlation coefficient that would produce given z score. 
+    """
+    return ((np.e ** (2 * z)) - 1.) / ((np.e ** (2 * z)) + 1.)
+
+
+def z_transform_pval(z, n):
+    '''Calculate two tailed probability of value as or more extreme than z.
+
+    Relies on formulation in Sokal and Rohlf Biometry pg 576.
+
+    Parameters
+    ----------
+    z : float
+        z-score
+    n : int or float
+        Number of samples that were used to generate the z-score.
+
+    Returns
+    -------
+    zprob : float
+        Probability of getting a zscore as or more extreme than the passed z 
+        given the total numger of samples that generated it (n).
+    '''
+    if n <= 3:  # sample size must be greater than 3 otherwise this transform
+        # isn't supported.
+        return np.nan
+    return zprob(z * ((n - 3) ** .5))
+
+
+def fisher_population_correlation(corrcoefs, sample_sizes):
+    """Calculate population rho, homogeneity from corrcoefs using Z transform.
+
+    Parameters
+    ----------
+    corrcoefs : array-like
+        A list or array of floats.
+    sample_sizes : array-like
+        A list or array of ints.
+
+    Returns
+    -------
+    rho : float
+        Combined rho for the population.
+    h_val : float
+        probablity that the rhos of the different samples were homogenous.
+
+    Notes
+    -----
+    This function calculates the correlation of a population that is relying 
+    on multiple different studies that have calculated correlation coefficients
+    of their own. The procedure is detailed in Sokal and Rohlf Biometry pgs
+    576 - 578. Pvals that are nans will be excluded by this function. 
+
+    Examples
+    --------
+    >>> from skbio.math.stats.test import fisher_population_correlation
+    >>> cc = [.4, .6, .7, .9]
+    >>> ss = [10, 25, 14, 50]
+    >>> fisher_population_correlation(cc, ss)
+    (0.80559851846605035, 0.0029974748507499201)
+    """
+    tmp_rs = np.array(corrcoefs)
+    tmp_ns = np.array(sample_sizes)
+    # make checks for nans and exclude them as they will cause things to break
+    rs = tmp_rs[~np.isnan(tmp_rs)]
+    ns = tmp_ns[~np.isnan(tmp_rs)]
+    if not (ns > 3).all():
+        # not all samples have size > 3 which causes 0 varaince estimation.
+        # thus we must return nan for pval and h_val
+        return np.nan, np.nan
+    if not len(ns) > 1:
+        # only one sample, because of reduced degrees of freedom must have at
+        # least two samples to calculate the homogeneity.
+        return np.nan, np.nan
+    if (rs >= 1.0).any():
+        # a failure will occur in chi_high calculation where an non-terminating 
+        # loop will be initiated. 
+        raise ValueError('A correlation coefficient >= 1 was passed. This is '
+            'a non real valured correlation coefficient and it\'s Fisher '
+            'Z transform cannot be computed.')
+    # calculate zs
+    zs = np.array(map(fisher_z_transform, rs))
+    # calculate variance weighted z average = z_bar
+    z_bar = (zs * (ns - 3)).sum() / float((ns - 3).sum())
+    rho = inverse_fisher_z_transform(z_bar)
+    # calculate homogeneity
+    x_2 = ((ns - 3) * (zs - z_bar) ** 2).sum()
+    h_val = chi_high(x_2, len(ns) - 1)
+    return rho, h_val
