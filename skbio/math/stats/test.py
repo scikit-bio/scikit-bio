@@ -1339,3 +1339,30 @@ def fisher_population_correlation(corrcoefs, sample_sizes):
     x_2 = ((ns - 3) * (zs - z_bar) ** 2).sum()
     h_val = chi_high(x_2, len(ns) - 1)
     return rho, h_val
+
+
+def cscore(v1, v2):
+    '''Calculate C-score between v1 and v2 according to Stone and Roberts 1990.
+
+    Parameters
+    ----------
+    v1 : array-like
+        List or array of numeric values to be tested.
+    v2 : array-like
+        List or array of numeric values to be tested.
+
+    Returns
+    -------
+    cscore : float
+        C-score between v1 and v2
+
+    Notes
+    -----
+    This function calculates the C-score between equal length vectors v1 and v2
+    according to the formulation given in Stone and Roberts 1990, Oecologia
+    85: 74-79.
+    '''
+    v1_b = v1.astype(bool)
+    v2_b = v2.astype(bool)
+    sij = (v1_b * v2_b).sum()
+    return (v1_b.sum() - sij) * (v2_b.sum() - sij)

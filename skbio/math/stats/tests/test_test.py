@@ -28,7 +28,8 @@ from skbio.math.stats.test import (G_2_by_2, G_fit, t_paired, t_one_sample,
                                    fisher_population_correlation,
                                    inverse_fisher_z_transform, 
                                    z_transform_pval, kruskal_wallis, kendall,
-                                   kendall_pval, assign_correlation_pval)
+                                   kendall_pval, assign_correlation_pval,
+                                   cscore)
 
 from skbio.math.stats.distribution import chi_high, tprob
 
@@ -1216,6 +1217,29 @@ class PvalueTests(TestCase):
         exp = kendall_pval(r, n)
         obs = assign_correlation_pval(r, n, 'kendall')
         np.testing.assert_allclose(exp, obs)
+
+    def test_cscore(self):
+        '''Test cscore is calculated correctly.'''
+        # test using example from Stone and Roberts pg 75
+        v1 = np.array([1, 0, 0, 0, 1, 1, 0, 1, 0, 1])
+        v2 = np.array([1, 1, 1, 0, 1, 0, 1, 1, 1, 0])
+        obs = cscore(v1, v2)
+        exp = 8
+        self.assertEqual(obs, exp)
+        # test using examples verified in ecosim
+        v1 = np.array([4, 6, 12, 13, 14, 0, 0, 0, 14, 11, 9, 6, 0, 1, 1, 0, 0, 
+                       4])
+        v2 = np.array([4, 0, 0, 113, 1, 2, 20, 0, 1, 0, 19, 16, 0, 13, 6, 0, 5,
+                       4])
+        # from R
+        # library(vegan)
+        # library(bipartite)
+        # m = matrix(c(4,6,12,13,14,0,0,0,14,11,9,6,0,1,1,0,0,4,4,0,0,113,1,2,
+        #              20,0,1,0,19,16,0,13,6,0,5,4), 18,2)
+        # C.score(m, normalise=FALSE)
+        exp = 9
+        obs = cscore(v1, v2)
+        self.assertEqual(obs, exp)
 
 # execute tests if called from command line
 if __name__ == '__main__':
