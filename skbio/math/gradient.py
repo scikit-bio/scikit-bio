@@ -1,7 +1,6 @@
-#!/usr/bin/env python
 r"""
 Gradient analyses (:mod:`skbio.math.gradient`)
-===============================================
+==============================================
 
 .. currentmodule:: skbio.math.gradient
 
@@ -36,11 +35,11 @@ Assume we have the following coordinates:
 
 the following metadata map:
 
->>> metamap = {'PC.354': {'Treatment': 'Control', 'Weight': '60'},
+>>> metadata_map = {'PC.354': {'Treatment': 'Control', 'Weight': '60'},
 ...            'PC.355': {'Treatment': 'Control', 'Weight': '55'},
 ...            'PC.607': {'Treatment': 'Fast', 'Weight': '65'},
 ...            'PC.634': {'Treatment': 'Fast', 'Weight': '68'}}
->>> metamap = pd.DataFrame.from_dict(metamap, orient='index')
+>>> metadata_map = pd.DataFrame.from_dict(metadata_map, orient='index')
 
 and the following vector with the proportion explained of each coord:
 
@@ -48,7 +47,7 @@ and the following vector with the proportion explained of each coord:
 
 Then to compute the average vectors of this data:
 
->>> av = AverageVectors(coords, prop_expl, metamap,
+>>> av = AverageVectors(coords, prop_expl, metadata_map,
 ...                     vector_categories=['Treatment'],
 ...                     sort_category='Weight')
 >>> vectors = av.get_vectors()
@@ -108,8 +107,8 @@ class GroupResults(namedtuple('GroupResults', ('name', 'vector', 'mean',
     ----------
     name : str
         The name of the group within the metadata category
-    vector : 1-D numpy array
-        The result vector
+    vector : array like
+        The 1-D numpy array result vector
     mean : float
         The mean of the vector
     info : dict
@@ -244,9 +243,10 @@ class BaseVectors(object):
     ----------
     coords : pandas.DataFrame
         The coordinates for each sample id
-    prop_expl : numpy 1-D array
-        The proportion explained by each axis in coords
-    metamap : pandas.DataFrame
+    prop_expl : array like
+        The numpy 1-D array with the proportion explained by each axis in
+        coords
+    metadata_map : pandas.DataFrame
         The metadata map, indexed by sample ids and columns are metadata
         categories
     vector_categories : list of str, optional
@@ -265,32 +265,32 @@ class BaseVectors(object):
     Raises
     ------
     ValueError
-        If any category of `vector_categories` is not present in `metamap`
-        If `sort_category` is not present in `metamap`
+        If any category of `vector_categories` is not present in `metadata_map`
+        If `sort_category` is not present in `metadata_map`
         If `axes` is not between 0 and the maximum number of axes available
         If `weighted` is True and no `sort_category` is provided
         If `weighted` is True and the values under `sort_category` are not
             numerical
-        If `coords` and `metamap` does not have samples in common
+        If `coords` and `metadata_map` does not have samples in common
     """
     # Should be defined by the derived classes
     _alg_name = None
 
-    def __init__(self, coords, prop_expl, metamap, vector_categories=None,
+    def __init__(self, coords, prop_expl, metadata_map, vector_categories=None,
                  sort_category=None, axes=3, weighted=False):
         if not vector_categories:
             # If vector_categories is not provided, use all the categories
             # present in the metadata map
-            vector_categories = metamap.keys()
+            vector_categories = metadata_map.keys()
         else:
-            # Check that vector_categories are in metamap
+            # Check that vector_categories are in metadata_map
             for category in vector_categories:
-                if category not in metamap:
+                if category not in metadata_map:
                     raise ValueError("Category %s not present in metadata."
                                      % category)
 
-        # Check that sort_categories is in metamap
-        if sort_category and sort_category not in metamap:
+        # Check that sort_categories is in metadata_map
+        if sort_category and sort_category not in metadata_map:
             raise ValueError("Sort category %s not present in metadata."
                              % sort_category)
 
@@ -306,11 +306,11 @@ class BaseVectors(object):
         # Restrict coordinates to those axes that we actually need to compute
         self._coords = coords.ix[:, :axes-1]
         self._prop_expl = prop_expl[:axes]
-        self._metamap = metamap
+        self._metadata_map = metadata_map
         self._weighted = weighted
 
         # Remove any samples from coords not present in mapping file
-        # and remove any samples from metamap not present in coords
+        # and remove any samples from metadata_map not present in coords
         self._normalize_samples()
 
         # Create groups
@@ -323,8 +323,8 @@ class BaseVectors(object):
                 raise ValueError("You should provide a sort category if you "
                                  "want to weight the vectors")
             try:
-                self._weighting_vector = self._metamap[sort_category].astype(
-                    np.float64)
+                self._weighting_vector = \
+                    self._metadata_map[sort_category].astype(np.float64)
             except ValueError:
                     raise ValueError("The sorting category must be numeric")
 
@@ -332,17 +332,17 @@ class BaseVectors(object):
         self._message_buffer = []
 
     def _normalize_samples(self):
-        r"""Ensures that `self._coords` and `self._metamap` have the same
+        r"""Ensures that `self._coords` and `self._metadata_map` have the same
         sample ids
 
         Raises
         ------
         ValueError
-            If `coords` and `metamap` does not have samples in common
+            If `coords` and `metadata_map` does not have samples in common
         """
         # Figure out the sample ids in common
         coords_sample_ids = set(self._coords.index)
-        mm_sample_ids = set(self._metamap.index)
+        mm_sample_ids = set(self._metadata_map.index)
         sample_ids = coords_sample_ids.intersection(mm_sample_ids)
 
         # Check if they actually have sample ids in common
@@ -353,12 +353,12 @@ class BaseVectors(object):
         # Need to take a subset of coords
         if coords_sample_ids != sample_ids:
             self._coords = self._coords.ix[sample_ids]
-        # Need to take a subset of metamap
+        # Need to take a subset of metadata_map
         if mm_sample_ids != sample_ids:
-            self._metamap = self._metamap.ix[sample_ids]
+            self._metadata_map = self._metadata_map.ix[sample_ids]
 
     def _make_groups(self, vector_categories, sort_category):
-        r"""Groups the sample ids in `self._metamap` by the values in
+        r"""Groups the sample ids in `self._metadata_map` by the values in
         `vector_categories`
 
         Creates `self._groups`, a dictionary keyed by category and values are
@@ -375,19 +375,19 @@ class BaseVectors(object):
             A list of metadata categories to use to create the groups.
             Default: None, compute all of them
         sort_category : str or None
-            The category from self._metamap to use to sort groups
+            The category from self._metadata_map to use to sort groups
         """
         # If sort_category is provided, we used the value of such category to
         # sort. Otherwise, we use the sample id.
         if sort_category:
-            sort_val = lambda sid: self._metamap[sort_category][sid]
+            sort_val = lambda sid: self._metadata_map[sort_category][sid]
         else:
             sort_val = lambda sid: sid
 
         self._groups = defaultdict(dict)
         for cat in vector_categories:
             # Group samples by category
-            gb = self._metamap.groupby(cat)
+            gb = self._metadata_map.groupby(cat)
             for g, df in gb:
                 sorted_list = signed_natsort([(sort_val(sid), sid)
                                               for sid in df.index])
@@ -707,9 +707,10 @@ class WindowDifferenceVectors(BaseVectors):
     ----------
     coords : pandas.DataFrame
         The coordinates for each sample id
-    prop_expl : numpy 1-D array
-        The proportion explained by each axis in coords
-    metamap : pandas.DataFrame
+    prop_expl : array like
+        The numpy 1-D array with the proportion explained by each axis in
+        coords
+    metadata_map : pandas.DataFrame
         The metadata map, indexed by sample ids and columns are metadata
         categories
     window_size : int or long
@@ -723,9 +724,9 @@ class WindowDifferenceVectors(BaseVectors):
 
     _alg_name = 'wdiff'
 
-    def __init__(self, coords, prop_expl, metamap, window_size, **kwargs):
+    def __init__(self, coords, prop_expl, metadata_map, window_size, **kwargs):
         super(WindowDifferenceVectors, self).__init__(coords, prop_expl,
-                                                      metamap, **kwargs)
+                                                      metadata_map, **kwargs)
 
         if not isinstance(window_size, Integral) or window_size < 1:
             raise ValueError("The window_size must be a positive integer")

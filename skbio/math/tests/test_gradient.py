@@ -95,43 +95,44 @@ class BaseTests(TestCase):
             }
         self.coords_3axes = pd.DataFrame.from_dict(coord_data, orient='index')
 
-        metamap = {'PC.354': {'Treatment': 'Control',
-                              'DOB': '20061218',
-                              'Weight': '60',
-                              'Description': 'Control_mouse_I.D._354'},
-                   'PC.355': {'Treatment': 'Control',
-                              'DOB': '20061218',
-                              'Weight': '55',
-                              'Description': 'Control_mouse_I.D._355'},
-                   'PC.356': {'Treatment': 'Control',
-                              'DOB': '20061126',
-                              'Weight': '50',
-                              'Description': 'Control_mouse_I.D._356'},
-                   'PC.481': {'Treatment': 'Control',
-                              'DOB': '20070314',
-                              'Weight': '52',
-                              'Description': 'Control_mouse_I.D._481'},
-                   'PC.593': {'Treatment': 'Control',
-                              'DOB': '20071210',
-                              'Weight': '57',
-                              'Description': 'Control_mouse_I.D._593'},
-                   'PC.607': {'Treatment': 'Fast',
-                              'DOB': '20071112',
-                              'Weight': '65',
-                              'Description': 'Fasting_mouse_I.D._607'},
-                   'PC.634': {'Treatment': 'Fast',
-                              'DOB': '20080116',
-                              'Weight': '68',
-                              'Description': 'Fasting_mouse_I.D._634'},
-                   'PC.635': {'Treatment': 'Fast',
-                              'DOB': '20080116',
-                              'Weight': '70',
-                              'Description': 'Fasting_mouse_I.D._635'},
-                   'PC.636': {'Treatment': 'Fast',
-                              'DOB': '20080116',
-                              'Weight': '72',
-                              'Description': 'Fasting_mouse_I.D._636'}}
-        self.metamap = pd.DataFrame.from_dict(metamap, orient='index')
+        metadata_map = {'PC.354': {'Treatment': 'Control',
+                                   'DOB': '20061218',
+                                   'Weight': '60',
+                                   'Description': 'Control_mouse_I.D._354'},
+                        'PC.355': {'Treatment': 'Control',
+                                   'DOB': '20061218',
+                                   'Weight': '55',
+                                   'Description': 'Control_mouse_I.D._355'},
+                        'PC.356': {'Treatment': 'Control',
+                                   'DOB': '20061126',
+                                   'Weight': '50',
+                                   'Description': 'Control_mouse_I.D._356'},
+                        'PC.481': {'Treatment': 'Control',
+                                   'DOB': '20070314',
+                                   'Weight': '52',
+                                   'Description': 'Control_mouse_I.D._481'},
+                        'PC.593': {'Treatment': 'Control',
+                                   'DOB': '20071210',
+                                   'Weight': '57',
+                                   'Description': 'Control_mouse_I.D._593'},
+                        'PC.607': {'Treatment': 'Fast',
+                                   'DOB': '20071112',
+                                   'Weight': '65',
+                                   'Description': 'Fasting_mouse_I.D._607'},
+                        'PC.634': {'Treatment': 'Fast',
+                                   'DOB': '20080116',
+                                   'Weight': '68',
+                                   'Description': 'Fasting_mouse_I.D._634'},
+                        'PC.635': {'Treatment': 'Fast',
+                                   'DOB': '20080116',
+                                   'Weight': '70',
+                                   'Description': 'Fasting_mouse_I.D._635'},
+                        'PC.636': {'Treatment': 'Fast',
+                                   'DOB': '20080116',
+                                   'Weight': '72',
+                                   'Description': 'Fasting_mouse_I.D._636'}}
+        self.metadata_map = pd.DataFrame.from_dict(metadata_map,
+                                                   orient='index')
 
         self.prop_expl = np.array([25.6216900347, 15.7715955926,
                                    14.1215046787, 11.6913885817, 9.83044890697,
@@ -290,23 +291,23 @@ class BaseVectorsTests(BaseTests):
         # so we are not testing it here
 
         # Test with weighted = False
-        bv = BaseVectors(self.coords, self.prop_expl, self.metamap)
+        bv = BaseVectors(self.coords, self.prop_expl, self.metadata_map)
 
         pdt.assert_frame_equal(bv._coords, self.coords_3axes)
         exp_prop_expl = np.array([25.6216900347, 15.7715955926,
                                   14.1215046787])
         npt.assert_equal(bv._prop_expl, exp_prop_expl)
-        pdt.assert_frame_equal(bv._metamap, self.metamap)
+        pdt.assert_frame_equal(bv._metadata_map, self.metadata_map)
         self.assertTrue(bv._weighting_vector is None)
         self.assertFalse(bv._weighted)
 
         # Test with weighted = True
-        bv = BaseVectors(self.coords, self.prop_expl, self.metamap,
+        bv = BaseVectors(self.coords, self.prop_expl, self.metadata_map,
                          sort_category='Weight', weighted=True)
 
         pdt.assert_frame_equal(bv._coords, self.coords_3axes)
         npt.assert_equal(bv._prop_expl, exp_prop_expl)
-        pdt.assert_frame_equal(bv._metamap, self.metamap)
+        pdt.assert_frame_equal(bv._metadata_map, self.metadata_map)
         exp_weighting_vector = pd.Series(
             np.array([60, 55, 50, 52, 57, 65, 68, 70, 72]),
             ['PC.354', 'PC.355', 'PC.356', 'PC.481', 'PC.593', 'PC.607',
@@ -318,40 +319,42 @@ class BaseVectorsTests(BaseTests):
     def test_init_error(self):
         """Raises an error with erroneous inputs"""
         # Raises ValueError if any category in vector_categories is not
-        # present in metamap
+        # present in metadata_map
         with self.assertRaises(ValueError):
-            BaseVectors(self.coords, self.prop_expl, self.metamap,
+            BaseVectors(self.coords, self.prop_expl, self.metadata_map,
                         vector_categories=['foo'])
         with self.assertRaises(ValueError):
-            BaseVectors(self.coords, self.prop_expl, self.metamap,
+            BaseVectors(self.coords, self.prop_expl, self.metadata_map,
                         vector_categories=['Weight', 'Treatment', 'foo'])
 
-        # Raises ValueError if sort_category is not present in metamap
+        # Raises ValueError if sort_category is not present in metadata_map
         with self.assertRaises(ValueError):
-            BaseVectors(self.coords, self.prop_expl, self.metamap,
+            BaseVectors(self.coords, self.prop_expl, self.metadata_map,
                         sort_category='foo')
 
         # Raises ValueError if weighted == True and sort_category == None
         with self.assertRaises(ValueError):
-            BaseVectors(self.coords, self.prop_expl, self.metamap,
+            BaseVectors(self.coords, self.prop_expl, self.metadata_map,
                         weighted=True)
 
         # Raises ValueError if weighted == True and the values under
         # sort_category are not numerical
         with self.assertRaises(ValueError):
-            BaseVectors(self.coords, self.prop_expl, self.metamap,
+            BaseVectors(self.coords, self.prop_expl, self.metadata_map,
                         sort_category='Treatment', weighted=True)
 
         # Raises ValueError if axes > len(prop_expl)
         with self.assertRaises(ValueError):
-            BaseVectors(self.coords, self.prop_expl, self.metamap, axes=10)
+            BaseVectors(self.coords, self.prop_expl, self.metadata_map,
+                        axes=10)
 
         # Raises ValueError if axes < 0
         with self.assertRaises(ValueError):
-            BaseVectors(self.coords, self.prop_expl, self.metamap, axes=-1)
+            BaseVectors(self.coords, self.prop_expl, self.metadata_map,
+                        axes=-1)
 
     def test_normalize_samples(self):
-        """Correctly normalizes the samples between coords and metamap"""
+        """Correctly normalizes the samples between coords and metadata_map"""
         coord_data = {
             'PC.636': np.array([-0.212230626531, 0.216034194368,
                                 0.03532727349]),
@@ -366,43 +369,44 @@ class BaseVectorsTests(BaseTests):
             }
         subset_coords = pd.DataFrame.from_dict(coord_data, orient='index')
 
-        metamap = {'PC.355': {'Treatment': 'Control',
-                              'DOB': '20061218',
-                              'Weight': '55',
-                              'Description': 'Control_mouse_I.D._355'},
-                   'PC.607': {'Treatment': 'Fast',
-                              'DOB': '20071112',
-                              'Weight': '65',
-                              'Description': 'Fasting_mouse_I.D._607'},
-                   'PC.634': {'Treatment': 'Fast',
-                              'DOB': '20080116',
-                              'Weight': '68',
-                              'Description': 'Fasting_mouse_I.D._634'},
-                   'PC.635': {'Treatment': 'Fast',
-                              'DOB': '20080116',
-                              'Weight': '70',
-                              'Description': 'Fasting_mouse_I.D._635'},
-                   'PC.636': {'Treatment': 'Fast',
-                              'DOB': '20080116',
-                              'Weight': '72',
-                              'Description': 'Fasting_mouse_I.D._636'}}
-        subset_metamap = pd.DataFrame.from_dict(metamap, orient='index')
+        metadata_map = {'PC.355': {'Treatment': 'Control',
+                                   'DOB': '20061218',
+                                   'Weight': '55',
+                                   'Description': 'Control_mouse_I.D._355'},
+                        'PC.607': {'Treatment': 'Fast',
+                                   'DOB': '20071112',
+                                   'Weight': '65',
+                                   'Description': 'Fasting_mouse_I.D._607'},
+                        'PC.634': {'Treatment': 'Fast',
+                                   'DOB': '20080116',
+                                   'Weight': '68',
+                                   'Description': 'Fasting_mouse_I.D._634'},
+                        'PC.635': {'Treatment': 'Fast',
+                                   'DOB': '20080116',
+                                   'Weight': '70',
+                                   'Description': 'Fasting_mouse_I.D._635'},
+                        'PC.636': {'Treatment': 'Fast',
+                                   'DOB': '20080116',
+                                   'Weight': '72',
+                                   'Description': 'Fasting_mouse_I.D._636'}}
+        subset_metadata_map = pd.DataFrame.from_dict(metadata_map,
+                                                     orient='index')
 
-        # Takes a subset from metamap
-        bv = BaseVectors(subset_coords, self.prop_expl, self.metamap)
+        # Takes a subset from metadata_map
+        bv = BaseVectors(subset_coords, self.prop_expl, self.metadata_map)
         pdt.assert_frame_equal(bv._coords.sort(axis=0),
                                subset_coords.sort(axis=0))
-        pdt.assert_frame_equal(bv._metamap.sort(axis=0),
-                               subset_metamap.sort(axis=0))
+        pdt.assert_frame_equal(bv._metadata_map.sort(axis=0),
+                               subset_metadata_map.sort(axis=0))
 
         # Takes a subset from coords
-        bv = BaseVectors(self.coords, self.prop_expl, subset_metamap)
+        bv = BaseVectors(self.coords, self.prop_expl, subset_metadata_map)
         pdt.assert_frame_equal(bv._coords.sort(axis=0),
                                subset_coords.sort(axis=0))
-        pdt.assert_frame_equal(bv._metamap.sort(axis=0),
-                               subset_metamap.sort(axis=0))
+        pdt.assert_frame_equal(bv._metadata_map.sort(axis=0),
+                               subset_metadata_map.sort(axis=0))
 
-        # Takes a subset from metamap and coords at the same time
+        # Takes a subset from metadata_map and coords at the same time
         coord_data = {
             'PC.636': np.array([-0.212230626531, 0.216034194368,
                                 0.03532727349]),
@@ -413,40 +417,41 @@ class BaseVectorsTests(BaseTests):
             }
         subset_coords = pd.DataFrame.from_dict(coord_data, orient='index')
 
-        metamap = {'PC.355': {'Treatment': 'Control',
-                              'DOB': '20061218',
-                              'Weight': '55',
-                              'Description': 'Control_mouse_I.D._355'},
-                   'PC.607': {'Treatment': 'Fast',
-                              'DOB': '20071112',
-                              'Weight': '65',
-                              'Description': 'Fasting_mouse_I.D._607'},
-                   'PC.634': {'Treatment': 'Fast',
-                              'DOB': '20080116',
-                              'Weight': '68',
-                              'Description': 'Fasting_mouse_I.D._634'}}
-        subset_metamap = pd.DataFrame.from_dict(metamap, orient='index')
+        metadata_map = {'PC.355': {'Treatment': 'Control',
+                                   'DOB': '20061218',
+                                   'Weight': '55',
+                                   'Description': 'Control_mouse_I.D._355'},
+                        'PC.607': {'Treatment': 'Fast',
+                                   'DOB': '20071112',
+                                   'Weight': '65',
+                                   'Description': 'Fasting_mouse_I.D._607'},
+                        'PC.634': {'Treatment': 'Fast',
+                                   'DOB': '20080116',
+                                   'Weight': '68',
+                                   'Description': 'Fasting_mouse_I.D._634'}}
+        subset_metadata_map = pd.DataFrame.from_dict(metadata_map,
+                                                     orient='index')
 
-        bv = BaseVectors(subset_coords, self.prop_expl, subset_metamap)
+        bv = BaseVectors(subset_coords, self.prop_expl, subset_metadata_map)
         exp_coords = pd.DataFrame.from_dict(
             {'PC.355': np.array([0.236467470907, 0.21863434374,
                                  -0.0301637746424])},
             orient='index')
         pdt.assert_frame_equal(bv._coords.sort(axis=0),
                                exp_coords.sort(axis=0))
-        exp_metamap = pd.DataFrame.from_dict(
+        exp_metadata_map = pd.DataFrame.from_dict(
             {'PC.355': {'Treatment': 'Control',
                         'DOB': '20061218',
                         'Weight': '55',
                         'Description': 'Control_mouse_I.D._355'}},
             orient='index')
-        pdt.assert_frame_equal(bv._metamap.sort(axis=0),
-                               exp_metamap.sort(axis=0))
+        pdt.assert_frame_equal(bv._metadata_map.sort(axis=0),
+                               exp_metadata_map.sort(axis=0))
 
     def test_normalize_samples_error(self):
-        """Raises an error if coords and metamap does not have samples in
+        """Raises an error if coords and metadata_map does not have samples in
         common"""
-        error_metamap = pd.DataFrame.from_dict(
+        error_metadata_map = pd.DataFrame.from_dict(
             {'Foo': {'Treatment': 'Control',
                      'DOB': '20061218',
                      'Weight': '55',
@@ -457,12 +462,12 @@ class BaseVectorsTests(BaseTests):
                      'Description': 'Fasting_mouse_I.D._607'}},
             orient='index')
         with self.assertRaises(ValueError):
-            BaseVectors(self.coords, self.prop_expl, error_metamap)
+            BaseVectors(self.coords, self.prop_expl, error_metadata_map)
 
     def test_make_groups(self):
         """Correctly generates the groups for vector_categories"""
         # Test with all categories
-        bv = BaseVectors(self.coords, self.prop_expl, self.metamap)
+        bv = BaseVectors(self.coords, self.prop_expl, self.metadata_map)
         exp_groups = {'Treatment': {'Control': ['PC.354', 'PC.355', 'PC.356',
                                                 'PC.481', 'PC.593'],
                                     'Fast': ['PC.607', 'PC.634',
@@ -494,7 +499,7 @@ class BaseVectorsTests(BaseTests):
         self.assertEqual(bv._groups, exp_groups)
 
         # Test with user-defined categories
-        bv = BaseVectors(self.coords, self.prop_expl, self.metamap,
+        bv = BaseVectors(self.coords, self.prop_expl, self.metadata_map,
                          vector_categories=['Treatment', 'DOB'])
         exp_groups = {'Treatment': {'Control': ['PC.354', 'PC.355', 'PC.356',
                                                 'PC.481', 'PC.593'],
@@ -510,21 +515,21 @@ class BaseVectorsTests(BaseTests):
 
     def test_get_vectors(self):
         """Should raise a NotImplementedError as this is a base class"""
-        bv = BaseVectors(self.coords, self.prop_expl, self.metamap)
+        bv = BaseVectors(self.coords, self.prop_expl, self.metadata_map)
         with self.assertRaises(NotImplementedError):
             bv.get_vectors()
 
     def test_get_group_vectors(self):
         """Should raise a NotImplementedError in usual execution as this is
         a base class"""
-        bv = BaseVectors(self.coords, self.prop_expl, self.metamap)
+        bv = BaseVectors(self.coords, self.prop_expl, self.metadata_map)
         with self.assertRaises(NotImplementedError):
             bv.get_vectors()
 
     def test_get_group_vectors_error(self):
         """Should raise a RuntimeError if the user call _get_group_vectors
         with erroneous inputs"""
-        bv = BaseVectors(self.coords, self.prop_expl, self.metamap)
+        bv = BaseVectors(self.coords, self.prop_expl, self.metadata_map)
         with self.assertRaises(RuntimeError):
             bv._get_group_vectors("foo", ['foo'])
         with self.assertRaises(RuntimeError):
@@ -532,13 +537,13 @@ class BaseVectorsTests(BaseTests):
 
     def test_compute_vector_results(self):
         """Should raise a NotImplementedError as this is a base class"""
-        bv = BaseVectors(self.coords, self.prop_expl, self.metamap)
+        bv = BaseVectors(self.coords, self.prop_expl, self.metadata_map)
         with self.assertRaises(NotImplementedError):
             bv._compute_vector_results("foo", [])
 
     def test_weight_by_vector(self):
         """Correctly weights the vectors"""
-        bv = BaseVectors(self.coords, self.prop_expl, self.metamap)
+        bv = BaseVectors(self.coords, self.prop_expl, self.metadata_map)
 
         vector = pd.DataFrame.from_dict({'s1': np.array([1]),
                                          's2': np.array([2]),
@@ -655,7 +660,7 @@ class BaseVectorsTests(BaseTests):
 
     def test_weight_by_vector_error(self):
         """Raises an error with erroneous inputs"""
-        bv = BaseVectors(self.coords, self.prop_expl, self.metamap)
+        bv = BaseVectors(self.coords, self.prop_expl, self.metadata_map)
         # Different vector lengths
         with self.assertRaises(ValueError):
             bv._weight_by_vector([1, 2, 3, 4], [1, 2, 3])
@@ -672,7 +677,7 @@ class BaseVectorsTests(BaseTests):
 class AverageVectorsTests(BaseTests):
     def test_get_vectors_all(self):
         """get_vectors returns the results of all categories"""
-        av = AverageVectors(self.coords, self.prop_expl, self.metamap)
+        av = AverageVectors(self.coords, self.prop_expl, self.metadata_map)
         obs = av.get_vectors()
 
         exp_description = CategoryResults('Description', None, None,
@@ -708,7 +713,7 @@ class AverageVectorsTests(BaseTests):
 
     def test_get_vectors_single(self):
         """get_vectors returns the results of the provided category"""
-        av = AverageVectors(self.coords, self.prop_expl, self.metamap,
+        av = AverageVectors(self.coords, self.prop_expl, self.metadata_map,
                             vector_categories=['Treatment'])
         obs = av.get_vectors()
 
@@ -735,7 +740,7 @@ class AverageVectorsTests(BaseTests):
 
     def test_get_vectors_weighted(self):
         """get_vectors returns the correct weighted results"""
-        av = AverageVectors(self.coords, self.prop_expl, self.metamap,
+        av = AverageVectors(self.coords, self.prop_expl, self.metadata_map,
                             vector_categories=['Treatment'],
                             sort_category='Weight', weighted=True)
         obs = av.get_vectors()
@@ -762,7 +767,7 @@ class AverageVectorsTests(BaseTests):
 class TrajectoryVectorsTests(BaseTests):
 
     def test_get_vectors(self):
-        tv = TrajectoryVectors(self.coords, self.prop_expl, self.metamap,
+        tv = TrajectoryVectors(self.coords, self.prop_expl, self.metadata_map,
                                vector_categories=['Treatment'],
                                sort_category='Weight')
         obs = tv.get_vectors()
@@ -784,7 +789,7 @@ class TrajectoryVectorsTests(BaseTests):
         self.assert_vectors_results_almost_equal(obs, exp)
 
     def test_get_vectors_weighted(self):
-        tv = TrajectoryVectors(self.coords, self.prop_expl, self.metamap,
+        tv = TrajectoryVectors(self.coords, self.prop_expl, self.metadata_map,
                                vector_categories=['Treatment'],
                                sort_category='Weight', weighted=True)
         obs = tv.get_vectors()
@@ -808,7 +813,7 @@ class TrajectoryVectorsTests(BaseTests):
 
 class DifferenceVectorsTests(BaseTests):
     def test_get_vectors(self):
-        dv = DifferenceVectors(self.coords, self.prop_expl, self.metamap,
+        dv = DifferenceVectors(self.coords, self.prop_expl, self.metadata_map,
                                vector_categories=['Treatment'],
                                sort_category='Weight')
         obs = dv.get_vectors()
@@ -830,7 +835,7 @@ class DifferenceVectorsTests(BaseTests):
         self.assert_vectors_results_almost_equal(obs, exp)
 
     def test_get_vectors_weighted(self):
-        dv = DifferenceVectors(self.coords, self.prop_expl, self.metamap,
+        dv = DifferenceVectors(self.coords, self.prop_expl, self.metadata_map,
                                vector_categories=['Treatment'],
                                sort_category='Weight', weighted=True)
         obs = dv.get_vectors()
@@ -855,7 +860,7 @@ class DifferenceVectorsTests(BaseTests):
 class WindowDifferenceVectorsTests(BaseTests):
     def test_get_vectors(self):
         wdv = WindowDifferenceVectors(self.coords, self.prop_expl,
-                                      self.metamap, 3,
+                                      self.metadata_map, 3,
                                       vector_categories=['Treatment'],
                                       sort_category='Weight')
         obs = wdv.get_vectors()
@@ -882,7 +887,7 @@ class WindowDifferenceVectorsTests(BaseTests):
 
     def test_get_vectors_weighted(self):
         wdv = WindowDifferenceVectors(self.coords, self.prop_expl,
-                                      self.metamap, 3,
+                                      self.metadata_map, 3,
                                       vector_categories=['Treatment'],
                                       sort_category='Weight', weighted=True)
         obs = wdv.get_vectors()
