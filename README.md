@@ -66,9 +66,11 @@ If you'd like to install the dependencies manually (or some other way than using
 Projects using scikit-bio
 -------------------------
 
-- [qiime](http://qiime.org/) 
+- [QIIME](http://qiime.org/) 
 - [EMPeror](http://biocore.github.io/emperor/)
-- [Introduction to Applied Bioinformatics](http://caporasolab.us/An-Introduction-To-Applied-Bioinformatics/)
+- [An Introduction to Applied Bioinformatics](http://caporasolab.us/An-Introduction-To-Applied-Bioinformatics/)
+
+If you are using scikit-bio in your own projects you can issue a pull request to have them included here.
 
 scikit-bio development
 ----------------------
