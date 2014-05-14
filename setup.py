@@ -24,7 +24,11 @@ classes = """
     Topic :: Scientific/Engineering
     Topic :: Scientific/Engineering :: Bio-Informatics
     Programming Language :: Python
+    Programming Language :: Python :: 2
     Programming Language :: Python :: 2.7
+    Programming Language :: Python :: 3
+    Programming Language :: Python :: 3.3
+    Programming Language :: Python :: 3.4
     Operating System :: Unix
     Operating System :: POSIX
     Operating System :: MacOS :: MacOS X
@@ -47,13 +51,13 @@ if on_rtd:
     install_requires = []
 else:
     install_requires = ['numpy >= 1.7', 'matplotlib >= 1.1.0',
-                        'scipy >= 0.13.0', 'future']
+                        'scipy >= 0.13.0', 'pandas', 'future']
 
 # Dealing with Cython
 USE_CYTHON = os.environ.get('USE_CYTHON', False)
 ext = '.pyx' if USE_CYTHON else '.c'
-extensions = [Extension("skbio.maths._subsample",
-                        ["skbio/maths/_subsample" + ext]),
+extensions = [Extension("skbio.math._subsample",
+                        ["skbio/math/_subsample" + ext]),
               Extension("skbio.core.ssw",
                         ["skbio/core/ssw/__init__" + ext,
                          "skbio/core/ssw/ssw.c"])]
@@ -73,6 +77,7 @@ setup(name='scikit-bio',
       maintainer="scikit-bio development team",
       maintainer_email="gregcaporaso@gmail.com",
       url='https://github.com/biocore/scikit-bio',
+      test_suite='nose.collector',
       packages=find_packages(),
       ext_modules=extensions,
       include_dirs=[np.get_include()],
@@ -81,5 +86,5 @@ setup(name='scikit-bio',
                       'doc': ["Sphinx >= 1.2.2", "sphinx-bootstrap-theme"]},
       classifiers=classifiers,
       package_data={'skbio': ['core/tests/data/*.txt',
-                              'maths/stats/ordination/test/data/*']
+                              'math/stats/ordination/test/data/*']
                     })

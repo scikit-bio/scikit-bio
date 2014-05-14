@@ -201,6 +201,8 @@ allow you to indicate ``anything`` as an option value, anything that is
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from future.utils import viewitems
+
 import sys
 from copy import deepcopy
 from time import time
@@ -291,7 +293,7 @@ class Workflow(object):
         self.state = state
         self.iter_ = None
 
-        for k, v in kwargs.iteritems():
+        for k, v in viewitems(kwargs):
             if hasattr(self, k):
                 raise AttributeError("%s exists in self!" % k)
             setattr(self, k, v)

@@ -8,7 +8,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from itertools import izip
+from future.builtins import zip
 from collections import defaultdict
 from skbio.core.workflow import Workflow, not_none, requires, method
 from unittest import TestCase, main
@@ -23,7 +23,7 @@ def construct_iterator(**kwargs):
     if len(to_gen) == 1:
         return (x for x in to_gen[0])
     else:
-        return izip(*to_gen)
+        return zip(*to_gen)
 
 
 class MockWorkflow(Workflow):
@@ -114,7 +114,7 @@ class WorkflowTests(TestCase):
         obj = self.obj_debug(gen)
 
         exp = ['C1', 1]
-        obs = obj.next()
+        obs = next(obj)
         self.assertEqual(obs, exp)
 
         exp_trace = set([('wf_groupA', 0),
@@ -182,24 +182,24 @@ class WorkflowTests(TestCase):
         # pass in a failed callback to capture the result, and pause execution
         gen = self.obj_short(iter_, sf, ff)
 
-        r1 = gen.next()
+        r1 = next(gen)
         self.assertEqual(r1, ['C2', 1])
         self.assertFalse(self.obj_short.failed)
 
-        r2 = gen.next()
+        r2 = next(gen)
         self.assertEqual(r2, ['C2', 2])
         self.assertFalse(self.obj_short.failed)
 
-        r3 = gen.next()
+        r3 = next(gen)
         self.assertEqual(self.obj_short.state, ['A2', 'fail A2'])
         self.assertTrue(self.obj_short.failed)
         self.assertEqual(r3, ['A2', 'fail A2'])
 
-        r4 = gen.next()
+        r4 = next(gen)
         self.assertEqual(r4, ['C2', 4])
         self.assertFalse(self.obj_short.failed)
 
-        r5 = gen.next()
+        r5 = next(gen)
         self.assertEqual(r5, ['C2', 5])
         self.assertFalse(self.obj_short.failed)
 
@@ -215,23 +215,23 @@ class WorkflowTests(TestCase):
         # pass in a failed callback to capture the result, and pause execution
         gen = self.obj_noshort(iter_, sf, ff)
 
-        r1 = gen.next()
+        r1 = next(gen)
         self.assertEqual(r1, ['C1', 1])
         self.assertFalse(self.obj_noshort.failed)
 
-        r2 = gen.next()
+        r2 = next(gen)
         self.assertEqual(r2, ['C1', 2])
         self.assertFalse(self.obj_noshort.failed)
 
-        _ = gen.next()
+        _ = next(gen)
         self.assertEqual(self.obj_noshort.state, ['C1', 'fail A2'])
         self.assertTrue(self.obj_noshort.failed)
 
-        r4 = gen.next()
+        r4 = next(gen)
         self.assertEqual(r4, ['C1', 4])
         self.assertFalse(self.obj_noshort.failed)
 
-        r5 = gen.next()
+        r5 = next(gen)
         self.assertEqual(r5, ['C1', 5])
         self.assertFalse(self.obj_noshort.failed)
 

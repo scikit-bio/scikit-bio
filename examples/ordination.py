@@ -1,14 +1,14 @@
 import os
 import numpy as np
 
-from skbio.maths.stats.ordination import CA, RDA, CCA
+from skbio.math.stats.ordination import CA, RDA, CCA
 
 
 path = os.path.dirname(os.path.abspath(__file__))
 
 
 def get_path(fn):
-    return os.path.join(path, os.pardir, 'maths', 'stats', 'ordination',
+    return os.path.join(path, os.pardir, 'math', 'stats', 'ordination',
                         'test', 'data', fn)
 
 X = np.loadtxt(get_path('L&L_CA_data'))

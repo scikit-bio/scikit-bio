@@ -39,8 +39,8 @@ def parse_fasta(infile, strict=True, label_to_name=str, finder=FastaFinder,
 
     Parameters
     ----------
-    data : open file object
-        An open fasta file.
+    data : open file object or str
+        An open fasta file or a path to it.
 
     strict : bool
         If strict is true a ``RecordError`` will
@@ -105,8 +105,8 @@ def parse_qual(infile, full_header=False):
 
     Parameters
     ----------
-    infile : open file object
-        An open fasta file.
+    infile : open file object or str
+        An open fasta file or path to it.
 
     full_header : bool
         Return the full header or just the id

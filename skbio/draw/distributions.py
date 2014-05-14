@@ -26,6 +26,7 @@ Functions
 # ----------------------------------------------------------------------------
 
 from __future__ import division
+from future.utils.six import string_types
 
 from itertools import cycle
 import warnings
@@ -373,7 +374,7 @@ def _validate_input(data, x_values, data_point_labels, distribution_labels):
     Validates plotting options to make sure they are valid with the supplied
     data.
     """
-    if data is None or not data or isinstance(data, basestring):
+    if data is None or not data or isinstance(data, string_types):
         raise ValueError("The data must be a list type, and it cannot be "
                          "None or empty.")
 
@@ -462,7 +463,7 @@ def _get_distribution_markers(marker_type, marker_choices, num_markers):
             RuntimeWarning)
         marker_cycle = cycle(marker_choices[:])
         while len(marker_choices) < num_markers:
-            marker_choices.append(marker_cycle.next())
+            marker_choices.append(next(marker_cycle))
     return marker_choices[:num_markers]
 
 
@@ -612,7 +613,7 @@ def _color_box_plot(plot_axes, box_plot, colors):
                 box_x.append(box.get_xdata()[i])
                 box_y.append(box.get_ydata()[i])
 
-            box_coords = zip(box_x, box_y)
+            box_coords = list(zip(box_x, box_y))
             box_polygon = Polygon(box_coords, facecolor=color)
             plot_axes.add_patch(box_polygon)
 

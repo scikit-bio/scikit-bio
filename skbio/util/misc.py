@@ -41,7 +41,7 @@ def is_casava_v180_or_later(header_line):
 
     Parameters
     ----------
-    header_line : str
+    header_line : bytes
         A header line
 
     Returns
@@ -58,11 +58,11 @@ def is_casava_v180_or_later(header_line):
     >>> print is_casava_v180_or_later(id_)
     True
     """
-    if not header_line.startswith('@'):
+    if not header_line.startswith(b'@'):
         raise ValueError("Non-header line passed in!")
-    fields = header_line.split(':')
+    fields = header_line.split(b':')
 
-    return len(fields) == 10 and fields[7] in 'YN'
+    return len(fields) == 10 and fields[7] in b'YN'
 
 
 def safe_md5(open_file, block_size=2 ** 20):
@@ -71,7 +71,8 @@ def safe_md5(open_file, block_size=2 ** 20):
     Parameters
     ----------
     open_file : file object
-        open file handle to the archive to compute the checksum
+        open file handle to the archive to compute the checksum. It
+        must be open as a binary file
     block_size : int, optional
         size of the block taken per iteration
 
@@ -97,6 +98,7 @@ def safe_md5(open_file, block_size=2 ** 20):
     >>> x.hexdigest()
     'ab07acbb1e496801937adfa772424bf7'
     >>> fd.close()
+
     """
     md5 = hashlib.md5()
     data = True
