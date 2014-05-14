@@ -162,7 +162,7 @@ def g_stat(data):
     avgs = np.array([np.array(i).mean() for i in data])
     n = avgs.sum()
     a = len(data)  # a is number of phenotypes or sample classes
-    obs_freqs = avgs # f_i values
+    obs_freqs = avgs  # f_i values
     exp_freqs = np.zeros(a) + (n / a)  # f_i_hat vals
     G = 2. * (obs_freqs * np.log(obs_freqs / exp_freqs)).sum()
     return G
