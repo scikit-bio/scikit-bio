@@ -28,9 +28,9 @@ from skbio.math.stats.test import (G_2_by_2, G_fit, t_paired, t_one_sample,
                                    fisher_population_correlation,
                                    inverse_fisher_z_transform, 
                                    z_transform_pval, kruskal_wallis, kendall,
-                                   kendall_pval)
+                                   kendall_pval, assign_correlation_pval)
 
-from skbio.math.stats.distribution import chi_high
+from skbio.math.stats.distribution import chi_high, tprob
 
 
 class TestsHelper(TestCase):
@@ -1163,57 +1163,59 @@ class PvalueTests(TestCase):
         ns = [10, 50, 100, 10]
         self.assertRaises(ValueError, fisher_population_correlation, rs, ns)
 
-    # def test_assign_correlation_pval(self):
-    #     '''Test that correlation pvalues are assigned correctly with each meth.
-    #     '''
-    #     # test with parametric t distribution, use example from Sokal and Rohlf
-    #     # Biometry pg 576.
-    #     r = .86519
-    #     n = 12
-    #     ts = 5.45618  # only 5 sig figs in sokal and rohlf
-    #     exp = tprob(ts, n - 2)
-    #     obs = assign_correlation_pval(r, n, 'parametric_t_distribution')
-    #     assert_allclose(exp, obs, eps=10 ** -5)
-    #     # test with too few samples
-    #     n = 3
-    #     self.assertRaises(AssertionError, assign_correlation_pval, r, n,
-    #                       'parametric_t_distribution')
-    #     # test with fisher_z_transform
-    #     r = .29
-    #     n = 100
-    #     z = 0.29856626366017841  # .2981 in biometry
-    #     exp = z_transform_pval(z, n)
-    #     obs = assign_correlation_pval(r, n, 'fisher_z_transform')
-    #     assert_allclose(exp, obs, eps=10 ** -5)
-    #     r = .61
-    #     n = 26
-    #     z = 0.70892135942740819  # .7089 in biometry
-    #     exp = z_transform_pval(z, n)
-    #     obs = assign_correlation_pval(r, n, 'fisher_z_transform')
-    #     assert_allclose(exp, obs, eps=10 ** -5)
-    #     # prove that we can have specify the other options, and as long as we
-    #     # dont have bootstrapped selected we are fine.
-    #     v1 = array([10, 11, 12])
-    #     v2 = array([10, 14, 15])
-    #     obs = assign_correlation_pval(r, n, 'fisher_z_transform',
-    #                                   permutations=1000, perm_test_fn=pearson, v1=v1, v2=v2)
-    #     assert_allclose(exp, obs)
-    #     # test with bootstrapping, seed for reproducibility.
-    #     seed(0)
-    #     v1 = array([54, 71, 60, 54, 42, 64, 43, 89, 96, 38])
-    #     v2 = array([79, 52, 56, 92, 7, 8, 2, 83, 77, 87])
-    #     #c = corrcoef(v1,v2)[0][1]
-    #     exp = .357
-    #     obs = assign_correlation_pval(0.33112494, 20000, 'bootstrapped',
-    #                                   permutations=1000, perm_test_fn=pearson, v1=v1, v2=v2)
-    #     assert_allclose(exp, obs)
-    #     # make sure it throws an error
-    #     self.assertRaises(ValueError, assign_correlation_pval, 7, 20000,
-    #                       'bootstrapped', perm_test_fn=pearson, v1=None, v2=v2)
-    #     # test that it does properly with kendall
-    #     exp = kendall_pval(r, n)
-    #     obs = assign_correlation_pval(r, n, 'kendall')
-    #     assert_allclose(exp, obs)
+    def test_assign_correlation_pval(self):
+        '''Test that correlation pvalues are assigned correctly with each meth.
+        '''
+        # test with parametric t distribution, use example from Sokal and Rohlf
+        # Biometry pg 576.
+        r = .86519
+        n = 12
+        ts = 5.45618  # only 5 sig figs in sokal and rohlf
+        exp = tprob(ts, n - 2)
+        obs = assign_correlation_pval(r, n, 'parametric_t_distribution')
+        np.testing.assert_allclose(exp, obs, rtol=1e-5)
+        # test with too few samples
+        n = 3
+        self.assertRaises(ValueError, assign_correlation_pval, r, n,
+                          'parametric_t_distribution')
+        # test with fisher_z_transform
+        r = .29
+        n = 100
+        z = 0.29856626366017841  # .2981 in biometry
+        exp = z_transform_pval(z, n)
+        obs = assign_correlation_pval(r, n, 'fisher_z_transform')
+        np.testing.assert_allclose(exp, obs, rtol=1e-5)
+        r = .61
+        n = 26
+        z = 0.70892135942740819  # .7089 in biometry
+        exp = z_transform_pval(z, n)
+        obs = assign_correlation_pval(r, n, 'fisher_z_transform')
+        np.testing.assert_allclose(exp, obs, rtol=1e-5)
+        # prove that we can have specify the other options, and as long as we
+        # dont have bootstrapped selected we are fine.
+        v1 = np.array([10, 11, 12])
+        v2 = np.array([10, 14, 15])
+        obs = assign_correlation_pval(r, n, 'fisher_z_transform',
+                                      permutations=1000, perm_test_fn=pearson, 
+                                      v1=v1, v2=v2)
+        np.testing.assert_allclose(exp, obs)
+        # test with bootstrapping, seed for reproducibility.
+        np.random.seed(0)
+        v1 = np.array([54, 71, 60, 54, 42, 64, 43, 89, 96, 38])
+        v2 = np.array([79, 52, 56, 92, 7, 8, 2, 83, 77, 87])
+        #c = corrcoef(v1,v2)[0][1]
+        exp = .357
+        obs = assign_correlation_pval(0.33112494, 20000, 'bootstrapped',
+                                      permutations=1000, perm_test_fn=pearson, 
+                                      v1=v1, v2=v2)
+        np.testing.assert_allclose(exp, obs)
+        # make sure it throws an error
+        self.assertRaises(ValueError, assign_correlation_pval, 7, 20000,
+                          'bootstrapped', perm_test_fn=pearson, v1=None, v2=v2)
+        # test that it does properly with kendall
+        exp = kendall_pval(r, n)
+        obs = assign_correlation_pval(r, n, 'kendall')
+        np.testing.assert_allclose(exp, obs)
 
 # execute tests if called from command line
 if __name__ == '__main__':

@@ -572,6 +572,74 @@ def kendall_pval(tau, n):
     test_stat = tau / ((2 * (2 * n + 5)) / float(9 * n * (n - 1))) ** .5
     return zprob(test_stat)
 
+def assign_correlation_pval(corr, n, method, permutations=None,
+                            perm_test_fn=None, v1=None, v2=None):
+    """Assign pval to a correlation score with given method.
+
+    This function will assign significance to the correlation score passed 
+    given the method that is passed. Some of the methods are appropriate only 
+    for certain types of data and there is no way for this test to determine 
+    the appropriateness, thus you must use this function only when with the 
+    proper prior knowledge. The 'parametric_t_distribution' method is described
+    in Sokal and Rohlf Biometry pg. 576, the 'fisher_z_transform' method is
+    described on pg 576 and 577. The 'bootstrap' method calculates the given
+    correlation permutations number of times using perm_test_fn.
+    Also note, this does *not* take the place of FDR correction.
+    
+    Paramters
+    ---------
+    corr : float
+        Correlation score from Kendall's Tau, Spearman's Rho, or Pearson.
+    n : int 
+        Length of the vectors that were correlated.
+    method : str
+        One of ['parametric_t_distribution', 'fisher_z_transform',
+        'bootstrapped', 'kendall'].
+    permutations : int
+        Number of permutations to use if bootstrapped selected.
+    perm_test_fn : function
+        Used to use to calculate correlation if permuation test desired.
+    v1 : array-like or None
+        List or array of ints or floats to be correlated. Passed if 
+        method='bootstrapped'.
+    v2 : array-like or None
+        List or array of ints or floats to be correlated. Passed if 
+        method='bootstrapped'
+    """
+    if method == 'parametric_t_distribution':
+        df = n - 2
+        if df <= 1:
+            raise ValueError("Must have more than 1 degree of freedom. "
+                "Can't Continue.")
+        try:
+            ts = corr * ((df / (1. - corr ** 2)) ** .5)
+            return tprob(ts, df)  # two tailed test because H0 is corr=0
+        except (ValueError, FloatingPointError, ZeroDivisionError):
+            # something unpleasant happened, most likely r or rho where +- 1
+            # which means the parametric p val should be 1 or 0 or nan
+            return np.nan
+    elif method == 'fisher_z_transform':
+        # Sokal and Rohlf indicate that for n<50, the Fisher Z transform for
+        # assigning correlation probabilities is not accurate. Currently no
+        # check is in place
+        z = fisher_z_transform(corr)
+        # the z transform pval compares against a t distribution with inf
+        # degrees of freedom which is equal to a z distribution.
+        return z_transform_pval(z, n)
+    elif method == 'bootstrapped':
+        if any([i == None for i in [v1, v2, permutations, perm_test_fn]]):
+            raise ValueError('You must specify vectors, permutation '
+                'function, and number of permutations to calculate '
+                'bootstrapped pvalues. Cant continue.')
+        r = np.empty(permutations)
+        for i in range(permutations):
+            r[i] = perm_test_fn(v1, np.random.permutation(v2))
+        return (abs(r) >= abs(corr)).sum() / float(permutations)
+    elif method == 'kendall':
+        return kendall_pval(corr, n)
+    else:
+        raise ValueError("'%s' method is unknown." % method)
+
 
 def correlation_t(x_items, y_items, method='pearson', tails=None,
                   permutations=999, confidence_level=0.95):
