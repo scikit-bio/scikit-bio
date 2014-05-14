@@ -1,10 +1,18 @@
 #!/usr/bin/env python
-""" Unit tests for Genetic Code classes.
-"""
-from skbio.core.sequence import DNA, RNA
+
+# ----------------------------------------------------------------------------
+# Copyright (c) 2013--, scikit-bio development team.
+#
+# Distributed under the terms of the Modified BSD License.
+#
+# The full license is in the file COPYING.txt, distributed with this software.
+# ----------------------------------------------------------------------------
+
+from unittest import TestCase, main
+
+from skbio.core.sequence import DNA, RNA, Protein
 from skbio.core.genetic_code import GeneticCode, GeneticCodes
 from skbio.core.exception import GeneticCodeInitError, InvalidCodonError
-from unittest import TestCase, main
 
 
 class GeneticCodeTests(TestCase):
@@ -255,34 +263,34 @@ class GeneticCodeTests(TestCase):
 
         seq = 'AUGCAUGACUUUUGA'
         #      .  .  .  .  .        markers for codon start
-        self.assertEqual(allg.translate(seq), 'GGGGG')
-        self.assertEqual(allg.translate(seq, 1), 'GGGG')
-        self.assertEqual(allg.translate(seq, 2), 'GGGG')
-        self.assertEqual(allg.translate(seq, 3), 'GGGG')
-        self.assertEqual(allg.translate(seq, 4), 'GGG')
-        self.assertEqual(allg.translate(seq, 12), 'G')
-        self.assertEqual(allg.translate(seq, 14), '')
+        self.assertEqual(allg.translate(seq), Protein('GGGGG'))
+        self.assertEqual(allg.translate(seq, 1), Protein('GGGG'))
+        self.assertEqual(allg.translate(seq, 2), Protein('GGGG'))
+        self.assertEqual(allg.translate(seq, 3), Protein('GGGG'))
+        self.assertEqual(allg.translate(seq, 4), Protein('GGG'))
+        self.assertEqual(allg.translate(seq, 12), Protein('G'))
+        self.assertEqual(allg.translate(seq, 14), Protein(''))
         self.assertRaises(ValueError, allg.translate, seq, 15)
         self.assertRaises(ValueError, allg.translate, seq, 20)
 
-        self.assertEqual(sgc.translate(seq), 'MHDF*')
-        self.assertEqual(sgc.translate(seq, 3), 'HDF*')
-        self.assertEqual(sgc.translate(seq, 6), 'DF*')
-        self.assertEqual(sgc.translate(seq, 9), 'F*')
-        self.assertEqual(sgc.translate(seq, 12), '*')
-        self.assertEqual(sgc.translate(seq, 14), '')
+        self.assertEqual(sgc.translate(seq), Protein('MHDF*'))
+        self.assertEqual(sgc.translate(seq, 3), Protein('HDF*'))
+        self.assertEqual(sgc.translate(seq, 6), Protein('DF*'))
+        self.assertEqual(sgc.translate(seq, 9), Protein('F*'))
+        self.assertEqual(sgc.translate(seq, 12), Protein('*'))
+        self.assertEqual(sgc.translate(seq, 14), Protein(''))
         # check shortest translatable sequences
-        self.assertEqual(sgc.translate('AAA'), 'K')
-        self.assertEqual(sgc.translate(''), '')
+        self.assertEqual(sgc.translate('AAA'), Protein('K'))
+        self.assertEqual(sgc.translate(''), Protein(''))
 
         # check that different code gives different results
-        self.assertEqual(mt.translate(seq), 'MHDFW')
+        self.assertEqual(mt.translate(seq), Protein('MHDFW'))
 
         # check translation with invalid codon(s)
-        self.assertEqual(sgc.translate('AAANNNCNC123UUU'), 'KXXXF')
+        self.assertEqual(sgc.translate('AAANNNCNC123UUU'), Protein('KXXXF'))
 
-    def test_sixframes(self):
-        """GeneticCode sixframes should provide six-frame translation"""
+    def test_translate_six_frames(self):
+        """GeneticCode translate_six_frames provides six-frame translation"""
 
         class fake_rna(str):
 
@@ -300,13 +308,15 @@ class GeneticCodeTests(TestCase):
         test_rna = fake_rna('AUGCUAACAUAAA', 'UUUAUGUUAGCAU')
         #                    .  .  .  .  .    .  .  .  .  .
         sgc = GeneticCode(self.sgc)
-        self.assertEqual(sgc.sixframes(test_rna), [
-            'MLT*', 'C*HK', 'ANI', 'FMLA', 'LC*H', 'YVS'])
+        self.assertEqual(sgc.translate_six_frames(test_rna), [
+            Protein('MLT*'), Protein('C*HK'), Protein('ANI'), Protein('FMLA'),
+            Protein('LC*H'), Protein('YVS')])
 
         # should also actually work with an RNA or DNA sequence!!!
         test_rna = RNA('AUGCUAACAUAAA')
-        self.assertEqual(sgc.sixframes(test_rna), [
-            'MLT*', 'C*HK', 'ANI', 'FMLA', 'LC*H', 'YVS'])
+        self.assertEqual(sgc.translate_six_frames(test_rna), [
+            Protein('MLT*'), Protein('C*HK'), Protein('ANI'), Protein('FMLA'),
+            Protein('LC*H'), Protein('YVS')])
 
     def test_stop_indexes(self):
         """should return stop codon indexes for a specified frame"""
