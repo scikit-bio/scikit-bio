@@ -138,43 +138,43 @@ class TestSSW(TestCase):
         for attribute in self.align_attributes:
             # The first element of this tuple is to identify
             # the broken sequence if one should fail
-            self.assertEqual((alignment['target_sequence'],
-                              alignment[attribute]),
-                             (expected['target_sequence'],
-                              expected[attribute]))
+            self.assertEqual((expected['target_sequence'],
+                              expected[attribute]),
+                             (alignment['target_sequence'],
+                              alignment[attribute]))
 
-    def _check_property_with_inequality_on_optimal_align_score(
+    def _check_argument_with_inequality_on_optimal_align_score(
             self,
             query_sequences=None,
             target_sequences=None,
-            prop=None,
+            arg=None,
             default=None,
             i_range=None,
             compare_lt=None,
             compare_gt=None):
         iterable_kwarg = {}
         default_kwarg = {}
-        default_kwarg[prop] = default
+        default_kwarg[arg] = default
         for query_sequence in query_sequences:
             for target_sequence in target_sequences:
                 for i in i_range:
-                    iterable_kwarg[prop] = i
-                    queryi = StripedSmithWaterman(query_sequence,
+                    iterable_kwarg[arg] = i
+                    query1 = StripedSmithWaterman(query_sequence,
                                                   **iterable_kwarg)
-                    aligni = queryi(target_sequence)
+                    align1 = query1(target_sequence)
 
                     query2 = StripedSmithWaterman(query_sequence,
                                                   **default_kwarg)
                     align2 = query2(target_sequence)
 
                     if i == default:
-                        self.assertEqual(align2.optimal_alignment_score,
-                                         aligni.optimal_alignment_score)
+                        self.assertEqual(align1.optimal_alignment_score,
+                                         align2.optimal_alignment_score)
                     if i < default:
-                        compare_lt(aligni.optimal_alignment_score,
+                        compare_lt(align1.optimal_alignment_score,
                                    align2.optimal_alignment_score)
                     if i > default:
-                        compare_gt(aligni.optimal_alignment_score,
+                        compare_gt(align1.optimal_alignment_score,
                                    align2.optimal_alignment_score)
 
     def _check_bit_flag_sets_properties_falsy_or_negative(
@@ -362,10 +362,10 @@ class TestStripedSmithWaterman(TestSSW):
             "AGGGTAATTTTAGGCGTGTTCACCTA"
         ]
         target_sequences = query_sequences
-        self._check_property_with_inequality_on_optimal_align_score(
+        self._check_argument_with_inequality_on_optimal_align_score(
             query_sequences=query_sequences,
             target_sequences=target_sequences,
-            prop='match',
+            arg='match',
             default=2,
             i_range=range(0, 5),
             compare_lt=self.assertLess,
@@ -382,10 +382,10 @@ class TestStripedSmithWaterman(TestSSW):
             "AGGGTAATTAGCGCGTGTTCACCTA"
         ]
         target_sequences = query_sequences
-        self._check_property_with_inequality_on_optimal_align_score(
+        self._check_argument_with_inequality_on_optimal_align_score(
             query_sequences=query_sequences,
             target_sequences=target_sequences,
-            prop='mismatch',
+            arg='mismatch',
             default=3,
             i_range=range(0, 7),
             # These are intentionally inverted
@@ -411,24 +411,32 @@ class TestStripedSmithWaterman(TestSSW):
         self._check_alignment(alignment, expected)
 
     def test_arg_matrix_overrides_match_and_mismatch(self):
-        query_sequence = "AGGGTAATTAGGCGTGTTCATTAGGCGTGTTCCCTA"
-        target_sequence = "AGGGTAATTAGGCGTGTTCACCTA"
-        matrix = {
+        query_sequences = [
+            "TTATAATTAATTCTTATTATTATCAATATTTATAATTTGATTTTGTTGTAAT",
+            "AGTCGAAGGGTAAGGGGTATAGGCGTGTCACCTA",
+            "AGTCGAAGGGTAATA",
+            "CTGCCTCAGGGGCGAGGAAAGCGTCAGCGCGGCTGCCGTCGGCGCAGGGGC",
+            "AGGGTAATTAGCGCGTGTTCACCTA"
+        ]
+        target_sequences = query_sequences
+        matrix = {  # This is a biologically meaningless matrix
             "A": {"A": 4,  "T": -1, "C": -2, "G": -3, "N": 4},
             "T": {"A": -1, "T": 1,  "C": -1, "G": -4, "N": 1},
             "C": {"A": -2, "T": -1, "C": 10, "G": 1,  "N": 1},
             "G": {"A": -3, "T": -4, "C": 1,  "G": 3,  "N": 1},
             "N": {"A": 4,  "T": 1,  "C": 1,  "G": 1,  "N": 0}
         }
-        query1 = StripedSmithWaterman(query_sequence)
-        align1 = query1(target_sequence)
+        for query_sequence in query_sequences:
+            for target_sequence in target_sequences:
+                query1 = StripedSmithWaterman(query_sequence)
+                align1 = query1(target_sequence)
 
-        query2 = StripedSmithWaterman(query_sequence,
-                                      substitution_matrix=matrix)
-        align2 = query2(target_sequence)
+                query2 = StripedSmithWaterman(query_sequence,
+                                              substitution_matrix=matrix)
+                align2 = query2(target_sequence)
 
-        self.assertNotEqual(align1.optimal_alignment_score,
-                            align2.optimal_alignment_score)
+                self.assertNotEqual(align1.optimal_alignment_score,
+                                    align2.optimal_alignment_score)
 
     def test_arg_weight_gap_open(self):
         query_sequences = [
@@ -439,10 +447,10 @@ class TestStripedSmithWaterman(TestSSW):
             "AGGGTAATTAAAGGCGTGTTCACCTA"
         ]
         target_sequences = query_sequences
-        self._check_property_with_inequality_on_optimal_align_score(
+        self._check_argument_with_inequality_on_optimal_align_score(
             query_sequences=query_sequences,
             target_sequences=target_sequences,
-            prop='weight_gap_open',
+            arg='weight_gap_open',
             default=5,
             i_range=range(1, 12),
             # These are intentionally inverted
@@ -477,10 +485,10 @@ class TestStripedSmithWaterman(TestSSW):
             "AGGGTAATTAGGCGTGTTCACCTA"
         ]
         target_sequences = query_sequences
-        self._check_property_with_inequality_on_optimal_align_score(
+        self._check_argument_with_inequality_on_optimal_align_score(
             query_sequences=query_sequences,
             target_sequences=target_sequences,
-            prop='weight_gap_extension',
+            arg='weight_gap_extension',
             default=2,
             i_range=range(1, 10),
             # These are intentionally inverted
@@ -768,6 +776,11 @@ class TestAlignmentStructure(TestSSW):
         ]
         for test in tests:
             mock_object = self.mock_object_factory({})
+            # Because SSW's output is [a, b] and Python's list ranges use
+            # [a, b) a 1 is added in the calculation of aligned sequences.
+            # We just have to subtract 1 while we are testing with the easy to
+            # verify interface of `end_after_cigar` to cancel this range effect
+            # out.
             end = test['end_after_cigar'] - 1 + test['begin'] + \
                 sum([le if t == 'M' else 0 for le, t in test['cigar_tuples']])
             self.assertEqual(test['expected'],
@@ -779,10 +792,17 @@ class TestAlignmentStructure(TestSSW):
     def test_get_aligned_query_target_sequence(self):
         query = StripedSmithWaterman("AGGGTAATTAGGCGTGTTCACCTA")
         alignment = query("AGTCGAAGGGTAATATAGGCGTGTCACCTA")
-        self.assertEqual(alignment.get_aligned_target_sequence(),
-                         "AGGGTAATATAGGCGT-GTCACCTA")
-        self.assertEqual(alignment.get_aligned_query_sequence(),
-                         "AGGGTAAT-TAGGCGTGTTCACCTA")
+        self.assertEqual("AGGGTAATATAGGCGT-GTCACCTA",
+                         alignment.get_aligned_target_sequence())
+        self.assertEqual("AGGGTAAT-TAGGCGTGTTCACCTA",
+                         alignment.get_aligned_query_sequence())
+
+    def test_get_aligned_query_target_sequence_with_suppressed_sequences(self):
+        query = StripedSmithWaterman("AGGGTAATTAGGCGTGTTCACCTA",
+                                     suppress_sequences=True)
+        alignment = query("AGTCGAAGGGTAATATAGGCGTGTCACCTA")
+        self.assertEqual(None, alignment.get_aligned_target_sequence())
+        self.assertEqual(None, alignment.get_aligned_query_sequence())
 
 if __name__ == '__main__':
     main()
