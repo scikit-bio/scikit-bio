@@ -156,6 +156,7 @@ from random import shuffle
 from copy import deepcopy
 from itertools import combinations
 from functools import reduce
+from collections import defaultdict
 
 import numpy as np
 
@@ -220,13 +221,15 @@ class TreeNode(object):
 
     """
 
-    _exclude_from_copy = set(['parent', 'children', '_node_cache'])
+    _exclude_from_copy = set(['parent', 'children', '_tip_cache',
+                              '_non_tip_cache'])
 
     def __init__(self, name=None, length=None, parent=None, children=None):
         self.name = name
         self.length = length
         self.parent = parent
-        self._node_cache = {}
+        self._tip_cache = {}
+        self._non_tip_cache = {}
         self.children = []
         self.id = None
 
@@ -302,7 +305,7 @@ class TreeNode(object):
 
     def _adopt(self, node):
         r"""Update `parent` references but does NOT update `children`."""
-        self.invalidate_node_cache()
+        self.invalidate_caches()
         if node.parent is not None:
             node.parent.remove(node)
         node.parent = self
@@ -399,7 +402,7 @@ class TreeNode(object):
 
     def _remove_node(self, idx):
         r"""The actual (and only) method that performs node removal"""
-        self.invalidate_node_cache()
+        self.invalidate_caches()
         node = self.children.pop(idx)
         node.parent = None
         return node
@@ -1396,58 +1399,82 @@ class TreeNode(object):
             if not n.is_tip():
                 yield n
 
-    def invalidate_node_cache(self):
-        r"""Delete the node cache
+    def invalidate_caches(self):
+        r"""Delete lookup caches
 
         See Also
         --------
-        create_node_cache
+        create_caches
         find
 
         """
         if not self.is_root():
-            self.root().invalidate_node_cache()
+            self.root().invalidate_caches()
         else:
-            self._node_cache = {}
+            self._tip_cache = {}
+            self._non_tip_cache = {}
 
-    def create_node_cache(self):
-        r"""Construct an internal lookup keyed by node name, valued by node
+    def create_caches(self):
+        r"""Construct an internal lookups to facilitate searching by name
 
-        This method will not cache nodes in which the `name` is `None`. This
-        method will raise DuplicateNodeError if a name conflict is discovered.
+        This method will not cache nodes in which the .name is None. This
+        method will raise `DuplicateNodeError` if a name conflict in the tips
+        is discovered, but will not raise if on internal nodes. This is
+        because, in practice, the tips of a tree are required to be unique
+        while no such requirement holds for internal nodes.
 
         Raises
         ------
         DuplicateNodeError
-            The node cache requies that names are unique (with the exception of
+            The tip cache requies that names are unique (with the exception of
             names that are None)
 
         See Also
         --------
-        invalidate_node_cache
+        invalidate_caches
         find
 
         """
         if not self.is_root():
-            self.root().create_node_cache()
+            self.root().create_caches()
         else:
-            if self._node_cache:
+            if self._tip_cache and self._non_tip_cache:
                 return
 
-            for node in self.traverse():
+            self.invalidate_caches()
+
+            tip_cache = {}
+            non_tip_cache = defaultdict(list)
+
+            for node in self.postorder():
                 name = node.name
+
                 if name is None:
                     continue
 
-                if name in self._node_cache:
-                    raise DuplicateNodeError("%s already exists!" % name)
-                self._node_cache[name] = node
+                if node.is_tip():
+                    if name in tip_cache:
+                        raise DuplicateNodeError("%s already exists!" % name)
+
+                    tip_cache[name] = node
+                else:
+                    non_tip_cache[name].append(node)
+
+            self._tip_cache = tip_cache
+            self._non_tip_cache = non_tip_cache
 
     def find(self, name):
         r"""Find a node by `name`.
 
-        The first call to find will cache all nodes in the tree on the
+        The first call to find will cache all tips in the tree on the
         assumption that additional calls to `find` will be made.
+
+        `find` will first attempt to find the node in the tips. If it cannot
+        find a corresponding tip, then it will search through the internal
+        nodes of the tree. In practice, phylogenetic trees and other common
+        trees in biology do not have unique internal node names. As a result,
+        this find method will only return the first occurance of an internal
+        node encountered on a postorder traversal of the tree.
 
         Parameters
         ----------
@@ -1483,8 +1510,11 @@ class TreeNode(object):
         if isinstance(name, root.__class__):
             return name
 
-        root.create_node_cache()
-        node = root._node_cache.get(name, None)
+        root.create_caches()
+        node = root._tip_cache.get(name, None)
+
+        if node is None:
+            node = root._non_tip_cache.get(name, [None])[0]
 
         if node is None:
             raise MissingNodeError("Node %s is not in self" % name)
@@ -1521,7 +1551,7 @@ class TreeNode(object):
         >>> from skbio.core.tree import TreeNode
         >>> tree = TreeNode.from_newick("((a,b)c,(d,e)f);")
         >>> print tree.find_by_id(2).name
-        c
+        d
 
         """
         # if this method gets used frequently, then we should cache by ID
@@ -1940,6 +1970,79 @@ class TreeNode(object):
         if curr_node is None:  # no data -- return empty node
             return cls()
         return curr_node  # this should be the root of the tree
+
+    def to_array(self, attrs=None):
+        """Return an array representation of self
+
+        Parameters
+        ----------
+        attrs : list of tuple or None
+            The attributes and types to return. The expected form is
+            [(attribute_name, type)]. If `None`, then `name`, `length`, and
+            `id` are returned.
+
+        Returns
+        -------
+        dict of array
+            {id_index: {id: TreeNode},
+             child_index: [(node_id, left_child_id, right_child_id)],
+             attr_1: array(...),
+             ...
+             attr_N: array(...)}
+
+        Notes
+        -----
+        Attribute arrays are in index order such that TreeNode.id can be used
+        as a lookup into the the array
+
+        If `length` is an attribute, this will also record the length off the
+        root which is `nan`. Take care when summing.
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> t = TreeNode.from_newick('(((a:1,b:2,c:3)x:4,(d:5)y:6)z:7)')
+        >>> res = t.to_array()
+        >>> res.keys()
+        ['child_index', 'length', 'name', 'id_index', 'id']
+        >>> res['child_index']
+        [(4, 0, 2), (5, 3, 3), (6, 4, 5), (7, 6, 6)]
+        >>> for k, v in res['id_index'].items():
+        ...     print k, v
+        ...
+        0 a:1.0;
+        1 b:2.0;
+        2 c:3.0;
+        3 d:5.0;
+        4 (a:1.0,b:2.0,c:3.0)x:4.0;
+        5 (d:5.0)y:6.0;
+        6 ((a:1.0,b:2.0,c:3.0)x:4.0,(d:5.0)y:6.0)z:7.0;
+        7 (((a:1.0,b:2.0,c:3.0)x:4.0,(d:5.0)y:6.0)z:7.0);
+        >>> res['id']
+        array([0, 1, 2, 3, 4, 5, 6, 7])
+        >>> res['name']
+        array(['a', 'b', 'c', 'd', 'x', 'y', 'z', None], dtype=object)
+
+        """
+        if attrs is None:
+            attrs = [('name', object), ('length', float), ('id', int)]
+        else:
+            for attr, dtype in attrs:
+                if not hasattr(self, attr):
+                    raise AttributeError("%s does not appear in self!" % attr)
+
+        id_index, child_index = self.index_tree()
+        n = self.id + 1  # assign_ids starts at 0
+        tmp = [np.zeros(n, dtype=dtype) for attr, dtype in attrs]
+
+        for node in self.traverse(include_self=True):
+            n_id = node.id
+            for idx, (attr, dtype) in enumerate(attrs):
+                tmp[idx][n_id] = getattr(node, attr)
+
+        results = {'id_index': id_index, 'child_index': child_index}
+        results.update({attr: arr for (attr, dtype), arr in zip(attrs, tmp)})
+        return results
 
     def to_newick(self, with_distances=False, semicolon=True,
                   escape_name=True):
@@ -2597,31 +2700,29 @@ class TreeNode(object):
             second index is the left most leaf index. The third index is the
             right most leaf index
         """
+        self.assign_ids()
+
         id_index = {}
         child_index = []
-        curr_index = 0
 
         for n in self.postorder():
             for c in n.children:
-                c._leaf_index = curr_index
-                id_index[curr_index] = c
-                curr_index += 1
+                id_index[c.id] = c
 
                 if c:
                     # c has children itself, so need to add to result
-                    child_index.append((c._leaf_index,
-                                        c.children[0]._leaf_index,
-                                        c.children[-1]._leaf_index))
+                    child_index.append((c.id,
+                                        c.children[0].id,
+                                        c.children[-1].id))
 
         # handle root, which should be t itself
-        self._leaf_index = curr_index
-        id_index[curr_index] = self
+        id_index[self.id] = self
 
         # only want to add to the child_index if self has children...
         if self.children:
-            child_index.append((self._leaf_index,
-                                self.children[0]._leaf_index,
-                                self.children[-1]._leaf_index))
+            child_index.append((self.id,
+                                self.children[0].id,
+                                self.children[-1].id))
 
         return id_index, child_index
 
@@ -2631,8 +2732,13 @@ class TreeNode(object):
         Following the call, all nodes in the tree will have their id
         attribute set
         """
-        for idx, n in enumerate(self.postorder(include_self=True)):
-            n.id = idx
+        curr_index = 0
+        for n in self.postorder():
+            for c in n.children:
+                c.id = curr_index
+                curr_index += 1
+
+        self.id = curr_index
 
 
 def _dnd_tokenizer(data):
