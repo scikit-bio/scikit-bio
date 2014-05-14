@@ -12,7 +12,7 @@ from __future__ import division
 
 import numpy as np
 from numpy.random import shuffle
-from scipy.stats import spearmanr, kruskal
+from scipy.stats import spearmanr, kruskal, mannwhitneyu
 
 from skbio.math.stats.special import MACHEP, ndtri
 from skbio.math.stats.distribution import (chi_high, zprob, f_high, t_high,
@@ -771,85 +771,100 @@ def _get_bootstrap_sample(x, y, num_reps):
         yield sampled_x, sampled_y
 
 
-def mw_t(x, y):
-    """computes the Mann-Whitney U statistic and the probability using the
-    normal approximation"""
-    if len(x) > len(y):
-        x, y = y, x
+def mw_t(x, y, continuity=True, two_sided=True):
+    '''Compute the Mann Whitney U statistic using scipy.stats.mannwhitneyu
 
-    num_x = len(x)
-    num_y = len(y)
+    This wrapper controls whether the continuity correction will be applied 
+    and whether or not a two sided hypothesis is specified.
 
-    x = list(zip(x, np.zeros(len(x), int), np.zeros(len(x), int)))
-    y = list(zip(y, np.ones(len(y), int), np.zeros(len(y), int)))
-    combined = x + y
-    combined = np.array(combined, dtype=[('stat', float), ('sample', int),
-                                         ('rank', float)])
-    combined.sort(order='stat')
-    prev = None
-    start = None
-    ties = False
-    T = 0.0
-    for index in range(combined.shape[0]):
-        value = combined['stat'][index]
-        sample = combined['sample'][index]
-        if value == prev and start is None:
-            start = index
-            continue
+    Parameters
+    ----------
+    x : array-like
+        List or array of numeric values to be tested.
+    y : array-like
+        List or array of numeric values to be tested.
+    continuity : boolean
+        Whether or not to use the continuity correction.
+    two_sided: boolean
+        Whether or not to use a two sided test. See Notes.
 
-        if value != prev and start is not None:
-            ties = True
-            ave_rank = _average_rank(start, index)
-            num_tied = index - start + 1
-            T += (num_tied ** 3 - num_tied)
-            for i in range(start - 1, index):
-                combined['rank'][i] = ave_rank
-            start = None
-        combined['rank'][index] = index + 1
-        prev = value
+    Returns
+    -------
+    U stat : float
+        The MWU U statistic.
+    pval : float
+        The pvalue associated with the given U statistic assuming a normal
+        probability distribution.
 
-    if start is not None:
-        ave_rank = _average_rank(start, index)
-        num_tied = index - start + 2
-        T += (num_tied ** 3 - num_tied)
-        for i in range(start - 1, index + 1):
-            combined['rank'][i] = ave_rank
+    See Also
+    --------
+    scipy.stats.mannwhitneyu
 
-    total = combined.shape[0]
-    x_ranks_sum = np.sum(combined['rank'][i]
-                         for i in range(total) if combined['sample'][i] == 0)
-    prod = num_x * num_y
-    U1 = prod + (num_x * (num_x + 1) / 2) - x_ranks_sum
-    U2 = prod - U1
-    U = max([U1, U2])
-    numerator = U - prod / 2
-    denominator = np.sqrt((prod / (total * (total - 1))) *
-                          ((total ** 3 - total - T) / 12))
-    z = (numerator / denominator)
-    p = zprob(z)
-    return U, p
+    Notes
+    -----
+    Two tails is appropriate because we do not know which of our groups has a 
+    higher mean, thus our alternate hypothesis is that the distributions from 
+    which the two samples come are not the same (FA!=FB) and we must account 
+    for E[FA] > E[FB] and E[FB] < E[FA]. Sokal and Rolhf, Biometry, 
+    pgs 427-431.
+    '''
+    u, pval = mannwhitneyu(x, y, continuity)
+    if two_sided:
+        return u, 2. * pval
+    else:
+        return u, pval 
 
 
-def mw_boot(x, y, num_reps=1000):
-    """Monte Carlo (bootstrap) variant of the Mann-Whitney test.
+def mw_boot(x, y, num_reps=999):
+    """Bootstrapped version of Mann-Whitney-U test
 
-    Arguments:
-        - x, y: vectors of numbers
-        - num_reps: number of replicates for the  bootstrap
+    Parameters
+    ----------
+    x : array-like
+        List or array of numeric values to be tested.
+    y : array-like
+        List or array of numeric values to be tested.
+    num_reps : int
+        Number of permutations tests to do.
 
-    Uses the same Monte-Carlo resampling code as kw_boot
+    Returns
+    -------
+    observed_stat : float
+        Value of the U statistic for the comparison of x and y.
+    pval : float
+        Number of times a U statistic as small or smaller than the observed U 
+        statistic was found. 
+
+    Notes
+    -----
+    The u statistic must be smaller than the observed u statistic to count as 
+    more extreme according to [1]. Only a two tailed test is allowed through 
+    this function. 
+
+    Examples
+    --------
+    >>> from skbio.math.stats.test import mw_boot
+    >>> x = [1.5, 4.6, 7.8, 10.2, 23.4]
+    >>> y = [3.4, 10.1, 100.3, 45.6, 45.6, 78.9]
+    >>> mw_boot(x, y, num_reps = 999)
+    (6.0, 0.079)
     """
     tol = MACHEP * 100
     combined = np.array(list(x) + list(y))
+    np.random.seed(0)
     observed_stat, obs_p = mw_t(x, y)
+    # from qiime.pycogent_backports.test import mw_test
+    # observed_stat, obs_p = mw_test(x, y)
     total_obs = len(combined)
     num_x = len(x)
-    num_greater = 0
+    u_stats_as_or_more_extreme = 0
     for sampled_x, sampled_y in _get_bootstrap_sample(x, y, num_reps):
         sample_stat, sample_p = mw_t(sampled_x, sampled_y)
-        if sample_stat >= (observed_stat - tol):
-            num_greater += 1
-    return observed_stat, num_greater / num_reps
+        if sample_stat <= (observed_stat - tol): 
+            # the u statistic must be smaller than the observed u statistic to 
+            # count as more extreme. see [1]
+            u_stats_as_or_more_extreme += 1
+    return observed_stat, (u_stats_as_or_more_extreme + 1) / (num_reps + 1)
 
 
 def kruskal_wallis(data):
@@ -869,20 +884,8 @@ def kruskal_wallis(data):
         The pvalue associated with the given U statistic assuming a chi**2 
         probability distribution.
 
-    Notes
-    -----
-    Implementation taken from Wikipedia and Sokal and Rohlf Biometry pg. 423.
-    H = [12/n(n+1) * sum(T_i^2/n_i)] - 3(n+1) = the Kruskal Wallis value, the
-    expected value of the variance of the sum of the ranks. Summation occurs
-    over all groups (samples)
-    T_i = sum of the ranks (with ties resolved by the Kruskal Wallis procedure)
-    of the values (or variates) in the ith group (sample).
-    n_i = number of values in the ith group.
-    n = total number of samples in all groups being compared.
-    D = 1 - sum(T_j^3-T_j)/(n^3-n) = correction factor for ties.
-    T_j = number of ties in the jth group of ties.
-
-    Examples:
+    Examples
+    --------
     >>> from skbio.math.stats.test import kruskal_wallis
     >>> data = [[1, 4.5, 67, 100, 2], [145, 100, 3, 14.5, -19], [2, 1.1, 5.5, 
     ...         3.3, 16.7, 18, 100.3]]

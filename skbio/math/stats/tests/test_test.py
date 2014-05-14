@@ -987,23 +987,31 @@ class CorrelationTests(TestsHelper):
         self.assertEqual(obs[4], (None, None))
 
 
-class MannWhitneyTests(TestCase):
-
-    """check accuracy of Mann-Whitney implementation"""
-    x = list(map(int, "104 109 112 114 116 118 118 119 121 123 125 126"
-                 " 126 128 128 128".split()))
-    y = list(map(int, "100 105 107 107 108 111 116 120 121 123".split()))
-
     def test_mw_test(self):
         """mann-whitney test results should match Sokal & Rohlf"""
-        U, p = mw_t(self.x, self.y)
-        np.testing.assert_allclose(U, 123.5)
-        self.assertTrue(0.02 <= p <= 0.05)
+        # using Sokal and Rolhf and R wilcox.test
+        # x <- c(104, 109, 112, 114, 116, 118, 118, 119, 121, 123, 125, 126, 
+        #        126, 128, 128, 128)
+        # y <- c(100, 105, 107, 107, 108, 111, 116, 120, 121, 123)
+        # wilcox.test(x,y)
+        # W = 123.5, p-value = 0.0232
+        x = [104, 109, 112, 114, 116, 118, 118, 119, 121, 123, 125, 126, 126, 
+            128, 128, 128]
+        y = [100, 105, 107, 107, 108, 111, 116, 120, 121, 123]
+        u, p = mw_t(x, y, continuity=True, two_sided=True)
+        # a return of 123.5 would also be okay, there is a consensus to use the
+        # smaller U statistic, but the probability calculated from each is the
+        # same
+        self.assertTrue(u == 36.5 or u == 123.5)
+        np.testing.assert_allclose(p, .0232, rtol=1e-3)
 
     def test_mw_boot(self):
         """excercising the Monte-carlo variant of mann-whitney"""
-        U, p = mw_boot(self.x, self.y, 10)
-        np.testing.assert_allclose(U, 123.5)
+        x = [104, 109, 112, 114, 116, 118, 118, 119, 121, 123, 125, 126, 126, 
+            128, 128, 128]
+        y = [100, 105, 107, 107, 108, 111, 116, 120, 121, 123]
+        u, p = mw_boot(x, y, 10)
+        self.assertTrue(u == 36.5 or u == 123.5)
         self.assertTrue(0 <= p <= 0.5)
 
 
