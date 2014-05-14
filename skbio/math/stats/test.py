@@ -452,7 +452,7 @@ def mc_t_two_sample(x_items, y_items, tails=None, permutations=999,
 
     # Only perform the Monte Carlo test if we got a sane answer back from the
     # initial t-test and we have been specified permutations.
-    nonparam_p_val = None
+    nonparam_p_val = np.nan
     perm_t_stats = []
     if permutations > 0 and obs_t is not None and param_p_val is not None:
         # Permute observations between x_items and y_items the specified number

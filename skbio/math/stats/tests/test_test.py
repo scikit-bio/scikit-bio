@@ -481,20 +481,20 @@ class StatTests(TestsHelper):
 
     def test_mc_t_two_sample_no_perms(self):
         """Test gives empty permutation results if no perms are given."""
-        exp = (-0.11858541225631833, 0.90756579317867436, [], None)
+        exp = (-0.11858541225631833, 0.90756579317867436, [], np.nan)
         I = np.array([7.2, 7.1, 9.1, 7.2, 7.3, 7.2, 7.5])
         II = np.array([8.8, 7.5, 7.7, 7.6, 7.4, 6.7, 7.2])
         obs = mc_t_two_sample(I, II, permutations=0)
         np.testing.assert_allclose(obs[0], exp[0])
         np.testing.assert_allclose(obs[1], exp[1])
         self.assertEqual(obs[2], exp[2])
-        self.assertEqual(obs[3], exp[3])
+        np.testing.assert_allclose(obs[3], exp[3])
 
     def test_mc_t_two_sample_no_mc(self):
         """Test no MC stats if initial t-test is bad."""
         x = np.array([1, 1, 1])
         y = np.array([0, 0, 0])
-        self.assertEqual(mc_t_two_sample(x, x), (None, None, [], None))
+        self.assertEqual(mc_t_two_sample(x, x), (None, None, [], np.nan))
 
     def test_mc_t_two_sample_no_variance(self):
         """Test input with no variance. Should match Deducer::perm.t.test."""
