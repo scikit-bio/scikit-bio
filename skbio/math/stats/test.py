@@ -1307,13 +1307,20 @@ def benjamini_hochberg_step_down(pvals):
     -----
     In short, computes the fdr adjusted pvals (ap_i's), and working from
     the largest to smallest, compare ap_i to ap_i-1. If ap_i < ap_i-1 set
-    ap_i-1 equal to ap_i. Does *not* assume pvals is sorted
+    ap_i-1 equal to ap_i. Does *not* assume pvals is sorted. Described in [1]_.
 
     Examples
     --------
     >>> from skbio.math.stats.test import fdr_correction
     >>> benjamini_hochberg_step_down([0.1, 0.21, 0.5, 0.2, 0.6])
     array([ 0.35,  0.35,  0.6 ,  0.35,  0.6 ])
+
+    References
+    ----------
+    .. [1] Controlling the False Discovery Rate: A Practical and Powerful
+       Approach to Multiple Testing' Yoav Benjamini and Yosef Hochberg. Journal
+       of the Royal Statistical Society. Series B (Methodological), Vol. 57,
+       No. 1 (1995) 289-300.
     """
     tmp = fdr_correction(pvals)
     corrected_vals = np.empty(len(pvals))
