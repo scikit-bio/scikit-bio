@@ -5,6 +5,9 @@ Gradient analyses (:mod:`skbio.math.gradient`)
 .. currentmodule:: skbio.math.gradient
 
 This module provides functionality for performing gradient analyses.
+The algorithms included in this module mainly allows performing analysis of
+volatility on time series data, but they can be applied to any data that
+contains a gradient.
 
 Classes
 -------
@@ -97,6 +100,100 @@ import numpy as np
 
 from skbio.util.sort import signed_natsort
 from skbio.math.stats.test import ANOVA_one_way
+
+
+def weight_by_vector(vector, w_vector):
+    r"""weights the values of `vector` given a weighting vector `w_vector`.
+
+    Each value in `vector` will be weighted by the 'rate of change'
+    to 'optimal rate of change' ratio. The 'rate of change' of a vector
+    measures how each point in the vector changes with respect to its
+    predecessor point. The 'optimal rate of change' is the rate of change
+    in which each point in the vector performs the same change than its
+    predecessor, meaning that when calling this function over evenly spaced
+    `w_vector` values, no change will be reflected on the output.
+
+    Parameters
+    ----------
+    vector: pandas.DataFrame
+        Values to weight
+    w_vector: pandas.Series
+        Values used to weight ``vector``
+
+    Returns
+    -------
+    pandas.DataFrame
+        A weighted version of ``vector``.
+
+    Raises
+    ------
+    ValueError
+        If vector and w_vector don't have equal lengths
+        If w_vector is not a gradient
+    TypeError
+        If vector and w_vector are not iterables
+    """
+    try:
+        if len(vector) != len(w_vector):
+            raise ValueError("vector (%d) & w_vector (%d) must be equal "
+                             "lengths" % (len(vector), len(w_vector)))
+    except TypeError:
+        raise TypeError("vector and w_vector must be iterables")
+
+    # check no repeated values are passed in the weighting vector
+    if len(set(w_vector)) != len(w_vector):
+        raise ValueError("The weighting vector must be a gradient")
+
+    # no need to weight in case of a one element vector
+    if len(w_vector) == 1:
+        return vector
+
+    # Cast to float so divisions have a floating point resolution
+    total_length = float(max(w_vector) - min(w_vector))
+
+    # Reflects the expected gradient between subsequent values in w_vector
+    # the first value isn't weighted so subtract one from the number of
+    # elements
+    optimal_gradient = total_length/(len(w_vector)-1)
+
+    # for all elements apply the weighting function
+    for i, idx in enumerate(vector.index):
+        # Skipping the first element is it doesn't need to be weighted
+        if i != 0:
+            vector.ix[idx] = (vector.ix[idx] * optimal_gradient /
+                              (np.abs((w_vector[i] - w_vector[i-1]))))
+
+    return vector
+
+
+def ANOVA_vectors(category, res_by_group):
+    r"""Run ANOVA over `res_by_group`
+
+    If ANOVA cannot be run in the current category (because either there is
+    only one group in category or there is a group with only one member)
+    the result CategoryResults instance has `probability` and `groups` set
+    to None and message is set to a string explaining why ANOVA was not run
+
+    Returns
+    -------
+    CategoryResults
+        An instance of CategoryResults holding the results of the vector
+        analysis applied on `category`
+    """
+    # If there is only one group under category we cannot run ANOVA
+    if len(res_by_group) == 1:
+        return CategoryResults(category, None, None,
+                               'Only one value in the group.')
+    # Check if groups can be tested using ANOVA. ANOVA testing requires
+    # all elements to have at least size greater to one.
+    values = [res.vector for res in res_by_group]
+    if any([len(value) == 1 for value in values]):
+        return CategoryResults(category, None, None,
+                               'This group can not be used. All groups '
+                               'should have more than 1 element.')
+    # We are ok to run ANOVA
+    _, p_val = ANOVA_one_way(values)
+    return CategoryResults(category, p_val, res_by_group, None)
 
 
 class GroupResults(namedtuple('GroupResults', ('name', 'vector', 'mean',
@@ -411,7 +508,7 @@ class BaseVectors(object):
             res_by_group = [self._get_group_vectors(group, sample_ids)
                             for group, sample_ids in cat_groups.items()]
 
-            result.categories.append(self._test_vectors(cat, res_by_group))
+            result.categories.append(ANOVA_vectors(cat, res_by_group))
 
         return result
 
@@ -454,8 +551,8 @@ class BaseVectors(object):
         if self._weighted and len(sids) > 1:
             vectors_copy = deepcopy(vectors)
             try:
-                vectors = self._weight_by_vector(vectors_copy,
-                                                 self._weighting_vector[sids])
+                vectors = weight_by_vector(vectors_copy,
+                                           self._weighting_vector[sids])
             except (FloatingPointError, ValueError):
                 self._message_buffer.append("Could not weight group, no "
                                             "gradient in the the "
@@ -481,95 +578,6 @@ class BaseVectors(object):
         """
         raise NotImplementedError("No algorithm is implemented on the base "
                                   "class.")
-
-    def _weight_by_vector(self, vector, w_vector):
-        r"""weights the values of `vector` given a weighting vector `w_vector`.
-
-        Each value in `vector` will be weighted by the 'rate of change'
-        to 'optimal rate of change' ratio, meaning that when calling this
-        function over evenly spaced `w_vector` values, no change will be
-        reflected on the output.
-
-        Parameters
-        ----------
-        vector: pandas.DataFrame
-            Values to weight
-        w_vector: pandas.Series
-            Values used to weight ``vector``
-
-        Returns
-        -------
-        pandas.DataFrame
-            A weighted version of ``vector``.
-
-        Raises
-        ------
-        ValueError
-            If vector and w_vector don't have equal lengths
-            If w_vector is not a gradient
-        TypeError
-            If vector and w_vector are not iterables
-        """
-        try:
-            if len(vector) != len(w_vector):
-                raise ValueError("vector (%d) & w_vector (%d) must be equal "
-                                 "lengths" % (len(vector), len(w_vector)))
-        except TypeError:
-            raise TypeError("vector and w_vector must be iterables")
-
-        # check no repeated values are passed in the weighting vector
-        if len(set(w_vector)) != len(w_vector):
-            raise ValueError("The weighting vector must be a gradient")
-
-        # no need to weight in case of a one element vector
-        if len(w_vector) == 1:
-            return vector
-
-        # Cast to float so divisions have a floating point resolution
-        total_length = float(max(w_vector) - min(w_vector))
-
-        # Reflects the expected gradient between subsequent values in w_vector
-        # the first value isn't weighted so subtract one from the number of
-        # elements
-        optimal_gradient = total_length/(len(w_vector)-1)
-
-        # for all elements apply the weighting function
-        for i, idx in enumerate(vector.index):
-            # Skipping the first element is it doesn't need to be weighted
-            if i != 0:
-                vector.ix[idx] = (vector.ix[idx] * optimal_gradient /
-                                  (np.abs((w_vector[i] - w_vector[i-1]))))
-
-        return vector
-
-    def _test_vectors(self, category, res_by_group):
-        r"""Run ANOVA over `res_by_group`
-
-        If ANOVA cannot be run in the current category (because either there is
-        only one group in category or there is a group with only one member)
-        the result CategoryResults instance has `probability` and `groups` set
-        to None and message is set to a string explaining why ANOVA was not run
-
-        Returns
-        -------
-        CategoryResults
-            An instance of CategoryResults holding the results of the vector
-            analysis applied on `category`
-        """
-        # If there is only one group under category we cannot run ANOVA
-        if len(res_by_group) == 1:
-            return CategoryResults(category, None, None,
-                                   'Only one value in the group.')
-        # Check if groups can be tested using ANOVA. ANOVA testing requires
-        # all elements to have at least size greater to one.
-        values = [res.vector for res in res_by_group]
-        if any([len(value) == 1 for value in values]):
-            return CategoryResults(category, None, None,
-                                   'This group can not be used. All groups '
-                                   'should have more than 1 element.')
-        # We are ok to run ANOVA
-        _, p_val = ANOVA_one_way(values)
-        return CategoryResults(category, p_val, res_by_group, None)
 
 
 class AverageVectors(BaseVectors):

@@ -22,7 +22,8 @@ from skbio.util.testing import get_data_path
 from skbio.math.gradient import (BaseVectors, AverageVectors,
                                  TrajectoryVectors, FirstDifferenceVectors,
                                  WindowDifferenceVectors, GroupResults,
-                                 CategoryResults, VectorsResults)
+                                 CategoryResults, VectorsResults,
+                                 weight_by_vector, ANOVA_vectors)
 
 
 class BaseTests(TestCase):
@@ -210,6 +211,173 @@ class BaseTests(TestCase):
 
         for o, e in zip(sorted(obs.categories), sorted(exp.categories)):
             self.assert_category_results_almost_equal(o, e)
+
+
+class GradientTests(BaseTests):
+    def test_weight_by_vector(self):
+        """Correctly weights the vectors"""
+        vector = pd.DataFrame.from_dict({'s1': np.array([1]),
+                                         's2': np.array([2]),
+                                         's3': np.array([3]),
+                                         's4': np.array([4]),
+                                         's5': np.array([5]),
+                                         's6': np.array([6]),
+                                         's7': np.array([7]),
+                                         's8': np.array([8])}, orient='index')
+        vector.sort(columns=0, inplace=True)
+        w_vector = pd.Series(np.array([1, 5, 8, 12, 45, 80, 85, 90]),
+                             ['s1', 's2', 's3', 's4',
+                              's5', 's6', 's7', 's8']).astype(np.float64)
+        exp = pd.DataFrame.from_dict({'s1': np.array([1]),
+                                      's2': np.array([6.3571428571]),
+                                      's3': np.array([12.7142857142]),
+                                      's4': np.array([12.7142857142]),
+                                      's5': np.array([1.9264069264]),
+                                      's6': np.array([2.1795918367]),
+                                      's7': np.array([17.8]),
+                                      's8': np.array([20.3428571428])},
+                                     orient='index')
+        obs = weight_by_vector(vector, w_vector)
+        pdt.assert_frame_equal(obs.sort(axis=0), exp.sort(axis=0))
+
+        vector = pd.DataFrame.from_dict({'s1': np.array([1]),
+                                         's2': np.array([2]),
+                                         's3': np.array([3]),
+                                         's4': np.array([4]),
+                                         's5': np.array([5]),
+                                         's6': np.array([6]),
+                                         's7': np.array([7]),
+                                         's8': np.array([8])}, orient='index')
+        vector.sort(columns=0, inplace=True)
+        w_vector = pd.Series(np.array([1, 2, 3, 4, 5, 6, 7, 8]),
+                             ['s1', 's2', 's3', 's4',
+                              's5', 's6', 's7', 's8']).astype(np.float64)
+        exp = pd.DataFrame.from_dict({'s1': np.array([1]), 's2': np.array([2]),
+                                      's3': np.array([3]), 's4': np.array([4]),
+                                      's5': np.array([5]), 's6': np.array([6]),
+                                      's7': np.array([7]), 's8': np.array([8])
+                                      },
+                                     orient='index')
+        obs = weight_by_vector(vector, w_vector)
+        pdt.assert_frame_equal(obs.sort(axis=0), exp.sort(axis=0))
+
+        vector = pd.DataFrame.from_dict({'s2': np.array([2]),
+                                         's3': np.array([3]),
+                                         's4': np.array([4]),
+                                         's5': np.array([5]),
+                                         's6': np.array([6])}, orient='index')
+        vector.sort(columns=0, inplace=True)
+        w_vector = pd.Series(np.array([25, 30, 35, 40, 45]),
+                             ['s2', 's3', 's4', 's5', 's6']).astype(np.float64)
+        exp = pd.DataFrame.from_dict({'s2': np.array([2]), 's3': np.array([3]),
+                                      's4': np.array([4]), 's5': np.array([5]),
+                                      's6': np.array([6])}, orient='index')
+        obs = weight_by_vector(vector, w_vector)
+        pdt.assert_frame_equal(obs.sort(axis=0), exp.sort(axis=0))
+
+        vector = pd.DataFrame.from_dict({'s1': np.array([1, 2, 3]),
+                                         's2': np.array([2, 3, 4]),
+                                         's3': np.array([5, 6, 7]),
+                                         's4': np.array([8, 9, 10])},
+                                        orient='index')
+        vector.sort(columns=0, inplace=True)
+        w_vector = pd.Series(np.array([1, 2, 3, 4]),
+                             ['s1', 's2', 's3', 's4']).astype(np.float64)
+        exp = pd.DataFrame.from_dict({'s1': np.array([1, 2, 3]),
+                                      's2': np.array([2, 3, 4]),
+                                      's3': np.array([5, 6, 7]),
+                                      's4': np.array([8, 9, 10])},
+                                     orient='index')
+        obs = weight_by_vector(vector, w_vector)
+        pdt.assert_frame_equal(obs.sort(axis=0), exp.sort(axis=0))
+
+        sample_ids = ['PC.356', 'PC.481', 'PC.355', 'PC.593', 'PC.354']
+        vector = pd.DataFrame.from_dict({'PC.356': np.array([5.65948525,
+                                                             1.37977545,
+                                                             -4.9706303]),
+                                         'PC.481': np.array([0.79151484,
+                                                             -0.70387996,
+                                                             1.89223152]),
+                                         'PC.355': np.array([6.05869624,
+                                                             3.44821245,
+                                                             -0.42595788]),
+                                         'PC.593': np.array([5.18731945,
+                                                             -1.81714206,
+                                                             4.26216485]),
+                                         'PC.354': np.array([7.07588529,
+                                                             -0.53917873,
+                                                             0.89389158])
+                                         }, orient='index')
+        w_vector = pd.Series(np.array([50, 52, 55, 57, 60]),
+                             sample_ids).astype(np.float64)
+        exp = pd.DataFrame.from_dict({'PC.356': np.array([5.65948525,
+                                                          1.37977545,
+                                                          -4.9706303]),
+                                      'PC.481': np.array([0.98939355,
+                                                          -0.87984995,
+                                                          2.3652894]),
+                                      'PC.355': np.array([5.04891353,
+                                                          2.87351038,
+                                                          -0.3549649]),
+                                      'PC.593': np.array([6.48414931,
+                                                          -2.27142757,
+                                                          5.32770606]),
+                                      'PC.354': np.array([5.89657108,
+                                                          -0.44931561,
+                                                          0.74490965])
+                                      }, orient='index')
+        obs = weight_by_vector(vector.ix[sample_ids], w_vector[sample_ids])
+        pdt.assert_frame_equal(obs.sort(axis=0), exp.sort(axis=0))
+
+    def test_weight_by_vector_error(self):
+        """Raises an error with erroneous inputs"""
+        # Different vector lengths
+        with self.assertRaises(ValueError):
+            weight_by_vector([1, 2, 3, 4], [1, 2, 3])
+
+        # Inputs are not iterables
+        with self.assertRaises(TypeError):
+            weight_by_vector(9, 1)
+
+        # Weighting vector is not a gradient
+        with self.assertRaises(ValueError):
+            weight_by_vector([1, 2, 3, 4], [1, 2, 3, 3])
+
+    def test_ANOVA_vectors(self):
+        """Correctly performs the check before running ANOVA"""
+        # Only one group in a given category
+        group = GroupResults('Bar', np.array([2.3694943596755276,
+                                              3.3716388181385781,
+                                              5.4452089176253367,
+                                              4.5704258453173559,
+                                              4.4972603724478377]),
+                             4.05080566264, {'avg': 4.0508056626409275}, None)
+        obs = ANOVA_vectors('Foo', [group])
+        exp = CategoryResults('Foo', None, None,
+                              'Only one value in the group.')
+        self.assert_category_results_almost_equal(obs, exp)
+
+        # One element have only one element
+        group2 = GroupResults('FooBar', np.array([4.05080566264]),
+                              4.05080566264, {'avg': 4.05080566264}, None)
+        obs = ANOVA_vectors('Foo', [group, group2])
+        exp = CategoryResults('Foo', None, None,
+                              'This group can not be used. All groups '
+                              'should have more than 1 element.')
+        self.assert_category_results_almost_equal(obs, exp)
+
+        gr1 = GroupResults('Foo', np.array([-0.219044992, 0.079674486,
+                                            0.09233683]),
+                           -0.015677892, {'avg': -0.015677892}, None)
+        gr2 = GroupResults('Bar', np.array([-0.042258081, 0.000204041,
+                                            0.024837603]),
+                           -0.0732878716, {'avg': -0.0732878716}, None)
+        gr3 = GroupResults('FBF', np.array([0.080504323, -0.212014503,
+                                            -0.088353435]),
+                           -0.0057388123, {'avg': -0.0057388123}, None)
+        obs = ANOVA_vectors('Cat', [gr1, gr2, gr3])
+        exp = CategoryResults('Cat', 0.8067456876, [gr1, gr2, gr3], None)
+        self.assert_category_results_almost_equal(obs, exp)
 
 
 class GroupResultsTests(BaseTests):
@@ -540,138 +708,6 @@ class BaseVectorsTests(BaseTests):
         bv = BaseVectors(self.coords, self.prop_expl, self.metadata_map)
         with self.assertRaises(NotImplementedError):
             bv._compute_vector_results("foo", [])
-
-    def test_weight_by_vector(self):
-        """Correctly weights the vectors"""
-        bv = BaseVectors(self.coords, self.prop_expl, self.metadata_map)
-
-        vector = pd.DataFrame.from_dict({'s1': np.array([1]),
-                                         's2': np.array([2]),
-                                         's3': np.array([3]),
-                                         's4': np.array([4]),
-                                         's5': np.array([5]),
-                                         's6': np.array([6]),
-                                         's7': np.array([7]),
-                                         's8': np.array([8])}, orient='index')
-        vector.sort(columns=0, inplace=True)
-        w_vector = pd.Series(np.array([1, 5, 8, 12, 45, 80, 85, 90]),
-                             ['s1', 's2', 's3', 's4',
-                              's5', 's6', 's7', 's8']).astype(np.float64)
-        exp = pd.DataFrame.from_dict({'s1': np.array([1]),
-                                      's2': np.array([6.3571428571]),
-                                      's3': np.array([12.7142857142]),
-                                      's4': np.array([12.7142857142]),
-                                      's5': np.array([1.9264069264]),
-                                      's6': np.array([2.1795918367]),
-                                      's7': np.array([17.8]),
-                                      's8': np.array([20.3428571428])},
-                                     orient='index')
-        obs = bv._weight_by_vector(vector, w_vector)
-        pdt.assert_frame_equal(obs.sort(axis=0), exp.sort(axis=0))
-
-        vector = pd.DataFrame.from_dict({'s1': np.array([1]),
-                                         's2': np.array([2]),
-                                         's3': np.array([3]),
-                                         's4': np.array([4]),
-                                         's5': np.array([5]),
-                                         's6': np.array([6]),
-                                         's7': np.array([7]),
-                                         's8': np.array([8])}, orient='index')
-        vector.sort(columns=0, inplace=True)
-        w_vector = pd.Series(np.array([1, 2, 3, 4, 5, 6, 7, 8]),
-                             ['s1', 's2', 's3', 's4',
-                              's5', 's6', 's7', 's8']).astype(np.float64)
-        exp = pd.DataFrame.from_dict({'s1': np.array([1]), 's2': np.array([2]),
-                                      's3': np.array([3]), 's4': np.array([4]),
-                                      's5': np.array([5]), 's6': np.array([6]),
-                                      's7': np.array([7]), 's8': np.array([8])
-                                      },
-                                     orient='index')
-        obs = bv._weight_by_vector(vector, w_vector)
-        pdt.assert_frame_equal(obs.sort(axis=0), exp.sort(axis=0))
-
-        vector = pd.DataFrame.from_dict({'s2': np.array([2]),
-                                         's3': np.array([3]),
-                                         's4': np.array([4]),
-                                         's5': np.array([5]),
-                                         's6': np.array([6])}, orient='index')
-        vector.sort(columns=0, inplace=True)
-        w_vector = pd.Series(np.array([25, 30, 35, 40, 45]),
-                             ['s2', 's3', 's4', 's5', 's6']).astype(np.float64)
-        exp = pd.DataFrame.from_dict({'s2': np.array([2]), 's3': np.array([3]),
-                                      's4': np.array([4]), 's5': np.array([5]),
-                                      's6': np.array([6])}, orient='index')
-        obs = bv._weight_by_vector(vector, w_vector)
-        pdt.assert_frame_equal(obs.sort(axis=0), exp.sort(axis=0))
-
-        vector = pd.DataFrame.from_dict({'s1': np.array([1, 2, 3]),
-                                         's2': np.array([2, 3, 4]),
-                                         's3': np.array([5, 6, 7]),
-                                         's4': np.array([8, 9, 10])},
-                                        orient='index')
-        vector.sort(columns=0, inplace=True)
-        w_vector = pd.Series(np.array([1, 2, 3, 4]),
-                             ['s1', 's2', 's3', 's4']).astype(np.float64)
-        exp = pd.DataFrame.from_dict({'s1': np.array([1, 2, 3]),
-                                      's2': np.array([2, 3, 4]),
-                                      's3': np.array([5, 6, 7]),
-                                      's4': np.array([8, 9, 10])},
-                                     orient='index')
-        obs = bv._weight_by_vector(vector, w_vector)
-        pdt.assert_frame_equal(obs.sort(axis=0), exp.sort(axis=0))
-
-        sample_ids = ['PC.356', 'PC.481', 'PC.355', 'PC.593', 'PC.354']
-        vector = pd.DataFrame.from_dict({'PC.356': np.array([5.65948525,
-                                                             1.37977545,
-                                                             -4.9706303]),
-                                         'PC.481': np.array([0.79151484,
-                                                             -0.70387996,
-                                                             1.89223152]),
-                                         'PC.355': np.array([6.05869624,
-                                                             3.44821245,
-                                                             -0.42595788]),
-                                         'PC.593': np.array([5.18731945,
-                                                             -1.81714206,
-                                                             4.26216485]),
-                                         'PC.354': np.array([7.07588529,
-                                                             -0.53917873,
-                                                             0.89389158])
-                                         }, orient='index')
-        w_vector = pd.Series(np.array([50, 52, 55, 57, 60]),
-                             sample_ids).astype(np.float64)
-        exp = pd.DataFrame.from_dict({'PC.356': np.array([5.65948525,
-                                                          1.37977545,
-                                                          -4.9706303]),
-                                      'PC.481': np.array([0.98939355,
-                                                          -0.87984995,
-                                                          2.3652894]),
-                                      'PC.355': np.array([5.04891353,
-                                                          2.87351038,
-                                                          -0.3549649]),
-                                      'PC.593': np.array([6.48414931,
-                                                          -2.27142757,
-                                                          5.32770606]),
-                                      'PC.354': np.array([5.89657108,
-                                                          -0.44931561,
-                                                          0.74490965])
-                                      }, orient='index')
-        obs = bv._weight_by_vector(vector.ix[sample_ids], w_vector[sample_ids])
-        pdt.assert_frame_equal(obs.sort(axis=0), exp.sort(axis=0))
-
-    def test_weight_by_vector_error(self):
-        """Raises an error with erroneous inputs"""
-        bv = BaseVectors(self.coords, self.prop_expl, self.metadata_map)
-        # Different vector lengths
-        with self.assertRaises(ValueError):
-            bv._weight_by_vector([1, 2, 3, 4], [1, 2, 3])
-
-        # Inputs are not iterables
-        with self.assertRaises(TypeError):
-            bv._weight_by_vector(9, 1)
-
-        # Weighting vector is not a gradient
-        with self.assertRaises(ValueError):
-            bv._weight_by_vector([1, 2, 3, 4], [1, 2, 3, 3])
 
 
 class AverageVectorsTests(BaseTests):
