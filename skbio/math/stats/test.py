@@ -978,6 +978,7 @@ def t_tailed_prob(t, df, tails):
 
 
 def is_symmetric_and_hollow(matrix):
+    """Return True if matrix is symmetric and hollow, otherwise False."""
     return (matrix.T == matrix).all() and (np.trace(matrix) == 0)
 
 
