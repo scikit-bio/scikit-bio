@@ -1411,7 +1411,7 @@ def fisher_population_correlation(corrcoefs, sample_sizes):
                          'a non real valured correlation coefficient and it\'s'
                          ' Fisher Z transform cannot be computed.')
     # calculate zs
-    zs = np.array(map(fisher_z_transform, rs))
+    zs = np.array(map(lambda x: fisher_z_transform(x), rs))
     # calculate variance weighted z average = z_bar
     z_bar = (zs * (ns - 3)).sum() / float((ns - 3).sum())
     rho = inverse_fisher_z_transform(z_bar)
