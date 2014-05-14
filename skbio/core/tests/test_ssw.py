@@ -19,7 +19,7 @@
 from unittest import TestCase, main
 from skbio.core.ssw import (StripedSmithWaterman,
                             AlignmentStructure,
-                            striped_smith_waterman_alignment)
+                            align_striped_smith_waterman)
 
 
 class TestSSW(TestCase):
@@ -638,8 +638,8 @@ class TestStripedSmithWatermanAlignment(TestSSW):
         target_sequence = 'AACTTATATAATAAAAATTATATATTCGTTGGGTTCTTTTGATATAAATC'
         query = StripedSmithWaterman(query_sequence)
         align1 = query(target_sequence)
-        align2 = striped_smith_waterman_alignment(query_sequence,
-                                                  target_sequence)
+        align2 = align_striped_smith_waterman(query_sequence,
+                                              target_sequence)
         self._check_alignment(align2, align1)
 
     def test_kwargs_are_usable(self):
@@ -650,8 +650,8 @@ class TestStripedSmithWatermanAlignment(TestSSW):
         target_sequence = 'TACTTATAAGATGTCTCAACGGCATGCGCAACTTGTGAAGTG'
         query = StripedSmithWaterman(query_sequence, **kwargs)
         align1 = query(target_sequence)
-        align2 = striped_smith_waterman_alignment(query_sequence,
-                                                  target_sequence, **kwargs)
+        align2 = align_striped_smith_waterman(query_sequence,
+                                              target_sequence, **kwargs)
         self._check_alignment(align2, align1)
 
 

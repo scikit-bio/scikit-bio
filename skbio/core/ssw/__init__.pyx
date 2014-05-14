@@ -21,14 +21,14 @@ Functions
 .. autosummary::
     :toctree: generated/
 
-    striped_smith_waterman_alignment
+    align_striped_smith_waterman
 
 Examples
 --------
-Using the convenient ``striped_smith_waterman_alignment`` function:
+Using the convenient ``align_striped_smith_waterman`` function:
 
->>> from skbio.core.ssw import striped_smith_waterman_alignment
->>> alignment = striped_smith_waterman_alignment(
+>>> from skbio.core.ssw import align_striped_smith_waterman
+>>> alignment = align_striped_smith_waterman(
 ...                 "ACTAAGGCTCTCTACCCCTCTCAGAGA",
 ...                 "ACTAAGGCTCCTAACCCCCTTTTCTCAGA"
 ...             )
@@ -66,12 +66,12 @@ Using the ``StripedSmithWaterman`` object:
 }
 
 Using the ``StripedSmithWaterman`` object for multiple targets in an efficient
-way:
+way and finding the aligned sequence representations:
 
 >>> from skbio.core.ssw import StripedSmithWaterman
 >>> alignments = []
 >>> target_sequences = [
-...     "TAGAGATTAATTGCCACATTGCCACTGCCAAAATTCTG",
+...     "GCTAACTAGGCTCCCTTCTACCCCTCTCAGAGA",
 ...     "GCCCAGTAGCTTCCCAATATGAGAGCATCAATTGTAGATCGGGCC",
 ...     "TCTATAAGATTCCGCATGCGTTACTTATAAGATGTCTCAACGG",
 ...     "TAGAGATTAATTGCCACTGCCAAAATTCTG"
@@ -84,18 +84,21 @@ way:
 ...
 >>> print alignments[0]
 {
-    'optimal_alignment_score': 10,
-    'suboptimal_alignment_score': 6,
-    'query_begin': 22,
+    'optimal_alignment_score': 38,
+    'suboptimal_alignment_score': 14,
+    'query_begin': 0,
     'query_end': 26,
-    'target_begin': 1,
-    'target_end_optimal': 5,
-    'target_end_suboptimal': 25,
-    'cigar': '5M',
+    'target_begin': 4,
+    'target_end_optimal': 32,
+    'target_end_suboptimal': 15,
+    'cigar': '3M1I6M3D17M',
     'query_sequence': 'ACTAAGGCTCTCTACCCCTCTCAGAGA',
-    'target_sequence': 'TAGAGATTAATTGCCACATTGCCACTGCCAAAATTCTG'
+    'target_sequence': 'GCTAACTAGGCTCCCTTCTACCCCTCTCAGAGA'
 }
-
+>>> print alignments[0].get_aligned_query_sequence()
+ACTAAGGCT---CTCTACCCCTCTCAGAGA
+>>> print alignments[0].get_aligned_target_sequence()
+ACT-AGGCTCCCTTCTACCCCTCTCAGAGA
 
 """
 # -----------------------------------------------------------------------------
@@ -420,7 +423,7 @@ cdef class AlignmentStructure:
 
         Notes
         -----
-        This will return a None object if suppress_sequences was True when this
+        This will return an empty str if suppress_sequences was True when this
         object was created
 
         """
@@ -439,7 +442,7 @@ cdef class AlignmentStructure:
 
         Notes
         -----
-        This will return a None object if suppress_sequences was True when this
+        This will return an empty str if suppress_sequences was True when this
         object was created
 
         """
@@ -775,8 +778,8 @@ cdef class StripedSmithWaterman:
         return py_list_matrix
 
 
-def striped_smith_waterman_alignment(query_sequence, target_sequence,
-                                     **kwargs):
+def align_striped_smith_waterman(query_sequence, target_sequence,
+                                 **kwargs):
     """Perform as Striped (Banded) Smith Waterman alignment on a query and
     target sequence.
 
