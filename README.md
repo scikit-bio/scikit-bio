@@ -63,6 +63,13 @@ If you'd like to install the dependencies manually (or some other way than using
 - [pandas](http://pandas.pydata.org/)
 - [future](https://pypi.python.org/pypi/future) 
 
+Projects using scikit-bio
+-------------------------
+
+- [qiime](http://qiime.org/) 
+- [EMPeror](http://biocore.github.io/emperor/)
+- [Introduction to Applied Bioinformatics](http://caporasolab.us/An-Introduction-To-Applied-Bioinformatics/)
+
 scikit-bio development
 ----------------------
 
