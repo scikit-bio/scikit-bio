@@ -186,8 +186,10 @@ class TestSSW(TestCase):
         kwarg = {}
 
         def falsy_or_negative(alignment, prop):
-            return (alignment[prop] < 0 or (not alignment[prop] and
-                                            alignment[prop] != 0))
+            if type(alignment[prop]) is int:
+                return alignment[prop] < 0
+            else:
+                return not alignment[prop]
 
         for query_sequence in query_sequences:
             for target_sequence in target_sequences:
