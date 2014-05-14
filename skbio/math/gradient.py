@@ -326,7 +326,7 @@ class BaseVectors(object):
                 self._weighting_vector = \
                     self._metadata_map[sort_category].astype(np.float64)
             except ValueError:
-                    raise ValueError("The sorting category must be numeric")
+                raise ValueError("The sorting category must be numeric")
 
         # Initialize the message buffer
         self._message_buffer = []
@@ -407,8 +407,7 @@ class BaseVectors(object):
         # Loop through all the categories that we should compute the vectors
         for cat, cat_groups in self._groups.items():
             # Loop through all the category values present in the current
-            # category and compute the vector for each of the category value
-            # present in
+            # category and compute the vector for each of them
             res_by_group = [self._get_group_vectors(group, sample_ids)
                             for group, sample_ids in cat_groups.items()]
 
@@ -420,7 +419,7 @@ class BaseVectors(object):
         r"""Compute the vector results for `group_name` containing the samples
         `sids`.
 
-        Weights the data if `self._weighted` is True and len(sids) > 1
+        Weights the data if `self._weighted` is True and ``len(sids) > 1``
 
         Parameters
         ----------
@@ -444,9 +443,9 @@ class BaseVectors(object):
 
         if vectors.empty:
             # Raising a RuntimeError since in a usual execution this should
-            # never happens. The only way this can happen is if the user
-            # directly calls this function, which shouldn't be done
-            # (that's why the function is private)
+            # never happen. The only way this can happen is if the user
+            # directly calls this method, which shouldn't be done
+            # (that's why the method is private)
             raise RuntimeError("No samples to process, an empty list cannot "
                                "be processed")
 
@@ -484,11 +483,11 @@ class BaseVectors(object):
                                   "class.")
 
     def _weight_by_vector(self, vector, w_vector):
-        r"""weights the values of 'vector' given a weighting vector 'w_vector'.
+        r"""weights the values of `vector` given a weighting vector `w_vector`.
 
-        Each value in 'vector' will be weighted by the 'rate of change'
+        Each value in `vector` will be weighted by the 'rate of change'
         to 'optimal rate of change' ratio, meaning that when calling this
-        function over evenly spaced 'w_vector' values, no change will be
+        function over evenly spaced `w_vector` values, no change will be
         reflected on the output.
 
         Parameters
@@ -496,12 +495,12 @@ class BaseVectors(object):
         vector: pandas.DataFrame
             Values to weight
         w_vector: pandas.Series
-            Values used to weight 'vector'
+            Values used to weight ``vector``
 
         Returns
         -------
         pandas.DataFrame
-            A weighted version of 'vector'.
+            A weighted version of ``vector``.
 
         Raises
         ------
@@ -576,8 +575,13 @@ class BaseVectors(object):
 class AverageVectors(BaseVectors):
     r"""Perform vector analysis using the RMS average algorithm
 
-    It calculates the average at each timepoint (averaging within a group),
-    then calculates the norm of each point
+    For each group in a category, it computes the average point among the
+    samples in such group and then computes the norm of each sample from the
+    averaged one.
+
+    See Also
+    --------
+    BaseVectors
     """
 
     _alg_name = 'avg'
@@ -616,7 +620,14 @@ class AverageVectors(BaseVectors):
 class TrajectoryVectors(BaseVectors):
     r"""Perform vector analysis using the RMS trajectory algorithm
 
-    It calculates the norm got the 1st-2nd, 2nd-rd, etc.
+    For each group in a category, each component of the result vector is
+    computed as taking the sorted list of samples in the group and taking the
+    norm of the coordinates of the 2nd sample minus 1st sample, 3rd sample
+    minus 2nd sample and so on.
+
+    See Also
+    --------
+    BaseVectors
     """
 
     _alg_name = 'trajectory'
@@ -641,6 +652,8 @@ class TrajectoryVectors(BaseVectors):
             vector = [np.linalg.norm(vectors)]
             calc = {'trajectory': vector[0]}
         else:
+            # Loop through all the rows in vectors and create 'vector' by
+            # taking the norm of the 2nd row - 1st row, 3rd row - 2nd row...
             vector = np.array([np.linalg.norm(vectors.ix[i+1].get_values() -
                                               vectors.ix[i].get_values())
                                for i in range(len(vectors) - 1)])
@@ -652,11 +665,15 @@ class TrajectoryVectors(BaseVectors):
         return GroupResults(group_name, vector, np.mean(vector), calc, msg)
 
 
-class DifferenceVectors(BaseVectors):
+class FirstDifferenceVectors(BaseVectors):
     r"""Perform vector analysis using the first difference algorithm
 
     It calculates the norm for all the time-points and then calculates the
     first difference for each resulting point
+
+    See Also
+    --------
+    BaseVectors
     """
 
     _alg_name = 'diff'
@@ -720,6 +737,10 @@ class WindowDifferenceVectors(BaseVectors):
     ------
     ValueError
         If the window_size is not a positive integer
+
+    See Also
+    --------
+    BaseVectors
     """
 
     _alg_name = 'wdiff'

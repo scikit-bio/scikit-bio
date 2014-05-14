@@ -20,7 +20,7 @@ import pandas.util.testing as pdt
 
 from skbio.util.testing import get_data_path
 from skbio.math.gradient import (BaseVectors, AverageVectors,
-                                 TrajectoryVectors, DifferenceVectors,
+                                 TrajectoryVectors, FirstDifferenceVectors,
                                  WindowDifferenceVectors, GroupResults,
                                  CategoryResults, VectorsResults)
 
@@ -811,11 +811,12 @@ class TrajectoryVectorsTests(BaseTests):
         self.assert_vectors_results_almost_equal(obs, exp)
 
 
-class DifferenceVectorsTests(BaseTests):
+class FirstDifferenceVectorsTests(BaseTests):
     def test_get_vectors(self):
-        dv = DifferenceVectors(self.coords, self.prop_expl, self.metadata_map,
-                               vector_categories=['Treatment'],
-                               sort_category='Weight')
+        dv = FirstDifferenceVectors(self.coords, self.prop_expl,
+                                    self.metadata_map,
+                                    vector_categories=['Treatment'],
+                                    sort_category='Weight')
         obs = dv.get_vectors()
         exp_control_group = GroupResults('Control', np.array([-1.5719245594,
                                                               0.0073716633,
@@ -835,9 +836,10 @@ class DifferenceVectorsTests(BaseTests):
         self.assert_vectors_results_almost_equal(obs, exp)
 
     def test_get_vectors_weighted(self):
-        dv = DifferenceVectors(self.coords, self.prop_expl, self.metadata_map,
-                               vector_categories=['Treatment'],
-                               sort_category='Weight', weighted=True)
+        dv = FirstDifferenceVectors(self.coords, self.prop_expl,
+                                    self.metadata_map,
+                                    vector_categories=['Treatment'],
+                                    sort_category='Weight', weighted=True)
         obs = dv.get_vectors()
         exp_control_group = GroupResults('Control', np.array([-2.8233113671,
                                                               1.6371596158,
