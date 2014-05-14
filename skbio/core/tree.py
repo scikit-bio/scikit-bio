@@ -2744,29 +2744,20 @@ class TreeNode(object):
         self.id = curr_index
 
     def descending_branch_length(self, tip_subset=None):
-        """Find total descending branchlength from self or subset of self tips
-
-        This function replicates cogent's totalDescendingBranchLength method
-        and extends that method to allow the calculation of total descending
-        branchlength of a subset of the tips if requested. The postorder
-        guarantees that the function will always be able to add the descending
-        branchlength if the node is not a tip.
-
-        Nodes with no length will have their length set to 0. The root length
-        (if it exists) is ignored.
+        """Find total descending branch length from self or subset of self tips
 
         Parameters
         ----------
         tip_subset : Iterable, or None
-            If None, the total descending branchlength for all tips in the tree
-            will be returned. If a list of tips is provided then only the
-            total descending branchlength associated with those tips will be
+            If None, the total descending branch length for all tips in the
+            tree will be returned. If a list of tips is provided then only the
+            total descending branch length associated with those tips will be
             returned.
 
         Returns
         -------
         float
-            The total descending branchlength for the specified set of tips.
+            The total descending branch length for the specified set of tips.
 
         Raises
         ------
@@ -2774,9 +2765,19 @@ class TreeNode(object):
             A ValueError is raised if the list of tips supplied to tip_subset
             contains internal nodes or non-tips.
 
+        Notes
+        -----
+        This function replicates cogent's totalDescendingBranch Length method
+        and extends that method to allow the calculation of total descending
+        branch length of a subset of the tips if requested. The postorder
+        guarantees that the function will always be able to add the descending
+        branch length if the node is not a tip.
+
+        Nodes with no length will have their length set to 0. The root length
+        (if it exists) is ignored.
+
         Examples
         --------
-
         >>> from skbio.core.tree import TreeNode
         >>> tr = TreeNode.from_newick("(((A:.1,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2."
         ...                           "4,(H:.4,I:.5)J:1.3)K;")
