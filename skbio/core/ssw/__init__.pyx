@@ -111,41 +111,41 @@ ACT-AGGCTCCCTTCTACCCCTCTCAGAGA
 
 from cpython cimport bool
 import numpy as np
-cimport numpy as np
+cimport numpy as cnp
 
 cdef extern from "ssw.h":
 
     ctypedef struct s_align:
-        np.uint16_t score1
-        np.uint16_t score2
-        np.int32_t ref_begin1
-        np.int32_t ref_end1
-        np.int32_t read_begin1
-        np.int32_t read_end1
-        np.int32_t ref_end2
-        np.uint32_t* cigar
-        np.int32_t cigarLen
+        cnp.uint16_t score1
+        cnp.uint16_t score2
+        cnp.int32_t ref_begin1
+        cnp.int32_t ref_end1
+        cnp.int32_t read_begin1
+        cnp.int32_t read_end1
+        cnp.int32_t ref_end2
+        cnp.uint32_t* cigar
+        cnp.int32_t cigarLen
 
     ctypedef struct s_profile:
         pass
 
-    cdef s_profile* ssw_init(const np.int8_t* read,
-                             const np.int32_t readLen,
-                             const np.int8_t* mat,
-                             const np.int32_t n,
-                             const np.int8_t score_size)
+    cdef s_profile* ssw_init(const cnp.int8_t* read,
+                             const cnp.int32_t readLen,
+                             const cnp.int8_t* mat,
+                             const cnp.int32_t n,
+                             const cnp.int8_t score_size)
 
     cdef void init_destroy(s_profile* p)
 
     cdef s_align* ssw_align(const s_profile* prof,
-                            const np.int8_t* ref,
-                            np.int32_t refLen,
-                            const np.uint8_t weight_gapO,
-                            const np.uint8_t weight_gapE,
-                            const np.uint8_t flag,
-                            const np.uint16_t filters,
-                            const np.int32_t filterd,
-                            const np.int32_t maskLen)
+                            const cnp.int8_t* ref,
+                            cnp.int32_t refLen,
+                            const cnp.uint8_t weight_gapO,
+                            const cnp.uint8_t weight_gapE,
+                            const cnp.uint8_t flag,
+                            const cnp.uint16_t filters,
+                            const cnp.int32_t filterd,
+                            const cnp.int32_t maskLen)
 
     cdef void align_destroy(s_align* a)
 
@@ -205,7 +205,7 @@ cdef class AlignmentStructure:
         self.reference_sequence = reference_sequence
         self.index_starts_at = index_starts_at
 
-    cdef __constructor__(self, s_align* pointer):
+    cdef __constructor(self, s_align* pointer):
         self.p = pointer
 
     def __dealloc__(self):
@@ -220,15 +220,8 @@ cdef class AlignmentStructure:
                 'query_begin', 'query_end', 'target_begin',
                 'target_end_optimal', 'target_end_suboptimal', 'cigar',
                 'query_sequence', 'target_sequence']
-
-        def make_str_tuple(k):
-            r = self[k]
-            if type(r) is int:
-                return (k, str(r))
-            else:
-                return (k, "'"+r+"'")
         return "{\n%s\n}" % ',\n'.join([
-            "    '%s': %s" % make_str_tuple(k) for k in data])
+            "    {!r}: {!r}".format(k, self[k]) for k in data])
 
     @property
     def optimal_alignment_score(self):
@@ -403,12 +396,12 @@ cdef class AlignmentStructure:
             self.index_starts_at = 1
 
     def is_zero_based(self):
-        """Returns True if alignment indicies start at 0 else False
+        """Returns True if alignment inidices start at 0 else False
 
         Returns
         -------
         bool
-            Whether the alignment indicies start at 0
+            Whether the alignment inidices start at 0
 
         """
         return self.index_starts_at == 0
@@ -589,7 +582,7 @@ cdef class StripedSmithWaterman:
         convenience.
         Default is False.
     zero_index : bool, optional
-        If True, all indicies will start at 0. If False, all indicies will
+        If True, all inidices will start at 0. If False, all inidices will
         start at 1.
         Default is True.
 
@@ -607,35 +600,35 @@ cdef class StripedSmithWaterman:
 
     """
     cdef s_profile *profile
-    cdef np.uint8_t weight_gap_open
-    cdef np.uint8_t weight_gap_extension
-    cdef np.uint8_t bit_flag
-    cdef np.uint16_t score_filter
-    cdef np.int32_t distance_filter
-    cdef np.int32_t mask_length
+    cdef cnp.uint8_t weight_gap_open
+    cdef cnp.uint8_t weight_gap_extension
+    cdef cnp.uint8_t bit_flag
+    cdef cnp.uint16_t score_filter
+    cdef cnp.int32_t distance_filter
+    cdef cnp.int32_t mask_length
     cdef str read_sequence
     cdef int index_starts_at
     cdef bool is_protein
     cdef bool suppress_sequences
-    cdef np.ndarray __KEEP_IT_IN_SCOPE_read
-    cdef np.ndarray __KEEP_IT_IN_SCOPE_matrix
+    cdef cnp.ndarray __KEEP_IT_IN_SCOPE_read
+    cdef cnp.ndarray __KEEP_IT_IN_SCOPE_matrix
 
-    def __init__(self, query_sequence,
-                 weight_gap_open=5,  # BLASTN Default
-                 weight_gap_extension=2,  # BLASTN Default
-                 score_size=2,  # BLASTN Default
-                 mask_length=15,  # Minimum length for a suboptimal alignment
-                 mask_auto=True,
-                 score_only=False,
-                 score_filter=None,
-                 distance_filter=None,
-                 override_skip_babp=False,
-                 protein=False,
-                 match=2,  # BLASTN Default
-                 mismatch=3,  # BLASTN Default
-                 substitution_matrix=None,
-                 suppress_sequences=False,
-                 zero_index=True):
+    def __cinit__(self, query_sequence,
+                  weight_gap_open=5,  # BLASTN Default
+                  weight_gap_extension=2,  # BLASTN Default
+                  score_size=2,  # BLASTN Default
+                  mask_length=15,  # Minimum length for a suboptimal alignment
+                  mask_auto=True,
+                  score_only=False,
+                  score_filter=None,
+                  distance_filter=None,
+                  override_skip_babp=False,
+                  protein=False,
+                  match=2,  # BLASTN Default
+                  mismatch=3,  # BLASTN Default
+                  substitution_matrix=None,
+                  suppress_sequences=False,
+                  zero_index=True):
         # initalize our values
         self.read_sequence = query_sequence
         self.weight_gap_open = weight_gap_open
@@ -650,7 +643,7 @@ cdef class StripedSmithWaterman:
         # Dijkstra knows what's up:
         self.index_starts_at = 0 if zero_index else 1
         # set up our matrix
-        cdef np.ndarray[np.int8_t, ndim = 1, mode = "c"] matrix
+        cdef cnp.ndarray[cnp.int8_t, ndim = 1, mode = "c"] matrix
         if substitution_matrix is None:
             if protein:
                 raise Exception("Must provide a substitution matrix for \
@@ -667,22 +660,22 @@ cdef class StripedSmithWaterman:
         else:
             self.mask_length = mask_length
 
-        cdef np.ndarray[np.int8_t, ndim = 1, mode = "c"] read_seq
+        cdef cnp.ndarray[cnp.int8_t, ndim = 1, mode = "c"] read_seq
         read_seq = self._seq_converter(query_sequence)
 
-        cdef np.int32_t read_length
+        cdef cnp.int32_t read_length
         read_length = len(query_sequence)
 
-        cdef np.int8_t s_size
+        cdef cnp.int8_t s_size
         s_size = score_size
 
-        cdef np.int32_t m_width
+        cdef cnp.int32_t m_width
         m_width = 24 if self.is_protein else 5
 
         cdef s_profile* p
-        self.profile = ssw_init(<np.int8_t*> read_seq.data,
+        self.profile = ssw_init(<cnp.int8_t*> read_seq.data,
                                 read_length,
-                                <np.int8_t*> matrix.data,
+                                <cnp.int8_t*> matrix.data,
                                 m_width,
                                 s_size)
 
@@ -703,14 +696,14 @@ cdef class StripedSmithWaterman:
             The resulting alignment.
 
         """
-        cdef np.ndarray[np.int8_t, ndim = 1, mode = "c"] reference
+        cdef cnp.ndarray[cnp.int8_t, ndim = 1, mode = "c"] reference
         reference = self._seq_converter(reference_sequence)
 
-        cdef np.int32_t ref_length
+        cdef cnp.int32_t ref_length
         ref_length = len(reference_sequence)
 
         cdef s_align *align
-        align = ssw_align(self.profile, <np.int8_t*> reference.data,
+        align = ssw_align(self.profile, <cnp.int8_t*> reference.data,
                           ref_length, self.weight_gap_open,
                           self.weight_gap_extension, self.bit_flag,
                           self.score_filter, self.distance_filter,
@@ -719,14 +712,12 @@ cdef class StripedSmithWaterman:
         # Cython won't let me do this correctly, so duplicate code ahoy:
         if self.suppress_sequences:
             alignment = AlignmentStructure("", "", self.index_starts_at)
-            alignment.__constructor__(align)  # Hack to get a pointer through
-            return alignment
         else:
             alignment = AlignmentStructure(self.read_sequence,
                                            reference_sequence,
                                            self.index_starts_at)
-            alignment.__constructor__(align)  # Hack to get a pointer through
-            return alignment
+        alignment.__constructor(align)  # Hack to get a pointer through
+        return alignment
 
     def __dealloc__(self):
         if self.profile is not NULL:
@@ -746,9 +737,10 @@ cdef class StripedSmithWaterman:
             bit_flag = bit_flag | 0x1
         return bit_flag
 
-    cdef np.ndarray[np.int8_t, ndim = 1, mode = "c"] _seq_converter(self,
-                                                                    sequence):
-        cdef np.ndarray[np.int8_t, ndim = 1, mode = "c"] seq
+    cdef cnp.ndarray[cnp.int8_t, ndim = 1, mode = "c"] _seq_converter(
+            self,
+            sequence):
+        cdef cnp.ndarray[cnp.int8_t, ndim = 1, mode = "c"] seq
         seq = np.empty(len(sequence), dtype=np.int8)
         if self.is_protein:
             for i, char in enumerate(sequence):
@@ -758,7 +750,7 @@ cdef class StripedSmithWaterman:
                 seq[i] = np_nt_table[ord(char)]
         return seq
 
-    cdef np.ndarray[np.int8_t, ndim = 1, mode = "c"] \
+    cdef cnp.ndarray[cnp.int8_t, ndim = 1, mode = "c"] \
             _build_match_matrix(self, match, mismatch):
         sequence_order = "ACGTN"
         dict2d = {}
@@ -771,7 +763,7 @@ cdef class StripedSmithWaterman:
                     dict2d[row][column] = match if row == column else -mismatch
         return self._convert_dict2d_to_matrix(dict2d)
 
-    cdef np.ndarray[np.int8_t, ndim = 1, mode = "c"] \
+    cdef cnp.ndarray[cnp.int8_t, ndim = 1, mode = "c"] \
             _convert_dict2d_to_matrix(self, dict2d):
         if self.is_protein:
             sequence_order = "ARNDCQEGHILKMFPSTWYVBZX*"
@@ -779,7 +771,7 @@ cdef class StripedSmithWaterman:
             sequence_order = "ACGTN"
         cdef int i = 0
         length = len(sequence_order)
-        cdef np.ndarray[np.int8_t, ndim = 1, mode = "c"] py_list_matrix = \
+        cdef cnp.ndarray[cnp.int8_t, ndim = 1, mode = "c"] py_list_matrix = \
             np.empty(length*length, dtype=np.int8)
         for row in sequence_order:
             for column in sequence_order:
