@@ -711,7 +711,6 @@ class TreeTests(TestCase):
 
         self.assertEqual(t_ids.intersection(obs_ids), set())
 
-
     def test_descending_branch_length(self):
         """Calculate descending branch_length"""
         tr = TreeNode.from_newick("(((A:.1,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,(H"
@@ -744,7 +743,6 @@ class TreeTests(TestCase):
         tdbl = tr.descending_branch_length(['I', 'D', 'E'])
         nptest.assert_almost_equal(tdbl, 6.6)
 
-
     def test_to_array(self):
         """Convert a tree to arrays"""
         t = TreeNode.from_newick(
@@ -767,7 +765,6 @@ class TreeTests(TestCase):
         exp = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
         obs = arrayed['id']
         nptest.assert_equal(obs, exp)
-
 
     def test_from_file(self):
         """Parse a tree from a file"""
