@@ -838,7 +838,7 @@ def mw_boot(x, y, num_reps=999):
     Notes
     -----
     The u statistic must be smaller than the observed u statistic to count as 
-    more extreme according to [1]. Only a two tailed test is allowed through 
+    more extreme according to [1]_. Only a two tailed test is allowed through 
     this function. 
 
     Examples
@@ -848,6 +848,11 @@ def mw_boot(x, y, num_reps=999):
     >>> y = [3.4, 10.1, 100.3, 45.6, 45.6, 78.9]
     >>> mw_boot(x, y, num_reps = 999)
     (6.0, 0.079)
+
+    References
+    ----------
+    [1] http://docs.scipy.org/doc/scipy-0.13.0/reference/generated/scipy.stats
+       .mannwhitneyu.html
     """
     tol = MACHEP * 100
     combined = np.array(list(x) + list(y))
