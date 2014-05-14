@@ -90,8 +90,10 @@ have been ported to scikit-bio are: Rob Knight
 ([@mikerobeson](https://github.com/mikerobeson)), Marcin Cieslik, Peter
 Maxwell, Jeremy Widmann, Zongzhi Liu, Michael Dwan, Logan Knecht
 ([@loganknecht](https://github.com/loganknecht)), Andrew Cochran, Jose Carlos
-Clemente ([@cleme](https://github.com/cleme)), Damien Coy, Levi McCracken, and
-Andrew Butterfield.
+Clemente ([@cleme](https://github.com/cleme)), Damien Coy, Levi McCracken,
+Andrew Butterfield, Will Van Treuren ([@wdwvt1](https://github.com/wdwvt1)),
+Justin Kuczynski ([@justin212k](https://github.com/justin212k)), and Jose
+Antonio Navas Molina ([@josenavas](https://github.com/josenavas)).
 
 Logo
 ----
