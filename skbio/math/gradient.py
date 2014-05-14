@@ -568,7 +568,7 @@ class BaseVectors(object):
                                    'This group can not be used. All groups '
                                    'should have more than 1 element.')
         # We are ok to run ANOVA
-        F, p_val = ANOVA_one_way(values)
+        _, p_val = ANOVA_one_way(values)
         return CategoryResults(category, p_val, res_by_group, None)
 
 
