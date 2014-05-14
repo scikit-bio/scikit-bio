@@ -125,9 +125,8 @@ def g_stat(data):
     Parameters
     ----------
     data : iterable of 1-D array_like
-        Iterable of 1D array_like, each array is 1D with any length. Each array
-        represents the observed frequencies of a given OTU in one of the sample
-        classes.
+        Each element of the iterable is 1D with any length and represents the
+        observed frequencies of a given OTU in one of the sample classes.
 
     Returns
     -------
@@ -159,12 +158,11 @@ def g_stat(data):
     # G = 2*sum(f_i*ln(f_i/f_i_hat)) over all i phenotypes/sample classes
     # calculate the total number of observations under the consideration that
     # multiple observations in a given group are averaged.
-    avgs = np.array([np.array(i).mean() for i in data])
+    avgs = np.array([np.array(i).mean() for i in data])  # also the f_i values
     n = avgs.sum()
     a = len(data)  # a is number of phenotypes or sample classes
-    obs_freqs = avgs  # f_i values
     exp_freqs = np.zeros(a) + (n / a)  # f_i_hat vals
-    G = 2. * (obs_freqs * np.log(obs_freqs / exp_freqs)).sum()
+    G = 2. * (avgs * np.log(avgs / exp_freqs)).sum()
     return G
 
 
