@@ -632,7 +632,7 @@ class TestStripedSmithWaterman(TestSSW):
         self._check_alignment(alignment, expected)
 
 
-class TestStripedSmithWatermanAlignment(TestSSW):
+class TestAlignStripedSmithWaterman(TestSSW):
     def test_same_as_using_StripedSmithWaterman_object(self):
         query_sequence = 'ATGGAAGCTATAAGCGCGGGTGAG'
         target_sequence = 'AACTTATATAATAAAAATTATATATTCGTTGGGTTCTTTTGATATAAATC'
