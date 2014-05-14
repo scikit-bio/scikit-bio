@@ -421,7 +421,7 @@ class GeneticCode(object):
         Parameters
         ----------
         nucleotide_sequence : NucleotideSequence
-            sequence to be scanned for stop codons
+            sequence to be translated
 
         Returns
         -------
