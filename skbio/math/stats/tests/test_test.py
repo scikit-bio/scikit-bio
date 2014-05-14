@@ -22,11 +22,11 @@ from skbio.math.stats.test import (G_2_by_2, G_fit, t_paired, t_one_sample,
                                    mantel_t, _flatten_lower_triangle, pearson,
                                    spearman, ANOVA_one_way, mw_t,
                                    mw_boot, is_symmetric_and_hollow,
-                                   reverse_tails, tail, fdr_correction, 
-                                   benjamini_hochberg_step_down, 
+                                   reverse_tails, tail, fdr_correction,
+                                   benjamini_hochberg_step_down,
                                    bonferroni_correction, fisher_z_transform,
                                    fisher_population_correlation,
-                                   inverse_fisher_z_transform, 
+                                   inverse_fisher_z_transform,
                                    z_transform_pval, kruskal_wallis, kendall,
                                    kendall_pval, assign_correlation_pval,
                                    cscore, williams_correction, G_stat)
@@ -102,7 +102,7 @@ class TestsTests(TestCase):
         np.testing.assert_allclose(permute_2d(a, [0, 1, 2]), a)
         np.testing.assert_allclose(permute_2d(a, [2, 1, 0]),
                                    np.array([[8, 7, 6], [5, 4, 3],
-                                            [2, 1, 0]]))
+                                             [2, 1, 0]]))
         np.testing.assert_allclose(permute_2d(a, [1, 2, 0]),
                                    np.array([[4, 5, 3], [7, 8, 6],
                                              [1, 2, 0]]))
@@ -183,7 +183,7 @@ class GTests(TestCase):
         a = 10
         G = 10.5783
         exp = 10.387855973813421
-        np.testing.assert_allclose(williams_correction(n, a, G), exp, 
+        np.testing.assert_allclose(williams_correction(n, a, G), exp,
                                    rtol=1e-5)
         # test with an example from Sokal and Rohlf pg 699
         n = 241
@@ -205,13 +205,10 @@ class GTests(TestCase):
         exp = 85.908598110052
         np.testing.assert_allclose(G_stat(data), exp, rtol=1e-5)
 
-
     def test_safe_sum_p_log_p(self):
         """safe_sum_p_log_p should ignore zero elements, not raise error"""
         m = np.array([2, 4, 0, 8])
         self.assertEqual(safe_sum_p_log_p(m, 2), 2 * 1 + 4 * 2 + 8 * 3)
-
-
 
 
 class StatTests(TestsHelper):
@@ -571,7 +568,8 @@ class StatTests(TestsHelper):
         self.assertEqual(len(obs[0][0]), len(I))
         self.assertEqual(len(obs[1][0]), len(II))
         np.testing.assert_allclose(sorted(np.concatenate((obs[0][0],
-                                   obs[1][0]))), sorted(I + II))
+                                                          obs[1][0]))),
+                                   sorted(I + II))
 
     def test_reverse_tails(self):
         """reverse_tails should return 'high' if tails was 'low' or vice versa
@@ -947,17 +945,16 @@ class CorrelationTests(TestsHelper):
                                  {'method': 'spearman'}, p_val_idx=3)
         self.assertEqual(obs[4], (None, None))
 
-
     def test_mw_test(self):
         """mann-whitney test results should match Sokal & Rohlf"""
         # using Sokal and Rolhf and R wilcox.test
-        # x <- c(104, 109, 112, 114, 116, 118, 118, 119, 121, 123, 125, 126, 
+        # x <- c(104, 109, 112, 114, 116, 118, 118, 119, 121, 123, 125, 126,
         #        126, 128, 128, 128)
         # y <- c(100, 105, 107, 107, 108, 111, 116, 120, 121, 123)
         # wilcox.test(x,y)
         # W = 123.5, p-value = 0.0232
-        x = [104, 109, 112, 114, 116, 118, 118, 119, 121, 123, 125, 126, 126, 
-            128, 128, 128]
+        x = [104, 109, 112, 114, 116, 118, 118, 119, 121, 123, 125, 126, 126,
+             128, 128, 128]
         y = [100, 105, 107, 107, 108, 111, 116, 120, 121, 123]
         u, p = mw_t(x, y, continuity=True, two_sided=True)
         # a return of 123.5 would also be okay, there is a consensus to use the
@@ -968,8 +965,8 @@ class CorrelationTests(TestsHelper):
 
     def test_mw_boot(self):
         """excercising the Monte-carlo variant of mann-whitney"""
-        x = [104, 109, 112, 114, 116, 118, 118, 119, 121, 123, 125, 126, 126, 
-            128, 128, 128]
+        x = [104, 109, 112, 114, 116, 118, 118, 119, 121, 123, 125, 126, 126,
+             128, 128, 128]
         y = [100, 105, 107, 107, 108, 111, 116, 120, 121, 123]
         u, p = mw_boot(x, y, 10)
         self.assertTrue(u == 36.5 or u == 123.5)
@@ -978,10 +975,10 @@ class CorrelationTests(TestsHelper):
     def test_kendall(self):
         """tests new kendall tau implamentation, returns tau, prob"""
         # test from pg. 594 Sokal and Rohlf, Box 15.7
-        v1 = [8.7, 8.5, 9.4, 10, 6.3, 7.8, 11.9, 6.5, 6.6, 10.6, 10.2, 7.2, 
-            8.6, 11.1, 11.6]
+        v1 = [8.7, 8.5, 9.4, 10, 6.3, 7.8, 11.9, 6.5, 6.6, 10.6, 10.2, 7.2,
+              8.6, 11.1, 11.6]
         v2 = [5.95, 5.65, 6.00, 5.70, 4.70, 5.53, 6.40, 4.18, 6.15, 5.93, 5.70,
-            5.68, 6.13, 6.30, 6.03]
+              5.68, 6.13, 6.30, 6.03]
         obs_tau = kendall(v1, v2)
         obs_prob = kendall_pval(obs_tau, len(v1))
         exp_tau = 0.49761335152811925
@@ -1001,21 +998,23 @@ class CorrelationTests(TestsHelper):
              2., 4.4, 0.8, 6.5, 4.8, 1.5, 9.9, 9.1, 9.9, 6.2, 2.9,
              2.])
         v2 = np.array([6.6, 8.6, 3.9, 6.1, 0.9, 8.4, 10., 3.3, 0.4,
-                    3.9, 7.6, 8.2, 8.6, 3., 6.9, 0.6, 8.4, 8.1,
-                    6.3, 0.5, 5.2, 6.4, 8., 9.9, 1.2, 6.7, 8.4,
-                    2.7, 8.4, 4.1, 4.6, 5.1, 5.2, 5.3, 2.2, 2.2,
-                    4.3, 7.1, 1.4, 6.6, 7.6, 4.5, 7.8, 3.5, 7.1,
-                    0.6, 4.6, 3.2, 2.2, 0.2, 3.9, 5.9, 7.7, 8.8,
-                    1.3, 5.1, 5.6, 8.3, 8.8, 1.7, 5.2, 6.9, 1.3,
-                    1.4, 4.9, 9.4, 2.3, 3.7, 9.1, 3.4, 1.6, 4.1,
-                    9.7, 2.8, 9.9, 0.5, 2., 2.7, 3.3, 2.4, 3.6,
-                    7.9, 6.5, 7., 4.2, 1.8, 1.6, 1.9, 5.5, 0.,
-                    1.4, 2.2, 7.2, 8.2, 1.1, 2.5, 5.3, 0.2, 9., 0.2])
+                       3.9, 7.6, 8.2, 8.6, 3., 6.9, 0.6, 8.4, 8.1,
+                       6.3, 0.5, 5.2, 6.4, 8., 9.9, 1.2, 6.7, 8.4,
+                       2.7, 8.4, 4.1, 4.6, 5.1, 5.2, 5.3, 2.2, 2.2,
+                       4.3, 7.1, 1.4, 6.6, 7.6, 4.5, 7.8, 3.5, 7.1,
+                       0.6, 4.6, 3.2, 2.2, 0.2, 3.9, 5.9, 7.7, 8.8,
+                       1.3, 5.1, 5.6, 8.3, 8.8, 1.7, 5.2, 6.9, 1.3,
+                       1.4, 4.9, 9.4, 2.3, 3.7, 9.1, 3.4, 1.6, 4.1,
+                       9.7, 2.8, 9.9, 0.5, 2., 2.7, 3.3, 2.4, 3.6,
+                       7.9, 6.5, 7., 4.2, 1.8, 1.6, 1.9, 5.5, 0.,
+                       1.4, 2.2, 7.2, 8.2, 1.1, 2.5, 5.3, 0.2, 9., 0.2])
         exp_tau, exp_prob = (0.024867511238807951, 0.71392573687923555)
         obs_tau = kendall(v1, v2)
         obs_prob = kendall_pval(obs_tau, len(v1))
         np.testing.assert_allclose(obs_tau, exp_tau)
         np.testing.assert_allclose(obs_prob, exp_prob)
+
+
 class TestDistMatrixPermutationTest(TestCase):
 
     """Tests of distance_matrix_permutation_test"""
@@ -1059,6 +1058,7 @@ class TestDistMatrixPermutationTest(TestCase):
         obs = kruskal_wallis([x_0, x_1, x_2])
         np.testing.assert_allclose(obs, exp)
 
+
 class PvalueTests(TestCase):
 
     '''Test that the methods for handling Pvalues return the results we expect.
@@ -1084,19 +1084,20 @@ class PvalueTests(TestCase):
         # q = c(0.64771481,  0.93517796,  0.7169902 ,  0.18223457,  0.26918556,
         #  0.1450153 ,  0.22448242,  0.74723508,  0.89061034,  0.74007906)
         # p.adjust(q, method='BH')
-        #  [1] 0.9340439 0.9351780 0.9340439 0.6729639 0.6729639 0.6729639 0.6729639
+        #  [1] 0.9340439 0.9351780 0.9340439 0.6729639 0.6729639 0.6729639
+        #      0.6729639
         #  [8] 0.9340439 0.9351780 0.9340439
         pvals = np.array([0.64771481, 0.93517796, 0.7169902, 0.18223457,
-                       0.26918556, 0.1450153, 0.22448242, 0.74723508, 0.89061034,
-                       0.74007906])
+                          0.26918556, 0.1450153, 0.22448242, 0.74723508,
+                          0.89061034, 0.74007906])
         exp = np.array([0.9340439, 0.9351780, 0.9340439, 0.6729639, 0.6729639,
-                     0.6729639, 0.6729639, 0.9340439, 0.9351780, 0.9340439])
+                        0.6729639, 0.6729639, 0.9340439, 0.9351780, 0.9340439])
         obs = benjamini_hochberg_step_down(pvals)
         np.testing.assert_allclose(obs, exp)
         # example 2
         pvals = np.array([1.32305426, 1.9345059, 0.87129877, 1.89957702,
-                       1.85712616, 0.68757988, 0.41248969, 0.20751712, 1.97658599,
-                       1.06209437])
+                          1.85712616, 0.68757988, 0.41248969, 0.20751712,
+                          1.97658599, 1.06209437])
         exp = np.array([1., 1., 1., 1., 1., 1., 1., 1., 1., 1.])
         obs = benjamini_hochberg_step_down(pvals)
         np.testing.assert_allclose(obs, exp)
@@ -1150,7 +1151,7 @@ class PvalueTests(TestCase):
 
     def test_fisher_population_correlation(self):
         '''Test that the population rho and homogeneity coeff are correct.'''
-        # note: the error tolerances are lower than they would normally be 
+        # note: the error tolerances are lower than they would normally be
         # because sokal and rolhf don't give many significant figures
         # example from Sokal and Rohlf Biometry pg. 580 - 582
         rs = np.array([.29, .7, .58, .56, .55, .67, .65, .61, .64, .56])
@@ -1163,7 +1164,8 @@ class PvalueTests(TestCase):
         np.testing.assert_allclose(obs_p_rho, pop_r, rtol=1e-5)
         np.testing.assert_allclose(obs_hval, hval, rtol=1e-5)
         # test with np.nans
-        rs = np.array([.29, .7, np.nan, .58, .56, .55, .67, .65, .61, .64, .56])
+        rs = np.array(
+            [.29, .7, np.nan, .58, .56, .55, .67, .65, .61, .64, .56])
         ns = np.array([100, 46, 400, 28, 74, 33, 27, 52, 26, 20, 17])
         obs_p_rho, obs_hval = fisher_population_correlation(rs, ns)
         np.testing.assert_allclose(obs_p_rho, pop_r, rtol=1e-5)
@@ -1212,17 +1214,17 @@ class PvalueTests(TestCase):
         v1 = np.array([10, 11, 12])
         v2 = np.array([10, 14, 15])
         obs = assign_correlation_pval(r, n, 'fisher_z_transform',
-                                      permutations=1000, perm_test_fn=pearson, 
+                                      permutations=1000, perm_test_fn=pearson,
                                       v1=v1, v2=v2)
         np.testing.assert_allclose(exp, obs)
         # test with bootstrapping, seed for reproducibility.
         np.random.seed(0)
         v1 = np.array([54, 71, 60, 54, 42, 64, 43, 89, 96, 38])
         v2 = np.array([79, 52, 56, 92, 7, 8, 2, 83, 77, 87])
-        #c = corrcoef(v1,v2)[0][1]
+        # c = corrcoef(v1,v2)[0][1]
         exp = .357
         obs = assign_correlation_pval(0.33112494, 20000, 'bootstrapped',
-                                      permutations=1000, perm_test_fn=pearson, 
+                                      permutations=1000, perm_test_fn=pearson,
                                       v1=v1, v2=v2)
         np.testing.assert_allclose(exp, obs)
         # make sure it throws an error
@@ -1242,7 +1244,7 @@ class PvalueTests(TestCase):
         exp = 8
         self.assertEqual(obs, exp)
         # test using examples verified in ecosim
-        v1 = np.array([4, 6, 12, 13, 14, 0, 0, 0, 14, 11, 9, 6, 0, 1, 1, 0, 0, 
+        v1 = np.array([4, 6, 12, 13, 14, 0, 0, 0, 14, 11, 9, 6, 0, 1, 1, 0, 0,
                        4])
         v2 = np.array([4, 0, 0, 113, 1, 2, 20, 0, 1, 0, 19, 16, 0, 13, 6, 0, 5,
                        4])
