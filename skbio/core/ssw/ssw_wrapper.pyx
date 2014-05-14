@@ -241,7 +241,7 @@ cdef class AlignmentStructure:
         Returns
         -------
         str
-            The cigar string (described in [1], [2]) of the optimal alignment
+            The cigar string (described in [1]_, [2]_) of the optimal alignment
 
         Notes
         -----

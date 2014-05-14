@@ -317,19 +317,19 @@ class TestStripedSmithWaterman(TestSSW):
 
     def test_protein_sequence_is_usable(self):
         expected = {
-            'optimal_alignment_score': 277,
-            'suboptimal_alignment_score': 153,
+            'optimal_alignment_score': 316,
+            'suboptimal_alignment_score': 95,
             'query_begin': 0,
             'query_end': 52,
             'target_begin': 0,
-            'target_end_optimal': 70,
-            'target_end_suboptimal': 27,
-            'cigar': '15M1D15M1I14M18D8M',
+            'target_end_optimal': 52,
+            'target_end_suboptimal': 18,
+            'cigar': '15M1D15M1I22M',
             'query_sequence':
-                'VHLTGEEKSAVAALWGKVNVDEVGGEALGRXLLVVYPWTQRFFESFSDLSTPDABVMSNP \
-                 KVKAHGK',
-            'target_sequence': 'VHLTPEEKSAVTALWBGKVNVDEVGGEALGRLLVVYPWTQRFFES \
-                 FGDLSTPD*'
+                'VHLTGEEKSAVAALWGKVNVDEVGGEALGRXLLVVYPWTQRFFESFSDLSTPDABVMSNP'
+                'KVKAHGK',
+            'target_sequence': 'VHLTPEEKSAVTALWBGKVNVDEVGGEALGRLLVVYPWTQRFFES'
+                'FGDLSTPD*'
         }
         query = StripedSmithWaterman(expected['query_sequence'],
                                      protein=True,
