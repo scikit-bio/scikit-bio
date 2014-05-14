@@ -119,6 +119,7 @@ def safe_sum_p_log_p(a, base=None):
         logs /= np.log(base)
     return np.sum(nz * logs, 0)
 
+
 def G_stat(data):
     """Calculate the G statistic for data.
 
@@ -132,7 +133,7 @@ def G_stat(data):
     Returns
     -------
     G : float
-        The G statistic that is additive between all groups. 
+        The G statistic that is additive between all groups.
 
     Notes
     -----
@@ -147,7 +148,7 @@ def G_stat(data):
     class (e.g. in the 6 treatment samples, the value for OTUX is averaged, and
     this forms the average frequency which represents all treatment samples in
     aggregate). This means that this version of the G stat cannot detect sample
-    heterogeneity as a replicated goodness of fit test would be able to. In 
+    heterogeneity as a replicated goodness of fit test would be able to. In
     addition, this function assumes the extrinsic hypothesis is that the
     mean frequency in all the samples groups is the same.
     """
@@ -161,6 +162,7 @@ def G_stat(data):
     G = 2. * (obs_freqs * np.log(obs_freqs / exp_freqs)).sum()
     return G
 
+
 def G_fit(data, williams=True):
     """Calculate G statistic and compare to one tailed chi-squared distribution.
 
@@ -172,19 +174,19 @@ def G_fit(data, williams=True):
         classes.
     williams : boolean
         Whether or not to apply the Williams correction before comparing to the
-        chi**2 distribution. 
+        chi**2 distribution.
 
     Returns
     -------
     G : float
         The G statistic that is additive between all groups.
     pval : float
-        The pvalue associated with the given G statistic. 
+        The pvalue associated with the given G statistic.
 
     Notes
     -----
     For discussion read Sokal and Rohlf Biometry pg. 695-699. This function
-    compares the calculated G statistic (with Williams correction by default) 
+    compares the calculated G statistic (with Williams correction by default)
     to the chi-squared distribution with the appropriate number of degrees of
     freedom.
     """
@@ -206,21 +208,21 @@ def G_fit(data, williams=True):
         # that multiple observations in a given group are averaged.
         n = sum([arr.mean() for arr in data])  # total observations
         G = williams_correction(n, a, G)
-    return G, chi_high(G, a - 1) # a-1 degrees of freedom bc of sum constraint
+    return G, chi_high(G, a - 1)  # a-1 degrees of freedom bc of sum constraint
 
 
 def williams_correction(n, a, G):
     """Return the Williams corrected G statistic for G goodness of fit test.
 
     For discussion read Sokal and Rohlf Biometry pg 698,699.
-    
+
     Parameters
     ----------
     n : int
         Sum of observed frequencies.
     a : int
         Number of groups that are being compared.
-    G : float 
+    G : float
         Uncorrected G statistic
     """
     # q = 1. + (a**2 - 1)/(6.*n*a - 6.*n) == 1. + (a+1.)/(6.*n)
@@ -474,6 +476,7 @@ def mc_t_two_sample(x_items, y_items, tails=None, permutations=999,
 
     return obs_t, param_p_val, perm_t_stats, nonparam_p_val
 
+
 def _permute_observations(x, y, num_perms):
     """Return num_perms pairs of permuted vectors x,y.
 
@@ -502,6 +505,7 @@ def _permute_observations(x, y, num_perms):
         ys.append(vals[inds[lenx:]])
     return xs, ys
 
+
 def t_one_observation(x, sample, tails=None, exp_diff=0,
                       none_on_zero_variance=True):
     """Returns t-test for significance of single observation versus a sample.
@@ -528,7 +532,7 @@ def t_one_observation(x, sample, tails=None, exp_diff=0,
             # The list varies.
             n = len(sample)
             t = ((x - sample_mean - exp_diff) / sample_std / np.sqrt((n + 1) /
-                 n))
+                                                                     n))
             prob = t_tailed_prob(t, n - 1, tails)
             result = (t, prob)
     except (ZeroDivisionError, ValueError, AttributeError, TypeError,
@@ -537,15 +541,16 @@ def t_one_observation(x, sample, tails=None, exp_diff=0,
 
     return result
 
+
 def pearson(v1, v2):
     '''Pearson correlation using numpy.corrcoef.
 
     Parameters
     ----------
     v1 : array-like
-        List or array of ints or floats to be correlated. 
+        List or array of ints or floats to be correlated.
     v2 : array-like
-        List or array of ints or floats to be correlated. 
+        List or array of ints or floats to be correlated.
 
     Returns
     -------
@@ -555,7 +560,7 @@ def pearson(v1, v2):
     Raises
     ------
     ValueError
-        If the vectors are not equally sized or if they are only a single 
+        If the vectors are not equally sized or if they are only a single
         element a ValueError will be returned.
 
     Examples
@@ -569,8 +574,9 @@ def pearson(v1, v2):
     v1, v2 = np.array(v1), np.array(v2)
     if not (v1.size == v2.size > 1):
         raise ValueError('One or more vectors isn\'t long enough to correlate '
-            ' or they have unequal lengths.')
+                         ' or they have unequal lengths.')
     return np.corrcoef(v1, v2)[0][1]  # 2x2 symmetric unit matrix
+
 
 def spearman(v1, v2):
     """Returns Spearman's rho.
@@ -578,9 +584,9 @@ def spearman(v1, v2):
     Parameters
     ----------
     v1 : array-like
-        List or array of ints or floats to be correlated. 
+        List or array of ints or floats to be correlated.
     v2 : array-like
-        List or array of ints or floats to be correlated. 
+        List or array of ints or floats to be correlated.
 
     Returns
     -------
@@ -590,7 +596,7 @@ def spearman(v1, v2):
     Raises
     ------
     ValueError
-        If the vectors are not equally sized or if they are only a single 
+        If the vectors are not equally sized or if they are only a single
         element a ValueError will be returned.
 
     See Also
@@ -607,8 +613,9 @@ def spearman(v1, v2):
     v1, v2 = np.array(v1), np.array(v2)
     if not (v1.size == v2.size > 1):
         raise ValueError('One or more vectors isn\'t long enough to correlate '
-            ' or they have unequal lengths.')
-    return spearmanr(v1, v2)[0] # return only the rho-value
+                         ' or they have unequal lengths.')
+    return spearmanr(v1, v2)[0]  # return only the rho-value
+
 
 def kendall(v1, v2):
     """Compute Kendall's Tau between v1 and v2 using scipy.stats.kendalltau
@@ -616,9 +623,9 @@ def kendall(v1, v2):
     Parameters
     ----------
     v1 : array-like
-        List or array of ints or floats to be correlated. 
+        List or array of ints or floats to be correlated.
     v2 : array-like
-        List or array of ints or floats to be correlated. 
+        List or array of ints or floats to be correlated.
 
     Returns
     -------
@@ -628,14 +635,14 @@ def kendall(v1, v2):
     Raises
     ------
     ValueError
-        If the vectors are not equally sized or if they are only a single 
+        If the vectors are not equally sized or if they are only a single
         element a ValueError will be returned.
     """
     v1, v2 = np.array(v1), np.array(v2)
     if not (v1.size == v2.size > 1):
         raise ValueError('One or more vectors isn\'t long enough to correlate '
-            ' or they have unequal lengths.')
-    return kendalltau(v1, v2)[0] # return only the tau correlation coeff
+                         ' or they have unequal lengths.')
+    return kendalltau(v1, v2)[0]  # return only the tau correlation coeff
 
 
 def kendall_pval(tau, n):
@@ -643,25 +650,26 @@ def kendall_pval(tau, n):
     test_stat = tau / ((2 * (2 * n + 5)) / float(9 * n * (n - 1))) ** .5
     return zprob(test_stat)
 
+
 def assign_correlation_pval(corr, n, method, permutations=None,
                             perm_test_fn=None, v1=None, v2=None):
     """Assign pval to a correlation score with given method.
 
-    This function will assign significance to the correlation score passed 
-    given the method that is passed. Some of the methods are appropriate only 
-    for certain types of data and there is no way for this test to determine 
-    the appropriateness, thus you must use this function only when with the 
+    This function will assign significance to the correlation score passed
+    given the method that is passed. Some of the methods are appropriate only
+    for certain types of data and there is no way for this test to determine
+    the appropriateness, thus you must use this function only when with the
     proper prior knowledge. The 'parametric_t_distribution' method is described
     in Sokal and Rohlf Biometry pg. 576, the 'fisher_z_transform' method is
     described on pg 576 and 577. The 'bootstrap' method calculates the given
     correlation permutations number of times using perm_test_fn.
     Also note, this does *not* take the place of FDR correction.
-    
+
     Paramters
     ---------
     corr : float
         Correlation score from Kendall's Tau, Spearman's Rho, or Pearson.
-    n : int 
+    n : int
         Length of the vectors that were correlated.
     method : str
         One of ['parametric_t_distribution', 'fisher_z_transform',
@@ -671,17 +679,17 @@ def assign_correlation_pval(corr, n, method, permutations=None,
     perm_test_fn : function
         Used to use to calculate correlation if permuation test desired.
     v1 : array-like or None
-        List or array of ints or floats to be correlated. Passed if 
+        List or array of ints or floats to be correlated. Passed if
         method='bootstrapped'.
     v2 : array-like or None
-        List or array of ints or floats to be correlated. Passed if 
+        List or array of ints or floats to be correlated. Passed if
         method='bootstrapped'
     """
     if method == 'parametric_t_distribution':
         df = n - 2
         if df <= 1:
             raise ValueError("Must have more than 1 degree of freedom. "
-                "Can't Continue.")
+                             "Can't Continue.")
         try:
             ts = corr * ((df / (1. - corr ** 2)) ** .5)
             return tprob(ts, df)  # two tailed test because H0 is corr=0
@@ -698,10 +706,10 @@ def assign_correlation_pval(corr, n, method, permutations=None,
         # degrees of freedom which is equal to a z distribution.
         return z_transform_pval(z, n)
     elif method == 'bootstrapped':
-        if any([i == None for i in [v1, v2, permutations, perm_test_fn]]):
+        if any([i is None for i in [v1, v2, permutations, perm_test_fn]]):
             raise ValueError('You must specify vectors, permutation '
-                'function, and number of permutations to calculate '
-                'bootstrapped pvalues. Cant continue.')
+                             'function, and number of permutations to calc '
+                             'bootstrapped pvalues. Cant continue.')
         r = np.empty(permutations)
         for i in range(permutations):
             r[i] = perm_test_fn(v1, np.random.permutation(v2))
@@ -804,13 +812,14 @@ def correlation_t(x_items, y_items, method='pearson', tails=None,
         permuted_corr_coeffs.append(permuted_corr_coeff)
 
         if tails is None:
-            if abs(round(permuted_corr_coeff,10)) >= abs(round(corr_coeff,10)):
+            if abs(round(permuted_corr_coeff, 10)) >= \
+               abs(round(corr_coeff, 10)):
                 better += 1
         elif tails == 'high':
-            if round(permuted_corr_coeff,10) >= round(corr_coeff,10):
+            if round(permuted_corr_coeff, 10) >= round(corr_coeff, 10):
                 better += 1
         elif tails == 'low':
-            if round(permuted_corr_coeff,10) <= round(corr_coeff,10):
+            if round(permuted_corr_coeff, 10) <= round(corr_coeff, 10):
                 better += 1
         else:
             # Not strictly necessary since this was checked above, but included
@@ -919,7 +928,7 @@ def _get_bootstrap_sample(x, y, num_reps):
 def mw_t(x, y, continuity=True, two_sided=True):
     '''Compute the Mann Whitney U statistic using scipy.stats.mannwhitneyu
 
-    This wrapper controls whether the continuity correction will be applied 
+    This wrapper controls whether the continuity correction will be applied
     and whether or not a two sided hypothesis is specified.
 
     Parameters
@@ -947,17 +956,17 @@ def mw_t(x, y, continuity=True, two_sided=True):
 
     Notes
     -----
-    Two tails is appropriate because we do not know which of our groups has a 
-    higher mean, thus our alternate hypothesis is that the distributions from 
-    which the two samples come are not the same (FA!=FB) and we must account 
-    for E[FA] > E[FB] and E[FB] < E[FA]. Sokal and Rolhf, Biometry, 
+    Two tails is appropriate because we do not know which of our groups has a
+    higher mean, thus our alternate hypothesis is that the distributions from
+    which the two samples come are not the same (FA!=FB) and we must account
+    for E[FA] > E[FB] and E[FB] < E[FA]. Sokal and Rolhf, Biometry,
     pgs 427-431.
     '''
     u, pval = mannwhitneyu(x, y, continuity)
     if two_sided:
         return u, 2. * pval
     else:
-        return u, pval 
+        return u, pval
 
 
 def mw_boot(x, y, num_reps=999):
@@ -977,14 +986,14 @@ def mw_boot(x, y, num_reps=999):
     observed_stat : float
         Value of the U statistic for the comparison of x and y.
     pval : float
-        Number of times a U statistic as small or smaller than the observed U 
-        statistic was found. 
+        Number of times a U statistic as small or smaller than the observed U
+        statistic was found.
 
     Notes
     -----
-    The u statistic must be smaller than the observed u statistic to count as 
-    more extreme according to [1]_. Only a two tailed test is allowed through 
-    this function. 
+    The u statistic must be smaller than the observed u statistic to count as
+    more extreme according to [1]_. Only a two tailed test is allowed through
+    this function.
 
     Examples
     --------
@@ -1010,8 +1019,8 @@ def mw_boot(x, y, num_reps=999):
     u_stats_as_or_more_extreme = 0
     for sampled_x, sampled_y in _get_bootstrap_sample(x, y, num_reps):
         sample_stat, sample_p = mw_t(sampled_x, sampled_y)
-        if sample_stat <= (observed_stat - tol): 
-            # the u statistic must be smaller than the observed u statistic to 
+        if sample_stat <= (observed_stat - tol):
+            # the u statistic must be smaller than the observed u statistic to
             # count as more extreme. see [1]
             u_stats_as_or_more_extreme += 1
     return observed_stat, (u_stats_as_or_more_extreme + 1) / (num_reps + 1)
@@ -1023,21 +1032,21 @@ def kruskal_wallis(data):
     Parameters
     ----------
     data : list of array-likes
-        data is a nested list whose elements are arrays of float data. The 
-        different lists correpsond to the groups being tested. 
+        data is a nested list whose elements are arrays of float data. The
+        different lists correpsond to the groups being tested.
 
     Returns
     -------
     U stat : float
         The Kruskal Wallis U statistic.
     pval : float
-        The pvalue associated with the given U statistic assuming a chi**2 
+        The pvalue associated with the given U statistic assuming a chi**2
         probability distribution.
 
     Examples
     --------
     >>> from skbio.math.stats.test import kruskal_wallis
-    >>> data = [[1, 4.5, 67, 100, 2], [145, 100, 3, 14.5, -19], [2, 1.1, 5.5, 
+    >>> data = [[1, 4.5, 67, 100, 2], [145, 100, 3, 14.5, -19], [2, 1.1, 5.5,
     ...         3.3, 16.7, 18, 100.3]]
     >>> rho, pval = kruskal_wallis(data)
     >>> print rho == 0.16848016848016789
@@ -1170,7 +1179,7 @@ def _flatten_lower_triangle(matrix):
     for col_num in range(matrix.shape[1]):
         for row_num in range(matrix.shape[0]):
             if col_num < row_num:
-                    flattened.append(matrix[row_num][col_num])
+                flattened.append(matrix[row_num][col_num])
     return flattened
 
 
@@ -1198,7 +1207,7 @@ def bonferroni_correction(pvals):
     -------
     list of pvals
         Returns the list of pvals multiplied by their length. Pvals are
-        still unsorted (i.e. order has not changed). 
+        still unsorted (i.e. order has not changed).
 
     See Also
     --------
@@ -1225,7 +1234,7 @@ def fdr_correction(pvals):
     -------
     list of pvals
         Returns the list of pvals properly adjusted based on the FDR. Pvals are
-        still unsorted (i.e. order has not changed). 
+        still unsorted (i.e. order has not changed).
 
     See Also
     --------
@@ -1258,8 +1267,8 @@ def benjamini_hochberg_step_down(pvals):
     Returns
     -------
     list of pvals
-        Returns the list of pvals properly adjusted based on the and then 
-        adjusted according to the BH rules. 
+        Returns the list of pvals properly adjusted based on the and then
+        adjusted according to the BH rules.
 
     See Also
     --------
@@ -1268,7 +1277,7 @@ def benjamini_hochberg_step_down(pvals):
     Notes
     -----
     In short, computes the fdr adjusted pvals (ap_i's), and working from
-    the largest to smallest, compare ap_i to ap_i-1. If ap_i < ap_i-1 set 
+    the largest to smallest, compare ap_i to ap_i-1. If ap_i < ap_i-1 set
     ap_i-1 equal to ap_i. Does *not* assume pvals is sorted
 
     Examples
@@ -1321,7 +1330,7 @@ def inverse_fisher_z_transform(z):
     Returns
     -------
     r : float
-        Rho or correlation coefficient that would produce given z score. 
+        Rho or correlation coefficient that would produce given z score.
     """
     return ((np.e ** (2 * z)) - 1.) / ((np.e ** (2 * z)) + 1.)
 
@@ -1341,7 +1350,7 @@ def z_transform_pval(z, n):
     Returns
     -------
     zprob : float
-        Probability of getting a zscore as or more extreme than the passed z 
+        Probability of getting a zscore as or more extreme than the passed z
         given the total numger of samples that generated it (n).
     '''
     if n <= 3:  # sample size must be greater than 3 otherwise this transform
@@ -1369,10 +1378,10 @@ def fisher_population_correlation(corrcoefs, sample_sizes):
 
     Notes
     -----
-    This function calculates the correlation of a population that is relying 
+    This function calculates the correlation of a population that is relying
     on multiple different studies that have calculated correlation coefficients
     of their own. The procedure is detailed in Sokal and Rohlf Biometry pgs
-    576 - 578. Pvals that are nans will be excluded by this function. 
+    576 - 578. Pvals that are nans will be excluded by this function.
 
     Examples
     --------
@@ -1396,11 +1405,11 @@ def fisher_population_correlation(corrcoefs, sample_sizes):
         # least two samples to calculate the homogeneity.
         return np.nan, np.nan
     if (rs >= 1.0).any():
-        # a failure will occur in chi_high calculation where an non-terminating 
-        # loop will be initiated. 
+        # a failure will occur in chi_high calculation where an non-terminating
+        # loop will be initiated.
         raise ValueError('A correlation coefficient >= 1 was passed. This is '
-            'a non real valured correlation coefficient and it\'s Fisher '
-            'Z transform cannot be computed.')
+                         'a non real valured correlation coefficient and it\'s'
+                         ' Fisher Z transform cannot be computed.')
     # calculate zs
     zs = np.array(map(fisher_z_transform, rs))
     # calculate variance weighted z average = z_bar
