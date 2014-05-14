@@ -58,8 +58,8 @@ USE_CYTHON = os.environ.get('USE_CYTHON', False)
 ext = '.pyx' if USE_CYTHON else '.c'
 extensions = [Extension("skbio.math._subsample",
                         ["skbio/math/_subsample" + ext]),
-              Extension("skbio.core.ssw",
-                        ["skbio/core/ssw/__init__" + ext,
+              Extension("skbio.core.ssw.ssw_wrapper",
+                        ["skbio/core/ssw/ssw_wrapper" + ext,
                          "skbio/core/ssw/ssw.c"])]
 
 if USE_CYTHON:
