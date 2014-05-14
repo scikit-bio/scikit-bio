@@ -444,10 +444,12 @@ cdef class StripedSmithWaterman:
         {A,C,G,T,N} (nucleotide) or from the set of
         {A,R,N,D,C,Q,E,G,H,I,L,K,M,F,P,S,T,W,Y,V,B,Z,X,*} (protein)
     weight_gap_open : int, optional
-        The penalty applied to creating a gap in the alignment.
+        The penalty applied to creating a gap in the alignment. This CANNOT
+        be 1.
         Default is 5.
     weight_gap_extension : int, optional
-        The penalty applied to extending a gap in the alignment.
+        The penalty applied to extending a gap in the alignment. This CANNOT
+        be 1.
         Default is 2.
     score_size : int, optional
         If your estimated best alignment score is < 255 this should be 0.
