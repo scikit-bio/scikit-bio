@@ -10,8 +10,9 @@
 # Special thanks to http://www.faculty.ucr.edu/~mmaduro/random.htm for the
 # random DNA generator.
 
-# These really only test against regression, not correctness.
-# It is assumed that ssw.c and ssw.h are correct.
+# These tests confirm that StripedSmithWaterman returns the same results as
+# SSW. We don't test for correctness of those results (i.e., we assume that
+# ssw.c and ssw.h are correct) as that testing is beyond the scope of skbio.
 # Furthermore all expected results are created by running StripedSmithWaterman
 # the resulting alignments are verified by hand. Creating tests from the base
 # C API is impractical at this time.

@@ -190,9 +190,12 @@ cdef class AlignmentStructure:
 
     Notes
     -----
-    `cigar` may be empty depending on parameters used
+    `cigar` may be empty depending on parameters used.
+
     `target_begin` and `query_begin` may be -1 depending on parameters used.
 
+    Developer note: `read_sequence` is an alias for `query_sequence` used by
+    ssw.c as is `reference_sequence` for `target_sequence`
     """
     cdef s_align *p
     cdef str read_sequence
@@ -201,6 +204,9 @@ cdef class AlignmentStructure:
     cdef str _cigar_string
 
     def __cinit__(self, read_sequence, reference_sequence, index_starts_at):
+        # We use `read_sequence` and `reference_sequence` here as they are
+        # treated sematically as a private output of ssw.c like the `s_align`
+        # struct
         self.read_sequence = read_sequence
         self.reference_sequence = reference_sequence
         self.index_starts_at = index_starts_at
@@ -258,7 +264,7 @@ cdef class AlignmentStructure:
 
         Notes
         -----
-        The result is a 0 based index by default
+        The result is a 0-based index by default
 
         """
         return self.p.ref_begin1 + self.index_starts_at if (self.p.ref_begin1
@@ -276,7 +282,7 @@ cdef class AlignmentStructure:
 
         Notes
         -----
-        The result is a 0 based index by default
+        The result is a 0-based index by default
 
         """
         return self.p.ref_end1 + self.index_starts_at
@@ -293,7 +299,7 @@ cdef class AlignmentStructure:
 
         Notes
         -----
-        The result is a 0 based index by default
+        The result is a 0-based index by default
 
         """
         return self.p.ref_end2 + self.index_starts_at
@@ -309,7 +315,7 @@ cdef class AlignmentStructure:
 
         Notes
         -----
-        The result is a 0 based index by default
+        The result is a 0-based index by default
 
         """
         return self.p.read_begin1 + self.index_starts_at if (self.p.read_begin1
@@ -326,7 +332,7 @@ cdef class AlignmentStructure:
 
         Notes
         -----
-        The result is a 0 based index by default
+        The result is a 0-based index by default
 
         """
         return self.p.read_end1 + self.index_starts_at
@@ -338,12 +344,17 @@ cdef class AlignmentStructure:
         Returns
         -------
         str
-            The cigar string of the optimal alignment
+            The cigar string (described in [1], [2]) of the optimal alignment
 
         Notes
         -----
         If there is no cigar or optimal alignment, this will return an empty
         string
+
+        References
+        ----------
+        .. [1] http://genome.sph.umich.edu/wiki/SAM
+        .. [2] http://samtools.github.io/hts-specs/SAMv1.pdf
 
         """
         # Memoization! (1/2)
@@ -476,7 +487,7 @@ cdef class AlignmentStructure:
         tuples = []
         length_stack = []
         for character in self.cigar:
-            if character in "1234567890":
+            if character.isdigit():
                 length_stack.append(character)
             else:
                 tuples.append((int("".join(length_stack)), character))
@@ -485,6 +496,7 @@ cdef class AlignmentStructure:
 
 cdef class StripedSmithWaterman:
     """Performs a striped (banded) Smith Waterman Alignment.
+
     First a StripedSmithWaterman object must be instantiated with a query
     sequence. The resulting object is then callable with a target sequence and
     may be reused on a large collection of target sequences.
@@ -502,7 +514,7 @@ cdef class StripedSmithWaterman:
         Default is 5.
     weight_gap_extension : int, optional
         The penalty applied to extending a gap in the alignment. This CANNOT
-        be .
+        be 0.
         Default is 2.
     score_size : int, optional
         If your estimated best alignment score is < 255 this should be 0.
@@ -528,53 +540,53 @@ cdef class StripedSmithWaterman:
         max(int(len(`query_sequence`)/2), `mask_length`).
         Default is True.
     score_only : bool, optional
-        This will prevent the Best Alignment Beginning Positions and the cigar
-        from being returned as a result. This overrides any setting on
+        This will prevent the best alignment beginning positions (BABP) and the
+        cigar from being returned as a result. This overrides any setting on
         `score_filter`, `distance_filter`, and `override_skip_babp`. It has the
         highest precedence.
         Default is False.
     score_filter : int, optional
-        If set, this will prevent the cigar and Best Alignment Beginning
-        Positions from being returned if the optimal alignment score is less
-        than score_filter saving some time computationally. This filter may be
-        overridden by `score_only` (prevents BABP and cigar, regardless of
-        other arguments), `distance_filter` (may prevent cigar, but will cause
-        BABP to be calculated), and `override_skip_babp` (will ensure BABP)
-        returned.
+        If set, this will prevent the cigar and best alignment beginning
+        positions (BABP) from being returned if the optimal alignment score is
+        less than `score_filter` saving some time computationally. This filter
+        may be overridden by `score_only` (prevents BABP and cigar, regardless
+        of other arguments), `distance_filter` (may prevent cigar, but will
+        cause BABP to be calculated), and `override_skip_babp` (will ensure
+        BABP) returned.
         Default is None.
     distance_filter : int, optional
         If set, this will prevent the cigar from being returned if the length
-        of the query_sequence or the target_sequence is less than
-        distance_filter saving some time computationally. This results of this
-        filter may be overridden by `score_only` (prevents BABP and cigar,
+        of the `query_sequence` or the `target_sequence` is less than
+        `distance_filter` saving some time computationally. The results of
+        this filter may be overridden by `score_only` (prevents BABP and cigar,
         regardless of other arguments), and `score_filter` (may prevent cigar).
         `override_skip_babp` has no effect with this filter applied, as BABP
         must be calculated to perform the filter.
         Default is None.
     override_skip_babp : bool, optional
-        When true, the best alignment beginning positions will always be
+        When True, the best alignment beginning positions (BABP) will always be
         returned unless `score_only` is set to True.
         Default is False.
     protein : bool, optional
-        When True, the `query_sequence` and `target_sequence` will be read as a
+        When True, the `query_sequence` and `target_sequence` will be read as
         protein sequence. When False, the `query_sequence` and
-        `target_sequence` will be read as a nucleotide sequence. If True, a
+        `target_sequence` will be read as nucleotide sequence. If True, a
         `substitution_matrix` must be supplied.
         Default is False.
     match : int, optional
-        When using a nucleotide sequence, the match is the score provided when
+        When using a nucleotide sequence, the match is the score added when
         a match occurs. This is ignored if `substitution_matrix` is provided.
         Default is 2.
     mismatch : int, optional
-        When using a nucleotide sequence, the mismatch is the score removed
-        when a mismatch occurs. This is ignored if `substitution_matrix` is
-        provided.
-        Default is 3.
-    substitution_matrix : dict[dict], optional
-        Provides the score for each possible combination of sequence letters.
-        This may be used for protein or nucleotide sequences. The entire set
-        of possible combinations for the relevant sequence type MUST be
-        enumerated in the dict of dicts. This will override `match` and
+        When using a nucleotide sequence, the mismatch is the score subtracted
+        when a mismatch occurs. This should be a negative integer.
+        This is ignored if `substitution_matrix` is provided.
+        Default is -3.
+    substitution_matrix : 2D dict, optional
+        Provides the score for each possible substitution of sequence
+        characters. This may be used for protein or nucleotide sequences. The
+        entire set of possible combinations for the relevant sequence type MUST
+        be enumerated in the dict of dicts. This will override `match` and
         `mismatch`. Required when `protein` is True.
         Default is None.
     suppress_sequences : bool, optional
@@ -588,15 +600,15 @@ cdef class StripedSmithWaterman:
 
     Notes
     -----
-    mask_length has to be >= 15, otherwise the suboptimal alignment information
-    will NOT be returned.
+    `mask_length` has to be >= 15, otherwise the suboptimal alignment
+    information will NOT be returned.
 
-    match and mismatch should both be positive integers.
+    `match` is a positive integer and `mismatch` is a negative integer.
 
-    match and mismatch are only meaningful in the context of nucleotide
-    sequences
+    `match` and `mismatch` are only meaningful in the context of nucleotide
+    sequences.
 
-    A substitution matrix must be provided when working with protein sequences
+    A substitution matrix must be provided when working with protein sequences.
 
     """
     cdef s_profile *profile
@@ -631,7 +643,11 @@ cdef class StripedSmithWaterman:
                   zero_index=True):
         # initalize our values
         self.read_sequence = query_sequence
+        if weight_gap_open <= 0:
+            raise ValueError("`weight_gap_open` must be > 0")
         self.weight_gap_open = weight_gap_open
+        if weight_gap_extension <= 0:
+            raise ValueError("`weight_gap_extension` must be > 0")
         self.weight_gap_extension = weight_gap_extension
         self.distance_filter = 0 if distance_filter is None else \
             distance_filter
@@ -646,8 +662,8 @@ cdef class StripedSmithWaterman:
         cdef cnp.ndarray[cnp.int8_t, ndim = 1, mode = "c"] matrix
         if substitution_matrix is None:
             if protein:
-                raise Exception("Must provide a substitution matrix for \
-                    protein sequences")
+                raise Exception("Must provide a substitution matrix for"
+                                " protein sequences")
             matrix = self._build_match_matrix(match, mismatch)
         else:
             matrix = self._convert_dict2d_to_matrix(substitution_matrix)
@@ -683,12 +699,12 @@ cdef class StripedSmithWaterman:
         self.__KEEP_IT_IN_SCOPE_read = read_seq
         self.__KEEP_IT_IN_SCOPE_matrix = matrix
 
-    def __call__(self, reference_sequence):
-        """Produces an alignment for the given reference_sequence
+    def __call__(self, target_sequence):
+        """Align `target_sequence` to `query_sequence`
 
         Parameters
         ----------
-        reference_sequence : string
+        target_sequence : string
 
         Returns
         -------
@@ -696,6 +712,7 @@ cdef class StripedSmithWaterman:
             The resulting alignment.
 
         """
+        reference_sequence = target_sequence
         cdef cnp.ndarray[cnp.int8_t, ndim = 1, mode = "c"] reference
         reference = self._seq_converter(reference_sequence)
 
@@ -782,8 +799,7 @@ cdef class StripedSmithWaterman:
 
 def align_striped_smith_waterman(query_sequence, target_sequence,
                                  **kwargs):
-    """Perform as Striped (Banded) Smith Waterman alignment on a query and
-    target sequence.
+    """Align query and target sequences with Striped Smith-Waterman.
 
     Parameters
     ----------
