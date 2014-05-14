@@ -10,15 +10,47 @@
 
 from unittest import TestCase, main
 
-from skbio.util.sort import signed_natsort, natsort
+from skbio.util.sort import (signed_natsort, natsort,
+                             _natsort_key_case_insensitive,
+                             _natsort_key)
 
 
 class SortTests(TestCase):
     """Test object for sort functions"""
 
-    def setUp(self):
-        """"""
-        pass
+    def test_natsort_key(self):
+        s = 'sample1'
+        exp = ([(1, 'sample'), (0, 1), (1, '')], 'sample1')
+        self.assertEqual(_natsort_key(s), exp)
+
+        s = '11'
+        exp = ([(1, ''), (0, 11), (1, '')], '11')
+        self.assertEqual(_natsort_key(s), exp)
+
+        s = '1.11'
+        exp = ([(1, ''), (0, 1.11), (1, '')], '1.11')
+        self.assertEqual(_natsort_key(s), exp)
+
+        s = ('11', 'A')
+        exp = ([(1, "('"), (0, 11), (1, "', 'A')")], "('11', 'A')")
+        self.assertEqual(_natsort_key(s), exp)
+
+    def test_natsort_key_case_insensitive(self):
+        s = 'sample1'
+        exp = ([(1, 'sample'), (0, 1), (1, '')], 'sample1')
+        self.assertEqual(_natsort_key_case_insensitive(s), exp)
+
+        s = '11'
+        exp = ([(1, ''), (0, 11), (1, '')], '11')
+        self.assertEqual(_natsort_key_case_insensitive(s), exp)
+
+        s = '1.11'
+        exp = ([(1, ''), (0, 1.11), (1, '')], '1.11')
+        self.assertEqual(_natsort_key_case_insensitive(s), exp)
+
+        s = ('11', 'A')
+        exp = ([(1, "('"), (0, 11), (1, "', 'a')")], "('11', 'a')")
+        self.assertEqual(_natsort_key_case_insensitive(s), exp)
 
     def test_natsort(self):
         """natsort should perform numeric comparisons on strings"""
