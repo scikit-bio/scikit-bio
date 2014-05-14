@@ -10,6 +10,7 @@ from __future__ import division
 import numpy as np
 
 from skbio.core.exception import FastqParseError
+from skbio.util.io import open_file
 
 
 def _ascii_to_phred(s, offset):
@@ -47,8 +48,8 @@ def parse_fastq(data, strict=False, phred_offset=33):
 
     Parameters
     ----------
-    data : open file object
-        An open fastq file.
+    data : open file object or str
+        An open fastq file (opened in binary mode) or a path to it.
 
     strict : bool
         If strict is true a FastqParse error will be raised if the seq and qual
@@ -108,50 +109,52 @@ def parse_fastq(data, strict=False, phred_offset=33):
     QUALID = 2
     QUAL = 3
 
-    data = iter(data)
-    first_line = next(data).strip()
+    with open_file(data, 'rb') as data:
+        data = iter(data)
+        first_line = next(data).strip()
 
-    if phred_offset == 33:
-        phred_f = _ascii_to_phred33
-    elif phred_offset == 64:
-        phred_f = _ascii_to_phred64
-    else:
-        raise ValueError("Unknown PHRED offset of %s" % phred_offset)
+        if phred_offset == 33:
+            phred_f = _ascii_to_phred33
+        elif phred_offset == 64:
+            phred_f = _ascii_to_phred64
+        else:
+            raise ValueError("Unknown PHRED offset of %s" % phred_offset)
 
-    seqid = _drop_id_marker(first_line)
-    seq = None
-    qualid = None
-    qual = None
+        seqid = _drop_id_marker(first_line)
+        seq = None
+        qualid = None
+        qual = None
 
-    for idx, line in enumerate(data):
-        # +1 due to fetch of line prior to loop
-        lineno = idx + 1
-        linetype = lineno % 4
-        line = line.strip()
+        for idx, line in enumerate(data):
+            # +1 due to fetch of line prior to loop
+            lineno = idx + 1
+            linetype = lineno % 4
+            line = line.strip()
 
-        if linetype == SEQUENCEID:
-            yield seqid, seq, qual
+            if linetype == SEQUENCEID:
+                yield seqid, seq, qual
 
-            seqid = _drop_id_marker(line)
-            seq = None
-            qualid = None
-            qual = None
-        elif linetype == SEQUENCE:
-            seq = line
-        elif linetype == QUALID:
-            qualid = _drop_id_marker(line)
-            if strict:
-                if seqid != qualid:
-                    raise FastqParseError('ID mismatch: {} != {}'.format(
-                        seqid, qualid))
-        elif linetype == QUAL:
-            qual = phred_f(line)
-            # bounds based on illumina limits, see:
-            # http://nar.oxfordjournals.org/content/38/6/1767/T1.expansion.html
-            if (qual < 0).any() or (qual > 62).any():
-                raise FastqParseError("Failed qual conversion for seq id: %s. "
-                                      "This may be because you passed an "
-                                      "incorrect value for phred_offset."
-                                      % seqid)
-    if seqid:
-        yield (seqid, seq, qual)
+                seqid = _drop_id_marker(line)
+                seq = None
+                qualid = None
+                qual = None
+            elif linetype == SEQUENCE:
+                seq = line
+            elif linetype == QUALID:
+                qualid = _drop_id_marker(line)
+                if strict:
+                    if seqid != qualid:
+                        raise FastqParseError('ID mismatch: {} != {}'.format(
+                            seqid, qualid))
+            elif linetype == QUAL:
+                qual = phred_f(line)
+                # bounds based on illumina limits, see:
+                # http://nar.oxfordjournals.org/content/38/6/1767/T1.expansion.html
+                if (qual < 0).any() or (qual > 62).any():
+                    raise FastqParseError(
+                        "Failed qual conversion for seq id: %s."
+                        " This may be because you passed an"
+                        " incorrect value for phred_offset."
+                        % seqid)
+        if seqid:
+            yield (seqid, seq, qual)

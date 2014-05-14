@@ -20,6 +20,7 @@ API Reference
    core.workflow
    draw.distributions
    format.sequences
+   math.diversity.alpha
    math.stats.distance
    math.stats.spatial
    math.stats.ordination

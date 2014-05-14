@@ -26,7 +26,7 @@ def fasta_from_sequences(seqs, make_seqlabel=None, line_wrap=None):
         callback function that takes the seq object and returns a label
         ``str``. If ``None`` is passed, the following attributes will try to be
         retrieved in this order and the first to exist will be used:
-        ``identifier``, ``Label`` or ``Name``. In any other case an integer
+        ``id``, ``Label`` or ``Name``. In any other case an integer
         with the position of the sequence object will be used.
     line_wrap : int, optional
         line_wrap: a integer for maximum line width, if ``None`` is passed the
@@ -62,8 +62,8 @@ def fasta_from_sequences(seqs, make_seqlabel=None, line_wrap=None):
         label = str(i)
         if make_seqlabel is not None:
             label = make_seqlabel(seq)
-        elif hasattr(seq, 'identifier') and seq.identifier:
-            label = seq.identifier
+        elif hasattr(seq, 'id') and seq.id:
+            label = seq.id
         elif hasattr(seq, 'Label') and seq.Label:
             label = seq.Label
         elif hasattr(seq, 'Name') and seq.Name:
@@ -92,20 +92,20 @@ def fasta_from_alignment(aln, make_seqlabel=None, line_wrap=None, sort=True):
     Parameters
     ----------
     aln : Alignment, dict
-        alignment or dictionary where the keys are the sequence identifiers and
+        alignment or dictionary where the keys are the sequence ids and
         the values are the sequences themselves.
     make_seqlabel : function, optional
         callback function that takes the seq object and returns a label
         ``str``. If ``None`` is passed, the following attributes will try to be
         retrieved in this order and the first to exist will be used:
-        ``identifier``, ``Label`` or ``Name``. In any other case an integer
+        ``id``, ``Label`` or ``Name``. In any other case an integer
         with the position of the sequence object will be used.
     line_wrap : int, optional
         line_wrap: a integer for maximum line width, if ``None`` is passed the
         full sequence will be used.
     sort : bool, optional
         Whether or not the sequences should be sorted by their sequence
-        identifier, default value is ``True``.
+        id, default value is ``True``.
 
     Returns
     -------
@@ -123,8 +123,8 @@ def fasta_from_alignment(aln, make_seqlabel=None, line_wrap=None, sort=True):
     >>> from skbio.core.alignment import Alignment
     >>> from skbio.core.sequence import DNA
     >>> from skbio.format.sequences import fasta_from_alignment
-    >>> seqs = [DNA("ACC--G-GGTA..", identifier="seq1"),
-    ...     DNA("TCC--G-GGCA..", identifier="seqs2")]
+    >>> seqs = [DNA("ACC--G-GGTA..", id="seq1"),
+    ...     DNA("TCC--G-GGCA..", id="seqs2")]
     >>> a1 = Alignment(seqs)
     >>> print fasta_from_alignment(a1)
     >seq1
@@ -135,7 +135,7 @@ def fasta_from_alignment(aln, make_seqlabel=None, line_wrap=None, sort=True):
     """
     # check if it's an Alignment object or a dictionary
     if isinstance(aln, Alignment):
-        order = aln.identifiers()
+        order = aln.ids()
     else:
         order = aln.keys()
 

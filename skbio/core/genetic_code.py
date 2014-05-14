@@ -75,6 +75,7 @@ import re
 from collections import defaultdict
 
 from skbio.core.exception import GeneticCodeInitError, InvalidCodonError
+from skbio.core.sequence import Protein
 
 # py3k compatibility
 try:
@@ -134,7 +135,7 @@ class GeneticCode(object):
     get_stop_indices
     is_start
     is_stop
-    sixframes
+    translate_six_frames
     translate
     __repr__
     __getitem__
@@ -332,23 +333,31 @@ class GeneticCode(object):
         else:
             raise InvalidCodonError("Codon or aa %s has wrong length" % item)
 
-    def translate(self, dna, start=0):
-        """Translates DNA to protein with current GeneticCode.
-
-        Translates the entire sequence: it is the caller's responsibility to
-        find open reading frames.
+    def translate(self, nucleotide_sequence, start=0):
+        """Translate nucleotide to protein sequence
 
         Parameters
         ----------
-        dna : str
-            a string of nucleotides
+        nucleotide_sequence : NucleotideSequence
+            sequence to be translated
         start : int, optional
-            position to begin translation (used to implement frames)
+            position to begin translation
 
         Returns
         -------
-        str
-            string containing amino acid sequence.
+        ProteinSequence
+            translation of nucleotide_sequence
+
+        Notes
+        -----
+        ``translate`` returns the translation of the entire sequence, (i.e., of
+        ``nucleotide_sequence[start:]``). It is the user's responsibility to
+        trim to an open reading frame, either from the input or using the
+        output, if that is desired.
+
+        See Also
+        --------
+        translate_six_frames
 
         Examples
         --------
@@ -356,24 +365,29 @@ class GeneticCode(object):
         >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSS'
         ...                   'RRVVVVAAAADDEEGGGG')
         >>> sgc.translate('AUGCAUGACUUUUGA', 1)
-        'CMTF'
+        <ProteinSequence: CMTF (length: 4)>
 
         """
-        # NOTE: should return Protein object when we have a class for it.
-        if not dna:
-            return ''
-        if start + 1 > len(dna):
-            raise ValueError("Translation starts after end of RNA")
-        return ''.join([self[dna[i:i + 3]] for i in
-                        range(start, len(dna) - 2, 3)])
+        if len(nucleotide_sequence) == 0:
+            return Protein('')
+        if start + 1 > len(nucleotide_sequence):
+            raise ValueError("Translation starts after end of"
+                             "NucleotideSequence")
 
-    def get_stop_indices(self, dna, start=0):
+        translation = []
+        for i in range(start, len(nucleotide_sequence) - 2, 3):
+            translation.append(self[nucleotide_sequence[i:i + 3]])
+        translation = Protein(''.join(translation))
+
+        return translation
+
+    def get_stop_indices(self, nucleotide_sequence, start=0):
         """returns indexes for stop codons in the specified frame
 
         Parameters
         ----------
-        dna : str
-            a string of nucleotides.
+        nucleotide_sequence : str, NucleotideSequence
+            sequence to be scanned for stop codons
         start : int, optional
             position where the search begins.
 
@@ -396,24 +410,27 @@ class GeneticCode(object):
         stops = self['*']
         stop_pattern = '(%s)' % '|'.join(stops)
         stop_pattern = re.compile(stop_pattern)
-        seq = str(dna)
+        seq = str(nucleotide_sequence)
         found = [hit.start() for hit in stop_pattern.finditer(seq)]
         found = [index for index in found if index % 3 == start]
         return found
 
-    def sixframes(self, dna):
-        """Returns six-frame translation as a dictionary object
+    def translate_six_frames(self, nucleotide_sequence):
+        """Translate nucleotide to protein sequences for all six reading frames
 
         Parameters
         ----------
-        dna : str
-            a string of nucleotides.
+        nucleotide_sequence : NucleotideSequence
+            sequence to be translated
 
         Returns
         -------
-        dict
-            dictionary of where the keys are the frames and the values are the
-            translations i. e. ``{frame:translation}``.
+        list
+            the six translated ProteinSequence objects
+
+        See Also
+        --------
+        translate
 
         Examples
         --------
@@ -421,13 +438,27 @@ class GeneticCode(object):
         >>> from skbio.core.sequence import RNA
         >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSS'
         ...                   'RRVVVVAAAADDEEGGGG')
-        >>> sgc.sixframes(RNA('AUGCUAACAUAAA'))
-        ['MLT*', 'C*HK', 'ANI', 'FMLA', 'LC*H', 'YVS']
+        >>> results = sgc.translate_six_frames(RNA('AUGCUAACAUAAA'))
+        >>> for e in results: e
+        <ProteinSequence: MLT* (length: 4)>
+        <ProteinSequence: C*HK (length: 4)>
+        <ProteinSequence: ANI (length: 3)>
+        <ProteinSequence: FMLA (length: 4)>
+        <ProteinSequence: LC*H (length: 4)>
+        <ProteinSequence: YVS (length: 3)>
 
         """
-        reverse = dna.rc()
-        return [self.translate(dna, start) for start in range(3)] + \
-               [self.translate(reverse, start) for start in range(3)]
+        rc_nucleotide_sequence = nucleotide_sequence.rc()
+        results = []
+        for start in range(3):
+            translation = self.translate(nucleotide_sequence, start)
+            results.append(translation)
+
+        for start in range(3):
+            translation = self.translate(rc_nucleotide_sequence, start)
+            results.append(translation)
+
+        return results
 
     def is_start(self, codon):
         """Checks if codon is a start codon
