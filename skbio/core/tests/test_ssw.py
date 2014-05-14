@@ -388,7 +388,7 @@ class TestStripedSmithWaterman(TestSSW):
             target_sequences=target_sequences,
             arg='mismatch',
             default=-3,
-            i_range=range(6, 1),
+            i_range=range(-6, 1),
             # These are intentionally inverted
             compare_lt=self.assertLessEqual,
             compare_gt=self.assertGreaterEqual
