@@ -11,7 +11,6 @@
 from __future__ import division
 
 import numpy as np
-from numpy.random import shuffle
 from scipy.stats import spearmanr, kruskal, mannwhitneyu, kendalltau
 
 from skbio.math.stats.special import MACHEP, ndtri
@@ -120,13 +119,13 @@ def safe_sum_p_log_p(a, base=None):
     return np.sum(nz * logs, 0)
 
 
-def G_stat(data):
+def g_stat(data):
     """Calculate the G statistic for data.
 
     Parameters
     ----------
-    data : list of arrays
-        List of arrays, each array is 1D with any length. Each array
+    data : iterable of 1-D array_like
+        Iterable of 1D array_like, each array is 1D with any length. Each array
         represents the observed frequencies of a given OTU in one of the sample
         classes.
 
@@ -137,8 +136,8 @@ def G_stat(data):
 
     Notes
     -----
-    For discussion read Sokal and Rohlf Biometry pg. 695-699. The G tests is
-    normally applied to data where you have only one observation of any given
+    For discussion read [1]_ pg. 695-699. The G test
+    is normally applied to data when you have only one observation of any given
     sample class (e.g. you observe 90 wildtype and 30 mutants). In microbial
     ecology it is normal to have multiple samples which contain a given feature
     where those samples share a metadata class (eg. you observe OTUX at certain
@@ -151,19 +150,25 @@ def G_stat(data):
     heterogeneity as a replicated goodness of fit test would be able to. In
     addition, this function assumes the extrinsic hypothesis is that the
     mean frequency in all the samples groups is the same.
+
+    References
+    ----------
+    .. [1] Sokal and Rohlf. "Biometry: The Principles and Practices of
+       Statistics in Biological Research". ISBN: 978-0716724117
     """
     # G = 2*sum(f_i*ln(f_i/f_i_hat)) over all i phenotypes/sample classes
     # calculate the total number of observations under the consideration that
     # multiple observations in a given group are averaged.
-    n = sum([arr.mean() for arr in data])
+    avgs = np.array([np.array(i).mean() for i in data])
+    n = avgs.sum()
     a = len(data)  # a is number of phenotypes or sample classes
-    obs_freqs = np.array([sample_type.mean() for sample_type in data])  # f_i's
-    exp_freqs = np.zeros(a) + (n / float(a))  # f_i_hat vals
+    obs_freqs = avgs # f_i values
+    exp_freqs = np.zeros(a) + (n / a)  # f_i_hat vals
     G = 2. * (obs_freqs * np.log(obs_freqs / exp_freqs)).sum()
     return G
 
 
-def G_fit(data, williams=True):
+def g_fit(data, williams=True):
     """Calculate G statistic and compare to one tailed chi-squared distribution.
 
     Parameters
@@ -174,7 +179,7 @@ def G_fit(data, williams=True):
         classes.
     williams : boolean
         Whether or not to apply the Williams correction before comparing to the
-        chi**2 distribution.
+        chi-squared distribution.
 
     Returns
     -------
@@ -185,23 +190,29 @@ def G_fit(data, williams=True):
 
     Notes
     -----
-    For discussion read Sokal and Rohlf Biometry pg. 695-699. This function
+    For discussion read [1]_. This function
     compares the calculated G statistic (with Williams correction by default)
     to the chi-squared distribution with the appropriate number of degrees of
-    freedom.
+    freedom. If the data do not pass sanity checks for basic assumptions then
+    this function will return nans.
+
+    References
+    ----------
+    .. [1] Sokal and Rohlf. "Biometry: The Principles and Practices of
+       Statistics in Biological Research". ISBN: 978-0716724117
     """
     # sanity checks on the data to return nans if conditions are not met
     if not all([(i >= 0).all() for i in data]):
-        # G_fit: data contains negative values. G test would be
+        # g_fit: data contains negative values. G test would be
         # undefined. Ignoring this OTU.
         return np.nan, np.nan
     if not all([i.sum() > 0 for i in data]):
-        # G_fit: data contains sample group with zero only values. This
+        # g_fit: data contains sample group with zero only values. This
         # means that the given OTU was never observed in this sample class
         # The G test fails in this case because we would be forced to
         # take log(0). Ignoring this OTU.
         return np.nan, np.nan
-    G = G_stat(data)
+    G = g_stat(data)
     a = len(data)  # a is number of phenotypes or sample classes
     if williams:
         # calculate the total number of observations under the consideration
@@ -214,7 +225,7 @@ def G_fit(data, williams=True):
 def williams_correction(n, a, G):
     """Return the Williams corrected G statistic for G goodness of fit test.
 
-    For discussion read Sokal and Rohlf Biometry pg 698,699.
+    For discussion read [1]_ pg 698-699.
 
     Parameters
     ----------
@@ -224,6 +235,11 @@ def williams_correction(n, a, G):
         Number of groups that are being compared.
     G : float
         Uncorrected G statistic
+
+    References
+    ----------
+    .. [1] Sokal and Rohlf. "Biometry: The Principles and Practices of
+       Statistics in Biological Research". ISBN: 978-0716724117
     """
     # q = 1. + (a**2 - 1)/(6.*n*a - 6.*n) == 1. + (a+1.)/(6.*n)
     q = 1. + (a + 1.) / (6. * n)
@@ -482,13 +498,17 @@ def _permute_observations(x, y, num_perms):
 
     Parameters
     ----------
-    x,y : array-like
+    x : 1-D array-like
+        Lists or arrays of values to be permuted.
+    y : 1-D array-like
         Lists or arrays of values to be permuted.
 
     Returns
     -------
-    xs, ys
-        Permuted vectors x and y
+    xs
+        Permuted vectors x
+    ys
+        Permuted vectors y
     """
     vals = np.hstack([np.array(x), np.array(y)])
     lenx = len(x)
@@ -500,7 +520,7 @@ def _permute_observations(x, y, num_perms):
     inds = np.arange(vals.size)
     xs, ys = [], []
     for i in range(num_perms):
-        shuffle(inds)
+        np.random.shuffle(inds)
         xs.append(vals[inds[:lenx]])
         ys.append(vals[inds[lenx:]])
     return xs, ys
@@ -660,8 +680,8 @@ def assign_correlation_pval(corr, n, method, permutations=None,
     for certain types of data and there is no way for this test to determine
     the appropriateness, thus you must use this function only when with the
     proper prior knowledge. The 'parametric_t_distribution' method is described
-    in Sokal and Rohlf Biometry pg. 576, the 'fisher_z_transform' method is
-    described on pg 576 and 577. The 'bootstrap' method calculates the given
+    in [1]_ pg. 576, the 'fisher_z_transform' method
+    is described on pg 576 and 577. The 'bootstrap' method calculates the given
     correlation permutations number of times using perm_test_fn.
     Also note, this does *not* take the place of FDR correction.
 
@@ -684,6 +704,11 @@ def assign_correlation_pval(corr, n, method, permutations=None,
     v2 : array-like or None
         List or array of ints or floats to be correlated. Passed if
         method='bootstrapped'
+
+    References
+    ----------
+    .. [1] Sokal and Rohlf. "Biometry: The Principles and Practices of
+       Statistics in Biological Research". ISBN: 978-0716724117
     """
     if method == 'parametric_t_distribution':
         df = n - 2
@@ -946,7 +971,7 @@ def mw_t(x, y, continuity=True, two_sided=True):
     -------
     U stat : float
         The MWU U statistic.
-    pval : float
+    p-value : float
         The pvalue associated with the given U statistic assuming a normal
         probability distribution.
 
@@ -959,8 +984,12 @@ def mw_t(x, y, continuity=True, two_sided=True):
     Two tails is appropriate because we do not know which of our groups has a
     higher mean, thus our alternate hypothesis is that the distributions from
     which the two samples come are not the same (FA!=FB) and we must account
-    for E[FA] > E[FB] and E[FB] < E[FA]. Sokal and Rolhf, Biometry,
-    pgs 427-431.
+    for E[FA] > E[FB] and E[FB] < E[FA]. See [1]_ pgs 427-431.
+
+    References
+    ----------
+    .. [1] Sokal and Rohlf. "Biometry: The Principles and Practices of
+       Statistics in Biological Research". ISBN: 978-0716724117
     '''
     u, pval = mannwhitneyu(x, y, continuity)
     if two_sided:
@@ -1005,8 +1034,8 @@ def mw_boot(x, y, num_reps=999):
 
     References
     ----------
-    [1] http://docs.scipy.org/doc/scipy-0.13.0/reference/generated/scipy.stats
-       .mannwhitneyu.html
+    .. [1] http://docs.scipy.org/doc/scipy-0.13.0/reference/generated/scipy.sta
+       ts.mannwhitneyu.html
     """
     tol = MACHEP * 100
     combined = np.array(list(x) + list(y))
@@ -1040,7 +1069,7 @@ def kruskal_wallis(data):
     U stat : float
         The Kruskal Wallis U statistic.
     pval : float
-        The pvalue associated with the given U statistic assuming a chi**2
+        The pvalue associated with the given U statistic assuming a chi-squared
         probability distribution.
 
     Examples
@@ -1301,7 +1330,7 @@ def benjamini_hochberg_step_down(pvals):
 def fisher_z_transform(r):
     """Calculate the Fisher Z transform of a correlation coefficient.
 
-    Relies on formulation in Sokal and Rohlf Biometry pg 575.
+    Relies on formulation in [1_] pg 575.
 
     Parameters
     ----------
@@ -1311,6 +1340,11 @@ def fisher_z_transform(r):
     Returns
     -------
     z value of r
+
+    References
+    ----------
+    .. [1] Sokal and Rohlf. "Biometry: The Principles and Practices of
+       Statistics in Biological Research". ISBN: 978-0716724117
     """
     if abs(r) >= 1:  # fisher z transform is undefined, have to return nan
         return np.nan
@@ -1320,7 +1354,7 @@ def fisher_z_transform(r):
 def inverse_fisher_z_transform(z):
     """Calculate the inverse of the Fisher Z transform on a z value.
 
-    Relies on formulation in Sokal and Rohlf Biometry pg 576.
+    Relies on formulation in [1_] pg 576.
 
     Parameters
     ----------
@@ -1331,6 +1365,11 @@ def inverse_fisher_z_transform(z):
     -------
     r : float
         Rho or correlation coefficient that would produce given z score.
+
+    References
+    ----------
+    .. [1] Sokal and Rohlf. "Biometry: The Principles and Practices of
+       Statistics in Biological Research". ISBN: 978-0716724117
     """
     return ((np.e ** (2 * z)) - 1.) / ((np.e ** (2 * z)) + 1.)
 
@@ -1338,7 +1377,7 @@ def inverse_fisher_z_transform(z):
 def z_transform_pval(z, n):
     '''Calculate two tailed probability of value as or more extreme than z.
 
-    Relies on formulation in Sokal and Rohlf Biometry pg 576.
+    Relies on formulation in [1_] pg. 576.
 
     Parameters
     ----------
@@ -1352,6 +1391,11 @@ def z_transform_pval(z, n):
     zprob : float
         Probability of getting a zscore as or more extreme than the passed z
         given the total numger of samples that generated it (n).
+
+    References
+    ----------
+    .. [1] Sokal and Rohlf. "Biometry: The Principles and Practices of
+       Statistics in Biological Research". ISBN: 978-0716724117
     '''
     if n <= 3:  # sample size must be greater than 3 otherwise this transform
         # isn't supported.
@@ -1380,8 +1424,13 @@ def fisher_population_correlation(corrcoefs, sample_sizes):
     -----
     This function calculates the correlation of a population that is relying
     on multiple different studies that have calculated correlation coefficients
-    of their own. The procedure is detailed in Sokal and Rohlf Biometry pgs
+    of their own. The procedure is detailed in [1]_ pgs
     576 - 578. Pvals that are nans will be excluded by this function.
+
+    References
+    ----------
+    .. [1] Sokal and Rohlf. "Biometry: The Principles and Practices of
+       Statistics in Biological Research". ISBN: 978-0716724117
 
     Examples
     --------
@@ -1439,8 +1488,11 @@ def cscore(v1, v2):
     Notes
     -----
     This function calculates the C-score between equal length vectors v1 and v2
-    according to the formulation given in Stone and Roberts 1990, Oecologia
-    85: 74-79.
+    according to the formulation given in [1]_.
+
+    References
+    ----------
+    .. [1] Stone and Roberts. 1990, Oecologia 85:74-79
     '''
     v1_b = v1.astype(bool)
     v2_b = v2.astype(bool)
