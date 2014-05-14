@@ -681,13 +681,13 @@ def correlation_t(x_items, y_items, method='pearson', tails=None,
         permuted_corr_coeffs.append(permuted_corr_coeff)
 
         if tails is None:
-            if abs(permuted_corr_coeff) >= abs(corr_coeff):
+            if abs(round(permuted_corr_coeff,10)) >= abs(round(corr_coeff,10)):
                 better += 1
         elif tails == 'high':
-            if permuted_corr_coeff >= corr_coeff:
+            if round(permuted_corr_coeff,10) >= round(corr_coeff,10):
                 better += 1
         elif tails == 'low':
-            if permuted_corr_coeff <= corr_coeff:
+            if round(permuted_corr_coeff,10) <= round(corr_coeff,10):
                 better += 1
         else:
             # Not strictly necessary since this was checked above, but included
