@@ -25,8 +25,28 @@ Functions
 
 Examples
 --------
+Using the convenient ``striped_smith_waterman_alignment`` function:
 
-Use the ``StripedSmithWaterman`` object:
+>>> from skbio.core.ssw import striped_smith_waterman_alignment
+>>> alignment = striped_smith_waterman_alignment(
+...                 "ACTAAGGCTCTCTACCCCTCTCAGAGA",
+...                 "ACTAAGGCTCCTAACCCCCTTTTCTCAGA"
+...             )
+>>> print alignment
+{
+    'optimal_alignment_score': 27,
+    'suboptimal_alignment_score': 21,
+    'query_begin': 0,
+    'query_end': 24,
+    'target_begin': 0,
+    'target_end_optimal': 28,
+    'target_end_suboptimal': 12,
+    'cigar': '10M1I2M1D5M4D7M',
+    'query_sequence': 'ACTAAGGCTCTCTACCCCTCTCAGAGA',
+    'target_sequence': 'ACTAAGGCTCCTAACCCCCTTTTCTCAGA'
+}
+
+Using the ``StripedSmithWaterman`` object:
 
 >>> from skbio.core.ssw import StripedSmithWaterman
 >>> query = StripedSmithWaterman("ACTAAGGCTCTCTACCCCTCTCAGAGA")
@@ -44,6 +64,38 @@ Use the ``StripedSmithWaterman`` object:
     'query_sequence': 'ACTAAGGCTCTCTACCCCTCTCAGAGA',
     'target_sequence': 'AAAAAACTCTCTAAACTCACTAAGGCTCTCTACCCCTCTTCAGAGAAGTCGA'
 }
+
+Using the ``StripedSmithWaterman`` object for multiple targets in an efficient
+way:
+
+>>> from skbio.core.ssw import StripedSmithWaterman
+>>> alignments = []
+>>> target_sequences = [
+...     "TAGAGATTAATTGCCACATTGCCACTGCCAAAATTCTG",
+...     "GCCCAGTAGCTTCCCAATATGAGAGCATCAATTGTAGATCGGGCC",
+...     "TCTATAAGATTCCGCATGCGTTACTTATAAGATGTCTCAACGG",
+...     "TAGAGATTAATTGCCACTGCCAAAATTCTG"
+... ]
+>>> query_sequence = "ACTAAGGCTCTCTACCCCTCTCAGAGA"
+>>> query = StripedSmithWaterman(query_sequence)
+>>> for target_sequence in target_sequences:
+...     alignment = query(target_sequence)
+...     alignments.append(alignment)
+...
+>>> print alignments[0]
+{
+    'optimal_alignment_score': 10,
+    'suboptimal_alignment_score': 6,
+    'query_begin': 22,
+    'query_end': 26,
+    'target_begin': 1,
+    'target_end_optimal': 5,
+    'target_end_suboptimal': 25,
+    'cigar': '5M',
+    'query_sequence': 'ACTAAGGCTCTCTACCCCTCTCAGAGA',
+    'target_sequence': 'TAGAGATTAATTGCCACATTGCCACTGCCAAAATTCTG'
+}
+
 
 """
 # -----------------------------------------------------------------------------
