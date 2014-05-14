@@ -42,7 +42,15 @@ skbio.core.sequence.BiologicalSequence
          BiologicalSequence.is_gap
          BiologicalSequence.is_gapped
          BiologicalSequence.is_valid
+         BiologicalSequence.iupac_characters
+         BiologicalSequence.iupac_degeneracies
+         BiologicalSequence.iupac_degenerate_characters
+         BiologicalSequence.iupac_standard_characters
+         BiologicalSequence.k_word_counts
+         BiologicalSequence.k_word_frequencies
+         BiologicalSequence.k_words
          BiologicalSequence.lower
+         BiologicalSequence.nondegenerates
          BiologicalSequence.to_fasta
          BiologicalSequence.unsupported_characters
          BiologicalSequence.upper
@@ -56,5 +64,5 @@ skbio.core.sequence.BiologicalSequence
          :toctree:
       
          BiologicalSequence.description
-         BiologicalSequence.identifier
+         BiologicalSequence.id
 

@@ -50,7 +50,11 @@ skbio.core.sequence.RNASequence
          RNASequence.iupac_degeneracies
          RNASequence.iupac_degenerate_characters
          RNASequence.iupac_standard_characters
+         RNASequence.k_word_counts
+         RNASequence.k_word_frequencies
+         RNASequence.k_words
          RNASequence.lower
+         RNASequence.nondegenerates
          RNASequence.rc
          RNASequence.reverse_complement
          RNASequence.to_fasta
@@ -66,5 +70,5 @@ skbio.core.sequence.RNASequence
          :toctree:
       
          RNASequence.description
-         RNASequence.identifier
+         RNASequence.id
 

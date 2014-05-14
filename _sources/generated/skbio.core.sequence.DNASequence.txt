@@ -50,7 +50,11 @@ skbio.core.sequence.DNASequence
          DNASequence.iupac_degeneracies
          DNASequence.iupac_degenerate_characters
          DNASequence.iupac_standard_characters
+         DNASequence.k_word_counts
+         DNASequence.k_word_frequencies
+         DNASequence.k_words
          DNASequence.lower
+         DNASequence.nondegenerates
          DNASequence.rc
          DNASequence.reverse_complement
          DNASequence.to_fasta
@@ -66,5 +70,5 @@ skbio.core.sequence.DNASequence
          :toctree:
       
          DNASequence.description
-         DNASequence.identifier
+         DNASequence.id
 

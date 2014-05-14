@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.maths.stats.ordination.PCoA.long_method_name
-==================================================
-
-.. currentmodule:: skbio.maths.stats.ordination
-
-.. autoattribute:: PCoA.long_method_name

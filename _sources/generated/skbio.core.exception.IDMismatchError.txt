@@ -1,6 +1,0 @@
-skbio.core.exception.IDMismatchError
-====================================
-
-.. currentmodule:: skbio.core.exception
-
-.. autoexception:: IDMismatchError

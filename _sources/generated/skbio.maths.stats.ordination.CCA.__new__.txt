@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.maths.stats.ordination.CCA.__new__
-========================================
-
-.. currentmodule:: skbio.maths.stats.ordination
-
-.. automethod:: CCA.__new__

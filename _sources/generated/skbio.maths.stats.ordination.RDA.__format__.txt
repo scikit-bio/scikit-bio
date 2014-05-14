@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.maths.stats.ordination.RDA.__format__
-===========================================
-
-.. currentmodule:: skbio.maths.stats.ordination
-
-.. automethod:: RDA.__format__

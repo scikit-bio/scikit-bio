@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.maths.stats.ordination.CA.long_method_name
-================================================
-
-.. currentmodule:: skbio.maths.stats.ordination
-
-.. autoattribute:: CA.long_method_name

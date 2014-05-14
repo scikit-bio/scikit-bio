@@ -11,6 +11,7 @@ skbio.core.alignment.Alignment
       .. autosummary::
          :toctree:
       
+         Alignment.__contains__
          Alignment.__eq__
          Alignment.__format__
          Alignment.__getitem__
@@ -22,7 +23,9 @@ skbio.core.alignment.Alignment
          Alignment.__reduce__
          Alignment.__reduce_ex__
          Alignment.__repr__
+         Alignment.__reversed__
          Alignment.__sizeof__
+         Alignment.__str__
          Alignment.__subclasshook__
          Alignment._validate_character_set
          Alignment._validate_lengths
@@ -31,11 +34,13 @@ skbio.core.alignment.Alignment
          Alignment.distribution_stats
          Alignment.from_fasta_records
          Alignment.get_seq
-         Alignment.identifiers
+         Alignment.ids
          Alignment.int_map
+         Alignment.is_empty
          Alignment.is_valid
          Alignment.iter_positions
          Alignment.iteritems
+         Alignment.k_word_frequencies
          Alignment.lower
          Alignment.majority_consensus
          Alignment.omit_gap_positions
@@ -44,7 +49,6 @@ skbio.core.alignment.Alignment
          Alignment.position_entropies
          Alignment.position_frequencies
          Alignment.sequence_count
-         Alignment.sequence_frequencies
          Alignment.sequence_length
          Alignment.sequence_lengths
          Alignment.subalignment

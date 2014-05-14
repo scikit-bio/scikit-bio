@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.maths.stats.distance.ANOSIM.long_method_name
-==================================================
-
-.. currentmodule:: skbio.maths.stats.distance
-
-.. autoattribute:: ANOSIM.long_method_name

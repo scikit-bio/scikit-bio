@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.util.trie.CompressedTrie.__reduce__
+=========================================
+
+.. currentmodule:: skbio.util.trie
+
+.. automethod:: CompressedTrie.__reduce__

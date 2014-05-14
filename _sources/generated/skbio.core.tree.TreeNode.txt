@@ -35,9 +35,11 @@ skbio.core.tree.TreeNode
          TreeNode.append
          TreeNode.ascii_art
          TreeNode.assign_ids
+         TreeNode.compare_rfd
          TreeNode.compare_subsets
          TreeNode.compare_tip_distances
          TreeNode.copy
+         TreeNode.count
          TreeNode.create_node_cache
          TreeNode.deepcopy
          TreeNode.distance
@@ -45,6 +47,7 @@ skbio.core.tree.TreeNode
          TreeNode.find
          TreeNode.find_by_func
          TreeNode.find_by_id
+         TreeNode.from_file
          TreeNode.from_newick
          TreeNode.get_max_distance
          TreeNode.has_children
@@ -67,6 +70,7 @@ skbio.core.tree.TreeNode
          TreeNode.root
          TreeNode.root_at
          TreeNode.root_at_midpoint
+         TreeNode.shear
          TreeNode.siblings
          TreeNode.subset
          TreeNode.subsets

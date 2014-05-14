@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.core.distance.SymmetricDistanceMatrix.redundant_form
-==========================================================
-
-.. currentmodule:: skbio.core.distance
-
-.. automethod:: SymmetricDistanceMatrix.redundant_form

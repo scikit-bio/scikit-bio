@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.core.distance.SymmetricDistanceMatrix.ids
-===============================================
-
-.. currentmodule:: skbio.core.distance
-
-.. autoattribute:: SymmetricDistanceMatrix.ids

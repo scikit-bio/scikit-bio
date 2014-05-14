@@ -24,15 +24,16 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/copybutton.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="top" title="scikit-bio 0.0.0-dev documentation" href="../index.html" />
-    <link rel="up" title="Distance matrices (skbio.core.distance)" href="../core.distance.html" />
+    <link rel="up" title="Dissimilarity and distance matrices (skbio.core.distance)" href="../core.distance.html" />
     <link rel="next" title="Exceptions (skbio.core.exception)" href="../core.exception.html" />
-    <link rel="prev" title="skbio.core.distance.SymmetricDistanceMatrix.transpose" href="skbio.core.distance.SymmetricDistanceMatrix.transpose.html" />
+    <link rel="prev" title="skbio.core.distance.DistanceMatrix.transpose" href="skbio.core.distance.DistanceMatrix.transpose.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
@@ -86,17 +87,26 @@
       aria-labelledby="dLabelGlobalToc"><ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../core.alignment.html">Sequence collections and alignments (<tt class="docutils literal"><span class="pre">skbio.core.alignment</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../core.sequence.html">Biological sequences (<tt class="docutils literal"><span class="pre">skbio.core.sequence</span></tt>)</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../core.distance.html">Distance matrices (<tt class="docutils literal"><span class="pre">skbio.core.distance</span></tt>)</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../core.distance.html">Dissimilarity and distance matrices (<tt class="docutils literal"><span class="pre">skbio.core.distance</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../core.exception.html">Exceptions (<tt class="docutils literal"><span class="pre">skbio.core.exception</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core.genetic_code.html">Genetic Code (<tt class="docutils literal"><span class="pre">skbio.core.genetic_code</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../core.tree.html">Tree representations (<tt class="docutils literal"><span class="pre">skbio.core.tree</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core.workflow.html">Constructing workflows (<tt class="docutils literal"><span class="pre">skbio.core.workflow</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../draw.distributions.html">Distribution visualizations (<tt class="docutils literal"><span class="pre">skbio.draw.distributions</span></tt>)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../maths.stats.distance.html">Distance-based statistics (<tt class="docutils literal"><span class="pre">skbio.maths.stats.distance</span></tt>)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../maths.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.maths.stats.spatial</span></tt>)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../maths.stats.ordination.html">Ordination methods (<tt class="docutils literal"><span class="pre">skbio.maths.stats.ordination</span></tt>)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../maths.subsample.html">Subsampling (<tt class="docutils literal"><span class="pre">skbio.maths.subsample</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../format.sequences.html">Format biological sequences (<tt class="docutils literal"><span class="pre">skbio.format.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.diversity.alpha.html">Alpha diversity measures (<tt class="docutils literal"><span class="pre">skbio.math.diversity.alpha</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.stats.distance.html">Distance-based statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.distance</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.spatial</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.stats.ordination.html">Ordination methods (<tt class="docutils literal"><span class="pre">skbio.math.stats.ordination</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.subsample.html">Subsampling (<tt class="docutils literal"><span class="pre">skbio.math.subsample</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../parse.sequences.html">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.io.html">I/O utils (<tt class="docutils literal"><span class="pre">skbio.util.io</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../util.misc.html">Miscellaneous Utilities (<tt class="docutils literal"><span class="pre">skbio.util.misc</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.testing.html">Testing utilities (<tt class="docutils literal"><span class="pre">skbio.util.testing</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../util.trie.html">Prefix tree (Trie) (<tt class="docutils literal"><span class="pre">skbio.util.trie</span></tt>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/py3.html">Supporting Python 2 and Python 3</a></li>
 </ul>
 </ul>
 </li>
@@ -144,7 +154,7 @@
 <h1>skbio.core.distance.randdm<a class="headerlink" href="#skbio-core-distance-randdm" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="skbio.core.distance.randdm">
-<tt class="descclassname">skbio.core.distance.</tt><tt class="descname">randdm</tt><big>(</big><em>num_objects</em>, <em>ids=None</em>, <em>constructor=None</em>, <em>random_fn=None</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/master/skbio/core/distance.py#L732"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.core.distance.randdm" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">skbio.core.distance.</tt><tt class="descname">randdm</tt><big>(</big><em>num_objects</em>, <em>ids=None</em>, <em>constructor=None</em>, <em>random_fn=None</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/master/skbio/core/distance.py#L792"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.core.distance.randdm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a distance matrix populated with random distances.</p>
 <p>Using the default <cite>random_fn</cite>, distances are randomly drawn from a uniform
 distribution over <tt class="docutils literal"><span class="pre">[0,</span> <span class="pre">1)</span></tt>.</p>
@@ -168,7 +178,7 @@ integers cast as strings (numbering starts at 1). For example,
 </div></blockquote>
 <p><strong>constructor</strong> : type, optional</p>
 <blockquote>
-<div><p><cite>DistanceMatrix</cite> or subclass constructor to use when creating the
+<div><p><cite>DissimilarityMatrix</cite> or subclass constructor to use when creating the
 random distance matrix. The returned distance matrix will be of this
 type. If <tt class="docutils literal"><span class="pre">None</span></tt> (the default), a <cite>DistanceMatrix</cite> instance will be
 returned.</p>
@@ -182,9 +192,9 @@ If <tt class="docutils literal"><span class="pre">None</span></tt> (the default)
 </div></blockquote>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">DistanceMatrix</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">DissimilarityMatrix</p>
 <blockquote class="last">
-<div><p><cite>DistanceMatrix</cite> (or subclass) instance of random distances. Type
+<div><p><cite>DissimilarityMatrix</cite> (or subclass) instance of random distances. Type
 depends on <cite>constructor</cite>.</p>
 </div></blockquote>
 </td>
@@ -204,6 +214,7 @@ depends on <cite>constructor</cite>.</p>
       
   </div>
 </div>
+  
 <footer class="footer">
   <div class="container">
     <p class="pull-right">
@@ -216,5 +227,15 @@ depends on <cite>constructor</cite>.</p>
     </p>
   </div>
 </footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
   </body>
 </html>

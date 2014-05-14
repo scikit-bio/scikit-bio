@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.maths.stats.ordination.RDA.__subclasshook__
-=================================================
-
-.. currentmodule:: skbio.maths.stats.ordination
-
-.. automethod:: RDA.__subclasshook__

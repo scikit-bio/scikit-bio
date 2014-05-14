@@ -50,7 +50,11 @@ skbio.core.sequence.NucleotideSequence
          NucleotideSequence.iupac_degeneracies
          NucleotideSequence.iupac_degenerate_characters
          NucleotideSequence.iupac_standard_characters
+         NucleotideSequence.k_word_counts
+         NucleotideSequence.k_word_frequencies
+         NucleotideSequence.k_words
          NucleotideSequence.lower
+         NucleotideSequence.nondegenerates
          NucleotideSequence.rc
          NucleotideSequence.reverse_complement
          NucleotideSequence.to_fasta
@@ -66,5 +70,5 @@ skbio.core.sequence.NucleotideSequence
          :toctree:
       
          NucleotideSequence.description
-         NucleotideSequence.identifier
+         NucleotideSequence.id
 

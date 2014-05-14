@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.core.sequence.BiologicalSequence.identifier
-=================================================
-
-.. currentmodule:: skbio.core.sequence
-
-.. autoattribute:: BiologicalSequence.identifier

@@ -24,14 +24,15 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/copybutton.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
     <link rel="top" title="scikit-bio 0.0.0-dev documentation" href="index.html" />
-    <link rel="next" title="skbio.parse.sequences.parse_fasta" href="generated/skbio.parse.sequences.parse_fasta.html" />
-    <link rel="prev" title="skbio.maths.subsample.subsample" href="generated/skbio.maths.subsample.subsample.html" />
+    <link rel="next" title="skbio.parse.sequences.parse_clustal" href="generated/skbio.parse.sequences.parse_clustal.html" />
+    <link rel="prev" title="skbio.math.subsample.subsample" href="generated/skbio.math.subsample.subsample.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
@@ -85,17 +86,26 @@
       aria-labelledby="dLabelGlobalToc"><ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="core.alignment.html">Sequence collections and alignments (<tt class="docutils literal"><span class="pre">skbio.core.alignment</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="core.sequence.html">Biological sequences (<tt class="docutils literal"><span class="pre">skbio.core.sequence</span></tt>)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="core.distance.html">Distance matrices (<tt class="docutils literal"><span class="pre">skbio.core.distance</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.distance.html">Dissimilarity and distance matrices (<tt class="docutils literal"><span class="pre">skbio.core.distance</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="core.exception.html">Exceptions (<tt class="docutils literal"><span class="pre">skbio.core.exception</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.genetic_code.html">Genetic Code (<tt class="docutils literal"><span class="pre">skbio.core.genetic_code</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="core.tree.html">Tree representations (<tt class="docutils literal"><span class="pre">skbio.core.tree</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.workflow.html">Constructing workflows (<tt class="docutils literal"><span class="pre">skbio.core.workflow</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="draw.distributions.html">Distribution visualizations (<tt class="docutils literal"><span class="pre">skbio.draw.distributions</span></tt>)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="maths.stats.distance.html">Distance-based statistics (<tt class="docutils literal"><span class="pre">skbio.maths.stats.distance</span></tt>)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="maths.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.maths.stats.spatial</span></tt>)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="maths.stats.ordination.html">Ordination methods (<tt class="docutils literal"><span class="pre">skbio.maths.stats.ordination</span></tt>)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="maths.subsample.html">Subsampling (<tt class="docutils literal"><span class="pre">skbio.maths.subsample</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="format.sequences.html">Format biological sequences (<tt class="docutils literal"><span class="pre">skbio.format.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.diversity.alpha.html">Alpha diversity measures (<tt class="docutils literal"><span class="pre">skbio.math.diversity.alpha</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.stats.distance.html">Distance-based statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.distance</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.spatial</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.stats.ordination.html">Ordination methods (<tt class="docutils literal"><span class="pre">skbio.math.stats.ordination</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.subsample.html">Subsampling (<tt class="docutils literal"><span class="pre">skbio.math.subsample</span></tt>)</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="util.io.html">I/O utils (<tt class="docutils literal"><span class="pre">skbio.util.io</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="util.misc.html">Miscellaneous Utilities (<tt class="docutils literal"><span class="pre">skbio.util.misc</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="util.testing.html">Testing utilities (<tt class="docutils literal"><span class="pre">skbio.util.testing</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="util.trie.html">Prefix tree (Trie) (<tt class="docutils literal"><span class="pre">skbio.util.trie</span></tt>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="development/py3.html">Supporting Python 2 and Python 3</a></li>
 </ul>
 </ul>
 </li>
@@ -144,7 +154,8 @@
       
   <span class="target" id="module-skbio.parse.sequences"></span><div class="section" id="parse-biological-sequences-skbio-parse-sequences">
 <h1>Parse biological sequences (<a class="reference internal" href="#module-skbio.parse.sequences" title="skbio.parse.sequences"><tt class="xref py py-mod docutils literal"><span class="pre">skbio.parse.sequences</span></tt></a>)<a class="headerlink" href="#parse-biological-sequences-skbio-parse-sequences" title="Permalink to this headline">¶</a></h1>
-<p>This module provides functions for parsing sequence files.</p>
+<p>This module provides functions for parsing sequence files in a variety of
+different formats, the available parsers are listed below.</p>
 <div class="section" id="functions">
 <h2>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h2>
 <table border="1" class="longtable docutils">
@@ -153,11 +164,17 @@
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.parse.sequences.parse_fasta.html#skbio.parse.sequences.parse_fasta" title="skbio.parse.sequences.parse_fasta"><tt class="xref py py-obj docutils literal"><span class="pre">parse_fasta</span></tt></a>(infile[,&nbsp;strict,&nbsp;label_to_name,&nbsp;...])</td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.parse.sequences.parse_clustal.html#skbio.parse.sequences.parse_clustal" title="skbio.parse.sequences.parse_clustal"><tt class="xref py py-obj docutils literal"><span class="pre">parse_clustal</span></tt></a>(record[,&nbsp;strict])</td>
+<td>yields labels and sequences</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.parse.sequences.parse_fasta.html#skbio.parse.sequences.parse_fasta" title="skbio.parse.sequences.parse_fasta"><tt class="xref py py-obj docutils literal"><span class="pre">parse_fasta</span></tt></a>(infile[,&nbsp;strict,&nbsp;label_to_name,&nbsp;...])</td>
 <td>yields label and seq from a fasta file.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="generated/skbio.parse.sequences.parse_fastq.html#skbio.parse.sequences.parse_fastq" title="skbio.parse.sequences.parse_fastq"><tt class="xref py py-obj docutils literal"><span class="pre">parse_fastq</span></tt></a>(data[,&nbsp;strict])</td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.parse.sequences.parse_fastq.html#skbio.parse.sequences.parse_fastq" title="skbio.parse.sequences.parse_fastq"><tt class="xref py py-obj docutils literal"><span class="pre">parse_fastq</span></tt></a>(data[,&nbsp;strict,&nbsp;phred_offset])</td>
 <td>yields label, seq, and qual from a fastq file.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.parse.sequences.parse_qual.html#skbio.parse.sequences.parse_qual" title="skbio.parse.sequences.parse_qual"><tt class="xref py py-obj docutils literal"><span class="pre">parse_qual</span></tt></a>(infile[,&nbsp;full_header])</td>
+<td>yields label and qual from a qual file.</td>
 </tr>
 </tbody>
 </table>
@@ -169,6 +186,7 @@
       
   </div>
 </div>
+  
 <footer class="footer">
   <div class="container">
     <p class="pull-right">
@@ -181,5 +199,15 @@
     </p>
   </div>
 </footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
   </body>
 </html>

@@ -11,9 +11,15 @@ skbio.util.trie.CompressedTrie
       .. autosummary::
          :toctree:
       
+         CompressedTrie.__format__
          CompressedTrie.__init__
          CompressedTrie.__len__
+         CompressedTrie.__new__
          CompressedTrie.__nonzero__
+         CompressedTrie.__reduce__
+         CompressedTrie.__reduce_ex__
+         CompressedTrie.__sizeof__
+         CompressedTrie.__subclasshook__
          CompressedTrie.find
          CompressedTrie.insert
 

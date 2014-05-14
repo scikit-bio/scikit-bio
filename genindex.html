@@ -25,6 +25,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/copybutton.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
@@ -38,21 +39,6 @@
 
   </head>
   <body>
-  
-  <a href="https://github.com/biocore/scikit-bio"
-     class="visible-desktop hidden-xs"><img
-    id="gh-banner"
-    style="position: absolute; top: 50px; right: 0; border: 0;"
-    src="https://s3.amazonaws.com/github/ribbons/forkme_right_white_ffffff.png"
-    alt="Fork me on GitHub"></a>
-  <script>
-    // Adjust banner height.
-    $(function () {
-      var navHeight = $(".navbar .container").css("height");
-      $("#gh-banner").css("top", navHeight);
-    });
-  </script>
-
 
   <div id="navbar" class="navbar navbar-default navbar-fixed-top">
     <div class="container">
@@ -84,17 +70,26 @@
       aria-labelledby="dLabelGlobalToc"><ul>
 <li class="toctree-l1"><a class="reference internal" href="core.alignment.html">Sequence collections and alignments (<tt class="docutils literal"><span class="pre">skbio.core.alignment</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="core.sequence.html">Biological sequences (<tt class="docutils literal"><span class="pre">skbio.core.sequence</span></tt>)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="core.distance.html">Distance matrices (<tt class="docutils literal"><span class="pre">skbio.core.distance</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.distance.html">Dissimilarity and distance matrices (<tt class="docutils literal"><span class="pre">skbio.core.distance</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="core.exception.html">Exceptions (<tt class="docutils literal"><span class="pre">skbio.core.exception</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.genetic_code.html">Genetic Code (<tt class="docutils literal"><span class="pre">skbio.core.genetic_code</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="core.tree.html">Tree representations (<tt class="docutils literal"><span class="pre">skbio.core.tree</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.workflow.html">Constructing workflows (<tt class="docutils literal"><span class="pre">skbio.core.workflow</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="draw.distributions.html">Distribution visualizations (<tt class="docutils literal"><span class="pre">skbio.draw.distributions</span></tt>)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="maths.stats.distance.html">Distance-based statistics (<tt class="docutils literal"><span class="pre">skbio.maths.stats.distance</span></tt>)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="maths.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.maths.stats.spatial</span></tt>)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="maths.stats.ordination.html">Ordination methods (<tt class="docutils literal"><span class="pre">skbio.maths.stats.ordination</span></tt>)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="maths.subsample.html">Subsampling (<tt class="docutils literal"><span class="pre">skbio.maths.subsample</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="format.sequences.html">Format biological sequences (<tt class="docutils literal"><span class="pre">skbio.format.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.diversity.alpha.html">Alpha diversity measures (<tt class="docutils literal"><span class="pre">skbio.math.diversity.alpha</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.stats.distance.html">Distance-based statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.distance</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.spatial</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.stats.ordination.html">Ordination methods (<tt class="docutils literal"><span class="pre">skbio.math.stats.ordination</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.subsample.html">Subsampling (<tt class="docutils literal"><span class="pre">skbio.math.subsample</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="parse.sequences.html">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="util.io.html">I/O utils (<tt class="docutils literal"><span class="pre">skbio.util.io</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="util.misc.html">Miscellaneous Utilities (<tt class="docutils literal"><span class="pre">skbio.util.misc</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="util.testing.html">Testing utilities (<tt class="docutils literal"><span class="pre">skbio.util.testing</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="util.trie.html">Prefix tree (Trie) (<tt class="docutils literal"><span class="pre">skbio.util.trie</span></tt>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="development/py3.html">Supporting Python 2 and Python 3</a></li>
 </ul>
 </ul>
 </li>
@@ -149,6 +144,7 @@
  | <a href="#G"><strong>G</strong></a>
  | <a href="#H"><strong>H</strong></a>
  | <a href="#I"><strong>I</strong></a>
+ | <a href="#K"><strong>K</strong></a>
  | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
  | <a href="#N"><strong>N</strong></a>
@@ -158,32 +154,57 @@
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
  | <a href="#U"><strong>U</strong></a>
+ | <a href="#W"><strong>W</strong></a>
  
 </div>
 <h2 id="_">_</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="generated/skbio.maths.stats.distance.ANOSIM.__call__.html#skbio.maths.stats.distance.ANOSIM.__call__">__call__() (skbio.maths.stats.distance.ANOSIM method)</a>
+  <dt><a href="generated/skbio.core.workflow.method.__call__.html#skbio.core.workflow.method.__call__">__call__() (skbio.core.workflow.method method)</a>
   </dt>
 
       <dd><dl>
         
-  <dt><a href="generated/skbio.maths.stats.distance.PERMANOVA.__call__.html#skbio.maths.stats.distance.PERMANOVA.__call__">(skbio.maths.stats.distance.PERMANOVA method)</a>
+  <dt><a href="generated/skbio.core.workflow.Workflow.__call__.html#skbio.core.workflow.Workflow.__call__">(skbio.core.workflow.Workflow method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.core.workflow.requires.__call__.html#skbio.core.workflow.requires.__call__">(skbio.core.workflow.requires method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.math.stats.distance.ANOSIM.__call__.html#skbio.math.stats.distance.ANOSIM.__call__">(skbio.math.stats.distance.ANOSIM method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.math.stats.distance.PERMANOVA.__call__.html#skbio.math.stats.distance.PERMANOVA.__call__">(skbio.math.stats.distance.PERMANOVA method)</a>
   </dt>
 
       </dl></dd>
       
-  <dt><a href="generated/skbio.core.sequence.BiologicalSequence.__contains__.html#skbio.core.sequence.BiologicalSequence.__contains__">__contains__() (skbio.core.sequence.BiologicalSequence method)</a>
+  <dt><a href="generated/skbio.core.alignment.Alignment.__contains__.html#skbio.core.alignment.Alignment.__contains__">__contains__() (skbio.core.alignment.Alignment method)</a>
   </dt>
 
       <dd><dl>
+        
+  <dt><a href="generated/skbio.core.alignment.SequenceCollection.__contains__.html#skbio.core.alignment.SequenceCollection.__contains__">(skbio.core.alignment.SequenceCollection method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.core.sequence.BiologicalSequence.__contains__.html#skbio.core.sequence.BiologicalSequence.__contains__">(skbio.core.sequence.BiologicalSequence method)</a>
+  </dt>
+
         
   <dt><a href="generated/skbio.core.sequence.DNASequence.__contains__.html#skbio.core.sequence.DNASequence.__contains__">(skbio.core.sequence.DNASequence method)</a>
   </dt>
 
         
   <dt><a href="generated/skbio.core.sequence.NucleotideSequence.__contains__.html#skbio.core.sequence.NucleotideSequence.__contains__">(skbio.core.sequence.NucleotideSequence method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.__contains__.html#skbio.core.sequence.ProteinSequence.__contains__">(skbio.core.sequence.ProteinSequence method)</a>
   </dt>
 
         
@@ -209,11 +230,15 @@
   </dt>
 
         
+  <dt><a href="generated/skbio.core.distance.DissimilarityMatrix.__eq__.html#skbio.core.distance.DissimilarityMatrix.__eq__">(skbio.core.distance.DissimilarityMatrix method)</a>
+  </dt>
+
+        
   <dt><a href="generated/skbio.core.distance.DistanceMatrix.__eq__.html#skbio.core.distance.DistanceMatrix.__eq__">(skbio.core.distance.DistanceMatrix method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.core.distance.SymmetricDistanceMatrix.__eq__.html#skbio.core.distance.SymmetricDistanceMatrix.__eq__">(skbio.core.distance.SymmetricDistanceMatrix method)</a>
+  <dt><a href="generated/skbio.core.genetic_code.GeneticCode.__eq__.html#skbio.core.genetic_code.GeneticCode.__eq__">(skbio.core.genetic_code.GeneticCode method)</a>
   </dt>
 
         
@@ -226,6 +251,10 @@
 
         
   <dt><a href="generated/skbio.core.sequence.NucleotideSequence.__eq__.html#skbio.core.sequence.NucleotideSequence.__eq__">(skbio.core.sequence.NucleotideSequence method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.__eq__.html#skbio.core.sequence.ProteinSequence.__eq__">(skbio.core.sequence.ProteinSequence method)</a>
   </dt>
 
         
@@ -243,11 +272,15 @@
   </dt>
 
         
+  <dt><a href="generated/skbio.core.distance.DissimilarityMatrix.__format__.html#skbio.core.distance.DissimilarityMatrix.__format__">(skbio.core.distance.DissimilarityMatrix method)</a>
+  </dt>
+
+        
   <dt><a href="generated/skbio.core.distance.DistanceMatrix.__format__.html#skbio.core.distance.DistanceMatrix.__format__">(skbio.core.distance.DistanceMatrix method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.core.distance.SymmetricDistanceMatrix.__format__.html#skbio.core.distance.SymmetricDistanceMatrix.__format__">(skbio.core.distance.SymmetricDistanceMatrix method)</a>
+  <dt><a href="generated/skbio.core.genetic_code.GeneticCode.__format__.html#skbio.core.genetic_code.GeneticCode.__format__">(skbio.core.genetic_code.GeneticCode method)</a>
   </dt>
 
         
@@ -263,6 +296,10 @@
   </dt>
 
         
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.__format__.html#skbio.core.sequence.ProteinSequence.__format__">(skbio.core.sequence.ProteinSequence method)</a>
+  </dt>
+
+        
   <dt><a href="generated/skbio.core.sequence.RNASequence.__format__.html#skbio.core.sequence.RNASequence.__format__">(skbio.core.sequence.RNASequence method)</a>
   </dt>
 
@@ -271,31 +308,51 @@
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.distance.ANOSIM.__format__.html#skbio.maths.stats.distance.ANOSIM.__format__">(skbio.maths.stats.distance.ANOSIM method)</a>
+  <dt><a href="generated/skbio.core.workflow.Workflow.__format__.html#skbio.core.workflow.Workflow.__format__">(skbio.core.workflow.Workflow method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.distance.CategoricalStatsResults.__format__.html#skbio.maths.stats.distance.CategoricalStatsResults.__format__">(skbio.maths.stats.distance.CategoricalStatsResults method)</a>
+  <dt><a href="generated/skbio.core.workflow.method.__format__.html#skbio.core.workflow.method.__format__">(skbio.core.workflow.method method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.distance.PERMANOVA.__format__.html#skbio.maths.stats.distance.PERMANOVA.__format__">(skbio.maths.stats.distance.PERMANOVA method)</a>
+  <dt><a href="generated/skbio.core.workflow.requires.__format__.html#skbio.core.workflow.requires.__format__">(skbio.core.workflow.requires method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.ordination.CA.__format__.html#skbio.maths.stats.ordination.CA.__format__">(skbio.maths.stats.ordination.CA method)</a>
+  <dt><a href="generated/skbio.math.stats.distance.ANOSIM.__format__.html#skbio.math.stats.distance.ANOSIM.__format__">(skbio.math.stats.distance.ANOSIM method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.ordination.CCA.__format__.html#skbio.maths.stats.ordination.CCA.__format__">(skbio.maths.stats.ordination.CCA method)</a>
+  <dt><a href="generated/skbio.math.stats.distance.CategoricalStatsResults.__format__.html#skbio.math.stats.distance.CategoricalStatsResults.__format__">(skbio.math.stats.distance.CategoricalStatsResults method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.ordination.PCoA.__format__.html#skbio.maths.stats.ordination.PCoA.__format__">(skbio.maths.stats.ordination.PCoA method)</a>
+  <dt><a href="generated/skbio.math.stats.distance.PERMANOVA.__format__.html#skbio.math.stats.distance.PERMANOVA.__format__">(skbio.math.stats.distance.PERMANOVA method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.ordination.RDA.__format__.html#skbio.maths.stats.ordination.RDA.__format__">(skbio.maths.stats.ordination.RDA method)</a>
+  <dt><a href="generated/skbio.math.stats.ordination.CA.__format__.html#skbio.math.stats.ordination.CA.__format__">(skbio.math.stats.ordination.CA method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.math.stats.ordination.CCA.__format__.html#skbio.math.stats.ordination.CCA.__format__">(skbio.math.stats.ordination.CCA method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.math.stats.ordination.OrdinationResults.__format__.html#skbio.math.stats.ordination.OrdinationResults.__format__">(skbio.math.stats.ordination.OrdinationResults method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.math.stats.ordination.PCoA.__format__.html#skbio.math.stats.ordination.PCoA.__format__">(skbio.math.stats.ordination.PCoA method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.math.stats.ordination.RDA.__format__.html#skbio.math.stats.ordination.RDA.__format__">(skbio.math.stats.ordination.RDA method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.util.trie.CompressedTrie.__format__.html#skbio.util.trie.CompressedTrie.__format__">(skbio.util.trie.CompressedTrie method)</a>
   </dt>
 
       </dl></dd>
@@ -309,11 +366,15 @@
   </dt>
 
         
+  <dt><a href="generated/skbio.core.distance.DissimilarityMatrix.__getitem__.html#skbio.core.distance.DissimilarityMatrix.__getitem__">(skbio.core.distance.DissimilarityMatrix method)</a>
+  </dt>
+
+        
   <dt><a href="generated/skbio.core.distance.DistanceMatrix.__getitem__.html#skbio.core.distance.DistanceMatrix.__getitem__">(skbio.core.distance.DistanceMatrix method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.core.distance.SymmetricDistanceMatrix.__getitem__.html#skbio.core.distance.SymmetricDistanceMatrix.__getitem__">(skbio.core.distance.SymmetricDistanceMatrix method)</a>
+  <dt><a href="generated/skbio.core.genetic_code.GeneticCode.__getitem__.html#skbio.core.genetic_code.GeneticCode.__getitem__">(skbio.core.genetic_code.GeneticCode method)</a>
   </dt>
 
         
@@ -329,6 +390,10 @@
   </dt>
 
         
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.__getitem__.html#skbio.core.sequence.ProteinSequence.__getitem__">(skbio.core.sequence.ProteinSequence method)</a>
+  </dt>
+
+        
   <dt><a href="generated/skbio.core.sequence.RNASequence.__getitem__.html#skbio.core.sequence.RNASequence.__getitem__">(skbio.core.sequence.RNASequence method)</a>
   </dt>
 
@@ -337,6 +402,10 @@
   </dt>
 
       </dl></dd>
+      
+  <dt><a href="generated/skbio.math.stats.ordination.OrdinationResults.__getnewargs__.html#skbio.math.stats.ordination.OrdinationResults.__getnewargs__">__getnewargs__() (skbio.math.stats.ordination.OrdinationResults method)</a>
+  </dt>
+
       
   <dt><a href="generated/skbio.core.sequence.BiologicalSequence.__hash__.html#skbio.core.sequence.BiologicalSequence.__hash__">__hash__() (skbio.core.sequence.BiologicalSequence method)</a>
   </dt>
@@ -348,6 +417,10 @@
 
         
   <dt><a href="generated/skbio.core.sequence.NucleotideSequence.__hash__.html#skbio.core.sequence.NucleotideSequence.__hash__">(skbio.core.sequence.NucleotideSequence method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.__hash__.html#skbio.core.sequence.ProteinSequence.__hash__">(skbio.core.sequence.ProteinSequence method)</a>
   </dt>
 
         
@@ -365,11 +438,15 @@
   </dt>
 
         
+  <dt><a href="generated/skbio.core.distance.DissimilarityMatrix.__init__.html#skbio.core.distance.DissimilarityMatrix.__init__">(skbio.core.distance.DissimilarityMatrix method)</a>
+  </dt>
+
+        
   <dt><a href="generated/skbio.core.distance.DistanceMatrix.__init__.html#skbio.core.distance.DistanceMatrix.__init__">(skbio.core.distance.DistanceMatrix method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.core.distance.SymmetricDistanceMatrix.__init__.html#skbio.core.distance.SymmetricDistanceMatrix.__init__">(skbio.core.distance.SymmetricDistanceMatrix method)</a>
+  <dt><a href="generated/skbio.core.genetic_code.GeneticCode.__init__.html#skbio.core.genetic_code.GeneticCode.__init__">(skbio.core.genetic_code.GeneticCode method)</a>
   </dt>
 
         
@@ -385,6 +462,10 @@
   </dt>
 
         
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.__init__.html#skbio.core.sequence.ProteinSequence.__init__">(skbio.core.sequence.ProteinSequence method)</a>
+  </dt>
+
+        
   <dt><a href="generated/skbio.core.sequence.RNASequence.__init__.html#skbio.core.sequence.RNASequence.__init__">(skbio.core.sequence.RNASequence method)</a>
   </dt>
 
@@ -393,31 +474,43 @@
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.distance.ANOSIM.__init__.html#skbio.maths.stats.distance.ANOSIM.__init__">(skbio.maths.stats.distance.ANOSIM method)</a>
+  <dt><a href="generated/skbio.core.workflow.Workflow.__init__.html#skbio.core.workflow.Workflow.__init__">(skbio.core.workflow.Workflow method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.distance.CategoricalStatsResults.__init__.html#skbio.maths.stats.distance.CategoricalStatsResults.__init__">(skbio.maths.stats.distance.CategoricalStatsResults method)</a>
+  <dt><a href="generated/skbio.core.workflow.method.__init__.html#skbio.core.workflow.method.__init__">(skbio.core.workflow.method method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.distance.PERMANOVA.__init__.html#skbio.maths.stats.distance.PERMANOVA.__init__">(skbio.maths.stats.distance.PERMANOVA method)</a>
+  <dt><a href="generated/skbio.core.workflow.requires.__init__.html#skbio.core.workflow.requires.__init__">(skbio.core.workflow.requires method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.ordination.CA.__init__.html#skbio.maths.stats.ordination.CA.__init__">(skbio.maths.stats.ordination.CA method)</a>
+  <dt><a href="generated/skbio.math.stats.distance.ANOSIM.__init__.html#skbio.math.stats.distance.ANOSIM.__init__">(skbio.math.stats.distance.ANOSIM method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.ordination.CCA.__init__.html#skbio.maths.stats.ordination.CCA.__init__">(skbio.maths.stats.ordination.CCA method)</a>
+  <dt><a href="generated/skbio.math.stats.distance.CategoricalStatsResults.__init__.html#skbio.math.stats.distance.CategoricalStatsResults.__init__">(skbio.math.stats.distance.CategoricalStatsResults method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.ordination.PCoA.__init__.html#skbio.maths.stats.ordination.PCoA.__init__">(skbio.maths.stats.ordination.PCoA method)</a>
+  <dt><a href="generated/skbio.math.stats.distance.PERMANOVA.__init__.html#skbio.math.stats.distance.PERMANOVA.__init__">(skbio.math.stats.distance.PERMANOVA method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.ordination.RDA.__init__.html#skbio.maths.stats.ordination.RDA.__init__">(skbio.maths.stats.ordination.RDA method)</a>
+  <dt><a href="generated/skbio.math.stats.ordination.CA.__init__.html#skbio.math.stats.ordination.CA.__init__">(skbio.math.stats.ordination.CA method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.math.stats.ordination.CCA.__init__.html#skbio.math.stats.ordination.CCA.__init__">(skbio.math.stats.ordination.CCA method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.math.stats.ordination.PCoA.__init__.html#skbio.math.stats.ordination.PCoA.__init__">(skbio.math.stats.ordination.PCoA method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.math.stats.ordination.RDA.__init__.html#skbio.math.stats.ordination.RDA.__init__">(skbio.math.stats.ordination.RDA method)</a>
   </dt>
 
         
@@ -444,6 +537,10 @@
 
         
   <dt><a href="generated/skbio.core.sequence.NucleotideSequence.__iter__.html#skbio.core.sequence.NucleotideSequence.__iter__">(skbio.core.sequence.NucleotideSequence method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.__iter__.html#skbio.core.sequence.ProteinSequence.__iter__">(skbio.core.sequence.ProteinSequence method)</a>
   </dt>
 
         
@@ -477,6 +574,10 @@
   </dt>
 
         
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.__len__.html#skbio.core.sequence.ProteinSequence.__len__">(skbio.core.sequence.ProteinSequence method)</a>
+  </dt>
+
+        
   <dt><a href="generated/skbio.core.sequence.RNASequence.__len__.html#skbio.core.sequence.RNASequence.__len__">(skbio.core.sequence.RNASequence method)</a>
   </dt>
 
@@ -499,11 +600,15 @@
   </dt>
 
         
+  <dt><a href="generated/skbio.core.distance.DissimilarityMatrix.__ne__.html#skbio.core.distance.DissimilarityMatrix.__ne__">(skbio.core.distance.DissimilarityMatrix method)</a>
+  </dt>
+
+        
   <dt><a href="generated/skbio.core.distance.DistanceMatrix.__ne__.html#skbio.core.distance.DistanceMatrix.__ne__">(skbio.core.distance.DistanceMatrix method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.core.distance.SymmetricDistanceMatrix.__ne__.html#skbio.core.distance.SymmetricDistanceMatrix.__ne__">(skbio.core.distance.SymmetricDistanceMatrix method)</a>
+  <dt><a href="generated/skbio.core.genetic_code.GeneticCode.__ne__.html#skbio.core.genetic_code.GeneticCode.__ne__">(skbio.core.genetic_code.GeneticCode method)</a>
   </dt>
 
         
@@ -516,6 +621,10 @@
 
         
   <dt><a href="generated/skbio.core.sequence.NucleotideSequence.__ne__.html#skbio.core.sequence.NucleotideSequence.__ne__">(skbio.core.sequence.NucleotideSequence method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.__ne__.html#skbio.core.sequence.ProteinSequence.__ne__">(skbio.core.sequence.ProteinSequence method)</a>
   </dt>
 
         
@@ -533,11 +642,15 @@
   </dt>
 
         
+  <dt><a href="generated/skbio.core.distance.DissimilarityMatrix.__new__.html#skbio.core.distance.DissimilarityMatrix.__new__">(skbio.core.distance.DissimilarityMatrix static method)</a>
+  </dt>
+
+        
   <dt><a href="generated/skbio.core.distance.DistanceMatrix.__new__.html#skbio.core.distance.DistanceMatrix.__new__">(skbio.core.distance.DistanceMatrix static method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.core.distance.SymmetricDistanceMatrix.__new__.html#skbio.core.distance.SymmetricDistanceMatrix.__new__">(skbio.core.distance.SymmetricDistanceMatrix static method)</a>
+  <dt><a href="generated/skbio.core.genetic_code.GeneticCode.__new__.html#skbio.core.genetic_code.GeneticCode.__new__">(skbio.core.genetic_code.GeneticCode static method)</a>
   </dt>
 
         
@@ -553,6 +666,10 @@
   </dt>
 
         
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.__new__.html#skbio.core.sequence.ProteinSequence.__new__">(skbio.core.sequence.ProteinSequence static method)</a>
+  </dt>
+
+        
   <dt><a href="generated/skbio.core.sequence.RNASequence.__new__.html#skbio.core.sequence.RNASequence.__new__">(skbio.core.sequence.RNASequence static method)</a>
   </dt>
 
@@ -561,31 +678,51 @@
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.distance.ANOSIM.__new__.html#skbio.maths.stats.distance.ANOSIM.__new__">(skbio.maths.stats.distance.ANOSIM static method)</a>
+  <dt><a href="generated/skbio.core.workflow.Workflow.__new__.html#skbio.core.workflow.Workflow.__new__">(skbio.core.workflow.Workflow static method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.distance.CategoricalStatsResults.__new__.html#skbio.maths.stats.distance.CategoricalStatsResults.__new__">(skbio.maths.stats.distance.CategoricalStatsResults static method)</a>
+  <dt><a href="generated/skbio.core.workflow.method.__new__.html#skbio.core.workflow.method.__new__">(skbio.core.workflow.method static method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.distance.PERMANOVA.__new__.html#skbio.maths.stats.distance.PERMANOVA.__new__">(skbio.maths.stats.distance.PERMANOVA static method)</a>
+  <dt><a href="generated/skbio.core.workflow.requires.__new__.html#skbio.core.workflow.requires.__new__">(skbio.core.workflow.requires static method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.ordination.CA.__new__.html#skbio.maths.stats.ordination.CA.__new__">(skbio.maths.stats.ordination.CA static method)</a>
+  <dt><a href="generated/skbio.math.stats.distance.ANOSIM.__new__.html#skbio.math.stats.distance.ANOSIM.__new__">(skbio.math.stats.distance.ANOSIM static method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.ordination.CCA.__new__.html#skbio.maths.stats.ordination.CCA.__new__">(skbio.maths.stats.ordination.CCA static method)</a>
+  <dt><a href="generated/skbio.math.stats.distance.CategoricalStatsResults.__new__.html#skbio.math.stats.distance.CategoricalStatsResults.__new__">(skbio.math.stats.distance.CategoricalStatsResults static method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.ordination.PCoA.__new__.html#skbio.maths.stats.ordination.PCoA.__new__">(skbio.maths.stats.ordination.PCoA static method)</a>
+  <dt><a href="generated/skbio.math.stats.distance.PERMANOVA.__new__.html#skbio.math.stats.distance.PERMANOVA.__new__">(skbio.math.stats.distance.PERMANOVA static method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.ordination.RDA.__new__.html#skbio.maths.stats.ordination.RDA.__new__">(skbio.maths.stats.ordination.RDA static method)</a>
+  <dt><a href="generated/skbio.math.stats.ordination.CA.__new__.html#skbio.math.stats.ordination.CA.__new__">(skbio.math.stats.ordination.CA static method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.math.stats.ordination.CCA.__new__.html#skbio.math.stats.ordination.CCA.__new__">(skbio.math.stats.ordination.CCA static method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.math.stats.ordination.OrdinationResults.__new__.html#skbio.math.stats.ordination.OrdinationResults.__new__">(skbio.math.stats.ordination.OrdinationResults static method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.math.stats.ordination.PCoA.__new__.html#skbio.math.stats.ordination.PCoA.__new__">(skbio.math.stats.ordination.PCoA static method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.math.stats.ordination.RDA.__new__.html#skbio.math.stats.ordination.RDA.__new__">(skbio.math.stats.ordination.RDA static method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.util.trie.CompressedTrie.__new__.html#skbio.util.trie.CompressedTrie.__new__">(skbio.util.trie.CompressedTrie static method)</a>
   </dt>
 
       </dl></dd>
@@ -603,11 +740,15 @@
   </dt>
 
         
+  <dt><a href="generated/skbio.core.distance.DissimilarityMatrix.__reduce__.html#skbio.core.distance.DissimilarityMatrix.__reduce__">(skbio.core.distance.DissimilarityMatrix method)</a>
+  </dt>
+
+        
   <dt><a href="generated/skbio.core.distance.DistanceMatrix.__reduce__.html#skbio.core.distance.DistanceMatrix.__reduce__">(skbio.core.distance.DistanceMatrix method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.core.distance.SymmetricDistanceMatrix.__reduce__.html#skbio.core.distance.SymmetricDistanceMatrix.__reduce__">(skbio.core.distance.SymmetricDistanceMatrix method)</a>
+  <dt><a href="generated/skbio.core.genetic_code.GeneticCode.__reduce__.html#skbio.core.genetic_code.GeneticCode.__reduce__">(skbio.core.genetic_code.GeneticCode method)</a>
   </dt>
 
         
@@ -623,6 +764,10 @@
   </dt>
 
         
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.__reduce__.html#skbio.core.sequence.ProteinSequence.__reduce__">(skbio.core.sequence.ProteinSequence method)</a>
+  </dt>
+
+        
   <dt><a href="generated/skbio.core.sequence.RNASequence.__reduce__.html#skbio.core.sequence.RNASequence.__reduce__">(skbio.core.sequence.RNASequence method)</a>
   </dt>
 
@@ -631,31 +776,51 @@
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.distance.ANOSIM.__reduce__.html#skbio.maths.stats.distance.ANOSIM.__reduce__">(skbio.maths.stats.distance.ANOSIM method)</a>
+  <dt><a href="generated/skbio.core.workflow.Workflow.__reduce__.html#skbio.core.workflow.Workflow.__reduce__">(skbio.core.workflow.Workflow method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.distance.CategoricalStatsResults.__reduce__.html#skbio.maths.stats.distance.CategoricalStatsResults.__reduce__">(skbio.maths.stats.distance.CategoricalStatsResults method)</a>
+  <dt><a href="generated/skbio.core.workflow.method.__reduce__.html#skbio.core.workflow.method.__reduce__">(skbio.core.workflow.method method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.distance.PERMANOVA.__reduce__.html#skbio.maths.stats.distance.PERMANOVA.__reduce__">(skbio.maths.stats.distance.PERMANOVA method)</a>
+  <dt><a href="generated/skbio.core.workflow.requires.__reduce__.html#skbio.core.workflow.requires.__reduce__">(skbio.core.workflow.requires method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.ordination.CA.__reduce__.html#skbio.maths.stats.ordination.CA.__reduce__">(skbio.maths.stats.ordination.CA method)</a>
+  <dt><a href="generated/skbio.math.stats.distance.ANOSIM.__reduce__.html#skbio.math.stats.distance.ANOSIM.__reduce__">(skbio.math.stats.distance.ANOSIM method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.ordination.CCA.__reduce__.html#skbio.maths.stats.ordination.CCA.__reduce__">(skbio.maths.stats.ordination.CCA method)</a>
+  <dt><a href="generated/skbio.math.stats.distance.CategoricalStatsResults.__reduce__.html#skbio.math.stats.distance.CategoricalStatsResults.__reduce__">(skbio.math.stats.distance.CategoricalStatsResults method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.ordination.PCoA.__reduce__.html#skbio.maths.stats.ordination.PCoA.__reduce__">(skbio.maths.stats.ordination.PCoA method)</a>
+  <dt><a href="generated/skbio.math.stats.distance.PERMANOVA.__reduce__.html#skbio.math.stats.distance.PERMANOVA.__reduce__">(skbio.math.stats.distance.PERMANOVA method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.ordination.RDA.__reduce__.html#skbio.maths.stats.ordination.RDA.__reduce__">(skbio.maths.stats.ordination.RDA method)</a>
+  <dt><a href="generated/skbio.math.stats.ordination.CA.__reduce__.html#skbio.math.stats.ordination.CA.__reduce__">(skbio.math.stats.ordination.CA method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.math.stats.ordination.CCA.__reduce__.html#skbio.math.stats.ordination.CCA.__reduce__">(skbio.math.stats.ordination.CCA method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.math.stats.ordination.OrdinationResults.__reduce__.html#skbio.math.stats.ordination.OrdinationResults.__reduce__">(skbio.math.stats.ordination.OrdinationResults method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.math.stats.ordination.PCoA.__reduce__.html#skbio.math.stats.ordination.PCoA.__reduce__">(skbio.math.stats.ordination.PCoA method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.math.stats.ordination.RDA.__reduce__.html#skbio.math.stats.ordination.RDA.__reduce__">(skbio.math.stats.ordination.RDA method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.util.trie.CompressedTrie.__reduce__.html#skbio.util.trie.CompressedTrie.__reduce__">(skbio.util.trie.CompressedTrie method)</a>
   </dt>
 
       </dl></dd>
@@ -669,11 +834,15 @@
   </dt>
 
         
+  <dt><a href="generated/skbio.core.distance.DissimilarityMatrix.__reduce_ex__.html#skbio.core.distance.DissimilarityMatrix.__reduce_ex__">(skbio.core.distance.DissimilarityMatrix method)</a>
+  </dt>
+
+        
   <dt><a href="generated/skbio.core.distance.DistanceMatrix.__reduce_ex__.html#skbio.core.distance.DistanceMatrix.__reduce_ex__">(skbio.core.distance.DistanceMatrix method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.core.distance.SymmetricDistanceMatrix.__reduce_ex__.html#skbio.core.distance.SymmetricDistanceMatrix.__reduce_ex__">(skbio.core.distance.SymmetricDistanceMatrix method)</a>
+  <dt><a href="generated/skbio.core.genetic_code.GeneticCode.__reduce_ex__.html#skbio.core.genetic_code.GeneticCode.__reduce_ex__">(skbio.core.genetic_code.GeneticCode method)</a>
   </dt>
 
         
@@ -689,6 +858,10 @@
   </dt>
 
         
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.__reduce_ex__.html#skbio.core.sequence.ProteinSequence.__reduce_ex__">(skbio.core.sequence.ProteinSequence method)</a>
+  </dt>
+
+        
   <dt><a href="generated/skbio.core.sequence.RNASequence.__reduce_ex__.html#skbio.core.sequence.RNASequence.__reduce_ex__">(skbio.core.sequence.RNASequence method)</a>
   </dt>
 
@@ -697,31 +870,51 @@
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.distance.ANOSIM.__reduce_ex__.html#skbio.maths.stats.distance.ANOSIM.__reduce_ex__">(skbio.maths.stats.distance.ANOSIM method)</a>
+  <dt><a href="generated/skbio.core.workflow.Workflow.__reduce_ex__.html#skbio.core.workflow.Workflow.__reduce_ex__">(skbio.core.workflow.Workflow method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.distance.CategoricalStatsResults.__reduce_ex__.html#skbio.maths.stats.distance.CategoricalStatsResults.__reduce_ex__">(skbio.maths.stats.distance.CategoricalStatsResults method)</a>
+  <dt><a href="generated/skbio.core.workflow.method.__reduce_ex__.html#skbio.core.workflow.method.__reduce_ex__">(skbio.core.workflow.method method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.distance.PERMANOVA.__reduce_ex__.html#skbio.maths.stats.distance.PERMANOVA.__reduce_ex__">(skbio.maths.stats.distance.PERMANOVA method)</a>
+  <dt><a href="generated/skbio.core.workflow.requires.__reduce_ex__.html#skbio.core.workflow.requires.__reduce_ex__">(skbio.core.workflow.requires method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.ordination.CA.__reduce_ex__.html#skbio.maths.stats.ordination.CA.__reduce_ex__">(skbio.maths.stats.ordination.CA method)</a>
+  <dt><a href="generated/skbio.math.stats.distance.ANOSIM.__reduce_ex__.html#skbio.math.stats.distance.ANOSIM.__reduce_ex__">(skbio.math.stats.distance.ANOSIM method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.ordination.CCA.__reduce_ex__.html#skbio.maths.stats.ordination.CCA.__reduce_ex__">(skbio.maths.stats.ordination.CCA method)</a>
+  <dt><a href="generated/skbio.math.stats.distance.CategoricalStatsResults.__reduce_ex__.html#skbio.math.stats.distance.CategoricalStatsResults.__reduce_ex__">(skbio.math.stats.distance.CategoricalStatsResults method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.ordination.PCoA.__reduce_ex__.html#skbio.maths.stats.ordination.PCoA.__reduce_ex__">(skbio.maths.stats.ordination.PCoA method)</a>
+  <dt><a href="generated/skbio.math.stats.distance.PERMANOVA.__reduce_ex__.html#skbio.math.stats.distance.PERMANOVA.__reduce_ex__">(skbio.math.stats.distance.PERMANOVA method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.ordination.RDA.__reduce_ex__.html#skbio.maths.stats.ordination.RDA.__reduce_ex__">(skbio.maths.stats.ordination.RDA method)</a>
+  <dt><a href="generated/skbio.math.stats.ordination.CA.__reduce_ex__.html#skbio.math.stats.ordination.CA.__reduce_ex__">(skbio.math.stats.ordination.CA method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.math.stats.ordination.CCA.__reduce_ex__.html#skbio.math.stats.ordination.CCA.__reduce_ex__">(skbio.math.stats.ordination.CCA method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.math.stats.ordination.OrdinationResults.__reduce_ex__.html#skbio.math.stats.ordination.OrdinationResults.__reduce_ex__">(skbio.math.stats.ordination.OrdinationResults method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.math.stats.ordination.PCoA.__reduce_ex__.html#skbio.math.stats.ordination.PCoA.__reduce_ex__">(skbio.math.stats.ordination.PCoA method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.math.stats.ordination.RDA.__reduce_ex__.html#skbio.math.stats.ordination.RDA.__reduce_ex__">(skbio.math.stats.ordination.RDA method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.util.trie.CompressedTrie.__reduce_ex__.html#skbio.util.trie.CompressedTrie.__reduce_ex__">(skbio.util.trie.CompressedTrie method)</a>
   </dt>
 
       </dl></dd>
@@ -732,6 +925,10 @@
       <dd><dl>
         
   <dt><a href="generated/skbio.core.alignment.SequenceCollection.__repr__.html#skbio.core.alignment.SequenceCollection.__repr__">(skbio.core.alignment.SequenceCollection method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.core.genetic_code.GeneticCode.__repr__.html#skbio.core.genetic_code.GeneticCode.__repr__">(skbio.core.genetic_code.GeneticCode method)</a>
   </dt>
 
         
@@ -747,6 +944,10 @@
   </dt>
 
         
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.__repr__.html#skbio.core.sequence.ProteinSequence.__repr__">(skbio.core.sequence.ProteinSequence method)</a>
+  </dt>
+
+        
   <dt><a href="generated/skbio.core.sequence.RNASequence.__repr__.html#skbio.core.sequence.RNASequence.__repr__">(skbio.core.sequence.RNASequence method)</a>
   </dt>
 
@@ -754,18 +955,34 @@
   <dt><a href="generated/skbio.core.tree.TreeNode.__repr__.html#skbio.core.tree.TreeNode.__repr__">(skbio.core.tree.TreeNode method)</a>
   </dt>
 
+        
+  <dt><a href="generated/skbio.math.stats.ordination.OrdinationResults.__repr__.html#skbio.math.stats.ordination.OrdinationResults.__repr__">(skbio.math.stats.ordination.OrdinationResults method)</a>
+  </dt>
+
       </dl></dd>
       
-  <dt><a href="generated/skbio.core.sequence.BiologicalSequence.__reversed__.html#skbio.core.sequence.BiologicalSequence.__reversed__">__reversed__() (skbio.core.sequence.BiologicalSequence method)</a>
+  <dt><a href="generated/skbio.core.alignment.Alignment.__reversed__.html#skbio.core.alignment.Alignment.__reversed__">__reversed__() (skbio.core.alignment.Alignment method)</a>
   </dt>
 
       <dd><dl>
+        
+  <dt><a href="generated/skbio.core.alignment.SequenceCollection.__reversed__.html#skbio.core.alignment.SequenceCollection.__reversed__">(skbio.core.alignment.SequenceCollection method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.core.sequence.BiologicalSequence.__reversed__.html#skbio.core.sequence.BiologicalSequence.__reversed__">(skbio.core.sequence.BiologicalSequence method)</a>
+  </dt>
+
         
   <dt><a href="generated/skbio.core.sequence.DNASequence.__reversed__.html#skbio.core.sequence.DNASequence.__reversed__">(skbio.core.sequence.DNASequence method)</a>
   </dt>
 
         
   <dt><a href="generated/skbio.core.sequence.NucleotideSequence.__reversed__.html#skbio.core.sequence.NucleotideSequence.__reversed__">(skbio.core.sequence.NucleotideSequence method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.__reversed__.html#skbio.core.sequence.ProteinSequence.__reversed__">(skbio.core.sequence.ProteinSequence method)</a>
   </dt>
 
         
@@ -783,11 +1000,15 @@
   </dt>
 
         
+  <dt><a href="generated/skbio.core.distance.DissimilarityMatrix.__sizeof__.html#skbio.core.distance.DissimilarityMatrix.__sizeof__">(skbio.core.distance.DissimilarityMatrix method)</a>
+  </dt>
+
+        
   <dt><a href="generated/skbio.core.distance.DistanceMatrix.__sizeof__.html#skbio.core.distance.DistanceMatrix.__sizeof__">(skbio.core.distance.DistanceMatrix method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.core.distance.SymmetricDistanceMatrix.__sizeof__.html#skbio.core.distance.SymmetricDistanceMatrix.__sizeof__">(skbio.core.distance.SymmetricDistanceMatrix method)</a>
+  <dt><a href="generated/skbio.core.genetic_code.GeneticCode.__sizeof__.html#skbio.core.genetic_code.GeneticCode.__sizeof__">(skbio.core.genetic_code.GeneticCode method)</a>
   </dt>
 
         
@@ -803,6 +1024,10 @@
   </dt>
 
         
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.__sizeof__.html#skbio.core.sequence.ProteinSequence.__sizeof__">(skbio.core.sequence.ProteinSequence method)</a>
+  </dt>
+
+        
   <dt><a href="generated/skbio.core.sequence.RNASequence.__sizeof__.html#skbio.core.sequence.RNASequence.__sizeof__">(skbio.core.sequence.RNASequence method)</a>
   </dt>
 
@@ -811,41 +1036,73 @@
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.distance.ANOSIM.__sizeof__.html#skbio.maths.stats.distance.ANOSIM.__sizeof__">(skbio.maths.stats.distance.ANOSIM method)</a>
+  <dt><a href="generated/skbio.core.workflow.Workflow.__sizeof__.html#skbio.core.workflow.Workflow.__sizeof__">(skbio.core.workflow.Workflow method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.distance.CategoricalStatsResults.__sizeof__.html#skbio.maths.stats.distance.CategoricalStatsResults.__sizeof__">(skbio.maths.stats.distance.CategoricalStatsResults method)</a>
+  <dt><a href="generated/skbio.core.workflow.method.__sizeof__.html#skbio.core.workflow.method.__sizeof__">(skbio.core.workflow.method method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.distance.PERMANOVA.__sizeof__.html#skbio.maths.stats.distance.PERMANOVA.__sizeof__">(skbio.maths.stats.distance.PERMANOVA method)</a>
+  <dt><a href="generated/skbio.core.workflow.requires.__sizeof__.html#skbio.core.workflow.requires.__sizeof__">(skbio.core.workflow.requires method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.ordination.CA.__sizeof__.html#skbio.maths.stats.ordination.CA.__sizeof__">(skbio.maths.stats.ordination.CA method)</a>
+  <dt><a href="generated/skbio.math.stats.distance.ANOSIM.__sizeof__.html#skbio.math.stats.distance.ANOSIM.__sizeof__">(skbio.math.stats.distance.ANOSIM method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.ordination.CCA.__sizeof__.html#skbio.maths.stats.ordination.CCA.__sizeof__">(skbio.maths.stats.ordination.CCA method)</a>
+  <dt><a href="generated/skbio.math.stats.distance.CategoricalStatsResults.__sizeof__.html#skbio.math.stats.distance.CategoricalStatsResults.__sizeof__">(skbio.math.stats.distance.CategoricalStatsResults method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.ordination.PCoA.__sizeof__.html#skbio.maths.stats.ordination.PCoA.__sizeof__">(skbio.maths.stats.ordination.PCoA method)</a>
+  <dt><a href="generated/skbio.math.stats.distance.PERMANOVA.__sizeof__.html#skbio.math.stats.distance.PERMANOVA.__sizeof__">(skbio.math.stats.distance.PERMANOVA method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.ordination.RDA.__sizeof__.html#skbio.maths.stats.ordination.RDA.__sizeof__">(skbio.maths.stats.ordination.RDA method)</a>
+  <dt><a href="generated/skbio.math.stats.ordination.CA.__sizeof__.html#skbio.math.stats.ordination.CA.__sizeof__">(skbio.math.stats.ordination.CA method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.math.stats.ordination.CCA.__sizeof__.html#skbio.math.stats.ordination.CCA.__sizeof__">(skbio.math.stats.ordination.CCA method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.math.stats.ordination.OrdinationResults.__sizeof__.html#skbio.math.stats.ordination.OrdinationResults.__sizeof__">(skbio.math.stats.ordination.OrdinationResults method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.math.stats.ordination.PCoA.__sizeof__.html#skbio.math.stats.ordination.PCoA.__sizeof__">(skbio.math.stats.ordination.PCoA method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.math.stats.ordination.RDA.__sizeof__.html#skbio.math.stats.ordination.RDA.__sizeof__">(skbio.math.stats.ordination.RDA method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.util.trie.CompressedTrie.__sizeof__.html#skbio.util.trie.CompressedTrie.__sizeof__">(skbio.util.trie.CompressedTrie method)</a>
   </dt>
 
       </dl></dd>
       
-  <dt><a href="generated/skbio.core.distance.DistanceMatrix.__str__.html#skbio.core.distance.DistanceMatrix.__str__">__str__() (skbio.core.distance.DistanceMatrix method)</a>
+  <dt><a href="generated/skbio.core.alignment.Alignment.__str__.html#skbio.core.alignment.Alignment.__str__">__str__() (skbio.core.alignment.Alignment method)</a>
   </dt>
 
       <dd><dl>
         
-  <dt><a href="generated/skbio.core.distance.SymmetricDistanceMatrix.__str__.html#skbio.core.distance.SymmetricDistanceMatrix.__str__">(skbio.core.distance.SymmetricDistanceMatrix method)</a>
+  <dt><a href="generated/skbio.core.alignment.SequenceCollection.__str__.html#skbio.core.alignment.SequenceCollection.__str__">(skbio.core.alignment.SequenceCollection method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.core.distance.DissimilarityMatrix.__str__.html#skbio.core.distance.DissimilarityMatrix.__str__">(skbio.core.distance.DissimilarityMatrix method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.core.distance.DistanceMatrix.__str__.html#skbio.core.distance.DistanceMatrix.__str__">(skbio.core.distance.DistanceMatrix method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.core.genetic_code.GeneticCode.__str__.html#skbio.core.genetic_code.GeneticCode.__str__">(skbio.core.genetic_code.GeneticCode method)</a>
   </dt>
 
         
@@ -861,6 +1118,10 @@
   </dt>
 
         
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.__str__.html#skbio.core.sequence.ProteinSequence.__str__">(skbio.core.sequence.ProteinSequence method)</a>
+  </dt>
+
+        
   <dt><a href="generated/skbio.core.sequence.RNASequence.__str__.html#skbio.core.sequence.RNASequence.__str__">(skbio.core.sequence.RNASequence method)</a>
   </dt>
 
@@ -869,7 +1130,7 @@
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.distance.CategoricalStatsResults.__str__.html#skbio.maths.stats.distance.CategoricalStatsResults.__str__">(skbio.maths.stats.distance.CategoricalStatsResults method)</a>
+  <dt><a href="generated/skbio.math.stats.distance.CategoricalStatsResults.__str__.html#skbio.math.stats.distance.CategoricalStatsResults.__str__">(skbio.math.stats.distance.CategoricalStatsResults method)</a>
   </dt>
 
       </dl></dd>
@@ -883,11 +1144,15 @@
   </dt>
 
         
+  <dt><a href="generated/skbio.core.distance.DissimilarityMatrix.__subclasshook__.html#skbio.core.distance.DissimilarityMatrix.__subclasshook__">(skbio.core.distance.DissimilarityMatrix static method)</a>
+  </dt>
+
+        
   <dt><a href="generated/skbio.core.distance.DistanceMatrix.__subclasshook__.html#skbio.core.distance.DistanceMatrix.__subclasshook__">(skbio.core.distance.DistanceMatrix static method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.core.distance.SymmetricDistanceMatrix.__subclasshook__.html#skbio.core.distance.SymmetricDistanceMatrix.__subclasshook__">(skbio.core.distance.SymmetricDistanceMatrix static method)</a>
+  <dt><a href="generated/skbio.core.genetic_code.GeneticCode.__subclasshook__.html#skbio.core.genetic_code.GeneticCode.__subclasshook__">(skbio.core.genetic_code.GeneticCode static method)</a>
   </dt>
 
         
@@ -903,6 +1168,10 @@
   </dt>
 
         
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.__subclasshook__.html#skbio.core.sequence.ProteinSequence.__subclasshook__">(skbio.core.sequence.ProteinSequence class method)</a>
+  </dt>
+
+        
   <dt><a href="generated/skbio.core.sequence.RNASequence.__subclasshook__.html#skbio.core.sequence.RNASequence.__subclasshook__">(skbio.core.sequence.RNASequence class method)</a>
   </dt>
 
@@ -911,31 +1180,51 @@
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.distance.ANOSIM.__subclasshook__.html#skbio.maths.stats.distance.ANOSIM.__subclasshook__">(skbio.maths.stats.distance.ANOSIM static method)</a>
+  <dt><a href="generated/skbio.core.workflow.Workflow.__subclasshook__.html#skbio.core.workflow.Workflow.__subclasshook__">(skbio.core.workflow.Workflow static method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.distance.CategoricalStatsResults.__subclasshook__.html#skbio.maths.stats.distance.CategoricalStatsResults.__subclasshook__">(skbio.maths.stats.distance.CategoricalStatsResults static method)</a>
+  <dt><a href="generated/skbio.core.workflow.method.__subclasshook__.html#skbio.core.workflow.method.__subclasshook__">(skbio.core.workflow.method static method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.distance.PERMANOVA.__subclasshook__.html#skbio.maths.stats.distance.PERMANOVA.__subclasshook__">(skbio.maths.stats.distance.PERMANOVA static method)</a>
+  <dt><a href="generated/skbio.core.workflow.requires.__subclasshook__.html#skbio.core.workflow.requires.__subclasshook__">(skbio.core.workflow.requires static method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.ordination.CA.__subclasshook__.html#skbio.maths.stats.ordination.CA.__subclasshook__">(skbio.maths.stats.ordination.CA static method)</a>
+  <dt><a href="generated/skbio.math.stats.distance.ANOSIM.__subclasshook__.html#skbio.math.stats.distance.ANOSIM.__subclasshook__">(skbio.math.stats.distance.ANOSIM static method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.ordination.CCA.__subclasshook__.html#skbio.maths.stats.ordination.CCA.__subclasshook__">(skbio.maths.stats.ordination.CCA static method)</a>
+  <dt><a href="generated/skbio.math.stats.distance.CategoricalStatsResults.__subclasshook__.html#skbio.math.stats.distance.CategoricalStatsResults.__subclasshook__">(skbio.math.stats.distance.CategoricalStatsResults static method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.ordination.PCoA.__subclasshook__.html#skbio.maths.stats.ordination.PCoA.__subclasshook__">(skbio.maths.stats.ordination.PCoA static method)</a>
+  <dt><a href="generated/skbio.math.stats.distance.PERMANOVA.__subclasshook__.html#skbio.math.stats.distance.PERMANOVA.__subclasshook__">(skbio.math.stats.distance.PERMANOVA static method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.ordination.RDA.__subclasshook__.html#skbio.maths.stats.ordination.RDA.__subclasshook__">(skbio.maths.stats.ordination.RDA static method)</a>
+  <dt><a href="generated/skbio.math.stats.ordination.CA.__subclasshook__.html#skbio.math.stats.ordination.CA.__subclasshook__">(skbio.math.stats.ordination.CA static method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.math.stats.ordination.CCA.__subclasshook__.html#skbio.math.stats.ordination.CCA.__subclasshook__">(skbio.math.stats.ordination.CCA static method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.math.stats.ordination.OrdinationResults.__subclasshook__.html#skbio.math.stats.ordination.OrdinationResults.__subclasshook__">(skbio.math.stats.ordination.OrdinationResults static method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.math.stats.ordination.PCoA.__subclasshook__.html#skbio.math.stats.ordination.PCoA.__subclasshook__">(skbio.math.stats.ordination.PCoA static method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.math.stats.ordination.RDA.__subclasshook__.html#skbio.math.stats.ordination.RDA.__subclasshook__">(skbio.math.stats.ordination.RDA static method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.util.trie.CompressedTrie.__subclasshook__.html#skbio.util.trie.CompressedTrie.__subclasshook__">(skbio.util.trie.CompressedTrie static method)</a>
   </dt>
 
       </dl></dd>
@@ -944,17 +1233,31 @@
   </dt>
 
       
+  <dt><a href="generated/skbio.core.workflow.Workflow._all_wf_methods.html#skbio.core.workflow.Workflow._all_wf_methods">_all_wf_methods() (skbio.core.workflow.Workflow method)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.core.genetic_code.GeneticCode._analyze_quartet.html#skbio.core.genetic_code.GeneticCode._analyze_quartet">_analyze_quartet() (skbio.core.genetic_code.GeneticCode method)</a>
+  </dt>
+
+      
   <dt><a href="generated/skbio.core.tree.TreeNode._ascii_art.html#skbio.core.tree.TreeNode._ascii_art">_ascii_art() (skbio.core.tree.TreeNode method)</a>
   </dt>
 
       
-  <dt><a href="generated/skbio.maths.stats.ordination.CA._ca.html#skbio.maths.stats.ordination.CA._ca">_ca() (skbio.maths.stats.ordination.CA method)</a>
+  <dt><a href="generated/skbio.math.stats.ordination.OrdinationResults._asdict.html#skbio.math.stats.ordination.OrdinationResults._asdict">_asdict() (skbio.math.stats.ordination.OrdinationResults method)</a>
   </dt>
 
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="generated/skbio.maths.stats.ordination.CCA._cca.html#skbio.maths.stats.ordination.CCA._cca">_cca() (skbio.maths.stats.ordination.CCA method)</a>
+  <dt><a href="generated/skbio.math.stats.ordination.CA._ca.html#skbio.math.stats.ordination.CA._ca">_ca() (skbio.math.stats.ordination.CA method)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.math.stats.ordination.CCA._cca.html#skbio.math.stats.ordination.CCA._cca">_cca() (skbio.math.stats.ordination.CCA method)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.math.stats.ordination.OrdinationResults._check_empty_line.html#skbio.math.stats.ordination.OrdinationResults._check_empty_line">_check_empty_line() (skbio.math.stats.ordination.OrdinationResults static method)</a>
   </dt>
 
       
@@ -972,41 +1275,61 @@
 
       </dl></dd>
       
-  <dt><a href="generated/skbio.maths.stats.distance.PERMANOVA._compute_f_stat.html#skbio.maths.stats.distance.PERMANOVA._compute_f_stat">_compute_f_stat() (skbio.maths.stats.distance.PERMANOVA method)</a>
+  <dt><a href="generated/skbio.math.stats.distance.PERMANOVA._compute_f_stat.html#skbio.math.stats.distance.PERMANOVA._compute_f_stat">_compute_f_stat() (skbio.math.stats.distance.PERMANOVA method)</a>
   </dt>
 
       
-  <dt><a href="generated/skbio.maths.stats.distance.ANOSIM._compute_r_stat.html#skbio.maths.stats.distance.ANOSIM._compute_r_stat">_compute_r_stat() (skbio.maths.stats.distance.ANOSIM method)</a>
+  <dt><a href="generated/skbio.math.stats.distance.ANOSIM._compute_r_stat.html#skbio.math.stats.distance.ANOSIM._compute_r_stat">_compute_r_stat() (skbio.math.stats.distance.ANOSIM method)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="generated/skbio.core.workflow.Workflow._debug_trace_wrapper.html#skbio.core.workflow.Workflow._debug_trace_wrapper">_debug_trace_wrapper() (skbio.core.workflow.Workflow method)</a>
   </dt>
 
       
-  <dt><a href="generated/skbio.maths.stats.ordination.PCoA._E_matrix.html#skbio.maths.stats.ordination.PCoA._E_matrix">_E_matrix() (skbio.maths.stats.ordination.PCoA static method)</a>
-  </dt>
-
-      
-  <dt><a href="generated/skbio.maths.stats.ordination.PCoA._F_matrix.html#skbio.maths.stats.ordination.PCoA._F_matrix">_F_matrix() (skbio.maths.stats.ordination.PCoA static method)</a>
-  </dt>
-
-      
-  <dt><a href="generated/skbio.maths.stats.distance.CategoricalStatsResults._format_data.html#skbio.maths.stats.distance.CategoricalStatsResults._format_data">_format_data() (skbio.maths.stats.distance.CategoricalStatsResults method)</a>
-  </dt>
-
-      
-  <dt><a href="generated/skbio.maths.stats.distance.CategoricalStatsResults._format_header.html#skbio.maths.stats.distance.CategoricalStatsResults._format_header">_format_header() (skbio.maths.stats.distance.CategoricalStatsResults method)</a>
-  </dt>
-
-      
-  <dt><a href="generated/skbio.core.distance.DistanceMatrix._format_ids.html#skbio.core.distance.DistanceMatrix._format_ids">_format_ids() (skbio.core.distance.DistanceMatrix method)</a>
+  <dt><a href="generated/skbio.math.stats.distance.ANOSIM._df_to_vector.html#skbio.math.stats.distance.ANOSIM._df_to_vector">_df_to_vector() (skbio.math.stats.distance.ANOSIM method)</a>
   </dt>
 
       <dd><dl>
         
-  <dt><a href="generated/skbio.core.distance.SymmetricDistanceMatrix._format_ids.html#skbio.core.distance.SymmetricDistanceMatrix._format_ids">(skbio.core.distance.SymmetricDistanceMatrix method)</a>
+  <dt><a href="generated/skbio.math.stats.distance.PERMANOVA._df_to_vector.html#skbio.math.stats.distance.PERMANOVA._df_to_vector">(skbio.math.stats.distance.PERMANOVA method)</a>
   </dt>
 
       </dl></dd>
       
-  <dt><a href="generated/skbio.maths.stats.distance.CategoricalStatsResults._format_p_value.html#skbio.maths.stats.distance.CategoricalStatsResults._format_p_value">_format_p_value() (skbio.maths.stats.distance.CategoricalStatsResults method)</a>
+  <dt><a href="generated/skbio.math.stats.ordination.PCoA._E_matrix.html#skbio.math.stats.ordination.PCoA._E_matrix">_E_matrix() (skbio.math.stats.ordination.PCoA static method)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.math.stats.ordination.PCoA._F_matrix.html#skbio.math.stats.ordination.PCoA._F_matrix">_F_matrix() (skbio.math.stats.ordination.PCoA static method)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.math.stats.distance.CategoricalStatsResults._format_data.html#skbio.math.stats.distance.CategoricalStatsResults._format_data">_format_data() (skbio.math.stats.distance.CategoricalStatsResults method)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.math.stats.distance.CategoricalStatsResults._format_header.html#skbio.math.stats.distance.CategoricalStatsResults._format_header">_format_header() (skbio.math.stats.distance.CategoricalStatsResults method)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.core.distance.DissimilarityMatrix._format_ids.html#skbio.core.distance.DissimilarityMatrix._format_ids">_format_ids() (skbio.core.distance.DissimilarityMatrix method)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="generated/skbio.core.distance.DistanceMatrix._format_ids.html#skbio.core.distance.DistanceMatrix._format_ids">(skbio.core.distance.DistanceMatrix method)</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="generated/skbio.math.stats.distance.CategoricalStatsResults._format_p_value.html#skbio.math.stats.distance.CategoricalStatsResults._format_p_value">_format_p_value() (skbio.math.stats.distance.CategoricalStatsResults method)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.core.genetic_code.GeneticCode._get_blocks.html#skbio.core.genetic_code.GeneticCode._get_blocks">_get_blocks() (skbio.core.genetic_code.GeneticCode method)</a>
   </dt>
 
       
@@ -1014,55 +1337,75 @@
   </dt>
 
       
-  <dt><a href="generated/skbio.maths.stats.distance.PERMANOVA._index_combinations.html#skbio.maths.stats.distance.PERMANOVA._index_combinations">_index_combinations() (skbio.maths.stats.distance.PERMANOVA method)</a>
+  <dt><a href="generated/skbio.math.stats.distance.PERMANOVA._index_combinations.html#skbio.math.stats.distance.PERMANOVA._index_combinations">_index_combinations() (skbio.math.stats.distance.PERMANOVA method)</a>
   </dt>
 
       
-  <dt><a href="generated/skbio.core.distance.DistanceMatrix._index_list.html#skbio.core.distance.DistanceMatrix._index_list">_index_list() (skbio.core.distance.DistanceMatrix method)</a>
+  <dt><a href="generated/skbio.core.distance.DissimilarityMatrix._index_list.html#skbio.core.distance.DissimilarityMatrix._index_list">_index_list() (skbio.core.distance.DissimilarityMatrix method)</a>
   </dt>
 
       <dd><dl>
         
-  <dt><a href="generated/skbio.core.distance.SymmetricDistanceMatrix._index_list.html#skbio.core.distance.SymmetricDistanceMatrix._index_list">(skbio.core.distance.SymmetricDistanceMatrix method)</a>
+  <dt><a href="generated/skbio.core.distance.DistanceMatrix._index_list.html#skbio.core.distance.DistanceMatrix._index_list">(skbio.core.distance.DistanceMatrix method)</a>
   </dt>
 
       </dl></dd>
       
-  <dt><a href="generated/skbio.core.distance.DistanceMatrix._is_id_pair.html#skbio.core.distance.DistanceMatrix._is_id_pair">_is_id_pair() (skbio.core.distance.DistanceMatrix method)</a>
+  <dt><a href="generated/skbio.core.distance.DissimilarityMatrix._is_id_pair.html#skbio.core.distance.DissimilarityMatrix._is_id_pair">_is_id_pair() (skbio.core.distance.DissimilarityMatrix method)</a>
   </dt>
 
       <dd><dl>
         
-  <dt><a href="generated/skbio.core.distance.SymmetricDistanceMatrix._is_id_pair.html#skbio.core.distance.SymmetricDistanceMatrix._is_id_pair">(skbio.core.distance.SymmetricDistanceMatrix method)</a>
+  <dt><a href="generated/skbio.core.distance.DistanceMatrix._is_id_pair.html#skbio.core.distance.DistanceMatrix._is_id_pair">(skbio.core.distance.DistanceMatrix method)</a>
   </dt>
 
       </dl></dd>
       
-  <dt><a href="generated/skbio.core.distance.DistanceMatrix._parse_ids.html#skbio.core.distance.DistanceMatrix._parse_ids">_parse_ids() (skbio.core.distance.DistanceMatrix static method)</a>
+  <dt><a href="generated/skbio.math.stats.ordination.OrdinationResults._make.html#skbio.math.stats.ordination.OrdinationResults._make">_make() (skbio.math.stats.ordination.OrdinationResults class method)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.math.stats.ordination.OrdinationResults._parse_biplot.html#skbio.math.stats.ordination.OrdinationResults._parse_biplot">_parse_biplot() (skbio.math.stats.ordination.OrdinationResults static method)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.math.stats.ordination.OrdinationResults._parse_coords.html#skbio.math.stats.ordination.OrdinationResults._parse_coords">_parse_coords() (skbio.math.stats.ordination.OrdinationResults static method)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.math.stats.ordination.OrdinationResults._parse_eigvals.html#skbio.math.stats.ordination.OrdinationResults._parse_eigvals">_parse_eigvals() (skbio.math.stats.ordination.OrdinationResults static method)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.core.distance.DissimilarityMatrix._parse_ids.html#skbio.core.distance.DissimilarityMatrix._parse_ids">_parse_ids() (skbio.core.distance.DissimilarityMatrix static method)</a>
   </dt>
 
       <dd><dl>
         
-  <dt><a href="generated/skbio.core.distance.SymmetricDistanceMatrix._parse_ids.html#skbio.core.distance.SymmetricDistanceMatrix._parse_ids">(skbio.core.distance.SymmetricDistanceMatrix static method)</a>
+  <dt><a href="generated/skbio.core.distance.DistanceMatrix._parse_ids.html#skbio.core.distance.DistanceMatrix._parse_ids">(skbio.core.distance.DistanceMatrix static method)</a>
   </dt>
 
       </dl></dd>
       
-  <dt><a href="generated/skbio.maths.stats.ordination.PCoA._pcoa.html#skbio.maths.stats.ordination.PCoA._pcoa">_pcoa() (skbio.maths.stats.ordination.PCoA method)</a>
+  <dt><a href="generated/skbio.math.stats.ordination.OrdinationResults._parse_proportion_explained.html#skbio.math.stats.ordination.OrdinationResults._parse_proportion_explained">_parse_proportion_explained() (skbio.math.stats.ordination.OrdinationResults static method)</a>
   </dt>
 
       
-  <dt><a href="generated/skbio.core.distance.DistanceMatrix._pprint_ids.html#skbio.core.distance.DistanceMatrix._pprint_ids">_pprint_ids() (skbio.core.distance.DistanceMatrix method)</a>
+  <dt><a href="generated/skbio.math.stats.ordination.PCoA._pcoa.html#skbio.math.stats.ordination.PCoA._pcoa">_pcoa() (skbio.math.stats.ordination.PCoA method)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.core.distance.DissimilarityMatrix._pprint_ids.html#skbio.core.distance.DissimilarityMatrix._pprint_ids">_pprint_ids() (skbio.core.distance.DissimilarityMatrix method)</a>
   </dt>
 
       <dd><dl>
         
-  <dt><a href="generated/skbio.core.distance.SymmetricDistanceMatrix._pprint_ids.html#skbio.core.distance.SymmetricDistanceMatrix._pprint_ids">(skbio.core.distance.SymmetricDistanceMatrix method)</a>
+  <dt><a href="generated/skbio.core.distance.DistanceMatrix._pprint_ids.html#skbio.core.distance.DistanceMatrix._pprint_ids">(skbio.core.distance.DistanceMatrix method)</a>
   </dt>
 
       </dl></dd>
       
-  <dt><a href="generated/skbio.maths.stats.ordination.RDA._rda.html#skbio.maths.stats.ordination.RDA._rda">_rda() (skbio.maths.stats.ordination.RDA method)</a>
+  <dt><a href="generated/skbio.math.stats.ordination.RDA._rda.html#skbio.math.stats.ordination.RDA._rda">_rda() (skbio.math.stats.ordination.RDA method)</a>
   </dt>
 
       
@@ -1070,12 +1413,20 @@
   </dt>
 
       
-  <dt><a href="generated/skbio.maths.stats.distance.ANOSIM._run.html#skbio.maths.stats.distance.ANOSIM._run">_run() (skbio.maths.stats.distance.ANOSIM method)</a>
+  <dt><a href="generated/skbio.math.stats.ordination.OrdinationResults._replace.html#skbio.math.stats.ordination.OrdinationResults._replace">_replace() (skbio.math.stats.ordination.OrdinationResults method)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.math.stats.distance.CategoricalStatsResults._repr_html_.html#skbio.math.stats.distance.CategoricalStatsResults._repr_html_">_repr_html_() (skbio.math.stats.distance.CategoricalStatsResults method)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.math.stats.distance.ANOSIM._run.html#skbio.math.stats.distance.ANOSIM._run">_run() (skbio.math.stats.distance.ANOSIM method)</a>
   </dt>
 
       <dd><dl>
         
-  <dt><a href="generated/skbio.maths.stats.distance.PERMANOVA._run.html#skbio.maths.stats.distance.PERMANOVA._run">(skbio.maths.stats.distance.PERMANOVA method)</a>
+  <dt><a href="generated/skbio.math.stats.distance.PERMANOVA._run.html#skbio.math.stats.distance.PERMANOVA._run">(skbio.math.stats.distance.PERMANOVA method)</a>
   </dt>
 
       </dl></dd>
@@ -1084,12 +1435,20 @@
   </dt>
 
       
-  <dt><a href="generated/skbio.core.distance.DistanceMatrix._validate.html#skbio.core.distance.DistanceMatrix._validate">_validate() (skbio.core.distance.DistanceMatrix method)</a>
+  <dt><a href="generated/skbio.core.workflow.Workflow._setup_debug.html#skbio.core.workflow.Workflow._setup_debug">_setup_debug() (skbio.core.workflow.Workflow method)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.core.workflow.Workflow._setup_debug_trace.html#skbio.core.workflow.Workflow._setup_debug_trace">_setup_debug_trace() (skbio.core.workflow.Workflow method)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.core.distance.DissimilarityMatrix._validate.html#skbio.core.distance.DissimilarityMatrix._validate">_validate() (skbio.core.distance.DissimilarityMatrix method)</a>
   </dt>
 
       <dd><dl>
         
-  <dt><a href="generated/skbio.core.distance.SymmetricDistanceMatrix._validate.html#skbio.core.distance.SymmetricDistanceMatrix._validate">(skbio.core.distance.SymmetricDistanceMatrix method)</a>
+  <dt><a href="generated/skbio.core.distance.DistanceMatrix._validate.html#skbio.core.distance.DistanceMatrix._validate">(skbio.core.distance.DistanceMatrix method)</a>
   </dt>
 
       </dl></dd>
@@ -1114,7 +1473,15 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
+  <dt><a href="generated/skbio.core.genetic_code.GeneticCode.a.html#skbio.core.genetic_code.GeneticCode.a">a (skbio.core.genetic_code.GeneticCode attribute)</a>
+  </dt>
+
+      
   <dt><a href="generated/skbio.core.tree.TreeNode.accumulate_to_ancestor.html#skbio.core.tree.TreeNode.accumulate_to_ancestor">accumulate_to_ancestor() (skbio.core.tree.TreeNode method)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.math.diversity.alpha.ace.html#skbio.math.diversity.alpha.ace">ace() (in module skbio.math.diversity.alpha)</a>
   </dt>
 
       
@@ -1135,18 +1502,22 @@
   </dt>
 
         
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.alphabet.html#skbio.core.sequence.ProteinSequence.alphabet">(skbio.core.sequence.ProteinSequence class method)</a>
+  </dt>
+
+        
   <dt><a href="generated/skbio.core.sequence.RNASequence.alphabet.html#skbio.core.sequence.RNASequence.alphabet">(skbio.core.sequence.RNASequence class method)</a>
   </dt>
 
       </dl></dd>
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="generated/skbio.core.tree.TreeNode.ancestors.html#skbio.core.tree.TreeNode.ancestors">ancestors() (skbio.core.tree.TreeNode method)</a>
   </dt>
 
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="generated/skbio.maths.stats.distance.ANOSIM.html#skbio.maths.stats.distance.ANOSIM">ANOSIM (class in skbio.maths.stats.distance)</a>
+  <dt><a href="generated/skbio.math.stats.distance.ANOSIM.html#skbio.math.stats.distance.ANOSIM">ANOSIM (class in skbio.math.stats.distance)</a>
   </dt>
 
       
@@ -1168,6 +1539,14 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
+  <dt><a href="generated/skbio.core.genetic_code.GeneticCode.b.html#skbio.core.genetic_code.GeneticCode.b">b (skbio.core.genetic_code.GeneticCode attribute)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.math.diversity.alpha.berger_parker_d.html#skbio.math.diversity.alpha.berger_parker_d">berger_parker_d() (in module skbio.math.diversity.alpha)</a>
+  </dt>
+
+      
   <dt><a href="generated/skbio.core.sequence.BiologicalSequence.html#skbio.core.sequence.BiologicalSequence">BiologicalSequence (class in skbio.core.sequence)</a>
   </dt>
 
@@ -1178,7 +1557,19 @@
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
+  <dt><a href="generated/skbio.math.stats.ordination.OrdinationResults.biplot.html#skbio.math.stats.ordination.OrdinationResults.biplot">biplot (skbio.math.stats.ordination.OrdinationResults attribute)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.core.genetic_code.GeneticCode.blocks.html#skbio.core.genetic_code.GeneticCode.blocks">blocks (skbio.core.genetic_code.GeneticCode attribute)</a>
+  </dt>
+
+      
   <dt><a href="generated/skbio.draw.distributions.boxplots.html#skbio.draw.distributions.boxplots">boxplots() (in module skbio.draw.distributions)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.math.diversity.alpha.brillouin_d.html#skbio.math.diversity.alpha.brillouin_d">brillouin_d() (in module skbio.math.diversity.alpha)</a>
   </dt>
 
   </dl></td>
@@ -1188,21 +1579,43 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="generated/skbio.maths.stats.ordination.CA.html#skbio.maths.stats.ordination.CA">CA (class in skbio.maths.stats.ordination)</a>
+  <dt><a href="generated/skbio.core.genetic_code.GeneticCode.c.html#skbio.core.genetic_code.GeneticCode.c">c (skbio.core.genetic_code.GeneticCode attribute)</a>
   </dt>
 
       
-  <dt><a href="generated/skbio.maths.stats.distance.CategoricalStatsResults.html#skbio.maths.stats.distance.CategoricalStatsResults">CategoricalStatsResults (class in skbio.maths.stats.distance)</a>
+  <dt><a href="generated/skbio.math.stats.ordination.CA.html#skbio.math.stats.ordination.CA">CA (class in skbio.math.stats.ordination)</a>
   </dt>
 
       
-  <dt><a href="generated/skbio.maths.stats.ordination.CCA.html#skbio.maths.stats.ordination.CCA">CCA (class in skbio.maths.stats.ordination)</a>
+  <dt><a href="generated/skbio.math.stats.distance.CategoricalStatsResults.html#skbio.math.stats.distance.CategoricalStatsResults">CategoricalStatsResults (class in skbio.math.stats.distance)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.math.stats.ordination.CCA.html#skbio.math.stats.ordination.CCA">CCA (class in skbio.math.stats.ordination)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.core.genetic_code.GeneticCode.changes.html#skbio.core.genetic_code.GeneticCode.changes">changes() (skbio.core.genetic_code.GeneticCode method)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.math.diversity.alpha.chao1.html#skbio.math.diversity.alpha.chao1">chao1() (in module skbio.math.diversity.alpha)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.math.diversity.alpha.chao1_ci.html#skbio.math.diversity.alpha.chao1_ci">chao1_ci() (in module skbio.math.diversity.alpha)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.core.tree.TreeNode.compare_rfd.html#skbio.core.tree.TreeNode.compare_rfd">compare_rfd() (skbio.core.tree.TreeNode method)</a>
   </dt>
 
       
   <dt><a href="generated/skbio.core.tree.TreeNode.compare_subsets.html#skbio.core.tree.TreeNode.compare_subsets">compare_subsets() (skbio.core.tree.TreeNode method)</a>
   </dt>
 
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="generated/skbio.core.tree.TreeNode.compare_tip_distances.html#skbio.core.tree.TreeNode.compare_tip_distances">compare_tip_distances() (skbio.core.tree.TreeNode method)</a>
   </dt>
@@ -1235,23 +1648,21 @@
   </dt>
 
       </dl></dd>
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="generated/skbio.util.trie.CompressedTrie.html#skbio.util.trie.CompressedTrie">CompressedTrie (class in skbio.util.trie)</a>
   </dt>
 
       
-  <dt><a href="generated/skbio.core.distance.SymmetricDistanceMatrix.condensed_form.html#skbio.core.distance.SymmetricDistanceMatrix.condensed_form">condensed_form() (skbio.core.distance.SymmetricDistanceMatrix method)</a>
+  <dt><a href="generated/skbio.core.distance.DistanceMatrix.condensed_form.html#skbio.core.distance.DistanceMatrix.condensed_form">condensed_form() (skbio.core.distance.DistanceMatrix method)</a>
   </dt>
 
       
-  <dt><a href="generated/skbio.core.distance.DistanceMatrix.copy.html#skbio.core.distance.DistanceMatrix.copy">copy() (skbio.core.distance.DistanceMatrix method)</a>
+  <dt><a href="generated/skbio.core.distance.DissimilarityMatrix.copy.html#skbio.core.distance.DissimilarityMatrix.copy">copy() (skbio.core.distance.DissimilarityMatrix method)</a>
   </dt>
 
       <dd><dl>
         
-  <dt><a href="generated/skbio.core.distance.SymmetricDistanceMatrix.copy.html#skbio.core.distance.SymmetricDistanceMatrix.copy">(skbio.core.distance.SymmetricDistanceMatrix method)</a>
+  <dt><a href="generated/skbio.core.distance.DistanceMatrix.copy.html#skbio.core.distance.DistanceMatrix.copy">(skbio.core.distance.DistanceMatrix method)</a>
   </dt>
 
         
@@ -1273,7 +1684,19 @@
   </dt>
 
         
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.count.html#skbio.core.sequence.ProteinSequence.count">(skbio.core.sequence.ProteinSequence method)</a>
+  </dt>
+
+        
   <dt><a href="generated/skbio.core.sequence.RNASequence.count.html#skbio.core.sequence.RNASequence.count">(skbio.core.sequence.RNASequence method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.core.tree.TreeNode.count.html#skbio.core.tree.TreeNode.count">(skbio.core.tree.TreeNode method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.math.stats.ordination.OrdinationResults.count.html#skbio.math.stats.ordination.OrdinationResults.count">(skbio.math.stats.ordination.OrdinationResults method)</a>
   </dt>
 
       </dl></dd>
@@ -1292,12 +1715,12 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="generated/skbio.core.distance.DistanceMatrix.data.html#skbio.core.distance.DistanceMatrix.data">data (skbio.core.distance.DistanceMatrix attribute)</a>
+  <dt><a href="generated/skbio.core.distance.DissimilarityMatrix.data.html#skbio.core.distance.DissimilarityMatrix.data">data (skbio.core.distance.DissimilarityMatrix attribute)</a>
   </dt>
 
       <dd><dl>
         
-  <dt><a href="generated/skbio.core.distance.SymmetricDistanceMatrix.data.html#skbio.core.distance.SymmetricDistanceMatrix.data">(skbio.core.distance.SymmetricDistanceMatrix attribute)</a>
+  <dt><a href="generated/skbio.core.distance.DistanceMatrix.data.html#skbio.core.distance.DistanceMatrix.data">(skbio.core.distance.DistanceMatrix attribute)</a>
   </dt>
 
       </dl></dd>
@@ -1327,6 +1750,10 @@
   </dt>
 
         
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.degap.html#skbio.core.sequence.ProteinSequence.degap">(skbio.core.sequence.ProteinSequence method)</a>
+  </dt>
+
+        
   <dt><a href="generated/skbio.core.sequence.RNASequence.degap.html#skbio.core.sequence.RNASequence.degap">(skbio.core.sequence.RNASequence method)</a>
   </dt>
 
@@ -1345,10 +1772,26 @@
   </dt>
 
         
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.description.html#skbio.core.sequence.ProteinSequence.description">(skbio.core.sequence.ProteinSequence attribute)</a>
+  </dt>
+
+        
   <dt><a href="generated/skbio.core.sequence.RNASequence.description.html#skbio.core.sequence.RNASequence.description">(skbio.core.sequence.RNASequence attribute)</a>
   </dt>
 
       </dl></dd>
+      
+  <dt><a href="generated/skbio.core.distance.DissimilarityMatrix.html#skbio.core.distance.DissimilarityMatrix">DissimilarityMatrix (class in skbio.core.distance)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.core.exception.DissimilarityMatrixError.html#skbio.core.exception.DissimilarityMatrixError">DissimilarityMatrixError</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.core.exception.DissimilarityMatrixFormatError.html#skbio.core.exception.DissimilarityMatrixFormatError">DissimilarityMatrixFormatError</a>
+  </dt>
+
       
   <dt><a href="generated/skbio.core.sequence.BiologicalSequence.distance.html#skbio.core.sequence.BiologicalSequence.distance">distance() (skbio.core.sequence.BiologicalSequence method)</a>
   </dt>
@@ -1360,6 +1803,10 @@
 
         
   <dt><a href="generated/skbio.core.sequence.NucleotideSequence.distance.html#skbio.core.sequence.NucleotideSequence.distance">(skbio.core.sequence.NucleotideSequence method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.distance.html#skbio.core.sequence.ProteinSequence.distance">(skbio.core.sequence.ProteinSequence method)</a>
   </dt>
 
         
@@ -1375,14 +1822,10 @@
   <dt><a href="generated/skbio.core.distance.DistanceMatrix.html#skbio.core.distance.DistanceMatrix">DistanceMatrix (class in skbio.core.distance)</a>
   </dt>
 
-      
-  <dt><a href="generated/skbio.core.exception.DistanceMatrixError.html#skbio.core.exception.DistanceMatrixError">DistanceMatrixError</a>
-  </dt>
-
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="generated/skbio.core.exception.DistanceMatrixFormatError.html#skbio.core.exception.DistanceMatrixFormatError">DistanceMatrixFormatError</a>
+  <dt><a href="generated/skbio.core.exception.DistanceMatrixError.html#skbio.core.exception.DistanceMatrixError">DistanceMatrixError</a>
   </dt>
 
       
@@ -1404,12 +1847,20 @@
   </dt>
 
       
-  <dt><a href="generated/skbio.core.distance.DistanceMatrix.dtype.html#skbio.core.distance.DistanceMatrix.dtype">dtype (skbio.core.distance.DistanceMatrix attribute)</a>
+  <dt><a href="generated/skbio.math.diversity.alpha.dominance.html#skbio.math.diversity.alpha.dominance">dominance() (in module skbio.math.diversity.alpha)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.math.diversity.alpha.doubles.html#skbio.math.diversity.alpha.doubles">doubles() (in module skbio.math.diversity.alpha)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.core.distance.DissimilarityMatrix.dtype.html#skbio.core.distance.DissimilarityMatrix.dtype">dtype (skbio.core.distance.DissimilarityMatrix attribute)</a>
   </dt>
 
       <dd><dl>
         
-  <dt><a href="generated/skbio.core.distance.SymmetricDistanceMatrix.dtype.html#skbio.core.distance.SymmetricDistanceMatrix.dtype">(skbio.core.distance.SymmetricDistanceMatrix attribute)</a>
+  <dt><a href="generated/skbio.core.distance.DistanceMatrix.dtype.html#skbio.core.distance.DistanceMatrix.dtype">(skbio.core.distance.DistanceMatrix attribute)</a>
   </dt>
 
       </dl></dd>
@@ -1424,6 +1875,24 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
+  <dt><a href="generated/skbio.math.stats.ordination.OrdinationResults.eigvals.html#skbio.math.stats.ordination.OrdinationResults.eigvals">eigvals (skbio.math.stats.ordination.OrdinationResults attribute)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.math.diversity.alpha.enspie.html#skbio.math.diversity.alpha.enspie">enspie() (in module skbio.math.diversity.alpha)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.math.diversity.alpha.equitability.html#skbio.math.diversity.alpha.equitability">equitability() (in module skbio.math.diversity.alpha)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="generated/skbio.math.diversity.alpha.esty_ci.html#skbio.math.diversity.alpha.esty_ci">esty_ci() (in module skbio.math.diversity.alpha)</a>
+  </dt>
+
+      
   <dt><a href="generated/skbio.core.tree.TreeNode.extend.html#skbio.core.tree.TreeNode.extend">extend() (skbio.core.tree.TreeNode method)</a>
   </dt>
 
@@ -1433,6 +1902,14 @@
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="generated/skbio.format.sequences.fasta_from_alignment.html#skbio.format.sequences.fasta_from_alignment">fasta_from_alignment() (in module skbio.format.sequences)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.format.sequences.fasta_from_sequences.html#skbio.format.sequences.fasta_from_sequences">fasta_from_sequences() (in module skbio.format.sequences)</a>
+  </dt>
+
       
   <dt><a href="generated/skbio.util.trie.fasta_to_pairlist.html#skbio.util.trie.fasta_to_pairlist">fasta_to_pairlist() (in module skbio.util.trie)</a>
   </dt>
@@ -1470,7 +1947,15 @@
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
+  <dt><a href="generated/skbio.math.diversity.alpha.fisher_alpha.html#skbio.math.diversity.alpha.fisher_alpha">fisher_alpha() (in module skbio.math.diversity.alpha)</a>
+  </dt>
+
+      
   <dt><a href="generated/skbio.util.misc.flatten.html#skbio.util.misc.flatten">flatten() (in module skbio.util.misc)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.format.sequences.format_fastq_record.html#skbio.format.sequences.format_fastq_record">format_fastq_record() (in module skbio.format.sequences)</a>
   </dt>
 
       
@@ -1484,6 +1969,10 @@
 
         
   <dt><a href="generated/skbio.core.sequence.NucleotideSequence.fraction_diff.html#skbio.core.sequence.NucleotideSequence.fraction_diff">(skbio.core.sequence.NucleotideSequence method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.fraction_diff.html#skbio.core.sequence.ProteinSequence.fraction_diff">(skbio.core.sequence.ProteinSequence method)</a>
   </dt>
 
         
@@ -1505,6 +1994,10 @@
   </dt>
 
         
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.fraction_same.html#skbio.core.sequence.ProteinSequence.fraction_same">(skbio.core.sequence.ProteinSequence method)</a>
+  </dt>
+
+        
   <dt><a href="generated/skbio.core.sequence.RNASequence.fraction_same.html#skbio.core.sequence.RNASequence.fraction_same">(skbio.core.sequence.RNASequence method)</a>
   </dt>
 
@@ -1520,12 +2013,20 @@
 
       </dl></dd>
       
-  <dt><a href="generated/skbio.core.distance.DistanceMatrix.from_file.html#skbio.core.distance.DistanceMatrix.from_file">from_file() (skbio.core.distance.DistanceMatrix class method)</a>
+  <dt><a href="generated/skbio.core.distance.DissimilarityMatrix.from_file.html#skbio.core.distance.DissimilarityMatrix.from_file">from_file() (skbio.core.distance.DissimilarityMatrix class method)</a>
   </dt>
 
       <dd><dl>
         
-  <dt><a href="generated/skbio.core.distance.SymmetricDistanceMatrix.from_file.html#skbio.core.distance.SymmetricDistanceMatrix.from_file">(skbio.core.distance.SymmetricDistanceMatrix class method)</a>
+  <dt><a href="generated/skbio.core.distance.DistanceMatrix.from_file.html#skbio.core.distance.DistanceMatrix.from_file">(skbio.core.distance.DistanceMatrix class method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.core.tree.TreeNode.from_file.html#skbio.core.tree.TreeNode.from_file">(skbio.core.tree.TreeNode class method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.math.stats.ordination.OrdinationResults.from_file.html#skbio.math.stats.ordination.OrdinationResults.from_file">(skbio.math.stats.ordination.OrdinationResults class method)</a>
   </dt>
 
       </dl></dd>
@@ -1553,6 +2054,10 @@
   </dt>
 
         
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.gap_alphabet.html#skbio.core.sequence.ProteinSequence.gap_alphabet">(skbio.core.sequence.ProteinSequence class method)</a>
+  </dt>
+
+        
   <dt><a href="generated/skbio.core.sequence.RNASequence.gap_alphabet.html#skbio.core.sequence.RNASequence.gap_alphabet">(skbio.core.sequence.RNASequence class method)</a>
   </dt>
 
@@ -1568,6 +2073,10 @@
 
         
   <dt><a href="generated/skbio.core.sequence.NucleotideSequence.gap_maps.html#skbio.core.sequence.NucleotideSequence.gap_maps">(skbio.core.sequence.NucleotideSequence method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.gap_maps.html#skbio.core.sequence.ProteinSequence.gap_maps">(skbio.core.sequence.ProteinSequence method)</a>
   </dt>
 
         
@@ -1589,10 +2098,30 @@
   </dt>
 
         
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.gap_vector.html#skbio.core.sequence.ProteinSequence.gap_vector">(skbio.core.sequence.ProteinSequence method)</a>
+  </dt>
+
+        
   <dt><a href="generated/skbio.core.sequence.RNASequence.gap_vector.html#skbio.core.sequence.RNASequence.gap_vector">(skbio.core.sequence.RNASequence method)</a>
   </dt>
 
       </dl></dd>
+      
+  <dt><a href="generated/skbio.core.genetic_code.GeneticCode.html#skbio.core.genetic_code.GeneticCode">GeneticCode (class in skbio.core.genetic_code)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.core.exception.GeneticCodeError.html#skbio.core.exception.GeneticCodeError">GeneticCodeError</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.core.exception.GeneticCodeInitError.html#skbio.core.exception.GeneticCodeInitError">GeneticCodeInitError</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.util.testing.get_data_path.html#skbio.util.testing.get_data_path">get_data_path() (in module skbio.util.testing)</a>
+  </dt>
+
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
@@ -1610,6 +2139,18 @@
 
       </dl></dd>
       
+  <dt><a href="generated/skbio.core.genetic_code.GeneticCode.get_stop_indices.html#skbio.core.genetic_code.GeneticCode.get_stop_indices">get_stop_indices() (skbio.core.genetic_code.GeneticCode method)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.math.diversity.alpha.gini_index.html#skbio.math.diversity.alpha.gini_index">gini_index() (in module skbio.math.diversity.alpha)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.math.diversity.alpha.goods_coverage.html#skbio.math.diversity.alpha.goods_coverage">goods_coverage() (in module skbio.math.diversity.alpha)</a>
+  </dt>
+
+      
   <dt><a href="generated/skbio.draw.distributions.grouped_distributions.html#skbio.draw.distributions.grouped_distributions">grouped_distributions() (in module skbio.draw.distributions)</a>
   </dt>
 
@@ -1623,8 +2164,6 @@
   <dt><a href="generated/skbio.core.tree.TreeNode.has_children.html#skbio.core.tree.TreeNode.has_children">has_children() (skbio.core.tree.TreeNode method)</a>
   </dt>
 
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="generated/skbio.core.sequence.BiologicalSequence.has_unsupported_characters.html#skbio.core.sequence.BiologicalSequence.has_unsupported_characters">has_unsupported_characters() (skbio.core.sequence.BiologicalSequence method)</a>
   </dt>
@@ -1639,10 +2178,24 @@
   </dt>
 
         
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.has_unsupported_characters.html#skbio.core.sequence.ProteinSequence.has_unsupported_characters">(skbio.core.sequence.ProteinSequence method)</a>
+  </dt>
+
+        
   <dt><a href="generated/skbio.core.sequence.RNASequence.has_unsupported_characters.html#skbio.core.sequence.RNASequence.has_unsupported_characters">(skbio.core.sequence.RNASequence method)</a>
   </dt>
 
       </dl></dd>
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="generated/skbio.math.diversity.alpha.heip_e.html#skbio.math.diversity.alpha.heip_e">heip_e() (in module skbio.math.diversity.alpha)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.core.workflow.method.highest_priority.html#skbio.core.workflow.method.highest_priority">highest_priority (skbio.core.workflow.method attribute)</a>
+  </dt>
+
   </dl></td>
 </tr></table>
 
@@ -1650,44 +2203,44 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="generated/skbio.core.sequence.BiologicalSequence.identifier.html#skbio.core.sequence.BiologicalSequence.identifier">identifier (skbio.core.sequence.BiologicalSequence attribute)</a>
+  <dt><a href="generated/skbio.core.sequence.BiologicalSequence.id.html#skbio.core.sequence.BiologicalSequence.id">id (skbio.core.sequence.BiologicalSequence attribute)</a>
   </dt>
 
       <dd><dl>
         
-  <dt><a href="generated/skbio.core.sequence.DNASequence.identifier.html#skbio.core.sequence.DNASequence.identifier">(skbio.core.sequence.DNASequence attribute)</a>
+  <dt><a href="generated/skbio.core.sequence.DNASequence.id.html#skbio.core.sequence.DNASequence.id">(skbio.core.sequence.DNASequence attribute)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.core.sequence.NucleotideSequence.identifier.html#skbio.core.sequence.NucleotideSequence.identifier">(skbio.core.sequence.NucleotideSequence attribute)</a>
+  <dt><a href="generated/skbio.core.sequence.NucleotideSequence.id.html#skbio.core.sequence.NucleotideSequence.id">(skbio.core.sequence.NucleotideSequence attribute)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.core.sequence.RNASequence.identifier.html#skbio.core.sequence.RNASequence.identifier">(skbio.core.sequence.RNASequence attribute)</a>
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.id.html#skbio.core.sequence.ProteinSequence.id">(skbio.core.sequence.ProteinSequence attribute)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.core.sequence.RNASequence.id.html#skbio.core.sequence.RNASequence.id">(skbio.core.sequence.RNASequence attribute)</a>
   </dt>
 
       </dl></dd>
       
-  <dt><a href="generated/skbio.core.alignment.Alignment.identifiers.html#skbio.core.alignment.Alignment.identifiers">identifiers() (skbio.core.alignment.Alignment method)</a>
+  <dt><a href="generated/skbio.core.distance.DissimilarityMatrix.ids.html#skbio.core.distance.DissimilarityMatrix.ids">ids (skbio.core.distance.DissimilarityMatrix attribute)</a>
   </dt>
 
       <dd><dl>
         
-  <dt><a href="generated/skbio.core.alignment.SequenceCollection.identifiers.html#skbio.core.alignment.SequenceCollection.identifiers">(skbio.core.alignment.SequenceCollection method)</a>
+  <dt><a href="generated/skbio.core.distance.DistanceMatrix.ids.html#skbio.core.distance.DistanceMatrix.ids">(skbio.core.distance.DistanceMatrix attribute)</a>
   </dt>
 
       </dl></dd>
       
-  <dt><a href="generated/skbio.core.exception.IDMismatchError.html#skbio.core.exception.IDMismatchError">IDMismatchError</a>
-  </dt>
-
-      
-  <dt><a href="generated/skbio.core.distance.DistanceMatrix.ids.html#skbio.core.distance.DistanceMatrix.ids">ids (skbio.core.distance.DistanceMatrix attribute)</a>
+  <dt><a href="generated/skbio.core.alignment.Alignment.ids.html#skbio.core.alignment.Alignment.ids">ids() (skbio.core.alignment.Alignment method)</a>
   </dt>
 
       <dd><dl>
         
-  <dt><a href="generated/skbio.core.distance.SymmetricDistanceMatrix.ids.html#skbio.core.distance.SymmetricDistanceMatrix.ids">(skbio.core.distance.SymmetricDistanceMatrix attribute)</a>
+  <dt><a href="generated/skbio.core.alignment.SequenceCollection.ids.html#skbio.core.alignment.SequenceCollection.ids">(skbio.core.alignment.SequenceCollection method)</a>
   </dt>
 
       </dl></dd>
@@ -1705,12 +2258,24 @@
   </dt>
 
         
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.index.html#skbio.core.sequence.ProteinSequence.index">(skbio.core.sequence.ProteinSequence method)</a>
+  </dt>
+
+        
   <dt><a href="generated/skbio.core.sequence.RNASequence.index.html#skbio.core.sequence.RNASequence.index">(skbio.core.sequence.RNASequence method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.math.stats.ordination.OrdinationResults.index.html#skbio.math.stats.ordination.OrdinationResults.index">(skbio.math.stats.ordination.OrdinationResults method)</a>
   </dt>
 
       </dl></dd>
       
   <dt><a href="generated/skbio.core.tree.TreeNode.index_tree.html#skbio.core.tree.TreeNode.index_tree">index_tree() (skbio.core.tree.TreeNode method)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.core.workflow.Workflow.initialize_state.html#skbio.core.workflow.Workflow.initialize_state">initialize_state() (skbio.core.workflow.Workflow method)</a>
   </dt>
 
       
@@ -1732,6 +2297,24 @@
   </dt>
 
       
+  <dt><a href="generated/skbio.core.exception.InvalidCodonError.html#skbio.core.exception.InvalidCodonError">InvalidCodonError</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.util.misc.is_casava_v180_or_later.html#skbio.util.misc.is_casava_v180_or_later">is_casava_v180_or_later() (in module skbio.util.misc)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.core.alignment.Alignment.is_empty.html#skbio.core.alignment.Alignment.is_empty">is_empty() (skbio.core.alignment.Alignment method)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="generated/skbio.core.alignment.SequenceCollection.is_empty.html#skbio.core.alignment.SequenceCollection.is_empty">(skbio.core.alignment.SequenceCollection method)</a>
+  </dt>
+
+      </dl></dd>
+      
   <dt><a href="generated/skbio.core.sequence.BiologicalSequence.is_gap.html#skbio.core.sequence.BiologicalSequence.is_gap">is_gap() (skbio.core.sequence.BiologicalSequence class method)</a>
   </dt>
 
@@ -1745,10 +2328,16 @@
   </dt>
 
         
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.is_gap.html#skbio.core.sequence.ProteinSequence.is_gap">(skbio.core.sequence.ProteinSequence class method)</a>
+  </dt>
+
+        
   <dt><a href="generated/skbio.core.sequence.RNASequence.is_gap.html#skbio.core.sequence.RNASequence.is_gap">(skbio.core.sequence.RNASequence class method)</a>
   </dt>
 
       </dl></dd>
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="generated/skbio.core.sequence.BiologicalSequence.is_gapped.html#skbio.core.sequence.BiologicalSequence.is_gapped">is_gapped() (skbio.core.sequence.BiologicalSequence method)</a>
   </dt>
@@ -1763,12 +2352,14 @@
   </dt>
 
         
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.is_gapped.html#skbio.core.sequence.ProteinSequence.is_gapped">(skbio.core.sequence.ProteinSequence method)</a>
+  </dt>
+
+        
   <dt><a href="generated/skbio.core.sequence.RNASequence.is_gapped.html#skbio.core.sequence.RNASequence.is_gapped">(skbio.core.sequence.RNASequence method)</a>
   </dt>
 
       </dl></dd>
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="generated/skbio.core.sequence.DNASequence.is_reverse_complement.html#skbio.core.sequence.DNASequence.is_reverse_complement">is_reverse_complement() (skbio.core.sequence.DNASequence method)</a>
   </dt>
@@ -1785,6 +2376,14 @@
       </dl></dd>
       
   <dt><a href="generated/skbio.core.tree.TreeNode.is_root.html#skbio.core.tree.TreeNode.is_root">is_root() (skbio.core.tree.TreeNode method)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.core.genetic_code.GeneticCode.is_start.html#skbio.core.genetic_code.GeneticCode.is_start">is_start() (skbio.core.genetic_code.GeneticCode method)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.core.genetic_code.GeneticCode.is_stop.html#skbio.core.genetic_code.GeneticCode.is_stop">is_stop() (skbio.core.genetic_code.GeneticCode method)</a>
   </dt>
 
       
@@ -1813,6 +2412,10 @@
   </dt>
 
         
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.is_valid.html#skbio.core.sequence.ProteinSequence.is_valid">(skbio.core.sequence.ProteinSequence method)</a>
+  </dt>
+
+        
   <dt><a href="generated/skbio.core.sequence.RNASequence.is_valid.html#skbio.core.sequence.RNASequence.is_valid">(skbio.core.sequence.RNASequence method)</a>
   </dt>
 
@@ -1832,12 +2435,20 @@
 
       </dl></dd>
       
-  <dt><a href="generated/skbio.core.sequence.DNASequence.iupac_characters.html#skbio.core.sequence.DNASequence.iupac_characters">iupac_characters() (skbio.core.sequence.DNASequence class method)</a>
+  <dt><a href="generated/skbio.core.sequence.BiologicalSequence.iupac_characters.html#skbio.core.sequence.BiologicalSequence.iupac_characters">iupac_characters() (skbio.core.sequence.BiologicalSequence class method)</a>
   </dt>
 
       <dd><dl>
         
+  <dt><a href="generated/skbio.core.sequence.DNASequence.iupac_characters.html#skbio.core.sequence.DNASequence.iupac_characters">(skbio.core.sequence.DNASequence class method)</a>
+  </dt>
+
+        
   <dt><a href="generated/skbio.core.sequence.NucleotideSequence.iupac_characters.html#skbio.core.sequence.NucleotideSequence.iupac_characters">(skbio.core.sequence.NucleotideSequence class method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.iupac_characters.html#skbio.core.sequence.ProteinSequence.iupac_characters">(skbio.core.sequence.ProteinSequence class method)</a>
   </dt>
 
         
@@ -1846,12 +2457,20 @@
 
       </dl></dd>
       
-  <dt><a href="generated/skbio.core.sequence.DNASequence.iupac_degeneracies.html#skbio.core.sequence.DNASequence.iupac_degeneracies">iupac_degeneracies() (skbio.core.sequence.DNASequence class method)</a>
+  <dt><a href="generated/skbio.core.sequence.BiologicalSequence.iupac_degeneracies.html#skbio.core.sequence.BiologicalSequence.iupac_degeneracies">iupac_degeneracies() (skbio.core.sequence.BiologicalSequence class method)</a>
   </dt>
 
       <dd><dl>
         
+  <dt><a href="generated/skbio.core.sequence.DNASequence.iupac_degeneracies.html#skbio.core.sequence.DNASequence.iupac_degeneracies">(skbio.core.sequence.DNASequence class method)</a>
+  </dt>
+
+        
   <dt><a href="generated/skbio.core.sequence.NucleotideSequence.iupac_degeneracies.html#skbio.core.sequence.NucleotideSequence.iupac_degeneracies">(skbio.core.sequence.NucleotideSequence class method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.iupac_degeneracies.html#skbio.core.sequence.ProteinSequence.iupac_degeneracies">(skbio.core.sequence.ProteinSequence class method)</a>
   </dt>
 
         
@@ -1860,12 +2479,20 @@
 
       </dl></dd>
       
-  <dt><a href="generated/skbio.core.sequence.DNASequence.iupac_degenerate_characters.html#skbio.core.sequence.DNASequence.iupac_degenerate_characters">iupac_degenerate_characters() (skbio.core.sequence.DNASequence class method)</a>
+  <dt><a href="generated/skbio.core.sequence.BiologicalSequence.iupac_degenerate_characters.html#skbio.core.sequence.BiologicalSequence.iupac_degenerate_characters">iupac_degenerate_characters() (skbio.core.sequence.BiologicalSequence class method)</a>
   </dt>
 
       <dd><dl>
         
+  <dt><a href="generated/skbio.core.sequence.DNASequence.iupac_degenerate_characters.html#skbio.core.sequence.DNASequence.iupac_degenerate_characters">(skbio.core.sequence.DNASequence class method)</a>
+  </dt>
+
+        
   <dt><a href="generated/skbio.core.sequence.NucleotideSequence.iupac_degenerate_characters.html#skbio.core.sequence.NucleotideSequence.iupac_degenerate_characters">(skbio.core.sequence.NucleotideSequence class method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.iupac_degenerate_characters.html#skbio.core.sequence.ProteinSequence.iupac_degenerate_characters">(skbio.core.sequence.ProteinSequence class method)</a>
   </dt>
 
         
@@ -1874,12 +2501,20 @@
 
       </dl></dd>
       
-  <dt><a href="generated/skbio.core.sequence.DNASequence.iupac_standard_characters.html#skbio.core.sequence.DNASequence.iupac_standard_characters">iupac_standard_characters() (skbio.core.sequence.DNASequence class method)</a>
+  <dt><a href="generated/skbio.core.sequence.BiologicalSequence.iupac_standard_characters.html#skbio.core.sequence.BiologicalSequence.iupac_standard_characters">iupac_standard_characters() (skbio.core.sequence.BiologicalSequence class method)</a>
   </dt>
 
       <dd><dl>
         
+  <dt><a href="generated/skbio.core.sequence.DNASequence.iupac_standard_characters.html#skbio.core.sequence.DNASequence.iupac_standard_characters">(skbio.core.sequence.DNASequence class method)</a>
+  </dt>
+
+        
   <dt><a href="generated/skbio.core.sequence.NucleotideSequence.iupac_standard_characters.html#skbio.core.sequence.NucleotideSequence.iupac_standard_characters">(skbio.core.sequence.NucleotideSequence class method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.iupac_standard_characters.html#skbio.core.sequence.ProteinSequence.iupac_standard_characters">(skbio.core.sequence.ProteinSequence class method)</a>
   </dt>
 
         
@@ -1887,6 +2522,92 @@
   </dt>
 
       </dl></dd>
+  </dl></td>
+</tr></table>
+
+<h2 id="K">K</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="generated/skbio.core.sequence.BiologicalSequence.k_word_counts.html#skbio.core.sequence.BiologicalSequence.k_word_counts">k_word_counts() (skbio.core.sequence.BiologicalSequence method)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="generated/skbio.core.sequence.DNASequence.k_word_counts.html#skbio.core.sequence.DNASequence.k_word_counts">(skbio.core.sequence.DNASequence method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.core.sequence.NucleotideSequence.k_word_counts.html#skbio.core.sequence.NucleotideSequence.k_word_counts">(skbio.core.sequence.NucleotideSequence method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.k_word_counts.html#skbio.core.sequence.ProteinSequence.k_word_counts">(skbio.core.sequence.ProteinSequence method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.core.sequence.RNASequence.k_word_counts.html#skbio.core.sequence.RNASequence.k_word_counts">(skbio.core.sequence.RNASequence method)</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="generated/skbio.core.alignment.Alignment.k_word_frequencies.html#skbio.core.alignment.Alignment.k_word_frequencies">k_word_frequencies() (skbio.core.alignment.Alignment method)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="generated/skbio.core.alignment.SequenceCollection.k_word_frequencies.html#skbio.core.alignment.SequenceCollection.k_word_frequencies">(skbio.core.alignment.SequenceCollection method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.core.sequence.BiologicalSequence.k_word_frequencies.html#skbio.core.sequence.BiologicalSequence.k_word_frequencies">(skbio.core.sequence.BiologicalSequence method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.core.sequence.DNASequence.k_word_frequencies.html#skbio.core.sequence.DNASequence.k_word_frequencies">(skbio.core.sequence.DNASequence method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.core.sequence.NucleotideSequence.k_word_frequencies.html#skbio.core.sequence.NucleotideSequence.k_word_frequencies">(skbio.core.sequence.NucleotideSequence method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.k_word_frequencies.html#skbio.core.sequence.ProteinSequence.k_word_frequencies">(skbio.core.sequence.ProteinSequence method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.core.sequence.RNASequence.k_word_frequencies.html#skbio.core.sequence.RNASequence.k_word_frequencies">(skbio.core.sequence.RNASequence method)</a>
+  </dt>
+
+      </dl></dd>
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="generated/skbio.core.sequence.BiologicalSequence.k_words.html#skbio.core.sequence.BiologicalSequence.k_words">k_words() (skbio.core.sequence.BiologicalSequence method)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="generated/skbio.core.sequence.DNASequence.k_words.html#skbio.core.sequence.DNASequence.k_words">(skbio.core.sequence.DNASequence method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.core.sequence.NucleotideSequence.k_words.html#skbio.core.sequence.NucleotideSequence.k_words">(skbio.core.sequence.NucleotideSequence method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.k_words.html#skbio.core.sequence.ProteinSequence.k_words">(skbio.core.sequence.ProteinSequence method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.core.sequence.RNASequence.k_words.html#skbio.core.sequence.RNASequence.k_words">(skbio.core.sequence.RNASequence method)</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="generated/skbio.math.diversity.alpha.kempton_taylor_q.html#skbio.math.diversity.alpha.kempton_taylor_q">kempton_taylor_q() (in module skbio.math.diversity.alpha)</a>
+  </dt>
+
   </dl></td>
 </tr></table>
 
@@ -1902,33 +2623,41 @@
   </dt>
 
       
-  <dt><a href="generated/skbio.maths.stats.distance.ANOSIM.long_method_name.html#skbio.maths.stats.distance.ANOSIM.long_method_name">long_method_name (skbio.maths.stats.distance.ANOSIM attribute)</a>
+  <dt><a href="generated/skbio.math.diversity.alpha.lladser_ci.html#skbio.math.diversity.alpha.lladser_ci">lladser_ci() (in module skbio.math.diversity.alpha)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.math.diversity.alpha.lladser_pe.html#skbio.math.diversity.alpha.lladser_pe">lladser_pe() (in module skbio.math.diversity.alpha)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="generated/skbio.math.stats.distance.ANOSIM.long_method_name.html#skbio.math.stats.distance.ANOSIM.long_method_name">long_method_name (skbio.math.stats.distance.ANOSIM attribute)</a>
   </dt>
 
       <dd><dl>
         
-  <dt><a href="generated/skbio.maths.stats.distance.PERMANOVA.long_method_name.html#skbio.maths.stats.distance.PERMANOVA.long_method_name">(skbio.maths.stats.distance.PERMANOVA attribute)</a>
+  <dt><a href="generated/skbio.math.stats.distance.PERMANOVA.long_method_name.html#skbio.math.stats.distance.PERMANOVA.long_method_name">(skbio.math.stats.distance.PERMANOVA attribute)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.ordination.CA.long_method_name.html#skbio.maths.stats.ordination.CA.long_method_name">(skbio.maths.stats.ordination.CA attribute)</a>
+  <dt><a href="generated/skbio.math.stats.ordination.CA.long_method_name.html#skbio.math.stats.ordination.CA.long_method_name">(skbio.math.stats.ordination.CA attribute)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.ordination.CCA.long_method_name.html#skbio.maths.stats.ordination.CCA.long_method_name">(skbio.maths.stats.ordination.CCA attribute)</a>
+  <dt><a href="generated/skbio.math.stats.ordination.CCA.long_method_name.html#skbio.math.stats.ordination.CCA.long_method_name">(skbio.math.stats.ordination.CCA attribute)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.ordination.PCoA.long_method_name.html#skbio.maths.stats.ordination.PCoA.long_method_name">(skbio.maths.stats.ordination.PCoA attribute)</a>
+  <dt><a href="generated/skbio.math.stats.ordination.PCoA.long_method_name.html#skbio.math.stats.ordination.PCoA.long_method_name">(skbio.math.stats.ordination.PCoA attribute)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.ordination.RDA.long_method_name.html#skbio.maths.stats.ordination.RDA.long_method_name">(skbio.maths.stats.ordination.RDA attribute)</a>
+  <dt><a href="generated/skbio.math.stats.ordination.RDA.long_method_name.html#skbio.math.stats.ordination.RDA.long_method_name">(skbio.math.stats.ordination.RDA attribute)</a>
   </dt>
 
       </dl></dd>
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="generated/skbio.core.alignment.Alignment.lower.html#skbio.core.alignment.Alignment.lower">lower() (skbio.core.alignment.Alignment method)</a>
   </dt>
@@ -1951,6 +2680,10 @@
   </dt>
 
         
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.lower.html#skbio.core.sequence.ProteinSequence.lower">(skbio.core.sequence.ProteinSequence method)</a>
+  </dt>
+
+        
   <dt><a href="generated/skbio.core.sequence.RNASequence.lower.html#skbio.core.sequence.RNASequence.lower">(skbio.core.sequence.RNASequence method)</a>
   </dt>
 
@@ -1970,15 +2703,31 @@
   </dt>
 
       
-  <dt><a href="generated/skbio.core.exception.MissingDataError.html#skbio.core.exception.MissingDataError">MissingDataError</a>
+  <dt><a href="generated/skbio.math.diversity.alpha.margalef.html#skbio.math.diversity.alpha.margalef">margalef() (in module skbio.math.diversity.alpha)</a>
   </dt>
 
       
-  <dt><a href="generated/skbio.core.exception.MissingHeaderError.html#skbio.core.exception.MissingHeaderError">MissingHeaderError</a>
+  <dt><a href="generated/skbio.math.diversity.alpha.mcintosh_d.html#skbio.math.diversity.alpha.mcintosh_d">mcintosh_d() (in module skbio.math.diversity.alpha)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.math.diversity.alpha.mcintosh_e.html#skbio.math.diversity.alpha.mcintosh_e">mcintosh_e() (in module skbio.math.diversity.alpha)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.math.diversity.alpha.menhinick.html#skbio.math.diversity.alpha.menhinick">menhinick() (in module skbio.math.diversity.alpha)</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="generated/skbio.core.workflow.method.html#skbio.core.workflow.method">method (class in skbio.core.workflow)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.math.diversity.alpha.michaelis_menten_fit.html#skbio.math.diversity.alpha.michaelis_menten_fit">michaelis_menten_fit() (in module skbio.math.diversity.alpha)</a>
+  </dt>
+
       
   <dt><a href="generated/skbio.core.exception.MissingIDError.html#skbio.core.exception.MissingIDError">MissingIDError</a>
   </dt>
@@ -2008,6 +2757,28 @@
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
+  <dt><a href="generated/skbio.core.sequence.BiologicalSequence.nondegenerates.html#skbio.core.sequence.BiologicalSequence.nondegenerates">nondegenerates() (skbio.core.sequence.BiologicalSequence method)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="generated/skbio.core.sequence.DNASequence.nondegenerates.html#skbio.core.sequence.DNASequence.nondegenerates">(skbio.core.sequence.DNASequence method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.core.sequence.NucleotideSequence.nondegenerates.html#skbio.core.sequence.NucleotideSequence.nondegenerates">(skbio.core.sequence.NucleotideSequence method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.nondegenerates.html#skbio.core.sequence.ProteinSequence.nondegenerates">(skbio.core.sequence.ProteinSequence method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.core.sequence.RNASequence.nondegenerates.html#skbio.core.sequence.RNASequence.nondegenerates">(skbio.core.sequence.RNASequence method)</a>
+  </dt>
+
+      </dl></dd>
+      
   <dt><a href="generated/skbio.core.exception.NoParentError.html#skbio.core.exception.NoParentError">NoParentError</a>
   </dt>
 
@@ -2022,13 +2793,29 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
+  <dt><a href="generated/skbio.math.diversity.alpha.observed_otus.html#skbio.math.diversity.alpha.observed_otus">observed_otus() (in module skbio.math.diversity.alpha)</a>
+  </dt>
+
+      
   <dt><a href="generated/skbio.core.alignment.Alignment.omit_gap_positions.html#skbio.core.alignment.Alignment.omit_gap_positions">omit_gap_positions() (skbio.core.alignment.Alignment method)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.core.alignment.Alignment.omit_gap_sequences.html#skbio.core.alignment.Alignment.omit_gap_sequences">omit_gap_sequences() (skbio.core.alignment.Alignment method)</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="generated/skbio.core.alignment.Alignment.omit_gap_sequences.html#skbio.core.alignment.Alignment.omit_gap_sequences">omit_gap_sequences() (skbio.core.alignment.Alignment method)</a>
+  <dt><a href="generated/skbio.util.io.open_file.html#skbio.util.io.open_file">open_file() (in module skbio.util.io)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.math.stats.ordination.OrdinationResults.html#skbio.math.stats.ordination.OrdinationResults">OrdinationResults (class in skbio.math.stats.ordination)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.math.diversity.alpha.osd.html#skbio.math.diversity.alpha.osd">osd() (in module skbio.math.diversity.alpha)</a>
   </dt>
 
   </dl></td>
@@ -2038,6 +2825,10 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
+  <dt><a href="generated/skbio.parse.sequences.parse_clustal.html#skbio.parse.sequences.parse_clustal">parse_clustal() (in module skbio.parse.sequences)</a>
+  </dt>
+
+      
   <dt><a href="generated/skbio.parse.sequences.parse_fasta.html#skbio.parse.sequences.parse_fasta">parse_fasta() (in module skbio.parse.sequences)</a>
   </dt>
 
@@ -2046,11 +2837,15 @@
   </dt>
 
       
-  <dt><a href="generated/skbio.maths.stats.ordination.PCoA.html#skbio.maths.stats.ordination.PCoA">PCoA (class in skbio.maths.stats.ordination)</a>
+  <dt><a href="generated/skbio.parse.sequences.parse_qual.html#skbio.parse.sequences.parse_qual">parse_qual() (in module skbio.parse.sequences)</a>
   </dt>
 
       
-  <dt><a href="generated/skbio.maths.stats.distance.PERMANOVA.html#skbio.maths.stats.distance.PERMANOVA">PERMANOVA (class in skbio.maths.stats.distance)</a>
+  <dt><a href="generated/skbio.math.stats.ordination.PCoA.html#skbio.math.stats.ordination.PCoA">PCoA (class in skbio.math.stats.ordination)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.math.stats.distance.PERMANOVA.html#skbio.math.stats.distance.PERMANOVA">PERMANOVA (class in skbio.math.stats.distance)</a>
   </dt>
 
       
@@ -2088,7 +2883,15 @@
   </dt>
 
       
-  <dt><a href="generated/skbio.maths.stats.spatial.procrustes.html#skbio.maths.stats.spatial.procrustes">procrustes() (in module skbio.maths.stats.spatial)</a>
+  <dt><a href="generated/skbio.math.stats.spatial.procrustes.html#skbio.math.stats.spatial.procrustes">procrustes() (in module skbio.math.stats.spatial)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.math.stats.ordination.OrdinationResults.proportion_explained.html#skbio.math.stats.ordination.OrdinationResults.proportion_explained">proportion_explained (skbio.math.stats.ordination.OrdinationResults attribute)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.html#skbio.core.sequence.ProteinSequence">ProteinSequence (class in skbio.core.sequence)</a>
   </dt>
 
       
@@ -2120,7 +2923,7 @@
 
       </dl></dd>
       
-  <dt><a href="generated/skbio.maths.stats.ordination.RDA.html#skbio.maths.stats.ordination.RDA">RDA (class in skbio.maths.stats.ordination)</a>
+  <dt><a href="generated/skbio.math.stats.ordination.RDA.html#skbio.math.stats.ordination.RDA">RDA (class in skbio.math.stats.ordination)</a>
   </dt>
 
       
@@ -2128,12 +2931,12 @@
   </dt>
 
       
-  <dt><a href="generated/skbio.core.distance.DistanceMatrix.redundant_form.html#skbio.core.distance.DistanceMatrix.redundant_form">redundant_form() (skbio.core.distance.DistanceMatrix method)</a>
+  <dt><a href="generated/skbio.core.distance.DissimilarityMatrix.redundant_form.html#skbio.core.distance.DissimilarityMatrix.redundant_form">redundant_form() (skbio.core.distance.DissimilarityMatrix method)</a>
   </dt>
 
       <dd><dl>
         
-  <dt><a href="generated/skbio.core.distance.SymmetricDistanceMatrix.redundant_form.html#skbio.core.distance.SymmetricDistanceMatrix.redundant_form">(skbio.core.distance.SymmetricDistanceMatrix method)</a>
+  <dt><a href="generated/skbio.core.distance.DistanceMatrix.redundant_form.html#skbio.core.distance.DistanceMatrix.redundant_form">(skbio.core.distance.DistanceMatrix method)</a>
   </dt>
 
       </dl></dd>
@@ -2145,10 +2948,14 @@
   <dt><a href="generated/skbio.core.tree.TreeNode.remove_deleted.html#skbio.core.tree.TreeNode.remove_deleted">remove_deleted() (skbio.core.tree.TreeNode method)</a>
   </dt>
 
+      
+  <dt><a href="generated/skbio.util.misc.remove_files.html#skbio.util.misc.remove_files">remove_files() (in module skbio.util.misc)</a>
+  </dt>
+
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="generated/skbio.util.misc.remove_files.html#skbio.util.misc.remove_files">remove_files() (in module skbio.util.misc)</a>
+  <dt><a href="generated/skbio.core.workflow.requires.html#skbio.core.workflow.requires">requires (class in skbio.core.workflow)</a>
   </dt>
 
       
@@ -2167,6 +2974,10 @@
       </dl></dd>
       
   <dt><a href="generated/skbio.core.sequence.RNASequence.html#skbio.core.sequence.RNASequence">RNASequence (class in skbio.core.sequence)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.math.diversity.alpha.robbins.html#skbio.math.diversity.alpha.robbins">robbins() (in module skbio.math.diversity.alpha)</a>
   </dt>
 
       
@@ -2192,20 +3003,20 @@
   </dt>
 
       
-  <dt><a href="generated/skbio.maths.stats.ordination.CA.scores.html#skbio.maths.stats.ordination.CA.scores">scores() (skbio.maths.stats.ordination.CA method)</a>
+  <dt><a href="generated/skbio.math.stats.ordination.CA.scores.html#skbio.math.stats.ordination.CA.scores">scores() (skbio.math.stats.ordination.CA method)</a>
   </dt>
 
       <dd><dl>
         
-  <dt><a href="generated/skbio.maths.stats.ordination.CCA.scores.html#skbio.maths.stats.ordination.CCA.scores">(skbio.maths.stats.ordination.CCA method)</a>
+  <dt><a href="generated/skbio.math.stats.ordination.CCA.scores.html#skbio.math.stats.ordination.CCA.scores">(skbio.math.stats.ordination.CCA method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.ordination.PCoA.scores.html#skbio.maths.stats.ordination.PCoA.scores">(skbio.maths.stats.ordination.PCoA method)</a>
+  <dt><a href="generated/skbio.math.stats.ordination.PCoA.scores.html#skbio.math.stats.ordination.PCoA.scores">(skbio.math.stats.ordination.PCoA method)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.ordination.RDA.scores.html#skbio.maths.stats.ordination.RDA.scores">(skbio.maths.stats.ordination.RDA method)</a>
+  <dt><a href="generated/skbio.math.stats.ordination.RDA.scores.html#skbio.math.stats.ordination.RDA.scores">(skbio.math.stats.ordination.RDA method)</a>
   </dt>
 
       </dl></dd>
@@ -2219,10 +3030,6 @@
   </dt>
 
       </dl></dd>
-      
-  <dt><a href="generated/skbio.core.alignment.Alignment.sequence_frequencies.html#skbio.core.alignment.Alignment.sequence_frequencies">sequence_frequencies() (skbio.core.alignment.Alignment method)</a>
-  </dt>
-
       
   <dt><a href="generated/skbio.core.alignment.Alignment.sequence_length.html#skbio.core.alignment.Alignment.sequence_length">sequence_length() (skbio.core.alignment.Alignment method)</a>
   </dt>
@@ -2246,38 +3053,46 @@
   </dt>
 
       
-  <dt><a href="generated/skbio.core.distance.DistanceMatrix.shape.html#skbio.core.distance.DistanceMatrix.shape">shape (skbio.core.distance.DistanceMatrix attribute)</a>
+  <dt><a href="generated/skbio.math.diversity.alpha.shannon.html#skbio.math.diversity.alpha.shannon">shannon() (in module skbio.math.diversity.alpha)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.core.distance.DissimilarityMatrix.shape.html#skbio.core.distance.DissimilarityMatrix.shape">shape (skbio.core.distance.DissimilarityMatrix attribute)</a>
   </dt>
 
       <dd><dl>
         
-  <dt><a href="generated/skbio.core.distance.SymmetricDistanceMatrix.shape.html#skbio.core.distance.SymmetricDistanceMatrix.shape">(skbio.core.distance.SymmetricDistanceMatrix attribute)</a>
+  <dt><a href="generated/skbio.core.distance.DistanceMatrix.shape.html#skbio.core.distance.DistanceMatrix.shape">(skbio.core.distance.DistanceMatrix attribute)</a>
   </dt>
 
       </dl></dd>
       
-  <dt><a href="generated/skbio.maths.stats.distance.ANOSIM.short_method_name.html#skbio.maths.stats.distance.ANOSIM.short_method_name">short_method_name (skbio.maths.stats.distance.ANOSIM attribute)</a>
+  <dt><a href="generated/skbio.core.tree.TreeNode.shear.html#skbio.core.tree.TreeNode.shear">shear() (skbio.core.tree.TreeNode method)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.math.stats.distance.ANOSIM.short_method_name.html#skbio.math.stats.distance.ANOSIM.short_method_name">short_method_name (skbio.math.stats.distance.ANOSIM attribute)</a>
   </dt>
 
       <dd><dl>
         
-  <dt><a href="generated/skbio.maths.stats.distance.PERMANOVA.short_method_name.html#skbio.maths.stats.distance.PERMANOVA.short_method_name">(skbio.maths.stats.distance.PERMANOVA attribute)</a>
+  <dt><a href="generated/skbio.math.stats.distance.PERMANOVA.short_method_name.html#skbio.math.stats.distance.PERMANOVA.short_method_name">(skbio.math.stats.distance.PERMANOVA attribute)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.ordination.CA.short_method_name.html#skbio.maths.stats.ordination.CA.short_method_name">(skbio.maths.stats.ordination.CA attribute)</a>
+  <dt><a href="generated/skbio.math.stats.ordination.CA.short_method_name.html#skbio.math.stats.ordination.CA.short_method_name">(skbio.math.stats.ordination.CA attribute)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.ordination.CCA.short_method_name.html#skbio.maths.stats.ordination.CCA.short_method_name">(skbio.maths.stats.ordination.CCA attribute)</a>
+  <dt><a href="generated/skbio.math.stats.ordination.CCA.short_method_name.html#skbio.math.stats.ordination.CCA.short_method_name">(skbio.math.stats.ordination.CCA attribute)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.ordination.PCoA.short_method_name.html#skbio.maths.stats.ordination.PCoA.short_method_name">(skbio.maths.stats.ordination.PCoA attribute)</a>
+  <dt><a href="generated/skbio.math.stats.ordination.PCoA.short_method_name.html#skbio.math.stats.ordination.PCoA.short_method_name">(skbio.math.stats.ordination.PCoA attribute)</a>
   </dt>
 
         
-  <dt><a href="generated/skbio.maths.stats.ordination.RDA.short_method_name.html#skbio.maths.stats.ordination.RDA.short_method_name">(skbio.maths.stats.ordination.RDA attribute)</a>
+  <dt><a href="generated/skbio.math.stats.ordination.RDA.short_method_name.html#skbio.math.stats.ordination.RDA.short_method_name">(skbio.math.stats.ordination.RDA attribute)</a>
   </dt>
 
       </dl></dd>
@@ -2286,12 +3101,36 @@
   </dt>
 
       
-  <dt><a href="generated/skbio.core.distance.DistanceMatrix.size.html#skbio.core.distance.DistanceMatrix.size">size (skbio.core.distance.DistanceMatrix attribute)</a>
+  <dt><a href="generated/skbio.math.diversity.alpha.simpson.html#skbio.math.diversity.alpha.simpson">simpson() (in module skbio.math.diversity.alpha)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.math.diversity.alpha.simpson_e.html#skbio.math.diversity.alpha.simpson_e">simpson_e() (in module skbio.math.diversity.alpha)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.math.diversity.alpha.singles.html#skbio.math.diversity.alpha.singles">singles() (in module skbio.math.diversity.alpha)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.math.stats.ordination.OrdinationResults.site.html#skbio.math.stats.ordination.OrdinationResults.site">site (skbio.math.stats.ordination.OrdinationResults attribute)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.math.stats.ordination.OrdinationResults.site_constraints.html#skbio.math.stats.ordination.OrdinationResults.site_constraints">site_constraints (skbio.math.stats.ordination.OrdinationResults attribute)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.math.stats.ordination.OrdinationResults.site_ids.html#skbio.math.stats.ordination.OrdinationResults.site_ids">site_ids (skbio.math.stats.ordination.OrdinationResults attribute)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.core.distance.DissimilarityMatrix.size.html#skbio.core.distance.DissimilarityMatrix.size">size (skbio.core.distance.DissimilarityMatrix attribute)</a>
   </dt>
 
       <dd><dl>
         
-  <dt><a href="generated/skbio.core.distance.SymmetricDistanceMatrix.size.html#skbio.core.distance.SymmetricDistanceMatrix.size">(skbio.core.distance.SymmetricDistanceMatrix attribute)</a>
+  <dt><a href="generated/skbio.core.distance.DistanceMatrix.size.html#skbio.core.distance.DistanceMatrix.size">(skbio.core.distance.DistanceMatrix attribute)</a>
   </dt>
 
         
@@ -2312,6 +3151,10 @@
   </dt>
 
       
+  <dt><a href="core.genetic_code.html#module-skbio.core.genetic_code">skbio.core.genetic_code (module)</a>
+  </dt>
+
+      
   <dt><a href="core.sequence.html#module-skbio.core.sequence">skbio.core.sequence (module)</a>
   </dt>
 
@@ -2322,23 +3165,35 @@
   </dt>
 
       
+  <dt><a href="core.workflow.html#module-skbio.core.workflow">skbio.core.workflow (module)</a>
+  </dt>
+
+      
   <dt><a href="draw.distributions.html#module-skbio.draw.distributions">skbio.draw.distributions (module)</a>
   </dt>
 
       
-  <dt><a href="maths.stats.distance.html#module-skbio.maths.stats.distance">skbio.maths.stats.distance (module)</a>
+  <dt><a href="format.sequences.html#module-skbio.format.sequences">skbio.format.sequences (module)</a>
   </dt>
 
       
-  <dt><a href="maths.stats.ordination.html#module-skbio.maths.stats.ordination">skbio.maths.stats.ordination (module)</a>
+  <dt><a href="math.diversity.alpha.html#module-skbio.math.diversity.alpha">skbio.math.diversity.alpha (module)</a>
   </dt>
 
       
-  <dt><a href="maths.stats.spatial.html#module-skbio.maths.stats.spatial">skbio.maths.stats.spatial (module)</a>
+  <dt><a href="math.stats.distance.html#module-skbio.math.stats.distance">skbio.math.stats.distance (module)</a>
   </dt>
 
       
-  <dt><a href="maths.subsample.html#module-skbio.maths.subsample">skbio.maths.subsample (module)</a>
+  <dt><a href="math.stats.ordination.html#module-skbio.math.stats.ordination">skbio.math.stats.ordination (module)</a>
+  </dt>
+
+      
+  <dt><a href="math.stats.spatial.html#module-skbio.math.stats.spatial">skbio.math.stats.spatial (module)</a>
+  </dt>
+
+      
+  <dt><a href="math.subsample.html#module-skbio.math.subsample">skbio.math.subsample (module)</a>
   </dt>
 
       
@@ -2346,7 +3201,15 @@
   </dt>
 
       
+  <dt><a href="util.io.html#module-skbio.util.io">skbio.util.io (module)</a>
+  </dt>
+
+      
   <dt><a href="util.misc.html#module-skbio.util.misc">skbio.util.misc (module)</a>
+  </dt>
+
+      
+  <dt><a href="util.testing.html#module-skbio.util.testing">skbio.util.testing (module)</a>
   </dt>
 
       
@@ -2354,11 +3217,23 @@
   </dt>
 
       
+  <dt><a href="generated/skbio.math.stats.ordination.OrdinationResults.species.html#skbio.math.stats.ordination.OrdinationResults.species">species (skbio.math.stats.ordination.OrdinationResults attribute)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.math.stats.ordination.OrdinationResults.species_ids.html#skbio.math.stats.ordination.OrdinationResults.species_ids">species_ids (skbio.math.stats.ordination.OrdinationResults attribute)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.math.diversity.alpha.strong.html#skbio.math.diversity.alpha.strong">strong() (in module skbio.math.diversity.alpha)</a>
+  </dt>
+
+      
   <dt><a href="generated/skbio.core.alignment.Alignment.subalignment.html#skbio.core.alignment.Alignment.subalignment">subalignment() (skbio.core.alignment.Alignment method)</a>
   </dt>
 
       
-  <dt><a href="generated/skbio.maths.subsample.subsample.html#skbio.maths.subsample.subsample">subsample() (in module skbio.maths.subsample)</a>
+  <dt><a href="generated/skbio.math.subsample.subsample.html#skbio.math.subsample.subsample">subsample() (in module skbio.math.subsample)</a>
   </dt>
 
       
@@ -2374,11 +3249,7 @@
   </dt>
 
       
-  <dt><a href="generated/skbio.maths.stats.distance.CategoricalStatsResults.summary.html#skbio.maths.stats.distance.CategoricalStatsResults.summary">summary() (skbio.maths.stats.distance.CategoricalStatsResults method)</a>
-  </dt>
-
-      
-  <dt><a href="generated/skbio.core.distance.SymmetricDistanceMatrix.html#skbio.core.distance.SymmetricDistanceMatrix">SymmetricDistanceMatrix (class in skbio.core.distance)</a>
+  <dt><a href="generated/skbio.math.stats.distance.CategoricalStatsResults.summary.html#skbio.math.stats.distance.CategoricalStatsResults.summary">summary() (skbio.math.stats.distance.CategoricalStatsResults method)</a>
   </dt>
 
   </dl></td>
@@ -2388,22 +3259,22 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="generated/skbio.core.distance.DistanceMatrix.T.html#skbio.core.distance.DistanceMatrix.T">T (skbio.core.distance.DistanceMatrix attribute)</a>
+  <dt><a href="generated/skbio.core.distance.DissimilarityMatrix.T.html#skbio.core.distance.DissimilarityMatrix.T">T (skbio.core.distance.DissimilarityMatrix attribute)</a>
   </dt>
 
       <dd><dl>
         
-  <dt><a href="generated/skbio.core.distance.SymmetricDistanceMatrix.T.html#skbio.core.distance.SymmetricDistanceMatrix.T">(skbio.core.distance.SymmetricDistanceMatrix attribute)</a>
+  <dt><a href="generated/skbio.core.distance.DistanceMatrix.T.html#skbio.core.distance.DistanceMatrix.T">(skbio.core.distance.DistanceMatrix attribute)</a>
   </dt>
 
       </dl></dd>
       
-  <dt><a href="generated/skbio.maths.stats.distance.ANOSIM.test_statistic_name.html#skbio.maths.stats.distance.ANOSIM.test_statistic_name">test_statistic_name (skbio.maths.stats.distance.ANOSIM attribute)</a>
+  <dt><a href="generated/skbio.math.stats.distance.ANOSIM.test_statistic_name.html#skbio.math.stats.distance.ANOSIM.test_statistic_name">test_statistic_name (skbio.math.stats.distance.ANOSIM attribute)</a>
   </dt>
 
       <dd><dl>
         
-  <dt><a href="generated/skbio.maths.stats.distance.PERMANOVA.test_statistic_name.html#skbio.maths.stats.distance.PERMANOVA.test_statistic_name">(skbio.maths.stats.distance.PERMANOVA attribute)</a>
+  <dt><a href="generated/skbio.math.stats.distance.PERMANOVA.test_statistic_name.html#skbio.math.stats.distance.PERMANOVA.test_statistic_name">(skbio.math.stats.distance.PERMANOVA attribute)</a>
   </dt>
 
       </dl></dd>
@@ -2437,17 +3308,25 @@
   </dt>
 
         
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.to_fasta.html#skbio.core.sequence.ProteinSequence.to_fasta">(skbio.core.sequence.ProteinSequence method)</a>
+  </dt>
+
+        
   <dt><a href="generated/skbio.core.sequence.RNASequence.to_fasta.html#skbio.core.sequence.RNASequence.to_fasta">(skbio.core.sequence.RNASequence method)</a>
   </dt>
 
       </dl></dd>
       
-  <dt><a href="generated/skbio.core.distance.DistanceMatrix.to_file.html#skbio.core.distance.DistanceMatrix.to_file">to_file() (skbio.core.distance.DistanceMatrix method)</a>
+  <dt><a href="generated/skbio.core.distance.DissimilarityMatrix.to_file.html#skbio.core.distance.DissimilarityMatrix.to_file">to_file() (skbio.core.distance.DissimilarityMatrix method)</a>
   </dt>
 
       <dd><dl>
         
-  <dt><a href="generated/skbio.core.distance.SymmetricDistanceMatrix.to_file.html#skbio.core.distance.SymmetricDistanceMatrix.to_file">(skbio.core.distance.SymmetricDistanceMatrix method)</a>
+  <dt><a href="generated/skbio.core.distance.DistanceMatrix.to_file.html#skbio.core.distance.DistanceMatrix.to_file">(skbio.core.distance.DistanceMatrix method)</a>
+  </dt>
+
+        
+  <dt><a href="generated/skbio.math.stats.ordination.OrdinationResults.to_file.html#skbio.math.stats.ordination.OrdinationResults.to_file">(skbio.math.stats.ordination.OrdinationResults method)</a>
   </dt>
 
       </dl></dd>
@@ -2455,12 +3334,12 @@
   <dt><a href="generated/skbio.core.tree.TreeNode.to_newick.html#skbio.core.tree.TreeNode.to_newick">to_newick() (skbio.core.tree.TreeNode method)</a>
   </dt>
 
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="generated/skbio.core.alignment.Alignment.to_phylip.html#skbio.core.alignment.Alignment.to_phylip">to_phylip() (skbio.core.alignment.Alignment method)</a>
   </dt>
 
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="generated/skbio.core.alignment.Alignment.toFasta.html#skbio.core.alignment.Alignment.toFasta">toFasta() (skbio.core.alignment.Alignment method)</a>
   </dt>
@@ -2472,12 +3351,20 @@
 
       </dl></dd>
       
-  <dt><a href="generated/skbio.core.distance.DistanceMatrix.transpose.html#skbio.core.distance.DistanceMatrix.transpose">transpose() (skbio.core.distance.DistanceMatrix method)</a>
+  <dt><a href="generated/skbio.core.genetic_code.GeneticCode.translate.html#skbio.core.genetic_code.GeneticCode.translate">translate() (skbio.core.genetic_code.GeneticCode method)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.core.genetic_code.GeneticCode.translate_six_frames.html#skbio.core.genetic_code.GeneticCode.translate_six_frames">translate_six_frames() (skbio.core.genetic_code.GeneticCode method)</a>
+  </dt>
+
+      
+  <dt><a href="generated/skbio.core.distance.DissimilarityMatrix.transpose.html#skbio.core.distance.DissimilarityMatrix.transpose">transpose() (skbio.core.distance.DissimilarityMatrix method)</a>
   </dt>
 
       <dd><dl>
         
-  <dt><a href="generated/skbio.core.distance.SymmetricDistanceMatrix.transpose.html#skbio.core.distance.SymmetricDistanceMatrix.transpose">(skbio.core.distance.SymmetricDistanceMatrix method)</a>
+  <dt><a href="generated/skbio.core.distance.DistanceMatrix.transpose.html#skbio.core.distance.DistanceMatrix.transpose">(skbio.core.distance.DistanceMatrix method)</a>
   </dt>
 
       </dl></dd>
@@ -2523,6 +3410,10 @@
   </dt>
 
         
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.unsupported_characters.html#skbio.core.sequence.ProteinSequence.unsupported_characters">(skbio.core.sequence.ProteinSequence method)</a>
+  </dt>
+
+        
   <dt><a href="generated/skbio.core.sequence.RNASequence.unsupported_characters.html#skbio.core.sequence.RNASequence.unsupported_characters">(skbio.core.sequence.RNASequence method)</a>
   </dt>
 
@@ -2549,10 +3440,24 @@
   </dt>
 
         
+  <dt><a href="generated/skbio.core.sequence.ProteinSequence.upper.html#skbio.core.sequence.ProteinSequence.upper">(skbio.core.sequence.ProteinSequence method)</a>
+  </dt>
+
+        
   <dt><a href="generated/skbio.core.sequence.RNASequence.upper.html#skbio.core.sequence.RNASequence.upper">(skbio.core.sequence.RNASequence method)</a>
   </dt>
 
       </dl></dd>
+  </dl></td>
+</tr></table>
+
+<h2 id="W">W</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="generated/skbio.core.workflow.Workflow.html#skbio.core.workflow.Workflow">Workflow (class in skbio.core.workflow)</a>
+  </dt>
+
   </dl></td>
 </tr></table>
 

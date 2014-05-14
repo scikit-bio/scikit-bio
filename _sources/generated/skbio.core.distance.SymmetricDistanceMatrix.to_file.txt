@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.core.distance.SymmetricDistanceMatrix.to_file
-===================================================
-
-.. currentmodule:: skbio.core.distance
-
-.. automethod:: SymmetricDistanceMatrix.to_file

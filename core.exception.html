@@ -24,6 +24,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/copybutton.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
@@ -85,17 +86,26 @@
       aria-labelledby="dLabelGlobalToc"><ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="core.alignment.html">Sequence collections and alignments (<tt class="docutils literal"><span class="pre">skbio.core.alignment</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="core.sequence.html">Biological sequences (<tt class="docutils literal"><span class="pre">skbio.core.sequence</span></tt>)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="core.distance.html">Distance matrices (<tt class="docutils literal"><span class="pre">skbio.core.distance</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.distance.html">Dissimilarity and distance matrices (<tt class="docutils literal"><span class="pre">skbio.core.distance</span></tt>)</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">Exceptions (<tt class="docutils literal"><span class="pre">skbio.core.exception</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.genetic_code.html">Genetic Code (<tt class="docutils literal"><span class="pre">skbio.core.genetic_code</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="core.tree.html">Tree representations (<tt class="docutils literal"><span class="pre">skbio.core.tree</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.workflow.html">Constructing workflows (<tt class="docutils literal"><span class="pre">skbio.core.workflow</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="draw.distributions.html">Distribution visualizations (<tt class="docutils literal"><span class="pre">skbio.draw.distributions</span></tt>)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="maths.stats.distance.html">Distance-based statistics (<tt class="docutils literal"><span class="pre">skbio.maths.stats.distance</span></tt>)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="maths.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.maths.stats.spatial</span></tt>)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="maths.stats.ordination.html">Ordination methods (<tt class="docutils literal"><span class="pre">skbio.maths.stats.ordination</span></tt>)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="maths.subsample.html">Subsampling (<tt class="docutils literal"><span class="pre">skbio.maths.subsample</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="format.sequences.html">Format biological sequences (<tt class="docutils literal"><span class="pre">skbio.format.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.diversity.alpha.html">Alpha diversity measures (<tt class="docutils literal"><span class="pre">skbio.math.diversity.alpha</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.stats.distance.html">Distance-based statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.distance</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.spatial</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.stats.ordination.html">Ordination methods (<tt class="docutils literal"><span class="pre">skbio.math.stats.ordination</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.subsample.html">Subsampling (<tt class="docutils literal"><span class="pre">skbio.math.subsample</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="parse.sequences.html">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="util.io.html">I/O utils (<tt class="docutils literal"><span class="pre">skbio.util.io</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="util.misc.html">Miscellaneous Utilities (<tt class="docutils literal"><span class="pre">skbio.util.misc</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="util.testing.html">Testing utilities (<tt class="docutils literal"><span class="pre">skbio.util.testing</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="util.trie.html">Prefix tree (Trie) (<tt class="docutils literal"><span class="pre">skbio.util.trie</span></tt>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="development/py3.html">Supporting Python 2 and Python 3</a></li>
 </ul>
 </ul>
 </li>
@@ -169,23 +179,17 @@ scikit-bio codebase.</p>
 <tr class="row-odd"><td><a class="reference internal" href="generated/skbio.core.exception.SequenceCollectionError.html#skbio.core.exception.SequenceCollectionError" title="skbio.core.exception.SequenceCollectionError"><tt class="xref py py-obj docutils literal"><span class="pre">SequenceCollectionError</span></tt></a></td>
 <td>General error for sequence collection validation failures.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="generated/skbio.core.exception.DistanceMatrixError.html#skbio.core.exception.DistanceMatrixError" title="skbio.core.exception.DistanceMatrixError"><tt class="xref py py-obj docutils literal"><span class="pre">DistanceMatrixError</span></tt></a></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.core.exception.DissimilarityMatrixError.html#skbio.core.exception.DissimilarityMatrixError" title="skbio.core.exception.DissimilarityMatrixError"><tt class="xref py py-obj docutils literal"><span class="pre">DissimilarityMatrixError</span></tt></a></td>
+<td>General error for dissimilarity matrix validation failures.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.core.exception.DistanceMatrixError.html#skbio.core.exception.DistanceMatrixError" title="skbio.core.exception.DistanceMatrixError"><tt class="xref py py-obj docutils literal"><span class="pre">DistanceMatrixError</span></tt></a></td>
 <td>General error for distance matrix validation failures.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.core.exception.DistanceMatrixFormatError.html#skbio.core.exception.DistanceMatrixFormatError" title="skbio.core.exception.DistanceMatrixFormatError"><tt class="xref py py-obj docutils literal"><span class="pre">DistanceMatrixFormatError</span></tt></a></td>
-<td>Error for reporting issues in distance matrix file format.</td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="generated/skbio.core.exception.IDMismatchError.html#skbio.core.exception.IDMismatchError" title="skbio.core.exception.IDMismatchError"><tt class="xref py py-obj docutils literal"><span class="pre">IDMismatchError</span></tt></a>(actual,&nbsp;expected)</td>
-<td>Error for reporting a mismatch between IDs.</td>
-</tr>
-<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.core.exception.MissingDataError.html#skbio.core.exception.MissingDataError" title="skbio.core.exception.MissingDataError"><tt class="xref py py-obj docutils literal"><span class="pre">MissingDataError</span></tt></a>(actual,&nbsp;expected)</td>
-<td>Error for reporting missing data lines during parsing.</td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="generated/skbio.core.exception.MissingHeaderError.html#skbio.core.exception.MissingHeaderError" title="skbio.core.exception.MissingHeaderError"><tt class="xref py py-obj docutils literal"><span class="pre">MissingHeaderError</span></tt></a>()</td>
-<td>Error for reporting a missing ID header line during parsing.</td>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.core.exception.DissimilarityMatrixFormatError.html#skbio.core.exception.DissimilarityMatrixFormatError" title="skbio.core.exception.DissimilarityMatrixFormatError"><tt class="xref py py-obj docutils literal"><span class="pre">DissimilarityMatrixFormatError</span></tt></a></td>
+<td>Error for reporting issues in dissimilarity matrix file format.</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="generated/skbio.core.exception.MissingIDError.html#skbio.core.exception.MissingIDError" title="skbio.core.exception.MissingIDError"><tt class="xref py py-obj docutils literal"><span class="pre">MissingIDError</span></tt></a>(missing_id)</td>
-<td>Error for ID lookup that doesn&#8217;t exist in the distance matrix.</td>
+<td>Error for ID lookup that doesn&#8217;t exist in the dissimilarity matrix.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="generated/skbio.core.exception.TreeError.html#skbio.core.exception.TreeError" title="skbio.core.exception.TreeError"><tt class="xref py py-obj docutils literal"><span class="pre">TreeError</span></tt></a></td>
 <td>General tree error</td>
@@ -202,14 +206,17 @@ scikit-bio codebase.</p>
 <tr class="row-even"><td><a class="reference internal" href="generated/skbio.core.exception.NoParentError.html#skbio.core.exception.NoParentError" title="skbio.core.exception.NoParentError"><tt class="xref py py-obj docutils literal"><span class="pre">NoParentError</span></tt></a></td>
 <td>Missing a parent</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.core.exception.FileFormatError.html#skbio.core.exception.FileFormatError" title="skbio.core.exception.FileFormatError"><tt class="xref py py-obj docutils literal"><span class="pre">FileFormatError</span></tt></a></td>
-<td>Exception raised when a file can not be parsed.</td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="generated/skbio.core.exception.RecordError.html#skbio.core.exception.RecordError" title="skbio.core.exception.RecordError"><tt class="xref py py-obj docutils literal"><span class="pre">RecordError</span></tt></a></td>
-<td>Exception raised when a record is bad.</td>
-</tr>
 <tr class="row-odd"><td><a class="reference internal" href="generated/skbio.core.exception.FastqParseError.html#skbio.core.exception.FastqParseError" title="skbio.core.exception.FastqParseError"><tt class="xref py py-obj docutils literal"><span class="pre">FastqParseError</span></tt></a></td>
-<td></td>
+<td>Exception raised when a FASTQ formatted file cannot be parsed</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.core.exception.GeneticCodeError.html#skbio.core.exception.GeneticCodeError" title="skbio.core.exception.GeneticCodeError"><tt class="xref py py-obj docutils literal"><span class="pre">GeneticCodeError</span></tt></a></td>
+<td>Base class exception used by the GeneticCode class</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.core.exception.GeneticCodeInitError.html#skbio.core.exception.GeneticCodeInitError" title="skbio.core.exception.GeneticCodeInitError"><tt class="xref py py-obj docutils literal"><span class="pre">GeneticCodeInitError</span></tt></a></td>
+<td>Exception raised by the GeneticCode class upon a bad initialization</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.core.exception.InvalidCodonError.html#skbio.core.exception.InvalidCodonError" title="skbio.core.exception.InvalidCodonError"><tt class="xref py py-obj docutils literal"><span class="pre">InvalidCodonError</span></tt></a></td>
+<td>Exception raised by the GeneticCode class if __getitem__ fails</td>
 </tr>
 </tbody>
 </table>
@@ -221,6 +228,7 @@ scikit-bio codebase.</p>
       
   </div>
 </div>
+  
 <footer class="footer">
   <div class="container">
     <p class="pull-right">
@@ -233,5 +241,15 @@ scikit-bio codebase.</p>
     </p>
   </div>
 </footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
   </body>
 </html>

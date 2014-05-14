@@ -28,6 +28,7 @@ skbio.core.distance.DistanceMatrix
          DistanceMatrix._parse_ids
          DistanceMatrix._pprint_ids
          DistanceMatrix._validate
+         DistanceMatrix.condensed_form
          DistanceMatrix.copy
          DistanceMatrix.from_file
          DistanceMatrix.redundant_form

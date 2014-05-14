@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.core.distance.SymmetricDistanceMatrix._parse_ids
-======================================================
-
-.. currentmodule:: skbio.core.distance
-
-.. automethod:: SymmetricDistanceMatrix._parse_ids

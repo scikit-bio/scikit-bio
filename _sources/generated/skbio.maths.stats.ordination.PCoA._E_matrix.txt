@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.maths.stats.ordination.PCoA._E_matrix
-===========================================
-
-.. currentmodule:: skbio.maths.stats.ordination
-
-.. automethod:: PCoA._E_matrix

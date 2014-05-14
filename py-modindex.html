@@ -24,6 +24,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/copybutton.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
@@ -40,21 +41,6 @@
 
   </head>
   <body>
-  
-  <a href="https://github.com/biocore/scikit-bio"
-     class="visible-desktop hidden-xs"><img
-    id="gh-banner"
-    style="position: absolute; top: 50px; right: 0; border: 0;"
-    src="https://s3.amazonaws.com/github/ribbons/forkme_right_white_ffffff.png"
-    alt="Fork me on GitHub"></a>
-  <script>
-    // Adjust banner height.
-    $(function () {
-      var navHeight = $(".navbar .container").css("height");
-      $("#gh-banner").css("top", navHeight);
-    });
-  </script>
-
 
   <div id="navbar" class="navbar navbar-default navbar-fixed-top">
     <div class="container">
@@ -86,17 +72,26 @@
       aria-labelledby="dLabelGlobalToc"><ul>
 <li class="toctree-l1"><a class="reference internal" href="core.alignment.html">Sequence collections and alignments (<tt class="docutils literal"><span class="pre">skbio.core.alignment</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="core.sequence.html">Biological sequences (<tt class="docutils literal"><span class="pre">skbio.core.sequence</span></tt>)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="core.distance.html">Distance matrices (<tt class="docutils literal"><span class="pre">skbio.core.distance</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.distance.html">Dissimilarity and distance matrices (<tt class="docutils literal"><span class="pre">skbio.core.distance</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="core.exception.html">Exceptions (<tt class="docutils literal"><span class="pre">skbio.core.exception</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.genetic_code.html">Genetic Code (<tt class="docutils literal"><span class="pre">skbio.core.genetic_code</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="core.tree.html">Tree representations (<tt class="docutils literal"><span class="pre">skbio.core.tree</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.workflow.html">Constructing workflows (<tt class="docutils literal"><span class="pre">skbio.core.workflow</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="draw.distributions.html">Distribution visualizations (<tt class="docutils literal"><span class="pre">skbio.draw.distributions</span></tt>)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="maths.stats.distance.html">Distance-based statistics (<tt class="docutils literal"><span class="pre">skbio.maths.stats.distance</span></tt>)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="maths.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.maths.stats.spatial</span></tt>)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="maths.stats.ordination.html">Ordination methods (<tt class="docutils literal"><span class="pre">skbio.maths.stats.ordination</span></tt>)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="maths.subsample.html">Subsampling (<tt class="docutils literal"><span class="pre">skbio.maths.subsample</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="format.sequences.html">Format biological sequences (<tt class="docutils literal"><span class="pre">skbio.format.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.diversity.alpha.html">Alpha diversity measures (<tt class="docutils literal"><span class="pre">skbio.math.diversity.alpha</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.stats.distance.html">Distance-based statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.distance</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.spatial</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.stats.ordination.html">Ordination methods (<tt class="docutils literal"><span class="pre">skbio.math.stats.ordination</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.subsample.html">Subsampling (<tt class="docutils literal"><span class="pre">skbio.math.subsample</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="parse.sequences.html">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="util.io.html">I/O utils (<tt class="docutils literal"><span class="pre">skbio.util.io</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="util.misc.html">Miscellaneous Utilities (<tt class="docutils literal"><span class="pre">skbio.util.misc</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="util.testing.html">Testing utilities (<tt class="docutils literal"><span class="pre">skbio.util.testing</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="util.trie.html">Prefix tree (Trie) (<tt class="docutils literal"><span class="pre">skbio.util.trie</span></tt>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="development/py3.html">Supporting Python 2 and Python 3</a></li>
 </ul>
 </ul>
 </li>
@@ -172,6 +167,11 @@
      <tr class="cg-1">
        <td></td>
        <td>&nbsp;&nbsp;&nbsp;
+       <a href="core.genetic_code.html#module-skbio.core.genetic_code"><tt class="xref">skbio.core.genetic_code</tt></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&nbsp;&nbsp;&nbsp;
        <a href="core.sequence.html#module-skbio.core.sequence"><tt class="xref">skbio.core.sequence</tt></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
@@ -182,27 +182,42 @@
      <tr class="cg-1">
        <td></td>
        <td>&nbsp;&nbsp;&nbsp;
+       <a href="core.workflow.html#module-skbio.core.workflow"><tt class="xref">skbio.core.workflow</tt></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&nbsp;&nbsp;&nbsp;
        <a href="draw.distributions.html#module-skbio.draw.distributions"><tt class="xref">skbio.draw.distributions</tt></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
        <td></td>
        <td>&nbsp;&nbsp;&nbsp;
-       <a href="maths.stats.distance.html#module-skbio.maths.stats.distance"><tt class="xref">skbio.maths.stats.distance</tt></a></td><td>
+       <a href="format.sequences.html#module-skbio.format.sequences"><tt class="xref">skbio.format.sequences</tt></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
        <td></td>
        <td>&nbsp;&nbsp;&nbsp;
-       <a href="maths.stats.ordination.html#module-skbio.maths.stats.ordination"><tt class="xref">skbio.maths.stats.ordination</tt></a></td><td>
+       <a href="math.diversity.alpha.html#module-skbio.math.diversity.alpha"><tt class="xref">skbio.math.diversity.alpha</tt></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
        <td></td>
        <td>&nbsp;&nbsp;&nbsp;
-       <a href="maths.stats.spatial.html#module-skbio.maths.stats.spatial"><tt class="xref">skbio.maths.stats.spatial</tt></a></td><td>
+       <a href="math.stats.distance.html#module-skbio.math.stats.distance"><tt class="xref">skbio.math.stats.distance</tt></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
        <td></td>
        <td>&nbsp;&nbsp;&nbsp;
-       <a href="maths.subsample.html#module-skbio.maths.subsample"><tt class="xref">skbio.maths.subsample</tt></a></td><td>
+       <a href="math.stats.ordination.html#module-skbio.math.stats.ordination"><tt class="xref">skbio.math.stats.ordination</tt></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&nbsp;&nbsp;&nbsp;
+       <a href="math.stats.spatial.html#module-skbio.math.stats.spatial"><tt class="xref">skbio.math.stats.spatial</tt></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&nbsp;&nbsp;&nbsp;
+       <a href="math.subsample.html#module-skbio.math.subsample"><tt class="xref">skbio.math.subsample</tt></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
        <td></td>
@@ -212,7 +227,17 @@
      <tr class="cg-1">
        <td></td>
        <td>&nbsp;&nbsp;&nbsp;
+       <a href="util.io.html#module-skbio.util.io"><tt class="xref">skbio.util.io</tt></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&nbsp;&nbsp;&nbsp;
        <a href="util.misc.html#module-skbio.util.misc"><tt class="xref">skbio.util.misc</tt></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&nbsp;&nbsp;&nbsp;
+       <a href="util.testing.html#module-skbio.util.testing"><tt class="xref">skbio.util.testing</tt></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
        <td></td>

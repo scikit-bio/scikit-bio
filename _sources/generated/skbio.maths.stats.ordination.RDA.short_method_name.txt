@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.maths.stats.ordination.RDA.short_method_name
-==================================================
-
-.. currentmodule:: skbio.maths.stats.ordination
-
-.. autoattribute:: RDA.short_method_name

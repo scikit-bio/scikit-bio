@@ -11,6 +11,7 @@ skbio.core.alignment.SequenceCollection
       .. autosummary::
          :toctree:
       
+         SequenceCollection.__contains__
          SequenceCollection.__eq__
          SequenceCollection.__format__
          SequenceCollection.__getitem__
@@ -22,17 +23,21 @@ skbio.core.alignment.SequenceCollection
          SequenceCollection.__reduce__
          SequenceCollection.__reduce_ex__
          SequenceCollection.__repr__
+         SequenceCollection.__reversed__
          SequenceCollection.__sizeof__
+         SequenceCollection.__str__
          SequenceCollection.__subclasshook__
          SequenceCollection._validate_character_set
          SequenceCollection.degap
          SequenceCollection.distribution_stats
          SequenceCollection.from_fasta_records
          SequenceCollection.get_seq
-         SequenceCollection.identifiers
+         SequenceCollection.ids
          SequenceCollection.int_map
+         SequenceCollection.is_empty
          SequenceCollection.is_valid
          SequenceCollection.iteritems
+         SequenceCollection.k_word_frequencies
          SequenceCollection.lower
          SequenceCollection.sequence_count
          SequenceCollection.sequence_lengths

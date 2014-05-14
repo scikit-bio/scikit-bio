@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.maths.stats.ordination.CA.scores
-======================================
-
-.. currentmodule:: skbio.maths.stats.ordination
-
-.. automethod:: CA.scores
