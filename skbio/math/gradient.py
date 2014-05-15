@@ -33,6 +33,7 @@ Assume we have the following coordinates:
 >>> from skbio.math.gradient import AverageGradientANOVA
 >>> coord_data = {'PC.354': np.array([0.2761, -0.0341, 0.0633, 0.1004]),
 ...               'PC.355': np.array([0.2364, 0.2186, -0.0301, -0.0225]),
+...               'PC.356': np.array([0.2208, 0.0874, -0.3519, -0.0031]),
 ...               'PC.607': np.array([-0.1055, -0.4140, -0.15, -0.116]),
 ...               'PC.634': np.array([-0.3716, 0.1154, 0.0721, 0.0898])}
 >>> coords = pd.DataFrame.from_dict(coord_data, orient='index')
@@ -41,13 +42,14 @@ the following metadata map:
 
 >>> metadata_map = {'PC.354': {'Treatment': 'Control', 'Weight': '60'},
 ...            'PC.355': {'Treatment': 'Control', 'Weight': '55'},
+...            'PC.356': {'Treatment': 'Control', 'Weight': '50'},
 ...            'PC.607': {'Treatment': 'Fast', 'Weight': '65'},
 ...            'PC.634': {'Treatment': 'Fast', 'Weight': '68'}}
 >>> metadata_map = pd.DataFrame.from_dict(metadata_map, orient='index')
 
 and the following array with the proportion explained of each coord:
 
->>> prop_expl = np.array([25.6216, 15.7715, 14.1215, 11.6913])
+>>> prop_expl = np.array([25.6216, 15.7715, 14.1215, 11.6913, 9.8304])
 
 Then to compute the average trajectory of this data:
 
@@ -71,16 +73,16 @@ Check the trajectory_results results of one of the categories:
 >>> print trajectory_results.categories[0].category
 Treatment
 >>> print trajectory_results.categories[0].probability
-4.13395163e-32
+0.0118478282382
 
 Check the trajectory_results results of one group of one of the categories:
 
 >>> print trajectory_results.categories[0].groups[0].name
 Control
 >>> print trajectory_results.categories[0].groups[0].trajectory
-[ 2.15975404  2.15975404]
+[ 3.52199973  2.29597001  3.20309816]
 >>> print trajectory_results.categories[0].groups[0].info
-{'avg': 2.1597540407414888}
+{'avg': 3.007022633956606}
 """
 
 # -----------------------------------------------------------------------------
@@ -188,7 +190,7 @@ def _ANOVA_trajectories(category, res_by_group):
                                'Only one value in the group.')
     # Check if groups can be tested using ANOVA. ANOVA testing requires
     # all elements to have at least size greater to one.
-    values = [res.trajectory for res in res_by_group]
+    values = [res.trajectory.astype(float) for res in res_by_group]
     if any([len(value) == 1 for value in values]):
         return CategoryResults(category, None, None,
                                'This group can not be used. All groups '
