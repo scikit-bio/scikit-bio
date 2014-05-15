@@ -150,7 +150,7 @@ def LabeledRecordFinder(is_label_line, constructor=str.strip, ignore=is_empty):
             for l in lines:
                 try:
                     l = str(l.decode('utf-8'))
-                except:
+                except AttributeError:
                     pass
 
                 if constructor is not None:

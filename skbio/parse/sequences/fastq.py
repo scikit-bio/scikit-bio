@@ -43,7 +43,7 @@ def _drop_id_marker(s):
     id_ = s[1:]
     try:
         return str(id_.decode('utf-8'))
-    except:
+    except AttributeError:
         return id_
 
 
