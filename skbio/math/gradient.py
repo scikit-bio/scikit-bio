@@ -371,7 +371,7 @@ class GradientANOVA(object):
         If `axes` is not between 0 and the maximum number of axes available
         If `weighted` is True and no `sort_category` is provided
         If `weighted` is True and the values under `sort_category` are not
-            numerical
+        numerical
         If `coords` and `metadata_map` does not have samples in common
     """
     # Should be defined by the derived classes
@@ -432,6 +432,28 @@ class GradientANOVA(object):
 
         # Initialize the message buffer
         self._message_buffer = []
+
+    def get_trajectories(self):
+        r"""Compute the trajectories for each group in each category and run
+        ANOVA over the results to test group independence.
+
+        Returns
+        -------
+        GradientANOVAResults
+            An instance of GradientANOVAResults holding the results.
+        """
+        result = GradientANOVAResults(self._alg_name, self._weighted, [])
+        # Loop through all the categories that we should compute
+        # the trajectories
+        for cat, cat_groups in self._groups.items():
+            # Loop through all the category values present in the current
+            # category and compute the trajectory for each of them
+            res_by_group = [self._get_group_trajectories(group, sample_ids)
+                            for group, sample_ids in cat_groups.items()]
+
+            result.categories.append(_ANOVA_trajectories(cat, res_by_group))
+
+        return result
 
     def _normalize_samples(self):
         r"""Ensures that `self._coords` and `self._metadata_map` have the same
@@ -494,29 +516,6 @@ class GradientANOVA(object):
                 sorted_list = signed_natsort([(sort_val(sid), sid)
                                               for sid in df.index])
                 self._groups[cat][g] = [val[1] for val in sorted_list]
-
-    def get_trajectories(self):
-        r"""Compute the trajectories for each group in each category and run
-        ANOVA over the results to test group independence.
-
-        Returns
-        -------
-        GradientANOVAResults
-            An instance of GradientANOVAResults holding the results of the
-            trajectory analysis.
-        """
-        result = GradientANOVAResults(self._alg_name, self._weighted, [])
-        # Loop through all the categories that we should compute
-        # the trajectories
-        for cat, cat_groups in self._groups.items():
-            # Loop through all the category values present in the current
-            # category and compute the trajectory for each of them
-            res_by_group = [self._get_group_trajectories(group, sample_ids)
-                            for group, sample_ids in cat_groups.items()]
-
-            result.categories.append(_ANOVA_trajectories(cat, res_by_group))
-
-        return result
 
     def _get_group_trajectories(self, group_name, sids):
         r"""Compute the trajectory results for `group_name` containing the
