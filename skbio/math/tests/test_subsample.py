@@ -31,6 +31,7 @@ def setup():
     """Ignore warnings during tests."""
     warnings.simplefilter("ignore")
 
+
 def teardown():
     """Clear the list of warning filters, so that no filters are active."""
     warnings.resetwarnings()
