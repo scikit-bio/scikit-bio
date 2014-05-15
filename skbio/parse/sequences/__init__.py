@@ -89,7 +89,7 @@ The next set of examples surround the `SequenceIterator` and derived classes.
 >>> from skbio.core.iterator import FastaIterator, FastqIterator
 
 In the first example, we're going to construct a FASTA iterator that is also
-paired with quality scores.
+paired with quality scores (e.g., as in 454 fasta/qual files).
 
 >>> seqs = StringIO(">seq1\n"
 ...                 "ATGC\n"
