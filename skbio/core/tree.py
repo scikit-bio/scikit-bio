@@ -159,12 +159,12 @@ from functools import reduce
 from collections import defaultdict
 
 import numpy as np
+from scipy.stats import pearsonr
 
 from skbio.core.distance import DistanceMatrix
 from skbio.core.exception import (NoLengthError, DuplicateNodeError,
                                   NoParentError, MissingNodeError, TreeError,
                                   RecordError)
-from skbio.math.stats.test import correlation_t
 from skbio.util.io import open_file
 
 
@@ -184,7 +184,7 @@ def distance_from_r(m1, m2):
         The distance between m1 and m2
 
     """
-    return (1-correlation_t(m1.data.flat, m2.data.flat)[0])/2
+    return (1-pearsonr(m1.data.flat, m2.data.flat)[0])/2
 
 
 class TreeNode(object):

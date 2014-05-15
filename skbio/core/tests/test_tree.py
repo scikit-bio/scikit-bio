@@ -14,13 +14,13 @@ from unittest import TestCase, main
 
 import numpy as np
 import numpy.testing as nptest
+from scipy.stats import pearsonr
 from future.utils.six import StringIO
 
 from skbio.core.tree import TreeNode, _dnd_tokenizer
 from skbio.core.distance import DistanceMatrix
 from skbio.core.exception import (NoLengthError, TreeError, RecordError,
                                   MissingNodeError, NoParentError)
-from skbio.math.stats.test import correlation_t
 
 
 class TreeTests(TestCase):
@@ -471,8 +471,8 @@ class TreeTests(TestCase):
         # note: common taxa are H, G, R (only)
         m1 = np.array([[0, 2, 6.5], [2, 0, 6.5], [6.5, 6.5, 0]])
         m2 = np.array([[0, 2, 6], [2, 0, 6], [6, 6, 0]])
-        r = correlation_t(m1.flat, m2.flat)[0]
-        self.assertEqual(obs, (1 - r) / 2)
+        r = pearsonr(m1.flat, m2.flat)[0]
+        self.assertAlmostEqual(obs, (1 - r) / 2)
 
     def test_compare_tip_distances_sample(self):
         t = TreeNode.from_newick('((H:1,G:1):2,(R:0.5,M:0.7):3);')
@@ -481,8 +481,8 @@ class TreeTests(TestCase):
         # note: common taxa are H, G, R (only)
         m1 = np.array([[0, 2, 6.5], [2, 0, 6.5], [6.5, 6.5, 0]])
         m2 = np.array([[0, 2, 6], [2, 0, 6], [6, 6, 0]])
-        r = correlation_t(m1.flat, m2.flat)[0]
-        self.assertEqual(obs, (1 - r) / 2)
+        r = pearsonr(m1.flat, m2.flat)[0]
+        self.assertAlmostEqual(obs, (1 - r) / 2)
 
         # 4 common taxa, still picking H, G, R
         s = '((H:1,G:1):2,(R:0.5,M:0.7,Q:5):3);'
