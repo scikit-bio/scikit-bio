@@ -15,6 +15,7 @@ Classes
 .. autosummary::
    :toctree: generated/
 
+   GradientANOVA
    AverageGradientANOVA
    TrajectoryGradientANOVA
    FirstDifferenceGradientANOVA
