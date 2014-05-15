@@ -743,6 +743,12 @@ class TreeTests(TestCase):
         tdbl = tr.descending_branch_length(['I', 'D', 'E'])
         nptest.assert_almost_equal(tdbl, 6.6)
 
+        # test with a situation where we have unnamed internal nodes
+        tr = TreeNode.from_newick("(((A,B:1.2):.6,(D:.9,E:.6)F):2.4,(H:.4,I:"
+                                  ".5)J:1.3);")
+        tdbl = tr.descending_branch_length()
+        nptest.assert_almost_equal(tdbl, 7.9)
+
     def test_to_array(self):
         """Convert a tree to arrays"""
         t = TreeNode.from_newick(

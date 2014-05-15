@@ -2786,6 +2786,7 @@ class TreeNode(object):
         >>> print tdbl, sdbl
         8.9 2.2
         """
+        self.assign_ids()
         if tip_subset is not None:
             all_tips = self.subset()
             if not set(tip_subset).issubset(all_tips):
@@ -2797,7 +2798,7 @@ class TreeNode(object):
             for tip in tip_subset:
                 curr = self.find(tip)
                 while curr is not lca:
-                    ancestors[curr.name] = curr.length if curr.length is not \
+                    ancestors[curr.id] = curr.length if curr.length is not \
                         None else 0.0
                     curr = curr.parent
             return sum(ancestors.values())
