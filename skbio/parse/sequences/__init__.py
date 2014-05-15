@@ -86,7 +86,7 @@ To be polite, lets now remove the files we just created:
 The next set of examples surround the `SequenceIterator` and derived classes.
 
 >>> from StringIO import StringIO
->>> from skbio.core.iterator import FastaIterator, FastqIterator
+>>> from skbio.parse.sequences import FastaIterator, FastqIterator
 
 In the first example, we're going to construct a FASTA iterator that is also
 paired with quality scores (e.g., as in 454 fasta/qual files).
@@ -441,9 +441,9 @@ def load(seqs, qual=None, constructor=None, **kwargs):
 
     See Also
     --------
-    skbio.core.iterator.SequenceIterator
-    skbio.core.iterator.FastaIterator
-    skbio.core.iterator.FastqIterator
+    skbio.parse.sequences.SequenceIterator
+    skbio.parse.sequences.FastaIterator
+    skbio.parse.sequences.FastqIterator
     """
     if not seqs:
         raise ValueError("Must pass in sequences!")
