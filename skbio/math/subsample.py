@@ -24,7 +24,7 @@ Functions
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import division
+from __future__ import absolute_import, division, print_function
 
 from warnings import warn
 
@@ -32,7 +32,7 @@ import numpy as np
 
 from skbio.core.warning import EfficiencyWarning
 try:
-    from _subsample import _subsample_without_replacement
+    from ._subsample import _subsample_without_replacement
 except ImportError:
     pass
 
