@@ -146,7 +146,7 @@ def parse_fastq(data, strict=False, phred_offset=33):
                 seq = line
                 try:
                     seq = str(seq.decode("utf-8"))
-                except:
+                except AttributeError:
                     pass
             elif linetype == QUALID:
                 qualid = _drop_id_marker(line)
