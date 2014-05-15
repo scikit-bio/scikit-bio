@@ -27,6 +27,15 @@ py_subsample = import_fresh_module('skbio.math.subsample',
                                    blocked=['skbio.math._subsample'])
 
 
+def setup():
+    """Ignore warnings during tests."""
+    warnings.simplefilter("ignore")
+
+def teardown():
+    """Clear the list of warning filters, so that no filters are active."""
+    warnings.resetwarnings()
+
+
 class SubsampleTests(object):
 
     def test_subsample_nonrandom(self):
@@ -124,4 +133,5 @@ class CySubsampleTests(SubsampleTests, TestCase):
     module = cy_subsample
 
 if __name__ == '__main__':
-    main()
+    import nose
+    nose.runmodule()
