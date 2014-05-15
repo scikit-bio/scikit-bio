@@ -29,6 +29,8 @@ API Reference
    math.gradient
    math.subsample
    parse.sequences
+   parse.sequences.iterator
+   parse.sequences.factory
    util.io
    util.misc
    util.testing

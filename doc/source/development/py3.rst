@@ -343,7 +343,6 @@ Always test that both `==` and `!=` are behaving correctly, e.g.::
         # Explicitly using !=
         self.assertFalse(gc_1 != gc_2)
 
-
 Other modules
 =============
 
