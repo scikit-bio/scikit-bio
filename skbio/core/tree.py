@@ -1793,6 +1793,17 @@ class TreeNode(object):
         return tree
 
     def _balanced_distance_to_tip(self):
+        """Return the distance to tip from this node.
+
+        The distance to every tip from this node must be equal for this to
+        return a correct result.
+
+        Returns
+        -------
+        int
+            The distance to tip of a length-balanced tree
+
+        """
         node = self
         distance = 0
         while node.has_children():
@@ -1848,7 +1859,7 @@ class TreeNode(object):
 
             newest_cluster_index += 1
 
-        return node_lookup[lookup_len - 1]
+        return node_lookup[-1]
 
     @classmethod
     def from_newick(cls, lines, unescape_name=True):
