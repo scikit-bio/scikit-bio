@@ -40,7 +40,11 @@ def _ascii_to_phred64(s):
 
 def _drop_id_marker(s):
     """Drop the first character and decode bytes to text"""
-    return s[1:].decode('utf-8')
+    id_ = s[1:]
+    try:
+        return str(id_.decode('utf-8'))
+    except AttributeError:
+        return id_
 
 
 def parse_fastq(data, strict=False, phred_offset=33):
@@ -140,21 +144,24 @@ def parse_fastq(data, strict=False, phred_offset=33):
                 qual = None
             elif linetype == SEQUENCE:
                 seq = line
+                try:
+                    seq = str(seq.decode("utf-8"))
+                except AttributeError:
+                    pass
             elif linetype == QUALID:
                 qualid = _drop_id_marker(line)
                 if strict:
                     if seqid != qualid:
                         raise FastqParseError('ID mismatch: {} != {}'.format(
                             seqid, qualid))
+            # bounds based on illumina limits, see:
+            # http://nar.oxfordjournals.org/content/38/6/1767/T1.expansion.html
             elif linetype == QUAL:
                 qual = phred_f(line)
-                # bounds based on illumina limits, see:
-                # http://nar.oxfordjournals.org/content/38/6/1767/T1.expansion.html
                 if (qual < 0).any() or (qual > 62).any():
-                    raise FastqParseError(
-                        "Failed qual conversion for seq id: %s."
-                        " This may be because you passed an"
-                        " incorrect value for phred_offset."
-                        % seqid)
+                    raise FastqParseError("Failed qual conversion for seq "
+                                          "id: %s. This may be because you "
+                                          "passed an incorrect value for "
+                                          "phred_offset." % seqid)
         if seqid:
             yield (seqid, seq, qual)

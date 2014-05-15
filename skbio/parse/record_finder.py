@@ -148,6 +148,11 @@ def LabeledRecordFinder(is_label_line, constructor=str.strip, ignore=is_empty):
         with open_file(lines) as lines:
             curr = []
             for l in lines:
+                try:
+                    l = str(l.decode('utf-8'))
+                except AttributeError:
+                    pass
+
                 if constructor is not None:
                     line = constructor(l)
                 else:

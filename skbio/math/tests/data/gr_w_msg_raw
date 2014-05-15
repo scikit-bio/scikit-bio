@@ -1,0 +1,4 @@
+For group "Bar":
+Cannot calculate the first difference with a window of size (3).
+The trajectory is:
+[9.6823, 2.9511, 5.2434]

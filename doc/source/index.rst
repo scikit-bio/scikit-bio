@@ -26,8 +26,11 @@ API Reference
    math.stats.distance
    math.stats.spatial
    math.stats.ordination
+   math.gradient
    math.subsample
    parse.sequences
+   parse.sequences.iterator
+   parse.sequences.factory
    util.io
    util.misc
    util.testing
