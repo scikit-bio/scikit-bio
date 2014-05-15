@@ -1802,13 +1802,13 @@ class TreeNode(object):
 
     @classmethod
     def from_linkage_matrix(cls, linkage_matrix, id_list):
-        """Return tree from SciPy linkage matrix
+        """Return tree from SciPy linkage matrix.
 
         Parameters
         ----------
         linkage_matrix : ndarray
             A SciPy linkage matrix as returned by
-            `scipy.cluster.hierarchy.linkage`[1]_
+            `scipy.cluster.hierarchy.linkage`
         id_list : list
             The indices of the `id_list` will be used in the linkage_matrix
 
@@ -1816,6 +1816,10 @@ class TreeNode(object):
         -------
         TreeNode
             An unrooted bifurcated tree
+
+        See Also
+        --------
+        scipy.cluster.hierarchy.linkage
 
         """
         tip_width = len(id_list)
