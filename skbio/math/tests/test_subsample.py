@@ -101,22 +101,22 @@ class SubsampleTests(object):
         """Should raise an error on invalid input."""
         # Negative n.
         with self.assertRaises(ValueError):
-            _ = self.module.subsample([1, 2, 3], -1)
+            self.module.subsample([1, 2, 3], -1)
 
         # Floats.
         with self.assertRaises(TypeError):
-            _ = self.module.subsample([1, 2.3, 3], 2)
+            self.module.subsample([1, 2.3, 3], 2)
 
         # Wrong number of dimensions.
         with self.assertRaises(ValueError):
-            _ = self.module.subsample([[1, 2, 3], [4, 5, 6]], 2)
+            self.module.subsample([[1, 2, 3], [4, 5, 6]], 2)
 
         # Input has too few counts.
         with self.assertRaises(ValueError):
-            _ = self.module.subsample([0, 5, 0], 6)
+            self.module.subsample([0, 5, 0], 6)
 
 
-class PySubsampleTests(SubsampleTests, TestCase):
+class PySubsampleTests(SubsampleTests, unittest.TestCase):
     module = py_subsample
 
 
