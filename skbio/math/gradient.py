@@ -98,9 +98,9 @@ from collections import namedtuple, defaultdict
 from numbers import Integral
 
 import numpy as np
+from scipy.stats import f_oneway
 
 from skbio.util.sort import signed_natsort
-from skbio.math.stats.test import ANOVA_one_way
 
 
 def _weight_by_vector(trajectories, w_vector):
@@ -194,7 +194,7 @@ def _ANOVA_trajectories(category, res_by_group):
                                'This group can not be used. All groups '
                                'should have more than 1 element.')
     # We are ok to run ANOVA
-    _, p_val = ANOVA_one_way(values)
+    _, p_val = f_oneway(*values)
     return CategoryResults(category, p_val, res_by_group, None)
 
 
