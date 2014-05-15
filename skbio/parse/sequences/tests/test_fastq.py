@@ -30,7 +30,7 @@ class FileData(object):
         tmp_files = []
         for attr, val in [('FASTQ_EXAMPLE', FASTQ_EXAMPLE),
                           ('FASTQ_EXAMPLE_2', FASTQ_EXAMPLE_2)]:
-            tmp_file = tempfile.NamedTemporaryFile('r+b')
+            tmp_file = tempfile.NamedTemporaryFile('w')
             tmp_file.write(val)
             tmp_file.flush()
             tmp_file.seek(0)
