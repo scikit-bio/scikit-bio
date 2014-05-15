@@ -1,0 +1,14 @@
+Trajectory algorithm: avg
+
+Grouped by "Description": This group can not be used. All groups should have more than 1 element.
+
+Grouped by "DOB": This group can not be used. All groups should have more than 1 element.
+
+Grouped by "Weight": This group can not be used. All groups should have more than 1 element.
+
+Grouped by "Treatment", probability: 0.933100
+For group "Control", the group means is: 4.050800
+The info is: [('avg', 4.0508)]
+For group "Fast", the group means is: 4.159600
+The info is: [('avg', 4.1596)]
+

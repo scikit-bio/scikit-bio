@@ -26,6 +26,7 @@ API Reference
    math.stats.distance
    math.stats.spatial
    math.stats.ordination
+   math.gradient
    math.subsample
    parse.sequences
    util.io
