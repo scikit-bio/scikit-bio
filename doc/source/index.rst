@@ -18,6 +18,7 @@ API Reference
    core.iterator
    core.tree
    core.workflow
+   core.ssw
    draw.distributions
    factory.sequence
    core.genetic_code
