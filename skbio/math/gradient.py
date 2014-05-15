@@ -51,9 +51,9 @@ and the following vector with the proportion explained of each coord:
 Then to compute the average vectors of this data:
 
 >>> av = AverageGradientANOVA(coords, prop_expl, metadata_map,
-...                     vector_categories=['Treatment'],
+...                     trajectory_categories=['Treatment'],
 ...                     sort_category='Weight')
->>> vectors = av.get_vectors()
+>>> vectors = av.get_trajectories()
 
 Check the algorithm used to compute the vectors:
 
@@ -242,13 +242,13 @@ class GroupResults(namedtuple('GroupResults', ('name', 'trajectory', 'mean',
 
         out_f.write('The info is: %s\n'
                     % sorted(((k, v) for k, v in self.info.items())))
-        raw_f.write('The vector is:\n[%s]\n'
+        raw_f.write('The trajectory is:\n[%s]\n'
                     % ", ".join(map(str, self.trajectory)))
 
 
 class CategoryResults(namedtuple('CategoryResults', ('category', 'probability',
                                                      'groups', 'message'))):
-    r"""Store the vector results of a metadata category
+    r"""Store the trajectory results of a metadata category
 
     Attributes
     ----------
@@ -257,26 +257,26 @@ class CategoryResults(namedtuple('CategoryResults', ('category', 'probability',
     probability : float
         The ANOVA probability that the category groups are independent
     groups : list of GroupResults
-        The vector results for each group in the category
+        The trajectory results for each group in the category
     message : str
         A message with information of the execution of the algorithm
     """
     __slots__ = ()  # To avoid creating a dict, as a namedtuple doesn't have it
 
     def to_files(self, out_f, raw_f):
-        r"""Save the vector analysis results for a category to files in
+        r"""Save the trajectory analysis results for a category to files in
         text format.
 
         Parameters
         ----------
         out_f : file-like object
-            File-like object to write vectors analysis data to. Must have a
-            ``write`` method. It is the caller's responsibility to close
-            `out_f` when done (if necessary)
+            File-like object to write trajectory analysis data to. Must have a
+            `write` method. It is the caller's responsibility to close `out_f`
+            when done (if necessary)
         raw_f : file-like object
-            File-like object to write vectors raw values. Must have a ``write``
-            method. It is the caller's responsibility to close `out_f` when
-            done (if necessary)
+            File-like object to write trajectory raw values. Must have a
+            `write` method. It is the caller's responsibility to close `out_f`
+            when done (if necessary)
         """
         if self.probability is None:
             out_f.write('Grouped by "%s": %s\n'
@@ -319,8 +319,8 @@ class GradientANOVAResults(namedtuple('GradientANOVAResults', ('algorithm',
             method. It is the caller's responsibility to close `out_f` when
             done (if necessary)
         """
-        out_f.write('Vectors algorithm: %s\n' % self.algorithm)
-        raw_f.write('Vectors algorithm: %s\n' % self.algorithm)
+        out_f.write('Trajectory algorithm: %s\n' % self.algorithm)
+        raw_f.write('Trajectory algorithm: %s\n' % self.algorithm)
 
         if self.weighted:
             out_f.write('** This output is weighted **\n')
@@ -336,7 +336,7 @@ class GradientANOVAResults(namedtuple('GradientANOVAResults', ('algorithm',
 
 
 class GradientANOVA(object):
-    r"""Base class for the Vector algorithms
+    r"""Base class for the Trajectory algorithms
 
     Parameters
     ----------
@@ -348,14 +348,14 @@ class GradientANOVA(object):
     metadata_map : pandas.DataFrame
         The metadata map, indexed by sample ids and columns are metadata
         categories
-    vector_categories : list of str, optional
-        A list of metadata categories to use to create the vectors. If None is
-        passed, the vectors for all metadata categories are computed. Default:
-        None, compute all of them
+    trajectory_categories : list of str, optional
+        A list of metadata categories to use to create the trajectories. If
+        None is passed, the trajectories for all metadata categories are
+        computed. Default: None, compute all of them
     sort_category : str, optional
-        The metadata category to use to sort the vectors. Default: None
+        The metadata category to use to sort the trajectories. Default: None
     axes : int, optional
-        The number of axes to account while doing the vector specific
+        The number of axes to account while doing the trajectory specific
         calculations. Pass 0 to compute all of them. Default: 3
     weighted : bool, optional
         If true, the output is weighted by the space between samples in the
@@ -364,7 +364,8 @@ class GradientANOVA(object):
     Raises
     ------
     ValueError
-        If any category of `vector_categories` is not present in `metadata_map`
+        If any category of `trajectory_categories` is not present in
+        `metadata_map`
         If `sort_category` is not present in `metadata_map`
         If `axes` is not between 0 and the maximum number of axes available
         If `weighted` is True and no `sort_category` is provided
@@ -375,15 +376,16 @@ class GradientANOVA(object):
     # Should be defined by the derived classes
     _alg_name = None
 
-    def __init__(self, coords, prop_expl, metadata_map, vector_categories=None,
-                 sort_category=None, axes=3, weighted=False):
-        if not vector_categories:
-            # If vector_categories is not provided, use all the categories
+    def __init__(self, coords, prop_expl, metadata_map,
+                 trajectory_categories=None, sort_category=None, axes=3,
+                 weighted=False):
+        if not trajectory_categories:
+            # If trajectory_categories is not provided, use all the categories
             # present in the metadata map
-            vector_categories = metadata_map.keys()
+            trajectory_categories = metadata_map.keys()
         else:
-            # Check that vector_categories are in metadata_map
-            for category in vector_categories:
+            # Check that trajectory_categories are in metadata_map
+            for category in trajectory_categories:
                 if category not in metadata_map:
                     raise ValueError("Category %s not present in metadata."
                                      % category)
@@ -394,7 +396,7 @@ class GradientANOVA(object):
                              % sort_category)
 
         if axes == 0:
-            # If axes == 0, we should compute the vectors for all axes
+            # If axes == 0, we should compute the trajectories for all axes
             axes = len(prop_expl)
         elif axes > len(prop_expl) or axes < 0:
             # Axes should be 0 <= axes <= len(prop_expl)
@@ -413,14 +415,14 @@ class GradientANOVA(object):
         self._normalize_samples()
 
         # Create groups
-        self._make_groups(vector_categories, sort_category)
+        self._make_groups(trajectory_categories, sort_category)
 
         # Compute the weighting_vector
         self._weighting_vector = None
         if weighted:
             if not sort_category:
                 raise ValueError("You should provide a sort category if you "
-                                 "want to weight the vectors")
+                                 "want to weight the trajectories")
             try:
                 self._weighting_vector = \
                     self._metadata_map[sort_category].astype(np.float64)
@@ -456,9 +458,9 @@ class GradientANOVA(object):
         if mm_sample_ids != sample_ids:
             self._metadata_map = self._metadata_map.ix[sample_ids]
 
-    def _make_groups(self, vector_categories, sort_category):
+    def _make_groups(self, trajectory_categories, sort_category):
         r"""Groups the sample ids in `self._metadata_map` by the values in
-        `vector_categories`
+        `trajectory_categories`
 
         Creates `self._groups`, a dictionary keyed by category and values are
         dictionaries in which the keys represent the group name within the
@@ -470,7 +472,7 @@ class GradientANOVA(object):
 
         Parameters
         ----------
-        vector_categories : list of str
+        trajectory_categories : list of str
             A list of metadata categories to use to create the groups.
             Default: None, compute all of them
         sort_category : str or None
@@ -484,7 +486,7 @@ class GradientANOVA(object):
             sort_val = lambda sid: sid
 
         self._groups = defaultdict(dict)
-        for cat in vector_categories:
+        for cat in trajectory_categories:
             # Group samples by category
             gb = self._metadata_map.groupby(cat)
             for g, df in gb:
@@ -492,31 +494,32 @@ class GradientANOVA(object):
                                               for sid in df.index])
                 self._groups[cat][g] = [val[1] for val in sorted_list]
 
-    def get_vectors(self):
-        r"""Compute the vectors for each group in each category and run ANOVA
-        over the results to test group independence.
+    def get_trajectories(self):
+        r"""Compute the trajectories for each group in each category and run
+        ANOVA over the results to test group independence.
 
         Returns
         -------
         GradientANOVAResults
             An instance of GradientANOVAResults holding the results of the
-            vector analysis.
+            trajectory analysis.
         """
         result = GradientANOVAResults(self._alg_name, self._weighted, [])
-        # Loop through all the categories that we should compute the vectors
+        # Loop through all the categories that we should compute
+        # the trajectories
         for cat, cat_groups in self._groups.items():
             # Loop through all the category values present in the current
-            # category and compute the vector for each of them
-            res_by_group = [self._get_group_vectors(group, sample_ids)
+            # category and compute the trajectory for each of them
+            res_by_group = [self._get_group_trajectories(group, sample_ids)
                             for group, sample_ids in cat_groups.items()]
 
             result.categories.append(ANOVA_trajectories(cat, res_by_group))
 
         return result
 
-    def _get_group_vectors(self, group_name, sids):
-        r"""Compute the vector results for `group_name` containing the samples
-        `sids`.
+    def _get_group_trajectories(self, group_name, sids):
+        r"""Compute the trajectory results for `group_name` containing the
+        samples `sids`.
 
         Weights the data if `self._weighted` is True and ``len(sids) > 1``
 
@@ -530,7 +533,7 @@ class GradientANOVA(object):
         Returns
         -------
         GroupResults
-            The vector results for the given group
+            The trajectory results for the given group
 
         Raises
         ------
@@ -538,9 +541,9 @@ class GradientANOVA(object):
             If sids is an empty list
         """
         # We multiply the coord values with the prop_expl
-        vectors = self._coords.ix[sids] * self._prop_expl
+        trajectories = self._coords.ix[sids] * self._prop_expl
 
-        if vectors.empty:
+        if trajectories.empty:
             # Raising a RuntimeError since in a usual execution this should
             # never happen. The only way this can happen is if the user
             # directly calls this method, which shouldn't be done
@@ -548,30 +551,31 @@ class GradientANOVA(object):
             raise RuntimeError("No samples to process, an empty list cannot "
                                "be processed")
 
-        # The weighting can only be done over vectors with a length greater
-        # than 1
+        # The weighting can only be done over trajectories with a length
+        # greater than 1
         if self._weighted and len(sids) > 1:
-            vectors_copy = deepcopy(vectors)
+            trajectories_copy = deepcopy(trajectories)
             try:
-                vectors = weight_by_vector(vectors_copy,
-                                           self._weighting_vector[sids])
+                trajectories = weight_by_vector(trajectories_copy,
+                                                self._weighting_vector[sids])
             except (FloatingPointError, ValueError):
                 self._message_buffer.append("Could not weight group, no "
                                             "gradient in the the "
                                             "weighting vector.\n")
-                vectors = vectors_copy
+                trajectories = trajectories_copy
 
-        return self._compute_vector_results(group_name, vectors.ix[sids])
+        return self._compute_trajectories_results(group_name,
+                                                  trajectories.ix[sids])
 
-    def _compute_vector_results(self, group_name, vectors):
-        r"""Do the actual vector computation over vectors
+    def _compute_trajectories_results(self, group_name, trajectories):
+        r"""Do the actual trajectories computation over trajectories
 
         Parameters
         ----------
         group_name : str
             The name of the group
-        vectors : pandas.DataFrame
-            The sorted vectors for each sample in the group
+        trajectories : pandas.DataFrame
+            The sorted trajectories for each sample in the group
 
         Raises
         ------
@@ -583,7 +587,7 @@ class GradientANOVA(object):
 
 
 class AverageGradientANOVA(GradientANOVA):
-    r"""Perform vector analysis using the RMS average algorithm
+    r"""Perform trajectory analysis using the RMS average algorithm
 
     For each group in a category, it computes the average point among the
     samples in such group and then computes the norm of each sample from the
@@ -596,41 +600,42 @@ class AverageGradientANOVA(GradientANOVA):
 
     _alg_name = 'avg'
 
-    def _compute_vector_results(self, group_name, vectors):
-        r"""Do the actual vector computation over vectors
+    def _compute_trajectories_results(self, group_name, trajectories):
+        r"""Do the actual trajectory computation over trajectories
 
         Parameters
         ----------
         group_name : str
             The name of the group
-        vectors : pandas.DataFrame
-            The sorted vectors for each sample in the group
+        trajectories : pandas.DataFrame
+            The sorted trajectories for each sample in the group
 
         Returns
         -------
         GroupResults
-            The vector results for `group_name` using the average vectors
-            method
+            The trajectory results for `group_name` using the average
+            trajectories method
         """
-        center = np.average(vectors, axis=0)
-        if len(vectors) == 1:
-            vector = np.array([np.linalg.norm(center)])
-            calc = {'avg': vector[0]}
+        center = np.average(trajectories, axis=0)
+        if len(trajectories) == 1:
+            trajectory = np.array([np.linalg.norm(center)])
+            calc = {'avg': trajectory[0]}
         else:
-            vector = np.array([np.linalg.norm(row[1].get_values() - center)
-                               for row in vectors.iterrows()])
-            calc = {'avg': np.average(vector)}
+            trajectory = np.array([np.linalg.norm(row[1].get_values() - center)
+                                   for row in trajectories.iterrows()])
+            calc = {'avg': np.average(trajectory)}
 
         msg = ''.join(self._message_buffer) if self._message_buffer else None
         # Reset the message buffer
         self._message_buffer = []
-        return GroupResults(group_name, vector, np.mean(vector), calc, msg)
+        return GroupResults(group_name, trajectory, np.mean(trajectory),
+                            calc, msg)
 
 
 class TrajectoryGradientANOVA(GradientANOVA):
-    r"""Perform vector analysis using the RMS trajectory algorithm
+    r"""Perform trajectory analysis using the RMS trajectory algorithm
 
-    For each group in a category, each component of the result vector is
+    For each group in a category, each component of the result trajectory is
     computed as taking the sorted list of samples in the group and taking the
     norm of the coordinates of the 2nd sample minus 1st sample, 3rd sample
     minus 2nd sample and so on.
@@ -642,41 +647,43 @@ class TrajectoryGradientANOVA(GradientANOVA):
 
     _alg_name = 'trajectory'
 
-    def _compute_vector_results(self, group_name, vectors):
-        r"""Do the actual vector computation over vectors
+    def _compute_trajectories_results(self, group_name, trajectories):
+        r"""Do the actual trajectory computation over trajectories
 
         Parameters
         ----------
         group_name : str
             The name of the group
-        vectors : pandas.DataFrame
-            The sorted vectors for each sample in the group
+        trajectories : pandas.DataFrame
+            The sorted trajectories for each sample in the group
 
         Returns
         -------
         GroupResults
-            The vector results for `group_name` using the trajectory vectors
+            The trajectory results for `group_name` using the trajectory
             method
         """
-        if len(vectors) == 1:
-            vector = [np.linalg.norm(vectors)]
-            calc = {'trajectory': vector[0]}
+        if len(trajectories) == 1:
+            trajectory = [np.linalg.norm(trajectories)]
+            calc = {'trajectory': trajectory[0]}
         else:
-            # Loop through all the rows in vectors and create 'vector' by
-            # taking the norm of the 2nd row - 1st row, 3rd row - 2nd row...
-            vector = np.array([np.linalg.norm(vectors.ix[i+1].get_values() -
-                                              vectors.ix[i].get_values())
-                               for i in range(len(vectors) - 1)])
-            calc = {'trajectory': np.linalg.norm(vector)}
+            # Loop through all the rows in trajectories and create 'trajectory'
+            # by taking the norm of the 2nd row - 1st row, 3rd row - 2nd row...
+            trajectory = \
+                np.array([np.linalg.norm(trajectories.ix[i+1].get_values() -
+                                         trajectories.ix[i].get_values())
+                          for i in range(len(trajectories) - 1)])
+            calc = {'trajectory': np.linalg.norm(trajectory)}
 
         msg = ''.join(self._message_buffer) if self._message_buffer else None
         # Reset the message buffer
         self._message_buffer = []
-        return GroupResults(group_name, vector, np.mean(vector), calc, msg)
+        return GroupResults(group_name, trajectory, np.mean(trajectory),
+                            calc, msg)
 
 
 class FirstDifferenceGradientANOVA(GradientANOVA):
-    r"""Perform vector analysis using the first difference algorithm
+    r"""Perform trajectory analysis using the first difference algorithm
 
     It calculates the norm for all the time-points and then calculates the
     first difference for each resulting point
@@ -688,43 +695,46 @@ class FirstDifferenceGradientANOVA(GradientANOVA):
 
     _alg_name = 'diff'
 
-    def _compute_vector_results(self, group_name, vectors):
-        r"""Do the actual vector computation over vectors
+    def _compute_trajectories_results(self, group_name, trajectories):
+        r"""Do the actual trajectory computation over trajectories
 
         Parameters
         ----------
         group_name : str
             The name of the group
-        vectors : pandas.DataFrame
-            The sorted vectors for each sample in the group
+        trajectories : pandas.DataFrame
+            The sorted trajectories for each sample in the group
 
         Returns
         -------
         GroupResults
-            The vector results for `group_name` using the difference vectors
+            The trajectory results for `group_name` using the first difference
             method
         """
-        if len(vectors) == 1:
-            vector = [np.linalg.norm(vectors)]
-            calc = {'mean': vector[0], 'std': 0}
-        elif len(vectors) == 2:
-            vector = [np.linalg.norm(vectors[1] - vectors[0])]
-            calc = {'mean': vector[0], 'std': 0}
+        if len(trajectories) == 1:
+            trajectory = [np.linalg.norm(trajectories)]
+            calc = {'mean': trajectory[0], 'std': 0}
+        elif len(trajectories) == 2:
+            trajectory = [np.linalg.norm(trajectories[1] - trajectories[0])]
+            calc = {'mean': trajectory[0], 'std': 0}
         else:
-            vec_norm = np.array([np.linalg.norm(vectors.ix[i+1].get_values() -
-                                                vectors.ix[i].get_values())
-                                 for i in range(len(vectors) - 1)])
-            vector = np.diff(vec_norm)
-            calc = {'mean': np.mean(vector), 'std': np.std(vector)}
+            vec_norm = \
+                np.array([np.linalg.norm(trajectories.ix[i+1].get_values() -
+                                         trajectories.ix[i].get_values())
+                          for i in range(len(trajectories) - 1)])
+            trajectory = np.diff(vec_norm)
+            calc = {'mean': np.mean(trajectory), 'std': np.std(trajectory)}
 
         msg = ''.join(self._message_buffer) if self._message_buffer else None
         # Reset the message buffer
         self._message_buffer = []
-        return GroupResults(group_name, vector, np.mean(vector), calc, msg)
+        return GroupResults(group_name, trajectory, np.mean(trajectory),
+                            calc, msg)
 
 
 class WindowDifferenceGradientANOVA(GradientANOVA):
-    r"""Perform vector analysis using the modified first difference algorithm
+    r"""Perform trajectory analysis using the modified first difference
+    algorithm
 
     It calculates the norm for all the time-points and subtracts the mean of
     the next number of elements specified in `window_size` and the current
@@ -765,8 +775,8 @@ class WindowDifferenceGradientANOVA(GradientANOVA):
 
         self._window_size = window_size
 
-    def _compute_vector_results(self, group_name, vectors):
-        r"""Do the actual vector computation over vectors
+    def _compute_trajectories_results(self, group_name, trajectories):
+        r"""Do the actual trajectory computation over trajectories
 
         If the first difference cannot be calculated of the provided window
         size, no difference is applied and a message is added to the results.
@@ -775,29 +785,31 @@ class WindowDifferenceGradientANOVA(GradientANOVA):
         ----------
         group_name : str
             The name of the group
-        vectors : pandas.DataFrame
-            The sorted vectors for each sample in the group
+        trajectories : pandas.DataFrame
+            The sorted trajectories for each sample in the group
 
         Returns
         -------
         GroupResults
-            The vector results for `group_name` using the windowed difference
-            vectors method
+            The trajectory results for `group_name` using the windowed
+            difference method
         """
-        if len(vectors) == 1:
-            vector = [np.linalg.norm(vectors)]
-            calc = {'mean': vector, 'std': 0}
-        elif len(vectors) == 2:
-            vector = [np.linalg.norm(vectors[1] - vectors[0])]
-            calc = {'mean': vector, 'std': 0}
+        if len(trajectories) == 1:
+            trajectory = [np.linalg.norm(trajectories)]
+            calc = {'mean': trajectory, 'std': 0}
+        elif len(trajectories) == 2:
+            trajectory = [np.linalg.norm(trajectories[1] - trajectories[0])]
+            calc = {'mean': trajectory, 'std': 0}
         else:
-            vec_norm = np.array([np.linalg.norm(vectors.ix[i+1].get_values() -
-                                                vectors.ix[i].get_values())
-                                 for i in range(len(vectors) - 1)])
+            vec_norm = \
+                np.array([np.linalg.norm(trajectories.ix[i+1].get_values() -
+                                         trajectories.ix[i].get_values())
+                          for i in range(len(trajectories) - 1)])
             # windowed first differences won't be able on every group,
-            # specially given the variation of size that a vector tends to have
+            # specially given the variation of size that a trajectory tends
+            # to have
             if len(vec_norm) <= self._window_size:
-                vector = vec_norm
+                trajectory = vec_norm
                 self._message_buffer.append("Cannot calculate the first "
                                             "difference with a window of size "
                                             "(%d)." % self._window_size)
@@ -805,18 +817,19 @@ class WindowDifferenceGradientANOVA(GradientANOVA):
                 # Replicate the last element as many times as required
                 for idx in range(0, self._window_size):
                     vec_norm = np.append(vec_norm, vec_norm[-1:], axis=0)
-                vector = []
+                trajectory = []
                 for idx in range(0, len(vec_norm) - self._window_size):
                     # Meas has to be over axis 0 so it handles arrays of arrays
                     element = np.mean(vec_norm[(idx + 1):
                                                (idx + 1 + self._window_size)],
                                       axis=0)
-                    vector.append(element - vec_norm[idx])
-                vector = np.array(vector)
+                    trajectory.append(element - vec_norm[idx])
+                trajectory = np.array(trajectory)
 
-            calc = {'mean': np.mean(vector), 'std': np.std(vector)}
+            calc = {'mean': np.mean(trajectory), 'std': np.std(trajectory)}
 
         msg = ''.join(self._message_buffer) if self._message_buffer else None
         # Reset the message buffer
         self._message_buffer = []
-        return GroupResults(group_name, vector, np.mean(vector), calc, msg)
+        return GroupResults(group_name, trajectory, np.mean(trajectory),
+                            calc, msg)

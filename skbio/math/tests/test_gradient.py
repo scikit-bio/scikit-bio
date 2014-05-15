@@ -205,7 +205,7 @@ class BaseTests(TestCase):
             for o, e in zip(sorted(obs.groups), sorted(exp.groups)):
                 self.assert_group_results_almost_equal(o, e)
 
-    def assert_vectors_results_almost_equal(self, obs, exp):
+    def assert_gradientANOVA_results_almost_equal(self, obs, exp):
         """Tests that obs and exp are almost equal"""
         self.assertEqual(obs.algorithm, exp.algorithm)
         self.assertEqual(obs.weighted, exp.weighted)
@@ -217,15 +217,16 @@ class BaseTests(TestCase):
 class GradientTests(BaseTests):
     def test_weight_by_vector(self):
         """Correctly weights the vectors"""
-        vector = pd.DataFrame.from_dict({'s1': np.array([1]),
-                                         's2': np.array([2]),
-                                         's3': np.array([3]),
-                                         's4': np.array([4]),
-                                         's5': np.array([5]),
-                                         's6': np.array([6]),
-                                         's7': np.array([7]),
-                                         's8': np.array([8])}, orient='index')
-        vector.sort(columns=0, inplace=True)
+        trajectory = pd.DataFrame.from_dict({'s1': np.array([1]),
+                                             's2': np.array([2]),
+                                             's3': np.array([3]),
+                                             's4': np.array([4]),
+                                             's5': np.array([5]),
+                                             's6': np.array([6]),
+                                             's7': np.array([7]),
+                                             's8': np.array([8])},
+                                            orient='index')
+        trajectory.sort(columns=0, inplace=True)
         w_vector = pd.Series(np.array([1, 5, 8, 12, 45, 80, 85, 90]),
                              ['s1', 's2', 's3', 's4',
                               's5', 's6', 's7', 's8']).astype(np.float64)
@@ -238,18 +239,19 @@ class GradientTests(BaseTests):
                                       's7': np.array([17.8]),
                                       's8': np.array([20.3428571428])},
                                      orient='index')
-        obs = weight_by_vector(vector, w_vector)
+        obs = weight_by_vector(trajectory, w_vector)
         pdt.assert_frame_equal(obs.sort(axis=0), exp.sort(axis=0))
 
-        vector = pd.DataFrame.from_dict({'s1': np.array([1]),
-                                         's2': np.array([2]),
-                                         's3': np.array([3]),
-                                         's4': np.array([4]),
-                                         's5': np.array([5]),
-                                         's6': np.array([6]),
-                                         's7': np.array([7]),
-                                         's8': np.array([8])}, orient='index')
-        vector.sort(columns=0, inplace=True)
+        trajectory = pd.DataFrame.from_dict({'s1': np.array([1]),
+                                             's2': np.array([2]),
+                                             's3': np.array([3]),
+                                             's4': np.array([4]),
+                                             's5': np.array([5]),
+                                             's6': np.array([6]),
+                                             's7': np.array([7]),
+                                             's8': np.array([8])},
+                                            orient='index')
+        trajectory.sort(columns=0, inplace=True)
         w_vector = pd.Series(np.array([1, 2, 3, 4, 5, 6, 7, 8]),
                              ['s1', 's2', 's3', 's4',
                               's5', 's6', 's7', 's8']).astype(np.float64)
@@ -259,29 +261,30 @@ class GradientTests(BaseTests):
                                       's7': np.array([7]), 's8': np.array([8])
                                       },
                                      orient='index')
-        obs = weight_by_vector(vector, w_vector)
+        obs = weight_by_vector(trajectory, w_vector)
         pdt.assert_frame_equal(obs.sort(axis=0), exp.sort(axis=0))
 
-        vector = pd.DataFrame.from_dict({'s2': np.array([2]),
-                                         's3': np.array([3]),
-                                         's4': np.array([4]),
-                                         's5': np.array([5]),
-                                         's6': np.array([6])}, orient='index')
-        vector.sort(columns=0, inplace=True)
+        trajectory = pd.DataFrame.from_dict({'s2': np.array([2]),
+                                             's3': np.array([3]),
+                                             's4': np.array([4]),
+                                             's5': np.array([5]),
+                                             's6': np.array([6])},
+                                            orient='index')
+        trajectory.sort(columns=0, inplace=True)
         w_vector = pd.Series(np.array([25, 30, 35, 40, 45]),
                              ['s2', 's3', 's4', 's5', 's6']).astype(np.float64)
         exp = pd.DataFrame.from_dict({'s2': np.array([2]), 's3': np.array([3]),
                                       's4': np.array([4]), 's5': np.array([5]),
                                       's6': np.array([6])}, orient='index')
-        obs = weight_by_vector(vector, w_vector)
+        obs = weight_by_vector(trajectory, w_vector)
         pdt.assert_frame_equal(obs.sort(axis=0), exp.sort(axis=0))
 
-        vector = pd.DataFrame.from_dict({'s1': np.array([1, 2, 3]),
-                                         's2': np.array([2, 3, 4]),
-                                         's3': np.array([5, 6, 7]),
-                                         's4': np.array([8, 9, 10])},
-                                        orient='index')
-        vector.sort(columns=0, inplace=True)
+        trajectory = pd.DataFrame.from_dict({'s1': np.array([1, 2, 3]),
+                                             's2': np.array([2, 3, 4]),
+                                             's3': np.array([5, 6, 7]),
+                                             's4': np.array([8, 9, 10])},
+                                            orient='index')
+        trajectory.sort(columns=0, inplace=True)
         w_vector = pd.Series(np.array([1, 2, 3, 4]),
                              ['s1', 's2', 's3', 's4']).astype(np.float64)
         exp = pd.DataFrame.from_dict({'s1': np.array([1, 2, 3]),
@@ -289,26 +292,26 @@ class GradientTests(BaseTests):
                                       's3': np.array([5, 6, 7]),
                                       's4': np.array([8, 9, 10])},
                                      orient='index')
-        obs = weight_by_vector(vector, w_vector)
+        obs = weight_by_vector(trajectory, w_vector)
         pdt.assert_frame_equal(obs.sort(axis=0), exp.sort(axis=0))
 
         sample_ids = ['PC.356', 'PC.481', 'PC.355', 'PC.593', 'PC.354']
-        vector = pd.DataFrame.from_dict({'PC.356': np.array([5.65948525,
-                                                             1.37977545,
-                                                             -4.9706303]),
-                                         'PC.481': np.array([0.79151484,
-                                                             -0.70387996,
-                                                             1.89223152]),
-                                         'PC.355': np.array([6.05869624,
-                                                             3.44821245,
-                                                             -0.42595788]),
-                                         'PC.593': np.array([5.18731945,
-                                                             -1.81714206,
-                                                             4.26216485]),
-                                         'PC.354': np.array([7.07588529,
-                                                             -0.53917873,
-                                                             0.89389158])
-                                         }, orient='index')
+        trajectory = pd.DataFrame.from_dict({'PC.356': np.array([5.65948525,
+                                                                 1.37977545,
+                                                                 -4.9706303]),
+                                             'PC.481': np.array([0.79151484,
+                                                                 -0.70387996,
+                                                                 1.89223152]),
+                                             'PC.355': np.array([6.05869624,
+                                                                 3.44821245,
+                                                                 -0.42595788]),
+                                             'PC.593': np.array([5.18731945,
+                                                                 -1.81714206,
+                                                                 4.26216485]),
+                                             'PC.354': np.array([7.07588529,
+                                                                 -0.53917873,
+                                                                 0.89389158])
+                                             }, orient='index')
         w_vector = pd.Series(np.array([50, 52, 55, 57, 60]),
                              sample_ids).astype(np.float64)
         exp = pd.DataFrame.from_dict({'PC.356': np.array([5.65948525,
@@ -327,7 +330,7 @@ class GradientTests(BaseTests):
                                                           -0.44931561,
                                                           0.74490965])
                                       }, orient='index')
-        obs = weight_by_vector(vector.ix[sample_ids], w_vector[sample_ids])
+        obs = weight_by_vector(trajectory.ix[sample_ids], w_vector[sample_ids])
         pdt.assert_frame_equal(obs.sort(axis=0), exp.sort(axis=0))
 
     def test_weight_by_vector_error(self):
@@ -487,14 +490,14 @@ class GradientANOVATests(BaseTests):
 
     def test_init_error(self):
         """Raises an error with erroneous inputs"""
-        # Raises ValueError if any category in vector_categories is not
+        # Raises ValueError if any category in trajectory_categories is not
         # present in metadata_map
         with self.assertRaises(ValueError):
             GradientANOVA(self.coords, self.prop_expl, self.metadata_map,
-                          vector_categories=['foo'])
+                          trajectory_categories=['foo'])
         with self.assertRaises(ValueError):
             GradientANOVA(self.coords, self.prop_expl, self.metadata_map,
-                          vector_categories=['Weight', 'Treatment', 'foo'])
+                          trajectory_categories=['Weight', 'Treatment', 'foo'])
 
         # Raises ValueError if sort_category is not present in metadata_map
         with self.assertRaises(ValueError):
@@ -634,7 +637,7 @@ class GradientANOVATests(BaseTests):
             GradientANOVA(self.coords, self.prop_expl, error_metadata_map)
 
     def test_make_groups(self):
-        """Correctly generates the groups for vector_categories"""
+        """Correctly generates the groups for trajectory_categories"""
         # Test with all categories
         bv = GradientANOVA(self.coords, self.prop_expl, self.metadata_map)
         exp_groups = {'Treatment': {'Control': ['PC.354', 'PC.355', 'PC.356',
@@ -669,7 +672,7 @@ class GradientANOVATests(BaseTests):
 
         # Test with user-defined categories
         bv = GradientANOVA(self.coords, self.prop_expl, self.metadata_map,
-                           vector_categories=['Treatment', 'DOB'])
+                           trajectory_categories=['Treatment', 'DOB'])
         exp_groups = {'Treatment': {'Control': ['PC.354', 'PC.355', 'PC.356',
                                                 'PC.481', 'PC.593'],
                                     'Fast': ['PC.607', 'PC.634',
@@ -682,41 +685,41 @@ class GradientANOVATests(BaseTests):
                               '20080116': ['PC.634', 'PC.635', 'PC.636']}}
         self.assertEqual(bv._groups, exp_groups)
 
-    def test_get_vectors(self):
+    def test_get_trajectories(self):
         """Should raise a NotImplementedError as this is a base class"""
         bv = GradientANOVA(self.coords, self.prop_expl, self.metadata_map)
         with self.assertRaises(NotImplementedError):
-            bv.get_vectors()
+            bv.get_trajectories()
 
-    def test_get_group_vectors(self):
+    def test_get_group_trajectories(self):
         """Should raise a NotImplementedError in usual execution as this is
         a base class"""
         bv = GradientANOVA(self.coords, self.prop_expl, self.metadata_map)
         with self.assertRaises(NotImplementedError):
-            bv.get_vectors()
+            bv.get_trajectories()
 
-    def test_get_group_vectors_error(self):
-        """Should raise a RuntimeError if the user call _get_group_vectors
+    def test_get_group_trajectories_error(self):
+        """Should raise a RuntimeError if the user call _get_group_trajectories
         with erroneous inputs"""
         bv = GradientANOVA(self.coords, self.prop_expl, self.metadata_map)
         with self.assertRaises(RuntimeError):
-            bv._get_group_vectors("foo", ['foo'])
+            bv._get_group_trajectories("foo", ['foo'])
         with self.assertRaises(RuntimeError):
-            bv._get_group_vectors("bar", [])
+            bv._get_group_trajectories("bar", [])
 
-    def test_compute_vector_results(self):
+    def test_compute_trajectories_results(self):
         """Should raise a NotImplementedError as this is a base class"""
         bv = GradientANOVA(self.coords, self.prop_expl, self.metadata_map)
         with self.assertRaises(NotImplementedError):
-            bv._compute_vector_results("foo", [])
+            bv._compute_trajectories_results("foo", [])
 
 
 class AverageGradientANOVATests(BaseTests):
-    def test_get_vectors_all(self):
-        """get_vectors returns the results of all categories"""
+    def test_get_trajectories_all(self):
+        """get_trajectories returns the results of all categories"""
         av = AverageGradientANOVA(self.coords, self.prop_expl,
                                   self.metadata_map)
-        obs = av.get_vectors()
+        obs = av.get_trajectories()
 
         exp_description = CategoryResults('Description', None, None,
                                           'This group can not be used. All '
@@ -747,14 +750,14 @@ class AverageGradientANOVATests(BaseTests):
                                         None)
         exp = GradientANOVAResults('avg', False, [exp_description, exp_weight,
                                                   exp_dob, exp_treatment])
-        self.assert_vectors_results_almost_equal(obs, exp)
+        self.assert_gradientANOVA_results_almost_equal(obs, exp)
 
-    def test_get_vectors_single(self):
-        """get_vectors returns the results of the provided category"""
+    def test_get_trajectories_single(self):
+        """get_trajectories returns the results of the provided category"""
         av = AverageGradientANOVA(self.coords, self.prop_expl,
                                   self.metadata_map,
-                                  vector_categories=['Treatment'])
-        obs = av.get_vectors()
+                                  trajectory_categories=['Treatment'])
+        obs = av.get_trajectories()
 
         exp_control_group = GroupResults('Control',
                                          np.array([2.3694943596755276,
@@ -775,15 +778,15 @@ class AverageGradientANOVATests(BaseTests):
                                         None)
         exp = GradientANOVAResults('avg', False, [exp_treatment])
 
-        self.assert_vectors_results_almost_equal(obs, exp)
+        self.assert_gradientANOVA_results_almost_equal(obs, exp)
 
-    def test_get_vectors_weighted(self):
-        """get_vectors returns the correct weighted results"""
+    def test_get_trajectories_weighted(self):
+        """get_trajectories returns the correct weighted results"""
         av = AverageGradientANOVA(self.coords, self.prop_expl,
                                   self.metadata_map,
-                                  vector_categories=['Treatment'],
+                                  trajectory_categories=['Treatment'],
                                   sort_category='Weight', weighted=True)
-        obs = av.get_vectors()
+        obs = av.get_trajectories()
         exp_control_group = GroupResults('Control', np.array([5.7926887872,
                                                               4.3242308936,
                                                               2.9212403501,
@@ -801,17 +804,17 @@ class AverageGradientANOVATests(BaseTests):
                                         [exp_control_group, exp_fast_group],
                                         None)
         exp = GradientANOVAResults('avg', True, [exp_treatment])
-        self.assert_vectors_results_almost_equal(obs, exp)
+        self.assert_gradientANOVA_results_almost_equal(obs, exp)
 
 
 class TrajectoryGradientANOVATests(BaseTests):
 
-    def test_get_vectors(self):
+    def test_get_trajectories(self):
         tv = TrajectoryGradientANOVA(self.coords, self.prop_expl,
                                      self.metadata_map,
-                                     vector_categories=['Treatment'],
+                                     trajectory_categories=['Treatment'],
                                      sort_category='Weight')
-        obs = tv.get_vectors()
+        obs = tv.get_trajectories()
         exp_control_group = GroupResults('Control', np.array([8.6681963576,
                                                               7.0962717982,
                                                               7.1036434615,
@@ -827,14 +830,14 @@ class TrajectoryGradientANOVATests(BaseTests):
                                         [exp_control_group, exp_fast_group],
                                         None)
         exp = GradientANOVAResults('trajectory', False, [exp_treatment])
-        self.assert_vectors_results_almost_equal(obs, exp)
+        self.assert_gradientANOVA_results_almost_equal(obs, exp)
 
-    def test_get_vectors_weighted(self):
+    def test_get_trajectories_weighted(self):
         tv = TrajectoryGradientANOVA(self.coords, self.prop_expl,
                                      self.metadata_map,
-                                     vector_categories=['Treatment'],
+                                     trajectory_categories=['Treatment'],
                                      sort_category='Weight', weighted=True)
-        obs = tv.get_vectors()
+        obs = tv.get_trajectories()
         exp_control_group = GroupResults('Control', np.array([8.9850643421,
                                                               6.1617529749,
                                                               7.7989125908,
@@ -850,16 +853,16 @@ class TrajectoryGradientANOVATests(BaseTests):
                                         [exp_control_group, exp_fast_group],
                                         None)
         exp = GradientANOVAResults('trajectory', True, [exp_treatment])
-        self.assert_vectors_results_almost_equal(obs, exp)
+        self.assert_gradientANOVA_results_almost_equal(obs, exp)
 
 
 class FirstDifferenceGradientANOVATests(BaseTests):
-    def test_get_vectors(self):
+    def test_get_trajectories(self):
         dv = FirstDifferenceGradientANOVA(self.coords, self.prop_expl,
                                           self.metadata_map,
-                                          vector_categories=['Treatment'],
+                                          trajectory_categories=['Treatment'],
                                           sort_category='Weight')
-        obs = dv.get_vectors()
+        obs = dv.get_trajectories()
         exp_control_group = GroupResults('Control', np.array([-1.5719245594,
                                                               0.0073716633,
                                                               -3.0360721941]),
@@ -875,15 +878,15 @@ class FirstDifferenceGradientANOVATests(BaseTests):
                                         [exp_control_group, exp_fast_group],
                                         None)
         exp = GradientANOVAResults('diff', False, [exp_treatment])
-        self.assert_vectors_results_almost_equal(obs, exp)
+        self.assert_gradientANOVA_results_almost_equal(obs, exp)
 
-    def test_get_vectors_weighted(self):
+    def test_get_trajectories_weighted(self):
         dv = FirstDifferenceGradientANOVA(self.coords, self.prop_expl,
                                           self.metadata_map,
-                                          vector_categories=['Treatment'],
+                                          trajectory_categories=['Treatment'],
                                           sort_category='Weight',
                                           weighted=True)
-        obs = dv.get_vectors()
+        obs = dv.get_trajectories()
         exp_control_group = GroupResults('Control', np.array([-2.8233113671,
                                                               1.6371596158,
                                                               -2.8322876639]),
@@ -899,16 +902,15 @@ class FirstDifferenceGradientANOVATests(BaseTests):
                                         [exp_control_group, exp_fast_group],
                                         None)
         exp = GradientANOVAResults('diff', True, [exp_treatment])
-        self.assert_vectors_results_almost_equal(obs, exp)
+        self.assert_gradientANOVA_results_almost_equal(obs, exp)
 
 
 class WindowDifferenceGradientANOVATests(BaseTests):
-    def test_get_vectors(self):
-        wdv = WindowDifferenceGradientANOVA(self.coords, self.prop_expl,
-                                            self.metadata_map, 3,
-                                            vector_categories=['Treatment'],
-                                            sort_category='Weight')
-        obs = wdv.get_vectors()
+    def test_get_trajectories(self):
+        wdv = WindowDifferenceGradientANOVA(
+            self.coords, self.prop_expl, self.metadata_map, 3,
+            trajectory_categories=['Treatment'], sort_category='Weight')
+        obs = wdv.get_trajectories()
         exp_control_group = GroupResults('Control', np.array([-2.5790341819,
                                                               -2.0166764661,
                                                               -3.0360721941,
@@ -928,15 +930,14 @@ class WindowDifferenceGradientANOVATests(BaseTests):
                                         [exp_control_group, exp_fast_group],
                                         None)
         exp = GradientANOVAResults('wdiff', False, [exp_treatment])
-        self.assert_vectors_results_almost_equal(obs, exp)
+        self.assert_gradientANOVA_results_almost_equal(obs, exp)
 
-    def test_get_vectors_weighted(self):
-        wdv = WindowDifferenceGradientANOVA(self.coords, self.prop_expl,
-                                            self.metadata_map, 3,
-                                            vector_categories=['Treatment'],
-                                            sort_category='Weight',
-                                            weighted=True)
-        obs = wdv.get_vectors()
+    def test_get_trajectories_weighted(self):
+        wdv = WindowDifferenceGradientANOVA(
+            self.coords, self.prop_expl, self.metadata_map, 3,
+            trajectory_categories=['Treatment'], sort_category='Weight',
+            weighted=True)
+        obs = wdv.get_trajectories()
         exp_control_group = GroupResults('Control', np.array([-2.6759675112,
                                                               -0.2510321601,
                                                               -2.8322876639,
@@ -956,7 +957,7 @@ class WindowDifferenceGradientANOVATests(BaseTests):
                                         [exp_control_group, exp_fast_group],
                                         None)
         exp = GradientANOVAResults('wdiff', True, [exp_treatment])
-        self.assert_vectors_results_almost_equal(obs, exp)
+        self.assert_gradientANOVA_results_almost_equal(obs, exp)
 
 
 if __name__ == '__main__':
