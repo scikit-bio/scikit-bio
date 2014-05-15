@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-from __future__ import division
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -9,15 +8,18 @@ from __future__ import division
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from unittest import TestCase, main
-
-import numpy as np
-
+from __future__ import division
 try:
     # future >= 0.12
     from future.backports.test.support import import_fresh_module
 except ImportError:
     from future.standard_library.test.support import import_fresh_module
+
+import unittest
+import warnings
+
+import numpy as np
+
 
 cy_subsample = import_fresh_module('skbio.math.subsample',
                                    fresh=['skbio.math._subsample'])
