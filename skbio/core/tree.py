@@ -1792,6 +1792,60 @@ class TreeNode(object):
             tree = cls.from_newick(data)
         return tree
 
+    def _balanced_distance_to_tip(self):
+        node = self
+        distance = 0
+        while node.has_children():
+            distance += node.children[0].length
+            node = node.children[0]
+        return distance
+
+    @classmethod
+    def from_linkage_matrix(cls, linkage_matrix, id_list):
+        """Return tree from SciPy linkage matrix
+
+        Parameters
+        ----------
+        linkage_matrix : ndarray
+            A SciPy linkage matrix as returned by
+            `scipy.cluster.hierarchy.linkage`[1]_
+        id_list : list
+            The indices of the `id_list` will be used in the linkage_matrix
+
+        Returns
+        -------
+        TreeNode
+            An unrooted bifurcated tree
+
+        """
+        tip_width = len(id_list)
+        cluster_count = len(linkage_matrix)
+        lookup_len = cluster_count + tip_width
+        node_lookup = np.empty(lookup_len, dtype=TreeNode)
+
+        for i, name in enumerate(id_list):
+            node_lookup[i] = TreeNode(name=name)
+
+        for i in range(tip_width, lookup_len):
+            node_lookup[i] = TreeNode()
+
+        newest_cluster_index = cluster_count + 1
+        for link in linkage_matrix:
+            child_a = node_lookup[link[0]]
+            child_b = node_lookup[link[1]]
+
+            path_length = link[2] / 2
+            child_a.length = path_length - child_a._balanced_distance_to_tip()
+            child_b.length = path_length - child_b._balanced_distance_to_tip()
+
+            new_cluster = node_lookup[newest_cluster_index]
+            new_cluster.append(child_a)
+            new_cluster.append(child_b)
+
+            newest_cluster_index += 1
+
+        return node_lookup[lookup_len - 1]
+
     @classmethod
     def from_newick(cls, lines, unescape_name=True):
         r"""Returns tree from the Clustal .dnd file format and equivalent
