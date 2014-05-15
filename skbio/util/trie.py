@@ -334,20 +334,18 @@ class CompressedTrie(object):
 
 
 def fasta_to_pairlist(seqs):
-    """Returns the fasta sequences in a key value list for Trie usage
-
-    Returns the sequence list `seqs` in (seq, label) tuples, so it can be used
-    as (key, value) pairs to populate the Trie object
+    """Yields (key, value) pairs, useful for populating a Trie object
 
     Parameters
     ----------
-    seqs : list
-        the list of sequences
+    seqs : Iterable
+        tuples of the form ``(label, seq)``, e.g., as obtained by
+        skbio.parse.sequences.parse_fasta
 
     Returns
     -------
-    list of tuples
-        list of (seq, label)
+    GeneratorType
+        yields tuples of the form ``(seq, label)``
     """
     for label, seq in seqs:
         yield seq, label
