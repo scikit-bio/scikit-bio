@@ -62,6 +62,11 @@ def subsample(counts, n, replace=False):
     ValueError
         If `n` is less than zero or greater than the sum of `counts`.
 
+    Raises
+    ------
+    EfficiencyWarning
+        If the accelerated code isn't present or hasn't been compiled.
+
     Notes
     -----
     If subsampling is performed without replacement (``replace=False``), a copy
