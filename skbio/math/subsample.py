@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 r"""
 Subsampling (:mod:`skbio.math.subsample`)
 =========================================
@@ -27,7 +26,11 @@ Functions
 
 from __future__ import division
 
+from warnings import warn
+
 import numpy as np
+
+from skbio.core.warning import EfficiencyWarning
 try:
     from _subsample import _subsample_without_replacement
 except ImportError:
@@ -129,6 +132,9 @@ def subsample(counts, n, replace=False):
             try:
                 result = _subsample_without_replacement(counts, n, counts_sum)
             except NameError:
+                warn("Accelerated subsampling without replacement isn't"
+                     " available.", EfficiencyWarning)
+
                 nz = counts.nonzero()[0]
                 unpacked = np.concatenate([np.repeat(np.array(i,), counts[i])
                                            for i in nz])
