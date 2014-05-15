@@ -12,7 +12,12 @@ from __future__ import print_function
 __credits__ = "https://github.com/biocore/scikit-bio/graphs/contributors"
 __version__ = "0.0.0-dev"
 
-mottos = ["It's gonna get weird, bro.", "no cog yay"]
+mottos = [
+    # 03/15/2014
+    "It's gonna get weird, bro.",
+    # 05/14/2014
+    "no cog yay"
+]
 motto = mottos[-1]
 
 title = r"""
