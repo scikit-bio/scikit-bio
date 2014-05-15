@@ -297,8 +297,8 @@ class TestStripedSmithWaterman(TestSSW):
             'target_sequence': 'AAACGACTACTAAATCCGCGTGATAGGGGA'
         }
         query = StripedSmithWaterman(expected['query_sequence'],
-                                     weight_gap_open=5,
-                                     weight_gap_extension=2,
+                                     gap_open=5,
+                                     gap_extend=2,
                                      score_size=2,
                                      mask_length=15,
                                      mask_auto=True,
@@ -349,6 +349,23 @@ class TestStripedSmithWaterman(TestSSW):
             'cigar': '6M4D11M',
             'query_sequence': 'aaacgataaatccgcgta',
             'target_sequence': 'aaacgactactaaatccgcgtgatagggga'
+        }
+        query = StripedSmithWaterman(expected['query_sequence'])
+        alignment = query(expected['target_sequence'])
+        self._check_alignment(alignment, expected)
+
+    def test_align_with_N_in_nucleotide_sequence(self):
+        expected = {
+            'optimal_alignment_score': 9,
+            'suboptimal_alignment_score': 0,
+            'query_begin': 0,
+            'query_end': 8,
+            'target_begin': 0,
+            'target_end_optimal': 9,
+            'target_end_suboptimal': 0,
+            'cigar': '4M1D5M',
+            'query_sequence': 'ACTCANNATCGANCTAGC',
+            'target_sequence': 'ACTCGAAAATGTNNGCA'
         }
         query = StripedSmithWaterman(expected['query_sequence'])
         alignment = query(expected['target_sequence'])
@@ -439,7 +456,7 @@ class TestStripedSmithWaterman(TestSSW):
                 self.assertNotEqual(align1.optimal_alignment_score,
                                     align2.optimal_alignment_score)
 
-    def test_arg_weight_gap_open(self):
+    def test_arg_gap_open(self):
         query_sequences = [
             "TTATAATTTTCTTAGTTATTATCAATATTTATAATTTGATTTTGTTGTAAT",
             "AGTCCGAAGGGTAATATAGGCGTGTCACCTA",
@@ -451,7 +468,7 @@ class TestStripedSmithWaterman(TestSSW):
         self._check_argument_with_inequality_on_optimal_align_score(
             query_sequences=query_sequences,
             target_sequences=target_sequences,
-            arg='weight_gap_open',
+            arg='gap_open',
             default=5,
             i_range=range(1, 12),
             # These are intentionally inverted
@@ -473,11 +490,11 @@ class TestStripedSmithWaterman(TestSSW):
             'target_sequence': 'TAGAGATTAATTGCCACTGCCAAAATTCTG'
         }
         query = StripedSmithWaterman(expected['query_sequence'],
-                                     weight_gap_open=1)
+                                     gap_open=1)
         alignment = query(expected['target_sequence'])
         self._check_alignment(alignment, expected)
 
-    def test_arg_weight_gap_extension(self):
+    def test_arg_gap_extend(self):
         query_sequences = [
             "TTATAATTTTCTTATTATTATCAATATTTATAATTTGATTTTGTTGTAAT",
             "AGTCGAAGGGTAATACTAGGCGTGTCACCTA",
@@ -489,7 +506,7 @@ class TestStripedSmithWaterman(TestSSW):
         self._check_argument_with_inequality_on_optimal_align_score(
             query_sequences=query_sequences,
             target_sequences=target_sequences,
-            arg='weight_gap_extension',
+            arg='gap_extend',
             default=2,
             i_range=range(1, 10),
             # These are intentionally inverted
@@ -511,7 +528,7 @@ class TestStripedSmithWaterman(TestSSW):
             'target_sequence': 'GCCCAGTAGCTTCCCAATATGAGAGCATCAATTGTAGATCGGGCC'
         }
         query = StripedSmithWaterman(expected['query_sequence'],
-                                     weight_gap_extension=10)
+                                     gap_extend=10)
         alignment = query(expected['target_sequence'])
         self._check_alignment(alignment, expected)
 

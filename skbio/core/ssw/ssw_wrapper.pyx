@@ -405,11 +405,11 @@ cdef class StripedSmithWaterman:
         {A, C, G, T, N} (nucleotide) or from the set of
         {A, R, N, D, C, Q, E, G, H, I, L, K, M, F, P, S, T, W, Y, V, B, Z, X, *
         } (protein)
-    weight_gap_open : int, optional
+    gap_open : int, optional
         The penalty applied to creating a gap in the alignment. This CANNOT
         be 0.
         Default is 5.
-    weight_gap_extension : int, optional
+    gap_extend : int, optional
         The penalty applied to extending a gap in the alignment. This CANNOT
         be 0.
         Default is 2.
@@ -509,8 +509,8 @@ cdef class StripedSmithWaterman:
 
     """
     cdef s_profile *profile
-    cdef cnp.uint8_t weight_gap_open
-    cdef cnp.uint8_t weight_gap_extension
+    cdef cnp.uint8_t gap_open
+    cdef cnp.uint8_t gap_extend
     cdef cnp.uint8_t bit_flag
     cdef cnp.uint16_t score_filter
     cdef cnp.int32_t distance_filter
@@ -523,8 +523,8 @@ cdef class StripedSmithWaterman:
     cdef cnp.ndarray __KEEP_IT_IN_SCOPE_matrix
 
     def __cinit__(self, query_sequence,
-                  weight_gap_open=5,  # BLASTN Default
-                  weight_gap_extension=2,  # BLASTN Default
+                  gap_open=5,  # BLASTN Default
+                  gap_extend=2,  # BLASTN Default
                   score_size=2,  # BLASTN Default
                   mask_length=15,  # Minimum length for a suboptimal alignment
                   mask_auto=True,
@@ -540,12 +540,12 @@ cdef class StripedSmithWaterman:
                   zero_index=True):
         # initalize our values
         self.read_sequence = query_sequence
-        if weight_gap_open <= 0:
-            raise ValueError("`weight_gap_open` must be > 0")
-        self.weight_gap_open = weight_gap_open
-        if weight_gap_extension <= 0:
-            raise ValueError("`weight_gap_extension` must be > 0")
-        self.weight_gap_extension = weight_gap_extension
+        if gap_open <= 0:
+            raise ValueError("`gap_open` must be > 0")
+        self.gap_open = gap_open
+        if gap_extend <= 0:
+            raise ValueError("`gap_extend` must be > 0")
+        self.gap_extend = gap_extend
         self.distance_filter = 0 if distance_filter is None else \
             distance_filter
         self.score_filter = 0 if score_filter is None else score_filter
@@ -618,8 +618,8 @@ cdef class StripedSmithWaterman:
 
         cdef s_align *align
         align = ssw_align(self.profile, <cnp.int8_t*> reference.data,
-                          ref_length, self.weight_gap_open,
-                          self.weight_gap_extension, self.bit_flag,
+                          ref_length, self.gap_open,
+                          self.gap_extend, self.bit_flag,
                           self.score_filter, self.distance_filter,
                           self.mask_length)
 
@@ -671,7 +671,7 @@ cdef class StripedSmithWaterman:
         for row in sequence_order:
             dict2d[row] = {}
             for column in sequence_order:
-                if column == '*' or row == '*':
+                if column == 'N' or row == 'N':
                     dict2d[row][column] = 0
                 else:
                     dict2d[row][column] = match if row == column else mismatch
