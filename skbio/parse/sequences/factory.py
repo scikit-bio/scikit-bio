@@ -62,7 +62,7 @@ To be polite, lets now remove the files we just created:
 """
 
 # ----------------------------------------------------------------------------
-# Copyright (c) 2013, The BiPy Developers.
+# Copyright (c) 2013, The scikit-bio Developers.
 #
 # Distributed under the terms of the Modified BSD License.
 #

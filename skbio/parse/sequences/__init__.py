@@ -17,11 +17,11 @@ Functions
     parse_fasta
     parse_fastq
     parse_qual
-    
+
 """
 
 # ----------------------------------------------------------------------------
-# Copyright (c) 2013, The BiPy Developers.
+# Copyright (c) 2013, The scikit-bio Developers.
 #
 # Distributed under the terms of the Modified BSD License.
 #

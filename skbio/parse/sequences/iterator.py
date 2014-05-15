@@ -89,7 +89,7 @@ CCGGTTAA
 """
 
 # ----------------------------------------------------------------------------
-# Copyright (c) 2013, The BiPy Developers.
+# Copyright (c) 2013, The scikit-bio Developers.
 #
 # Distributed under the terms of the Modified BSD License.
 #
