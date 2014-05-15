@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-from __future__ import division
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -9,20 +8,33 @@ from __future__ import division
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from unittest import TestCase, main
-
-import numpy as np
-
+from __future__ import division
 try:
     # future >= 0.12
     from future.backports.test.support import import_fresh_module
 except ImportError:
     from future.standard_library.test.support import import_fresh_module
 
+import unittest
+import warnings
+
+import numpy as np
+
+
 cy_subsample = import_fresh_module('skbio.math.subsample',
                                    fresh=['skbio.math._subsample'])
 py_subsample = import_fresh_module('skbio.math.subsample',
                                    blocked=['skbio.math._subsample'])
+
+
+def setup():
+    """Ignore warnings during tests."""
+    warnings.simplefilter("ignore")
+
+
+def teardown():
+    """Clear the list of warning filters, so that no filters are active."""
+    warnings.resetwarnings()
 
 
 class SubsampleTests(object):
@@ -99,27 +111,30 @@ class SubsampleTests(object):
         """Should raise an error on invalid input."""
         # Negative n.
         with self.assertRaises(ValueError):
-            _ = self.module.subsample([1, 2, 3], -1)
+            self.module.subsample([1, 2, 3], -1)
 
         # Floats.
         with self.assertRaises(TypeError):
-            _ = self.module.subsample([1, 2.3, 3], 2)
+            self.module.subsample([1, 2.3, 3], 2)
 
         # Wrong number of dimensions.
         with self.assertRaises(ValueError):
-            _ = self.module.subsample([[1, 2, 3], [4, 5, 6]], 2)
+            self.module.subsample([[1, 2, 3], [4, 5, 6]], 2)
 
         # Input has too few counts.
         with self.assertRaises(ValueError):
-            _ = self.module.subsample([0, 5, 0], 6)
+            self.module.subsample([0, 5, 0], 6)
 
 
-class PySubsampleTests(SubsampleTests, TestCase):
+class PySubsampleTests(SubsampleTests, unittest.TestCase):
     module = py_subsample
 
 
-class CySubsampleTests(SubsampleTests, TestCase):
+@unittest.skipIf(cy_subsample is None,
+                 "Accelerated subsample module unavailable.")
+class CySubsampleTests(SubsampleTests, unittest.TestCase):
     module = cy_subsample
 
 if __name__ == '__main__':
-    main()
+    import nose
+    nose.runmodule()
