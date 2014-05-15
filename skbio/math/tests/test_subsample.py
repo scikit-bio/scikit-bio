@@ -129,7 +129,9 @@ class PySubsampleTests(SubsampleTests, unittest.TestCase):
     module = py_subsample
 
 
-class CySubsampleTests(SubsampleTests, TestCase):
+@unittest.skipIf(cy_subsample is None,
+                 "Accelerated subsample module unavailable.")
+class CySubsampleTests(SubsampleTests, unittest.TestCase):
     module = cy_subsample
 
 if __name__ == '__main__':
