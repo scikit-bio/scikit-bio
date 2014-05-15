@@ -16,6 +16,8 @@ API Reference
    core.distance
    core.exception
    core.iterator
+   core.warning
+   core.genetic_code
    core.tree
    core.workflow
    core.ssw
