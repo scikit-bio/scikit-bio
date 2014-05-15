@@ -44,41 +44,41 @@ the following metadata map:
 ...            'PC.634': {'Treatment': 'Fast', 'Weight': '68'}}
 >>> metadata_map = pd.DataFrame.from_dict(metadata_map, orient='index')
 
-and the following vector with the proportion explained of each coord:
+and the following array with the proportion explained of each coord:
 
 >>> prop_expl = np.array([25.6216, 15.7715, 14.1215, 11.6913])
 
-Then to compute the average vectors of this data:
+Then to compute the average trajectory of this data:
 
 >>> av = AverageGradientANOVA(coords, prop_expl, metadata_map,
 ...                     trajectory_categories=['Treatment'],
 ...                     sort_category='Weight')
->>> vectors = av.get_trajectories()
+>>> trajectory_results = av.get_trajectories()
 
-Check the algorithm used to compute the vectors:
+Check the algorithm used to compute the trajectory_results:
 
->>> print vectors.algorithm
+>>> print trajectory_results.algorithm
 avg
 
 Check if we weighted the data or not:
 
->>> print vectors.weighted
+>>> print trajectory_results.weighted
 False
 
-Check the vectors results of one of the categories:
+Check the trajectory_results results of one of the categories:
 
->>> print vectors.categories[0].category
+>>> print trajectory_results.categories[0].category
 Treatment
->>> print vectors.categories[0].probability
+>>> print trajectory_results.categories[0].probability
 4.13395163e-32
 
-Check the vectors results of one group of one of the categories:
+Check the trajectory_results results of one group of one of the categories:
 
->>> print vectors.categories[0].groups[0].name
+>>> print trajectory_results.categories[0].groups[0].name
 Control
->>> print vectors.categories[0].groups[0].vector
+>>> print trajectory_results.categories[0].groups[0].trajectory
 [ 2.15975404  2.15975404]
->>> print vectors.categories[0].groups[0].info
+>>> print trajectory_results.categories[0].groups[0].info
 {'avg': 2.1597540407414888}
 """
 
@@ -139,7 +139,7 @@ def weight_by_vector(trajectories, w_vector):
             raise ValueError("trajectories (%d) & w_vector (%d) must be equal "
                              "lengths" % (len(trajectories), len(w_vector)))
     except TypeError:
-        raise TypeError("vector and w_vector must be iterables")
+        raise TypeError("trajectories and w_vector must be iterables")
 
     # check no repeated values are passed in the weighting vector
     if len(set(w_vector)) != len(w_vector):
@@ -228,9 +228,9 @@ class GroupResults(namedtuple('GroupResults', ('name', 'trajectory', 'mean',
             `write` method. It is the caller's responsibility to close
             `out_f` when done (if necessary)
         raw_f : file-like object
-            File-like object to write vectors trajectory values. Must have a
-            `write` method. It is the caller's responsibility to close `out_f`
-            when done (if necessary)
+            File-like object to write trajectories trajectory values. Must have
+            a `write` method. It is the caller's responsibility to close
+            `out_f` when done (if necessary)
         """
         out_f.write('For group "%s", the group means is: %f\n'
                     % (self.name, self.mean))
@@ -292,32 +292,32 @@ class CategoryResults(namedtuple('CategoryResults', ('category', 'probability',
 class GradientANOVAResults(namedtuple('GradientANOVAResults', ('algorithm',
                                                                'weighted',
                                                                'categories'))):
-    r"""Store the vector results
+    r"""Store the trajectory results
 
     Attributes
     ----------
     algorithm : str
-        The algorithm used to compute vectors
+        The algorithm used to compute trajectories
     weighted : bool
         If true, a weighting vector was used
     categories : list of CategoryResults
-        The vector results for each metadata category
+        The trajectory results for each metadata category
     """
     __slots__ = ()  # To avoid creating a dict, as a namedtuple doesn't have it
 
     def to_files(self, out_f, raw_f):
-        r"""Save the vector analysis results to files in text format.
+        r"""Save the trajectory analysis results to files in text format.
 
         Parameters
         ----------
         out_f : file-like object
-            File-like object to write vectors analysis data to. Must have a
-            ``write`` method. It is the caller's responsibility to close
+            File-like object to write trajectories analysis data to. Must have
+            a `write` method. It is the caller's responsibility to close
             `out_f` when done (if necessary)
         raw_f : file-like object
-            File-like object to write vectors raw values. Must have a ``write``
-            method. It is the caller's responsibility to close `out_f` when
-            done (if necessary)
+            File-like object to write trajectories raw values. Must have a
+            `write` method. It is the caller's responsibility to close `out_f`
+            when done (if necessary)
         """
         out_f.write('Trajectory algorithm: %s\n' % self.algorithm)
         raw_f.write('Trajectory algorithm: %s\n' % self.algorithm)
