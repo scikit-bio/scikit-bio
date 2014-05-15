@@ -1,19 +1,20 @@
 """
-Exceptions (:mod:`skbio.core.warning`)
-========================================
+Warnings (:mod:`skbio.core.warning`)
+====================================
 
 .. currentmodule:: skbio.core.warning
 
-This module defines custom warning classes used throughout the core
-scikit-bio codebase.
+This module defines custom warning classes used throughout the core scikit-bio
+codebase.
 
-Exceptions
-----------
+Warnings
+--------
 
 .. autosummary::
    :toctree: generated/
 
    EfficiencyWarning
+
 """
 
 # ----------------------------------------------------------------------------
