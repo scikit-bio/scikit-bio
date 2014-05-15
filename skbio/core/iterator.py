@@ -7,7 +7,7 @@ Iterators (:mod:`skbio.core.iterator`)
 
 This module provides standardized iterators. The benefit of using these
 iterators for things like sequence files is that the type of the file, and
-any file format details are abstracted out to the developer. In this mannor,
+any file format details are abstracted out to the developer. In this manner,
 the developer does not need to worry about whether they're operating on
 FASTA or FASTQ, and any differences in the returns from their respective
 parsers.
