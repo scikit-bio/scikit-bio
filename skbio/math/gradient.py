@@ -102,10 +102,11 @@ from skbio.util.sort import signed_natsort
 from skbio.math.stats.test import ANOVA_one_way
 
 
-def weight_by_vector(vector, w_vector):
-    r"""weights the values of `vector` given a weighting vector `w_vector`.
+def weight_by_vector(trajectories, w_vector):
+    r"""weights the values of `trajectories` given a weighting vector
+    `w_vector`.
 
-    Each value in `vector` will be weighted by the 'rate of change'
+    Each value in `trajectories` will be weighted by the 'rate of change'
     to 'optimal rate of change' ratio. The 'rate of change' of a vector
     measures how each point in the vector changes with respect to its
     predecessor point. The 'optimal rate of change' is the rate of change
@@ -115,28 +116,28 @@ def weight_by_vector(vector, w_vector):
 
     Parameters
     ----------
-    vector: pandas.DataFrame
+    trajectories: pandas.DataFrame
         Values to weight
     w_vector: pandas.Series
-        Values used to weight ``vector``
+        Values used to weight `trajectories`
 
     Returns
     -------
     pandas.DataFrame
-        A weighted version of ``vector``.
+        A weighted version of `trajectories`.
 
     Raises
     ------
     ValueError
-        If vector and w_vector don't have equal lengths
-        If w_vector is not a gradient
+        If `trajectories` and `w_vector` don't have equal lengths
+        If `w_vector` is not a gradient
     TypeError
-        If vector and w_vector are not iterables
+        If `trajectories` and `w_vector` are not iterables
     """
     try:
-        if len(vector) != len(w_vector):
-            raise ValueError("vector (%d) & w_vector (%d) must be equal "
-                             "lengths" % (len(vector), len(w_vector)))
+        if len(trajectories) != len(w_vector):
+            raise ValueError("trajectories (%d) & w_vector (%d) must be equal "
+                             "lengths" % (len(trajectories), len(w_vector)))
     except TypeError:
         raise TypeError("vector and w_vector must be iterables")
 
@@ -146,7 +147,7 @@ def weight_by_vector(vector, w_vector):
 
     # no need to weight in case of a one element vector
     if len(w_vector) == 1:
-        return vector
+        return trajectories
 
     # Cast to float so divisions have a floating point resolution
     total_length = float(max(w_vector) - min(w_vector))
@@ -157,16 +158,16 @@ def weight_by_vector(vector, w_vector):
     optimal_gradient = total_length/(len(w_vector)-1)
 
     # for all elements apply the weighting function
-    for i, idx in enumerate(vector.index):
+    for i, idx in enumerate(trajectories.index):
         # Skipping the first element is it doesn't need to be weighted
         if i != 0:
-            vector.ix[idx] = (vector.ix[idx] * optimal_gradient /
-                              (np.abs((w_vector[i] - w_vector[i-1]))))
+            trajectories.ix[idx] = (trajectories.ix[idx] * optimal_gradient /
+                                    (np.abs((w_vector[i] - w_vector[i-1]))))
 
-    return vector
+    return trajectories
 
 
-def ANOVA_vectors(category, res_by_group):
+def ANOVA_trajectories(category, res_by_group):
     r"""Run ANOVA over `res_by_group`
 
     If ANOVA cannot be run in the current category (because either there is
@@ -177,7 +178,7 @@ def ANOVA_vectors(category, res_by_group):
     Returns
     -------
     CategoryResults
-        An instance of CategoryResults holding the results of the vector
+        An instance of CategoryResults holding the results of the trajectory
         analysis applied on `category`
     """
     # If there is only one group under category we cannot run ANOVA
@@ -186,7 +187,7 @@ def ANOVA_vectors(category, res_by_group):
                                'Only one value in the group.')
     # Check if groups can be tested using ANOVA. ANOVA testing requires
     # all elements to have at least size greater to one.
-    values = [res.vector for res in res_by_group]
+    values = [res.trajectory for res in res_by_group]
     if any([len(value) == 1 for value in values]):
         return CategoryResults(category, None, None,
                                'This group can not be used. All groups '
@@ -196,40 +197,40 @@ def ANOVA_vectors(category, res_by_group):
     return CategoryResults(category, p_val, res_by_group, None)
 
 
-class GroupResults(namedtuple('GroupResults', ('name', 'vector', 'mean',
+class GroupResults(namedtuple('GroupResults', ('name', 'trajectory', 'mean',
                                                'info', 'message'))):
-    r"""Store the vector results of a group of a metadata category
+    r"""Store the trajectory results of a group of a metadata category
 
     Attributes
     ----------
     name : str
         The name of the group within the metadata category
-    vector : array like
-        The 1-D numpy array result vector
+    trajectory : array like
+        The result trajectory in an 1-D numpy array
     mean : float
-        The mean of the vector
+        The mean of the trajectory
     info : dict
-        Any extra information computed by the vector algorithm. Depends on the
-        algorithm
+        Any extra information computed by the trajectory algorithm. Depends on
+        the algorithm
     message : str
         A message with information of the execution of the algorithm
     """
     __slots__ = ()  # To avoid creating a dict, as a namedtuple doesn't have it
 
     def to_files(self, out_f, raw_f):
-        r"""Save the vector analysis results for a category group to files in
-        text format.
+        r"""Save the trajectory analysis results for a category group to files
+        in text format.
 
         Parameters
         ----------
         out_f : file-like object
-            File-like object to write vectors analysis data to. Must have a
-            ``write`` method. It is the caller's responsibility to close
+            File-like object to write trajectory analysis data to. Must have a
+            `write` method. It is the caller's responsibility to close
             `out_f` when done (if necessary)
         raw_f : file-like object
-            File-like object to write vectors raw values. Must have a ``write``
-            method. It is the caller's responsibility to close `out_f` when
-            done (if necessary)
+            File-like object to write vectors trajectory values. Must have a
+            `write` method. It is the caller's responsibility to close `out_f`
+            when done (if necessary)
         """
         out_f.write('For group "%s", the group means is: %f\n'
                     % (self.name, self.mean))
@@ -242,7 +243,7 @@ class GroupResults(namedtuple('GroupResults', ('name', 'vector', 'mean',
         out_f.write('The info is: %s\n'
                     % sorted(((k, v) for k, v in self.info.items())))
         raw_f.write('The vector is:\n[%s]\n'
-                    % ", ".join(map(str, self.vector)))
+                    % ", ".join(map(str, self.trajectory)))
 
 
 class CategoryResults(namedtuple('CategoryResults', ('category', 'probability',
@@ -509,7 +510,7 @@ class GradientANOVA(object):
             res_by_group = [self._get_group_vectors(group, sample_ids)
                             for group, sample_ids in cat_groups.items()]
 
-            result.categories.append(ANOVA_vectors(cat, res_by_group))
+            result.categories.append(ANOVA_trajectories(cat, res_by_group))
 
         return result
 

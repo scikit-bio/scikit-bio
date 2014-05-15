@@ -24,7 +24,7 @@ from skbio.math.gradient import (GradientANOVA, AverageGradientANOVA,
                                  FirstDifferenceGradientANOVA,
                                  WindowDifferenceGradientANOVA, GroupResults,
                                  CategoryResults, GradientANOVAResults,
-                                 weight_by_vector, ANOVA_vectors)
+                                 weight_by_vector, ANOVA_trajectories)
 
 
 class BaseTests(TestCase):
@@ -186,7 +186,7 @@ class BaseTests(TestCase):
     def assert_group_results_almost_equal(self, obs, exp):
         """Tests that obs and exp are almost equal"""
         self.assertEqual(obs.name, exp.name)
-        npt.assert_almost_equal(obs.vector, exp.vector)
+        npt.assert_almost_equal(obs.trajectory, exp.trajectory)
         npt.assert_almost_equal(obs.mean, exp.mean)
         self.assertEqual(obs.info.keys(), exp.info.keys())
         for key in obs.info:
@@ -344,7 +344,7 @@ class GradientTests(BaseTests):
         with self.assertRaises(ValueError):
             weight_by_vector([1, 2, 3, 4], [1, 2, 3, 3])
 
-    def test_ANOVA_vectors(self):
+    def test_ANOVA_trajectories(self):
         """Correctly performs the check before running ANOVA"""
         # Only one group in a given category
         group = GroupResults('Bar', np.array([2.3694943596755276,
@@ -353,7 +353,7 @@ class GradientTests(BaseTests):
                                               4.5704258453173559,
                                               4.4972603724478377]),
                              4.05080566264, {'avg': 4.0508056626409275}, None)
-        obs = ANOVA_vectors('Foo', [group])
+        obs = ANOVA_trajectories('Foo', [group])
         exp = CategoryResults('Foo', None, None,
                               'Only one value in the group.')
         self.assert_category_results_almost_equal(obs, exp)
@@ -361,7 +361,7 @@ class GradientTests(BaseTests):
         # One element have only one element
         group2 = GroupResults('FooBar', np.array([4.05080566264]),
                               4.05080566264, {'avg': 4.05080566264}, None)
-        obs = ANOVA_vectors('Foo', [group, group2])
+        obs = ANOVA_trajectories('Foo', [group, group2])
         exp = CategoryResults('Foo', None, None,
                               'This group can not be used. All groups '
                               'should have more than 1 element.')
@@ -376,7 +376,7 @@ class GradientTests(BaseTests):
         gr3 = GroupResults('FBF', np.array([0.080504323, -0.212014503,
                                             -0.088353435]),
                            -0.0057388123, {'avg': -0.0057388123}, None)
-        obs = ANOVA_vectors('Cat', [gr1, gr2, gr3])
+        obs = ANOVA_trajectories('Cat', [gr1, gr2, gr3])
         exp = CategoryResults('Cat', 0.8067456876, [gr1, gr2, gr3], None)
         self.assert_category_results_almost_equal(obs, exp)
 
