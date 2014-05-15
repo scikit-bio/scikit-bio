@@ -583,7 +583,6 @@ class TreeTests(TestCase):
         id_3, child_3 = t3.index_tree()
         nodes_3 = [n.id for n in t3.traverse(self_before=False,
                    self_after=True)]
-
         self.assertEqual(nodes_3, [0, 1, 2, 4, 3, 5, 8, 6, 7, 9, 10])
         self.assertEqual(child_3, [(4, 0, 2), (5, 3, 3), (8, 4, 5), (9, 6, 7),
                                    (10, 8, 9)])
@@ -711,6 +710,44 @@ class TreeTests(TestCase):
         obs_ids = {id(n) for n in obs.traverse()}
 
         self.assertEqual(t_ids.intersection(obs_ids), set())
+
+    def test_descending_branch_length(self):
+        """Calculate descending branch_length"""
+        tr = TreeNode.from_newick("(((A:.1,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,(H"
+                                  ":.4,I:.5)J:1.3)K;")
+        tdbl = tr.descending_branch_length()
+        sdbl = tr.descending_branch_length(['A', 'E'])
+        nptest.assert_almost_equal(tdbl, 8.9)
+        nptest.assert_almost_equal(sdbl, 2.2)
+        self.assertRaises(ValueError, tr.descending_branch_length,
+                          ['A', 'DNE'])
+        self.assertRaises(ValueError, tr.descending_branch_length, ['A', 'C'])
+
+        tr = TreeNode.from_newick("(((A,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,(H:.4"
+                                  ",I:.5)J:1.3)K;")
+        tdbl = tr.descending_branch_length()
+        nptest.assert_almost_equal(tdbl, 8.8)
+
+        tr = TreeNode.from_newick("(((A,B:1.2)C:.6,(D:.9,E:.6)F)G:2.4,(H:.4,I:"
+                                  ".5)J:1.3)K;")
+        tdbl = tr.descending_branch_length()
+        nptest.assert_almost_equal(tdbl, 7.9)
+
+        tr = TreeNode.from_newick("(((A,B:1.2)C:.6,(D:.9,E:.6)F)G:2.4,(H:.4,I:"
+                                  ".5)J:1.3)K;")
+        tdbl = tr.descending_branch_length(['A', 'D', 'E'])
+        nptest.assert_almost_equal(tdbl, 2.1)
+
+        tr = TreeNode.from_newick("(((A,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,(H:."
+                                  "4,I:.5)J:1.3)K;")
+        tdbl = tr.descending_branch_length(['I', 'D', 'E'])
+        nptest.assert_almost_equal(tdbl, 6.6)
+
+        # test with a situation where we have unnamed internal nodes
+        tr = TreeNode.from_newick("(((A,B:1.2):.6,(D:.9,E:.6)F):2.4,(H:.4,I:"
+                                  ".5)J:1.3);")
+        tdbl = tr.descending_branch_length()
+        nptest.assert_almost_equal(tdbl, 7.9)
 
     def test_to_array(self):
         """Convert a tree to arrays"""
