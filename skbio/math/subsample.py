@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 r"""
 Subsampling (:mod:`skbio.math.subsample`)
 =========================================
@@ -25,11 +24,15 @@ Functions
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import division
+from __future__ import absolute_import, division, print_function
+
+from warnings import warn
 
 import numpy as np
+
+from skbio.core.warning import EfficiencyWarning
 try:
-    from _subsample import _subsample_without_replacement
+    from ._subsample import _subsample_without_replacement
 except ImportError:
     pass
 
@@ -61,6 +64,11 @@ def subsample(counts, n, replace=False):
         If `counts` cannot be safely converted to an integer datatype.
     ValueError
         If `n` is less than zero or greater than the sum of `counts`.
+
+    Raises
+    ------
+    EfficiencyWarning
+        If the accelerated code isn't present or hasn't been compiled.
 
     Notes
     -----
@@ -124,6 +132,9 @@ def subsample(counts, n, replace=False):
             try:
                 result = _subsample_without_replacement(counts, n, counts_sum)
             except NameError:
+                warn("Accelerated subsampling without replacement isn't"
+                     " available.", EfficiencyWarning)
+
                 nz = counts.nonzero()[0]
                 unpacked = np.concatenate([np.repeat(np.array(i,), counts[i])
                                            for i in nz])
