@@ -15,14 +15,12 @@ API Reference
    core.sequence
    core.distance
    core.exception
-   core.iterator
    core.warning
    core.genetic_code
    core.tree
    core.workflow
    core.ssw
    draw.distributions
-   factory.sequence
    format.sequences
    math.diversity.alpha
    math.stats.distance
