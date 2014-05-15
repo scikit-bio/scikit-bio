@@ -23,7 +23,6 @@ API Reference
    core.ssw
    draw.distributions
    factory.sequence
-   core.genetic_code
    format.sequences
    math.diversity.alpha
    math.stats.distance
