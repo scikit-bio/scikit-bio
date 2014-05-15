@@ -19,10 +19,11 @@ import numpy.testing as npt
 import pandas.util.testing as pdt
 
 from skbio.util.testing import get_data_path
-from skbio.math.gradient import (BaseVectors, AverageVectors,
-                                 TrajectoryVectors, FirstDifferenceVectors,
-                                 WindowDifferenceVectors, GroupResults,
-                                 CategoryResults, VectorsResults,
+from skbio.math.gradient import (GradientANOVA, AverageGradientANOVA,
+                                 TrajectoryGradientANOVA,
+                                 FirstDifferenceGradientANOVA,
+                                 WindowDifferenceGradientANOVA, GroupResults,
+                                 CategoryResults, GradientANOVAResults,
                                  weight_by_vector, ANOVA_vectors)
 
 
@@ -156,7 +157,7 @@ class BaseTests(TestCase):
         cr_data = CategoryResults('bar', 0.0110, self.groups, None)
         self.categories = [cr_no_data, cr_data]
 
-        vr = VectorsResults('wdiff', True, self.categories)
+        vr = GradientANOVAResults('wdiff', True, self.categories)
 
         description = CategoryResults('Description', None, None,
                                       'This group can not be used. All groups '
@@ -176,8 +177,8 @@ class BaseTests(TestCase):
                                   4.1596, {'avg': 4.1596}, None)
         treatment = CategoryResults('Treatment', 0.9331,
                                     [control_group, fast_group], None)
-        vr_real = VectorsResults('avg', False, [description, weight, dob,
-                                                treatment])
+        vr_real = GradientANOVAResults('avg', False, [description, weight, dob,
+                                                      treatment])
 
         self.vec_results = [vr, vr_real]
 
@@ -428,7 +429,7 @@ class CategoryResultsTests(BaseTests):
             self.assertEqual(obs_raw, exp_raw)
 
 
-class VectorsResultsTests(BaseTests):
+class GradientANOVAResultsTests(BaseTests):
     def test_to_file(self):
         out_paths = ['vr_out']
         raw_paths = ['vr_raw']
@@ -452,14 +453,14 @@ class VectorsResultsTests(BaseTests):
             self.assertEqual(obs_raw, exp_raw)
 
 
-class BaseVectorsTests(BaseTests):
+class GradientANOVATests(BaseTests):
     def test_init(self):
         """Correctly initializes the class attributes"""
         # Note self._groups is tested on test_make_groups
         # so we are not testing it here
 
         # Test with weighted = False
-        bv = BaseVectors(self.coords, self.prop_expl, self.metadata_map)
+        bv = GradientANOVA(self.coords, self.prop_expl, self.metadata_map)
 
         pdt.assert_frame_equal(bv._coords, self.coords_3axes)
         exp_prop_expl = np.array([25.6216900347, 15.7715955926,
@@ -470,8 +471,8 @@ class BaseVectorsTests(BaseTests):
         self.assertFalse(bv._weighted)
 
         # Test with weighted = True
-        bv = BaseVectors(self.coords, self.prop_expl, self.metadata_map,
-                         sort_category='Weight', weighted=True)
+        bv = GradientANOVA(self.coords, self.prop_expl, self.metadata_map,
+                           sort_category='Weight', weighted=True)
 
         pdt.assert_frame_equal(bv._coords, self.coords_3axes)
         npt.assert_equal(bv._prop_expl, exp_prop_expl)
@@ -489,37 +490,37 @@ class BaseVectorsTests(BaseTests):
         # Raises ValueError if any category in vector_categories is not
         # present in metadata_map
         with self.assertRaises(ValueError):
-            BaseVectors(self.coords, self.prop_expl, self.metadata_map,
-                        vector_categories=['foo'])
+            GradientANOVA(self.coords, self.prop_expl, self.metadata_map,
+                          vector_categories=['foo'])
         with self.assertRaises(ValueError):
-            BaseVectors(self.coords, self.prop_expl, self.metadata_map,
-                        vector_categories=['Weight', 'Treatment', 'foo'])
+            GradientANOVA(self.coords, self.prop_expl, self.metadata_map,
+                          vector_categories=['Weight', 'Treatment', 'foo'])
 
         # Raises ValueError if sort_category is not present in metadata_map
         with self.assertRaises(ValueError):
-            BaseVectors(self.coords, self.prop_expl, self.metadata_map,
-                        sort_category='foo')
+            GradientANOVA(self.coords, self.prop_expl, self.metadata_map,
+                          sort_category='foo')
 
         # Raises ValueError if weighted == True and sort_category == None
         with self.assertRaises(ValueError):
-            BaseVectors(self.coords, self.prop_expl, self.metadata_map,
-                        weighted=True)
+            GradientANOVA(self.coords, self.prop_expl, self.metadata_map,
+                          weighted=True)
 
         # Raises ValueError if weighted == True and the values under
         # sort_category are not numerical
         with self.assertRaises(ValueError):
-            BaseVectors(self.coords, self.prop_expl, self.metadata_map,
-                        sort_category='Treatment', weighted=True)
+            GradientANOVA(self.coords, self.prop_expl, self.metadata_map,
+                          sort_category='Treatment', weighted=True)
 
         # Raises ValueError if axes > len(prop_expl)
         with self.assertRaises(ValueError):
-            BaseVectors(self.coords, self.prop_expl, self.metadata_map,
-                        axes=10)
+            GradientANOVA(self.coords, self.prop_expl, self.metadata_map,
+                          axes=10)
 
         # Raises ValueError if axes < 0
         with self.assertRaises(ValueError):
-            BaseVectors(self.coords, self.prop_expl, self.metadata_map,
-                        axes=-1)
+            GradientANOVA(self.coords, self.prop_expl, self.metadata_map,
+                          axes=-1)
 
     def test_normalize_samples(self):
         """Correctly normalizes the samples between coords and metadata_map"""
@@ -561,14 +562,14 @@ class BaseVectorsTests(BaseTests):
                                                      orient='index')
 
         # Takes a subset from metadata_map
-        bv = BaseVectors(subset_coords, self.prop_expl, self.metadata_map)
+        bv = GradientANOVA(subset_coords, self.prop_expl, self.metadata_map)
         pdt.assert_frame_equal(bv._coords.sort(axis=0),
                                subset_coords.sort(axis=0))
         pdt.assert_frame_equal(bv._metadata_map.sort(axis=0),
                                subset_metadata_map.sort(axis=0))
 
         # Takes a subset from coords
-        bv = BaseVectors(self.coords, self.prop_expl, subset_metadata_map)
+        bv = GradientANOVA(self.coords, self.prop_expl, subset_metadata_map)
         pdt.assert_frame_equal(bv._coords.sort(axis=0),
                                subset_coords.sort(axis=0))
         pdt.assert_frame_equal(bv._metadata_map.sort(axis=0),
@@ -600,7 +601,7 @@ class BaseVectorsTests(BaseTests):
         subset_metadata_map = pd.DataFrame.from_dict(metadata_map,
                                                      orient='index')
 
-        bv = BaseVectors(subset_coords, self.prop_expl, subset_metadata_map)
+        bv = GradientANOVA(subset_coords, self.prop_expl, subset_metadata_map)
         exp_coords = pd.DataFrame.from_dict(
             {'PC.355': np.array([0.236467470907, 0.21863434374,
                                  -0.0301637746424])},
@@ -630,12 +631,12 @@ class BaseVectorsTests(BaseTests):
                      'Description': 'Fasting_mouse_I.D._607'}},
             orient='index')
         with self.assertRaises(ValueError):
-            BaseVectors(self.coords, self.prop_expl, error_metadata_map)
+            GradientANOVA(self.coords, self.prop_expl, error_metadata_map)
 
     def test_make_groups(self):
         """Correctly generates the groups for vector_categories"""
         # Test with all categories
-        bv = BaseVectors(self.coords, self.prop_expl, self.metadata_map)
+        bv = GradientANOVA(self.coords, self.prop_expl, self.metadata_map)
         exp_groups = {'Treatment': {'Control': ['PC.354', 'PC.355', 'PC.356',
                                                 'PC.481', 'PC.593'],
                                     'Fast': ['PC.607', 'PC.634',
@@ -667,8 +668,8 @@ class BaseVectorsTests(BaseTests):
         self.assertEqual(bv._groups, exp_groups)
 
         # Test with user-defined categories
-        bv = BaseVectors(self.coords, self.prop_expl, self.metadata_map,
-                         vector_categories=['Treatment', 'DOB'])
+        bv = GradientANOVA(self.coords, self.prop_expl, self.metadata_map,
+                           vector_categories=['Treatment', 'DOB'])
         exp_groups = {'Treatment': {'Control': ['PC.354', 'PC.355', 'PC.356',
                                                 'PC.481', 'PC.593'],
                                     'Fast': ['PC.607', 'PC.634',
@@ -683,21 +684,21 @@ class BaseVectorsTests(BaseTests):
 
     def test_get_vectors(self):
         """Should raise a NotImplementedError as this is a base class"""
-        bv = BaseVectors(self.coords, self.prop_expl, self.metadata_map)
+        bv = GradientANOVA(self.coords, self.prop_expl, self.metadata_map)
         with self.assertRaises(NotImplementedError):
             bv.get_vectors()
 
     def test_get_group_vectors(self):
         """Should raise a NotImplementedError in usual execution as this is
         a base class"""
-        bv = BaseVectors(self.coords, self.prop_expl, self.metadata_map)
+        bv = GradientANOVA(self.coords, self.prop_expl, self.metadata_map)
         with self.assertRaises(NotImplementedError):
             bv.get_vectors()
 
     def test_get_group_vectors_error(self):
         """Should raise a RuntimeError if the user call _get_group_vectors
         with erroneous inputs"""
-        bv = BaseVectors(self.coords, self.prop_expl, self.metadata_map)
+        bv = GradientANOVA(self.coords, self.prop_expl, self.metadata_map)
         with self.assertRaises(RuntimeError):
             bv._get_group_vectors("foo", ['foo'])
         with self.assertRaises(RuntimeError):
@@ -705,15 +706,16 @@ class BaseVectorsTests(BaseTests):
 
     def test_compute_vector_results(self):
         """Should raise a NotImplementedError as this is a base class"""
-        bv = BaseVectors(self.coords, self.prop_expl, self.metadata_map)
+        bv = GradientANOVA(self.coords, self.prop_expl, self.metadata_map)
         with self.assertRaises(NotImplementedError):
             bv._compute_vector_results("foo", [])
 
 
-class AverageVectorsTests(BaseTests):
+class AverageGradientANOVATests(BaseTests):
     def test_get_vectors_all(self):
         """get_vectors returns the results of all categories"""
-        av = AverageVectors(self.coords, self.prop_expl, self.metadata_map)
+        av = AverageGradientANOVA(self.coords, self.prop_expl,
+                                  self.metadata_map)
         obs = av.get_vectors()
 
         exp_description = CategoryResults('Description', None, None,
@@ -743,14 +745,15 @@ class AverageVectorsTests(BaseTests):
         exp_treatment = CategoryResults('Treatment', 0.93311555,
                                         [exp_control_group, exp_fast_group],
                                         None)
-        exp = VectorsResults('avg', False, [exp_description, exp_weight,
-                                            exp_dob, exp_treatment])
+        exp = GradientANOVAResults('avg', False, [exp_description, exp_weight,
+                                                  exp_dob, exp_treatment])
         self.assert_vectors_results_almost_equal(obs, exp)
 
     def test_get_vectors_single(self):
         """get_vectors returns the results of the provided category"""
-        av = AverageVectors(self.coords, self.prop_expl, self.metadata_map,
-                            vector_categories=['Treatment'])
+        av = AverageGradientANOVA(self.coords, self.prop_expl,
+                                  self.metadata_map,
+                                  vector_categories=['Treatment'])
         obs = av.get_vectors()
 
         exp_control_group = GroupResults('Control',
@@ -770,15 +773,16 @@ class AverageVectorsTests(BaseTests):
         exp_treatment = CategoryResults('Treatment', 0.93311555,
                                         [exp_control_group, exp_fast_group],
                                         None)
-        exp = VectorsResults('avg', False, [exp_treatment])
+        exp = GradientANOVAResults('avg', False, [exp_treatment])
 
         self.assert_vectors_results_almost_equal(obs, exp)
 
     def test_get_vectors_weighted(self):
         """get_vectors returns the correct weighted results"""
-        av = AverageVectors(self.coords, self.prop_expl, self.metadata_map,
-                            vector_categories=['Treatment'],
-                            sort_category='Weight', weighted=True)
+        av = AverageGradientANOVA(self.coords, self.prop_expl,
+                                  self.metadata_map,
+                                  vector_categories=['Treatment'],
+                                  sort_category='Weight', weighted=True)
         obs = av.get_vectors()
         exp_control_group = GroupResults('Control', np.array([5.7926887872,
                                                               4.3242308936,
@@ -796,16 +800,17 @@ class AverageVectorsTests(BaseTests):
         exp_treatment = CategoryResults('Treatment', 0.9057666800,
                                         [exp_control_group, exp_fast_group],
                                         None)
-        exp = VectorsResults('avg', True, [exp_treatment])
+        exp = GradientANOVAResults('avg', True, [exp_treatment])
         self.assert_vectors_results_almost_equal(obs, exp)
 
 
-class TrajectoryVectorsTests(BaseTests):
+class TrajectoryGradientANOVATests(BaseTests):
 
     def test_get_vectors(self):
-        tv = TrajectoryVectors(self.coords, self.prop_expl, self.metadata_map,
-                               vector_categories=['Treatment'],
-                               sort_category='Weight')
+        tv = TrajectoryGradientANOVA(self.coords, self.prop_expl,
+                                     self.metadata_map,
+                                     vector_categories=['Treatment'],
+                                     sort_category='Weight')
         obs = tv.get_vectors()
         exp_control_group = GroupResults('Control', np.array([8.6681963576,
                                                               7.0962717982,
@@ -821,13 +826,14 @@ class TrajectoryVectorsTests(BaseTests):
         exp_treatment = CategoryResults('Treatment', 0.9374500147,
                                         [exp_control_group, exp_fast_group],
                                         None)
-        exp = VectorsResults('trajectory', False, [exp_treatment])
+        exp = GradientANOVAResults('trajectory', False, [exp_treatment])
         self.assert_vectors_results_almost_equal(obs, exp)
 
     def test_get_vectors_weighted(self):
-        tv = TrajectoryVectors(self.coords, self.prop_expl, self.metadata_map,
-                               vector_categories=['Treatment'],
-                               sort_category='Weight', weighted=True)
+        tv = TrajectoryGradientANOVA(self.coords, self.prop_expl,
+                                     self.metadata_map,
+                                     vector_categories=['Treatment'],
+                                     sort_category='Weight', weighted=True)
         obs = tv.get_vectors()
         exp_control_group = GroupResults('Control', np.array([8.9850643421,
                                                               6.1617529749,
@@ -843,16 +849,16 @@ class TrajectoryVectorsTests(BaseTests):
         exp_treatment = CategoryResults('Treatment', 0.6248157720,
                                         [exp_control_group, exp_fast_group],
                                         None)
-        exp = VectorsResults('trajectory', True, [exp_treatment])
+        exp = GradientANOVAResults('trajectory', True, [exp_treatment])
         self.assert_vectors_results_almost_equal(obs, exp)
 
 
-class FirstDifferenceVectorsTests(BaseTests):
+class FirstDifferenceGradientANOVATests(BaseTests):
     def test_get_vectors(self):
-        dv = FirstDifferenceVectors(self.coords, self.prop_expl,
-                                    self.metadata_map,
-                                    vector_categories=['Treatment'],
-                                    sort_category='Weight')
+        dv = FirstDifferenceGradientANOVA(self.coords, self.prop_expl,
+                                          self.metadata_map,
+                                          vector_categories=['Treatment'],
+                                          sort_category='Weight')
         obs = dv.get_vectors()
         exp_control_group = GroupResults('Control', np.array([-1.5719245594,
                                                               0.0073716633,
@@ -868,14 +874,15 @@ class FirstDifferenceVectorsTests(BaseTests):
         exp_treatment = CategoryResults('Treatment', 0.6015260608,
                                         [exp_control_group, exp_fast_group],
                                         None)
-        exp = VectorsResults('diff', False, [exp_treatment])
+        exp = GradientANOVAResults('diff', False, [exp_treatment])
         self.assert_vectors_results_almost_equal(obs, exp)
 
     def test_get_vectors_weighted(self):
-        dv = FirstDifferenceVectors(self.coords, self.prop_expl,
-                                    self.metadata_map,
-                                    vector_categories=['Treatment'],
-                                    sort_category='Weight', weighted=True)
+        dv = FirstDifferenceGradientANOVA(self.coords, self.prop_expl,
+                                          self.metadata_map,
+                                          vector_categories=['Treatment'],
+                                          sort_category='Weight',
+                                          weighted=True)
         obs = dv.get_vectors()
         exp_control_group = GroupResults('Control', np.array([-2.8233113671,
                                                               1.6371596158,
@@ -891,16 +898,16 @@ class FirstDifferenceVectorsTests(BaseTests):
         exp_treatment = CategoryResults('Treatment', 0.8348644420,
                                         [exp_control_group, exp_fast_group],
                                         None)
-        exp = VectorsResults('diff', True, [exp_treatment])
+        exp = GradientANOVAResults('diff', True, [exp_treatment])
         self.assert_vectors_results_almost_equal(obs, exp)
 
 
-class WindowDifferenceVectorsTests(BaseTests):
+class WindowDifferenceGradientANOVATests(BaseTests):
     def test_get_vectors(self):
-        wdv = WindowDifferenceVectors(self.coords, self.prop_expl,
-                                      self.metadata_map, 3,
-                                      vector_categories=['Treatment'],
-                                      sort_category='Weight')
+        wdv = WindowDifferenceGradientANOVA(self.coords, self.prop_expl,
+                                            self.metadata_map, 3,
+                                            vector_categories=['Treatment'],
+                                            sort_category='Weight')
         obs = wdv.get_vectors()
         exp_control_group = GroupResults('Control', np.array([-2.5790341819,
                                                               -2.0166764661,
@@ -920,14 +927,15 @@ class WindowDifferenceVectorsTests(BaseTests):
         exp_treatment = CategoryResults('Treatment', 0.0103976830,
                                         [exp_control_group, exp_fast_group],
                                         None)
-        exp = VectorsResults('wdiff', False, [exp_treatment])
+        exp = GradientANOVAResults('wdiff', False, [exp_treatment])
         self.assert_vectors_results_almost_equal(obs, exp)
 
     def test_get_vectors_weighted(self):
-        wdv = WindowDifferenceVectors(self.coords, self.prop_expl,
-                                      self.metadata_map, 3,
-                                      vector_categories=['Treatment'],
-                                      sort_category='Weight', weighted=True)
+        wdv = WindowDifferenceGradientANOVA(self.coords, self.prop_expl,
+                                            self.metadata_map, 3,
+                                            vector_categories=['Treatment'],
+                                            sort_category='Weight',
+                                            weighted=True)
         obs = wdv.get_vectors()
         exp_control_group = GroupResults('Control', np.array([-2.6759675112,
                                                               -0.2510321601,
@@ -947,7 +955,7 @@ class WindowDifferenceVectorsTests(BaseTests):
         exp_treatment = CategoryResults('Treatment', 0.0110675605,
                                         [exp_control_group, exp_fast_group],
                                         None)
-        exp = VectorsResults('wdiff', True, [exp_treatment])
+        exp = GradientANOVAResults('wdiff', True, [exp_treatment])
         self.assert_vectors_results_almost_equal(obs, exp)
 
 

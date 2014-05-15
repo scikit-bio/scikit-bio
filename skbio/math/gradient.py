@@ -15,13 +15,13 @@ Classes
 .. autosummary::
    :toctree: generated/
 
-   AverageVectors
-   TrajectoryVectors
-   DifferenceVectors
-   WindowDifferenceVectors
+   AverageGradientANOVA
+   TrajectoryGradientANOVA
+   FirstDifferenceGradientANOVA
+   WindowDifferenceGradientANOVA
    GroupResults
    CategoryResults
-   VectorsResults
+   GradientANOVAResults
 
 Examples
 --------
@@ -29,7 +29,7 @@ Assume we have the following coordinates:
 
 >>> import numpy as np
 >>> import pandas as pd
->>> from skbio.math.gradient import AverageVectors
+>>> from skbio.math.gradient import AverageGradientANOVA
 >>> coord_data = {'PC.354': np.array([0.2761, -0.0341, 0.0633, 0.1004]),
 ...               'PC.355': np.array([0.2364, 0.2186, -0.0301, -0.0225]),
 ...               'PC.607': np.array([-0.1055, -0.4140, -0.15, -0.116]),
@@ -50,7 +50,7 @@ and the following vector with the proportion explained of each coord:
 
 Then to compute the average vectors of this data:
 
->>> av = AverageVectors(coords, prop_expl, metadata_map,
+>>> av = AverageGradientANOVA(coords, prop_expl, metadata_map,
 ...                     vector_categories=['Treatment'],
 ...                     sort_category='Weight')
 >>> vectors = av.get_vectors()
@@ -288,8 +288,9 @@ class CategoryResults(namedtuple('CategoryResults', ('category', 'probability',
                 group.to_files(out_f, raw_f)
 
 
-class VectorsResults(namedtuple('VectorsResults', ('algorithm', 'weighted',
-                                                   'categories'))):
+class GradientANOVAResults(namedtuple('GradientANOVAResults', ('algorithm',
+                                                               'weighted',
+                                                               'categories'))):
     r"""Store the vector results
 
     Attributes
@@ -333,7 +334,7 @@ class VectorsResults(namedtuple('VectorsResults', ('algorithm', 'weighted',
             raw_f.write('\n')
 
 
-class BaseVectors(object):
+class GradientANOVA(object):
     r"""Base class for the Vector algorithms
 
     Parameters
@@ -496,11 +497,11 @@ class BaseVectors(object):
 
         Returns
         -------
-        VectorsResults
-            An instance of VectorsResults holding the results of the vector
-            analysis.
+        GradientANOVAResults
+            An instance of GradientANOVAResults holding the results of the
+            vector analysis.
         """
-        result = VectorsResults(self._alg_name, self._weighted, [])
+        result = GradientANOVAResults(self._alg_name, self._weighted, [])
         # Loop through all the categories that we should compute the vectors
         for cat, cat_groups in self._groups.items():
             # Loop through all the category values present in the current
@@ -580,7 +581,7 @@ class BaseVectors(object):
                                   "class.")
 
 
-class AverageVectors(BaseVectors):
+class AverageGradientANOVA(GradientANOVA):
     r"""Perform vector analysis using the RMS average algorithm
 
     For each group in a category, it computes the average point among the
@@ -589,7 +590,7 @@ class AverageVectors(BaseVectors):
 
     See Also
     --------
-    BaseVectors
+    GradientANOVA
     """
 
     _alg_name = 'avg'
@@ -625,7 +626,7 @@ class AverageVectors(BaseVectors):
         return GroupResults(group_name, vector, np.mean(vector), calc, msg)
 
 
-class TrajectoryVectors(BaseVectors):
+class TrajectoryGradientANOVA(GradientANOVA):
     r"""Perform vector analysis using the RMS trajectory algorithm
 
     For each group in a category, each component of the result vector is
@@ -635,7 +636,7 @@ class TrajectoryVectors(BaseVectors):
 
     See Also
     --------
-    BaseVectors
+    GradientANOVA
     """
 
     _alg_name = 'trajectory'
@@ -673,7 +674,7 @@ class TrajectoryVectors(BaseVectors):
         return GroupResults(group_name, vector, np.mean(vector), calc, msg)
 
 
-class FirstDifferenceVectors(BaseVectors):
+class FirstDifferenceGradientANOVA(GradientANOVA):
     r"""Perform vector analysis using the first difference algorithm
 
     It calculates the norm for all the time-points and then calculates the
@@ -681,7 +682,7 @@ class FirstDifferenceVectors(BaseVectors):
 
     See Also
     --------
-    BaseVectors
+    GradientANOVA
     """
 
     _alg_name = 'diff'
@@ -721,7 +722,7 @@ class FirstDifferenceVectors(BaseVectors):
         return GroupResults(group_name, vector, np.mean(vector), calc, msg)
 
 
-class WindowDifferenceVectors(BaseVectors):
+class WindowDifferenceGradientANOVA(GradientANOVA):
     r"""Perform vector analysis using the modified first difference algorithm
 
     It calculates the norm for all the time-points and subtracts the mean of
@@ -748,14 +749,15 @@ class WindowDifferenceVectors(BaseVectors):
 
     See Also
     --------
-    BaseVectors
+    GradientANOVA
     """
 
     _alg_name = 'wdiff'
 
     def __init__(self, coords, prop_expl, metadata_map, window_size, **kwargs):
-        super(WindowDifferenceVectors, self).__init__(coords, prop_expl,
-                                                      metadata_map, **kwargs)
+        super(WindowDifferenceGradientANOVA, self).__init__(coords, prop_expl,
+                                                            metadata_map,
+                                                            **kwargs)
 
         if not isinstance(window_size, Integral) or window_size < 1:
             raise ValueError("The window_size must be a positive integer")
