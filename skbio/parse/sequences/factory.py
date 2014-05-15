@@ -15,7 +15,7 @@ Functions
 .. autosummary::
    :toctree: generated/
 
-	load
+    load
 
 Examples
 --------

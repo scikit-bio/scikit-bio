@@ -14,7 +14,7 @@ from future.utils.six import StringIO
 from numpy import arange, array
 
 from skbio.parse.sequences.iterator import (SequenceIterator, FastaIterator,
-                                   			FastqIterator)
+                                            FastqIterator)
 
 
 class SeqIterTests(TestCase):
@@ -330,4 +330,4 @@ EFG
 
 
 if __name__ == '__main__':
-	main()
+    main()
