@@ -671,7 +671,7 @@ cdef class StripedSmithWaterman:
         for row in sequence_order:
             dict2d[row] = {}
             for column in sequence_order:
-                if column == '*' or row == '*':
+                if column == 'N' or row == 'N':
                     dict2d[row][column] = 0
                 else:
                     dict2d[row][column] = match if row == column else mismatch

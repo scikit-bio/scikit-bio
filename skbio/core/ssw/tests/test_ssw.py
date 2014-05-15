@@ -354,6 +354,23 @@ class TestStripedSmithWaterman(TestSSW):
         alignment = query(expected['target_sequence'])
         self._check_alignment(alignment, expected)
 
+    def test_align_with_N_in_nucleotide_sequence(self):
+        expected = {
+            'optimal_alignment_score': 9,
+            'suboptimal_alignment_score': 0,
+            'query_begin': 0,
+            'query_end': 8,
+            'target_begin': 0,
+            'target_end_optimal': 9,
+            'target_end_suboptimal': 0,
+            'cigar': '4M1D5M',
+            'query_sequence': 'ACTCANNATCGANCTAGC',
+            'target_sequence': 'ACTCGAAAATGTNNGCA'
+        }
+        query = StripedSmithWaterman(expected['query_sequence'])
+        alignment = query(expected['target_sequence'])
+        self._check_alignment(alignment, expected)
+
     def test_arg_match_score(self):
         query_sequences = [
             "TTTTTTCTTATTATTATCAATATTTATAATTTGATTTTGTTGTAAT",
