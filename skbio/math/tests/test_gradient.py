@@ -24,7 +24,7 @@ from skbio.math.gradient import (GradientANOVA, AverageGradientANOVA,
                                  FirstDifferenceGradientANOVA,
                                  WindowDifferenceGradientANOVA, GroupResults,
                                  CategoryResults, GradientANOVAResults,
-                                 weight_by_vector, ANOVA_trajectories)
+                                 _weight_by_vector, _ANOVA_trajectories)
 
 
 class BaseTests(TestCase):
@@ -239,7 +239,7 @@ class GradientTests(BaseTests):
                                       's7': np.array([17.8]),
                                       's8': np.array([20.3428571428])},
                                      orient='index')
-        obs = weight_by_vector(trajectory, w_vector)
+        obs = _weight_by_vector(trajectory, w_vector)
         pdt.assert_frame_equal(obs.sort(axis=0), exp.sort(axis=0))
 
         trajectory = pd.DataFrame.from_dict({'s1': np.array([1]),
@@ -261,7 +261,7 @@ class GradientTests(BaseTests):
                                       's7': np.array([7]), 's8': np.array([8])
                                       },
                                      orient='index')
-        obs = weight_by_vector(trajectory, w_vector)
+        obs = _weight_by_vector(trajectory, w_vector)
         pdt.assert_frame_equal(obs.sort(axis=0), exp.sort(axis=0))
 
         trajectory = pd.DataFrame.from_dict({'s2': np.array([2]),
@@ -276,7 +276,7 @@ class GradientTests(BaseTests):
         exp = pd.DataFrame.from_dict({'s2': np.array([2]), 's3': np.array([3]),
                                       's4': np.array([4]), 's5': np.array([5]),
                                       's6': np.array([6])}, orient='index')
-        obs = weight_by_vector(trajectory, w_vector)
+        obs = _weight_by_vector(trajectory, w_vector)
         pdt.assert_frame_equal(obs.sort(axis=0), exp.sort(axis=0))
 
         trajectory = pd.DataFrame.from_dict({'s1': np.array([1, 2, 3]),
@@ -292,7 +292,7 @@ class GradientTests(BaseTests):
                                       's3': np.array([5, 6, 7]),
                                       's4': np.array([8, 9, 10])},
                                      orient='index')
-        obs = weight_by_vector(trajectory, w_vector)
+        obs = _weight_by_vector(trajectory, w_vector)
         pdt.assert_frame_equal(obs.sort(axis=0), exp.sort(axis=0))
 
         sample_ids = ['PC.356', 'PC.481', 'PC.355', 'PC.593', 'PC.354']
@@ -330,22 +330,23 @@ class GradientTests(BaseTests):
                                                           -0.44931561,
                                                           0.74490965])
                                       }, orient='index')
-        obs = weight_by_vector(trajectory.ix[sample_ids], w_vector[sample_ids])
+        obs = _weight_by_vector(trajectory.ix[sample_ids],
+                                w_vector[sample_ids])
         pdt.assert_frame_equal(obs.sort(axis=0), exp.sort(axis=0))
 
     def test_weight_by_vector_error(self):
         """Raises an error with erroneous inputs"""
         # Different vector lengths
         with self.assertRaises(ValueError):
-            weight_by_vector([1, 2, 3, 4], [1, 2, 3])
+            _weight_by_vector([1, 2, 3, 4], [1, 2, 3])
 
         # Inputs are not iterables
         with self.assertRaises(TypeError):
-            weight_by_vector(9, 1)
+            _weight_by_vector(9, 1)
 
         # Weighting vector is not a gradient
         with self.assertRaises(ValueError):
-            weight_by_vector([1, 2, 3, 4], [1, 2, 3, 3])
+            _weight_by_vector([1, 2, 3, 4], [1, 2, 3, 3])
 
     def test_ANOVA_trajectories(self):
         """Correctly performs the check before running ANOVA"""
@@ -356,7 +357,7 @@ class GradientTests(BaseTests):
                                               4.5704258453173559,
                                               4.4972603724478377]),
                              4.05080566264, {'avg': 4.0508056626409275}, None)
-        obs = ANOVA_trajectories('Foo', [group])
+        obs = _ANOVA_trajectories('Foo', [group])
         exp = CategoryResults('Foo', None, None,
                               'Only one value in the group.')
         self.assert_category_results_almost_equal(obs, exp)
@@ -364,7 +365,7 @@ class GradientTests(BaseTests):
         # One element have only one element
         group2 = GroupResults('FooBar', np.array([4.05080566264]),
                               4.05080566264, {'avg': 4.05080566264}, None)
-        obs = ANOVA_trajectories('Foo', [group, group2])
+        obs = _ANOVA_trajectories('Foo', [group, group2])
         exp = CategoryResults('Foo', None, None,
                               'This group can not be used. All groups '
                               'should have more than 1 element.')
@@ -379,7 +380,7 @@ class GradientTests(BaseTests):
         gr3 = GroupResults('FBF', np.array([0.080504323, -0.212014503,
                                             -0.088353435]),
                            -0.0057388123, {'avg': -0.0057388123}, None)
-        obs = ANOVA_trajectories('Cat', [gr1, gr2, gr3])
+        obs = _ANOVA_trajectories('Cat', [gr1, gr2, gr3])
         exp = CategoryResults('Cat', 0.8067456876, [gr1, gr2, gr3], None)
         self.assert_category_results_almost_equal(obs, exp)
 

@@ -102,7 +102,7 @@ from skbio.util.sort import signed_natsort
 from skbio.math.stats.test import ANOVA_one_way
 
 
-def weight_by_vector(trajectories, w_vector):
+def _weight_by_vector(trajectories, w_vector):
     r"""weights the values of `trajectories` given a weighting vector
     `w_vector`.
 
@@ -167,7 +167,7 @@ def weight_by_vector(trajectories, w_vector):
     return trajectories
 
 
-def ANOVA_trajectories(category, res_by_group):
+def _ANOVA_trajectories(category, res_by_group):
     r"""Run ANOVA over `res_by_group`
 
     If ANOVA cannot be run in the current category (because either there is
@@ -513,7 +513,7 @@ class GradientANOVA(object):
             res_by_group = [self._get_group_trajectories(group, sample_ids)
                             for group, sample_ids in cat_groups.items()]
 
-            result.categories.append(ANOVA_trajectories(cat, res_by_group))
+            result.categories.append(_ANOVA_trajectories(cat, res_by_group))
 
         return result
 
@@ -556,8 +556,8 @@ class GradientANOVA(object):
         if self._weighted and len(sids) > 1:
             trajectories_copy = deepcopy(trajectories)
             try:
-                trajectories = weight_by_vector(trajectories_copy,
-                                                self._weighting_vector[sids])
+                trajectories = _weight_by_vector(trajectories_copy,
+                                                 self._weighting_vector[sids])
             except (FloatingPointError, ValueError):
                 self._message_buffer.append("Could not weight group, no "
                                             "gradient in the the "
