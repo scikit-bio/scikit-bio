@@ -436,7 +436,7 @@ def load(seqs, qual=None, constructor=None, **kwargs):
 
     Returns
     -------
-    SequenceIterator instance
+    SequenceIterator
         the return is ``Iterable``
 
     See Also
@@ -474,7 +474,8 @@ def load(seqs, qual=None, constructor=None, **kwargs):
         # if seqs is a mix of fasta/fastq, with qual coming in as there aren't
         # 1-1 mappings. This could be addressed if necessary, but seems like
         # an unnecessary block of code right now
-        raise ValueError("Cannot resolve iterators!")
+        raise ValueError("Cannot handle multiple sequence file types and qual "
+                         "at the sametime!")
 
     if _is_single_iterator_type(i_seqs):
         seqs_constructor = i_seqs[0]
