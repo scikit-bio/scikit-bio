@@ -67,5 +67,11 @@ setup(name='scikit-bio',
                         'scipy >= 0.13.0', 'pandas', 'future'],
       extras_require={'test': ["nose >= 0.10.1", "pep8"],
                       'doc': ["Sphinx >= 1.2.2", "sphinx-bootstrap-theme"]},
-      classifiers=classifiers
+      classifiers=classifiers,
+      package_data={
+          'skbio.core.tests': ['data/*.txt'],
+          'skbio.math.tests': ['data/*'],
+          'skbio.math.stats.ordination.tests': ['data/*'],
+          'skbio.parse.sequences.tests': ['data/*'],
+          }
       )
