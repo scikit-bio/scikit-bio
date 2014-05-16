@@ -60,7 +60,7 @@ setup(name='scikit-bio',
       author_email="gregcaporaso@gmail.com",
       maintainer="scikit-bio development team",
       maintainer_email="gregcaporaso@gmail.com",
-      url='https://github.com/biocore/scikit-bio',
+      url='http://scikit-bio.org',
       test_suite='nose.collector',
       packages=find_packages(),
       ext_modules=extensions,
@@ -69,7 +69,5 @@ setup(name='scikit-bio',
                         'scipy >= 0.13.0', 'pandas', 'future'],
       extras_require={'test': ["nose >= 0.10.1", "pep8"],
                       'doc': ["Sphinx >= 1.2.2", "sphinx-bootstrap-theme"]},
-      classifiers=classifiers,
-      package_data={'skbio': ['core/tests/data/*.txt',
-                              'math/stats/ordination/test/data/*']
-                    })
+      classifiers=classifiers
+     )
