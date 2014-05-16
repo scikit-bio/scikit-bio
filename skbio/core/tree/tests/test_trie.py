@@ -13,7 +13,7 @@ from __future__ import division
 from future.builtins import zip
 
 from sys import version_info
-from unittest import TestCase, main, skipUnless
+from unittest import TestCase, main
 
 from skbio.core.tree import CompressedTrie, fasta_to_pairlist
 from skbio.core.tree.trie import _CompressedNode
@@ -144,30 +144,40 @@ class CompressedTrieTests(TestCase):
         self.assertEqual(self.empty_trie.size, 1)
         self.assertEqual(self.trie.size, 10)
 
-    @skipUnless(version_info.major < 3,
-                "See https://github.com/biocore/scikit-bio/issues/270")
     def test_prefix_map(self):
         """Should map prefix to values"""
-        exp = {"1": ["6", "2", "0", "5"],
-               "8": ["7"],
-               "3": [],
-               "4": []}
-        self.assertEqual(exp, self.trie.prefix_map)
+        exp1 = {"1": ["6", "2", "0", "5"],
+                "8": ["7"],
+                "3": [],
+                "4": []}
+        exp2 = {"1": ["6", "2", "0", "5"],
+                "8": [],
+                "3": ["7"],
+                "4": []}
+        self.assertTrue(self.trie.prefix_map in (exp1, exp2))
 
-    @skipUnless(version_info.major < 3,
-                "See https://github.com/biocore/scikit-bio/issues/270")
     def test_insert(self):
         """Correctly inserts a new key into the trie"""
         t = CompressedTrie(self.data)
         t.insert("babc", "9")
         self.assertTrue("9" in t.find("babc"))
 
-        exp = {"1": ["6", "2", "0", "5"],
-               "9": ["7"],
-               "3": [],
-               "4": [],
-               "8": []}
-        self.assertEqual(exp, t.prefix_map)
+        exp1 = {"1": ["6", "2", "0", "5"],
+                "9": ["7"],
+                "3": [],
+                "4": [],
+                "8": []}
+        exp2 = {"1": ["6", "2", "0", "5"],
+                "9": [],
+                "3": ["7"],
+                "4": [],
+                "8": []}
+        exp3 = {"1": ["6", "2", "0", "5"],
+                "9": [],
+                "3": [],
+                "4": [],
+                "8": ["7"]}
+        self.assertTrue(t.prefix_map in (exp1, exp2, exp3))
 
     def test_find(self):
         """Correctly founds the values present on the trie"""
