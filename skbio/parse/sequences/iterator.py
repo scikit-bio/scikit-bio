@@ -1,110 +1,18 @@
-r"""
-Biological sequence iterators (:mod:`skbio.parse.sequences.iterator`)
-=====================================================================
-
-.. currentmodule:: skbio.parse.sequences.iterator
-
-This module provides standardized iterators. The benefit of using these
-iterators for things like sequence files is that the type of the file, and
-any file format details are abstracted out to the developer. In this manner,
-the developer does not need to worry about whether they're operating on
-FASTA or FASTQ, and any differences in the returns from their respective
-parsers.
-
-Classes
--------
-
-.. autosummary::
-   :toctree: generated/
-
-   SequenceIterator
-   FastaIterator
-   FastqIterator
-
-Examples
---------
->>> from StringIO import StringIO
->>> from skbio.parse.sequences import FastaIterator, FastqIterator
-
-In the first example, we're going to construct a FASTA iterator that is also
-paired with quality scores (e.g., as in 454 fasta/qual files).
-
->>> seqs = StringIO(">seq1\n"
-...                 "ATGC\n"
-...                 ">seq2\n"
-...                 "TTGGCC\n")
->>> qual = StringIO(">seq1\n"
-...                 "10 20 30 40\n"
-...                 ">seq2\n"
-...                 "1 2 3 4 5 6\n")
->>> it = FastaIterator(seq=[seqs], qual=[qual])
->>> for record in it:
-...     print record['Sequence']
-...     print record['Qual']
-ATGC
-[10 20 30 40]
-TTGGCC
-[1 2 3 4 5 6]
-
-In the next example, we're going to iterate over multiple FASTQ files at once.
-
->>> seqs1 = StringIO("@seq1\n"
-...                  "ATGC\n"
-...                  "+\n"
-...                  "hhhh\n")
->>> seqs2 = StringIO("@seq2\n"
-...                 "AATTGGCC\n"
-...                 ">seq2\n"
-...                 "abcdefgh\n")
->>> it = FastqIterator(seq=[seqs1, seqs2], phred_offset=64)
->>> for record in it:
-...     print record['Sequence']
-...     print record['Qual']
-ATGC
-[40 40 40 40]
-AATTGGCC
-[33 34 35 36 37 38 39 40]
-
-Finally, we can apply arbitrary transforms to the sequences during iteratation.
-
->>> seqs1 = StringIO("@seq1\n"
-...                  "ATGC\n"
-...                  "+\n"
-...                  "hhhh\n")
->>> seqs2 = StringIO("@seq2\n"
-...                 "AATTGGCC\n"
-...                 ">seq2\n"
-...                 "abcdefgh\n")
->>> def rev_f(st):
-...     st['Sequence'] = st['Sequence'][::-1]
-...     st['Qual'] = st['Qual'][::-1] if st['Qual'] is not None else None
->>> it = FastqIterator(seq=[seqs1, seqs2], transform=rev_f, phred_offset=64)
->>> for record in it:
-...     print record['Sequence']
-...     print record['Qual']
-CGTA
-[40 40 40 40]
-CCGGTTAA
-[40 39 38 37 36 35 34 33]
-"""
-
 # ----------------------------------------------------------------------------
-# Copyright (c) 2013, The scikit-bio Developers.
+# Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-
 from itertools import chain
 
 from future.builtins import zip
-from numpy.testing import Tester
 
+from skbio.core.workflow import Workflow, not_none, method, requires
 from .fasta import parse_fasta, parse_qual
 from .fastq import parse_fastq
-from skbio.core.workflow import Workflow, not_none, method, requires
 
 
 def _has_qual(item):

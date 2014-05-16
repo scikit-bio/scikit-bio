@@ -13,8 +13,8 @@ from unittest import TestCase, main
 from future.utils.six import StringIO
 from numpy import arange, array
 
-from skbio.parse.sequences.iterator import (SequenceIterator, FastaIterator,
-                                            FastqIterator)
+from skbio.parse.sequences import (SequenceIterator, FastaIterator,
+                                   FastqIterator)
 
 
 class SeqIterTests(TestCase):

@@ -1,79 +1,14 @@
-r"""
-Biological sequences factory (:mod:`skbio.parse.sequences.factory`)
-===================================================================
-
-.. currentmodule:: skbio.parse.sequences.factory
-
-The `load` function provides a standard mechanism to iterate over sequence
-files regardless of file type or whether they are compressed. The method
-will take a single or list of file paths, resolve the necessary file openers,
-necessary iterator objects and the corresponding parsers.
-
-Functions
----------
-
-.. autosummary::
-   :toctree: generated/
-
-    load
-
-Examples
---------
-
-For the first set of examples, we're going to use the `load` function. The
-`load` function is intended to operate on file paths, so lets create two files
-for it to use. The first one will be a regular FASTA file, and the second will
-be a gzip'd FASTQ file:
-
->>> import os
->>> import gzip
->>> out = open('test_seqs.fna', 'w')
->>> out.write(">s1\nATGC\n>s2\nATGGC\n")
->>> out.close()
->>> outgz = gzip.open('test_seqs.fq.gz', 'w')
->>> _ = outgz.write("@s3\nAATTGG\n+\nghghgh\n@s4\nAAA\n+\nfgh\n")
->>> outgz.close()
-
-Now, lets see what `load` can do:
-
->>> it = load(['test_seqs.fna', 'test_seqs.fq.gz'], phred_offset=64)
->>> for rec in it:
-...     print rec['SequenceID']
-...     print rec['Sequence']
-...     print rec['Qual']
-s1
-ATGC
-None
-s2
-ATGGC
-None
-s3
-AATTGG
-[39 40 39 40 39 40]
-s4
-AAA
-[38 39 40]
-
-To be polite, lets now remove the files we just created:
-
->>> os.remove('test_seqs.fna')
->>> os.remove('test_seqs.fq.gz')
-
-"""
-
 # ----------------------------------------------------------------------------
-# Copyright (c) 2013, The scikit-bio Developers.
+# Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-
 import os
-
-from itertools import chain
 from gzip import open as gzip_open
+from itertools import chain
 
 from .iterator import FastaIterator, FastqIterator
 
@@ -170,6 +105,7 @@ def load(seqs, qual=None, constructor=None, **kwargs):
     skbio.parse.sequences.iterator.SequenceIterator
     skbio.parse.sequences.iterator.FastaIterator
     skbio.parse.sequences.iterator.FastqIterator
+
     """
     if not seqs:
         raise ValueError("Must pass in sequences!")
