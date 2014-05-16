@@ -77,8 +77,8 @@ def test_lladser_ci():
     assert_true(sum/reps >= 0.95)
 
 
-def test_lladser_ci_f2(): 
-    """lladser_ci estimate using f=2 contains p with 95% prob"""
+def test_lladser_ci_f3(): 
+    """lladser_ci estimate using f=3 contains p with 95% prob"""
  
     # Test different values of f=3 and r=14, which lie exactly on the 95% interval line.
     # For 100 reps using simple cumulative binomial probs we expect to have more than 5 misses
