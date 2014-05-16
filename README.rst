@@ -104,22 +104,22 @@ scikit-bio began from code derived from `PyCogent
 the contributors and/or copyright holders have agreed to make the code
 they wrote for PyCogent and/or QIIME available under the BSD
 license. The contributors to PyCogent and/or QIIME modules that have
-been ported to scikit-bio are: Rob Knight
-([@rob-knight](https://github.com/rob-knight)), Gavin Huttley
-([@gavin-huttley](https://github.com/gavin-huttley)), Daniel McDonald
-([@wasade](https://github.com/wasade)), Micah Hamady, Antonio Gonzalez
-([@antgonza](https://github.com/antgonza)), Sandra Smit, Greg Caporaso
-([@gregcaporaso](https://github.com/gregcaporaso)), Jai Ram Rideout
-([@ElBrogrammer](https://github.com/ElBrogrammer)), Cathy Lozupone
-([@clozupone](clozupone)), Mike Robeson
-([@mikerobeson](https://github.com/mikerobeson)), Marcin Cieslik,
+been ported to scikit-bio are: Rob Knight (`@rob-knight
+<https://github.com/rob-knight>`__), Gavin Huttley (`@gavin-huttley
+<https://github.com/gavin-huttley>`__), Daniel McDonald (`@wasade
+<https://github.com/wasade>`__), Micah Hamady, Antonio Gonzalez
+(`@antgonza <https://github.com/antgonza>`__), Sandra Smit, Greg
+Caporaso (`@gregcaporaso <https://github.com/gregcaporaso>`__), Jai
+Ram Rideout (`@ElBrogrammer <https://github.com/ElBrogrammer>`__),
+Cathy Lozupone (`@clozupone <clozupone>`__), Mike Robeson
+(`@mikerobeson <https://github.com/mikerobeson>`__), Marcin Cieslik,
 Peter Maxwell, Jeremy Widmann, Zongzhi Liu, Michael Dwan, Logan Knecht
-([@loganknecht](https://github.com/loganknecht)), Andrew Cochran, Jose
-Carlos Clemente ([@cleme](https://github.com/cleme)), Damien Coy, Levi
-McCracken, Andrew Butterfield, Will Van Treuren
-([@wdwvt1](https://github.com/wdwvt1)), Justin Kuczynski
-([@justin212k](https://github.com/justin212k)), and Jose Antonio Navas
-Molina ([@josenavas](https://github.com/josenavas)).
+(`@loganknecht <https://github.com/loganknecht>`__), Andrew Cochran,
+Jose Carlos Clemente (`@cleme <https://github.com/cleme>`__), Damien
+Coy, Levi McCracken, Andrew Butterfield, Will Van Treuren (`@wdwvt1
+<https://github.com/wdwvt1>`__), Justin Kuczynski (`@justin212k
+<https://github.com/justin212k>`__), and Jose Antonio Navas Molina
+(`@josenavas <https://github.com/josenavas>`__).
 
 Logo
 ----
