@@ -13,7 +13,6 @@ __version__ = "0.1.1"
 import os
 from setuptools import find_packages, setup
 from setuptools.extension import Extension
-from distutils.command.build_py import build_py
 
 import numpy as np
 
@@ -51,7 +50,6 @@ if USE_CYTHON:
     extensions = cythonize(extensions)
 
 setup(name='scikit-bio',
-      cmdclass={'build_py': build_py},
       version=__version__,
       license='BSD',
       description='scikit-bio',
