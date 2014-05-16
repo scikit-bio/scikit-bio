@@ -59,7 +59,7 @@ def lladser_pe(counts, r=10):
     return pe
 
 
-def lladser_ci(counts, r):
+def lladser_ci(counts, r, alpha=0.95, f=10, ci_type='ULCL'):
     """Calculate single CI of the conditional uncovered probability.
 
     Parameters
@@ -68,6 +68,15 @@ def lladser_ci(counts, r):
         Vector of counts.
     r : int
         Number of new colors that are required for the next prediction.
+    alpha : float, optional
+        Desired confidence level.
+    f : float, optional
+        Ratio between upper and lower bound.
+    ci_type : {'ULCL', 'ULCU', 'U', 'L'}
+        Type of confidence interval. If ``'ULCL'``, upper and lower bounds with
+        conservative lower bound. If ``'ULCU'``, upper and lower bounds with
+        conservative upper bound. If ``'U'``, upper bound only, lower bound
+        fixed to 0.0. If ``'L'``, lower bound only, upper bound fixed to 1.0.
 
     Returns
     -------
@@ -96,7 +105,7 @@ def lladser_ci(counts, r):
     np.random.shuffle(sample)
 
     try:
-        ci = list(_lladser_ci_series(sample, r))[-1]
+        ci = list(_lladser_ci_series(sample, r, alpha, f, ci_type))[-1]
     except IndexError:
         ci = (np.nan, np.nan)
 
