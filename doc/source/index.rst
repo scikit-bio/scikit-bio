@@ -44,3 +44,4 @@ to scikit-bio.
    :maxdepth: 1
 
    development/py3
+   development/new_module
