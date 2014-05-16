@@ -778,6 +778,21 @@ class TreeTests(TestCase):
         t = TreeNode.from_file(t_io)
         self.assertEqual(list('abcdefg'), [n.name for n in t.postorder()])
 
+    def test_linkage_matrix(self):
+        # Ensure matches: http://www.southampton.ac.uk/~re1u06/teaching/upgma/
+        id_list = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
+        linkage = np.asarray([[1.0,  5.0,  1.0,  2.0],
+                              [0.0,  3.0,  8.0,  2.0],
+                              [6.0,  7.0, 12.5,  3.0],
+                              [8.0,  9.0, 16.5,  5.0],
+                              [2.0, 10.0, 29.0,  6.0],
+                              [4.0, 11.0, 34.0,  7.0]])
+
+        tree = TreeNode.from_linkage_matrix(linkage, id_list)
+        self.assertEquals("(E:17.0,(C:14.5,((A:4.0,D:4.0):4.25,(G:6.25,(B:0.5,"
+                          "F:0.5):5.75):2.0):6.25):2.5);",
+                          tree.to_newick(with_distances=True))
+
 
 class DndTokenizerTests(TestCase):
 
