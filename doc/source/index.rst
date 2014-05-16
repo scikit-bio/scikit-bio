@@ -34,7 +34,6 @@ API Reference
    util.io
    util.misc
    util.testing
-   util.trie
 
 
 Developer Documentation
