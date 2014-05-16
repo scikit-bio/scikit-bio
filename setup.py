@@ -70,4 +70,4 @@ setup(name='scikit-bio',
       extras_require={'test': ["nose >= 0.10.1", "pep8"],
                       'doc': ["Sphinx >= 1.2.2", "sphinx-bootstrap-theme"]},
       classifiers=classifiers
-     )
+      )
