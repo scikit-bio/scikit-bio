@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.core.tree.TreeNode.create_node_cache
-==========================================
-
-.. currentmodule:: skbio.core.tree
-
-.. automethod:: TreeNode.create_node_cache

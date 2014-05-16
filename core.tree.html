@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Tree representations (skbio.core.tree) &mdash; scikit-bio 0.0.0-dev documentation</title>
+    <title>Tree representations (skbio.core.tree) &mdash; scikit-bio 0.1.0 documentation</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.0.0-dev',
+        VERSION:     '0.1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -30,7 +30,7 @@
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="scikit-bio 0.0.0-dev documentation" href="index.html" />
+    <link rel="top" title="scikit-bio 0.1.0 documentation" href="index.html" />
     <link rel="next" title="skbio.core.tree.TreeNode" href="generated/skbio.core.tree.TreeNode.html" />
     <link rel="prev" title="skbio.core.genetic_code.GeneticCode.__eq__" href="generated/skbio.core.genetic_code.GeneticCode.__eq__.html" />
 <meta charset='utf-8'>
@@ -67,7 +67,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.0.0-dev</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.1.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -88,21 +88,23 @@
 <li class="toctree-l1"><a class="reference internal" href="core.sequence.html">Biological sequences (<tt class="docutils literal"><span class="pre">skbio.core.sequence</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="core.distance.html">Dissimilarity and distance matrices (<tt class="docutils literal"><span class="pre">skbio.core.distance</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="core.exception.html">Exceptions (<tt class="docutils literal"><span class="pre">skbio.core.exception</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.warning.html">Warnings (<tt class="docutils literal"><span class="pre">skbio.core.warning</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="core.genetic_code.html">Genetic Code (<tt class="docutils literal"><span class="pre">skbio.core.genetic_code</span></tt>)</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">Tree representations (<tt class="docutils literal"><span class="pre">skbio.core.tree</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="core.workflow.html">Constructing workflows (<tt class="docutils literal"><span class="pre">skbio.core.workflow</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.ssw.html">Performing Striped Smith Waterman Alignments (<tt class="docutils literal"><span class="pre">skbio.core.ssw</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="draw.distributions.html">Distribution visualizations (<tt class="docutils literal"><span class="pre">skbio.draw.distributions</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="format.sequences.html">Format biological sequences (<tt class="docutils literal"><span class="pre">skbio.format.sequences</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="math.diversity.alpha.html">Alpha diversity measures (<tt class="docutils literal"><span class="pre">skbio.math.diversity.alpha</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="math.stats.distance.html">Distance-based statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.distance</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="math.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.spatial</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="math.stats.ordination.html">Ordination methods (<tt class="docutils literal"><span class="pre">skbio.math.stats.ordination</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.gradient.html">Gradient analyses (<tt class="docutils literal"><span class="pre">skbio.math.gradient</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="math.subsample.html">Subsampling (<tt class="docutils literal"><span class="pre">skbio.math.subsample</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="parse.sequences.html">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="util.io.html">I/O utils (<tt class="docutils literal"><span class="pre">skbio.util.io</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="util.misc.html">Miscellaneous Utilities (<tt class="docutils literal"><span class="pre">skbio.util.misc</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="util.testing.html">Testing utilities (<tt class="docutils literal"><span class="pre">skbio.util.testing</span></tt>)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="util.trie.html">Prefix tree (Trie) (<tt class="docutils literal"><span class="pre">skbio.util.trie</span></tt>)</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="development/py3.html">Supporting Python 2 and Python 3</a></li>
@@ -121,7 +123,9 @@
       aria-labelledby="dLabelLocalToc"><ul>
 <li><a class="reference internal" href="#">Tree representations (<tt class="docutils literal"><span class="pre">skbio.core.tree</span></tt>)</a><ul>
 <li><a class="reference internal" href="#classes">Classes</a></li>
-<li><a class="reference internal" href="#examples">Examples</a></li>
+<li><a class="reference internal" href="#functions">Functions</a></li>
+<li><a class="reference internal" href="#phylogenetic-tree-examples">Phylogenetic tree examples</a></li>
+<li><a class="reference internal" href="#prefix-trees-i-e-tries-examples">Prefix trees (i.e., tries) examples</a></li>
 </ul>
 </li>
 </ul>
@@ -156,10 +160,10 @@
   <span class="target" id="module-skbio.core.tree"></span><div class="section" id="tree-representations-skbio-core-tree">
 <h1>Tree representations (<a class="reference internal" href="#module-skbio.core.tree" title="skbio.core.tree"><tt class="xref py py-mod docutils literal"><span class="pre">skbio.core.tree</span></tt></a>)<a class="headerlink" href="#tree-representations-skbio-core-tree" title="Permalink to this headline">¶</a></h1>
 <p>This module provides functionality for working with trees, including
-phylogenetic trees and hierarchies. Functionality is provided for constructing
-the trees, for traversing in multiple ways, comparisons, fetching subtrees, and
-more. This module supports trees that are multifurcating and nodes that have
-single descendants as well.</p>
+phylogenetic trees and hierarchies, and prefix trees (i.e., tries).
+Functionality is provided for constructing trees, for traversing in multiple
+ways, comparisons, fetching subtrees, and more. This module supports trees that
+are multifurcating and nodes that have single descendants.</p>
 <div class="section" id="classes">
 <h2>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h2>
 <table border="1" class="longtable docutils">
@@ -171,11 +175,28 @@ single descendants as well.</p>
 <tr class="row-odd"><td><a class="reference internal" href="generated/skbio.core.tree.TreeNode.html#skbio.core.tree.TreeNode" title="skbio.core.tree.TreeNode"><tt class="xref py py-obj docutils literal"><span class="pre">TreeNode</span></tt></a>([name,&nbsp;length,&nbsp;parent,&nbsp;children])</td>
 <td>Representation of a node within a tree</td>
 </tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.core.tree.CompressedTrie.html#skbio.core.tree.CompressedTrie" title="skbio.core.tree.CompressedTrie"><tt class="xref py py-obj docutils literal"><span class="pre">CompressedTrie</span></tt></a>([pair_list])</td>
+<td>A compressed Trie for a list of (key, value) pairs</td>
+</tr>
 </tbody>
 </table>
 </div>
-<div class="section" id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.core.tree.fasta_to_pairlist.html#skbio.core.tree.fasta_to_pairlist" title="skbio.core.tree.fasta_to_pairlist"><tt class="xref py py-obj docutils literal"><span class="pre">fasta_to_pairlist</span></tt></a>(seqs)</td>
+<td>Yields (key, value) pairs, useful for populating a Trie object</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="phylogenetic-tree-examples">
+<h2>Phylogenetic tree examples<a class="headerlink" href="#phylogenetic-tree-examples" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.core.tree</span> <span class="kn">import</span> <span class="n">TreeNode</span>
 </pre></div>
 </div>
@@ -290,6 +311,72 @@ pairwise tip-to-tip distances between trees:</p>
 <span class="go">0.0</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">tree1</span><span class="o">.</span><span class="n">compare_tip_distances</span><span class="p">(</span><span class="n">tree2</span><span class="p">)</span>
 <span class="go">0.120492524415</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="prefix-trees-i-e-tries-examples">
+<h2>Prefix trees (i.e., tries) examples<a class="headerlink" href="#prefix-trees-i-e-tries-examples" title="Permalink to this headline">¶</a></h2>
+<p>Construct a Trie from a (key, value) list</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.core.tree</span> <span class="kn">import</span> <span class="n">CompressedTrie</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pair_list</span> <span class="o">=</span> <span class="p">[(</span><span class="s">&quot;ab&quot;</span><span class="p">,</span>  <span class="s">&quot;0&quot;</span><span class="p">),</span>
+<span class="gp">... </span>             <span class="p">(</span><span class="s">&quot;abababa&quot;</span><span class="p">,</span> <span class="s">&quot;1&quot;</span><span class="p">),</span>
+<span class="gp">... </span>             <span class="p">(</span><span class="s">&quot;abab&quot;</span><span class="p">,</span> <span class="s">&quot;2&quot;</span><span class="p">),</span>
+<span class="gp">... </span>             <span class="p">(</span><span class="s">&quot;baba&quot;</span><span class="p">,</span> <span class="s">&quot;3&quot;</span><span class="p">),</span>
+<span class="gp">... </span>             <span class="p">(</span><span class="s">&quot;ababaa&quot;</span><span class="p">,</span> <span class="s">&quot;4&quot;</span><span class="p">),</span>
+<span class="gp">... </span>             <span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">,</span> <span class="s">&quot;5&quot;</span><span class="p">),</span>
+<span class="gp">... </span>             <span class="p">(</span><span class="s">&quot;abababa&quot;</span><span class="p">,</span> <span class="s">&quot;6&quot;</span><span class="p">),</span>
+<span class="gp">... </span>             <span class="p">(</span><span class="s">&quot;bab&quot;</span><span class="p">,</span> <span class="s">&quot;7&quot;</span><span class="p">),</span>
+<span class="gp">... </span>             <span class="p">(</span><span class="s">&quot;babba&quot;</span><span class="p">,</span> <span class="s">&quot;8&quot;</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">CompressedTrie</span><span class="p">(</span><span class="n">pair_list</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Get the number of keys stored in the trie</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+<span class="go">9</span>
+</pre></div>
+</div>
+<p>Get the number of nodes in the trie</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">size</span>
+<span class="go">10</span>
+</pre></div>
+</div>
+<p>Get the trie&#8217;s prefix map</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">prefix_map</span>
+<span class="go">{&#39;1&#39;: [&#39;6&#39;, &#39;2&#39;, &#39;0&#39;, &#39;5&#39;], &#39;8&#39;: [&#39;7&#39;], &#39;3&#39;: [], &#39;4&#39;: []}</span>
+</pre></div>
+</div>
+<p>Find the value attached to a given key</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&quot;ababaa&quot;</span><span class="p">)</span>
+<span class="go">[&#39;4&#39;]</span>
+</pre></div>
+</div>
+<p>Add a new (key, value) pair to the Trie</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&quot;bac&quot;</span><span class="p">,</span> <span class="s">&quot;9&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&quot;bac&quot;</span><span class="p">)</span>
+<span class="go">[&#39;9&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">prefix_map</span>
+<span class="go">{&#39;1&#39;: [&#39;6&#39;, &#39;2&#39;, &#39;0&#39;, &#39;5&#39;], &#39;9&#39;: [], &#39;3&#39;: [], &#39;4&#39;: [], &#39;8&#39;: [&#39;7&#39;]}</span>
+</pre></div>
+</div>
+<p>Create a new trie with a list of sequences</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.core.tree</span> <span class="kn">import</span> <span class="n">fasta_to_pairlist</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">seqs</span> <span class="o">=</span> <span class="p">[(</span><span class="s">&quot;s0&quot;</span><span class="p">,</span> <span class="s">&quot;ACA&quot;</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="p">(</span><span class="s">&quot;s1&quot;</span><span class="p">,</span> <span class="s">&quot;ACAGTC&quot;</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="p">(</span><span class="s">&quot;s2&quot;</span><span class="p">,</span> <span class="s">&quot;ACTA&quot;</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="p">(</span><span class="s">&quot;s3&quot;</span><span class="p">,</span> <span class="s">&quot;CAGT&quot;</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="p">(</span><span class="s">&quot;s4&quot;</span><span class="p">,</span> <span class="s">&quot;CATGAA&quot;</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="p">(</span><span class="s">&quot;s5&quot;</span><span class="p">,</span> <span class="s">&quot;A&quot;</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="p">(</span><span class="s">&quot;s6&quot;</span><span class="p">,</span> <span class="s">&quot;CATGTA&quot;</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="p">(</span><span class="s">&quot;s7&quot;</span><span class="p">,</span> <span class="s">&quot;CACCA&quot;</span><span class="p">)]</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">CompressedTrie</span><span class="p">(</span><span class="n">fasta_to_pairlist</span><span class="p">(</span><span class="n">seqs</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">prefix_map</span>
+<span class="go">{&#39;s3&#39;: [], &#39;s2&#39;: [], &#39;s1&#39;: [&#39;s0&#39;, &#39;s5&#39;], &#39;s7&#39;: [], &#39;s6&#39;: [], &#39;s4&#39;: []}</span>
 </pre></div>
 </div>
 </div>

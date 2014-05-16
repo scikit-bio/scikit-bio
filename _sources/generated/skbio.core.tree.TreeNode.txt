@@ -27,6 +27,7 @@ skbio.core.tree.TreeNode
          TreeNode.__subclasshook__
          TreeNode._adopt
          TreeNode._ascii_art
+         TreeNode._balanced_distance_to_tip
          TreeNode._get_max_distance_singledesc
          TreeNode._remove_node
          TreeNode._set_max_distance
@@ -40,19 +41,21 @@ skbio.core.tree.TreeNode
          TreeNode.compare_tip_distances
          TreeNode.copy
          TreeNode.count
-         TreeNode.create_node_cache
+         TreeNode.create_caches
          TreeNode.deepcopy
+         TreeNode.descending_branch_length
          TreeNode.distance
          TreeNode.extend
          TreeNode.find
          TreeNode.find_by_func
          TreeNode.find_by_id
          TreeNode.from_file
+         TreeNode.from_linkage_matrix
          TreeNode.from_newick
          TreeNode.get_max_distance
          TreeNode.has_children
          TreeNode.index_tree
-         TreeNode.invalidate_node_cache
+         TreeNode.invalidate_caches
          TreeNode.is_root
          TreeNode.is_tip
          TreeNode.lca
@@ -77,6 +80,7 @@ skbio.core.tree.TreeNode
          TreeNode.subtree
          TreeNode.tip_tip_distances
          TreeNode.tips
+         TreeNode.to_array
          TreeNode.to_newick
          TreeNode.traverse
          TreeNode.unrooted_copy

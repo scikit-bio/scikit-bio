@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.util.trie.CompressedTrie.find
-===================================
-
-.. currentmodule:: skbio.util.trie
-
-.. automethod:: CompressedTrie.find

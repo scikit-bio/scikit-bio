@@ -16,6 +16,22 @@ guide <https://docs.python.org/3/howto/pyporting.html>`_ and the
 `python-future docs <http://python-future.org/>`_ for more
 information.
 
+Importing __future__
+====================
+
+For consistency across versions, every Python file should start with
+the following imports::
+
+  # ----------------------------------------------------------------------------
+  # Copyright (c) 2013--, scikit-bio development team.
+  #
+  # Distributed under the terms of the Modified BSD License.
+  #
+  # The full license is in the file COPYING.txt, distributed with this software.
+  # ----------------------------------------------------------------------------
+
+  from __future__ import absolute_import, division, print_function
+
 Iterators
 =========
 
@@ -326,7 +342,6 @@ Always test that both `==` and `!=` are behaving correctly, e.g.::
         gc_2 = GeneticCode(self.sgc)
         # Explicitly using !=
         self.assertFalse(gc_1 != gc_2)
-
 
 Other modules
 =============
