@@ -149,7 +149,13 @@ from .base import (
 from .gini import gini_index
 from .lladser import lladser_pe, lladser_ci
 
-__all__ = [m for m in dir() if not m.startswith('_')]
+__all__ = ['ace', 'chao1', 'chao1_ci', 'berger_parker_d', 'brillouin_d',
+           'dominance', 'doubles', 'enspie', 'equitability', 'esty_ci',
+           'fisher_alpha', 'goods_coverage', 'heip_e', 'kempton_taylor_q',
+           'margalef', 'mcintosh_d', 'mcintosh_e', 'menhinick',
+           'michaelis_menten_fit', 'observed_otus', 'osd', 'robbins',
+           'shannon', 'simpson', 'simpson_e', 'singles', 'strong',
+           'gini_index', 'lladser_pe', 'lladser_ci']
 
 from numpy.testing import Tester
 test = Tester().test

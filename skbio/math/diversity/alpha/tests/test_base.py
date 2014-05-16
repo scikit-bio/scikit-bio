@@ -62,19 +62,19 @@ class BaseTests(TestCase):
     def test_validate_invalid_input(self):
         # wrong dtype
         with self.assertRaises(TypeError):
-            _ = _validate([0, 2, 1.2, 3])
+            _validate([0, 2, 1.2, 3])
 
         # wrong number of dimensions (2-D)
         with self.assertRaises(ValueError):
-            _ = _validate([[0, 2, 1, 3], [4, 5, 6, 7]])
+            _validate([[0, 2, 1, 3], [4, 5, 6, 7]])
 
         # wrong number of dimensions (scalar)
         with self.assertRaises(ValueError):
-            _ = _validate(1)
+            _validate(1)
 
         # negative values
         with self.assertRaises(ValueError):
-            _ = _validate([0, 0, 2, -1, 3])
+            _validate([0, 0, 2, -1, 3])
 
     def test_berger_parker_d(self):
         self.assertEqual(berger_parker_d(np.array([5])), 1)

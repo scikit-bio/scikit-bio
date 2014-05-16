@@ -223,7 +223,7 @@ class WorkflowTests(TestCase):
         self.assertEqual(r2, ['C1', 2])
         self.assertFalse(self.obj_noshort.failed)
 
-        _ = next(gen)
+        next(gen)
         self.assertEqual(self.obj_noshort.state, ['C1', 'fail A2'])
         self.assertTrue(self.obj_noshort.failed)
 
