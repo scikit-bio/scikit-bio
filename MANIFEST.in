@@ -1,8 +1,13 @@
-include README.md
 include CHANGELOG.md
+include COPYING.txt
+include CONTRIBUTING.md
+include README.md
 
-graft skbio
 graft doc
+graft examples
+graft ipynbs
+graft licenses
+graft skbio
 
 prune doc/build
 
