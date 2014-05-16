@@ -124,9 +124,9 @@ Coy, Levi McCracken, Andrew Butterfield, Will Van Treuren (`@wdwvt1
 Logo
 ----
 
-scikit-bio ASCII art created by
-[@gregcaporaso](https://github.com/gregcaporaso). Text logo created at
-`patorjk.com <http://patorjk.com/software/taag/>`__.
+scikit-bio ASCII art created by `@gregcaporaso
+<https://github.com/gregcaporaso>`_. Text logo created at `patorjk.com
+<http://patorjk.com/software/taag/>`__.
 
 .. |Build Status| image:: https://travis-ci.org/biocore/scikit-bio.svg?branch=master
    :target: https://travis-ci.org/biocore/scikit-bio
