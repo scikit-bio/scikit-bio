@@ -34,6 +34,9 @@ classes = """
 """
 classifiers = [s.strip() for s in classes.split('\n') if s]
 
+description = ('Data structures, algorithms and educational '
+               'resources for bioinformatics.')
+
 with open('README.rst') as f:
     long_description = f.read()
 
@@ -53,7 +56,7 @@ if USE_CYTHON:
 setup(name='scikit-bio',
       version=__version__,
       license='BSD',
-      description='scikit-bio',
+      description=description,
       long_description=long_description,
       author="scikit-bio development team",
       author_email="gregcaporaso@gmail.com",

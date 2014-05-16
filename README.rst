@@ -25,9 +25,7 @@
         Proteobacteria  \
                        Cyanobacteria
 
-
 |Build Status| |Coverage Status|
-
 
 Core objects, functions and statistics for working with biological
 data in Python.
@@ -48,7 +46,7 @@ Licensing
 ---------
 
 scikit-bio is available under the new BSD license. See
-`COPYING.txt <COPYING.txt>`__ for scikit-bio's license, and the
+`COPYING.txt <https://github.com/biocore/scikit-bio/blob/master/COPYING.txt>`__ for scikit-bio's license, and the
 ``licenses`` directory for the licenses of other software that is
 (either partially or entirely) distributed with scikit-bio.
 
@@ -85,7 +83,7 @@ scikit-bio development
 ----------------------
 
 If you're interested in getting involved in or learning about
-scikit-bio development, see `CONTRIBUTING.md <CONTRIBUTING.md>`__, in
+scikit-bio development, see `CONTRIBUTING.md <https://github.com/biocore/scikit-bio/blob/master/CONTRIBUTING.md>`__, in
 this directory.
 
 See the `list of all of scikit-bio's contributors
@@ -111,7 +109,7 @@ been ported to scikit-bio are: Rob Knight (`@rob-knight
 (`@antgonza <https://github.com/antgonza>`__), Sandra Smit, Greg
 Caporaso (`@gregcaporaso <https://github.com/gregcaporaso>`__), Jai
 Ram Rideout (`@ElBrogrammer <https://github.com/ElBrogrammer>`__),
-Cathy Lozupone (`@clozupone <clozupone>`__), Mike Robeson
+Cathy Lozupone (`@clozupone <https://github.com/clozupone>`__), Mike Robeson
 (`@mikerobeson <https://github.com/mikerobeson>`__), Marcin Cieslik,
 Peter Maxwell, Jeremy Widmann, Zongzhi Liu, Michael Dwan, Logan Knecht
 (`@loganknecht <https://github.com/loganknecht>`__), Andrew Cochran,
