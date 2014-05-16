@@ -7,7 +7,7 @@ like this::
 
   r"""
   A module (:mod:`skbio.module`)
-  ====================================
+  ==============================
 
   .. currentmodule:: skbio.module
 
