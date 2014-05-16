@@ -1,0 +1,16 @@
+include CHANGELOG.md
+include COPYING.txt
+include CONTRIBUTING.md
+include README.md
+
+graft doc
+graft examples
+graft ipynbs
+graft licenses
+graft skbio
+
+prune doc/build
+
+global-exclude *.pyc
+global-exclude *.pyo
+global-exclude .git
