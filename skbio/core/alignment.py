@@ -742,7 +742,7 @@ class SequenceCollection(object):
     def toFasta(self):
         """Return fasta-formatted string representing the `SequenceCollection`
 
-        .. note:: Deprecated in skbio 0.0.0
+        .. note:: Deprecated in skbio 0.3.0
                   `SequenceCollection.toFasta` will be removed in skbio 0.2.0,
                   it is replaced by `SequenceCollection.to_fasta` as the latter
                   adheres to PEP8 naming conventions. This is necessary to keep
