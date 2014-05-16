@@ -24,8 +24,6 @@ script:
   - pushd doc
   - make clean
   - make html
-  # linkcheck disabled in Py3 (bug in Sphinx)
-  - if [ $PYTHON_VERSION ==  2.7 ]; then make linkcheck; fi
   - popd
   # we need to run the test suite from setup.py for coveralls to grab the info
   - coverage run setup.py test
