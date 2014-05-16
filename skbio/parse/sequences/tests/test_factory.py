@@ -8,21 +8,13 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import os
 from unittest import TestCase, main
 
 from numpy import array
 
-from skbio.parse.sequences.factory import load
-from skbio.parse.sequences.iterator import FastaIterator
-
-
-# copied from maths/stats/ordination/tests/test_ordination.py
-def get_data_path(fn):
-    """Return path to filename `fn` in the data folder."""
-    path = os.path.dirname(os.path.abspath(__file__))
-    data_path = os.path.join(path, 'data', fn)
-    return data_path
+from skbio.parse.sequences import load
+from skbio.parse.sequences import FastaIterator
+from skbio.util.testing import get_data_path
 
 
 class SequenceLoadTests(TestCase):
