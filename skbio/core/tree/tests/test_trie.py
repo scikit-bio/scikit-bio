@@ -12,7 +12,6 @@
 from __future__ import division
 from future.builtins import zip
 
-from sys import version_info
 from unittest import TestCase, main
 
 from skbio.core.tree import CompressedTrie, fasta_to_pairlist

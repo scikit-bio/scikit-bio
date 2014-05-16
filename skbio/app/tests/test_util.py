@@ -15,7 +15,7 @@ from copy import deepcopy
 
 from skbio.app.parameters import (FilePath, ValuedParameter, FlagParameter,
                                   MixedParameter)
-from unittest import TestCase, main
+from unittest import TestCase
 from skbio.app.util import (CommandLineApplication, ResultPath,
                             ApplicationError, ParameterIterBase,
                             ParameterCombinations, cmdline_generator,
@@ -210,7 +210,6 @@ class CommandLineGeneratorTests(TestCase):
         cmd = self.abs_path_to_cmd
         inputfile = self.abs_path_to_input
         outputfile = self.abs_path_to_output
-        stdout = self.abs_path_to_stdout
         stderr = self.abs_path_to_stderr
 
         # the extra '' is intentionally added. When stdout is used for actual
@@ -250,8 +249,6 @@ class CommandLineGeneratorTests(TestCase):
         cmd = self.abs_path_to_cmd
         inputfile = self.abs_path_to_input
         outputfile = self.abs_path_to_output
-        stdout = self.abs_path_to_stdout
-        stderr = self.abs_path_to_stderr
 
         exp = [' '.join([bin, cmd, '-default=42', '-delimaaachoice1', '-flag1',
                         '-input="%s"' % inputfile, '-output="%s"' % outputfile,

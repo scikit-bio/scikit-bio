@@ -10,7 +10,7 @@ from __future__ import division
 # ----------------------------------------------------------------------------
 
 import numpy as np
-from nose.tools import assert_almost_equal, assert_raises, assert_true
+from nose.tools import assert_almost_equal, assert_raises
 
 from skbio.math.diversity.alpha.ace import ace
 

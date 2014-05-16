@@ -391,19 +391,19 @@ class TreeTests(TestCase):
         nptest.assert_almost_equal(tips[0].distance(tips[1]), 0.3)
         nptest.assert_almost_equal(tips[0].distance(tips[2]), 1.3)
         with self.assertRaises(NoLengthError):
-            _ = tips[0].distance(tips[3])
+            tips[0].distance(tips[3])
 
         nptest.assert_almost_equal(tips[1].distance(tips[0]), 0.3)
         nptest.assert_almost_equal(tips[1].distance(tips[1]), 0.0)
         nptest.assert_almost_equal(tips[1].distance(tips[2]), 1.4)
         with self.assertRaises(NoLengthError):
-            _ = tips[1].distance(tips[3])
+            tips[1].distance(tips[3])
 
         self.assertEqual(tips[2].distance(tips[0]), 1.3)
         self.assertEqual(tips[2].distance(tips[1]), 1.4)
         self.assertEqual(tips[2].distance(tips[2]), 0.0)
         with self.assertRaises(NoLengthError):
-            _ = tips[2].distance(tips[3])
+            tips[2].distance(tips[3])
 
     def test_lowest_common_ancestor(self):
         """TreeNode lowestCommonAncestor should return LCA for set of tips"""
@@ -543,7 +543,7 @@ class TreeTests(TestCase):
         obs = [n.name for n in self.simple_t.tips()]
         self.assertEqual(obs, exp)
         obs2 = [n.name for n in self.simple_t.traverse(False, False)]
-        self.assertEqual(obs, exp)
+        self.assertEqual(obs2, exp)
 
     def test_pre_and_postorder(self):
         """Pre and post order traversal of the tree"""
@@ -592,7 +592,7 @@ class TreeTests(TestCase):
         """Form a new root"""
         t = TreeNode.from_newick("(((a,b)c,(d,e)f)g,h)i;")
         with self.assertRaises(TreeError):
-            _ = t.root_at(t.find('h'))
+            t.root_at(t.find('h'))
 
         exp = "(a,b,((d,e)f,(h)g)c)root;"
         rooted = t.root_at('c')
@@ -601,7 +601,7 @@ class TreeTests(TestCase):
 
     def test_root_at_midpoint(self):
         """Root at the midpoint"""
-        nodes, tree1 = self.TreeNode, self.TreeRoot
+        tree1 = self.TreeRoot
         for n in tree1.traverse():
             n.length = 1
 

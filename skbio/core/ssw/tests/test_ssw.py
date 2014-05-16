@@ -221,8 +221,8 @@ class TestStripedSmithWaterman(TestSSW):
                 'target_end_suboptimal': 34,
                 'cigar': '5M',
                 'query_sequence': q_seq,
-                'target_sequence':
-                    'TTATAATTTTCTTATTATTATCAATATTTATAATTTGATTTTGTTGTAAT'
+                'target_sequence': ('TTATAATTTTCTTATTATTATCAATATTTATAATTTGATTT'
+                                    'TGTTGTAAT')
             },
             {
                 'optimal_alignment_score': 36,
@@ -258,8 +258,8 @@ class TestStripedSmithWaterman(TestSSW):
                 'target_end_suboptimal': 42,
                 'cigar': '4M',
                 'query_sequence': q_seq,
-                'target_sequence':
-                    'CTGCCTCAGGGGGAGGAAAGCGTCAGCGCGGCTGCCGTCGGCGCAGGGGC'
+                'target_sequence': ('CTGCCTCAGGGGGAGGAAAGCGTCAGCGCGGCTGCCGTCGG'
+                                    'CGCAGGGGC')
             },
             {
                 'optimal_alignment_score': 48,
@@ -325,11 +325,10 @@ class TestStripedSmithWaterman(TestSSW):
             'target_end_optimal': 52,
             'target_end_suboptimal': 18,
             'cigar': '15M1D15M1I22M',
-            'query_sequence':
-                'VHLTGEEKSAVAALWGKVNVDEVGGEALGRXLLVVYPWTQRFFESFSDLSTPDABVMSNP'
-                'KVKAHGK',
-            'target_sequence': 'VHLTPEEKSAVTALWBGKVNVDEVGGEALGRLLVVYPWTQRFFES'
-                'FGDLSTPD*'
+            'query_sequence': ('VHLTGEEKSAVAALWGKVNVDEVGGEALGRXLLVVYPWTQRFFESF'
+                               'SDLSTPDABVMSNPKVKAHGK'),
+            'target_sequence': ('VHLTPEEKSAVTALWBGKVNVDEVGGEALGRLLVVYPWTQRFFES'
+                                'FGDLSTPD*')
         }
         query = StripedSmithWaterman(expected['query_sequence'],
                                      protein=True,
@@ -612,10 +611,10 @@ class TestStripedSmithWaterman(TestSSW):
                 'target_end_optimal': 49,
                 'target_end_suboptimal': 21,
                 'cigar': '50M',
-                'query_sequence':
-                    'AGTCACGCGCGCCGCCGGGGGGCCGGCCGGCGCCGGGGGGCGCCCCGGGCGGGGC',
-                'target_sequence':
-                    'CGCGCGCCGCCGGGGGGCCGGCCGGCGCCGGGGGGCGCCCCGGGCGGGGC'
+                'query_sequence': ('AGTCACGCGCGCCGCCGGGGGGCCGGCCGGCGCCGGGGGGCG'
+                                   'CCCCGGGCGGGGC'),
+                'target_sequence': ('CGCGCGCCGCCGGGGGGCCGGCCGGCGCCGGGGGGCGCCCC'
+                                    'GGGCGGGGC')
             }, True),
             ({
                 'optimal_alignment_score': 100,
@@ -626,10 +625,10 @@ class TestStripedSmithWaterman(TestSSW):
                 'target_end_optimal': 50,
                 'target_end_suboptimal': 22,
                 'cigar': '50M',
-                'query_sequence':
-                    'AGTCACGCGCGCCGCCGGGGGGCCGGCCGGCGCCGGGGGGCGCCCCGGGCGGGGC',
-                'target_sequence':
-                    'CGCGCGCCGCCGGGGGGCCGGCCGGCGCCGGGGGGCGCCCCGGGCGGGGC'
+                'query_sequence': ('AGTCACGCGCGCCGCCGGGGGGCCGGCCGGCGCCGGGGGGCG'
+                                   'CCCCGGGCGGGGC'),
+                'target_sequence': ('CGCGCGCCGCCGGGGGGCCGGCCGGCGCCGGGGGGCGCCCC'
+                                    'GGGCGGGGC')
             }, False)
         ]
         for expected, z in expected_alignments:
@@ -701,16 +700,16 @@ class TestAlignmentStructure(TestSSW):
     def test_is_zero_based_returns_true_if_index_base_is_zero(self):
         expected_alignments = [
             ({
-                'query_sequence':
-                    'AGTCACGCGCGCCGCCGGGGGGCCGGCCGGCGCCGGGGGGCGCCCCGGGCGGGGC',
-                'target_sequence':
-                    'CGCGCGCCGCCGGGGGGCCGGCCGGCGCCGGGGGGCGCCCCGGGCGGGGC'
+                'query_sequence': ('AGTCACGCGCGCCGCCGGGGGGCCGGCCGGCGCCGGGGGGCG'
+                                   'CCCCGGGCGGGGC'),
+                'target_sequence': ('CGCGCGCCGCCGGGGGGCCGGCCGGCGCCGGGGGGCGCCCC'
+                                    'GGGCGGGGC')
             }, True),
             ({
-                'query_sequence':
-                    'AGTCACGCGCGCCGCCGGGGGGCCGGCCGGCGCCGGGGGGCGCCCCGGGCGGGGC',
-                'target_sequence':
-                    'CGCGCGCCGCCGGGGGGCCGGCCGGCGCCGGGGGGCGCCCCGGGCGGGGC'
+                'query_sequence': ('AGTCACGCGCGCCGCCGGGGGGCCGGCCGGCGCCGGGGGGCG'
+                                   'CCCCGGGCGGGGC'),
+                'target_sequence': ('CGCGCGCCGCCGGGGGGCCGGCCGGCGCCGGGGGGCGCCCC'
+                                    'GGGCGGGGC')
             }, False)
         ]
         for expected, z in expected_alignments:
@@ -722,16 +721,16 @@ class TestAlignmentStructure(TestSSW):
     def test_set_zero_based_changes_the_index_base(self):
         expected_alignments = [
             ({
-                'query_sequence':
-                    'AGTCACGCGCGCCGCCGGGGGGCCGGCCGGCGCCGGGGGGCGCCCCGGGCGGGGC',
-                'target_sequence':
-                    'CGCGCGCCGCCGGGGGGCCGGCCGGCGCCGGGGGGCGCCCCGGGCGGGGC'
+                'query_sequence': ('AGTCACGCGCGCCGCCGGGGGGCCGGCCGGCGCCGGGGGGCG'
+                                   'CCCCGGGCGGGGC'),
+                'target_sequence': ('CGCGCGCCGCCGGGGGGCCGGCCGGCGCCGGGGGGCGCCCC'
+                                    'GGGCGGGGC')
             }, True),
             ({
-                'query_sequence':
-                    'AGTCACGCGCGCCGCCGGGGGGCCGGCCGGCGCCGGGGGGCGCCCCGGGCGGGGC',
-                'target_sequence':
-                    'CGCGCGCCGCCGGGGGGCCGGCCGGCGCCGGGGGGCGCCCCGGGCGGGGC'
+                'query_sequence': ('AGTCACGCGCGCCGCCGGGGGGCCGGCCGGCGCCGGGGGGCG'
+                                   'CCCCGGGCGGGGC'),
+                'target_sequence': ('CGCGCGCCGCCGGGGGGCCGGCCGGCGCCGGGGGGCGCCCC'
+                                    'GGGCGGGGC')
             }, False)
         ]
         for expected, z in expected_alignments:

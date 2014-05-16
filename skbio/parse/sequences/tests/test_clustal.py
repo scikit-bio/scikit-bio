@@ -90,7 +90,7 @@ class ClustalParserTests(TestCase):
         self.assertEqual(dict(result), {})
         # should fail unless we turned strict processing off
         with self.assertRaises(RecordError):
-            _ = dict(parse_clustal(BAD))
+            dict(parse_clustal(BAD))
 
     def test_space_labels(self):
         """Should tolerate spaces in labels"""
