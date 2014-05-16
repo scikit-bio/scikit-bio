@@ -10,7 +10,7 @@ What should I call my variables?
 
 - *Good names are hard to find.* Don't be afraid to change names except when they are part of interfaces that other people are also using. It may take some time working with the code to come up with reasonable names for everything: if you have unit tests, it's easy to change them, especially with global search and replace.
 
-- *Use singular names for individual things, plural names for collections.* For example, you'd expect ``self.Name`` to hold something like a single string, but ``self.Names`` to hold something that you could loop through like a list or dict. Sometimes the decision can be tricky: is ``self.Index`` an int holding a positon, or a dict holding records keyed by name for easy lookup? If you find yourself wondering these things, the name should probably be changed to avoid the problem: try ``self.Position`` or ``self.LookUp``.
+- *Use singular names for individual things, plural names for collections.* For example, you'd expect ``self.name`` to hold something like a single string, but ``self.names`` to hold something that you could loop through like a list or dict. Sometimes the decision can be tricky: is ``self.index`` an int holding a positon, or a dict holding records keyed by name for easy lookup? If you find yourself wondering these things, the name should probably be changed to avoid the problem: try ``self.position`` or ``self.look_up``.
 
 - *Don't make the type part of the name.* You might want to change the implementation later. Use ``Records`` rather than ``RecordDict`` or ``RecordList``, etc. Don't use Hungarian Notation either (i.e. where you prefix the name with the type).
 
@@ -47,6 +47,8 @@ The following list of abbreviations can be considered well-known and used with i
 |         dictionary |         dict |
 +--------------------+--------------+
 |          directory |          dir |
++--------------------+--------------+
+|    distance matrix |           dm |
 +--------------------+--------------+
 |        end of file |          eof |
 +--------------------+--------------+
