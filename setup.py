@@ -34,7 +34,8 @@ classes = """
 """
 classifiers = [s.strip() for s in classes.split('\n') if s]
 
-long_description = """The scikit-bio project"""
+with open('README.rst') as f:
+    long_description = f.read()
 
 # Dealing with Cython
 USE_CYTHON = os.environ.get('USE_CYTHON', False)
