@@ -1,0 +1,11 @@
+include README.md
+include CHANGELOG.md
+
+graft skbio
+graft doc
+
+prune doc/build
+
+global-exclude *.pyc
+global-exclude *.pyo
+global-exclude .git
