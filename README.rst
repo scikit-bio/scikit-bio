@@ -119,6 +119,7 @@ Coy, Levi McCracken, Andrew Butterfield, Will Van Treuren (`@wdwvt1
 Logo
 ----
 
+scikit-bio's logo was created by `@ebolyen <https://github.com/ebolyen>`_.
 scikit-bio's ASCII art tree was created by `@gregcaporaso
 <https://github.com/gregcaporaso>`_. Our text logo was created at `patorjk.com
 <http://patorjk.com/software/taag/>`__.
