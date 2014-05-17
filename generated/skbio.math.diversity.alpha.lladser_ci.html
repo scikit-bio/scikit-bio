@@ -9,7 +9,7 @@
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.1.0/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.1.0/united/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     
     <script type="text/javascript">
@@ -46,7 +46,7 @@
      class="visible-desktop hidden-xs"><img
     id="gh-banner"
     style="position: absolute; top: 50px; right: 0; border: 0;"
-    src="https://s3.amazonaws.com/github/ribbons/forkme_right_white_ffffff.png"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
     alt="Fork me on GitHub"></a>
   <script>
     // Adjust banner height.
@@ -109,6 +109,7 @@
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../development/py3.html">Supporting Python 2 and Python 3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/new_module.html">Adding a new module to skbio</a></li>
 </ul>
 </ul>
 </li>
@@ -156,7 +157,7 @@
 <h1>skbio.math.diversity.alpha.lladser_ci<a class="headerlink" href="#skbio-math-diversity-alpha-lladser-ci" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="skbio.math.diversity.alpha.lladser_ci">
-<tt class="descclassname">skbio.math.diversity.alpha.</tt><tt class="descname">lladser_ci</tt><big>(</big><em>counts</em>, <em>r</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.1.1/skbio/math/diversity/alpha/lladser.py#L62"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.math.diversity.alpha.lladser_ci" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">skbio.math.diversity.alpha.</tt><tt class="descname">lladser_ci</tt><big>(</big><em>counts</em>, <em>r</em>, <em>alpha=0.95</em>, <em>f=10</em>, <em>ci_type='ULCL'</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.1.1/skbio/math/diversity/alpha/lladser.py#L62"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.math.diversity.alpha.lladser_ci" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate single CI of the conditional uncovered probability.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -169,6 +170,21 @@
 <p><strong>r</strong> : int</p>
 <blockquote>
 <div><p>Number of new colors that are required for the next prediction.</p>
+</div></blockquote>
+<p><strong>alpha</strong> : float, optional</p>
+<blockquote>
+<div><p>Desired confidence level.</p>
+</div></blockquote>
+<p><strong>f</strong> : float, optional</p>
+<blockquote>
+<div><p>Ratio between upper and lower bound.</p>
+</div></blockquote>
+<p><strong>ci_type</strong> : {&#8216;ULCL&#8217;, &#8216;ULCU&#8217;, &#8216;U&#8217;, &#8216;L&#8217;}</p>
+<blockquote>
+<div><p>Type of confidence interval. If <tt class="docutils literal"><span class="pre">'ULCL'</span></tt>, upper and lower bounds with
+conservative lower bound. If <tt class="docutils literal"><span class="pre">'ULCU'</span></tt>, upper and lower bounds with
+conservative upper bound. If <tt class="docutils literal"><span class="pre">'U'</span></tt>, upper bound only, lower bound
+fixed to 0.0. If <tt class="docutils literal"><span class="pre">'L'</span></tt>, lower bound only, upper bound fixed to 1.0.</p>
 </div></blockquote>
 </td>
 </tr>

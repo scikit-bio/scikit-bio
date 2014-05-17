@@ -9,7 +9,7 @@
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.1.0/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.1.0/united/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     
     <script type="text/javascript">
@@ -46,7 +46,7 @@
      class="visible-desktop hidden-xs"><img
     id="gh-banner"
     style="position: absolute; top: 50px; right: 0; border: 0;"
-    src="https://s3.amazonaws.com/github/ribbons/forkme_right_white_ffffff.png"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
     alt="Fork me on GitHub"></a>
   <script>
     // Adjust banner height.
@@ -109,6 +109,7 @@
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../development/py3.html">Supporting Python 2 and Python 3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/new_module.html">Adding a new module to skbio</a></li>
 </ul>
 </ul>
 </li>
@@ -156,7 +157,7 @@
 <h1>skbio.core.tree.TreeNode.compare_tip_distances<a class="headerlink" href="#skbio-core-tree-treenode-compare-tip-distances" title="Permalink to this headline">¶</a></h1>
 <dl class="method">
 <dt id="skbio.core.tree.TreeNode.compare_tip_distances">
-<tt class="descclassname">TreeNode.</tt><tt class="descname">compare_tip_distances</tt><big>(</big><em>other</em>, <em>sample=None</em>, <em>dist_f=&lt;function distance_from_r at 0x3c20938&gt;</em>, <em>shuffle_f=&lt;bound method Random.shuffle of &lt;random.Random object at 0xe85470&gt;&gt;</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.1.1/skbio/core/tree/tree.py#L2541"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.core.tree.TreeNode.compare_tip_distances" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">TreeNode.</tt><tt class="descname">compare_tip_distances</tt><big>(</big><em>other</em>, <em>sample=None</em>, <em>dist_f=&lt;function distance_from_r at 0x3cb0938&gt;</em>, <em>shuffle_f=&lt;bound method Random.shuffle of &lt;random.Random object at 0xf2b050&gt;&gt;</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.1.1/skbio/core/tree/tree.py#L2541"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.core.tree.TreeNode.compare_tip_distances" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compares self to other using tip-to-tip distance matrices.</p>
 <p>Value returned is <cite>dist_f(m1, m2)</cite> for the two matrices. Default is
 to use the Pearson correlation coefficient, with +1 giving a distance
