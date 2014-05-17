@@ -29,7 +29,7 @@
 
 scikit-bio is an open-source, BSD-licensed python package providing data structures, algorithms and educational resources for bioinformatics.
 
-scikit-bio is currently in pre-alpha release stage. We are very actively developing it, and **backwards-compatibility interface changes can and will arise**. Once the API has started to solidify, we will strive to maintain backwards compatibility. We will provide deprecation warnings, etc. wherever possible.
+scikit-bio is currently in pre-alpha release stage. We are very actively developing it, and **backwards-incompatible interface changes can and will arise**. Once the API has started to solidify, we will strive to maintain backwards compatibility. We will provide deprecation warnings, etc. wherever possible.
 
 To view scikit-bio's documentation, visit `scikit-bio.org
 <http://scikit-bio.org>`__.
@@ -61,7 +61,7 @@ Licensing
 
 scikit-bio is available under the new BSD license. See
 `COPYING.txt <https://github.com/biocore/scikit-bio/blob/master/COPYING.txt>`__ for scikit-bio's license, and the
-`licenses directory <https://github.com/biocore/scikit-bio/tree/master/licenses>`_ for the licenses third-party software that is
+`licenses directory <https://github.com/biocore/scikit-bio/tree/master/licenses>`_ for the licenses of third-party software that is
 (either partially or entirely) distributed with scikit-bio.
 
 Projects using scikit-bio
