@@ -27,33 +27,17 @@
 
 |Build Status| |Coverage Status|
 
-Core objects, functions and statistics for working with biological
-data in Python.
+scikit-bio is an open-source, BSD-licensed python package providing data structures, algorithms and educational resources for bioinformatics.
+
+scikit-bio is currently in pre-alpha release stage. We are very actively developing it, and **backwards-compatibility interface changes can and will arise**. Once the API has started to solidify, we will strive to maintain backwards compatibility. We will provide deprecation warnings, etc. wherever possible.
 
 To view scikit-bio's documentation, visit `scikit-bio.org
 <http://scikit-bio.org>`__.
 
-**Note:** scikit-bio is currently under active development and its
-API is not stable. Major compatibility-breaking API changes will
-likely happen as development progresses. Once the API has started to
-solidify and we have an official release, we will strive to maintain
-backwards compatibility, provide deprecation warnings, etc. wherever
-possible. In the mean time, feel free to try out scikit-bio and let us
-know what you think!
-
-
-Licensing
----------
-
-scikit-bio is available under the new BSD license. See
-`COPYING.txt <https://github.com/biocore/scikit-bio/blob/master/COPYING.txt>`__ for scikit-bio's license, and the
-``licenses`` directory for the licenses of other software that is
-(either partially or entirely) distributed with scikit-bio.
-
 Installation
 ------------
 
-In order to install scikit-bio::
+To install the latest release version of scikit-bio you should run::
 
     pip install numpy
     pip install scikit-bio
@@ -68,23 +52,36 @@ than using pip), you can find those here:
 -  `pandas <http://pandas.pydata.org/>`__
 -  `future <https://pypi.python.org/pypi/future>`__
 
+If you have trouble getting these dependencies installed (scipy, in particular, can be tricky), you should try installing `Canopy Express <https://www.enthought.com/canopy-express/>`_, which includes all of these dependencies. You should then be able to easily install scikit-bio by running::
+
+    pip install scikit-bio
+
+Licensing
+---------
+
+scikit-bio is available under the new BSD license. See
+`COPYING.txt <https://github.com/biocore/scikit-bio/blob/master/COPYING.txt>`__ for scikit-bio's license, and the
+`licenses directory <https://github.com/biocore/scikit-bio/tree/master/licenses>`_ for the licenses third-party software that is
+(either partially or entirely) distributed with scikit-bio.
+
 Projects using scikit-bio
 -------------------------
 
+Some of the projects that we know of that are using scikit-bio are:
+
 -  `QIIME <http://qiime.org/>`__
--  `EMPeror <http://biocore.github.io/emperor/>`__
+-  `Emperor <http://biocore.github.io/emperor/>`__
 -  `An Introduction to Applied
    Bioinformatics <http://caporasolab.us/An-Introduction-To-Applied-Bioinformatics/>`__
 
-If you're using scikit-bio in your own projects, you should issue a
-pull request adding them to this list.
+If you're using scikit-bio in your own projects, you can issue a
+pull request to add them to this list.
 
 scikit-bio development
 ----------------------
 
 If you're interested in getting involved in or learning about
-scikit-bio development, see `CONTRIBUTING.md <https://github.com/biocore/scikit-bio/blob/master/CONTRIBUTING.md>`__, in
-this directory.
+scikit-bio development, see `CONTRIBUTING.md <https://github.com/biocore/scikit-bio/blob/master/CONTRIBUTING.md>`__.
 
 See the `list of all of scikit-bio's contributors
 <https://github.com/biocore/scikit-bio/graphs/contributors>`__.
@@ -122,8 +119,8 @@ Coy, Levi McCracken, Andrew Butterfield, Will Van Treuren (`@wdwvt1
 Logo
 ----
 
-scikit-bio ASCII art created by `@gregcaporaso
-<https://github.com/gregcaporaso>`_. Text logo created at `patorjk.com
+scikit-bio's ASCII art tree was created by `@gregcaporaso
+<https://github.com/gregcaporaso>`_. Our text logo was created at `patorjk.com
 <http://patorjk.com/software/taag/>`__.
 
 .. |Build Status| image:: https://travis-ci.org/biocore/scikit-bio.svg?branch=master
