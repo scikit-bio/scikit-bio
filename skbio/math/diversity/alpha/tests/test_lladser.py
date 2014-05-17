@@ -9,6 +9,8 @@ from __future__ import division
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import unittest
+
 import numpy as np
 import numpy.testing as npt
 from nose.tools import (assert_equal, assert_almost_equal, assert_raises,
@@ -64,6 +66,9 @@ def test_lladser_ci_nan():
     assert_true(len(obs) == 2 and np.isnan(obs[0]) and np.isnan(obs[1]))
 
 
+@unittest.skipIf(True,
+                 "Test fails stochastically; see "
+                 "https://github.com/biocore/scikit-bio/issues/386")
 def test_lladser_ci():
     """lladser_ci estimate using defaults contains p with 95% prob"""
 
