@@ -137,7 +137,7 @@ html_theme_options = {
     #
     # Options are nothing with "" (default) or the name of a valid theme
     # such as "amelia" or "cosmo".
-    'bootswatch_theme': 'spacelab',
+    'bootswatch_theme': 'united',
 
     # Location of link to source.
     # Options are "nav" (default), "footer" or anything else to exclude.
