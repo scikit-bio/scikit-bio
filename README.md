@@ -22,8 +22,8 @@
                    /   \
         Proteobacteria  \
                        Cyanobacteria
-    
-    
+
+
 ---
 [![Build Status](https://travis-ci.org/biocore/scikit-bio.png?branch=master)](https://travis-ci.org/biocore/scikit-bio) [![Coverage Status](https://coveralls.io/repos/biocore/scikit-bio/badge.png)](https://coveralls.io/r/biocore/scikit-bio)
 
@@ -61,12 +61,12 @@ If you'd like to install the dependencies manually (or some other way than using
 - [scipy](http://www.scipy.org/) >= 0.13.0
 - [matplotlib](http://www.matplotlib.org/) >= 1.1.0
 - [pandas](http://pandas.pydata.org/)
-- [future](https://pypi.python.org/pypi/future) 
+- [future](https://pypi.python.org/pypi/future)
 
 Projects using scikit-bio
 -------------------------
 
-- [QIIME](http://qiime.org/) 
+- [QIIME](http://qiime.org/)
 - [EMPeror](http://biocore.github.io/emperor/)
 - [An Introduction to Applied Bioinformatics](http://caporasolab.us/An-Introduction-To-Applied-Bioinformatics/)
 
@@ -106,4 +106,4 @@ Antonio Navas Molina ([@josenavas](https://github.com/josenavas)).
 
 Logo
 ----
-scikit-bio ASCII art created by [@gregcaporaso](https://github.com/gregcaporaso). Text logo created at [patorjk.com](http://patorjk.com/software/taag/).
+Logo created by [@ebolyen](https://github.com/ebolyen). scikit-bio ASCII art created by [@gregcaporaso](https://github.com/gregcaporaso). Text logo created at [patorjk.com](http://patorjk.com/software/taag/).
