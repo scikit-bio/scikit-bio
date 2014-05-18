@@ -125,6 +125,18 @@ How do I organize my modules (source files)?
 
 - *Don't use* ``from module import *``, *instead use* ``from module import Name, Name2, Name3...`` *or possibly* ``import module``. This makes it *much* easier to see name collisions and to replace implementations.
 
+- If you are importing `NumPy`_, `Matplotlib`_, or another package that encourages a standard style for their import statements use them as needed for example:
+
+::
+
+    import numpy as np
+    import numpy.testing as npt
+
+    from matplotlib import pyplot as plt
+
+.. _`NumPy`: http://www.numpy.org/
+.. _`Matplotlib`: http://matplotlib.org/
+
 Example of module structure
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
