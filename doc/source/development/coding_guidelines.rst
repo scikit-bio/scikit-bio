@@ -110,42 +110,9 @@ The following list of abbreviations can be considered well-known and used with i
 What are the naming conventions?
 --------------------------------
 
-.. tabularcolumns:: |p{3.4cm}|p{6cm}|p{5cm}|
+We adhere to the `PEP 8`_ python coding guidelines for code and documentation standards. Before submitting any code to scikit-bio, you should read these carefully and apply the guidelines in your code.
 
-.. csv-table::
-    :header: Type                    , Convention                    , Example
-
-    function                         , ``verb_with_underscores``       , ``find_all``
-    variable                         , ``noun_with_underscores``         , ``curr_index``
-    constant                         , ``NOUN_ALL_CAPS``                 , ``ALLOWED_RNA_PAIRS``
-    class                            , ``MixedCaseNoun``                 , ``RnaSequence``
-    public property                  , ``MixedCaseNoun``                 , ``IsPaired``
-    private property                 , ``_noun_with_leading_underscore`` , ``_is_updated``
-    public method                    , ``mixedCaseExceptFirstWordVerb``  , ``stripDegenerate``
-    private method                   , ``_verb_with_leading_underscore`` , ``_check_if_paired``
-    really private data              , ``__two_leading_underscores``     , ``__delegator_object_ref``
-    parameters that match properties , ``SameAsProperty``                , "``def __init__(data, Alphabet=None)``"
-    factory function                 , ``MixedCase``                     , ``InverseDict``
-    module                           , ``lowercase_with_underscores``    , ``unit_test``
-    global variables                 , ``gMixedCaseWithLeadingG``        , no examples - should be rare!
-
-- *It is important to follow the naming conventions because they make it much easier to guess what a name refers to*. In particular, it should be easy to guess what scope a name is defined in, what it refers to, whether it's OK to change its value, and whether its referent is callable. The following rules provide these distinctions.
-
-- ``lowercase_with_underscores`` *for modules and internal variables (including function/method parameters).*
-
-- ``MixedCase`` for *classes* and *public properties*, and for *factory functions* that act like additional constructors for a class.
-
-- ``mixedCaseExceptFirstWord`` for *public methods and functions*.
-
-- ``_lowercase_with_leading_underscore`` for *private* functions, methods, and properties.
-
-- ``__lowercase_with_two_leading_underscores`` for *private* properties and functions that *must not be overwritten* by a subclass.
-
-- ``CAPS_WITH_UNDERSCORES`` for named *constants*.
-
-- ``gMixedCase`` (i.e. mixed case prefixed with 'g') for *globals*. Globals should be used extremely rarely and with caution, even if you sneak them in using the Singleton pattern or some similar system.
-
-- *Underscores can be left out if the words read OK run together.* ``infile`` and ``outfile`` rather than ``in_file`` and ``out_file``; ``infile_name`` and ``outfile_name`` rather than ``in_file_name`` and ``out_file_name`` or ``infilename`` and ``outfilename`` (getting too long to read effortlessly).
+.. _`PEP 8`: http://legacy.python.org/dev/peps/pep-0008/
 
 How do I organize my modules (source files)?
 --------------------------------------------
