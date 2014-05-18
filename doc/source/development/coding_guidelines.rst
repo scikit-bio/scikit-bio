@@ -140,30 +140,53 @@ How do I organize my modules (source files)?
 Example of module structure
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-::
+The structure of your module should be similar to the example bellow, note that scikit-bio uses the `NumPy doc`_ standard for documentation, `this document explains`_ how to do this:
 
-    #!/usr/bin/env python
+.. _`Numpy doc`: https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt
+.. _`this document explains`: https://github.com/biocore/scikit-bio/blob/master/doc/README.md
 
-    """Provides NumberList and FrequencyDistribution, classes for statistics.
+.. code-block:: python
+
+    r"""
+    Number List (:mod:`skbio.core.numbers`)
+    =================================================================
+
+    .. currentmodule:: skbio.core.numbers
 
     NumberList holds a sequence of numbers, and defines several statistical
     operations (mean, stdev, etc.) FrequencyDistribution holds a mapping from
     items (not necessarily numbers) to counts, and defines operations such as
     Shannon entropy and frequency normalization.
-    """
 
-    from math import sqrt, log, e
+
+    Classes
+    -------
+
+    .. autosummary::
+       :toctree: generated/
+
+       NumberList
+
+    """
+    # ----------------------------------------------------------------------------
+    # Copyright (c) 2013--, scikit-bio development team.
+    #
+    # Distributed under the terms of the Modified BSD License.
+    #
+    # The full license is in the file COPYING.txt, distributed with this software.
+    # ----------------------------------------------------------------------------
+
+    from __future__ import division
+
+    import numpy as np
     from random import choice, random
-    from Utils import indices
+    from utils import indices
 
     class NumberList(list):
         pass    # much code deleted
     class FrequencyDistribution(dict):
         pass    # much code deleted
 
-    # use the following when the module can meaningfully be called as a script.
-    if __name__ == '__main__':    # code to execute if called from command-line
-        pass    # do nothing - code deleted
 
 How should I write comments?
 ----------------------------
