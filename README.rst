@@ -45,7 +45,7 @@ To install the latest release version of scikit-bio you should run::
 If you'd like to install the dependencies manually (or some other way
 than using pip), you can find those here:
 
--  `Python <http://www.python.org/>`__ 2.7 or 3.4
+-  `Python <http://www.python.org/>`__ 2.7 or >= 3.3
 -  `numpy <http://www.numpy.org/>`__ >= 1.7
 -  `scipy <http://www.scipy.org/>`__ >= 0.13.0
 -  `matplotlib <http://www.matplotlib.org/>`__ >= 1.1.0
