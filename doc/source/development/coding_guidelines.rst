@@ -149,7 +149,7 @@ The structure of your module should be similar to the example bellow, note that 
 
     r"""
     Number List (:mod:`skbio.core.numbers`)
-    =================================================================
+    =======================================
 
     .. currentmodule:: skbio.core.numbers
 
@@ -176,7 +176,7 @@ The structure of your module should be similar to the example bellow, note that 
     # The full license is in the file COPYING.txt, distributed with this software.
     # ----------------------------------------------------------------------------
 
-    from __future__ import division
+    from __future__ import absolute_import, division, print_function
 
     import numpy as np
     from random import choice, random
