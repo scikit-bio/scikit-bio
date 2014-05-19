@@ -34,8 +34,8 @@ scikit-bio is currently in pre-alpha release stage. We are very actively develop
 To view scikit-bio's documentation, visit `scikit-bio.org
 <http://scikit-bio.org>`__.
 
-Installation
-------------
+Installation with pip
+---------------------
 
 To install the latest release version of scikit-bio you should run::
 
@@ -55,6 +55,30 @@ than using pip), you can find those here:
 If you have trouble getting these dependencies installed (scipy, in particular, can be tricky), you should try installing `Canopy Express <https://www.enthought.com/canopy-express/>`_, which includes all of these dependencies. You should then be able to easily install scikit-bio by running::
 
     pip install scikit-bio
+
+After installation with ``pip``, you can run the scikit-bio unittest suite as follows::
+
+    nosetests --with-doctest skbio
+
+Installation with setup.py
+--------------------------
+
+If you're interested in working with the latest development release of scikit-bio (recommended for developers only, as the development code can be unstable and less documented than the release code), you can clone the repository and install as follows. This will require that you have ``git`` installed.::
+
+    git clone git@github.com:biocore/scikit-bio.git
+    cd scikit-bio
+    python setup.py install
+
+After this completes, you can run the scikit-biom unittest suite as follows. You must first ``cd`` out of the ``scikit-bio`` directory for the tests to pass (here we ``cd`` to the home directory).::
+
+    cd
+    nosetests --with-doctest skbio
+
+If you prefer to put the ``scikit-bio`` directory in your ``$PYTHONPATH`` rather than install it, at the minimum you should run::
+
+    python setup.py build_ext --inplace
+
+This will ensure that scikit-bio's cython extensions are built. If this isn't done, using certain components of scikit-bio will be inefficient, and running these components will generate an ``EfficencyWarning``.
 
 Licensing
 ---------
