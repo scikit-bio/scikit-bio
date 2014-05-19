@@ -70,7 +70,7 @@ If you're interested in working with the latest development release of scikit-bi
     cd scikit-bio
     python setup.py install
 
-After this completes, you can run the scikit-biom unittest suite as follows. You must first ``cd`` out of the ``scikit-bio`` directory for the tests to pass (here we ``cd`` to the home directory).
+After this completes, you can run the scikit-bio unittest suite as follows. You must first ``cd`` out of the ``scikit-bio`` directory for the tests to pass (here we ``cd`` to the home directory).
 ::
 
     cd
