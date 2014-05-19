@@ -63,13 +63,15 @@ After installation with ``pip``, you can run the scikit-bio unittest suite as fo
 Installation with setup.py
 --------------------------
 
-If you're interested in working with the latest development release of scikit-bio (recommended for developers only, as the development code can be unstable and less documented than the release code), you can clone the repository and install as follows. This will require that you have ``git`` installed.::
+If you're interested in working with the latest development release of scikit-bio (recommended for developers only, as the development code can be unstable and less documented than the release code), you can clone the repository and install as follows. This will require that you have ``git`` installed.
+::
 
     git clone git@github.com:biocore/scikit-bio.git
     cd scikit-bio
     python setup.py install
 
-After this completes, you can run the scikit-biom unittest suite as follows. You must first ``cd`` out of the ``scikit-bio`` directory for the tests to pass (here we ``cd`` to the home directory).::
+After this completes, you can run the scikit-biom unittest suite as follows. You must first ``cd`` out of the ``scikit-bio`` directory for the tests to pass (here we ``cd`` to the home directory).
+::
 
     cd
     nosetests --with-doctest skbio
