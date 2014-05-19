@@ -80,7 +80,7 @@ If you prefer to put the ``scikit-bio`` directory in your ``$PYTHONPATH`` rather
 
     python setup.py build_ext --inplace
 
-This will ensure that scikit-bio's cython extensions are built. If this isn't done, using certain components of scikit-bio will be inefficient, and running these components will generate an ``EfficencyWarning``.
+This will ensure that scikit-bio's cython extensions are built. If this isn't done, using certain components of scikit-bio will be inefficient, and running these components will generate an ``EfficiencyWarning``.
 
 Licensing
 ---------
