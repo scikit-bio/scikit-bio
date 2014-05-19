@@ -120,11 +120,12 @@ def fasta_from_alignment(aln, make_seqlabel=None, line_wrap=None, sort=True):
     Examples
     --------
     Formatting a sequence alignment object into a FASTA file.
+
     >>> from skbio.core.alignment import Alignment
     >>> from skbio.core.sequence import DNA
     >>> from skbio.format.sequences import fasta_from_alignment
     >>> seqs = [DNA("ACC--G-GGTA..", id="seq1"),
-    ...     DNA("TCC--G-GGCA..", id="seqs2")]
+    ...         DNA("TCC--G-GGCA..", id="seqs2")]
     >>> a1 = Alignment(seqs)
     >>> print fasta_from_alignment(a1)
     >seq1
