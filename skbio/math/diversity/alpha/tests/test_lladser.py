@@ -83,6 +83,9 @@ def test_lladser_ci():
     assert_true(sum/reps >= 0.95)
 
 
+@unittest.skipIf(True,
+                 "Test fails stochastically; see "
+                 "https://github.com/biocore/scikit-bio/issues/386")
 def test_lladser_ci_f3():
     """lladser_ci estimate using f=3 contains p with 95% prob"""
 
