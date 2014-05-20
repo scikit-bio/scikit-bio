@@ -142,7 +142,7 @@ Example of module structure
 
 The structure of your module should be similar to the example bellow, note that scikit-bio uses the `NumPy doc`_ standard for documentation, `this document explains`_ how to do this:
 
-.. _`Numpy doc`: https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt
+.. _`NumPy doc`: https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt
 .. _`this document explains`: https://github.com/biocore/scikit-bio/blob/master/doc/README.md
 
 .. code-block:: python
@@ -206,22 +206,67 @@ How should I write comments?
     +-------+------------------------------------------------------------+
 
 
-- *Use comments starting with #, not strings, inside blocks of code.* Python ignores real comments, but must allocate storage for strings (which can be a performance disaster inside an inner loop).
-
+- *Use comments starting with #, not strings, inside blocks of code.*
 - *Start each method, class and function with a docstring using triple double quotes (""").* The docstring should start with a 1-line description that makes sense by itself (many automated formatting tools, and the IDE, use this). This should be followed by a blank line, followed by descriptions of the parameters (if any). Finally, add any more detailed information, such as a longer description, notes about the algorithm, detailed notes about the parameters, etc. If there is a usage example, it should appear at the end. Make sure any descriptions of parameters have the correct spelling, case, etc. For example: ::
 
-    def __init__(self, data, name='', alphabet=None):
-        """Returns new Sequence object with specified data, name, alphabet.
+.. code-block:: python
 
-        Arguments:
+    class BiologicalSequence(Sequence):
+        """Base class for biological sequences.
 
-            - data: The sequence data. Should be a sequence of characters.
-            - name: Arbitrary label for the sequence. Should be string-like.
-            - alphabet: Set of allowed characters. Should support 'for x in y'
-              syntax. None by default.
+        Parameters
+        ----------
+        sequence : python Sequence (e.g., str, list or tuple)
+            The biological sequence.
+        id : str, optional
+            The sequence id (e.g., an accession number).
+        description : str, optional
+            A description or comment about the sequence (e.g., "green
+            fluorescent protein").
+        validate : bool, optional
+            If True, runs the `is_valid` method after construction and raises
+            BiologicalSequenceError if ``is_valid == False``.
 
-        Note: if alphabet is None, performs no validation.
+        Attributes
+        ----------
+        description
+        id
+
+        Raises
+        ------
+        skbio.core.exception.BiologicalSequenceError
+          If ``validate == True`` and ``is_valid == False``.
+
+        See Also
+        --------
+        NucleotideSequence
+        DNASequence
+        RNASequence
+
+        Notes
+        -----
+        `BiologicalSequence` objects are immutable. Where applicable, methods
+        return a new object of the same class.
+        Subclasses are typically defined by methods relevant to only a specific
+        type of biological sequence, and by containing characters only contained in
+        the IUPAC standard character set [1]_ for that molecule type.
+
+        Examples
+        --------
+        >>> from skbio.core.sequence import BiologicalSequence
+        >>> s = BiologicalSequence('GGUCGUGAAGGA')
+        >>> t = BiologicalSequence('GGUCCUGAAGGU')
+
+        References
+        ----------
+        .. [1] Nomenclature for incompletely specified bases in nucleic acid
+           sequences: recommendations 1984.
+           Nucleic Acids Res. May 10, 1985; 13(9): 3021-3030.
+           A Cornish-Bowden
+
         """
+
+For more information refer to the `NumPy doc`_ standard.
 
 - *Always update the docstring when the code changes.* Like outdated comments, outdated docstrings can waste a lot of time. "Correct examples are priceless, but incorrect examples are worse than worthless." `Jim Fulton`_.
 
