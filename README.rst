@@ -34,8 +34,8 @@ scikit-bio is currently in pre-alpha release stage. We are very actively develop
 To view scikit-bio's documentation, visit `scikit-bio.org
 <http://scikit-bio.org>`__.
 
-Installation
-------------
+Installation of release version (recommended for most users)
+------------------------------------------------------------
 
 To install the latest release version of scikit-bio you should run::
 
@@ -55,6 +55,38 @@ than using pip), you can find those here:
 If you have trouble getting these dependencies installed (scipy, in particular, can be tricky), you should try installing `Canopy Express <https://www.enthought.com/canopy-express/>`_, which includes all of these dependencies. You should then be able to easily install scikit-bio by running::
 
     pip install scikit-bio
+
+After installation with ``pip``, you can run the scikit-bio unittest suite as follows::
+
+    nosetests --with-doctest skbio
+
+Installation of development version
+-----------------------------------
+
+If you're interested in working with the latest development release of scikit-bio (recommended for developers only, as the development code can be unstable and less documented than the release code), you can clone the repository and install as follows. This will require that you have ``git`` installed.
+::
+
+    git clone git@github.com:biocore/scikit-bio.git
+    cd scikit-bio
+    pip install .
+
+After this completes, you can run the scikit-bio unittest suite as follows. You must first ``cd`` out of the ``scikit-bio`` directory for the tests to pass (here we ``cd`` to the home directory).
+::
+
+    cd
+    nosetests --with-doctest skbio
+
+For developers of scikit-bio, if you don't want to be forced to re-install after every change, you can modify the above ``pip install`` command to::
+
+    pip install -e .
+
+This will build scikit-bio's cython extensions, and will create a link in the ``site-packages`` directory to the scikit-bio source directory. When you then make changes to code in the source directory, those will be used (e.g., by the unittests) without re-installing.
+
+Finally, if you don't want to use ``pip`` to install scikit-bio, and prefer to just put ``scikit-bio`` in your ``$PYTHONPATH``, at the minimum you should run::
+
+    python setup.py build_ext --inplace
+
+This will build scikit-bio's cython extensions, but not create a link to the scikit-bio source directory in ``site-packages``. If this isn't done, using certain components of scikit-bio will be inefficient and will produce an ``EfficiencyWarning``.
 
 Licensing
 ---------
