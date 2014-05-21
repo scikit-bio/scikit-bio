@@ -94,5 +94,4 @@ def _make_cat_mat(cats, combo, dm, df):
         for id_ in dm.ids:
             row.append(df[cats[i - 1]][id_])
         res.append(row)
-        #res.append(md_map.getCategoryValues(dm.ids, cats[i - 1]))
     return zip(*res)
