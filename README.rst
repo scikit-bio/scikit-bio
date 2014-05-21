@@ -76,11 +76,17 @@ After this completes, you can run the scikit-bio unittest suite as follows. You 
     cd
     nosetests --with-doctest skbio
 
-If you prefer to put the ``scikit-bio`` directory in your ``$PYTHONPATH`` rather than install it, at the minimum you should run::
+For developers of scikit-bio, if you don't want to be forced to re-install after every change, you can modify the above ``pip install`` command to::
 
     pip install -e .
 
-This will ensure that scikit-bio's cython extensions are built. If this isn't done, using certain components of scikit-bio will be inefficient, and running these components will generate an ``EfficiencyWarning``.
+This will build scikit-bio's cython extensions, and will create a link in the ``site-packages`` directory to the scikit-bio source directory. When you then make changes to code in the source directory, those will be used (e.g., by the unittests) without re-installing.
+
+Finally, if you don't want to use ``pip`` to install scikit-bio, and prefer to just put ``scikit-bio`` in your ``$PYTHONPATH``, at the minimum you should run::
+
+    python setup.py build_ext --inplace
+
+This will build scikit-bio's cython extensions, but not create a link to the scikit-bio source directory in ``site-packages``. If this isn't done, using certain components of scikit-bio will be inefficient and will produce an ``EfficiencyWarning``.
 
 Licensing
 ---------
