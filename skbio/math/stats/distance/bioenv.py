@@ -80,7 +80,10 @@ def bioenv(distance_matrix, data_frame, columns=None):
                          "in the data frame, or there is missing data in the "
                          "data frame.")
 
-    # TODO check for non-numeric columns
+    try:
+        vars_df.astype(float)
+    except ValueError:
+        raise ValueError("All specified columns must be numeric.")
 
     # From http://stackoverflow.com/a/18017059
     # TODO make sure this doesn't modify the original df

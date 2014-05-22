@@ -86,6 +86,11 @@ class BIOENVTests(TestCase):
         with self.assertRaises(ValueError):
             bioenv(self.dm_88_soils, df)
 
+    def test_bioenv_nans(self):
+        df = self.df_88_soils.replace(2400, 'no cog yay')
+        with self.assertRaises(ValueError):
+            bioenv(self.dm_88_soils, df)
+
 
 if __name__ == '__main__':
     main()
