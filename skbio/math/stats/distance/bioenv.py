@@ -11,12 +11,13 @@ from __future__ import absolute_import, division, print_function
 from itertools import combinations
 
 import numpy as np
+import pandas as pd
+from scipy.spatial.distance import pdist
 from scipy.stats import spearmanr
+from sklearn.preprocessing import scale
 
-from skbio.core.distance import DistanceMatrix
 
-
-def bioenv(distance_matrix, data_frame, columns):
+def bioenv(distance_matrix, data_frame, columns=None):
     """BIO-ENV statistical method executor.
 
     TODO: fill in description
@@ -36,62 +37,42 @@ def bioenv(distance_matrix, data_frame, columns):
     .. [2] http://cran.r-project.org/web/packages/vegan/index.html
 
     """
-    cats = columns
-    dm = distance_matrix
-    dm_flat = dm.condensed_form()
+    if columns is None:
+        # TODO verify order is maintained
+        columns = data_frame.keys()
 
-    row_count = dm.shape[0]
-    col_count = len(cats)
-    sum = 0
-    stats = [(-777777777, '') for c in range(col_count + 1)]
-    for i in range(1, col_count + 1):
-        combo = combinations([j for j in range(1, col_count + 1)], i)
+    if len(set(columns)) != len(columns):
+        raise ValueError
 
-        for element in combo:
-            cat_mat = _make_cat_mat(cats, element, dm, data_frame)
-            cat_dm = _derive_euclidean_dm(cat_mat, row_count, dm.ids)
-            cat_dm_flat = cat_dm.condensed_form()
-            r = spearmanr(dm_flat, cat_dm_flat)[0]
-            if r > stats[i - 1][0]:
-                stats[i - 1] = (r, ','.join(str(s) for s in element))
+    # TODO test for missing columns and/or ids
+    # also add unit test to ensure differences in order don't affect results
+    vars_df = data_frame.loc[distance_matrix.ids, columns]
 
-    res = {}
-    res['method_name'] = 'BEST'
-    res['num_vars'] = col_count
-    res['vars'] = ['%s = %d' % (name, val + 1)
-                   for val, name in enumerate(cats)]
-    res['rho_vals'] = stats[:-1]
+    # TODO check for non-numeric columns
 
-    return res
+    # From http://stackoverflow.com/a/18017059
+    # TODO make sure this doesn't modify the original df
+    vars_df = pd.DataFrame(scale(vars_df), index=vars_df.index,
+                           columns=vars_df.columns)
+    dm_flat = distance_matrix.condensed_form()
 
-def _derive_euclidean_dm(cat_mat, dim, ids):
-    """Returns an n x n, euclidean distance matrix, where n = len(cats)."""
-    res_mat = []
+    num_vars = len(columns)
+    var_idxs = np.arange(num_vars)
+    max_rhos = []
+    max_vars = []
+    for subset_size in range(1, num_vars + 1):
+        # TODO performance test this way vs. generating all rhos in np array
+        # and choosing max
+        max_rho = (None, None)
+        for subset_idxs in combinations(var_idxs, subset_size):
+            vars_array = vars_df.iloc[:, subset_idxs].values
+            vars_dm_flat = pdist(vars_array, metric='euclidean')
+            rho = spearmanr(dm_flat, vars_dm_flat)[0]
 
-    for i in range(dim):
-        res_mat.append([0 for k in range(dim)])
-        for j in range(i):
-            res_mat[i][j] = _vector_dist(cat_mat[i], cat_mat[j])
-            res_mat[j][i] = res_mat[i][j]
+            if max_rho == (None, None) or rho > max_rho[0]:
+                max_rho = (rho, subset_idxs)
+        max_rhos.append((subset_size, max_rho[0]))
+        max_vars.append(', '.join([columns[i] for i in max_rho[1]]))
 
-    return DistanceMatrix(res_mat, ids)
-
-def _vector_dist(vec1, vec2):
-    """Calculates the Euclidean distance between two vectors."""
-    return np.sqrt(sum([(float(v1) - float(v2)) ** 2 for v1, v2 in
-                     zip(vec1, vec2)]))
-
-def _make_cat_mat(cats, combo, dm, df):
-    """Returns a matrix with columns pulled from category values.
-
-    Returns a matrix with len(ids) rows of columns pulled from
-    category values, the number of columns for each category is
-    determined by the current combination (combo).
-    """
-    res = []
-    for i in combo:
-        row = []
-        for id_ in dm.ids:
-            row.append(df[cats[i - 1]][id_])
-        res.append(row)
-    return zip(*res)
+    return pd.DataFrame.from_records(max_rhos, index=max_vars,
+                                     columns=('size', 'correlation'))
