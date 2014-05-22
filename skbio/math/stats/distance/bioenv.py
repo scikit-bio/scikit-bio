@@ -81,12 +81,11 @@ def bioenv(distance_matrix, data_frame, columns=None):
                          "data frame.")
 
     try:
-        vars_df.astype(float)
+        vars_df = vars_df.astype(float)
     except ValueError:
         raise ValueError("All specified columns must be numeric.")
 
     # From http://stackoverflow.com/a/18017059
-    # TODO make sure this doesn't modify the original df
     vars_df = pd.DataFrame(scale(vars_df), index=vars_df.index,
                            columns=vars_df.columns)
     dm_flat = distance_matrix.condensed_form()

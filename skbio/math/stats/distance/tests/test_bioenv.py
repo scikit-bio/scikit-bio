@@ -25,6 +25,7 @@ class BIOENVTests(TestCase):
     """All results were verified with R (vegan::bioenv)."""
 
     def setUp(self):
+        # TODO add description of test dataset
         self.dm_88_soils = DistanceMatrix.from_file(
             get_data_path('88_soils_dm.txt'))
         self.df_88_soils = pd.read_csv(get_data_path('88_soils_df.txt'),
