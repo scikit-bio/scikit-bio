@@ -35,15 +35,15 @@ class BIOENVTests(TestCase):
         self.exp_88_soils = pd.read_csv(
             get_data_path('88_soils_exp_results.txt'), sep='\t', index_col=0)
 
-    def test_bioenv_with_all_columns(self):
-        # Test with all columns being specified.
-        obs = bioenv(self.dm_88_soils, self.df_88_soils, columns=self.cols)
-        #obs.to_csv('tests/data/88_soils_exp_results.txt', sep='\t')
-        assert_frame_equal(obs, self.exp_88_soils)
-
     def test_bioenv_all_columns_implicit(self):
         # Test with all columns (implicitly, not specified).
         obs = bioenv(self.dm_88_soils, self.df_88_soils)
+        #obs.to_csv('tests/data/88_soils_exp_results.txt', sep='\t')
+        assert_frame_equal(obs, self.exp_88_soils)
+
+    def test_bioenv_all_columns_explicit(self):
+        # Test with all columns being specified.
+        obs = bioenv(self.dm_88_soils, self.df_88_soils, columns=self.cols)
         #obs.to_csv('tests/data/88_soils_exp_results.txt', sep='\t')
         assert_frame_equal(obs, self.exp_88_soils)
 

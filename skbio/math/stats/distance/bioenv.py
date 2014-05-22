@@ -18,9 +18,23 @@ from sklearn.preprocessing import scale
 
 
 def bioenv(distance_matrix, data_frame, columns=None):
-    """BIO-ENV statistical method executor.
+    """Find subset of variables maximally correlated with community distances.
 
     TODO: fill in description
+
+    Parameters
+    ----------
+    distance_matrix : DistanceMatrix
+        TODO
+    data_frame : pandas.DataFrame
+        TODO
+    columns : iterable of strs, optional
+        TODO
+
+    Returns
+    -------
+    pandas.DataFrame
+        TODO
 
     Notes
     -----
@@ -38,8 +52,7 @@ def bioenv(distance_matrix, data_frame, columns=None):
 
     """
     if columns is None:
-        # TODO verify order is maintained
-        columns = data_frame.keys()
+        columns = data_frame.columns.values.tolist()
 
     if len(set(columns)) != len(columns):
         raise ValueError
