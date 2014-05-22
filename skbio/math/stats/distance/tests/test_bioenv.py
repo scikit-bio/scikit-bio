@@ -91,6 +91,18 @@ class BIOENVTests(TestCase):
         with self.assertRaises(ValueError):
             bioenv(self.dm_88_soils, df)
 
+    def test_bioenv_no_side_effects(self):
+        # Deep copies of both primary inputs.
+        dm_copy = self.dm_88_soils.copy()
+        df_copy = self.df_88_soils.copy(deep=True)
+
+        bioenv(self.dm_88_soils, self.df_88_soils)
+
+        # Make sure we haven't modified the primary input in some way (e.g.,
+        # with scaling, type conversions, etc.).
+        self.assertEqual(self.dm_88_soils, dm_copy)
+        assert_frame_equal(self.df_88_soils, df_copy)
+
 
 if __name__ == '__main__':
     main()
