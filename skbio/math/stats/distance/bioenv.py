@@ -51,13 +51,16 @@ def bioenv(distance_matrix, data_frame, columns=None):
     .. [2] http://cran.r-project.org/web/packages/vegan/index.html
 
     """
+    # TODO test for dm type
+
     if columns is None:
         columns = data_frame.columns.values.tolist()
 
     if len(set(columns)) != len(columns):
         raise ValueError("Duplicate column names are not supported.")
 
-    # TODO check for number of columns >= 1
+    if len(columns) < 1:
+        raise ValueError("Must provide at least one column.")
 
     # TODO test for missing columns and/or ids
     # also add unit test to ensure differences in order don't affect results
