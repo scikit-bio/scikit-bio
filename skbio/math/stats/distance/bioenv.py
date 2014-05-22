@@ -16,6 +16,8 @@ from scipy.spatial.distance import pdist
 from scipy.stats import spearmanr
 from sklearn.preprocessing import scale
 
+from skbio.core.distance import DistanceMatrix
+
 
 def bioenv(distance_matrix, data_frame, columns=None):
     """Find subset of variables maximally correlated with community distances.
@@ -51,7 +53,10 @@ def bioenv(distance_matrix, data_frame, columns=None):
     .. [2] http://cran.r-project.org/web/packages/vegan/index.html
 
     """
-    # TODO test for dm type
+    if not isinstance(distance_matrix, DistanceMatrix):
+        raise TypeError("Must provide a DistanceMatrix as input.")
+    if not isinstance(data_frame, pd.DataFrame):
+        raise TypeError("Must provide a pandas.DataFrame as input.")
 
     if columns is None:
         columns = data_frame.columns.values.tolist()

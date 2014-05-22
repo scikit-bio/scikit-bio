@@ -53,6 +53,14 @@ class BIOENVTests(TestCase):
         obs = bioenv(self.dm_88_soils, self.df_88_soils, columns=['PH'])
         assert_frame_equal(obs, self.exp_88_soils_single_column)
 
+    def test_bioenv_no_distance_matrix(self):
+        with self.assertRaises(TypeError):
+            bioenv('breh', self.df_88_soils)
+
+    def test_bioenv_no_data_frame(self):
+        with self.assertRaises(TypeError):
+            bioenv(self.dm_88_soils, None)
+
     def test_bioenv_duplicate_columns(self):
         with self.assertRaises(ValueError):
             bioenv(self.dm_88_soils, self.df_88_soils,
