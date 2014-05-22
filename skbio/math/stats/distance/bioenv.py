@@ -67,9 +67,18 @@ def bioenv(distance_matrix, data_frame, columns=None):
     if len(columns) < 1:
         raise ValueError("Must provide at least one column.")
 
-    # TODO test for missing columns and/or ids
-    # also add unit test to ensure differences in order don't affect results
+    for column in columns:
+        if column not in data_frame:
+            raise ValueError("Column '%s' not in data frame." % column)
+
+    # TODO also add unit test to ensure differences in order don't affect results
+
     vars_df = data_frame.loc[distance_matrix.ids, columns]
+
+    if vars_df.isnull().any().any():
+        raise ValueError("One or more IDs in the distance matrix are not "
+                         "in the data frame, or there is missing data in the "
+                         "data frame.")
 
     # TODO check for non-numeric columns
 

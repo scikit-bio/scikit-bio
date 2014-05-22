@@ -8,10 +8,11 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import division
+from __future__ import absolute_import, division, print_function
 from future.utils.six import StringIO
 from unittest import TestCase, main
 
+import numpy as np
 import pandas as pd
 from pandas.util.testing import assert_frame_equal
 
@@ -69,6 +70,21 @@ class BIOENVTests(TestCase):
     def test_bioenv_no_columns(self):
         with self.assertRaises(ValueError):
             bioenv(self.dm_88_soils, self.df_88_soils, columns=[])
+
+    def test_bioenv_missing_columns(self):
+        with self.assertRaises(ValueError):
+            bioenv(self.dm_88_soils, self.df_88_soils,
+                   columns=self.cols + ['brofist'])
+
+    def test_bioenv_missing_distance_matrix_ids(self):
+        df = self.df_88_soils[1:]
+        with self.assertRaises(ValueError):
+            bioenv(self.dm_88_soils, df)
+
+    def test_bioenv_nans(self):
+        df = self.df_88_soils.replace(53.9, np.nan)
+        with self.assertRaises(ValueError):
+            bioenv(self.dm_88_soils, df)
 
 
 if __name__ == '__main__':
