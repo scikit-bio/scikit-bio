@@ -55,7 +55,9 @@ def bioenv(distance_matrix, data_frame, columns=None):
         columns = data_frame.columns.values.tolist()
 
     if len(set(columns)) != len(columns):
-        raise ValueError
+        raise ValueError("Duplicate column names are not supported.")
+
+    # TODO check for number of columns >= 1
 
     # TODO test for missing columns and/or ids
     # also add unit test to ensure differences in order don't affect results

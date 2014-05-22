@@ -44,8 +44,12 @@ class BIOENVTests(TestCase):
     def test_bioenv_all_columns_explicit(self):
         # Test with all columns being specified.
         obs = bioenv(self.dm_88_soils, self.df_88_soils, columns=self.cols)
-        #obs.to_csv('tests/data/88_soils_exp_results.txt', sep='\t')
         assert_frame_equal(obs, self.exp_88_soils)
+
+    def test_bioenv_duplicate_columns(self):
+        with self.assertRaises(ValueError):
+            bioenv(self.dm_88_soils, self.df_88_soils,
+                   columns=self.cols + ['PH'])
 
 
 if __name__ == '__main__':
