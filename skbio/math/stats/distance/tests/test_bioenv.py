@@ -30,6 +30,9 @@ class BIOENVTests(TestCase):
             get_data_path('88_soils_dm.txt'))
         self.df_88_soils = pd.read_csv(get_data_path('88_soils_df.txt'),
                                        sep='\t', index_col=0)
+        self.df_88_soils_extra_column = pd.read_csv(
+            get_data_path('88_soils_df_extra_column.txt'), sep='\t',
+            index_col=0)
         self.cols = ['TOT_ORG_CARB', 'SILT_CLAY', 'ELEVATION',
                      'SOIL_MOISTURE_DEFICIT', 'CARB_NITRO_RATIO',
                      'ANNUAL_SEASON_TEMP', 'ANNUAL_SEASON_PRECPT', 'PH',
@@ -49,6 +52,13 @@ class BIOENVTests(TestCase):
     def test_bioenv_all_columns_explicit(self):
         # Test with all columns being specified.
         obs = bioenv(self.dm_88_soils, self.df_88_soils, columns=self.cols)
+        assert_frame_equal(obs, self.exp_88_soils)
+
+        # Test against a data frame that has an extra non-numeric column and
+        # some of the rows and columns reordered (we should get the same
+        # result).
+        obs = bioenv(self.dm_88_soils, self.df_88_soils_extra_column,
+                     columns=self.cols)
         assert_frame_equal(obs, self.exp_88_soils)
 
     def test_bioenv_single_column(self):
