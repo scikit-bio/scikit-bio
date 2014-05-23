@@ -79,10 +79,7 @@ class BIOENVTests(TestCase):
     def test_bioenv_different_column_order(self):
         # Specifying columns in a different order will change the row labels in
         # the results data frame as the column subsets will be reordered, but
-        # the actual results shouldn't change unless there happens to be a tie
-        # in the correlation coefficients at a particular subset size and a
-        # different optimal subset is chosen (there isn't a tie in this
-        # dataset).
+        # the actual results (e.g., correlation coefficients) shouldn't change.
         obs = bioenv(self.dm_88_soils, self.df_88_soils,
                      columns=self.cols[::-1])
         assert_frame_equal(obs, self.exp_88_soils_different_column_order)
