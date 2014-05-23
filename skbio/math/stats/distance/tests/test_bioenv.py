@@ -99,8 +99,11 @@ class BIOENVTests(TestCase):
 
     def test_bioenv_nonnumeric_columns(self):
         df = self.df_88_soils.replace(2400, 'no cog yay')
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             bioenv(self.dm_88_soils, df)
+
+        with self.assertRaises(TypeError):
+            bioenv(self.dm_88_soils, self.df_88_soils_extra_column)
 
     def test_bioenv_no_side_effects(self):
         # Deep copies of both primary inputs.

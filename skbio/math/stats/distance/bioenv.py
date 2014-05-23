@@ -38,6 +38,10 @@ def bioenv(distance_matrix, data_frame, columns=None):
     pandas.DataFrame
         TODO
 
+    Raises
+    ------
+    TODO
+
     Notes
     -----
     See [1]_ for the original BIO-ENV reference. The general algorithm and
@@ -85,7 +89,8 @@ def bioenv(distance_matrix, data_frame, columns=None):
     try:
         vars_df = vars_df.astype(float)
     except ValueError:
-        raise ValueError("All specified columns must be numeric.")
+        raise TypeError("All specified columns in the data frame must be "
+                        "numeric.")
 
     # From http://stackoverflow.com/a/18017059
     vars_df = pd.DataFrame(scale(vars_df), index=vars_df.index,
