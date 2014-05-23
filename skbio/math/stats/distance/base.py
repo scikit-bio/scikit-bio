@@ -289,9 +289,9 @@ class CategoricalStatsResults(object):
 def bioenv(distance_matrix, data_frame, columns=None):
     """Find subset of variables maximally correlated with community distances.
 
-    Finds subsets of numeric variables (e.g., environmental variables) whose
-    Euclidean distances are maximally rank-correlated with the distance matrix
-    (e.g., community distance matrix). Correlation between the community
+    Finds subsets of environmental variables whose Euclidean distances (after
+    scaling the variables) are maximally rank-correlated with the distance
+    matrix (e.g., community distance matrix). Correlation between the community
     distance matrix and Euclidean environmental distance matrix is computed
     using Spearman's rank correlation coefficient (:math:`\\rho`).
 
@@ -353,6 +353,9 @@ def bioenv(distance_matrix, data_frame, columns=None):
        variables are specified, as all possible subsets are evaluated at each
        subset size.
 
+    The variables are scaled before computing the Euclidean distance: each
+    column is centered and then scaled by its standard deviation.
+
     References
     ----------
     .. [1] Clarke, K. R & Ainsworth, M. 1993. "A method of linking multivariate
@@ -404,7 +407,7 @@ def bioenv(distance_matrix, data_frame, columns=None):
     [2 rows x 2 columns]
 
     We see that in this simple example, pH alone is maximally rank-correlated
-    with the community distances.
+    with the community distances (:math:`\\rho=0.771517`).
 
     """
     if not isinstance(distance_matrix, DistanceMatrix):
@@ -438,11 +441,7 @@ def bioenv(distance_matrix, data_frame, columns=None):
         raise TypeError("All specified columns in the data frame must be "
                         "numeric.")
 
-    # From http://stackoverflow.com/a/18017059
-    #vars_df = pd.DataFrame(scale(vars_df), index=vars_df.index,
-    #                       columns=vars_df.columns)
-    vars_df = scale(vars_df)
-    #print(vars_df)
+    vars_df = _scale(vars_df)
     dm_flat = distance_matrix.condensed_form()
 
     num_vars = len(columns)
@@ -467,13 +466,15 @@ def bioenv(distance_matrix, data_frame, columns=None):
                                      columns=('size', 'correlation'))
 
 
-def scale(y, c=True, sc=True):
-    x = y.copy()
+def _scale(df):
+    """Scale each column in a data frame.
 
-    if c:
-        x -= x.mean()
-    if sc and c:
-        x /= x.std()
-    elif sc:
-        x /= np.sqrt(x.pow(2).sum().div(x.count() - 1))
-    return x
+    Each column is centered and then scaled by its standard deviation.
+
+    Modified from http://stackoverflow.com/a/18005745
+
+    """
+    df = df.copy()
+    df -= df.mean()
+    df /= df.std()
+    return df
