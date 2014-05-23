@@ -19,7 +19,8 @@ from pandas.util.testing import assert_frame_equal
 
 from skbio.core.distance import DissimilarityMatrix, DistanceMatrix
 from skbio.math.stats.distance.base import (CategoricalStats,
-                                            CategoricalStatsResults, bioenv)
+                                            CategoricalStatsResults, bioenv,
+                                            _scale)
 from skbio.util.testing import get_data_path
 
 
@@ -277,6 +278,25 @@ class BIOENVTests(TestCase):
 
         with self.assertRaises(TypeError):
             bioenv(self.dm, self.df_extra_column)
+
+    # TODO add a few more tests for scale
+    def test_scale(self):
+        df = pd.DataFrame([[7.0, 400], [8.0, 530], [7.5, 450], [8.5, 810]],
+                          index=['A','B','C','D'], columns=['pH', 'Elevation'])
+        exp = pd.DataFrame([[-1.161895, -0.805979], [0.387298, -0.095625],
+                            [-0.387298, -0.532766], [1.161895, 1.434369]],
+                           index=['A','B','C','D'],
+                           columns=['pH', 'Elevation'])
+        obs = _scale(df)
+        assert_frame_equal(obs, exp)
+
+    def test_scale_single_column(self):
+        df = pd.DataFrame([[1], [0], [2]], index=['A','B','C'],
+                          columns=['foo'])
+        exp = pd.DataFrame([[0.0], [-1.0], [1.0]], index=['A','B','C'],
+                           columns=['foo'])
+        obs = _scale(df)
+        assert_frame_equal(obs, exp)
 
 
 if __name__ == '__main__':
