@@ -75,10 +75,6 @@ def bioenv(distance_matrix, data_frame, columns=None):
         if column not in data_frame:
             raise ValueError("Column '%s' not in data frame." % column)
 
-    # TODO add unit test to ensure differences in column order (don't?) affect results
-    # TODO add test for distance matrix with reordered ids (should be the same
-    # exact result)
-
     vars_df = data_frame.loc[distance_matrix.ids, columns]
 
     if vars_df.isnull().any().any():

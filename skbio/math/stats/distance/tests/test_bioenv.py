@@ -28,6 +28,9 @@ class BIOENVTests(TestCase):
         # TODO add description of test dataset
         self.dm_88_soils = DistanceMatrix.from_file(
             get_data_path('88_soils_dm.txt'))
+        self.dm_88_soils_reordered = DistanceMatrix.from_file(
+            get_data_path('88_soils_dm_reordered.txt'))
+
         self.df_88_soils = pd.read_csv(get_data_path('88_soils_df.txt'),
                                        sep='\t', index_col=0)
         self.df_88_soils_extra_column = pd.read_csv(
@@ -37,16 +40,24 @@ class BIOENVTests(TestCase):
                      'SOIL_MOISTURE_DEFICIT', 'CARB_NITRO_RATIO',
                      'ANNUAL_SEASON_TEMP', 'ANNUAL_SEASON_PRECPT', 'PH',
                      'CMIN_RATE', 'LONGITUDE', 'LATITUDE']
+
         self.exp_88_soils = pd.read_csv(
             get_data_path('88_soils_exp_results.txt'), sep='\t', index_col=0)
         self.exp_88_soils_single_column = pd.read_csv(
             get_data_path('88_soils_single_column_exp_results.txt'), sep='\t',
             index_col=0)
+        self.exp_88_soils_different_column_order = pd.read_csv(
+            get_data_path('88_soils_different_column_order_exp_results.txt'),
+            sep='\t', index_col=0)
 
     def test_bioenv_all_columns_implicit(self):
-        # Test with all columns (implicitly, not specified).
+        # Test with all columns in data frame (implicitly).
         obs = bioenv(self.dm_88_soils, self.df_88_soils)
-        #obs.to_csv('tests/data/88_soils_exp_results.txt', sep='\t')
+        assert_frame_equal(obs, self.exp_88_soils)
+
+        # Should get the same results if order of rows/cols in distance matrix
+        # is changed.
+        obs = bioenv(self.dm_88_soils_reordered, self.df_88_soils)
         assert_frame_equal(obs, self.exp_88_soils)
 
     def test_bioenv_all_columns_explicit(self):
@@ -64,6 +75,29 @@ class BIOENVTests(TestCase):
     def test_bioenv_single_column(self):
         obs = bioenv(self.dm_88_soils, self.df_88_soils, columns=['PH'])
         assert_frame_equal(obs, self.exp_88_soils_single_column)
+
+    def test_bioenv_different_column_order(self):
+        # Specifying columns in a different order will change the row labels in
+        # the results data frame as the column subsets will be reordered, but
+        # the actual results shouldn't change unless there happens to be a tie
+        # in the correlation coefficients at a particular subset size and a
+        # different optimal subset is chosen (there isn't a tie in this
+        # dataset).
+        obs = bioenv(self.dm_88_soils, self.df_88_soils,
+                     columns=self.cols[::-1])
+        assert_frame_equal(obs, self.exp_88_soils_different_column_order)
+
+    def test_bioenv_no_side_effects(self):
+        # Deep copies of both primary inputs.
+        dm_copy = self.dm_88_soils.copy()
+        df_copy = self.df_88_soils.copy(deep=True)
+
+        bioenv(self.dm_88_soils, self.df_88_soils)
+
+        # Make sure we haven't modified the primary input in some way (e.g.,
+        # with scaling, type conversions, etc.).
+        self.assertEqual(self.dm_88_soils, dm_copy)
+        assert_frame_equal(self.df_88_soils, df_copy)
 
     def test_bioenv_no_distance_matrix(self):
         with self.assertRaises(TypeError):
@@ -104,18 +138,6 @@ class BIOENVTests(TestCase):
 
         with self.assertRaises(TypeError):
             bioenv(self.dm_88_soils, self.df_88_soils_extra_column)
-
-    def test_bioenv_no_side_effects(self):
-        # Deep copies of both primary inputs.
-        dm_copy = self.dm_88_soils.copy()
-        df_copy = self.df_88_soils.copy(deep=True)
-
-        bioenv(self.dm_88_soils, self.df_88_soils)
-
-        # Make sure we haven't modified the primary input in some way (e.g.,
-        # with scaling, type conversions, etc.).
-        self.assertEqual(self.dm_88_soils, dm_copy)
-        assert_frame_equal(self.df_88_soils, df_copy)
 
 
 if __name__ == '__main__':
