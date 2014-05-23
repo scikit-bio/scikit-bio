@@ -56,7 +56,7 @@ class BIOENVTests(TestCase):
 
         # Test against a data frame that has an extra non-numeric column and
         # some of the rows and columns reordered (we should get the same
-        # result).
+        # result since we're specifying the same columns in the same order).
         obs = bioenv(self.dm_88_soils, self.df_88_soils_extra_column,
                      columns=self.cols)
         assert_frame_equal(obs, self.exp_88_soils)
@@ -97,7 +97,7 @@ class BIOENVTests(TestCase):
         with self.assertRaises(ValueError):
             bioenv(self.dm_88_soils, df)
 
-    def test_bioenv_nans(self):
+    def test_bioenv_nonnumeric_columns(self):
         df = self.df_88_soils.replace(2400, 'no cog yay')
         with self.assertRaises(ValueError):
             bioenv(self.dm_88_soils, df)
