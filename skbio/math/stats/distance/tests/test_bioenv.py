@@ -25,19 +25,43 @@ class BIOENVTests(TestCase):
     """All results were verified with R (vegan::bioenv)."""
 
     def setUp(self):
-        # TODO add description of test dataset
+        # The test dataset used here is a subset of the Lauber et al. 2009
+        # "88 Soils" dataset. It has been altered to exercise various aspects
+        # of the code, including (but not limited to):
+        #
+        # - order of distance matrix IDs and IDs in data frame (metadata) are
+        #   not exactly the same
+        # - data frame has an extra sample that is not in the distance matrix
+        # - this extra sample has non-numeric and missing values in some of its
+        #   cells
+        #
+        # Additional variations of the distance matrix and data frame are used
+        # to test different orderings of rows/columns, extra non-numeric data
+        # frame columns, etc.
+        #
+        # This dataset is also useful because it is non-trivial in size (6
+        # samples, 11 environment variables) and it includes positive/negative
+        # floats and integers in the data frame.
+
         self.dm = DistanceMatrix.from_file(get_data_path('dm.txt'))
+
+        # Reordered rows and columns (i.e., different ID order). Still
+        # conceptually the same distance matrix.
         self.dm_reordered = DistanceMatrix.from_file(
             get_data_path('dm_reordered.txt'))
 
         self.df = pd.read_csv(get_data_path('df.txt'), sep='\t',
                                        index_col=0)
+
+        # Similar to the above data frame, except that it has an extra
+        # non-numeric column, and some of the other rows and columns have been
+        # reordered.
         self.df_extra_column = pd.read_csv(
             get_data_path('df_extra_column.txt'), sep='\t', index_col=0)
-        self.cols = ['TOT_ORG_CARB', 'SILT_CLAY', 'ELEVATION',
-                     'SOIL_MOISTURE_DEFICIT', 'CARB_NITRO_RATIO',
-                     'ANNUAL_SEASON_TEMP', 'ANNUAL_SEASON_PRECPT', 'PH',
-                     'CMIN_RATE', 'LONGITUDE', 'LATITUDE']
+
+        # All columns in the original data frame (these are all numeric
+        # columns).
+        self.cols = self.df.columns.tolist()
 
         self.exp_results = pd.read_csv(get_data_path('exp_results.txt'),
                                        sep='\t', index_col=0)
