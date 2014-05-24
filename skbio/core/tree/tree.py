@@ -2064,7 +2064,8 @@ class TreeNode(object):
                 result.pop(-1)
             return ''.join(result)
 
-    def _ascii_art(self, char1='-', show_internal=True, compact=False,with_distances=False):
+    def _ascii_art(self, char1='-', show_internal=True, compact=False, 
+                    with_distances=False):
         LEN = 10
         PAD = ' ' * LEN
         PA = ' ' * (LEN - 1)
@@ -2082,7 +2083,8 @@ class TreeNode(object):
                     char2 = '\\'
                 else:
                     char2 = '-'
-                (clines, mid) = c._ascii_art(char2, show_internal, compact, with_distances)
+                (clines, mid) = c._ascii_art(char2, show_internal, compact, 
+                                                with_distances)
                 mids.append(mid + len(result))
                 result.extend(clines)
                 if not compact:
@@ -2102,7 +2104,8 @@ class TreeNode(object):
         else:
             return ([char1 + '-' + namestr], 0)
 
-    def ascii_art(self, show_internal=True, compact=False, with_distances=False):
+    def ascii_art(self, show_internal=True, compact=False, 
+                    with_distances=False):
         r"""Returns a string containing an ascii drawing of the tree
 
         Note, this method calls a private recursive function and is not safe
@@ -2134,7 +2137,8 @@ class TreeNode(object):
                             \-e
         """
         (lines, mid) = self._ascii_art(show_internal=show_internal,
-                                       compact=compact,with_distances=with_distances)
+                                       compact=compact,
+                                       with_distances=with_distances)
         return '\n'.join(lines)
 
     def accumulate_to_ancestor(self, ancestor):

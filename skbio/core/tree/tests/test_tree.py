@@ -370,8 +370,10 @@ class TreeTests(TestCase):
               " \\--------|\n                    \\-D"
         self.assertEqual(obs, exp)
 
-        obs = tr.ascii_art(show_internal=True, compact=False,with_distances=True)
-        exp = "          /-0.2-B\n-F-------|\n         |          /-0.3-C\n         "\
+        obs = tr.ascii_art(show_internal=True, compact=False,
+                            with_distances=True)
+        exp = "          /-0.2-B\n-F-------|\n"\
+              "         |          /-0.3-C\n         "\
               " \\0.6-----|\n                    \\-0.4-D"
         self.assertEqual(obs, exp)   
 
