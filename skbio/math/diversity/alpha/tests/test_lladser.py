@@ -45,7 +45,6 @@ def test_lladser_pe():
     obs = lladser_pe([3], r=4)
     assert_true(np.isnan(obs))
 
-
     np.random.seed(123456789)
     fake_obs, exp_p = create_fake_observation()
     reps = 100
@@ -64,7 +63,6 @@ def test_lladser_ci_nan():
 
     obs = lladser_ci([3], r=4)
     assert_true(len(obs) == 2 and np.isnan(obs[0]) and np.isnan(obs[1]))
-
 
 
 def test_lladser_ci():
