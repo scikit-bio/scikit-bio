@@ -371,11 +371,11 @@ class TreeTests(TestCase):
         self.assertEqual(obs, exp)
 
         obs = tr.ascii_art(show_internal=True, compact=False,
-                            with_distances=True)
+                           with_distances=True)
         exp = "          /-0.2-B\n-F-------|\n"\
               "         |          /-0.3-C\n         "\
               " \\0.6-----|\n                    \\-0.4-D"
-        self.assertEqual(obs, exp)   
+        self.assertEqual(obs, exp)
 
     def test_accumulate_to_ancestor(self):
         """Get the distance from a node to its ancestor"""
