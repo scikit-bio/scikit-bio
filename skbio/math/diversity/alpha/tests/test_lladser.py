@@ -66,12 +66,11 @@ def test_lladser_ci_nan():
     assert_true(len(obs) == 2 and np.isnan(obs[0]) and np.isnan(obs[1]))
 
 
-@unittest.skipIf(True,
-                 "Test fails stochastically; see "
-                 "https://github.com/biocore/scikit-bio/issues/386")
+
 def test_lladser_ci():
     """lladser_ci estimate using defaults contains p with 95% prob"""
 
+    np.random.seed(12345678)
     reps = 100
     sum = 0
     for i in range(reps):
