@@ -44,8 +44,10 @@ def test_lladser_pe():
 
     obs = lladser_pe([3], r=4)
     assert_true(np.isnan(obs))
-    fake_obs, exp_p = create_fake_observation()
 
+
+    np.random.seed(123456789)
+    fake_obs, exp_p = create_fake_observation()
     reps = 100
     sum = 0
     for i in range(reps):
@@ -54,9 +56,7 @@ def test_lladser_pe():
 
     # Estimator has variance of (1-p)^2/(r-2),
     # which for r=30 and p~=0.9 is 0.0289
-    # Given that p_exp is slightly higher than 0.9 and we only
-    # sample 100 times, we play safe and test against 0.04
-    assert_almost_equal(obs, exp_p, delta=0.04)
+    assert_almost_equal(obs, exp_p, delta=0.03)
 
 
 def test_lladser_ci_nan():
