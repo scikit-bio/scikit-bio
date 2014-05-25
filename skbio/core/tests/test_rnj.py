@@ -10,15 +10,12 @@
 
 from __future__ import division
 
-import unittest, os
+import unittest
 import numpy as np
-# from cogent.phylo.distance import *
 from skbio.core.rnj import rnj
-# from cogent import LoadTree
 import skbio.core.distance
 from skbio.core.tree import TreeNode
 import random
-import numpy.testing as npt
 
 
 class RnjTests(unittest.TestCase):
