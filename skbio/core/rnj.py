@@ -63,61 +63,18 @@ def rnj(distmtx, no_negatives=True, randomize=True):
         for i in range(len(nodes)):
             rate_corrected_d[i,i] = diag_num
             # will soon need to find minimum off diagonal
-        print rate_corrected_d
-        imax, jmax = numpy.unravel_index(rate_corrected_d.argmin(),rate_corrected_d.shape)
+        # print rate_corrected_d
+        i, j = numpy.unravel_index(rate_corrected_d.argmin(),rate_corrected_d.shape)
 
 
-        
+        num_nodes = len(nodes) # len will change below
+        n1 = nodes[i]
+        n1.length = .5 * (d[i,j] + (r[i] - r[j])/(num_nodes-2))
 
-        # Eliminate one node per iteration until 2 left
-        num_nodes = len(nodes)
-        
-        # compute r (normalized), the sum of all pairwise distances
-        # the normalization is over (num - 2), since later for a given i, j
-        # distance(i, j) will be removed, and distance(i, i) = 0 always
-        r = numpy.sum(d, 0) * 1./(num_nodes-2.)
-        
-        # find two nodes i, j that are minimize each other's 
-        # transformed distance
-        node_indices = range(num_nodes)
-        if randomize == True:
-            shuffle(node_indices)
-        chose_pair = False
-        
-        # coefficient used calculating transformed distances
-        coef = num_nodes * 1./(num_nodes - 2.)
-        for i in node_indices:
-        # find i's closest, call it j
-        
-            # xformed_dists is a list of T_i,j for all j
-            xformed_dists = coef*d[i] - r - r[i]
-        
-            # give distance to self a bogus but nonminimum value
-            xformed_dists[i] = numpy.abs(xformed_dists[0])*2. +\
-                numpy.abs(xformed_dists[num_nodes - 1])*2.
-        
-            j = numpy.argmin(xformed_dists)
-        
-        
-        # now find j's closest
-            xformed_dists = coef*d[j] - r - r[j]
-            xformed_dists[j] = numpy.abs(xformed_dists[0])*2. +\
-                numpy.abs(xformed_dists[num_nodes - 1])*2.
-            
-            # if i and j are each other's minimum, choose this (i, j) pair
-            if i == numpy.argmin(xformed_dists):
-                # choose these i, j
-                chose_pair = True
-                break
-        
-        if not chose_pair:
-            raise Exception("didn't choose a pair of nodes correctly")
-        assert i != j, (i, j)
-        
-        # Branch lengths from i and j to new node
-        nodes[i].length = 0.5 * (d[i,j] + r[i] - r[j])
-        nodes[j].length = 0.5 * (d[i,j] + r[j] - r[i])
-            
+        n2 = nodes[j]
+        n2.length = .5 * (d[i,j] + (r[j] - r[i])/(num_nodes-2))
+
+
         # no negative branch lengths
         if no_negatives:
             nodes[i].length = max(0.0, nodes[i].length)
@@ -133,7 +90,7 @@ def rnj(distmtx, no_negatives=True, randomize=True):
         d[i, i] = 0.0
         nodes[i] = new_node
         
-        # Eliminate j
+        # rm j
         d[j, :] = d[num_nodes-1, :]
         d[:, j] = d[:, num_nodes-1]
         assert d[j, j] == 0.0, d
@@ -141,13 +98,14 @@ def rnj(distmtx, no_negatives=True, randomize=True):
         nodes[j] = nodes[num_nodes-1]
         nodes.pop()
     
+        # print 'd:', d, [node.name for node in nodes]
 
     # 2 left
     # if len(nodes[0].children) < len(nodes[1].children):
     #     nodes.reverse()
 
 
-    final_dist = 0.5 * d[0,1]
+    final_dist =  .5 * d[0,1]
     nodes[0].length = final_dist
     nodes[1].length = final_dist
 
