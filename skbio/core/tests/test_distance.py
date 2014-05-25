@@ -350,6 +350,10 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
             self.assertTrue(copy == dm)
 
         self.assertFalse(self.dm_1x1 == self.dm_3x3)
+        self.dm_3x3_reordered_fp = get_data_path('dm_3x3_reordered.txt')
+        dm_3x3_reordered = DissimilarityMatrix.from_file(
+            self.dm_3x3_reordered_fp)
+        self.assertTrue(self.dm_3x3 == dm_3x3_reordered)
 
     def test_ne(self):
         """Test unequal dms are identified as such."""
