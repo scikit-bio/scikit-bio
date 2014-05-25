@@ -16,7 +16,8 @@ import numpy
 from skbio.core.rnj import rnj
 # from cogent import LoadTree
 import skbio.core.distance
-
+from skbio.core.tree import TreeNode
+import random
 
 class RnjTests(unittest.TestCase):
     def setUp(self):
@@ -36,19 +37,36 @@ class RnjTests(unittest.TestCase):
             [8,11,8,8,8,0]] )
         self.names2 = [char for char in 'ABCDEF']
 
-    def test_rnj(self):
-        """testing (well, exercising at least), rnj"""
-        res = rnj(self.distmtx)
-        print res.ascii_art(with_distances=True)
-        print res.to_newick(with_distances=True)
-        dists = res.tip_tip_distances()
-        print dists
-        print self.distmtx
-        print dists == self.distmtx
-        # res2 = rnj(self.mtx2, self.names2)
-        # print res2.ascii_art()
-        # print res2.to_newick(with_distances=True)
-        # print res2.tip_tip_distances()
+    # def test_rnj(self):
+    #     """testing (well, exercising at least), rnj"""
+    #     res = rnj(self.distmtx)
+    #     print res.ascii_art(with_distances=True)
+    #     print res.to_newick(with_distances=True)
+    #     dists = res.tip_tip_distances()
+    #     print dists
+    #     print self.distmtx
+    #     print dists == self.distmtx
+    #     # res2 = rnj(self.mtx2, self.names2)
+    #     # print res2.ascii_art()
+    #     # print res2.to_newick(with_distances=True)
+    #     # print res2.tip_tip_distances()
+
+    def test_build_recover(self):
+        nodes = [TreeNode(name=char) for char in 'abcde']
+        while len(nodes) > 1:
+            random.shuffle(nodes)
+            n1 = nodes.pop()
+            n1.length = round(numpy.random.gamma(1,1),3)
+            n2 = nodes.pop()
+            n2.length = 1
+            new_parent = TreeNode(children=[n1,n2])
+            nodes.append(new_parent)
+        tree = nodes[0]
+        print tree.ascii_art(with_distances=True)
+        dmtx = tree.tip_tip_distances()
+        rnj_tree = rnj(dmtx)
+        print 'rnj:'
+        print rnj_tree.ascii_art(with_distances=True)
 
 if __name__ == '__main__':
     unittest.main()
