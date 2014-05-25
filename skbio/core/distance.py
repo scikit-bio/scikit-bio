@@ -513,10 +513,19 @@ class DissimilarityMatrix(object):
         try:
             if self.shape != other.shape:
                 equal = False
-            elif self.ids != other.ids:
+            elif sorted(self.ids) != sorted(other.ids):
                 equal = False
-            elif not np.array_equal(self.data, other.data):
+            elif self.ids == other.ids and not \
+                    np.array_equal(self.data, other.data):
                 equal = False
+            else:
+                self_order = np.argsort(self.ids)
+                other_order = np.argsort(other.ids)
+                sorted_self = self.data[:, self_order][self_order]
+                sorted_other = other.data[:, other_order][other_order]
+                if not np.array_equal(sorted_self, sorted_other):
+                    equal = False
+
         except AttributeError:
             equal = False
 
