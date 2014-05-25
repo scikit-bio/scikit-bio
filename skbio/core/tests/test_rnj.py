@@ -11,17 +11,19 @@
 from __future__ import division
 
 import unittest, os
-import numpy
+import numpy as np
 # from cogent.phylo.distance import *
 from skbio.core.rnj import rnj
 # from cogent import LoadTree
 import skbio.core.distance
 from skbio.core.tree import TreeNode
 import random
+import numpy.testing as npt
+
 
 class RnjTests(unittest.TestCase):
     def setUp(self):
-        self.mtx = numpy.array(
+        self.mtx = np.array(
         [   [0,1.5,3],
             [1.5,0,2.5],
             [3,2.5,0]])
@@ -29,7 +31,7 @@ class RnjTests(unittest.TestCase):
         
         # example from Yves Van de Peer, pg 150
         self.distmtx = skbio.core.distance.DistanceMatrix(self.mtx,self.names)
-        self.mtx2 = numpy.array(
+        self.mtx2 = np.array(
         [   [0,5,4,7,6,8],
             [5,0,7,10,9,11],
             [4,7,0,7,6,8],
@@ -37,7 +39,8 @@ class RnjTests(unittest.TestCase):
             [6,9,6,5,0,8],
             [8,11,8,9,8,0]] )
         self.names2 = [char for char in 'ABCDEF']
-        self.distmtx2 = skbio.core.distance.DistanceMatrix(self.mtx2,self.names2)
+        self.distmtx2 = skbio.core.distance.DistanceMatrix(
+            self.mtx2,self.names2)
 
     def test_rnj(self):
         """test nj with 2 hand-worked examples"""
@@ -51,26 +54,36 @@ class RnjTests(unittest.TestCase):
         self.assertEqual(res2.tip_tip_distances(), self.distmtx2)
 
     def test_build_recover(self):
-        nodes = [TreeNode(name=char) for char in 'abcde']
-        while len(nodes) > 1:
-            random.seed(0)
-            random.shuffle(nodes)
-            n1 = nodes.pop()
-            n1.length = round(numpy.random.gamma(1,1),3)
-            n2 = nodes.pop()
-            n2.length = 1
-            new_parent = TreeNode(children=[n1,n2])
-            nodes.append(new_parent)
-        tree = nodes[0]
-        print tree.ascii_art(with_distances=True)
-        dmtx = tree.tip_tip_distances()
-        rnj_tree = rnj(dmtx)
-        print 'rnj:'
-        print rnj_tree.ascii_art(with_distances=True)
-        print dmtx
-        rnj_dmtx = rnj_tree.tip_tip_distances()
-        print rnj_dmtx
-        print 'eq to orig?', rnj_dmtx == dmtx
+        """ build a tree, get dist matrix, recover dist matrix with nj."""
+        # should always work, as (I think) an actual tree 
+        # with nonnegative gamma lengths is always additive
+        random.seed(0)
+        for i in range(100):
+            nodes = [TreeNode(name=char) for char in 'abcdefghij']
+            while len(nodes) > 1:
+                random.shuffle(nodes)
+                n1 = nodes.pop()
+                n1.length = round(np.random.gamma(1,1),3)
+                n2 = nodes.pop()
+                n2.length = round(np.random.gamma(1,1),3)
+                new_parent = TreeNode(children=[n1,n2])
+                nodes.append(new_parent)
+            tree = nodes[0]
+            # print 'original tree:'
+            # print tree.ascii_art(with_distances=True)
+            dmtx = tree.tip_tip_distances()
+            rnj_tree = rnj(dmtx)
+            # print 'rnj:'
+            # print rnj_tree.ascii_art(with_distances=True)
+
+            # maybe this sorting should be handled by __eq__ or similar
+            # in dist mtx
+            rnj_dmtx = rnj_tree.tip_tip_distances()
+            orig_order = np.argsort(dmtx.ids)
+            rnj_order = np.argsort(rnj_dmtx.ids)
+            orig_d = dmtx.data[:, orig_order][orig_order]
+            rnj_d = rnj_dmtx.data[:, rnj_order][rnj_order]
+            self.assertTrue( np.allclose(rnj_d, orig_d))
 
 if __name__ == '__main__':
     unittest.main()
