@@ -52,6 +52,23 @@ def rnj(distmtx, no_negatives=True, randomize=True):
     nodes = [TreeNode(name=name) for name in names]
     # print nodes
     while len(nodes) > 2:
+        r = d.sum(0) # rate / net divergence / r
+
+
+        rate_corrected_d = d.copy()
+        for i in range(len(nodes)):
+            for j in range(len(nodes)):
+                rate_corrected_d[i,j] -= (r[i] + r[j]) / (len(nodes)-2)
+        diag_num = rate_corrected_d.max() + 1
+        for i in range(len(nodes)):
+            rate_corrected_d[i,i] = diag_num
+            # will soon need to find minimum off diagonal
+        print rate_corrected_d
+        imax, jmax = numpy.unravel_index(rate_corrected_d.argmin(),rate_corrected_d.shape)
+
+
+        
+
         # Eliminate one node per iteration until 2 left
         num_nodes = len(nodes)
         
