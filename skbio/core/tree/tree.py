@@ -2072,7 +2072,10 @@ class TreeNode(object):
         namestr = self.name or ''  # prevents name of NoneType
         if with_distances:
             if self.length is not None:
-                namestr = str(self.length) + '-' + namestr
+                if self.length >= 99:
+                    namestr = 'BIG-' + namestr
+                else:
+                    namestr = str(round(self.length, 1)) + '-' + namestr
         if self.children:
             mids = []
             result = []
