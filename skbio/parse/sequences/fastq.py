@@ -157,11 +157,11 @@ def parse_fastq(data, strict=False, enforce_qual_range=True, phred_offset=33):
             # http://nar.oxfordjournals.org/content/38/6/1767/T1.expansion.html
             elif linetype == QUAL:
                 qual = phred_f(line)
-                if enforce_qual_range:
-                    if (qual < 0).any() or (qual > 62).any():
-                        raise FastqParseError("Failed qual conversion for seq "
-                                              "id: %s. This may be because "
-                                              "you passed an incorrect value "
-                                              "for phred_offset." % seqid)
+                if enforce_qual_range and ((qual < 0).any() or
+                                           (qual > 62).any()):
+                    raise FastqParseError("Failed qual conversion for seq "
+                                          "id: %s. This may be because you "
+                                          "passed an incorrect value for "
+                                          "phred_offset." % seqid)
         if seqid:
             yield (seqid, seq, qual)
