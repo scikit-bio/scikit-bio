@@ -8,12 +8,11 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-__version__ = '0.0.0-dev'
+__version__ = "0.1.1-dev"
 
 import os
 from setuptools import find_packages, setup
 from setuptools.extension import Extension
-from distutils.command.build_py import build_py
 
 import numpy as np
 
@@ -35,7 +34,11 @@ classes = """
 """
 classifiers = [s.strip() for s in classes.split('\n') if s]
 
-long_description = """The scikit-bio project"""
+description = ('Data structures, algorithms and educational '
+               'resources for bioinformatics.')
+
+with open('README.rst') as f:
+    long_description = f.read()
 
 # Dealing with Cython
 USE_CYTHON = os.environ.get('USE_CYTHON', False)
@@ -51,25 +54,28 @@ if USE_CYTHON:
     extensions = cythonize(extensions)
 
 setup(name='scikit-bio',
-      cmdclass={'build_py': build_py},
       version=__version__,
       license='BSD',
-      description='scikit-bio',
+      description=description,
       long_description=long_description,
       author="scikit-bio development team",
       author_email="gregcaporaso@gmail.com",
       maintainer="scikit-bio development team",
       maintainer_email="gregcaporaso@gmail.com",
-      url='https://github.com/biocore/scikit-bio',
+      url='http://scikit-bio.org',
       test_suite='nose.collector',
       packages=find_packages(),
       ext_modules=extensions,
       include_dirs=[np.get_include()],
       install_requires=['numpy >= 1.7', 'matplotlib >= 1.1.0',
                         'scipy >= 0.13.0', 'pandas', 'future'],
-      extras_require={'test': ["nose >= 0.10.1", "pep8"],
+      extras_require={'test': ["nose >= 0.10.1", "pep8", "flake8"],
                       'doc': ["Sphinx >= 1.2.2", "sphinx-bootstrap-theme"]},
       classifiers=classifiers,
-      package_data={'skbio': ['core/tests/data/*.txt',
-                              'math/stats/ordination/test/data/*']
-                    })
+      package_data={
+          'skbio.core.tests': ['data/*.txt'],
+          'skbio.math.tests': ['data/*'],
+          'skbio.math.stats.ordination.tests': ['data/*'],
+          'skbio.parse.sequences.tests': ['data/*'],
+          }
+      )

@@ -742,7 +742,7 @@ class SequenceCollection(object):
     def toFasta(self):
         """Return fasta-formatted string representing the `SequenceCollection`
 
-        .. note:: Deprecated in skbio 0.0.0
+        .. note:: Deprecated in skbio 0.3.0
                   `SequenceCollection.toFasta` will be removed in skbio 0.2.0,
                   it is replaced by `SequenceCollection.to_fasta` as the latter
                   adheres to PEP8 naming conventions. This is necessary to keep
@@ -1434,11 +1434,9 @@ class Alignment(SequenceCollection):
         sequence_count = self.sequence_count()
         result = ["%d %d" % (sequence_count, sequence_length)]
         if map_labels:
-            seq_id_to_seqs, new_id_to_old_id =\
-                self.int_map(prefix=label_prefix)
+            _, new_id_to_old_id = self.int_map(prefix=label_prefix)
             old_id_to_new_id = {v: k for k, v in new_id_to_old_id.items()}
         else:
-            seq_id_to_seqs = self
             new_id_to_old_id = {seq_id: seq_id for seq_id in ids}
             old_id_to_new_id = new_id_to_old_id
 

@@ -116,7 +116,7 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
 
         # should fail with the expected exception
         with self.assertRaises(DissimilarityMatrixFormatError):
-            _ = DissimilarityMatrix.from_file(self.bad_dm_fp)
+            DissimilarityMatrix.from_file(self.bad_dm_fp)
 
         obs = DissimilarityMatrix.from_file(self.dm_2x2_asym_fp)
         self.assertEqual(self.dm_2x2_asym, obs)
@@ -151,31 +151,31 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         """Raises error on ill-formatted dissimilarity matrix file."""
         # Empty dm.
         with self.assertRaises(DissimilarityMatrixFormatError):
-            _ = DissimilarityMatrix.from_file([])
+            DissimilarityMatrix.from_file([])
 
         # Number of values don't match number of IDs.
         with self.assertRaises(DissimilarityMatrixFormatError):
-            _ = DissimilarityMatrix.from_file(self.bad_dm_f1)
+            DissimilarityMatrix.from_file(self.bad_dm_f1)
 
         # Mismatched IDs.
         with self.assertRaises(DissimilarityMatrixFormatError):
-            _ = DissimilarityMatrix.from_file(self.bad_dm_f2)
+            DissimilarityMatrix.from_file(self.bad_dm_f2)
 
         # Extra data at end.
         with self.assertRaises(DissimilarityMatrixFormatError):
-            _ = DissimilarityMatrix.from_file(self.bad_dm_f3)
+            DissimilarityMatrix.from_file(self.bad_dm_f3)
 
         # Missing data.
         with self.assertRaises(DissimilarityMatrixFormatError):
-            _ = DissimilarityMatrix.from_file(self.bad_dm_f4)
+            DissimilarityMatrix.from_file(self.bad_dm_f4)
 
         # Header, but no data.
         with self.assertRaises(DissimilarityMatrixFormatError):
-            _ = DissimilarityMatrix.from_file(self.bad_dm_f5)
+            DissimilarityMatrix.from_file(self.bad_dm_f5)
 
         # Non-hollow.
         with self.assertRaises(DissimilarityMatrixError):
-            _ = DissimilarityMatrix.from_file(self.bad_dm_f6)
+            DissimilarityMatrix.from_file(self.bad_dm_f6)
 
     def test_to_file(self):
         """Should serialize a DissimilarityMatrix to file."""
@@ -215,40 +215,40 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
 
         # DissimilarityMatrix -> DistanceMatrix
         with self.assertRaises(DistanceMatrixError):
-            _ = DistanceMatrix(self.dm_2x2_asym, ['foo', 'bar'])
+            DistanceMatrix(self.dm_2x2_asym, ['foo', 'bar'])
 
     def test_init_invalid_input(self):
         """Raises error on invalid dissimilarity matrix data / IDs."""
         # Empty data.
         with self.assertRaises(DissimilarityMatrixError):
-            _ = DissimilarityMatrix([], [])
+            DissimilarityMatrix([], [])
 
         # Another type of empty data.
         with self.assertRaises(DissimilarityMatrixError):
-            _ = DissimilarityMatrix(np.empty((0, 0)), [])
+            DissimilarityMatrix(np.empty((0, 0)), [])
 
         # Invalid number of dimensions.
         with self.assertRaises(DissimilarityMatrixError):
-            _ = DissimilarityMatrix([1, 2, 3], ['a'])
+            DissimilarityMatrix([1, 2, 3], ['a'])
 
         # Dimensions don't match.
         with self.assertRaises(DissimilarityMatrixError):
-            _ = DissimilarityMatrix([[1, 2, 3]], ['a'])
+            DissimilarityMatrix([[1, 2, 3]], ['a'])
 
         data = [[0, 1], [1, 0]]
 
         # Duplicate IDs.
         with self.assertRaises(DissimilarityMatrixError):
-            _ = DissimilarityMatrix(data, ['a', 'a'])
+            DissimilarityMatrix(data, ['a', 'a'])
 
         # Number of IDs don't match dimensions.
         with self.assertRaises(DissimilarityMatrixError):
-            _ = DissimilarityMatrix(data, ['a', 'b', 'c'])
+            DissimilarityMatrix(data, ['a', 'b', 'c'])
 
         # Non-hollow.
         data = [[0.0, 1.0], [1.0, 0.01]]
         with self.assertRaises(DissimilarityMatrixError):
-            _ = DissimilarityMatrix(data, ['a', 'b'])
+            DissimilarityMatrix(data, ['a', 'b'])
 
     def test_data(self):
         """Test retrieving/setting data matrix."""
@@ -273,7 +273,7 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         self.assertTrue(np.array_equal(self.dm_3x3['bar'],
                                        np.array([0.01, 0.0, 12.0])))
         with self.assertRaises(MissingIDError):
-            _ = self.dm_3x3['b']
+            self.dm_3x3['b']
 
     def test_ids_invalid_input(self):
         """Test setting invalid IDs raises an error."""
@@ -390,7 +390,7 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         self.assertTrue(np.array_equal(obs, np.array([4.2, 12.0, 0.0])))
 
         with self.assertRaises(MissingIDError):
-            _ = self.dm_2x2['c']
+            self.dm_2x2['c']
 
     def test_getitem_by_id_pair(self):
         """Test retrieving elements by ID pair."""
@@ -406,7 +406,7 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         self.assertEqual(self.dm_2x2_asym['b', 'a'], -2.0)
 
         with self.assertRaises(MissingIDError):
-            _ = self.dm_2x2['a', 'c']
+            self.dm_2x2['a', 'c']
 
     def test_getitem_ndarray_indexing(self):
         """Test __getitem__ delegates to underlying ndarray."""
@@ -429,7 +429,7 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         self.assertEqual(type(obs), np.ndarray)
 
         with self.assertRaises(IndexError):
-            _ = self.dm_3x3[:, 3]
+            self.dm_3x3[:, 3]
 
     def test_parse_ids(self):
         """Empty stub: DissimilarityMatrix._parse_ids tested elsewhere."""
@@ -481,7 +481,7 @@ class DistanceMatrixTests(DissimilarityMatrixTestData):
 
         # should fail with the expected exception
         with self.assertRaises(DissimilarityMatrixFormatError):
-            _ = DistanceMatrix.from_file(self.bad_dm_fp)
+            DistanceMatrix.from_file(self.bad_dm_fp)
 
         obs = DistanceMatrix.from_file(self.dm_3x3_fp)
         self.assertEqual(self.dm_3x3, obs)
@@ -491,18 +491,18 @@ class DistanceMatrixTests(DissimilarityMatrixTestData):
         """Raises error on invalid distance matrix file."""
         # Asymmetric.
         with self.assertRaises(DistanceMatrixError):
-            _ = DistanceMatrix.from_file(self.dm_2x2_asym_f)
+            DistanceMatrix.from_file(self.dm_2x2_asym_f)
 
     def test_init_invalid_input(self):
         """Raises error on invalid distance matrix data / IDs."""
         # Asymmetric.
         data = [[0.0, 2.0], [1.0, 0.0]]
         with self.assertRaises(DistanceMatrixError):
-            _ = DistanceMatrix(data, ['a', 'b'])
+            DistanceMatrix(data, ['a', 'b'])
 
         # Ensure that the superclass validation is still being performed.
         with self.assertRaises(DissimilarityMatrixError):
-            _ = DistanceMatrix([[1, 2, 3]], ['a'])
+            DistanceMatrix([[1, 2, 3]], ['a'])
 
     def test_condensed_form(self):
         """Test retrieving the data matrix in condensed form."""
@@ -579,15 +579,15 @@ class RandomDistanceMatrixTests(TestCase):
         """Test error-handling upon invalid input."""
         # Invalid dimensions.
         with self.assertRaises(DissimilarityMatrixError):
-            _ = randdm(0)
+            randdm(0)
 
         # Invalid dimensions.
         with self.assertRaises(ValueError):
-            _ = randdm(-1)
+            randdm(-1)
 
         # Invalid number of IDs.
         with self.assertRaises(DissimilarityMatrixError):
-            _ = randdm(2, ids=['foo'])
+            randdm(2, ids=['foo'])
 
 
 # 1x1:

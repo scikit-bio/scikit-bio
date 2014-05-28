@@ -61,7 +61,7 @@ def _delete_trailing_number(line):
     """
     pieces = line.split()
     try:
-        _ = int(pieces[-1])
+        int(pieces[-1])
         return ' '.join(pieces[:-1])
     except ValueError:  # no trailing numbers
         return line

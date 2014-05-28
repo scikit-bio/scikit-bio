@@ -1,145 +1,5 @@
 #!/usr/bin/env python
-r"""
-Tree representations (:mod:`skbio.core.tree`)
-=============================================
 
-.. currentmodule:: skbio.core.tree
-
-This module provides functionality for working with trees, including
-phylogenetic trees and hierarchies. Functionality is provided for constructing
-the trees, for traversing in multiple ways, comparisons, fetching subtrees, and
-more. This module supports trees that are multifurcating and nodes that have
-single descendants as well.
-
-Classes
--------
-
-.. autosummary::
-   :toctree: generated/
-
-   TreeNode
-
-Examples
---------
->>> from skbio.core.tree import TreeNode
-
-A new tree can be constructed from a Newick string. Newick is a common format
-used to represent tree objects within a file. Newick was part of the original
-PHYLIP package from Joseph Felsenstein's group (defined `here
-<http://goo.gl/fIY1Iq>`_), and is based around representing nesting with
-parentheses. For instance, the following string describes a 3 taxon tree, with
-one internal node:
-
-    ((A, B)C, D)root;
-
-Where A, B, and D are tips of the tree, and C is an internal node that covers
-tips A and B.
-
-Now let's construct a simple tree and dump an ASCII representation:
-
->>> tree = TreeNode.from_newick("((A, B)C, D)root;")
->>> print tree.is_root()  # is this the root of the tree?
-True
->>> print tree.is_tip()  # is this node a tip?
-False
->>> print tree.ascii_art()
-                    /-A
-          /C-------|
--root----|          \-B
-         |
-          \-D
-
-There are a few common ways to traverse a tree, and depending on your use,
-some methods are more appropriate than others. Wikipedia has a well written
-page on tree `traversal methods <http://goo.gl/K4Ufl>`_, and will go into
-further depth than what we'll cover here. We're only going to cover two of the
-commonly used traversals here, preorder and postorder, but we will show
-examples of two other common helper traversal methods to gather tips or
-internal nodes.
-
-The first traversal we'll cover is a preorder traversal in which you evaluate
-from root to tips, looking at the left most child first. For instance:
-
->>> for node in tree.preorder():
-...    print node.name
-root
-C
-A
-B
-D
-
-The next method we'll look at is a postorder traveral which will evaluate the
-left subtree tips first before walking back up the tree:
-
->>> for node in tree.postorder():
-...    print node.name
-A
-B
-C
-D
-root
-
-`TreeNode` provides two helper methods as well for iterating over just the tips
-or for iterating over just the internal nodes.
-
->>> for node in tree.tips():
-...    print "Node name: %s, Is a tip: %s" % (node.name, node.is_tip())
-Node name: A, Is a tip: True
-Node name: B, Is a tip: True
-Node name: D, Is a tip: True
-
->>> for node in tree.non_tips():
-...    print "Node name: %s, Is a tip: %s" % (node.name, node.is_tip())
-Node name: C, Is a tip: False
-
-Note, by default, `non_tips` will ignore `self` (which is the root in this
-case).  You can pass the `include_self` flag to `non_tips` if you wish to
-include `self`.
-
-The `TreeNode` provides a few ways to compare trees. First, let's create two
-similar trees and compare their topologies using `compare_subsets`. This
-distance is the fraction of common clades present in the two trees, where a
-distance of 0 means the trees contain identical clades, and a distance of 1
-indicates the trees do not share any common clades:
-
->>> tree1 = TreeNode.from_newick("((A, B)C, (D, E)F, (G, H)I)root;")
->>> tree2 = TreeNode.from_newick("((G, H)C, (D, E)F, (B, A)I)root;")
->>> tree3 = TreeNode.from_newick("((D, B)C, (A, E)F, (G, H)I)root;")
->>> print tree1.compare_subsets(tree1)  # identity case
-0.0
->>> print tree1.compare_subsets(tree2)  # same tree but different clade order
-0.0
->>> print tree1.compare_subsets(tree3)  # only 1 of 3 common subsets
-0.666666666667
-
-We can additionally take into account branch length when computing distances
-between trees. First, we're going to construct two new trees with described
-branch length, note the difference in the Newick strings:
-
->>> tree1 = TreeNode.from_newick("((A:0.1, B:0.2)C:0.3, D:0.4, E:0.5)root;")
->>> tree2 = TreeNode.from_newick("((A:0.4, B:0.8)C:0.3, D:0.1, E:0.5)root;")
-
-In these two trees, we've added on a description of length from the node to
-its parent, so for instance:
-
->>> for node in tree1.postorder():
-...     print node.name, node.length
-A 0.1
-B 0.2
-C 0.3
-D 0.4
-E 0.5
-root None
-
-Now let's compare two trees using the distances computed pairwise between tips
-in the trees. The distance computed, by default, is the correlation of all
-pairwise tip-to-tip distances between trees:
-
->>> print tree1.compare_tip_distances(tree1)  # identity case
-0.0
->>> print tree1.compare_tip_distances(tree2)
-0.120492524415
-"""
 from __future__ import division
 
 # ----------------------------------------------------------------------------
@@ -159,12 +19,12 @@ from functools import reduce
 from collections import defaultdict
 
 import numpy as np
+from scipy.stats import pearsonr
 
 from skbio.core.distance import DistanceMatrix
 from skbio.core.exception import (NoLengthError, DuplicateNodeError,
                                   NoParentError, MissingNodeError, TreeError,
                                   RecordError)
-from skbio.math.stats.test import correlation_t
 from skbio.util.io import open_file
 
 
@@ -184,10 +44,11 @@ def distance_from_r(m1, m2):
         The distance between m1 and m2
 
     """
-    return (1-correlation_t(m1.data.flat, m2.data.flat)[0])/2
+    return (1-pearsonr(m1.data.flat, m2.data.flat)[0])/2
 
 
 class TreeNode(object):
+
     r"""Representation of a node within a tree
 
     A `TreeNode` instance stores links to its parent and optional children
@@ -909,7 +770,7 @@ class TreeNode(object):
         """
         tree = self.copy()
         max_dist, tips = tree.get_max_distance()
-        half_max_dist = max_dist/2.0
+        half_max_dist = max_dist / 2.0
 
         if max_dist == 0.0:  # only pathological cases with no lengths
             return tree
@@ -1792,6 +1653,75 @@ class TreeNode(object):
             tree = cls.from_newick(data)
         return tree
 
+    def _balanced_distance_to_tip(self):
+        """Return the distance to tip from this node.
+
+        The distance to every tip from this node must be equal for this to
+        return a correct result.
+
+        Returns
+        -------
+        int
+            The distance to tip of a length-balanced tree
+
+        """
+        node = self
+        distance = 0
+        while node.has_children():
+            distance += node.children[0].length
+            node = node.children[0]
+        return distance
+
+    @classmethod
+    def from_linkage_matrix(cls, linkage_matrix, id_list):
+        """Return tree from SciPy linkage matrix.
+
+        Parameters
+        ----------
+        linkage_matrix : ndarray
+            A SciPy linkage matrix as returned by
+            `scipy.cluster.hierarchy.linkage`
+        id_list : list
+            The indices of the `id_list` will be used in the linkage_matrix
+
+        Returns
+        -------
+        TreeNode
+            An unrooted bifurcated tree
+
+        See Also
+        --------
+        scipy.cluster.hierarchy.linkage
+
+        """
+        tip_width = len(id_list)
+        cluster_count = len(linkage_matrix)
+        lookup_len = cluster_count + tip_width
+        node_lookup = np.empty(lookup_len, dtype=TreeNode)
+
+        for i, name in enumerate(id_list):
+            node_lookup[i] = TreeNode(name=name)
+
+        for i in range(tip_width, lookup_len):
+            node_lookup[i] = TreeNode()
+
+        newest_cluster_index = cluster_count + 1
+        for link in linkage_matrix:
+            child_a = node_lookup[link[0]]
+            child_b = node_lookup[link[1]]
+
+            path_length = link[2] / 2
+            child_a.length = path_length - child_a._balanced_distance_to_tip()
+            child_b.length = path_length - child_b._balanced_distance_to_tip()
+
+            new_cluster = node_lookup[newest_cluster_index]
+            new_cluster.append(child_a)
+            new_cluster.append(child_b)
+
+            newest_cluster_index += 1
+
+        return node_lookup[-1]
+
     @classmethod
     def from_newick(cls, lines, unescape_name=True):
         r"""Returns tree from the Clustal .dnd file format and equivalent
@@ -2137,7 +2067,7 @@ class TreeNode(object):
     def _ascii_art(self, char1='-', show_internal=True, compact=False):
         LEN = 10
         PAD = ' ' * LEN
-        PA = ' ' * (LEN-1)
+        PA = ' ' * (LEN - 1)
         namestr = self.name or ''  # prevents name of NoneType
         if self.children:
             mids = []
@@ -2150,20 +2080,21 @@ class TreeNode(object):
                 else:
                     char2 = '-'
                 (clines, mid) = c._ascii_art(char2, show_internal, compact)
-                mids.append(mid+len(result))
+                mids.append(mid + len(result))
                 result.extend(clines)
                 if not compact:
                     result.append('')
             if not compact:
                 result.pop()
             (lo, hi, end) = (mids[0], mids[-1], len(result))
-            prefixes = [PAD] * (lo+1) + [PA+'|'] * (hi-lo-1) + [PAD] * (end-hi)
+            prefixes = [PAD] * (lo + 1) + [PA + '|'] * \
+                (hi - lo - 1) + [PAD] * (end - hi)
             mid = np.int(np.trunc((lo + hi) / 2))
-            prefixes[mid] = char1 + '-'*(LEN-2) + prefixes[mid][-1]
-            result = [p+l for (p, l) in zip(prefixes, result)]
+            prefixes[mid] = char1 + '-' * (LEN - 2) + prefixes[mid][-1]
+            result = [p + l for (p, l) in zip(prefixes, result)]
             if show_internal:
                 stem = result[mid]
-                result[mid] = stem[0] + namestr + stem[len(namestr)+1:]
+                result[mid] = stem[0] + namestr + stem[len(namestr) + 1:]
             return (result, mid)
         else:
             return ([char1 + '-' + namestr], 0)
@@ -2441,7 +2372,7 @@ class TreeNode(object):
         # linearize all tips in postorder
         # .__start, .__stop compose the slice in tip_order.
         for i, node in enumerate(all_tips):
-            node.__start, node.__stop = i, i+1
+            node.__start, node.__stop = i, i + 1
 
         # the result map provides index in the result matrix
         result_map = {n.__start: i for i, n in enumerate(tip_order)}
@@ -2461,7 +2392,8 @@ class TreeNode(object):
                         if tip2 not in result_map:
                             continue
                         t2idx = result_map[tip2]
-                        result[t1idx, t2idx] = distances[tip1]+distances[tip2]
+                        result[t1idx, t2idx] = distances[
+                            tip1] + distances[tip2]
 
         for node in self.postorder():
             if not node.children:
@@ -2604,7 +2536,7 @@ class TreeNode(object):
         if not total_subsets:  # no common subsets after filtering, so max dist
             return 1
 
-        return 1 - (2*intersection_length / float(total_subsets))
+        return 1 - (2 * intersection_length / float(total_subsets))
 
     def compare_tip_distances(self, other, sample=None, dist_f=distance_from_r,
                               shuffle_f=shuffle):
@@ -2740,6 +2672,70 @@ class TreeNode(object):
 
         self.id = curr_index
 
+    def descending_branch_length(self, tip_subset=None):
+        """Find total descending branch length from self or subset of self tips
+
+        Parameters
+        ----------
+        tip_subset : Iterable, or None
+            If None, the total descending branch length for all tips in the
+            tree will be returned. If a list of tips is provided then only the
+            total descending branch length associated with those tips will be
+            returned.
+
+        Returns
+        -------
+        float
+            The total descending branch length for the specified set of tips.
+
+        Raises
+        ------
+        ValueError
+            A ValueError is raised if the list of tips supplied to tip_subset
+            contains internal nodes or non-tips.
+
+        Notes
+        -----
+        This function replicates cogent's totalDescendingBranch Length method
+        and extends that method to allow the calculation of total descending
+        branch length of a subset of the tips if requested. The postorder
+        guarantees that the function will always be able to add the descending
+        branch length if the node is not a tip.
+
+        Nodes with no length will have their length set to 0. The root length
+        (if it exists) is ignored.
+
+        Examples
+        --------
+        >>> from skbio.core.tree import TreeNode
+        >>> tr = TreeNode.from_newick("(((A:.1,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2."
+        ...                           "4,(H:.4,I:.5)J:1.3)K;")
+        >>> tdbl = tr.descending_branch_length()
+        >>> sdbl = tr.descending_branch_length(['A','E'])
+        >>> print tdbl, sdbl
+        8.9 2.2
+        """
+        self.assign_ids()
+        if tip_subset is not None:
+            all_tips = self.subset()
+            if not set(tip_subset).issubset(all_tips):
+                raise ValueError('tip_subset contains ids that arent tip '
+                                 'names.')
+
+            lca = self.lowest_common_ancestor(tip_subset)
+            ancestors = {}
+            for tip in tip_subset:
+                curr = self.find(tip)
+                while curr is not lca:
+                    ancestors[curr.id] = curr.length if curr.length is not \
+                        None else 0.0
+                    curr = curr.parent
+            return sum(ancestors.values())
+
+        else:
+            return sum(n.length for n in self.postorder(include_self=True) if
+                       n.length is not None)
+
 
 def _dnd_tokenizer(data):
     r"""Tokenizes data into a stream of punctuation, labels and lengths.
@@ -2761,7 +2757,7 @@ def _dnd_tokenizer(data):
 
     Examples
     --------
-    >>> from skbio.core.tree import _dnd_tokenizer
+    >>> from skbio.core.tree.tree import _dnd_tokenizer
     >>> for token in _dnd_tokenizer("((tip1, tip2)internal1)"):
     ...     print token
     (

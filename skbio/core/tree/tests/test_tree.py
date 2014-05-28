@@ -14,13 +14,14 @@ from unittest import TestCase, main
 
 import numpy as np
 import numpy.testing as nptest
+from scipy.stats import pearsonr
 from future.utils.six import StringIO
 
-from skbio.core.tree import TreeNode, _dnd_tokenizer
+from skbio.core.tree import TreeNode
+from skbio.core.tree.tree import _dnd_tokenizer
 from skbio.core.distance import DistanceMatrix
 from skbio.core.exception import (NoLengthError, TreeError, RecordError,
                                   MissingNodeError, NoParentError)
-from skbio.math.stats.test import correlation_t
 
 
 class TreeTests(TestCase):
@@ -390,19 +391,19 @@ class TreeTests(TestCase):
         nptest.assert_almost_equal(tips[0].distance(tips[1]), 0.3)
         nptest.assert_almost_equal(tips[0].distance(tips[2]), 1.3)
         with self.assertRaises(NoLengthError):
-            _ = tips[0].distance(tips[3])
+            tips[0].distance(tips[3])
 
         nptest.assert_almost_equal(tips[1].distance(tips[0]), 0.3)
         nptest.assert_almost_equal(tips[1].distance(tips[1]), 0.0)
         nptest.assert_almost_equal(tips[1].distance(tips[2]), 1.4)
         with self.assertRaises(NoLengthError):
-            _ = tips[1].distance(tips[3])
+            tips[1].distance(tips[3])
 
         self.assertEqual(tips[2].distance(tips[0]), 1.3)
         self.assertEqual(tips[2].distance(tips[1]), 1.4)
         self.assertEqual(tips[2].distance(tips[2]), 0.0)
         with self.assertRaises(NoLengthError):
-            _ = tips[2].distance(tips[3])
+            tips[2].distance(tips[3])
 
     def test_lowest_common_ancestor(self):
         """TreeNode lowestCommonAncestor should return LCA for set of tips"""
@@ -471,8 +472,8 @@ class TreeTests(TestCase):
         # note: common taxa are H, G, R (only)
         m1 = np.array([[0, 2, 6.5], [2, 0, 6.5], [6.5, 6.5, 0]])
         m2 = np.array([[0, 2, 6], [2, 0, 6], [6, 6, 0]])
-        r = correlation_t(m1.flat, m2.flat)[0]
-        self.assertEqual(obs, (1 - r) / 2)
+        r = pearsonr(m1.flat, m2.flat)[0]
+        self.assertAlmostEqual(obs, (1 - r) / 2)
 
     def test_compare_tip_distances_sample(self):
         t = TreeNode.from_newick('((H:1,G:1):2,(R:0.5,M:0.7):3);')
@@ -481,8 +482,8 @@ class TreeTests(TestCase):
         # note: common taxa are H, G, R (only)
         m1 = np.array([[0, 2, 6.5], [2, 0, 6.5], [6.5, 6.5, 0]])
         m2 = np.array([[0, 2, 6], [2, 0, 6], [6, 6, 0]])
-        r = correlation_t(m1.flat, m2.flat)[0]
-        self.assertEqual(obs, (1 - r) / 2)
+        r = pearsonr(m1.flat, m2.flat)[0]
+        self.assertAlmostEqual(obs, (1 - r) / 2)
 
         # 4 common taxa, still picking H, G, R
         s = '((H:1,G:1):2,(R:0.5,M:0.7,Q:5):3);'
@@ -542,7 +543,7 @@ class TreeTests(TestCase):
         obs = [n.name for n in self.simple_t.tips()]
         self.assertEqual(obs, exp)
         obs2 = [n.name for n in self.simple_t.traverse(False, False)]
-        self.assertEqual(obs, exp)
+        self.assertEqual(obs2, exp)
 
     def test_pre_and_postorder(self):
         """Pre and post order traversal of the tree"""
@@ -583,7 +584,6 @@ class TreeTests(TestCase):
         id_3, child_3 = t3.index_tree()
         nodes_3 = [n.id for n in t3.traverse(self_before=False,
                    self_after=True)]
-
         self.assertEqual(nodes_3, [0, 1, 2, 4, 3, 5, 8, 6, 7, 9, 10])
         self.assertEqual(child_3, [(4, 0, 2), (5, 3, 3), (8, 4, 5), (9, 6, 7),
                                    (10, 8, 9)])
@@ -592,7 +592,7 @@ class TreeTests(TestCase):
         """Form a new root"""
         t = TreeNode.from_newick("(((a,b)c,(d,e)f)g,h)i;")
         with self.assertRaises(TreeError):
-            _ = t.root_at(t.find('h'))
+            t.root_at(t.find('h'))
 
         exp = "(a,b,((d,e)f,(h)g)c)root;"
         rooted = t.root_at('c')
@@ -601,7 +601,7 @@ class TreeTests(TestCase):
 
     def test_root_at_midpoint(self):
         """Root at the midpoint"""
-        nodes, tree1 = self.TreeNode, self.TreeRoot
+        tree1 = self.TreeRoot
         for n in tree1.traverse():
             n.length = 1
 
@@ -712,6 +712,44 @@ class TreeTests(TestCase):
 
         self.assertEqual(t_ids.intersection(obs_ids), set())
 
+    def test_descending_branch_length(self):
+        """Calculate descending branch_length"""
+        tr = TreeNode.from_newick("(((A:.1,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,(H"
+                                  ":.4,I:.5)J:1.3)K;")
+        tdbl = tr.descending_branch_length()
+        sdbl = tr.descending_branch_length(['A', 'E'])
+        nptest.assert_almost_equal(tdbl, 8.9)
+        nptest.assert_almost_equal(sdbl, 2.2)
+        self.assertRaises(ValueError, tr.descending_branch_length,
+                          ['A', 'DNE'])
+        self.assertRaises(ValueError, tr.descending_branch_length, ['A', 'C'])
+
+        tr = TreeNode.from_newick("(((A,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,(H:.4"
+                                  ",I:.5)J:1.3)K;")
+        tdbl = tr.descending_branch_length()
+        nptest.assert_almost_equal(tdbl, 8.8)
+
+        tr = TreeNode.from_newick("(((A,B:1.2)C:.6,(D:.9,E:.6)F)G:2.4,(H:.4,I:"
+                                  ".5)J:1.3)K;")
+        tdbl = tr.descending_branch_length()
+        nptest.assert_almost_equal(tdbl, 7.9)
+
+        tr = TreeNode.from_newick("(((A,B:1.2)C:.6,(D:.9,E:.6)F)G:2.4,(H:.4,I:"
+                                  ".5)J:1.3)K;")
+        tdbl = tr.descending_branch_length(['A', 'D', 'E'])
+        nptest.assert_almost_equal(tdbl, 2.1)
+
+        tr = TreeNode.from_newick("(((A,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,(H:."
+                                  "4,I:.5)J:1.3)K;")
+        tdbl = tr.descending_branch_length(['I', 'D', 'E'])
+        nptest.assert_almost_equal(tdbl, 6.6)
+
+        # test with a situation where we have unnamed internal nodes
+        tr = TreeNode.from_newick("(((A,B:1.2):.6,(D:.9,E:.6)F):2.4,(H:.4,I:"
+                                  ".5)J:1.3);")
+        tdbl = tr.descending_branch_length()
+        nptest.assert_almost_equal(tdbl, 7.9)
+
     def test_to_array(self):
         """Convert a tree to arrays"""
         t = TreeNode.from_newick(
@@ -740,6 +778,21 @@ class TreeTests(TestCase):
         t_io = StringIO("((a,b)c,(d,e)f)g;")
         t = TreeNode.from_file(t_io)
         self.assertEqual(list('abcdefg'), [n.name for n in t.postorder()])
+
+    def test_linkage_matrix(self):
+        # Ensure matches: http://www.southampton.ac.uk/~re1u06/teaching/upgma/
+        id_list = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
+        linkage = np.asarray([[1.0,  5.0,  1.0,  2.0],
+                              [0.0,  3.0,  8.0,  2.0],
+                              [6.0,  7.0, 12.5,  3.0],
+                              [8.0,  9.0, 16.5,  5.0],
+                              [2.0, 10.0, 29.0,  6.0],
+                              [4.0, 11.0, 34.0,  7.0]])
+
+        tree = TreeNode.from_linkage_matrix(linkage, id_list)
+        self.assertEquals("(E:17.0,(C:14.5,((A:4.0,D:4.0):4.25,(G:6.25,(B:0.5,"
+                          "F:0.5):5.75):2.0):6.25):2.5);",
+                          tree.to_newick(with_distances=True))
 
 
 class DndTokenizerTests(TestCase):

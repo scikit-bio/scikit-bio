@@ -1,0 +1,3 @@
+For group "Bar", the group means is: 5.958900
+Cannot calculate the first difference with a window of size (3).
+The info is: [('mean', 5.9589), ('std', 2.7942)]

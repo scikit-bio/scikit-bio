@@ -26,12 +26,12 @@ API Reference
    math.stats.distance
    math.stats.spatial
    math.stats.ordination
+   math.gradient
    math.subsample
    parse.sequences
    util.io
    util.misc
    util.testing
-   util.trie
 
 
 Developer Documentation
@@ -45,3 +45,4 @@ to scikit-bio.
 
    development/py3
    development/coding_guidelines
+   development/new_module

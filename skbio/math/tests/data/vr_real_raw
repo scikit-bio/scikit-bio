@@ -1,0 +1,13 @@
+Trajectory algorithm: avg
+
+
+
+
+Grouped by "Treatment"
+For group "Control":
+The trajectory is:
+[2.3694, 3.3716, 5.4452, 4.5704, 4.4972]
+For group "Fast":
+The trajectory is:
+[7.2220, 4.2726, 1.1169, 4.0271]
+

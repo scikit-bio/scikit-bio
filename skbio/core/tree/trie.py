@@ -1,91 +1,4 @@
 #!/usr/bin/env python
-r"""
-Prefix tree (Trie) (:mod:`skbio.util.trie`)
-===========================================
-
-.. currentmodule:: skbio.util.trie
-
-This module provides functionality for working with tries.
-
-Classes
--------
-
-.. autosummary::
-    :toctree: generated/
-
-    CompressedTrie
-
-Functions
----------
-
-.. autosummary::
-   :toctree: generated/
-
-   fasta_to_pairlist
-
-Examples
---------
-
-Construct a Trie from a (key, value) list
-
->>> from skbio.util.trie import CompressedTrie
->>> pair_list = [("ab",  "0"),
-...              ("abababa", "1"),
-...              ("abab", "2"),
-...              ("baba", "3"),
-...              ("ababaa", "4"),
-...              ("a", "5"),
-...              ("abababa", "6"),
-...              ("bab", "7"),
-...              ("babba", "8")]
->>> t = CompressedTrie(pair_list)
-
-Get the number of keys stored in the trie
-
->>> len(t)
-9
-
-Get the number of nodes in the trie
-
->>> t.size
-10
-
-Get the trie's prefix map
-
->>> t.prefix_map
-{'1': ['6', '2', '0', '5'], '8': ['7'], '3': [], '4': []}
-
-Find the value attached to a given key
-
->>> t.find("ababaa")
-['4']
-
-Add a new (key, value) pair to the Trie
-
->>> t.insert("bac", "9")
->>> t.find("bac")
-['9']
->>> t.prefix_map
-{'1': ['6', '2', '0', '5'], '9': [], '3': [], '4': [], '8': ['7']}
-
-Create a new trie with a list of sequences
-
->>> from skbio.util.trie import CompressedTrie, fasta_to_pairlist
-
->>> seqs = [("s0", "ACA"),
-...         ("s1", "ACAGTC"),
-...         ("s2", "ACTA"),
-...         ("s3", "CAGT"),
-...         ("s4", "CATGAA"),
-...         ("s5", "A"),
-...         ("s6", "CATGTA"),
-...         ("s7", "CACCA")]
-
->>> t = CompressedTrie(fasta_to_pairlist(seqs))
-
->>> t.prefix_map
-{'s3': [], 's2': [], 's1': ['s0', 's5'], 's7': [], 's6': [], 's4': []}
-"""
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -334,20 +247,18 @@ class CompressedTrie(object):
 
 
 def fasta_to_pairlist(seqs):
-    """Returns the fasta sequences in a key value list for Trie usage
-
-    Returns the sequence list `seqs` in (seq, label) tuples, so it can be used
-    as (key, value) pairs to populate the Trie object
+    """Yields (key, value) pairs, useful for populating a Trie object
 
     Parameters
     ----------
-    seqs : list
-        the list of sequences
+    seqs : Iterable
+        tuples of the form ``(label, seq)``, e.g., as obtained by
+        skbio.parse.sequences.parse_fasta
 
     Returns
     -------
-    list of tuples
-        list of (seq, label)
+    GeneratorType
+        yields tuples of the form ``(seq, label)``
     """
     for label, seq in seqs:
         yield seq, label

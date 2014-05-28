@@ -38,7 +38,7 @@ class MiscTests(TestCase):
         self.assertTrue(is_casava_v180_or_later(id_))
 
         with self.assertRaises(ValueError):
-            _ = is_casava_v180_or_later(b'foo')
+            is_casava_v180_or_later(b'foo')
 
     def test_safe_md5(self):
         """Make sure we have the expected md5"""

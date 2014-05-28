@@ -1,0 +1,12 @@
+Trajectory algorithm: wdiff
+** This output is weighted **
+
+Grouped by "foo": This group can not be used. All groups should have more than 1 element.
+
+Grouped by "bar", probability: 0.011000
+For group "Foo", the group means is: -1.439800
+The info is: [('mean', -1.4398), ('std', 1.3184)]
+For group "Bar", the group means is: 5.958900
+Cannot calculate the first difference with a window of size (3).
+The info is: [('mean', 5.9589), ('std', 2.7942)]
+

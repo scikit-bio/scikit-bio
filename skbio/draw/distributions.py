@@ -327,12 +327,8 @@ def grouped_distributions(plot_type, data, x_values=None,
         for dist_index, dist, dist_marker in zip(range(num_distributions),
                                                  point, distribution_markers):
             dist_location = x_pos + dist_offset
-            distribution_plot_result = plotting_function(plot_axes, dist,
-                                                         dist_marker,
-                                                         distribution_width,
-                                                         dist_location,
-                                                         whisker_length,
-                                                         error_bar_type)
+            plotting_function(plot_axes, dist, dist_marker, distribution_width,
+                              dist_location, whisker_length, error_bar_type)
             dist_offset += distribution_width
 
     # Set up various plot options that are best set after the plotting is done.
@@ -650,13 +646,12 @@ def _set_axes_options(plot_axes, title=None, x_label=None, y_label=None,
     # available, simply label the data points in an incremental fashion,
     # i.e. 1, 2, 3, ..., n, where n is the number of data points on the plot.
     if x_tick_labels is not None:
-        labels = plot_axes.set_xticklabels(x_tick_labels,
-                                           rotation=x_tick_labels_orientation)
+        plot_axes.set_xticklabels(x_tick_labels,
+                                  rotation=x_tick_labels_orientation)
     elif x_tick_labels is None and x_values is not None:
-        labels = plot_axes.set_xticklabels(x_values,
-                                           rotation=x_tick_labels_orientation)
+        plot_axes.set_xticklabels(x_values, rotation=x_tick_labels_orientation)
     else:
-        labels = plot_axes.set_xticklabels(
+        plot_axes.set_xticklabels(
             range(1, len(plot_axes.get_xticklabels()) + 1),
             rotation=x_tick_labels_orientation)
 

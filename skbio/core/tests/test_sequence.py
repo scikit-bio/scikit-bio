@@ -17,7 +17,6 @@ from skbio.core.sequence import (
     BiologicalSequence, NucleotideSequence, DNASequence, RNASequence,
     ProteinSequence)
 from skbio.core.exception import BiologicalSequenceError
-from skbio.core.genetic_code import GeneticCode
 
 
 class BiologicalSequenceTests(TestCase):
@@ -457,7 +456,7 @@ class NucelotideSequenceTests(TestCase):
 
     def test_nondegenerates_invalid(self):
         with self.assertRaises(BiologicalSequenceError):
-            _ = list(NucleotideSequence('AZA').nondegenerates())
+            list(NucleotideSequence('AZA').nondegenerates())
 
     def test_nondegenerates_empty(self):
         self.assertEqual(list(self.empty.nondegenerates()), [self.empty])
@@ -610,7 +609,7 @@ class DNASequenceTests(TestCase):
 
     def test_nondegenerates_invalid(self):
         with self.assertRaises(BiologicalSequenceError):
-            _ = list(DNASequence('AZA').nondegenerates())
+            list(DNASequence('AZA').nondegenerates())
 
     def test_nondegenerates_empty(self):
         self.assertEqual(list(self.empty.nondegenerates()), [self.empty])
@@ -762,7 +761,7 @@ class RNASequenceTests(TestCase):
 
     def test_nondegenerates_invalid(self):
         with self.assertRaises(BiologicalSequenceError):
-            _ = list(RNASequence('AZA').nondegenerates())
+            list(RNASequence('AZA').nondegenerates())
 
     def test_nondegenerates_empty(self):
         self.assertEqual(list(self.empty.nondegenerates()), [self.empty])
