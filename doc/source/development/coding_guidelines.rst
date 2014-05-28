@@ -107,8 +107,8 @@ The following list of abbreviations can be considered well-known and used with i
 |           variance |          var |
 +--------------------+--------------+
 
-What are the naming conventions?
---------------------------------
+What are the naming conventions? and How should I format my code?
+-----------------------------------------------------------------
 
 We adhere to the `PEP 8`_ python coding guidelines for code and documentation standards. Before submitting any code to scikit-bio, you should read these carefully and apply the guidelines in your code.
 
@@ -270,32 +270,6 @@ For more information refer to the `NumPy doc`_ standard.
 
 - *Always update the docstring when the code changes.* Like outdated comments, outdated docstrings can waste a lot of time. "Correct examples are priceless, but incorrect examples are worse than worthless." `Jim Fulton`_.
 
-How should I format my code?
-----------------------------
-
-- *Use 4 spaces for indentation.* Do not use tabs (set your editor to convert tabs to spaces). The behaviour of tabs is not predictable across platforms, and will cause syntax errors. If we all use the same indentation, collaboration is much easier.
-
-- *Lines should not be longer than 79 characters.* Long lines are inconvenient in some editors. Use \\ for line continuation. Note that there cannot be whitespace after the \\.
-
-- *Blank lines should be used to highlight class and method definitions.* Separate class definitions by two blank lines. Separate methods by one blank line.
-
-- *Be consistent with the use of whitespace around operators.* Inconsistent whitespace makes it harder to see at a glance what is grouped together.
-
-    +------+--------------------------+
-    | Good |        ``((a+b)*(c+d))`` |
-    +------+--------------------------+
-    |   OK |  ``((a + b) * (c + d))`` |
-    +------+--------------------------+
-    |  Bad | ``( (a+ b)  *(c +d  ))`` |
-    +------+--------------------------+
-
-- *Don't put whitespace after delimiters or inside slicing delimiters.* Whitespace here makes it harder to see what's associated.
-
-    +------+-------------+------------------+
-    | Good |   ``(a+b)`` |         ``d[k]`` |
-    +------+-------------+------------------+
-    |  Bad | ``( a+b )`` | ``d [k], d[ k]`` |
-    +------+-------------+------------------+
 
 How should I test my code ?
 ---------------------------
