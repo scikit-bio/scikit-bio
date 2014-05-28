@@ -150,7 +150,7 @@ def parse_fastq(data, strict=False, enforce_qual_range=True, phred_offset=33):
             if enforce_qual_range and ((qual < 0).any() or (qual > 62).any()):
                 raise FastqParseError("Failed qual conversion for seq id: %s. "
                                       "This may be because you passed an "
-                                      "incorrect value for phred_offset." % 
+                                      "incorrect value for phred_offset." %
                                       seqid)
 
             yield (seqid, seq, qual)
