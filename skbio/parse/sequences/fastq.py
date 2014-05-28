@@ -7,7 +7,10 @@
 # -----------------------------------------------------------------------------
 from __future__ import division
 
-from itertools import izip_longest
+try:
+    from itertools import izip_longest as zip_longest
+except ImportError:
+    from itertools import zip_longest
 
 import numpy as np
 
@@ -117,7 +120,7 @@ def parse_fastq(data, strict=False, enforce_qual_range=True, phred_offset=33):
 
     with open_file(data, 'rb') as data:
         iters = [iter(data)] * 4
-        for seqid, seq, qualid, qual in izip_longest(*iters):
+        for seqid, seq, qualid, qual in zip_longest(*iters):
             # If the file simply ended in a blankline, do not error
             if seqid is '':
                 continue
