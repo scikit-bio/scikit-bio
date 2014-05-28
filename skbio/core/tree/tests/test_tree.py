@@ -370,6 +370,13 @@ class TreeTests(TestCase):
               " \\--------|\n                    \\-D"
         self.assertEqual(obs, exp)
 
+        obs = tr.ascii_art(show_internal=True, compact=False,
+                           with_distances=True)
+        exp = "          /-0.2-B\n-F-------|\n"\
+              "         |          /-0.3-C\n         "\
+              " \\0.6-----|\n                    \\-0.4-D"
+        self.assertEqual(obs, exp)
+
     def test_accumulate_to_ancestor(self):
         """Get the distance from a node to its ancestor"""
         t = TreeNode.from_newick("((a:0.1,b:0.2)c:0.3,(d:0.4,e)f:0.5)root;")
