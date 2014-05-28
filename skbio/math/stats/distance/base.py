@@ -335,8 +335,9 @@ def bioenv(distance_matrix, data_frame, columns=None):
         columns in `data_frame` are not numeric.
     ValueError
         If column name(s) or `distance_matrix` IDs cannot be found in
-        `data_frame`, or if there is missing data (``NaN``) in the
-        environmental variables.
+        `data_frame`, if there is missing data (``NaN``) in the environmental
+        variables, or if the environmental variables cannot be scaled (e.g.,
+        due to zero variance).
 
     See Also
     --------
@@ -467,14 +468,18 @@ def bioenv(distance_matrix, data_frame, columns=None):
 
 
 def _scale(df):
-    """Scale each column in a data frame.
+    """Center and scale each column in a data frame.
 
-    Each column is centered and then scaled by its standard deviation.
-
-    Modified from http://stackoverflow.com/a/18005745
+    Each column is centered (by subtracting the mean) and then scaled by its
+    standard deviation.
 
     """
+    # Modified from http://stackoverflow.com/a/18005745
     df = df.copy()
     df -= df.mean()
     df /= df.std()
+
+    if df.isnull().any().any():
+        raise ValueError("Column(s) in the data frame could not be scaled, "
+                         "likely because the column(s) had no variance.")
     return df

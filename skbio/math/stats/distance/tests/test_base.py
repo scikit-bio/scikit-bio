@@ -197,6 +197,8 @@ class BIOENVTests(TestCase):
             get_data_path('exp_results_different_column_order.txt'), sep='\t',
             index_col=0)
 
+        # TODO add R example data, if it isn't too big
+
     def test_bioenv_all_columns_implicit(self):
         # Test with all columns in data frame (implicitly).
         obs = bioenv(self.dm, self.df)
@@ -279,17 +281,6 @@ class BIOENVTests(TestCase):
         with self.assertRaises(TypeError):
             bioenv(self.dm, self.df_extra_column)
 
-    # TODO add a few more tests for scale
-    def test_scale(self):
-        df = pd.DataFrame([[7.0, 400], [8.0, 530], [7.5, 450], [8.5, 810]],
-                          index=['A','B','C','D'], columns=['pH', 'Elevation'])
-        exp = pd.DataFrame([[-1.161895, -0.805979], [0.387298, -0.095625],
-                            [-0.387298, -0.532766], [1.161895, 1.434369]],
-                           index=['A','B','C','D'],
-                           columns=['pH', 'Elevation'])
-        obs = _scale(df)
-        assert_frame_equal(obs, exp)
-
     def test_scale_single_column(self):
         df = pd.DataFrame([[1], [0], [2]], index=['A','B','C'],
                           columns=['foo'])
@@ -297,6 +288,29 @@ class BIOENVTests(TestCase):
                            columns=['foo'])
         obs = _scale(df)
         assert_frame_equal(obs, exp)
+
+    def test_scale_multiple_columns(self):
+        # Floats and ints, including positives and negatives.
+        df = pd.DataFrame([[7.0, 400, -1],
+                           [8.0, 530, -5],
+                           [7.5, 450, 1],
+                           [8.5, 810, -4]],
+                          index=['A','B','C','D'],
+                          columns=['pH', 'Elevation', 'negatives'])
+        exp = pd.DataFrame([[-1.161895, -0.805979, 0.453921],
+                            [0.387298, -0.095625, -0.998625],
+                            [-0.387298, -0.532766, 1.180194],
+                            [1.161895, 1.434369, -0.635489]],
+                           index=['A','B','C','D'],
+                           columns=['pH', 'Elevation', 'negatives'])
+        obs = _scale(df)
+        assert_frame_equal(obs, exp)
+
+    def test_scale_no_variance(self):
+        df = pd.DataFrame([[-7.0, -1.2], [6.2, -1.2], [2.9, -1.2]],
+                          index=['A','B','C'], columns=['foo', 'bar'])
+        with self.assertRaises(ValueError):
+            _scale(df)
 
 
 if __name__ == '__main__':
