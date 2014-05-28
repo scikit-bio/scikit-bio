@@ -44,7 +44,6 @@ class FileData(object):
 
 
 class ParseFastqTests(object):
-
     def test_parse(self):
         """sequence and info objects should correctly match"""
         for label, seq, qual in parse_fastq(self.FASTQ_EXAMPLE,
@@ -52,6 +51,21 @@ class ParseFastqTests(object):
             self.assertTrue(label in DATA)
             self.assertEqual(seq, DATA[label]["seq"])
             self.assertTrue((qual == DATA[label]["qual"]).all())
+
+        # Make sure that enforce_qual_range set to False allows qual scores
+        # to fall outside the typically acceptable range of 0-62
+        for label, seq, qual in parse_fastq(self.FASTQ_EXAMPLE_2,
+                                            phred_offset=33,
+                                            enforce_qual_range=False):
+            self.assertTrue(label in DATA_2)
+            self.assertEqual(seq, DATA_2[label]["seq"])
+            self.assertTrue((qual == DATA_2[label]["qual"]).all())
+
+        # This should raise a FastqParseError since the qual scores are
+        # intended to be interpreted with an offset of 64, and using 33 will
+        # make the qual score fall outside the acceptable range of 0-62.
+        with self.assertRaises(FastqParseError):
+            list(parse_fastq(self.FASTQ_EXAMPLE, phred_offset=33))
 
     def test_parse_error(self):
         """Does this raise a FastqParseError with incorrect input?"""
@@ -121,6 +135,18 @@ DATA = {
 
 }
 
+DATA_2 = {
+    "GAPC_0017:6:1:1259:10413#0/1":
+    dict(seq='AACACCAAACTTCTCCACCACGTGAGCTACAAAAG',
+         qual=array([63, 63, 63, 63, 56, 61, 51, 60, 63, 60, 66, 61, 66, 64,
+                     65, 66, 64, 66, 66, 63, 61, 43, 65, 61, 66, 66, 56, 51,
+                     59, 51, 59, 56, 59, 54, 37])),
+    "GAPC_0015:6:1:1283:11957#0/1":
+    dict(seq='TATGTATATATAACATATACATATATACATACATA',
+         qual=array([60, 42, 57, 58, 47, 56, 60, 62, 58, 56, 56, 61, 63, 63,
+                     63, 64, 66, 61, 59, 59, 63, 65, 51, 63, 63, 66, 63, 59,
+                     64, 51, 63, 63, 65, 65, 65]))
+}
 
 FASTQ_EXAMPLE = r"""@GAPC_0015:6:1:1259:10413#0/1
 AACACCAAACTTCTCCACCACGTGAGCTACAAAAG
@@ -171,8 +197,8 @@ AACACCAAACTTCTCCACCACGTGAGCTACAAAAG
 TATGTATATATAACATATACATATATACATACATA
 +GAPC_0015:6:1:1283:11957#0/1
 ]KZ[PY]_[YY^```ac^\\`bT``c`\aT``bbb
-@GAPC_0015:6:1:1284:10484#0/1
 """
+
 
 if __name__ == "__main__":
     main()

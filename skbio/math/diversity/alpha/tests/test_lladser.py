@@ -44,8 +44,9 @@ def test_lladser_pe():
 
     obs = lladser_pe([3], r=4)
     assert_true(np.isnan(obs))
-    fake_obs, exp_p = create_fake_observation()
 
+    np.random.seed(123456789)
+    fake_obs, exp_p = create_fake_observation()
     reps = 100
     sum = 0
     for i in range(reps):
@@ -54,9 +55,7 @@ def test_lladser_pe():
 
     # Estimator has variance of (1-p)^2/(r-2),
     # which for r=30 and p~=0.9 is 0.0289
-    # Given that p_exp is slightly higher than 0.9 and we only
-    # sample 100 times, we play safe and test against 0.04
-    assert_almost_equal(obs, exp_p, delta=0.04)
+    assert_almost_equal(obs, exp_p, delta=0.03)
 
 
 def test_lladser_ci_nan():
@@ -66,12 +65,10 @@ def test_lladser_ci_nan():
     assert_true(len(obs) == 2 and np.isnan(obs[0]) and np.isnan(obs[1]))
 
 
-@unittest.skipIf(True,
-                 "Test fails stochastically; see "
-                 "https://github.com/biocore/scikit-bio/issues/386")
 def test_lladser_ci():
     """lladser_ci estimate using defaults contains p with 95% prob"""
 
+    np.random.seed(12345678)
     reps = 100
     sum = 0
     for i in range(reps):
@@ -83,20 +80,16 @@ def test_lladser_ci():
     assert_true(sum/reps >= 0.95)
 
 
-@unittest.skipIf(True,
-                 "Test fails stochastically; see "
-                 "https://github.com/biocore/scikit-bio/issues/386")
 def test_lladser_ci_f3():
     """lladser_ci estimate using f=3 contains p with 95% prob"""
 
-    # Test different values of f=3 and r=14, which lie exactly on th
+    # Test different values of f=3 and r=14, which lie exactly on the
     # 95% interval line. For 100 reps using simple cumulative binomial
     # probs we expect to have more than 5 misses of the interval in 38%
     # of all test runs. To make this test pass reliable we thus have to
-    # set the threshold much lower and do more reps. For 0.93 and 1000 reps,
-    # the binomial distribution tells us that the test will pass more
-    # often than 99%.
-    reps = 1000
+    # set a defined seed
+    np.random.seed(12345678)
+    reps = 100
     sum = 0
     for i in range(reps):
         # re-create the obs for every estimate, such that they are truly
@@ -106,7 +99,7 @@ def test_lladser_ci_f3():
         if (low <= exp_p <= high):
             sum += 1
 
-    assert_true(sum/reps >= 0.93)
+    assert_true(sum/reps >= 0.95)
 
 
 def test_expand_counts():
