@@ -167,7 +167,6 @@ class BIOENVTests(TestCase):
         # This dataset is also useful because it is non-trivial in size (6
         # samples, 11 environment variables) and it includes positive/negative
         # floats and integers in the data frame.
-
         self.dm = DistanceMatrix.from_file(get_data_path('dm.txt'))
 
         # Reordered rows and columns (i.e., different ID order). Still
@@ -188,6 +187,21 @@ class BIOENVTests(TestCase):
         # columns).
         self.cols = self.df.columns.tolist()
 
+        # This second dataset is derived from vegan::bioenv's example dataset
+        # (varespec and varechem). The original dataset includes a site x
+        # species table (e.g., OTU table) and a data frame of environmental
+        # variables. Since the bioenv function defined here accepts a distance
+        # matrix, we use a Bray-Curtis distance matrix that is derived from the
+        # site x species table (this matches what is done by vegan::bioenv when
+        # provided an OTU table, using their default distance measure). The
+        # data frame only includes the numeric environmental variables we're
+        # interested in for these tests: log(N), P, K, Ca, pH, Al
+        self.dm_vegan = DistanceMatrix.from_file(get_data_path('dm_vegan.txt'))
+        self.df_vegan = pd.read_csv(get_data_path('df_vegan.txt'), sep='\t',
+                                    converters={0: str})
+        self.df_vegan.set_index('#SampleID', inplace=True)
+
+        # Load expected results.
         self.exp_results = pd.read_csv(get_data_path('exp_results.txt'),
                                        sep='\t', index_col=0)
         self.exp_results_single_column = pd.read_csv(
@@ -196,8 +210,8 @@ class BIOENVTests(TestCase):
         self.exp_results_different_column_order = pd.read_csv(
             get_data_path('exp_results_different_column_order.txt'), sep='\t',
             index_col=0)
-
-        # TODO add R example data, if it isn't too big
+        self.exp_results_vegan = pd.read_csv(
+            get_data_path('exp_results_vegan.txt'), sep='\t', index_col=0)
 
     def test_bioenv_all_columns_implicit(self):
         # Test with all columns in data frame (implicitly).
@@ -242,6 +256,22 @@ class BIOENVTests(TestCase):
         # with scaling, type conversions, etc.).
         self.assertEqual(self.dm, dm_copy)
         assert_frame_equal(self.df, df_copy)
+
+    def test_bioenv_vegan_example(self):
+        # The correlation coefficient in the first row of the
+        # results (rho=0.2516) is different from the correlation coefficient
+        # computed by vegan (rho=0.2513). This seems to occur due to
+        # differences in numerical precision when calculating the Euclidean
+        # distances, which affects the rank calculations in Spearman
+        # (specifically, dealing with ties). The ranked distances end up being
+        # slightly different between vegan and our implementation because some
+        # distances are treated as ties in vegan but treated as distinct values
+        # in our implementation. This explains the difference in rho values. I
+        # verified that using Pearson correlation instead of Spearman on the
+        # same distances yields *very* similar results. Thus, the discrepancy
+        # seems to stem from differences when computing ranks/ties.
+        obs = bioenv(self.dm_vegan, self.df_vegan)
+        assert_frame_equal(obs, self.exp_results_vegan)
 
     def test_bioenv_no_distance_matrix(self):
         with self.assertRaises(TypeError):

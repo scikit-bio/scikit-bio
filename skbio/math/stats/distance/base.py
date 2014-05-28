@@ -460,6 +460,7 @@ def bioenv(distance_matrix, data_frame, columns=None):
 
             if max_rho == (None, None) or rho > max_rho[0]:
                 max_rho = (rho, subset_idxs)
+
         max_rhos.append((subset_size, max_rho[0]))
         max_vars.append(', '.join([columns[i] for i in max_rho[1]]))
 
