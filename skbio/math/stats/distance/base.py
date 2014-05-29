@@ -443,6 +443,7 @@ def bioenv(distance_matrix, data_frame, columns=None):
                         "numeric.")
 
     vars_df = _scale(vars_df)
+    vars_array = vars_df.values
     dm_flat = distance_matrix.condensed_form()
 
     num_vars = len(columns)
@@ -454,8 +455,8 @@ def bioenv(distance_matrix, data_frame, columns=None):
         # and choosing max
         max_rho = (None, None)
         for subset_idxs in combinations(var_idxs, subset_size):
-            vars_array = vars_df.iloc[:, subset_idxs].values
-            vars_dm_flat = pdist(vars_array, metric='euclidean')
+            vars_dm_flat = pdist(vars_array[:, subset_idxs],
+                                 metric='euclidean')
             rho = spearmanr(dm_flat, vars_dm_flat)[0]
 
             if max_rho == (None, None) or rho > max_rho[0]:
