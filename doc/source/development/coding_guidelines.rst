@@ -208,7 +208,7 @@ How should I write comments?
 
 
 - *Use comments starting with #, not strings, inside blocks of code.*
-- *Start each method, class and function with a docstring using triple double quotes (""").* The docstring should start with a 1-line description that makes sense by itself (many automated formatting tools, and the IDE, use this). This should be followed by a blank line, followed by descriptions of the parameters (if any). Finally, add any more detailed information, such as a longer description, notes about the algorithm, detailed notes about the parameters, etc. If there is a usage example, it should appear at the end. Make sure any descriptions of parameters have the correct spelling, case, etc. For example: ::
+- *Start each method, class and function with a docstring using triple double quotes (""").* The docstring should start with a 1-line description that makes sense by itself (many automated formatting tools, and the IDE, use this). This should be followed by a blank line, followed by descriptions of the parameters (if any). Finally, add any more detailed information, such as a longer description, notes about the algorithm, detailed notes about the parameters, etc. If there is a usage example, it should appear at the end. Make sure any descriptions of parameters have the correct spelling, case, etc. For example:
 
 .. code-block:: python
 
@@ -337,7 +337,7 @@ Some ``unittest`` pointers
 Example of a ``unittest`` test module structure
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-::
+.. code-block:: python
 
     #!/usr/bin/env python
 
