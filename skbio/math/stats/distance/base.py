@@ -463,13 +463,14 @@ def bioenv(distance_matrix, data_frame, columns=None):
     for subset_size in range(1, num_vars + 1):
         max_rho = None
         for subset_idxs in combinations(var_idxs, subset_size):
-            # pdist returns the distances in condensed form.
+            # Compute Euclidean distances using the current subset of
+            # variables. pdist returns the distances in condensed form.
             vars_dm_flat = pdist(vars_array[:, subset_idxs],
                                  metric='euclidean')
             rho = spearmanr(dm_flat, vars_dm_flat)[0]
 
             # If there are ties for the best rho at a given subset size, choose
-            # the first one (to match vegan::bioenv's behavior).
+            # the first one in order to match vegan::bioenv's behavior.
             if max_rho is None or rho > max_rho[0]:
                 max_rho = (rho, subset_idxs)
 
