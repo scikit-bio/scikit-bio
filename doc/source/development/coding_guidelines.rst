@@ -374,3 +374,35 @@ Example of a ``nose`` test module structure
     if __name__ == '__main__':
         import nose
         nose.runmodule()
+
+Git pointers
+------------
+
+Commit messages are a useful way to document the changes being made to a project, it additionally documents who is making these changes and when are these changes being made, all of which are relevant when tracing back problems.
+
+Authoring a commit message
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The most important metadata in a commit message is (arguably) the author's name and the author's e-mail. GitHub uses this information to attribute your contributions to a project, see for example the `scikit-bio list of contributors`_.
+
+.. _`scikit-bio list of contributors`: https://github.com/biocore/scikit-bio/graphs/contributors
+
+Follow `this guide`_ to set up your system and **make sure the e-mail you use in this step is the same e-mail associated to your GitHub account**.
+
+.. _`this guide`: http://git-scm.com/book/en/Getting-Started-First-Time-Git-Setup
+
+After doing this you should see your name and e-mail when you run the following commands:
+
+.. code-block:: none
+
+    $ git config --global user.name
+    Yoshiki Vázquez Baeza
+    $ git config --global user.email
+    yoshiki89@gmail.com
+
+Writting a commit message
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In general the writing of a commit message should adhere to `NumPy's guidelines`_ which if followed correctly will help you structure your changes better i. e. bug fixes will be in a commit followed by a commit updating the test suite and with one last commit that update the documentation as needed.
+
+.. _`NumPy's guidelines`: http://docs.scipy.org/doc/numpy/dev/gitwash/development_workflow.html#writing-the-commit-message
