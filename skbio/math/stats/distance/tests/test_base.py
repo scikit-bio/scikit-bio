@@ -174,8 +174,7 @@ class BIOENVTests(TestCase):
         self.dm_reordered = DistanceMatrix.from_file(
             get_data_path('dm_reordered.txt'))
 
-        self.df = pd.read_csv(get_data_path('df.txt'), sep='\t',
-                                       index_col=0)
+        self.df = pd.read_csv(get_data_path('df.txt'), sep='\t', index_col=0)
 
         # Similar to the above data frame, except that it has an extra
         # non-numeric column, and some of the other rows and columns have been
@@ -312,9 +311,9 @@ class BIOENVTests(TestCase):
             bioenv(self.dm, self.df_extra_column)
 
     def test_scale_single_column(self):
-        df = pd.DataFrame([[1], [0], [2]], index=['A','B','C'],
+        df = pd.DataFrame([[1], [0], [2]], index=['A', 'B', 'C'],
                           columns=['foo'])
-        exp = pd.DataFrame([[0.0], [-1.0], [1.0]], index=['A','B','C'],
+        exp = pd.DataFrame([[0.0], [-1.0], [1.0]], index=['A', 'B', 'C'],
                            columns=['foo'])
         obs = _scale(df)
         assert_frame_equal(obs, exp)
@@ -325,20 +324,20 @@ class BIOENVTests(TestCase):
                            [8.0, 530, -5],
                            [7.5, 450, 1],
                            [8.5, 810, -4]],
-                          index=['A','B','C','D'],
+                          index=['A', 'B', 'C', 'D'],
                           columns=['pH', 'Elevation', 'negatives'])
         exp = pd.DataFrame([[-1.161895, -0.805979, 0.453921],
                             [0.387298, -0.095625, -0.998625],
                             [-0.387298, -0.532766, 1.180194],
                             [1.161895, 1.434369, -0.635489]],
-                           index=['A','B','C','D'],
+                           index=['A', 'B', 'C', 'D'],
                            columns=['pH', 'Elevation', 'negatives'])
         obs = _scale(df)
         assert_frame_equal(obs, exp)
 
     def test_scale_no_variance(self):
         df = pd.DataFrame([[-7.0, -1.2], [6.2, -1.2], [2.9, -1.2]],
-                          index=['A','B','C'], columns=['foo', 'bar'])
+                          index=['A', 'B', 'C'], columns=['foo', 'bar'])
         with self.assertRaises(ValueError):
             _scale(df)
 
