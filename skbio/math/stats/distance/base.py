@@ -301,8 +301,8 @@ def bioenv(distance_matrix, data_frame, columns=None):
 
     The "best" subset is chosen by computing the correlation between the
     community distance matrix and all possible Euclidean environmental distance
-    matrices at the given subset size. The subset with maximum correlation is
-    chosen as the "best" subset.
+    matrices at the given subset size. The environmental variable combination
+    with maximum correlation is chosen as the "best" subset.
 
     Parameters
     ----------
