@@ -453,13 +453,13 @@ def bioenv(distance_matrix, data_frame, columns=None):
     for subset_size in range(1, num_vars + 1):
         # TODO performance test this way vs. generating all rhos in np array
         # and choosing max
-        max_rho = (None, None)
+        max_rho = None
         for subset_idxs in combinations(var_idxs, subset_size):
             vars_dm_flat = pdist(vars_array[:, subset_idxs],
                                  metric='euclidean')
             rho = spearmanr(dm_flat, vars_dm_flat)[0]
 
-            if max_rho == (None, None) or rho > max_rho[0]:
+            if max_rho is None or rho > max_rho[0]:
                 max_rho = (rho, subset_idxs)
 
         max_rhos.append((subset_size, max_rho[0]))
