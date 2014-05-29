@@ -429,6 +429,8 @@ def bioenv(distance_matrix, data_frame, columns=None):
         if column not in data_frame:
             raise ValueError("Column '%s' not in data frame." % column)
 
+    # Subset and order the vars data frame to match the IDs in the distance
+    # matrix, only keeping the specified columns.
     vars_df = data_frame.loc[distance_matrix.ids, columns]
 
     if vars_df.isnull().any().any():
@@ -442,31 +444,40 @@ def bioenv(distance_matrix, data_frame, columns=None):
         raise TypeError("All specified columns in the data frame must be "
                         "numeric.")
 
-    vars_df = _scale(vars_df)
-    vars_array = vars_df.values
+    # Scale the vars and extract the underlying numpy array from the data
+    # frame. We mainly do this for performance as we'll be taking subsets of
+    # columns within a tight loop and using a numpy array ends up being ~2x
+    # faster.
+    vars_array = _scale(vars_df).values
     dm_flat = distance_matrix.condensed_form()
 
     num_vars = len(columns)
     var_idxs = np.arange(num_vars)
-    max_rhos = []
-    max_vars = []
+
+    # For each subset size, store the best combination of variables:
+    #     (string identifying best vars, subset size, rho)
+    max_rhos = np.empty(num_vars, dtype=[('vars', object),
+                                         ('size', int),
+                                         ('correlation', float)])
     for subset_size in range(1, num_vars + 1):
-        # TODO performance test this way vs. generating all rhos in np array
-        # and choosing max
         max_rho = None
         for subset_idxs in combinations(var_idxs, subset_size):
+            # pdist returns the distances in condensed form.
             vars_dm_flat = pdist(vars_array[:, subset_idxs],
                                  metric='euclidean')
             rho = spearmanr(dm_flat, vars_dm_flat)[0]
 
+            # If there are ties for the best rho at a given subset size, choose
+            # the first one (to match vegan::bioenv's behavior).
             if max_rho is None or rho > max_rho[0]:
                 max_rho = (rho, subset_idxs)
 
-        max_rhos.append((subset_size, max_rho[0]))
-        max_vars.append(', '.join([columns[i] for i in max_rho[1]]))
+        vars_label = ', '.join([columns[i] for i in max_rho[1]])
+        max_rhos[subset_size - 1] = (vars_label, subset_size, max_rho[0])
 
-    return pd.DataFrame.from_records(max_rhos, index=max_vars,
-                                     columns=('size', 'correlation'))
+    result_df = pd.DataFrame.from_records(max_rhos, index='vars')
+    result_df.index.rename(None, inplace=True)
+    return result_df
 
 
 def _scale(df):
