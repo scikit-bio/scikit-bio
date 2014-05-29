@@ -3,6 +3,14 @@ Coding guidelines
 
 As project size increases, consistency increases in importance. Unit testing and a consistent style are critical to having trusted code to integrate. Also, guesses about names and interfaces will be correct more often.
 
+What are the naming conventions? and How should I format my code?
+-----------------------------------------------------------------
+
+We adhere to the `PEP 8`_ python coding guidelines for code and documentation standards. Before submitting any code to scikit-bio, you should read these carefully and apply the guidelines in your code.
+
+.. _`PEP 8`: http://legacy.python.org/dev/peps/pep-0008/
+
+
 What should I call my variables?
 --------------------------------
 
@@ -106,13 +114,6 @@ The following list of abbreviations can be considered well-known and used with i
 +--------------------+--------------+
 |           variance |          var |
 +--------------------+--------------+
-
-What are the naming conventions? and How should I format my code?
------------------------------------------------------------------
-
-We adhere to the `PEP 8`_ python coding guidelines for code and documentation standards. Before submitting any code to scikit-bio, you should read these carefully and apply the guidelines in your code.
-
-.. _`PEP 8`: http://legacy.python.org/dev/peps/pep-0008/
 
 How do I organize my modules (source files)?
 --------------------------------------------
