@@ -275,31 +275,26 @@ For more information refer to the `NumPy doc`_ standard.
 How should I test my code ?
 ---------------------------
 
-There are two basic approaches for testing code in python: unit testing and doc testing. Their purpose is the same, to check that execution of code given some input produces a specified output. The cases to which the two approaches lend themselves are different.
+There are several different approaches for testing code in python: ``nose``, ``unittest`` and ``numpy.testing``. Their purpose is the same, to check that execution of code given some input produces a specified output. The cases to which the approaches lend themselves are different.
 
-An excellent discourse on testing code and the pros and cons of these alternatives is provided in a presentation by `Jim Fulton`_, which is recommended reading. A significant change since that presentation is that ``doctest`` can now read content that is not contained within docstrings. A another comparison of these two approaches, along with a third (``py.test``) is also available_. To see examples of both styles of testing look in ``PyCogent/tests``: files ending in .rst are using ``doctest``, those ending in .py are using ``unittest``.
-
-.. _`Jim Fulton`: http://www.python.org/pycon/dc2004/papers/4/PyCon2004DocTestUnit.pdf
-.. _available: http://agiletesting.blogspot.com/2005/11/articles-and-tutorials-page-updated.html
-
-In general, it's easier to start writing ``doctest``'s, as you don't need to learn the ``unittest`` API but the latter give's much greater control.
-
-Whatever approach is employed, the general principle is every line of code should be tested. It is critical that your code be fully tested before you draw conclusions from results it produces. For scientific work, bugs don't just mean unhappy users who you'll never actually meet: they may mean retracted publications.
+Whatever approach is employed, the general principle is every line of code should be tested. It is critical that your code be fully tested before you draw conclusions from results it produces. For scientific work, bugs don't just mean unhappy users who you'll never actually meet: **they may mean retracted publications**.
 
 Tests are an opportunity to invent the interface(s) you want. Write the test for a method before you write the method: often, this helps you figure out what you would want to call it and what parameters it should take. It's OK to write the tests a few methods at a time, and to change them as your ideas about the interface change. However, you shouldn't change them once you've told other people what the interface is.
 
 Never treat prototypes as production code. It's fine to write prototype code without tests to try things out, but when you've figured out the algorithm and interfaces you must rewrite it *with tests* to consider it finished. Often, this helps you decide what interfaces and functionality you actually need and what you can get rid of.
 
-"Code a little test a little". For production code, write a couple of tests, then a couple of methods, then a couple more tests, then a couple more methods, then maybe change some of the names or generalize some of the functionality. If you have a huge amount of code where 'all you have to do is write the tests', you're probably closer to 30% done than 90%. Testing vastly reduces the time spent debugging, since whatever went wrong has to be in the code you wrote since the last test suite. And remember to use python's interactive interpreter for quick checks of syntax and ideas.
+"Code a little test a little". For production code, write a couple of tests, then a couple of methods, then a couple more tests, then a couple more methods, then maybe change some of the names or generalize some of the functionality. If you have a huge amount of code where all you have to do is write the tests', you're probably closer to 30% done than 90%. Testing vastly reduces the time spent debugging, since whatever went wrong has to be in the code you wrote since the last test suite. And remember to use python's interactive interpreter for quick checks of syntax and ideas.
 
 Run the test suite when you change `anything`. Even if a change seems trivial, it will only take a couple of seconds to run the tests and then you'll be sure. This can eliminate long and frustrating debugging sessions where the change turned out to have been made long ago, but didn't seem significant at the time.
 
 Some ``unittest`` pointers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-- *Use the* ``unittest`` *framework with tests in a separate file for each module.* Name the test file ``test_module_name.py``. Keeping the tests separate from the code reduces the temptation to change the tests when the code doesn't work, and makes it easy to verify that a completely new implementation presents the same interface (behaves the same) as the old.
+- *Use the* ``unittest`` *or the* ``nose`` *framework with tests in a separate file for each module.* Name the test file ``test_module_name.py`` and include it inside the tests forlder for the module. Keeping the tests separate from the code reduces the temptation to change the tests when the code doesn't work, and makes it easy to verify that a completely new implementation presents the same interface (behaves the same) as the old.
 
-- *Use* ``evo.unit_test`` *if you are doing anything with floating point numbers or permutations* (use ``assertFloatEqual``). Do *not* try to compare floating point numbers using ``assertEqual`` if you value your sanity. ``assertFloatEqualAbs`` and ``assertFloatEqualRel`` can specifically test for absolute and relative differences if the default behavior is not giving you what you want. Similarly, ``assertEqualItems``, ``assertSameItems``, etc. can be useful when testing permutations.
+- *Always include an* ``__init__.py`` *file in your tests directory*. This is required for the module to be included when the package is built and installed via ``setup.py``.
+
+- *Use* ``numpy.testing`` *if you are doing anything with floating point numbers or permutations* (use ``numpy.testing.assert_almost_equal``). Do *not* try to compare floating point numbers using ``assertEqual`` if you value your sanity.
 
 - *Test the interface of each class in your code by defining at least one* ``TestCase`` *with the name* ``ClassNameTests``. This should contain tests for everything in the public interface.
 
@@ -307,22 +302,20 @@ Some ``unittest`` pointers
 
 - *Tests of private methods should be in a separate* ``TestCase`` *called* ``ClassNameTests_private``. Private methods may change if you change the implementation. It is not required that test cases for private methods pass when you change things (that's why they're private, after all), though it is often useful to have these tests for debugging.
 
-- *Test `all` the methods in your class.* You should assume that any method you haven't tested has bugs. The convention for naming tests is ``test_method_name``. Any leading and trailing underscores on the method name can be ignored for the purposes of the test; however, *all tests must start with the literal substring* ``test`` *for* ``unittest`` *to find them.* If the method is particularly complex, or has several discretely different cases you need to check, use ``test_method_name_suffix``, e.g. ``test_init_empty``, ``test_init_single``, ``test_init_wrong_type``, etc. for testing ``__init__``.
+- *Test `all` the methods in your class.* You should assume that any method you haven't tested has bugs. The convention for naming tests is ``test_method_name``. Any leading and trailing underscores on the method name can be ignored for the purposes of the test; however, *all tests must start with the literal substring* ``test`` *for* ``unittest`` and ``nose`` *to find them.* If the method is particularly complex, or has several discretely different cases you need to check, use ``test_method_name_suffix``, e.g. ``test_init_empty``, ``test_init_single``, ``test_init_wrong_type``, etc. for testing ``__init__``.
 
-- *Write good docstrings for all your test methods.* When you run the test with the ``-v`` command-line switch for verbose output, the docstring for each test will be printed along with ``...OK`` or ``...FAILED`` on a single line. It is thus important that your docstring is short and descriptive, and makes sense in this context.
+- *Docstrings for testing methods should be considered optional*, instead the description of what the method does should be included in the name itself, therefore the name should be descriptive enough such that when running ``nose -v`` you can immediately see the file and test method that's failing.
 
-    **Good docstrings:** ::
+.. code-block:: none
 
-        NumberList.var should raise ValueError on empty or 1-item list
-        NumberList.var should match values from R if list has >2 items
-        NumberList.__init__ should raise error on values that fail float()
-        FrequencyDistribution.var should match corresponding NumberList var
+    $ nosetests -v
+    skbio.maths.diversity.alpha.tests.test_ace.test_ace ... ok
+    test_berger_parker_d (skbio.maths.diversity.alpha.tests.test_base.BaseTests) ... ok
 
-    **Bad docstrings:** ::
+    ----------------------------------------------------------------------
+    Ran 2 tests in 0.1234s
 
-        var should calculate variance           # lacks class name, not descriptive
-        Check initialization of a NumberList    # doesn't say what's expected
-        Tests of the NumberList initialization. # ditto
+    OK
 
 - *Module-level functions should be tested in their own* ``TestCase``\ *, called* ``modulenameTests``. Even if these functions are simple, it's important to check that they work as advertised.
 
