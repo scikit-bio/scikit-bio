@@ -271,6 +271,7 @@ For more information refer to the `NumPy doc`_ standard.
 
 - *Always update the docstring when the code changes.* Like outdated comments, outdated docstrings can waste a lot of time. "Correct examples are priceless, but incorrect examples are worse than worthless." `Jim Fulton`_.
 
+.. _`Jim Fulton`: http://www.python.org/pycon/dc2004/papers/4/PyCon2004DocTestUnit.pdf
 
 How should I test my code ?
 ---------------------------
@@ -287,8 +288,8 @@ Never treat prototypes as production code. It's fine to write prototype code wit
 
 Run the test suite when you change `anything`. Even if a change seems trivial, it will only take a couple of seconds to run the tests and then you'll be sure. This can eliminate long and frustrating debugging sessions where the change turned out to have been made long ago, but didn't seem significant at the time.
 
-Some ``unittest`` pointers
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+Some pointers
+^^^^^^^^^^^^^
 
 - *Use the* ``unittest`` *or the* ``nose`` *framework with tests in a separate file for each module.* Name the test file ``test_module_name.py`` and include it inside the tests forlder for the module. Keeping the tests separate from the code reduces the temptation to change the tests when the code doesn't work, and makes it easy to verify that a completely new implementation presents the same interface (behaves the same) as the old.
 
