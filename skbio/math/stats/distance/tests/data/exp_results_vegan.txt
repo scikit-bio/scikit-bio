@@ -1,4 +1,4 @@
-	size	correlation
+vars	size	correlation
 P	1	0.25163022609618835
 P, Al	2	0.4003778484896049
 P, Ca, Al	3	0.4004805867496183

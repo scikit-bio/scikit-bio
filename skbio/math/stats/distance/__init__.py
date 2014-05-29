@@ -9,8 +9,8 @@ This package contains various statistical methods that operate on distance
 matrices, often relating distances (e.g., community distances) to categorical
 and/or continuous variables of interest (e.g., body site or pH).
 
-Categorical Variables
----------------------
+Categorical Variable Stats
+--------------------------
 
 .. autosummary::
    :toctree: generated/
@@ -19,8 +19,8 @@ Categorical Variables
    PERMANOVA
    CategoricalStatsResults
 
-Continuous Variables
---------------------
+Continuous Variable Stats
+-------------------------
 
 .. autosummary::
    :toctree: generated/

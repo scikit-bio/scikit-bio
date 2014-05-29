@@ -400,8 +400,9 @@ def bioenv(distance_matrix, data_frame, columns=None):
     Find the best subsets of environmental variables that are correlated with
     community distances:
 
-    >>> bioenv(dm, df)
+    >>> bioenv(dm, df) # doctest: +NORMALIZE_WHITESPACE
                    size  correlation
+    vars
     pH                1     0.771517
     pH, Elevation     2     0.714286
     <BLANKLINE>
@@ -475,9 +476,7 @@ def bioenv(distance_matrix, data_frame, columns=None):
         vars_label = ', '.join([columns[i] for i in max_rho[1]])
         max_rhos[subset_size - 1] = (vars_label, subset_size, max_rho[0])
 
-    result_df = pd.DataFrame.from_records(max_rhos, index='vars')
-    result_df.index.rename(None, inplace=True)
-    return result_df
+    return pd.DataFrame.from_records(max_rhos, index='vars')
 
 
 def _scale(df):
