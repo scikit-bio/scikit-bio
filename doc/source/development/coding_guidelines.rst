@@ -327,52 +327,49 @@ Some ``unittest`` pointers
 
 - *To test random choices, figure out how many of each choice you expect in a large sample (say, 1000 or a million) using the binomial distribution or its normal approximation.* Run the test several times and check that you're within, say, 3 standard deviations of the mean.
 
-Example of a ``unittest`` test module structure
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Example of a ``nose`` test module structure
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: python
 
     #!/usr/bin/env python
+    from __future__ import division
 
-    """Tests NumberList and FrequencyDistribution, classes for statistics."""
+    # ----------------------------------------------------------------------------
+    # Copyright (c) 2013--, scikit-bio development team.
+    #
+    # Distributed under the terms of the Modified BSD License.
+    #
+    # The full license is in the file COPYING.txt, distributed with this software.
+    # ----------------------------------------------------------------------------
 
-    from cogent.util.unit_test import TestCase, main # for floating point test use unittestfp
-    from statistics import NumberList, FrequencyDistribution
+    import numpy as np
+    from nose.tools import assert_almost_equal, assert_raises
 
-    class NumberListTests(TestCase): # remember to subclass TestCase
-        """Tests of the NumberList class."""
-        def setUp(self):
-            """Define a few standard NumberLists."""
-            self.Null = NumberList()            # test empty init
-            self.Empty = NumberList([])         # test init with empty sequence
-            self.Single = NumberList([5])       # single item
-            self.Zero = NumberList([0])         # single, False item
-            self.Three = NumberList([1,2,3])    # multiple items
-            self.ZeroMean = NumberList([1,-1])  # items nonzero, mean zero
-            self.ZeroVar = NumberList([1,1,1])  # items nonzero, mean nonzero, variance zero
-            # etc. These objects shared by all tests, and created new each time a method
-            # starting with the string 'test' is called (i.e. the same object does not
-            # persist between tests: rather, you get separate copies).
+    from skbio.math.diversity.alpha.ace import ace
 
-            def test_mean_empty(self):
-                """NumberList.mean() should raise ValueError on empty object"""
-                for empty in (self.Null, self.Empty):
-                    self.assertRaises(ValueError, empty.mean)
-            def test_mean_single(self):
-                """NumberList.mean() should return item if only 1 item in list"""
-                for single in (self.Single, self.Zero):
-                    self.assertEqual(single.mean(), single[0])
-            # other tests of mean
-            def test_var_failures(self):
-                """NumberList.var() should raise ZeroDivisionError if <2 items"""
-                for small in (self.Null, self.Empty, self.Single, self.Zero):
-                    self.assertRaises(ZeroDivisionError, small.var)
-            # other tests of var
-            # tests of other methods
 
-    class FrequencyDistributionTests(TestCase):
-        pass    # much code deleted
-    # tests of other classes
+    def test_ace():
+        assert_almost_equal(ace(np.array([2, 0])), 1.0)
+        assert_almost_equal(ace(np.array([12, 0, 9])), 2.0)
+        assert_almost_equal(ace(np.array([12, 2, 8])), 3.0)
+        assert_almost_equal(ace(np.array([12, 2, 1])), 4.0)
+        assert_almost_equal(ace(np.array([12, 1, 2, 1])), 7.0)
+        assert_almost_equal(ace(np.array([12, 3, 2, 1])), 4.6)
+        assert_almost_equal(ace(np.array([12, 3, 6, 1, 10])), 5.62749672)
 
-    if __name__ == '__main__':    # run tests if called from command-line
-        main()
+        # Just returns the number of OTUs when all are abundant.
+        assert_almost_equal(ace(np.array([12, 12, 13, 14])), 4.0)
+
+        # Border case: only singletons and 10-tons, no abundant OTUs.
+        assert_almost_equal(ace([0, 1, 1, 0, 0, 10, 10, 1, 0, 0]), 9.35681818182)
+
+
+    def test_ace_only_rare_singletons():
+        with assert_raises(ValueError):
+            ace([0, 0, 43, 0, 1, 0, 1, 42, 1, 43])
+
+
+    if __name__ == '__main__':
+        import nose
+        nose.runmodule()
