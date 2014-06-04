@@ -372,9 +372,15 @@ def bioenv(distance_matrix, data_frame, columns=None):
 
     Examples
     --------
+    Import the functionality we'll use in the following examples. The call to
+    ``pd.set_option`` ensures consistent data frame formatting across
+    different versions of pandas. This call is not necessary for normal
+    use; it is only included here so that the doctests will pass.
+
     >>> import pandas as pd
     >>> from skbio.core.distance import DistanceMatrix
     >>> from skbio.math.stats.distance import bioenv
+    >>> pd.set_option('show_dimensions', True) # not necessary for normal use
 
     Load a 4x4 community distance matrix:
 
@@ -408,6 +414,8 @@ def bioenv(distance_matrix, data_frame, columns=None):
     vars
     pH                1     0.771517
     pH, Elevation     2     0.714286
+    <BLANKLINE>
+    [2 rows x 2 columns]
 
     We see that in this simple example, pH alone is maximally rank-correlated
     with the community distances (:math:`\\rho=0.771517`).
