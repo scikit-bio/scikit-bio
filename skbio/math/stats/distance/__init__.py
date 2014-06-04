@@ -7,7 +7,7 @@ Distance-based statistics (:mod:`skbio.math.stats.distance`)
 
 This package contains various statistical methods that operate on distance
 matrices, often relating distances (e.g., community distances) to categorical
-and/or continuous variables of interest (e.g., body site or pH).
+and/or continuous variables of interest (e.g., gender or age).
 
 Categorical Variable Stats
 --------------------------

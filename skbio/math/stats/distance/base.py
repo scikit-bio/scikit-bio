@@ -287,16 +287,18 @@ class CategoricalStatsResults(object):
 # Either way, this shouldn't affect users as the public API/import stays the
 # same regardless of where we put the function.
 def bioenv(distance_matrix, data_frame, columns=None):
-    """Find subset of variables maximally correlated with community distances.
+    """Find subset of variables maximally correlated with distances.
 
-    Finds subsets of environmental variables whose Euclidean distances (after
-    scaling the variables) are maximally rank-correlated with the distance
-    matrix (e.g., community distance matrix). Correlation between the community
-    distance matrix and Euclidean environmental distance matrix is computed
-    using Spearman's rank correlation coefficient (:math:`\\rho`).
+    Finds subsets of variables whose Euclidean distances (after scaling the
+    variables; see Notes section below for details) are maximally
+    rank-correlated with the distance matrix. For example, the distance matrix
+    might contain distances between communities, and the variables might be
+    numeric environmental variables (e.g., pH). Correlation between the
+    community distance matrix and Euclidean environmental distance matrix is
+    computed using Spearman's rank correlation coefficient (:math:`\\rho`).
 
-    Subset sizes of environmental variables range from 1 to the total number of
-    variables (inclusive). For example, if there are 3 variables, the "best"
+    Subsets of environmental variables range in size from 1 to the total number
+    of variables (inclusive). For example, if there are 3 variables, the "best"
     variable subsets will be computed for subset sizes 1, 2, and 3.
 
     The "best" subset is chosen by computing the correlation between the
@@ -315,18 +317,19 @@ def bioenv(distance_matrix, data_frame, columns=None):
         indexed by the IDs in `distance_matrix` (i.e., the row labels must be
         distance matrix IDs), but the order of IDs between `distance_matrix`
         and `data_frame` need not be the same. All IDs in the distance matrix
-        must be present in `data_frame`. Extra rows in `data_frame` are allowed
+        must be present in `data_frame`. Extra IDs in `data_frame` are allowed
         (they are ignored in the calculations).
     columns : iterable of strs, optional
         Column names in `data_frame` to include as variables in the
         calculations. If not provided, defaults to all columns in `data_frame`.
-        Each column must be numeric.
+        The values in each column must be numeric or convertible to a numeric
+        type.
 
     Returns
     -------
     pandas.DataFrame
         Data frame containing the "best" subset of variables at each subset
-        size, as well as the correlation coefficient.
+        size, as well as the correlation coefficient of each.
 
     Raises
     ------
