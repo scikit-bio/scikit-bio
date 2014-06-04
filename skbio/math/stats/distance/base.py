@@ -408,8 +408,6 @@ def bioenv(distance_matrix, data_frame, columns=None):
     vars
     pH                1     0.771517
     pH, Elevation     2     0.714286
-    <BLANKLINE>
-    [2 rows x 2 columns]
 
     We see that in this simple example, pH alone is maximally rank-correlated
     with the community distances (:math:`\\rho=0.771517`).

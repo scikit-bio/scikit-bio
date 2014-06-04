@@ -109,8 +109,6 @@ class CategoricalStatsResultsTests(TestCase):
         self.assertTrue('<th' in obs)
         self.assertTrue('<tbody' in obs)
         self.assertTrue('<td' in obs)
-        self.assertTrue('1 rows' in obs)
-        self.assertTrue('5 columns' in obs)
 
     def test_summary(self):
         exp = ('Method name\tSample size\tNumber of groups\tmy stat\tp-value\t'
