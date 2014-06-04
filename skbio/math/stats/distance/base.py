@@ -380,7 +380,11 @@ def bioenv(distance_matrix, data_frame, columns=None):
     >>> import pandas as pd
     >>> from skbio.core.distance import DistanceMatrix
     >>> from skbio.math.stats.distance import bioenv
-    >>> pd.set_option('show_dimensions', True) # not necessary for normal use
+    >>> try:
+    ...     # not necessary for normal use
+    ...     pd.set_option('show_dimensions', True)
+    ... except KeyError:
+    ...     pass
 
     Load a 4x4 community distance matrix:
 
