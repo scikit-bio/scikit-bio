@@ -33,8 +33,9 @@ class MantelTests(TestCase):
     def setUp(self):
         self.minx = [[0, 1, 2], [1, 0, 3], [2, 3, 0]]
         self.miny = [[0, 2, 7], [2, 0, 6], [7, 6, 0]]
+        self.minz = [[0, 0.5, 0.25], [0.5, 0, 0.1], [0.25, 0.1, 0]]
 
-    def test_minimal_statistic_same_across_alternatives_and_permutations(self):
+    def test_statistic_same_across_alternatives_and_permutations(self):
         # Varying permutations and alternative hypotheses shouldn't affect the
         # computed test statistics.
         for n in (0, 99, 999):
@@ -43,6 +44,19 @@ class MantelTests(TestCase):
                     obs = mantel(self.minx, self.miny, method=method,
                                  permutations=n, alternative=alt)[0]
                     self.assertAlmostEqual(obs, exp)
+
+    def test_comparing_same_matrices(self):
+        for method in ('pearson', 'spearman'):
+            obs = mantel(self.minx, self.minx, method=method)[0]
+            self.assertAlmostEqual(obs, 1)
+
+            obs = mantel(self.miny, self.miny, method=method)[0]
+            self.assertAlmostEqual(obs, 1)
+
+    def test_negative_correlation(self):
+        for method, exp in (('pearson', -0.9897433), ('spearman', -1)):
+            obs = mantel(self.minx, self.minz, method=method)[0]
+            self.assertAlmostEqual(obs, exp)
 
     def test_mantel_invalid_distance_matrix(self):
         # Single asymmetric, non-hollow distance matrix.
