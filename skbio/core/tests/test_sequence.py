@@ -69,8 +69,11 @@ class BiologicalSequenceTests(TestCase):
     def test_init_with_validation(self):
         self.assertRaises(BiologicalSequenceError, BiologicalSequence, "ACC",
                           validate=True)
-        # no error raised when only allow characters are passed
-        BiologicalSequence("..--..", validate=True)
+        try:
+            # no error raised when only allow characters are passed
+            BiologicalSequence("..--..", validate=True)
+        except BiologicalSequenceError:
+            self.assertTrue(False)
 
     def test_contains(self):
         self.assertTrue('G' in self.b1)
