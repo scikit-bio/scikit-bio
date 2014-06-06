@@ -549,6 +549,18 @@ class BiologicalSequence(Sequence):
         """
         return self._description
 
+    @description.setter
+    def description(self, value):
+        """Set the new description of the `BiologicalSequence`.
+
+        Parameters
+        ----------
+        value : str
+            The new description of the sequence.
+
+        """
+        self._description = value
+
     @property
     def id(self):
         """Return the id of the `BiologicalSequence`
@@ -560,6 +572,18 @@ class BiologicalSequence(Sequence):
 
         """
         return self._id
+
+    @id.setter
+    def id(self, value):
+        """Set the new description of the `BiologicalSequence`.
+
+        Parameters
+        ----------
+        value : str
+            The new ID of the sequence.
+
+        """
+        self._id = value
 
     def count(self, subsequence):
         """Returns the number of occurences of subsequence.

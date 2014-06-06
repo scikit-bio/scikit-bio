@@ -69,8 +69,11 @@ class BiologicalSequenceTests(TestCase):
     def test_init_with_validation(self):
         self.assertRaises(BiologicalSequenceError, BiologicalSequence, "ACC",
                           validate=True)
-        # no error raised when only allow characters are passed
-        BiologicalSequence("..--..", validate=True)
+        try:
+            # no error raised when only allow characters are passed
+            BiologicalSequence("..--..", validate=True)
+        except BiologicalSequenceError:
+            self.assertTrue(False)
 
     def test_contains(self):
         self.assertTrue('G' in self.b1)
@@ -231,6 +234,13 @@ class BiologicalSequenceTests(TestCase):
         self.assertEqual(self.b2.description, "A test sequence")
         self.assertEqual(self.b3.description, "A protein sequence")
 
+    def test_set_description(self):
+        original_description = self.b1.description
+        new_description = "new-seq-description"
+        self.b1.description = new_description
+        self.assertEqual(self.b1.description, new_description)
+        self.b1.description = original_description
+
     def test_gap_alphabet(self):
         self.assertEqual(self.b1.gap_alphabet(), set('-.'))
 
@@ -238,6 +248,13 @@ class BiologicalSequenceTests(TestCase):
         self.assertEqual(self.b1.id, "")
         self.assertEqual(self.b2.id, "test-seq-2")
         self.assertEqual(self.b3.id, "test-seq-3")
+
+    def test_set_id(self):
+        original_id = self.b1.id
+        new_id = "new-seq-id"
+        self.b1.id = new_id
+        self.assertEqual(self.b1.id, new_id)
+        self.b1.id = original_id
 
     def test_count(self):
         self.assertEqual(self.b1.count('A'), 3)
