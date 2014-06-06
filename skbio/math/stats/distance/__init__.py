@@ -141,8 +141,10 @@ data frame or an error will be raised.
 from .base import CategoricalStatsResults, bioenv
 from .anosim import ANOSIM
 from .permanova import PERMANOVA
+from ._mantel import mantel
 
-__all__ = ['ANOSIM', 'PERMANOVA', 'CategoricalStatsResults', 'bioenv']
+__all__ = ['ANOSIM', 'PERMANOVA', 'CategoricalStatsResults', 'bioenv',
+           'mantel']
 
 from numpy.testing import Tester
 test = Tester().test
