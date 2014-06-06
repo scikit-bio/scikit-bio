@@ -12,6 +12,7 @@ from __future__ import absolute_import, division, print_function
 from unittest import TestCase, main
 
 import numpy as np
+import numpy.testing as npt
 import pandas as pd
 from pandas.util.testing import assert_frame_equal
 
@@ -57,6 +58,14 @@ class MantelTests(TestCase):
         for method, exp in (('pearson', -0.9897433), ('spearman', -1)):
             obs = mantel(self.minx, self.minz, method=method)[0]
             self.assertAlmostEqual(obs, exp)
+
+    def test_zero_permutations(self):
+        for alt in ('twosided', 'greater', 'less'):
+            for method, exp in (('pearson', 0.7559289), ('spearman', 0.5)):
+                obs = mantel(self.minx, self.miny, permutations=0,
+                             method=method, alternative=alt)
+                self.assertAlmostEqual(obs[0], exp)
+                npt.assert_equal(obs[1], np.nan)
 
     def test_mantel_invalid_distance_matrix(self):
         # Single asymmetric, non-hollow distance matrix.
