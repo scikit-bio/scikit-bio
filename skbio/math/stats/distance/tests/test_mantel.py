@@ -26,7 +26,9 @@ class MantelTests(TestCase):
     
     vegan::mantel performs a one-sided (greater) test and does not have the
     option to specify different alternative hypotheses. In order to test the
-    other two alternative hypothesis types, I modified the TODO finish me
+    other alternative hypotheses, I modified vegan::mantel to perform the
+    appropriate test, source()'d the file and verified the output.
+
     """
 
     # TODO: add test from Legendre (where r is undefined, no variation)
@@ -36,18 +38,27 @@ class MantelTests(TestCase):
         self.miny = [[0, 2, 7], [2, 0, 6], [7, 6, 0]]
         self.minz = [[0, 0.5, 0.25], [0.5, 0, 0.1], [0.25, 0.1, 0]]
 
+        self.methods = ('pearson', 'spearman')
+
+        # Expected test statistic when comparing x and y with method='pearson'.
+        self.exp_x_vs_y = 0.7559289
+
+        # Expected test statistic when comparing x and z with method='pearson'.
+        self.exp_x_vs_z = -0.9897433
+
     def test_statistic_same_across_alternatives_and_permutations(self):
         # Varying permutations and alternative hypotheses shouldn't affect the
         # computed test statistics.
         for n in (0, 99, 999):
             for alt in ('twosided', 'greater', 'less'):
-                for method, exp in (('pearson', 0.7559289), ('spearman', 0.5)):
+                for method, exp in (('pearson', self.exp_x_vs_y),
+                                    ('spearman', 0.5)):
                     obs = mantel(self.minx, self.miny, method=method,
                                  permutations=n, alternative=alt)[0]
                     self.assertAlmostEqual(obs, exp)
 
     def test_comparing_same_matrices(self):
-        for method in ('pearson', 'spearman'):
+        for method in self.methods:
             obs = mantel(self.minx, self.minx, method=method)[0]
             self.assertAlmostEqual(obs, 1)
 
@@ -55,17 +66,50 @@ class MantelTests(TestCase):
             self.assertAlmostEqual(obs, 1)
 
     def test_negative_correlation(self):
-        for method, exp in (('pearson', -0.9897433), ('spearman', -1)):
+        for method, exp in (('pearson', self.exp_x_vs_z), ('spearman', -1)):
             obs = mantel(self.minx, self.minz, method=method)[0]
             self.assertAlmostEqual(obs, exp)
 
     def test_zero_permutations(self):
         for alt in ('twosided', 'greater', 'less'):
-            for method, exp in (('pearson', 0.7559289), ('spearman', 0.5)):
+            for method, exp in (('pearson', self.exp_x_vs_y),
+                                ('spearman', 0.5)):
                 obs = mantel(self.minx, self.miny, permutations=0,
                              method=method, alternative=alt)
                 self.assertAlmostEqual(obs[0], exp)
                 npt.assert_equal(obs[1], np.nan)
+
+                # TODO test swapping order of matrices -- should get same
+                # result
+
+    def test_one_sided_greater(self):
+        np.random.seed(0)
+
+        obs = mantel(self.minx, self.miny, alternative='greater')
+        self.assertAlmostEqual(obs[0], self.exp_x_vs_y)
+        self.assertAlmostEqual(obs[1], 0.324)
+
+        obs = mantel(self.minx, self.minx, alternative='greater')
+        self.assertAlmostEqual(obs[0], 1)
+        self.assertAlmostEqual(obs[1], 0.172)
+
+    def test_one_sided_less(self):
+        # no need to seed here as permuted test statistics will all be less
+        # than or equal to the observed test statistic (1.0)
+        for method in self.methods:
+            obs = mantel(self.minx, self.minx, method=method,
+                         alternative='less')
+            self.assertEqual(obs, (1, 1))
+
+        np.random.seed(0)
+
+        obs = mantel(self.minx, self.miny, alternative='less')
+        self.assertAlmostEqual(obs[0], self.exp_x_vs_y)
+        self.assertAlmostEqual(obs[1], 0.843)
+
+        obs = mantel(self.minx, self.minz, alternative='less')
+        self.assertAlmostEqual(obs[0], self.exp_x_vs_z)
+        self.assertAlmostEqual(obs[1], 0.172)
 
     def test_mantel_invalid_distance_matrix(self):
         # Single asymmetric, non-hollow distance matrix.
