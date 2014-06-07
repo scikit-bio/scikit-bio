@@ -111,6 +111,24 @@ class MantelTests(TestCase):
         self.assertAlmostEqual(obs[0], self.exp_x_vs_z)
         self.assertAlmostEqual(obs[1], 0.172)
 
+    def test_two_sided(self):
+        np.random.seed(0)
+
+        obs = mantel(self.minx, self.minx, method='spearman',
+                     alternative='twosided')
+        self.assertEqual(obs[0], 1)
+        self.assertAlmostEqual(obs[1], 0.328)
+
+        obs = mantel(self.minx, self.miny, method='spearman',
+                     alternative='twosided')
+        self.assertAlmostEqual(obs[0], 0.5)
+        self.assertAlmostEqual(obs[1], 1.0)
+
+        obs = mantel(self.minx, self.minz, method='spearman',
+                     alternative='twosided')
+        self.assertAlmostEqual(obs[0], -1)
+        self.assertAlmostEqual(obs[1], 0.322)
+
     def test_mantel_invalid_distance_matrix(self):
         # Single asymmetric, non-hollow distance matrix.
         with self.assertRaises(ValueError):
