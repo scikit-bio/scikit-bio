@@ -17,6 +17,7 @@ import pandas as pd
 from pandas.util.testing import assert_frame_equal
 
 from skbio.core.distance import DistanceMatrix
+from skbio.core.exception import DissimilarityMatrixError, DistanceMatrixError
 from skbio.math.stats.distance import mantel
 from skbio.util.testing import get_data_path
 
@@ -135,11 +136,11 @@ class MantelTests(TestCase):
 
     def test_mantel_invalid_distance_matrix(self):
         # Single asymmetric, non-hollow distance matrix.
-        with self.assertRaises(ValueError):
+        with self.assertRaises(DissimilarityMatrixError):
             mantel([[1, 2], [3, 4]], [[0, 0], [0, 0]])
 
         # Two asymmetric distance matrices.
-        with self.assertRaises(ValueError):
+        with self.assertRaises(DistanceMatrixError):
             mantel([[0, 2], [3, 0]], [[0, 1], [0, 0]])
 
     def test_mantel_invalid_input(self):
@@ -157,7 +158,7 @@ class MantelTests(TestCase):
 
         # mismatched shape
         with self.assertRaises(ValueError):
-            mantel([[1]], [[1, 2], [3, 4]])
+            mantel(self.minx, [[0, 2], [2, 0]])
 
 
 if __name__ == '__main__':

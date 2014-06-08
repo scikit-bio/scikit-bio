@@ -14,8 +14,6 @@ from scipy.stats import pearsonr, spearmanr
 from skbio.core.distance import DistanceMatrix
 
 def mantel(x, y, method='pearson', permutations=999, alternative='twosided'):
-    # TODO: test size >= 3
-
     if method == 'pearson':
         corr_func = pearsonr
     elif method == 'spearman':
@@ -29,30 +27,26 @@ def mantel(x, y, method='pearson', permutations=999, alternative='twosided'):
     if alternative not in ('twosided', 'greater', 'less'):
         raise ValueError("Invalid alternative hypothesis '%s'." % alternative)
 
-    x = np.asarray(x)
-    y = np.asarray(y)
+    x = DistanceMatrix(x)
+    y = DistanceMatrix(y)
 
+    # TODO: test size >= 3
     if x.shape != y.shape:
         raise ValueError("Distance matrices must have the same shape.")
-    # TODO assert square
-    if not (_is_symmetric_and_hollow(x) and _is_symmetric_and_hollow(y)):
-        raise ValueError("Distance matrices must be symmetric and hollow.")
 
-    # Get a flattened list of lower-triangular matrix elements (excluding the
-    # diagonal) in column-major order. Use these values to calculate the
-    # correlation statistic.
-    x_flat, y_flat = _flatten_lower_triangle(x), _flatten_lower_triangle(y)
+    x_flat = x.condensed_form()
+    y_flat = y.condensed_form()
+
     orig_stat = corr_func(x_flat, y_flat)[0]
 
     if permutations == 0:
         p_value = np.nan
     else:
-        size = len(x)
+        size = x.shape[0]
         better = 0
-        perm_stats = []
         for i in range(permutations):
-            perm = _permute_2d(x, np.random.permutation(size))
-            perm_flat = _flatten_lower_triangle(perm)
+            perm = DistanceMatrix(_permute_2d(x, np.random.permutation(size)))
+            perm_flat = perm.condensed_form()
             r = corr_func(perm_flat, y_flat)[0]
 
             if alternative == 'twosided':
@@ -62,30 +56,9 @@ def mantel(x, y, method='pearson', permutations=999, alternative='twosided'):
                 if ((alternative == 'greater' and r >= orig_stat) or
                     (alternative == 'less' and r <= orig_stat)):
                     better += 1
-            perm_stats.append(r)
         p_value = (better + 1) / (permutations + 1)
 
     return orig_stat, p_value
-
-
-def _is_symmetric_and_hollow(x):
-    return (x.T == x).all() and (np.trace(x) == 0)
-
-
-def _flatten_lower_triangle(x):
-    """Returns a list containing the flattened lower triangle of the matrix.
-
-    The returned list will contain the elements in column-major order. The
-    diagonal will be excluded.
-
-    """
-    x = np.asarray(x)
-    flattened = []
-    for col_num in range(x.shape[1]):
-        for row_num in range(x.shape[0]):
-            if col_num < row_num:
-                    flattened.append(x[row_num][col_num])
-    return flattened
 
 
 def _permute_2d(x, p):
