@@ -122,6 +122,13 @@ Data:
 >>> dm_from_np == dm
 True
 
+IDs may be omitted when constructing a dissimilarity/distance matrix.
+Monotonically-increasing integers (cast as strings) will be automatically used:
+
+>>> dm = DistanceMatrix(data)
+>>> dm.ids
+('0', '1', '2')
+
 """
 
 # ----------------------------------------------------------------------------
@@ -168,9 +175,11 @@ class DissimilarityMatrix(object):
         subclass) instance, in which case the instance's data will be used.
         Data will be converted to a float ``dtype`` if necessary. A copy will
         *not* be made if already a ``numpy.ndarray`` with a float ``dtype``.
-    ids : sequence of str
+    ids : sequence of str, optional
         Sequence of strings to be used as object IDs. Must match the number of
-        rows/cols in `data`.
+        rows/cols in `data`. If ``None`` (the default), IDs will be
+        monotonically-increasing integers cast as strings, with numbering
+        starting from zero, e.g., ``('0', '1', '2', '3', ...)``.
 
     Attributes
     ----------
@@ -321,12 +330,15 @@ class DissimilarityMatrix(object):
 
         return cls(data, ids)
 
-    def __init__(self, data, ids):
+    def __init__(self, data, ids=None):
         if isinstance(data, DissimilarityMatrix):
             data = data.data
         data = np.asarray(data, dtype='float')
 
+        if ids is None:
+            ids = (str(i) for i in range(data.shape[0]))
         ids = tuple(ids)
+
         self._validate(data, ids)
 
         self._data = data

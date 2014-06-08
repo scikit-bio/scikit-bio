@@ -4,6 +4,8 @@ scikit-bio changelog
 Version 0.1.1-dev (changes since 0.1.1 release go here)
 -------------------------------------------------------
 
+* IDs are now optional when constructing a ``DissimilarityMatrix`` or ``DistanceMatrix`` (monotonically-increasing integers cast as strings are automatically used).
+
 Version 0.1.1 (2014-05-16)
 --------------------------
 

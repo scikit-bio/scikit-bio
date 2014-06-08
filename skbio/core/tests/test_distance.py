@@ -217,6 +217,12 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         with self.assertRaises(DistanceMatrixError):
             DistanceMatrix(self.dm_2x2_asym, ['foo', 'bar'])
 
+    def test_init_no_ids(self):
+        exp = DissimilarityMatrix(self.dm_3x3_data, ('0', '1', '2'))
+        obs = DissimilarityMatrix(self.dm_3x3_data)
+        self.assertEqual(obs, exp)
+        self.assertEqual(obs['1', '2'], 12.0)
+
     def test_init_invalid_input(self):
         """Raises error on invalid dissimilarity matrix data / IDs."""
         # Empty data.
