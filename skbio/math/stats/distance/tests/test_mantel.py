@@ -33,6 +33,10 @@ class MantelTests(TestCase):
 
     # TODO: add test from Legendre (where r is undefined, no variation)
 
+    # TODO: add test using vegan::mantel example dataset
+
+    # TODO: add test to ensure inputs aren't modified
+
     def setUp(self):
         self.minx = [[0, 1, 2], [1, 0, 3], [2, 3, 0]]
         self.miny = [[0, 2, 7], [2, 0, 6], [7, 6, 0]]
