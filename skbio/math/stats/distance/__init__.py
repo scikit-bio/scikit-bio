@@ -138,7 +138,8 @@ data frame or an error will be raised.
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from .base import CategoricalStatsResults, bioenv
+from .base import CategoricalStatsResults
+from ._bioenv import bioenv
 from .anosim import ANOSIM
 from .permanova import PERMANOVA
 from ._mantel import mantel
