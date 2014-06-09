@@ -76,7 +76,7 @@ NucleotideSequences can be translated using a GeneticCode object.
 <ProteinSequence: MSK* (length: 4)>
 
 """
-from __future__ import division
+from __future__ import absolute_import, division, print_function
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
