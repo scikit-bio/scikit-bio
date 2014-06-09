@@ -786,7 +786,12 @@ class DistanceMatrix(DissimilarityMatrix):
         .. [1] http://docs.scipy.org/doc/scipy/reference/spatial.distance.html
 
         """
-        return squareform(self.data, force='tovector')
+        return squareform(self._data, force='tovector', checks=False)
+
+    def permute(self):
+        order = np.random.permutation(self.shape[0])
+        permuted = self._data[order][:, order]
+        return squareform(permuted, force='tovector', checks=False)
 
     def _validate(self, data, ids):
         """Validate the data array and IDs.

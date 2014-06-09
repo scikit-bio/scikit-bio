@@ -42,12 +42,9 @@ def mantel(x, y, method='pearson', permutations=999, alternative='twosided'):
     if permutations == 0:
         p_value = np.nan
     else:
-        size = x.shape[0]
         better = 0
         for i in range(permutations):
-            perm = DistanceMatrix(_permute_2d(x, np.random.permutation(size)))
-            perm_flat = perm.condensed_form()
-            r = corr_func(perm_flat, y_flat)[0]
+            r = corr_func(x.permute(), y_flat)[0]
 
             if alternative == 'twosided':
                 if abs(r) >= abs(orig_stat):
@@ -59,8 +56,3 @@ def mantel(x, y, method='pearson', permutations=999, alternative='twosided'):
         p_value = (better + 1) / (permutations + 1)
 
     return orig_stat, p_value
-
-
-def _permute_2d(x, p):
-    """Performs 2D permutation of matrix x according to p."""
-    return x[p][:, p]
