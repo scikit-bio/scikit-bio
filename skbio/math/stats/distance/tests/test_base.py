@@ -193,9 +193,11 @@ class BIOENVTests(TestCase):
         # provided an OTU table, using their default distance measure). The
         # data frame only includes the numeric environmental variables we're
         # interested in for these tests: log(N), P, K, Ca, pH, Al
-        self.dm_vegan = DistanceMatrix.from_file(get_data_path('dm_vegan.txt'))
-        self.df_vegan = pd.read_csv(get_data_path('df_vegan.txt'), sep='\t',
-                                    converters={0: str})
+        self.dm_vegan = DistanceMatrix.from_file(
+            get_data_path('bioenv_dm_vegan.txt'))
+        self.df_vegan = pd.read_csv(
+            get_data_path('bioenv_df_vegan.txt'), sep='\t',
+            converters={0: str})
         self.df_vegan.set_index('#SampleID', inplace=True)
 
         # Load expected results.
@@ -208,7 +210,8 @@ class BIOENVTests(TestCase):
             get_data_path('exp_results_different_column_order.txt'), sep='\t',
             index_col=0)
         self.exp_results_vegan = pd.read_csv(
-            get_data_path('exp_results_vegan.txt'), sep='\t', index_col=0)
+            get_data_path('bioenv_exp_results_vegan.txt'), sep='\t',
+            index_col=0)
 
     def test_bioenv_all_columns_implicit(self):
         # Test with all columns in data frame (implicitly).
