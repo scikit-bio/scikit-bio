@@ -39,11 +39,23 @@ class MantelTests(TestCase):
     # TODO: add test to ensure inputs aren't modified
 
     def setUp(self):
+        self.methods = ('pearson', 'spearman')
+
+        # Small dataset of minimal size (3x3). Mix of floats and ints in a
+        # native Python nested list structure.
         self.minx = [[0, 1, 2], [1, 0, 3], [2, 3, 0]]
         self.miny = [[0, 2, 7], [2, 0, 6], [7, 6, 0]]
         self.minz = [[0, 0.5, 0.25], [0.5, 0, 0.1], [0.25, 0.1, 0]]
 
-        self.methods = ('pearson', 'spearman')
+        # This second dataset is derived from vegan::mantel's example dataset.
+        # The "veg" distance matrix contains Bray-Curtis distances derived from
+        # the varespec data (named "veg.dist" in the example). The "env"
+        # distance matrix contains Euclidean distances derived from scaled
+        # varechem data (named "env.dist" in the example).
+        self.veg_dm_vegan = np.loadtxt(
+            get_data_path('mantel_veg_dm_vegan.txt'))
+        self.env_dm_vegan = np.loadtxt(
+            get_data_path('mantel_env_dm_vegan.txt'))
 
         # Expected test statistic when comparing x and y with method='pearson'.
         self.exp_x_vs_y = 0.7559289
@@ -133,6 +145,21 @@ class MantelTests(TestCase):
                      alternative='twosided')
         self.assertAlmostEqual(obs[0], -1)
         self.assertAlmostEqual(obs[1], 0.322)
+
+    def test_vegan_example(self):
+        np.random.seed(0)
+
+        # pearson
+        obs = mantel(self.veg_dm_vegan, self.env_dm_vegan,
+                     alternative='greater')
+        self.assertAlmostEqual(obs[0], 0.3047454)
+        self.assertAlmostEqual(obs[1], 0.002)
+
+        # spearman
+        obs = mantel(self.veg_dm_vegan, self.env_dm_vegan,
+                     alternative='greater', method='spearman')
+        self.assertAlmostEqual(obs[0], 0.283791)
+        self.assertAlmostEqual(obs[1], 0.003)
 
     def test_mantel_invalid_distance_matrix(self):
         # Single asymmetric, non-hollow distance matrix.
