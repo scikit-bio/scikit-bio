@@ -185,6 +185,10 @@ class MantelTests(TestCase):
         with self.assertRaises(ValueError):
             mantel(self.minx, [[0, 2], [2, 0]])
 
+        # too small dms
+        with self.assertRaises(ValueError):
+            mantel([[0, 3], [3, 0]], [[0, 2], [2, 0]])
+
 
 if __name__ == '__main__':
     main()

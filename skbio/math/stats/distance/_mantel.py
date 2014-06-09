@@ -30,9 +30,10 @@ def mantel(x, y, method='pearson', permutations=999, alternative='twosided'):
     x = DistanceMatrix(x)
     y = DistanceMatrix(y)
 
-    # TODO: test size >= 3
     if x.shape != y.shape:
         raise ValueError("Distance matrices must have the same shape.")
+    if x.shape[0] < 3:
+        raise ValueError("Distance matrices must be at least 3x3 in size.")
 
     x_flat = x.condensed_form()
     y_flat = y.condensed_form()
