@@ -42,17 +42,18 @@ def mantel(x, y, method='pearson', permutations=999, alternative='twosided'):
     if permutations == 0:
         p_value = np.nan
     else:
-        better = 0
-        for i in range(permutations):
-            r = corr_func(x.permute(), y_flat)[0]
+        perm_gen = (corr_func(x.permute(), y_flat)[0]
+                    for _ in range(permutations))
+        permuted_stats = np.fromiter(perm_gen, np.float, count=permutations)
 
-            if alternative == 'twosided':
-                if abs(r) >= abs(orig_stat):
-                    better += 1
-            else:
-                if ((alternative == 'greater' and r >= orig_stat) or
-                    (alternative == 'less' and r <= orig_stat)):
-                    better += 1
-        p_value = (better + 1) / (permutations + 1)
+        if alternative == 'twosided':
+            count_better = (np.absolute(permuted_stats) >=
+                            np.absolute(orig_stat)).sum()
+        elif alternative == 'greater':
+            count_better = (permuted_stats >= orig_stat).sum()
+        else:
+            count_better = (permuted_stats <= orig_stat).sum()
+
+        p_value = (count_better + 1) / (permutations + 1)
 
     return orig_stat, p_value
