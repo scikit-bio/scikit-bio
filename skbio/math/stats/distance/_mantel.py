@@ -131,7 +131,6 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided'):
     --------
     Define two 3x3 distance matrices:
 
-    >>> import numpy as np
     >>> x = [[0, 1, 2],
     ...      [1, 0, 3],
     ...      [2, 3, 0]]
@@ -140,20 +139,14 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided'):
     ...      [7, 6, 0]]
 
     Compute the Pearson correlation between them and assess significance using
-    a two-sided test with 999 permutations. We set the random seed to make the
-    p-value calculation deterministic, but you would not normally need to do
-    this:
+    a two-sided test with 999 permutations:
 
-    >>> np.random.seed(0) # not necessary for normal use
     >>> coeff, p_value = mantel(x, y)
     >>> round(coeff, 4)
     0.7559
-    >>> round(p_value, 3)
-    0.654
 
-    Thus, we see a moderate-to-strong positive correlation between the two
-    matrices. The p-value of ~0.654 is quite high and would most likely not
-    lead us to reject the null hypothesis.
+    Thus, we see a moderate-to-strong positive correlation (:math:`r_M=0.7559`)
+    between the two matrices.
 
     """
     if method == 'pearson':
