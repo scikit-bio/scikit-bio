@@ -9,8 +9,6 @@ from __future__ import absolute_import, division, print_function
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import unittest
-
 import numpy as np
 import numpy.testing as npt
 from nose.tools import (assert_equal, assert_almost_equal, assert_raises,

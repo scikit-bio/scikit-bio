@@ -122,6 +122,13 @@ Data:
 >>> dm_from_np == dm
 True
 
+IDs may be omitted when constructing a dissimilarity/distance matrix.
+Monotonically-increasing integers (cast as strings) will be automatically used:
+
+>>> dm = DistanceMatrix(data)
+>>> dm.ids
+('0', '1', '2')
+
 """
 
 # ----------------------------------------------------------------------------
@@ -168,9 +175,11 @@ class DissimilarityMatrix(object):
         subclass) instance, in which case the instance's data will be used.
         Data will be converted to a float ``dtype`` if necessary. A copy will
         *not* be made if already a ``numpy.ndarray`` with a float ``dtype``.
-    ids : sequence of str
+    ids : sequence of str, optional
         Sequence of strings to be used as object IDs. Must match the number of
-        rows/cols in `data`.
+        rows/cols in `data`. If ``None`` (the default), IDs will be
+        monotonically-increasing integers cast as strings, with numbering
+        starting from zero, e.g., ``('0', '1', '2', '3', ...)``.
 
     Attributes
     ----------
@@ -321,12 +330,15 @@ class DissimilarityMatrix(object):
 
         return cls(data, ids)
 
-    def __init__(self, data, ids):
+    def __init__(self, data, ids=None):
         if isinstance(data, DissimilarityMatrix):
             data = data.data
         data = np.asarray(data, dtype='float')
 
+        if ids is None:
+            ids = (str(i) for i in range(data.shape[0]))
         ids = tuple(ids)
+
         self._validate(data, ids)
 
         self._data = data
@@ -610,10 +622,6 @@ class DissimilarityMatrix(object):
     def to_file(self, out_f, delimiter='\t'):
         """Save the dissimilarity matrix to file in delimited text format.
 
-        See Also
-        --------
-        from_file
-
         Parameters
         ----------
         out_f : file-like object or filename
@@ -623,6 +631,10 @@ class DissimilarityMatrix(object):
             closed after writing.
         delimiter : str, optional
             Delimiter used to separate elements in output format.
+
+        See Also
+        --------
+        from_file
 
         """
         with open_file(out_f, 'w') as out_f:
@@ -774,7 +786,47 @@ class DistanceMatrix(DissimilarityMatrix):
         .. [1] http://docs.scipy.org/doc/scipy/reference/spatial.distance.html
 
         """
-        return squareform(self.data, force='tovector')
+        return squareform(self._data, force='tovector', checks=False)
+
+    def permute(self, condensed=False):
+        """Randomly permute both rows and columns in the matrix.
+
+        Randomly permutes the ordering of rows and columns in the matrix. The
+        same permutation is applied to both rows and columns in order to
+        maintain symmetry and hollowness. Only the rows/columns in the distance
+        matrix are permuted; the IDs are *not* permuted.
+
+        Parameters
+        ----------
+        condensed : bool, optional
+            If ``True``, return the permuted distance matrix in condensed
+            format. Otherwise, return the permuted distance matrix as a new
+            ``DistanceMatrix`` instance.
+
+        Returns
+        -------
+        DistanceMatrix or ndarray
+            Permuted distances as a new ``DistanceMatrix`` or as a ``ndarray``
+            in condensed format.
+
+        See Also
+        --------
+        condensed_form
+
+        Notes
+        -----
+        This method does not modify the distance matrix that it is called on.
+        It is more efficient to pass ``condensed=True`` than permuting the
+        distance matrix and then converting to condensed format.
+
+        """
+        order = np.random.permutation(self.shape[0])
+        permuted = self._data[order][:, order]
+
+        if condensed:
+            return squareform(permuted, force='tovector', checks=False)
+        else:
+            return self.__class__(permuted, self.ids)
 
     def _validate(self, data, ids):
         """Validate the data array and IDs.
