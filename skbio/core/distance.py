@@ -622,10 +622,6 @@ class DissimilarityMatrix(object):
     def to_file(self, out_f, delimiter='\t'):
         """Save the dissimilarity matrix to file in delimited text format.
 
-        See Also
-        --------
-        from_file
-
         Parameters
         ----------
         out_f : file-like object or filename
@@ -635,6 +631,10 @@ class DissimilarityMatrix(object):
             closed after writing.
         delimiter : str, optional
             Delimiter used to separate elements in output format.
+
+        See Also
+        --------
+        from_file
 
         """
         with open_file(out_f, 'w') as out_f:
@@ -789,6 +789,26 @@ class DistanceMatrix(DissimilarityMatrix):
         return squareform(self._data, force='tovector', checks=False)
 
     def permute(self):
+        """Randomly permute both rows and columns in the matrix.
+
+        Randomly permutes the ordering of rows and columns in the matrix. The
+        same permutation is applied to both rows and columns in order to
+        maintain symmetry and hollowness.
+
+        Returns
+        -------
+        ndarray
+            Permuted distances in condensed format.
+
+        See Also
+        --------
+        condensed_form
+
+        Notes
+        -----
+        This method does not modify the distance matrix that it is called on.
+
+        """
         order = np.random.permutation(self.shape[0])
         permuted = self._data[order][:, order]
         return squareform(permuted, force='tovector', checks=False)

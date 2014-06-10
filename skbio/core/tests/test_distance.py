@@ -16,6 +16,7 @@ import tempfile
 from unittest import TestCase, main
 
 import numpy as np
+import numpy.testing as npt
 
 from skbio.core.distance import randdm, DissimilarityMatrix, DistanceMatrix
 from skbio.core.exception import (DissimilarityMatrixError,
@@ -515,6 +516,30 @@ class DistanceMatrixTests(DissimilarityMatrixTestData):
         for dm, condensed in zip(self.dms, self.dm_condensed_forms):
             obs = dm.condensed_form()
             self.assertTrue(np.array_equal(obs, condensed))
+
+    def test_permute(self):
+        # Can't really permute a 1x1 or 2x2...
+        for _ in range(2):
+            obs = self.dm_1x1.permute()
+            npt.assert_equal(obs, np.array([]))
+
+        for _ in range(2):
+            obs = self.dm_2x2.permute()
+            npt.assert_equal(obs, np.array([0.123]))
+
+        dm_copy = self.dm_3x3.copy()
+
+        np.random.seed(0)
+
+        obs = self.dm_3x3.permute()
+        npt.assert_equal(obs, np.array([12.0, 4.2, 0.01]))
+
+        obs = self.dm_3x3.permute()
+        npt.assert_equal(obs, np.array([4.2, 12.0, 0.01]))
+
+        # Ensure dm hasn't changed after calling permute() on it a couple of
+        # times.
+        self.assertEqual(self.dm_3x3, dm_copy)
 
     def test_eq(self):
         """Test data equality between different matrix types."""
