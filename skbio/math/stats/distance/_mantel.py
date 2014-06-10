@@ -178,7 +178,7 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided'):
     if permutations == 0 or np.isnan(orig_stat):
         p_value = np.nan
     else:
-        perm_gen = (corr_func(x.permute(), y_flat)[0]
+        perm_gen = (corr_func(x.permute(condensed=True), y_flat)[0]
                     for _ in range(permutations))
         permuted_stats = np.fromiter(perm_gen, np.float, count=permutations)
 

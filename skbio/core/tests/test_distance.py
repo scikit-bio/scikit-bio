@@ -517,29 +517,52 @@ class DistanceMatrixTests(DissimilarityMatrixTestData):
             obs = dm.condensed_form()
             self.assertTrue(np.array_equal(obs, condensed))
 
-    def test_permute(self):
+    def test_permute_condensed(self):
         # Can't really permute a 1x1 or 2x2...
         for _ in range(2):
-            obs = self.dm_1x1.permute()
+            obs = self.dm_1x1.permute(condensed=True)
             npt.assert_equal(obs, np.array([]))
 
         for _ in range(2):
-            obs = self.dm_2x2.permute()
+            obs = self.dm_2x2.permute(condensed=True)
             npt.assert_equal(obs, np.array([0.123]))
 
         dm_copy = self.dm_3x3.copy()
 
         np.random.seed(0)
 
-        obs = self.dm_3x3.permute()
+        obs = self.dm_3x3.permute(condensed=True)
         npt.assert_equal(obs, np.array([12.0, 4.2, 0.01]))
 
-        obs = self.dm_3x3.permute()
+        obs = self.dm_3x3.permute(condensed=True)
         npt.assert_equal(obs, np.array([4.2, 12.0, 0.01]))
 
         # Ensure dm hasn't changed after calling permute() on it a couple of
         # times.
         self.assertEqual(self.dm_3x3, dm_copy)
+
+    def test_permute_not_condensed(self):
+        obs = self.dm_1x1.permute()
+        self.assertEqual(obs, self.dm_1x1)
+        self.assertFalse(obs is self.dm_1x1)
+
+        obs = self.dm_2x2.permute()
+        self.assertEqual(obs, self.dm_2x2)
+        self.assertFalse(obs is self.dm_2x2)
+
+        np.random.seed(0)
+
+        exp = DistanceMatrix([[0, 12, 4.2],
+                              [12, 0, 0.01],
+                              [4.2, 0.01, 0]], self.dm_3x3.ids)
+        obs = self.dm_3x3.permute()
+        self.assertEqual(obs, exp)
+
+        exp = DistanceMatrix([[0, 4.2, 12],
+                              [4.2, 0, 0.01],
+                              [12, 0.01, 0]], self.dm_3x3.ids)
+        obs = self.dm_3x3.permute()
+        self.assertEqual(obs, exp)
 
     def test_eq(self):
         """Test data equality between different matrix types."""
