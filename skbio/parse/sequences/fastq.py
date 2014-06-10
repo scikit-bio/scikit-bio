@@ -6,6 +6,9 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # -----------------------------------------------------------------------------
 from __future__ import absolute_import, division, print_function
+from future import standard_library
+with standard_library.hooks():
+    from itertools import zip_longest
 
 import numpy as np
 
@@ -106,62 +109,52 @@ def parse_fastq(data, strict=False, enforce_qual_range=True, phred_offset=33):
     [29 11 26 27 16 25 29 31 27 25 25 30 32 32 32 33 35 30 28 28 32 34 20 32 32
      35 32 28 33 20 32 32 34 34 34]
     """
-    # line number for modulus operation
-    SEQUENCEID = 0
-    SEQUENCE = 1
-    QUALID = 2
-    QUAL = 3
+    if phred_offset == 33:
+        phred_f = _ascii_to_phred33
+    elif phred_offset == 64:
+        phred_f = _ascii_to_phred64
+    else:
+        raise ValueError("Unknown PHRED offset of %s" % phred_offset)
 
     with open_file(data, 'rb') as data:
-        data = iter(data)
-        first_line = next(data).strip()
+        iters = [iter(data)] * 4
+        for seqid, seq, qualid, qual in zip_longest(*iters):
+            seqid = seqid.strip()
+            # If the file simply ended in a blankline, do not error
+            if seqid is '':
+                continue
+            # Error if an incomplete record is found
+            # Note: seqid cannot be None, because if all 4 values were None,
+            # then the loop condition would be false, and we could not have
+            # gotten to this point
+            if seq is None or qualid is None or qual is None:
+                raise FastqParseError("Incomplete FASTQ record found at end "
+                                      "of file")
 
-        if phred_offset == 33:
-            phred_f = _ascii_to_phred33
-        elif phred_offset == 64:
-            phred_f = _ascii_to_phred64
-        else:
-            raise ValueError("Unknown PHRED offset of %s" % phred_offset)
+            seq = seq.strip()
+            qualid = qualid.strip()
+            qual = qual.strip()
 
-        seqid = _drop_id_marker(first_line)
-        seq = None
-        qualid = None
-        qual = None
+            seqid = _drop_id_marker(seqid)
 
-        for idx, line in enumerate(data):
-            # +1 due to fetch of line prior to loop
-            lineno = idx + 1
-            linetype = lineno % 4
-            line = line.strip()
+            try:
+                seq = str(seq.decode("utf-8"))
+            except AttributeError:
+                pass
 
-            if linetype == SEQUENCEID:
-                yield seqid, seq, qual
+            qualid = _drop_id_marker(qualid)
+            if strict:
+                if seqid != qualid:
+                    raise FastqParseError('ID mismatch: {} != {}'.format(
+                        seqid, qualid))
 
-                seqid = _drop_id_marker(line)
-                seq = None
-                qualid = None
-                qual = None
-            elif linetype == SEQUENCE:
-                seq = line
-                try:
-                    seq = str(seq.decode("utf-8"))
-                except AttributeError:
-                    pass
-            elif linetype == QUALID:
-                qualid = _drop_id_marker(line)
-                if strict:
-                    if seqid != qualid:
-                        raise FastqParseError('ID mismatch: {} != {}'.format(
-                            seqid, qualid))
             # bounds based on illumina limits, see:
             # http://nar.oxfordjournals.org/content/38/6/1767/T1.expansion.html
-            elif linetype == QUAL:
-                qual = phred_f(line)
-                if enforce_qual_range and ((qual < 0).any() or
-                                           (qual > 62).any()):
-                    raise FastqParseError("Failed qual conversion for seq "
-                                          "id: %s. This may be because you "
-                                          "passed an incorrect value for "
-                                          "phred_offset." % seqid)
-        if seqid:
+            qual = phred_f(qual)
+            if enforce_qual_range and ((qual < 0).any() or (qual > 62).any()):
+                raise FastqParseError("Failed qual conversion for seq id: %s. "
+                                      "This may be because you passed an "
+                                      "incorrect value for phred_offset." %
+                                      seqid)
+
             yield (seqid, seq, qual)
