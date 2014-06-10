@@ -23,6 +23,31 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided'):
     product-moment correlation coefficient or Spearman's rank correlation
     coefficient.
 
+    As defined in [1]_, the Mantel test computes a test statistic :math:`r_M`
+    given two symmetric distance matrices :math:`D_X` and :math:`D_Y`.
+    :math:`r_M` is defined as
+
+    .. math::
+
+       r_M=\\frac{1}{d-1}\\sum_{i=1}^{n-1}\\sum_{j=i+1}^{n}
+       stand(D_X)_{ij}stand(D_Y)_{ij}
+
+    where
+
+    .. math::
+
+       d=\\frac{n(n-1)}{2}
+
+    and :math:`n` is the number of rows/columns in each of the distance
+    matrices. :math:`stand(D_X)` and :math:`stand(D_Y)` are distance matrices
+    with their upper triangles containing standardized distances. Note that
+    since :math:`D_X` and :math:`D_Y` are symmetric, the lower triangular
+    portions of the matrices could equivalently have been used instead of the
+    upper triangular portions (the current function behaves in this manner).
+
+    If ``method='spearman'``, the above equation operates on ranked distances
+    instead of the original distances.
+
     Statistical significance is assessed via a permutation test. The rows and
     columns of the first distance matrix (`x`) are randomly permuted a
     number of times (controlled via `permutations`). A correlation coefficient
@@ -82,9 +107,9 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided'):
 
     Notes
     -----
-    The Mantel test was first described in [1]_. The general algorithm and
+    The Mantel test was first described in [2]_. The general algorithm and
     interface are similar to ``vegan::mantel``, available in R's vegan
-    package [2]_.
+    package [3]_.
 
     ``np.nan`` will be returned for the p-value if `permutations` is zero or if
     the correlation coefficient is ``np.nan``. The correlation coefficient will
@@ -93,11 +118,14 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided'):
 
     References
     ----------
-    .. [1] Mantel, N. (1967). "The detection of disease clustering and a
+    .. [1] Legendre, P. and Legendre, L. (2012) Numerical Ecology. 3rd English
+       Edition. Elsevier.
+
+    .. [2] Mantel, N. (1967). "The detection of disease clustering and a
        generalized regression approach". Cancer Research 27 (2): 209-220. PMID
        6018555.
 
-    .. [2] http://cran.r-project.org/web/packages/vegan/index.html
+    .. [3] http://cran.r-project.org/web/packages/vegan/index.html
 
     Examples
     --------
