@@ -13,7 +13,7 @@ from scipy.stats import pearsonr, spearmanr
 
 from skbio.core.distance import DistanceMatrix
 
-def mantel(x, y, method='pearson', permutations=999, alternative='twosided'):
+def mantel(x, y, method='pearson', permutations=999, alternative='two-sided'):
     if method == 'pearson':
         corr_func = pearsonr
     elif method == 'spearman':
@@ -24,7 +24,7 @@ def mantel(x, y, method='pearson', permutations=999, alternative='twosided'):
     if permutations < 0:
         raise ValueError("Number of permutations must be greater than or "
                          "equal to zero.")
-    if alternative not in ('twosided', 'greater', 'less'):
+    if alternative not in ('two-sided', 'greater', 'less'):
         raise ValueError("Invalid alternative hypothesis '%s'." % alternative)
 
     x = DistanceMatrix(x)
@@ -47,7 +47,7 @@ def mantel(x, y, method='pearson', permutations=999, alternative='twosided'):
                     for _ in range(permutations))
         permuted_stats = np.fromiter(perm_gen, np.float, count=permutations)
 
-        if alternative == 'twosided':
+        if alternative == 'two-sided':
             count_better = (np.absolute(permuted_stats) >=
                             np.absolute(orig_stat)).sum()
         elif alternative == 'greater':

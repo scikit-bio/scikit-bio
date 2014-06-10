@@ -34,7 +34,7 @@ class MantelTests(TestCase):
 
     def setUp(self):
         self.methods = ('pearson', 'spearman')
-        self.alternatives = ('twosided', 'greater', 'less')
+        self.alternatives = ('two-sided', 'greater', 'less')
 
         # Small dataset of minimal size (3x3). Mix of floats and ints in a
         # native Python nested list structure.
@@ -104,6 +104,19 @@ class MantelTests(TestCase):
                 self.assertAlmostEqual(obs[0], exp)
                 npt.assert_equal(obs[1], np.nan)
 
+    def test_distance_matrix_instances_as_input(self):
+        # IDs shouldn't matter -- the function should only care about the
+        # matrix data
+        dmx = DistanceMatrix(self.minx)
+        dmy = DistanceMatrix(self.miny, ['no', 'cog', 'yay'])
+
+        np.random.seed(0)
+
+        obs = mantel(dmx, dmy, alternative='less')
+
+        self.assertAlmostEqual(obs[0], self.exp_x_vs_y)
+        self.assertAlmostEqual(obs[1], 0.843)
+
     def test_one_sided_greater(self):
         np.random.seed(0)
 
@@ -137,17 +150,17 @@ class MantelTests(TestCase):
         np.random.seed(0)
 
         obs = mantel(self.minx, self.minx, method='spearman',
-                     alternative='twosided')
+                     alternative='two-sided')
         self.assertEqual(obs[0], 1)
         self.assertAlmostEqual(obs[1], 0.328)
 
         obs = mantel(self.minx, self.miny, method='spearman',
-                     alternative='twosided')
+                     alternative='two-sided')
         self.assertAlmostEqual(obs[0], 0.5)
         self.assertAlmostEqual(obs[1], 1.0)
 
         obs = mantel(self.minx, self.minz, method='spearman',
-                     alternative='twosided')
+                     alternative='two-sided')
         self.assertAlmostEqual(obs[0], -1)
         self.assertAlmostEqual(obs[1], 0.322)
 
