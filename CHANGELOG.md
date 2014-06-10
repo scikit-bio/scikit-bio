@@ -4,7 +4,9 @@ scikit-bio changelog
 Version 0.1.1-dev (changes since 0.1.1 release go here)
 -------------------------------------------------------
 
+* Added new ``bioenv`` and ``mantel`` distance-based statistics to ``skbio.math.stats.distance`` subpackage.
 * IDs are now optional when constructing a ``DissimilarityMatrix`` or ``DistanceMatrix`` (monotonically-increasing integers cast as strings are automatically used).
+* Added ``DistanceMatrix.permute`` method for randomly permuting rows and columns of a distance matrix.
 
 Version 0.1.1 (2014-05-16)
 --------------------------

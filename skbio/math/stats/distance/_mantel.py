@@ -14,6 +14,119 @@ from scipy.stats import pearsonr, spearmanr
 from skbio.core.distance import DistanceMatrix
 
 def mantel(x, y, method='pearson', permutations=999, alternative='two-sided'):
+    """Compute correlation between distance matrices using the Mantel test.
+
+    The Mantel test compares two distance matrices by computing the correlation
+    between the distances in the lower (or upper) triangular portions of the
+    symmetric distance matrices. Correlation can be computed using Pearson's
+    product-moment correlation coefficient or Spearman's rank correlation
+    coefficient.
+
+    Statistical significance is assessed via a permutation test. The rows and
+    columns of the first distance matrix (`x`) are randomly permuted a
+    number of times (controlled via `permutations`). A correlation coefficient
+    is computed for each permutation and the p-value is the proportion of
+    permuted correlation coefficients that are equal to or more extreme
+    than the original (unpermuted) correlation coefficient. Whether a permuted
+    correlation coefficient is "more extreme" than the original correlation
+    coefficient depends on the alternative hypothesis (controlled via
+    `alternative`).
+
+    Parameters
+    ----------
+    x, y : array_like or DistanceMatrix
+        Input distance matrices to compare. Both matrices must have the same
+        shape and be at least 3x3 in size. If ``array_like``, will be cast to
+        ``DistanceMatrix`` (thus the requirements of a valid ``DistanceMatrix``
+        apply to both `x` and `y`, such as symmetry and hollowness). If inputs
+        are already ``DistanceMatrix`` instances, the IDs do not need to match
+        between them; they are assumed to both be in the same order regardless
+        of their IDs (the underlying data matrix is the only thing considered
+        by this function).
+    method : {'pearson', 'spearman'}
+        Method used to compute the correlation between distance matrices.
+    permutations : int, optional
+        Number of times to randomly permute `x` when assessing statistical
+        significance. Must be greater than or equal to zero. If zero,
+        statistical significance calculations will be skipped and the p-value
+        will be ``np.nan``.
+    alternative : {'two-sided', 'greater', 'less'}
+        Alternative hypothesis to use when calculating statistical
+        significance. The default ``'two-sided'`` alternative hypothesis
+        calculates the proportion of permuted correlation coefficients whose
+        magnitude (i.e. after taking the absolute value) is greater than or
+        equal to the absolute value of the original correlation coefficient.
+        ``'greater'`` calculates the proportion of permuted coefficients that
+        are greater than or equal to the original coefficient. ``'less'``
+        calculates the proportion of permuted coefficients that are less than
+        or equal to the original coefficient.
+
+    Returns
+    -------
+    tuple of floats
+        Correlation coefficient and p-value of the test.
+
+    Raises
+    ------
+    ValueError
+        If `x` and `y` are not the same shape and at least 3x3 in size, or an
+        invalid `method`, number of `permutations`, or `alternative` are
+        provided.
+
+    See Also
+    --------
+    DistanceMatrix
+    scipy.stats.pearsonr
+    scipy.stats.spearmanr
+
+    Notes
+    -----
+    The Mantel test was first described in [1]_. The general algorithm and
+    interface are similar to ``vegan::mantel``, available in R's vegan
+    package [2]_.
+
+    ``np.nan`` will be returned for the p-value if `permutations` is zero or if
+    the correlation coefficient is ``np.nan``. The correlation coefficient will
+    be ``np.nan`` if one or both of the inputs does not have any variation
+    (i.e. the distances are all constant) and ``method='spearman'``.
+
+    References
+    ----------
+    .. [1] Mantel, N. (1967). "The detection of disease clustering and a
+       generalized regression approach". Cancer Research 27 (2): 209-220. PMID
+       6018555.
+
+    .. [2] http://cran.r-project.org/web/packages/vegan/index.html
+
+    Examples
+    --------
+    Define two 3x3 distance matrices:
+
+    >>> import numpy as np
+    >>> x = [[0, 1, 2],
+    ...      [1, 0, 3],
+    ...      [2, 3, 0]]
+    >>> y = [[0, 2, 7],
+    ...      [2, 0, 6],
+    ...      [7, 6, 0]]
+
+    Compute the Pearson correlation between them and assess significance using
+    a two-sided test with 999 permutations. We set the random seed to make the
+    p-value calculation deterministic, but you would not normally need to do
+    this:
+
+    >>> np.random.seed(0) # not necessary for normal use
+    >>> coeff, p_value = mantel(x, y)
+    >>> round(coeff, 4)
+    0.7559
+    >>> round(p_value, 3)
+    0.654
+
+    Thus, we see a moderate-to-strong positive correlation between the two
+    matrices. The p-value of ~0.654 is quite high and would most likely not
+    lead us to reject the null hypothesis.
+
+    """
     if method == 'pearson':
         corr_func = pearsonr
     elif method == 'spearman':
