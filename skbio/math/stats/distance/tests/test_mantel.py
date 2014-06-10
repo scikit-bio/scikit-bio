@@ -13,8 +13,6 @@ from unittest import TestCase, main
 
 import numpy as np
 import numpy.testing as npt
-import pandas as pd
-from pandas.util.testing import assert_frame_equal
 
 from skbio.core.distance import DistanceMatrix
 from skbio.core.exception import DissimilarityMatrixError, DistanceMatrixError
@@ -24,7 +22,7 @@ from skbio.util.testing import get_data_path
 
 class MantelTests(TestCase):
     """Results were verified with R 3.1.0 and vegan 2.0-10 (vegan::mantel).
-    
+
     vegan::mantel performs a one-sided (greater) test and does not have the
     option to specify different alternative hypotheses. In order to test the
     other alternative hypotheses, I modified vegan::mantel to perform the

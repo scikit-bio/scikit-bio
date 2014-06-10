@@ -13,6 +13,7 @@ from scipy.stats import pearsonr, spearmanr
 
 from skbio.core.distance import DistanceMatrix
 
+
 def mantel(x, y, method='pearson', permutations=999, alternative='two-sided'):
     """Compute correlation between distance matrices using the Mantel test.
 
