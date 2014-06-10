@@ -6,10 +6,8 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # -----------------------------------------------------------------------------
 from __future__ import division
-
-try:
-    from itertools import izip_longest as zip_longest
-except ImportError:
+from future import standard_library
+with standard_library.hooks():
     from itertools import zip_longest
 
 import numpy as np
@@ -121,15 +119,18 @@ def parse_fastq(data, strict=False, enforce_qual_range=True, phred_offset=33):
     with open_file(data, 'rb') as data:
         iters = [iter(data)] * 4
         for seqid, seq, qualid, qual in zip_longest(*iters):
+            seqid = seqid.strip()
             # If the file simply ended in a blankline, do not error
             if seqid is '':
                 continue
             # Error if an incomplete record is found
+            # Note: seqid cannot be None, because if all 4 values were None,
+            # then the loop condition would be false, and we could not have
+            # gotten to this point
             if seq is None or qualid is None or qual is None:
                 raise FastqParseError("Incomplete FASTQ record found at end "
                                       "of file")
 
-            seqid = seqid.strip()
             seq = seq.strip()
             qualid = qualid.strip()
             qual = qual.strip()
