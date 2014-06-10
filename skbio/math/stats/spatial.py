@@ -16,7 +16,7 @@ Functions
    procrustes
 
 """
-from __future__ import division
+from __future__ import absolute_import, division, print_function
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -101,7 +101,7 @@ def procrustes(data1, data2):
     >>> a = np.array([[1, 3], [1, 2], [1, 1], [2, 1]], 'd')
     >>> b = np.array([[4, -2], [4, -4], [4, -6], [2, -6]], 'd')
     >>> p = procrustes(a, b)
-    >>> print p
+    >>> print(p)
     (array([[-0.13363062,  0.6681531 ],
            [-0.13363062,  0.13363062],
            [-0.13363062, -0.40089186],

@@ -6,7 +6,7 @@
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # -----------------------------------------------------------------------------
-from __future__ import division
+from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
@@ -67,8 +67,8 @@ def parse_fasta(infile, strict=True, label_to_name=str, finder=FastaFinder,
     ...                    '>seq2\n'
     ...                    'CATCGATCGATCGATGCATGCATGCATG\n')
     >>> for label, seq in parse_fasta(fasta_f):
-    ...     print label
-    ...     print seq
+    ...     print(label)
+    ...     print(seq)
     seq1
     CGATGTCGATCGATCGATCGATCAG
     seq2
@@ -134,8 +134,8 @@ def parse_qual(infile, full_header=False):
     ...                   '>seq2\n'
     ...                   '1 2 3 4\n')
     >>> for label, qual in parse_qual(qual_f):
-    ...     print label
-    ...     print qual
+    ...     print(label)
+    ...     print(qual)
     seq1
     [10 20 30 40]
     seq2
