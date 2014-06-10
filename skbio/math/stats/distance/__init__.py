@@ -5,10 +5,14 @@ Distance-based statistics (:mod:`skbio.math.stats.distance`)
 
 .. currentmodule:: skbio.math.stats.distance
 
-Distance-based statistical methods package.
+This package contains various statistical methods that operate on distance
+matrices, often relating distances (e.g., community distances) to categorical
+and/or continuous variables of interest (e.g., gender or age). Methods are also
+provided for comparing distance matrices (e.g., computing the correlation
+between two or more distance matrices using the Mantel test).
 
-Classes
--------
+Categorical Variable Stats
+--------------------------
 
 .. autosummary::
    :toctree: generated/
@@ -16,6 +20,22 @@ Classes
    ANOSIM
    PERMANOVA
    CategoricalStatsResults
+
+Continuous Variable Stats
+-------------------------
+
+.. autosummary::
+   :toctree: generated/
+
+   bioenv
+
+Distance Matrix Comparisons
+---------------------------
+
+.. autosummary::
+   :toctree: generated/
+
+   mantel
 
 Examples
 --------
@@ -129,10 +149,13 @@ data frame or an error will be raised.
 # ----------------------------------------------------------------------------
 
 from .base import CategoricalStatsResults
+from ._bioenv import bioenv
 from .anosim import ANOSIM
 from .permanova import PERMANOVA
+from ._mantel import mantel
 
-__all__ = ['ANOSIM', 'PERMANOVA', 'CategoricalStatsResults']
+__all__ = ['ANOSIM', 'PERMANOVA', 'CategoricalStatsResults', 'bioenv',
+           'mantel']
 
 from numpy.testing import Tester
 test = Tester().test

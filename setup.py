@@ -75,6 +75,7 @@ setup(name='scikit-bio',
       package_data={
           'skbio.core.tests': ['data/*.txt'],
           'skbio.math.tests': ['data/*'],
+          'skbio.math.stats.distance.tests': ['data/*'],
           'skbio.math.stats.ordination.tests': ['data/*'],
           'skbio.parse.sequences.tests': ['data/*'],
           }
