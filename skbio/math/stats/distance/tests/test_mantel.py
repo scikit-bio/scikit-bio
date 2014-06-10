@@ -179,8 +179,8 @@ class MantelTests(TestCase):
 
     def test_no_variation_pearson(self):
         # Output doesn't match vegan::mantel with method='pearson'. Consider
-        # revising output and this test depending on outcome of TODO: add issue
-        # on scipy issue tracker
+        # revising output and this test depending on outcome of
+        # https://github.com/scipy/scipy/issues/3728
         for alt in self.alternatives:
             # test one or both inputs having no variation in their
             # distances
