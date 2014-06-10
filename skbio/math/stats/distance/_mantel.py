@@ -40,7 +40,7 @@ def mantel(x, y, method='pearson', permutations=999, alternative='twosided'):
 
     orig_stat = corr_func(x_flat, y_flat)[0]
 
-    if permutations == 0:
+    if permutations == 0 or np.isnan(orig_stat):
         p_value = np.nan
     else:
         perm_gen = (corr_func(x.permute(), y_flat)[0]

@@ -32,18 +32,24 @@ class MantelTests(TestCase):
 
     """
 
-    # TODO: add test from Legendre (where r is undefined, no variation)
-
     # TODO: add test to ensure inputs aren't modified
 
     def setUp(self):
         self.methods = ('pearson', 'spearman')
+        self.alternatives = ('twosided', 'greater', 'less')
 
         # Small dataset of minimal size (3x3). Mix of floats and ints in a
         # native Python nested list structure.
         self.minx = [[0, 1, 2], [1, 0, 3], [2, 3, 0]]
         self.miny = [[0, 2, 7], [2, 0, 6], [7, 6, 0]]
         self.minz = [[0, 0.5, 0.25], [0.5, 0, 0.1], [0.25, 0.1, 0]]
+
+        # No variation in distances. Taken from Figure 10.20(b), pg. 603 in L&L
+        # 3rd edition. Their example is 4x4 but using 3x3 here for easy
+        # comparison to the minimal dataset above.
+        self.no_variation = [[0, 0.667, 0.667],
+                             [0.667, 0, 0.667],
+                             [0.667, 0.667, 0]]
 
         # This second dataset is derived from vegan::mantel's example dataset.
         # The "veg" distance matrix contains Bray-Curtis distances derived from
@@ -65,7 +71,7 @@ class MantelTests(TestCase):
         # Varying permutations and alternative hypotheses shouldn't affect the
         # computed test statistics.
         for n in (0, 99, 999):
-            for alt in ('twosided', 'greater', 'less'):
+            for alt in self.alternatives:
                 for method, exp in (('pearson', self.exp_x_vs_y),
                                     ('spearman', 0.5)):
                     obs = mantel(self.minx, self.miny, method=method,
@@ -86,7 +92,7 @@ class MantelTests(TestCase):
             self.assertAlmostEqual(obs, exp)
 
     def test_zero_permutations(self):
-        for alt in ('twosided', 'greater', 'less'):
+        for alt in self.alternatives:
             for method, exp in (('pearson', self.exp_x_vs_y),
                                 ('spearman', 0.5)):
                 obs = mantel(self.minx, self.miny, permutations=0,
@@ -94,8 +100,11 @@ class MantelTests(TestCase):
                 self.assertAlmostEqual(obs[0], exp)
                 npt.assert_equal(obs[1], np.nan)
 
-                # TODO test swapping order of matrices -- should get same
-                # result
+                # swapping order of matrices should give same result
+                obs = mantel(self.miny, self.minx, permutations=0,
+                             method=method, alternative=alt)
+                self.assertAlmostEqual(obs[0], exp)
+                npt.assert_equal(obs[1], np.nan)
 
     def test_one_sided_greater(self):
         np.random.seed(0)
@@ -159,7 +168,41 @@ class MantelTests(TestCase):
         self.assertAlmostEqual(obs[0], 0.283791)
         self.assertAlmostEqual(obs[1], 0.003)
 
-    def test_mantel_invalid_distance_matrix(self):
+    def test_no_variation_pearson(self):
+        # Output doesn't match vegan::mantel with method='pearson'. Consider
+        # revising output and this test depending on outcome of TODO add issue
+        # on scipy issue tracker
+        for alt in self.alternatives:
+            # test one or both inputs having no variation in their
+            # distances
+            obs = mantel(self.miny, self.no_variation, method='pearson',
+                         alternative=alt)
+            npt.assert_equal(obs, (0.0, 1.0))
+
+            obs = mantel(self.no_variation, self.miny, method='pearson',
+                         alternative=alt)
+            npt.assert_equal(obs, (0.0, 1.0))
+
+            obs = mantel(self.no_variation, self.no_variation,
+                         method='pearson', alternative=alt)
+            npt.assert_equal(obs, (1.0, 1.0))
+
+    def test_no_variation_spearman(self):
+        exp = (np.nan, np.nan)
+        for alt in self.alternatives:
+            obs = mantel(self.miny, self.no_variation, method='spearman',
+                         alternative=alt)
+            npt.assert_equal(obs, exp)
+
+            obs = mantel(self.no_variation, self.miny, method='spearman',
+                         alternative=alt)
+            npt.assert_equal(obs, exp)
+
+            obs = mantel(self.no_variation, self.no_variation,
+                         method='spearman', alternative=alt)
+            npt.assert_equal(obs, exp)
+
+    def test_invalid_distance_matrix(self):
         # Single asymmetric, non-hollow distance matrix.
         with self.assertRaises(DissimilarityMatrixError):
             mantel([[1, 2], [3, 4]], [[0, 0], [0, 0]])
@@ -168,7 +211,7 @@ class MantelTests(TestCase):
         with self.assertRaises(DistanceMatrixError):
             mantel([[0, 2], [3, 0]], [[0, 1], [0, 0]])
 
-    def test_mantel_invalid_input(self):
+    def test_invalid_input(self):
         # invalid correlation method
         with self.assertRaises(ValueError):
             mantel([[1]], [[1]], method='brofist')
