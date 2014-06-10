@@ -32,8 +32,6 @@ class MantelTests(TestCase):
 
     """
 
-    # TODO: add test to ensure inputs aren't modified
-
     def setUp(self):
         self.methods = ('pearson', 'spearman')
         self.alternatives = ('twosided', 'greater', 'less')
@@ -170,7 +168,7 @@ class MantelTests(TestCase):
 
     def test_no_variation_pearson(self):
         # Output doesn't match vegan::mantel with method='pearson'. Consider
-        # revising output and this test depending on outcome of TODO add issue
+        # revising output and this test depending on outcome of TODO: add issue
         # on scipy issue tracker
         for alt in self.alternatives:
             # test one or both inputs having no variation in their
@@ -201,6 +199,19 @@ class MantelTests(TestCase):
             obs = mantel(self.no_variation, self.no_variation,
                          method='spearman', alternative=alt)
             npt.assert_equal(obs, exp)
+
+    def test_no_side_effects(self):
+        minx = np.asarray(self.minx, dtype='float')
+        miny = np.asarray(self.miny, dtype='float')
+
+        minx_copy = np.copy(minx)
+        miny_copy = np.copy(miny)
+
+        mantel(minx, miny)
+
+        # Make sure we haven't modified the input.
+        npt.assert_equal(minx, minx_copy)
+        npt.assert_equal(miny, miny_copy)
 
     def test_invalid_distance_matrix(self):
         # Single asymmetric, non-hollow distance matrix.
