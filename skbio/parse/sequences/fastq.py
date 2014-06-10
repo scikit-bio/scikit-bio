@@ -94,9 +94,9 @@ def parse_fastq(data, strict=False, enforce_qual_range=True, phred_offset=33):
     ...                     '+\n'
     ...                     ']KZ[PY]_[YY^```ac^\\\`bT``c`\\aT``bbb\n')
     >>> for label, seq, qual in parse_fastq(fastq_f, phred_offset=64):
-    ...     print label
-    ...     print seq
-    ...     print qual
+    ...     print(label)
+    ...     print(seq)
+    ...     print(qual)
     seq1
     AACACCAAACTTCTCCACCACGTGAGCTACAAAAG
     [32 32 32 32 25 30 20 29 32 29 35 30 35 33 34 35 33 35 35 32 30 12 34 30 35

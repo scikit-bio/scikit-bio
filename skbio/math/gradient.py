@@ -60,28 +60,28 @@ Then to compute the average trajectory of this data:
 
 Check the algorithm used to compute the trajectory_results:
 
->>> print trajectory_results.algorithm
+>>> print(trajectory_results.algorithm)
 avg
 
 Check if we weighted the data or not:
 
->>> print trajectory_results.weighted
+>>> print(trajectory_results.weighted)
 False
 
 Check the trajectory_results results of one of the categories:
 
->>> print trajectory_results.categories[0].category
+>>> print(trajectory_results.categories[0].category)
 Treatment
->>> print trajectory_results.categories[0].probability
+>>> print(trajectory_results.categories[0].probability)
 0.0118478282382
 
 Check the trajectory_results results of one group of one of the categories:
 
->>> print trajectory_results.categories[0].groups[0].name
+>>> print(trajectory_results.categories[0].groups[0].name)
 Control
->>> print trajectory_results.categories[0].groups[0].trajectory
+>>> print(trajectory_results.categories[0].groups[0].trajectory)
 [ 3.52199973  2.29597001  3.20309816]
->>> print trajectory_results.categories[0].groups[0].info
+>>> print(trajectory_results.categories[0].groups[0].info)
 {'avg': 3.007022633956606}
 """
 

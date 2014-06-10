@@ -353,7 +353,7 @@ class SequenceCollection(object):
         >>> sequences = [DNA('ACCGT', id="seq1"),
         ...              DNA('AACCGGT', id="seq2")]
         >>> s1 = SequenceCollection(sequences)
-        >>> print repr(s1)
+        >>> print(repr(s1))
         <SequenceCollection: n=2; mean +/- std length=6.00 +/- 1.00>
 
         .. shownumpydoc
@@ -482,7 +482,7 @@ class SequenceCollection(object):
         >>> sequences = [DNA('A--CCGT.', id="seq1"),
         ...              DNA('.AACCG-GT.', id="seq2")]
         >>> s1 = SequenceCollection(sequences)
-        >>> print s1['seq1']
+        >>> print(s1['seq1'])
         A--CCGT.
 
         """
@@ -505,7 +505,7 @@ class SequenceCollection(object):
         >>> sequences = [DNA('A--CCGT.', id="seq1"),
         ...              DNA('.AACCG-GT.', id="seq2")]
         >>> s1 = SequenceCollection(sequences)
-        >>> print s1.ids()
+        >>> print(s1.ids())
         ['seq1', 'seq2']
 
         """
@@ -547,13 +547,13 @@ class SequenceCollection(object):
         ...              DNA('AACCGGT', id="seq2")]
         >>> s1 = SequenceCollection(sequences)
         >>> new_id_to_seqs, new_id_to_old_ids = s1.int_map()
-        >>> print repr(new_id_to_seqs['1'])
+        >>> print(repr(new_id_to_seqs['1']))
         <DNASequence: ACCGT (length: 5)>
-        >>> print repr(new_id_to_seqs['2'])
+        >>> print(repr(new_id_to_seqs['2']))
         <DNASequence: AACCGGT (length: 7)>
-        >>> print new_id_to_old_ids['1']
+        >>> print(new_id_to_old_ids['1'])
         seq1
-        >>> print new_id_to_old_ids['2']
+        >>> print(new_id_to_old_ids['2'])
         seq2
 
         """
@@ -601,12 +601,12 @@ class SequenceCollection(object):
         >>> sequences = [DNA('ACCGT', id="seq1"),
         ...              DNA('AACCGGT', id="seq2")]
         >>> s1 = SequenceCollection(sequences)
-        >>> print s1.is_valid()
+        >>> print(s1.is_valid())
         True
         >>> sequences = [RNA('ACCGT', id="seq1"),
         ...              RNA('AACCGGT', id="seq2")]
         >>> s1 = SequenceCollection(sequences)
-        >>> print s1.is_valid()
+        >>> print(s1.is_valid())
         False
 
         """
@@ -693,12 +693,12 @@ class SequenceCollection(object):
         ...              DNA('TTTT', id="seq3")]
         >>> s1 = SequenceCollection(sequences)
         >>> for freqs in s1.k_word_frequencies(1):
-        ...     print freqs
+        ...     print(freqs)
         defaultdict(<type 'int'>, {'A': 1.0})
         defaultdict(<type 'int'>, {'A': 0.5, 'T': 0.5})
         defaultdict(<type 'int'>, {'T': 1.0})
         >>> for freqs in s1.k_word_frequencies(2):
-        ...     print freqs
+        ...     print(freqs)
         defaultdict(<type 'int'>, {})
         defaultdict(<type 'int'>, {'AT': 1.0})
         defaultdict(<type 'int'>, {'TT': 1.0})
@@ -837,7 +837,7 @@ class Alignment(SequenceCollection):
         ...         DNA("ATCC--G", id="s2"),
         ...         DNA("ATCCGGA", id="s3")]
         >>> a1 = Alignment(seqs)
-        >>> print a1.distances()
+        >>> print(a1.distances())
         3x3 distance matrix
         IDs:
         s1, s2, s3
@@ -1017,12 +1017,12 @@ class Alignment(SequenceCollection):
         >>> sequences = [DNA('ACCGT', id="seq1"),
         ...              DNA('AACCGGT', id="seq2")]
         >>> a1 = Alignment(sequences)
-        >>> print a1.is_valid()
+        >>> print(a1.is_valid())
         False
         >>> sequences = [RNA('ACCGT--', id="seq1"),
         ...              RNA('AACCGGT', id="seq2")]
         >>> a1 = Alignment(sequences)
-        >>> print a1.is_valid()
+        >>> print(a1.is_valid())
         False
 
         """
@@ -1061,7 +1061,7 @@ class Alignment(SequenceCollection):
         ...              DNA('AACCGGT', id="seq2")]
         >>> a1 = Alignment(sequences)
         >>> for position in a1.iter_positions():
-        ...     print position
+        ...     print(position)
         [<DNASequence: A (length: 1)>, <DNASequence: A (length: 1)>]
         [<DNASequence: C (length: 1)>, <DNASequence: A (length: 1)>]
         [<DNASequence: C (length: 1)>, <DNASequence: C (length: 1)>]
@@ -1071,7 +1071,7 @@ class Alignment(SequenceCollection):
         [<DNASequence: - (length: 1)>, <DNASequence: T (length: 1)>]
 
         >>> for position in a1.iter_positions(constructor=str):
-        ...     print position
+        ...     print(position)
         ['A', 'A']
         ['C', 'A']
         ['C', 'C']
@@ -1167,11 +1167,11 @@ class Alignment(SequenceCollection):
         >>> a2 = a1.omit_gap_positions(0.50)
         >>> a2
         <Alignment: n=3; mean +/- std length=3.00 +/- 0.00>
-        >>> print a2[0]
+        >>> print(a2[0])
         AC-
-        >>> print a2[1]
+        >>> print(a2[1])
         ATC
-        >>> print a2[2]
+        >>> print(a2[2])
         TTC
 
         """
@@ -1216,9 +1216,9 @@ class Alignment(SequenceCollection):
         >>> a2 = a1.omit_gap_sequences(0.49)
         >>> a2
         <Alignment: n=2; mean +/- std length=4.00 +/- 0.00>
-        >>> print a2[0]
+        >>> print(a2[0])
         AT-C
-        >>> print a2[1]
+        >>> print(a2[1])
         TT-C
 
         """
@@ -1258,7 +1258,7 @@ class Alignment(SequenceCollection):
         ...              DNA('TT-C', id="seq3")]
         >>> a1 = Alignment(sequences)
         >>> for counter in a1.position_counters():
-        ...     print counter
+        ...     print(counter)
         Counter({'A': 2, 'T': 1})
         Counter({'T': 2, 'C': 1})
         Counter({'-': 3})
@@ -1292,9 +1292,9 @@ class Alignment(SequenceCollection):
         ...              DNA('TT-C', id="seq3")]
         >>> a1 = Alignment(sequences)
         >>> position_freqs = a1.position_frequencies()
-        >>> print round(position_freqs[0]['A'],3)
+        >>> print(round(position_freqs[0]['A'],3))
         0.667
-        >>> print round(position_freqs[1]['A'],3)
+        >>> print(round(position_freqs[1]['A'],3))
         0.0
 
         """
@@ -1356,7 +1356,7 @@ class Alignment(SequenceCollection):
         ...              DNA('AT-C', id="seq2"),
         ...              DNA('TT-C', id="seq3")]
         >>> a1 = Alignment(sequences)
-        >>> print a1.position_entropies()
+        >>> print(a1.position_entropies())
         [0.63651416829481278, 0.63651416829481278, nan, nan]
 
         """

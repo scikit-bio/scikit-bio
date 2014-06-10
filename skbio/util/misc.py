@@ -52,10 +52,10 @@ def is_casava_v180_or_later(header_line):
     Examples
     --------
     >>> from skbio.util.misc import is_casava_v180_or_later
-    >>> print is_casava_v180_or_later('@foo')
+    >>> print(is_casava_v180_or_later('@foo'))
     False
     >>> id_ = '@M00176:17:000000000-A0CNA:1:1:15487:1773 1:N:0:0'
-    >>> print is_casava_v180_or_later(id_)
+    >>> print(is_casava_v180_or_later(id_))
     True
     """
     if not header_line.startswith(b'@'):
@@ -286,7 +286,7 @@ def flatten(items):
 
     >>> from skbio.util.misc import flatten
     >>> h = [['a', 'b', 'c', 'd'], [1, 2, 3, 4, 5], ['x', 'y'], ['foo']]
-    >>> print flatten(h)
+    >>> print(flatten(h))
     ['a', 'b', 'c', 'd', 1, 2, 3, 4, 5, 'x', 'y', 'foo']
 
     """

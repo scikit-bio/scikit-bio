@@ -379,7 +379,7 @@ class BiologicalSequence(Sequence):
         --------
         >>> from skbio.core.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUC')
-        >>> for c in s: print c
+        >>> for c in s: print(c)
         G
         G
         U
@@ -495,7 +495,7 @@ class BiologicalSequence(Sequence):
         --------
         >>> from skbio.core.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUC')
-        >>> for c in reversed(s): print c
+        >>> for c in reversed(s): print(c)
         C
         U
         G
@@ -529,7 +529,7 @@ class BiologicalSequence(Sequence):
         >>> s = BiologicalSequence('GGUC')
         >>> str(s)
         'GGUC'
-        >>> print s
+        >>> print(s)
         GGUC
 
         .. shownumpydoc
@@ -605,7 +605,7 @@ class BiologicalSequence(Sequence):
         >>> t = s.degap()
         >>> t
         <BiologicalSequence: GGUCCACGTT... (length: 11)>
-        >>> print t
+        >>> print(t)
         GGUCCACGTTC
 
         """
@@ -1189,11 +1189,11 @@ class BiologicalSequence(Sequence):
         --------
         >>> from skbio.core.sequence import BiologicalSequence
         >>> s = BiologicalSequence('ACACGACGTT')
-        >>> print s.to_fasta(terminal_character="")
+        >>> print(s.to_fasta(terminal_character=""))
         >
         ACACGACGTT
         >>> t = BiologicalSequence('ACA',id='my-seq',description='h')
-        >>> print t.to_fasta(terminal_character="")
+        >>> print(t.to_fasta(terminal_character=""))
         >my-seq h
         ACA
 
