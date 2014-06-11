@@ -97,9 +97,16 @@ def nj(dm, disallow_negative_branch_length=True,
     (d:2, (c:4, (b:3, a:2):3):2, e:1);
 
     """
+    if dm.shape[0] < 3:
+        raise ValueError(
+            "Distance matrix must be at least 3x3 to "
+            "generate a neighbor joining tree.")
+
+    # initialize variables
+    node_definition = None
+
     # while there are still more than three distances in the distance matrix,
     # join neighboring nodes.
-    node_definition = None
     while(dm.shape[0] > 3):
         # compute the Q matrix
         q = _compute_q(dm)

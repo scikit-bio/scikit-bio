@@ -47,6 +47,12 @@ class NjTests(TestCase):
         expected_str = "(b:2, a:1, c:1);"
         self.assertEqual(nj(dm, result_constructor=str), expected_str)
 
+    def test_nj_error(self):
+        data = [[0, 3],
+                [3, 0]]
+        dm = DistanceMatrix(data, list('ab'))
+        self.assertRaises(ValueError, nj, dm)
+
     def test_compute_q(self):
         expected_data = [[  0, -50, -38, -34, -34],
                          [-50,   0, -38, -34, -34],
