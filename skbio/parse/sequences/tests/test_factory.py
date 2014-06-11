@@ -26,6 +26,9 @@ class SequenceLoadTests(TestCase):
         self.qual1 = get_data_path('fna1.qual')
         self.noext = get_data_path('noextensionfasta')
 
+    def cleanUp(self):
+        self.fq1.close()
+
     def test_single_files(self):
         """load should handle a single file, and can be gzipped"""
         it = load(self.fna1)
