@@ -1,0 +1,107 @@
+html, body {
+    background: url('assets/bg.png');
+    margin: 0px;
+    padding: 0px;
+    position: relative;
+    font-family: "Ubuntu", Tahoma, "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+h1, h2, h3 {
+    color: #24372C;
+}
+
+
+#nav {
+    width: 100%;
+    background: #24372C;
+    position: fixed;
+    z-index: 100;
+    border-bottom: 4px solid #259D57;
+}
+
+a {
+    color: #259D57;
+}
+
+a:hover {
+    color: #00B84D;  
+}
+
+
+#nav a {
+    display: block;
+    color: #FFF;
+    text-decoration: none;
+    height: 50px;
+    line-height: 50px;
+    font-size: 18px;
+    padding: 0px 10px;
+}
+
+#nav ul {
+    margin: 0px auto;
+    list-style: none;
+    width: 924px;
+    padding: 0px;
+}
+
+#nav ul li {
+    display: inline-block;
+    color: white;
+}
+
+#nav ul li:hover {
+    background: #259D57;   
+}
+
+#decorationWrapper {
+    position:relative;
+    background: url('assets/decoration_microbial_mat2.png') top center no-repeat;
+    width: 100%;
+}
+
+#contentWrapper {
+    position: relative;
+    top: 50px;
+    margin: 0px auto;
+    width: 924px;
+    margin-bottom: 100px;
+}
+
+#heading {
+    padding-top: 10px;
+    height: 300px;
+    position: relative;
+    border-bottom: solid 7px black;
+}
+
+#content {
+}
+
+#logo {
+    float: left;
+}
+
+#pitchWrapper {
+    position:absolute;
+    bottom: 0;
+    left: 324px;
+    width: 600px;
+    height: 300px;
+}
+
+#pitch {
+    color: #24372C;
+    font-size: 19px;
+    margin-top: 182px;
+    text-align: left;
+}
+pre {
+    background-color: #F8F8F8;
+    border: 1px solid #DDD;
+    font-size: 13px;
+    line-height: 19px;
+    overflow: auto;
+    padding: 6px 10px;
+    border-radius: 3px;
+}
