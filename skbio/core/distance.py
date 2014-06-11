@@ -454,7 +454,7 @@ class DissimilarityMatrix(object):
             If `lookup_id` is not in the dissimilarity matrix.
 
         """
-        if lookup_id in self._id_index:
+        if lookup_id in self:
             return self._id_index[lookup_id]
         else:
             raise MissingIDError(lookup_id)
@@ -579,6 +579,32 @@ class DissimilarityMatrix(object):
 
         """
         return not self == other
+
+    def __contains__(self, lookup_id):
+        """Check if the specified ID is in the dissimilarity matrix.
+
+        Parameters
+        ----------
+        lookup_id : str
+            ID to search for.
+
+        Returns
+        -------
+        bool
+            ``True`` if `lookup_id` is in the dissimilarity matrix, ``False``
+            otherwise.
+
+        See Also
+        --------
+        index
+
+        .. shownumpydoc
+
+        """
+        if lookup_id in self._id_index:
+            return True
+        else:
+            return False
 
     def __getitem__(self, index):
         """Slice into dissimilarity data by object ID or numpy indexing.

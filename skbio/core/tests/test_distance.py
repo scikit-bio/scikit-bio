@@ -389,6 +389,12 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
 
         self.assertFalse(self.dm_2x2 != self.dm_2x2)
 
+    def test_contains(self):
+        self.assertTrue('a' in self.dm_3x3)
+        self.assertTrue('b' in self.dm_3x3)
+        self.assertTrue('c' in self.dm_3x3)
+        self.assertFalse('d' in self.dm_3x3)
+
     def test_getslice(self):
         """Test that __getslice__ defers to __getitem__."""
         # Slice of first dimension only.
