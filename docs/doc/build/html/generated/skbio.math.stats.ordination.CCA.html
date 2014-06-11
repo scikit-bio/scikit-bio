@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>skbio.math.stats.ordination.CCA &mdash; scikit-bio 0.1.1-dev documentation</title>
+    
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.1.0/united/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1.1-dev',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/copybutton.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="top" title="scikit-bio 0.1.1-dev documentation" href="../index.html" />
+    <link rel="up" title="Ordination methods (skbio.math.stats.ordination)" href="../math.stats.ordination.html" />
+    <link rel="next" title="skbio.math.stats.ordination.CCA.scores" href="skbio.math.stats.ordination.CCA.scores.html" />
+    <link rel="prev" title="skbio.math.stats.ordination.RDA.scores" href="skbio.math.stats.ordination.RDA.scores.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body>
+  
+  <a href="https://github.com/biocore/scikit-bio"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../test.html">
+          scikit-bio docs</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.1.1-dev</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            <li class="divider-vertical"></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../test.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../core.alignment.html">Sequence collections and alignments (<tt class="docutils literal"><span class="pre">skbio.core.alignment</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core.sequence.html">Biological sequences (<tt class="docutils literal"><span class="pre">skbio.core.sequence</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core.distance.html">Dissimilarity and distance matrices (<tt class="docutils literal"><span class="pre">skbio.core.distance</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core.exception.html">Exceptions (<tt class="docutils literal"><span class="pre">skbio.core.exception</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core.warning.html">Warnings (<tt class="docutils literal"><span class="pre">skbio.core.warning</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core.genetic_code.html">Genetic Code (<tt class="docutils literal"><span class="pre">skbio.core.genetic_code</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core.tree.html">Tree representations (<tt class="docutils literal"><span class="pre">skbio.core.tree</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core.workflow.html">Constructing workflows (<tt class="docutils literal"><span class="pre">skbio.core.workflow</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core.ssw.html">Performing Striped Smith Waterman Alignments (<tt class="docutils literal"><span class="pre">skbio.core.ssw</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../draw.distributions.html">Distribution visualizations (<tt class="docutils literal"><span class="pre">skbio.draw.distributions</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../format.sequences.html">Format biological sequences (<tt class="docutils literal"><span class="pre">skbio.format.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.diversity.alpha.html">Alpha diversity measures (<tt class="docutils literal"><span class="pre">skbio.math.diversity.alpha</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.stats.distance.html">Distance-based statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.distance</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.spatial</span></tt>)</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../math.stats.ordination.html">Ordination methods (<tt class="docutils literal"><span class="pre">skbio.math.stats.ordination</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.gradient.html">Gradient analyses (<tt class="docutils literal"><span class="pre">skbio.math.gradient</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.subsample.html">Subsampling (<tt class="docutils literal"><span class="pre">skbio.math.subsample</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../parse.sequences.html">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.io.html">I/O utils (<tt class="docutils literal"><span class="pre">skbio.util.io</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.misc.html">Miscellaneous Utilities (<tt class="docutils literal"><span class="pre">skbio.util.misc</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.testing.html">Testing utilities (<tt class="docutils literal"><span class="pre">skbio.util.testing</span></tt>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/py3.html">Supporting Python 2 and Python 3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/new_module.html">Adding a new module to skbio</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">skbio.math.stats.ordination.CCA</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      
+  <div class="section" id="skbio-math-stats-ordination-cca">
+<h1>skbio.math.stats.ordination.CCA<a class="headerlink" href="#skbio-math-stats-ordination-cca" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="skbio.math.stats.ordination.CCA">
+<em class="property">class </em><tt class="descclassname">skbio.math.stats.ordination.</tt><tt class="descname">CCA</tt><big>(</big><em>Y</em>, <em>X</em>, <em>site_ids</em>, <em>species_ids</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/master/skbio/math/stats/ordination/canonical_correspondence_analysis.py#L17"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.math.stats.ordination.CCA" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute constrained (also known as canonical) correspondence
+analysis.</p>
+<p>Canonical (or constrained) correspondence analysis is a
+multivariate ordination technique. It appeared in community
+ecology <a class="reference internal" href="#r65" id="id1">[R65]</a> and relates community composition to the variation in
+the environment (or in other factors). It works from data on
+abundances or counts of individuals and environmental variables,
+and outputs ordination axes that maximize niche separation among
+species.</p>
+<p>It is better suited to extract the niches of taxa than linear
+multivariate methods because it assumes unimodal response curves
+(habitat preferences are often unimodal functions of habitat
+variables <a class="reference internal" href="#r66" id="id2">[R66]</a>).</p>
+<p>As more environmental variables are added, the result gets more
+similar to unconstrained ordination, so only the variables that
+are deemed explanatory should be included in the analysis.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>Y</strong> : array_like Community data matrix of shape (n, m): a</p>
+<blockquote>
+<div><p>contingency table for m species at n sites.</p>
+</div></blockquote>
+<p><strong>X</strong> : array_like Constraining matrix of shape (n, q): q quantitative</p>
+<blockquote class="last">
+<div><p>environmental variables at n sites.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="skbio.math.stats.ordination.CA.html#skbio.math.stats.ordination.CA" title="skbio.math.stats.ordination.CA"><tt class="xref py py-obj docutils literal"><span class="pre">CA</span></tt></a>, <a class="reference internal" href="skbio.math.stats.ordination.RDA.html#skbio.math.stats.ordination.RDA" title="skbio.math.stats.ordination.RDA"><tt class="xref py py-obj docutils literal"><span class="pre">RDA</span></tt></a></p>
+</div>
+<p class="rubric">Notes</p>
+<p>The algorithm is based on <a class="reference internal" href="#r67" id="id3">[R67]</a>, S 11.2, and is expected to give
+the same results as <tt class="docutils literal"><span class="pre">cca(Y,</span> <span class="pre">X)</span></tt> in R&#8217;s package vegan, except
+that this implementation won&#8217;t drop constraining variables due to
+perfect collinearity: the user needs to choose which ones to
+input.</p>
+<p>Canonical <em>correspondence</em> analysis shouldn&#8217;t be confused with
+canonical <em>correlation</em> analysis (CCorA, but sometimes called
+CCA), a different technique to search for multivariate
+relationships between two datasets. Canonical correlation analysis
+is a statistical tool that, given two vectors of random variables,
+finds linear combinations that have maximum correlation with each
+other. In some sense, it assumes linear responses of &#8220;species&#8221; to
+&#8220;environmental variables&#8221; and is not well suited to analyze
+ecological data.</p>
+<p>In data analysis, ordination (or multivariate gradient analysis)
+complements clustering by arranging objects (species, samples...)
+along gradients so that similar ones are closer and dissimilar
+ones are further. There&#8217;s a good overview of the available
+techniques in <a class="reference external" href="http://ordination.okstate.edu/overview.htm">http://ordination.okstate.edu/overview.htm</a>.</p>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r65" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R65]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> Cajo J. F. Ter Braak, &#8220;Canonical Correspondence Analysis: A
+New Eigenvector Technique for Multivariate Direct Gradient
+Analysis&#8221;, Ecology 67.5 (1986), pp. 1167-1179.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r66" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R66]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id5">2</a>)</em> Cajo J.F. Braak and Piet F.M. Verdonschot, &#8220;Canonical
+correspondence analysis and related multivariate methods in
+aquatic ecology&#8221;, Aquatic Sciences 57.3 (1995), pp. 255-289.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r67" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R67]</td><td><em>(<a class="fn-backref" href="#id3">1</a>, <a class="fn-backref" href="#id6">2</a>)</em> Legendre P. and Legendre L. 1998. Numerical
+Ecology. Elsevier, Amsterdam.</td></tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="skbio.math.stats.ordination.CCA.scores.html#skbio.math.stats.ordination.CCA.scores" title="skbio.math.stats.ordination.CCA.scores"><tt class="xref py py-obj docutils literal"><span class="pre">scores</span></tt></a>(scaling)</td>
+<td>Compute site and species scores for different scalings.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+  
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014--, scikit-bio development team.<br/>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.2.2.<br/>
+    </p>
+  </div>
+</footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
+  </body>
+</html>

@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Tree representations (skbio.core.tree) &mdash; scikit-bio 0.1.1-dev documentation</title>
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootswatch-3.1.0/united/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1.1-dev',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/copybutton.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+    <link rel="top" title="scikit-bio 0.1.1-dev documentation" href="index.html" />
+    <link rel="next" title="skbio.core.tree.TreeNode" href="generated/skbio.core.tree.TreeNode.html" />
+    <link rel="prev" title="skbio.core.genetic_code.GeneticCode.__eq__" href="generated/skbio.core.genetic_code.GeneticCode.__eq__.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body>
+  
+  <a href="https://github.com/biocore/scikit-bio"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="test.html">
+          scikit-bio docs</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.1.1-dev</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            <li class="divider-vertical"></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="test.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="core.alignment.html">Sequence collections and alignments (<tt class="docutils literal"><span class="pre">skbio.core.alignment</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.sequence.html">Biological sequences (<tt class="docutils literal"><span class="pre">skbio.core.sequence</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.distance.html">Dissimilarity and distance matrices (<tt class="docutils literal"><span class="pre">skbio.core.distance</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.exception.html">Exceptions (<tt class="docutils literal"><span class="pre">skbio.core.exception</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.warning.html">Warnings (<tt class="docutils literal"><span class="pre">skbio.core.warning</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.genetic_code.html">Genetic Code (<tt class="docutils literal"><span class="pre">skbio.core.genetic_code</span></tt>)</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Tree representations (<tt class="docutils literal"><span class="pre">skbio.core.tree</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.workflow.html">Constructing workflows (<tt class="docutils literal"><span class="pre">skbio.core.workflow</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.ssw.html">Performing Striped Smith Waterman Alignments (<tt class="docutils literal"><span class="pre">skbio.core.ssw</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="draw.distributions.html">Distribution visualizations (<tt class="docutils literal"><span class="pre">skbio.draw.distributions</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="format.sequences.html">Format biological sequences (<tt class="docutils literal"><span class="pre">skbio.format.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.diversity.alpha.html">Alpha diversity measures (<tt class="docutils literal"><span class="pre">skbio.math.diversity.alpha</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.stats.distance.html">Distance-based statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.distance</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.spatial</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.stats.ordination.html">Ordination methods (<tt class="docutils literal"><span class="pre">skbio.math.stats.ordination</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.gradient.html">Gradient analyses (<tt class="docutils literal"><span class="pre">skbio.math.gradient</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.subsample.html">Subsampling (<tt class="docutils literal"><span class="pre">skbio.math.subsample</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="parse.sequences.html">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="util.io.html">I/O utils (<tt class="docutils literal"><span class="pre">skbio.util.io</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="util.misc.html">Miscellaneous Utilities (<tt class="docutils literal"><span class="pre">skbio.util.misc</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="util.testing.html">Testing utilities (<tt class="docutils literal"><span class="pre">skbio.util.testing</span></tt>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="development/py3.html">Supporting Python 2 and Python 3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/new_module.html">Adding a new module to skbio</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Tree representations (<tt class="docutils literal"><span class="pre">skbio.core.tree</span></tt>)</a><ul>
+<li><a class="reference internal" href="#classes">Classes</a></li>
+<li><a class="reference internal" href="#functions">Functions</a></li>
+<li><a class="reference internal" href="#phylogenetic-tree-examples">Phylogenetic tree examples</a></li>
+<li><a class="reference internal" href="#prefix-trees-i-e-tries-examples">Prefix trees (i.e., tries) examples</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      
+  <span class="target" id="module-skbio.core.tree"></span><div class="section" id="tree-representations-skbio-core-tree">
+<h1>Tree representations (<a class="reference internal" href="#module-skbio.core.tree" title="skbio.core.tree"><tt class="xref py py-mod docutils literal"><span class="pre">skbio.core.tree</span></tt></a>)<a class="headerlink" href="#tree-representations-skbio-core-tree" title="Permalink to this headline">¶</a></h1>
+<p>This module provides functionality for working with trees, including
+phylogenetic trees and hierarchies, and prefix trees (i.e., tries).
+Functionality is provided for constructing trees, for traversing in multiple
+ways, comparisons, fetching subtrees, and more. This module supports trees that
+are multifurcating and nodes that have single descendants.</p>
+<div class="section" id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.core.tree.TreeNode.html#skbio.core.tree.TreeNode" title="skbio.core.tree.TreeNode"><tt class="xref py py-obj docutils literal"><span class="pre">TreeNode</span></tt></a>([name,&nbsp;length,&nbsp;parent,&nbsp;children])</td>
+<td>Representation of a node within a tree</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.core.tree.CompressedTrie.html#skbio.core.tree.CompressedTrie" title="skbio.core.tree.CompressedTrie"><tt class="xref py py-obj docutils literal"><span class="pre">CompressedTrie</span></tt></a>([pair_list])</td>
+<td>A compressed Trie for a list of (key, value) pairs</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.core.tree.fasta_to_pairlist.html#skbio.core.tree.fasta_to_pairlist" title="skbio.core.tree.fasta_to_pairlist"><tt class="xref py py-obj docutils literal"><span class="pre">fasta_to_pairlist</span></tt></a>(seqs)</td>
+<td>Yields (key, value) pairs, useful for populating a Trie object</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="phylogenetic-tree-examples">
+<h2>Phylogenetic tree examples<a class="headerlink" href="#phylogenetic-tree-examples" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.core.tree</span> <span class="kn">import</span> <span class="n">TreeNode</span>
+</pre></div>
+</div>
+<p>A new tree can be constructed from a Newick string. Newick is a common format
+used to represent tree objects within a file. Newick was part of the original
+PHYLIP package from Joseph Felsenstein&#8217;s group (defined <a class="reference external" href="http://goo.gl/fIY1Iq">here</a>), and is based around representing nesting with
+parentheses. For instance, the following string describes a 3 taxon tree, with
+one internal node:</p>
+<blockquote>
+<div>((A, B)C, D)root;</div></blockquote>
+<p>Where A, B, and D are tips of the tree, and C is an internal node that covers
+tips A and B.</p>
+<p>Now let&#8217;s construct a simple tree and dump an ASCII representation:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">tree</span> <span class="o">=</span> <span class="n">TreeNode</span><span class="o">.</span><span class="n">from_newick</span><span class="p">(</span><span class="s">&quot;((A, B)C, D)root;&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">tree</span><span class="o">.</span><span class="n">is_root</span><span class="p">()</span>  <span class="c"># is this the root of the tree?</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">tree</span><span class="o">.</span><span class="n">is_tip</span><span class="p">()</span>  <span class="c"># is this node a tip?</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">tree</span><span class="o">.</span><span class="n">ascii_art</span><span class="p">()</span>
+<span class="go">                    /-A</span>
+<span class="go">          /C-------|</span>
+<span class="go">-root----|          \-B</span>
+<span class="go">         |</span>
+<span class="go">          \-D</span>
+</pre></div>
+</div>
+<p>There are a few common ways to traverse a tree, and depending on your use,
+some methods are more appropriate than others. Wikipedia has a well written
+page on tree <a class="reference external" href="http://goo.gl/K4Ufl">traversal methods</a>, and will go into
+further depth than what we&#8217;ll cover here. We&#8217;re only going to cover two of the
+commonly used traversals here, preorder and postorder, but we will show
+examples of two other common helper traversal methods to gather tips or
+internal nodes.</p>
+<p>The first traversal we&#8217;ll cover is a preorder traversal in which you evaluate
+from root to tips, looking at the left most child first. For instance:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">tree</span><span class="o">.</span><span class="n">preorder</span><span class="p">():</span>
+<span class="gp">... </span>   <span class="k">print</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span>
+<span class="go">root</span>
+<span class="go">C</span>
+<span class="go">A</span>
+<span class="go">B</span>
+<span class="go">D</span>
+</pre></div>
+</div>
+<p>The next method we&#8217;ll look at is a postorder traveral which will evaluate the
+left subtree tips first before walking back up the tree:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">tree</span><span class="o">.</span><span class="n">postorder</span><span class="p">():</span>
+<span class="gp">... </span>   <span class="k">print</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span>
+<span class="go">A</span>
+<span class="go">B</span>
+<span class="go">C</span>
+<span class="go">D</span>
+<span class="go">root</span>
+</pre></div>
+</div>
+<p><cite>TreeNode</cite> provides two helper methods as well for iterating over just the tips
+or for iterating over just the internal nodes.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">tree</span><span class="o">.</span><span class="n">tips</span><span class="p">():</span>
+<span class="gp">... </span>   <span class="k">print</span> <span class="s">&quot;Node name: </span><span class="si">%s</span><span class="s">, Is a tip: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">is_tip</span><span class="p">())</span>
+<span class="go">Node name: A, Is a tip: True</span>
+<span class="go">Node name: B, Is a tip: True</span>
+<span class="go">Node name: D, Is a tip: True</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">tree</span><span class="o">.</span><span class="n">non_tips</span><span class="p">():</span>
+<span class="gp">... </span>   <span class="k">print</span> <span class="s">&quot;Node name: </span><span class="si">%s</span><span class="s">, Is a tip: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">is_tip</span><span class="p">())</span>
+<span class="go">Node name: C, Is a tip: False</span>
+</pre></div>
+</div>
+<p>Note, by default, <cite>non_tips</cite> will ignore <cite>self</cite> (which is the root in this
+case).  You can pass the <cite>include_self</cite> flag to <cite>non_tips</cite> if you wish to
+include <cite>self</cite>.</p>
+<p>The <cite>TreeNode</cite> provides a few ways to compare trees. First, let&#8217;s create two
+similar trees and compare their topologies using <cite>compare_subsets</cite>. This
+distance is the fraction of common clades present in the two trees, where a
+distance of 0 means the trees contain identical clades, and a distance of 1
+indicates the trees do not share any common clades:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">tree1</span> <span class="o">=</span> <span class="n">TreeNode</span><span class="o">.</span><span class="n">from_newick</span><span class="p">(</span><span class="s">&quot;((A, B)C, (D, E)F, (G, H)I)root;&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tree2</span> <span class="o">=</span> <span class="n">TreeNode</span><span class="o">.</span><span class="n">from_newick</span><span class="p">(</span><span class="s">&quot;((G, H)C, (D, E)F, (B, A)I)root;&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tree3</span> <span class="o">=</span> <span class="n">TreeNode</span><span class="o">.</span><span class="n">from_newick</span><span class="p">(</span><span class="s">&quot;((D, B)C, (A, E)F, (G, H)I)root;&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">tree1</span><span class="o">.</span><span class="n">compare_subsets</span><span class="p">(</span><span class="n">tree1</span><span class="p">)</span>  <span class="c"># identity case</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">tree1</span><span class="o">.</span><span class="n">compare_subsets</span><span class="p">(</span><span class="n">tree2</span><span class="p">)</span>  <span class="c"># same tree but different clade order</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">tree1</span><span class="o">.</span><span class="n">compare_subsets</span><span class="p">(</span><span class="n">tree3</span><span class="p">)</span>  <span class="c"># only 1 of 3 common subsets</span>
+<span class="go">0.666666666667</span>
+</pre></div>
+</div>
+<p>We can additionally take into account branch length when computing distances
+between trees. First, we&#8217;re going to construct two new trees with described
+branch length, note the difference in the Newick strings:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">tree1</span> <span class="o">=</span> <span class="n">TreeNode</span><span class="o">.</span><span class="n">from_newick</span><span class="p">(</span><span class="s">&quot;((A:0.1, B:0.2)C:0.3, D:0.4, E:0.5)root;&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tree2</span> <span class="o">=</span> <span class="n">TreeNode</span><span class="o">.</span><span class="n">from_newick</span><span class="p">(</span><span class="s">&quot;((A:0.4, B:0.8)C:0.3, D:0.1, E:0.5)root;&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In these two trees, we&#8217;ve added on a description of length from the node to
+its parent, so for instance:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">tree1</span><span class="o">.</span><span class="n">postorder</span><span class="p">():</span>
+<span class="gp">... </span>    <span class="k">print</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">length</span>
+<span class="go">A 0.1</span>
+<span class="go">B 0.2</span>
+<span class="go">C 0.3</span>
+<span class="go">D 0.4</span>
+<span class="go">E 0.5</span>
+<span class="go">root None</span>
+</pre></div>
+</div>
+<p>Now let&#8217;s compare two trees using the distances computed pairwise between tips
+in the trees. The distance computed, by default, is the correlation of all
+pairwise tip-to-tip distances between trees:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">tree1</span><span class="o">.</span><span class="n">compare_tip_distances</span><span class="p">(</span><span class="n">tree1</span><span class="p">)</span>  <span class="c"># identity case</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">tree1</span><span class="o">.</span><span class="n">compare_tip_distances</span><span class="p">(</span><span class="n">tree2</span><span class="p">)</span>
+<span class="go">0.120492524415</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="prefix-trees-i-e-tries-examples">
+<h2>Prefix trees (i.e., tries) examples<a class="headerlink" href="#prefix-trees-i-e-tries-examples" title="Permalink to this headline">¶</a></h2>
+<p>Construct a Trie from a (key, value) list</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.core.tree</span> <span class="kn">import</span> <span class="n">CompressedTrie</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pair_list</span> <span class="o">=</span> <span class="p">[(</span><span class="s">&quot;ab&quot;</span><span class="p">,</span>  <span class="s">&quot;0&quot;</span><span class="p">),</span>
+<span class="gp">... </span>             <span class="p">(</span><span class="s">&quot;abababa&quot;</span><span class="p">,</span> <span class="s">&quot;1&quot;</span><span class="p">),</span>
+<span class="gp">... </span>             <span class="p">(</span><span class="s">&quot;abab&quot;</span><span class="p">,</span> <span class="s">&quot;2&quot;</span><span class="p">),</span>
+<span class="gp">... </span>             <span class="p">(</span><span class="s">&quot;baba&quot;</span><span class="p">,</span> <span class="s">&quot;3&quot;</span><span class="p">),</span>
+<span class="gp">... </span>             <span class="p">(</span><span class="s">&quot;ababaa&quot;</span><span class="p">,</span> <span class="s">&quot;4&quot;</span><span class="p">),</span>
+<span class="gp">... </span>             <span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">,</span> <span class="s">&quot;5&quot;</span><span class="p">),</span>
+<span class="gp">... </span>             <span class="p">(</span><span class="s">&quot;abababa&quot;</span><span class="p">,</span> <span class="s">&quot;6&quot;</span><span class="p">),</span>
+<span class="gp">... </span>             <span class="p">(</span><span class="s">&quot;bab&quot;</span><span class="p">,</span> <span class="s">&quot;7&quot;</span><span class="p">),</span>
+<span class="gp">... </span>             <span class="p">(</span><span class="s">&quot;babba&quot;</span><span class="p">,</span> <span class="s">&quot;8&quot;</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">CompressedTrie</span><span class="p">(</span><span class="n">pair_list</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Get the number of keys stored in the trie</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+<span class="go">9</span>
+</pre></div>
+</div>
+<p>Get the number of nodes in the trie</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">size</span>
+<span class="go">10</span>
+</pre></div>
+</div>
+<p>Get the trie&#8217;s prefix map</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">prefix_map</span>
+<span class="go">{&#39;1&#39;: [&#39;6&#39;, &#39;2&#39;, &#39;0&#39;, &#39;5&#39;], &#39;8&#39;: [&#39;7&#39;], &#39;3&#39;: [], &#39;4&#39;: []}</span>
+</pre></div>
+</div>
+<p>Find the value attached to a given key</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&quot;ababaa&quot;</span><span class="p">)</span>
+<span class="go">[&#39;4&#39;]</span>
+</pre></div>
+</div>
+<p>Add a new (key, value) pair to the Trie</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&quot;bac&quot;</span><span class="p">,</span> <span class="s">&quot;9&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&quot;bac&quot;</span><span class="p">)</span>
+<span class="go">[&#39;9&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">prefix_map</span>
+<span class="go">{&#39;1&#39;: [&#39;6&#39;, &#39;2&#39;, &#39;0&#39;, &#39;5&#39;], &#39;9&#39;: [], &#39;3&#39;: [], &#39;4&#39;: [], &#39;8&#39;: [&#39;7&#39;]}</span>
+</pre></div>
+</div>
+<p>Create a new trie with a list of sequences</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.core.tree</span> <span class="kn">import</span> <span class="n">fasta_to_pairlist</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">seqs</span> <span class="o">=</span> <span class="p">[(</span><span class="s">&quot;s0&quot;</span><span class="p">,</span> <span class="s">&quot;ACA&quot;</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="p">(</span><span class="s">&quot;s1&quot;</span><span class="p">,</span> <span class="s">&quot;ACAGTC&quot;</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="p">(</span><span class="s">&quot;s2&quot;</span><span class="p">,</span> <span class="s">&quot;ACTA&quot;</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="p">(</span><span class="s">&quot;s3&quot;</span><span class="p">,</span> <span class="s">&quot;CAGT&quot;</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="p">(</span><span class="s">&quot;s4&quot;</span><span class="p">,</span> <span class="s">&quot;CATGAA&quot;</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="p">(</span><span class="s">&quot;s5&quot;</span><span class="p">,</span> <span class="s">&quot;A&quot;</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="p">(</span><span class="s">&quot;s6&quot;</span><span class="p">,</span> <span class="s">&quot;CATGTA&quot;</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="p">(</span><span class="s">&quot;s7&quot;</span><span class="p">,</span> <span class="s">&quot;CACCA&quot;</span><span class="p">)]</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">CompressedTrie</span><span class="p">(</span><span class="n">fasta_to_pairlist</span><span class="p">(</span><span class="n">seqs</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">prefix_map</span>
+<span class="go">{&#39;s3&#39;: [], &#39;s2&#39;: [], &#39;s1&#39;: [&#39;s0&#39;, &#39;s5&#39;], &#39;s7&#39;: [], &#39;s6&#39;: [], &#39;s4&#39;: []}</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+  
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014--, scikit-bio development team.<br/>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.2.2.<br/>
+    </p>
+  </div>
+</footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
+  </body>
+</html>

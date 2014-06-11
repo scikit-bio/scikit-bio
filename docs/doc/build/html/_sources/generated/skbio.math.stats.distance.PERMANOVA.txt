@@ -1,0 +1,38 @@
+skbio.math.stats.distance.PERMANOVA
+===================================
+
+.. currentmodule:: skbio.math.stats.distance
+
+.. autoclass:: PERMANOVA
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         PERMANOVA.__call__
+         PERMANOVA.__format__
+         PERMANOVA.__init__
+         PERMANOVA.__new__
+         PERMANOVA.__reduce__
+         PERMANOVA.__reduce_ex__
+         PERMANOVA.__sizeof__
+         PERMANOVA.__subclasshook__
+         PERMANOVA._compute_f_stat
+         PERMANOVA._df_to_vector
+         PERMANOVA._index_combinations
+         PERMANOVA._run
+
+
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         PERMANOVA.long_method_name
+         PERMANOVA.short_method_name
+         PERMANOVA.test_statistic_name
+

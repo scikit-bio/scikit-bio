@@ -1,0 +1,1 @@
+.. automodule:: skbio.draw.distributions

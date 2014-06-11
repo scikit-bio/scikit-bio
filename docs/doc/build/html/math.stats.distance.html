@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Distance-based statistics (skbio.math.stats.distance) &mdash; scikit-bio 0.1.1-dev documentation</title>
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootswatch-3.1.0/united/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1.1-dev',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/copybutton.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+    <link rel="top" title="scikit-bio 0.1.1-dev documentation" href="index.html" />
+    <link rel="next" title="skbio.math.stats.distance.ANOSIM" href="generated/skbio.math.stats.distance.ANOSIM.html" />
+    <link rel="prev" title="skbio.math.diversity.alpha.strong" href="generated/skbio.math.diversity.alpha.strong.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body>
+  
+  <a href="https://github.com/biocore/scikit-bio"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="test.html">
+          scikit-bio docs</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.1.1-dev</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            <li class="divider-vertical"></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="test.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="core.alignment.html">Sequence collections and alignments (<tt class="docutils literal"><span class="pre">skbio.core.alignment</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.sequence.html">Biological sequences (<tt class="docutils literal"><span class="pre">skbio.core.sequence</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.distance.html">Dissimilarity and distance matrices (<tt class="docutils literal"><span class="pre">skbio.core.distance</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.exception.html">Exceptions (<tt class="docutils literal"><span class="pre">skbio.core.exception</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.warning.html">Warnings (<tt class="docutils literal"><span class="pre">skbio.core.warning</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.genetic_code.html">Genetic Code (<tt class="docutils literal"><span class="pre">skbio.core.genetic_code</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.tree.html">Tree representations (<tt class="docutils literal"><span class="pre">skbio.core.tree</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.workflow.html">Constructing workflows (<tt class="docutils literal"><span class="pre">skbio.core.workflow</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.ssw.html">Performing Striped Smith Waterman Alignments (<tt class="docutils literal"><span class="pre">skbio.core.ssw</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="draw.distributions.html">Distribution visualizations (<tt class="docutils literal"><span class="pre">skbio.draw.distributions</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="format.sequences.html">Format biological sequences (<tt class="docutils literal"><span class="pre">skbio.format.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.diversity.alpha.html">Alpha diversity measures (<tt class="docutils literal"><span class="pre">skbio.math.diversity.alpha</span></tt>)</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Distance-based statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.distance</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.spatial</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.stats.ordination.html">Ordination methods (<tt class="docutils literal"><span class="pre">skbio.math.stats.ordination</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.gradient.html">Gradient analyses (<tt class="docutils literal"><span class="pre">skbio.math.gradient</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.subsample.html">Subsampling (<tt class="docutils literal"><span class="pre">skbio.math.subsample</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="parse.sequences.html">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="util.io.html">I/O utils (<tt class="docutils literal"><span class="pre">skbio.util.io</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="util.misc.html">Miscellaneous Utilities (<tt class="docutils literal"><span class="pre">skbio.util.misc</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="util.testing.html">Testing utilities (<tt class="docutils literal"><span class="pre">skbio.util.testing</span></tt>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="development/py3.html">Supporting Python 2 and Python 3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/new_module.html">Adding a new module to skbio</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Distance-based statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.distance</span></tt>)</a><ul>
+<li><a class="reference internal" href="#classes">Classes</a></li>
+<li><a class="reference internal" href="#examples">Examples</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      
+  <span class="target" id="module-skbio.math.stats.distance"></span><div class="section" id="distance-based-statistics-skbio-math-stats-distance">
+<h1>Distance-based statistics (<a class="reference internal" href="#module-skbio.math.stats.distance" title="skbio.math.stats.distance"><tt class="xref py py-mod docutils literal"><span class="pre">skbio.math.stats.distance</span></tt></a>)<a class="headerlink" href="#distance-based-statistics-skbio-math-stats-distance" title="Permalink to this headline">¶</a></h1>
+<p>Distance-based statistical methods package.</p>
+<div class="section" id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.math.stats.distance.ANOSIM.html#skbio.math.stats.distance.ANOSIM" title="skbio.math.stats.distance.ANOSIM"><tt class="xref py py-obj docutils literal"><span class="pre">ANOSIM</span></tt></a>(distance_matrix,&nbsp;grouping[,&nbsp;column])</td>
+<td>ANOSIM statistical method executor.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.math.stats.distance.PERMANOVA.html#skbio.math.stats.distance.PERMANOVA" title="skbio.math.stats.distance.PERMANOVA"><tt class="xref py py-obj docutils literal"><span class="pre">PERMANOVA</span></tt></a>(distance_matrix,&nbsp;grouping[,&nbsp;column])</td>
+<td>PERMANOVA statistical method executor.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.math.stats.distance.CategoricalStatsResults.html#skbio.math.stats.distance.CategoricalStatsResults" title="skbio.math.stats.distance.CategoricalStatsResults"><tt class="xref py py-obj docutils literal"><span class="pre">CategoricalStatsResults</span></tt></a>(short_method_name,&nbsp;...)</td>
+<td>Statistical method results container.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>Load a 4x4 distance matrix and grouping vector denoting 2 groups of objects.
+Note that these statistical methods require symmetric distances:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.core.distance</span> <span class="kn">import</span> <span class="n">DistanceMatrix</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dm</span> <span class="o">=</span> <span class="n">DistanceMatrix</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span>
+<span class="gp">... </span>                     <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+<span class="gp">... </span>                     <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+<span class="gp">... </span>                     <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span>
+<span class="gp">... </span>                    <span class="p">[</span><span class="s">&#39;s1&#39;</span><span class="p">,</span> <span class="s">&#39;s2&#39;</span><span class="p">,</span> <span class="s">&#39;s3&#39;</span><span class="p">,</span> <span class="s">&#39;s4&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">grouping</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;Group1&#39;</span><span class="p">,</span> <span class="s">&#39;Group1&#39;</span><span class="p">,</span> <span class="s">&#39;Group2&#39;</span><span class="p">,</span> <span class="s">&#39;Group2&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Create an ANOSIM instance and run the method with 99 permutations:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="c"># Make output deterministic; not necessary for normal use</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.math.stats.distance</span> <span class="kn">import</span> <span class="n">ANOSIM</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">anosim</span> <span class="o">=</span> <span class="n">ANOSIM</span><span class="p">(</span><span class="n">dm</span><span class="p">,</span> <span class="n">grouping</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">results</span> <span class="o">=</span> <span class="n">anosim</span><span class="p">(</span><span class="mi">99</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">results</span>
+<span class="go">Method name  Sample size  Number of groups  R statistic  p-value  Number of permutations</span>
+<span class="go">     ANOSIM            4                 2         0.25     0.67                      99</span>
+</pre></div>
+</div>
+<p>It is possible to rerun a method using an existing instance. Rerun ANOSIM with
+999 permutations this time. Note that we obtain the same R statistic as before:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">results</span> <span class="o">=</span> <span class="n">anosim</span><span class="p">(</span><span class="mi">999</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">results</span>
+<span class="go">Method name  Sample size  Number of groups  R statistic  p-value  Number of permutations</span>
+<span class="go">     ANOSIM            4                 2         0.25    0.667                     999</span>
+</pre></div>
+</div>
+<p>To suppress calculation of the p-value and only obtain the R statistic, specify
+zero permutations:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">results</span> <span class="o">=</span> <span class="n">anosim</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">results</span>
+<span class="go">Method name  Sample size  Number of groups  R statistic  p-value  Number of permutations</span>
+<span class="go">     ANOSIM            4                 2         0.25      N/A                       0</span>
+</pre></div>
+</div>
+<p>A statistical results object can also format its results as delimited text.
+This is useful, for example, if you want to view the results in a spreadsheet
+program such as Excel:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">results</span><span class="o">.</span><span class="n">summary</span><span class="p">(</span><span class="n">delimiter</span><span class="o">=</span><span class="s">&#39;,&#39;</span><span class="p">)</span>
+<span class="go">Method name,Sample size,Number of groups,R statistic,p-value,Number of permutations</span>
+<span class="go">ANOSIM,4,2,0.25,N/A,0</span>
+</pre></div>
+</div>
+<p>Individual values of the results can be accessed via the attributes of the
+<tt class="docutils literal"><span class="pre">CategoricalStatsResults</span></tt> class:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">results</span><span class="o">.</span><span class="n">statistic</span>
+<span class="go">0.25</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">results</span><span class="o">.</span><span class="n">p_value</span>
+<span class="go">None</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">results</span><span class="o">.</span><span class="n">permutations</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+<p>You can also provide a <tt class="docutils literal"><span class="pre">pandas.DataFrame</span></tt> and a column denoting the grouping
+instead of a grouping vector. The following data frame&#8217;s <tt class="docutils literal"><span class="pre">Group</span></tt> column
+specifies the same grouping as the vector we used in all of the previous
+examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="c"># Make output deterministic; not necessary for normal use</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="p">{</span><span class="s">&#39;Group&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;s2&#39;</span><span class="p">:</span> <span class="s">&#39;Group1&#39;</span><span class="p">,</span> <span class="s">&#39;s3&#39;</span><span class="p">:</span> <span class="s">&#39;Group2&#39;</span><span class="p">,</span> <span class="s">&#39;s4&#39;</span><span class="p">:</span> <span class="s">&#39;Group2&#39;</span><span class="p">,</span>
+<span class="gp">... </span>               <span class="s">&#39;s5&#39;</span><span class="p">:</span> <span class="s">&#39;Group3&#39;</span><span class="p">,</span> <span class="s">&#39;s1&#39;</span><span class="p">:</span> <span class="s">&#39;Group1&#39;</span><span class="p">}})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">anosim</span> <span class="o">=</span> <span class="n">ANOSIM</span><span class="p">(</span><span class="n">dm</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="s">&#39;Group&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">results</span> <span class="o">=</span> <span class="n">anosim</span><span class="p">(</span><span class="mi">99</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">results</span>
+<span class="go">Method name  Sample size  Number of groups  R statistic  p-value  Number of permutations</span>
+<span class="go">     ANOSIM            4                 2         0.25     0.67                      99</span>
+</pre></div>
+</div>
+<p>The results match the results we saw in the first example above.</p>
+<p>Note that when providing a data frame, the ordering of rows and/or columns does
+not affect the grouping vector that is extracted. The data frame must be
+indexed by the distance matrix IDs (i.e., the row labels must be distance
+matrix IDs).</p>
+<p>If IDs (rows) are present in the data frame but not in the distance matrix,
+they are ignored (the previous example&#8217;s <tt class="docutils literal"><span class="pre">s5</span></tt> ID illustrates this behavior).
+Thus, the data frame can be a superset of the distance matrix IDs. Note that
+the reverse is not true: IDs in the distance matrix <em>must</em> be present in the
+data frame or an error will be raised.</p>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+  
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014--, scikit-bio development team.<br/>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.2.2.<br/>
+    </p>
+  </div>
+</footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
+  </body>
+</html>

@@ -1,0 +1,30 @@
+skbio.math.gradient.AverageGradientANOVA
+========================================
+
+.. currentmodule:: skbio.math.gradient
+
+.. autoclass:: AverageGradientANOVA
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         AverageGradientANOVA.__format__
+         AverageGradientANOVA.__init__
+         AverageGradientANOVA.__new__
+         AverageGradientANOVA.__reduce__
+         AverageGradientANOVA.__reduce_ex__
+         AverageGradientANOVA.__sizeof__
+         AverageGradientANOVA.__subclasshook__
+         AverageGradientANOVA._compute_trajectories_results
+         AverageGradientANOVA._get_group_trajectories
+         AverageGradientANOVA._make_groups
+         AverageGradientANOVA._normalize_samples
+         AverageGradientANOVA.get_trajectories
+
+
+
+   
+

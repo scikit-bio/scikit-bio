@@ -1,0 +1,37 @@
+skbio.math.stats.distance.ANOSIM
+================================
+
+.. currentmodule:: skbio.math.stats.distance
+
+.. autoclass:: ANOSIM
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ANOSIM.__call__
+         ANOSIM.__format__
+         ANOSIM.__init__
+         ANOSIM.__new__
+         ANOSIM.__reduce__
+         ANOSIM.__reduce_ex__
+         ANOSIM.__sizeof__
+         ANOSIM.__subclasshook__
+         ANOSIM._compute_r_stat
+         ANOSIM._df_to_vector
+         ANOSIM._run
+
+
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ANOSIM.long_method_name
+         ANOSIM.short_method_name
+         ANOSIM.test_statistic_name
+
