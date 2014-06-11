@@ -67,15 +67,15 @@ def _open_or_none(opener, f):
     else:
         name = opener.__name__
 
-        if not os.path.exists(f):
-            raise IOError("%s does not appear to exist!" % f)
-        try:
-            with opener(f) as opened:
-                pass
-        except IOError:
-            raise IOError("Could not open %s with %s!" % (f, name))
+    if not os.path.exists(f):
+        raise IOError("%s does not appear to exist!" % f)
+    try:
+        with opener(f) as opened:
+            pass
+    except IOError:
+        raise IOError("Could not open %s with %s!" % (f, name))
 
-        return opened
+    return opened
 
 
 def load(seqs, qual=None, constructor=None, **kwargs):
