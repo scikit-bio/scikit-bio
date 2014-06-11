@@ -45,60 +45,6 @@ import numpy as np
 from skbio.core.distance import DistanceMatrix
 from skbio.core.tree import TreeNode
 
-def _compute_q(dm):
-    q = np.zeros(dm.shape)
-    n = dm.shape[0]
-    for i in range(n):
-        for j in range(i):
-            q[i, j] = q[j, i] = ((n - 2) * dm[i, j]) - dm[i].sum() - dm[j].sum()
-    return DistanceMatrix(q, dm.ids)
-
-def _pair_members_to_new_node(dm, i, j, dissallow_negative_branch_length):
-    n = dm.shape[0]
-    i_to_j = dm[i, j]
-    i_to_u = (0.5 * i_to_j) + (1 / (2 * (n - 2))) * (dm[i].sum() - dm[j].sum())
-    j_to_u = i_to_j - i_to_u
-
-    if dissallow_negative_branch_length and i_to_u < 0:
-        i_to_u = 0
-    if dissallow_negative_branch_length and j_to_u < 0:
-        j_to_u = 0
-
-    return i_to_u, j_to_u
-
-def _otu_to_new_node(dm, i, j, k, dissallow_negative_branch_length):
-    k_to_u = 0.5 * (dm[i, k] + dm[j, k] - dm[i, j])
-
-    if dissallow_negative_branch_length and k_to_u < 0:
-        k_to_u = 0
-
-    return k_to_u
-
-def _lowest_index(dm):
-    lowest_value = np.inf
-    for i in range(dm.shape[0]):
-        for j in range(i):
-            curr_index = i, j
-            curr_value = dm[curr_index]
-            if curr_value < lowest_value:
-                lowest_value = curr_value
-                result = curr_index
-    return result
-
-def _compute_collapsed_dm(dm, i, j, dissallow_negative_branch_length, new_node_id=None):
-    in_n = dm.shape[0]
-    out_n = in_n - 1
-    new_node_id = new_node_id or "(%s, %s)" % (i, j)
-    out_ids = [new_node_id]
-    out_ids.extend([e for e in dm.ids if e not in (i, j)])
-    result = np.zeros((out_n, out_n))
-    for idx1, out_id1 in enumerate(out_ids[1:]):
-        result[0, idx1 + 1] = result[idx1 + 1, 0] = \
-         _otu_to_new_node(dm, i, j, out_id1, dissallow_negative_branch_length)
-        for idx2, out_id2 in enumerate(out_ids[1:idx1+1]):
-            result[idx1+1, idx2+1] = result[idx2+1, idx1+1] = dm[out_id1, out_id2]
-    return DistanceMatrix(result, out_ids)
-
 def nj(dm, dissallow_negative_branch_length=True,
        result_constructor=TreeNode.from_newick):
     while(dm.shape[0] > 3):
@@ -133,3 +79,57 @@ def nj(dm, dissallow_negative_branch_length=True,
                                          pair_member_2, pair_member_2_len)
 
     return result_constructor(newick)
+
+def _compute_q(dm):
+    q = np.zeros(dm.shape)
+    n = dm.shape[0]
+    for i in range(n):
+        for j in range(i):
+            q[i, j] = q[j, i] = ((n - 2) * dm[i, j]) - dm[i].sum() - dm[j].sum()
+    return DistanceMatrix(q, dm.ids)
+
+def _compute_collapsed_dm(dm, i, j, dissallow_negative_branch_length, new_node_id=None):
+    in_n = dm.shape[0]
+    out_n = in_n - 1
+    new_node_id = new_node_id or "(%s, %s)" % (i, j)
+    out_ids = [new_node_id]
+    out_ids.extend([e for e in dm.ids if e not in (i, j)])
+    result = np.zeros((out_n, out_n))
+    for idx1, out_id1 in enumerate(out_ids[1:]):
+        result[0, idx1 + 1] = result[idx1 + 1, 0] = \
+         _otu_to_new_node(dm, i, j, out_id1, dissallow_negative_branch_length)
+        for idx2, out_id2 in enumerate(out_ids[1:idx1+1]):
+            result[idx1+1, idx2+1] = result[idx2+1, idx1+1] = dm[out_id1, out_id2]
+    return DistanceMatrix(result, out_ids)
+
+def _lowest_index(dm):
+    lowest_value = np.inf
+    for i in range(dm.shape[0]):
+        for j in range(i):
+            curr_index = i, j
+            curr_value = dm[curr_index]
+            if curr_value < lowest_value:
+                lowest_value = curr_value
+                result = curr_index
+    return result
+
+def _otu_to_new_node(dm, i, j, k, dissallow_negative_branch_length):
+    k_to_u = 0.5 * (dm[i, k] + dm[j, k] - dm[i, j])
+
+    if dissallow_negative_branch_length and k_to_u < 0:
+        k_to_u = 0
+
+    return k_to_u
+
+def _pair_members_to_new_node(dm, i, j, dissallow_negative_branch_length):
+    n = dm.shape[0]
+    i_to_j = dm[i, j]
+    i_to_u = (0.5 * i_to_j) + (1 / (2 * (n - 2))) * (dm[i].sum() - dm[j].sum())
+    j_to_u = i_to_j - i_to_u
+
+    if dissallow_negative_branch_length and i_to_u < 0:
+        i_to_u = 0
+    if dissallow_negative_branch_length and j_to_u < 0:
+        j_to_u = 0
+
+    return i_to_u, j_to_u
