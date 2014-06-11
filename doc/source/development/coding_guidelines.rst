@@ -18,11 +18,11 @@ What should I call my variables?
 
 - *Good names are hard to find.* Don't be afraid to change names except when they are part of interfaces that other people are also using. It may take some time working with the code to come up with reasonable names for everything: if you have unit tests, it's easy to change them, especially with global search and replace.
 
-- *Use singular names for individual things, plural names for collections.* For example, you'd expect ``self.name`` to hold something like a single string, but ``self.names`` to hold something that you could loop through like a list or dict. Sometimes the decision can be tricky: is ``self.index`` an int holding a positon, or a dict holding records keyed by name for easy lookup? If you find yourself wondering these things, the name should probably be changed to avoid the problem: try ``self.position`` or ``self.look_up``.
+- *Use singular names for individual things, plural names for collections.* For example, you'd expect ``self.name`` to hold something like a single string, but ``self.names`` to hold something that you could loop through like a list or dictionary. Sometimes the decision can be tricky: is ``self.index`` an integer holding a positon, or a dictionary holding records keyed by name for easy lookup? If you find yourself wondering these things, the name should probably be changed to avoid the problem: try ``self.position`` or ``self.look_up``.
 
 - *Don't make the type part of the name.* You might want to change the implementation later. Use ``Records`` rather than ``RecordDict`` or ``RecordList``, etc. Don't use Hungarian Notation either (i.e. where you prefix the name with the type).
 
-- *Make the name as precise as possible.* If the variable is the name of the input file, call it ``infile_name``, not ``input`` or ``file`` (which you shouldn't use anyway, since they're keywords), and not ``infile`` (because that looks like it should be a file object, not just its name).
+- *Make the name as precise as possible.* If the variable is the path of the input file, call it ``input_fp``, not ``input`` or ``file`` (which you shouldn't use anyway, since they're keywords), and not ``infile`` (because that looks like it should be a file object, not just its name).
 
 - *Use* ``result`` *to store the value that will be returned from a method or function.* Use ``data`` for input in cases where the function or method acts on arbitrary data (e.g. sequence data, or a list of numbers, etc.) unless a more descriptive name is appropriate.
 
@@ -42,7 +42,7 @@ The following list of abbreviations can be considered well-known and used with i
 +--------------------+--------------+
 |           archaeal |         arch |
 +--------------------+--------------+
-|          auxillary |          aux |
+|          auxiliary |          aux |
 +--------------------+--------------+
 |          bacterial |         bact |
 +--------------------+--------------+
@@ -62,6 +62,8 @@ The following list of abbreviations can be considered well-known and used with i
 +--------------------+--------------+
 |         eukaryotic |          euk |
 +--------------------+--------------+
+|          filepath  |           fp |
++--------------------+--------------+
 |          frequency |         freq |
 +--------------------+--------------+
 |           expected |          exp |
@@ -77,6 +79,8 @@ The following list of abbreviations can be considered well-known and used with i
 |      mitochondrial |           mt |
 +--------------------+--------------+
 |             number |          num |
++--------------------+--------------+
+|        observation |          obs |
 +--------------------+--------------+
 |           observed |          obs |
 +--------------------+--------------+
@@ -110,7 +114,13 @@ The following list of abbreviations can be considered well-known and used with i
 +--------------------+--------------+
 |          temporary |         temp |
 +--------------------+--------------+
+|               taxa |          tax |
++--------------------+--------------+
+|              taxon |          tax |
++--------------------+--------------+
 |          taxonomic |          tax |
++--------------------+--------------+
+|           taxonomy |          tax |
 +--------------------+--------------+
 |           variance |          var |
 +--------------------+--------------+
@@ -132,6 +142,7 @@ How do I organize my modules (source files)?
 
     import numpy as np
     import numpy.testing as npt
+    import pandas as pd
 
     from matplotlib import pyplot as plt
 
@@ -141,20 +152,20 @@ How do I organize my modules (source files)?
 Example of module structure
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The structure of your module should be similar to the example bellow, note that scikit-bio uses the `NumPy doc`_ standard for documentation, `this document explains`_ how to do this:
+The structure of your module should be similar to the example below. scikit-bio uses the `NumPy doc`_ standard for documentation. Our `doc/README.md`_ explains how to write your docstrings using the `NumPy doc`_ standards for scikit-bio:
 
 .. _`NumPy doc`: https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt
-.. _`this document explains`: https://github.com/biocore/scikit-bio/blob/master/doc/README.md
+.. _`doc/README.md`: https://github.com/biocore/scikit-bio/blob/master/doc/README.md
 
 .. code-block:: python
 
     r"""
-    Number List (:mod:`skbio.core.numbers`)
-    =======================================
+    Numbers (:mod:`skbio.core.numbers`)
+    ===================================
 
     .. currentmodule:: skbio.core.numbers
 
-    NumberList holds a sequence of numbers, and defines several statistical
+    Numbers holds a sequence of numbers, and defines several statistical
     operations (mean, stdev, etc.) FrequencyDistribution holds a mapping from
     items (not necessarily numbers) to counts, and defines operations such as
     Shannon entropy and frequency normalization.
@@ -166,7 +177,7 @@ The structure of your module should be similar to the example bellow, note that 
     .. autosummary::
        :toctree: generated/
 
-       NumberList
+       Numbers
 
     """
     # ----------------------------------------------------------------------------
@@ -183,7 +194,7 @@ The structure of your module should be similar to the example bellow, note that 
     from random import choice, random
     from utils import indices
 
-    class NumberList(list):
+    class Numbers(list):
         pass    # much code deleted
     class FrequencyDistribution(dict):
         pass    # much code deleted
@@ -194,7 +205,7 @@ How should I write comments?
 
 - *Always update the comments when the code changes.* Incorrect comments are far worse than no comments, since they are actively misleading.
 
-- *Comments should say more than the code itself.* Examine your comments carefully: they may indicate that you'd be better off rewriting your code (especially, *renaming your variables* and getting rid of the comment.) In particular, don't scatter magic numbers and other constants that have to be explained through your code. It's far better to use variables whose names are self-documenting, especially if you use the same constant more than once. Also, think about making constants into class or instance data, since it's all too common for 'constants' to need to change or to be needed in several methods.
+- *Comments should say more than the code itself.* Examine your comments carefully: they may indicate that you'd be better off rewriting your code (especially if *renaming your variables* would allow you to get rid of the comment.) In particular, don't scatter magic numbers and other constants that have to be explained through your code. It's far better to use variables whose names are self-documenting, especially if you use the same constant more than once. Also, think about making constants into class or instance data, since it's all too common for 'constants' to need to change or to be needed in several methods.
 
     +-------+------------------------------------------------------------+
     | Wrong |       ``win_size -= 20        # decrement win_size by 20`` |
@@ -208,66 +219,7 @@ How should I write comments?
 
 
 - *Use comments starting with #, not strings, inside blocks of code.*
-- *Start each method, class and function with a docstring using triple double quotes (""").* The docstring should start with a 1-line description that makes sense by itself (many automated formatting tools, and the IDE, use this). This should be followed by a blank line, followed by descriptions of the parameters (if any). Finally, add any more detailed information, such as a longer description, notes about the algorithm, detailed notes about the parameters, etc. If there is a usage example, it should appear at the end. Make sure any descriptions of parameters have the correct spelling, case, etc. For example:
-
-.. code-block:: python
-
-    class BiologicalSequence(Sequence):
-        """Base class for biological sequences.
-
-        Parameters
-        ----------
-        sequence : python Sequence (e.g., str, list or tuple)
-            The biological sequence.
-        id : str, optional
-            The sequence id (e.g., an accession number).
-        description : str, optional
-            A description or comment about the sequence (e.g., "green
-            fluorescent protein").
-        validate : bool, optional
-            If True, runs the `is_valid` method after construction and raises
-            BiologicalSequenceError if ``is_valid == False``.
-
-        Attributes
-        ----------
-        description
-        id
-
-        Raises
-        ------
-        skbio.core.exception.BiologicalSequenceError
-          If ``validate == True`` and ``is_valid == False``.
-
-        See Also
-        --------
-        NucleotideSequence
-        DNASequence
-        RNASequence
-
-        Notes
-        -----
-        `BiologicalSequence` objects are immutable. Where applicable, methods
-        return a new object of the same class.
-        Subclasses are typically defined by methods relevant to only a specific
-        type of biological sequence, and by containing characters only contained in
-        the IUPAC standard character set [1]_ for that molecule type.
-
-        Examples
-        --------
-        >>> from skbio.core.sequence import BiologicalSequence
-        >>> s = BiologicalSequence('GGUCGUGAAGGA')
-        >>> t = BiologicalSequence('GGUCCUGAAGGU')
-
-        References
-        ----------
-        .. [1] Nomenclature for incompletely specified bases in nucleic acid
-           sequences: recommendations 1984.
-           Nucleic Acids Res. May 10, 1985; 13(9): 3021-3030.
-           A Cornish-Bowden
-
-        """
-
-For more information refer to the `NumPy doc`_ standard.
+- *Start each method, class and function with a docstring using triple double quotes (""").* Make sure the docstring follows the `NumPy doc`_ standard.
 
 - *Always update the docstring when the code changes.* Like outdated comments, outdated docstrings can waste a lot of time. "Correct examples are priceless, but incorrect examples are worse than worthless." `Jim Fulton`_.
 
@@ -286,7 +238,9 @@ Never treat prototypes as production code. It's fine to write prototype code wit
 
 "Code a little test a little". For production code, write a couple of tests, then a couple of methods, then a couple more tests, then a couple more methods, then maybe change some of the names or generalize some of the functionality. If you have a huge amount of code where all you have to do is write the tests', you're probably closer to 30% done than 90%. Testing vastly reduces the time spent debugging, since whatever went wrong has to be in the code you wrote since the last test suite. And remember to use python's interactive interpreter for quick checks of syntax and ideas.
 
-Run the test suite when you change `anything`. Even if a change seems trivial, it will only take a couple of seconds to run the tests and then you'll be sure. This can eliminate long and frustrating debugging sessions where the change turned out to have been made long ago, but didn't seem significant at the time.
+Run the test suite when you change `anything`. Even if a change seems trivial, it will only take a couple of seconds to run the tests and then you'll be sure. This can eliminate long and frustrating debugging sessions where the change turned out to have been made long ago, but didn't seem significant at the time. **Note that tests are executed using Travis CI**, see `this document's section`_ for further discussion.
+
+.. _`this document's section`: https://github.com/biocore/scikit-bio/blob/master/CONTRIBUTING.md#testing-guidelines
 
 Some pointers
 ^^^^^^^^^^^^^
@@ -327,6 +281,10 @@ Some pointers
 - *To test permutations, check that the original and shuffled version are different, but that the sorted original and sorted shuffled version are the same.* Make sure that you get *different* permutations on repeated runs and when starting from different points.
 
 - *To test random choices, figure out how many of each choice you expect in a large sample (say, 1000 or a million) using the binomial distribution or its normal approximation.* Run the test several times and check that you're within, say, 3 standard deviations of the mean.
+
+- All tests that depend on a random value should be seeded, for example if using NumPy, `numpy.random.seed(0)` should be used, in any other case the appropriate API should be used to create consistent outputs between runs. It is preferable that you do this for each test case instead of doing it in the `setUp` function/method (if any exists).
+
+- Stochastic failures should occur less than 1/10,1000 times, otherwise you risk adding a significant amount of time to the total running time of the test suite.
 
 Example of a ``nose`` test module structure
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -405,4 +363,7 @@ Writting a commit message
 
 In general the writing of a commit message should adhere to `NumPy's guidelines`_ which if followed correctly will help you structure your changes better i. e. bug fixes will be in a commit followed by a commit updating the test suite and with one last commit that update the documentation as needed.
 
+GitHub provides a set of handy features that will link together a commit message to a ticket in the issue tracker, this is specially helpful because you can `close an issue automatically`_ when the change is merged into the main repository, this reduces the amount of work that has to be done making sure outdated issues are not open.
+
 .. _`NumPy's guidelines`: http://docs.scipy.org/doc/numpy/dev/gitwash/development_workflow.html#writing-the-commit-message
+.. _`close an issue automatically`: https://help.github.com/articles/closing-issues-via-commit-messages
