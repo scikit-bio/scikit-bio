@@ -258,7 +258,6 @@ class MantelTests(TestCase):
 class PairwiseMantelTests(TestCase):
 
     # TODO add test with duplicate dms
-    # TODO add test for n/a p-value
 
     def setUp(self):
         self.minx = DistanceMatrix([[0, 1, 2], [1, 0, 3], [2, 3, 0]])
@@ -284,7 +283,16 @@ class PairwiseMantelTests(TestCase):
             get_data_path('pwmantel_exp_results_minimal_with_labels.txt'),
             sep='\t', index_col=(0, 1), converters=p_val_conv)
 
+        self.exp_results_na_p_value = pd.read_csv(
+            get_data_path('pwmantel_exp_results_na_p_value.txt'),
+            sep='\t', index_col=(0, 1), converters=p_val_conv)
+
+        self.exp_results_too_few_permutations = pd.read_csv(
+            get_data_path('pwmantel_exp_results_too_few_permutations.txt'),
+            sep='\t', index_col=(0, 1), converters=p_val_conv)
+
     def test_minimal_compatible_input(self):
+        # Matrices are already in the correct order and have matching IDs.
         np.random.seed(0)
 
         obs = pwmantel(self.min_dms, alternative='greater')
@@ -296,8 +304,28 @@ class PairwiseMantelTests(TestCase):
 
         obs = pwmantel(self.min_dms, alternative='greater',
                        labels=('minx', 'miny', 'minz'))
-        #obs.to_csv('tests/data/pwmantel_exp_results_minimal_with_labels.txt', sep='\t')
         assert_frame_equal(obs, self.exp_results_minimal_with_labels)
+
+    def test_na_p_value(self):
+        obs = pwmantel((self.miny, self.minx), method='spearman',
+                       permutations=0)
+        assert_frame_equal(obs, self.exp_results_na_p_value)
+
+    def test_too_few_permutations_for_p_value(self):
+        obs = pwmantel((self.miny, self.minx), method='spearman',
+                       permutations=9)
+        assert_frame_equal(obs, self.exp_results_too_few_permutations)
+
+    #def test_reordered_distance_matrices(self):
+    #    # Matrices have matching IDs but they all have different ordering.
+    #    x = DistanceMatrix(self.minx[
+
+
+    #    np.random.seed(0)
+
+    #    obs = pwmantel(self.min_dms, alternative='greater')
+    #    #obs.to_csv('tests/data/pwmantel_exp_results_minimal.txt', sep='\t')
+    #    assert_frame_equal(obs, self.exp_results_minimal)
 
 
 if __name__ == '__main__':
