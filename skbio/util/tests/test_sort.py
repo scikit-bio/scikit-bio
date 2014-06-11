@@ -146,7 +146,7 @@ class SortTests(TestCase):
                            ('9', 'SampleA'), ('13', 'SampleH'),
                            ('17.11', 'SampleB'), ('100', 'SampleG')]
         output = signed_natsort(test_list)
-        self.assertEquals(output, expected_result)
+        self.assertEqual(output, expected_result)
 
         # tuples that must be sorted alphabetically
         test_list = [('Cygnus', 'SampleA'), ('Cepheus', 'SampleD'),
@@ -158,7 +158,7 @@ class SortTests(TestCase):
                            ('Grus', 'SampleE'), ('Hydra', 'SampleF'),
                            ('Lynx', 'SampleH'), ('Orion', 'SampleG')]
         output = signed_natsort(test_list)
-        self.assertEquals(output, expected_result)
+        self.assertEqual(output, expected_result)
 
         # mixed case, tuples will be sorted alpha-numerically
         test_list = [('Cygnus', 'SampleA'), ('Cepheus', 'SampleD'),
@@ -170,26 +170,26 @@ class SortTests(TestCase):
                            ('Cepheus', 'SampleD'), ('Cygnus', 'SampleA'),
                            ('Grus', 'SampleE'), ('Lynx', 'SampleH')]
         output = signed_natsort(test_list)
-        self.assertEquals(output, expected_result)
+        self.assertEqual(output, expected_result)
 
         # mixed case just a list
         test_list = ['foo', 'bar', '-100', '12', 'spam', '4', '-1']
         expected_result = ['4', '12', '-1', '-100', 'bar', 'foo', 'spam']
         output = signed_natsort(test_list)
-        self.assertEquals(output, expected_result)
+        self.assertEqual(output, expected_result)
 
         # list of elements that can be type-casted
         test_list = ['0', '1', '14', '12', '-15', '4', '-1']
         expected_result = ['-15', '-1', '0', '1', '4', '12', '14']
         output = signed_natsort(test_list)
-        self.assertEquals(output, expected_result)
+        self.assertEqual(output, expected_result)
 
         # mixed dict case
         test_dict = {'foo': 'a', 'bar': 'b', '-100': '1', '12': '11',
                      'spam': 'q', '4': '11', '-1': 'e'}
         expected_result = ['4', '12', '-1', '-100', 'bar', 'foo', 'spam']
         output = signed_natsort(test_dict)
-        self.assertEquals(output, expected_result)
+        self.assertEqual(output, expected_result)
 
         # dict where the keys can be type-casted
         test_dict = {'0': 'foo', '1': 'bar', '14': 'stand', '12': 'eggs',
