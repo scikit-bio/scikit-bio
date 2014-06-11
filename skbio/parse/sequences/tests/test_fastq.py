@@ -6,7 +6,7 @@
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # -----------------------------------------------------------------------------
-from __future__ import division
+from __future__ import absolute_import, division, print_function
 
 from unittest import TestCase, main
 import tempfile
@@ -22,6 +22,7 @@ class IterableData(object):
         """ Initialize variables to be used by the tests as lists of strings"""
         self.FASTQ_EXAMPLE = FASTQ_EXAMPLE.split('\n')
         self.FASTQ_EXAMPLE_2 = FASTQ_EXAMPLE_2.split('\n')
+        self.FASTQ_EXAMPLE_3 = FASTQ_EXAMPLE_3.split('\n')
 
 
 class FileData(object):
@@ -29,7 +30,8 @@ class FileData(object):
         """ Initialize variables to be used by the tests as file names"""
         tmp_files = []
         for attr, val in [('FASTQ_EXAMPLE', FASTQ_EXAMPLE),
-                          ('FASTQ_EXAMPLE_2', FASTQ_EXAMPLE_2)]:
+                          ('FASTQ_EXAMPLE_2', FASTQ_EXAMPLE_2),
+                          ('FASTQ_EXAMPLE_3', FASTQ_EXAMPLE_3)]:
             tmp_file = tempfile.NamedTemporaryFile('w')
             tmp_file.write(val)
             tmp_file.flush()
@@ -72,6 +74,9 @@ class ParseFastqTests(object):
         with self.assertRaises(FastqParseError):
             list(parse_fastq(self.FASTQ_EXAMPLE_2, strict=True))
 
+        with self.assertRaises(FastqParseError):
+            list(parse_fastq(self.FASTQ_EXAMPLE_3, phred_offset=64))
+
 
 class ParseFastqTestsInputIsIterable(IterableData, ParseFastqTests, TestCase):
     pass
@@ -79,6 +84,7 @@ class ParseFastqTestsInputIsIterable(IterableData, ParseFastqTests, TestCase):
 
 class ParseFastqTestsInputIsFileNames(FileData, ParseFastqTests, TestCase):
     pass
+
 
 DATA = {
     "GAPC_0015:6:1:1259:10413#0/1":
@@ -135,6 +141,7 @@ DATA = {
 
 }
 
+
 DATA_2 = {
     "GAPC_0017:6:1:1259:10413#0/1":
     dict(seq='AACACCAAACTTCTCCACCACGTGAGCTACAAAAG',
@@ -147,6 +154,7 @@ DATA_2 = {
                      63, 64, 66, 61, 59, 59, 63, 65, 51, 63, 63, 66, 63, 59,
                      64, 51, 63, 63, 65, 65, 65]))
 }
+
 
 FASTQ_EXAMPLE = r"""@GAPC_0015:6:1:1259:10413#0/1
 AACACCAAACTTCTCCACCACGTGAGCTACAAAAG
@@ -189,6 +197,7 @@ TTGTTTCCACTTGGTTGATTTCACCCCTGAGTTTG
 +GAPC_0015:6:1:1317:3403#0/1
 \\\ZTYTSaLbb``\_UZ_bbcc`cc^[ac\a\Tc"""
 
+
 FASTQ_EXAMPLE_2 = r"""@GAPC_0017:6:1:1259:10413#0/1
 AACACCAAACTTCTCCACCACGTGAGCTACAAAAG
 +GAPC_0015:6:1:1259:10413#0/1
@@ -197,6 +206,14 @@ AACACCAAACTTCTCCACCACGTGAGCTACAAAAG
 TATGTATATATAACATATACATATATACATACATA
 +GAPC_0015:6:1:1283:11957#0/1
 ]KZ[PY]_[YY^```ac^\\`bT``c`\aT``bbb
+"""
+
+
+FASTQ_EXAMPLE_3 = r"""@GAPC_0017:6:1:1259:10413#0/1
+AACACCAAACTTCTCCACCACGTGAGCTACAAAAG
++GAPC_0015:6:1:1259:10413#0/1
+````Y^T]`]c^cabcacc`^Lb^ccYT\T\Y\WF
+@GAPC_0015:6:1:1283:11957#0/1
 """
 
 

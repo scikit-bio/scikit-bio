@@ -5,7 +5,7 @@
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # -----------------------------------------------------------------------------
-from __future__ import division
+from __future__ import absolute_import, division, print_function
 
 from skbio.core.exception import RecordError
 from skbio.parse.record import DelimitedSplitter
@@ -131,8 +131,8 @@ def parse_clustal(record, strict=True):
     ...                      'def   ---------------CGUGCAUGCAU-CGAU 18\n'
     ...                      'xyz   -----------CAUUCGUACGUACGCAUGAC 23\n')
     >>> for label, seq in parse_clustal(clustal_f):
-    ...     print label
-    ...     print seq
+    ...     print(label)
+    ...     print(seq)
     abc
     GCAUGCAUCUGCAUACGUACGUACGCAUGCAGUCGAUACAUACGUACGUCGGUACGU-CGAC
     def

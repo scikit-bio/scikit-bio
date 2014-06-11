@@ -33,7 +33,7 @@ Exceptions
    InvalidCodonError
 
 """
-from __future__ import division
+from __future__ import absolute_import, division, print_function
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.

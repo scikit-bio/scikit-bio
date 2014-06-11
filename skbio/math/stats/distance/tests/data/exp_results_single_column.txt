@@ -1,0 +1,2 @@
+vars	size	correlation
+PH	1	0.75

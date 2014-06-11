@@ -8,7 +8,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import division
+from __future__ import absolute_import, division, print_function
 from future.utils.six import StringIO
 from unittest import TestCase, main
 
@@ -104,8 +104,6 @@ class CategoricalStatsResultsTests(TestCase):
         self.assertTrue('<th' in obs)
         self.assertTrue('<tbody' in obs)
         self.assertTrue('<td' in obs)
-        self.assertTrue('1 rows' in obs)
-        self.assertTrue('5 columns' in obs)
 
     def test_summary(self):
         exp = ('Method name\tSample size\tNumber of groups\tmy stat\tp-value\t'
