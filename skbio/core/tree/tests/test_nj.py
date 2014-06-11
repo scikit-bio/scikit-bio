@@ -39,6 +39,14 @@ class NjTests(TestCase):
         self.assertEqual(\
             actual_TreeNode.compare_tip_distances(self.expected1_TreeNode), 0.0)
 
+    def test_nj_trivial(self):
+        data = [[0, 3, 2],
+                [3, 0, 3],
+                [2, 3, 0]]
+        dm = DistanceMatrix(data, list('abc'))
+        expected_str = "(b:2, a:1, c:1);"
+        self.assertEqual(nj(dm, result_constructor=str), expected_str)
+
     def test_compute_q(self):
         expected_data = [[  0, -50, -38, -34, -34],
                          [-50,   0, -38, -34, -34],

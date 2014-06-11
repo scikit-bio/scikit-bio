@@ -99,6 +99,7 @@ def nj(dm, disallow_negative_branch_length=True,
     """
     # while there are still more than three distances in the distance matrix,
     # join neighboring nodes.
+    node_definition = None
     while(dm.shape[0] > 3):
         # compute the Q matrix
         q = _compute_q(dm)
@@ -136,7 +137,9 @@ def nj(dm, disallow_negative_branch_length=True,
     pair_member_1_len, pair_member_2_len = \
         _pair_members_to_new_node(dm, pair_member_1, pair_member_2,
                                   disallow_negative_branch_length)
-    # ...then determine their distance to the other remaining node...
+    # ...then determine their distance to the other remaining node, but first
+    # handle the trival case where the input dm was only 3 x 3
+    node_definition = node_definition or dm.ids[0]
     internal_len = _otu_to_new_node(\
         dm, pair_member_1, pair_member_2, node_definition,
         disallow_negative_branch_length=disallow_negative_branch_length)
