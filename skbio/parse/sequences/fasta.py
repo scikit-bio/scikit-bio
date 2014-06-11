@@ -32,19 +32,28 @@ def is_blank(x):
 FastaFinder = LabeledRecordFinder(is_fasta_label, ignore=is_blank_or_comment)
 
 
-def parse_fasta(infile, strict=True, label_to_name=str, finder=FastaFinder,
-                is_label=None, label_characters='>'):
+def parse_fasta(infile, strict=True, label_to_name=None, finder=FastaFinder,
+                label_characters='>'):
     r"""yields label and seq from a fasta file.
 
 
     Parameters
     ----------
-    data : open file object or str
+    infile : open file object or str
         An open fasta file or a path to it.
 
     strict : bool
         If strict is true a ``RecordError`` will
         be raised if no header line is found
+
+    label_to_name : function
+        A function to modify the sequence label.
+
+    finder :
+        A function of recorder finder for fasta format.
+
+    label_character : str
+        A string demarcating fasta record.
 
     Returns
     -------
@@ -93,7 +102,9 @@ def parse_fasta(infile, strict=True, label_to_name=str, finder=FastaFinder,
                 continue
 
         label = rec[0][1:].strip()
-        label = label_to_name(label)
+        if label_to_name is not None:
+            label = label_to_name(label)
+
         seq = ''.join(rec[1:])
 
         yield label, seq
