@@ -26,9 +26,6 @@ class SequenceLoadTests(TestCase):
         self.qual1 = get_data_path('fna1.qual')
         self.noext = get_data_path('noextensionfasta')
 
-    def cleanUp(self):
-        self.fq1.close()
-
     def test_single_files(self):
         """load should handle a single file, and can be gzipped"""
         it = load(self.fna1)
@@ -69,6 +66,8 @@ class SequenceLoadTests(TestCase):
             self.assertEqual(o['SequenceID'], e['SequenceID'])
             self.assertEqual(o['QualID'], e['QualID'])
             self.assertTrue((o['Qual'] == e['Qual']).all())
+
+        map(lambda x: x.close())it
 
     def test_multiple_files(self):
         """load should handle multiple files of different types"""
