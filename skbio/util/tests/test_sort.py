@@ -196,7 +196,7 @@ class SortTests(TestCase):
                      '-15': 'q', '4': 'b', '-1': 'h'}
         expected_result = ['-15', '-1', '0', '1', '4', '12', '14']
         output = signed_natsort(test_dict)
-        self.assertEquals(output, expected_result)
+        self.assertEqual(output, expected_result)
 
 
 if __name__ == '__main__':
