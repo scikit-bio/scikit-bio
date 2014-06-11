@@ -17,6 +17,7 @@ import scipy.misc
 from scipy.stats import pearsonr, spearmanr
 
 from skbio.core.distance import DistanceMatrix
+from .base import p_value_to_str
 
 
 def mantel(x, y, method='pearson', permutations=999, alternative='two-sided'):
@@ -218,9 +219,9 @@ def pwmantel(dms, labels=None, method='pearson', permutations=999,
     num_combs = scipy.misc.comb(num_dms, 2, exact=True)
     results = np.empty(
         num_combs, dtype=[('dm1', object), ('dm2', object),
-                          ('statistic', float), ('p-value', float), ('n', int),
-                          ('method', object), ('permutations', int),
-                          ('alternative', object)])
+                          ('statistic', float), ('p-value', object),
+                          ('n', int), ('method', object),
+                          ('permutations', int), ('alternative', object)])
 
     for i, pair in enumerate(combinations(zip(labels, dms), 2)):
         (xlabel, x), (ylabel, y) = pair
@@ -233,8 +234,8 @@ def pwmantel(dms, labels=None, method='pearson', permutations=999,
         stat, p_val = mantel(x, y, method=method, permutations=permutations,
                              alternative=alternative)
 
-        # TODO format p-value
-        results[i] = (xlabel, ylabel, stat, p_val, x.shape[0], method,
+        p_val_str = p_value_to_str(p_val, permutations)
+        results[i] = (xlabel, ylabel, stat, p_val_str, x.shape[0], method,
                       permutations, alternative)
 
     return pd.DataFrame.from_records(results, index=('dm1', 'dm2'))

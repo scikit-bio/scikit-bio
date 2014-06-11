@@ -258,6 +258,7 @@ class MantelTests(TestCase):
 class PairwiseMantelTests(TestCase):
 
     # TODO add test with duplicate dms
+    # TODO add test for n/a p-value
 
     def setUp(self):
         self.minx = DistanceMatrix([[0, 1, 2], [1, 0, 3], [2, 3, 0]])
@@ -267,19 +268,27 @@ class PairwiseMantelTests(TestCase):
                                     [0.25, 0.1, 0]])
         self.min_dms = (self.minx, self.miny, self.minz)
 
-        # Load expected results.
+        # Load expected results. We have to load the p-value column (column
+        # index 3) as a string dtype in order to compare with the in-memory
+        # results since we're formatting the p-values as strings with the
+        # correct number of decimal places. Without this explicit converter,
+        # the p-value column will be loaded as a float dtype and the frames
+        # won't compare equal.
+        p_val_conv = {3: str}
+
         self.exp_results_minimal = pd.read_csv(
             get_data_path('pwmantel_exp_results_minimal.txt'), sep='\t',
-            index_col=(0, 1))
+            index_col=(0, 1), converters=p_val_conv)
+
         self.exp_results_minimal_with_labels = pd.read_csv(
             get_data_path('pwmantel_exp_results_minimal_with_labels.txt'),
-            sep='\t', index_col=(0, 1))
+            sep='\t', index_col=(0, 1), converters=p_val_conv)
 
     def test_minimal_compatible_input(self):
-        #obs.to_csv('tests/data/pwmantel_exp_results_minimal.txt', sep='\t')
         np.random.seed(0)
 
         obs = pwmantel(self.min_dms, alternative='greater')
+        #obs.to_csv('tests/data/pwmantel_exp_results_minimal.txt', sep='\t')
         assert_frame_equal(obs, self.exp_results_minimal)
 
     def test_minimal_compatible_input_with_labels(self):
@@ -287,6 +296,7 @@ class PairwiseMantelTests(TestCase):
 
         obs = pwmantel(self.min_dms, alternative='greater',
                        labels=('minx', 'miny', 'minz'))
+        #obs.to_csv('tests/data/pwmantel_exp_results_minimal_with_labels.txt', sep='\t')
         assert_frame_equal(obs, self.exp_results_minimal_with_labels)
 
 

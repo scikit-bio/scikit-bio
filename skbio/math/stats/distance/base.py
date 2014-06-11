@@ -249,26 +249,40 @@ class CategoricalStatsResults(object):
                 self.test_statistic_name, 'p-value', 'Number of permutations')
 
     def _format_data(self):
-        p_value_str = self._format_p_value(self.p_value, self.permutations)
+        p_value_str = p_value_to_str(self.p_value, self.permutations)
 
         return (self.short_method_name, '%d' % self.sample_size,
                 '%d' % len(self.groups), str(self.statistic), p_value_str,
                 '%d' % self.permutations)
 
-    def _format_p_value(self, p_value, permutations):
-        """Format p-value as a string with the correct number of decimals.
 
-        Number of decimals is determined by the number of permutations.
-        """
-        if p_value is None:
-            result = 'N/A'
-        elif permutations < 10:
-            # This can be the last step of a long process, so we don't want to
-            # fail.
-            result = ('Too few permutations to compute p-value (permutations '
-                      '= %d)' % permutations)
-        else:
-            decimal_places = int(np.log10(permutations + 1))
-            result = ('%1.' + '%df' % decimal_places) % p_value
+def p_value_to_str(p_value, permutations):
+    """Format p-value as a string with the correct number of decimals.
 
-        return result
+    Number of decimals is determined by the number of permutations.
+
+    Parameters
+    ----------
+    p_value : float or None
+        p-value to convert to string.
+    permutations : int
+        Number of permutations used to calculate `p_value`.
+
+    Returns
+    -------
+    str
+        `p_value` formatted as a string with the correct number of decimals. If
+        `p_value` is ``None`` or ``np.nan``, ``'N/A'`` is returned. If
+        `permutations` is less than 10, a message stating insufficient number
+        of permutations is returned.
+    """
+    if p_value is None or np.isnan(p_value):
+        result = 'N/A'
+    elif permutations < 10:
+        result = ('Too few permutations to compute p-value (permutations '
+                  '= %d)' % permutations)
+    else:
+        decimal_places = int(np.log10(permutations + 1))
+        result = ('%1.' + '%df' % decimal_places) % p_value
+
+    return result
