@@ -26,7 +26,7 @@ def nj(dm, disallow_negative_branch_length=True,
         Neighbor joining can result in negative branch lengths, which don't
         make sense in an evolutionary context. If `True`, negative branch
         lengths will be returned as zero, a common strategy for handling this
-        issue.
+        issue that was proposed by the original developers of the algorithm.
     result_constructor : function, optional
         Function to apply to construct the result object. This must take a
         newick-formatted string as input. The result of applying this function
@@ -149,6 +149,9 @@ def nj(dm, disallow_negative_branch_length=True,
     return result_constructor(newick)
 
 def _compute_q(dm):
+    """Compute Q matrix, used to identify the next pair of nodes to join.
+
+    """
     q = np.zeros(dm.shape)
     n = dm.shape[0]
     for i in range(n):
@@ -159,6 +162,12 @@ def _compute_q(dm):
 
 def _compute_collapsed_dm(dm, i, j, disallow_negative_branch_length,
                           new_node_id):
+    """Return the distance matrix resulting from joining ids i and j in a node.
+
+    If the input distance matrix has shape (n, n), the result will have shape
+    (n-1, n-1) as the ids i and j are collapsed to a single new ids.
+
+    """
     in_n = dm.shape[0]
     out_n = in_n - 1
     out_ids = [new_node_id]
@@ -172,6 +181,15 @@ def _compute_collapsed_dm(dm, i, j, disallow_negative_branch_length,
     return DistanceMatrix(result, out_ids)
 
 def _lowest_index(dm):
+    """Return the index of the lowest value in the input distance matrix.
+
+    If there are ties for the lowest value, the index of top-left most
+    occurrence of that value will be returned.
+
+    This should be ultimately be replaced with a new DistanceMatrix object
+    method (#228).
+
+    """
     lowest_value = np.inf
     for i in range(dm.shape[0]):
         for j in range(i):
@@ -183,6 +201,25 @@ def _lowest_index(dm):
     return result
 
 def _otu_to_new_node(dm, i, j, k, disallow_negative_branch_length):
+    """Return the distance between a new node and some other node.
+
+    Parameters
+    ----------
+    dm : skbio.core.distance.DistanceMatrix
+        The input DistanceMatrix.
+    i, j : str
+        Identifiers of entries in the DistanceMatrix to be collapsed. These
+        get collapsed to a new node, internally represented as `u`.
+    k : str
+        Identifier of the entry in the DistanceMatrix for which distance to `u`
+        will be computed.
+    disallow_negative_branch_length : bool
+        Neighbor joining can result in negative branch lengths, which don't
+        make sense in an evolutionary context. If `True`, negative branch
+        lengths will be returned as zero, a common strategy for handling this
+        issue that was proposed by the original developers of the algorithm.
+
+    """
     k_to_u = 0.5 * (dm[i, k] + dm[j, k] - dm[i, j])
 
     if disallow_negative_branch_length and k_to_u < 0:
@@ -191,6 +228,22 @@ def _otu_to_new_node(dm, i, j, k, disallow_negative_branch_length):
     return k_to_u
 
 def _pair_members_to_new_node(dm, i, j, disallow_negative_branch_length):
+    """Return the distance between a new node and decendants of that new node.
+
+    Parameters
+    ----------
+    dm : skbio.core.distance.DistanceMatrix
+        The input DistanceMatrix.
+    i, j : str
+        Identifiers of entries in the DistanceMatrix to be collapsed (i.e., the
+        descendents of the new node, which is internally represented as `u`).
+    disallow_negative_branch_length : bool
+        Neighbor joining can result in negative branch lengths, which don't
+        make sense in an evolutionary context. If `True`, negative branch
+        lengths will be returned as zero, a common strategy for handling this
+        issue that was proposed by the original developers of the algorithm.
+
+    """
     n = dm.shape[0]
     i_to_j = dm[i, j]
     i_to_u = (0.5 * i_to_j) + (1 / (2 * (n - 2))) * (dm[i].sum() - dm[j].sum())
