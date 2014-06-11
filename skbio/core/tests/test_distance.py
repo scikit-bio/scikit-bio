@@ -396,6 +396,14 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         obs = self.dm_3x3.filter(ids)
         self.assertEqual(obs, exp)
 
+        # 4x4
+        dm = DissimilarityMatrix([[0, 1, 55, 7], [1, 0, 16, 1],
+                                  [55, 16, 0, 23], [7, 1, 23, 0]])
+        ids = np.asarray(['3', '0', '1'])
+        exp = DissimilarityMatrix([[0, 7, 1], [7, 0, 1], [1, 1, 0]], ids)
+        obs = dm.filter(ids)
+        self.assertEqual(obs, exp)
+
     def test_filter_duplicate_ids(self):
         with self.assertRaises(DissimilarityMatrixError):
             self.dm_3x3.filter(['c', 'a', 'c'])
