@@ -99,7 +99,15 @@ We adhere to the [PEP 8](http://www.python.org/dev/peps/pep-0008/) python coding
 Testing Guidelines
 ------------------
 
-All code that is added to scikit-bio must be unit tested, and the unit test code must be submitted in the same pull request as the library code that you are submitting. We will not merge code that is not unit tested. The PyCogent Coding Guidelines describe our [expectations for unit tests](http://pycogent.org/coding_guidelines.html?highlight=coding%20guidelines#how-should-i-test-my-code). You should review the unit test section before working on your test code.
+All code that is added to scikit-bio must be unit tested, and the unit test code must be submitted in the same pull request as the library code that you are submitting. We will only merge code that is unit tested and that passes the [continuous integration build](https://github.com/biocore/scikit-bio/blob/master/.travis.yml), this build verifies that the:
+
+- Full test suite executes without errors.
+- Doctests execute correctly (currently only for Python 2.7).
+- C code can be correctly compiled.
+- Cython code is correctly generated.
+- All code is valid in Python 2.7 and >=3.3.
+
+The scikit-bio coding guidelines describe our [expectations for unit tests](http://scikit-bio.org/development/coding_guidelines.html). You should review the unit test section before working on your test code.
 
 Tests can be executed using [nose](https://nose.readthedocs.org/en/latest/) by running `nosetests --with-doctest` from the base directory of the project or from within a Python or IPython session running the following code:
 
