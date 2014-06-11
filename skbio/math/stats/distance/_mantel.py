@@ -7,8 +7,13 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
+from future.builtins import zip
+
+import itertools
 
 import numpy as np
+import pandas as pd
+import scipy.misc
 from scipy.stats import pearsonr, spearmanr
 
 from skbio.core.distance import DistanceMatrix
@@ -193,3 +198,35 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided'):
         p_value = (count_better + 1) / (permutations + 1)
 
     return orig_stat, p_value
+
+
+def pwmantel(dms, labels=None, method='pearson', permutations=999,
+             alternative='two-sided'):
+    num_dms = len(dms)
+
+    if labels is None:
+        labels = [str(i) for i in range(num_dms)]
+
+    if num_dms != len(labels):
+        raise ValueError
+
+    num_combs = scipy.misc.comb(num_dms, 2, exact=True)
+    results = np.empty(
+        num_combs, dtype=[('dm1', object), ('dm2', object),
+                          ('statistic', float), ('p-value', float), ('n', int),
+                          ('method', object), ('permutations', int),
+                          ('alternative', object)])
+
+    for i, pair in enumerate(itertools.combinations(zip(labels, dms), 2)):
+        (xlabel, x), (ylabel, y) = pair
+
+        if x.ids != y.ids:
+            raise ValueError
+
+        stat, p_val = mantel(x, y, method=method, permutations=permutations,
+                             alternative=alternative)
+
+        results[i] = (xlabel, ylabel, stat, p_val, x.shape[0], method,
+                      permutations, alternative)
+
+    return pd.DataFrame.from_records(results, index=('dm1', 'dm2'))
