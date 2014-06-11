@@ -435,6 +435,30 @@ class DissimilarityMatrix(object):
         """
         return self.__class__(self.data.T.copy(), deepcopy(self.ids))
 
+    def index(self, lookup_id):
+        """Return the index of the specified ID.
+
+        Parameters
+        ----------
+        lookup_id : str
+            ID whose index will be returned.
+
+        Returns
+        -------
+        int
+            Row/column index of `lookup_id`.
+
+        Raises
+        ------
+        MissingIDError
+            If `lookup_id` is not in the dissimilarity matrix.
+
+        """
+        if lookup_id in self._id_index:
+            return self._id_index[lookup_id]
+        else:
+            raise MissingIDError(lookup_id)
+
     def redundant_form(self):
         """Return an array of dissimilarities in redundant format.
 
@@ -606,16 +630,9 @@ class DissimilarityMatrix(object):
 
         """
         if isinstance(index, string_types):
-            if index in self._id_index:
-                return self.data[self._id_index[index]]
-            else:
-                raise MissingIDError(index)
+            return self.data[self.index(index)]
         elif self._is_id_pair(index):
-            for id_ in index:
-                if id_ not in self._id_index:
-                    raise MissingIDError(id_)
-            return self.data[self._id_index[index[0]],
-                             self._id_index[index[1]]]
+            return self.data[self.index(index[0]), self.index(index[1])]
         else:
             return self.data.__getitem__(index)
 

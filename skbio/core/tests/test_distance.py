@@ -315,6 +315,17 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
             # transpose is the same as the original.
             self.assertTrue(dm.transpose() is not dm)
 
+    def test_index(self):
+        self.assertEqual(self.dm_3x3.index('a'), 0)
+        self.assertEqual(self.dm_3x3.index('b'), 1)
+        self.assertEqual(self.dm_3x3.index('c'), 2)
+
+        with self.assertRaises(MissingIDError):
+            self.dm_3x3.index('d')
+
+        with self.assertRaises(MissingIDError):
+            self.dm_3x3.index(1)
+
     def test_redundant_form(self):
         """Test retrieving the data matrix in redundant form."""
         for dm, redundant in zip(self.dms, self.dm_redundant_forms):
