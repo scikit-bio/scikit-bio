@@ -498,6 +498,26 @@ class DissimilarityMatrix(object):
         # point in the future.
         return self.__class__(self.data.copy(), deepcopy(self.ids))
 
+    def filter(self, ids):
+        """Filter the dissimilarity matrix by IDs.
+
+        Parameters
+        ----------
+        ids : iterable of str
+            IDs to retain. May not contain duplicates or be empty. Each ID must
+            be present in the dissimilarity matrix.
+
+        Returns
+        -------
+        DissimilarityMatrix
+            Filtered dissimilarity matrix containing only the IDs specified in
+            `ids`. IDs will be in the same order as they appear in `ids`.
+
+        """
+        idxs = [self.index(id_) for id_ in ids]
+        filtered_data = self._data[idxs][:, idxs]
+        return self.__class__(filtered_data, ids)
+
     def __str__(self):
         """Return a string representation of the dissimilarity matrix.
 

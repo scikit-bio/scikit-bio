@@ -349,6 +349,65 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         copy.data[0, 1] = 0.0001
         self.assertFalse(np.array_equal(copy.data, self.dm_2x2.data))
 
+    def test_filter_no_filtering(self):
+        # Don't actually filter anything -- ensure we get back a different
+        # object.
+        obs = self.dm_3x3.filter(['a', 'b', 'c'])
+        self.assertEqual(obs, self.dm_3x3)
+        self.assertFalse(obs is self.dm_3x3)
+
+    def test_filter_reorder(self):
+        # Don't filter anything, but reorder the distance matrix.
+        order = ['c', 'a', 'b']
+        exp = DissimilarityMatrix(
+            [[0, 4.2, 12], [4.2, 0, 0.01], [12, 0.01, 0]], order)
+        obs = self.dm_3x3.filter(order)
+        self.assertEqual(obs, exp)
+
+    def test_filter_single_id(self):
+        ids = ['b']
+        exp = DissimilarityMatrix([[0]], ids)
+        obs = self.dm_2x2_asym.filter(ids)
+        self.assertEqual(obs, exp)
+
+    def test_filter_asymmetric(self):
+        # 2x2
+        ids = ['b', 'a']
+        exp = DissimilarityMatrix([[0, -2], [1, 0]], ids)
+        obs = self.dm_2x2_asym.filter(ids)
+        self.assertEqual(obs, exp)
+
+        # 3x3
+        dm = DissimilarityMatrix([[0, 10, 53], [42, 0, 22.5], [53, 1, 0]],
+                                 ('bro', 'brah', 'breh'))
+        ids = ['breh', 'brah']
+        exp = DissimilarityMatrix([[0, 1], [22.5, 0]], ids)
+        obs = dm.filter(ids)
+        self.assertEqual(obs, exp)
+
+    def test_filter_subset(self):
+        ids = ('c', 'a')
+        exp = DissimilarityMatrix([[0, 4.2], [4.2, 0]], ids)
+        obs = self.dm_3x3.filter(ids)
+        self.assertEqual(obs, exp)
+
+        ids = ('b', 'a')
+        exp = DissimilarityMatrix([[0, 0.01], [0.01, 0]], ids)
+        obs = self.dm_3x3.filter(ids)
+        self.assertEqual(obs, exp)
+
+    def test_filter_duplicate_ids(self):
+        with self.assertRaises(DissimilarityMatrixError):
+            self.dm_3x3.filter(['c', 'a', 'c'])
+
+    def test_filter_missing_ids(self):
+        with self.assertRaises(MissingIDError):
+            self.dm_3x3.filter(['c', 'bro'])
+
+    def test_filter_empty_ids(self):
+        with self.assertRaises(DissimilarityMatrixError):
+            self.dm_3x3.filter([])
+
     def test_str(self):
         """Test retrieving string representation of a DissimilarityMatrix."""
         for dm in self.dms:
