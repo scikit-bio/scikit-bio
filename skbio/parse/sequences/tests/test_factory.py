@@ -110,6 +110,9 @@ class SequenceLoadTests(TestCase):
         self.assertEqual(o['QualID'], e['QualID'])
         self.assertEqual(o['Qual'], e['Qual'])
 
+        map(lambda x: x.close())it
+
+
     def test_transform(self):
         """load should pass transform methods to the iterators"""
         def rev_f(st):
@@ -155,6 +158,9 @@ class SequenceLoadTests(TestCase):
         self.assertEqual(o['QualID'], e['QualID'])
         self.assertEqual(o['Qual'], e['Qual'])
 
+        map(lambda x: x.close())it
+
+
     def test_force_constructor(self):
         it = load([self.noext], constructor=FastaIterator)
         obs = [rec.copy() for rec in it]
@@ -163,6 +169,7 @@ class SequenceLoadTests(TestCase):
                {'Sequence': 'ATATA', 'SequenceID': 'seq2',
                 'Qual': None, 'QualID': None}]
         self.assertEqual(obs, exp)
+        map(lambda x: x.close())it
 
 
 if __name__ == '__main__':
