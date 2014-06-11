@@ -291,6 +291,11 @@ class PairwiseMantelTests(TestCase):
             get_data_path('pwmantel_exp_results_too_few_permutations.txt'),
             sep='\t', index_col=(0, 1), converters=p_val_conv)
 
+        self.exp_results_reordered_distance_matrices = pd.read_csv(
+            get_data_path('pwmantel_exp_results_reordered_distance_matrices'
+                          '.txt'),
+            sep='\t', index_col=(0, 1), converters=p_val_conv)
+
     def test_minimal_compatible_input(self):
         # Matrices are already in the correct order and have matching IDs.
         np.random.seed(0)
@@ -316,16 +321,16 @@ class PairwiseMantelTests(TestCase):
                        permutations=9)
         assert_frame_equal(obs, self.exp_results_too_few_permutations)
 
-    #def test_reordered_distance_matrices(self):
-    #    # Matrices have matching IDs but they all have different ordering.
-    #    x = DistanceMatrix(self.minx[
+    def test_reordered_distance_matrices(self):
+        # Matrices have matching IDs but they all have different ordering.
+        x = self.minx.filter(['1', '0', '2'])
+        y = self.miny.filter(['0', '2', '1'])
+        z = self.minz.filter(['1', '2', '0'])
 
+        np.random.seed(0)
 
-    #    np.random.seed(0)
-
-    #    obs = pwmantel(self.min_dms, alternative='greater')
-    #    #obs.to_csv('tests/data/pwmantel_exp_results_minimal.txt', sep='\t')
-    #    assert_frame_equal(obs, self.exp_results_minimal)
+        obs = pwmantel((x, y, z), alternative='greater')
+        assert_frame_equal(obs, self.exp_results_reordered_distance_matrices)
 
 
 if __name__ == '__main__':
