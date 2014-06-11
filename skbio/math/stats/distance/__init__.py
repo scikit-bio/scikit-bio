@@ -36,6 +36,7 @@ Distance Matrix Comparisons
    :toctree: generated/
 
    mantel
+   pwmantel
 
 Examples
 --------
@@ -152,10 +153,10 @@ from .base import CategoricalStatsResults
 from ._bioenv import bioenv
 from .anosim import ANOSIM
 from .permanova import PERMANOVA
-from ._mantel import mantel
+from ._mantel import mantel, pwmantel
 
 __all__ = ['ANOSIM', 'PERMANOVA', 'CategoricalStatsResults', 'bioenv',
-           'mantel']
+           'mantel', 'pwmantel']
 
 from numpy.testing import Tester
 test = Tester().test

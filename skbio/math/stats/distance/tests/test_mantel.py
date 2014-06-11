@@ -11,10 +11,12 @@ from unittest import TestCase, main
 
 import numpy as np
 import numpy.testing as npt
+import pandas as pd
+from pandas.util.testing import assert_frame_equal
 
 from skbio.core.distance import DistanceMatrix
 from skbio.core.exception import DissimilarityMatrixError, DistanceMatrixError
-from skbio.math.stats.distance import mantel
+from skbio.math.stats.distance import mantel, pwmantel
 from skbio.util.testing import get_data_path
 
 
@@ -251,6 +253,41 @@ class MantelTests(TestCase):
         # too small dms
         with self.assertRaises(ValueError):
             mantel([[0, 3], [3, 0]], [[0, 2], [2, 0]])
+
+
+class PairwiseMantelTests(TestCase):
+
+    # TODO add test with duplicate dms
+
+    def setUp(self):
+        self.minx = DistanceMatrix([[0, 1, 2], [1, 0, 3], [2, 3, 0]])
+        self.miny = DistanceMatrix([[0, 2, 7], [2, 0, 6], [7, 6, 0]])
+        self.minz = DistanceMatrix([[0, 0.5, 0.25],
+                                    [0.5, 0, 0.1],
+                                    [0.25, 0.1, 0]])
+        self.min_dms = (self.minx, self.miny, self.minz)
+
+        # Load expected results.
+        self.exp_results_minimal = pd.read_csv(
+            get_data_path('pwmantel_exp_results_minimal.txt'), sep='\t',
+            index_col=(0, 1))
+        self.exp_results_minimal_with_labels = pd.read_csv(
+            get_data_path('pwmantel_exp_results_minimal_with_labels.txt'),
+            sep='\t', index_col=(0, 1))
+
+    def test_minimal_compatible_input(self):
+        #obs.to_csv('tests/data/pwmantel_exp_results_minimal.txt', sep='\t')
+        np.random.seed(0)
+
+        obs = pwmantel(self.min_dms, alternative='greater')
+        assert_frame_equal(obs, self.exp_results_minimal)
+
+    def test_minimal_compatible_input_with_labels(self):
+        np.random.seed(0)
+
+        obs = pwmantel(self.min_dms, alternative='greater',
+                       labels=('minx', 'miny', 'minz'))
+        assert_frame_equal(obs, self.exp_results_minimal_with_labels)
 
 
 if __name__ == '__main__':

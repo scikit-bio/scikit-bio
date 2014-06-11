@@ -9,7 +9,7 @@
 from __future__ import absolute_import, division, print_function
 from future.builtins import zip
 
-import itertools
+from itertools import combinations
 
 import numpy as np
 import pandas as pd
@@ -204,11 +204,16 @@ def pwmantel(dms, labels=None, method='pearson', permutations=999,
              alternative='two-sided'):
     num_dms = len(dms)
 
-    if labels is None:
-        labels = [str(i) for i in range(num_dms)]
-
-    if num_dms != len(labels):
+    if num_dms < 2:
         raise ValueError
+
+    if labels is None:
+        labels = range(num_dms)
+    else:
+        if num_dms != len(labels):
+            raise ValueError
+        if len(set(labels)) != len(labels):
+            raise ValueError
 
     num_combs = scipy.misc.comb(num_dms, 2, exact=True)
     results = np.empty(
@@ -217,8 +222,10 @@ def pwmantel(dms, labels=None, method='pearson', permutations=999,
                           ('method', object), ('permutations', int),
                           ('alternative', object)])
 
-    for i, pair in enumerate(itertools.combinations(zip(labels, dms), 2)):
+    for i, pair in enumerate(combinations(zip(labels, dms), 2)):
         (xlabel, x), (ylabel, y) = pair
+
+        x, y = make_compatible_distance_matrices(x, y)
 
         if x.ids != y.ids:
             raise ValueError
@@ -226,7 +233,41 @@ def pwmantel(dms, labels=None, method='pearson', permutations=999,
         stat, p_val = mantel(x, y, method=method, permutations=permutations,
                              alternative=alternative)
 
+        # TODO format p-value
         results[i] = (xlabel, ylabel, stat, p_val, x.shape[0], method,
                       permutations, alternative)
 
     return pd.DataFrame.from_records(results, index=('dm1', 'dm2'))
+
+
+def make_compatible_distance_matrices(dm1, dm2, lookup=None):
+    """ Intersect distance matrices and sort the values """
+    if lookup:
+        try:
+            dm1_ids = [lookup[e] for e in dm1.ids]
+            dm2_ids = [lookup[e] for e in dm2.ids]
+        except KeyError as e:
+            raise KeyError("All entries in both DMs must be in lookup if a "
+                           "lookup is provided. Missing: %s" % str(e))
+        dm1.ids = dm1_ids
+        dm2.ids = dm2_ids
+
+    order = [e for e in dm1.ids if e in dm2.ids]
+
+    if len(order) == 0:
+        raise ValueError
+
+    # store the intersected distance matrices here
+    matrices = []
+
+    # iterate over the distance matrices and identifiers to match the data
+    # note that the order must be the same between the two matrices
+    for dm in (dm1, dm2):
+        # the order is kept by getting the indices from this list
+        indices = [dm.ids.index(element) for element in order]
+
+        # this matrix contains the matched up data
+        out = dm[indices][:, indices]
+        matrices.append(DistanceMatrix(out, order))
+
+    return matrices[0], matrices[1]
