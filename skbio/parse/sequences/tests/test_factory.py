@@ -67,7 +67,7 @@ class SequenceLoadTests(TestCase):
             self.assertEqual(o['QualID'], e['QualID'])
             self.assertTrue((o['Qual'] == e['Qual']).all())
 
-        map(lambda x: x.close())it
+        map(lambda x: x.close(), it)
 
     def test_multiple_files(self):
         """load should handle multiple files of different types"""
@@ -110,7 +110,7 @@ class SequenceLoadTests(TestCase):
         self.assertEqual(o['QualID'], e['QualID'])
         self.assertEqual(o['Qual'], e['Qual'])
 
-        map(lambda x: x.close())it
+        map(lambda x: x.close(), it)
 
 
     def test_transform(self):
@@ -158,7 +158,7 @@ class SequenceLoadTests(TestCase):
         self.assertEqual(o['QualID'], e['QualID'])
         self.assertEqual(o['Qual'], e['Qual'])
 
-        map(lambda x: x.close())it
+        map(lambda x: x.close(), it)
 
 
     def test_force_constructor(self):
@@ -169,7 +169,7 @@ class SequenceLoadTests(TestCase):
                {'Sequence': 'ATATA', 'SequenceID': 'seq2',
                 'Qual': None, 'QualID': None}]
         self.assertEqual(obs, exp)
-        map(lambda x: x.close())it
+        map(lambda x: x.close(), it)
 
 
 if __name__ == '__main__':
