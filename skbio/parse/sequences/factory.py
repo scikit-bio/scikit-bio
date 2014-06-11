@@ -71,7 +71,9 @@ def _open_or_none(opener, f):
             raise IOError("%s does not appear to exist!" % f)
 
         with opener(f) as opened:
-            return opened
+            pass
+
+        return opened
 
 
 def load(seqs, qual=None, constructor=None, **kwargs):
