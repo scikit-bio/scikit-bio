@@ -94,7 +94,7 @@ def nj(dm, disallow_negative_branch_length=True, result_constructor=None):
 
     Again, construct the neighbor joining tree, but instead return the newick
     string representing the tree, rather than the TreeNode object. (Note that
-    in this example the string output is truncated when printed to faciliate
+    in this example the string output is truncated when printed to facilitate
     rendering.)
 
     >>> newick_str = nj(dm, result_constructor=str)
