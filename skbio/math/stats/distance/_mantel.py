@@ -210,7 +210,9 @@ def pwmantel(dms, labels=None, strict=True, lookup=None, method='pearson',
     ID order (contrary to how the ``mantel`` function behaves). Distance
     matrices will be re-ordered prior to running each pairwise test, and if
     ``strict=False``, IDs that don't match between a pair of distance matrices
-    will be dropped prior to running the test.
+    will be dropped prior to running the test (otherwise a ``ValueError`` will
+    be raised if there are non-matching IDs between any pair of distance
+    matrices).
 
     Parameters
     ----------
