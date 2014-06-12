@@ -49,7 +49,9 @@ def nj(dm, disallow_negative_branch_length=True,
     joining [2]_. The Phylip manual also describes the method [3]_ and Phylip
     itself provides an implementation which is useful for comparison.
 
-    Neighbor joining, by definition, creates unrooted trees.
+    Neighbor joining, by definition, creates unrooted trees. One strategy for
+    rooting the resulting trees is midpoint rooting, which is accessible as
+    ``TreeNode.root_at_midpoint``.
 
     References
     ----------
