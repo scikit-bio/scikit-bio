@@ -61,7 +61,9 @@ def parse_fasta(infile, strict=True, label_to_name=None, finder=FastaFinder,
     ignore_comment : bool
         If `True`, split the sequence label on spaces, and return the label
         only as the first space separated field (i.e., the sequence
-        identifier).
+        identifier). Note: if both ``ignore_comment`` and ``label_to_name`` are
+        passed, ``ignore_comment`` is ignored (both operate on the label, so
+        there is potential for things to get messy otherwise).
 
     Returns
     -------
