@@ -111,6 +111,19 @@ class ParseFastaTests(object):
         a = f[0]
         self.assertEqual(a, ('abc', '>CAG'))
 
+    def test_parse_fasta_ignore_comment(self):
+        """parse_fasta correct ignores label comments when requested
+        """
+        in_ = '>1\nCAG\n>2 some other info\nCCAG\n>3 \nA'.split('\n')
+        # ignore_comment = False
+        actual = list(parse_fasta(in_))
+        expected = [('1', 'CAG'), ('2 some other info', 'CCAG'), ('3', 'A')]
+        self.assertEqual(actual, expected)
+        # ignore_comment = True
+        actual = list(parse_fasta(in_, ignore_comment=True))
+        expected = [('1', 'CAG'), ('2', 'CCAG'), ('3', 'A')]
+        self.assertEqual(actual, expected)
+
     def test_multiple(self):
         """parse_fasta should read multiline records correctly"""
         f = list(parse_fasta(self.threeseq))
