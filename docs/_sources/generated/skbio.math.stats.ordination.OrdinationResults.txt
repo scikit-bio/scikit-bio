@@ -13,6 +13,7 @@ skbio.math.stats.ordination.OrdinationResults
       
          OrdinationResults.__format__
          OrdinationResults.__getnewargs__
+         OrdinationResults.__getstate__
          OrdinationResults.__new__
          OrdinationResults.__reduce__
          OrdinationResults.__reduce_ex__

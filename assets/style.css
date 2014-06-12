@@ -1,5 +1,5 @@
 html, body {
-    background: url('assets/bg.png');
+    background: url('bg.png');
     margin: 0px;
     padding: 0px;
     position: relative;
@@ -24,7 +24,7 @@ a {
 }
 
 a:hover {
-    color: #00B84D;  
+    color: #00B84D;
 }
 
 
@@ -51,12 +51,12 @@ a:hover {
 }
 
 #nav ul li:hover {
-    background: #259D57;   
+    background: #259D57;
 }
 
 #decorationWrapper {
     position:relative;
-    background: url('assets/decoration_microbial_mat2.png') top center no-repeat;
+    background: url('decoration_microbial_mat2.png') top center no-repeat;
     width: 100%;
 }
 
