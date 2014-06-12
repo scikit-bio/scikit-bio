@@ -46,7 +46,8 @@ def nj(dm, disallow_negative_branch_length=True,
     -----
     Neighbor joining was initially described in Saitou and Nei (1987) [1]_. The
     example presented here is derived from the Wikipedia page on neighbor
-    joining [2]_.
+    joining [2]_. The Phylip manual also describes the method [3]_ and Phylip
+    itself provides an implementation which is useful for comparison.
 
     Neighbor joining, by definition, creates unrooted trees.
 
@@ -56,6 +57,7 @@ def nj(dm, disallow_negative_branch_length=True,
        method for reconstructing phylogenetic trees." Molecular Biology and
        Evolution. PMID: 3447015.
     .. [2] http://en.wikipedia.org/wiki/Neighbour_joining
+    .. [3] http://evolution.genetics.washington.edu/phylip/doc/neighbor.html
 
     Examples
     --------
@@ -94,7 +96,7 @@ def nj(dm, disallow_negative_branch_length=True,
 
     >>> newick_str = nj(dm, result_constructor=str)
     >>> print newick_str
-    (d:2, (c:4, (b:3, a:2):3):2, e:1);
+    (d:2.0, (c:4.0, (b:3.0, a:2.0):3.0):2.0, e:1.0);
 
     """
     if dm.shape[0] < 3:
@@ -123,7 +125,7 @@ def nj(dm, disallow_negative_branch_length=True,
         _pair_members_to_new_node(dm, idx1, idx2,
                                   disallow_negative_branch_length)
         # define the new node in newick style
-        node_definition = "(%s:%d, %s:%d)" % (pair_member_1,
+        node_definition = "(%s:%f, %s:%f)" % (pair_member_1,
                                               pair_member_1_len,
                                               pair_member_2,
                                               pair_member_2_len)
@@ -151,7 +153,7 @@ def nj(dm, disallow_negative_branch_length=True,
         dm, pair_member_1, pair_member_2, node_definition,
         disallow_negative_branch_length=disallow_negative_branch_length)
     # ...and finally create the newick string describing the whole tree.
-    newick = "(%s:%d, %s:%d, %s:%d);" % (pair_member_1, pair_member_1_len,
+    newick = "(%s:%f, %s:%f, %s:%f);" % (pair_member_1, pair_member_1_len,
                                          node_definition, internal_len,
                                          pair_member_2, pair_member_2_len)
 
@@ -256,7 +258,7 @@ def _pair_members_to_new_node(dm, i, j, disallow_negative_branch_length):
     """
     n = dm.shape[0]
     i_to_j = dm[i, j]
-    i_to_u = (0.5 * i_to_j) + (1 / (2 * (n - 2))) * (dm[i].sum() - dm[j].sum())
+    i_to_u = (0.5 * i_to_j) + ((dm[i].sum() - dm[j].sum()) / (2 * (n - 2)))
     j_to_u = i_to_j - i_to_u
 
     if disallow_negative_branch_length and i_to_u < 0:
