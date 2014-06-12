@@ -47,13 +47,13 @@ explicitly need to avoid perfect collinearity, so we'll drop one of
 the substrate types (the last column of `X`). We also expect to
 increase pandas integration to ease analyses.
 
->>> from skbio.maths.stats.ordination import CCA
+>>> from skbio.math.stats.ordination import CCA
 >>> ordination_result = CCA(Y, X[:, :-1],
-                            ['Site0', 'Site1', 'Site2', 'Site3', 'Site4',
-                             'Site5', 'Site6', 'Site7', 'Site8', 'Site9'],
-                            ['Species0', 'Species1', 'Species2', 'Species3',
-                             'Species4', 'Species5', 'Species6', 'Species7',
-                             'Species8'])
+...                         ['Site0', 'Site1', 'Site2', 'Site3', 'Site4',
+...                          'Site5', 'Site6', 'Site7', 'Site8', 'Site9'],
+...                         ['Species0', 'Species1', 'Species2', 'Species3',
+...                          'Species4', 'Species5', 'Species6', 'Species7',
+...                          'Species8'])
 
 Exploring the results we see that the first three axes explain about
 80% of all the variance.
