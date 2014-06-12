@@ -241,6 +241,7 @@ class CCA(Ordination):
 
         biplot_scores = corr(self.X_weighted, self.u)
         return OrdinationResults(eigvals=eigvals,
+                                 proportion_explained=eigvals / eigvals.sum(),
                                  species=species_scores,
                                  site=site_scores,
                                  biplot=biplot_scores,
