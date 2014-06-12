@@ -102,11 +102,11 @@ class NjTests(TestCase):
         # have positive branch lengths when we allow negative branch
         # length
         tree = nj(self.dm4, False)
-        self.assertTrue(tree.find('a') > 0)
+        self.assertTrue(tree.find('a').length > 0)
         self.assertTrue(tree.find('b').length < 0)
         self.assertTrue(tree.find('c').length < 0)
         self.assertTrue(tree.find('d').length < 0)
-        self.assertTrue(tree.find('e') > 0)
+        self.assertTrue(tree.find('e').length > 0)
 
     def test_nj_trivial(self):
         data = [[0, 3, 2],
