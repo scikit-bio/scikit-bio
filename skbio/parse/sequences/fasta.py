@@ -127,15 +127,15 @@ def parse_fasta(infile, strict=True, label_to_name=None, finder=FastaFinder,
         # first line must be a label line
         if not rec[0][0] in label_characters:
             if strict:
-                raise RecordError("Found Fasta record without label line: %s" %
-                                  rec)
+                raise RecordError(
+                    "Found Fasta record without label line: %s" % rec)
             else:
                 continue
         # record must have at least one sequence
         if len(rec) < 2:
             if strict:
-                raise RecordError("Found label line without sequences: %s" %
-                                  rec)
+                raise RecordError(
+                    "Found label line without sequences: %s" % rec)
             else:
                 continue
 
