@@ -48,7 +48,8 @@ def parse_fasta(infile, strict=True, label_to_name=None, finder=FastaFinder,
     label_to_name : function
         A function to apply to the sequence label (i.e., text on the header
         line) before yielding it. By default, the sequence label is returned
-        with no processing.
+        with no processing. This function must take a single string as input
+        and return a single string as output.
 
     finder : function
         The function to apply to find records in the fasta file. In general
