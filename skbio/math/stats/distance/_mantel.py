@@ -201,8 +201,8 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided'):
     return orig_stat, p_value
 
 
-def pwmantel(dms, labels=None, method='pearson', permutations=999,
-             alternative='two-sided'):
+def pwmantel(dms, labels=None, intersect=False, lookup=None, method='pearson',
+             permutations=999, alternative='two-sided'):
     num_dms = len(dms)
 
     if num_dms < 2:
@@ -226,7 +226,7 @@ def pwmantel(dms, labels=None, method='pearson', permutations=999,
     for i, pair in enumerate(combinations(zip(labels, dms), 2)):
         (xlabel, x), (ylabel, y) = pair
 
-        x, y = make_compatible_distance_matrices(x, y)
+        x, y = _order_dms(x, y, intersect=intersect, lookup=lookup)
 
         if x.ids != y.ids:
             raise ValueError
@@ -241,34 +241,30 @@ def pwmantel(dms, labels=None, method='pearson', permutations=999,
     return pd.DataFrame.from_records(results, index=('dm1', 'dm2'))
 
 
-def make_compatible_distance_matrices(dm1, dm2, lookup=None):
-    """ Intersect distance matrices and sort the values """
-    if lookup:
+def _order_dms(x, y, intersect=False, lookup=None):
+    """Intersect distance matrices and put them in the same order."""
+    if lookup is not None:
+        # Create copy as we'll be modifying the IDs in place.
+        x = x.copy()
+        y = y.copy()
+
         try:
-            dm1_ids = [lookup[e] for e in dm1.ids]
-            dm2_ids = [lookup[e] for e in dm2.ids]
+            x_ids = [lookup[id_] for id_ in x.ids]
+            y_ids = [lookup[id_] for id_ in y.ids]
         except KeyError as e:
-            raise KeyError("All entries in both DMs must be in lookup if a "
-                           "lookup is provided. Missing: %s" % str(e))
-        dm1.ids = dm1_ids
-        dm2.ids = dm2_ids
+            raise KeyError("All IDs in both distance matrices must be in the "
+                           "lookup. Missing ID: %s" % str(e))
+        x.ids = x_ids
+        y.ids = y_ids
 
-    order = [e for e in dm1.ids if e in dm2.ids]
+    id_order = [id_ for id_ in x.ids if id_ in y]
+    num_matches = len(id_order)
 
-    if len(order) == 0:
+    if not intersect and (num_matches != len(x.ids) or
+                          num_matches != len(y.ids)):
         raise ValueError
 
-    # store the intersected distance matrices here
-    matrices = []
+    if num_matches == 0:
+        raise ValueError
 
-    # iterate over the distance matrices and identifiers to match the data
-    # note that the order must be the same between the two matrices
-    for dm in (dm1, dm2):
-        # the order is kept by getting the indices from this list
-        indices = [dm.ids.index(element) for element in order]
-
-        # this matrix contains the matched up data
-        out = dm[indices][:, indices]
-        matrices.append(DistanceMatrix(out, order))
-
-    return matrices[0], matrices[1]
+    return x.filter(id_order), y.filter(id_order)

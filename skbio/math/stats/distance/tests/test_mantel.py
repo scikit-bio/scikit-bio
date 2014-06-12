@@ -259,6 +259,8 @@ class PairwiseMantelTests(TestCase):
 
     # TODO add test with duplicate dms
 
+    # TODO add test to ensure inputs aren't modified
+
     def setUp(self):
         self.minx = DistanceMatrix([[0, 1, 2], [1, 0, 3], [2, 3, 0]])
         self.miny = DistanceMatrix([[0, 2, 7], [2, 0, 6], [7, 6, 0]])
@@ -343,7 +345,7 @@ class PairwiseMantelTests(TestCase):
         obs = pwmantel((x, y, z), alternative='greater')
         assert_frame_equal(obs, self.exp_results_reordered_distance_matrices)
 
-    def test_nonmatching_ids(self):
+    def test_intersect(self):
         # Matrices have some matching and nonmatching IDs, with different
         # ordering.
         x = self.x_extra.filter(['1', '0', 'foo', '2'])
@@ -352,7 +354,25 @@ class PairwiseMantelTests(TestCase):
 
         np.random.seed(0)
 
-        obs = pwmantel((x, y, z), alternative='greater')
+        obs = pwmantel((x, y, z), alternative='greater', intersect=True)
+        assert_frame_equal(obs, self.exp_results_reordered_distance_matrices)
+
+    def test_id_lookup(self):
+        # Matrices have mismatched IDs but a lookup is provided.
+        self.x_extra.ids = ['a', 'b', 'c', 'foo']
+        self.z_extra.ids = ['d', 'e', 'f', 'bar']
+        lookup = {'a': '0', 'b': '1', 'c': '2', 'foo': 'foo',
+                  'd': '0', 'e': '1', 'f': '2', 'bar': 'bar',
+                  '0': '0', '1': '1', '2': '2'}
+
+        x = self.x_extra.filter(['b', 'a', 'foo', 'c'])
+        y = self.miny.filter(['0', '2', '1'])
+        z = self.z_extra.filter(['bar', 'e', 'f', 'd'])
+
+        np.random.seed(0)
+
+        obs = pwmantel((x, y, z), alternative='greater', intersect=True,
+                       lookup=lookup)
         assert_frame_equal(obs, self.exp_results_reordered_distance_matrices)
 
 
