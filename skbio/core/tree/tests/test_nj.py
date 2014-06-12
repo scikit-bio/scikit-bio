@@ -52,6 +52,19 @@ class NjTests(TestCase):
                               "0.91769);")
         self.expected2_TreeNode = TreeNode.from_newick(self.expected2_str)
 
+        data3 = [[0, 5, 4, 7, 6, 8],
+                 [5, 0, 7, 10, 9, 11],
+                 [4, 7, 0, 7, 6, 8],
+                 [7, 10, 7, 0, 5, 8],
+                 [6, 9, 6, 5, 0, 8],
+                 [8, 11, 8, 8, 8, 0]]
+        ids3 = map(str, range(6))
+        self.dm3 = DistanceMatrix(data3, ids3)
+        self.expected3_str = ("((((0:1.000000,1:4.000000):1.000000,2:2.000000"
+                              "):1.250000,5:4.750000):0.750000,3:2.750000,4:2."
+                              "250000);")
+        self.expected3_TreeNode = TreeNode.from_newick(self.expected3_str)
+
     def test_nj_dm1(self):
         self.assertEqual(nj(self.dm1, result_constructor=str),
                          self.expected1_str)
@@ -64,6 +77,11 @@ class NjTests(TestCase):
         actual_TreeNode = nj(self.dm2)
         self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
             self.expected2_TreeNode), 0.0)
+
+    def test_nj_dm3(self):
+        actual_TreeNode = nj(self.dm3)
+        self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
+            self.expected3_TreeNode), 0.0)
 
     def test_nj_trivial(self):
         data = [[0, 3, 2],

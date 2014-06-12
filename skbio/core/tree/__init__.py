@@ -19,17 +19,24 @@ Classes
     TreeNode
     CompressedTrie
 
-Functions
----------
+Phylogenetic Reconstruction
+---------------------------
+
+.. autosummary::
+   :toctree: generated/
+
+   nj
+
+Utility Functions
+-----------------
 
 .. autosummary::
    :toctree: generated/
 
     fasta_to_pairlist
-    nj
 
-Phylogenetic tree examples
---------------------------
+Examples
+--------
 
 >>> from skbio.core.tree import TreeNode
 

@@ -14,8 +14,7 @@ from skbio.core.distance import DistanceMatrix
 from skbio.core.tree import TreeNode
 
 
-def nj(dm, disallow_negative_branch_length=True,
-       result_constructor=TreeNode.from_newick):
+def nj(dm, disallow_negative_branch_length=True, result_constructor=None):
     """ Apply neighbor joining for phylogenetic reconstruction.
 
     Parameters
@@ -30,7 +29,8 @@ def nj(dm, disallow_negative_branch_length=True,
     result_constructor : function, optional
         Function to apply to construct the result object. This must take a
         newick-formatted string as input. The result of applying this function
-        to a newick-formatted string will be returned from this function.
+        to a newick-formatted string will be returned from this function. This
+        defaults to ``TreeNode.from_newick``.
 
     Returns
     -------
@@ -67,7 +67,7 @@ def nj(dm, disallow_negative_branch_length=True,
     OTUs: a, b, c, d, and e.
 
     >>> from skbio.core.distance import DistanceMatrix
-    >>> from skbio.core.tree.nj import nj
+    >>> from skbio.core.tree import nj
 
     >>> data = [[0,  5,  9,  9,  8],
     ...         [5,  0, 10, 10,  9],
@@ -106,6 +106,9 @@ def nj(dm, disallow_negative_branch_length=True,
         raise ValueError(
             "Distance matrix must be at least 3x3 to "
             "generate a neighbor joining tree.")
+
+    if result_constructor is None:
+        result_constructor = TreeNode.from_newick
 
     # initialize variables
     node_definition = None
@@ -180,8 +183,9 @@ def _compute_collapsed_dm(dm, i, j, disallow_negative_branch_length,
                           new_node_id):
     """Return the distance matrix resulting from joining ids i and j in a node.
 
-    If the input distance matrix has shape (n, n), the result will have shape
-    (n-1, n-1) as the ids i and j are collapsed to a single new ids.
+    If the input distance matrix has shape ``(n, n)``, the result will have
+    shape ``(n-1, n-1)`` as the ids `i` and `j` are collapsed to a single new
+    ids.
 
     """
     in_n = dm.shape[0]
@@ -225,13 +229,13 @@ def _otu_to_new_node(dm, i, j, k, disallow_negative_branch_length):
     Parameters
     ----------
     dm : skbio.core.distance.DistanceMatrix
-        The input DistanceMatrix.
+        The input distance matrix.
     i, j : str
-        Identifiers of entries in the DistanceMatrix to be collapsed. These
+        Identifiers of entries in the distance matrix to be collapsed. These
         get collapsed to a new node, internally represented as `u`.
     k : str
-        Identifier of the entry in the DistanceMatrix for which distance to `u`
-        will be computed.
+        Identifier of the entry in the distance matrix for which distance to
+        `u` will be computed.
     disallow_negative_branch_length : bool
         Neighbor joining can result in negative branch lengths, which don't
         make sense in an evolutionary context. If `True`, negative branch
@@ -253,10 +257,11 @@ def _pair_members_to_new_node(dm, i, j, disallow_negative_branch_length):
     Parameters
     ----------
     dm : skbio.core.distance.DistanceMatrix
-        The input DistanceMatrix.
+        The input distance matrix.
     i, j : str
-        Identifiers of entries in the DistanceMatrix to be collapsed (i.e., the
-        descendents of the new node, which is internally represented as `u`).
+        Identifiers of entries in the distance matrix to be collapsed (i.e.,
+        the descendents of the new node, which is internally represented as
+        `u`).
     disallow_negative_branch_length : bool
         Neighbor joining can result in negative branch lengths, which don't
         make sense in an evolutionary context. If `True`, negative branch
