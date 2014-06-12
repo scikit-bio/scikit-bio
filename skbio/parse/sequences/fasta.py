@@ -102,12 +102,12 @@ def parse_fasta(infile, strict=True, label_to_name=None, finder=FastaFinder,
     seq2 db-accession-34989 CATCGATCGATCGATGCATGCATGCATG
 
     The sequence label or header line in a fasta file is defined as containing
-    two separate pieces of information, delimited by spaces. The first space-
+    two separate pieces of information, delimited by a space. The first space-
     separated entry is the sequence identifier, and everything following the
     first space is considered additional information (e.g., comments about the
     source of the sequence or the molecule that it encodes). Often we don't
-    care about that information internally. If you want to just return the
-    sequence identifier from that line, you can do this as follows:
+    care about that information within our code. If you want to just return the
+    sequence identifier from that line, you can pass ``ignore_comment=True``:
 
     >>> from StringIO import StringIO
     >>> fasta_f = StringIO('>seq1 db-accession-149855\n'
