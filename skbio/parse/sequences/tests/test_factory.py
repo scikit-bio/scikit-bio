@@ -67,7 +67,6 @@ class SequenceLoadTests(TestCase):
             self.assertEqual(o['QualID'], e['QualID'])
             self.assertTrue((o['Qual'] == e['Qual']).all())
 
-
     def test_multiple_files(self):
         """load should handle multiple files of different types"""
         it = load([self.fq1, self.fna1], phred_offset=64)
@@ -108,7 +107,6 @@ class SequenceLoadTests(TestCase):
         self.assertEqual(o['SequenceID'], e['SequenceID'])
         self.assertEqual(o['QualID'], e['QualID'])
         self.assertEqual(o['Qual'], e['Qual'])
-
 
     def test_transform(self):
         """load should pass transform methods to the iterators"""
@@ -155,7 +153,6 @@ class SequenceLoadTests(TestCase):
         self.assertEqual(o['QualID'], e['QualID'])
         self.assertEqual(o['Qual'], e['Qual'])
 
-
     def test_force_constructor(self):
         it = load([self.noext], constructor=FastaIterator)
         obs = [rec.copy() for rec in it]
@@ -164,7 +161,6 @@ class SequenceLoadTests(TestCase):
                {'Sequence': 'ATATA', 'SequenceID': 'seq2',
                 'Qual': None, 'QualID': None}]
         self.assertEqual(obs, exp)
-
 
 
 if __name__ == '__main__':

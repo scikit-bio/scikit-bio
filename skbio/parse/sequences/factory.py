@@ -74,7 +74,7 @@ def _open_or_none(opener, f):
             opened = opener(f)
         except IOError:
             raise IOError("Could not open %s with %s!" % (f, name))
-        
+
         return opened
 
 
