@@ -15,6 +15,7 @@ import numpy as np
 import pandas as pd
 
 from skbio.core.distance import DistanceMatrix
+from skbio.math.stats.misc import p_value_to_str
 
 
 class CategoricalStats(object):
@@ -249,26 +250,8 @@ class CategoricalStatsResults(object):
                 self.test_statistic_name, 'p-value', 'Number of permutations')
 
     def _format_data(self):
-        p_value_str = self._format_p_value(self.p_value, self.permutations)
+        p_value_str = p_value_to_str(self.p_value, self.permutations)
 
         return (self.short_method_name, '%d' % self.sample_size,
                 '%d' % len(self.groups), str(self.statistic), p_value_str,
                 '%d' % self.permutations)
-
-    def _format_p_value(self, p_value, permutations):
-        """Format p-value as a string with the correct number of decimals.
-
-        Number of decimals is determined by the number of permutations.
-        """
-        if p_value is None:
-            result = 'N/A'
-        elif permutations < 10:
-            # This can be the last step of a long process, so we don't want to
-            # fail.
-            result = ('Too few permutations to compute p-value (permutations '
-                      '= %d)' % permutations)
-        else:
-            decimal_places = int(np.log10(permutations + 1))
-            result = ('%1.' + '%df' % decimal_places) % p_value
-
-        return result

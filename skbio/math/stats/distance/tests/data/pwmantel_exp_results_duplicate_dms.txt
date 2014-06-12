@@ -1,0 +1,4 @@
+dm1	dm2	statistic	p-value	n	method	permutations	alternative
+0	1	1.0	1.000	3	pearson	999	less
+0	2	1.0	1.000	3	pearson	999	less
+1	2	1.0	1.000	3	pearson	999	less
