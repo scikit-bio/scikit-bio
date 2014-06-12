@@ -23,8 +23,9 @@ API Reference
    format.sequences
    math.diversity.alpha
    math.stats.distance
-   math.stats.spatial
+   math.stats.misc
    math.stats.ordination
+   math.stats.spatial
    math.gradient
    math.subsample
    parse.sequences

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 r"""
 Dissimilarity and distance matrices (:mod:`skbio.core.distance`)
 ================================================================
@@ -435,6 +434,30 @@ class DissimilarityMatrix(object):
         """
         return self.__class__(self.data.T.copy(), deepcopy(self.ids))
 
+    def index(self, lookup_id):
+        """Return the index of the specified ID.
+
+        Parameters
+        ----------
+        lookup_id : str
+            ID whose index will be returned.
+
+        Returns
+        -------
+        int
+            Row/column index of `lookup_id`.
+
+        Raises
+        ------
+        MissingIDError
+            If `lookup_id` is not in the dissimilarity matrix.
+
+        """
+        if lookup_id in self:
+            return self._id_index[lookup_id]
+        else:
+            raise MissingIDError(lookup_id)
+
     def redundant_form(self):
         """Return an array of dissimilarities in redundant format.
 
@@ -473,6 +496,26 @@ class DissimilarityMatrix(object):
         # We deepcopy IDs in case the tuple contains mutable objects at some
         # point in the future.
         return self.__class__(self.data.copy(), deepcopy(self.ids))
+
+    def filter(self, ids):
+        """Filter the dissimilarity matrix by IDs.
+
+        Parameters
+        ----------
+        ids : iterable of str
+            IDs to retain. May not contain duplicates or be empty. Each ID must
+            be present in the dissimilarity matrix.
+
+        Returns
+        -------
+        DissimilarityMatrix
+            Filtered dissimilarity matrix containing only the IDs specified in
+            `ids`. IDs will be in the same order as they appear in `ids`.
+
+        """
+        idxs = [self.index(id_) for id_ in ids]
+        filtered_data = self._data[idxs][:, idxs]
+        return self.__class__(filtered_data, ids)
 
     def __str__(self):
         """Return a string representation of the dissimilarity matrix.
@@ -556,6 +599,29 @@ class DissimilarityMatrix(object):
         """
         return not self == other
 
+    def __contains__(self, lookup_id):
+        """Check if the specified ID is in the dissimilarity matrix.
+
+        Parameters
+        ----------
+        lookup_id : str
+            ID to search for.
+
+        Returns
+        -------
+        bool
+            ``True`` if `lookup_id` is in the dissimilarity matrix, ``False``
+            otherwise.
+
+        See Also
+        --------
+        index
+
+        .. shownumpydoc
+
+        """
+        return lookup_id in self._id_index
+
     def __getitem__(self, index):
         """Slice into dissimilarity data by object ID or numpy indexing.
 
@@ -606,16 +672,9 @@ class DissimilarityMatrix(object):
 
         """
         if isinstance(index, string_types):
-            if index in self._id_index:
-                return self.data[self._id_index[index]]
-            else:
-                raise MissingIDError(index)
+            return self.data[self.index(index)]
         elif self._is_id_pair(index):
-            for id_ in index:
-                if id_ not in self._id_index:
-                    raise MissingIDError(id_)
-            return self.data[self._id_index[index[0]],
-                             self._id_index[index[1]]]
+            return self.data[self.index(index[0]), self.index(index[1])]
         else:
             return self.data.__getitem__(index)
 

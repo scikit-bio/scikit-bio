@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -12,6 +10,7 @@ from __future__ import absolute_import, division, print_function
 from future.utils.six import StringIO
 from unittest import TestCase, main
 
+import numpy as np
 import pandas as pd
 
 from skbio.core.distance import DissimilarityMatrix, DistanceMatrix
@@ -83,7 +82,6 @@ class CategoricalStatsResultsTests(TestCase):
         self.results = CategoricalStatsResults('foo', 'Foo', 'my stat', 42,
                                                ['a', 'b', 'c', 'd'],
                                                0.01234567890, 0.1151111, 99)
-        self.p_value = 0.119123123123
 
     def test_str(self):
         exp = ('Method name  Sample size  Number of groups       my stat  '
@@ -110,33 +108,6 @@ class CategoricalStatsResultsTests(TestCase):
                'Number of permutations\nfoo\t42\t4\t0.0123456789\t0.12\t99\n')
         obs = self.results.summary()
         self.assertEqual(obs, exp)
-
-    def test_format_p_value(self):
-        obs = self.results._format_p_value(self.p_value, 100)
-        self.assertEqual(obs, '0.12')
-
-        obs = self.results._format_p_value(self.p_value, 250)
-        self.assertEqual(obs, '0.12')
-
-        obs = self.results._format_p_value(self.p_value, 1000)
-        self.assertEqual(obs, '0.119')
-
-    def test_format_p_value_few_perms(self):
-        obs = self.results._format_p_value(self.p_value, 9)
-        self.assertEqual(obs, 'Too few permutations to compute p-value '
-                              '(permutations = 9)')
-
-        obs = self.results._format_p_value(self.p_value, 1)
-        self.assertEqual(obs, 'Too few permutations to compute p-value '
-                              '(permutations = 1)')
-
-        obs = self.results._format_p_value(self.p_value, 0)
-        self.assertEqual(obs, 'Too few permutations to compute p-value '
-                              '(permutations = 0)')
-
-    def test_format_p_value_none(self):
-        obs = self.results._format_p_value(None, 0)
-        self.assertEqual(obs, 'N/A')
 
 
 if __name__ == '__main__':

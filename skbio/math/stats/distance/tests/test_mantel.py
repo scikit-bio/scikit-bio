@@ -11,10 +11,12 @@ from unittest import TestCase, main
 
 import numpy as np
 import numpy.testing as npt
+import pandas as pd
+from pandas.util.testing import assert_frame_equal
 
 from skbio.core.distance import DistanceMatrix
 from skbio.core.exception import DissimilarityMatrixError, DistanceMatrixError
-from skbio.math.stats.distance import mantel
+from skbio.math.stats.distance import mantel, pwmantel
 from skbio.util.testing import get_data_path
 
 
@@ -251,6 +253,172 @@ class MantelTests(TestCase):
         # too small dms
         with self.assertRaises(ValueError):
             mantel([[0, 3], [3, 0]], [[0, 2], [2, 0]])
+
+
+class PairwiseMantelTests(TestCase):
+    def setUp(self):
+        self.minx = DistanceMatrix([[0, 1, 2], [1, 0, 3], [2, 3, 0]])
+        self.miny = DistanceMatrix([[0, 2, 7], [2, 0, 6], [7, 6, 0]])
+        self.minz = DistanceMatrix([[0, 0.5, 0.25],
+                                    [0.5, 0, 0.1],
+                                    [0.25, 0.1, 0]])
+        self.min_dms = (self.minx, self.miny, self.minz)
+
+        # Versions of self.minx and self.minz (above) that each have an extra
+        # ID on the end.
+        self.x_extra = DistanceMatrix([[0, 1, 2, 7],
+                                       [1, 0, 3, 2],
+                                       [2, 3, 0, 4],
+                                       [7, 2, 4, 0]], ['0', '1', '2', 'foo'])
+        self.z_extra = DistanceMatrix([[0, 0.5, 0.25, 3],
+                                       [0.5, 0, 0.1, 24],
+                                       [0.25, 0.1, 0, 5],
+                                       [3, 24, 5, 0]], ['0', '1', '2', 'bar'])
+
+        # Load expected results. We have to load the p-value column (column
+        # index 3) as a string dtype in order to compare with the in-memory
+        # results since we're formatting the p-values as strings with the
+        # correct number of decimal places. Without this explicit converter,
+        # the p-value column will be loaded as a float dtype and the frames
+        # won't compare equal.
+        p_val_conv = {3: str}
+
+        self.exp_results_minimal = pd.read_csv(
+            get_data_path('pwmantel_exp_results_minimal.txt'), sep='\t',
+            index_col=(0, 1), converters=p_val_conv)
+
+        self.exp_results_minimal_with_labels = pd.read_csv(
+            get_data_path('pwmantel_exp_results_minimal_with_labels.txt'),
+            sep='\t', index_col=(0, 1), converters=p_val_conv)
+
+        self.exp_results_duplicate_dms = pd.read_csv(
+            get_data_path('pwmantel_exp_results_duplicate_dms.txt'),
+            sep='\t', index_col=(0, 1), converters=p_val_conv)
+
+        self.exp_results_na_p_value = pd.read_csv(
+            get_data_path('pwmantel_exp_results_na_p_value.txt'),
+            sep='\t', index_col=(0, 1), converters=p_val_conv)
+
+        self.exp_results_too_few_permutations = pd.read_csv(
+            get_data_path('pwmantel_exp_results_too_few_permutations.txt'),
+            sep='\t', index_col=(0, 1), converters=p_val_conv)
+
+        self.exp_results_reordered_distance_matrices = pd.read_csv(
+            get_data_path('pwmantel_exp_results_reordered_distance_matrices'
+                          '.txt'),
+            sep='\t', index_col=(0, 1), converters=p_val_conv)
+
+    def test_minimal_compatible_input(self):
+        # Matrices are already in the correct order and have matching IDs.
+        np.random.seed(0)
+
+        obs = pwmantel(self.min_dms, alternative='greater')
+        assert_frame_equal(obs, self.exp_results_minimal)
+
+    def test_minimal_compatible_input_with_labels(self):
+        np.random.seed(0)
+
+        obs = pwmantel(self.min_dms, alternative='greater',
+                       labels=('minx', 'miny', 'minz'))
+        assert_frame_equal(obs, self.exp_results_minimal_with_labels)
+
+    def test_duplicate_dms(self):
+        obs = pwmantel((self.minx, self.minx, self.minx), alternative='less')
+        assert_frame_equal(obs, self.exp_results_duplicate_dms)
+
+    def test_na_p_value(self):
+        obs = pwmantel((self.miny, self.minx), method='spearman',
+                       permutations=0)
+        assert_frame_equal(obs, self.exp_results_na_p_value)
+
+    def test_too_few_permutations_for_p_value(self):
+        obs = pwmantel((self.miny, self.minx), method='spearman',
+                       permutations=9)
+        assert_frame_equal(obs, self.exp_results_too_few_permutations)
+
+    def test_reordered_distance_matrices(self):
+        # Matrices have matching IDs but they all have different ordering.
+        x = self.minx.filter(['1', '0', '2'])
+        y = self.miny.filter(['0', '2', '1'])
+        z = self.minz.filter(['1', '2', '0'])
+
+        np.random.seed(0)
+
+        obs = pwmantel((x, y, z), alternative='greater')
+        assert_frame_equal(obs, self.exp_results_reordered_distance_matrices)
+
+    def test_strict(self):
+        # Matrices have some matching and nonmatching IDs, with different
+        # ordering.
+        x = self.x_extra.filter(['1', '0', 'foo', '2'])
+        y = self.miny.filter(['0', '2', '1'])
+        z = self.z_extra.filter(['bar', '1', '2', '0'])
+
+        np.random.seed(0)
+
+        # strict=False should discard IDs that aren't found in both matrices
+        obs = pwmantel((x, y, z), alternative='greater', strict=False)
+        assert_frame_equal(obs, self.exp_results_reordered_distance_matrices)
+
+        with self.assertRaises(ValueError):
+            pwmantel((x, y, z), strict=True)
+
+    def test_id_lookup(self):
+        # Matrices have mismatched IDs but a lookup is provided.
+        self.x_extra.ids = ['a', 'b', 'c', 'foo']
+        self.z_extra.ids = ['d', 'e', 'f', 'bar']
+        lookup = {'a': '0', 'b': '1', 'c': '2', 'foo': 'foo',
+                  'd': '0', 'e': '1', 'f': '2', 'bar': 'bar',
+                  '0': '0', '1': '1', '2': '2'}
+
+        x = self.x_extra.filter(['b', 'a', 'foo', 'c'])
+        y = self.miny.filter(['0', '2', '1'])
+        z = self.z_extra.filter(['bar', 'e', 'f', 'd'])
+
+        x_copy = x.copy()
+        y_copy = y.copy()
+        z_copy = z.copy()
+
+        np.random.seed(0)
+
+        obs = pwmantel((x, y, z), alternative='greater', strict=False,
+                       lookup=lookup)
+        assert_frame_equal(obs, self.exp_results_reordered_distance_matrices)
+
+        # Make sure the inputs aren't modified.
+        self.assertEqual(x, x_copy)
+        self.assertEqual(y, y_copy)
+        self.assertEqual(z, z_copy)
+
+    def test_too_few_dms(self):
+        with self.assertRaises(ValueError):
+            pwmantel([self.miny])
+
+    def test_invalid_input_type(self):
+        with self.assertRaises(TypeError):
+            pwmantel([self.miny, self.minx, [[0, 42], [42, 0]]])
+
+    def test_wrong_number_of_labels(self):
+        with self.assertRaises(ValueError):
+            pwmantel(self.min_dms, labels=['foo', 'bar'])
+
+    def test_duplicate_labels(self):
+        with self.assertRaises(ValueError):
+            pwmantel(self.min_dms, labels=['foo', 'bar', 'foo'])
+
+    def test_missing_ids_in_lookup(self):
+        # mapping for '1' is missing
+        lookup = {'0': 'a', '2': 'c'}
+
+        with self.assertRaises(KeyError):
+            pwmantel(self.min_dms, lookup=lookup)
+
+    def test_no_matching_ids(self):
+        self.minx.ids = ['foo', 'bar', 'baz']
+        self.miny.ids = ['bro', 'fist', 'breh']
+
+        with self.assertRaises(ValueError):
+            pwmantel((self.minx, self.miny, self.minz), strict=False)
 
 
 if __name__ == '__main__':
