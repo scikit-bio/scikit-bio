@@ -256,9 +256,6 @@ class MantelTests(TestCase):
 
 
 class PairwiseMantelTests(TestCase):
-
-    # TODO add test to ensure inputs aren't modified
-
     def setUp(self):
         self.minx = DistanceMatrix([[0, 1, 2], [1, 0, 3], [2, 3, 0]])
         self.miny = DistanceMatrix([[0, 2, 7], [2, 0, 6], [7, 6, 0]])
@@ -316,7 +313,6 @@ class PairwiseMantelTests(TestCase):
         np.random.seed(0)
 
         obs = pwmantel(self.min_dms, alternative='greater')
-        #obs.to_csv('tests/data/pwmantel_exp_results_minimal.txt', sep='\t')
         assert_frame_equal(obs, self.exp_results_minimal)
 
     def test_minimal_compatible_input_with_labels(self):
@@ -379,15 +375,28 @@ class PairwiseMantelTests(TestCase):
         y = self.miny.filter(['0', '2', '1'])
         z = self.z_extra.filter(['bar', 'e', 'f', 'd'])
 
+        x_copy = x.copy()
+        y_copy = y.copy()
+        z_copy = z.copy()
+
         np.random.seed(0)
 
         obs = pwmantel((x, y, z), alternative='greater', strict=False,
                        lookup=lookup)
         assert_frame_equal(obs, self.exp_results_reordered_distance_matrices)
 
+        # Make sure the inputs aren't modified.
+        self.assertEqual(x, x_copy)
+        self.assertEqual(y, y_copy)
+        self.assertEqual(z, z_copy)
+
     def test_too_few_dms(self):
         with self.assertRaises(ValueError):
             pwmantel([self.miny])
+
+    def test_invalid_input_type(self):
+        with self.assertRaises(TypeError):
+            pwmantel([self.miny, self.minx, [[0, 42], [42, 0]]])
 
     def test_wrong_number_of_labels(self):
         with self.assertRaises(ValueError):

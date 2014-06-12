@@ -208,6 +208,10 @@ def pwmantel(dms, labels=None, strict=True, lookup=None, method='pearson',
     if num_dms < 2:
         raise ValueError("Must provide at least two distance matrices.")
 
+    for dm in dms:
+        if not isinstance(dm, DistanceMatrix):
+            raise TypeError("Must provide DistanceMatrix instances as input.")
+
     if labels is None:
         labels = range(num_dms)
     else:
