@@ -1,8 +1,8 @@
 r"""
-Sequence collections and alignments (:mod:`skbio.core.alignment.alignment`)
+Sequence collections and alignments (:mod:`skbio.core.alignment`)
 ===========================================================================
 
-.. currentmodule:: skbio.core.alignment.alignment
+.. currentmodule:: skbio.core.alignment
 
 This module provides functionality for working with biological sequence
 collections and alignments. These can be composed of generic sequences,
@@ -11,8 +11,8 @@ not validated, except that sequence ids must be unique, but all
 contructor methods take a validate option which checks different features of
 the input based on ``SequenceCollection`` type.
 
-Classes
--------
+Data Structures
+---------------
 
 .. autosummary::
    :toctree: generated/
@@ -20,8 +20,18 @@ Classes
    SequenceCollection
    Alignment
 
-Examples
---------
+Alignment Algorithms
+--------------------
+
+.. autosummary::
+   :toctree: generated/
+
+   StripedSmithWaterman
+   AlignmentStructure
+   align_striped_smith_waterman
+
+Data Structure Examples
+-----------------------
 >>> from StringIO import StringIO
 >>> from skbio.core.alignment import SequenceCollection, Alignment
 >>> from skbio.core.sequence import DNA
@@ -46,6 +56,83 @@ Examples
 >>> s1
 <SequenceCollection: n=2; mean +/- std length=26.50 +/- 1.50>
 
+Alignment Algorithm Examples
+----------------------------
+Using the convenient ``align_striped_smith_waterman`` function:
+
+>>> from skbio.core.alignment import align_striped_smith_waterman
+>>> alignment = align_striped_smith_waterman(
+...                 "ACTAAGGCTCTCTACCCCTCTCAGAGA",
+...                 "ACTAAGGCTCCTAACCCCCTTTTCTCAGA"
+...             )
+>>> print alignment
+{
+    'optimal_alignment_score': 27,
+    'suboptimal_alignment_score': 21,
+    'query_begin': 0,
+    'query_end': 24,
+    'target_begin': 0,
+    'target_end_optimal': 28,
+    'target_end_suboptimal': 12,
+    'cigar': '10M1I2M1D5M4D7M',
+    'query_sequence': 'ACTAAGGCTCTCTACCCCTCTCAGAGA',
+    'target_sequence': 'ACTAAGGCTCCTAACCCCCTTTTCTCAGA'
+}
+
+Using the ``StripedSmithWaterman`` object:
+
+>>> from skbio.core.alignment import StripedSmithWaterman
+>>> query = StripedSmithWaterman("ACTAAGGCTCTCTACCCCTCTCAGAGA")
+>>> alignment = query("AAAAAACTCTCTAAACTCACTAAGGCTCTCTACCCCTCTTCAGAGAAGTCGA")
+>>> print alignment
+{
+    'optimal_alignment_score': 49,
+    'suboptimal_alignment_score': 24,
+    'query_begin': 0,
+    'query_end': 26,
+    'target_begin': 18,
+    'target_end_optimal': 45,
+    'target_end_suboptimal': 29,
+    'cigar': '20M1D7M',
+    'query_sequence': 'ACTAAGGCTCTCTACCCCTCTCAGAGA',
+    'target_sequence': 'AAAAAACTCTCTAAACTCACTAAGGCTCTCTACCCCTCTTCAGAGAAGTCGA'
+}
+
+Using the ``StripedSmithWaterman`` object for multiple targets in an efficient
+way and finding the aligned sequence representations:
+
+>>> from skbio.core.alignment import StripedSmithWaterman
+>>> alignments = []
+>>> target_sequences = [
+...     "GCTAACTAGGCTCCCTTCTACCCCTCTCAGAGA",
+...     "GCCCAGTAGCTTCCCAATATGAGAGCATCAATTGTAGATCGGGCC",
+...     "TCTATAAGATTCCGCATGCGTTACTTATAAGATGTCTCAACGG",
+...     "TAGAGATTAATTGCCACTGCCAAAATTCTG"
+... ]
+>>> query_sequence = "ACTAAGGCTCTCTACCCCTCTCAGAGA"
+>>> query = StripedSmithWaterman(query_sequence)
+>>> for target_sequence in target_sequences:
+...     alignment = query(target_sequence)
+...     alignments.append(alignment)
+...
+>>> print alignments[0]
+{
+    'optimal_alignment_score': 38,
+    'suboptimal_alignment_score': 14,
+    'query_begin': 0,
+    'query_end': 26,
+    'target_begin': 4,
+    'target_end_optimal': 32,
+    'target_end_suboptimal': 15,
+    'cigar': '3M1I6M3D17M',
+    'query_sequence': 'ACTAAGGCTCTCTACCCCTCTCAGAGA',
+    'target_sequence': 'GCTAACTAGGCTCCCTTCTACCCCTCTCAGAGA'
+}
+>>> print alignments[0].get_aligned_query_sequence()
+ACTAAGGCT---CTCTACCCCTCTCAGAGA
+>>> print alignments[0].get_aligned_target_sequence()
+ACT-AGGCTCCCTTCTACCCCTCTCAGAGA
+
 """
 
 # ----------------------------------------------------------------------------
@@ -57,8 +144,11 @@ Examples
 # ----------------------------------------------------------------------------
 
 from .alignment import Alignment, SequenceCollection
+from .ssw.ssw_wrapper import (
+    StripedSmithWaterman, AlignmentStructure, align_striped_smith_waterman)
 
-__all__ = ['Alignment', 'SequenceCollection']
+__all__ = ['Alignment', 'SequenceCollection', 'StripedSmithWaterman',
+           'AlignmentStructure', 'align_striped_smith_waterman']
 
 from numpy.testing import Tester
 test = Tester().test
