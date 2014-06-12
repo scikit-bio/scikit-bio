@@ -15,7 +15,7 @@ This is a pre-alpha release. At this stage, major backwards-incompatible API cha
 * Added the following methods to ``DissimilarityMatrix``: ``filter``, ``index``, and ``__contains__`` for ID-based filtering, index lookup, and membership testing, respectively.
 * Added ``ignore_comment`` parameter to ``parse_fasta`` (off by default, maintaining backward compatibility). This handles stripping the comment field from the header line (i.e., all characters beginning with the first space) before returning the label.
 
-### Bug fixes:
+### Bug fixes
 
 * Fixed a couple of unit tests that could fail stochastically.
 * Added missing ``__init__.py`` files to a couple of test directories so that these tests won't be skipped.
