@@ -122,10 +122,16 @@ class NjTests(TestCase):
 
     def test_otu_to_new_node(self):
         self.assertEqual(_otu_to_new_node(self.dm1, 'a', 'b', 'c', True), 7)
+        self.assertEqual(_otu_to_new_node(self.dm1, 'a', 'b', 'd', True), 7)
+        self.assertEqual(_otu_to_new_node(self.dm1, 'a', 'b', 'e', True), 6)
 
     def test_pair_members_to_new_node(self):
         self.assertEqual(_pair_members_to_new_node(self.dm1, 'a', 'b', True),
                          (2, 3))
+        self.assertEqual(_pair_members_to_new_node(self.dm1, 'a', 'c', True),
+                         (4, 5))
+        self.assertEqual(_pair_members_to_new_node(self.dm1, 'd', 'e', True),
+                         (2, 1))
 
 if __name__ == "__main__":
     main()
