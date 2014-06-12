@@ -224,6 +224,7 @@ class RDA(Ordination):
         # scores, but they're computed like this:
         # corr(self.X, self.F))
         return OrdinationResults(eigvals=eigvals,
+                                 proportion_explained=eigvals / eigvals.sum(),
                                  species=species_scores,
                                  site=site_scores,
                                  biplot=biplot_scores,
