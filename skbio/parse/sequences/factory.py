@@ -62,7 +62,6 @@ def _is_single_iterator_type(iters):
 
 def _open_or_none(opener, f):
     """Open a file or returns None"""
-    opened = None
     if not opener:
         return None
     else:
