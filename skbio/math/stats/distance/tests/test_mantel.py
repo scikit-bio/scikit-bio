@@ -257,8 +257,6 @@ class MantelTests(TestCase):
 
 class PairwiseMantelTests(TestCase):
 
-    # TODO add test with duplicate dms
-
     # TODO add test to ensure inputs aren't modified
 
     def setUp(self):
@@ -296,6 +294,10 @@ class PairwiseMantelTests(TestCase):
             get_data_path('pwmantel_exp_results_minimal_with_labels.txt'),
             sep='\t', index_col=(0, 1), converters=p_val_conv)
 
+        self.exp_results_duplicate_dms = pd.read_csv(
+            get_data_path('pwmantel_exp_results_duplicate_dms.txt'),
+            sep='\t', index_col=(0, 1), converters=p_val_conv)
+
         self.exp_results_na_p_value = pd.read_csv(
             get_data_path('pwmantel_exp_results_na_p_value.txt'),
             sep='\t', index_col=(0, 1), converters=p_val_conv)
@@ -324,6 +326,10 @@ class PairwiseMantelTests(TestCase):
                        labels=('minx', 'miny', 'minz'))
         assert_frame_equal(obs, self.exp_results_minimal_with_labels)
 
+    def test_duplicate_dms(self):
+        obs = pwmantel((self.minx, self.minx, self.minx), alternative='less')
+        assert_frame_equal(obs, self.exp_results_duplicate_dms)
+
     def test_na_p_value(self):
         obs = pwmantel((self.miny, self.minx), method='spearman',
                        permutations=0)
@@ -345,7 +351,7 @@ class PairwiseMantelTests(TestCase):
         obs = pwmantel((x, y, z), alternative='greater')
         assert_frame_equal(obs, self.exp_results_reordered_distance_matrices)
 
-    def test_intersect(self):
+    def test_strict(self):
         # Matrices have some matching and nonmatching IDs, with different
         # ordering.
         x = self.x_extra.filter(['1', '0', 'foo', '2'])
@@ -354,8 +360,12 @@ class PairwiseMantelTests(TestCase):
 
         np.random.seed(0)
 
-        obs = pwmantel((x, y, z), alternative='greater', intersect=True)
+        # strict=False should discard IDs that aren't found in both matrices
+        obs = pwmantel((x, y, z), alternative='greater', strict=False)
         assert_frame_equal(obs, self.exp_results_reordered_distance_matrices)
+
+        with self.assertRaises(ValueError):
+            pwmantel((x, y, z), strict=True)
 
     def test_id_lookup(self):
         # Matrices have mismatched IDs but a lookup is provided.
@@ -371,9 +381,35 @@ class PairwiseMantelTests(TestCase):
 
         np.random.seed(0)
 
-        obs = pwmantel((x, y, z), alternative='greater', intersect=True,
+        obs = pwmantel((x, y, z), alternative='greater', strict=False,
                        lookup=lookup)
         assert_frame_equal(obs, self.exp_results_reordered_distance_matrices)
+
+    def test_too_few_dms(self):
+        with self.assertRaises(ValueError):
+            pwmantel([self.miny])
+
+    def test_wrong_number_of_labels(self):
+        with self.assertRaises(ValueError):
+            pwmantel(self.min_dms, labels=['foo', 'bar'])
+
+    def test_duplicate_labels(self):
+        with self.assertRaises(ValueError):
+            pwmantel(self.min_dms, labels=['foo', 'bar', 'foo'])
+
+    def test_missing_ids_in_lookup(self):
+        # mapping for '1' is missing
+        lookup = {'0': 'a', '2': 'c'}
+
+        with self.assertRaises(KeyError):
+            pwmantel(self.min_dms, lookup=lookup)
+
+    def test_no_matching_ids(self):
+        self.minx.ids = ['foo', 'bar', 'baz']
+        self.miny.ids = ['bro', 'fist', 'breh']
+
+        with self.assertRaises(ValueError):
+            pwmantel((self.minx, self.miny, self.minz), strict=False)
 
 
 if __name__ == '__main__':

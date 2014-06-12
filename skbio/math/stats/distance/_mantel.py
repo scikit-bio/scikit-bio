@@ -201,35 +201,32 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided'):
     return orig_stat, p_value
 
 
-def pwmantel(dms, labels=None, intersect=False, lookup=None, method='pearson',
+def pwmantel(dms, labels=None, strict=True, lookup=None, method='pearson',
              permutations=999, alternative='two-sided'):
     num_dms = len(dms)
 
     if num_dms < 2:
-        raise ValueError
+        raise ValueError("Must provide at least two distance matrices.")
 
     if labels is None:
         labels = range(num_dms)
     else:
         if num_dms != len(labels):
-            raise ValueError
+            raise ValueError("Number of labels must match the number of "
+                             "distance matrices.")
         if len(set(labels)) != len(labels):
-            raise ValueError
+            raise ValueError("Labels must be unique.")
 
     num_combs = scipy.misc.comb(num_dms, 2, exact=True)
-    results = np.empty(
-        num_combs, dtype=[('dm1', object), ('dm2', object),
-                          ('statistic', float), ('p-value', object),
-                          ('n', int), ('method', object),
-                          ('permutations', int), ('alternative', object)])
+    results_dtype = [('dm1', object), ('dm2', object), ('statistic', float),
+                     ('p-value', object), ('n', int), ('method', object),
+                     ('permutations', int), ('alternative', object)]
+    results = np.empty(num_combs, dtype=results_dtype)
 
     for i, pair in enumerate(combinations(zip(labels, dms), 2)):
         (xlabel, x), (ylabel, y) = pair
 
-        x, y = _order_dms(x, y, intersect=intersect, lookup=lookup)
-
-        if x.ids != y.ids:
-            raise ValueError
+        x, y = _order_dms(x, y, strict=strict, lookup=lookup)
 
         stat, p_val = mantel(x, y, method=method, permutations=permutations,
                              alternative=alternative)
@@ -241,7 +238,7 @@ def pwmantel(dms, labels=None, intersect=False, lookup=None, method='pearson',
     return pd.DataFrame.from_records(results, index=('dm1', 'dm2'))
 
 
-def _order_dms(x, y, intersect=False, lookup=None):
+def _order_dms(x, y, strict=True, lookup=None):
     """Intersect distance matrices and put them in the same order."""
     if lookup is not None:
         # Create copy as we'll be modifying the IDs in place.
@@ -260,11 +257,11 @@ def _order_dms(x, y, intersect=False, lookup=None):
     id_order = [id_ for id_ in x.ids if id_ in y]
     num_matches = len(id_order)
 
-    if not intersect and (num_matches != len(x.ids) or
-                          num_matches != len(y.ids)):
-        raise ValueError
+    if strict and ((num_matches != len(x.ids)) or (num_matches != len(y.ids))):
+        raise ValueError("IDs exist that are not in both distance matrices.")
 
-    if num_matches == 0:
-        raise ValueError
+    if num_matches < 1:
+        raise ValueError("No matching IDs exist between the distance "
+                         "matrices.")
 
     return x.filter(id_order), y.filter(id_order)
