@@ -28,7 +28,9 @@ Let's import a few utility functions to load the data:
 >>> from skbio.util.testing import get_data_path
 >>> import os
 >>> from functools import partial
->>> path = partial(get_data_path, subfolder=os.path.join('tests', 'data'))
+>>> path = partial(get_data_path,
+...                subfolder=os.path.join('skbio', 'math', 'stats',
+...                                       'ordination', 'tests', 'data'))
 
 It's an artificial dataset (table 11.3 in [1]_) that represents fish
 abundance in different sites (`Y`, the response variables) and
