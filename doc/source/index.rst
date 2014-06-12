@@ -23,9 +23,11 @@ API Reference
    draw.distributions
    format.sequences
    math.diversity.alpha
+   math.stats
    math.stats.distance
-   math.stats.spatial
+   math.stats.misc
    math.stats.ordination
+   math.stats.spatial
    math.gradient
    math.subsample
    parse.sequences
