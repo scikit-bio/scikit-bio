@@ -621,10 +621,7 @@ class DissimilarityMatrix(object):
         .. shownumpydoc
 
         """
-        if lookup_id in self._id_index:
-            return True
-        else:
-            return False
+        return lookup_id in self._id_index
 
     def __getitem__(self, index):
         """Slice into dissimilarity data by object ID or numpy indexing.
