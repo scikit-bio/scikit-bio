@@ -69,7 +69,6 @@ def _open_or_none(opener, f):
 
         if not os.path.exists(f):
             raise IOError("%s does not appear to exist!" % f)
-
         try:
             opened = opener(f)
         except IOError:
