@@ -1,0 +1,26 @@
+skbio.core.workflow.requires
+============================
+
+.. currentmodule:: skbio.core.workflow
+
+.. autoclass:: requires
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         requires.__call__
+         requires.__format__
+         requires.__init__
+         requires.__new__
+         requires.__reduce__
+         requires.__reduce_ex__
+         requires.__sizeof__
+         requires.__subclasshook__
+
+
+
+   
+

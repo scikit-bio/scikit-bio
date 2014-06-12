@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Parse biological sequences (skbio.parse.sequences) &mdash; scikit-bio 0.1.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootswatch-3.1.0/united/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/copybutton.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+    <link rel="top" title="scikit-bio 0.1.1 documentation" href="index.html" />
+    <link rel="next" title="skbio.parse.sequences.SequenceIterator" href="generated/skbio.parse.sequences.SequenceIterator.html" />
+    <link rel="prev" title="skbio.math.subsample.subsample" href="generated/skbio.math.subsample.subsample.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body>
+  
+  <a href="https://github.com/biocore/scikit-bio"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          scikit-bio docs</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.1.1</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            <li class="divider-vertical"></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="core.alignment.html">Sequence collections and alignments (<tt class="docutils literal"><span class="pre">skbio.core.alignment</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.sequence.html">Biological sequences (<tt class="docutils literal"><span class="pre">skbio.core.sequence</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.distance.html">Dissimilarity and distance matrices (<tt class="docutils literal"><span class="pre">skbio.core.distance</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.exception.html">Exceptions (<tt class="docutils literal"><span class="pre">skbio.core.exception</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.warning.html">Warnings (<tt class="docutils literal"><span class="pre">skbio.core.warning</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.genetic_code.html">Genetic Code (<tt class="docutils literal"><span class="pre">skbio.core.genetic_code</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.tree.html">Tree representations (<tt class="docutils literal"><span class="pre">skbio.core.tree</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.workflow.html">Constructing workflows (<tt class="docutils literal"><span class="pre">skbio.core.workflow</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.ssw.html">Performing Striped Smith Waterman Alignments (<tt class="docutils literal"><span class="pre">skbio.core.ssw</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="draw.distributions.html">Distribution visualizations (<tt class="docutils literal"><span class="pre">skbio.draw.distributions</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="format.sequences.html">Format biological sequences (<tt class="docutils literal"><span class="pre">skbio.format.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.diversity.alpha.html">Alpha diversity measures (<tt class="docutils literal"><span class="pre">skbio.math.diversity.alpha</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.stats.distance.html">Distance-based statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.distance</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.spatial</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.stats.ordination.html">Ordination methods (<tt class="docutils literal"><span class="pre">skbio.math.stats.ordination</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.gradient.html">Gradient analyses (<tt class="docutils literal"><span class="pre">skbio.math.gradient</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.subsample.html">Subsampling (<tt class="docutils literal"><span class="pre">skbio.math.subsample</span></tt>)</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="util.io.html">I/O utils (<tt class="docutils literal"><span class="pre">skbio.util.io</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="util.misc.html">Miscellaneous Utilities (<tt class="docutils literal"><span class="pre">skbio.util.misc</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="util.testing.html">Testing utilities (<tt class="docutils literal"><span class="pre">skbio.util.testing</span></tt>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="development/py3.html">Supporting Python 2 and Python 3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/new_module.html">Adding a new module to skbio</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a><ul>
+<li><a class="reference internal" href="#sequence-iterator-interface">Sequence iterator interface</a><ul>
+<li><a class="reference internal" href="#classes">Classes</a></li>
+<li><a class="reference internal" href="#functions">Functions</a></li>
+<li><a class="reference internal" href="#examples">Examples</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#low-level-parsing-functions">Low-level parsing functions</a><ul>
+<li><a class="reference internal" href="#id1">Functions</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      
+  <span class="target" id="module-skbio.parse.sequences"></span><div class="section" id="parse-biological-sequences-skbio-parse-sequences">
+<h1>Parse biological sequences (<a class="reference internal" href="#module-skbio.parse.sequences" title="skbio.parse.sequences"><tt class="xref py py-mod docutils literal"><span class="pre">skbio.parse.sequences</span></tt></a>)<a class="headerlink" href="#parse-biological-sequences-skbio-parse-sequences" title="Permalink to this headline">¶</a></h1>
+<p>This module provides functions for parsing sequence files in a variety of
+different formats. Two interfaces are provided for parsing sequence files:
+sequence iterators (high-level, recommended interface) and parsing functions
+(lower-level interface).</p>
+<div class="section" id="sequence-iterator-interface">
+<h2>Sequence iterator interface<a class="headerlink" href="#sequence-iterator-interface" title="Permalink to this headline">¶</a></h2>
+<p>The sequence iterator interface is the recommended way to parse sequence files.
+The <tt class="docutils literal"><span class="pre">load</span></tt> function provides a standard, high-level interface to iterate over
+sequence files regardless of file type or whether they are compressed. The
+method accepts single or multiple file paths and employs the correct file
+handlers, iterator objects, and parsers for the user.</p>
+<p>The benefit of the sequence iterator interface is that the type of the file and
+any file format details are abstracted away from the user. In this manner, the
+user does not need to worry about whether they&#8217;re operating on FASTA or FASTQ
+files or any differences in the returns from their respective parsers.</p>
+<div class="section" id="classes">
+<h3>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.parse.sequences.SequenceIterator.html#skbio.parse.sequences.SequenceIterator" title="skbio.parse.sequences.SequenceIterator"><tt class="xref py py-obj docutils literal"><span class="pre">SequenceIterator</span></tt></a>(seq[,&nbsp;qual,&nbsp;transform,&nbsp;...])</td>
+<td>Provide a standard API for interacting with sequence data</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.parse.sequences.FastaIterator.html#skbio.parse.sequences.FastaIterator" title="skbio.parse.sequences.FastaIterator"><tt class="xref py py-obj docutils literal"><span class="pre">FastaIterator</span></tt></a>(seq[,&nbsp;qual,&nbsp;transform,&nbsp;...])</td>
+<td>Populate state based on fasta sequence and qual (if provided)</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.parse.sequences.FastqIterator.html#skbio.parse.sequences.FastqIterator" title="skbio.parse.sequences.FastqIterator"><tt class="xref py py-obj docutils literal"><span class="pre">FastqIterator</span></tt></a>(*args,&nbsp;**kwargs)</td>
+<td>Populate state based on fastq sequence</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="functions">
+<h3>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.parse.sequences.load.html#skbio.parse.sequences.load" title="skbio.parse.sequences.load"><tt class="xref py py-obj docutils literal"><span class="pre">load</span></tt></a>(seqs[,&nbsp;qual,&nbsp;constructor])</td>
+<td>Construct the appropriate iterator for all your processing needs</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
+<p>For the first set of sequence iterator examples, we&#8217;re going to use the
+<tt class="docutils literal"><span class="pre">load</span></tt> function. The <tt class="docutils literal"><span class="pre">load</span></tt> function is intended to operate on file paths,
+so let&#8217;s create two files for it to use. The first one will be a regular FASTA
+file, and the second will be a gzip&#8217;d FASTQ file:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">os</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">gzip</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">out</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s">&#39;test_seqs.fna&#39;</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;&gt;s1</span><span class="se">\n</span><span class="s">ATGC</span><span class="se">\n</span><span class="s">&gt;s2</span><span class="se">\n</span><span class="s">ATGGC</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">out</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">outgz</span> <span class="o">=</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&#39;test_seqs.fq.gz&#39;</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">outgz</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;@s3</span><span class="se">\n</span><span class="s">AATTGG</span><span class="se">\n</span><span class="s">+</span><span class="se">\n</span><span class="s">ghghgh</span><span class="se">\n</span><span class="s">@s4</span><span class="se">\n</span><span class="s">AAA</span><span class="se">\n</span><span class="s">+</span><span class="se">\n</span><span class="s">fgh</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">outgz</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Now let&#8217;s see what <tt class="docutils literal"><span class="pre">load</span></tt> can do:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">it</span> <span class="o">=</span> <span class="n">load</span><span class="p">([</span><span class="s">&#39;test_seqs.fna&#39;</span><span class="p">,</span> <span class="s">&#39;test_seqs.fq.gz&#39;</span><span class="p">],</span> <span class="n">phred_offset</span><span class="o">=</span><span class="mi">64</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">rec</span> <span class="ow">in</span> <span class="n">it</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">print</span> <span class="n">rec</span><span class="p">[</span><span class="s">&#39;SequenceID&#39;</span><span class="p">]</span>
+<span class="gp">... </span>    <span class="k">print</span> <span class="n">rec</span><span class="p">[</span><span class="s">&#39;Sequence&#39;</span><span class="p">]</span>
+<span class="gp">... </span>    <span class="k">print</span> <span class="n">rec</span><span class="p">[</span><span class="s">&#39;Qual&#39;</span><span class="p">]</span>
+<span class="go">s1</span>
+<span class="go">ATGC</span>
+<span class="go">None</span>
+<span class="go">s2</span>
+<span class="go">ATGGC</span>
+<span class="go">None</span>
+<span class="go">s3</span>
+<span class="go">AATTGG</span>
+<span class="go">[39 40 39 40 39 40]</span>
+<span class="go">s4</span>
+<span class="go">AAA</span>
+<span class="go">[38 39 40]</span>
+</pre></div>
+</div>
+<p>To be polite, let&#8217;s remove the files we just created:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s">&#39;test_seqs.fna&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s">&#39;test_seqs.fq.gz&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In the following examples, we&#8217;ll see how to use the sequence iterators directly
+instead of using <tt class="docutils literal"><span class="pre">load</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">StringIO</span> <span class="kn">import</span> <span class="n">StringIO</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.parse.sequences</span> <span class="kn">import</span> <span class="n">FastaIterator</span><span class="p">,</span> <span class="n">FastqIterator</span>
+</pre></div>
+</div>
+<p>In this first example, we&#8217;re going to construct a FASTA iterator that is also
+paired with quality scores (e.g., as in 454 fasta/qual files).</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">seqs</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">(</span><span class="s">&quot;&gt;seq1</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="gp">... </span>                <span class="s">&quot;ATGC</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="gp">... </span>                <span class="s">&quot;&gt;seq2</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="gp">... </span>                <span class="s">&quot;TTGGCC</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qual</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">(</span><span class="s">&quot;&gt;seq1</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="gp">... </span>                <span class="s">&quot;10 20 30 40</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="gp">... </span>                <span class="s">&quot;&gt;seq2</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="gp">... </span>                <span class="s">&quot;1 2 3 4 5 6</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">it</span> <span class="o">=</span> <span class="n">FastaIterator</span><span class="p">(</span><span class="n">seq</span><span class="o">=</span><span class="p">[</span><span class="n">seqs</span><span class="p">],</span> <span class="n">qual</span><span class="o">=</span><span class="p">[</span><span class="n">qual</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">it</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">print</span> <span class="n">record</span><span class="p">[</span><span class="s">&#39;Sequence&#39;</span><span class="p">]</span>
+<span class="gp">... </span>    <span class="k">print</span> <span class="n">record</span><span class="p">[</span><span class="s">&#39;Qual&#39;</span><span class="p">]</span>
+<span class="go">ATGC</span>
+<span class="go">[10 20 30 40]</span>
+<span class="go">TTGGCC</span>
+<span class="go">[1 2 3 4 5 6]</span>
+</pre></div>
+</div>
+<p>In the next example, we&#8217;re going to iterate over multiple FASTQ files at once.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">seqs1</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">(</span><span class="s">&quot;@seq1</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="gp">... </span>                 <span class="s">&quot;ATGC</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="gp">... </span>                 <span class="s">&quot;+</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="gp">... </span>                 <span class="s">&quot;hhhh</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seqs2</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">(</span><span class="s">&quot;@seq2</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="gp">... </span>                <span class="s">&quot;AATTGGCC</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="gp">... </span>                <span class="s">&quot;&gt;seq2</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="gp">... </span>                <span class="s">&quot;abcdefgh</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">it</span> <span class="o">=</span> <span class="n">FastqIterator</span><span class="p">(</span><span class="n">seq</span><span class="o">=</span><span class="p">[</span><span class="n">seqs1</span><span class="p">,</span> <span class="n">seqs2</span><span class="p">],</span> <span class="n">phred_offset</span><span class="o">=</span><span class="mi">64</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">it</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">print</span> <span class="n">record</span><span class="p">[</span><span class="s">&#39;Sequence&#39;</span><span class="p">]</span>
+<span class="gp">... </span>    <span class="k">print</span> <span class="n">record</span><span class="p">[</span><span class="s">&#39;Qual&#39;</span><span class="p">]</span>
+<span class="go">ATGC</span>
+<span class="go">[40 40 40 40]</span>
+<span class="go">AATTGGCC</span>
+<span class="go">[33 34 35 36 37 38 39 40]</span>
+</pre></div>
+</div>
+<p>Finally, we can apply arbitrary transforms to the sequences during iteration.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">seqs1</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">(</span><span class="s">&quot;@seq1</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="gp">... </span>                 <span class="s">&quot;ATGC</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="gp">... </span>                 <span class="s">&quot;+</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="gp">... </span>                 <span class="s">&quot;hhhh</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seqs2</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">(</span><span class="s">&quot;@seq2</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="gp">... </span>                <span class="s">&quot;AATTGGCC</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="gp">... </span>                <span class="s">&quot;&gt;seq2</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="gp">... </span>                <span class="s">&quot;abcdefgh</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">rev_f</span><span class="p">(</span><span class="n">st</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">st</span><span class="p">[</span><span class="s">&#39;Sequence&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s">&#39;Sequence&#39;</span><span class="p">][::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="gp">... </span>    <span class="n">st</span><span class="p">[</span><span class="s">&#39;Qual&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s">&#39;Qual&#39;</span><span class="p">][::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s">&#39;Qual&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="k">else</span> <span class="bp">None</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">it</span> <span class="o">=</span> <span class="n">FastqIterator</span><span class="p">(</span><span class="n">seq</span><span class="o">=</span><span class="p">[</span><span class="n">seqs1</span><span class="p">,</span> <span class="n">seqs2</span><span class="p">],</span> <span class="n">transform</span><span class="o">=</span><span class="n">rev_f</span><span class="p">,</span> <span class="n">phred_offset</span><span class="o">=</span><span class="mi">64</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">it</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">print</span> <span class="n">record</span><span class="p">[</span><span class="s">&#39;Sequence&#39;</span><span class="p">]</span>
+<span class="gp">... </span>    <span class="k">print</span> <span class="n">record</span><span class="p">[</span><span class="s">&#39;Qual&#39;</span><span class="p">]</span>
+<span class="go">CGTA</span>
+<span class="go">[40 40 40 40]</span>
+<span class="go">CCGGTTAA</span>
+<span class="go">[40 39 38 37 36 35 34 33]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="low-level-parsing-functions">
+<h2>Low-level parsing functions<a class="headerlink" href="#low-level-parsing-functions" title="Permalink to this headline">¶</a></h2>
+<p>Lower-level parsing functions are also made available in addition to the
+sequence iterator interface. These functions can be used to directly parse a
+single sequence file. They accept file paths, file handles, or file-like
+objects.</p>
+<div class="section" id="id1">
+<h3>Functions<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.parse.sequences.parse_clustal.html#skbio.parse.sequences.parse_clustal" title="skbio.parse.sequences.parse_clustal"><tt class="xref py py-obj docutils literal"><span class="pre">parse_clustal</span></tt></a>(record[,&nbsp;strict])</td>
+<td>yields labels and sequences</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.parse.sequences.parse_fasta.html#skbio.parse.sequences.parse_fasta" title="skbio.parse.sequences.parse_fasta"><tt class="xref py py-obj docutils literal"><span class="pre">parse_fasta</span></tt></a>(infile[,&nbsp;strict,&nbsp;label_to_name,&nbsp;...])</td>
+<td>yields label and seq from a fasta file.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.parse.sequences.parse_fastq.html#skbio.parse.sequences.parse_fastq" title="skbio.parse.sequences.parse_fastq"><tt class="xref py py-obj docutils literal"><span class="pre">parse_fastq</span></tt></a>(data[,&nbsp;strict,&nbsp;phred_offset])</td>
+<td>yields label, seq, and qual from a fastq file.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.parse.sequences.parse_qual.html#skbio.parse.sequences.parse_qual" title="skbio.parse.sequences.parse_qual"><tt class="xref py py-obj docutils literal"><span class="pre">parse_qual</span></tt></a>(infile[,&nbsp;full_header])</td>
+<td>yields label and qual from a qual file.</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+  
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014--, scikit-bio development team.<br/>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.2.2.<br/>
+    </p>
+  </div>
+</footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
+  </body>
+</html>

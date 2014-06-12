@@ -2,14 +2,23 @@
 <html>
     <head>
         <link rel="stylesheet" tpye="text/css" href="assets/style.css">
-
     </head>
     <body>
         <div id="nav">
             <ul>
-                <li><a href="">scikit-bio</a></li>
-                <li><a href="docs/index.html">documentation</a></li>
-                <li><a href="https://github.com/biocore/scikit-bio">view the source</a></li>
+                <li><a id="skbio" href="">scikit-bio</a></li>
+                <li class="dropdown">
+                    <a href="#">Docs <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                        <li><a href="docs/latest/index.html">Latest</a></li>
+                        <li class="divider"></li>
+                        <li><a href="docs/0.1.2/index.html">0.1.2</a></li>
+                        <li><a href="docs/0.1.1/index.html">0.1.1</a></li>
+                        <li></li>
+                    </ul>
+
+                </li>
+                <li><a href="https://github.com/biocore/scikit-bio">Github</a></li>
             </ul>
         </div>
         <div id="decorationWrapper">

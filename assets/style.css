@@ -16,6 +16,7 @@ h1, h2, h3 {
     background: #24372C;
     position: fixed;
     z-index: 100;
+    height: 50px;
     border-bottom: 4px solid #259D57;
 }
 
@@ -34,24 +35,31 @@ a:hover {
     text-decoration: none;
     height: 50px;
     line-height: 50px;
-    font-size: 18px;
+    font-size: 14px;
     padding: 0px 10px;
 }
 
-#nav ul {
+#skbio{
+    font-size: 18px !important;
+}
+
+#nav > ul {
     margin: 0px auto;
     list-style: none;
     width: 924px;
     padding: 0px;
+    position: relative;
 }
 
-#nav ul li {
+#nav > ul > li {
     display: inline-block;
     color: white;
+    position: relative;
 }
 
 #nav ul li:hover {
     background: #259D57;
+    color: #FFF;
 }
 
 #decorationWrapper {
@@ -104,4 +112,57 @@ pre {
     overflow: auto;
     padding: 6px 10px;
     border-radius: 3px;
+}
+
+.caret {
+    display: inline-block;
+    width: 0px;
+    height: 0px;
+    margin-left: 2px;
+    vertical-align: middle;
+    border-top: 4px solid;
+    border-right: 4px solid transparent;
+    border-left: 4px solid transparent;
+}
+
+#nav ul li:hover ul {
+    display: inline-block;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0px;
+    z-index: 1000;
+    float: left;
+    display: none;
+    min-width: 160px;
+    padding: 5px 0px;
+    margin: 0px 0px 0px;
+    list-style: none outside none;
+    font-size: 14px;
+    background-color: #FFF;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+    border-top: 4px solid #259D57;
+    box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.176);
+    background-clip: padding-box;
+}
+
+#nav .dropdown-menu a {
+    color: #259D57;
+    font-size: 14px;
+    height: 30px;
+    line-height: 30px;
+}
+
+#nav .dropdown-menu a:hover {
+    color: #FFF;
+}
+
+.divider {
+    height: 1px;
+    margin: 9px 0px;
+    overflow: hidden;
+    background-color: #E5E5E5;
 }

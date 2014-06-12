@@ -1,0 +1,32 @@
+skbio.core.workflow.method
+==========================
+
+.. currentmodule:: skbio.core.workflow
+
+.. autoclass:: method
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         method.__call__
+         method.__format__
+         method.__init__
+         method.__new__
+         method.__reduce__
+         method.__reduce_ex__
+         method.__sizeof__
+         method.__subclasshook__
+
+
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         method.highest_priority
+

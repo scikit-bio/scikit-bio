@@ -1,0 +1,42 @@
+skbio.math.gradient.GroupResults
+================================
+
+.. currentmodule:: skbio.math.gradient
+
+.. autoclass:: GroupResults
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         GroupResults.__format__
+         GroupResults.__getnewargs__
+         GroupResults.__new__
+         GroupResults.__reduce__
+         GroupResults.__reduce_ex__
+         GroupResults.__repr__
+         GroupResults.__sizeof__
+         GroupResults.__subclasshook__
+         GroupResults._asdict
+         GroupResults._make
+         GroupResults._replace
+         GroupResults.count
+         GroupResults.index
+         GroupResults.to_files
+
+
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         GroupResults.info
+         GroupResults.mean
+         GroupResults.message
+         GroupResults.name
+         GroupResults.trajectory
+

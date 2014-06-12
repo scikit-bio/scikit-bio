@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Sequence collections and alignments (skbio.core.alignment) &mdash; scikit-bio 0.1.1-dev documentation</title>
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/style.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootswatch-3.1.0/united/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1.1-dev',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/copybutton.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+    <link rel="top" title="scikit-bio 0.1.1-dev documentation" href="index.html" />
+    <link rel="next" title="skbio.core.alignment.SequenceCollection" href="generated/skbio.core.alignment.SequenceCollection.html" />
+    <link rel="prev" title="scikit-bio" href="index.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body>
+  
+  <a href="https://github.com/biocore/scikit-bio"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          scikit-bio docs</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.1.1-dev</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            <li class="divider-vertical"></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="">Sequence collections and alignments (<tt class="docutils literal"><span class="pre">skbio.core.alignment</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.sequence.html">Biological sequences (<tt class="docutils literal"><span class="pre">skbio.core.sequence</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.distance.html">Dissimilarity and distance matrices (<tt class="docutils literal"><span class="pre">skbio.core.distance</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.exception.html">Exceptions (<tt class="docutils literal"><span class="pre">skbio.core.exception</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.warning.html">Warnings (<tt class="docutils literal"><span class="pre">skbio.core.warning</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.genetic_code.html">Genetic Code (<tt class="docutils literal"><span class="pre">skbio.core.genetic_code</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.tree.html">Tree representations (<tt class="docutils literal"><span class="pre">skbio.core.tree</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.workflow.html">Constructing workflows (<tt class="docutils literal"><span class="pre">skbio.core.workflow</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="draw.distributions.html">Distribution visualizations (<tt class="docutils literal"><span class="pre">skbio.draw.distributions</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="format.sequences.html">Format biological sequences (<tt class="docutils literal"><span class="pre">skbio.format.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.diversity.alpha.html">Alpha diversity measures (<tt class="docutils literal"><span class="pre">skbio.math.diversity.alpha</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.stats.distance.html">Distance-based statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.distance</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.spatial</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.stats.ordination.html">Ordination methods (<tt class="docutils literal"><span class="pre">skbio.math.stats.ordination</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.gradient.html">Gradient analyses (<tt class="docutils literal"><span class="pre">skbio.math.gradient</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.subsample.html">Subsampling (<tt class="docutils literal"><span class="pre">skbio.math.subsample</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="parse.sequences.html">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="util.io.html">I/O utils (<tt class="docutils literal"><span class="pre">skbio.util.io</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="util.misc.html">Miscellaneous Utilities (<tt class="docutils literal"><span class="pre">skbio.util.misc</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="util.testing.html">Testing utilities (<tt class="docutils literal"><span class="pre">skbio.util.testing</span></tt>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="development/py3.html">Supporting Python 2 and Python 3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/new_module.html">Adding a new module to skbio</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Sequence collections and alignments (<tt class="docutils literal"><span class="pre">skbio.core.alignment</span></tt>)</a><ul>
+<li><a class="reference internal" href="#data-structures">Data Structures</a></li>
+<li><a class="reference internal" href="#alignment-algorithms">Alignment Algorithms</a></li>
+<li><a class="reference internal" href="#data-structure-examples">Data Structure Examples</a></li>
+<li><a class="reference internal" href="#alignment-algorithm-examples">Alignment Algorithm Examples</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      
+  <span class="target" id="module-skbio.core.alignment"></span><div class="section" id="sequence-collections-and-alignments-skbio-core-alignment">
+<h1>Sequence collections and alignments (<a class="reference internal" href="#module-skbio.core.alignment" title="skbio.core.alignment"><tt class="xref py py-mod docutils literal"><span class="pre">skbio.core.alignment</span></tt></a>)<a class="headerlink" href="#sequence-collections-and-alignments-skbio-core-alignment" title="Permalink to this headline">¶</a></h1>
+<p>This module provides functionality for working with biological sequence
+collections and alignments. These can be composed of generic sequences,
+nucelotide sequences, DNA sequences, and RNA sequences. By default, input is
+not validated, except that sequence ids must be unique, but all
+contructor methods take a validate option which checks different features of
+the input based on <tt class="docutils literal"><span class="pre">SequenceCollection</span></tt> type.</p>
+<div class="section" id="data-structures">
+<h2>Data Structures<a class="headerlink" href="#data-structures" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.core.alignment.SequenceCollection.html#skbio.core.alignment.SequenceCollection" title="skbio.core.alignment.SequenceCollection"><tt class="xref py py-obj docutils literal"><span class="pre">SequenceCollection</span></tt></a>(seqs[,&nbsp;validate])</td>
+<td>Class for storing collections of biological sequences.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.core.alignment.Alignment.html#skbio.core.alignment.Alignment" title="skbio.core.alignment.Alignment"><tt class="xref py py-obj docutils literal"><span class="pre">Alignment</span></tt></a>(seqs[,&nbsp;validate])</td>
+<td>Class for storing alignments of biological sequences.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="alignment-algorithms">
+<h2>Alignment Algorithms<a class="headerlink" href="#alignment-algorithms" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.core.alignment.StripedSmithWaterman.html#skbio.core.alignment.StripedSmithWaterman" title="skbio.core.alignment.StripedSmithWaterman"><tt class="xref py py-obj docutils literal"><span class="pre">StripedSmithWaterman</span></tt></a></td>
+<td>Performs a striped (banded) Smith Waterman Alignment.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.core.alignment.AlignmentStructure.html#skbio.core.alignment.AlignmentStructure" title="skbio.core.alignment.AlignmentStructure"><tt class="xref py py-obj docutils literal"><span class="pre">AlignmentStructure</span></tt></a></td>
+<td>Wraps the result of an alignment c struct so it is accessible to Python</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.core.alignment.align_striped_smith_waterman.html#skbio.core.alignment.align_striped_smith_waterman" title="skbio.core.alignment.align_striped_smith_waterman"><tt class="xref py py-obj docutils literal"><span class="pre">align_striped_smith_waterman</span></tt></a></td>
+<td>Align query and target sequences with Striped Smith-Waterman.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="data-structure-examples">
+<h2>Data Structure Examples<a class="headerlink" href="#data-structure-examples" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">StringIO</span> <span class="kn">import</span> <span class="n">StringIO</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.core.alignment</span> <span class="kn">import</span> <span class="n">SequenceCollection</span><span class="p">,</span> <span class="n">Alignment</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.core.sequence</span> <span class="kn">import</span> <span class="n">DNA</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seqs</span> <span class="o">=</span> <span class="p">[</span><span class="n">DNA</span><span class="p">(</span><span class="s">&quot;ACC--G-GGTA..&quot;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="s">&quot;seq1&quot;</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">DNA</span><span class="p">(</span><span class="s">&quot;TCC--G-GGCA..&quot;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="s">&quot;seqs2&quot;</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a1</span> <span class="o">=</span> <span class="n">Alignment</span><span class="p">(</span><span class="n">seqs</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a1</span>
+<span class="go">&lt;Alignment: n=2; mean +/- std length=13.00 +/- 0.00&gt;</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">seqs</span> <span class="o">=</span> <span class="p">[</span><span class="n">DNA</span><span class="p">(</span><span class="s">&quot;ACCGGG&quot;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="s">&quot;seq1&quot;</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">DNA</span><span class="p">(</span><span class="s">&quot;TCCGGGCA&quot;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="s">&quot;seq2&quot;</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s1</span> <span class="o">=</span> <span class="n">SequenceCollection</span><span class="p">(</span><span class="n">seqs</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s1</span>
+<span class="go">&lt;SequenceCollection: n=2; mean +/- std length=7.00 +/- 1.00&gt;</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.parse.sequences</span> <span class="kn">import</span> <span class="n">parse_fasta</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fasta_f</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">(</span><span class="s">&#39;&gt;seq1</span><span class="se">\n</span><span class="s">&#39;</span>
+<span class="gp">... </span>                   <span class="s">&#39;CGATGTCGATCGATCGATCGATCAG</span><span class="se">\n</span><span class="s">&#39;</span>
+<span class="gp">... </span>                   <span class="s">&#39;&gt;seq2</span><span class="se">\n</span><span class="s">&#39;</span>
+<span class="gp">... </span>                   <span class="s">&#39;CATCGATCGATCGATGCATGCATGCATG</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s1</span> <span class="o">=</span> <span class="n">SequenceCollection</span><span class="o">.</span><span class="n">from_fasta_records</span><span class="p">(</span><span class="n">parse_fasta</span><span class="p">(</span><span class="n">fasta_f</span><span class="p">),</span> <span class="n">DNA</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s1</span>
+<span class="go">&lt;SequenceCollection: n=2; mean +/- std length=26.50 +/- 1.50&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="alignment-algorithm-examples">
+<h2>Alignment Algorithm Examples<a class="headerlink" href="#alignment-algorithm-examples" title="Permalink to this headline">¶</a></h2>
+<p>Using the convenient <tt class="docutils literal"><span class="pre">align_striped_smith_waterman</span></tt> function:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.core.alignment</span> <span class="kn">import</span> <span class="n">align_striped_smith_waterman</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">alignment</span> <span class="o">=</span> <span class="n">align_striped_smith_waterman</span><span class="p">(</span>
+<span class="gp">... </span>                <span class="s">&quot;ACTAAGGCTCTCTACCCCTCTCAGAGA&quot;</span><span class="p">,</span>
+<span class="gp">... </span>                <span class="s">&quot;ACTAAGGCTCCTAACCCCCTTTTCTCAGA&quot;</span>
+<span class="gp">... </span>            <span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">alignment</span>
+<span class="go">{</span>
+<span class="go">    &#39;optimal_alignment_score&#39;: 27,</span>
+<span class="go">    &#39;suboptimal_alignment_score&#39;: 21,</span>
+<span class="go">    &#39;query_begin&#39;: 0,</span>
+<span class="go">    &#39;query_end&#39;: 24,</span>
+<span class="go">    &#39;target_begin&#39;: 0,</span>
+<span class="go">    &#39;target_end_optimal&#39;: 28,</span>
+<span class="go">    &#39;target_end_suboptimal&#39;: 12,</span>
+<span class="go">    &#39;cigar&#39;: &#39;10M1I2M1D5M4D7M&#39;,</span>
+<span class="go">    &#39;query_sequence&#39;: &#39;ACTAAGGCTCTCTACCCCTCTCAGAGA&#39;,</span>
+<span class="go">    &#39;target_sequence&#39;: &#39;ACTAAGGCTCCTAACCCCCTTTTCTCAGA&#39;</span>
+<span class="go">}</span>
+</pre></div>
+</div>
+<p>Using the <tt class="docutils literal"><span class="pre">StripedSmithWaterman</span></tt> object:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.core.alignment</span> <span class="kn">import</span> <span class="n">StripedSmithWaterman</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">query</span> <span class="o">=</span> <span class="n">StripedSmithWaterman</span><span class="p">(</span><span class="s">&quot;ACTAAGGCTCTCTACCCCTCTCAGAGA&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">alignment</span> <span class="o">=</span> <span class="n">query</span><span class="p">(</span><span class="s">&quot;AAAAAACTCTCTAAACTCACTAAGGCTCTCTACCCCTCTTCAGAGAAGTCGA&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">alignment</span>
+<span class="go">{</span>
+<span class="go">    &#39;optimal_alignment_score&#39;: 49,</span>
+<span class="go">    &#39;suboptimal_alignment_score&#39;: 24,</span>
+<span class="go">    &#39;query_begin&#39;: 0,</span>
+<span class="go">    &#39;query_end&#39;: 26,</span>
+<span class="go">    &#39;target_begin&#39;: 18,</span>
+<span class="go">    &#39;target_end_optimal&#39;: 45,</span>
+<span class="go">    &#39;target_end_suboptimal&#39;: 29,</span>
+<span class="go">    &#39;cigar&#39;: &#39;20M1D7M&#39;,</span>
+<span class="go">    &#39;query_sequence&#39;: &#39;ACTAAGGCTCTCTACCCCTCTCAGAGA&#39;,</span>
+<span class="go">    &#39;target_sequence&#39;: &#39;AAAAAACTCTCTAAACTCACTAAGGCTCTCTACCCCTCTTCAGAGAAGTCGA&#39;</span>
+<span class="go">}</span>
+</pre></div>
+</div>
+<p>Using the <tt class="docutils literal"><span class="pre">StripedSmithWaterman</span></tt> object for multiple targets in an efficient
+way and finding the aligned sequence representations:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.core.alignment</span> <span class="kn">import</span> <span class="n">StripedSmithWaterman</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">alignments</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">target_sequences</span> <span class="o">=</span> <span class="p">[</span>
+<span class="gp">... </span>    <span class="s">&quot;GCTAACTAGGCTCCCTTCTACCCCTCTCAGAGA&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s">&quot;GCCCAGTAGCTTCCCAATATGAGAGCATCAATTGTAGATCGGGCC&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s">&quot;TCTATAAGATTCCGCATGCGTTACTTATAAGATGTCTCAACGG&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s">&quot;TAGAGATTAATTGCCACTGCCAAAATTCTG&quot;</span>
+<span class="gp">... </span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">query_sequence</span> <span class="o">=</span> <span class="s">&quot;ACTAAGGCTCTCTACCCCTCTCAGAGA&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">query</span> <span class="o">=</span> <span class="n">StripedSmithWaterman</span><span class="p">(</span><span class="n">query_sequence</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">target_sequence</span> <span class="ow">in</span> <span class="n">target_sequences</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">alignment</span> <span class="o">=</span> <span class="n">query</span><span class="p">(</span><span class="n">target_sequence</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">alignments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">alignment</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">alignments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">{</span>
+<span class="go">    &#39;optimal_alignment_score&#39;: 38,</span>
+<span class="go">    &#39;suboptimal_alignment_score&#39;: 14,</span>
+<span class="go">    &#39;query_begin&#39;: 0,</span>
+<span class="go">    &#39;query_end&#39;: 26,</span>
+<span class="go">    &#39;target_begin&#39;: 4,</span>
+<span class="go">    &#39;target_end_optimal&#39;: 32,</span>
+<span class="go">    &#39;target_end_suboptimal&#39;: 15,</span>
+<span class="go">    &#39;cigar&#39;: &#39;3M1I6M3D17M&#39;,</span>
+<span class="go">    &#39;query_sequence&#39;: &#39;ACTAAGGCTCTCTACCCCTCTCAGAGA&#39;,</span>
+<span class="go">    &#39;target_sequence&#39;: &#39;GCTAACTAGGCTCCCTTCTACCCCTCTCAGAGA&#39;</span>
+<span class="go">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">alignments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_aligned_query_sequence</span><span class="p">()</span>
+<span class="go">ACTAAGGCT---CTCTACCCCTCTCAGAGA</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">alignments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_aligned_target_sequence</span><span class="p">()</span>
+<span class="go">ACT-AGGCTCCCTTCTACCCCTCTCAGAGA</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+  
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014--, scikit-bio development team.<br/>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.2.2.<br/>
+    </p>
+  </div>
+</footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
+  </body>
+</html>

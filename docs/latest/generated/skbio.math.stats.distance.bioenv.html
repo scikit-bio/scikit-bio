@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>skbio.math.stats.distance.bioenv &mdash; scikit-bio 0.1.1-dev documentation</title>
+    
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/style.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.1.0/united/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1.1-dev',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/copybutton.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="top" title="scikit-bio 0.1.1-dev documentation" href="../index.html" />
+    <link rel="up" title="Distance-based statistics (skbio.math.stats.distance)" href="../math.stats.distance.html" />
+    <link rel="next" title="skbio.math.stats.distance.mantel" href="skbio.math.stats.distance.mantel.html" />
+    <link rel="prev" title="skbio.math.stats.distance.CategoricalStatsResults.summary" href="skbio.math.stats.distance.CategoricalStatsResults.summary.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body>
+  
+  <a href="https://github.com/biocore/scikit-bio"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          scikit-bio docs</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.1.1-dev</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            <li class="divider-vertical"></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../core.alignment.html">Sequence collections and alignments (<tt class="docutils literal"><span class="pre">skbio.core.alignment</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core.sequence.html">Biological sequences (<tt class="docutils literal"><span class="pre">skbio.core.sequence</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core.distance.html">Dissimilarity and distance matrices (<tt class="docutils literal"><span class="pre">skbio.core.distance</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core.exception.html">Exceptions (<tt class="docutils literal"><span class="pre">skbio.core.exception</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core.warning.html">Warnings (<tt class="docutils literal"><span class="pre">skbio.core.warning</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core.genetic_code.html">Genetic Code (<tt class="docutils literal"><span class="pre">skbio.core.genetic_code</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core.tree.html">Tree representations (<tt class="docutils literal"><span class="pre">skbio.core.tree</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core.workflow.html">Constructing workflows (<tt class="docutils literal"><span class="pre">skbio.core.workflow</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../draw.distributions.html">Distribution visualizations (<tt class="docutils literal"><span class="pre">skbio.draw.distributions</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../format.sequences.html">Format biological sequences (<tt class="docutils literal"><span class="pre">skbio.format.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.diversity.alpha.html">Alpha diversity measures (<tt class="docutils literal"><span class="pre">skbio.math.diversity.alpha</span></tt>)</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../math.stats.distance.html">Distance-based statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.distance</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.spatial</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.stats.ordination.html">Ordination methods (<tt class="docutils literal"><span class="pre">skbio.math.stats.ordination</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.gradient.html">Gradient analyses (<tt class="docutils literal"><span class="pre">skbio.math.gradient</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.subsample.html">Subsampling (<tt class="docutils literal"><span class="pre">skbio.math.subsample</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../parse.sequences.html">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.io.html">I/O utils (<tt class="docutils literal"><span class="pre">skbio.util.io</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.misc.html">Miscellaneous Utilities (<tt class="docutils literal"><span class="pre">skbio.util.misc</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.testing.html">Testing utilities (<tt class="docutils literal"><span class="pre">skbio.util.testing</span></tt>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/py3.html">Supporting Python 2 and Python 3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/new_module.html">Adding a new module to skbio</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">skbio.math.stats.distance.bioenv</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      
+  <div class="section" id="skbio-math-stats-distance-bioenv">
+<h1>skbio.math.stats.distance.bioenv<a class="headerlink" href="#skbio-math-stats-distance-bioenv" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="skbio.math.stats.distance.bioenv">
+<tt class="descclassname">skbio.math.stats.distance.</tt><tt class="descname">bioenv</tt><big>(</big><em>distance_matrix</em>, <em>data_frame</em>, <em>columns=None</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/master/skbio/math/stats/distance/_bioenv.py#L21"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.math.stats.distance.bioenv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find subset of variables maximally correlated with distances.</p>
+<p>Finds subsets of variables whose Euclidean distances (after scaling the
+variables; see Notes section below for details) are maximally
+rank-correlated with the distance matrix. For example, the distance matrix
+might contain distances between communities, and the variables might be
+numeric environmental variables (e.g., pH). Correlation between the
+community distance matrix and Euclidean environmental distance matrix is
+computed using Spearman&#8217;s rank correlation coefficient (<span class="math">\(\rho\)</span>).</p>
+<p>Subsets of environmental variables range in size from 1 to the total number
+of variables (inclusive). For example, if there are 3 variables, the &#8220;best&#8221;
+variable subsets will be computed for subset sizes 1, 2, and 3.</p>
+<p>The &#8220;best&#8221; subset is chosen by computing the correlation between the
+community distance matrix and all possible Euclidean environmental distance
+matrices at the given subset size. The combination of environmental
+variables with maximum correlation is chosen as the &#8220;best&#8221; subset.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>distance_matrix</strong> : DistanceMatrix</p>
+<blockquote>
+<div><p>Distance matrix containing distances between objects (e.g., distances
+between samples of microbial communities).</p>
+</div></blockquote>
+<p><strong>data_frame</strong> : pandas.DataFrame</p>
+<blockquote>
+<div><p>Contains columns of variables (e.g., numeric environmental variables
+such as pH) associated with the objects in <cite>distance_matrix</cite>. Must be
+indexed by the IDs in <cite>distance_matrix</cite> (i.e., the row labels must be
+distance matrix IDs), but the order of IDs between <cite>distance_matrix</cite>
+and <cite>data_frame</cite> need not be the same. All IDs in the distance matrix
+must be present in <cite>data_frame</cite>. Extra IDs in <cite>data_frame</cite> are allowed
+(they are ignored in the calculations).</p>
+</div></blockquote>
+<p><strong>columns</strong> : iterable of strs, optional</p>
+<blockquote>
+<div><p>Column names in <cite>data_frame</cite> to include as variables in the
+calculations. If not provided, defaults to all columns in <cite>data_frame</cite>.
+The values in each column must be numeric or convertible to a numeric
+type.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">pandas.DataFrame</p>
+<blockquote>
+<div><p>Data frame containing the &#8220;best&#8221; subset of variables at each subset
+size, as well as the correlation coefficient of each.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><strong>TypeError</strong></p>
+<blockquote>
+<div><p>If invalid input types are provided, or if one or more specified
+columns in <cite>data_frame</cite> are not numeric.</p>
+</div></blockquote>
+<p><strong>ValueError</strong></p>
+<blockquote class="last">
+<div><p>If column name(s) or <cite>distance_matrix</cite> IDs cannot be found in
+<cite>data_frame</cite>, if there is missing data (<tt class="docutils literal"><span class="pre">NaN</span></tt>) in the environmental
+variables, or if the environmental variables cannot be scaled (e.g.,
+due to zero variance).</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">scipy.stats.spearmanr</span></tt></p>
+</div>
+<p class="rubric">Notes</p>
+<p>See <a class="reference internal" href="#r64" id="id1">[R64]</a> for the original method reference (originally called BIO-ENV).
+The general algorithm and interface are similar to <tt class="docutils literal"><span class="pre">vegan::bioenv</span></tt>,
+available in R&#8217;s vegan package <a class="reference internal" href="#r65" id="id2">[R65]</a>. This method can also be found in
+PRIMER-E <a class="reference internal" href="#r66" id="id3">[R66]</a> (originally called BIO-ENV, but is now called BEST).</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">This method can take a <em>long</em> time to run if a large number of
+variables are specified, as all possible subsets are evaluated at each
+subset size.</p>
+</div>
+<p>The variables are scaled before computing the Euclidean distance: each
+column is centered and then scaled by its standard deviation.</p>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r64" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R64]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> Clarke, K. R &amp; Ainsworth, M. 1993. &#8220;A method of linking multivariate
+community structure to environmental variables&#8221;. Marine Ecology Progress
+Series, 92, 205-219.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r65" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R65]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id5">2</a>)</em> <a class="reference external" href="http://cran.r-project.org/web/packages/vegan/index.html">http://cran.r-project.org/web/packages/vegan/index.html</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r66" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R66]</td><td><em>(<a class="fn-backref" href="#id3">1</a>, <a class="fn-backref" href="#id6">2</a>)</em> <a class="reference external" href="http://www.primer-e.com/primer.htm">http://www.primer-e.com/primer.htm</a></td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Import the functionality we&#8217;ll use in the following examples. The call to
+<tt class="docutils literal"><span class="pre">pd.set_option</span></tt> ensures consistent data frame formatting across
+different versions of pandas. This call is not necessary for normal
+use; it is only included here so that the doctests will pass.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.core.distance</span> <span class="kn">import</span> <span class="n">DistanceMatrix</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.math.stats.distance</span> <span class="kn">import</span> <span class="n">bioenv</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="c"># not necessary for normal use</span>
+<span class="gp">... </span>    <span class="n">pd</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="s">&#39;show_dimensions&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">pass</span>
+</pre></div>
+</div>
+<p>Load a 4x4 community distance matrix:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">dm</span> <span class="o">=</span> <span class="n">DistanceMatrix</span><span class="p">([[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">],</span>
+<span class="gp">... </span>                     <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.42</span><span class="p">],</span>
+<span class="gp">... </span>                     <span class="p">[</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.33</span><span class="p">],</span>
+<span class="gp">... </span>                     <span class="p">[</span><span class="mf">0.75</span><span class="p">,</span> <span class="mf">0.42</span><span class="p">,</span> <span class="mf">0.33</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]],</span>
+<span class="gp">... </span>                    <span class="p">[</span><span class="s">&#39;A&#39;</span><span class="p">,</span> <span class="s">&#39;B&#39;</span><span class="p">,</span> <span class="s">&#39;C&#39;</span><span class="p">,</span> <span class="s">&#39;D&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Load a <tt class="docutils literal"><span class="pre">pandas.DataFrame</span></tt> with two environmental variables, pH and
+elevation:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([[</span><span class="mf">7.0</span><span class="p">,</span> <span class="mi">400</span><span class="p">],</span>
+<span class="gp">... </span>                   <span class="p">[</span><span class="mf">8.0</span><span class="p">,</span> <span class="mi">530</span><span class="p">],</span>
+<span class="gp">... </span>                   <span class="p">[</span><span class="mf">7.5</span><span class="p">,</span> <span class="mi">450</span><span class="p">],</span>
+<span class="gp">... </span>                   <span class="p">[</span><span class="mf">8.5</span><span class="p">,</span> <span class="mi">810</span><span class="p">]],</span>
+<span class="gp">... </span>                  <span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;A&#39;</span><span class="p">,</span><span class="s">&#39;B&#39;</span><span class="p">,</span><span class="s">&#39;C&#39;</span><span class="p">,</span><span class="s">&#39;D&#39;</span><span class="p">],</span>
+<span class="gp">... </span>                  <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;pH&#39;</span><span class="p">,</span> <span class="s">&#39;Elevation&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Note that the data frame is indexed with the same IDs (<tt class="docutils literal"><span class="pre">'A'</span></tt>, <tt class="docutils literal"><span class="pre">'B'</span></tt>,
+<tt class="docutils literal"><span class="pre">'C'</span></tt>, and <tt class="docutils literal"><span class="pre">'D'</span></tt>) that are in the distance matrix. This is necessary in
+order to link the environmental variables (metadata) to each of the objects
+in the distance matrix. In this example, the IDs appear in the same order
+in both the distance matrix and data frame, but this is not necessary.</p>
+<p>Find the best subsets of environmental variables that are correlated with
+community distances:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">bioenv</span><span class="p">(</span><span class="n">dm</span><span class="p">,</span> <span class="n">df</span><span class="p">)</span> 
+<span class="go">               size  correlation</span>
+<span class="go">vars</span>
+<span class="go">pH                1     0.771517</span>
+<span class="go">pH, Elevation     2     0.714286</span>
+
+<span class="go">[2 rows x 2 columns]</span>
+</pre></div>
+</div>
+<p>We see that in this simple example, pH alone is maximally rank-correlated
+with the community distances (<span class="math">\(\rho=0.771517\)</span>).</p>
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+  
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014--, scikit-bio development team.<br/>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.2.2.<br/>
+    </p>
+  </div>
+</footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
+  </body>
+</html>
