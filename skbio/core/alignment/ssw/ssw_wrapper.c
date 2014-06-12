@@ -1428,14 +1428,14 @@ static PyTypeObject *__pyx_ptype_5numpy_ndarray = 0;
 static PyTypeObject *__pyx_ptype_5numpy_ufunc = 0;
 static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *, char *, char *, int *); /*proto*/
 
-/* Module declarations from 'skbio.core.ssw.ssw_wrapper' */
+/* Module declarations from 'skbio.core.alignment.ssw.ssw_wrapper' */
 static PyTypeObject *__pyx_ptype_5skbio_4core_3ssw_11ssw_wrapper_AlignmentStructure = 0;
 static PyTypeObject *__pyx_ptype_5skbio_4core_3ssw_11ssw_wrapper_StripedSmithWaterman = 0;
 static __Pyx_TypeInfo __Pyx_TypeInfo_nn___pyx_t_5numpy_int8_t = { "int8_t", NULL, sizeof(__pyx_t_5numpy_int8_t), { 0 }, 0, IS_UNSIGNED(__pyx_t_5numpy_int8_t) ? 'U' : 'I', IS_UNSIGNED(__pyx_t_5numpy_int8_t), 0 };
-#define __Pyx_MODULE_NAME "skbio.core.ssw.ssw_wrapper"
+#define __Pyx_MODULE_NAME "skbio.core.alignment.ssw.ssw_wrapper"
 int __pyx_module_is_main_skbio__core__ssw__ssw_wrapper = 0;
 
-/* Implementation of 'skbio.core.ssw.ssw_wrapper' */
+/* Implementation of 'skbio.core.alignment.ssw.ssw_wrapper' */
 static PyObject *__pyx_builtin_property;
 static PyObject *__pyx_builtin_range;
 static PyObject *__pyx_builtin_ValueError;
@@ -1565,7 +1565,7 @@ static char __pyx_k_get_aligned_sequence[] = "_get_aligned_sequence";
 static char __pyx_k_target_end_suboptimal[] = "target_end_suboptimal";
 static char __pyx_k_ARNDCQEGHILKMFPSTWYVBZX[] = "ARNDCQEGHILKMFPSTWYVBZX*";
 static char __pyx_k_optimal_alignment_score[] = "optimal_alignment_score";
-static char __pyx_k_skbio_core_ssw_ssw_wrapper[] = "skbio.core.ssw.ssw_wrapper";
+static char __pyx_k_skbio_core_ssw_ssw_wrapper[] = "skbio.core.alignment.ssw.ssw_wrapper";
 static char __pyx_k_suboptimal_alignment_score[] = "suboptimal_alignment_score";
 static char __pyx_k_ndarray_is_not_C_contiguous[] = "ndarray is not C contiguous";
 static char __pyx_k_align_striped_smith_waterman[] = "align_striped_smith_waterman";
@@ -1770,7 +1770,7 @@ static int __pyx_pw_5skbio_4core_3ssw_11ssw_wrapper_18AlignmentStructure_1__cini
   __pyx_L5_argtuple_error:;
   __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 103; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   __pyx_L3_error:;
-  __Pyx_AddTraceback("skbio.core.ssw.ssw_wrapper.AlignmentStructure.__cinit__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.core.alignment.ssw.ssw_wrapper.AlignmentStructure.__cinit__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return -1;
   __pyx_L4_argument_unpacking_done:;
@@ -1846,7 +1846,7 @@ static int __pyx_pf_5skbio_4core_3ssw_11ssw_wrapper_18AlignmentStructure___cinit
   goto __pyx_L0;
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("skbio.core.ssw.ssw_wrapper.AlignmentStructure.__cinit__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.core.alignment.ssw.ssw_wrapper.AlignmentStructure.__cinit__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = -1;
   __pyx_L0:;
   __Pyx_RefNannyFinishContext();
@@ -2003,7 +2003,7 @@ static PyObject *__pyx_pf_5skbio_4core_3ssw_11ssw_wrapper_18AlignmentStructure_4
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("skbio.core.ssw.ssw_wrapper.AlignmentStructure.__getitem__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.core.alignment.ssw.ssw_wrapper.AlignmentStructure.__getitem__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -2171,7 +2171,7 @@ static PyObject *__pyx_pf_5skbio_4core_3ssw_11ssw_wrapper_18AlignmentStructure_6
   __Pyx_XDECREF(__pyx_t_4);
   __Pyx_XDECREF(__pyx_t_5);
   __Pyx_XDECREF(__pyx_t_6);
-  __Pyx_AddTraceback("skbio.core.ssw.ssw_wrapper.AlignmentStructure.__str__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.core.alignment.ssw.ssw_wrapper.AlignmentStructure.__str__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v_data);
@@ -2237,7 +2237,7 @@ static PyObject *__pyx_pf_5skbio_4core_3ssw_11ssw_wrapper_18AlignmentStructure_8
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("skbio.core.ssw.ssw_wrapper.AlignmentStructure.optimal_alignment_score", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.core.alignment.ssw.ssw_wrapper.AlignmentStructure.optimal_alignment_score", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -2301,7 +2301,7 @@ static PyObject *__pyx_pf_5skbio_4core_3ssw_11ssw_wrapper_18AlignmentStructure_1
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("skbio.core.ssw.ssw_wrapper.AlignmentStructure.suboptimal_alignment_score", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.core.alignment.ssw.ssw_wrapper.AlignmentStructure.suboptimal_alignment_score", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -2390,7 +2390,7 @@ static PyObject *__pyx_pf_5skbio_4core_3ssw_11ssw_wrapper_18AlignmentStructure_1
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
   __Pyx_XDECREF(__pyx_t_2);
-  __Pyx_AddTraceback("skbio.core.ssw.ssw_wrapper.AlignmentStructure.target_begin", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.core.alignment.ssw.ssw_wrapper.AlignmentStructure.target_begin", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -2454,7 +2454,7 @@ static PyObject *__pyx_pf_5skbio_4core_3ssw_11ssw_wrapper_18AlignmentStructure_1
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("skbio.core.ssw.ssw_wrapper.AlignmentStructure.target_end_optimal", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.core.alignment.ssw.ssw_wrapper.AlignmentStructure.target_end_optimal", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -2518,7 +2518,7 @@ static PyObject *__pyx_pf_5skbio_4core_3ssw_11ssw_wrapper_18AlignmentStructure_1
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("skbio.core.ssw.ssw_wrapper.AlignmentStructure.target_end_suboptimal", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.core.alignment.ssw.ssw_wrapper.AlignmentStructure.target_end_suboptimal", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -2607,7 +2607,7 @@ static PyObject *__pyx_pf_5skbio_4core_3ssw_11ssw_wrapper_18AlignmentStructure_1
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
   __Pyx_XDECREF(__pyx_t_2);
-  __Pyx_AddTraceback("skbio.core.ssw.ssw_wrapper.AlignmentStructure.query_begin", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.core.alignment.ssw.ssw_wrapper.AlignmentStructure.query_begin", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -2671,7 +2671,7 @@ static PyObject *__pyx_pf_5skbio_4core_3ssw_11ssw_wrapper_18AlignmentStructure_2
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("skbio.core.ssw.ssw_wrapper.AlignmentStructure.query_end", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.core.alignment.ssw.ssw_wrapper.AlignmentStructure.query_end", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -2843,7 +2843,7 @@ static PyObject *__pyx_pf_5skbio_4core_3ssw_11ssw_wrapper_18AlignmentStructure_2
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_6);
-  __Pyx_AddTraceback("skbio.core.ssw.ssw_wrapper.AlignmentStructure.cigar", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.core.alignment.ssw.ssw_wrapper.AlignmentStructure.cigar", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v_cigar_list);
@@ -3036,7 +3036,7 @@ static PyObject *__pyx_pf_5skbio_4core_3ssw_11ssw_wrapper_18AlignmentStructure_2
   __pyx_r = Py_None; __Pyx_INCREF(Py_None);
   goto __pyx_L0;
   __pyx_L1_error:;
-  __Pyx_AddTraceback("skbio.core.ssw.ssw_wrapper.AlignmentStructure.set_zero_based", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.core.alignment.ssw.ssw_wrapper.AlignmentStructure.set_zero_based", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -3100,7 +3100,7 @@ static PyObject *__pyx_pf_5skbio_4core_3ssw_11ssw_wrapper_18AlignmentStructure_3
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("skbio.core.ssw.ssw_wrapper.AlignmentStructure.is_zero_based", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.core.alignment.ssw.ssw_wrapper.AlignmentStructure.is_zero_based", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -3257,7 +3257,7 @@ static PyObject *__pyx_pf_5skbio_4core_3ssw_11ssw_wrapper_18AlignmentStructure_3
   __Pyx_XDECREF(__pyx_t_5);
   __Pyx_XDECREF(__pyx_t_6);
   __Pyx_XDECREF(__pyx_t_7);
-  __Pyx_AddTraceback("skbio.core.ssw.ssw_wrapper.AlignmentStructure.get_aligned_query_sequence", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.core.alignment.ssw.ssw_wrapper.AlignmentStructure.get_aligned_query_sequence", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -3422,7 +3422,7 @@ static PyObject *__pyx_pf_5skbio_4core_3ssw_11ssw_wrapper_18AlignmentStructure_3
   __Pyx_XDECREF(__pyx_t_5);
   __Pyx_XDECREF(__pyx_t_6);
   __Pyx_XDECREF(__pyx_t_7);
-  __Pyx_AddTraceback("skbio.core.ssw.ssw_wrapper.AlignmentStructure.get_aligned_target_sequence", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.core.alignment.ssw.ssw_wrapper.AlignmentStructure.get_aligned_target_sequence", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -3515,7 +3515,7 @@ static PyObject *__pyx_pw_5skbio_4core_3ssw_11ssw_wrapper_18AlignmentStructure_3
   __pyx_L5_argtuple_error:;
   __Pyx_RaiseArgtupleInvalid("_get_aligned_sequence", 1, 5, 5, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 360; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   __pyx_L3_error:;
-  __Pyx_AddTraceback("skbio.core.ssw.ssw_wrapper.AlignmentStructure._get_aligned_sequence", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.core.alignment.ssw.ssw_wrapper.AlignmentStructure._get_aligned_sequence", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
@@ -3993,7 +3993,7 @@ static PyObject *__pyx_pf_5skbio_4core_3ssw_11ssw_wrapper_18AlignmentStructure_3
   __Pyx_XDECREF(__pyx_t_5);
   __Pyx_XDECREF(__pyx_t_6);
   __Pyx_XDECREF(__pyx_t_7);
-  __Pyx_AddTraceback("skbio.core.ssw.ssw_wrapper.AlignmentStructure._get_aligned_sequence", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.core.alignment.ssw.ssw_wrapper.AlignmentStructure._get_aligned_sequence", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v_orig_z_base);
@@ -4211,7 +4211,7 @@ static PyObject *__pyx_pf_5skbio_4core_3ssw_11ssw_wrapper_18AlignmentStructure_3
   __Pyx_XDECREF(__pyx_t_1);
   __Pyx_XDECREF(__pyx_t_2);
   __Pyx_XDECREF(__pyx_t_5);
-  __Pyx_AddTraceback("skbio.core.ssw.ssw_wrapper.AlignmentStructure._tuples_from_cigar", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.core.alignment.ssw.ssw_wrapper.AlignmentStructure._tuples_from_cigar", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v_tuples);
@@ -4495,7 +4495,7 @@ static int __pyx_pw_5skbio_4core_3ssw_11ssw_wrapper_20StripedSmithWaterman_1__ci
   __pyx_L5_argtuple_error:;
   __Pyx_RaiseArgtupleInvalid("__cinit__", 0, 1, 16, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 525; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   __pyx_L3_error:;
-  __Pyx_AddTraceback("skbio.core.ssw.ssw_wrapper.StripedSmithWaterman.__cinit__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.core.alignment.ssw.ssw_wrapper.StripedSmithWaterman.__cinit__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return -1;
   __pyx_L4_argument_unpacking_done:;
@@ -5040,7 +5040,7 @@ static int __pyx_pf_5skbio_4core_3ssw_11ssw_wrapper_20StripedSmithWaterman___cin
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_matrix.rcbuffer->pybuffer);
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_read_seq.rcbuffer->pybuffer);
   __Pyx_ErrRestore(__pyx_type, __pyx_value, __pyx_tb);}
-  __Pyx_AddTraceback("skbio.core.ssw.ssw_wrapper.StripedSmithWaterman.__cinit__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.core.alignment.ssw.ssw_wrapper.StripedSmithWaterman.__cinit__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = -1;
   goto __pyx_L2;
   __pyx_L0:;
@@ -5063,7 +5063,7 @@ static int __pyx_pf_5skbio_4core_3ssw_11ssw_wrapper_20StripedSmithWaterman___cin
 
 /* Python wrapper */
 static PyObject *__pyx_pw_5skbio_4core_3ssw_11ssw_wrapper_20StripedSmithWaterman_3__call__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_5skbio_4core_3ssw_11ssw_wrapper_20StripedSmithWaterman_2__call__[] = "Align `target_sequence` to `query_sequence`\n\n        Parameters\n        ----------\n        target_sequence : string\n\n        Returns\n        -------\n        ``skbio.core.ssw.AlignmentStructure``\n            The resulting alignment.\n\n        ";
+static char __pyx_doc_5skbio_4core_3ssw_11ssw_wrapper_20StripedSmithWaterman_2__call__[] = "Align `target_sequence` to `query_sequence`\n\n        Parameters\n        ----------\n        target_sequence : string\n\n        Returns\n        -------\n        ``skbio.core.alignment.ssw.AlignmentStructure``\n            The resulting alignment.\n\n        ";
 #if CYTHON_COMPILING_IN_CPYTHON
 struct wrapperbase __pyx_wrapperbase_5skbio_4core_3ssw_11ssw_wrapper_20StripedSmithWaterman_2__call__;
 #endif
@@ -5106,7 +5106,7 @@ static PyObject *__pyx_pw_5skbio_4core_3ssw_11ssw_wrapper_20StripedSmithWaterman
   __pyx_L5_argtuple_error:;
   __Pyx_RaiseArgtupleInvalid("__call__", 1, 1, 1, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 599; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   __pyx_L3_error:;
-  __Pyx_AddTraceback("skbio.core.ssw.ssw_wrapper.StripedSmithWaterman.__call__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.core.alignment.ssw.ssw_wrapper.StripedSmithWaterman.__call__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
@@ -5315,7 +5315,7 @@ static PyObject *__pyx_pf_5skbio_4core_3ssw_11ssw_wrapper_20StripedSmithWaterman
     __Pyx_ErrFetch(&__pyx_type, &__pyx_value, &__pyx_tb);
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_reference.rcbuffer->pybuffer);
   __Pyx_ErrRestore(__pyx_type, __pyx_value, __pyx_tb);}
-  __Pyx_AddTraceback("skbio.core.ssw.ssw_wrapper.StripedSmithWaterman.__call__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.core.alignment.ssw.ssw_wrapper.StripedSmithWaterman.__call__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   goto __pyx_L2;
   __pyx_L0:;
@@ -5445,7 +5445,7 @@ static PyObject *__pyx_pw_5skbio_4core_3ssw_11ssw_wrapper_20StripedSmithWaterman
   __pyx_L5_argtuple_error:;
   __Pyx_RaiseArgtupleInvalid("_get_bit_flag", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 640; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   __pyx_L3_error:;
-  __Pyx_AddTraceback("skbio.core.ssw.ssw_wrapper.StripedSmithWaterman._get_bit_flag", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.core.alignment.ssw.ssw_wrapper.StripedSmithWaterman._get_bit_flag", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
@@ -5615,7 +5615,7 @@ static PyObject *__pyx_pf_5skbio_4core_3ssw_11ssw_wrapper_20StripedSmithWaterman
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_2);
-  __Pyx_AddTraceback("skbio.core.ssw.ssw_wrapper.StripedSmithWaterman._get_bit_flag", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.core.alignment.ssw.ssw_wrapper.StripedSmithWaterman._get_bit_flag", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -5925,7 +5925,7 @@ static PyArrayObject *__pyx_f_5skbio_4core_3ssw_11ssw_wrapper_20StripedSmithWate
     __Pyx_ErrFetch(&__pyx_type, &__pyx_value, &__pyx_tb);
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_seq.rcbuffer->pybuffer);
   __Pyx_ErrRestore(__pyx_type, __pyx_value, __pyx_tb);}
-  __Pyx_AddTraceback("skbio.core.ssw.ssw_wrapper.StripedSmithWaterman._seq_converter", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.core.alignment.ssw.ssw_wrapper.StripedSmithWaterman._seq_converter", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = 0;
   goto __pyx_L2;
   __pyx_L0:;
@@ -6182,7 +6182,7 @@ static PyArrayObject *__pyx_f_5skbio_4core_3ssw_11ssw_wrapper_20StripedSmithWate
   __Pyx_XDECREF(__pyx_t_4);
   __Pyx_XDECREF(__pyx_t_7);
   __Pyx_XDECREF(__pyx_t_11);
-  __Pyx_AddTraceback("skbio.core.ssw.ssw_wrapper.StripedSmithWaterman._build_match_matrix", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.core.alignment.ssw.ssw_wrapper.StripedSmithWaterman._build_match_matrix", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = 0;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v_sequence_order);
@@ -6500,7 +6500,7 @@ static PyArrayObject *__pyx_f_5skbio_4core_3ssw_11ssw_wrapper_20StripedSmithWate
     __Pyx_ErrFetch(&__pyx_type, &__pyx_value, &__pyx_tb);
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_py_list_matrix.rcbuffer->pybuffer);
   __Pyx_ErrRestore(__pyx_type, __pyx_value, __pyx_tb);}
-  __Pyx_AddTraceback("skbio.core.ssw.ssw_wrapper.StripedSmithWaterman._convert_dict2d_to_matrix", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.core.alignment.ssw.ssw_wrapper.StripedSmithWaterman._convert_dict2d_to_matrix", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = 0;
   goto __pyx_L2;
   __pyx_L0:;
@@ -6526,7 +6526,7 @@ static PyArrayObject *__pyx_f_5skbio_4core_3ssw_11ssw_wrapper_20StripedSmithWate
 
 /* Python wrapper */
 static PyObject *__pyx_pw_5skbio_4core_3ssw_11ssw_wrapper_1align_striped_smith_waterman(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_5skbio_4core_3ssw_11ssw_wrapper_align_striped_smith_waterman[] = "Align query and target sequences with Striped Smith-Waterman.\n\n    Parameters\n    ----------\n    query_sequence : string\n    target_sequence : string\n\n    Returns\n    -------\n    ``skbio.core.ssw.AlignmentStructure``\n        The resulting alignment as a dict-like object\n\n    ";
+static char __pyx_doc_5skbio_4core_3ssw_11ssw_wrapper_align_striped_smith_waterman[] = "Align query and target sequences with Striped Smith-Waterman.\n\n    Parameters\n    ----------\n    query_sequence : string\n    target_sequence : string\n\n    Returns\n    -------\n    ``skbio.core.alignment.ssw.AlignmentStructure``\n        The resulting alignment as a dict-like object\n\n    ";
 static PyMethodDef __pyx_mdef_5skbio_4core_3ssw_11ssw_wrapper_1align_striped_smith_waterman = {__Pyx_NAMESTR("align_striped_smith_waterman"), (PyCFunction)__pyx_pw_5skbio_4core_3ssw_11ssw_wrapper_1align_striped_smith_waterman, METH_VARARGS|METH_KEYWORDS, __Pyx_DOCSTR(__pyx_doc_5skbio_4core_3ssw_11ssw_wrapper_align_striped_smith_waterman)};
 static PyObject *__pyx_pw_5skbio_4core_3ssw_11ssw_wrapper_1align_striped_smith_waterman(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_query_sequence = 0;
@@ -6580,7 +6580,7 @@ static PyObject *__pyx_pw_5skbio_4core_3ssw_11ssw_wrapper_1align_striped_smith_w
   __Pyx_RaiseArgtupleInvalid("align_striped_smith_waterman", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 697; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   __pyx_L3_error:;
   __Pyx_DECREF(__pyx_v_kwargs); __pyx_v_kwargs = 0;
-  __Pyx_AddTraceback("skbio.core.ssw.ssw_wrapper.align_striped_smith_waterman", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.core.alignment.ssw.ssw_wrapper.align_striped_smith_waterman", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
@@ -6655,7 +6655,7 @@ static PyObject *__pyx_pf_5skbio_4core_3ssw_11ssw_wrapper_align_striped_smith_wa
   __Pyx_XDECREF(__pyx_t_1);
   __Pyx_XDECREF(__pyx_t_2);
   __Pyx_XDECREF(__pyx_t_3);
-  __Pyx_AddTraceback("skbio.core.ssw.ssw_wrapper.align_striped_smith_waterman", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.core.alignment.ssw.ssw_wrapper.align_striped_smith_waterman", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XDECREF((PyObject *)__pyx_v_query);
@@ -8736,7 +8736,7 @@ static PyMappingMethods __pyx_tp_as_mapping_AlignmentStructure = {
 
 static PyTypeObject __pyx_type_5skbio_4core_3ssw_11ssw_wrapper_AlignmentStructure = {
   PyVarObject_HEAD_INIT(0, 0)
-  __Pyx_NAMESTR("skbio.core.ssw.ssw_wrapper.AlignmentStructure"), /*tp_name*/
+  __Pyx_NAMESTR("skbio.core.alignment.ssw.ssw_wrapper.AlignmentStructure"), /*tp_name*/
   sizeof(struct __pyx_obj_5skbio_4core_3ssw_11ssw_wrapper_AlignmentStructure), /*tp_basicsize*/
   0, /*tp_itemsize*/
   __pyx_tp_dealloc_5skbio_4core_3ssw_11ssw_wrapper_AlignmentStructure, /*tp_dealloc*/
@@ -8883,7 +8883,7 @@ static PyMethodDef __pyx_methods_5skbio_4core_3ssw_11ssw_wrapper_StripedSmithWat
 
 static PyTypeObject __pyx_type_5skbio_4core_3ssw_11ssw_wrapper_StripedSmithWaterman = {
   PyVarObject_HEAD_INIT(0, 0)
-  __Pyx_NAMESTR("skbio.core.ssw.ssw_wrapper.StripedSmithWaterman"), /*tp_name*/
+  __Pyx_NAMESTR("skbio.core.alignment.ssw.ssw_wrapper.StripedSmithWaterman"), /*tp_name*/
   sizeof(struct __pyx_obj_5skbio_4core_3ssw_11ssw_wrapper_StripedSmithWaterman), /*tp_basicsize*/
   0, /*tp_itemsize*/
   __pyx_tp_dealloc_5skbio_4core_3ssw_11ssw_wrapper_StripedSmithWaterman, /*tp_dealloc*/
@@ -9300,8 +9300,8 @@ PyMODINIT_FUNC PyInit_ssw_wrapper(void)
   #if PY_MAJOR_VERSION >= 3
   {
     PyObject *modules = PyImport_GetModuleDict(); if (unlikely(!modules)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    if (!PyDict_GetItemString(modules, "skbio.core.ssw.ssw_wrapper")) {
-      if (unlikely(PyDict_SetItemString(modules, "skbio.core.ssw.ssw_wrapper", __pyx_m) < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    if (!PyDict_GetItemString(modules, "skbio.core.alignment.ssw.ssw_wrapper")) {
+      if (unlikely(PyDict_SetItemString(modules, "skbio.core.alignment.ssw.ssw_wrapper", __pyx_m) < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     }
   }
   #endif
@@ -10550,10 +10550,10 @@ PyMODINIT_FUNC PyInit_ssw_wrapper(void)
   __Pyx_XDECREF(__pyx_t_2);
   __Pyx_XDECREF(__pyx_t_3);
   if (__pyx_m) {
-    __Pyx_AddTraceback("init skbio.core.ssw.ssw_wrapper", __pyx_clineno, __pyx_lineno, __pyx_filename);
+    __Pyx_AddTraceback("init skbio.core.alignment.ssw.ssw_wrapper", __pyx_clineno, __pyx_lineno, __pyx_filename);
     Py_DECREF(__pyx_m); __pyx_m = 0;
   } else if (!PyErr_Occurred()) {
-    PyErr_SetString(PyExc_ImportError, "init skbio.core.ssw.ssw_wrapper");
+    PyErr_SetString(PyExc_ImportError, "init skbio.core.alignment.ssw.ssw_wrapper");
   }
   __pyx_L0:;
   __Pyx_RefNannyFinishContext();
