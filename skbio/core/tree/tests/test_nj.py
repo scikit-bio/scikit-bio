@@ -65,6 +65,15 @@ class NjTests(TestCase):
                               "250000);")
         self.expected3_TreeNode = TreeNode.from_newick(self.expected3_str)
 
+        # this dm can yield negative branch lengths
+        data4 = [[0,  5,  9,  9,  800],
+                 [5,  0, 10, 10,  9],
+                 [9, 10,  0,  8,  7],
+                 [9, 10,  8,  0,  3],
+                 [800,  9,  7,  3,  0]]
+        ids4 = list('abcde')
+        self.dm4 = DistanceMatrix(data4, ids4)
+
     def test_nj_dm1(self):
         self.assertEqual(nj(self.dm1, result_constructor=str),
                          self.expected1_str)
@@ -82,6 +91,22 @@ class NjTests(TestCase):
         actual_TreeNode = nj(self.dm3)
         self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
             self.expected3_TreeNode), 0.0)
+
+    def test_nj_zero_branch_length(self):
+        # no nodes have negative branch length when we disallow negative
+        # branch length. self is excluded as branch length is None
+        tree = nj(self.dm4)
+        for n in tree.postorder(include_self=False):
+            self.assertTrue(n.length >= 0)
+        # only tips associated with the large distance in the input
+        # have positive branch lengths when we allow negative branch
+        # length
+        tree = nj(self.dm4, False)
+        self.assertTrue(tree.find('a') > 0)
+        self.assertTrue(tree.find('b').length < 0)
+        self.assertTrue(tree.find('c').length < 0)
+        self.assertTrue(tree.find('d').length < 0)
+        self.assertTrue(tree.find('e') > 0)
 
     def test_nj_trivial(self):
         data = [[0, 3, 2],
