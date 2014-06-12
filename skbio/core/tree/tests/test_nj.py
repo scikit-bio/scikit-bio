@@ -103,9 +103,18 @@ class NjTests(TestCase):
                          [7,  8,  0,  3],
                          [6,  7,  3,  0]]
         expected_ids = ['x', 'c', 'd', 'e']
-        expected = DistanceMatrix(expected_data, expected_ids)
+        expected1 = DistanceMatrix(expected_data, expected_ids)
         self.assertEqual(_compute_collapsed_dm(self.dm1, 'a', 'b', True, 'x'),
-                         expected)
+                         expected1)
+
+        # computed manually
+        expected_data = [[0, 4, 3],
+                         [4, 0, 3],
+                         [3, 3, 0]]
+        expected_ids = ['yy', 'd', 'e']
+        expected2 = DistanceMatrix(expected_data, expected_ids)
+        self.assertEqual(_compute_collapsed_dm(expected1, 'x', 'c', True, 'yy'),
+                         expected2)
 
     def test_lowest_index(self):
         self.assertEqual(_lowest_index(self.dm1), (4, 3))
