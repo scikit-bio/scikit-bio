@@ -1,0 +1,74 @@
+skbio.core.sequence.NucleotideSequence
+======================================
+
+.. currentmodule:: skbio.core.sequence
+
+.. autoclass:: NucleotideSequence
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         NucleotideSequence.__contains__
+         NucleotideSequence.__eq__
+         NucleotideSequence.__format__
+         NucleotideSequence.__getitem__
+         NucleotideSequence.__hash__
+         NucleotideSequence.__init__
+         NucleotideSequence.__iter__
+         NucleotideSequence.__len__
+         NucleotideSequence.__ne__
+         NucleotideSequence.__new__
+         NucleotideSequence.__reduce__
+         NucleotideSequence.__reduce_ex__
+         NucleotideSequence.__repr__
+         NucleotideSequence.__reversed__
+         NucleotideSequence.__sizeof__
+         NucleotideSequence.__str__
+         NucleotideSequence.__subclasshook__
+         NucleotideSequence._complement
+         NucleotideSequence.alphabet
+         NucleotideSequence.complement
+         NucleotideSequence.complement_map
+         NucleotideSequence.count
+         NucleotideSequence.degap
+         NucleotideSequence.distance
+         NucleotideSequence.fraction_diff
+         NucleotideSequence.fraction_same
+         NucleotideSequence.gap_alphabet
+         NucleotideSequence.gap_maps
+         NucleotideSequence.gap_vector
+         NucleotideSequence.has_unsupported_characters
+         NucleotideSequence.index
+         NucleotideSequence.is_gap
+         NucleotideSequence.is_gapped
+         NucleotideSequence.is_reverse_complement
+         NucleotideSequence.is_valid
+         NucleotideSequence.iupac_characters
+         NucleotideSequence.iupac_degeneracies
+         NucleotideSequence.iupac_degenerate_characters
+         NucleotideSequence.iupac_standard_characters
+         NucleotideSequence.k_word_counts
+         NucleotideSequence.k_word_frequencies
+         NucleotideSequence.k_words
+         NucleotideSequence.lower
+         NucleotideSequence.nondegenerates
+         NucleotideSequence.rc
+         NucleotideSequence.reverse_complement
+         NucleotideSequence.to_fasta
+         NucleotideSequence.unsupported_characters
+         NucleotideSequence.upper
+
+
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         NucleotideSequence.description
+         NucleotideSequence.id
+
