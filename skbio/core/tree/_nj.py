@@ -272,10 +272,12 @@ def _pair_members_to_new_node(dm, i, j, disallow_negative_branch_length):
     n = dm.shape[0]
     i_to_j = dm[i, j]
     i_to_u = (0.5 * i_to_j) + ((dm[i].sum() - dm[j].sum()) / (2 * (n - 2)))
-    j_to_u = i_to_j - i_to_u
 
     if disallow_negative_branch_length and i_to_u < 0:
         i_to_u = 0
+
+    j_to_u = i_to_j - i_to_u
+
     if disallow_negative_branch_length and j_to_u < 0:
         j_to_u = 0
 

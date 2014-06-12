@@ -146,6 +146,15 @@ class NjTests(TestCase):
         self.assertEqual(_otu_to_new_node(self.dm1, 'a', 'b', 'd', True), 7)
         self.assertEqual(_otu_to_new_node(self.dm1, 'a', 'b', 'e', True), 6)
 
+    def test_otu_to_new_node_zero_branch_length(self):
+        data = [[0, 40, 3],
+                [40, 0, 3],
+                [3, 3, 0]]
+        ids = ['a', 'b', 'c']
+        dm = DistanceMatrix(data, ids)
+        self.assertEqual(_otu_to_new_node(dm, 'a', 'b', 'c', True), 0)
+        self.assertEqual(_otu_to_new_node(dm, 'a', 'b', 'c', False), -17)
+
     def test_pair_members_to_new_node(self):
         self.assertEqual(_pair_members_to_new_node(self.dm1, 'a', 'b', True),
                          (2, 3))
@@ -153,6 +162,21 @@ class NjTests(TestCase):
                          (4, 5))
         self.assertEqual(_pair_members_to_new_node(self.dm1, 'd', 'e', True),
                          (2, 1))
+
+    def test_pair_members_to_new_node_zero_branch_length(self):
+        # the values in this example don't really make sense
+        # (I'm not sure how you end up with these distances between
+        # three sequences), but that doesn't really matter for the sake
+        # of this test
+        data = [[0, 4, 2],
+                [4, 0, 38],
+                [2, 38, 0]]
+        ids = ['a', 'b', 'c']
+        dm = DistanceMatrix(data, ids)
+        self.assertEqual(_pair_members_to_new_node(dm, 'a', 'b', True), (0, 4))
+        # this makes it clear why negative branch lengths don't make sense...
+        self.assertEqual(
+            _pair_members_to_new_node(dm, 'a', 'b', False), (-16, 20))
 
 if __name__ == "__main__":
     main()
