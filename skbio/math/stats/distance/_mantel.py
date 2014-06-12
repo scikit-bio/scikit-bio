@@ -203,6 +203,56 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided'):
 
 def pwmantel(dms, labels=None, strict=True, lookup=None, method='pearson',
              permutations=999, alternative='two-sided'):
+    """Run Mantel tests for every pair of distance matrices.
+
+    Runs a Mantel test for each pair of distance matrices and collates the
+    results in a data frame. Distance matrices do not need to be in the same
+    ID order (contrary to how the ``mantel`` function behaves). Distance
+    matrices will be re-ordered prior to running each pairwise test, and if
+    ``strict=False``, IDs that don't match between a pair of distance matrices
+    will be dropped prior to running the test.
+
+    Parameters
+    ----------
+    dms : iterable of DistanceMatrix
+        DistanceMatrix instances to perform pairwise Mantel tests upon.
+    labels : iterable of str or int, optional
+        Labels for each ``DistanceMatrix`` in `dms`. These are
+        used in the results data frame to identify the pair of distance
+        matrices used in a pairwise Mantel test. If ``None``, defaults to
+        monotonically-increasing integers starting at zero.
+    strict : bool, optional
+        If ``True``, raises a ``ValueError`` if IDs are found that do not exist
+        in both distance matrices for the current pairwise test. If ``False``,
+        these "extra" (nonmatching) IDs are discarded before running the
+        pairwise Mantel test.
+    lookup : dict, optional
+        Maps each ID in the distance matrices to a new ID. Used to match up IDs
+        across distance matrices prior to running the Mantel test. If the IDs
+        already match between the distance matrices in `dms`, this parameter is
+        not necessary.
+    method : {'pearson', 'spearman'}
+        Correlation method. See ``mantel`` function for more details.
+    permutations : int, optional
+        Number of permutations. See ``mantel`` function for more details.
+    alternative : {'two-sided', 'greater', 'less'}
+        Alternative hypothesis. See ``mantel`` function for more details.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Data frame containing the results of each pairwise test (one per row).
+        Includes the number of objects considered in each test as column ``n``
+        (after applying `lookup` and filtering non-matching IDs if
+        ``strict=False``). Column ``p-value`` has the p-values formatted as
+        strings with the correct number of decimal places, or ``N/A`` if a
+        p-value could not be computed.
+
+    See Also
+    --------
+    mantel
+
+    """
     num_dms = len(dms)
 
     if num_dms < 2:
