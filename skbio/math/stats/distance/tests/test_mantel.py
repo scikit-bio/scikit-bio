@@ -267,6 +267,17 @@ class PairwiseMantelTests(TestCase):
                                     [0.25, 0.1, 0]])
         self.min_dms = (self.minx, self.miny, self.minz)
 
+        # Versions of self.minx and self.minz (above) that each have an extra
+        # ID on the end.
+        self.x_extra = DistanceMatrix([[0, 1, 2, 7],
+                                       [1, 0, 3, 2],
+                                       [2, 3, 0, 4],
+                                       [7, 2, 4, 0]], ['0', '1', '2', 'foo'])
+        self.z_extra = DistanceMatrix([[0, 0.5, 0.25, 3],
+                                       [0.5, 0, 0.1, 24],
+                                       [0.25, 0.1, 0, 5],
+                                       [3, 24, 5, 0]], ['0', '1', '2', 'bar'])
+
         # Load expected results. We have to load the p-value column (column
         # index 3) as a string dtype in order to compare with the in-memory
         # results since we're formatting the p-values as strings with the
@@ -326,6 +337,18 @@ class PairwiseMantelTests(TestCase):
         x = self.minx.filter(['1', '0', '2'])
         y = self.miny.filter(['0', '2', '1'])
         z = self.minz.filter(['1', '2', '0'])
+
+        np.random.seed(0)
+
+        obs = pwmantel((x, y, z), alternative='greater')
+        assert_frame_equal(obs, self.exp_results_reordered_distance_matrices)
+
+    def test_nonmatching_ids(self):
+        # Matrices have some matching and nonmatching IDs, with different
+        # ordering.
+        x = self.x_extra.filter(['1', '0', 'foo', '2'])
+        y = self.miny.filter(['0', '2', '1'])
+        z = self.z_extra.filter(['bar', '1', '2', '0'])
 
         np.random.seed(0)
 
