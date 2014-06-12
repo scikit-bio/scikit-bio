@@ -79,8 +79,7 @@ def nj(dm, disallow_negative_branch_length=True,
     those OTUs. This is returned as a TreeNode object.
 
     >>> tree = nj(dm)
-    >>> print tree.ascii_art()
-
+    >>> print(tree.ascii_art())
               /-d
              |
              |          /-c
@@ -92,11 +91,13 @@ def nj(dm, disallow_negative_branch_length=True,
               \-e
 
     Again, construct the neighbor joining tree, but instead return the newick
-    string representing the tree, rather than the TreeNode object.
+    string representing the tree, rather than the TreeNode object. (Note that
+    in this example the string output is truncated when printed to faciliate
+    rendering.)
 
     >>> newick_str = nj(dm, result_constructor=str)
-    >>> print newick_str
-    (d:2.0, (c:4.0, (b:3.0, a:2.0):3.0):2.0, e:1.0);
+    >>> print(newick_str[:55], "...")
+    (d:2.000000, (c:4.000000, (b:3.000000, a:2.000000):3.00 ...
 
     """
     if dm.shape[0] < 3:
