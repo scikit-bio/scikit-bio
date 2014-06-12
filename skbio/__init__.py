@@ -55,6 +55,19 @@ if __doc__ is None:
 else:
     __doc__ = title + art + __doc__
 
+# imports included for convenience
+from skbio.core.sequence import (
+    BiologicalSequence, NucleotideSequence, DNA, DNASequence, RNA, RNASequence,
+    Protein, ProteinSequence)
+from skbio.core.distance import DistanceMatrix
+from skbio.core.alignment import (
+    align_striped_smith_waterman, SequenceCollection, Alignment)
+from skbio.core.tree import (
+    TreeNode, nj)
+from skbio.parse.sequences import (
+    parse_fasta, parse_fastq, parse_qual, FastaIterator, FastqIterator,
+    SequenceIterator)
+
 from numpy.testing import Tester
 test = Tester().test
 
