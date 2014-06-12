@@ -12,8 +12,10 @@ from unittest import TestCase, main
 
 from skbio.core.distance import DistanceMatrix
 from skbio.core.tree import TreeNode
-from skbio.core.tree.nj import (nj, _compute_q, _compute_collapsed_dm,
-    _lowest_index, _otu_to_new_node, _pair_members_to_new_node)
+from skbio.core.tree.nj import (
+    nj, _compute_q, _compute_collapsed_dm, _lowest_index, _otu_to_new_node,
+    _pair_members_to_new_node)
+
 
 class NjTests(TestCase):
 
@@ -29,7 +31,7 @@ class NjTests(TestCase):
         # which generated the following (isomorphic) newick string:
         # (d:2.0000,e:1.0000,(c:4.0000,(a:2.0000,b:3.0000):3.0000):2.0000);
         self.expected1_str = ("(d:2.000000, (c:4.000000, (b:3.000000,"
-        " a:2.000000):3.000000):2.000000, e:1.000000);")
+                              " a:2.000000):3.000000):2.000000, e:1.000000);")
         self.expected1_TreeNode = TreeNode.from_newick(self.expected1_str)
 
         # this example was pulled from the Phylip manual
@@ -44,9 +46,10 @@ class NjTests(TestCase):
         ids2 = ["Bovine", "Mouse", "Gibbon", "Orang", "Gorilla", "Chimp",
                 "Human"]
         self.dm2 = DistanceMatrix(data2, ids2)
-        self.expected2_str = ("(Mouse:0.76891, (Gibbon:0.35793, (Orang:0.28469,"
-            " (Gorilla:0.15393, (Chimp:0.15167, Human:0.11753):0.03982):"
-            "0.02696):0.04648):0.42027, Bovine:0.91769);")
+        self.expected2_str = ("(Mouse:0.76891, (Gibbon:0.35793, (Orang:0.28469"
+                              ", (Gorilla:0.15393, (Chimp:0.15167, Human:0.117"
+                              "53):0.03982):0.02696):0.04648):0.42027, Bovine:"
+                              "0.91769);")
         self.expected2_TreeNode = TreeNode.from_newick(self.expected2_str)
 
     def test_nj_dm1(self):
@@ -54,13 +57,13 @@ class NjTests(TestCase):
                          self.expected1_str)
         # what is the correct way to compare TreeNode objects for equality?
         actual_TreeNode = nj(self.dm1)
-        self.assertEqual(\
-            actual_TreeNode.compare_tip_distances(self.expected1_TreeNode), 0.0)
+        self.assertEqual(actual_TreeNode.compare_tip_distances(
+            self.expected1_TreeNode), 0.0)
 
     def test_nj_dm2(self):
         actual_TreeNode = nj(self.dm2)
-        self.assertAlmostEqual(\
-            actual_TreeNode.compare_tip_distances(self.expected2_TreeNode), 0.0)
+        self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
+            self.expected2_TreeNode), 0.0)
 
     def test_nj_trivial(self):
         data = [[0, 3, 2],
@@ -77,7 +80,7 @@ class NjTests(TestCase):
         self.assertRaises(ValueError, nj, dm)
 
     def test_compute_q(self):
-        expected_data = [[  0, -50, -38, -34, -34],
+        expected_data = [[0, -50, -38, -34, -34],
                          [-50,   0, -38, -34, -34],
                          [-38, -38,   0, -40, -40],
                          [-34, -34, -40,   0, -48],
@@ -91,7 +94,7 @@ class NjTests(TestCase):
                 [2, 3, 0]]
         dm = DistanceMatrix(data, list('abc'))
         # computed this manually
-        expected_data = [[ 0, -8, -8],
+        expected_data = [[0, -8, -8],
                          [-8,  0, -8],
                          [-8, -8,  0]]
         expected = DistanceMatrix(expected_data, list('abc'))
@@ -113,8 +116,8 @@ class NjTests(TestCase):
                          [3, 3, 0]]
         expected_ids = ['yy', 'd', 'e']
         expected2 = DistanceMatrix(expected_data, expected_ids)
-        self.assertEqual(_compute_collapsed_dm(expected1, 'x', 'c', True, 'yy'),
-                         expected2)
+        self.assertEqual(
+            _compute_collapsed_dm(expected1, 'x', 'c', True, 'yy'), expected2)
 
     def test_lowest_index(self):
         self.assertEqual(_lowest_index(self.dm1), (4, 3))
