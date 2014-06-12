@@ -1,4 +1,24 @@
-#!/usr/bin/env python
+"""
+Statistics (:mod:`skbio.math.stats`)
+====================================
+
+.. currentmodule:: skbio.math.stats
+
+This package contains various statistical methods, including ordination
+techniques and distance matrix-based statistics.
+
+Subpackages
+-----------
+
+.. autosummary::
+   :toctree: generated/
+
+   ordination
+   distance
+   spatial
+   misc
+
+"""
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.

@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -17,8 +15,7 @@ import pandas as pd
 
 from skbio.core.distance import DissimilarityMatrix, DistanceMatrix
 from skbio.math.stats.distance.base import (CategoricalStats,
-                                            CategoricalStatsResults,
-                                            p_value_to_str)
+                                            CategoricalStatsResults)
 
 
 class CategoricalStatsTests(TestCase):
@@ -111,44 +108,6 @@ class CategoricalStatsResultsTests(TestCase):
                'Number of permutations\nfoo\t42\t4\t0.0123456789\t0.12\t99\n')
         obs = self.results.summary()
         self.assertEqual(obs, exp)
-
-
-class PValueToStrTests(TestCase):
-    def setUp(self):
-        self.p_value = 0.119123123123
-
-    def test_valid_input(self):
-        obs = p_value_to_str(self.p_value, 100)
-        self.assertEqual(obs, '0.12')
-
-        obs = p_value_to_str(self.p_value, 250)
-        self.assertEqual(obs, '0.12')
-
-        obs = p_value_to_str(self.p_value, 1000)
-        self.assertEqual(obs, '0.119')
-
-        obs = p_value_to_str(0.0055623489, 999)
-        self.assertEqual(obs, '0.006')
-
-    def test_too_few_permutations(self):
-        obs = p_value_to_str(self.p_value, 9)
-        self.assertEqual(obs, 'Too few permutations to compute p-value '
-                              '(permutations = 9)')
-
-        obs = p_value_to_str(self.p_value, 1)
-        self.assertEqual(obs, 'Too few permutations to compute p-value '
-                              '(permutations = 1)')
-
-        obs = p_value_to_str(self.p_value, 0)
-        self.assertEqual(obs, 'Too few permutations to compute p-value '
-                              '(permutations = 0)')
-
-    def test_missing_or_invalid_p_value(self):
-        obs = p_value_to_str(None, 0)
-        self.assertEqual(obs, 'N/A')
-
-        obs = p_value_to_str(np.nan, 0)
-        self.assertEqual(obs, 'N/A')
 
 
 if __name__ == '__main__':

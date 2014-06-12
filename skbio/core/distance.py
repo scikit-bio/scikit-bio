@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 r"""
 Dissimilarity and distance matrices (:mod:`skbio.core.distance`)
 ================================================================

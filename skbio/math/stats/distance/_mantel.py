@@ -17,7 +17,7 @@ import scipy.misc
 from scipy.stats import pearsonr, spearmanr
 
 from skbio.core.distance import DistanceMatrix
-from .base import p_value_to_str
+from skbio.math.stats.misc import p_value_to_str
 
 
 def mantel(x, y, method='pearson', permutations=999, alternative='two-sided'):

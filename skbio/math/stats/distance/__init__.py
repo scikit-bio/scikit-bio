@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 Distance-based statistics (:mod:`skbio.math.stats.distance`)
 ============================================================
