@@ -419,3 +419,4 @@ linkcheck_timeout = 30
 # examples, originally taken from scikit-learn's doc/conf.py
 def setup(app):
     app.add_javascript('copybutton.js')
+    app.add_stylesheet('style.css')
