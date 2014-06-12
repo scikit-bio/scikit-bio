@@ -216,7 +216,7 @@ def pwmantel(dms, labels=None, strict=True, lookup=None, method='pearson',
 
     Parameters
     ----------
-    dms : iterable of DistanceMatrix
+    dms : iterable of DistanceMatrix objects
         DistanceMatrix instances to perform pairwise Mantel tests upon.
     labels : iterable of str or int, optional
         Labels for each ``DistanceMatrix`` in `dms`. These are
