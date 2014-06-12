@@ -19,7 +19,6 @@ API Reference
    core.genetic_code
    core.tree
    core.workflow
-   core.ssw
    draw.distributions
    format.sequences
    math.diversity.alpha
