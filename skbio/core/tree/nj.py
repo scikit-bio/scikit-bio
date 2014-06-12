@@ -8,11 +8,11 @@ from __future__ import absolute_import, division, print_function
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-
 import numpy as np
 
 from skbio.core.distance import DistanceMatrix
 from skbio.core.tree import TreeNode
+
 
 def nj(dm, disallow_negative_branch_length=True,
        result_constructor=TreeNode.from_newick):
@@ -116,15 +116,14 @@ def nj(dm, disallow_negative_branch_length=True,
 
         # identify the pair of nodes that have the lowest Q value. if multiple
         # pairs have equally low Q values, the first pair identified (closest
-        # to the top-left of the matrix) will be chosen. these will be joined in
-        # the current node.
+        # to the top-left of the matrix) will be chosen. these will be joined
+        # in the current node.
         idx1, idx2 = _lowest_index(q)
         pair_member_1 = dm.ids[idx1]
         pair_member_2 = dm.ids[idx2]
         # determine the distance of each node to the new node connecting them.
-        pair_member_1_len, pair_member_2_len = \
-        _pair_members_to_new_node(dm, idx1, idx2,
-                                  disallow_negative_branch_length)
+        pair_member_1_len, pair_member_2_len = _pair_members_to_new_node(
+            dm, idx1, idx2, disallow_negative_branch_length)
         # define the new node in newick style
         node_definition = "(%s:%f, %s:%f)" % (pair_member_1,
                                               pair_member_1_len,
@@ -132,7 +131,7 @@ def nj(dm, disallow_negative_branch_length=True,
                                               pair_member_2_len)
         # compute the new distance matrix, which will contain distances of all
         # other nodes to this new node
-        dm = _compute_collapsed_dm(\
+        dm = _compute_collapsed_dm(
             dm, pair_member_1, pair_member_2,
             disallow_negative_branch_length=disallow_negative_branch_length,
             new_node_id=node_definition)
@@ -150,7 +149,7 @@ def nj(dm, disallow_negative_branch_length=True,
     # ...then determine their distance to the other remaining node, but first
     # handle the trival case where the input dm was only 3 x 3
     node_definition = node_definition or dm.ids[0]
-    internal_len = _otu_to_new_node(\
+    internal_len = _otu_to_new_node(
         dm, pair_member_1, pair_member_2, node_definition,
         disallow_negative_branch_length=disallow_negative_branch_length)
     # ...and finally create the newick string describing the whole tree.
@@ -160,6 +159,7 @@ def nj(dm, disallow_negative_branch_length=True,
 
     # package the result as requested by the user and return it.
     return result_constructor(newick)
+
 
 def _compute_q(dm):
     """Compute Q matrix, used to identify the next pair of nodes to join.
@@ -172,6 +172,7 @@ def _compute_q(dm):
             q[i, j] = q[j, i] = \
                 ((n - 2) * dm[i, j]) - dm[i].sum() - dm[j].sum()
     return DistanceMatrix(q, dm.ids)
+
 
 def _compute_collapsed_dm(dm, i, j, disallow_negative_branch_length,
                           new_node_id):
@@ -187,11 +188,13 @@ def _compute_collapsed_dm(dm, i, j, disallow_negative_branch_length,
     out_ids.extend([e for e in dm.ids if e not in (i, j)])
     result = np.zeros((out_n, out_n))
     for idx1, out_id1 in enumerate(out_ids[1:]):
-        result[0, idx1 + 1] = result[idx1 + 1, 0] = \
-         _otu_to_new_node(dm, i, j, out_id1, disallow_negative_branch_length)
+        result[0, idx1 + 1] = result[idx1 + 1, 0] = _otu_to_new_node(
+            dm, i, j, out_id1, disallow_negative_branch_length)
         for idx2, out_id2 in enumerate(out_ids[1:idx1+1]):
-            result[idx1+1, idx2+1] = result[idx2+1, idx1+1] = dm[out_id1, out_id2]
+            result[idx1+1, idx2+1] = result[idx2+1, idx1+1] = \
+                dm[out_id1, out_id2]
     return DistanceMatrix(result, out_ids)
+
 
 def _lowest_index(dm):
     """Return the index of the lowest value in the input distance matrix.
@@ -212,6 +215,7 @@ def _lowest_index(dm):
                 lowest_value = curr_value
                 result = curr_index
     return result
+
 
 def _otu_to_new_node(dm, i, j, k, disallow_negative_branch_length):
     """Return the distance between a new node and some other node.
@@ -239,6 +243,7 @@ def _otu_to_new_node(dm, i, j, k, disallow_negative_branch_length):
         k_to_u = 0
 
     return k_to_u
+
 
 def _pair_members_to_new_node(dm, i, j, disallow_negative_branch_length):
     """Return the distance between a new node and decendants of that new node.
