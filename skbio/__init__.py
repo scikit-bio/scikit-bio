@@ -68,6 +68,13 @@ from skbio.parse.sequences import (
     parse_fasta, parse_fastq, parse_qual, FastaIterator, FastqIterator,
     SequenceIterator)
 
+__all__ = ['BiologicalSequence', 'NucleotideSequence', 'DNA', 'DNASequence',
+           'RNA', 'RNASequence', 'Protein', 'ProteinSequence',
+           'DistanceMatrix', 'align_striped_smith_waterman',
+           'SequenceCollection', 'Alignment', 'TreeNode', 'nj', 'parse_fasta',
+           'parse_fastq', 'parse_qual', 'FastaIterator', 'FastqIterator',
+           'SequenceIterator']
+
 from numpy.testing import Tester
 test = Tester().test
 
