@@ -1128,7 +1128,7 @@ script = """#!/usr/bin/env python
 #This is a test script intended to test the CommandLineApplication
 #class and CommandLineAppResult class
 
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 from sys import argv, stderr, stdin
 from os import isatty

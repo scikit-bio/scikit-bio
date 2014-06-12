@@ -18,9 +18,8 @@
 # C API is impractical at this time.
 
 from unittest import TestCase, main
-from skbio.core.ssw import (StripedSmithWaterman,
-                            AlignmentStructure,
-                            align_striped_smith_waterman)
+from skbio.core.alignment.ssw.ssw_wrapper import (
+    StripedSmithWaterman, AlignmentStructure, align_striped_smith_waterman)
 
 
 class TestSSW(TestCase):

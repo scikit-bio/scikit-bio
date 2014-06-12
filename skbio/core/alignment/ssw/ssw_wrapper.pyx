@@ -607,7 +607,7 @@ cdef class StripedSmithWaterman:
 
         Returns
         -------
-        ``skbio.core.ssw.AlignmentStructure``
+        ``skbio.core.alignment.ssw.AlignmentStructure``
             The resulting alignment.
 
         """
@@ -707,7 +707,7 @@ def align_striped_smith_waterman(query_sequence, target_sequence,
 
     Returns
     -------
-    ``skbio.core.ssw.AlignmentStructure``
+    ``skbio.core.alignment.ssw.AlignmentStructure``
         The resulting alignment as a dict-like object
 
     """

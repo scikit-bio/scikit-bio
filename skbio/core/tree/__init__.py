@@ -19,16 +19,24 @@ Classes
     TreeNode
     CompressedTrie
 
-Functions
----------
+Phylogenetic Reconstruction
+---------------------------
+
+.. autosummary::
+   :toctree: generated/
+
+   nj
+
+Utility Functions
+-----------------
 
 .. autosummary::
    :toctree: generated/
 
     fasta_to_pairlist
 
-Phylogenetic tree examples
---------------------------
+Examples
+--------
 
 >>> from skbio.core.tree import TreeNode
 
@@ -225,8 +233,9 @@ Create a new trie with a list of sequences
 
 from .tree import TreeNode
 from .trie import CompressedTrie, fasta_to_pairlist
+from ._nj import nj
 
-__all__ = ['TreeNode', 'CompressedTrie', 'fasta_to_pairlist']
+__all__ = ['TreeNode', 'CompressedTrie', 'fasta_to_pairlist', 'nj']
 
 from numpy.testing import Tester
 test = Tester().test
