@@ -114,7 +114,7 @@ If this succeeds, the release appears to be a success!
 
 2. Close the release milestone on the GitHub issue tracker.
 
-3. Send an email to the skbio users and developers lists, and anyone else who might be interested (e.g., lab mailing lists).
+3. Send an email to the skbio users and developers lists, and anyone else who might be interested (e.g., lab mailing lists). You might include links to the GitHub release page and ``CHANGELOG.md``.
 
 4. Tweet about the release.
 
