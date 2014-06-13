@@ -2,25 +2,25 @@
 
 ## Introduction
 
-Releasing a piece of software can simultaneously be an invigorating, intimidating, horrifying, and cathartic experience. This guide aims to make the release process as smooth as possible, though this goal may be impossible to fully meet.
+Releasing a piece of software can simultaneously be an invigorating, intimidating, horrifying, and cathartic experience. This guide aims to make the release process as smooth as possible.
 
 To illustrate examples of commands you might run, let's assume that the current version is 1.2.3-dev and we want to release version 1.2.4.
 
 **Note:** the following commands assume you are in the top-level directory of the scikit-bio repository unless otherwise noted.
 
-**Tip:** It can be efficient to have the help of a couple other devs as some steps can be run in parallel. It's also useful to have a variety of platforms/environments to test on during the release process, so find friends that are Linux and Mac users!
+**Tip:** It can be efficient to have the help of a couple other devs, as some steps can be run in parallel. It's also useful to have a variety of platforms/environments to test on during the release process, so find friends that are Linux and Mac users!
 
 ## Prepping the release
 
-1. Ensure the scikit-bio build is passing on Travis.
+1. Ensure the Travis build is passing against the latest master branch.
 
 2. Update the version strings (1.2.3-dev) to the new version (1.2.4). There should only be two places this needs to be done: ``setup.py`` and ``skbio.__init__.py``. It's a good idea to ``grep`` for the current version string just to be safe:
 
-    grep -ir '1\.2\.3-dev' *
+        grep -ir '1\.2\.3-dev' *
 
-Update ``CHANGELOG.md`` to include descriptions of the changes that made it into this release. Be sure to update the heading to include the new version (1.2.4) and the date of the release. Use the existing structure in the file as a template/guide.
+3. Update ``CHANGELOG.md`` to include descriptions of the changes that made it into this release. Be sure to update the heading to include the new version (1.2.4) and the date of the release. Use the existing structure in the file as a template/guide.
 
-Submit a pull request with these changes and let Travis run the tests. In the meantime, build the documentation locally:
+4. Submit a pull request with these changes and let Travis run the tests. In the meantime, build the documentation locally:
 
     cd doc
     make clean && make html
