@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>skbio.parse.sequences.parse_fasta &mdash; scikit-bio 0.1.1-dev documentation</title>
+    <title>skbio.parse.sequences.parse_fasta &mdash; scikit-bio 0.1.2 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.1.1-dev',
+        VERSION:     '0.1.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -31,7 +31,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="scikit-bio 0.1.1-dev documentation" href="../index.html" />
+    <link rel="top" title="scikit-bio 0.1.2 documentation" href="../index.html" />
     <link rel="up" title="Parse biological sequences (skbio.parse.sequences)" href="../parse.sequences.html" />
     <link rel="next" title="skbio.parse.sequences.parse_fastq" href="skbio.parse.sequences.parse_fastq.html" />
     <link rel="prev" title="skbio.parse.sequences.parse_clustal" href="skbio.parse.sequences.parse_clustal.html" />
@@ -69,7 +69,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.1.1-dev</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.1.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -98,8 +98,9 @@
 <li class="toctree-l1"><a class="reference internal" href="../format.sequences.html">Format biological sequences (<tt class="docutils literal"><span class="pre">skbio.format.sequences</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.diversity.alpha.html">Alpha diversity measures (<tt class="docutils literal"><span class="pre">skbio.math.diversity.alpha</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.stats.distance.html">Distance-based statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.distance</span></tt>)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../math.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.spatial</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.stats.misc.html">Miscellaneous statistics utilities (<tt class="docutils literal"><span class="pre">skbio.math.stats.misc</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.stats.ordination.html">Ordination methods (<tt class="docutils literal"><span class="pre">skbio.math.stats.ordination</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.spatial</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.gradient.html">Gradient analyses (<tt class="docutils literal"><span class="pre">skbio.math.gradient</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.subsample.html">Subsampling (<tt class="docutils literal"><span class="pre">skbio.math.subsample</span></tt>)</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../parse.sequences.html">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
@@ -157,52 +158,105 @@
 <h1>skbio.parse.sequences.parse_fasta<a class="headerlink" href="#skbio-parse-sequences-parse-fasta" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="skbio.parse.sequences.parse_fasta">
-<tt class="descclassname">skbio.parse.sequences.</tt><tt class="descname">parse_fasta</tt><big>(</big><em>infile</em>, <em>strict=True</em>, <em>label_to_name=&lt;type 'str'&gt;</em>, <em>finder=&lt;function parser at 0x3f05848&gt;</em>, <em>is_label=None</em>, <em>label_characters='&gt;'</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/master/skbio/parse/sequences/fasta.py#L35"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.parse.sequences.parse_fasta" title="Permalink to this definition">¶</a></dt>
-<dd><p>yields label and seq from a fasta file.</p>
+<tt class="descclassname">skbio.parse.sequences.</tt><tt class="descname">parse_fasta</tt><big>(</big><em>infile</em>, <em>strict=True</em>, <em>label_to_name=None</em>, <em>finder=&lt;function parser at 0x317cb18&gt;</em>, <em>label_characters='&gt;'</em>, <em>ignore_comment=False</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.1.2/skbio/parse/sequences/fasta.py#L35"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.parse.sequences.parse_fasta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generator of labels and sequences from a fasta file.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data</strong> : open file object or str</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>infile</strong> : open file object or str</p>
 <blockquote>
-<div><p>An open fasta file or a path to it.</p>
+<div><p>An open fasta file or a path to a fasta file.</p>
 </div></blockquote>
 <p><strong>strict</strong> : bool</p>
 <blockquote>
-<div><p>If strict is true a <tt class="docutils literal"><span class="pre">RecordError</span></tt> will
-be raised if no header line is found</p>
+<div><p>If <cite>True</cite> a <tt class="docutils literal"><span class="pre">RecordError</span></tt> will be raised if no header line is found.</p>
+</div></blockquote>
+<p><strong>label_to_name</strong> : function</p>
+<blockquote>
+<div><p>A function to apply to the sequence label (i.e., text on the header
+line) before yielding it. By default, the sequence label is returned
+with no processing. This function must take a single string as input
+and return a single string as output.</p>
+</div></blockquote>
+<p><strong>finder</strong> : function</p>
+<blockquote>
+<div><p>The function to apply to find records in the fasta file. In general
+you should not have to change this.</p>
+</div></blockquote>
+<p><strong>label_characters</strong> : str</p>
+<blockquote>
+<div><p>String used to indicate the beginning of a new record. In general you
+should not have to change this.</p>
+</div></blockquote>
+<p><strong>ignore_comment</strong> : bool</p>
+<blockquote>
+<div><p>If <cite>True</cite>, split the sequence label on spaces, and return the label
+only as the first space separated field (i.e., the sequence
+identifier). Note: if both <tt class="docutils literal"><span class="pre">ignore_comment</span></tt> and <tt class="docutils literal"><span class="pre">label_to_name</span></tt> are
+passed, <tt class="docutils literal"><span class="pre">ignore_comment</span></tt> is ignored (both operate on the label, so
+there is potential for things to get messy otherwise).</p>
 </div></blockquote>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>label, sequence</strong> : string</p>
-<blockquote class="last">
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">two-item tuple of str</p>
+<blockquote>
 <div><p>yields the label and sequence for each entry.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><strong>RecordError</strong></p>
+<blockquote class="last">
+<div><p>If <tt class="docutils literal"><span class="pre">strict</span> <span class="pre">==</span> <span class="pre">True</span></tt>, raises a <tt class="docutils literal"><span class="pre">RecordError</span></tt> if there is a fasta
+label line with no associated sequence, or a sequence with no
+associated label line (in other words, if there is a partial record).</p>
 </div></blockquote>
 </td>
 </tr>
 </tbody>
 </table>
 <p class="rubric">Examples</p>
-<p>Assume we have a fasta formatted file with the following contents:</p>
-<div class="highlight-python"><div class="highlight"><pre>&gt;seq1
+<p>Assume we have a fasta-formatted file with the following contents:</p>
+<div class="highlight-python"><div class="highlight"><pre>&gt;seq1 db-accession-149855
 CGATGTCGATCGATCGATCGATCAG
-&gt;seq2
+&gt;seq2 db-accession-34989
 CATCGATCGATCGATGCATGCATGCATG
 </pre></div>
 </div>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">StringIO</span> <span class="kn">import</span> <span class="n">StringIO</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.parse.sequences</span> <span class="kn">import</span> <span class="n">parse_fasta</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">fasta_f</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">(</span><span class="s">&#39;&gt;seq1</span><span class="se">\n</span><span class="s">&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fasta_f</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">(</span><span class="s">&#39;&gt;seq1 db-accession-149855</span><span class="se">\n</span><span class="s">&#39;</span>
 <span class="gp">... </span>                   <span class="s">&#39;CGATGTCGATCGATCGATCGATCAG</span><span class="se">\n</span><span class="s">&#39;</span>
-<span class="gp">... </span>                   <span class="s">&#39;&gt;seq2</span><span class="se">\n</span><span class="s">&#39;</span>
+<span class="gp">... </span>                   <span class="s">&#39;&gt;seq2 db-accession-34989</span><span class="se">\n</span><span class="s">&#39;</span>
 <span class="gp">... </span>                   <span class="s">&#39;CATCGATCGATCGATGCATGCATGCATG</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We can parse this as follows:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.parse.sequences</span> <span class="kn">import</span> <span class="n">parse_fasta</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">seq</span> <span class="ow">in</span> <span class="n">parse_fasta</span><span class="p">(</span><span class="n">fasta_f</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
-<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span>
-<span class="go">seq1</span>
-<span class="go">CGATGTCGATCGATCGATCGATCAG</span>
-<span class="go">seq2</span>
-<span class="go">CATCGATCGATCGATGCATGCATGCATG</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">seq</span><span class="p">)</span>
+<span class="go">seq1 db-accession-149855 CGATGTCGATCGATCGATCGATCAG</span>
+<span class="go">seq2 db-accession-34989 CATCGATCGATCGATGCATGCATGCATG</span>
+</pre></div>
+</div>
+<p>The sequence label or header line in a fasta file is defined as containing
+two separate pieces of information, delimited by a space. The first space-
+separated entry is the sequence identifier, and everything following the
+first space is considered additional information (e.g., comments about the
+source of the sequence or the molecule that it encodes). Often we don&#8217;t
+care about that information within our code. If you want to just return the
+sequence identifier from that line, you can pass <tt class="docutils literal"><span class="pre">ignore_comment=True</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">StringIO</span> <span class="kn">import</span> <span class="n">StringIO</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fasta_f</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">(</span><span class="s">&#39;&gt;seq1 db-accession-149855</span><span class="se">\n</span><span class="s">&#39;</span>
+<span class="gp">... </span>                   <span class="s">&#39;CGATGTCGATCGATCGATCGATCAG</span><span class="se">\n</span><span class="s">&#39;</span>
+<span class="gp">... </span>                   <span class="s">&#39;&gt;seq2 db-accession-34989</span><span class="se">\n</span><span class="s">&#39;</span>
+<span class="gp">... </span>                   <span class="s">&#39;CATCGATCGATCGATGCATGCATGCATG</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.parse.sequences</span> <span class="kn">import</span> <span class="n">parse_fasta</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">seq</span> <span class="ow">in</span> <span class="n">parse_fasta</span><span class="p">(</span><span class="n">fasta_f</span><span class="p">,</span> <span class="n">ignore_comment</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">seq</span><span class="p">)</span>
+<span class="go">seq1 CGATGTCGATCGATCGATCGATCAG</span>
+<span class="go">seq2 CATCGATCGATCGATGCATGCATGCATG</span>
 </pre></div>
 </div>
 </dd></dl>

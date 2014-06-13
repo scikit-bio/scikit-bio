@@ -13,7 +13,6 @@ skbio.math.gradient.GroupResults
       
          GroupResults.__format__
          GroupResults.__getnewargs__
-         GroupResults.__getstate__
          GroupResults.__new__
          GroupResults.__reduce__
          GroupResults.__reduce_ex__

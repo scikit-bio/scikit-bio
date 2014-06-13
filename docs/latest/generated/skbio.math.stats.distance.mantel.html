@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>skbio.math.stats.distance.mantel &mdash; scikit-bio 0.1.1-dev documentation</title>
+    <title>skbio.math.stats.distance.mantel &mdash; scikit-bio 0.1.2 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.1.1-dev',
+        VERSION:     '0.1.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -31,9 +31,9 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="scikit-bio 0.1.1-dev documentation" href="../index.html" />
+    <link rel="top" title="scikit-bio 0.1.2 documentation" href="../index.html" />
     <link rel="up" title="Distance-based statistics (skbio.math.stats.distance)" href="../math.stats.distance.html" />
-    <link rel="next" title="Spatial Statistics (skbio.math.stats.spatial)" href="../math.stats.spatial.html" />
+    <link rel="next" title="skbio.math.stats.distance.pwmantel" href="skbio.math.stats.distance.pwmantel.html" />
     <link rel="prev" title="skbio.math.stats.distance.bioenv" href="skbio.math.stats.distance.bioenv.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
@@ -69,7 +69,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.1.1-dev</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.1.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -98,8 +98,9 @@
 <li class="toctree-l1"><a class="reference internal" href="../format.sequences.html">Format biological sequences (<tt class="docutils literal"><span class="pre">skbio.format.sequences</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.diversity.alpha.html">Alpha diversity measures (<tt class="docutils literal"><span class="pre">skbio.math.diversity.alpha</span></tt>)</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../math.stats.distance.html">Distance-based statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.distance</span></tt>)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../math.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.spatial</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.stats.misc.html">Miscellaneous statistics utilities (<tt class="docutils literal"><span class="pre">skbio.math.stats.misc</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.stats.ordination.html">Ordination methods (<tt class="docutils literal"><span class="pre">skbio.math.stats.ordination</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.spatial</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.gradient.html">Gradient analyses (<tt class="docutils literal"><span class="pre">skbio.math.gradient</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.subsample.html">Subsampling (<tt class="docutils literal"><span class="pre">skbio.math.subsample</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../parse.sequences.html">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
@@ -157,14 +158,14 @@
 <h1>skbio.math.stats.distance.mantel<a class="headerlink" href="#skbio-math-stats-distance-mantel" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="skbio.math.stats.distance.mantel">
-<tt class="descclassname">skbio.math.stats.distance.</tt><tt class="descname">mantel</tt><big>(</big><em>x</em>, <em>y</em>, <em>method='pearson'</em>, <em>permutations=999</em>, <em>alternative='two-sided'</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/master/skbio/math/stats/distance/_mantel.py#L17"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.math.stats.distance.mantel" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">skbio.math.stats.distance.</tt><tt class="descname">mantel</tt><big>(</big><em>x</em>, <em>y</em>, <em>method='pearson'</em>, <em>permutations=999</em>, <em>alternative='two-sided'</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.1.2/skbio/math/stats/distance/_mantel.py#L23"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.math.stats.distance.mantel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute correlation between distance matrices using the Mantel test.</p>
 <p>The Mantel test compares two distance matrices by computing the correlation
 between the distances in the lower (or upper) triangular portions of the
 symmetric distance matrices. Correlation can be computed using Pearson&#8217;s
 product-moment correlation coefficient or Spearman&#8217;s rank correlation
 coefficient.</p>
-<p>As defined in <a class="reference internal" href="#r67" id="id1">[R67]</a>, the Mantel test computes a test statistic <span class="math">\(r_M\)</span>
+<p>As defined in <a class="reference internal" href="#r73" id="id1">[R73]</a>, the Mantel test computes a test statistic <span class="math">\(r_M\)</span>
 given two symmetric distance matrices <span class="math">\(D_X\)</span> and <span class="math">\(D_Y\)</span>.
 <span class="math">\(r_M\)</span> is defined as</p>
 <div class="math">
@@ -251,33 +252,33 @@ provided.</p>
 <p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">DistanceMatrix</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">scipy.stats.pearsonr</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">scipy.stats.spearmanr</span></tt></p>
 </div>
 <p class="rubric">Notes</p>
-<p>The Mantel test was first described in <a class="reference internal" href="#r68" id="id2">[R68]</a>. The general algorithm and
+<p>The Mantel test was first described in <a class="reference internal" href="#r74" id="id2">[R74]</a>. The general algorithm and
 interface are similar to <tt class="docutils literal"><span class="pre">vegan::mantel</span></tt>, available in R&#8217;s vegan
-package <a class="reference internal" href="#r69" id="id3">[R69]</a>.</p>
+package <a class="reference internal" href="#r75" id="id3">[R75]</a>.</p>
 <p><tt class="docutils literal"><span class="pre">np.nan</span></tt> will be returned for the p-value if <cite>permutations</cite> is zero or if
 the correlation coefficient is <tt class="docutils literal"><span class="pre">np.nan</span></tt>. The correlation coefficient will
 be <tt class="docutils literal"><span class="pre">np.nan</span></tt> if one or both of the inputs does not have any variation
 (i.e. the distances are all constant) and <tt class="docutils literal"><span class="pre">method='spearman'</span></tt>.</p>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r67" rules="none">
+<table class="docutils citation" frame="void" id="r73" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R67]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> Legendre, P. and Legendre, L. (2012) Numerical Ecology. 3rd English
+<tr><td class="label">[R73]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> Legendre, P. and Legendre, L. (2012) Numerical Ecology. 3rd English
 Edition. Elsevier.</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r68" rules="none">
+<table class="docutils citation" frame="void" id="r74" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R68]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id5">2</a>)</em> Mantel, N. (1967). &#8220;The detection of disease clustering and a
+<tr><td class="label">[R74]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id5">2</a>)</em> Mantel, N. (1967). &#8220;The detection of disease clustering and a
 generalized regression approach&#8221;. Cancer Research 27 (2): 209-220. PMID
 6018555.</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r69" rules="none">
+<table class="docutils citation" frame="void" id="r75" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R69]</td><td><em>(<a class="fn-backref" href="#id3">1</a>, <a class="fn-backref" href="#id6">2</a>)</em> <a class="reference external" href="http://cran.r-project.org/web/packages/vegan/index.html">http://cran.r-project.org/web/packages/vegan/index.html</a></td></tr>
+<tr><td class="label">[R75]</td><td><em>(<a class="fn-backref" href="#id3">1</a>, <a class="fn-backref" href="#id6">2</a>)</em> <a class="reference external" href="http://cran.r-project.org/web/packages/vegan/index.html">http://cran.r-project.org/web/packages/vegan/index.html</a></td></tr>
 </tbody>
 </table>
 <p class="rubric">Examples</p>

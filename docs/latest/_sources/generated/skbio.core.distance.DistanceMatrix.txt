@@ -11,6 +11,7 @@ skbio.core.distance.DistanceMatrix
       .. autosummary::
          :toctree:
       
+         DistanceMatrix.__contains__
          DistanceMatrix.__eq__
          DistanceMatrix.__format__
          DistanceMatrix.__getitem__
@@ -30,7 +31,9 @@ skbio.core.distance.DistanceMatrix
          DistanceMatrix._validate
          DistanceMatrix.condensed_form
          DistanceMatrix.copy
+         DistanceMatrix.filter
          DistanceMatrix.from_file
+         DistanceMatrix.index
          DistanceMatrix.permute
          DistanceMatrix.redundant_form
          DistanceMatrix.to_file

@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>skbio.math.stats.spatial.procrustes &mdash; scikit-bio 0.1.1-dev documentation</title>
+    <title>skbio.math.stats.spatial.procrustes &mdash; scikit-bio 0.1.2 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.1.1-dev',
+        VERSION:     '0.1.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -31,9 +31,9 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="scikit-bio 0.1.1-dev documentation" href="../index.html" />
+    <link rel="top" title="scikit-bio 0.1.2 documentation" href="../index.html" />
     <link rel="up" title="Spatial Statistics (skbio.math.stats.spatial)" href="../math.stats.spatial.html" />
-    <link rel="next" title="Ordination methods (skbio.math.stats.ordination)" href="../math.stats.ordination.html" />
+    <link rel="next" title="Gradient analyses (skbio.math.gradient)" href="../math.gradient.html" />
     <link rel="prev" title="skbio.math.stats.spatial.procrustes" href="" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
@@ -69,7 +69,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.1.1-dev</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.1.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -98,8 +98,9 @@
 <li class="toctree-l1"><a class="reference internal" href="../format.sequences.html">Format biological sequences (<tt class="docutils literal"><span class="pre">skbio.format.sequences</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.diversity.alpha.html">Alpha diversity measures (<tt class="docutils literal"><span class="pre">skbio.math.diversity.alpha</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.stats.distance.html">Distance-based statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.distance</span></tt>)</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../math.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.spatial</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.stats.misc.html">Miscellaneous statistics utilities (<tt class="docutils literal"><span class="pre">skbio.math.stats.misc</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.stats.ordination.html">Ordination methods (<tt class="docutils literal"><span class="pre">skbio.math.stats.ordination</span></tt>)</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../math.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.spatial</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.gradient.html">Gradient analyses (<tt class="docutils literal"><span class="pre">skbio.math.gradient</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.subsample.html">Subsampling (<tt class="docutils literal"><span class="pre">skbio.math.subsample</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../parse.sequences.html">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
@@ -157,7 +158,7 @@
 <h1>skbio.math.stats.spatial.procrustes<a class="headerlink" href="#skbio-math-stats-spatial-procrustes" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="skbio.math.stats.spatial.procrustes">
-<tt class="descclassname">skbio.math.stats.spatial.</tt><tt class="descname">procrustes</tt><big>(</big><em>data1</em>, <em>data2</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/master/skbio/math/stats/spatial.py#L32"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.math.stats.spatial.procrustes" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">skbio.math.stats.spatial.</tt><tt class="descname">procrustes</tt><big>(</big><em>data1</em>, <em>data2</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.1.2/skbio/math/stats/spatial.py#L32"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.math.stats.spatial.procrustes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Procrustes analysis, a similarity test for two data sets</p>
 <p>Each input matrix is a set of points or vectors (the rows of the matrix).
 The dimension of the space is the number of columns of each matrix. Given
@@ -167,7 +168,7 @@ two identially sized matrices, procrustes standardizes both such that:</p>
 matrix product).</li>
 <li>Both sets of points are centered around the origin.</li>
 </ul>
-<p>Procrustes (<a class="reference internal" href="#r77" id="id1">[R77]</a>, <a class="reference internal" href="#r78" id="id2">[R78]</a>) then applies the optimal transform to the second
+<p>Procrustes (<a class="reference internal" href="#r83" id="id1">[R83]</a>, <a class="reference internal" href="#r84" id="id2">[R84]</a>) then applies the optimal transform to the second
 matrix (including scaling/dilation, rotations, and reflections) to minimize
 M^2 = sum(square(mtx1 - mtx2)), or the sum of the squares of the pointwise
 differences between the two input datasets.</p>
@@ -220,16 +221,16 @@ increase it&#8217;s effect on the procrustes fit.</li>
 <li>The disparity scales as the number of points per input matrix.</li>
 </ul>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r77" rules="none">
+<table class="docutils citation" frame="void" id="r83" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R77]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id3">2</a>)</em> Krzanowski, W. J. (2000). &#8220;Principles of Multivariate analysis&#8221;.</td></tr>
+<tr><td class="label">[R83]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id3">2</a>)</em> Krzanowski, W. J. (2000). &#8220;Principles of Multivariate analysis&#8221;.</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r78" rules="none">
+<table class="docutils citation" frame="void" id="r84" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R78]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> Gower, J. C. (1975). &#8220;Generalized procrustes analysis&#8221;.</td></tr>
+<tr><td class="label">[R84]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> Gower, J. C. (1975). &#8220;Generalized procrustes analysis&#8221;.</td></tr>
 </tbody>
 </table>
 <p class="rubric">Examples</p>

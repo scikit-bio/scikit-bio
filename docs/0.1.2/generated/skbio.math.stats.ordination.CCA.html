@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>skbio.math.stats.ordination.CCA &mdash; scikit-bio 0.1.1-dev documentation</title>
+    <title>skbio.math.stats.ordination.CCA &mdash; scikit-bio 0.1.2 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.1.1-dev',
+        VERSION:     '0.1.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -31,7 +31,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="scikit-bio 0.1.1-dev documentation" href="../index.html" />
+    <link rel="top" title="scikit-bio 0.1.2 documentation" href="../index.html" />
     <link rel="up" title="Ordination methods (skbio.math.stats.ordination)" href="../math.stats.ordination.html" />
     <link rel="next" title="skbio.math.stats.ordination.CCA.scores" href="skbio.math.stats.ordination.CCA.scores.html" />
     <link rel="prev" title="skbio.math.stats.ordination.RDA.scores" href="skbio.math.stats.ordination.RDA.scores.html" />
@@ -69,7 +69,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.1.1-dev</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.1.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -98,8 +98,9 @@
 <li class="toctree-l1"><a class="reference internal" href="../format.sequences.html">Format biological sequences (<tt class="docutils literal"><span class="pre">skbio.format.sequences</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.diversity.alpha.html">Alpha diversity measures (<tt class="docutils literal"><span class="pre">skbio.math.diversity.alpha</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.stats.distance.html">Distance-based statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.distance</span></tt>)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../math.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.spatial</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.stats.misc.html">Miscellaneous statistics utilities (<tt class="docutils literal"><span class="pre">skbio.math.stats.misc</span></tt>)</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../math.stats.ordination.html">Ordination methods (<tt class="docutils literal"><span class="pre">skbio.math.stats.ordination</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.spatial</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.gradient.html">Gradient analyses (<tt class="docutils literal"><span class="pre">skbio.math.gradient</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.subsample.html">Subsampling (<tt class="docutils literal"><span class="pre">skbio.math.subsample</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../parse.sequences.html">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
@@ -157,12 +158,12 @@
 <h1>skbio.math.stats.ordination.CCA<a class="headerlink" href="#skbio-math-stats-ordination-cca" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="skbio.math.stats.ordination.CCA">
-<em class="property">class </em><tt class="descclassname">skbio.math.stats.ordination.</tt><tt class="descname">CCA</tt><big>(</big><em>Y</em>, <em>X</em>, <em>site_ids</em>, <em>species_ids</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/master/skbio/math/stats/ordination/canonical_correspondence_analysis.py#L17"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.math.stats.ordination.CCA" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">skbio.math.stats.ordination.</tt><tt class="descname">CCA</tt><big>(</big><em>Y</em>, <em>X</em>, <em>site_ids</em>, <em>species_ids</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.1.2/skbio/math/stats/ordination/canonical_correspondence_analysis.py#L17"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.math.stats.ordination.CCA" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute constrained (also known as canonical) correspondence
 analysis.</p>
 <p>Canonical (or constrained) correspondence analysis is a
 multivariate ordination technique. It appeared in community
-ecology <a class="reference internal" href="#r71" id="id1">[R71]</a> and relates community composition to the variation in
+ecology <a class="reference internal" href="#r77" id="id1">[R77]</a> and relates community composition to the variation in
 the environment (or in other factors). It works from data on
 abundances or counts of individuals and environmental variables,
 and outputs ordination axes that maximize niche separation among
@@ -170,7 +171,7 @@ species.</p>
 <p>It is better suited to extract the niches of taxa than linear
 multivariate methods because it assumes unimodal response curves
 (habitat preferences are often unimodal functions of habitat
-variables <a class="reference internal" href="#r72" id="id2">[R72]</a>).</p>
+variables <a class="reference internal" href="#r78" id="id2">[R78]</a>).</p>
 <p>As more environmental variables are added, the result gets more
 similar to unconstrained ordination, so only the variables that
 are deemed explanatory should be included in the analysis.</p>
@@ -195,7 +196,7 @@ are deemed explanatory should be included in the analysis.</p>
 <p class="last"><a class="reference internal" href="skbio.math.stats.ordination.CA.html#skbio.math.stats.ordination.CA" title="skbio.math.stats.ordination.CA"><tt class="xref py py-obj docutils literal"><span class="pre">CA</span></tt></a>, <a class="reference internal" href="skbio.math.stats.ordination.RDA.html#skbio.math.stats.ordination.RDA" title="skbio.math.stats.ordination.RDA"><tt class="xref py py-obj docutils literal"><span class="pre">RDA</span></tt></a></p>
 </div>
 <p class="rubric">Notes</p>
-<p>The algorithm is based on <a class="reference internal" href="#r73" id="id3">[R73]</a>, S 11.2, and is expected to give
+<p>The algorithm is based on <a class="reference internal" href="#r79" id="id3">[R79]</a>, S 11.2, and is expected to give
 the same results as <tt class="docutils literal"><span class="pre">cca(Y,</span> <span class="pre">X)</span></tt> in R&#8217;s package vegan, except
 that this implementation won&#8217;t drop constraining variables due to
 perfect collinearity: the user needs to choose which ones to
@@ -215,26 +216,26 @@ along gradients so that similar ones are closer and dissimilar
 ones are further. There&#8217;s a good overview of the available
 techniques in <a class="reference external" href="http://ordination.okstate.edu/overview.htm">http://ordination.okstate.edu/overview.htm</a>.</p>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r71" rules="none">
+<table class="docutils citation" frame="void" id="r77" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R71]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> Cajo J. F. Ter Braak, &#8220;Canonical Correspondence Analysis: A
+<tr><td class="label">[R77]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> Cajo J. F. Ter Braak, &#8220;Canonical Correspondence Analysis: A
 New Eigenvector Technique for Multivariate Direct Gradient
 Analysis&#8221;, Ecology 67.5 (1986), pp. 1167-1179.</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r72" rules="none">
+<table class="docutils citation" frame="void" id="r78" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R72]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id5">2</a>)</em> Cajo J.F. Braak and Piet F.M. Verdonschot, &#8220;Canonical
+<tr><td class="label">[R78]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id5">2</a>)</em> Cajo J.F. Braak and Piet F.M. Verdonschot, &#8220;Canonical
 correspondence analysis and related multivariate methods in
 aquatic ecology&#8221;, Aquatic Sciences 57.3 (1995), pp. 255-289.</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r73" rules="none">
+<table class="docutils citation" frame="void" id="r79" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R73]</td><td><em>(<a class="fn-backref" href="#id3">1</a>, <a class="fn-backref" href="#id6">2</a>)</em> Legendre P. and Legendre L. 1998. Numerical
+<tr><td class="label">[R79]</td><td><em>(<a class="fn-backref" href="#id3">1</a>, <a class="fn-backref" href="#id6">2</a>)</em> Legendre P. and Legendre L. 1998. Numerical
 Ecology. Elsevier, Amsterdam.</td></tr>
 </tbody>
 </table>

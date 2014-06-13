@@ -13,7 +13,6 @@ skbio.math.gradient.GradientANOVAResults
       
          GradientANOVAResults.__format__
          GradientANOVAResults.__getnewargs__
-         GradientANOVAResults.__getstate__
          GradientANOVAResults.__new__
          GradientANOVAResults.__reduce__
          GradientANOVAResults.__reduce_ex__

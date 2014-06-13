@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>skbio.core.tree.TreeNode.compare_rfd &mdash; scikit-bio 0.1.1-dev documentation</title>
+    <title>skbio.core.tree.TreeNode.compare_rfd &mdash; scikit-bio 0.1.2 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.1.1-dev',
+        VERSION:     '0.1.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -31,7 +31,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="scikit-bio 0.1.1-dev documentation" href="../index.html" />
+    <link rel="top" title="scikit-bio 0.1.2 documentation" href="../index.html" />
     <link rel="up" title="skbio.core.tree.TreeNode" href="skbio.core.tree.TreeNode.html" />
     <link rel="next" title="skbio.core.tree.TreeNode.compare_subsets" href="skbio.core.tree.TreeNode.compare_subsets.html" />
     <link rel="prev" title="skbio.core.tree.TreeNode.assign_ids" href="skbio.core.tree.TreeNode.assign_ids.html" />
@@ -69,7 +69,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.1.1-dev</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.1.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -98,8 +98,9 @@
 <li class="toctree-l1"><a class="reference internal" href="../format.sequences.html">Format biological sequences (<tt class="docutils literal"><span class="pre">skbio.format.sequences</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.diversity.alpha.html">Alpha diversity measures (<tt class="docutils literal"><span class="pre">skbio.math.diversity.alpha</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.stats.distance.html">Distance-based statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.distance</span></tt>)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../math.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.spatial</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.stats.misc.html">Miscellaneous statistics utilities (<tt class="docutils literal"><span class="pre">skbio.math.stats.misc</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.stats.ordination.html">Ordination methods (<tt class="docutils literal"><span class="pre">skbio.math.stats.ordination</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.spatial</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.gradient.html">Gradient analyses (<tt class="docutils literal"><span class="pre">skbio.math.gradient</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.subsample.html">Subsampling (<tt class="docutils literal"><span class="pre">skbio.math.subsample</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../parse.sequences.html">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
@@ -157,7 +158,7 @@
 <h1>skbio.core.tree.TreeNode.compare_rfd<a class="headerlink" href="#skbio-core-tree-treenode-compare-rfd" title="Permalink to this headline">¶</a></h1>
 <dl class="method">
 <dt id="skbio.core.tree.TreeNode.compare_rfd">
-<tt class="descclassname">TreeNode.</tt><tt class="descname">compare_rfd</tt><big>(</big><em>other</em>, <em>proportion=False</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/master/skbio/core/tree/tree.py#L2420"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.core.tree.TreeNode.compare_rfd" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">TreeNode.</tt><tt class="descname">compare_rfd</tt><big>(</big><em>other</em>, <em>proportion=False</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.1.2/skbio/core/tree/tree.py#L2420"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.core.tree.TreeNode.compare_rfd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculates the Robinson and Foulds symmetric difference</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -193,12 +194,12 @@
 </div>
 <p class="rubric">Notes</p>
 <p>Implementation based off of code by Julia Goodrich. The original
-description of the algorithm can be found in <a class="reference internal" href="#r25" id="id1">[R25]</a>.</p>
+description of the algorithm can be found in <a class="reference internal" href="#r28" id="id1">[R28]</a>.</p>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r25" rules="none">
+<table class="docutils citation" frame="void" id="r28" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R25]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>)</em> Comparison of phylogenetic trees. Robinson and Foulds.
+<tr><td class="label">[R28]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>)</em> Comparison of phylogenetic trees. Robinson and Foulds.
 Mathematical Biosciences. 1981. 53:131-141</td></tr>
 </tbody>
 </table>

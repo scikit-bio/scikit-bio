@@ -11,6 +11,7 @@ skbio.core.distance.DissimilarityMatrix
       .. autosummary::
          :toctree:
       
+         DissimilarityMatrix.__contains__
          DissimilarityMatrix.__eq__
          DissimilarityMatrix.__format__
          DissimilarityMatrix.__getitem__
@@ -29,7 +30,9 @@ skbio.core.distance.DissimilarityMatrix
          DissimilarityMatrix._pprint_ids
          DissimilarityMatrix._validate
          DissimilarityMatrix.copy
+         DissimilarityMatrix.filter
          DissimilarityMatrix.from_file
+         DissimilarityMatrix.index
          DissimilarityMatrix.redundant_form
          DissimilarityMatrix.to_file
          DissimilarityMatrix.transpose

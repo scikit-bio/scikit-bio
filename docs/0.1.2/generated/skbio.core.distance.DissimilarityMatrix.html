@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>skbio.core.distance.DissimilarityMatrix &mdash; scikit-bio 0.1.1-dev documentation</title>
+    <title>skbio.core.distance.DissimilarityMatrix &mdash; scikit-bio 0.1.2 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.1.1-dev',
+        VERSION:     '0.1.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -31,7 +31,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="scikit-bio 0.1.1-dev documentation" href="../index.html" />
+    <link rel="top" title="scikit-bio 0.1.2 documentation" href="../index.html" />
     <link rel="up" title="Dissimilarity and distance matrices (skbio.core.distance)" href="../core.distance.html" />
     <link rel="next" title="skbio.core.distance.DissimilarityMatrix.data" href="skbio.core.distance.DissimilarityMatrix.data.html" />
     <link rel="prev" title="skbio.core.distance.randdm" href="skbio.core.distance.randdm.html" />
@@ -69,7 +69,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.1.1-dev</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.1.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -98,8 +98,9 @@
 <li class="toctree-l1"><a class="reference internal" href="../format.sequences.html">Format biological sequences (<tt class="docutils literal"><span class="pre">skbio.format.sequences</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.diversity.alpha.html">Alpha diversity measures (<tt class="docutils literal"><span class="pre">skbio.math.diversity.alpha</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.stats.distance.html">Distance-based statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.distance</span></tt>)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../math.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.spatial</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.stats.misc.html">Miscellaneous statistics utilities (<tt class="docutils literal"><span class="pre">skbio.math.stats.misc</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.stats.ordination.html">Ordination methods (<tt class="docutils literal"><span class="pre">skbio.math.stats.ordination</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.spatial</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.gradient.html">Gradient analyses (<tt class="docutils literal"><span class="pre">skbio.math.gradient</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.subsample.html">Subsampling (<tt class="docutils literal"><span class="pre">skbio.math.subsample</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../parse.sequences.html">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
@@ -159,7 +160,7 @@
 <h1>skbio.core.distance.DissimilarityMatrix<a class="headerlink" href="#skbio-core-distance-dissimilaritymatrix" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="skbio.core.distance.DissimilarityMatrix">
-<em class="property">class </em><tt class="descclassname">skbio.core.distance.</tt><tt class="descname">DissimilarityMatrix</tt><big>(</big><em>data</em>, <em>ids=None</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/master/skbio/core/distance.py#L157"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.core.distance.DissimilarityMatrix" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">skbio.core.distance.</tt><tt class="descname">DissimilarityMatrix</tt><big>(</big><em>data</em>, <em>ids=None</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.1.2/skbio/core/distance.py#L156"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.core.distance.DissimilarityMatrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>Store dissimilarities between objects.</p>
 <p>A <cite>DissimilarityMatrix</cite> instance stores a square, hollow, two-dimensional
 matrix of dissimilarities between objects. Objects could be, for example,
@@ -197,14 +198,14 @@ starting from zero, e.g., <tt class="docutils literal"><span class="pre">('0',</
 <p class="last"><a class="reference internal" href="skbio.core.distance.DistanceMatrix.html#skbio.core.distance.DistanceMatrix" title="skbio.core.distance.DistanceMatrix"><tt class="xref py py-obj docutils literal"><span class="pre">DistanceMatrix</span></tt></a></p>
 </div>
 <p class="rubric">Notes</p>
-<p>The dissimilarities are stored in redundant (square-form) format <a class="reference internal" href="#r14" id="id1">[R14]</a>.</p>
+<p>The dissimilarities are stored in redundant (square-form) format <a class="reference internal" href="#r17" id="id1">[R17]</a>.</p>
 <p>The data are not checked for symmetry, nor guaranteed/assumed to be
 symmetric.</p>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r14" rules="none">
+<table class="docutils citation" frame="void" id="r17" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R14]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>)</em> <a class="reference external" href="http://docs.scipy.org/doc/scipy/reference/spatial.distance.html">http://docs.scipy.org/doc/scipy/reference/spatial.distance.html</a></td></tr>
+<tr><td class="label">[R17]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>)</em> <a class="reference external" href="http://docs.scipy.org/doc/scipy/reference/spatial.distance.html">http://docs.scipy.org/doc/scipy/reference/spatial.distance.html</a></td></tr>
 </tbody>
 </table>
 <p class="rubric">Attributes</p>
@@ -241,31 +242,40 @@ symmetric.</p>
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="skbio.core.distance.DissimilarityMatrix.__eq__.html#skbio.core.distance.DissimilarityMatrix.__eq__" title="skbio.core.distance.DissimilarityMatrix.__eq__"><tt class="xref py py-obj docutils literal"><span class="pre">__eq__</span></tt></a>(other)</td>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.core.distance.DissimilarityMatrix.__contains__.html#skbio.core.distance.DissimilarityMatrix.__contains__" title="skbio.core.distance.DissimilarityMatrix.__contains__"><tt class="xref py py-obj docutils literal"><span class="pre">__contains__</span></tt></a>(lookup_id)</td>
+<td>Check if the specified ID is in the dissimilarity matrix.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.core.distance.DissimilarityMatrix.__eq__.html#skbio.core.distance.DissimilarityMatrix.__eq__" title="skbio.core.distance.DissimilarityMatrix.__eq__"><tt class="xref py py-obj docutils literal"><span class="pre">__eq__</span></tt></a>(other)</td>
 <td>Compare this dissimilarity matrix to another for equality.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="skbio.core.distance.DissimilarityMatrix.__getitem__.html#skbio.core.distance.DissimilarityMatrix.__getitem__" title="skbio.core.distance.DissimilarityMatrix.__getitem__"><tt class="xref py py-obj docutils literal"><span class="pre">__getitem__</span></tt></a>(index)</td>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.core.distance.DissimilarityMatrix.__getitem__.html#skbio.core.distance.DissimilarityMatrix.__getitem__" title="skbio.core.distance.DissimilarityMatrix.__getitem__"><tt class="xref py py-obj docutils literal"><span class="pre">__getitem__</span></tt></a>(index)</td>
 <td>Slice into dissimilarity data by object ID or numpy indexing.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="skbio.core.distance.DissimilarityMatrix.__ne__.html#skbio.core.distance.DissimilarityMatrix.__ne__" title="skbio.core.distance.DissimilarityMatrix.__ne__"><tt class="xref py py-obj docutils literal"><span class="pre">__ne__</span></tt></a>(other)</td>
+<tr class="row-even"><td><a class="reference internal" href="skbio.core.distance.DissimilarityMatrix.__ne__.html#skbio.core.distance.DissimilarityMatrix.__ne__" title="skbio.core.distance.DissimilarityMatrix.__ne__"><tt class="xref py py-obj docutils literal"><span class="pre">__ne__</span></tt></a>(other)</td>
 <td>Determine whether two dissimilarity matrices are not equal.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="skbio.core.distance.DissimilarityMatrix.__str__.html#skbio.core.distance.DissimilarityMatrix.__str__" title="skbio.core.distance.DissimilarityMatrix.__str__"><tt class="xref py py-obj docutils literal"><span class="pre">__str__</span></tt></a>()</td>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.core.distance.DissimilarityMatrix.__str__.html#skbio.core.distance.DissimilarityMatrix.__str__" title="skbio.core.distance.DissimilarityMatrix.__str__"><tt class="xref py py-obj docutils literal"><span class="pre">__str__</span></tt></a>()</td>
 <td>Return a string representation of the dissimilarity matrix.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="skbio.core.distance.DissimilarityMatrix.copy.html#skbio.core.distance.DissimilarityMatrix.copy" title="skbio.core.distance.DissimilarityMatrix.copy"><tt class="xref py py-obj docutils literal"><span class="pre">copy</span></tt></a>()</td>
+<tr class="row-even"><td><a class="reference internal" href="skbio.core.distance.DissimilarityMatrix.copy.html#skbio.core.distance.DissimilarityMatrix.copy" title="skbio.core.distance.DissimilarityMatrix.copy"><tt class="xref py py-obj docutils literal"><span class="pre">copy</span></tt></a>()</td>
 <td>Return a deep copy of the dissimilarity matrix.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.core.distance.DissimilarityMatrix.filter.html#skbio.core.distance.DissimilarityMatrix.filter" title="skbio.core.distance.DissimilarityMatrix.filter"><tt class="xref py py-obj docutils literal"><span class="pre">filter</span></tt></a>(ids)</td>
+<td>Filter the dissimilarity matrix by IDs.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="skbio.core.distance.DissimilarityMatrix.from_file.html#skbio.core.distance.DissimilarityMatrix.from_file" title="skbio.core.distance.DissimilarityMatrix.from_file"><tt class="xref py py-obj docutils literal"><span class="pre">from_file</span></tt></a>(dm_f[,&nbsp;delimiter])</td>
 <td>Load dissimilarity matrix from a delimited text file or file path.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="skbio.core.distance.DissimilarityMatrix.redundant_form.html#skbio.core.distance.DissimilarityMatrix.redundant_form" title="skbio.core.distance.DissimilarityMatrix.redundant_form"><tt class="xref py py-obj docutils literal"><span class="pre">redundant_form</span></tt></a>()</td>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.core.distance.DissimilarityMatrix.index.html#skbio.core.distance.DissimilarityMatrix.index" title="skbio.core.distance.DissimilarityMatrix.index"><tt class="xref py py-obj docutils literal"><span class="pre">index</span></tt></a>(lookup_id)</td>
+<td>Return the index of the specified ID.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.core.distance.DissimilarityMatrix.redundant_form.html#skbio.core.distance.DissimilarityMatrix.redundant_form" title="skbio.core.distance.DissimilarityMatrix.redundant_form"><tt class="xref py py-obj docutils literal"><span class="pre">redundant_form</span></tt></a>()</td>
 <td>Return an array of dissimilarities in redundant format.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="skbio.core.distance.DissimilarityMatrix.to_file.html#skbio.core.distance.DissimilarityMatrix.to_file" title="skbio.core.distance.DissimilarityMatrix.to_file"><tt class="xref py py-obj docutils literal"><span class="pre">to_file</span></tt></a>(out_f[,&nbsp;delimiter])</td>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.core.distance.DissimilarityMatrix.to_file.html#skbio.core.distance.DissimilarityMatrix.to_file" title="skbio.core.distance.DissimilarityMatrix.to_file"><tt class="xref py py-obj docutils literal"><span class="pre">to_file</span></tt></a>(out_f[,&nbsp;delimiter])</td>
 <td>Save the dissimilarity matrix to file in delimited text format.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="skbio.core.distance.DissimilarityMatrix.transpose.html#skbio.core.distance.DissimilarityMatrix.transpose" title="skbio.core.distance.DissimilarityMatrix.transpose"><tt class="xref py py-obj docutils literal"><span class="pre">transpose</span></tt></a>()</td>
+<tr class="row-even"><td><a class="reference internal" href="skbio.core.distance.DissimilarityMatrix.transpose.html#skbio.core.distance.DissimilarityMatrix.transpose" title="skbio.core.distance.DissimilarityMatrix.transpose"><tt class="xref py py-obj docutils literal"><span class="pre">transpose</span></tt></a>()</td>
 <td>Return the transpose of the dissimilarity matrix.</td>
 </tr>
 </tbody>

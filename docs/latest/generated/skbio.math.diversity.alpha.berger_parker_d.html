@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>skbio.math.diversity.alpha.berger_parker_d &mdash; scikit-bio 0.1.1-dev documentation</title>
+    <title>skbio.math.diversity.alpha.berger_parker_d &mdash; scikit-bio 0.1.2 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.1.1-dev',
+        VERSION:     '0.1.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -31,7 +31,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="scikit-bio 0.1.1-dev documentation" href="../index.html" />
+    <link rel="top" title="scikit-bio 0.1.2 documentation" href="../index.html" />
     <link rel="up" title="Alpha diversity measures (skbio.math.diversity.alpha)" href="../math.diversity.alpha.html" />
     <link rel="next" title="skbio.math.diversity.alpha.brillouin_d" href="skbio.math.diversity.alpha.brillouin_d.html" />
     <link rel="prev" title="skbio.math.diversity.alpha.ace" href="skbio.math.diversity.alpha.ace.html" />
@@ -69,7 +69,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.1.1-dev</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.1.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -98,8 +98,9 @@
 <li class="toctree-l1"><a class="reference internal" href="../format.sequences.html">Format biological sequences (<tt class="docutils literal"><span class="pre">skbio.format.sequences</span></tt>)</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../math.diversity.alpha.html">Alpha diversity measures (<tt class="docutils literal"><span class="pre">skbio.math.diversity.alpha</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.stats.distance.html">Distance-based statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.distance</span></tt>)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../math.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.spatial</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.stats.misc.html">Miscellaneous statistics utilities (<tt class="docutils literal"><span class="pre">skbio.math.stats.misc</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.stats.ordination.html">Ordination methods (<tt class="docutils literal"><span class="pre">skbio.math.stats.ordination</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.spatial</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.gradient.html">Gradient analyses (<tt class="docutils literal"><span class="pre">skbio.math.gradient</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.subsample.html">Subsampling (<tt class="docutils literal"><span class="pre">skbio.math.subsample</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../parse.sequences.html">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
@@ -157,7 +158,7 @@
 <h1>skbio.math.diversity.alpha.berger_parker_d<a class="headerlink" href="#skbio-math-diversity-alpha-berger-parker-d" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="skbio.math.diversity.alpha.berger_parker_d">
-<tt class="descclassname">skbio.math.diversity.alpha.</tt><tt class="descname">berger_parker_d</tt><big>(</big><em>counts</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/master/skbio/math/diversity/alpha/base.py#L38"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.math.diversity.alpha.berger_parker_d" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">skbio.math.diversity.alpha.</tt><tt class="descname">berger_parker_d</tt><big>(</big><em>counts</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.1.2/skbio/math/diversity/alpha/base.py#L38"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.math.diversity.alpha.berger_parker_d" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate Berger-Parker dominance.</p>
 <p>Berger-Parker dominance is defined as the fraction of the sample that
 belongs to the most abundant OTUs.</p>
@@ -180,19 +181,19 @@ belongs to the most abundant OTUs.</p>
 </tbody>
 </table>
 <p class="rubric">Notes</p>
-<p>Berger-Parker dominance is defined in <a class="reference internal" href="#r30" id="id1">[R30]</a>. The implementation here is
-based on the description given in the SDR-IV online manual <a class="reference internal" href="#r31" id="id2">[R31]</a>.</p>
+<p>Berger-Parker dominance is defined in <a class="reference internal" href="#r36" id="id1">[R36]</a>. The implementation here is
+based on the description given in the SDR-IV online manual <a class="reference internal" href="#r37" id="id2">[R37]</a>.</p>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r30" rules="none">
+<table class="docutils citation" frame="void" id="r36" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R30]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id3">2</a>)</em> Berger &amp; Parker (1970). SDR-IV online help.</td></tr>
+<tr><td class="label">[R36]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id3">2</a>)</em> Berger &amp; Parker (1970). SDR-IV online help.</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r31" rules="none">
+<table class="docutils citation" frame="void" id="r37" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R31]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> <a class="reference external" href="http://www.pisces-conservation.com/sdrhelp/index.html">http://www.pisces-conservation.com/sdrhelp/index.html</a></td></tr>
+<tr><td class="label">[R37]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> <a class="reference external" href="http://www.pisces-conservation.com/sdrhelp/index.html">http://www.pisces-conservation.com/sdrhelp/index.html</a></td></tr>
 </tbody>
 </table>
 </dd></dl>

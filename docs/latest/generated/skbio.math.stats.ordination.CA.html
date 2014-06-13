@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>skbio.math.stats.ordination.CA &mdash; scikit-bio 0.1.1-dev documentation</title>
+    <title>skbio.math.stats.ordination.CA &mdash; scikit-bio 0.1.2 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.1.1-dev',
+        VERSION:     '0.1.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -31,7 +31,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="scikit-bio 0.1.1-dev documentation" href="../index.html" />
+    <link rel="top" title="scikit-bio 0.1.2 documentation" href="../index.html" />
     <link rel="up" title="Ordination methods (skbio.math.stats.ordination)" href="../math.stats.ordination.html" />
     <link rel="next" title="skbio.math.stats.ordination.CA.scores" href="skbio.math.stats.ordination.CA.scores.html" />
     <link rel="prev" title="skbio.math.stats.ordination.PCoA.scores" href="skbio.math.stats.ordination.PCoA.scores.html" />
@@ -69,7 +69,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.1.1-dev</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.1.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -98,8 +98,9 @@
 <li class="toctree-l1"><a class="reference internal" href="../format.sequences.html">Format biological sequences (<tt class="docutils literal"><span class="pre">skbio.format.sequences</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.diversity.alpha.html">Alpha diversity measures (<tt class="docutils literal"><span class="pre">skbio.math.diversity.alpha</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.stats.distance.html">Distance-based statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.distance</span></tt>)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../math.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.spatial</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.stats.misc.html">Miscellaneous statistics utilities (<tt class="docutils literal"><span class="pre">skbio.math.stats.misc</span></tt>)</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../math.stats.ordination.html">Ordination methods (<tt class="docutils literal"><span class="pre">skbio.math.stats.ordination</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.spatial</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.gradient.html">Gradient analyses (<tt class="docutils literal"><span class="pre">skbio.math.gradient</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.subsample.html">Subsampling (<tt class="docutils literal"><span class="pre">skbio.math.subsample</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../parse.sequences.html">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
@@ -157,7 +158,7 @@
 <h1>skbio.math.stats.ordination.CA<a class="headerlink" href="#skbio-math-stats-ordination-ca" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="skbio.math.stats.ordination.CA">
-<em class="property">class </em><tt class="descclassname">skbio.math.stats.ordination.</tt><tt class="descname">CA</tt><big>(</big><em>X</em>, <em>row_ids</em>, <em>column_ids</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/master/skbio/math/stats/ordination/correspondence_analysis.py#L17"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.math.stats.ordination.CA" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">skbio.math.stats.ordination.</tt><tt class="descname">CA</tt><big>(</big><em>X</em>, <em>row_ids</em>, <em>column_ids</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.1.2/skbio/math/stats/ordination/correspondence_analysis.py#L17"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.math.stats.ordination.CA" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute correspondence analysis, a multivariate statistical
 technique for ordination.</p>
 <p>In general, rows in the data table will correspond to sites and
@@ -189,13 +190,13 @@ homogeneous (quantitative or binary).</p>
 <p class="last"><a class="reference internal" href="skbio.math.stats.ordination.CCA.html#skbio.math.stats.ordination.CCA" title="skbio.math.stats.ordination.CCA"><tt class="xref py py-obj docutils literal"><span class="pre">CCA</span></tt></a></p>
 </div>
 <p class="rubric">Notes</p>
-<p>The algorithm is based on <a class="reference internal" href="#r70" id="id1">[R70]</a>, S 9.4.1., and is expected to give
+<p>The algorithm is based on <a class="reference internal" href="#r76" id="id1">[R76]</a>, S 9.4.1., and is expected to give
 the same results as <tt class="docutils literal"><span class="pre">cca(X)</span></tt> in R&#8217;s package vegan.</p>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r70" rules="none">
+<table class="docutils citation" frame="void" id="r76" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R70]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>)</em> Legendre P. and Legendre L. 1998. Numerical
+<tr><td class="label">[R76]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>)</em> Legendre P. and Legendre L. 1998. Numerical
 Ecology. Elsevier, Amsterdam.</td></tr>
 </tbody>
 </table>

@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>skbio.math.diversity.alpha.shannon &mdash; scikit-bio 0.1.1-dev documentation</title>
+    <title>skbio.math.diversity.alpha.shannon &mdash; scikit-bio 0.1.2 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.1.1-dev',
+        VERSION:     '0.1.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -31,7 +31,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="scikit-bio 0.1.1-dev documentation" href="../index.html" />
+    <link rel="top" title="scikit-bio 0.1.2 documentation" href="../index.html" />
     <link rel="up" title="Alpha diversity measures (skbio.math.diversity.alpha)" href="../math.diversity.alpha.html" />
     <link rel="next" title="skbio.math.diversity.alpha.simpson" href="skbio.math.diversity.alpha.simpson.html" />
     <link rel="prev" title="skbio.math.diversity.alpha.robbins" href="skbio.math.diversity.alpha.robbins.html" />
@@ -69,7 +69,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.1.1-dev</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.1.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -98,8 +98,9 @@
 <li class="toctree-l1"><a class="reference internal" href="../format.sequences.html">Format biological sequences (<tt class="docutils literal"><span class="pre">skbio.format.sequences</span></tt>)</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../math.diversity.alpha.html">Alpha diversity measures (<tt class="docutils literal"><span class="pre">skbio.math.diversity.alpha</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.stats.distance.html">Distance-based statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.distance</span></tt>)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../math.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.spatial</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.stats.misc.html">Miscellaneous statistics utilities (<tt class="docutils literal"><span class="pre">skbio.math.stats.misc</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.stats.ordination.html">Ordination methods (<tt class="docutils literal"><span class="pre">skbio.math.stats.ordination</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.spatial</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.gradient.html">Gradient analyses (<tt class="docutils literal"><span class="pre">skbio.math.gradient</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.subsample.html">Subsampling (<tt class="docutils literal"><span class="pre">skbio.math.subsample</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../parse.sequences.html">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
@@ -157,7 +158,7 @@
 <h1>skbio.math.diversity.alpha.shannon<a class="headerlink" href="#skbio-math-diversity-alpha-shannon" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="skbio.math.diversity.alpha.shannon">
-<tt class="descclassname">skbio.math.diversity.alpha.</tt><tt class="descname">shannon</tt><big>(</big><em>counts</em>, <em>base=2</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/master/skbio/math/diversity/alpha/base.py#L728"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.math.diversity.alpha.shannon" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">skbio.math.diversity.alpha.</tt><tt class="descname">shannon</tt><big>(</big><em>counts</em>, <em>base=2</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.1.2/skbio/math/diversity/alpha/base.py#L728"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.math.diversity.alpha.shannon" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate Shannon entropy of counts (H), default in bits.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -183,13 +184,13 @@
 </table>
 <p class="rubric">Notes</p>
 <p>The implementation here is based on the description given in the SDR-IV
-online manual <a class="reference internal" href="#r54" id="id1">[R54]</a>, except that the default logarithm base used here is 2
+online manual <a class="reference internal" href="#r60" id="id1">[R60]</a>, except that the default logarithm base used here is 2
 instead of <span class="math">\(e\)</span>.</p>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r54" rules="none">
+<table class="docutils citation" frame="void" id="r60" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R54]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>)</em> <a class="reference external" href="http://www.pisces-conservation.com/sdrhelp/index.html">http://www.pisces-conservation.com/sdrhelp/index.html</a></td></tr>
+<tr><td class="label">[R60]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>)</em> <a class="reference external" href="http://www.pisces-conservation.com/sdrhelp/index.html">http://www.pisces-conservation.com/sdrhelp/index.html</a></td></tr>
 </tbody>
 </table>
 </dd></dl>

@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>skbio.core.alignment.AlignmentStructure.cigar &mdash; scikit-bio 0.1.1-dev documentation</title>
+    <title>skbio.core.alignment.AlignmentStructure.cigar &mdash; scikit-bio 0.1.2 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.1.1-dev',
+        VERSION:     '0.1.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -31,7 +31,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="scikit-bio 0.1.1-dev documentation" href="../index.html" />
+    <link rel="top" title="scikit-bio 0.1.2 documentation" href="../index.html" />
     <link rel="up" title="skbio.core.alignment.AlignmentStructure" href="skbio.core.alignment.AlignmentStructure.html" />
     <link rel="next" title="skbio.core.alignment.AlignmentStructure.query_sequence" href="skbio.core.alignment.AlignmentStructure.query_sequence.html" />
     <link rel="prev" title="skbio.core.alignment.AlignmentStructure.query_end" href="skbio.core.alignment.AlignmentStructure.query_end.html" />
@@ -69,7 +69,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.1.1-dev</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.1.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -98,8 +98,9 @@
 <li class="toctree-l1"><a class="reference internal" href="../format.sequences.html">Format biological sequences (<tt class="docutils literal"><span class="pre">skbio.format.sequences</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.diversity.alpha.html">Alpha diversity measures (<tt class="docutils literal"><span class="pre">skbio.math.diversity.alpha</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.stats.distance.html">Distance-based statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.distance</span></tt>)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../math.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.spatial</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.stats.misc.html">Miscellaneous statistics utilities (<tt class="docutils literal"><span class="pre">skbio.math.stats.misc</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.stats.ordination.html">Ordination methods (<tt class="docutils literal"><span class="pre">skbio.math.stats.ordination</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.spatial</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.gradient.html">Gradient analyses (<tt class="docutils literal"><span class="pre">skbio.math.gradient</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.subsample.html">Subsampling (<tt class="docutils literal"><span class="pre">skbio.math.subsample</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../parse.sequences.html">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
@@ -165,7 +166,7 @@
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">str</p>
 <blockquote class="last">
-<div><p>The cigar string (described in <a class="reference internal" href="#r12" id="id1">[R12]</a>, <a class="reference internal" href="#r13" id="id2">[R13]</a>) of the optimal alignment</p>
+<div><p>The cigar string (described in <a class="reference internal" href="#r15" id="id1">[R15]</a>, <a class="reference internal" href="#r16" id="id2">[R16]</a>) of the optimal alignment</p>
 </div></blockquote>
 </td>
 </tr>
@@ -175,16 +176,16 @@
 <p>If there is no cigar or optimal alignment, this will return an empty
 string</p>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r12" rules="none">
+<table class="docutils citation" frame="void" id="r15" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R12]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id3">2</a>)</em> <a class="reference external" href="http://genome.sph.umich.edu/wiki/SAM">http://genome.sph.umich.edu/wiki/SAM</a></td></tr>
+<tr><td class="label">[R15]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id3">2</a>)</em> <a class="reference external" href="http://genome.sph.umich.edu/wiki/SAM">http://genome.sph.umich.edu/wiki/SAM</a></td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r13" rules="none">
+<table class="docutils citation" frame="void" id="r16" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R13]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> <a class="reference external" href="http://samtools.github.io/hts-specs/SAMv1.pdf">http://samtools.github.io/hts-specs/SAMv1.pdf</a></td></tr>
+<tr><td class="label">[R16]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> <a class="reference external" href="http://samtools.github.io/hts-specs/SAMv1.pdf">http://samtools.github.io/hts-specs/SAMv1.pdf</a></td></tr>
 </tbody>
 </table>
 </dd></dl>

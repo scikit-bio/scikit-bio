@@ -21,7 +21,6 @@ skbio.math.stats.distance.CategoricalStatsResults
          CategoricalStatsResults.__subclasshook__
          CategoricalStatsResults._format_data
          CategoricalStatsResults._format_header
-         CategoricalStatsResults._format_p_value
          CategoricalStatsResults._repr_html_
          CategoricalStatsResults.summary
 

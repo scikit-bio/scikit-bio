@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>skbio.math.stats.distance.ANOSIM &mdash; scikit-bio 0.1.1-dev documentation</title>
+    <title>skbio.math.stats.distance.ANOSIM &mdash; scikit-bio 0.1.2 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.1.1-dev',
+        VERSION:     '0.1.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -31,10 +31,10 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="scikit-bio 0.1.1-dev documentation" href="../index.html" />
+    <link rel="top" title="scikit-bio 0.1.2 documentation" href="../index.html" />
     <link rel="up" title="Distance-based statistics (skbio.math.stats.distance)" href="../math.stats.distance.html" />
     <link rel="next" title="skbio.math.stats.distance.ANOSIM.__call__" href="skbio.math.stats.distance.ANOSIM.__call__.html" />
-    <link rel="prev" title="skbio.math.stats.distance.mantel" href="skbio.math.stats.distance.mantel.html" />
+    <link rel="prev" title="skbio.math.stats.distance.pwmantel" href="skbio.math.stats.distance.pwmantel.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
@@ -69,7 +69,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.1.1-dev</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.1.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -98,8 +98,9 @@
 <li class="toctree-l1"><a class="reference internal" href="../format.sequences.html">Format biological sequences (<tt class="docutils literal"><span class="pre">skbio.format.sequences</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.diversity.alpha.html">Alpha diversity measures (<tt class="docutils literal"><span class="pre">skbio.math.diversity.alpha</span></tt>)</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../math.stats.distance.html">Distance-based statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.distance</span></tt>)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../math.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.spatial</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.stats.misc.html">Miscellaneous statistics utilities (<tt class="docutils literal"><span class="pre">skbio.math.stats.misc</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.stats.ordination.html">Ordination methods (<tt class="docutils literal"><span class="pre">skbio.math.stats.ordination</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.spatial</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.gradient.html">Gradient analyses (<tt class="docutils literal"><span class="pre">skbio.math.gradient</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.subsample.html">Subsampling (<tt class="docutils literal"><span class="pre">skbio.math.subsample</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../parse.sequences.html">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
@@ -157,7 +158,7 @@
 <h1>skbio.math.stats.distance.ANOSIM<a class="headerlink" href="#skbio-math-stats-distance-anosim" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="skbio.math.stats.distance.ANOSIM">
-<em class="property">class </em><tt class="descclassname">skbio.math.stats.distance.</tt><tt class="descname">ANOSIM</tt><big>(</big><em>distance_matrix</em>, <em>grouping</em>, <em>column=None</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/master/skbio/math/stats/distance/anosim.py#L19"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.math.stats.distance.ANOSIM" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">skbio.math.stats.distance.</tt><tt class="descname">ANOSIM</tt><big>(</big><em>distance_matrix</em>, <em>grouping</em>, <em>column=None</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.1.2/skbio/math/stats/distance/anosim.py#L19"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.math.stats.distance.ANOSIM" title="Permalink to this definition">¶</a></dt>
 <dd><p>ANOSIM statistical method executor.</p>
 <p>Analysis of Similarities (ANOSIM) is a non-parametric method that tests
 whether two or more groups of objects are significantly different based on
@@ -165,22 +166,22 @@ a categorical factor. The ranks of the distances in the distance matrix are
 used to calculate an R statistic, which ranges between -1 (anti-grouping)
 to +1 (strong grouping), with an R value of 0 indicating random grouping.</p>
 <p class="rubric">Notes</p>
-<p>See <a class="reference internal" href="#r60" id="id1">[R60]</a> for the original ANOSIM reference. The general algorithm and
+<p>See <a class="reference internal" href="#r66" id="id1">[R66]</a> for the original ANOSIM reference. The general algorithm and
 interface are similar to <tt class="docutils literal"><span class="pre">vegan::anosim</span></tt>, available in R&#8217;s vegan package
-<a class="reference internal" href="#r61" id="id2">[R61]</a>.</p>
+<a class="reference internal" href="#r67" id="id2">[R67]</a>.</p>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r60" rules="none">
+<table class="docutils citation" frame="void" id="r66" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R60]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id3">2</a>)</em> Clarke, KR. &#8220;Non-parametric multivariate analyses of changes in
+<tr><td class="label">[R66]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id3">2</a>)</em> Clarke, KR. &#8220;Non-parametric multivariate analyses of changes in
 community structure.&#8221; Australian journal of ecology 18.1 (1993):
 117-143.</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r61" rules="none">
+<table class="docutils citation" frame="void" id="r67" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R61]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> <a class="reference external" href="http://cran.r-project.org/web/packages/vegan/index.html">http://cran.r-project.org/web/packages/vegan/index.html</a></td></tr>
+<tr><td class="label">[R67]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> <a class="reference external" href="http://cran.r-project.org/web/packages/vegan/index.html">http://cran.r-project.org/web/packages/vegan/index.html</a></td></tr>
 </tbody>
 </table>
 <p class="rubric">Methods</p>

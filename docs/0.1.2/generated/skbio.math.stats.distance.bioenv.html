@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>skbio.math.stats.distance.bioenv &mdash; scikit-bio 0.1.1-dev documentation</title>
+    <title>skbio.math.stats.distance.bioenv &mdash; scikit-bio 0.1.2 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.1.1-dev',
+        VERSION:     '0.1.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -31,7 +31,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="scikit-bio 0.1.1-dev documentation" href="../index.html" />
+    <link rel="top" title="scikit-bio 0.1.2 documentation" href="../index.html" />
     <link rel="up" title="Distance-based statistics (skbio.math.stats.distance)" href="../math.stats.distance.html" />
     <link rel="next" title="skbio.math.stats.distance.mantel" href="skbio.math.stats.distance.mantel.html" />
     <link rel="prev" title="skbio.math.stats.distance.CategoricalStatsResults.summary" href="skbio.math.stats.distance.CategoricalStatsResults.summary.html" />
@@ -69,7 +69,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.1.1-dev</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.1.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -98,8 +98,9 @@
 <li class="toctree-l1"><a class="reference internal" href="../format.sequences.html">Format biological sequences (<tt class="docutils literal"><span class="pre">skbio.format.sequences</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.diversity.alpha.html">Alpha diversity measures (<tt class="docutils literal"><span class="pre">skbio.math.diversity.alpha</span></tt>)</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../math.stats.distance.html">Distance-based statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.distance</span></tt>)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../math.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.spatial</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.stats.misc.html">Miscellaneous statistics utilities (<tt class="docutils literal"><span class="pre">skbio.math.stats.misc</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.stats.ordination.html">Ordination methods (<tt class="docutils literal"><span class="pre">skbio.math.stats.ordination</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.spatial</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.gradient.html">Gradient analyses (<tt class="docutils literal"><span class="pre">skbio.math.gradient</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math.subsample.html">Subsampling (<tt class="docutils literal"><span class="pre">skbio.math.subsample</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../parse.sequences.html">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
@@ -157,7 +158,7 @@
 <h1>skbio.math.stats.distance.bioenv<a class="headerlink" href="#skbio-math-stats-distance-bioenv" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="skbio.math.stats.distance.bioenv">
-<tt class="descclassname">skbio.math.stats.distance.</tt><tt class="descname">bioenv</tt><big>(</big><em>distance_matrix</em>, <em>data_frame</em>, <em>columns=None</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/master/skbio/math/stats/distance/_bioenv.py#L21"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.math.stats.distance.bioenv" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">skbio.math.stats.distance.</tt><tt class="descname">bioenv</tt><big>(</big><em>distance_matrix</em>, <em>data_frame</em>, <em>columns=None</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.1.2/skbio/math/stats/distance/_bioenv.py#L21"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.math.stats.distance.bioenv" title="Permalink to this definition">¶</a></dt>
 <dd><p>Find subset of variables maximally correlated with distances.</p>
 <p>Finds subsets of variables whose Euclidean distances (after scaling the
 variables; see Notes section below for details) are maximally
@@ -229,10 +230,10 @@ due to zero variance).</p>
 <p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">scipy.stats.spearmanr</span></tt></p>
 </div>
 <p class="rubric">Notes</p>
-<p>See <a class="reference internal" href="#r64" id="id1">[R64]</a> for the original method reference (originally called BIO-ENV).
+<p>See <a class="reference internal" href="#r70" id="id1">[R70]</a> for the original method reference (originally called BIO-ENV).
 The general algorithm and interface are similar to <tt class="docutils literal"><span class="pre">vegan::bioenv</span></tt>,
-available in R&#8217;s vegan package <a class="reference internal" href="#r65" id="id2">[R65]</a>. This method can also be found in
-PRIMER-E <a class="reference internal" href="#r66" id="id3">[R66]</a> (originally called BIO-ENV, but is now called BEST).</p>
+available in R&#8217;s vegan package <a class="reference internal" href="#r71" id="id2">[R71]</a>. This method can also be found in
+PRIMER-E <a class="reference internal" href="#r72" id="id3">[R72]</a> (originally called BIO-ENV, but is now called BEST).</p>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
 <p class="last">This method can take a <em>long</em> time to run if a large number of
@@ -242,24 +243,24 @@ subset size.</p>
 <p>The variables are scaled before computing the Euclidean distance: each
 column is centered and then scaled by its standard deviation.</p>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r64" rules="none">
+<table class="docutils citation" frame="void" id="r70" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R64]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> Clarke, K. R &amp; Ainsworth, M. 1993. &#8220;A method of linking multivariate
+<tr><td class="label">[R70]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> Clarke, K. R &amp; Ainsworth, M. 1993. &#8220;A method of linking multivariate
 community structure to environmental variables&#8221;. Marine Ecology Progress
 Series, 92, 205-219.</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r65" rules="none">
+<table class="docutils citation" frame="void" id="r71" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R65]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id5">2</a>)</em> <a class="reference external" href="http://cran.r-project.org/web/packages/vegan/index.html">http://cran.r-project.org/web/packages/vegan/index.html</a></td></tr>
+<tr><td class="label">[R71]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id5">2</a>)</em> <a class="reference external" href="http://cran.r-project.org/web/packages/vegan/index.html">http://cran.r-project.org/web/packages/vegan/index.html</a></td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r66" rules="none">
+<table class="docutils citation" frame="void" id="r72" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R66]</td><td><em>(<a class="fn-backref" href="#id3">1</a>, <a class="fn-backref" href="#id6">2</a>)</em> <a class="reference external" href="http://www.primer-e.com/primer.htm">http://www.primer-e.com/primer.htm</a></td></tr>
+<tr><td class="label">[R72]</td><td><em>(<a class="fn-backref" href="#id3">1</a>, <a class="fn-backref" href="#id6">2</a>)</em> <a class="reference external" href="http://www.primer-e.com/primer.htm">http://www.primer-e.com/primer.htm</a></td></tr>
 </tbody>
 </table>
 <p class="rubric">Examples</p>

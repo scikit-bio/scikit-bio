@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Tree representations (skbio.core.tree) &mdash; scikit-bio 0.1.1-dev documentation</title>
+    <title>Tree representations (skbio.core.tree) &mdash; scikit-bio 0.1.2 documentation</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.1.1-dev',
+        VERSION:     '0.1.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -31,7 +31,7 @@
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="scikit-bio 0.1.1-dev documentation" href="index.html" />
+    <link rel="top" title="scikit-bio 0.1.2 documentation" href="index.html" />
     <link rel="next" title="skbio.core.tree.TreeNode" href="generated/skbio.core.tree.TreeNode.html" />
     <link rel="prev" title="skbio.core.genetic_code.GeneticCode.__eq__" href="generated/skbio.core.genetic_code.GeneticCode.__eq__.html" />
 <meta charset='utf-8'>
@@ -68,7 +68,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.1.1-dev</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.1.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -97,8 +97,9 @@
 <li class="toctree-l1"><a class="reference internal" href="format.sequences.html">Format biological sequences (<tt class="docutils literal"><span class="pre">skbio.format.sequences</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="math.diversity.alpha.html">Alpha diversity measures (<tt class="docutils literal"><span class="pre">skbio.math.diversity.alpha</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="math.stats.distance.html">Distance-based statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.distance</span></tt>)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="math.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.spatial</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.stats.misc.html">Miscellaneous statistics utilities (<tt class="docutils literal"><span class="pre">skbio.math.stats.misc</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="math.stats.ordination.html">Ordination methods (<tt class="docutils literal"><span class="pre">skbio.math.stats.ordination</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.spatial</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="math.gradient.html">Gradient analyses (<tt class="docutils literal"><span class="pre">skbio.math.gradient</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="math.subsample.html">Subsampling (<tt class="docutils literal"><span class="pre">skbio.math.subsample</span></tt>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="parse.sequences.html">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
@@ -124,8 +125,9 @@
       aria-labelledby="dLabelLocalToc"><ul>
 <li><a class="reference internal" href="#">Tree representations (<tt class="docutils literal"><span class="pre">skbio.core.tree</span></tt>)</a><ul>
 <li><a class="reference internal" href="#classes">Classes</a></li>
-<li><a class="reference internal" href="#functions">Functions</a></li>
-<li><a class="reference internal" href="#phylogenetic-tree-examples">Phylogenetic tree examples</a></li>
+<li><a class="reference internal" href="#phylogenetic-reconstruction">Phylogenetic Reconstruction</a></li>
+<li><a class="reference internal" href="#utility-functions">Utility Functions</a></li>
+<li><a class="reference internal" href="#examples">Examples</a></li>
 <li><a class="reference internal" href="#prefix-trees-i-e-tries-examples">Prefix trees (i.e., tries) examples</a></li>
 </ul>
 </li>
@@ -182,8 +184,22 @@ are multifurcating and nodes that have single descendants.</p>
 </tbody>
 </table>
 </div>
-<div class="section" id="functions">
-<h2>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="phylogenetic-reconstruction">
+<h2>Phylogenetic Reconstruction<a class="headerlink" href="#phylogenetic-reconstruction" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.core.tree.nj.html#skbio.core.tree.nj" title="skbio.core.tree.nj"><tt class="xref py py-obj docutils literal"><span class="pre">nj</span></tt></a>(dm[,&nbsp;disallow_negative_branch_length,&nbsp;...])</td>
+<td>Apply neighbor joining for phylogenetic reconstruction.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="utility-functions">
+<h2>Utility Functions<a class="headerlink" href="#utility-functions" title="Permalink to this headline">¶</a></h2>
 <table border="1" class="longtable docutils">
 <colgroup>
 <col width="10%" />
@@ -196,8 +212,8 @@ are multifurcating and nodes that have single descendants.</p>
 </tbody>
 </table>
 </div>
-<div class="section" id="phylogenetic-tree-examples">
-<h2>Phylogenetic tree examples<a class="headerlink" href="#phylogenetic-tree-examples" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.core.tree</span> <span class="kn">import</span> <span class="n">TreeNode</span>
 </pre></div>
 </div>
