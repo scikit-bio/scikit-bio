@@ -2,6 +2,7 @@ include CHANGELOG.md
 include COPYING.txt
 include CONTRIBUTING.md
 include README.rst
+include powertrip.py
 
 graft doc
 graft examples
