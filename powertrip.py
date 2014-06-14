@@ -17,7 +17,8 @@ import sys
 
 def main():
     root = 'skbio'
-    validators = [TestInitValidator(), ExecPermissionValidator()]
+    validators = [TestInitValidator(), ExecPermissionValidator(),
+                  GeneratedCythonValidator()]
 
     return_code = 0
     for validator in validators:
@@ -84,6 +85,40 @@ class ExecPermissionValidator(Validator):
 
             for invalid_perm in invalid_perms:
                 msg.append("    %s" % invalid_perm)
+
+        return success, msg
+
+
+class GeneratedCythonValidator(Validator):
+    def __init__(self, cython_extension='.pyx'):
+        self.cython_extension = cython_extension
+
+    def validate(self, root):
+        missing_gen = []
+        for root, dirs, files in os.walk(root):
+            for file_ in files:
+                base, ext = os.path.splitext(file_)
+
+                if ext == self.cython_extension:
+                    found_match = False
+                    match = '%s.c' % base
+                    for f in files:
+                        if (f == match and
+                            os.path.getsize(os.path.join(root, f)) > 0):
+                            found_match = True
+                            break
+
+                    if not found_match:
+                        missing_gen.append(os.path.join(root, file_))
+
+        success = True
+        msg = []
+        if missing_gen:
+            success = False
+            msg.append("Cython code missing generated C code:")
+
+            for e in missing_gen:
+                msg.append("    %s" % e)
 
         return success, msg
 
