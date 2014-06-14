@@ -17,7 +17,7 @@ import sys
 
 def main():
     root = 'skbio'
-    validators = [TestInitValidator()]
+    validators = [TestInitValidator(), ExecPermissionValidator()]
 
     return_code = 0
     for validator in validators:
@@ -26,7 +26,7 @@ def main():
         if not success:
             return_code = 1
             sys.stderr.write('\n'.join(msg))
-            sys.stderr.write('\n')
+            sys.stderr.write('\n\n')
 
     return return_code
 
@@ -53,10 +53,37 @@ class TestInitValidator(Validator):
         msg = []
         if missing_inits:
             success = False
-            msg.append("Missing __init__.py files inside test directories:")
+            msg.append("Missing %s files inside test directories:" %
+                       self.init_name)
 
             for missing_init in missing_inits:
                 msg.append("    %s" % missing_init)
+
+        return success, msg
+
+
+class ExecPermissionValidator(Validator):
+    def __init__(self, extensions=('.py', '.pyx', '.h', '.c')):
+        self.extensions = extensions
+
+    def validate(self, root):
+        invalid_perms = []
+        for root, dirs, files in os.walk(root):
+            for file_ in files:
+                if os.path.splitext(file_)[1] in self.extensions:
+                    fp = os.path.join(root, file_)
+
+                    if os.access(fp, os.X_OK):
+                        invalid_perms.append(fp)
+
+        success = True
+        msg = []
+        if invalid_perms:
+            success = False
+            msg.append("Library code with execute permissions:")
+
+            for invalid_perm in invalid_perms:
+                msg.append("    %s" % invalid_perm)
 
         return success, msg
 
