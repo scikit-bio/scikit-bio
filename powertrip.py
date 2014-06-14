@@ -136,12 +136,13 @@ class InitValidator(RepoValidator):
     ----------
     skip_dirs : iterable of str, optional
         Directory names to skip during validation. Defaults to skipping any
-        directories named ``'data'`` (and anything contained within them).
+        directories named ``'data'`` or ``'__pycache__'`` (and anything
+        contained within them).
 
     """
     reason = "Directories missing init files"
 
-    def __init__(self, skip_dirs=('data',)):
+    def __init__(self, skip_dirs=('data', '__pycache__')):
         self.skip_dirs = skip_dirs
 
     def _validate(self, root, dirs, files):
