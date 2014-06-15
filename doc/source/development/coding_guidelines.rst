@@ -245,7 +245,7 @@ Run the test suite when you change `anything`. Even if a change seems trivial, i
 Some pointers
 ^^^^^^^^^^^^^
 
-- *Use the* ``unittest`` *or the* ``nose`` *framework with tests in a separate file for each module.* Name the test file ``test_module_name.py`` and include it inside the tests forlder for the module. Keeping the tests separate from the code reduces the temptation to change the tests when the code doesn't work, and makes it easy to verify that a completely new implementation presents the same interface (behaves the same) as the old.
+- *Use the* ``unittest`` *or the* ``nose`` *framework with tests in a separate file for each module.* Name the test file ``test_module_name.py`` and include it inside the tests folder of the module. Keeping the tests separate from the code reduces the temptation to change the tests when the code doesn't work, and makes it easy to verify that a completely new implementation presents the same interface (behaves the same) as the old.
 
 - *Always include an* ``__init__.py`` *file in your tests directory*. This is required for the module to be included when the package is built and installed via ``setup.py``.
 
