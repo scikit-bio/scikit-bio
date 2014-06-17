@@ -100,7 +100,7 @@ Assuming the GitHub release tarball correctly installs and passes its tests, you
 
         python setup.py sdist upload
 
-    You must have the proper login credentials to add a release to PyPI. Currently [@gregcaporaso](https://github.com/gregcaporaso) has these, but they can be shared with other release admins.
+    You must have the proper login credentials to add a release to PyPI. Currently [@gregcaporaso](https://github.com/gregcaporaso) has these, but they can be shared with other release managers.
 
 5. Once the release is available on PyPI, do a final round of testing. Create a new virtualenv and run:
 
