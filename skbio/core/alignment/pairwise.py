@@ -175,6 +175,9 @@ def local_pairwise_align(sequence1, sequence2, gap_open_penalty,
 
     return _sw_traceback(traceback_matrix,sw_matrix,sequence1,sequence2)
 
+## Everything under here will have a lot of shared code with different
+## methods, suggesting that an Aligner class is probably the way to go.
+
 def _local_dynamic_programming_and_traceback(seq1, seq2, gap_open_penalty,
                                              gap_extend_penalty,
                                              substitution_matrix):
@@ -214,7 +217,8 @@ def _local_dynamic_programming_and_traceback(seq1, seq2, gap_open_penalty,
             else:
                 # gap open, because the cell to the left was not a gap
                 left_score = (current_row[-1] - gap_open_penalty,'-')
-            best_score = max(diag_score,up_score,left_score,new_alignment_score)
+            best_score = max(diag_score,up_score,left_score,
+                             new_alignment_score)
             current_row.append(best_score[0])
             current_traceback_matrix_row.append(best_score[1])
         # append the current row to the matrix
@@ -257,7 +261,8 @@ def _sw_traceback(traceback_matrix,sw_matrix,seq1,seq2,gap_character='-'):
         elif current_value == None:
             break
         else:
-            raise ValueError, "Invalid value in traceback matrix: %s" % current_value
+            raise ValueError(
+                "Invalid value in traceback matrix: %s" % current_value)
 
     return (''.join(aligned_seq1[::-1]), ''.join(aligned_seq2[::-1]),
              best_score, current_col, current_row)
