@@ -486,7 +486,7 @@ def _global_dynamic_programming_and_traceback(seq1, seq2, gap_open_penalty,
     gap_extend_penalty, substitution_matrix):
     # Initialize a matrix to use for scoring the alignment and for tracing
     # back the best alignment
-    nw_row1 = [0]
+    nw_row1 = [0.]
     for i in range(1, len(seq1)+1):
         nw_row1.append(-gap_open_penalty - ((i-1) * gap_extend_penalty))
     nw_matrix = [nw_row1]
