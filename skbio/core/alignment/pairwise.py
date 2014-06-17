@@ -125,6 +125,17 @@ def local_pairwise_align_protein(sequence1, sequence2, gap_open_penalty=11,
        int
           The start position of the alignment in sequence 2
 
+       Examples
+       --------
+       >>> from skbio import local_pairwise_align_protein
+       >>> s1 = "HEAGAWGHEE"
+       >>> s2 = "PAWHEAE"
+       >>> r = local_pairwise_align_protein(s1, s2, 8, 8)
+       >>> print(r[0])
+       AWGHE
+       >>> print(r[1])
+       AW-HE
+
     """
     if substitution_matrix is None:
         substitution_matrix = blosum50
