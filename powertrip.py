@@ -142,8 +142,10 @@ class InitValidator(RepoValidator):
     """
     reason = "Directories missing init files"
 
-    def __init__(self, skip_dirs=('data', '__pycache__')):
-        self.skip_dirs = skip_dirs
+    def __init__(self, skip_dirs=None):
+        if skip_dirs is None:
+            skip_dirs = {'data', '__pycache__'}
+        self.skip_dirs = set(skip_dirs)
 
     def _validate(self, root, dirs, files):
         # If any of the directories yet to be visited should be skipped, remove
@@ -172,8 +174,10 @@ class ExecPermissionValidator(RepoValidator):
     """
     reason = "Library code with execute permissions"
 
-    def __init__(self, extensions=('.py', '.pyx', '.h', '.c')):
-        self.extensions = extensions
+    def __init__(self, extensions=None):
+        if extensions is None:
+            extensions = {'.py', '.pyx', '.h', '.c'}
+        self.extensions = set(extensions)
 
     def _validate(self, root, dirs, files):
         invalid_fps = []
