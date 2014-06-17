@@ -9,7 +9,9 @@
 
 from __future__ import absolute_import, division, print_function
 
-
+# This is temporary: blosum50 does not exist in skbio yet as per
+# issue 161. When the issue is resolved, this should be removed in favor
+# of an import.
 blosum50 = \
     {
         '*': {'*': 1, 'A': -5, 'C': -5, 'B': -5, 'E': -5, 'D': -5, 'G': -5,
