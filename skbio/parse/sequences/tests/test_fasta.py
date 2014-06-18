@@ -137,9 +137,11 @@ class ParseFastaTests(object):
         self.assertEqual(b, ('abc', 'caggac'))
         self.assertEqual(c, ('456', 'cg'))
 
-    def test_multiple_bad(self):
-        """parse_fasta should complain or skip bad records"""
-        self.assertRaises(RecordError, list, parse_fasta(self.twogood))
+    def test_multiple_bad_strict(self):
+        with self.assertRaises(RecordError):
+            list(parse_fasta(self.twogood))
+
+    def test_multiple_bad_not_strict(self):
         f = list(parse_fasta(self.twogood, strict=False))
         self.assertEqual(len(f), 2)
         a, b = f

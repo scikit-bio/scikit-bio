@@ -38,7 +38,10 @@ def parse_fasta(infile, strict=True, label_to_name=None, finder=FastaFinder,
         An open fasta file or a path to a fasta file.
 
     strict : bool
-        If `True` a ``RecordError`` will be raised if no header line is found.
+        If ``True`` a ``RecordError`` will be raised if there is a fasta label
+        line with no associated sequence, or a sequence with no associated
+        label line (in other words, if there is a partial record). If
+        ``False``, partial records will be skipped.
 
     label_to_name : function
         A function to apply to the sequence label (i.e., text on the header
