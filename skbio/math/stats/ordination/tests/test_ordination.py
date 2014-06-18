@@ -20,7 +20,7 @@ import numpy.testing as npt
 from scipy.spatial.distance import pdist
 
 from skbio.math.stats.ordination import CA, RDA, CCA, PCoA, OrdinationResults
-from skbio.math.stats.ordination.utils import mean_and_std
+from skbio.math.stats.ordination.utils import corr, mean_and_std
 from skbio.core.distance import DistanceMatrix
 from skbio.util.testing import get_data_path
 from skbio.core.exception import FileFormatError
@@ -261,10 +261,15 @@ class TestChiSquareDistance(object):
 class TestUtils(object):
     def setup(self):
         self.x = np.array([[1, 2, 3], [4, 5, 6]])
+        self.y = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
 
     def test_mean_and_std_no_mean_no_std(self):
         with npt.assert_raises(ValueError):
             mean_and_std(self.x, with_mean=False, with_std=False)
+
+    def test_corr_shape_mismatch(self):
+        with npt.assert_raises(ValueError):
+            corr(self.x, self.y)
 
 
 class TestCAResults(object):
