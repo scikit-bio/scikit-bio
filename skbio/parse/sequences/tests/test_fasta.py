@@ -10,11 +10,12 @@
 from __future__ import absolute_import, division, print_function
 
 import tempfile
+from unittest import TestCase, main
+
+import numpy.testing as npt
 
 from skbio.parse.sequences.fasta import parse_fasta, parse_qual
 from skbio.core.exception import RecordError
-
-from unittest import TestCase, main
 
 
 FASTA_PARSERS_DATA = {
@@ -26,7 +27,8 @@ FASTA_PARSERS_DATA = {
     'oneX': '>123\nX\n> \t abc  \t \ncag\ngac\n>456\nc\ng',
     'nolabels': 'GJ>DSJGSJDF\nSFHKLDFS>jkfs\n',
     'empty': '',
-    'qualscores': '>x\n5 10 5\n12\n>y\n30 40\n>a\n5 10 5\n12\n>b\n30 40',
+    'qualscores': '>x\n5 10 5\n12\n>y foo bar\n30 40\n>a\n5 10 5\n12\n'
+                  '>b baz\n30 40',
     'invalidqual': '>x\n5 10 5\n12\n>y\n30 40\n>a\n5 10 5\n12 brofist 42'
     }
 
@@ -154,6 +156,14 @@ class ParseFastaTests(object):
     def test_parse_qual_invalid_qual_file(self):
         with self.assertRaises(RecordError):
             list(parse_qual(self.invalidqual))
+
+    def test_parse_qual_full_header(self):
+        exp = [('x', [5, 10, 5, 12]), ('y foo bar', [30, 40]),
+               ('a', [5, 10, 5, 12]), ('b baz', [30, 40])]
+        obs = parse_qual(self.qualscores, full_header=True)
+
+        for o, e in zip(obs, exp):
+            npt.assert_equal(o, e)
 
 
 class ParseFastaTestsInputIsIterable(IterableData, ParseFastaTests, TestCase):
