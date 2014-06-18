@@ -128,6 +128,15 @@ class ParseFastaTests(object):
         expected = [('1', 'CAG'), ('2', 'CCAG'), ('3', 'A')]
         self.assertEqual(actual, expected)
 
+    def test_parse_fasta_label_to_name(self):
+        exp = [('brofist', 'a'), ('brofist', 'caggac'), ('brofist', 'cg')]
+
+        # the most powerful fasta label converter known to mankind
+        obs = list(parse_fasta(self.threeseq,
+                   label_to_name=lambda _: 'brofist'))
+
+        self.assertEqual(obs, exp)
+
     def test_multiple(self):
         """parse_fasta should read multiline records correctly"""
         f = list(parse_fasta(self.threeseq))
