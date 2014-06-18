@@ -12,8 +12,9 @@ from unittest import TestCase, main
 
 from numpy import array
 
-from skbio.parse.sequences import load
-from skbio.parse.sequences import FastaIterator
+from skbio.parse.sequences import load, FastaIterator
+from skbio.parse.sequences.factory import (
+    _open_or_none, _is_single_iterator_type)
 from skbio.util.testing import get_data_path
 
 
@@ -161,6 +162,38 @@ class SequenceLoadTests(TestCase):
                {'Sequence': 'ATATA', 'SequenceID': 'seq2',
                 'Qual': None, 'QualID': None}]
         self.assertEqual(obs, exp)
+
+    def test_no_seqs(self):
+        for null in ('', [], (), None):
+            with self.assertRaises(ValueError):
+                load(null)
+
+    def test_unknown_filetype(self):
+        with self.assertRaises(IOError):
+            load('seqs.mpeg')
+
+    def test_file_path_does_not_exist(self):
+        with self.assertRaises(IOError):
+            load('this-seqs-file-had-better-not-exist-or-this-test-will-'
+                 'fail.fna')
+
+    def test_multiple_types_fasta_fastq_qual(self):
+        with self.assertRaises(ValueError):
+            load([self.fna1, self.fq1], qual=self.qual1)
+
+    def test_open_or_none_no_opener(self):
+        obs = _open_or_none(None, self.fna1)
+        self.assertTrue(obs is None)
+
+    def test_open_or_none_opener_error(self):
+        def bogus_opener(f):
+            raise IOError('hahaha')
+
+        with self.assertRaises(IOError):
+            _open_or_none(bogus_opener, self.fna1)
+
+    def test_is_single_iterator_type_null_case(self):
+        self.assertTrue(_is_single_iterator_type([]))
 
 
 if __name__ == '__main__':

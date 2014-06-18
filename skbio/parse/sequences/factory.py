@@ -107,7 +107,7 @@ def load(seqs, qual=None, constructor=None, **kwargs):
 
     """
     if not seqs:
-        raise ValueError("Must pass in sequences!")
+        raise ValueError("Must supply sequences.")
 
     if isinstance(seqs, str):
         seqs = [seqs]
@@ -136,7 +136,7 @@ def load(seqs, qual=None, constructor=None, **kwargs):
         # 1-1 mappings. This could be addressed if necessary, but seems like
         # an unnecessary block of code right now
         raise ValueError("Cannot handle multiple sequence file types and qual "
-                         "at the sametime!")
+                         "file(s) at the same time.")
 
     if _is_single_iterator_type(i_seqs):
         seqs_constructor = i_seqs[0]

@@ -10,11 +10,12 @@
 from __future__ import absolute_import, division, print_function
 
 import tempfile
+from unittest import TestCase, main
+
+import numpy.testing as npt
 
 from skbio.parse.sequences.fasta import parse_fasta, parse_qual
 from skbio.core.exception import RecordError
-
-from unittest import TestCase, main
 
 
 FASTA_PARSERS_DATA = {
@@ -26,6 +27,9 @@ FASTA_PARSERS_DATA = {
     'oneX': '>123\nX\n> \t abc  \t \ncag\ngac\n>456\nc\ng',
     'nolabels': 'GJ>DSJGSJDF\nSFHKLDFS>jkfs\n',
     'empty': '',
+    'qualscores': '>x\n5 10 5\n12\n>y foo bar\n30 40\n>a   \n5 10 5\n12\n'
+                  '>b  baz\n30 40',
+    'invalidqual': '>x\n5 10 5\n12\n>y\n30 40\n>a\n5 10 5\n12 brofist 42'
     }
 
 
@@ -124,6 +128,15 @@ class ParseFastaTests(object):
         expected = [('1', 'CAG'), ('2', 'CCAG'), ('3', 'A')]
         self.assertEqual(actual, expected)
 
+    def test_parse_fasta_label_to_name(self):
+        exp = [('brofist', 'a'), ('brofist', 'caggac'), ('brofist', 'cg')]
+
+        # the most powerful fasta label converter known to mankind
+        obs = list(parse_fasta(self.threeseq,
+                   label_to_name=lambda _: 'brofist'))
+
+        self.assertEqual(obs, exp)
+
     def test_multiple(self):
         """parse_fasta should read multiline records correctly"""
         f = list(parse_fasta(self.threeseq))
@@ -133,25 +146,35 @@ class ParseFastaTests(object):
         self.assertEqual(b, ('abc', 'caggac'))
         self.assertEqual(c, ('456', 'cg'))
 
-    def test_multiple_bad(self):
-        """parse_fasta should complain or skip bad records"""
-        self.assertRaises(RecordError, list, parse_fasta(self.twogood))
+    def test_multiple_bad_strict(self):
+        with self.assertRaises(RecordError):
+            list(parse_fasta(self.twogood))
+
+    def test_multiple_bad_not_strict(self):
         f = list(parse_fasta(self.twogood, strict=False))
         self.assertEqual(len(f), 2)
         a, b = f
         self.assertEqual(a, ('abc', 'caggac'))
 
     def test_parse_qual(self):
-        """parse_qual should yield (id_, quals)"""
-        scores = ['>x', '5 10 5', '12',
-                  '>y', '30 40',
-                  '>a', '5 10 5', '12',
-                  '>b', '30 40']
-        gen = list(parse_qual(scores))
-        self.assertListEqual(list(gen[0][1]), [5, 10, 5, 12])
-        self.assertListEqual(list(gen[1][1]), [30, 40])
-        self.assertListEqual(list(gen[2][1]), [5, 10, 5, 12])
-        self.assertListEqual(list(gen[3][1]), [30, 40])
+        exp = [('x', [5, 10, 5, 12]), ('y', [30, 40]), ('a', [5, 10, 5, 12]),
+               ('b', [30, 40])]
+        obs = parse_qual(self.qualscores)
+
+        for o, e in zip(obs, exp):
+            npt.assert_equal(o, e)
+
+    def test_parse_qual_invalid_qual_file(self):
+        with self.assertRaises(RecordError):
+            list(parse_qual(self.invalidqual))
+
+    def test_parse_qual_full_header(self):
+        exp = [('x', [5, 10, 5, 12]), ('y foo bar', [30, 40]),
+               ('a', [5, 10, 5, 12]), ('b  baz', [30, 40])]
+        obs = parse_qual(self.qualscores, full_header=True)
+
+        for o, e in zip(obs, exp):
+            npt.assert_equal(o, e)
 
 
 class ParseFastaTestsInputIsIterable(IterableData, ParseFastaTests, TestCase):

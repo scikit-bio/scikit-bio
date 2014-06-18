@@ -24,11 +24,6 @@ def is_blank_or_comment(x):
     return (not x) or x.startswith('#') or x.isspace()
 
 
-def is_blank(x):
-    """Checks if x is blank."""
-    return (not x) or x.isspace()
-
-
 FastaFinder = LabeledRecordFinder(is_fasta_label, ignore=is_blank_or_comment)
 
 
@@ -43,7 +38,10 @@ def parse_fasta(infile, strict=True, label_to_name=None, finder=FastaFinder,
         An open fasta file or a path to a fasta file.
 
     strict : bool
-        If `True` a ``RecordError`` will be raised if no header line is found.
+        If ``True`` a ``RecordError`` will be raised if there is a fasta label
+        line with no associated sequence, or a sequence with no associated
+        label line (in other words, if there is a partial record). If
+        ``False``, partial records will be skipped.
 
     label_to_name : function
         A function to apply to the sequence label (i.e., text on the header
@@ -208,7 +206,8 @@ def parse_qual(infile, full_header=False):
             parts = np.asarray(curr_qual.split(), dtype=int)
         except ValueError:
             raise RecordError(
-                "Invalid qual file. Check the format of the qual files.")
+                "Invalid qual file. Check the format of the qual file: each "
+                "quality score must be convertible to an integer.")
         if full_header:
             curr_pid = curr_id
         else:
