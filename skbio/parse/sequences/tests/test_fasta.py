@@ -26,6 +26,8 @@ FASTA_PARSERS_DATA = {
     'oneX': '>123\nX\n> \t abc  \t \ncag\ngac\n>456\nc\ng',
     'nolabels': 'GJ>DSJGSJDF\nSFHKLDFS>jkfs\n',
     'empty': '',
+    'qualscores': '>x\n5 10 5\n12\n>y\n30 40\n>a\n5 10 5\n12\n>b\n30 40',
+    'invalidqual': '>x\n5 10 5\n12\n>y\n30 40\n>a\n5 10 5\n12 brofist 42'
     }
 
 
@@ -143,15 +145,15 @@ class ParseFastaTests(object):
 
     def test_parse_qual(self):
         """parse_qual should yield (id_, quals)"""
-        scores = ['>x', '5 10 5', '12',
-                  '>y', '30 40',
-                  '>a', '5 10 5', '12',
-                  '>b', '30 40']
-        gen = list(parse_qual(scores))
+        gen = list(parse_qual(self.qualscores))
         self.assertListEqual(list(gen[0][1]), [5, 10, 5, 12])
         self.assertListEqual(list(gen[1][1]), [30, 40])
         self.assertListEqual(list(gen[2][1]), [5, 10, 5, 12])
         self.assertListEqual(list(gen[3][1]), [30, 40])
+
+    def test_parse_qual_invalid_qual_file(self):
+        with self.assertRaises(RecordError):
+            list(parse_qual(self.invalidqual))
 
 
 class ParseFastaTestsInputIsIterable(IterableData, ParseFastaTests, TestCase):
