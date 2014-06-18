@@ -121,4 +121,4 @@ If this succeeds, the release appears to be a success!
 
 4. Tweet about the release, including a link to the GitHub release page (for example, for 0.1.3, the URL to include was https://github.com/biocore/scikit-bio/releases/tag/0.1.3).
 
-5. ``:beers:``
+5. :beers:
