@@ -810,6 +810,14 @@ class TreeTests(TestCase):
                           "F:0.5):5.75):2.0):6.25):2.5);",
                           tree.to_newick(with_distances=True))
 
+    def test_from_newick_empty(self):
+        obs = TreeNode.from_newick('')
+        self.assertTrue(obs.name is None)
+        self.assertTrue(obs.length is None)
+        self.assertTrue(obs.parent is None)
+        self.assertEqual(obs.children, [])
+        self.assertTrue(obs.id is None)
+
 
 class DndTokenizerTests(TestCase):
 
