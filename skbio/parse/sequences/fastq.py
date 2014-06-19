@@ -43,11 +43,7 @@ def _ascii_to_phred64(s):
 
 def _drop_id_marker(s):
     """Drop the first character and decode bytes to text"""
-    id_ = s[1:]
-    try:
-        return str(id_.decode('utf-8'))
-    except AttributeError:
-        return id_
+    return str(s[1:].decode('utf-8'))
 
 
 def parse_fastq(data, strict=False, enforce_qual_range=True, phred_offset=33):
@@ -136,11 +132,7 @@ def parse_fastq(data, strict=False, enforce_qual_range=True, phred_offset=33):
             qual = qual.strip()
 
             seqid = _drop_id_marker(seqid)
-
-            try:
-                seq = str(seq.decode("utf-8"))
-            except AttributeError:
-                pass
+            seq = str(seq.decode("utf-8"))
 
             qualid = _drop_id_marker(qualid)
             if strict:
