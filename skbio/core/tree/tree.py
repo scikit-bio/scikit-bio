@@ -1287,7 +1287,7 @@ class TreeNode(object):
         Raises
         ------
         DuplicateNodeError
-            The tip cache requies that names are unique (with the exception of
+            The tip cache requires that names are unique (with the exception of
             names that are None)
 
         See Also
@@ -1315,7 +1315,8 @@ class TreeNode(object):
 
                 if node.is_tip():
                     if name in tip_cache:
-                        raise DuplicateNodeError("%s already exists!" % name)
+                        raise DuplicateNodeError("Tip with name '%s' already "
+                                                 "exists!" % name)
 
                     tip_cache[name] = node
                 else:

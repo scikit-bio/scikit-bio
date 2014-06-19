@@ -20,8 +20,8 @@ from future.utils.six import StringIO
 from skbio.core.tree import TreeNode
 from skbio.core.tree.tree import _dnd_tokenizer
 from skbio.core.distance import DistanceMatrix
-from skbio.core.exception import (NoLengthError, TreeError, RecordError,
-                                  MissingNodeError, NoParentError)
+from skbio.core.exception import (DuplicateNodeError, NoLengthError, TreeError,
+                                  RecordError, MissingNodeError, NoParentError)
 
 
 class TreeTests(TestCase):
@@ -269,6 +269,10 @@ class TreeTests(TestCase):
         self.assertIs(root, self.simple_t.root())
         self.assertIs(root, self.simple_t.children[0].root())
         self.assertIs(root, self.simple_t.children[1].children[1].root())
+
+    def test_create_caches_duplicate_tip_names(self):
+        with self.assertRaises(DuplicateNodeError):
+            TreeNode.from_newick('(a, a)').create_caches()
 
     def test_find(self):
         """Find a node in a tree"""
