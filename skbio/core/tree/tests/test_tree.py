@@ -553,6 +553,18 @@ class TreeTests(TestCase):
         obs2 = [n.name for n in self.simple_t.traverse(True, True)]
         self.assertEqual(obs2, exp)
 
+    def test_pre_and_postorder_no_children(self):
+        t = TreeNode('brofist')
+
+        # include self
+        exp = ['brofist']
+        obs = [n.name for n in t.pre_and_postorder()]
+        self.assertEqual(obs, exp)
+
+        # do not include self
+        obs = list(t.pre_and_postorder(include_self=False))
+        self.assertEqual(obs, [])
+
     def test_levelorder(self):
         """Test level order traversal of the tree"""
         exp = ['root', 'i1', 'i2', 'a', 'b', 'c', 'd']
