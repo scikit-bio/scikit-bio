@@ -454,6 +454,18 @@ class AlignmentTests(TestCase):
         expected = Alignment([d2])
         self.assertEqual(actual, expected)
 
+    def test_subalignment_filter_out_everything(self):
+        exp = Alignment([])
+
+        # no sequences
+        obs = self.a1.subalignment(seqs_to_keep=None, invert_seqs_to_keep=True)
+        self.assertEqual(obs, exp)
+
+        # no positions
+        obs = self.a1.subalignment(positions_to_keep=None,
+                                   invert_positions_to_keep=True)
+        self.assertEqual(obs, exp)
+
     def test_init_validate(self):
         """initialization with validation functions as expected
         """
