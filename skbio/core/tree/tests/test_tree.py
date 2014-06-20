@@ -652,6 +652,13 @@ class TreeTests(TestCase):
         obs_dist = result.tip_tip_distances()
         self.assertEqual(obs_dist, exp_dist)
 
+    def test_root_at_midpoint_no_lengths(self):
+        # should get same tree back (a copy)
+        nwk = '(a,b)c;'
+        t = TreeNode.from_newick(nwk)
+        obs = t.root_at_midpoint()
+        self.assertEqual(str(obs), nwk)
+
     def test_compare_subsets(self):
         """compare_subsets should return the fraction of shared subsets"""
         t = TreeNode.from_newick('((H,G),(R,M));')
@@ -813,6 +820,28 @@ class TreeTests(TestCase):
         obs = arrayed['id']
         nptest.assert_equal(obs, exp)
 
+    def test_to_array_attrs(self):
+        t = TreeNode.from_newick(
+            '(((a:1,b:2,c:3)x:4,(d:5)y:6)z:7,(e:8,f:9)z:10)')
+        id_index, child_index = t.index_tree()
+        arrayed = t.to_array(attrs=[('name', object)])
+
+        # should only have id_index, child_index, and name since we specified
+        # attrs
+        self.assertEqual(len(arrayed), 3)
+
+        self.assertEqual(id_index, arrayed['id_index'])
+        self.assertEqual(child_index, arrayed['child_index'])
+
+        exp = np.array(['a', 'b', 'c', 'd', 'x',
+                        'y', 'e', 'f', 'z', 'z', None])
+        obs = arrayed['name']
+        nptest.assert_equal(obs, exp)
+
+        # invalid attrs
+        with self.assertRaises(AttributeError):
+            t.to_array(attrs=[('name', object), ('brofist', int)])
+
     def test_from_file(self):
         """Parse a tree from a file"""
         t_io = StringIO("((a,b)c,(d,e)f)g;")
@@ -841,6 +870,10 @@ class TreeTests(TestCase):
         self.assertTrue(obs.parent is None)
         self.assertEqual(obs.children, [])
         self.assertTrue(obs.id is None)
+
+    def test_from_newick_embedded_semicolon(self):
+        with self.assertRaises(RecordError):
+            TreeNode.from_newick('(a,(c,;b))')
 
     def test_to_newick_single_node(self):
         # single node, no name, with semicolon

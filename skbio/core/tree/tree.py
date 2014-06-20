@@ -587,8 +587,7 @@ class TreeNode(object):
             edgename = parent.name
             length = parent.length
         else:
-            if parent is not self.parent:
-                raise TreeError("Should never happen...")
+            assert parent is self.parent
             edgename = self.name
             length = self.length
 
@@ -1896,7 +1895,8 @@ class TreeNode(object):
             last_token = t
 
         if curr_node is not None and curr_node.parent is not None:
-            raise RecordError("Didn't get back to root of tree.")
+            raise RecordError("Didn't get back to root of tree. The newick "
+                              "string may be malformed.")
 
         if curr_node is None:  # no data -- return empty node
             return cls()
@@ -1960,7 +1960,7 @@ class TreeNode(object):
         else:
             for attr, dtype in attrs:
                 if not hasattr(self, attr):
-                    raise AttributeError("%s does not appear in self!" % attr)
+                    raise AttributeError("Invalid attribute '%s'." % attr)
 
         id_index, child_index = self.index_tree()
         n = self.id + 1  # assign_ids starts at 0
