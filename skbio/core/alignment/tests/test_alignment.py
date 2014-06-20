@@ -10,6 +10,7 @@
 
 from __future__ import absolute_import, division, print_function
 
+import warnings
 from unittest import TestCase, main
 from collections import Counter, defaultdict
 
@@ -335,6 +336,12 @@ class SequenceCollectionTests(TestCase):
         self.assertEqual(self.s1.to_fasta(), exp1)
         exp2 = ">r1\nGAUUACA\n>r2\nUUG\n>r3\nU-----UGCC--\n"
         self.assertEqual(self.s2.to_fasta(), exp2)
+
+    def test_toFasta(self):
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            exp = ">d1\nGATTACA\n>d2\nTTG\n"
+            self.assertEqual(self.s1.toFasta(), exp)
 
     def test_upper(self):
         """upper functions as expected
