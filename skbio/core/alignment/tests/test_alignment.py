@@ -665,6 +665,27 @@ class AlignmentTests(TestCase):
                               "s3 .-ACC-GTTGC--"])
         self.assertEqual(phylip_str, expected)
 
+    def test_to_phylip_unequal_sequence_lengths(self):
+        d1 = DNASequence('A-CT', id="d1")
+        d2 = DNASequence('TTA', id="d2")
+        d3 = DNASequence('.-AC', id="d3")
+        a = Alignment([d1, d2, d3])
+
+        with self.assertRaises(SequenceCollectionError):
+            a.to_phylip()
+
+    def test_to_phylip_no_sequences(self):
+        with self.assertRaises(SequenceCollectionError):
+            Alignment([]).to_phylip()
+
+    def test_to_phylip_no_positions(self):
+        d1 = DNASequence('', id="d1")
+        d2 = DNASequence('', id="d2")
+        a = Alignment([d1, d2])
+
+        with self.assertRaises(SequenceCollectionError):
+            a.to_phylip()
+
     def test_validate_lengths(self):
         """
         """
