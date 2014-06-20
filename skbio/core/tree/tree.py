@@ -1980,7 +1980,7 @@ class TreeNode(object):
         r"""Return the newick string representation of this tree.
 
         Please see `TreeNode.from_newick` for a further description of the
-        Newick format
+        Newick format.
 
         Parameters
         ----------
@@ -2047,13 +2047,7 @@ class TreeNode(object):
 
                 result.append(',')
 
-        len_result = len(result)
-        if len_result == 2:  # single node no name
-            if semicolon:
-                return ";"
-            else:
-                return ''
-        elif len_result == 3:  # single node with name
+        if len(result) <= 3:  # single node with or without name
             if semicolon:
                 return "%s;" % result[1]
             else:
