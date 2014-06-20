@@ -2598,7 +2598,7 @@ class TreeNode(object):
         common_names = list(common_names)
 
         if not common_names:
-            raise ValueError("No names in common between the two trees.")
+            raise ValueError("No tip names in common between the two trees.")
 
         if len(common_names) <= 2:
             return 1  # the two trees must match by definition in this case

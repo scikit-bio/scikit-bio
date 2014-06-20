@@ -496,6 +496,20 @@ class TreeTests(TestCase):
         t3 = TreeNode.from_newick(s3, TreeNode)
         obs = t.compare_tip_distances(t3, sample=3, shuffle_f=sorted)
 
+    def test_compare_tip_distances_no_common_tips(self):
+        t = TreeNode.from_newick('((H:1,G:1):2,(R:0.5,M:0.7):3);')
+        t2 = TreeNode.from_newick('(((Z:1,Y:1,X:1):2,W:3):1,V:4);')
+
+        with self.assertRaises(ValueError):
+            t.compare_tip_distances(t2)
+
+    def test_compare_tip_distances_single_common_tip(self):
+        t = TreeNode.from_newick('((H:1,G:1):2,(R:0.5,M:0.7):3);')
+        t2 = TreeNode.from_newick('(((R:1,Y:1,X:1):2,W:3):1,V:4);')
+
+        self.assertEqual(t.compare_tip_distances(t2), 1)
+        self.assertEqual(t2.compare_tip_distances(t), 1)
+
     def test_tip_tip_distances_endpoints(self):
         """Test getting specifc tip distances  with tipToTipDistances"""
         t = TreeNode.from_newick('((H:1,G:1):2,(R:0.5,M:0.7):3);')
