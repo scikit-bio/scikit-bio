@@ -835,6 +835,17 @@ class TreeTests(TestCase):
         obs = TreeNode(name='brofist').to_newick(semicolon=False)
         self.assertEqual(obs, 'brofist')
 
+    def test_to_newick_multi_node(self):
+        t = TreeNode.from_newick(double)
+
+        # with semicolon
+        obs = t.to_newick()
+        self.assertEqual(obs, '(abc,def);')
+
+        # without semicolon
+        obs = t.to_newick(semicolon=False)
+        self.assertEqual(obs, '(abc,def)')
+
 
 class DndTokenizerTests(TestCase):
 
