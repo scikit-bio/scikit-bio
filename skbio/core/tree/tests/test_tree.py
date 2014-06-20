@@ -374,6 +374,10 @@ class TreeTests(TestCase):
               " \\--------|\n                    \\-D"
         self.assertEqual(obs, exp)
 
+    def test_ascii_art_three_children(self):
+        obs = TreeNode.from_newick('(a,(b,c,d));').ascii_art()
+        self.assertEqual(obs, exp_ascii_art_three_children)
+
     def test_accumulate_to_ancestor(self):
         """Get the distance from a node to its ancestor"""
         t = TreeNode.from_newick("((a:0.1,b:0.2)c:0.3,(d:0.4,e)f:0.5)root;")
@@ -1124,6 +1128,17 @@ single = '(abc:3);'
 double = '(abc:3, def:4);'
 onenest = '(abc:3, (def:4, ghi:5):6 );'
 nodedata = '(abc:3, (def:4, ghi:5)jkl:6 );'
+
+exp_ascii_art_three_children = """\
+          /-a
+         |
+---------|          /-b
+         |         |
+          \--------|--c
+                   |
+                    \-d\
+"""
+
 
 if __name__ == '__main__':
     main()
