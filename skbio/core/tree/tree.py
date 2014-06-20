@@ -2362,7 +2362,8 @@ class TreeNode(object):
             tip_order = [self.find(n) for n in endpoints]
             for n in tip_order:
                 if not n.is_tip():
-                    raise ValueError("%s is not a tip!" % n.name)
+                    raise ValueError("Node with name '%s' is not a tip." %
+                                     n.name)
 
         # linearize all tips in postorder
         # .__start, .__stop compose the slice in tip_order.
@@ -2398,7 +2399,8 @@ class TreeNode(object):
             starts, stops = [], []  # to calc ._start and ._stop for curr node
             for child in node.children:
                 if child.length is None:
-                    raise NoLengthError("%s doesn't have length" % child.name)
+                    raise NoLengthError("Node with name '%s' doesn't have a "
+                                        "length." % child.name)
 
                 distances[child.__start:child.__stop] += child.length
 

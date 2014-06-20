@@ -511,6 +511,16 @@ class TreeTests(TestCase):
         obs = t.tip_tip_distances(endpoints=nodes)
         self.assertEqual(obs, exp)
 
+    def test_tip_tip_distances_non_tip_endpoints(self):
+        t = TreeNode.from_newick('((H:1,G:1)foo:2,(R:0.5,M:0.7):3);')
+        with self.assertRaises(ValueError):
+            t.tip_tip_distances(endpoints=['foo'])
+
+    def test_tip_tip_distances_no_length(self):
+        t = TreeNode.from_newick("((a,b)c,(d,e)f);")
+        with self.assertRaises(NoLengthError):
+            t.tip_tip_distances()
+
     def test_neighbors(self):
         """Get neighbors of a node"""
         t = TreeNode.from_newick("((a,b)c,(d,e)f);")
