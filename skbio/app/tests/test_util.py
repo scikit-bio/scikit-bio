@@ -391,6 +391,7 @@ class CommandLineGeneratorTests(TestCase):
         with self.assertRaises(ValueError):
             list(cmdline_generator(None, PathsToInputs=['/foo/bar/baz']))
 
+
 class CommandLineApplicationTests(TestCase):
 
     """Tests for the CommandLineApplication class"""
