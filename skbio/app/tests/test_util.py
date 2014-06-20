@@ -382,6 +382,14 @@ class CommandLineGeneratorTests(TestCase):
         cmdlines = list(cmdgen)
         self.assertEqual(cmdlines, exp)
 
+    def test_cmdline_generator_missing_input_output_paths(self):
+        # missing input
+        with self.assertRaises(ValueError):
+            list(cmdline_generator(None))
+
+        # missing output
+        with self.assertRaises(ValueError):
+            list(cmdline_generator(None, PathsToInputs=['/foo/bar/baz']))
 
 class CommandLineApplicationTests(TestCase):
 
