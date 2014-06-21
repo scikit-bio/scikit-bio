@@ -32,7 +32,6 @@ class PairwiseAlignmentTests(TestCase):
     """
 
     def test_global_pairwise_align_protein(self):
-
         expected = ("HEAGAWGHEE", "---PAWHEAE", 1.0)
         actual = global_pairwise_align_protein("HEAGAWGHEE", "PAWHEAE",
                                                gap_open_penalty=10.,
@@ -58,3 +57,30 @@ class PairwiseAlignmentTests(TestCase):
                                                gap_open_penalty=5.,
                                                gap_extend_penalty=0.5)
         self.assertEqual(actual, expected)
+
+    def test_global_pairwise_align_nucleotide(self):
+        expected = ("G-ACCTTGACCAGGTACC", "GAACTTTGAC---GTAAC", 31.0)
+        actual = global_pairwise_align_nucleotide("GACCTTGACCAGGTACC",
+                                                 "GAACTTTGACGTAAC",
+                                               gap_open_penalty=10.,
+                                               gap_extend_penalty=0.5)
+        self.assertEqual(actual, expected)
+    #     expected = ("", "", )
+    #     actual = global_pairwise_align_nucleotide("", "",
+    #                                            gap_open_penalty=10.,
+    #                                            gap_extend_penalty=5.)
+    #     self.assertEqual(actual, expected)
+    #
+    #     expected = ("", "", )
+    #     actual = global_pairwise_align_nucleotide("", "",
+    #                                            gap_open_penalty=5.,
+    #                                            gap_extend_penalty=0.5)
+    #     self.assertEqual(actual, expected)
+
+    #def test_local_pairwise_align_nucleotide(self):
+
+        # expected = ("", "", , , )
+        # actual = local_pairwise_align_nucleotide("", "",
+        #                                        gap_open_penalty=5.,
+        #                                        gap_extend_penalty=0.5)
+        # self.assertEqual(actual, expected)
