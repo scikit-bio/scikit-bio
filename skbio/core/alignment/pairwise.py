@@ -111,12 +111,22 @@ blosum50 = \
               'Q': 4, 'P': -1, 'S': 0, 'R': 0, 'T': -1, 'W': -2, 'V': -3,
               'Y': -2, 'X': -1, 'Z': 5}
 }
-nt_substitution_matrix = {'A': {'A':  1, 'C': -2, 'G': -2, 'T': -2, 'N': 0},
-                          'C': {'A': -2, 'C':  1, 'G': -2, 'T': -2, 'N': 0},
-                          'G': {'A': -2, 'C': -2, 'G':  1, 'T': -2, 'N': 0},
-                          'T': {'A': -2, 'C': -2, 'G': -2, 'T':  1, 'N': 0},
-                          'N': {'A':  0, 'C':  0, 'G':  0, 'T':  0, 'N': 0 }}
+nt_substitution_matrix = {'A': {'A':  1, 'C': -2, 'G': -2, 'T': -2},
+                          'C': {'A': -2, 'C':  1, 'G': -2, 'T': -2},
+                          'G': {'A': -2, 'C': -2, 'G':  1, 'T': -2},
+                          'T': {'A': -2, 'C': -2, 'G': -2, 'T':  1}}
 
+def make_nt_substitution_matrix(match, mismatch, alphabet='ACGT'):
+    result = {}
+    for c1 in alphabet:
+        row = {}
+        for c2 in alphabet:
+            if c1 == c2:
+                row[c2] = match
+            else:
+                row[c2] = mismatch
+        result[c1] = row
+    return result
 
 def local_pairwise_align_nucleotide(sequence1, sequence2, gap_open_penalty=5,
                                     gap_extend_penalty=2,
