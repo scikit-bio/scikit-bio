@@ -458,7 +458,7 @@ def _local_traceback(traceback_matrix,sw_matrix,seq1,seq2,gap_character='-'):
 
     current_row = None
     current_col = None
-    best_score = 0
+    best_score = 0.0
     for i in range(len(sw_matrix[0])):
         for j in range(len(sw_matrix)):
             current_score = sw_matrix[j][i]

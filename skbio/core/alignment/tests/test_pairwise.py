@@ -96,7 +96,7 @@ class PairwiseAlignmentTests(TestCase):
 
     def test_local_pairwise_align_nucleotide(self):
         m = make_nt_substitution_matrix(2, -3)
-        expected = ("ACCTTGAC", "ACTTTGAC", 11, 1, 2)
+        expected = ("ACCTTGAC", "ACTTTGAC", 11.0, 1, 2)
         actual = local_pairwise_align_nucleotide("GACCTTGACCAGGTACC",
                                                   "GAACTTTGACGTAAC",
                                                   gap_open_penalty=5.,
