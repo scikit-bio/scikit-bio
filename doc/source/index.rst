@@ -15,13 +15,38 @@ API Reference
    core.sequence
    core.distance
    core.exception
+   core.warning
+   core.genetic_code
    core.tree
+   core.workflow
    draw.distributions
    maths.stats.distance
    maths.stats.spatial
    maths.stats.ordination
    maths.subsample
+   format.sequences
    format.stockholm
+   math.diversity.alpha
+   math.stats.distance
+   math.stats.misc
+   math.stats.ordination
+   math.stats.spatial
+   math.gradient
+   math.subsample
    parse.sequences
+   util.io
    util.misc
-   util.trie
+   util.testing
+
+
+Developer Documentation
+-----------------------
+
+The developer documentation contains information for how to contribute
+to scikit-bio.
+
+.. toctree::
+   :maxdepth: 1
+
+   development/py3
+   development/new_module

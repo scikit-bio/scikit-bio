@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-from __future__ import division
-
 # -----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -8,14 +5,13 @@ from __future__ import division
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # -----------------------------------------------------------------------------
+from __future__ import absolute_import, division, print_function
 
 from skbio.core.exception import RecordError
 from skbio.parse.record import DelimitedSplitter
 
-from string import strip
 
-
-def label_line_parser(record, splitter, strict=True):
+def _label_line_parser(record, splitter, strict=True):
     """Returns dict mapping list of data to labels, plus list with field order.
 
     Field order contains labels in order encountered in file.
@@ -45,7 +41,7 @@ def label_line_parser(record, splitter, strict=True):
     return result, labels
 
 
-def is_clustal_seq_line(line):
+def _is_clustal_seq_line(line):
     """Returns True if line starts with a non-blank character but not 'CLUSTAL'
 
     Useful for filtering other lines out of the file.
@@ -56,7 +52,7 @@ def is_clustal_seq_line(line):
 last_space = DelimitedSplitter(None, -1)
 
 
-def delete_trailing_number(line):
+def _delete_trailing_number(line):
     """Deletes trailing number from a line.
 
     WARNING: does not preserve internal whitespace when a number is removed!
@@ -72,27 +68,23 @@ def delete_trailing_number(line):
 
 
 def parse_clustal(record, strict=True):
-    r"""Returns a dictionary of the parsed data
+    r"""yields labels and sequences
 
     Parameters
     ----------
 
     data : open file object
         An open Clustal file.
-
-
     strict : boolean
         Whether or not to raise a ``RecordError`` when no labels are found.
-
 
     Returns
     -------
 
-    labels: list
-        list of strings with the labels
-
-    data : dict
-        a dict of label to sequence (pieces not joined)
+    label : str
+        label of the sequence
+    seq : str
+        sequence for each label
 
     Notes
     -----
@@ -138,24 +130,29 @@ def parse_clustal(record, strict=True):
     ...                      'abc   GUCGAUACAUACGUACGUCGGUACGU-CGAC 11\n'
     ...                      'def   ---------------CGUGCAUGCAU-CGAU 18\n'
     ...                      'xyz   -----------CAUUCGUACGUACGCAUGAC 23\n')
-    >>> data, labels = parse_clustal(clustal_f)
-    >>> print labels
-    ['abc', 'def', 'xyz']
-    >>> for label, seq in data.iteritems():
-    ...     print label
-    ...     print seq
-    xyz
-    ['-------------------------------', '-----------CAUUCGUACGUACGCAUGAC']
+    >>> for label, seq in parse_clustal(clustal_f):
+    ...     print(label)
+    ...     print(seq)
     abc
-    ['GCAUGCAUCUGCAUACGUACGUACGCAUGCA', 'GUCGAUACAUACGUACGUCGGUACGU-CGAC']
+    GCAUGCAUCUGCAUACGUACGUACGCAUGCAGUCGAUACAUACGUACGUCGGUACGU-CGAC
     def
-    ['-------------------------------', '---------------CGUGCAUGCAU-CGAU']
+    ----------------------------------------------CGUGCAUGCAU-CGAU
+    xyz
+    ------------------------------------------CAUUCGUACGUACGCAUGAC
+
 
     References
     ----------
 
-    .. [1] Clustal: Multiple Sequence Alginment http://www.clustal.org
+    .. [1] Thompson JD, Higgins DG, Gibson TJ,  "CLUSTAL W: improving the
+        sensitivity of progressive multiple sequence alignment through sequence
+        weighting, position-specific gap penalties and weight matrix choice.
+        Thompson", Nucleic Acids Res. 1994 Nov 11;22(22):4673-80.
 
     """
-    records = map(delete_trailing_number, filter(is_clustal_seq_line, record))
-    return label_line_parser(records, last_space, strict)
+    records = map(_delete_trailing_number,
+                  filter(_is_clustal_seq_line, record))
+    data, labels = _label_line_parser(records, last_space, strict)
+
+    for key in labels:
+        yield key, ''.join(data[key])

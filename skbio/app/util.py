@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
+
+from future.utils import implements_iterator
 
 import os
 from os import remove, system, mkdir, getcwd
@@ -222,13 +224,7 @@ class CommandLineApplication(Application):
         self.TmpDir = FilePath(TmpDir)
         self.TmpNameLen = TmpNameLen
         self.HaltExec = HALT_EXEC
-        #===========================
-        # try:
-        #    mkdir(self.WorkingDir)
-        # except OSError:
-            # Directory already exists
-        #    pass
-        #===========================
+
         # create a variable to hold the name of the file being used as
         # input to the application. this is important especially when
         # you are using an input handler which creates a temporary file
@@ -552,7 +548,8 @@ class CommandLineApplication(Application):
             result_constructor(suffix)
 
 
-class ParameterIterBase:
+@implements_iterator
+class ParameterIterBase(object):
 
     """Base class for parameter iteration objects
 
@@ -640,8 +637,8 @@ class ParameterIterBase:
     def __iter__(self):
         return self
 
-    def next(self):
-        return self._generator.next()
+    def __next__(self):
+        return next(self._generator)
 
     def reset(self):
         self._generator = self._init_generator()

@@ -1,0 +1,4 @@
+dm1	dm2	statistic	p-value	n	method	permutations	alternative
+minx	miny	0.7559289460184544	0.324	3	pearson	999	greater
+minx	minz	-0.989743318610787	1.000	3	pearson	999	greater
+miny	minz	-0.8416975766245421	0.835	3	pearson	999	greater

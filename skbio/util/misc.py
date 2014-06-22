@@ -18,22 +18,51 @@ Functions
    flatten
    remove_files
    safe_md5
-
+   is_casava_v180_or_later
 """
-from __future__ import division
+from __future__ import absolute_import, division, print_function
 
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 import hashlib
 from os import remove, makedirs
 from os.path import exists, isdir
 from functools import partial
+
+
+def is_casava_v180_or_later(header_line):
+    """Check if the header looks like it is Illumina software post-casava v1.8
+
+    Parameters
+    ----------
+    header_line : bytes
+        A header line
+
+    Returns
+    -------
+    bool
+        ``True`` for if casava v1.8+, otherwise ``False``
+
+    Examples
+    --------
+    >>> from skbio.util.misc import is_casava_v180_or_later
+    >>> print(is_casava_v180_or_later('@foo'))
+    False
+    >>> id_ = '@M00176:17:000000000-A0CNA:1:1:15487:1773 1:N:0:0'
+    >>> print(is_casava_v180_or_later(id_))
+    True
+    """
+    if not header_line.startswith(b'@'):
+        raise ValueError("Non-header line passed in!")
+    fields = header_line.split(b':')
+
+    return len(fields) == 10 and fields[7] in b'YN'
 
 
 def safe_md5(open_file, block_size=2 ** 20):
@@ -42,7 +71,8 @@ def safe_md5(open_file, block_size=2 ** 20):
     Parameters
     ----------
     open_file : file object
-        open file handle to the archive to compute the checksum
+        open file handle to the archive to compute the checksum. It
+        must be open as a binary file
     block_size : int, optional
         size of the block taken per iteration
 
@@ -68,6 +98,7 @@ def safe_md5(open_file, block_size=2 ** 20):
     >>> x.hexdigest()
     'ab07acbb1e496801937adfa772424bf7'
     >>> fd.close()
+
     """
     md5 = hashlib.md5()
     data = True
@@ -177,7 +208,7 @@ def create_dir(dir_name, fail_on_exist=False, handle_errors_externally=False):
 
     if exists(dir_name):
         if isdir(dir_name):
-            #dir is there
+            # dir is there
             if fail_on_exist:
                 return ror(error_code_lookup['DIR_EXISTS'])
             else:
@@ -255,7 +286,7 @@ def flatten(items):
 
     >>> from skbio.util.misc import flatten
     >>> h = [['a', 'b', 'c', 'd'], [1, 2, 3, 4, 5], ['x', 'y'], ['foo']]
-    >>> print flatten(h)
+    >>> print(flatten(h))
     ['a', 'b', 'c', 'd', 1, 2, 3, 4, 5, 'x', 'y', 'foo']
 
     """

@@ -1,14 +1,18 @@
 #!/usr/bin/env python
 
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
+from future.utils import viewitems
+
+from numbers import Integral
 from copy import deepcopy
+
 from skbio.core.exception import FieldError
 
 
@@ -28,7 +32,7 @@ def DelimitedSplitter(delimiter=None, max_splits=1):
 
     Note: leaves empty fields in place.
     """
-    is_int = isinstance(max_splits, int) or isinstance(max_splits, long)
+    is_int = isinstance(max_splits, Integral)
     if is_int and (max_splits > 0):
         def parser(line):
             return [i.strip() for i in line.split(delimiter, max_splits)]
@@ -92,8 +96,8 @@ class GenericRecord(dict):
         temp = {}
         dict.__init__(temp, *args, **kwargs)
         self.update(temp)
-        for name, prototype in self.Required.iteritems():
-            if not name in self:
+        for name, prototype in viewitems(self.Required):
+            if name not in self:
                 self[name] = deepcopy(prototype)
 
     def __delitem__(self, item):
@@ -112,7 +116,7 @@ class GenericRecord(dict):
         """Coerces copy to correct type"""
         temp = self.__class__(super(GenericRecord, self).copy())
         # don't forget to copy attributes!
-        for attr, val in self.__dict__.iteritems():
+        for attr, val in viewitems(self.__dict__):
             temp.__dict__[attr] = deepcopy(val)
         return temp
 
@@ -152,9 +156,9 @@ class MappedRecord(GenericRecord):
             return prototype.copy()
         elif isinstance(prototype, list):
             return prototype[:]
-        elif isinstance(prototype, str) or isinstance(prototype, int) or\
-                isinstance(prototype, long) or isinstance(prototype, tuple)\
-                or isinstance(prototype, complex) or prototype is None:
+        elif (isinstance(prototype, str) or isinstance(prototype, int) or
+              isinstance(prototype, tuple) or isinstance(prototype, complex) or
+              prototype is None):
             return prototype  # immutable type: use directly
         else:
             return deepcopy(prototype)
@@ -166,11 +170,11 @@ class MappedRecord(GenericRecord):
         temp = {}
         unalias = self.unalias
         dict.__init__(temp, *args, **kwargs)
-        for key, val in temp.iteritems():
+        for key, val in viewitems(temp):
             self[unalias(key)] = val
-        for name, prototype in self.Required.iteritems():
+        for name, prototype in viewitems(self.Required):
             new_name = unalias(name)
-            if not new_name in self:
+            if new_name not in self:
                 self[new_name] = self._copy(prototype)
 
     def unalias(self, key):
@@ -251,7 +255,7 @@ class MappedRecord(GenericRecord):
         temp = {}
         unalias = self.unalias
         temp.update(*args, **kwargs)
-        for key, val in temp.iteritems():
+        for key, val in viewitems(temp):
             self[unalias(key)] = val
 
 # The following methods are useful for handling particular types of fields in
@@ -474,7 +478,7 @@ class FieldMorpher(object):
         result = {}
         default = self.Default
         cons = self.Constructors
-        for key, val in data.iteritems():
+        for key, val in viewitems(data):
             if key in cons:
                 result[key] = cons[key](val)
             else:

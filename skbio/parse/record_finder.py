@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 """Provides some classes for treating files as sequences of records.
 
@@ -24,6 +24,7 @@ str.  Note that its default constuctor is rstrip instead of strip.
 """
 
 from skbio.core.exception import RecordError
+from skbio.util.io import open_file
 
 
 def is_empty(line):
@@ -144,23 +145,29 @@ def LabeledRecordFinder(is_label_line, constructor=str.strip, ignore=is_empty):
     is incomplete.
     """
     def parser(lines):
-        curr = []
-        for l in lines:
-            if constructor is not None:
-                line = constructor(l)
-            else:
-                line = l
-            if ignore(line):
-                continue
-            # if we find the label, return the previous record
-            if is_label_line(line):
-                if curr:
-                    yield curr
-                    curr = []
-            curr.append(line)
-        # don't forget to return the last record in the file
-        if curr:
-            yield curr
+        with open_file(lines) as lines:
+            curr = []
+            for l in lines:
+                try:
+                    l = str(l.decode('utf-8'))
+                except AttributeError:
+                    pass
+
+                if constructor is not None:
+                    line = constructor(l)
+                else:
+                    line = l
+                if ignore(line):
+                    continue
+                # if we find the label, return the previous record
+                if is_label_line(line):
+                    if curr:
+                        yield curr
+                        curr = []
+                curr.append(line)
+            # don't forget to return the last record in the file
+            if curr:
+                yield curr
     return parser
 
 

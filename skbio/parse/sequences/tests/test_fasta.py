@@ -7,35 +7,58 @@
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # -----------------------------------------------------------------------------
-from __future__ import division
+from __future__ import absolute_import, division, print_function
 
-from skbio.parse.sequences.fasta import parse_fasta
-from skbio.core.alignment import Alignment
-from skbio.core.sequence import BiologicalSequence
-from skbio.core.exception import FastqParseError, RecordError
-
+import tempfile
 from unittest import TestCase, main
 
+import numpy.testing as npt
 
-class GenericFastaTest(TestCase):
+from skbio.parse.sequences.fasta import parse_fasta, parse_qual
+from skbio.core.exception import RecordError
 
-    """Setup data for all the various FASTA parsers."""
 
+FASTA_PARSERS_DATA = {
+    'labels': '>abc\n>def\n>ghi\n',
+    'oneseq': '>abc\nUCAG\n',
+    'multiline': '>xyz\nUUUU\nCC\nAAAAA\nG',
+    'threeseq': '>123\na\n> \t abc  \t \ncag\ngac\n>456\nc\ng',
+    'twogood': '>123\n\n> \t abc  \t \ncag\ngac\n>456\nc\ng',
+    'oneX': '>123\nX\n> \t abc  \t \ncag\ngac\n>456\nc\ng',
+    'nolabels': 'GJ>DSJGSJDF\nSFHKLDFS>jkfs\n',
+    'empty': '',
+    'qualscores': '>x\n5 10 5\n12\n>y foo bar\n30 40\n>a   \n5 10 5\n12\n'
+                  '>b  baz\n30 40',
+    'invalidqual': '>x\n5 10 5\n12\n>y\n30 40\n>a\n5 10 5\n12 brofist 42'
+    }
+
+
+class IterableData(object):
+    """Store fasta data as lists of strings."""
     def setUp(self):
-        """standard files"""
-        self.labels = '>abc\n>def\n>ghi\n'.split('\n')
-        self.oneseq = '>abc\nUCAG\n'.split('\n')
-        self.multiline = '>xyz\nUUUU\nCC\nAAAAA\nG'.split('\n')
-        self.threeseq = '>123\na\n> \t abc  \t \ncag\ngac\n>456\nc\ng'.split(
-            '\n')
-        self.twogood = '>123\n\n> \t abc  \t \ncag\ngac\n>456\nc\ng'.split(
-            '\n')
-        self.oneX = '>123\nX\n> \t abc  \t \ncag\ngac\n>456\nc\ng'.split('\n')
-        self.nolabels = 'GJ>DSJGSJDF\nSFHKLDFS>jkfs\n'.split('\n')
-        self.empty = []
+        for attr, val in FASTA_PARSERS_DATA.items():
+            setattr(self, attr, val.split('\n'))
 
 
-class ParseFastaTests(GenericFastaTest):
+class FileData(object):
+    """Store fasta data as file names pointing to the data."""
+    def setUp(self):
+        tmp_files = []
+        for attr, val in FASTA_PARSERS_DATA.items():
+            tmp_file = tempfile.NamedTemporaryFile('r+')
+            tmp_file.write(val)
+            tmp_file.flush()
+            tmp_file.seek(0)
+            setattr(self, attr, tmp_file.name)
+            tmp_files.append(tmp_file)
+        self._tmp_files = tmp_files
+
+    def tearDown(self):
+        for tmp_file in self._tmp_files:
+            tmp_file.close()
+
+
+class ParseFastaTests(object):
 
     """Tests of parse_fasta: returns (label, seq) tuples."""
 
@@ -92,6 +115,28 @@ class ParseFastaTests(GenericFastaTest):
         a = f[0]
         self.assertEqual(a, ('abc', '>CAG'))
 
+    def test_parse_fasta_ignore_comment(self):
+        """parse_fasta correct ignores label comments when requested
+        """
+        in_ = '>1\nCAG\n>2 some other info\nCCAG\n>3 \nA'.split('\n')
+        # ignore_comment = False
+        actual = list(parse_fasta(in_))
+        expected = [('1', 'CAG'), ('2 some other info', 'CCAG'), ('3', 'A')]
+        self.assertEqual(actual, expected)
+        # ignore_comment = True
+        actual = list(parse_fasta(in_, ignore_comment=True))
+        expected = [('1', 'CAG'), ('2', 'CCAG'), ('3', 'A')]
+        self.assertEqual(actual, expected)
+
+    def test_parse_fasta_label_to_name(self):
+        exp = [('brofist', 'a'), ('brofist', 'caggac'), ('brofist', 'cg')]
+
+        # the most powerful fasta label converter known to mankind
+        obs = list(parse_fasta(self.threeseq,
+                   label_to_name=lambda _: 'brofist'))
+
+        self.assertEqual(obs, exp)
+
     def test_multiple(self):
         """parse_fasta should read multiline records correctly"""
         f = list(parse_fasta(self.threeseq))
@@ -101,14 +146,51 @@ class ParseFastaTests(GenericFastaTest):
         self.assertEqual(b, ('abc', 'caggac'))
         self.assertEqual(c, ('456', 'cg'))
 
-    def test_multiple_bad(self):
-        """parse_fasta should complain or skip bad records"""
-        self.assertRaises(RecordError, list, parse_fasta(self.twogood))
+    def test_multiple_bad_strict(self):
+        with self.assertRaises(RecordError):
+            list(parse_fasta(self.twogood))
+
+    def test_multiple_bad_not_strict(self):
         f = list(parse_fasta(self.twogood, strict=False))
         self.assertEqual(len(f), 2)
         a, b = f
         self.assertEqual(a, ('abc', 'caggac'))
 
+    def test_parse_qual(self):
+        exp = [('x', [5, 10, 5, 12]), ('y', [30, 40]), ('a', [5, 10, 5, 12]),
+               ('b', [30, 40])]
+        obs = parse_qual(self.qualscores)
+
+        for o, e in zip(obs, exp):
+            npt.assert_equal(o, e)
+
+    def test_parse_qual_invalid_qual_file(self):
+        with self.assertRaises(RecordError):
+            list(parse_qual(self.invalidqual))
+
+    def test_parse_qual_full_header(self):
+        exp = [('x', [5, 10, 5, 12]), ('y foo bar', [30, 40]),
+               ('a', [5, 10, 5, 12]), ('b  baz', [30, 40])]
+        obs = parse_qual(self.qualscores, full_header=True)
+
+        for o, e in zip(obs, exp):
+            npt.assert_equal(o, e)
+
+
+class ParseFastaTestsInputIsIterable(IterableData, ParseFastaTests, TestCase):
+    """Mixin: `parse_fasta` and `parse_qual` in ParseFastaTests gets lists
+    of strings.
+
+    """
+    pass
+
+
+class ParseFastaTestsInputIsFileNames(FileData, ParseFastaTests, TestCase):
+    """Mixin: `parse_fasta` and `parse_qual` in ParseFastaTests gets a
+    file name.
+
+    """
+    pass
 
 if __name__ == "__main__":
     main()

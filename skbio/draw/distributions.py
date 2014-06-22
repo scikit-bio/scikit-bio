@@ -17,15 +17,16 @@ Functions
    grouped_distributions
 
 """
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
-from __future__ import division
+from __future__ import absolute_import, division, print_function
+from future.utils.six import string_types
 
 from itertools import cycle
 import warnings
@@ -326,12 +327,8 @@ def grouped_distributions(plot_type, data, x_values=None,
         for dist_index, dist, dist_marker in zip(range(num_distributions),
                                                  point, distribution_markers):
             dist_location = x_pos + dist_offset
-            distribution_plot_result = plotting_function(plot_axes, dist,
-                                                         dist_marker,
-                                                         distribution_width,
-                                                         dist_location,
-                                                         whisker_length,
-                                                         error_bar_type)
+            plotting_function(plot_axes, dist, dist_marker, distribution_width,
+                              dist_location, whisker_length, error_bar_type)
             dist_offset += distribution_width
 
     # Set up various plot options that are best set after the plotting is done.
@@ -373,7 +370,7 @@ def _validate_input(data, x_values, data_point_labels, distribution_labels):
     Validates plotting options to make sure they are valid with the supplied
     data.
     """
-    if data is None or not data or isinstance(data, basestring):
+    if data is None or not data or isinstance(data, string_types):
         raise ValueError("The data must be a list type, and it cannot be "
                          "None or empty.")
 
@@ -462,7 +459,7 @@ def _get_distribution_markers(marker_type, marker_choices, num_markers):
             RuntimeWarning)
         marker_cycle = cycle(marker_choices[:])
         while len(marker_choices) < num_markers:
-            marker_choices.append(marker_cycle.next())
+            marker_choices.append(next(marker_cycle))
     return marker_choices[:num_markers]
 
 
@@ -612,7 +609,7 @@ def _color_box_plot(plot_axes, box_plot, colors):
                 box_x.append(box.get_xdata()[i])
                 box_y.append(box.get_ydata()[i])
 
-            box_coords = zip(box_x, box_y)
+            box_coords = list(zip(box_x, box_y))
             box_polygon = Polygon(box_coords, facecolor=color)
             plot_axes.add_patch(box_polygon)
 
@@ -649,13 +646,12 @@ def _set_axes_options(plot_axes, title=None, x_label=None, y_label=None,
     # available, simply label the data points in an incremental fashion,
     # i.e. 1, 2, 3, ..., n, where n is the number of data points on the plot.
     if x_tick_labels is not None:
-        labels = plot_axes.set_xticklabels(x_tick_labels,
-                                           rotation=x_tick_labels_orientation)
+        plot_axes.set_xticklabels(x_tick_labels,
+                                  rotation=x_tick_labels_orientation)
     elif x_tick_labels is None and x_values is not None:
-        labels = plot_axes.set_xticklabels(x_values,
-                                           rotation=x_tick_labels_orientation)
+        plot_axes.set_xticklabels(x_values, rotation=x_tick_labels_orientation)
     else:
-        labels = plot_axes.set_xticklabels(
+        plot_axes.set_xticklabels(
             range(1, len(plot_axes.get_xticklabels()) + 1),
             rotation=x_tick_labels_orientation)
 

@@ -223,7 +223,7 @@ documentation build system:
    top-level table of contents:
 
     ```
-    skbio.core.example
+    core.example
     ```
 
 That's it! You can now try building the documentation, which should include the

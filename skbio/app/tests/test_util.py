@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 from tempfile import gettempdir
 from os import remove, system, rmdir, getcwd, walk
@@ -15,7 +15,7 @@ from copy import deepcopy
 
 from skbio.app.parameters import (FilePath, ValuedParameter, FlagParameter,
                                   MixedParameter)
-from unittest import TestCase, main
+from unittest import TestCase
 from skbio.app.util import (CommandLineApplication, ResultPath,
                             ApplicationError, ParameterIterBase,
                             ParameterCombinations, cmdline_generator,
@@ -29,9 +29,9 @@ class ParameterCombinationsTests(TestCase):
         """Setup for ParameterCombinations tests"""
         self.mock_app = ParameterCombinationsApp
         self.params = {'-flag1': True,
-                       '--value1': range(0, 5),
-                       '-delim': range(0, 2),
-                       '-mix1': [None] + range(0, 3)}
+                       '--value1': list(range(0, 5)),
+                       '-delim': list(range(0, 2)),
+                       '-mix1': [None] + list(range(0, 3))}
         self.always_on = ['--value1']
         self.param_iter = ParameterCombinations(self.mock_app, self.params,
                                                 self.always_on)
@@ -74,7 +74,7 @@ class ParameterCombinationsTests(TestCase):
     def test_reset(self):
         """Resets the iterator"""
         first = list(self.param_iter)
-        self.assertRaises(StopIteration, self.param_iter.next)
+        self.assertRaises(StopIteration, lambda: next(self.param_iter))
         self.param_iter.reset()
         second = list(self.param_iter)
         self.assertEqual(first, second)
@@ -86,9 +86,9 @@ class ParameterIterBaseTests(TestCase):
         """Setup for ParameterIterBase tests"""
         self.mock_app = ParameterCombinationsApp
         self.params = {'-flag1': True,
-                       '--value1': range(0, 5),
-                       '-delim': range(0, 2),
-                       '-mix1': [None] + range(0, 3)}
+                       '--value1': list(range(0, 5)),
+                       '-delim': list(range(0, 2)),
+                       '-mix1': [None] + list(range(0, 3))}
         self.always_on = ['--value1']
         self.param_base = ParameterIterBase(self.mock_app, self.params,
                                             self.always_on)
@@ -96,8 +96,8 @@ class ParameterIterBaseTests(TestCase):
     def test_init(self):
         """Test constructor"""
         exp_params = {'-flag1': [True, False],
-                      '--value1': range(0, 5),
-                      '-delim': range(0, 2) + [False],
+                      '--value1': list(range(0, 5)),
+                      '-delim': list(range(0, 2)) + [False],
                       '-mix1': [None, 0, 1, 2] + [False]}
 
         self.assertEqual(exp_params,
@@ -210,7 +210,6 @@ class CommandLineGeneratorTests(TestCase):
         cmd = self.abs_path_to_cmd
         inputfile = self.abs_path_to_input
         outputfile = self.abs_path_to_output
-        stdout = self.abs_path_to_stdout
         stderr = self.abs_path_to_stderr
 
         # the extra '' is intentionally added. When stdout is used for actual
@@ -250,8 +249,6 @@ class CommandLineGeneratorTests(TestCase):
         cmd = self.abs_path_to_cmd
         inputfile = self.abs_path_to_input
         outputfile = self.abs_path_to_output
-        stdout = self.abs_path_to_stdout
-        stderr = self.abs_path_to_stderr
 
         exp = [' '.join([bin, cmd, '-default=42', '-delimaaachoice1', '-flag1',
                         '-input="%s"' % inputfile, '-output="%s"' % outputfile,
@@ -449,7 +446,7 @@ class CommandLineApplicationTests(TestCase):
         # because parameters are printed in arbitrary order
         app.Parameters['-F'].on('junk.txt')
         app.Parameters['--duh'].on()
-        self.failUnless(app.BaseCommand ==
+        self.assertTrue(app.BaseCommand ==
                         'cd "/tmp/"; /tmp/CLAppTester.py -F "junk.txt" --duh'
                         or app.BaseCommand ==
                         'cd "/tmp/"; /tmp/CLAppTester.py --duh -F "junk.txt"')
@@ -1125,13 +1122,15 @@ def teardown_module():
     rmdir('/tmp/blah')
 
 
-#=====================END OF TESTS===================================
+# =====================END OF TESTS==================================
 
 script = """#!/usr/bin/env python
 #This is a test script intended to test the CommandLineApplication
 #class and CommandLineAppResult class
 
-from sys import argv, stderr,stdin
+from __future__ import absolute_import, division, print_function
+
+from sys import argv, stderr, stdin
 from os import isatty
 
 out_file_name = None
@@ -1184,10 +1183,10 @@ if out_file_name:
     f.writelines(out)
     f.close()
 else:
-    print out
+    print(out)
 
 #generate some stderr
-print >> stderr, 'I am stderr'
+print('I am stderr', file=stderr)
 
 # Write the fixed file
 f = open('/tmp/fixed.txt','w')
@@ -1295,5 +1294,5 @@ class ParameterCombinationsApp(CommandLineApplication):
                    '-output': ValuedParameter(Prefix='-', Name='output',
                                               Delimiter='=')}
 if __name__ == '__main__':
-
-    main()
+    from nose import runmodule
+    runmodule()
