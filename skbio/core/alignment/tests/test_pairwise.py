@@ -103,3 +103,41 @@ class PairwiseAlignmentTests(TestCase):
                                                   gap_extend_penalty=2.,
                                                   substitution_matrix=m)
         self.assertEqual(actual, expected)
+
+        m = make_nt_substitution_matrix(5, -4)
+        # this result comes from EMBOSS:
+        expected = ("ACCTTGACCAGGTACC", "ACTTTGAC---GTAAC", 41.0, 1, 2)
+        actual = local_pairwise_align_nucleotide("GACCTTGACCAGGTACC",
+                                                  "GAACTTTGACGTAAC",
+                                                  gap_open_penalty=5.,
+                                                  gap_extend_penalty=0.5,
+                                                  substitution_matrix=m)
+        self.assertEqual(actual, expected)
+        # This result comes from SSW
+        # expected = ("ACCTTGACCAGGTACC", "ACTTTGAC---GTAAC", 42.0, 1, 2)
+        # In [28]: a = StripedSmithWaterman('GACCTTGACCAGGTACC',match=5, mismatch=-4, gap_open=5, gap_extend=0.5)('GAACTTTGACGTAAC')
+        #
+        # In [29]: a
+        # Out[29]: <skbio.core.ssw.ssw_wrapper.AlignmentStructure at 0x107ccfa70>
+        #
+        # In [30]: print a
+        # {
+        #     'optimal_alignment_score': 42,
+        #     'suboptimal_alignment_score': 0,
+        #     'query_begin': 1,
+        #     'query_end': 16,
+        #     'target_begin': 2,
+        #     'target_end_optimal': 14,
+        #     'target_end_suboptimal': 0,
+        #     'cigar': '8M3I5M',
+        #     'query_sequence': 'GACCTTGACCAGGTACC',
+        #     'target_sequence': 'GAACTTTGACGTAAC'
+        # }
+        #
+        # In [31]: print a.get_aligned_query_sequence()
+        # ACCTTGACCAGGTACC
+        #
+        # In [32]: print a.get_aligned_target_sequence()
+        # ACTTTGAC---GTAAC
+
+        ## I suspect that I might be initializing the score matrix incorrectly...
