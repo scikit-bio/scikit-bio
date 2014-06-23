@@ -2763,7 +2763,7 @@ class TreeNode(object):
             empty list.
         cache_attrname : str
             Name of the attribute to decorate on containing the cached values
-        cache_type : {set, list}
+        cache_type : {set, frozenset, list}
             The type of the cache
 
         Notes
@@ -2802,12 +2802,12 @@ class TreeNode(object):
         Node name: h, cache: ['h']
 
         """
-        if cache_type == set:
+        if cache_type in [set, frozenset]:
             reduce_f = lambda a, b: a | b
         elif cache_type == list:
             reduce_f = lambda a, b: a + b
         else:
-            raise TypeError("Only list and set are supported!")
+            raise TypeError("Only list, set and frozenset are supported!")
 
         for node in self.postorder(include_self=True):
             node._registered_caches.add(cache_attrname)
