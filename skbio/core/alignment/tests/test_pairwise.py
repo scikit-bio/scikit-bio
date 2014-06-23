@@ -15,8 +15,8 @@ import numpy as np
 from skbio import (
     global_pairwise_align_protein, local_pairwise_align_protein,
     global_pairwise_align_nucleotide, local_pairwise_align_nucleotide)
-from skbio.core.alignment.pairwise import (make_nt_substitution_matrix,
-    _init_matrices_sw, _init_matrices_nw)
+from skbio.core.alignment.pairwise import (
+    make_nt_substitution_matrix, _init_matrices_sw, _init_matrices_nw)
 
 
 class PairwiseAlignmentTests(TestCase):
@@ -37,17 +37,16 @@ class PairwiseAlignmentTests(TestCase):
 
     def test_make_nt_substitution_matrix(self):
         expected = {'A': {'A':  1, 'C': -2, 'G': -2, 'T': -2},
-                          'C': {'A': -2, 'C':  1, 'G': -2, 'T': -2},
-                          'G': {'A': -2, 'C': -2, 'G':  1, 'T': -2},
-                          'T': {'A': -2, 'C': -2, 'G': -2, 'T':  1}}
+                    'C': {'A': -2, 'C':  1, 'G': -2, 'T': -2},
+                    'G': {'A': -2, 'C': -2, 'G':  1, 'T': -2},
+                    'T': {'A': -2, 'C': -2, 'G': -2, 'T':  1}}
         self.assertEqual(make_nt_substitution_matrix(1, -2), expected)
 
         expected = {'A': {'A':  5, 'C': -4, 'G': -4, 'T': -4},
-                          'C': {'A': -4, 'C':  5, 'G': -4, 'T': -4},
-                          'G': {'A': -4, 'C': -4, 'G':  5, 'T': -4},
-                          'T': {'A': -4, 'C': -4, 'G': -4, 'T':  5}}
+                    'C': {'A': -4, 'C':  5, 'G': -4, 'T': -4},
+                    'G': {'A': -4, 'C': -4, 'G':  5, 'T': -4},
+                    'T': {'A': -4, 'C': -4, 'G': -4, 'T':  5}}
         self.assertEqual(make_nt_substitution_matrix(5, -4), expected)
-
 
     def test_global_pairwise_align_protein(self):
         expected = ("HEAGAWGHEE", "---PAWHEAE", 1.0, 0, 0)
@@ -66,14 +65,14 @@ class PairwiseAlignmentTests(TestCase):
     def test_local_pairwise_align_protein(self):
         expected = ("AWGHE", "AW-HE", 26.0, 4, 1)
         actual = local_pairwise_align_protein("HEAGAWGHEE", "PAWHEAE",
-                                               gap_open_penalty=10.,
-                                               gap_extend_penalty=5.)
+                                              gap_open_penalty=10.,
+                                              gap_extend_penalty=5.)
         self.assertEqual(actual, expected)
 
         expected = ("AWGHE-E", "AW-HEAE", 32.0, 4, 1)
         actual = local_pairwise_align_protein("HEAGAWGHEE", "PAWHEAE",
-                                               gap_open_penalty=5.,
-                                               gap_extend_penalty=0.5)
+                                              gap_open_penalty=5.,
+                                              gap_extend_penalty=0.5)
         self.assertEqual(actual, expected)
 
     def test_global_pairwise_align_nucleotide(self):
@@ -98,17 +97,17 @@ class PairwiseAlignmentTests(TestCase):
         m = make_nt_substitution_matrix(5, -4)
         expected = ("ACCTTGACCAGGTACC", "ACTTTGAC---GTAAC", 41.0, 1, 2)
         actual = local_pairwise_align_nucleotide("GACCTTGACCAGGTACC",
-                                                  "GAACTTTGACGTAAC",
-                                                  gap_open_penalty=5.,
-                                                  gap_extend_penalty=0.5,
-                                                  substitution_matrix=m)
+                                                 "GAACTTTGACGTAAC",
+                                                 gap_open_penalty=5.,
+                                                 gap_extend_penalty=0.5,
+                                                 substitution_matrix=m)
 
         expected = ("ACCTTGAC", "ACTTTGAC", 31.0, 1, 2)
         actual = local_pairwise_align_nucleotide("GACCTTGACCAGGTACC",
-                                                  "GAACTTTGACGTAAC",
-                                                  gap_open_penalty=10.,
-                                                  gap_extend_penalty=5.,
-                                                  substitution_matrix=m)
+                                                 "GAACTTTGACGTAAC",
+                                                 gap_open_penalty=10.,
+                                                 gap_extend_penalty=5.,
+                                                 substitution_matrix=m)
         self.assertEqual(actual, expected)
 
     def test_init_matrices_sw(self):
