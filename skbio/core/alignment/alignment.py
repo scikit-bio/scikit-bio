@@ -882,12 +882,12 @@ class Alignment(SequenceCollection):
         Notes
         -----
         The start/end positions indicate the range of the unaligned sequences
-        that were aligned when the alignment was constructed. For example, if
-        local alignment was performed on the sequences ACA and TACAT, depending
-        on the specific algorithm that was used to perform the alignment the
-        start/end positions would likely be: [(0,2), (1,3)], indicating that
-        alignment looked like the following, and that the first and last
-        positions of the second sequence were not included in the alignment:
+        in the alignment. For example, if local alignment were performed on the
+        sequences ACA and TACAT, depending on the specific algorithm that was
+        used to perform the alignment, the start/end positions would likely be:
+        ``[(0,2), (1,3)]``. This indicates that the first and last positions of
+        the second sequence were not included in the alignment, and the
+        aligned sequences were therefore:
         ACA
         ACA
 
