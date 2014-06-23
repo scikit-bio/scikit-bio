@@ -9,7 +9,7 @@
 
 from __future__ import absolute_import, division, print_function
 from future.builtins import zip, range
-from future.utils import viewkeys
+from future.utils import viewkeys, viewitems, itervalues
 
 from collections import Counter, defaultdict, OrderedDict
 from warnings import warn
@@ -19,7 +19,6 @@ from scipy.stats import entropy
 
 from skbio.core.exception import SequenceCollectionError, StockholmParseError
 from skbio.core.distance import DistanceMatrix
-from skbio.format.sequences.stockholm import stockholm_from_alignment
 
 
 class SequenceCollection(object):
@@ -1516,7 +1515,16 @@ class StockholmAlignment(Alignment):
     gc : dict, optional
         GC info in the format {feature: info}
 
+    Notes
+    -----
+    If there are multiple references, include information for each R* line
+    as a list, with reference 0 information in position 0 for all lists,
+    etc. This list will be broken up into the appropriate bits for each
+    reference on string formatting.
 
+    If there are multiple trees included, use a list to store identifiers
+    and trees, with position 0 holding identifier for tree in position 0,
+    etc.
 
     Examples
     --------
@@ -1534,28 +1542,135 @@ class StockholmAlignment(Alignment):
     >>> sto_in = StringIO("# STOCKHOLM 1.0\n"
     ...                  "seq1     ACC--G-GGGU\nseq2     TCC--G-GGGA\n"
     ...                  "#=GC SS_cons (((.....)))\n//")
-    >>> sto_records = StockholmAlignment.parse_stockholm(sto_in, RNA)
-    >>> for sto in sto_records:
-    >>>     print sto
+    >>> sto_records = StockholmAlignment.from_file(sto_in, RNA)
+    >>> sto = next(sto_records)
+    >>> print sto
     # STOCKHOLM 1.0
     seq1         ACC--G-GGGU
     seq2         TCC--G-GGGA
     #=GC SS_cons (((.....)))
-    >>>     sto.gc
+    >>> sto.gc
+    {'SS_cons': '(((.....)))'}
     //
     """
     def __init__(self, seqs, gf=None, gs=None, gr=None, gc=None,
                  validate=False):
-        self.gf = gf
-        self.gs = gs
-        self.gr = gr
-        self.gc = gc
+        self.gf = gf if gf else {}
+        self.gs = gs if gs else {}
+        self.gr = gr if gr else {}
+        self.gc = gc if gc else {}
         super(StockholmAlignment, self).__init__(seqs, validate)
 
     def __str__(self):
-        return stockholm_from_alignment(self)
+        r"""Parses StockholmAlignment into a string with stockholm format
 
-    def _parse_gf_info(self, lines):
+        Returns
+        -------
+        str
+            Stockholm formatted string containing all information in the object
+
+        Notes
+        -----
+        If references are included in GF data, the RN lines are automatically
+        generated if not provided.
+
+        References
+        ----------
+        http://sonnhammer.sbc.su.se/Stockholm.html
+        http://en.wikipedia.org/wiki/Stockholm_format
+        """
+
+        # find length of leader info needed to make file pretty
+        # 10 comes from the characters for '#=GF ' and the feature after label
+        infolen = max(len(seq.id) for seq in self._data) + 10
+
+        GF_lines = []
+        GS_lines = []
+        GC_lines = []
+        # NOTE: EVERYTHING MUST BE COERECED TO STR in case int or float passed
+        # add GF information if applicable
+        if self.gf:
+            skipfeatures = set(("NH", "RC", "RM", "RN", "RA", "RL"))
+            for feature, value in self.gf.items():
+                # list of features to skip and parse special later
+                if feature in skipfeatures:
+                    continue
+                # list of features to parse special
+                elif feature == "TN":
+                    # trees must be in proper order of identifier then tree
+                    ident = value if isinstance(value, list) else [value]
+                    tree = self.gf["NH"] if isinstance(self.gf["NH"], list) \
+                        else [self.gf["NH"]]
+                    for ident, tree in zip(self.gf["TN"], self.gf["NH"]):
+                        GF_lines.append(' '.join(["#=GF", "TN", str(ident)]))
+                        GF_lines.append(' '.join(["#=GF", "NH", str(tree)]))
+                elif feature == "RT":
+                    # make sure each reference block stays together
+                    # set up lists to zip in case some bits are missing
+                    # create rn list if needed
+                    default_none = [0]*len(value)
+                    rn = self.gf.get("RN", ["[%i]" % x for x in
+                                     range(1, len(value)+1)])
+                    rm = self.gf.get("RM", default_none)
+                    rt = self.gf.get("RT", default_none)
+                    ra = self.gf.get("RA", default_none)
+                    rl = self.gf.get("RL", default_none)
+                    rc = self.gf.get("RC", default_none)
+                    # order: RN, RM, RT, RA, RL, RC
+                    for n, m, t, a, l, c in zip(rn, rm, rt, ra, rl, rc):
+                        GF_lines.append(' '.join(["#=GF", "RN", n]))
+                        if m:
+                            GF_lines.append(' '.join(["#=GF", "RM", str(m)]))
+                        if t:
+                            GF_lines.append(' '.join(["#=GF", "RT", str(t)]))
+                        if a:
+                            GF_lines.append(' '.join(["#=GF", "RA", str(a)]))
+                        if l:
+                            GF_lines.append(' '.join(["#=GF", "RL", str(l)]))
+                        if c:
+                            GF_lines.append(' '.join(["#=GF", "RC", str(c)]))
+                else:
+                    # normal addition for everything else
+                    if not isinstance(value, list):
+                        value = [value]
+                    for val in value:
+                        GF_lines.append(' '.join(["#=GF", feature, str(val)]))
+
+        # add GS information if applicable
+        if self.gs:
+            for seqname in self.gs:
+                for feature in self.gs[seqname]:
+                    GS_lines.append(' '.join(["#=GS", seqname, feature,
+                                             str(self.gs[seqname][feature])]))
+
+        # add GC information if applicable
+        if self.gc:
+            for feature, value in viewitems(self.gc):
+                leaderinfo = ' '.join(["#=GC", feature])
+                spacer = ' ' * (infolen - len(leaderinfo))
+                GC_lines.append(spacer.join([leaderinfo,
+                                             str(self.gc[feature])]))
+
+        sto_lines = ["# STOCKHOLM 1.0"] + GF_lines + GS_lines
+        # create seq output along with GR info if applicable
+        for label, seq in self.iteritems():
+            spacer = ' ' * (infolen - len(label))
+            sto_lines.append(spacer.join([label, str(seq)]))
+            # GR info added if exists for sequence
+            if label in self.gr:
+                for feature, value in viewitems(self.gr[label]):
+                    leaderinfo = ' '.join(['#=GR', label, feature])
+                    spacer = ' ' * (infolen - len(leaderinfo))
+                    sto_lines.append(spacer.join([leaderinfo, value]))
+
+        sto_lines.extend(GC_lines)
+        # add final slashes to end of file
+        sto_lines.append('//')
+
+        return '\n'.join(sto_lines)
+
+    @staticmethod
+    def _parse_gf_info(lines):
         """Takes care of parsing GF lines in stockholm plus special cases"""
         parsed = defaultdict(list)
         # needed for making each multi-line RT and NH one string
@@ -1605,7 +1720,8 @@ class StockholmAlignment(Alignment):
                 parsed[feature] = value[0]
         return parsed
 
-    def _parse_gc_info(self, lines, strict=False, seqlen=-1):
+    @staticmethod
+    def _parse_gc_info(lines, strict=False, seqlen=-1):
         """Takes care of parsing GC lines in stockholm format"""
         parsed = {}
         for line in lines:
@@ -1637,7 +1753,8 @@ class StockholmAlignment(Alignment):
 
         return parsed
 
-    def _parse_gs_gr_info(self, lines, strict=False, seqlen=-1):
+    @staticmethod
+    def _parse_gs_gr_info(lines, strict=False, seqlen=-1):
         """Takes care of parsing GS and GR lines in stockholm format"""
         parsed = {}
         parsetype = ""
@@ -1714,7 +1831,7 @@ class StockholmAlignment(Alignment):
             elif line == "//":
                 # parse the record since we are at its end
                 # get length of sequences in the alignment
-                seqlen = len(next(seqs.items()))
+                seqlen = len(next(itervalues(seqs)))
 
                 # parse information lines
                 gf = cls._parse_gf_info(gf_lines)
@@ -1723,7 +1840,8 @@ class StockholmAlignment(Alignment):
                 gc = cls._parse_gc_info(gc_lines, strict, seqlen)
 
                 # yield the actual stockholm object
-                yield cls(seqs.items(), gf, gs, gr, gc)
+                yield cls([seq_constructor(_id, seq) for seq, _id in
+                           viewitems(seqs)], gf, gs, gr, gc)
 
                 # reset all storage variables
                 gs_lines = []

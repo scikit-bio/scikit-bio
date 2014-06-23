@@ -19,6 +19,7 @@ Data Structures
 
    SequenceCollection
    Alignment
+   StockholmAlignment
 
 Alignment Algorithms
 --------------------

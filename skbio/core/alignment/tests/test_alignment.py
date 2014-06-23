@@ -12,13 +12,19 @@ from __future__ import absolute_import, division, print_function
 
 import warnings
 from unittest import TestCase, main
-from collections import Counter, defaultdict
+from collections import Counter, defaultdict, OrderedDict
+try:
+    from StringIO import StringIO
+except ImportError:  # python3 system
+    from io import StringIO
 
 import numpy as np
 
-from skbio.core.sequence import NucleotideSequence, DNASequence, RNASequence
-from skbio.core.alignment import SequenceCollection, Alignment
-from skbio.core.exception import SequenceCollectionError
+from skbio.core.sequence import (NucleotideSequence, DNASequence, RNASequence,
+                                 DNA)
+from skbio.core.alignment import (SequenceCollection, Alignment,
+                                  StockholmAlignment)
+from skbio.core.exception import SequenceCollectionError, StockholmParseError
 from skbio.core.distance import DistanceMatrix
 
 
@@ -710,6 +716,253 @@ class AlignmentTests(TestCase):
         self.assertFalse(Alignment([
             DNASequence('TTT', id="d1"),
             DNASequence('TT', id="d2")])._validate_lengths())
+
+
+class StockholmAlignmentTests(TestCase):
+    """Tests for stockholmAlignment object"""
+
+    def setUp(self):
+        """Setup for stockholm tests."""
+        self.seqs = [DNASequence("ACC-G-GGTA", id="seq1"),
+                     DNASequence("TCC-G-GGCA", id="seq2")]
+        self.GF = {"RT": ["TITLE1",  "TITLE2"],
+                   "AC": "RF00360",
+                   "BM": ["cmbuild  -F CM SEED",
+                          "cmsearch  -Z 274931 -E 1000000"],
+                   "SQ": "9", "RA": ["Auth1;", "Auth2;"],
+                   "RL": ["J Mol Biol", "Cell"],
+                   "RM": ["11469857", "12007400"],
+                   'RN': ['[1]', '[2]']}
+        self.GS = {"seq1": {"AC": "111"}, "seq2": {"AC": "222"}}
+        self.GR = {"seq1": {"SS": "1110101111"},
+                   "seq2": {"SS": "0110101110"}}
+        self.GC = {"SS_cons": "(((....)))"}
+        self.st = StockholmAlignment(self.seqs, gc=self.GC, gf=self.GF,
+                                     gs=self.GS, gr=self.GR)
+
+    def test_retrieve_metadata(self):
+        self.assertEqual(self.st.gc, self.GC)
+        self.assertEqual(self.st.gf, self.GF)
+        self.assertEqual(self.st.gs, self.GS)
+        self.assertEqual(self.st.gr, self.GR)
+
+    def test_from_file_alignment(self):
+        """make sure can parse basic sto file with interleaved alignment"""
+        sto = StringIO("# STOCKHOLM 1.0\n"
+                       "seq1      ACC-G\n"
+                       "seq2      TCC-G\n\n"
+                       "seq1      -GGTA\n"
+                       "seq2      -GGCA\n//")
+        obs_sto = StockholmAlignment.from_file(sto, DNA).next()
+        exp_sto = StockholmAlignment(self.seqs)
+        self.assertEqual(obs_sto, exp_sto)
+
+    def test_from_file_GF(self):
+        """Make sure GF lines are parsed correctly"""
+        sto = StringIO("# STOCKHOLM 1.0\n#=GF RN [1]\n#=GF RM 11469857\n"
+                       "#=GF RT TITLE1\n#=GF RA Auth1;\n#=GF RL J Mol Biol\n"
+                       "#=GF RN [2]\n#=GF RM 12007400\n#=GF RT TITLE2\n"
+                       "#=GF RA Auth2;\n#=GF RL Cell\n#=GF AC RF00360\n"
+                       "#=GF BM cmbuild  -F CM SEED\n"
+                       "#=GF BM cmsearch  -Z 274931 -E 1000000\n#=GF SQ 9\n"
+                       "seq1         ACC-G-GGTA\nseq2         TCC-G-GGCA\n//")
+        obs_sto = StockholmAlignment.from_file(sto, DNA).next()
+        exp_sto = StockholmAlignment(self.seqs, self.GF, {}, {}, {})
+        self.assertEqual(obs_sto, exp_sto)
+
+    def test_from_file_GC(self):
+        """Make sure GC lines are parsed correctly"""
+        sto = StringIO("# STOCKHOLM 1.0\n"
+                       "seq1         ACC-G-GGTA\nseq2         TCC-G-GGCA\n"
+                       "#=GC SS_cons (((....)))\n//")
+        obs_sto = StockholmAlignment.from_file(sto, DNA).next()
+        exp_sto = StockholmAlignment(self.seqs, {}, {}, {}, self.GC)
+        self.assertEqual(obs_sto, exp_sto)
+
+    def test_from_file_GS(self):
+        """Make sure GS lines are parsed correctly"""
+        sto = StringIO("# STOCKHOLM 1.0\n#=GS seq2 AC 222\n#=GS seq1 AC 111\n"
+                       "seq1          ACC-G-GGTA\n"
+                       "seq2          TCC-G-GGCA\n//")
+        obs_sto = StockholmAlignment.from_file(sto, DNA).next()
+        exp_sto = StockholmAlignment(self.seqs, {}, self.GS, {}, {})
+        self.assertEqual(obs_sto, exp_sto)
+
+    def test_from_file_GR(self):
+        """Make sure GR lines are parsed correctly"""
+        sto = StringIO("# STOCKHOLM 1.0\nseq1          ACC-G\n"
+                       "#=GR seq1 SS  11101\nseq2          TCC-G\n"
+                       "#=GR seq2 SS  01101\n\nseq1          -GGTA\n"
+                       "#=GR seq1 SS  01111\nseq2          -GGCA\n"
+                       "#=GR seq2 SS  01110\n//")
+        obs_sto = StockholmAlignment.from_file(sto, DNA).next()
+        exp_sto = StockholmAlignment(self.seqs, {}, {}, self.GR, {})
+        self.assertEqual(obs_sto, exp_sto)
+
+    def test_from_file_multi(self):
+        """Make sure yield works correctly with multi-alignment sto files"""
+        sto = StringIO("# STOCKHOLM 1.0\n#=GS seq2 AC 222\n#=GS seq1 AC 111\n"
+                       "seq1          ACC-G-GGTA\n"
+                       "seq2          TCC-G-GGCA\n//\n"
+                       "# STOCKHOLM 1.0\nseq1          ACC-G-GGTA\n"
+                       "#=GR seq1 SS  1110101111\nseq2          TCC-G-GGCA\n"
+                       "#=GR seq2 SS  0110101110\n//")
+        obs_sto = StockholmAlignment.from_file(sto, DNA)
+        count = 0
+        for obs in obs_sto:
+            if count == 0:
+                exp_sto = StockholmAlignment(self.seqs, {}, self.GS, {}, {})
+                self.assertEqual(obs, exp_sto)
+            elif count == 1:
+                exp_sto = StockholmAlignment(self.seqs, {}, {}, self.GR, {})
+                self.assertEqual(obs, exp_sto)
+            else:
+                raise AssertionError("More than 2 sto alignments parsed!")
+            count += 1
+
+    def test_parse_gf_info_nongf(self):
+        """Makes sure error raised if non-GF line passed"""
+        sto = ["#=GF AC BLAAAAAAAHHH", "#=GC HUH THIS SHOULD NOT BE HERE"]
+        with self.assertRaises(StockholmParseError):
+            self.st._parse_gf_info(sto)
+
+    def test_parse_gf_info_malformed(self):
+        """Makes sure error raised if too short a line passed"""
+        sto = ["#=GF AC BLAAAAAAAHHH", "#=GF SMALL"]
+        with self.assertRaises(StockholmParseError):
+            self.st._parse_gc_info(sto)
+
+    def test_parse_gc_info_nongf(self):
+        """Makes sure error raised if non-GC line passed"""
+        sto = ["#=GC AC BLAAAAAAAHHH", "#=GF HUH THIS SHOULD NOT BE HERE"]
+        with self.assertRaises(StockholmParseError):
+            self.st._parse_gf_info(sto)
+
+    def test_parse_gc_info_strict(self):
+        """Make sure error raised if GC lines bad length and strict parsing"""
+        sto = ["#=GC SS_cons (((..)))"]
+        with self.assertRaises(StockholmParseError):
+            self.st._parse_gc_info(sto, seqlen=20, strict=True)
+
+    def test_parse_gc_info_malformed(self):
+        """Makes sure error raised if too short a line passed"""
+        sto = ["#=GC AC BLAAAAAAAHHH", "#=GC SMALL"]
+        with self.assertRaises(StockholmParseError):
+            self.st._parse_gc_info(sto)
+
+    def test_parse_gs_gr_info_mixed(self):
+        """Makes sure error raised if mixed GS and GR lines passed"""
+        sto = ["#=GS seq1 AC BLAAA", "#=GR seq2 HUH THIS SHOULD NOT BE HERE"]
+        with self.assertRaises(StockholmParseError):
+            self.st._parse_gs_gr_info(sto)
+
+    def test_parse_gs_gr_info_malformed(self):
+        """Makes sure error raised if too short a line passed"""
+        sto = ["#=GS AC BLAAAAAAAHHH", "#=GS SMALL"]
+        with self.assertRaises(StockholmParseError):
+            self.st._parse_gs_gr_info(sto)
+
+    def test_parse_gs_gr_info_strict(self):
+        """Make sure error raised if GR lines bad length and strict parsing"""
+        sto = ["#=GR seq1 SS  10101111", "#=GR seq2 SS  01101"]
+        with self.assertRaises(StockholmParseError):
+            self.st._parse_gs_gr_info(sto, seqlen=20, strict=True)
+
+    def test_str(self):
+        """ Make sure stockholm with all information contained is formatted
+        correctly """
+        st = StockholmAlignment(self.seqs, gc=self.GC, gf=self.GF, gs=self.GS,
+                                gr=self.GR)
+        obs = str(st)
+        exp = ('# STOCKHOLM 1.0\n#=GF RN [1]\n#=GF RM 11469857\n'
+            '#=GF RT TITLE1\n#=GF RA Auth1;\n#=GF RL J Mol Biol\n'
+            '#=GF RN [2]\n#=GF RM 12007400\n#=GF RT TITLE2\n#=GF RA Auth2;\n'
+            '#=GF RL Cell\n#=GF AC RF00360\n#=GF BM cmbuild  -F CM SEED\n'
+            '#=GF BM cmsearch  -Z 274931 -E 1000000\n#=GF SQ 9\n'
+            '#=GS seq2 AC 222\n#=GS seq1 AC 111\nseq1          ACC-G-GGTA\n'
+            '#=GR seq1 SS  1110101111\nseq2          TCC-G-GGCA\n'
+            '#=GR seq2 SS  0110101110\n#=GC SS_cons  (((....)))\n//')
+        self.assertEqual(obs, exp)
+
+    def test_str_gc(self):
+        """ Make sure stockholm with only GC information contained is formatted
+        correctly """
+        st = StockholmAlignment(self.seqs, gc=self.GC, gf=None, gs=None,
+                                gr=None)
+        obs = str(st)
+        exp = ("# STOCKHOLM 1.0\nseq1          ACC-G-GGTA\n"
+               "seq2          TCC-G-GGCA\n"
+               "#=GC SS_cons  (((....)))\n//")
+        self.assertEqual(obs, exp)
+
+    def test_str_gf(self):
+        """ Make sure stockholm with only GF information contained is formatted
+        correctly """
+        st = StockholmAlignment(self.seqs, gc=None, gf=self.GF, gs=None,
+                                gr=None)
+        obs = str(st)
+        exp = ('# STOCKHOLM 1.0\n#=GF RN [1]\n#=GF RM 11469857\n'
+               '#=GF RT TITLE1\n#=GF RA Auth1;\n#=GF RL J Mol Biol\n'
+               '#=GF RN [2]\n#=GF RM 12007400\n#=GF RT TITLE2\n#=GF RA Auth2;'
+               '\n#=GF RL Cell\n#=GF AC RF00360\n#=GF BM cmbuild  -F CM SEED'
+               '\n#=GF BM cmsearch  -Z 274931 -E 1000000\n#=GF SQ 9'
+               '\nseq1          ACC-G-GGTA\nseq2          TCC-G-GGCA\n//')
+        self.assertEqual(obs, exp)
+
+    def test_str_gs(self):
+        """ Make sure stockholm with only GS information contained is formatted
+        correctly """
+        st = StockholmAlignment(self.seqs, gc=None, gf=None, gs=self.GS,
+                                gr=None)
+        obs = str(st)
+        exp = ("# STOCKHOLM 1.0\n#=GS seq2 AC 222\n"
+               "#=GS seq1 AC 111\nseq1          ACC-G-GGTA\n"
+               "seq2          TCC-G-GGCA\n//")
+        self.assertEqual(obs, exp)
+
+    def test_str_gr(self):
+        """ Make sure stockholm with only GR information contained is formatted
+        correctly """
+        st = StockholmAlignment(self.seqs, gc=None, gf=None, gs=None,
+                                gr=self.GR)
+        obs = str(st)
+        exp = ("# STOCKHOLM 1.0\nseq1          ACC-G-GGTA\n"
+               "#=GR seq1 SS  1110101111\nseq2          TCC-G-GGCA\n"
+               "#=GR seq2 SS  0110101110\n//")
+        self.assertEqual(obs, exp)
+
+    def test_str_refs(self):
+        """ Make sure stockholm with references printed correctly"""
+        GF = OrderedDict({"RT": ["TITLE1",  "TITLE2"],
+                          "AC": "RF00360",
+                          "BM": ["cmbuild  -F CM SEED",
+                                 "cmsearch  -Z 274931 -E 1000000"],
+                          "SQ": 9, "RA": ["Auth1;", "Auth2;"],
+                          "RL": ["J Mol Biol", "Cell"],
+                          "RM": ["11469857", "12007400"]})
+        st = StockholmAlignment(self.seqs, gc=None, gf=GF, gs=None,
+                                gr=None)
+        obs = str(st)
+        exp = ("# STOCKHOLM 1.0\n#=GF RN [1]\n#=GF RM 11469857\n#=GF RT TITLE1"
+               "\n#=GF RA Auth1;\n#=GF RL J Mol Biol\n#=GF RN [2]\n"
+               "#=GF RM 12007400\n#=GF RT TITLE2\n#=GF RA Auth2;\n#=GF RL Cell"
+               "\n#=GF AC RF00360\n#=GF BM cmbuild  -F CM SEED\n"
+               "#=GF BM cmsearch  -Z 274931 -E 1000000\n#=GF SQ 9\n"
+               "seq1          ACC-G-GGTA\nseq2          TCC-G-GGCA\n//")
+        self.assertEqual(obs, exp)
+
+    def test_str_trees(self):
+        """ Make sure stockholm with trees printed correctly"""
+        GF = OrderedDict({"NH": ["IMATREE", "IMATREETOO"],
+                          "TN": ["Tree2", "Tree1"]})
+        st = StockholmAlignment(self.seqs, gc=None, gf=GF, gs=None,
+                                gr=None)
+        obs = str(st)
+        exp = ("# STOCKHOLM 1.0\n#=GF TN Tree2\n#=GF NH IMATREE\n#=GF TN Tree1"
+               "\n#=GF NH IMATREETOO\nseq1          ACC-G-GGTA\n"
+               "seq2          TCC-G-GGCA\n//")
+
+        self.assertEqual(obs, exp)
 
 
 if __name__ == "__main__":
