@@ -84,6 +84,8 @@ cdef class AlignmentStructure:
     cigar
     query_sequence
     target_sequence
+    aligned_query_sequence
+    aligned_target_sequence
 
     Notes
     -----
@@ -118,13 +120,28 @@ cdef class AlignmentStructure:
     def __getitem__(self, key):
         return getattr(self, key)
 
-    def __str__(self):
+    def __repr__(self):
         data = ['optimal_alignment_score', 'suboptimal_alignment_score',
                 'query_begin', 'query_end', 'target_begin',
                 'target_end_optimal', 'target_end_suboptimal', 'cigar',
                 'query_sequence', 'target_sequence']
         return "{\n%s\n}" % ',\n'.join([
             "    {!r}: {!r}".format(k, self[k]) for k in data])
+
+    def __str__(self):
+        score = "Score: %d" % self.optimal_alignment_score
+        if self.query_sequence and self.cigar:
+            target = self.aligned_target_sequence
+            query = self.aligned_query_sequence
+            align_len = len(query)
+            if align_len > 13:
+                target = target[:10] + "..."
+                query = query[:10] + "..."
+
+            length = "Length: %d" % align_len
+            return "\n".join([query, target, score, length])
+        return score
+
 
     @property
     def optimal_alignment_score(self):
@@ -296,27 +313,8 @@ cdef class AlignmentStructure:
         """
         return self.reference_sequence
 
-    def set_zero_based(self, is_zero_based):
-        """Set the aligment indices to start at 0 if True else 1 if False
-
-        """
-        if is_zero_based:
-            self.index_starts_at = 0
-        else:
-            self.index_starts_at = 1
-
-    def is_zero_based(self):
-        """Returns True if alignment inidices start at 0 else False
-
-        Returns
-        -------
-        bool
-            Whether the alignment inidices start at 0
-
-        """
-        return self.index_starts_at == 0
-
-    def get_aligned_query_sequence(self):
+    @property
+    def aligned_query_sequence(self):
         """Returns the query sequence aligned by the cigar
 
         Returns
@@ -337,7 +335,8 @@ cdef class AlignmentStructure:
                                               "D")
         return None
 
-    def get_aligned_target_sequence(self):
+    @property
+    def aligned_target_sequence(self):
         """Returns the target sequence aligned by the cigar
 
         Returns
@@ -358,6 +357,26 @@ cdef class AlignmentStructure:
                                               self.target_end_optimal,
                                               "I")
         return None
+
+    def set_zero_based(self, is_zero_based):
+        """Set the aligment indices to start at 0 if True else 1 if False
+
+        """
+        if is_zero_based:
+            self.index_starts_at = 0
+        else:
+            self.index_starts_at = 1
+
+    def is_zero_based(self):
+        """Returns True if alignment inidices start at 0 else False
+
+        Returns
+        -------
+        bool
+            Whether the alignment inidices start at 0
+
+        """
+        return self.index_starts_at == 0
 
     def _get_aligned_sequence(self, sequence, tuple_cigar, begin, end,
                               gap_type):

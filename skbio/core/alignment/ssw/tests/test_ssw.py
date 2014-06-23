@@ -805,20 +805,20 @@ class TestAlignmentStructure(TestSSW):
                                  test['cigar_tuples'], test['begin'],
                                  end, test['gap_type']))
 
-    def test_get_aligned_query_target_sequence(self):
+    def test_aligned_query_target_sequence(self):
         query = StripedSmithWaterman("AGGGTAATTAGGCGTGTTCACCTA")
         alignment = query("AGTCGAAGGGTAATATAGGCGTGTCACCTA")
         self.assertEqual("AGGGTAATATAGGCGT-GTCACCTA",
-                         alignment.get_aligned_target_sequence())
+                         alignment.aligned_target_sequence)
         self.assertEqual("AGGGTAAT-TAGGCGTGTTCACCTA",
-                         alignment.get_aligned_query_sequence())
+                         alignment.aligned_query_sequence)
 
-    def test_get_aligned_query_target_sequence_with_suppressed_sequences(self):
+    def test_aligned_query_target_sequence_with_suppressed_sequences(self):
         query = StripedSmithWaterman("AGGGTAATTAGGCGTGTTCACCTA",
                                      suppress_sequences=True)
         alignment = query("AGTCGAAGGGTAATATAGGCGTGTCACCTA")
-        self.assertEqual(None, alignment.get_aligned_target_sequence())
-        self.assertEqual(None, alignment.get_aligned_query_sequence())
+        self.assertEqual(None, alignment.aligned_target_sequence)
+        self.assertEqual(None, alignment.aligned_query_sequence)
 
 if __name__ == '__main__':
     main()
