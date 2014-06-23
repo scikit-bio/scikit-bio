@@ -13,6 +13,7 @@ from warnings import warn
 import numpy as np
 
 from skbio.core.warning import EfficiencyWarning
+from skbio import Alignment, BiologicalSequence
 
 # This is temporary: blosum50 does not exist in skbio yet as per
 # issue 161. When the issue is resolved, this should be removed in favor
@@ -279,13 +280,19 @@ def local_pairwise_align(seq1, seq2, gap_open_penalty,
         substitution_matrix, new_alignment_score=0.0,
         init_matrices_f=_init_matrices_sw)
 
-    seq1_end_position, seq2_end_position =\
+    end_row_position, end_col_position =\
         np.unravel_index(np.argmax(score_matrix), score_matrix.shape)
 
     aligned1, aligned2, score, seq1_start_position, seq2_start_position = \
         _traceback(traceback_matrix, score_matrix, seq1, seq2,
-                   seq1_end_position, seq2_end_position)
-    return aligned1, aligned2, score, seq1_start_position, seq2_start_position
+                   end_row_position, end_col_position)
+    start_end_positions = [(seq1_start_position, end_col_position-1),
+                           (seq2_start_position, end_row_position-1)]
+    result = Alignment(
+        [BiologicalSequence(aligned1, id=0),
+         BiologicalSequence(aligned2, id=1)],
+        score=score, start_end_positions=start_end_positions)
+    return result
 
 
 def global_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
@@ -437,13 +444,19 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
             substitution_matrix, new_alignment_score=-np.inf,
             init_matrices_f=_init_matrices_nw)
 
-    seq1_end_position = len(traceback_matrix) - 1
-    seq2_end_position = len(traceback_matrix[0]) - 1
+    end_row_position = traceback_matrix.shape[0] - 1
+    end_col_position = traceback_matrix.shape[1] - 1
 
     aligned1, aligned2, score, seq1_start_position, seq2_start_position = \
         _traceback(traceback_matrix, score_matrix, seq1, seq2,
-                   seq1_end_position, seq2_end_position)
-    return aligned1, aligned2, score, seq1_start_position, seq2_start_position
+                   end_row_position, end_col_position)
+    start_end_positions = [(seq1_start_position, end_col_position-1),
+                           (seq2_start_position, end_row_position-1)]
+    result = Alignment(
+        [BiologicalSequence(aligned1, id=0),
+         BiologicalSequence(aligned2, id=1)],
+        score=score, start_end_positions=start_end_positions)
+    return result
 
 # Functions from here allow for generalized (global or local) alignment. I
 # will likely want to put these in a single object to make the naming a little

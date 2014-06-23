@@ -15,7 +15,8 @@ import numpy as np
 
 from skbio import (
     global_pairwise_align_protein, local_pairwise_align_protein,
-    global_pairwise_align_nucleotide, local_pairwise_align_nucleotide)
+    global_pairwise_align_nucleotide, local_pairwise_align_nucleotide,
+    Alignment)
 from skbio.core.alignment.pairwise import (
     make_nt_substitution_matrix, _init_matrices_sw, _init_matrices_nw)
 
@@ -52,31 +53,43 @@ class PairwiseAlignmentTests(TestCase):
         self.assertEqual(make_nt_substitution_matrix(5, -4), expected)
 
     def test_global_pairwise_align_protein(self):
-        expected = ("HEAGAWGHEE", "---PAWHEAE", 1.0, 0, 0)
+        expected = ("HEAGAWGHEE", "---PAWHEAE", 1.0)
         actual = global_pairwise_align_protein("HEAGAWGHEE", "PAWHEAE",
                                                gap_open_penalty=10.,
                                                gap_extend_penalty=5.)
-        self.assertEqual(actual, expected)
+        self.assertEqual(str(actual[0]), expected[0])
+        self.assertEqual(str(actual[1]), expected[1])
+        self.assertEqual(actual.score(), expected[2])
+        self.assertEqual(actual.start_end_positions(), [(0, 9), (0, 6)])
 
-        expected = ("HEAGAWGHE-E", "---PAW-HEAE", 24.0, 0, 0)
+        expected = ("HEAGAWGHE-E", "---PAW-HEAE", 24.0)
         # EMBOSS result: P---AW-HEAE
         actual = global_pairwise_align_protein("HEAGAWGHEE", "PAWHEAE",
                                                gap_open_penalty=5.,
                                                gap_extend_penalty=0.5)
-        self.assertEqual(actual, expected)
+        self.assertEqual(str(actual[0]), expected[0])
+        self.assertEqual(str(actual[1]), expected[1])
+        self.assertEqual(actual.score(), expected[2])
+        self.assertEqual(actual.start_end_positions(), [(0, 9), (0, 6)])
 
     def test_local_pairwise_align_protein(self):
         expected = ("AWGHE", "AW-HE", 26.0, 4, 1)
         actual = local_pairwise_align_protein("HEAGAWGHEE", "PAWHEAE",
                                               gap_open_penalty=10.,
                                               gap_extend_penalty=5.)
-        self.assertEqual(actual, expected)
+        self.assertEqual(str(actual[0]), expected[0])
+        self.assertEqual(str(actual[1]), expected[1])
+        self.assertEqual(actual.score(), expected[2])
+        self.assertEqual(actual.start_end_positions(), [(4, 8), (1, 4)])
 
         expected = ("AWGHE-E", "AW-HEAE", 32.0, 4, 1)
         actual = local_pairwise_align_protein("HEAGAWGHEE", "PAWHEAE",
                                               gap_open_penalty=5.,
                                               gap_extend_penalty=0.5)
-        self.assertEqual(actual, expected)
+        self.assertEqual(str(actual[0]), expected[0])
+        self.assertEqual(str(actual[1]), expected[1])
+        self.assertEqual(actual.score(), expected[2])
+        self.assertEqual(actual.start_end_positions(), [(4, 9), (1, 6)])
 
     def test_global_pairwise_align_nucleotide(self):
         m = make_nt_substitution_matrix(5, -4)
@@ -86,7 +99,10 @@ class PairwiseAlignmentTests(TestCase):
                                                   gap_open_penalty=5.,
                                                   gap_extend_penalty=0.5,
                                                   substitution_matrix=m)
-        self.assertEqual(actual, expected)
+        self.assertEqual(str(actual[0]), expected[0])
+        self.assertEqual(str(actual[1]), expected[1])
+        self.assertEqual(actual.score(), expected[2])
+        self.assertEqual(actual.start_end_positions(), [(0, 16), (0, 14)])
 
         expected = ("G-ACCTTGACCAGGTACC", "GAACTTTGAC---GTAAC", 31.0, 0, 0)
         actual = global_pairwise_align_nucleotide("GACCTTGACCAGGTACC",
@@ -94,7 +110,10 @@ class PairwiseAlignmentTests(TestCase):
                                                   gap_open_penalty=10.,
                                                   gap_extend_penalty=0.5,
                                                   substitution_matrix=m)
-        self.assertEqual(actual, expected)
+        self.assertEqual(str(actual[0]), expected[0])
+        self.assertEqual(str(actual[1]), expected[1])
+        self.assertEqual(actual.score(), expected[2])
+        self.assertEqual(actual.start_end_positions(), [(0, 16), (0, 14)])
 
     def test_local_pairwise_align_nucleotide(self):
         m = make_nt_substitution_matrix(5, -4)
@@ -104,6 +123,10 @@ class PairwiseAlignmentTests(TestCase):
                                                  gap_open_penalty=5.,
                                                  gap_extend_penalty=0.5,
                                                  substitution_matrix=m)
+        self.assertEqual(str(actual[0]), expected[0])
+        self.assertEqual(str(actual[1]), expected[1])
+        self.assertEqual(actual.score(), expected[2])
+        self.assertEqual(actual.start_end_positions(), [(1, 16), (2, 14)])
 
         expected = ("ACCTTGAC", "ACTTTGAC", 31.0, 1, 2)
         actual = local_pairwise_align_nucleotide("GACCTTGACCAGGTACC",
@@ -111,7 +134,10 @@ class PairwiseAlignmentTests(TestCase):
                                                  gap_open_penalty=10.,
                                                  gap_extend_penalty=5.,
                                                  substitution_matrix=m)
-        self.assertEqual(actual, expected)
+        self.assertEqual(str(actual[0]), expected[0])
+        self.assertEqual(str(actual[1]), expected[1])
+        self.assertEqual(actual.score(), expected[2])
+        self.assertEqual(actual.start_end_positions(), [(1, 8), (2, 9)])
 
     def test_init_matrices_sw(self):
         expected_score_m = np.zeros((5, 4))
