@@ -8,8 +8,12 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
+from warnings import warn
 
 import numpy as np
+
+from skbio.core.warning import EfficiencyWarning
+
 # This is temporary: blosum50 does not exist in skbio yet as per
 # issue 161. When the issue is resolved, this should be removed in favor
 # of an import.
@@ -265,6 +269,11 @@ def local_pairwise_align(sequence1, sequence2, gap_open_penalty,
        int
           The start position of the alignment in sequence 2
     """
+    warn("You're using skbio's python implementation of Smith-Waterman "
+         "alignment. This will be very slow (e.g., thousands of times slower) "
+         "than skbio.core.alignment.align_striped_smith_waterman.",
+         EfficiencyWarning)
+
     score_matrix, traceback_matrix = _compute_score_and_traceback_matrices(
         sequence1, sequence2, gap_open_penalty, gap_extend_penalty,
         substitution_matrix, new_alignment_score=0.0,

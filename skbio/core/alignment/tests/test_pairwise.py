@@ -9,6 +9,7 @@
 from __future__ import absolute_import, division, print_function
 
 from unittest import TestCase, main
+from warnings import filterwarnings
 
 import numpy as np
 
@@ -17,6 +18,8 @@ from skbio import (
     global_pairwise_align_nucleotide, local_pairwise_align_nucleotide)
 from skbio.core.alignment.pairwise import (
     make_nt_substitution_matrix, _init_matrices_sw, _init_matrices_nw)
+
+filterwarnings("ignore")
 
 
 class PairwiseAlignmentTests(TestCase):
