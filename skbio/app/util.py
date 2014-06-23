@@ -678,9 +678,9 @@ def cmdline_generator(param_iter, PathToBin=None, PathToCmd=None,
         stdout is to be used)
     """
     # Make sure we have input(s) and output
-    if PathsToInputs is None:
+    if not PathsToInputs:
         raise ValueError("No input file(s) specified.")
-    if PathToOutput is None:
+    if not PathToOutput:
         raise ValueError("No output file specified.")
 
     if not isinstance(PathsToInputs, list):
