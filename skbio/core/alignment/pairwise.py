@@ -171,9 +171,9 @@ def local_pairwise_align_nucleotide(sequence1, sequence2, gap_open_penalty=5,
        >>> s1 = "GCGTGCCTAAGGTATGCAAG"
        >>> s2 = "ACGTGCCTAGGTACGCAAG"
        >>> r = local_pairwise_align_nucleotide(s1, s2)
-       >>> print(r[0])
+       >>> print(str(r[0]))
        CGTGCCTAAGGTATGCAAG
-       >>> print(r[1])
+       >>> print(str(r[1]))
        CGTGCCTA-GGTACGCAAG
 
     """
@@ -224,9 +224,9 @@ def local_pairwise_align_protein(sequence1, sequence2, gap_open_penalty=11,
        >>> s1 = "HEAGAWGHEE"
        >>> s2 = "PAWHEAE"
        >>> r = local_pairwise_align_protein(s1, s2, 8, 8)
-       >>> print(r[0])
+       >>> print(str(r[0]))
        AWGHE
-       >>> print(r[1])
+       >>> print(str(r[1]))
        AW-HE
 
     """
@@ -387,9 +387,9 @@ def global_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
        >>> s1 = "HEAGAWGHEE"
        >>> s2 = "PAWHEAE"
        >>> r = global_pairwise_align_protein(s1, s2, 8, 8)
-       >>> print(r[0])
+       >>> print(str(r[0]))
        HEAGAWGHE-E
-       >>> print(r[1])
+       >>> print(str(r[1]))
        -PA--W-HEAE
 
     """
