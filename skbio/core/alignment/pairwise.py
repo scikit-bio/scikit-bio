@@ -112,10 +112,6 @@ blosum50 = \
               'Q': 4, 'P': -1, 'S': 0, 'R': 0, 'T': -1, 'W': -2, 'V': -3,
               'Y': -2, 'X': -1, 'Z': 5}
 }
-nt_substitution_matrix = {'A': {'A':  1, 'C': -2, 'G': -2, 'T': -2},
-                          'C': {'A': -2, 'C':  1, 'G': -2, 'T': -2},
-                          'G': {'A': -2, 'C': -2, 'G':  1, 'T': -2},
-                          'T': {'A': -2, 'C': -2, 'G': -2, 'T':  1}}
 
 def make_nt_substitution_matrix(match, mismatch, alphabet='ACGT'):
     result = {}
@@ -176,7 +172,7 @@ def local_pairwise_align_nucleotide(sequence1, sequence2, gap_open_penalty=5,
 
     """
     if substitution_matrix is None:
-        substitution_matrix = nt_substitution_matrix
+        substitution_matrix = make_nt_substitution_matrix(match=1, mismatch=-2)
 
     return local_pairwise_align(sequence1, sequence2, gap_open_penalty,
                                 gap_extend_penalty, substitution_matrix)
@@ -419,7 +415,6 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
     return _traceback(\
         traceback_matrix, score_matrix, seq1, seq2, traceback_start_row,
         traceback_end_row)
-
 
 ## Functions from here allow for generalized (global or local) alignment. I
 ## will likely want to put these in a single object to make the naming a little
