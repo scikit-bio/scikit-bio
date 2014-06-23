@@ -25,7 +25,6 @@ API Reference
    maths.stats.ordination
    maths.subsample
    format.sequences
-   format.stockholm
    math.diversity.alpha
    math.stats.distance
    math.stats.misc
