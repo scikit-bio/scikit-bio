@@ -20,8 +20,8 @@ from future.utils.six import StringIO
 from skbio.core.tree import TreeNode
 from skbio.core.tree.tree import _dnd_tokenizer
 from skbio.core.distance import DistanceMatrix
-from skbio.core.exception import (NoLengthError, TreeError, RecordError,
-                                  MissingNodeError, NoParentError)
+from skbio.core.exception import (DuplicateNodeError, NoLengthError, TreeError,
+                                  RecordError, MissingNodeError, NoParentError)
 
 
 class TreeTests(TestCase):
@@ -270,6 +270,10 @@ class TreeTests(TestCase):
         self.assertIs(root, self.simple_t.children[0].root())
         self.assertIs(root, self.simple_t.children[1].children[1].root())
 
+    def test_create_caches_duplicate_tip_names(self):
+        with self.assertRaises(DuplicateNodeError):
+            TreeNode.from_newick('(a, a)').create_caches()
+
     def test_find(self):
         """Find a node in a tree"""
         t = TreeNode.from_newick("((a,b)c,(d,e)f);")
@@ -369,6 +373,10 @@ class TreeTests(TestCase):
         exp = "          /-B\n---------|\n         |          /-C\n         "\
               " \\--------|\n                    \\-D"
         self.assertEqual(obs, exp)
+
+    def test_ascii_art_three_children(self):
+        obs = TreeNode.from_newick('(a,(b,c,d));').ascii_art()
+        self.assertEqual(obs, exp_ascii_art_three_children)
 
     def test_accumulate_to_ancestor(self):
         """Get the distance from a node to its ancestor"""
@@ -492,6 +500,20 @@ class TreeTests(TestCase):
         t3 = TreeNode.from_newick(s3, TreeNode)
         obs = t.compare_tip_distances(t3, sample=3, shuffle_f=sorted)
 
+    def test_compare_tip_distances_no_common_tips(self):
+        t = TreeNode.from_newick('((H:1,G:1):2,(R:0.5,M:0.7):3);')
+        t2 = TreeNode.from_newick('(((Z:1,Y:1,X:1):2,W:3):1,V:4);')
+
+        with self.assertRaises(ValueError):
+            t.compare_tip_distances(t2)
+
+    def test_compare_tip_distances_single_common_tip(self):
+        t = TreeNode.from_newick('((H:1,G:1):2,(R:0.5,M:0.7):3);')
+        t2 = TreeNode.from_newick('(((R:1,Y:1,X:1):2,W:3):1,V:4);')
+
+        self.assertEqual(t.compare_tip_distances(t2), 1)
+        self.assertEqual(t2.compare_tip_distances(t), 1)
+
     def test_tip_tip_distances_endpoints(self):
         """Test getting specifc tip distances  with tipToTipDistances"""
         t = TreeNode.from_newick('((H:1,G:1):2,(R:0.5,M:0.7):3);')
@@ -506,6 +528,16 @@ class TreeTests(TestCase):
 
         obs = t.tip_tip_distances(endpoints=nodes)
         self.assertEqual(obs, exp)
+
+    def test_tip_tip_distances_non_tip_endpoints(self):
+        t = TreeNode.from_newick('((H:1,G:1)foo:2,(R:0.5,M:0.7):3);')
+        with self.assertRaises(ValueError):
+            t.tip_tip_distances(endpoints=['foo'])
+
+    def test_tip_tip_distances_no_length(self):
+        t = TreeNode.from_newick("((a,b)c,(d,e)f);")
+        with self.assertRaises(NoLengthError):
+            t.tip_tip_distances()
 
     def test_neighbors(self):
         """Get neighbors of a node"""
@@ -552,6 +584,18 @@ class TreeTests(TestCase):
         self.assertEqual(obs, exp)
         obs2 = [n.name for n in self.simple_t.traverse(True, True)]
         self.assertEqual(obs2, exp)
+
+    def test_pre_and_postorder_no_children(self):
+        t = TreeNode('brofist')
+
+        # include self
+        exp = ['brofist']
+        obs = [n.name for n in t.pre_and_postorder()]
+        self.assertEqual(obs, exp)
+
+        # do not include self
+        obs = list(t.pre_and_postorder(include_self=False))
+        self.assertEqual(obs, [])
 
     def test_levelorder(self):
         """Test level order traversal of the tree"""
@@ -611,6 +655,13 @@ class TreeTests(TestCase):
         exp_dist = tree1.tip_tip_distances()
         obs_dist = result.tip_tip_distances()
         self.assertEqual(obs_dist, exp_dist)
+
+    def test_root_at_midpoint_no_lengths(self):
+        # should get same tree back (a copy)
+        nwk = '(a,b)c;'
+        t = TreeNode.from_newick(nwk)
+        obs = t.root_at_midpoint()
+        self.assertEqual(str(obs), nwk)
 
     def test_compare_subsets(self):
         """compare_subsets should return the fraction of shared subsets"""
@@ -773,6 +824,28 @@ class TreeTests(TestCase):
         obs = arrayed['id']
         nptest.assert_equal(obs, exp)
 
+    def test_to_array_attrs(self):
+        t = TreeNode.from_newick(
+            '(((a:1,b:2,c:3)x:4,(d:5)y:6)z:7,(e:8,f:9)z:10)')
+        id_index, child_index = t.index_tree()
+        arrayed = t.to_array(attrs=[('name', object)])
+
+        # should only have id_index, child_index, and name since we specified
+        # attrs
+        self.assertEqual(len(arrayed), 3)
+
+        self.assertEqual(id_index, arrayed['id_index'])
+        self.assertEqual(child_index, arrayed['child_index'])
+
+        exp = np.array(['a', 'b', 'c', 'd', 'x',
+                        'y', 'e', 'f', 'z', 'z', None])
+        obs = arrayed['name']
+        nptest.assert_equal(obs, exp)
+
+        # invalid attrs
+        with self.assertRaises(AttributeError):
+            t.to_array(attrs=[('name', object), ('brofist', int)])
+
     def test_from_file(self):
         """Parse a tree from a file"""
         t_io = StringIO("((a,b)c,(d,e)f)g;")
@@ -793,6 +866,46 @@ class TreeTests(TestCase):
         self.assertEquals("(E:17.0,(C:14.5,((A:4.0,D:4.0):4.25,(G:6.25,(B:0.5,"
                           "F:0.5):5.75):2.0):6.25):2.5);",
                           tree.to_newick(with_distances=True))
+
+    def test_from_newick_empty(self):
+        obs = TreeNode.from_newick('')
+        self.assertTrue(obs.name is None)
+        self.assertTrue(obs.length is None)
+        self.assertTrue(obs.parent is None)
+        self.assertEqual(obs.children, [])
+        self.assertTrue(obs.id is None)
+
+    def test_from_newick_embedded_semicolon(self):
+        with self.assertRaises(RecordError):
+            TreeNode.from_newick('(a,(c,;b))')
+
+    def test_to_newick_single_node(self):
+        # single node, no name, with semicolon
+        obs = TreeNode().to_newick()
+        self.assertEqual(obs, ';')
+
+        # single node, no name, without semicolon
+        obs = TreeNode().to_newick(semicolon=False)
+        self.assertEqual(obs, '')
+
+        # single node, with name, with semicolon
+        obs = TreeNode(name='brofist').to_newick()
+        self.assertEqual(obs, 'brofist;')
+
+        # single node, with name, without semicolon
+        obs = TreeNode(name='brofist').to_newick(semicolon=False)
+        self.assertEqual(obs, 'brofist')
+
+    def test_to_newick_multi_node(self):
+        t = TreeNode.from_newick(double)
+
+        # with semicolon
+        obs = t.to_newick()
+        self.assertEqual(obs, '(abc,def);')
+
+        # without semicolon
+        obs = t.to_newick(semicolon=False)
+        self.assertEqual(obs, '(abc,def)')
 
 
 class DndTokenizerTests(TestCase):
@@ -1015,6 +1128,17 @@ single = '(abc:3);'
 double = '(abc:3, def:4);'
 onenest = '(abc:3, (def:4, ghi:5):6 );'
 nodedata = '(abc:3, (def:4, ghi:5)jkl:6 );'
+
+exp_ascii_art_three_children = """\
+          /-a
+         |
+---------|          /-b
+         |         |
+          \--------|--c
+                   |
+                    \-d\
+"""
+
 
 if __name__ == '__main__':
     main()

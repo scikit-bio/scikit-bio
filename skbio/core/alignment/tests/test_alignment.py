@@ -10,6 +10,7 @@
 
 from __future__ import absolute_import, division, print_function
 
+import warnings
 from unittest import TestCase, main
 from collections import Counter, defaultdict
 
@@ -336,6 +337,12 @@ class SequenceCollectionTests(TestCase):
         exp2 = ">r1\nGAUUACA\n>r2\nUUG\n>r3\nU-----UGCC--\n"
         self.assertEqual(self.s2.to_fasta(), exp2)
 
+    def test_toFasta(self):
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            exp = ">d1\nGATTACA\n>d2\nTTG\n"
+            self.assertEqual(self.s1.toFasta(), exp)
+
     def test_upper(self):
         """upper functions as expected
         """
@@ -458,6 +465,18 @@ class AlignmentTests(TestCase):
         d2 = DNASequence('TCGGT-GGCC', id="d2")
         expected = Alignment([d2])
         self.assertEqual(actual, expected)
+
+    def test_subalignment_filter_out_everything(self):
+        exp = Alignment([])
+
+        # no sequences
+        obs = self.a1.subalignment(seqs_to_keep=None, invert_seqs_to_keep=True)
+        self.assertEqual(obs, exp)
+
+        # no positions
+        obs = self.a1.subalignment(positions_to_keep=None,
+                                   invert_positions_to_keep=True)
+        self.assertEqual(obs, exp)
 
     def test_init_validate(self):
         """initialization with validation functions as expected
@@ -657,6 +676,27 @@ class AlignmentTests(TestCase):
                               "s2 TTACCGGT-GGCC",
                               "s3 .-ACC-GTTGC--"])
         self.assertEqual(phylip_str, expected)
+
+    def test_to_phylip_unequal_sequence_lengths(self):
+        d1 = DNASequence('A-CT', id="d1")
+        d2 = DNASequence('TTA', id="d2")
+        d3 = DNASequence('.-AC', id="d3")
+        a = Alignment([d1, d2, d3])
+
+        with self.assertRaises(SequenceCollectionError):
+            a.to_phylip()
+
+    def test_to_phylip_no_sequences(self):
+        with self.assertRaises(SequenceCollectionError):
+            Alignment([]).to_phylip()
+
+    def test_to_phylip_no_positions(self):
+        d1 = DNASequence('', id="d1")
+        d2 = DNASequence('', id="d2")
+        a = Alignment([d1, d2])
+
+        with self.assertRaises(SequenceCollectionError):
+            a.to_phylip()
 
     def test_validate_lengths(self):
         """
