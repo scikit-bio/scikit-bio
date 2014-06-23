@@ -2,9 +2,11 @@ include CHANGELOG.md
 include COPYING.txt
 include CONTRIBUTING.md
 include README.rst
+include RELEASE.md
+include powertrip.py
 
+graft assets
 graft doc
-graft examples
 graft ipynbs
 graft licenses
 graft skbio
