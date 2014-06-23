@@ -142,7 +142,6 @@ cdef class AlignmentStructure:
             return "\n".join([query, target, score, length])
         return score
 
-
     @property
     def optimal_alignment_score(self):
         """Optimal alignment score
