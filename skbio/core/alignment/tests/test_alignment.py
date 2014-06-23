@@ -875,13 +875,13 @@ class StockholmAlignmentTests(TestCase):
                                 gr=self.GR)
         obs = str(st)
         exp = ('# STOCKHOLM 1.0\n#=GF RN [1]\n#=GF RM 11469857\n'
-            '#=GF RT TITLE1\n#=GF RA Auth1;\n#=GF RL J Mol Biol\n'
-            '#=GF RN [2]\n#=GF RM 12007400\n#=GF RT TITLE2\n#=GF RA Auth2;\n'
-            '#=GF RL Cell\n#=GF AC RF00360\n#=GF BM cmbuild  -F CM SEED\n'
-            '#=GF BM cmsearch  -Z 274931 -E 1000000\n#=GF SQ 9\n'
-            '#=GS seq2 AC 222\n#=GS seq1 AC 111\nseq1          ACC-G-GGTA\n'
-            '#=GR seq1 SS  1110101111\nseq2          TCC-G-GGCA\n'
-            '#=GR seq2 SS  0110101110\n#=GC SS_cons  (((....)))\n//')
+               '#=GF RT TITLE1\n#=GF RA Auth1;\n#=GF RL J Mol Biol\n'
+               '#=GF RN [2]\n#=GF RM 12007400\n#=GF RT TITLE2\n#=GF RA Auth2;'
+               '\n#=GF RL Cell\n#=GF AC RF00360\n#=GF BM cmbuild  -F CM SEED\n'
+               '#=GF BM cmsearch  -Z 274931 -E 1000000\n#=GF SQ 9\n'
+               '#=GS seq2 AC 222\n#=GS seq1 AC 111\nseq1          ACC-G-GGTA\n'
+               '#=GR seq1 SS  1110101111\nseq2          TCC-G-GGCA\n'
+               '#=GR seq2 SS  0110101110\n#=GC SS_cons  (((....)))\n//')
         self.assertEqual(obs, exp)
 
     def test_str_gc(self):
