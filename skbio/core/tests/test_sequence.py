@@ -116,7 +116,7 @@ class BiologicalSequenceTests(TestCase):
             self.b1[42]
 
     def test_hash(self):
-        self.assertEqual(type(hash(self.b1)), int)
+        self.assertTrue(isinstance(hash(self.b1), int))
 
     def test_iter(self):
         b1_iter = iter(self.b1)
