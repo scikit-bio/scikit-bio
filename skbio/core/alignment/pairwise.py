@@ -9,6 +9,7 @@
 
 from __future__ import absolute_import, division, print_function
 
+import numpy as np
 # This is temporary: blosum50 does not exist in skbio yet as per
 # issue 161. When the issue is resolved, this should be removed in favor
 # of an import.
@@ -268,11 +269,14 @@ def local_pairwise_align(sequence1, sequence2, gap_open_penalty,
           The start position of the alignment in sequence 2
     """
     sw_matrix, traceback_matrix = \
-        _local_dynamic_programming_and_traceback(sequence1,
+        _dynamic_programming_and_traceback(sequence1,
                                                  sequence2,
                                                  gap_open_penalty,
                                                  gap_extend_penalty,
-                                                 substitution_matrix)
+                                                 substitution_matrix,
+                                                 new_alignment_score=0,
+                                                 init_matrices_f=_init_matrices_sw,
+                                                 init_rows_f=_init_rows_sw)
 
     return _local_traceback(traceback_matrix,sw_matrix,sequence1,sequence2)
 
@@ -311,7 +315,7 @@ def global_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
     if substitution_matrix is None:
         substitution_matrix = nt_substitution_matrix
 
-    return nw_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
+    return global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
                      substitution_matrix)
 
 def global_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
@@ -359,10 +363,10 @@ def global_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
     if substitution_matrix is None:
         substitution_matrix = blosum50
 
-    return nw_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
+    return global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
                      substitution_matrix)
 
-def nw_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
+def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
              substitution_matrix):
     """Globally align seqs with Needleman-Wunsch
 
@@ -392,9 +396,10 @@ def nw_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
           The score of the alignment
     """
     nw_matrix, traceback_matrix = \
-        _global_dynamic_programming_and_traceback(\
+        _dynamic_programming_and_traceback(\
             seq1, seq2, gap_open_penalty, gap_extend_penalty,
-            substitution_matrix)
+            substitution_matrix, new_alignment_score=-np.inf,
+            init_matrices_f=_init_matrices_nw, init_rows_f=_init_rows_nw)
     aligned_seq1, aligned_seq2, score = _global_traceback(\
         traceback_matrix, nw_matrix, seq1, seq2)
     return aligned_seq1, aligned_seq2, score
@@ -403,30 +408,53 @@ def nw_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
 ## Everything under here will have a lot of shared code with different
 ## methods, suggesting that an Aligner class is probably the way to go.
 
-def _local_dynamic_programming_and_traceback(seq1, seq2, gap_open_penalty,
+def _init_matrices_sw(seq1, seq2, gap_open_penalty, gap_extend_penalty):
+    sw_matrix = [[0 for i in range(0,len(seq1)+1)]]
+    traceback_matrix = [[None] + [None for i in range(0,len(seq1))]]
+    return sw_matrix, traceback_matrix
+
+def _init_rows_sw(row_number, gap_open_penalty, gap_extend_penalty):
+    return ([0], [None])
+
+def _init_matrices_nw(seq1, seq2, gap_open_penalty, gap_extend_penalty):
+    nw_row1 = [0.]
+    for i in range(1, len(seq1)+1):
+        nw_row1.append(-gap_open_penalty - ((i-1) * gap_extend_penalty))
+    nw_matrix = [nw_row1]
+    traceback_matrix = [[None] + ['-' for i in range(0,len(seq1))]]
+    return nw_matrix, traceback_matrix
+
+def _init_rows_nw(row_number, gap_open_penalty, gap_extend_penalty):
+    nw_row = [(-gap_open_penalty - ((row_number-1) * gap_extend_penalty))]
+    return (nw_row, ['|'])
+
+def _dynamic_programming_and_traceback(seq1, seq2, gap_open_penalty,
                                              gap_extend_penalty,
-                                             substitution_matrix):
+                                             substitution_matrix,
+                                             new_alignment_score=-np.inf,
+                                             init_matrices_f=_init_matrices_nw,
+                                             init_rows_f=_init_rows_nw):
     """Return dynamic programming and traceback matrices
 
     These are generated for local alignment using Smith-Waterman.
     """
+    new_alignment_score = (new_alignment_score, None)
     # Initialize a matrix to use for scoring the alignment and for tracing
     # back the best alignment
-    sw_matrix = [[0 for i in range(0,len(seq1)+1)]]
-    traceback_matrix = [[None] + [None for i in range(0,len(seq1))]]
+    sw_matrix, traceback_matrix = init_matrices_f(
+        seq1, seq2, gap_open_penalty, gap_extend_penalty)
     # Iterate over the amino acids in sequence two (which will correspond
     # to the vertical sequence in the matrix)
     # Note that i corresponds to column numbers, as in 'Biological Sequence
     # Analysis'
     for i,aa2 in zip(range(1,len(seq2)+1),seq2):
         # Initialize the current row of the matrix
-        current_row = [0]
-        current_traceback_matrix_row = [None]
+        current_row, current_traceback_matrix_row = \
+            init_rows_f(i, gap_open_penalty, gap_extend_penalty)
         # Iterate over the amino acids in sequence one (which will
         # correspond to the horizontal sequence in the matrix)
         # Note that j corresponds to row numbers, as in 'Biological Sequence
         # Analysis'
-        new_alignment_score = (0,None)
         for j,aa1 in zip(range(1,len(seq1)+1),seq1):
             substitution_score = substitution_matrix[aa1][aa2]
             diag_score = (sw_matrix[i-1][j-1] + substitution_score,'\\')
@@ -505,50 +533,6 @@ def _first_largest(scores):
         if score > result[0]:
             result = (score, direction)
     return result
-
-def _global_dynamic_programming_and_traceback(seq1, seq2, gap_open_penalty,
-    gap_extend_penalty, substitution_matrix):
-    # Initialize a matrix to use for scoring the alignment and for tracing
-    # back the best alignment
-    nw_row1 = [0.]
-    for i in range(1, len(seq1)+1):
-        nw_row1.append(-gap_open_penalty - ((i-1) * gap_extend_penalty))
-    nw_matrix = [nw_row1]
-    traceback_matrix = [[None] + ['-' for i in range(0,len(seq1))]]
-    # Iterate over the amino acids in sequence two (which will correspond
-    # to the vertical sequence in the matrix)
-    # Note that i corresponds to column numbers, as in the 'Biological Sequence
-    # Analysis' example
-    for i,aa2 in zip(range(1,len(seq2)+1),seq2):
-        # Initialize the current row of the matrix
-        current_row = [(-gap_open_penalty - ((i-1) * gap_extend_penalty))]
-        current_traceback_matrix_row = ['|']
-        # Iterate over the amino acids in sequence one (which will
-        # correspond to the horizontal sequence in the matrix)
-        # Note that j corresponds to row numbers, as in the 'Biological Sequence
-        # Analysis' example
-        for j,aa1 in zip(range(1,len(seq1)+1),seq1):
-            substitution_score = substitution_matrix[aa1][aa2]
-            diag_score = (nw_matrix[i-1][j-1] + substitution_score,'\\')
-            if traceback_matrix[i-1][j] == '|':
-                # gap extend, because the cell above was also a gap
-                up_score = (nw_matrix[i-1][j] - gap_extend_penalty,'|')
-            else:
-                # gap open, because the cell above was not a gap
-                up_score = (nw_matrix[i-1][j] - gap_open_penalty,'|')
-            if current_traceback_matrix_row[-1] == '-':
-                # gap extend, because the cell to the left was also a gap
-                left_score = (current_row[-1] - gap_extend_penalty,'-')
-            else:
-                # gap open, because the cell to the left was not a gap
-                left_score = (current_row[-1] - gap_open_penalty,'-')
-            best_score = _first_largest([left_score, diag_score, up_score])
-            current_row.append(best_score[0])
-            current_traceback_matrix_row.append(best_score[1])
-        # append the current row to the matrix
-        nw_matrix.append(current_row)
-        traceback_matrix.append(current_traceback_matrix_row)
-    return nw_matrix, traceback_matrix
 
 def _global_traceback(traceback_matrix,nw_matrix,seq1,seq2,gap_character='-'):
 
