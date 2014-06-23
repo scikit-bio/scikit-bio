@@ -19,7 +19,7 @@
 
 from unittest import TestCase, main
 from skbio.core.alignment.ssw.ssw_wrapper import (
-    StripedSmithWaterman, AlignmentStructure, align_striped_smith_waterman)
+    StripedSmithWaterman, AlignmentStructure, local_pairwise_align_ssw)
 
 
 class TestSSW(TestCase):
@@ -296,8 +296,8 @@ class TestStripedSmithWaterman(TestSSW):
             'target_sequence': 'AAACGACTACTAAATCCGCGTGATAGGGGA'
         }
         query = StripedSmithWaterman(expected['query_sequence'],
-                                     gap_open=5,
-                                     gap_extend=2,
+                                     gap_open_penalty=5,
+                                     gap_extend_penalty=2,
                                      score_size=2,
                                      mask_length=15,
                                      mask_auto=True,
@@ -306,8 +306,8 @@ class TestStripedSmithWaterman(TestSSW):
                                      distance_filter=None,
                                      override_skip_babp=False,
                                      protein=False,
-                                     match=2,
-                                     mismatch=-3,
+                                     match_score=2,
+                                     mismatch_score=-3,
                                      substitution_matrix=None,
                                      suppress_sequences=False,
                                      zero_index=True)
@@ -381,7 +381,7 @@ class TestStripedSmithWaterman(TestSSW):
         self._check_argument_with_inequality_on_optimal_align_score(
             query_sequences=query_sequences,
             target_sequences=target_sequences,
-            arg='match',
+            arg='match_score',
             default=2,
             i_range=range(0, 5),
             compare_lt=self.assertLess,
@@ -401,7 +401,7 @@ class TestStripedSmithWaterman(TestSSW):
         self._check_argument_with_inequality_on_optimal_align_score(
             query_sequences=query_sequences,
             target_sequences=target_sequences,
-            arg='mismatch',
+            arg='mismatch_score',
             default=-3,
             i_range=range(-6, 1),
             # These are intentionally inverted
@@ -422,7 +422,8 @@ class TestStripedSmithWaterman(TestSSW):
             'query_sequence': 'AGAGGGTAATCAGCCGTGTCCACCGGAACACAACGCTATCGGGCGA',
             'target_sequence': 'GTTCGCCCCAGTAAAGTTGCTACCAAATCCGCATG'
         }
-        query = StripedSmithWaterman(expected['query_sequence'], mismatch=-8)
+        query = StripedSmithWaterman(expected['query_sequence'],
+                                     mismatch_score=-8)
         alignment = query(expected['target_sequence'])
         self._check_alignment(alignment, expected)
 
@@ -454,7 +455,7 @@ class TestStripedSmithWaterman(TestSSW):
                 self.assertNotEqual(align1.optimal_alignment_score,
                                     align2.optimal_alignment_score)
 
-    def test_arg_gap_open(self):
+    def test_arg_gap_open_penalty(self):
         query_sequences = [
             "TTATAATTTTCTTAGTTATTATCAATATTTATAATTTGATTTTGTTGTAAT",
             "AGTCCGAAGGGTAATATAGGCGTGTCACCTA",
@@ -466,7 +467,7 @@ class TestStripedSmithWaterman(TestSSW):
         self._check_argument_with_inequality_on_optimal_align_score(
             query_sequences=query_sequences,
             target_sequences=target_sequences,
-            arg='gap_open',
+            arg='gap_open_penalty',
             default=5,
             i_range=range(1, 12),
             # These are intentionally inverted
@@ -488,11 +489,11 @@ class TestStripedSmithWaterman(TestSSW):
             'target_sequence': 'TAGAGATTAATTGCCACTGCCAAAATTCTG'
         }
         query = StripedSmithWaterman(expected['query_sequence'],
-                                     gap_open=1)
+                                     gap_open_penalty=1)
         alignment = query(expected['target_sequence'])
         self._check_alignment(alignment, expected)
 
-    def test_arg_gap_extend(self):
+    def test_arg_gap_extend_penalty(self):
         query_sequences = [
             "TTATAATTTTCTTATTATTATCAATATTTATAATTTGATTTTGTTGTAAT",
             "AGTCGAAGGGTAATACTAGGCGTGTCACCTA",
@@ -504,7 +505,7 @@ class TestStripedSmithWaterman(TestSSW):
         self._check_argument_with_inequality_on_optimal_align_score(
             query_sequences=query_sequences,
             target_sequences=target_sequences,
-            arg='gap_extend',
+            arg='gap_extend_penalty',
             default=2,
             i_range=range(1, 10),
             # These are intentionally inverted
@@ -526,7 +527,7 @@ class TestStripedSmithWaterman(TestSSW):
             'target_sequence': 'GCCCAGTAGCTTCCCAATATGAGAGCATCAATTGTAGATCGGGCC'
         }
         query = StripedSmithWaterman(expected['query_sequence'],
-                                     gap_extend=10)
+                                     gap_extend_penalty=10)
         alignment = query(expected['target_sequence'])
         self._check_alignment(alignment, expected)
 
@@ -657,26 +658,29 @@ class TestStripedSmithWaterman(TestSSW):
 
 
 class TestAlignStripedSmithWaterman(TestSSW):
+    def _check_Alignment_to_AlignmentStructure(self, alignment, structure):
+        self.assertEqual(alignment.score(), structure.optimal_alignment_score)
+
     def test_same_as_using_StripedSmithWaterman_object(self):
         query_sequence = 'ATGGAAGCTATAAGCGCGGGTGAG'
         target_sequence = 'AACTTATATAATAAAAATTATATATTCGTTGGGTTCTTTTGATATAAATC'
         query = StripedSmithWaterman(query_sequence)
         align1 = query(target_sequence)
-        align2 = align_striped_smith_waterman(query_sequence,
-                                              target_sequence)
-        self._check_alignment(align2, align1)
+        align2 = local_pairwise_align_ssw(query_sequence,
+                                          target_sequence)
+        self._check_Alignment_to_AlignmentStructure(align2, align1)
 
     def test_kwargs_are_usable(self):
         kwargs = {}
-        kwargs['zero_index'] = False
-        kwargs['match'] = 5
+        kwargs['mismatch_score'] = -2
+        kwargs['match_score'] = 5
         query_sequence = 'AGGGTAATTAGGCGTGTTCACCTA'
         target_sequence = 'TACTTATAAGATGTCTCAACGGCATGCGCAACTTGTGAAGTG'
         query = StripedSmithWaterman(query_sequence, **kwargs)
         align1 = query(target_sequence)
-        align2 = align_striped_smith_waterman(query_sequence,
-                                              target_sequence, **kwargs)
-        self._check_alignment(align2, align1)
+        align2 = local_pairwise_align_ssw(query_sequence,
+                                          target_sequence, **kwargs)
+        self._check_Alignment_to_AlignmentStructure(align2, align1)
 
 
 class TestAlignmentStructure(TestSSW):

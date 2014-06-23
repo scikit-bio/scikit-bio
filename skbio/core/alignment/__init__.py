@@ -28,7 +28,7 @@ Alignment Algorithms
 
    StripedSmithWaterman
    AlignmentStructure
-   align_striped_smith_waterman
+   local_pairwise_align_ssw
 
 Data Structure Examples
 -----------------------
@@ -58,18 +58,19 @@ Data Structure Examples
 
 Alignment Algorithm Examples
 ----------------------------
-Using the convenient ``align_striped_smith_waterman`` function:
+Using the convenient ``local_pairwise_align_ssw`` function:
 
->>> from skbio.core.alignment import align_striped_smith_waterman
->>> alignment = align_striped_smith_waterman(
+>>> from skbio.core.alignment import local_pairwise_align_ssw
+>>> alignment = local_pairwise_align_ssw(
 ...                 "ACTAAGGCTCTCTACCCCTCTCAGAGA",
 ...                 "ACTAAGGCTCCTAACCCCCTTTTCTCAGA"
 ...             )
 >>> print alignment
-ACTAAGGCTC...
-ACTAAGGCTC...
-Score: 27
-Length: 30
+>query
+ACTAAGGCTCTC-TACCC----CTCTCAGA
+>target
+ACTAAGGCTC-CTAACCCCCTTTTCTCAGA
+<BLANKLINE>
 
 Using the ``StripedSmithWaterman`` object:
 
@@ -121,10 +122,10 @@ ACT-AGGCTCCCTTCTACCCCTCTCAGAGA
 
 from .alignment import Alignment, SequenceCollection
 from .ssw.ssw_wrapper import (
-    StripedSmithWaterman, AlignmentStructure, align_striped_smith_waterman)
+    StripedSmithWaterman, local_pairwise_align_ssw)
 
 __all__ = ['Alignment', 'SequenceCollection', 'StripedSmithWaterman',
-           'AlignmentStructure', 'align_striped_smith_waterman']
+           'AlignmentStructure', 'local_pairwise_align_ssw']
 
 from numpy.testing import Tester
 test = Tester().test
