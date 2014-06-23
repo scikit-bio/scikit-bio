@@ -876,8 +876,8 @@ class Alignment(SequenceCollection):
         Returns
         -------
         list, None
-            The ordered list of sequence lengths, or ``None`` if this was not
-            provided on object construction.
+            The list of sequence start/end positions, or ``None`` if this was
+            not provided on object construction.
 
         Notes
         -----
