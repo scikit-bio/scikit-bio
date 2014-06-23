@@ -75,6 +75,14 @@ class PairwiseAlignmentTests(TestCase):
 
     def test_global_pairwise_align_nucleotide(self):
         m = make_nt_substitution_matrix(5, -4)
+        expected = ("G-ACCTTGACCAGGTACC", "GAACTTTGAC---GTAAC", 41.0)
+        actual = global_pairwise_align_nucleotide("GACCTTGACCAGGTACC",
+                                                  "GAACTTTGACGTAAC",
+                                                  gap_open_penalty=5.,
+                                                  gap_extend_penalty=0.5,
+                                                  substitution_matrix=m)
+        self.assertEqual(actual, expected)
+
         expected = ("G-ACCTTGACCAGGTACC", "GAACTTTGAC---GTAAC", 31.0)
         actual = global_pairwise_align_nucleotide("GACCTTGACCAGGTACC",
                                                   "GAACTTTGACGTAAC",
