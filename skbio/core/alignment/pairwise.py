@@ -268,8 +268,8 @@ def local_pairwise_align(sequence1, sequence2, gap_open_penalty,
        int
           The start position of the alignment in sequence 2
     """
-    sw_matrix, traceback_matrix = \
-        _dynamic_programming_and_traceback(sequence1,
+    score_matrix, traceback_matrix = \
+        _compute_score_and_traceback_matrices(sequence1,
                                                  sequence2,
                                                  gap_open_penalty,
                                                  gap_extend_penalty,
@@ -278,7 +278,7 @@ def local_pairwise_align(sequence1, sequence2, gap_open_penalty,
                                                  init_matrices_f=_init_matrices_sw,
                                                  init_rows_f=_init_rows_sw)
 
-    return _local_traceback(traceback_matrix,sw_matrix,sequence1,sequence2)
+    return _local_traceback(traceback_matrix,score_matrix,sequence1,sequence2)
 
 
 def global_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
@@ -395,13 +395,13 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
        float
           The score of the alignment
     """
-    nw_matrix, traceback_matrix = \
-        _dynamic_programming_and_traceback(\
+    score_matrix, traceback_matrix = \
+        _compute_score_and_traceback_matrices(\
             seq1, seq2, gap_open_penalty, gap_extend_penalty,
             substitution_matrix, new_alignment_score=-np.inf,
             init_matrices_f=_init_matrices_nw, init_rows_f=_init_rows_nw)
     aligned_seq1, aligned_seq2, score = _global_traceback(\
-        traceback_matrix, nw_matrix, seq1, seq2)
+        traceback_matrix, score_matrix, seq1, seq2)
     return aligned_seq1, aligned_seq2, score
 
 
@@ -409,9 +409,9 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
 ## methods, suggesting that an Aligner class is probably the way to go.
 
 def _init_matrices_sw(seq1, seq2, gap_open_penalty, gap_extend_penalty):
-    sw_matrix = [[0 for i in range(0,len(seq1)+1)]]
+    score_matrix = [[0 for i in range(0,len(seq1)+1)]]
     traceback_matrix = [[None] + [None for i in range(0,len(seq1))]]
-    return sw_matrix, traceback_matrix
+    return score_matrix, traceback_matrix
 
 def _init_rows_sw(row_number, gap_open_penalty, gap_extend_penalty):
     return ([0], [None])
@@ -420,28 +420,26 @@ def _init_matrices_nw(seq1, seq2, gap_open_penalty, gap_extend_penalty):
     nw_row1 = [0.]
     for i in range(1, len(seq1)+1):
         nw_row1.append(-gap_open_penalty - ((i-1) * gap_extend_penalty))
-    nw_matrix = [nw_row1]
+    score_matrix = [nw_row1]
     traceback_matrix = [[None] + ['-' for i in range(0,len(seq1))]]
-    return nw_matrix, traceback_matrix
+    return score_matrix, traceback_matrix
 
 def _init_rows_nw(row_number, gap_open_penalty, gap_extend_penalty):
     nw_row = [(-gap_open_penalty - ((row_number-1) * gap_extend_penalty))]
     return (nw_row, ['|'])
 
-def _dynamic_programming_and_traceback(seq1, seq2, gap_open_penalty,
+def _compute_score_and_traceback_matrices(seq1, seq2, gap_open_penalty,
                                              gap_extend_penalty,
                                              substitution_matrix,
                                              new_alignment_score=-np.inf,
                                              init_matrices_f=_init_matrices_nw,
                                              init_rows_f=_init_rows_nw):
-    """Return dynamic programming and traceback matrices
-
-    These are generated for local alignment using Smith-Waterman.
+    """Return dynamic programming (score) and traceback matrices
     """
     new_alignment_score = (new_alignment_score, None)
     # Initialize a matrix to use for scoring the alignment and for tracing
     # back the best alignment
-    sw_matrix, traceback_matrix = init_matrices_f(
+    score_matrix, traceback_matrix = init_matrices_f(
         seq1, seq2, gap_open_penalty, gap_extend_penalty)
     # Iterate over the characters in sequence two (which will correspond
     # to the vertical sequence in the matrix)
@@ -457,13 +455,13 @@ def _dynamic_programming_and_traceback(seq1, seq2, gap_open_penalty,
         # Analysis'
         for j,c1 in zip(range(1,len(seq1)+1),seq1):
             substitution_score = substitution_matrix[c1][c2]
-            diag_score = (sw_matrix[i-1][j-1] + substitution_score,'\\')
+            diag_score = (score_matrix[i-1][j-1] + substitution_score,'\\')
             if traceback_matrix[i-1][j] == '|':
                 # gap extend, because the cell above was also a gap
-                up_score = (sw_matrix[i-1][j] - gap_extend_penalty,'|')
+                up_score = (score_matrix[i-1][j] - gap_extend_penalty,'|')
             else:
                 # gap open, because the cell above was not a gap
-                up_score = (sw_matrix[i-1][j] - gap_open_penalty,'|')
+                up_score = (score_matrix[i-1][j] - gap_open_penalty,'|')
             if current_traceback_matrix_row[-1] == '-':
                 # gap extend, because the cell to the left was also a gap
                 left_score = (current_row[-1] - gap_extend_penalty,'-')
@@ -475,11 +473,11 @@ def _dynamic_programming_and_traceback(seq1, seq2, gap_open_penalty,
             current_row.append(best_score[0])
             current_traceback_matrix_row.append(best_score[1])
         # append the current row to the matrix
-        sw_matrix.append(current_row)
+        score_matrix.append(current_row)
         traceback_matrix.append(current_traceback_matrix_row)
-    return sw_matrix, traceback_matrix
+    return score_matrix, traceback_matrix
 
-def _local_traceback(traceback_matrix,sw_matrix,seq1,seq2,gap_character='-'):
+def _local_traceback(traceback_matrix,score_matrix,seq1,seq2,gap_character='-'):
 
     aligned_seq1 = []
     aligned_seq2 = []
@@ -487,9 +485,9 @@ def _local_traceback(traceback_matrix,sw_matrix,seq1,seq2,gap_character='-'):
     current_row = None
     current_col = None
     best_score = 0.0
-    for i in range(len(sw_matrix[0])):
-        for j in range(len(sw_matrix)):
-            current_score = sw_matrix[j][i]
+    for i in range(len(score_matrix[0])):
+        for j in range(len(score_matrix)):
+            current_score = score_matrix[j][i]
             if current_score > best_score:
                 best_score = current_score
                 current_row = j
@@ -534,7 +532,7 @@ def _first_largest(scores):
             result = (score, direction)
     return result
 
-def _global_traceback(traceback_matrix,nw_matrix,seq1,seq2,gap_character='-'):
+def _global_traceback(traceback_matrix,score_matrix,seq1,seq2,gap_character='-'):
 
     aligned_seq1 = []
     aligned_seq2 = []
@@ -542,7 +540,7 @@ def _global_traceback(traceback_matrix,nw_matrix,seq1,seq2,gap_character='-'):
     current_row = len(traceback_matrix) - 1
     current_col = len(traceback_matrix[0]) - 1
 
-    best_score = nw_matrix[current_row][current_col]
+    best_score = score_matrix[current_row][current_col]
 
     while True:
         current_value = traceback_matrix[current_row][current_col]
