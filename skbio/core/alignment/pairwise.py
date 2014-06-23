@@ -110,8 +110,8 @@ blosum50 = \
         'Z': {'*': -5, 'A': -1, 'C': -3, 'B': 1, 'E': 5, 'D': 1, 'G': -2,
               'F': -4, 'I': -3, 'H': 0, 'K': 1, 'M': -1, 'L': -3, 'N': 0,
               'Q': 4, 'P': -1, 'S': 0, 'R': 0, 'T': -1, 'W': -2, 'V': -3,
-              'Y': -2, 'X': -1, 'Z': 5}
-}
+              'Y': -2, 'X': -1, 'Z': 5}}
+
 
 def make_nt_substitution_matrix(match, mismatch, alphabet='ACGT'):
     result = {}
@@ -124,6 +124,7 @@ def make_nt_substitution_matrix(match, mismatch, alphabet='ACGT'):
                 row[c2] = mismatch
         result[c1] = row
     return result
+
 
 def local_pairwise_align_nucleotide(sequence1, sequence2, gap_open_penalty=5,
                                     gap_extend_penalty=2,
@@ -228,7 +229,7 @@ def local_pairwise_align_protein(sequence1, sequence2, gap_open_penalty=11,
         substitution_matrix = blosum50
 
     return local_pairwise_align(sequence1, sequence2, gap_open_penalty,
-                                 gap_extend_penalty, substitution_matrix)
+                                gap_extend_penalty, substitution_matrix)
 
 
 def local_pairwise_align(sequence1, sequence2, gap_open_penalty,
@@ -264,14 +265,10 @@ def local_pairwise_align(sequence1, sequence2, gap_open_penalty,
        int
           The start position of the alignment in sequence 2
     """
-    score_matrix, traceback_matrix = \
-        _compute_score_and_traceback_matrices(sequence1,
-                                                 sequence2,
-                                                 gap_open_penalty,
-                                                 gap_extend_penalty,
-                                                 substitution_matrix,
-                                                 new_alignment_score=0.0,
-                                                 init_matrices_f=_init_matrices_sw)
+    score_matrix, traceback_matrix = _compute_score_and_traceback_matrices(
+        sequence1, sequence2, gap_open_penalty, gap_extend_penalty,
+        substitution_matrix, new_alignment_score=0.0,
+        init_matrices_f=_init_matrices_sw)
 
     traceback_start_row = None
     traceback_start_col = None
@@ -284,13 +281,13 @@ def local_pairwise_align(sequence1, sequence2, gap_open_penalty,
                 traceback_start_row = j
                 traceback_start_col = i
 
-    return _traceback(traceback_matrix,score_matrix,sequence1,sequence2,
-                       traceback_start_row, traceback_start_col)
+    return _traceback(traceback_matrix, score_matrix, sequence1, sequence2,
+                      traceback_start_row, traceback_start_col)
 
 
 def global_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
-                                    gap_extend_penalty=2,
-                                    substitution_matrix=None):
+                                     gap_extend_penalty=2,
+                                     substitution_matrix=None):
     """Globally align nucleotide seqs with Needleman-Wunsch
 
        Parameters
@@ -331,8 +328,9 @@ def global_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
     if substitution_matrix is None:
         substitution_matrix = nt_substitution_matrix
 
-    return global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
-                     substitution_matrix)
+    return global_pairwise_align(seq1, seq2, gap_open_penalty,
+                                 gap_extend_penalty, substitution_matrix)
+
 
 def global_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
                                   gap_extend_penalty=1,
@@ -388,11 +386,12 @@ def global_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
     if substitution_matrix is None:
         substitution_matrix = blosum50
 
-    return global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
-                     substitution_matrix)
+    return global_pairwise_align(seq1, seq2, gap_open_penalty,
+                                 gap_extend_penalty, substitution_matrix)
+
 
 def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
-             substitution_matrix):
+                          substitution_matrix):
     """Globally align seqs with Needleman-Wunsch
 
        Parameters
@@ -443,12 +442,13 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
         traceback_matrix, score_matrix, seq1, seq2, traceback_start_row,
         traceback_end_row)
 
-## Functions from here allow for generalized (global or local) alignment. I
-## will likely want to put these in a single object to make the naming a little
-## less clunky.
+# Functions from here allow for generalized (global or local) alignment. I
+# will likely want to put these in a single object to make the naming a little
+# less clunky.
 
 _traceback_encoding = {'match': 1, 'vertical-gap': 2, 'horizontal-gap': 3,
                        'uninitialized': -1, 'alignment-end': 0}
+
 
 def _init_matrices_sw(seq1, seq2, gap_open_penalty, gap_extend_penalty):
     shape = (len(seq2)+1, len(seq1)+1)
@@ -458,6 +458,7 @@ def _init_matrices_sw(seq1, seq2, gap_open_penalty, gap_extend_penalty):
     traceback_matrix[0, 0] = _traceback_encoding['alignment-end']
     return score_matrix, traceback_matrix
 
+
 def _init_matrices_nw(seq1, seq2, gap_open_penalty, gap_extend_penalty):
     shape = (len(seq2)+1, len(seq1)+1)
     score_matrix = np.zeros(shape)
@@ -465,24 +466,33 @@ def _init_matrices_nw(seq1, seq2, gap_open_penalty, gap_extend_penalty):
     traceback_matrix += _traceback_encoding['uninitialized']
     traceback_matrix[0, 0] = _traceback_encoding['alignment-end']
 
+    # cache some values for quicker access
+    vgap = _traceback_encoding['vertical-gap']
+    hgap = _traceback_encoding['horizontal-gap']
+
     for i in range(1, shape[0]):
-        score_matrix[i,0] = -gap_open_penalty - ((i-1) * gap_extend_penalty)
-        traceback_matrix[i,0] = _traceback_encoding['vertical-gap']
+        score_matrix[i, 0] = -gap_open_penalty - ((i-1) * gap_extend_penalty)
+        traceback_matrix[i, 0] = vgap
 
     for i in range(1, shape[1]):
-        score_matrix[0,i] = -gap_open_penalty - ((i-1) * gap_extend_penalty)
-        traceback_matrix[0,i] = _traceback_encoding['horizontal-gap']
+        score_matrix[0, i] = -gap_open_penalty - ((i-1) * gap_extend_penalty)
+        traceback_matrix[0, i] = hgap
 
     return score_matrix, traceback_matrix
 
-def _compute_score_and_traceback_matrices(seq1, seq2, gap_open_penalty,
-                                             gap_extend_penalty,
-                                             substitution_matrix,
-                                             new_alignment_score=-np.inf,
-                                             init_matrices_f=_init_matrices_nw):
+
+def _compute_score_and_traceback_matrices(
+        seq1, seq2, gap_open_penalty, gap_extend_penalty, substitution_matrix,
+        new_alignment_score=-np.inf, init_matrices_f=_init_matrices_nw):
     """Return dynamic programming (score) and traceback matrices
     """
-    new_alignment_score = (new_alignment_score, _traceback_encoding['alignment-end'])
+    # cache some values for quicker access
+    aend = _traceback_encoding['alignment-end']
+    match = _traceback_encoding['match']
+    vgap = _traceback_encoding['vertical-gap']
+    hgap = _traceback_encoding['horizontal-gap']
+
+    new_alignment_score = (new_alignment_score, aend)
     # Initialize a matrix to use for scoring the alignment and for tracing
     # back the best alignment
     score_matrix, traceback_matrix = init_matrices_f(
@@ -491,39 +501,35 @@ def _compute_score_and_traceback_matrices(seq1, seq2, gap_open_penalty,
     # to the vertical sequence in the matrix)
     # Note that i corresponds to column numbers, as in 'Biological Sequence
     # Analysis'
-    for i,c2 in zip(range(1,len(seq2)+1),seq2):
+    for i, c2 in zip(range(1, len(seq2)+1), seq2):
         # Iterate over the characters in sequence one (which will
         # correspond to the horizontal sequence in the matrix)
         # Note that j corresponds to row numbers, as in 'Biological Sequence
         # Analysis'
-        for j,c1 in zip(range(1,len(seq1)+1),seq1):
+        for j, c1 in zip(range(1, len(seq1)+1), seq1):
             substitution_score = substitution_matrix[c1][c2]
-            diag_score = (score_matrix[i-1][j-1] + substitution_score,
-                          _traceback_encoding['match'])
-            if traceback_matrix[i-1][j] == _traceback_encoding['vertical-gap']:
+            diag_score = (score_matrix[i-1][j-1] + substitution_score, match)
+            if traceback_matrix[i-1][j] == vgap:
                 # gap extend, because the cell above was also a gap
-                up_score = (score_matrix[i-1][j] - gap_extend_penalty,
-                            _traceback_encoding['vertical-gap'])
+                up_score = (score_matrix[i-1][j] - gap_extend_penalty, vgap)
             else:
                 # gap open, because the cell above was not a gap
-                up_score = (score_matrix[i-1][j] - gap_open_penalty,
-                            _traceback_encoding['vertical-gap'])
-            if traceback_matrix[i][j-1] == _traceback_encoding['horizontal-gap']:
+                up_score = (score_matrix[i-1][j] - gap_open_penalty, vgap)
+            if traceback_matrix[i][j-1] == hgap:
                 # gap extend, because the cell to the left was also a gap
-                left_score = (score_matrix[i][j-1] - gap_extend_penalty,
-                              _traceback_encoding['horizontal-gap'])
+                left_score = (score_matrix[i][j-1] - gap_extend_penalty, hgap)
             else:
                 # gap open, because the cell to the left was not a gap
-                left_score = (score_matrix[i][j-1] - gap_open_penalty,
-                              _traceback_encoding['horizontal-gap'])
+                left_score = (score_matrix[i][j-1] - gap_open_penalty, hgap)
             best_score = _first_largest([new_alignment_score, left_score,
                                          diag_score, up_score])
             score_matrix[i][j] = best_score[0]
-            traceback_matrix[i][j]  = best_score[1]
+            traceback_matrix[i][j] = best_score[1]
     return score_matrix, traceback_matrix
 
-def _traceback(traceback_matrix,score_matrix,seq1,seq2,start_row, start_col,
-               gap_character='-'):
+
+def _traceback(traceback_matrix, score_matrix, seq1, seq2, start_row,
+               start_col, gap_character='-'):
 
     aligned_seq1 = []
     aligned_seq2 = []
@@ -552,10 +558,12 @@ def _traceback(traceback_matrix,score_matrix,seq1,seq2,start_row, start_col,
         elif current_value == _traceback_encoding['alignment-end']:
             break
         else:
-            raise ValueError, "Invalid value in traceback matrix: %s" % current_value
+            raise ValueError(
+                "Invalid value in traceback matrix: %s" % current_value)
 
     return (''.join(aligned_seq1[::-1]), ''.join(aligned_seq2[::-1]),
-             best_score, current_col, current_row)
+            best_score, current_col, current_row)
+
 
 def _first_largest(scores):
     """ Similar to max, but returns the first element achieving the high score
