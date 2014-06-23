@@ -95,6 +95,10 @@ class DistributionsTests(TestCase):
         self.assertEqual(num_points, 1)
         self.assertEqual(num_samples, 1)
 
+    def test_validate_input_empty_point(self):
+        with npt.assert_raises(ValueError):
+            _validate_input([[[1, 2, 3], [4, 5]], []], None, None, None)
+
     def test_validate_input_invalid_num_samples(self):
         """_validate_input() should raise a ValueError if an inconsistent
         number of samples in included in the data."""
@@ -180,6 +184,10 @@ class DistributionsTests(TestCase):
         """_get_distribution_markers() should return an empty list."""
         self.assertEqual(_get_distribution_markers('symbols', None, 0), [])
         self.assertEqual(_get_distribution_markers('symbols', ['^'], 0), [])
+
+    def test_get_distribution_markers_negative_num_markers(self):
+        with npt.assert_raises(ValueError):
+            _get_distribution_markers('symbols', [], -1)
 
     def test_plot_bar_data(self):
         """_plot_bar_data() should return a list of Rectangle objects."""
@@ -305,6 +313,17 @@ class DistributionsTests(TestCase):
         self.assertEqual(ax.get_xticklabels()[1].get_text(), "T1")
         self.assertEqual(ax.get_ylim(), (0.0, 1.0))
 
+    def test_set_axes_options_x_values_as_tick_labels(self):
+        fig, ax = plt.subplots()
+        _set_axes_options(ax, "Plot Title", "x-axis label", "y-axis label",
+                          x_values=[42, 45, 800])
+
+        self.assertEqual(ax.get_title(), "Plot Title")
+        self.assertEqual(ax.get_ylabel(), "y-axis label")
+        self.assertEqual(ax.get_xticklabels()[0].get_text(), '42')
+        self.assertEqual(ax.get_xticklabels()[1].get_text(), '45')
+        self.assertEqual(ax.get_xticklabels()[2].get_text(), '800')
+
     def test_set_axes_options_bad_ylim(self):
         """_set_axes_options() should raise an exception when given non-numeric
         y limits."""
@@ -313,6 +332,13 @@ class DistributionsTests(TestCase):
             _set_axes_options(ax, "Plot Title", "x-axis label", "y-axis label",
                               x_tick_labels=["T0", "T1", "T2"], y_min='car',
                               y_max=30)
+
+    def test_set_axes_options_invalid_x_tick_labels_orientation(self):
+        fig, ax = plt.subplots()
+        with npt.assert_raises(ValueError):
+            _set_axes_options(ax, "Plot Title", "x-axis label", "y-axis label",
+                              x_tick_labels=["T0", "T1"],
+                              x_tick_labels_orientation='brofist')
 
     def test_create_legend(self):
         """_create_box_plot_legend() should create a legend on valid input."""
@@ -417,11 +443,23 @@ class DistributionsTests(TestCase):
                                   ['b', 'g', 'y'],
                                   "x-axis label", "y-axis label", "Test")
 
+    def test_grouped_distributions_negative_distribution_width(self):
+        args = ('box', self.ValidTypicalData, [1, 4, 10, 11],
+                ["T0", "T1", "T2", "T3"], ["Infants", "Children", "Teens"],
+                ['b', 'g', 'y'], "x-axis label", "y-axis label", "Test")
+
+        with self.assertRaises(ValueError):
+            grouped_distributions(*args, distribution_width=0)
+
+        with self.assertRaises(ValueError):
+            grouped_distributions(*args, distribution_width=-42)
+
     def test_boxplots(self):
         """boxplots() should return a valid Figure object."""
         fig = boxplots(self.ValidTypicalBoxData, [1, 4, 10],
                        ["Data 1", "Data 2", "Data 3"], "Test", "x-axis label",
-                       "y-axis label")
+                       "y-axis label",
+                       legend=(('blue', 'red'), ('foo', 'bar')))
         ax = fig.get_axes()[0]
         self.assertEqual(ax.get_title(), "Test")
         self.assertEqual(ax.get_xlabel(), "x-axis label")

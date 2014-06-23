@@ -45,7 +45,6 @@ class SequenceCollection(object):
     skbio.core.sequence.NucelotideSequence
     skbio.core.sequence.DNASequence
     skbio.core.sequence.RNASequence
-    SequenceCollection
     Alignment
     skbio.parse.sequences
     skbio.parse.sequences.parse_fasta
@@ -745,6 +744,29 @@ class Alignment(SequenceCollection):
     ``SequenceCollection`` class to make it easy to work with alignments of
     biological sequences.
 
+    Parameters
+    ----------
+    seqs : list of `skbio.core.sequence.BiologicalSequence` objects
+        The `skbio.core.sequence.BiologicalSequence` objects to load into
+        a new `Alignment` object.
+    validate : bool, optional
+        If True, runs the `is_valid` method after construction and raises
+        `SequenceCollectionError` if ``is_valid == False``.
+    score : float, optional
+        The score of the alignment, if applicable (usually only if the
+        alignment was just constructed).
+    start_end_positions : iterable of two-item tuples, optional
+        The start and end positions of each input sequence in the alignment,
+        if applicable (usually only if the alignment was just constructed using
+        a local alignment algorithm). Note that these should be indexes into
+        the unaligned sequences, though the `Alignment` object itself doesn't
+        know about these.
+
+    Raises
+    ------
+    skbio.core.exception.SequenceCollectionError
+        If ``validate == True`` and ``is_valid == False``.
+
     Notes
     -----
     By definition, all of the sequences in an alignment must be of the same
@@ -753,9 +775,33 @@ class Alignment(SequenceCollection):
 
     See Also
     --------
+    skbio.core.sequence.BiologicalSequence
+    skbio.core.sequence.NucelotideSequence
+    skbio.core.sequence.DNASequence
+    skbio.core.sequence.RNASequence
     SequenceCollection
+    skbio.parse.sequences
+    skbio.parse.sequences.parse_fasta
+
+    Examples
+    --------
+    >>> from skbio.core.alignment import Alignment
+    >>> from skbio.core.sequence import DNA
+    >>> sequences = [DNA('A--CCGT', id="seq1"),
+    ...              DNA('AACCGGT', id="seq2")]
+    >>> a1 = Alignment(sequences)
+    >>> a1
+    <Alignment: n=2; mean +/- std length=7.00 +/- 0.00>
 
     """
+
+    def __init__(self, seqs, validate=False, score=None,
+                 start_end_positions=None):
+        super(Alignment, self).__init__(seqs, validate)
+
+        if score is not None:
+            self._score = float(score)
+        self._start_end_positions = start_end_positions
 
     def distances(self):
         """Compute distances between all pairs of sequences
@@ -806,6 +852,52 @@ class Alignment(SequenceCollection):
             for j in range(i):
                 dm[i, j] = dm[j, i] = self_i.distance(self[j])
         return DistanceMatrix(dm, ids)
+
+    def score(self):
+        """Returns the score of the alignment.
+
+        Returns
+        -------
+        float, None
+            The score of the alignment, or ``None`` if this was not provided on
+            object construction.
+
+        Notes
+        -----
+        This value will often be ``None``, as it is generally only going to be
+        provided on construction if the alignment itself was built within
+        scikit-bio.
+
+        """
+        return self._score
+
+    def start_end_positions(self):
+        """Returns the (start, end) positions for each aligned sequence.
+
+        Returns
+        -------
+        list, None
+            The list of sequence start/end positions, or ``None`` if this was
+            not provided on object construction.
+
+        Notes
+        -----
+        The start/end positions indicate the range of the unaligned sequences
+        in the alignment. For example, if local alignment were performed on the
+        sequences ACA and TACAT, depending on the specific algorithm that was
+        used to perform the alignment, the start/end positions would likely be:
+        ``[(0,2), (1,3)]``. This indicates that the first and last positions of
+        the second sequence were not included in the alignment, and the
+        aligned sequences were therefore:
+        ACA
+        ACA
+
+        This value will often be ``None``, as it is generally only going to be
+        provided on construction if the alignment itself was built within
+        scikit-bio.
+
+        """
+        return self._start_end_positions
 
     def subalignment(self, seqs_to_keep=None, positions_to_keep=None,
                      invert_seqs_to_keep=False,

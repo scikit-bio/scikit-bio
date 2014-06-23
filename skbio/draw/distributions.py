@@ -637,7 +637,7 @@ def _set_axes_options(plot_axes, title=None, x_label=None, y_label=None,
 
     if (x_tick_labels_orientation != 'vertical' and
             x_tick_labels_orientation != 'horizontal'):
-        raise ValueError("Invalid orientation for x-axis tick labels: %s. "
+        raise ValueError("Invalid orientation for x-axis tick labels: '%s'. "
                          "Valid orientations are 'vertical' or 'horizontal'."
                          % x_tick_labels_orientation)
 
