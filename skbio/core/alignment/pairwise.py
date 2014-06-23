@@ -118,23 +118,10 @@ blosum50 = \
               'Y': -2, 'X': -1, 'Z': 5}}
 
 
-def make_nt_substitution_matrix(match, mismatch, alphabet='ACGT'):
-    result = {}
-    for c1 in alphabet:
-        row = {}
-        for c2 in alphabet:
-            if c1 == c2:
-                row[c2] = match
-            else:
-                row[c2] = mismatch
-        result[c1] = row
-    return result
-
-
 def local_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
                                     gap_extend_penalty=2,
                                     substitution_matrix=None):
-    """Locally align nucleotide seqs using Smith-Waterman w/ affine gap scoring
+    """Locally align exactly two nucleotide seqs with Smith-Waterman
 
        Parameters
        ----------
@@ -142,13 +129,13 @@ def local_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
            The first unaligned sequence
        seq2 : str or BiologicalSequence
            The second unaligned sequence
-       gap_open_penalty : int, float, optional
+       gap_open_penalty : int, float
            penalty for opening a gap (this is substracted from previous best
            alignment score, so is typically positive)
-       gap_extend_penalty : int, float, optional
+       gap_extend_penalty : int, float
            penalty for extending a gap (this is substracted from previous best
            alignment score, so is typically positive)
-       substitution_matrix: 2D dict (or similar), optional
+       substitution_matrix: 2D dict (or similar)
            lookup for substitution scores (these values are added to the
            previous best alignment score); default is nt_substitution_matrix
 
@@ -171,7 +158,7 @@ def local_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
 
     """
     if substitution_matrix is None:
-        substitution_matrix = make_nt_substitution_matrix(match=1, mismatch=-2)
+        substitution_matrix = _make_nt_substitution_matrix(1, -2)
 
     return local_pairwise_align(seq1, seq2, gap_open_penalty,
                                 gap_extend_penalty, substitution_matrix)
@@ -180,23 +167,23 @@ def local_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
 def local_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
                                  gap_extend_penalty=1,
                                  substitution_matrix=None):
-    """Locally align two protein seqs (Smith-Waterman w affine gap scoring)
+    """Locally align exactly two protein seqs with Smith-Waterman
 
        Parameters
        ----------
-       seq1 : string
+       seq1 : str or BiologicalSequence
            The first unaligned sequence
-       seq2 : string
+       seq2 : str or BiologicalSequence
            The second unaligned sequence
-       gap_open_penalty : int, float, optional
+       gap_open_penalty : int, float
            penalty for opening a gap (this is substracted from previous best
            alignment score, so is typically positive)
-       gap_extend_penalty : int, float, optional
+       gap_extend_penalty : int, float
            penalty for extending a gap (this is substracted from previous best
            alignment score, so is typically positive)
-       substitution_matrix: 2D dict (or similar), optional
+       substitution_matrix: 2D dict (or similar)
            lookup for substitution scores (these values are added to the
-           previous best alignment score)
+           previous best alignment score); default is nt_substitution_matrix
 
        Returns
        -------
@@ -240,7 +227,7 @@ def local_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
 
 def local_pairwise_align(seq1, seq2, gap_open_penalty,
                          gap_extend_penalty, substitution_matrix):
-    """Locally align sequences using Smith-Waterman w/ affine gap scoring
+    """Locally align exactly two seqs with Smith-Waterman
 
        Parameters
        ----------
@@ -293,7 +280,7 @@ def local_pairwise_align(seq1, seq2, gap_open_penalty,
 def global_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
                                      gap_extend_penalty=2,
                                      substitution_matrix=None):
-    """Globally align nucleotide seqs with Needleman-Wunsch
+    """Globally align exactly two nucleotide seqs with Needleman-Wunsch
 
        Parameters
        ----------
@@ -301,13 +288,13 @@ def global_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
            The first unaligned sequence
        seq2 : str or BiologicalSequence
            The second unaligned sequence
-       gap_open_penalty : int, float, optional
+       gap_open_penalty : int, float
            penalty for opening a gap (this is substracted from previous best
            alignment score, so is typically positive)
-       gap_extend_penalty : int, float, optional
+       gap_extend_penalty : int, float
            penalty for extending a gap (this is substracted from previous best
            alignment score, so is typically positive)
-       substitution_matrix: 2D dict (or similar), optional
+       substitution_matrix: 2D dict (or similar)
            lookup for substitution scores (these values are added to the
            previous best alignment score); default is nt_substitution_matrix
 
@@ -333,7 +320,7 @@ def global_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
 def global_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
                                   gap_extend_penalty=1,
                                   substitution_matrix=None):
-    """Globally align protein seqs with Needleman-Wunsch
+    """Globally align exactly two protein seqs with Needleman-Wunsch
 
        Parameters
        ----------
@@ -341,13 +328,13 @@ def global_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
            The first unaligned sequence
        seq2 : str or BiologicalSequence
            The second unaligned sequence
-       gap_open_penalty : int, float, optional
+       gap_open_penalty : int, float
            penalty for opening a gap (this is substracted from previous best
            alignment score, so is typically positive)
-       gap_extend_penalty : int, float, optional
+       gap_extend_penalty : int, float
            penalty for extending a gap (this is substracted from previous best
            alignment score, so is typically positive)
-       substitution_matrix: 2D dict (or similar), optional
+       substitution_matrix: 2D dict (or similar)
            lookup for substitution scores (these values are added to the
            previous best alignment score); default is nt_substitution_matrix
 
@@ -378,7 +365,7 @@ def global_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
 
 def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
                           substitution_matrix):
-    """Globally align seqs with Needleman-Wunsch
+    """Globally align exactly two seqs with Needleman-Wunsch
 
        Parameters
        ----------
@@ -435,6 +422,19 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
 
 _traceback_encoding = {'match': 1, 'vertical-gap': 2, 'horizontal-gap': 3,
                        'uninitialized': -1, 'alignment-end': 0}
+
+
+def _make_nt_substitution_matrix(match_score, mismatch_score, alphabet='ACGT'):
+    result = {}
+    for c1 in alphabet:
+        row = {}
+        for c2 in alphabet:
+            if c1 == c2:
+                row[c2] = match_score
+            else:
+                row[c2] = mismatch_score
+        result[c1] = row
+    return result
 
 
 def _init_matrices_sw(seq1, seq2, gap_open_penalty, gap_extend_penalty):

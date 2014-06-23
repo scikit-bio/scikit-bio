@@ -18,7 +18,7 @@ from skbio import (
     global_pairwise_align_nucleotide, local_pairwise_align_nucleotide,
     Alignment, Protein, DNA, RNA)
 from skbio.core.alignment.pairwise import (
-    make_nt_substitution_matrix, _init_matrices_sw, _init_matrices_nw)
+    _make_nt_substitution_matrix, _init_matrices_sw, _init_matrices_nw)
 
 filterwarnings("ignore")
 
@@ -44,13 +44,13 @@ class PairwiseAlignmentTests(TestCase):
                     'C': {'A': -2, 'C':  1, 'G': -2, 'T': -2},
                     'G': {'A': -2, 'C': -2, 'G':  1, 'T': -2},
                     'T': {'A': -2, 'C': -2, 'G': -2, 'T':  1}}
-        self.assertEqual(make_nt_substitution_matrix(1, -2), expected)
+        self.assertEqual(_make_nt_substitution_matrix(1, -2), expected)
 
         expected = {'A': {'A':  5, 'C': -4, 'G': -4, 'T': -4},
                     'C': {'A': -4, 'C':  5, 'G': -4, 'T': -4},
                     'G': {'A': -4, 'C': -4, 'G':  5, 'T': -4},
                     'T': {'A': -4, 'C': -4, 'G': -4, 'T':  5}}
-        self.assertEqual(make_nt_substitution_matrix(5, -4), expected)
+        self.assertEqual(_make_nt_substitution_matrix(5, -4), expected)
 
     def test_global_pairwise_align_protein(self):
         expected = ("HEAGAWGHEE", "---PAWHEAE", 1.0)
@@ -114,7 +114,7 @@ class PairwiseAlignmentTests(TestCase):
         self.assertEqual(actual.start_end_positions(), [(4, 8), (1, 4)])
 
     def test_global_pairwise_align_nucleotide(self):
-        m = make_nt_substitution_matrix(5, -4)
+        m = _make_nt_substitution_matrix(5, -4)
         expected = ("G-ACCTTGACCAGGTACC", "GAACTTTGAC---GTAAC", 41.0, 0, 0)
         actual = global_pairwise_align_nucleotide("GACCTTGACCAGGTACC",
                                                   "GAACTTTGACGTAAC",
@@ -150,7 +150,7 @@ class PairwiseAlignmentTests(TestCase):
         self.assertEqual(actual.start_end_positions(), [(0, 16), (0, 14)])
 
     def test_local_pairwise_align_nucleotide(self):
-        m = make_nt_substitution_matrix(5, -4)
+        m = _make_nt_substitution_matrix(5, -4)
         expected = ("ACCTTGACCAGGTACC", "ACTTTGAC---GTAAC", 41.0, 1, 2)
         actual = local_pairwise_align_nucleotide("GACCTTGACCAGGTACC",
                                                  "GAACTTTGACGTAAC",
