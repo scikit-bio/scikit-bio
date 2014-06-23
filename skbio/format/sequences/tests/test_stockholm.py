@@ -6,7 +6,7 @@ from collections import OrderedDict
 
 from skbio.core.alignment import Alignment
 from skbio.core.sequence import DNA
-from skbio.format.stockholm import Stockholm, stockholm_from_alignment
+from skbio.format.sequences.stockholm import stockholm_from_alignment
 
 
 class StockholmTests(TestCase):

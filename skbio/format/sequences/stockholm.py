@@ -1,28 +1,4 @@
-#!/usr/bin/env python
-r"""
-Write stockholm formatted strings (:mod:`skbio.format.stockholm`)
-=================================================================
-
-.. currentmodule:: skbio.format.stockholm
-
-This module provides functions for writing stockholm strings.
-
-Constants
----------
-
-.. autosummary::
-   :toctree: generated/
-
-    Stockholm
-
-Functions
----------
-
-.. autosummary::
-   :toctree: generated/
-
-    stockholm_from_alignment
-"""
+"""Writer for stockholm format"""
 
 
 # -----------------------------------------------------------------------------
@@ -32,33 +8,7 @@ Functions
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # -----------------------------------------------------------------------------
-
-from collections import namedtuple
-try:
-    from itertools import izip as zip
-except ImportError:  # doesn't exist in python3 so import fails
-    pass
-
-Stockholm = namedtuple("Stockholm", ("aln", "GF", "GS", "GR", "GC"))
-r"""Stockholm named tuple for holding all information in a stockholm file
-
-Attributes
-----------
-aln: Alignment object
-    Holds the actual sequence alignment in the file
-GF: dict
-    Holds GF info in the format {feature: info}
-GS: dict of dicts
-    Holds GS info in the format {seqlabel: {feature: info}}
-GR: dict of dicts
-    Holds GR info in the format {seqlabel: {feature: info}}
-GC: dict
-    Holds GC info in the format {feature: info}
-
-Notes
------
-Works with collectons.OrderedDict if the order of information matters
-"""
+from future.builtins import izip
 
 
 def stockholm_from_alignment(stdata):
@@ -66,8 +16,7 @@ def stockholm_from_alignment(stdata):
 
     Parameters
     ----------
-    stdata: Stockholm namedtuple
-        Stockholm formatted namedtuple with alignment and all information
+    stdata: StockholmAlignment object
 
     Returns
     -------
@@ -171,7 +120,7 @@ def stockholm_from_alignment(stdata):
                 ident = value if isinstance(value, list) else [value]
                 tree = stdata.GF["NH"] if isinstance(stdata.GF["NH"], list) \
                     else [stdata.GF["NH"]]
-                for ident, tree in zip(stdata.GF["TN"], stdata.GF["NH"]):
+                for ident, tree in izip(stdata.GF["TN"], stdata.GF["NH"]):
                     GF_lines.append(' '.join(["#=GF", "TN", str(ident)]))
                     GF_lines.append(' '.join(["#=GF", "NH", str(tree)]))
             elif feature == "RT":
@@ -187,7 +136,7 @@ def stockholm_from_alignment(stdata):
                 rl = stdata.GF.get("RL", default_none)
                 rc = stdata.GF.get("RC", default_none)
                 # order: RN, RM, RT, RA, RL, RC
-                for n, m, t, a, l, c in zip(rn, rm, rt, ra, rl, rc):
+                for n, m, t, a, l, c in izip(rn, rm, rt, ra, rl, rc):
                     GF_lines.append(' '.join(["#=GF", "RN", n]))
                     if m:
                         GF_lines.append(' '.join(["#=GF", "RM", str(m)]))

@@ -11,14 +11,15 @@ from __future__ import absolute_import, division, print_function
 from future.builtins import zip, range
 from future.utils import viewkeys
 
-from collections import Counter, defaultdict
+from collections import Counter, defaultdict, OrderedDict
 from warnings import warn
 
 import numpy as np
 from scipy.stats import entropy
 
-from skbio.core.exception import SequenceCollectionError
+from skbio.core.exception import SequenceCollectionError, StockholmParseError
 from skbio.core.distance import DistanceMatrix
+from skbio.format.sequences.stockholm import stockholm_from_alignment
 
 
 class SequenceCollection(object):
@@ -1405,3 +1406,254 @@ class Alignment(SequenceCollection):
             if seq1_length != len(seq):
                 return False
         return True
+
+
+class StockholmAlignment(Alignment):
+    """Contains the metadata information in a Stockholm file alignment
+
+    Parameters
+    ----------
+    seqs : list of `skbio.core.sequence.BiologicalSequence` objects
+        The `skbio.core.sequence.BiologicalSequence` objects to load.
+    gf : dict, optional
+        GF info in the format {feature: info}
+    gs : dict of dicts, optional
+        GS info in the format {seqlabel: {feature: info}}
+    gr : dict of dicts, optional
+        GR info in the format {seqlabel: {feature: info}}
+    gc : dict, optional
+        GC info in the format {feature: info}
+
+
+
+    Examples
+    --------
+    Assume we have a basic stockholm file with the following contents::
+
+        # STOCKHOLM 1.0
+        seq1         ACC--G-GGGU
+        seq2         TCC--G-GGGA
+        #=GC SS_cons (((.....)))
+        //
+
+    >>> from skbio.core.sequence import RNA
+    >>> from skbio.core.alignment import StockholmAlignment
+    >>> from StringIO import StringIO
+    >>> sto_in = StringIO("# STOCKHOLM 1.0\n"
+    ...                  "seq1     ACC--G-GGGU\nseq2     TCC--G-GGGA\n"
+    ...                  "#=GC SS_cons (((.....)))\n//")
+    >>> sto_records = StockholmAlignment.parse_stockholm(sto_in, RNA)
+    >>> for sto in sto_records:
+    >>>     print sto
+    # STOCKHOLM 1.0
+    seq1         ACC--G-GGGU
+    seq2         TCC--G-GGGA
+    #=GC SS_cons (((.....)))
+    >>>     sto.gc
+    //
+    """
+    def __init__(self, seqs, gf=None, gs=None, gr=None, gc=None,
+                 validate=False):
+        self.gf = gf
+        self.gs = gs
+        self.gr = gr
+        self.gc = gc
+        super(StockholmAlignment, self).__init__(seqs, validate)
+
+    def __str__(self):
+        return stockholm_from_alignment(self)
+
+    def _parse_gf_info(self, lines):
+        """Takes care of parsing GF lines in stockholm plus special cases"""
+        parsed = defaultdict(list)
+        # needed for making each multi-line RT and NH one string
+        rt = []
+        nh = []
+        lastline = ""
+        for line in lines:
+            try:
+                init, feature, content = line.split(None, 2)
+            except ValueError:
+                raise StockholmParseError("Malformed GF line encountered!"
+                                          "\n%s" % line.split(None, 2))
+            if init != "#=GF":
+                raise StockholmParseError("Non-GF line encountered!")
+
+            # take care of adding multiline RT to the parsed information
+            if lastline == "RT" and feature != "RT":
+                # add rt line to the parsed dictionary
+                rtline = " ".join(rt)
+                rt = []
+                parsed["RT"].append(rtline)
+            elif feature == "RT":
+                rt.append(content)
+                lastline = feature
+                continue
+
+            # Take care of adding multiline NH to the parsed dictionary
+            elif lastline == "NH" and feature != "NH":
+                nhline = " ".join(nh)
+                nh = []
+                parsed["NH"].append(nhline)
+            elif feature == "NH":
+                nh.append(content)
+                lastline = feature
+                continue
+
+            # add current feature to the parsed information
+            parsed[feature].append(content)
+            lastline = feature
+
+        # removing unneccessary lists from parsed. Use .items() for py3 support
+        for feature, value in parsed.items():
+            # list of multi-line features to join into single string if needed
+            if feature in ["CC"]:
+                parsed[feature] = ' '.join(value)
+            elif len(parsed[feature]) == 1:
+                parsed[feature] = value[0]
+        return parsed
+
+    def _parse_gc_info(self, lines, strict=False, seqlen=-1):
+        """Takes care of parsing GC lines in stockholm format"""
+        parsed = {}
+        for line in lines:
+            try:
+                init, feature, content = line.split(None, 2)
+            except ValueError:
+                raise StockholmParseError("Malformed GC line encountered!\n%s"
+                                          % line.split(None, 2))
+            if init != "#=GC":
+                raise StockholmParseError("Non-GC line encountered!")
+
+            # add current feature to the parsed information
+            if feature in parsed:
+                if strict:
+                    raise StockholmParseError("Should not have multiple lines "
+                                              "with the same feature: %s" %
+                                              feature)
+                parsed[feature].append(content)
+            else:
+                parsed[feature] = [content]
+
+        # removing unneccessary lists from parsed. Use .items() for py3 support
+        for feature, value in parsed.items():
+            parsed[feature] = ''.join(value)
+            if strict:
+                if len(value) != seqlen:
+                    raise StockholmParseError("GC must have exactly one char "
+                                              "per position in alignment!")
+
+        return parsed
+
+    def _parse_gs_gr_info(self, lines, strict=False, seqlen=-1):
+        """Takes care of parsing GS and GR lines in stockholm format"""
+        parsed = {}
+        parsetype = ""
+        for line in lines:
+            try:
+                init, label, feature, content = line.split(None, 3)
+            except ValueError:
+                raise StockholmParseError("Malformed GS/GR line encountered!"
+                                          "\n%s" % line.split(None, 3))
+            if parsetype == "":
+                parsetype = init
+            elif init != parsetype:
+                    raise StockholmParseError("Non-GS/GR line encountered!")
+
+            # parse each line, taking into account interleaved format
+            if label in parsed and feature in parsed[label]:
+                # interleaved format, so need list of content
+                parsed[label][feature].append(content)
+            else:
+                parsed[label] = {feature: [content]}
+
+        # join all the crazy lists created during parsing
+        for label in parsed:
+            for feature, content in parsed[label].items():
+                parsed[label][feature] = ''.join(content)
+                if strict:
+                    if len(parsed[label][feature]) != seqlen:
+                        raise StockholmParseError("GR must have exactly one "
+                                                  "char per position in the "
+                                                  "alignment!")
+        return parsed
+
+    @classmethod
+    def from_file(cls, infile, seq_constructor, strict=False):
+        r"""yields StockholmAlignment objects from a stockholm file.
+
+        Parameters
+        ----------
+        infile : open file object
+            An open stockholm file.
+
+        seq_constructor : BiologicalSequence object
+            The biologicalsequence object that corresponds to what the
+            stockholm file holds. See skbio.core.sequence
+
+        strict : bool (optional)
+            Turns on strict parsing of GR and GC lines to ensure one char per
+             position. Default: False
+
+        Returns
+        -------
+        Iterator of StockholmAlignment objects
+
+        Raises
+        ------
+        StockholmParseError
+            If any lines are found that don't conform to stockholm format
+        """
+        # make sure first line is corect
+        line = infile.readline()
+        if not line.startswith("# STOCKHOLM 1.0"):
+            raise StockholmParseError("Incorrect header found")
+        gs_lines = []
+        gf_lines = []
+        gr_lines = []
+        gc_lines = []
+        # OrderedDict used so sequences maintain same order as in file
+        seqs = OrderedDict()
+        for line in infile:
+            line = line.strip()
+            if line == "" or line.startswith("# S"):
+                # skip blank lines or secondary headers
+                continue
+            elif line == "//":
+                # parse the record since we are at its end
+                # get length of sequences in the alignment
+                seqlen = len(next(seqs.items()))
+
+                # parse information lines
+                gf = cls._parse_gf_info(gf_lines)
+                gs = cls._parse_gs_gr_info(gs_lines)
+                gr = cls._parse_gs_gr_info(gr_lines, strict, seqlen)
+                gc = cls._parse_gc_info(gc_lines, strict, seqlen)
+
+                # yield the actual stockholm object
+                yield cls(seqs.items(), gf, gs, gr, gc)
+
+                # reset all storage variables
+                gs_lines = []
+                gf_lines = []
+                gr_lines = []
+                gc_lines = []
+                seqs = OrderedDict()
+            # add the metadata lines to the proper lists
+            elif line.startswith("#=GF"):
+                gf_lines.append(line)
+            elif line.startswith("#=GS"):
+                gs_lines.append(line)
+            elif line.startswith("#=GR"):
+                gr_lines.append(line)
+            elif line.startswith("#=GC"):
+                gc_lines.append(line)
+            else:
+                lineinfo = line.split()
+                # assume sequence since nothing else in format is left
+                # in case of interleaved format, need to do check
+                if lineinfo[0] in seqs:
+                    sequence = seqs[lineinfo[0]]
+                    seqs[lineinfo[0]] = ''.join([sequence, lineinfo[1]])
+                else:
+                    seqs[lineinfo[0]] = lineinfo[1]

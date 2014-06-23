@@ -143,12 +143,13 @@ ACT-AGGCTCCCTTCTACCCCTCTCAGAGA
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from .alignment import Alignment, SequenceCollection
+from .alignment import Alignment, SequenceCollection, StockholmAlignment
 from .ssw.ssw_wrapper import (
     StripedSmithWaterman, AlignmentStructure, align_striped_smith_waterman)
 
-__all__ = ['Alignment', 'SequenceCollection', 'StripedSmithWaterman',
-           'AlignmentStructure', 'align_striped_smith_waterman']
+__all__ = ['Alignment', 'SequenceCollection', 'StockholmAlignment',
+           'StripedSmithWaterman', 'AlignmentStructure',
+           'align_striped_smith_waterman']
 
 from numpy.testing import Tester
 test = Tester().test
