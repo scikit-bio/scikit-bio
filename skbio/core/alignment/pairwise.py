@@ -279,16 +279,8 @@ def local_pairwise_align(seq1, seq2, gap_open_penalty,
         substitution_matrix, new_alignment_score=0.0,
         init_matrices_f=_init_matrices_sw)
 
-    seq1_end_position = None
-    seq2_end_position = None
-    best_score = -np.inf
-    for i in range(len(score_matrix[0])):
-        for j in range(len(score_matrix)):
-            current_score = score_matrix[j][i]
-            if current_score > best_score:
-                best_score = current_score
-                seq1_end_position = j
-                seq2_end_position = i
+    seq1_end_position, seq2_end_position =\
+        np.unravel_index(np.argmax(score_matrix), score_matrix.shape)
 
     aligned1, aligned2, score, seq1_start_position, seq2_start_position = \
         _traceback(traceback_matrix, score_matrix, seq1, seq2,
