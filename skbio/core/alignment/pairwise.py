@@ -442,8 +442,8 @@ def _local_dynamic_programming_and_traceback(seq1, seq2, gap_open_penalty,
             else:
                 # gap open, because the cell to the left was not a gap
                 left_score = (current_row[-1] - gap_open_penalty,'-')
-            best_score = max(diag_score,up_score,left_score,
-                             new_alignment_score)
+            best_score = _first_largest([new_alignment_score, left_score,
+                                         diag_score, up_score])
             current_row.append(best_score[0])
             current_traceback_matrix_row.append(best_score[1])
         # append the current row to the matrix
@@ -492,6 +492,19 @@ def _local_traceback(traceback_matrix,sw_matrix,seq1,seq2,gap_character='-'):
     return (''.join(aligned_seq1[::-1]), ''.join(aligned_seq2[::-1]),
              best_score, current_col, current_row)
 
+def _first_largest(scores):
+    """ Similar to max, but returns the first element achieving the high score
+
+        If max receives a tuple, it will break a score for the highest value
+        of entry[i] with entry[i+1]. We don't want that here. We want to be
+        able to prefer e.g. a match to a gap if they result in ties.
+    """
+    result = scores[0]
+    for score, direction in scores[1:]:
+        if score > result[0]:
+            result = (score, direction)
+    return result
+
 def _global_dynamic_programming_and_traceback(seq1, seq2, gap_open_penalty,
     gap_extend_penalty, substitution_matrix):
     # Initialize a matrix to use for scoring the alignment and for tracing
@@ -512,7 +525,7 @@ def _global_dynamic_programming_and_traceback(seq1, seq2, gap_open_penalty,
         # Iterate over the amino acids in sequence one (which will
         # correspond to the horizontal sequence in the matrix)
         # Note that j corresponds to row numbers, as in the 'Biological Sequence
-        # Analysis' example from class
+        # Analysis' example
         for j,aa1 in zip(range(1,len(seq1)+1),seq1):
             substitution_score = substitution_matrix[aa1][aa2]
             diag_score = (nw_matrix[i-1][j-1] + substitution_score,'\\')
@@ -528,14 +541,13 @@ def _global_dynamic_programming_and_traceback(seq1, seq2, gap_open_penalty,
             else:
                 # gap open, because the cell to the left was not a gap
                 left_score = (current_row[-1] - gap_open_penalty,'-')
-            best_score = max(diag_score,up_score,left_score)
+            best_score = _first_largest([left_score, diag_score, up_score])
             current_row.append(best_score[0])
             current_traceback_matrix_row.append(best_score[1])
         # append the current row to the matrix
         nw_matrix.append(current_row)
         traceback_matrix.append(current_traceback_matrix_row)
     return nw_matrix, traceback_matrix
-
 
 def _global_traceback(traceback_matrix,nw_matrix,seq1,seq2,gap_character='-'):
 
