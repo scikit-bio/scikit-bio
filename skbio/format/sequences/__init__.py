@@ -29,9 +29,10 @@ Functions
 
 from .fasta import fasta_from_sequences, fasta_from_alignment
 from .fastq import format_fastq_record
+from .stockholm import stockholm_from_alignment
 
 __all__ = ['fasta_from_sequences', 'fasta_from_alignment',
-           'format_fastq_record']
+           'format_fastq_record', 'stockholm_from_alignment']
 
 
 from numpy.testing import Tester
