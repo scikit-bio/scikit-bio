@@ -318,6 +318,15 @@ def global_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
           The second aligned sequence
        float
           The score of the alignment
+       int
+          The start position of the alignment in sequence 1
+       int
+          The start position of the alignment in sequence 2
+
+       Notes
+       -----
+       Start positions are always zero, but including them in the results
+       gives a consistent interface with local aligners.
 
     """
     if substitution_matrix is None:
@@ -355,6 +364,15 @@ def global_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
           The second aligned sequence
        float
           The score of the alignment
+       int
+          The start position of the alignment in sequence 1
+       int
+          The start position of the alignment in sequence 2
+
+       Notes
+       -----
+       Start positions are always zero, but including them in the results
+       gives a consistent interface with local aligners.
 
        Examples
        --------
@@ -402,6 +420,16 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
           The second aligned sequence
        float
           The score of the alignment
+       int
+          The start position of the alignment in sequence 1
+       int
+          The start position of the alignment in sequence 2
+
+       Notes
+       -----
+       Start positions are always zero, but including them in the results
+       gives a consistent interface with local aligners.
+
     """
     score_matrix, traceback_matrix = \
         _compute_score_and_traceback_matrices(\
