@@ -164,7 +164,6 @@ Functions
     parse_clustal
     parse_fasta
     parse_fastq
-    parse_stockholm
     parse_qual
 """
 
@@ -179,13 +178,11 @@ Functions
 from .clustal import parse_clustal
 from .fasta import parse_fasta, parse_qual
 from .fastq import parse_fastq
-from .stockholm import parse_stockholm
 from .iterator import FastaIterator, FastqIterator, SequenceIterator
 from .factory import load
 
 __all__ = ['parse_clustal', 'parse_fasta', 'parse_fastq', 'parse_qual',
-           'parse_stockholm', 'FastqIterator', 'FastaIterator',
-           'SequenceIterator', 'load']
+           'FastqIterator', 'FastaIterator', 'SequenceIterator', 'load']
 
 from numpy.testing import Tester
 test = Tester().test
