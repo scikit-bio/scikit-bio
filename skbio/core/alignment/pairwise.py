@@ -443,20 +443,20 @@ def _dynamic_programming_and_traceback(seq1, seq2, gap_open_penalty,
     # back the best alignment
     sw_matrix, traceback_matrix = init_matrices_f(
         seq1, seq2, gap_open_penalty, gap_extend_penalty)
-    # Iterate over the amino acids in sequence two (which will correspond
+    # Iterate over the characters in sequence two (which will correspond
     # to the vertical sequence in the matrix)
     # Note that i corresponds to column numbers, as in 'Biological Sequence
     # Analysis'
-    for i,aa2 in zip(range(1,len(seq2)+1),seq2):
+    for i,c2 in zip(range(1,len(seq2)+1),seq2):
         # Initialize the current row of the matrix
         current_row, current_traceback_matrix_row = \
             init_rows_f(i, gap_open_penalty, gap_extend_penalty)
-        # Iterate over the amino acids in sequence one (which will
+        # Iterate over the characters in sequence one (which will
         # correspond to the horizontal sequence in the matrix)
         # Note that j corresponds to row numbers, as in 'Biological Sequence
         # Analysis'
-        for j,aa1 in zip(range(1,len(seq1)+1),seq1):
-            substitution_score = substitution_matrix[aa1][aa2]
+        for j,c1 in zip(range(1,len(seq1)+1),seq1):
+            substitution_score = substitution_matrix[c1][c2]
             diag_score = (sw_matrix[i-1][j-1] + substitution_score,'\\')
             if traceback_matrix[i-1][j] == '|':
                 # gap extend, because the cell above was also a gap
