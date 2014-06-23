@@ -553,7 +553,8 @@ def _traceback(traceback_matrix, score_matrix, seq1, seq2, start_row,
             raise ValueError(
                 "Invalid value in traceback matrix: %s" % current_value)
 
-    return (''.join(aligned_seq1[::-1]), ''.join(aligned_seq2[::-1]),
+    return (''.join(map(str, aligned_seq1[::-1])),
+            ''.join(map(str, aligned_seq2[::-1])),
             best_score, current_col, current_row)
 
 
