@@ -362,9 +362,9 @@ class AlignmentTests(TestCase):
         self.a1 = Alignment(self.seqs1)
         self.a2 = Alignment(self.seqs2)
         self.a3 = Alignment(self.seqs2, score=42.0,
-                            start_end_positions=[(0,3), (5,9)])
+                            start_end_positions=[(0, 3), (5, 9)])
         self.a4 = Alignment(self.seqs2, score=-42.0,
-                            start_end_positions=[(1,4), (6,10)])
+                            start_end_positions=[(1, 4), (6, 10)])
         self.empty = Alignment([])
 
     def test_degap(self):
@@ -397,8 +397,8 @@ class AlignmentTests(TestCase):
         self.assertEqual(self.a4.score(), -42.0)
 
     def test_start_end_positions(self):
-        self.assertEqual(self.a3.start_end_positions(), [(0,3), (5,9)])
-        self.assertEqual(self.a4.start_end_positions(), [(1,4), (6,10)])
+        self.assertEqual(self.a3.start_end_positions(), [(0, 3), (5, 9)])
+        self.assertEqual(self.a4.start_end_positions(), [(1, 4), (6, 10)])
 
     def test_subalignment(self):
         """subalignment functions as expected
