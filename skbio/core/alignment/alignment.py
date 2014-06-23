@@ -32,6 +32,15 @@ class SequenceCollection(object):
     validate : bool, optional
         If True, runs the `is_valid` method after construction and raises
         `SequenceCollectionError` if ``is_valid == False``.
+    score : float, optional
+        The score of the alignment, if applicable (usually only if the
+        alignment was just constructed).
+    start_end_positions : iterable of two-item tuples, optional
+        The start and end positions of each input sequence in the alignment,
+        if applicable (usually only if the alignment was just constructed using
+        a local alignment algorithm). Note that these should be indexes into
+        the unaligned sequences, though the ``Alignment`` object itself doesn't
+        know about these.
 
     Raises
     ------
@@ -126,7 +135,8 @@ class SequenceCollection(object):
 
         return cls(data, validate=validate)
 
-    def __init__(self, seqs, validate=False):
+    def __init__(self, seqs, validate=False, score=None,
+                 start_end_positions=None):
         self._data = seqs
         self._id_to_index = {}
         for i, seq in enumerate(self._data):
@@ -137,6 +147,10 @@ class SequenceCollection(object):
                     "id %s is present multiple times." % id)
             else:
                 self._id_to_index[seq.id] = i
+
+        if score is not None:
+            self._score = float(score)
+        self._start_end_positions = start_end_positions
 
         # This is bad because we're making a second pass through the sequence
         # collection to validate. We'll want to avoid this, but it's tricky
@@ -674,6 +688,52 @@ class SequenceCollection(object):
 
         """
         return [len(seq) for seq in self]
+
+    def score(self):
+        """Returns the score of the alignment.
+
+        Returns
+        -------
+        float, None
+            The score of the alignment, or ``None`` if this was not provided on
+            object construction.
+
+        Notes
+        -----
+        This value will often be ``None``, as it is generally only going to be
+        provided on construction if the alignment itself was built within
+        scikit-bio.
+
+        """
+        return self._score
+
+    def start_end_positions(self):
+        """Returns the (start, end) positions for each aligned sequence.
+
+        Returns
+        -------
+        list, None
+            The ordered list of sequence lengths, or ``None`` if this was not
+            provided on object construction.
+
+        Notes
+        -----
+        The start/end positions indicate the range of the unaligned sequences
+        that were aligned when the alignment was constructed. For example, if
+        local alignment was performed on the sequences ACA and TACAT, depending
+        on the specific algorithm that was used to perform the alignment the
+        start/end positions would likely be: [(0,2), (1,3)], indicating that
+        alignment looked like the following, and that the first and last
+        positions of the second sequence were not included in the alignment:
+        ACA
+        ACA
+
+        This value will often be ``None``, as it is generally only going to be
+        provided on construction if the alignment itself was built within
+        scikit-bio.
+
+        """
+        return self._start_end_positions
 
     def to_fasta(self):
         """Return fasta-formatted string representing the `SequenceCollection`
