@@ -486,7 +486,7 @@ def _compute_score_and_traceback_matrices(
         new_alignment_score=-np.inf, init_matrices_f=_init_matrices_nw):
     """Return dynamic programming (score) and traceback matrices
     """
-    # cache some values for quicker access
+    # cache some values for quicker/simpler access
     aend = _traceback_encoding['alignment-end']
     match = _traceback_encoding['match']
     vgap = _traceback_encoding['vertical-gap']
@@ -530,6 +530,11 @@ def _compute_score_and_traceback_matrices(
 
 def _traceback(traceback_matrix, score_matrix, seq1, seq2, start_row,
                start_col, gap_character='-'):
+    # cache some values for simpler
+    aend = _traceback_encoding['alignment-end']
+    match = _traceback_encoding['match']
+    vgap = _traceback_encoding['vertical-gap']
+    hgap = _traceback_encoding['horizontal-gap']
 
     aligned_seq1 = []
     aligned_seq2 = []
@@ -542,20 +547,20 @@ def _traceback(traceback_matrix, score_matrix, seq1, seq2, start_row,
     while True:
         current_value = traceback_matrix[current_row][current_col]
 
-        if current_value == _traceback_encoding['match']:
+        if current_value == match:
             aligned_seq1.append(seq1[current_col-1])
             aligned_seq2.append(seq2[current_row-1])
             current_row -= 1
             current_col -= 1
-        elif current_value == _traceback_encoding['vertical-gap']:
+        elif current_value == vgap:
             aligned_seq1.append('-')
             aligned_seq2.append(seq2[current_row-1])
             current_row -= 1
-        elif current_value == _traceback_encoding['horizontal-gap']:
+        elif current_value == hgap:
             aligned_seq1.append(seq1[current_col-1])
             aligned_seq2.append('-')
             current_col -= 1
-        elif current_value == _traceback_encoding['alignment-end']:
+        elif current_value == aend:
             break
         else:
             raise ValueError(
