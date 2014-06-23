@@ -10,10 +10,13 @@ from __future__ import absolute_import, division, print_function
 
 from unittest import TestCase, main
 
+import numpy as np
+
 from skbio import (
     global_pairwise_align_protein, local_pairwise_align_protein,
     global_pairwise_align_nucleotide, local_pairwise_align_nucleotide)
-from skbio.core.alignment.pairwise import (make_nt_substitution_matrix)
+from skbio.core.alignment.pairwise import (make_nt_substitution_matrix,
+    _init_matrices_sw, _init_matrices_nw)
 
 
 class PairwiseAlignmentTests(TestCase):
@@ -107,6 +110,29 @@ class PairwiseAlignmentTests(TestCase):
                                                   gap_extend_penalty=5.,
                                                   substitution_matrix=m)
         self.assertEqual(actual, expected)
+
+    def test_init_matrices_sw(self):
+        expected_score_m = np.zeros((5, 4))
+        expected_tback_m = np.zeros((5, 4)) - 1
+        expected_tback_m[0, 0] = 0
+        actual_score_m, actual_tback_m = _init_matrices_sw('AAA', 'AAAA', 5, 2)
+        np.testing.assert_array_equal(actual_score_m, expected_score_m)
+        np.testing.assert_array_equal(actual_tback_m, expected_tback_m)
+
+    def test_init_matrices_nw(self):
+        expected_score_m = [[0, -5, -7, -9],
+                            [-5, 0, 0, 0],
+                            [-7, 0, 0, 0],
+                            [-9, 0, 0, 0],
+                            [-11, 0, 0, 0]]
+        expected_tback_m = [[0, 3, 3, 3],
+                            [2, -1, -1, -1],
+                            [2, -1, -1, -1],
+                            [2, -1, -1, -1],
+                            [2, -1, -1, -1]]
+        actual_score_m, actual_tback_m = _init_matrices_nw('AAA', 'AAAA', 5, 2)
+        np.testing.assert_array_equal(actual_score_m, expected_score_m)
+        np.testing.assert_array_equal(actual_tback_m, expected_tback_m)
 
 if __name__ == "__main__":
     main()

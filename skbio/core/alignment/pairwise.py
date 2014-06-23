@@ -271,8 +271,7 @@ def local_pairwise_align(sequence1, sequence2, gap_open_penalty,
                                                  gap_extend_penalty,
                                                  substitution_matrix,
                                                  new_alignment_score=0.0,
-                                                 init_matrices_f=_init_matrices_sw,
-                                                 init_rows_f=_init_rows_sw)
+                                                 init_matrices_f=_init_matrices_sw)
 
     traceback_start_row = None
     traceback_start_col = None
@@ -432,15 +431,15 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
 
     """
     score_matrix, traceback_matrix = \
-        _compute_score_and_traceback_matrices(\
+        _compute_score_and_traceback_matrices(
             seq1, seq2, gap_open_penalty, gap_extend_penalty,
             substitution_matrix, new_alignment_score=-np.inf,
-            init_matrices_f=_init_matrices_nw, init_rows_f=_init_rows_nw)
+            init_matrices_f=_init_matrices_nw)
 
     traceback_start_row = len(traceback_matrix) - 1
     traceback_end_row = len(traceback_matrix[0]) - 1
 
-    return _traceback(\
+    return _traceback(
         traceback_matrix, score_matrix, seq1, seq2, traceback_start_row,
         traceback_end_row)
 
@@ -448,35 +447,42 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
 ## will likely want to put these in a single object to make the naming a little
 ## less clunky.
 
-def _init_matrices_sw(seq1, seq2, gap_open_penalty, gap_extend_penalty):
-    score_matrix = [[0 for i in range(0,len(seq1)+1)]]
-    traceback_matrix = [[None] + [None for i in range(0,len(seq1))]]
-    return score_matrix, traceback_matrix
+_traceback_encoding = {'match': 1, 'vertical-gap': 2, 'horizontal-gap': 3,
+                       'uninitialized': -1, 'alignment-end': 0}
 
-def _init_rows_sw(row_number, gap_open_penalty, gap_extend_penalty):
-    return ([0], [None])
+def _init_matrices_sw(seq1, seq2, gap_open_penalty, gap_extend_penalty):
+    shape = (len(seq2)+1, len(seq1)+1)
+    score_matrix = np.zeros(shape)
+    traceback_matrix = np.zeros(shape, dtype=np.int16)
+    traceback_matrix += _traceback_encoding['uninitialized']
+    traceback_matrix[0, 0] = _traceback_encoding['alignment-end']
+    return score_matrix, traceback_matrix
 
 def _init_matrices_nw(seq1, seq2, gap_open_penalty, gap_extend_penalty):
-    nw_row1 = [0.]
-    for i in range(1, len(seq1)+1):
-        nw_row1.append(-gap_open_penalty - ((i-1) * gap_extend_penalty))
-    score_matrix = [nw_row1]
-    traceback_matrix = [[None] + ['-' for i in range(0,len(seq1))]]
-    return score_matrix, traceback_matrix
+    shape = (len(seq2)+1, len(seq1)+1)
+    score_matrix = np.zeros(shape)
+    traceback_matrix = np.zeros(shape, dtype=np.int16)
+    traceback_matrix += _traceback_encoding['uninitialized']
+    traceback_matrix[0, 0] = _traceback_encoding['alignment-end']
 
-def _init_rows_nw(row_number, gap_open_penalty, gap_extend_penalty):
-    nw_row = [(-gap_open_penalty - ((row_number-1) * gap_extend_penalty))]
-    return (nw_row, ['|'])
+    for i in range(1, shape[0]):
+        score_matrix[i,0] = -gap_open_penalty - ((i-1) * gap_extend_penalty)
+        traceback_matrix[i,0] = _traceback_encoding['vertical-gap']
+
+    for i in range(1, shape[1]):
+        score_matrix[0,i] = -gap_open_penalty - ((i-1) * gap_extend_penalty)
+        traceback_matrix[0,i] = _traceback_encoding['horizontal-gap']
+
+    return score_matrix, traceback_matrix
 
 def _compute_score_and_traceback_matrices(seq1, seq2, gap_open_penalty,
                                              gap_extend_penalty,
                                              substitution_matrix,
                                              new_alignment_score=-np.inf,
-                                             init_matrices_f=_init_matrices_nw,
-                                             init_rows_f=_init_rows_nw):
+                                             init_matrices_f=_init_matrices_nw):
     """Return dynamic programming (score) and traceback matrices
     """
-    new_alignment_score = (new_alignment_score, None)
+    new_alignment_score = (new_alignment_score, _traceback_encoding['alignment-end'])
     # Initialize a matrix to use for scoring the alignment and for tracing
     # back the best alignment
     score_matrix, traceback_matrix = init_matrices_f(
@@ -486,35 +492,34 @@ def _compute_score_and_traceback_matrices(seq1, seq2, gap_open_penalty,
     # Note that i corresponds to column numbers, as in 'Biological Sequence
     # Analysis'
     for i,c2 in zip(range(1,len(seq2)+1),seq2):
-        # Initialize the current row of the matrix
-        current_row, current_traceback_matrix_row = \
-            init_rows_f(i, gap_open_penalty, gap_extend_penalty)
         # Iterate over the characters in sequence one (which will
         # correspond to the horizontal sequence in the matrix)
         # Note that j corresponds to row numbers, as in 'Biological Sequence
         # Analysis'
         for j,c1 in zip(range(1,len(seq1)+1),seq1):
             substitution_score = substitution_matrix[c1][c2]
-            diag_score = (score_matrix[i-1][j-1] + substitution_score,'\\')
-            if traceback_matrix[i-1][j] == '|':
+            diag_score = (score_matrix[i-1][j-1] + substitution_score,
+                          _traceback_encoding['match'])
+            if traceback_matrix[i-1][j] == _traceback_encoding['vertical-gap']:
                 # gap extend, because the cell above was also a gap
-                up_score = (score_matrix[i-1][j] - gap_extend_penalty,'|')
+                up_score = (score_matrix[i-1][j] - gap_extend_penalty,
+                            _traceback_encoding['vertical-gap'])
             else:
                 # gap open, because the cell above was not a gap
-                up_score = (score_matrix[i-1][j] - gap_open_penalty,'|')
-            if current_traceback_matrix_row[-1] == '-':
+                up_score = (score_matrix[i-1][j] - gap_open_penalty,
+                            _traceback_encoding['vertical-gap'])
+            if traceback_matrix[i][j-1] == _traceback_encoding['horizontal-gap']:
                 # gap extend, because the cell to the left was also a gap
-                left_score = (current_row[-1] - gap_extend_penalty,'-')
+                left_score = (score_matrix[i][j-1] - gap_extend_penalty,
+                              _traceback_encoding['horizontal-gap'])
             else:
                 # gap open, because the cell to the left was not a gap
-                left_score = (current_row[-1] - gap_open_penalty,'-')
+                left_score = (score_matrix[i][j-1] - gap_open_penalty,
+                              _traceback_encoding['horizontal-gap'])
             best_score = _first_largest([new_alignment_score, left_score,
                                          diag_score, up_score])
-            current_row.append(best_score[0])
-            current_traceback_matrix_row.append(best_score[1])
-        # append the current row to the matrix
-        score_matrix.append(current_row)
-        traceback_matrix.append(current_traceback_matrix_row)
+            score_matrix[i][j] = best_score[0]
+            traceback_matrix[i][j]  = best_score[1]
     return score_matrix, traceback_matrix
 
 def _traceback(traceback_matrix,score_matrix,seq1,seq2,start_row, start_col,
@@ -531,20 +536,20 @@ def _traceback(traceback_matrix,score_matrix,seq1,seq2,start_row, start_col,
     while True:
         current_value = traceback_matrix[current_row][current_col]
 
-        if current_value == '\\':
+        if current_value == _traceback_encoding['match']:
             aligned_seq1.append(seq1[current_col-1])
             aligned_seq2.append(seq2[current_row-1])
             current_row -= 1
             current_col -= 1
-        elif current_value == '|':
+        elif current_value == _traceback_encoding['vertical-gap']:
             aligned_seq1.append('-')
             aligned_seq2.append(seq2[current_row-1])
             current_row -= 1
-        elif current_value == '-':
+        elif current_value == _traceback_encoding['horizontal-gap']:
             aligned_seq1.append(seq1[current_col-1])
             aligned_seq2.append('-')
             current_col -= 1
-        elif current_value == None:
+        elif current_value == _traceback_encoding['alignment-end']:
             break
         else:
             raise ValueError, "Invalid value in traceback matrix: %s" % current_value
