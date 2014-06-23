@@ -120,7 +120,8 @@ class PairwiseAlignmentTests(TestCase):
                                                   "GAACTTTGACGTAAC",
                                                   gap_open_penalty=5.,
                                                   gap_extend_penalty=0.5,
-                                                  substitution_matrix=m)
+                                                  match_score=5,
+                                                  mismatch_score=-4)
         self.assertEqual(str(actual[0]), expected[0])
         self.assertEqual(str(actual[1]), expected[1])
         self.assertEqual(actual.score(), expected[2])
@@ -131,7 +132,8 @@ class PairwiseAlignmentTests(TestCase):
                                                   "GAACTTTGACGTAAC",
                                                   gap_open_penalty=10.,
                                                   gap_extend_penalty=0.5,
-                                                  substitution_matrix=m)
+                                                  match_score=5,
+                                                  mismatch_score=-4)
         self.assertEqual(str(actual[0]), expected[0])
         self.assertEqual(str(actual[1]), expected[1])
         self.assertEqual(actual.score(), expected[2])
@@ -143,7 +145,8 @@ class PairwiseAlignmentTests(TestCase):
                                                   DNA("GAACTTTGACGTAAC"),
                                                   gap_open_penalty=10.,
                                                   gap_extend_penalty=0.5,
-                                                  substitution_matrix=m)
+                                                  match_score=5,
+                                                  mismatch_score=-4)
         self.assertEqual(str(actual[0]), expected[0])
         self.assertEqual(str(actual[1]), expected[1])
         self.assertEqual(actual.score(), expected[2])
@@ -156,7 +159,8 @@ class PairwiseAlignmentTests(TestCase):
                                                  "GAACTTTGACGTAAC",
                                                  gap_open_penalty=5.,
                                                  gap_extend_penalty=0.5,
-                                                 substitution_matrix=m)
+                                                 match_score=5,
+                                                 mismatch_score=-4)
         self.assertEqual(str(actual[0]), expected[0])
         self.assertEqual(str(actual[1]), expected[1])
         self.assertEqual(actual.score(), expected[2])
@@ -167,7 +171,8 @@ class PairwiseAlignmentTests(TestCase):
                                                  "GAACTTTGACGTAAC",
                                                  gap_open_penalty=10.,
                                                  gap_extend_penalty=5.,
-                                                 substitution_matrix=m)
+                                                 match_score=5,
+                                                 mismatch_score=-4)
         self.assertEqual(str(actual[0]), expected[0])
         self.assertEqual(str(actual[1]), expected[1])
         self.assertEqual(actual.score(), expected[2])
@@ -179,7 +184,8 @@ class PairwiseAlignmentTests(TestCase):
                                                  DNA("GAACTTTGACGTAAC"),
                                                  gap_open_penalty=10.,
                                                  gap_extend_penalty=5.,
-                                                 substitution_matrix=m)
+                                                 match_score=5,
+                                                 mismatch_score=-4)
         self.assertEqual(str(actual[0]), expected[0])
         self.assertEqual(str(actual[1]), expected[1])
         self.assertEqual(actual.score(), expected[2])
