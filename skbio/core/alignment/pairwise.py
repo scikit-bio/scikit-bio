@@ -120,7 +120,7 @@ blosum50 = \
 
 def local_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
                                     gap_extend_penalty=2,
-                                    match_score=1, mismatch_score=-2):
+                                    match_score=2, mismatch_score=-3):
     """Locally align exactly two nucleotide seqs with Smith-Waterman
 
        Parameters
@@ -148,6 +148,12 @@ def local_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
        skbio.Alignment
            ``Alignment`` object containing the aligned sequences as well as
            details about the alignment.
+
+       Notes
+       -----
+       Default ``match_score``, ``mismatch_score``, ``gap_open_penalty`` and
+       ``gap_extend_penalty`` parameters are derived from the NCBI BLAST
+       Server.
 
        Examples
        --------
@@ -194,6 +200,11 @@ def local_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
        skbio.Alignment
            ``Alignment`` object containing the aligned sequences as well as
            details about the alignment.
+
+       Notes
+       -----
+       Default ``gap_open_penalty`` and ``gap_extend_penalty`` parameters are
+       derived from the NCBI BLAST Server.
 
        Examples
        --------
@@ -314,8 +325,9 @@ def global_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
 
        Notes
        -----
-       Start positions are always zero, but including them in the results
-       gives a consistent interface with local aligners.
+       Default ``match_score``, ``mismatch_score``, ``gap_open_penalty`` and
+       ``gap_extend_penalty`` parameters are derived from the NCBI BLAST
+       Server.
 
     """
     substitution_matrix = \
@@ -351,6 +363,11 @@ def global_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
        skbio.Alignment
            ``Alignment`` object containing the aligned sequences as well as
            details about the alignment.
+
+       Notes
+       -----
+       Default ``gap_open_penalty`` and ``gap_extend_penalty`` parameters are
+       derived from the NCBI BLAST Server.
 
        Examples
        --------
