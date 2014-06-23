@@ -171,7 +171,7 @@ def local_pairwise_align_nucleotide(sequence1, sequence2, gap_open_penalty=5,
        >>> print(r[0])
        CGTGCCTAAGGTATGCAAG
        >>> print(r[1])
-       CGTGCCT-AGGTACGCAAG
+       CGTGCCTA-GGTACGCAAG
 
     """
     if substitution_matrix is None:
@@ -353,7 +353,7 @@ def global_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
        >>> print(r[0])
        HEAGAWGHE-E
        >>> print(r[1])
-       --P-AW-HEAE
+       -PA--W-HEAE
 
     """
     if substitution_matrix is None:
@@ -496,8 +496,9 @@ def _first_largest(scores):
     """ Similar to max, but returns the first element achieving the high score
 
         If max receives a tuple, it will break a score for the highest value
-        of entry[i] with entry[i+1]. We don't want that here. We want to be
-        able to prefer e.g. a match to a gap if they result in ties.
+        of entry[i] with entry[i+1]. We don't want that here - to better match
+        with the results of other tools, it's better to be able to set the
+        order of the choices.
     """
     result = scores[0]
     for score, direction in scores[1:]:

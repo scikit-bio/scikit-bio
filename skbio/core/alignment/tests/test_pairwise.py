@@ -91,6 +91,13 @@ class PairwiseAlignmentTests(TestCase):
                                                   gap_open_penalty=5.,
                                                   gap_extend_penalty=0.5,
                                                   substitution_matrix=m)
+
+        expected = ("ACCTTGAC", "ACTTTGAC", 31.0, 1, 2)
+        actual = local_pairwise_align_nucleotide("GACCTTGACCAGGTACC",
+                                                  "GAACTTTGACGTAAC",
+                                                  gap_open_penalty=10.,
+                                                  gap_extend_penalty=5.,
+                                                  substitution_matrix=m)
         self.assertEqual(actual, expected)
 
 if __name__ == "__main__":
