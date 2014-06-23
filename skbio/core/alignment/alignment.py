@@ -1539,19 +1539,19 @@ class StockholmAlignment(Alignment):
     >>> from skbio.core.sequence import RNA
     >>> from skbio.core.alignment import StockholmAlignment
     >>> from StringIO import StringIO
-    >>> sto_in = StringIO("# STOCKHOLM 1.0\n"
-    ...                   "seq1     ACC--G-GGGU\nseq2     TCC--G-GGGA\n"
-    ...                   "#=GC SS_cons (((.....)))\n//")
+    >>> sto_in = StringIO("# STOCKHOLM 1.0\\n"
+    ...                   "seq1     ACC--G-GGGU\\nseq2     TCC--G-GGGA\\n"
+    ...                   "#=GC SS_cons (((.....)))\\n//")
     >>> sto_records = StockholmAlignment.from_file(sto_in, RNA)
     >>> sto = next(sto_records)
-    >>> print sto
+    >>> print(sto)
     # STOCKHOLM 1.0
-    seq1         ACC--G-GGGU
-    seq2         TCC--G-GGGA
-    #=GC SS_cons (((.....)))
+    seq1          ACC--G-GGGU
+    seq2          TCC--G-GGGA
+    #=GC SS_cons  (((.....)))
+    //
     >>> sto.gc
     {'SS_cons': '(((.....)))'}
-    //
     """
     def __init__(self, seqs, gf=None, gs=None, gr=None, gc=None,
                  validate=False):
@@ -1739,7 +1739,6 @@ class StockholmAlignment(Alignment):
                     raise StockholmParseError("Should not have multiple lines "
                                               "with the same feature: %s" %
                                               feature)
-                parsed[feature].append(content)
             else:
                 parsed[feature] = [content]
 

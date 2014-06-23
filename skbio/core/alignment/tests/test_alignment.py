@@ -726,6 +726,7 @@ class StockholmAlignmentTests(TestCase):
         self.seqs = [DNASequence("ACC-G-GGTA", id="seq1"),
                      DNASequence("TCC-G-GGCA", id="seq2")]
         self.GF = {"RT": ["TITLE1",  "TITLE2"],
+                   "RN": ["[1]", "[2]"],
                    "AC": "RF00360",
                    "BM": ["cmbuild  -F CM SEED",
                           "cmsearch  -Z 274931 -E 1000000"],
@@ -753,12 +754,14 @@ class StockholmAlignmentTests(TestCase):
                        "seq2      TCC-G\n\n"
                        "seq1      -GGTA\n"
                        "seq2      -GGCA\n//")
-        obs_sto = StockholmAlignment.from_file(sto, DNA).next()
+        obs_sto = next(StockholmAlignment.from_file(sto, DNA))
         exp_sto = StockholmAlignment(self.seqs)
         self.assertEqual(obs_sto, exp_sto)
 
     def test_from_file_GF(self):
         """Make sure GF lines are parsed correctly"""
+        # remove rn line to make sure auto-added
+        self.GF.pop("RN")
         sto = StringIO("# STOCKHOLM 1.0\n#=GF RN [1]\n#=GF RM 11469857\n"
                        "#=GF RT TITLE1\n#=GF RA Auth1;\n#=GF RL J Mol Biol\n"
                        "#=GF RN [2]\n#=GF RM 12007400\n#=GF RT TITLE2\n"
@@ -766,7 +769,7 @@ class StockholmAlignmentTests(TestCase):
                        "#=GF BM cmbuild  -F CM SEED\n"
                        "#=GF BM cmsearch  -Z 274931 -E 1000000\n#=GF SQ 9\n"
                        "seq1         ACC-G-GGTA\nseq2         TCC-G-GGCA\n//")
-        obs_sto = StockholmAlignment.from_file(sto, DNA).next()
+        obs_sto = next(StockholmAlignment.from_file(sto, DNA))
         exp_sto = StockholmAlignment(self.seqs, self.GF, {}, {}, {})
         self.assertEqual(obs_sto, exp_sto)
 
@@ -775,7 +778,7 @@ class StockholmAlignmentTests(TestCase):
         sto = StringIO("# STOCKHOLM 1.0\n"
                        "seq1         ACC-G-GGTA\nseq2         TCC-G-GGCA\n"
                        "#=GC SS_cons (((....)))\n//")
-        obs_sto = StockholmAlignment.from_file(sto, DNA).next()
+        obs_sto = next(StockholmAlignment.from_file(sto, DNA))
         exp_sto = StockholmAlignment(self.seqs, {}, {}, {}, self.GC)
         self.assertEqual(obs_sto, exp_sto)
 
@@ -784,7 +787,7 @@ class StockholmAlignmentTests(TestCase):
         sto = StringIO("# STOCKHOLM 1.0\n#=GS seq2 AC 222\n#=GS seq1 AC 111\n"
                        "seq1          ACC-G-GGTA\n"
                        "seq2          TCC-G-GGCA\n//")
-        obs_sto = StockholmAlignment.from_file(sto, DNA).next()
+        obs_sto = next(StockholmAlignment.from_file(sto, DNA))
         exp_sto = StockholmAlignment(self.seqs, {}, self.GS, {}, {})
         self.assertEqual(obs_sto, exp_sto)
 
@@ -795,7 +798,7 @@ class StockholmAlignmentTests(TestCase):
                        "#=GR seq2 SS  01101\n\nseq1          -GGTA\n"
                        "#=GR seq1 SS  01111\nseq2          -GGCA\n"
                        "#=GR seq2 SS  01110\n//")
-        obs_sto = StockholmAlignment.from_file(sto, DNA).next()
+        obs_sto = next(StockholmAlignment.from_file(sto, DNA))
         exp_sto = StockholmAlignment(self.seqs, {}, {}, self.GR, {})
         self.assertEqual(obs_sto, exp_sto)
 
@@ -820,6 +823,22 @@ class StockholmAlignmentTests(TestCase):
                 raise AssertionError("More than 2 sto alignments parsed!")
             count += 1
 
+    def test_parse_gf_multiline_nh(self):
+        """Makes sure a multiline NH code is parsed correctly"""
+        sto = ["#=GF TN MULTILINE TREE",
+               "#=GF NH THIS IS FIRST", "#=GF NH THIS IS SECOND",
+               "#=GF AC 1283394"]
+        exp = {'TN': 'MULTILINE TREE',
+               'NH': 'THIS IS FIRST THIS IS SECOND',
+               'AC': '1283394'}
+        self.assertEqual(self.st._parse_gf_info(sto), exp)
+
+    def test_parse_gf_multiline_cc(self):
+        """Makes sure a multiline CC code is parsed correctly"""
+        sto = ["#=GF CC THIS IS FIRST", "#=GF CC THIS IS SECOND"]
+        exp = {'CC': 'THIS IS FIRST THIS IS SECOND'}
+        self.assertEqual(self.st._parse_gf_info(sto), exp)
+
     def test_parse_gf_info_nongf(self):
         """Makes sure error raised if non-GF line passed"""
         sto = ["#=GF AC BLAAAAAAAHHH", "#=GC HUH THIS SHOULD NOT BE HERE"]
@@ -828,9 +847,9 @@ class StockholmAlignmentTests(TestCase):
 
     def test_parse_gf_info_malformed(self):
         """Makes sure error raised if too short a line passed"""
-        sto = ["#=GF AC BLAAAAAAAHHH", "#=GF SMALL"]
+        sto = ["#=GF AC", "#=GF"]
         with self.assertRaises(StockholmParseError):
-            self.st._parse_gc_info(sto)
+            self.st._parse_gf_info(sto)
 
     def test_parse_gc_info_nongf(self):
         """Makes sure error raised if non-GC line passed"""
@@ -838,15 +857,21 @@ class StockholmAlignmentTests(TestCase):
         with self.assertRaises(StockholmParseError):
             self.st._parse_gf_info(sto)
 
-    def test_parse_gc_info_strict(self):
+    def test_parse_gc_info_strict_len(self):
         """Make sure error raised if GC lines bad length and strict parsing"""
         sto = ["#=GC SS_cons (((..)))"]
         with self.assertRaises(StockholmParseError):
             self.st._parse_gc_info(sto, seqlen=20, strict=True)
 
+    def test_parse_gc_info_strict_duplicate(self):
+        """Make sure error raised if GC lines repeated"""
+        sto = ["#=GC SS_cons (((..)))", "#=GC SS_cons (((..)))"]
+        with self.assertRaises(StockholmParseError):
+            self.st._parse_gc_info(sto, seqlen=8, strict=True)
+
     def test_parse_gc_info_malformed(self):
         """Makes sure error raised if too short a line passed"""
-        sto = ["#=GC AC BLAAAAAAAHHH", "#=GC SMALL"]
+        sto = ["#=GC AC BLAAAAAAAHHH", "#=GC"]
         with self.assertRaises(StockholmParseError):
             self.st._parse_gc_info(sto)
 
@@ -858,7 +883,7 @@ class StockholmAlignmentTests(TestCase):
 
     def test_parse_gs_gr_info_malformed(self):
         """Makes sure error raised if too short a line passed"""
-        sto = ["#=GS AC BLAAAAAAAHHH", "#=GS SMALL"]
+        sto = ["#=GS AC BLAAAAAAAHHH", "#=GS"]
         with self.assertRaises(StockholmParseError):
             self.st._parse_gs_gr_info(sto)
 
