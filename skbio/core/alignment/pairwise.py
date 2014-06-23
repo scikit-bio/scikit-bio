@@ -131,16 +131,16 @@ def make_nt_substitution_matrix(match, mismatch, alphabet='ACGT'):
     return result
 
 
-def local_pairwise_align_nucleotide(sequence1, sequence2, gap_open_penalty=5,
+def local_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
                                     gap_extend_penalty=2,
                                     substitution_matrix=None):
     """Locally align nucleotide seqs using Smith-Waterman w/ affine gap scoring
 
        Parameters
        ----------
-       sequence1 : str or BiologicalSequence
+       seq1 : str or BiologicalSequence
            The first unaligned sequence
-       sequence2 : str or BiologicalSequence
+       seq2 : str or BiologicalSequence
            The second unaligned sequence
        gap_open_penalty : int, float, optional
            penalty for opening a gap (this is substracted from previous best
@@ -154,16 +154,9 @@ def local_pairwise_align_nucleotide(sequence1, sequence2, gap_open_penalty=5,
 
        Returns
        -------
-       string
-          The first aligned sequence
-       string
-          The second aligned sequence
-       float
-          The score of the alignment
-       int
-          The start position of the alignment in sequence 1
-       int
-          The start position of the alignment in sequence 2
+       skbio.Alignment
+           ``Alignment`` object containing the aligned sequences as well as
+           details about the alignment.
 
        Examples
        --------
@@ -180,20 +173,20 @@ def local_pairwise_align_nucleotide(sequence1, sequence2, gap_open_penalty=5,
     if substitution_matrix is None:
         substitution_matrix = make_nt_substitution_matrix(match=1, mismatch=-2)
 
-    return local_pairwise_align(sequence1, sequence2, gap_open_penalty,
+    return local_pairwise_align(seq1, seq2, gap_open_penalty,
                                 gap_extend_penalty, substitution_matrix)
 
 
-def local_pairwise_align_protein(sequence1, sequence2, gap_open_penalty=11,
+def local_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
                                  gap_extend_penalty=1,
                                  substitution_matrix=None):
     """Locally align two protein seqs (Smith-Waterman w affine gap scoring)
 
        Parameters
        ----------
-       sequence1 : string
+       seq1 : string
            The first unaligned sequence
-       sequence2 : string
+       seq2 : string
            The second unaligned sequence
        gap_open_penalty : int, float, optional
            penalty for opening a gap (this is substracted from previous best
@@ -207,33 +200,41 @@ def local_pairwise_align_protein(sequence1, sequence2, gap_open_penalty=11,
 
        Returns
        -------
-       string
-          The first aligned sequence
-       string
-          The second aligned sequence
-       float
-          The score of the alignment
-       int
-          The start position of the alignment in sequence 1
-       int
-          The start position of the alignment in sequence 2
+       skbio.Alignment
+           ``Alignment`` object containing the aligned sequences as well as
+           details about the alignment.
 
        Examples
        --------
+       Here we locally align a pair of protein sequences using gap open penalty
+       of 11 and a gap extend penalty of 1 (in other words, it is much more
+       costly to open a new gap than extend an existing one).
        >>> from skbio import local_pairwise_align_protein
        >>> s1 = "HEAGAWGHEE"
        >>> s2 = "PAWHEAE"
-       >>> r = local_pairwise_align_protein(s1, s2, 8, 8)
+       >>> r = local_pairwise_align_protein(s1, s2, 11, 1)
+
+       This returns an ``skbio.Alignment`` object. We can look at the aligned
+       sequences as follows:
        >>> print(str(r[0]))
        AWGHE
        >>> print(str(r[1]))
        AW-HE
 
+       You can identify the start and end positions of each aligned sequence
+       as follows:
+       >>> r.start_end_positions()
+       [(4, 8), (1, 4)]
+
+       The score of the alignment is accessible through the ``score`` method:
+       >>> r.score()
+       25.0
+
     """
     if substitution_matrix is None:
         substitution_matrix = blosum50
 
-    return local_pairwise_align(sequence1, sequence2, gap_open_penalty,
+    return local_pairwise_align(seq1, seq2, gap_open_penalty,
                                 gap_extend_penalty, substitution_matrix)
 
 
@@ -243,9 +244,9 @@ def local_pairwise_align(seq1, seq2, gap_open_penalty,
 
        Parameters
        ----------
-       sequence1 : str or BiologicalSequence
+       seq1 : str or BiologicalSequence
            The first unaligned sequence
-       sequence2 : str or BiologicalSequence
+       seq2 : str or BiologicalSequence
            The second unaligned sequence
        gap_open_penalty : int, float
            penalty for opening a gap (this is substracted from previous best
@@ -259,16 +260,10 @@ def local_pairwise_align(seq1, seq2, gap_open_penalty,
 
        Returns
        -------
-       string
-          The first aligned sequence
-       string
-          The second aligned sequence
-       float
-          The score of the alignment
-       int
-          The start position of the alignment in sequence 1
-       int
-          The start position of the alignment in sequence 2
+       skbio.Alignment
+           ``Alignment`` object containing the aligned sequences as well as
+           details about the alignment.
+
     """
     warn("You're using skbio's python implementation of Smith-Waterman "
          "alignment. This will be very slow (e.g., thousands of times slower) "
@@ -302,9 +297,9 @@ def global_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
 
        Parameters
        ----------
-       sequence1 : str or BiologicalSequence
+       seq1 : str or BiologicalSequence
            The first unaligned sequence
-       sequence2 : str or BiologicalSequence
+       seq2 : str or BiologicalSequence
            The second unaligned sequence
        gap_open_penalty : int, float, optional
            penalty for opening a gap (this is substracted from previous best
@@ -318,16 +313,9 @@ def global_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
 
        Returns
        -------
-       string
-          The first aligned sequence
-       string
-          The second aligned sequence
-       float
-          The score of the alignment
-       int
-          The start position of the alignment in sequence 1
-       int
-          The start position of the alignment in sequence 2
+       skbio.Alignment
+           ``Alignment`` object containing the aligned sequences as well as
+           details about the alignment.
 
        Notes
        -----
@@ -349,9 +337,9 @@ def global_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
 
        Parameters
        ----------
-       sequence1 : str or BiologicalSequence
+       seq1 : str or BiologicalSequence
            The first unaligned sequence
-       sequence2 : str or BiologicalSequence
+       seq2 : str or BiologicalSequence
            The second unaligned sequence
        gap_open_penalty : int, float, optional
            penalty for opening a gap (this is substracted from previous best
@@ -365,21 +353,9 @@ def global_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
 
        Returns
        -------
-       string
-          The first aligned sequence
-       string
-          The second aligned sequence
-       float
-          The score of the alignment
-       int
-          The start position of the alignment in sequence 1
-       int
-          The start position of the alignment in sequence 2
-
-       Notes
-       -----
-       Start positions are always zero, but including them in the results
-       gives a consistent interface with local aligners.
+       skbio.Alignment
+           ``Alignment`` object containing the aligned sequences as well as
+           details about the alignment.
 
        Examples
        --------
@@ -406,9 +382,9 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
 
        Parameters
        ----------
-       sequence1 : str or BiologicalSequence
+       seq1 : str or BiologicalSequence
            The first unaligned sequence
-       sequence2 : str or BiologicalSequence
+       seq2 : str or BiologicalSequence
            The second unaligned sequence
        gap_open_penalty : int, float
            penalty for opening a gap (this is substracted from previous best
@@ -425,11 +401,6 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
        skbio.Alignment
            ``Alignment`` object containing the aligned sequences as well as
            details about the alignment.
-
-       Notes
-       -----
-       Start positions are always zero, but including them in the results
-       gives a consistent interface with local aligners.
 
     """
     warn("You're using skbio's python implementation of Needleman-Wunsch "
