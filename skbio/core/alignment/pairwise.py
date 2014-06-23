@@ -236,7 +236,7 @@ def local_pairwise_align_protein(sequence1, sequence2, gap_open_penalty=11,
                                 gap_extend_penalty, substitution_matrix)
 
 
-def local_pairwise_align(sequence1, sequence2, gap_open_penalty,
+def local_pairwise_align(seq1, seq2, gap_open_penalty,
                          gap_extend_penalty, substitution_matrix):
     """Locally align sequences using Smith-Waterman w/ affine gap scoring
 
@@ -271,27 +271,29 @@ def local_pairwise_align(sequence1, sequence2, gap_open_penalty,
     """
     warn("You're using skbio's python implementation of Smith-Waterman "
          "alignment. This will be very slow (e.g., thousands of times slower) "
-         "than skbio.core.alignment.align_striped_smith_waterman.",
+         "than skbio.core.alignment.local_pairwise_align_ssw.",
          EfficiencyWarning)
 
     score_matrix, traceback_matrix = _compute_score_and_traceback_matrices(
-        sequence1, sequence2, gap_open_penalty, gap_extend_penalty,
+        seq1, seq2, gap_open_penalty, gap_extend_penalty,
         substitution_matrix, new_alignment_score=0.0,
         init_matrices_f=_init_matrices_sw)
 
-    traceback_start_row = None
-    traceback_start_col = None
+    seq1_end_position = None
+    seq2_end_position = None
     best_score = -np.inf
     for i in range(len(score_matrix[0])):
         for j in range(len(score_matrix)):
             current_score = score_matrix[j][i]
             if current_score > best_score:
                 best_score = current_score
-                traceback_start_row = j
-                traceback_start_col = i
+                seq1_end_position = j
+                seq2_end_position = i
 
-    return _traceback(traceback_matrix, score_matrix, sequence1, sequence2,
-                      traceback_start_row, traceback_start_col)
+    aligned1, aligned2, score, seq1_start_position, seq2_start_position = \
+        _traceback(traceback_matrix, score_matrix, seq1, seq2,
+                   seq1_end_position, seq2_end_position)
+    return aligned1, aligned2, score, seq1_start_position, seq2_start_position
 
 
 def global_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
@@ -421,16 +423,9 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
 
        Returns
        -------
-       string
-          The first aligned sequence
-       string
-          The second aligned sequence
-       float
-          The score of the alignment
-       int
-          The start position of the alignment in sequence 1
-       int
-          The start position of the alignment in sequence 2
+       skbio.Alignment
+           ``Alignment`` object containing the aligned sequences as well as
+           details about the alignment.
 
        Notes
        -----
@@ -438,18 +433,25 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
        gives a consistent interface with local aligners.
 
     """
+    warn("You're using skbio's python implementation of Needleman-Wunsch "
+         "alignment. This is known to be very slow (e.g., thousands of times "
+         "slower than a native C implementation). We'll be adding a faster "
+         "version soon (see https://github.com/biocore/scikit-bio/issues/254 "
+         "to track progress on this).", EfficiencyWarning)
+
     score_matrix, traceback_matrix = \
         _compute_score_and_traceback_matrices(
             seq1, seq2, gap_open_penalty, gap_extend_penalty,
             substitution_matrix, new_alignment_score=-np.inf,
             init_matrices_f=_init_matrices_nw)
 
-    traceback_start_row = len(traceback_matrix) - 1
-    traceback_end_row = len(traceback_matrix[0]) - 1
+    seq1_end_position = len(traceback_matrix) - 1
+    seq2_end_position = len(traceback_matrix[0]) - 1
 
-    return _traceback(
-        traceback_matrix, score_matrix, seq1, seq2, traceback_start_row,
-        traceback_end_row)
+    aligned1, aligned2, score, seq1_start_position, seq2_start_position = \
+        _traceback(traceback_matrix, score_matrix, seq1, seq2,
+                   seq1_end_position, seq2_end_position)
+    return aligned1, aligned2, score, seq1_start_position, seq2_start_position
 
 # Functions from here allow for generalized (global or local) alignment. I
 # will likely want to put these in a single object to make the naming a little
