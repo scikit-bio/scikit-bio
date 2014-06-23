@@ -274,11 +274,23 @@ def local_pairwise_align(sequence1, sequence2, gap_open_penalty,
                                                  gap_open_penalty,
                                                  gap_extend_penalty,
                                                  substitution_matrix,
-                                                 new_alignment_score=0,
+                                                 new_alignment_score=0.0,
                                                  init_matrices_f=_init_matrices_sw,
                                                  init_rows_f=_init_rows_sw)
 
-    return _local_traceback(traceback_matrix,score_matrix,sequence1,sequence2)
+    traceback_start_row = None
+    traceback_start_col = None
+    best_score = -np.inf
+    for i in range(len(score_matrix[0])):
+        for j in range(len(score_matrix)):
+            current_score = score_matrix[j][i]
+            if current_score > best_score:
+                best_score = current_score
+                traceback_start_row = j
+                traceback_start_col = i
+
+    return _traceback(traceback_matrix,score_matrix,sequence1,sequence2,
+                       traceback_start_row, traceback_start_col)
 
 
 def global_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
@@ -400,13 +412,18 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
             seq1, seq2, gap_open_penalty, gap_extend_penalty,
             substitution_matrix, new_alignment_score=-np.inf,
             init_matrices_f=_init_matrices_nw, init_rows_f=_init_rows_nw)
-    aligned_seq1, aligned_seq2, score = _global_traceback(\
-        traceback_matrix, score_matrix, seq1, seq2)
-    return aligned_seq1, aligned_seq2, score
+
+    traceback_start_row = len(traceback_matrix) - 1
+    traceback_end_row = len(traceback_matrix[0]) - 1
+
+    return _traceback(\
+        traceback_matrix, score_matrix, seq1, seq2, traceback_start_row,
+        traceback_end_row)
 
 
-## Everything under here will have a lot of shared code with different
-## methods, suggesting that an Aligner class is probably the way to go.
+## Functions from here allow for generalized (global or local) alignment. I
+## will likely want to put these in a single object to make the naming a little
+## less clunky.
 
 def _init_matrices_sw(seq1, seq2, gap_open_penalty, gap_extend_penalty):
     score_matrix = [[0 for i in range(0,len(seq1)+1)]]
@@ -477,68 +494,14 @@ def _compute_score_and_traceback_matrices(seq1, seq2, gap_open_penalty,
         traceback_matrix.append(current_traceback_matrix_row)
     return score_matrix, traceback_matrix
 
-def _local_traceback(traceback_matrix,score_matrix,seq1,seq2,gap_character='-'):
+def _traceback(traceback_matrix,score_matrix,seq1,seq2,start_row, start_col,
+               gap_character='-'):
 
     aligned_seq1 = []
     aligned_seq2 = []
 
-    current_row = None
-    current_col = None
-    best_score = 0.0
-    for i in range(len(score_matrix[0])):
-        for j in range(len(score_matrix)):
-            current_score = score_matrix[j][i]
-            if current_score > best_score:
-                best_score = current_score
-                current_row = j
-                current_col = i
-
-    while True:
-        current_value = traceback_matrix[current_row][current_col]
-
-        if current_value == '\\':
-            aligned_seq1.append(seq1[current_col-1])
-            aligned_seq2.append(seq2[current_row-1])
-            current_row -= 1
-            current_col -= 1
-        elif current_value == '|':
-            aligned_seq1.append('-')
-            aligned_seq2.append(seq2[current_row-1])
-            current_row -= 1
-        elif current_value == '-':
-            aligned_seq1.append(seq1[current_col-1])
-            aligned_seq2.append('-')
-            current_col -= 1
-        elif current_value == None:
-            break
-        else:
-            raise ValueError(
-                "Invalid value in traceback matrix: %s" % current_value)
-
-    return (''.join(aligned_seq1[::-1]), ''.join(aligned_seq2[::-1]),
-             best_score, current_col, current_row)
-
-def _first_largest(scores):
-    """ Similar to max, but returns the first element achieving the high score
-
-        If max receives a tuple, it will break a score for the highest value
-        of entry[i] with entry[i+1]. We don't want that here - to better match
-        with the results of other tools, it's better to be able to set the
-        order of the choices.
-    """
-    result = scores[0]
-    for score, direction in scores[1:]:
-        if score > result[0]:
-            result = (score, direction)
-    return result
-
-def _global_traceback(traceback_matrix,score_matrix,seq1,seq2,gap_character='-'):
-
-    aligned_seq1 = []
-    aligned_seq2 = []
-
-    current_row = len(traceback_matrix) - 1
-    current_col = len(traceback_matrix[0]) - 1
+    current_row = start_row
+    current_col = start_col
 
     best_score = score_matrix[current_row][current_col]
 
@@ -563,4 +526,19 @@ def _global_traceback(traceback_matrix,score_matrix,seq1,seq2,gap_character='-')
         else:
             raise ValueError, "Invalid value in traceback matrix: %s" % current_value
 
-    return ''.join(aligned_seq1[::-1]), ''.join(aligned_seq2[::-1]), best_score
+    return (''.join(aligned_seq1[::-1]), ''.join(aligned_seq2[::-1]),
+             best_score, current_col, current_row)
+
+def _first_largest(scores):
+    """ Similar to max, but returns the first element achieving the high score
+
+        If max receives a tuple, it will break a score for the highest value
+        of entry[i] with entry[i+1]. We don't want that here - to better match
+        with the results of other tools, it's better to be able to set the
+        order of the choices.
+    """
+    result = scores[0]
+    for score, direction in scores[1:]:
+        if score > result[0]:
+            result = (score, direction)
+    return result

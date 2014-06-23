@@ -47,13 +47,13 @@ class PairwiseAlignmentTests(TestCase):
 
 
     def test_global_pairwise_align_protein(self):
-        expected = ("HEAGAWGHEE", "---PAWHEAE", 1.0)
+        expected = ("HEAGAWGHEE", "---PAWHEAE", 1.0, 0, 0)
         actual = global_pairwise_align_protein("HEAGAWGHEE", "PAWHEAE",
                                                gap_open_penalty=10.,
                                                gap_extend_penalty=5.)
         self.assertEqual(actual, expected)
 
-        expected = ("HEAGAWGHE-E", "---PAW-HEAE", 24.0)
+        expected = ("HEAGAWGHE-E", "---PAW-HEAE", 24.0, 0, 0)
         # EMBOSS result: P---AW-HEAE
         actual = global_pairwise_align_protein("HEAGAWGHEE", "PAWHEAE",
                                                gap_open_penalty=5.,
@@ -75,7 +75,7 @@ class PairwiseAlignmentTests(TestCase):
 
     def test_global_pairwise_align_nucleotide(self):
         m = make_nt_substitution_matrix(5, -4)
-        expected = ("G-ACCTTGACCAGGTACC", "GAACTTTGAC---GTAAC", 41.0)
+        expected = ("G-ACCTTGACCAGGTACC", "GAACTTTGAC---GTAAC", 41.0, 0, 0)
         actual = global_pairwise_align_nucleotide("GACCTTGACCAGGTACC",
                                                   "GAACTTTGACGTAAC",
                                                   gap_open_penalty=5.,
@@ -83,7 +83,7 @@ class PairwiseAlignmentTests(TestCase):
                                                   substitution_matrix=m)
         self.assertEqual(actual, expected)
 
-        expected = ("G-ACCTTGACCAGGTACC", "GAACTTTGAC---GTAAC", 31.0)
+        expected = ("G-ACCTTGACCAGGTACC", "GAACTTTGAC---GTAAC", 31.0, 0, 0)
         actual = global_pairwise_align_nucleotide("GACCTTGACCAGGTACC",
                                                   "GAACTTTGACGTAAC",
                                                   gap_open_penalty=10.,
