@@ -29,6 +29,10 @@ Alignment Algorithms
    StripedSmithWaterman
    AlignmentStructure
    align_striped_smith_waterman
+   global_pairwise_align_nucleotide
+   global_pairwise_align_protein
+   local_pairwise_align_nucleotide
+   local_pairwise_align_protein
 
 Data Structure Examples
 -----------------------
