@@ -149,13 +149,13 @@ ACT-AGGCTCCCTTCTACCCCTCTCAGAGA
 Slow Alignment Algorithm Examples
 ---------------------------------
 scikit-bio also implements Smith-Waterman and Needleman-Wunsch alignment
-in python. These are much slower than the methods described above, but provide
-useful education examples as they're simpler to experiment with. Convenience
-wrappers are provided for local and global alignment of protein and nucleotide
-sequences. The ``global`` and ``local`` functions differ in the underlying
-algorithm that is applied (``global`` uses Needleman-Wunsch while local uses
-Smith-Waterman), and ``protein`` and ``nucleotide`` differ in their default
-scoring of matches, mismatches, and gaps.
+in python. These are much slower than the methods described above, but serve
+as useful educational examples as they're simpler to experiment with. Functions
+are provided for local and global alignment of protein and nucleotide
+sequences. The ``global*`` and ``local*`` functions differ in the underlying
+algorithm that is applied (``global*`` uses Needleman-Wunsch while ``local*``
+uses Smith-Waterman), and ``*protein`` and ``*nucleotide`` differ in their
+default scoring of matches, mismatches, and gaps.
 
 Here we locally align a pair of protein sequences using gap open penalty
 of 11 and a gap extend penalty of 1 (in other words, it is much more
@@ -180,8 +180,7 @@ as follows:
 >>> r.start_end_positions()
 [(4, 8), (1, 4)]
 
-And we can view the score of the alignment is accessible using the ``score``
-method:
+And we can view the score of the alignment using the ``score`` method:
 
 >>> r.score()
 25.0
