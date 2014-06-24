@@ -1552,6 +1552,35 @@ class StockholmAlignment(Alignment):
     //
     >>> sto.gc
     {'SS_cons': '(((.....)))'}
+
+    We can also write out information by instantiating the StockholmAlignment
+    object and then printing it.
+
+    >>> from skbio.core.sequence import RNA
+    >>> from skbio.core.alignment import StockholmAlignment
+    >>> seqs = [RNA("ACC--G-GGGU", id="seq1"),
+    ...     RNA("TCC--G-GGGA", id="seq2")]
+    >>> gf = {
+    ... "RT": ["TITLE1",  "TITLE2"],
+    ... "RA": ["Auth1;", "Auth2;"],
+    ... "RL": ["J Mol Biol", "Cell"],
+    ... "RM": ["11469857", "12007400"]}
+    >>> sto = StockholmAlignment(seqs, gf=gf)
+    >>> print(sto)
+    # STOCKHOLM 1.0
+    #=GF RN [1]
+    #=GF RM 11469857
+    #=GF RT TITLE1
+    #=GF RA Auth1;
+    #=GF RL J Mol Biol
+    #=GF RN [2]
+    #=GF RM 12007400
+    #=GF RT TITLE2
+    #=GF RA Auth2;
+    #=GF RL Cell
+    seq1          ACC--G-GGGU
+    seq2          TCC--G-GGGA
+    //
     """
     def __init__(self, seqs, gf=None, gs=None, gr=None, gc=None,
                  validate=False):

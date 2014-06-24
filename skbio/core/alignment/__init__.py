@@ -59,12 +59,10 @@ Data Structure Examples
 
 >>> from skbio.core.sequence import RNA
 >>> from skbio.core.alignment import StockholmAlignment
->>> from StringIO import StringIO
->>> sto_in = StringIO("# STOCKHOLM 1.0\\n"
-...                   "seq1     ACC--G-GGGU\\nseq2     TCC--G-GGGA\\n"
-...                   "#=GC SS_cons (((.....)))\\n//")
->>> sto_records = StockholmAlignment.from_file(sto_in, RNA)
->>> sto = next(sto_records)
+>>> seqs = [RNA("ACC--G-GGGU", id="seq1"),
+...     RNA("TCC--G-GGGA", id="seq2")]
+>>> gc = {'SS_cons': '(((.....)))'}
+>>> sto = StockholmAlignment(seqs, gc=gc)
 >>> print(sto)
 # STOCKHOLM 1.0
 seq1          ACC--G-GGGU

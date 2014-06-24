@@ -20,10 +20,6 @@ API Reference
    core.tree
    core.workflow
    draw.distributions
-   maths.stats.distance
-   maths.stats.spatial
-   maths.stats.ordination
-   maths.subsample
    format.sequences
    math.diversity.alpha
    math.stats.distance
