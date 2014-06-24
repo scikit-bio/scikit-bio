@@ -25,7 +25,7 @@ Phylogenetic Reconstruction
 .. autosummary::
    :toctree: generated/
 
-   nj
+    nj
 
 Utility Functions
 -----------------
@@ -34,6 +34,7 @@ Utility Functions
    :toctree: generated/
 
     fasta_to_pairlist
+    majority_rule
 
 Examples
 --------
