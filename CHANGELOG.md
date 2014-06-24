@@ -2,6 +2,12 @@
 
 ## Version 0.1.3-dev (changes since 0.1.3 release go here)
 
+This is a pre-alpha release. At this stage, major backwards-incompatible API changes can and will happen.
+
+### Features
+
+* Added Python implementations of Smith-Waterman and Needleman-Wunsch alignment as ``skbio.core.alignment.pairwise.local_pairwise_align`` and ``skbio.core.alignment.pairwise.global_pairwise_align``. These are much slower than native C implementations (e.g., ``skbio.core.alignment.local_pairwise_align_ssw``) and as a result raise an ``EfficencyWarning`` when called, but are included as they serve as useful educational examples as they’re simple to experiment with.
+
 ### Backward-incompatible changes
 
 * Function ``skbio.core.alignment.align_striped_smith_waterman`` renamed to ``local_pairwise_align_ssw`` and now returns an ``Alignment`` object instead of an ``AlignmentStructure``
@@ -15,7 +21,6 @@
 
 * Added powertrip.py script to perform basic sanity-checking of the repo based on recurring issues that weren't being caught until release time; added to Travis build.
 * Added RELEASE.md with release instructions.
-* Added python implementations of Smith-Waterman and Needleman-Wunsch alignment. These are much slower than native C implementations (e.g., scikit-bio's SSW wrapper) and as a result raise an ``EfficencyWarning`` when called, but are included as they serve as useful educational examples as they’re simple to experiment with.
 
 ## Version 0.1.3 (2014-06-12)
 
