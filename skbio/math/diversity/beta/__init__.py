@@ -26,7 +26,7 @@ DistanceMatrix object:
 >>> print(bc_dm)
 6x6 distance matrix
 IDs:
-S0, S1, S2, S3, S4, S5
+A, B, C, D, E, F
 Data:
 [[ 0.          0.78787879  0.86666667  0.30927835  0.85714286  0.81521739]
  [ 0.78787879  0.          0.78142077  0.86813187  0.75        0.1627907 ]
@@ -42,7 +42,7 @@ DistanceMatrix object.
 >>> print(j_dm)
 6x6 distance matrix
 IDs:
-S0, S1, S2, S3, S4, S5
+A, B, C, D, E, F
 Data:
 [[ 0.          0.83333333  1.          1.          0.83333333  1.        ]
  [ 0.83333333  0.          1.          1.          0.83333333  1.        ]
@@ -59,8 +59,8 @@ will fail.)
 >>> from skbio.math.stats.distance import mantel
 >>> r, p_value = mantel(j_dm, bc_dm)
 >>> print(r)
->>> print(p_value < 0.05)
 -0.209362157621
+>>> print(p_value < 0.05)
 False
 
 Compute PCoA for both distance matrices, and then find the Procrustes
@@ -87,47 +87,49 @@ so let's define some:
 >>> print(sample_md)
   body_habitat     person
 A          gut  subject 1
-B          gut  subject 2
+B         skin  subject 1
 C       tongue  subject 1
-D       tongue  subject 2
-E         skin  subject 1
+D          gut  subject 2
+E       tongue  subject 2
 F         skin  subject 2
-
+<BLANKLINE>
 [6 rows x 2 columns]
 
 >>> subject_groups = sample_md.groupby('person').groups
 >>> print(subject_groups)
+{'subject 1': ['A', 'B', 'C'], 'subject 2': ['D', 'E', 'F']}
 
-And we'll put a quick 3D plotting function together. This function is adapted
-from the matplotlib gallery here:
-http://matplotlib.org/examples/mplot3d/scatter3d_demo.html
-
->>> from mpl_toolkits.mplot3d import Axes3D
->>> import matplotlib.pyplot as plt
->>> def scatter_3d(coord_matrices, title="", axis1=0, axis2=1, axis3=2):
-...    fig = plt.figure()
-...
-...    ax = fig.add_subplot(111, projection='3d')
-...
-...    for coord_matrix in coord_matrices:
-...        xs = [e[axis1] for e in coord_matrix]
-...        ys = [e[axis2] for e in coord_matrix]
-...        zs = [e[axis3] for e in coord_matrix]
-...        plot = ax.scatter(xs, ys, zs)
-...
-...    ax.set_xlabel('PC %d' % (axis1 + 1))
-...    ax.set_ylabel('PC %d' % (axis2 + 1))
-...    ax.set_zlabel('PC %d' % (axis3 + 1))
-...    ax.set_xticklabels([])
-...    ax.set_yticklabels([])
-...    ax.set_zticklabels([])
-...    ax.set_title(title)
-...    return fig
-
-.. plot::
-
->>> b = bc_pc.site.T
->>> fig = scatter_3d([[b[0], b[1]], [b[2], b[3]], [b[4], b[5]]])
+# this isn't working yet...
+# And we'll put a quick 3D plotting function together. This function is adapted
+# from the matplotlib gallery here:
+# http://matplotlib.org/examples/mplot3d/scatter3d_demo.html
+#
+# >>> from mpl_toolkits.mplot3d import Axes3D
+# >>> import matplotlib.pyplot as plt
+# >>> def scatter_3d(coord_matrices, title="", axis1=0, axis2=1, axis3=2):
+# ...    fig = plt.figure()
+# ...
+# ...    ax = fig.add_subplot(111, projection='3d')
+# ...
+# ...    for coord_matrix in coord_matrices:
+# ...        xs = [e[axis1] for e in coord_matrix]
+# ...        ys = [e[axis2] for e in coord_matrix]
+# ...        zs = [e[axis3] for e in coord_matrix]
+# ...        plot = ax.scatter(xs, ys, zs)
+# ...
+# ...    ax.set_xlabel('PC %d' % (axis1 + 1))
+# ...    ax.set_ylabel('PC %d' % (axis2 + 1))
+# ...    ax.set_zlabel('PC %d' % (axis3 + 1))
+# ...    ax.set_xticklabels([])
+# ...    ax.set_yticklabels([])
+# ...    ax.set_zticklabels([])
+# ...    ax.set_title(title)
+# ...    return fig
+#
+# .. plot::
+#
+# >>> b = bc_pc.site.T
+# >>> fig = scatter_3d([[b[0], b[1]], [b[2], b[3]], [b[4], b[5]]])
 
 
 """
