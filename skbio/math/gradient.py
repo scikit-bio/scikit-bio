@@ -663,7 +663,7 @@ class TrajectoryGradientANOVA(GradientANOVA):
             method
         """
         if len(trajectories) == 1:
-            trajectory = [np.linalg.norm(trajectories)]
+            trajectory = np.array([np.linalg.norm(trajectories)])
             calc = {'trajectory': trajectory[0]}
         else:
             # Loop through all the rows in trajectories and create 'trajectory'
@@ -711,10 +711,11 @@ class FirstDifferenceGradientANOVA(GradientANOVA):
             method
         """
         if len(trajectories) == 1:
-            trajectory = [np.linalg.norm(trajectories)]
+            trajectory = np.array([np.linalg.norm(trajectories)])
             calc = {'mean': trajectory[0], 'std': 0}
         elif len(trajectories) == 2:
-            trajectory = [np.linalg.norm(trajectories[1] - trajectories[0])]
+            trajectory = np.array([np.linalg.norm(trajectories[1] -
+                                                  trajectories[0])])
             calc = {'mean': trajectory[0], 'std': 0}
         else:
             vec_norm = \
@@ -794,10 +795,11 @@ class WindowDifferenceGradientANOVA(GradientANOVA):
             difference method
         """
         if len(trajectories) == 1:
-            trajectory = [np.linalg.norm(trajectories)]
+            trajectory = np.array([np.linalg.norm(trajectories)])
             calc = {'mean': trajectory, 'std': 0}
         elif len(trajectories) == 2:
-            trajectory = [np.linalg.norm(trajectories[1] - trajectories[0])]
+            trajectory = np.array([np.linalg.norm(trajectories[1] -
+                                                  trajectories[0])])
             calc = {'mean': trajectory, 'std': 0}
         else:
             vec_norm = \

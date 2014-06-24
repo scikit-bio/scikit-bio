@@ -4,6 +4,12 @@
 
 ### Backward-incompatible changes
 
+* Function ``skbio.core.alignment.align_striped_smith_waterman`` renamed to ``local_pairwise_align_ssw`` and now returns an ``Alignment`` object instead of an ``AlignmentStructure``
+* The following keyword-arguments for ``StripedSmithWaterman`` and ``local_pairwise_align_ssw`` have been renamed:
+    * ``gap_open`` -> ``gap_open_penalty``
+    * ``gap_extend`` -> ``gap_extend_penalty``
+    * ``match`` -> ``match_score``
+    * ``mismatch`` -> ``mismatch_score``
 * Removed ``skbio.util.sort`` module in favor of [natsort](https://pypi.python.org/pypi/natsort) package.
 
 ### Miscellaneous
