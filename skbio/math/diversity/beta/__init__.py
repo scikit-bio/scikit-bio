@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
-Alpha diversity measures (:mod:`skbio.math.diversity.beta`)
-============================================================
+Beta diversity measures (:mod:`skbio.math.diversity.beta`)
+==========================================================
 
 .. currentmodule:: skbio.math.diversity.beta
 
