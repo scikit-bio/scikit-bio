@@ -111,6 +111,13 @@ class BiologicalSequenceTests(TestCase):
         self.assertEqual(self.b1[:], BiologicalSequence('GATTACA'))
         self.assertEqual(self.b1[::-1], BiologicalSequence('ACATTAG'))
 
+    def test_getitem_out_of_range(self):
+        with self.assertRaises(IndexError):
+            self.b1[42]
+
+    def test_hash(self):
+        self.assertTrue(isinstance(hash(self.b1), int))
+
     def test_iter(self):
         b1_iter = iter(self.b1)
         for actual, expected in zip(b1_iter, "GATTACA"):
@@ -263,6 +270,10 @@ class BiologicalSequenceTests(TestCase):
 
         self.assertEqual(
             self.b1.distance(self.b1, distance_fn=dumb_distance), 42)
+
+    def test_distance_unequal_length(self):
+        with self.assertRaises(BiologicalSequenceError):
+            self.b1.distance(self.b2)
 
     def test_fraction_diff(self):
         self.assertEqual(self.b1.fraction_diff(self.b1), 0., 5)

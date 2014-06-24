@@ -10,7 +10,8 @@
 
 from future.builtins import zip
 from collections import defaultdict
-from skbio.core.workflow import Workflow, not_none, requires, method
+from skbio.core.workflow import (Exists, NotExecuted, NotNone, Workflow,
+                                 not_none, requires, method)
 from unittest import TestCase, main
 
 
@@ -150,6 +151,10 @@ class WorkflowTests(TestCase):
         self.assertEqual(self.obj_noshort.options, {'A': True, 'C': True})
         self.assertEqual(self.obj_noshort.stats, {})
         self.assertFalse(self.obj_noshort.short_circuit)
+
+    def test_init_reserved_attributes(self):
+        with self.assertRaises(AttributeError):
+            Workflow('foo', failed=True)
 
     def test_all_wf_methods(self):
         # note on priority: groupA:90, groupC:10, groupB:0 (default)
@@ -363,6 +368,29 @@ class PriorityTests(TestCase):
         self.assertEqual(foo.priority, 10)
         self.assertEqual(foo.__name__, 'foo')
         self.assertEqual(foo.__doc__, 'doc check')
+
+
+class NotExecutedTests(TestCase):
+    def test_call(self):
+        ne = NotExecuted()
+        obs = ne('foo')
+        self.assertTrue(obs is ne)
+        self.assertEqual(obs.msg, 'foo')
+
+
+class ExistsTests(TestCase):
+    def test_contains(self):
+        e = Exists()
+        self.assertTrue('foo' in e)
+        self.assertTrue(None in e)
+
+
+class NotNoneTests(TestCase):
+    def test_contains(self):
+        nn = NotNone()
+        self.assertTrue('foo' in nn)
+        self.assertFalse(None in nn)
+
 
 if __name__ == '__main__':
     main()

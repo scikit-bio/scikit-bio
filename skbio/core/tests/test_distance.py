@@ -526,9 +526,9 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         """Empty stub: DissimilarityMatrix._parse_ids tested elsewhere."""
         pass
 
-    def test_validate(self):
-        """Empty stub: DissimilarityMatrix._validate tested elsewhere."""
-        pass
+    def test_validate_invalid_dtype(self):
+        with self.assertRaises(DissimilarityMatrixError):
+            self.dm_3x3._validate(np.array([[0, 42], [42, 0]]), ['a', 'b'])
 
     def test_index_list(self):
         """Empty stub: DissimilarityMatrix._index_list tested elsewhere."""
