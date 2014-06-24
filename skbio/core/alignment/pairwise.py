@@ -240,7 +240,7 @@ def local_pairwise_align(seq1, seq2, gap_open_penalty,
        .. [1] Identification of common molecular subsequences.
           Smith TF, Waterman MS.
           J Mol Biol. 1981 Mar 25;147(1):195-7.
-       .. [2] http://www.ebi.ac.uk/Tools/psa/emboss_needle/
+       .. [2] http://www.ebi.ac.uk/Tools/psa/emboss_water/
 
 
     """
