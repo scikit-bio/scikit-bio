@@ -230,6 +230,19 @@ def local_pairwise_align(seq1, seq2, gap_open_penalty,
            ``Alignment`` object containing the aligned sequences as well as
            details about the alignment.
 
+       Notes
+       -----
+       This algorithm was originally described in [1]_. The scikit-bio
+       implementation was validated against the EMBOSS water web server [2]_.
+
+       References
+       ----------
+       .. [1] Identification of common molecular subsequences.
+          Smith TF, Waterman MS.
+          J Mol Biol. 1981 Mar 25;147(1):195-7.
+       .. [2] http://www.ebi.ac.uk/Tools/psa/emboss_needle/
+
+
     """
     warn("You're using skbio's python implementation of Smith-Waterman "
          "alignment. This will be very slow (e.g., thousands of times slower) "
@@ -366,6 +379,20 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
        skbio.Alignment
            ``Alignment`` object containing the aligned sequences as well as
            details about the alignment.
+
+       Notes
+       -----
+       This algorithm (in a slightly more basic form) was originally described
+       in [1]_. The scikit-bio implementation was validated against the
+       EMBOSS needle web server [2]_.
+
+       References
+       ----------
+       .. [1] A general method applicable to the search for similarities in
+          the amino acid sequence of two proteins.
+          Needleman SB, Wunsch CD.
+          J Mol Biol. 1970 Mar;48(3):443-53.
+       .. [2] http://www.ebi.ac.uk/Tools/psa/emboss_needle/
 
     """
     warn("You're using skbio's python implementation of Needleman-Wunsch "
