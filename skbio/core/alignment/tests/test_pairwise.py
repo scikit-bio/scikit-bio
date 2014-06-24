@@ -19,7 +19,7 @@ from skbio import (
     Alignment, Protein, DNA, RNA)
 from skbio.core.alignment.pairwise import (
     _make_nt_substitution_matrix, _init_matrices_sw, _init_matrices_nw,
-    _compute_score_and_traceback_matrices)
+    _compute_score_and_traceback_matrices, _traceback)
 
 filterwarnings("ignore")
 
@@ -216,6 +216,7 @@ class PairwiseAlignmentTests(TestCase):
         np.testing.assert_array_equal(actual_tback_m, expected_tback_m)
 
     def test_compute_score_and_traceback_matrices(self):
+        # these results were computed manually
         expected_score_m = [[0, -5, -7, -9],
                             [-5, 2, -3, -5],
                             [-7, -3, 4, -1],
@@ -231,6 +232,37 @@ class PairwiseAlignmentTests(TestCase):
             'ACG', 'ACGT', 5, 2, m)
         np.testing.assert_array_equal(actual_score_m, expected_score_m)
         np.testing.assert_array_equal(actual_tback_m, expected_tback_m)
+
+    def test_traceback(self):
+        score_m = [[0, -5, -7, -9],
+                   [-5, 2, -3, -5],
+                   [-7, -3, 4, -1],
+                   [-9, -5, -1, 6],
+                   [-11, -7, -3, 1]]
+        tback_m = [[0, 3, 3, 3],
+                   [2, 1, 3, 3],
+                   [2, 2, 1, 3],
+                   [2, 2, 2, 1],
+                   [2, 2, 2, 2]]
+        # start at bottom-right
+        expected = ("ACG-", "ACGT", 1, 0, 0)
+        actual = _traceback(tback_m, score_m, 'ACG', 'ACGT', 4, 3)
+        self.assertEqual(actual, expected)
+
+        # start at highest-score
+        expected = ("ACG", "ACG", 6, 0, 0)
+        actual = _traceback(tback_m, score_m, 'ACG', 'ACGT', 3, 3)
+        self.assertEqual(actual, expected)
+
+        # terminate traceback before top-right
+        tback_m = [[0, 3, 3, 3],
+                   [2, 1, 3, 3],
+                   [2, 2, 0, 3],
+                   [2, 2, 2, 1],
+                   [2, 2, 2, 2]]
+        expected = ("G", "G", 6, 2, 2)
+        actual = _traceback(tback_m, score_m, 'ACG', 'ACGT', 3, 3)
+        self.assertEqual(actual, expected)
 
 
 if __name__ == "__main__":
