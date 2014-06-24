@@ -12,7 +12,6 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 
 from skbio import DistanceMatrix
-from numpy import zeros
 from scipy.spatial.distance import pdist
 
 
@@ -22,14 +21,14 @@ def pw_distances(table, ids, metric):
         Parameters
         ----------
         table : 2D np.array or list of ints or floats
-            Table containing count data where each list/array counts of
-            observations in a given sample.
+            Table containing count/abundance data where each list/array counts
+            of observations in a given sample.
         ids : np.array or list
-            Iterable of identifiers for each sample in ``table``.
+            Identifiers for each sample in ``table``.
         metric : str
-            The name of the scipy pairwise distance (``pdist``) function
-            to use when generating pairwise distances. See the scipy ``pdist``
-            docs for available choices: http://bit.ly/1nAfiWf
+            The name of the pairwise distance (``pdist``) function to use when
+            generating pairwise distances. See the scipy ``pdist`` docs for
+            available choices: http://bit.ly/1nAfiWf
 
         Returns
         -------
@@ -48,7 +47,7 @@ def pw_distances(table, ids, metric):
             " provided ids.")
 
     # initialize the result object
-    dm = zeros((num_samples, num_samples))
+    dm = np.zeros((num_samples, num_samples))
     for i, id1 in enumerate(ids):
         v1 = table[i]
         for j, id2 in enumerate(ids[:i]):
