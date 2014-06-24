@@ -18,7 +18,8 @@ from skbio import (
     global_pairwise_align_nucleotide, local_pairwise_align_nucleotide,
     Alignment, Protein, DNA, RNA)
 from skbio.core.alignment.pairwise import (
-    _make_nt_substitution_matrix, _init_matrices_sw, _init_matrices_nw)
+    _make_nt_substitution_matrix, _init_matrices_sw, _init_matrices_nw,
+    _compute_score_and_traceback_matrices)
 
 filterwarnings("ignore")
 
@@ -213,6 +214,24 @@ class PairwiseAlignmentTests(TestCase):
         actual_score_m, actual_tback_m = _init_matrices_nw('AAA', 'AAAA', 5, 2)
         np.testing.assert_array_equal(actual_score_m, expected_score_m)
         np.testing.assert_array_equal(actual_tback_m, expected_tback_m)
+
+    def test_compute_score_and_traceback_matrices(self):
+        expected_score_m = [[0, -5, -7, -9],
+                            [-5, 2, -3, -5],
+                            [-7, -3, 4, -1],
+                            [-9, -5, -1, 6],
+                            [-11, -7, -3, 1]]
+        expected_tback_m = [[0, 3, 3, 3],
+                            [2, 1, 3, 3],
+                            [2, 2, 1, 3],
+                            [2, 2, 2, 1],
+                            [2, 2, 2, 2]]
+        m = _make_nt_substitution_matrix(2, -1)
+        actual_score_m, actual_tback_m = _compute_score_and_traceback_matrices(
+            'ACG', 'ACGT', 5, 2, m)
+        np.testing.assert_array_equal(actual_score_m, expected_score_m)
+        np.testing.assert_array_equal(actual_tback_m, expected_tback_m)
+
 
 if __name__ == "__main__":
     main()
