@@ -72,32 +72,32 @@ M-squared value.
 >>> print procrustes(bc_pc.site, j_pc.site)[2]
 0.466134984787
 
-Of course all of this only gets interesting in the context of sample metadata,
-so let's define some:
-
->>> import pandas as pd
->>> sample_md = {
-...    'A': {'body_habitat': 'gut', 'person': 'subject 1'},
-...    'B': {'body_habitat': 'skin', 'person': 'subject 1'},
-...    'C': {'body_habitat': 'tongue', 'person': 'subject 1'},
-...    'D': {'body_habitat': 'gut', 'person': 'subject 2'},
-...    'E': {'body_habitat': 'tongue', 'person': 'subject 2'},
-...    'F': {'body_habitat': 'skin', 'person': 'subject 2'}}
->>> sample_md = pd.DataFrame(sample_md).T
->>> print(sample_md)
-  body_habitat     person
-A          gut  subject 1
-B         skin  subject 1
-C       tongue  subject 1
-D          gut  subject 2
-E       tongue  subject 2
-F         skin  subject 2
-<BLANKLINE>
-[6 rows x 2 columns]
-
->>> subject_groups = sample_md.groupby('person').groups
->>> print(subject_groups)
-{'subject 1': ['A', 'B', 'C'], 'subject 2': ['D', 'E', 'F']}
+# Of course all of this only gets interesting in the context of sample metadata,
+# so let's define some:
+#
+# >>> import pandas as pd
+# >>> sample_md = {
+# ...    'A': {'body_habitat': 'gut', 'person': 'subject 1'},
+# ...    'B': {'body_habitat': 'skin', 'person': 'subject 1'},
+# ...    'C': {'body_habitat': 'tongue', 'person': 'subject 1'},
+# ...    'D': {'body_habitat': 'gut', 'person': 'subject 2'},
+# ...    'E': {'body_habitat': 'tongue', 'person': 'subject 2'},
+# ...    'F': {'body_habitat': 'skin', 'person': 'subject 2'}}
+# >>> sample_md = pd.DataFrame(sample_md).T
+# >>> print(sample_md)
+#   body_habitat     person
+# A          gut  subject 1
+# B         skin  subject 1
+# C       tongue  subject 1
+# D          gut  subject 2
+# E       tongue  subject 2
+# F         skin  subject 2
+# <BLANKLINE>
+# [6 rows x 2 columns]
+#
+# >>> subject_groups = sample_md.groupby('person').groups
+# >>> print(subject_groups)
+# {'subject 1': ['A', 'B', 'C'], 'subject 2': ['D', 'E', 'F']}
 
 # this isn't working yet...
 # And we'll put a quick 3D plotting function together. This function is adapted
