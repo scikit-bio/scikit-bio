@@ -62,9 +62,6 @@ from skbio.core.sequence import (
 from skbio.core.distance import DistanceMatrix
 from skbio.core.alignment import (
     local_pairwise_align_ssw, SequenceCollection, Alignment)
-from skbio.core.alignment.pairwise import (
-    local_pairwise_align_nucleotide, local_pairwise_align_protein,
-    global_pairwise_align_nucleotide, global_pairwise_align_protein)
 from skbio.core.tree import (
     TreeNode, nj)
 from skbio.parse.sequences import (
