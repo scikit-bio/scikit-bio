@@ -100,9 +100,8 @@ from collections import namedtuple, defaultdict
 from numbers import Integral
 
 import numpy as np
+from natsort import natsorted
 from scipy.stats import f_oneway
-
-from skbio.util.sort import signed_natsort
 
 
 def _weight_by_vector(trajectories, w_vector):
@@ -515,9 +514,7 @@ class GradientANOVA(object):
             # Group samples by category
             gb = self._metadata_map.groupby(cat)
             for g, df in gb:
-                sorted_list = signed_natsort([(sort_val(sid), sid)
-                                              for sid in df.index])
-                self._groups[cat][g] = [val[1] for val in sorted_list]
+                self._groups[cat][g] = natsorted(df.index, key=sort_val)
 
     def _get_group_trajectories(self, group_name, sids):
         r"""Compute the trajectory results for `group_name` containing the
