@@ -72,7 +72,7 @@ M-squared value.
 >>> print procrustes(bc_pc.site, j_pc.site)[2]
 0.466134984787
 
-# Of course all of this only gets interesting in the context of sample metadata,
+# All of this only gets interesting in the context of sample metadata,
 # so let's define some:
 #
 # >>> import pandas as pd
@@ -100,8 +100,8 @@ M-squared value.
 # {'subject 1': ['A', 'B', 'C'], 'subject 2': ['D', 'E', 'F']}
 
 # this isn't working yet...
-# And we'll put a quick 3D plotting function together. This function is adapted
-# from the matplotlib gallery here:
+# And we'll put a quick 3D plotting function together. This function is
+# adapted from the matplotlib gallery here:
 # http://matplotlib.org/examples/mplot3d/scatter3d_demo.html
 #
 # >>> from mpl_toolkits.mplot3d import Axes3D
