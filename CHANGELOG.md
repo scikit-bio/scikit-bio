@@ -6,6 +6,7 @@
 
 * Added powertrip.py script to perform basic sanity-checking of the repo based on recurring issues that weren't being caught until release time; added to Travis build.
 * Added RELEASE.md with release instructions.
+* Added python implementations of Smith-Waterman and Needleman-Wunsch alignment. These are much slower than native C implementations (e.g., scikit-bio's SSW wrapper) and as a result raise an ``EfficencyWarning`` when called, but are included as they serve as useful educational examples as they’re simple to experiment with.
 
 ## Version 0.1.3 (2014-06-12)
 
