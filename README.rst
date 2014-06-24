@@ -145,8 +145,8 @@ Peter Maxwell, Jeremy Widmann, Zongzhi Liu, Michael Dwan, Logan Knecht
 Jose Carlos Clemente (`@cleme <https://github.com/cleme>`__), Damien
 Coy, Levi McCracken, Andrew Butterfield, Will Van Treuren (`@wdwvt1
 <https://github.com/wdwvt1>`__), Justin Kuczynski (`@justin212k
-<https://github.com/justin212k>`__), and Jose Antonio Navas Molina
-(`@josenavas <https://github.com/josenavas>`__).
+<https://github.com/justin212k>`__), Jose Antonio Navas Molina
+(`@josenavas <https://github.com/josenavas>`__) and Matthew Wakefield.
 
 Logo
 ----
