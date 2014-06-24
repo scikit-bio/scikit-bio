@@ -566,10 +566,10 @@ def _traceback(traceback_matrix, score_matrix, seq1, seq2, start_row,
 def _first_largest(scores):
     """ Similar to max, but returns the first element achieving the high score
 
-        If max receives a tuple, it will break a score for the highest value
+        If max receives a tuple, it will break a tie for the highest value
         of entry[i] with entry[i+1]. We don't want that here - to better match
-        with the results of other tools, it's better to be able to set the
-        order of the choices.
+        with the results of other tools, we want to be able to define which
+        entry is returned in the case of a tie.
     """
     result = scores[0]
     for score, direction in scores[1:]:
