@@ -30,36 +30,47 @@ class MajorityRuleTests(TestCase):
             TreeNode.from_newick("(A,(B,(E,((G,(F,I)),((J,(H,D)),C)))));"),
             TreeNode.from_newick("(A,(B,(E,((G,(F,I)),(((J,H),D),C)))));")]
 
-        exp = "(((E,(G,(F,I),(C,(D,J,H)))),B),A);"
+        exp = TreeNode.from_newick("(((E,(G,(F,I),(C,(D,J,H)))),B),A);")
         obs = majority_rule(trees)
-        self.assertEqual(obs[0].to_newick(with_distances=False), exp)
+        self.assertEqual(exp.compare_subsets(obs[0]), 0.0)
         self.assertEqual(len(obs), 1)
 
         tree = obs[0]
-        self.assertEqual(tree.children[0].support, 9.0)
-        self.assertEqual(tree.children[0].children[0].support, 9.0)
-        self.assertEqual(tree.children[0].children[0].children[1].support, 6.0)
-        inner = tree.children[0].children[0].children[1]
-        self.assertEqual(inner.children[1].support, 9.0)
-        self.assertEqual(inner.children[2].support, 6.0)
-        self.assertEqual(inner.children[2].children[1].support, 6.0)
+        exp_supports = sorted([9.0, 9.0, 9.0, 6.0, 6.0, 6.0])
+        obs_supports = sorted([n.support for n in tree.non_tips()])
+        self.assertEqual(obs_supports, exp_supports)
 
         obs = majority_rule(trees, weights=np.ones(len(trees)) * 2)
-        self.assertEqual(obs[0].to_newick(with_distances=False), exp)
+        self.assertEqual(exp.compare_subsets(obs[0]), 0.0)
         self.assertEqual(len(obs), 1)
 
         tree = obs[0]
-        self.assertEqual(tree.children[0].support, 18.0)
-        self.assertEqual(tree.children[0].children[0].support, 18.0)
-        self.assertEqual(tree.children[0].children[0].children[1].support,
-                         12.0)
-        inner = tree.children[0].children[0].children[1]
-        self.assertEqual(inner.children[1].support, 18.0)
-        self.assertEqual(inner.children[2].support, 12.0)
-        self.assertEqual(inner.children[2].children[1].support, 12.0)
+        exp_supports = sorted([18.0, 18.0, 12.0, 18.0, 12.0, 12.0])
+        obs_supports = sorted([n.support for n in tree.non_tips()])
 
         with self.assertRaises(ValueError):
             majority_rule(trees, weights=[1, 2])
+
+    def test_majority_rule_multiple_trees(self):
+        trees = [
+            TreeNode.from_newick("((a,b),(c,d),(e,f))"),
+            TreeNode.from_newick("(a,(c,d),b,(e,f))"),
+            TreeNode.from_newick("((c,d),(e,f),b)"),
+            TreeNode.from_newick("(a,(c,d),(e,f))")
+            ]
+
+        trees = majority_rule(trees)
+        self.assertEqual(len(trees), 4)
+
+        exp = set([
+                  frozenset(['a']),
+                  frozenset(['b']),
+                  frozenset([None, 'c', 'd']),
+                  frozenset([None, 'e', 'f'])
+              ])
+
+        obs = set([frozenset([n.name for n in t.traverse()]) for t in trees])
+        self.assertEqual(obs, exp)
 
     def test_walk_clades(self):
         trees = [TreeNode.from_newick("((A,B),(D,E));"),
@@ -150,10 +161,10 @@ class MajorityRuleTests(TestCase):
                         frozenset(['B']): 3}
         tree = _build_trees(clade_counts, edge_lengths, 'foo')[0]
         self.assertEqual(tree.foo, 6)
-        self.assertEqual(tree.children[0].foo, 8)
-        self.assertEqual(tree.children[0].length, 3)
-        self.assertEqual(tree.children[1].foo, 7)
-        self.assertEqual(tree.children[1].length, 2)
+        tree_foos = set([c.foo for c in tree.children])
+        tree_lens = set([c.length for c in tree.children])
+        self.assertEqual(tree_foos, set([7, 8]))
+        self.assertEqual(tree_lens, set([2, 3]))
 
 
 if __name__ == '__main__':
