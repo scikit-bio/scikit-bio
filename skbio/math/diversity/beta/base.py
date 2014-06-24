@@ -15,6 +15,7 @@ from skbio import DistanceMatrix
 from numpy import zeros
 from scipy.spatial.distance import pdist
 
+
 def pw_distances(table, ids, metric):
     """Compute distances between all pairs of samples in table
 
