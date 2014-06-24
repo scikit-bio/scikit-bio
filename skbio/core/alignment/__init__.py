@@ -57,6 +57,24 @@ Data Structure Examples
 >>> s1
 <SequenceCollection: n=2; mean +/- std length=26.50 +/- 1.50>
 
+>>> from skbio.core.sequence import RNA
+>>> from skbio.core.alignment import StockholmAlignment
+>>> from StringIO import StringIO
+>>> sto_in = StringIO("# STOCKHOLM 1.0\\n"
+...                   "seq1     ACC--G-GGGU\\n
+                      "seq2     TCC--G-GGGA\\n"
+...                   "#=GC SS_cons (((.....)))\\n//")
+>>> sto_records = StockholmAlignment.from_file(sto_in, RNA)
+>>> sto = next(sto_records)
+>>> print(sto)
+# STOCKHOLM 1.0
+seq1          ACC--G-GGGU
+seq2          TCC--G-GGGA
+#=GC SS_cons  (((.....)))
+//
+>>> sto.gc
+{'SS_cons': '(((.....)))'}
+
 Alignment Algorithm Examples
 ----------------------------
 Using the convenient ``align_striped_smith_waterman`` function:
