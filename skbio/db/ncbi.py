@@ -1,28 +1,19 @@
-#!/usr/bin/env python
-
-"""To automate batch functions provided by EUtils
+r"""To automate batch functions provided by EUtils
 
     (http://www.ncbi..nih.gov/entrez/eutils) 
     search and fetch for sets of sequence information
 """
 from urllib import urlopen, urlretrieve
+from time import sleep
 from xml.dom.minidom import parseString
 from xml.etree.ElementTree import parse
-from skbio.db.util import UrlGetter, expand_slice,\
-    make_lists_of_expanded_slices_of_set_size,make_lists_of_accessions_of_set_size
-from time import sleep
 from StringIO import StringIO
-from skbio.parse.record_finder import DelimitedRecordFinder 
-from string import strip
 
-__author__ = "Mike Robeson"
-__copyright__ = "Copyright 2007-2012, The Cogent Project"
-__credits__ = ["Mike Robeson", "Rob Knight", "Zongzhi Liu"]
-__license__ = "GPL"
-__version__ = "1.5.3-dev"
-__maintainer__ = "Mike Robeson"
-__email__ = "mike.robeson@colorado.edu"
-__status__ = "Production"
+from skbio.db.util import (UrlGetter, expand_slice,
+                           make_lists_of_expanded_slices_of_set_size,
+                           make_lists_of_accessions_of_set_size)
+from skbio.parse.record_finder import DelimitedRecordFinder
+
 
 class QueryNotFoundError(Exception): pass
 
