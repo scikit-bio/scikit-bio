@@ -1,0 +1,160 @@
+from __future__ import absolute_import, division, print_function
+
+# ----------------------------------------------------------------------------
+# Copyright (c) 2013--, scikit-bio development team.
+#
+# Distributed under the terms of the Modified BSD License.
+#
+# The full license is in the file COPYING.txt, distributed with this software.
+# ----------------------------------------------------------------------------
+
+from unittest import TestCase, main
+
+import numpy as np
+
+from skbio.core.tree import TreeNode
+from skbio.core.tree.majority_rule import (_walk_clades, _filter_clades,
+                                           _build_trees, majority_rule)
+
+
+class MajorityRuleTests(TestCase):
+    def test_majority_rule(self):
+        trees = [
+            TreeNode.from_newick("(A,(B,(H,(D,(J,(((G,E),(F,I)),C))))));"),
+            TreeNode.from_newick("(A,(B,(D,((J,H),(((G,E),(F,I)),C)))));"),
+            TreeNode.from_newick("(A,(B,(D,(H,(J,(((G,E),(F,I)),C))))));"),
+            TreeNode.from_newick("(A,(B,(E,(G,((F,I),((J,(H,D)),C))))));"),
+            TreeNode.from_newick("(A,(B,(E,(G,((F,I),(((J,H),D),C))))));"),
+            TreeNode.from_newick("(A,(B,(E,((F,I),(G,((J,(H,D)),C))))));"),
+            TreeNode.from_newick("(A,(B,(E,((F,I),(G,(((J,H),D),C))))));"),
+            TreeNode.from_newick("(A,(B,(E,((G,(F,I)),((J,(H,D)),C)))));"),
+            TreeNode.from_newick("(A,(B,(E,((G,(F,I)),(((J,H),D),C)))));")]
+
+        exp = "(((E,(G,(F,I),(C,(D,J,H)))),B),A);"
+        obs = majority_rule(trees)
+        self.assertEqual(obs[0].to_newick(with_distances=False), exp)
+        self.assertEqual(len(obs), 1)
+
+        tree = obs[0]
+        self.assertEqual(tree.children[0].support, 9.0)
+        self.assertEqual(tree.children[0].children[0].support, 9.0)
+        self.assertEqual(tree.children[0].children[0].children[1].support, 6.0)
+        inner = tree.children[0].children[0].children[1]
+        self.assertEqual(inner.children[1].support, 9.0)
+        self.assertEqual(inner.children[2].support, 6.0)
+        self.assertEqual(inner.children[2].children[1].support, 6.0)
+
+        obs = majority_rule(trees, weights=np.ones(len(trees)) * 2)
+        self.assertEqual(obs[0].to_newick(with_distances=False), exp)
+        self.assertEqual(len(obs), 1)
+
+        tree = obs[0]
+        self.assertEqual(tree.children[0].support, 18.0)
+        self.assertEqual(tree.children[0].children[0].support, 18.0)
+        self.assertEqual(tree.children[0].children[0].children[1].support,
+                         12.0)
+        inner = tree.children[0].children[0].children[1]
+        self.assertEqual(inner.children[1].support, 18.0)
+        self.assertEqual(inner.children[2].support, 12.0)
+        self.assertEqual(inner.children[2].children[1].support, 12.0)
+
+        with self.assertRaises(ValueError):
+            majority_rule(trees, weights=[1, 2])
+
+    def test_walk_clades(self):
+        trees = [TreeNode.from_newick("((A,B),(D,E));"),
+                 TreeNode.from_newick("((A,B),(D,(E,X)));")]
+        exp_clades = [
+            (frozenset(['A']), 2.0),
+            (frozenset(['B']), 2.0),
+            (frozenset(['A', 'B']), 2.0),
+            (frozenset(['D', 'E']), 1.0),
+            (frozenset(['D', 'E', 'A', 'B']), 1.0),
+            (frozenset(['D']), 2.0),
+            (frozenset(['E']), 2.0),
+            (frozenset(['X']), 1.0),
+            (frozenset(['E', 'X']), 1.0),
+            (frozenset(['D', 'E', 'X']), 1.0),
+            (frozenset(['A', 'B', 'D', 'E', 'X']), 1.0)]
+
+        exp_lengths_nolength = {
+            frozenset(['A']): None,
+            frozenset(['B']): None,
+            frozenset(['A', 'B']): None,
+            frozenset(['D', 'E']): None,
+            frozenset(['D', 'E', 'A', 'B']): None,
+            frozenset(['D']): None,
+            frozenset(['E']): None,
+            frozenset(['X']): None,
+            frozenset(['E', 'X']): None,
+            frozenset(['D', 'E', 'X']): None,
+            frozenset(['A', 'B', 'D', 'E', 'X']): None}
+
+        exp_lengths = {
+            frozenset(['A']): 2.0,
+            frozenset(['B']): 2.0,
+            frozenset(['A', 'B']): 2.0,
+            frozenset(['D', 'E']): 1.0,
+            frozenset(['D', 'E', 'A', 'B']): 1.0,
+            frozenset(['D']): 2.0,
+            frozenset(['E']): 2.0,
+            frozenset(['X']): 1.0,
+            frozenset(['E', 'X']): 1.0,
+            frozenset(['D', 'E', 'X']): 1.0,
+            frozenset(['A', 'B', 'D', 'E', 'X']): 1.0}
+
+        obs_clades, obs_lengths = _walk_clades(trees, np.ones(len(trees)))
+        self.assertEqual(set(obs_clades), set(exp_clades))
+        self.assertEqual(obs_lengths, exp_lengths_nolength)
+
+        for t in trees:
+            for n in t.traverse(include_self=True):
+                n.length = 2.0
+
+        obs_clades, obs_lengths = _walk_clades(trees, np.ones(len(trees)))
+
+        self.assertEqual(set(obs_clades), set(exp_clades))
+        self.assertEqual(obs_lengths, exp_lengths)
+
+    def test_filter_clades(self):
+        clade_counts = [(frozenset(['A', 'B']), 8),
+                        (frozenset(['A', 'C']), 7),
+                        (frozenset(['A']), 6),
+                        (frozenset(['B']), 5)]
+        obs = _filter_clades(clade_counts, 2)
+        exp = {frozenset(['A', 'B']): 8,
+               frozenset(['A']): 6,
+               frozenset(['B']): 5}
+        self.assertEqual(obs, exp)
+
+        clade_counts = [(frozenset(['A']), 8),
+                        (frozenset(['B']), 7),
+                        (frozenset(['C']), 7),
+                        (frozenset(['A', 'B']), 6),
+                        (frozenset(['A', 'B', 'C']), 5),
+                        (frozenset(['D']), 2)]
+        obs = _filter_clades(clade_counts, 4)
+        exp = {frozenset(['A']): 8,
+               frozenset(['B']): 7,
+               frozenset(['C']): 7,
+               frozenset(['A', 'B']): 6,
+               frozenset(['A', 'B', 'C']): 5}
+        self.assertEqual(obs, exp)
+
+    def test_build_trees(self):
+        clade_counts = {frozenset(['A', 'B']): 6,
+                        frozenset(['A']): 7,
+                        frozenset(['B']): 8}
+        edge_lengths = {frozenset(['A', 'B']): 1,
+                        frozenset(['A']): 2,
+                        frozenset(['B']): 3}
+        tree = _build_trees(clade_counts, edge_lengths, 'foo')[0]
+        self.assertEqual(tree.foo, 6)
+        self.assertEqual(tree.children[0].foo, 8)
+        self.assertEqual(tree.children[0].length, 3)
+        self.assertEqual(tree.children[1].foo, 7)
+        self.assertEqual(tree.children[1].length, 2)
+
+
+if __name__ == '__main__':
+    main()
