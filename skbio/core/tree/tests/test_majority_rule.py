@@ -56,8 +56,7 @@ class MajorityRuleTests(TestCase):
             TreeNode.from_newick("((a,b),(c,d),(e,f))"),
             TreeNode.from_newick("(a,(c,d),b,(e,f))"),
             TreeNode.from_newick("((c,d),(e,f),b)"),
-            TreeNode.from_newick("(a,(c,d),(e,f))")
-            ]
+            TreeNode.from_newick("(a,(c,d),(e,f))")]
 
         trees = majority_rule(trees)
         self.assertEqual(len(trees), 4)
@@ -66,8 +65,7 @@ class MajorityRuleTests(TestCase):
                   frozenset(['a']),
                   frozenset(['b']),
                   frozenset([None, 'c', 'd']),
-                  frozenset([None, 'e', 'f'])
-              ])
+                  frozenset([None, 'e', 'f'])])
 
         obs = set([frozenset([n.name for n in t.traverse()]) for t in trees])
         self.assertEqual(obs, exp)
