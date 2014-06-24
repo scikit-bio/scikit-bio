@@ -19,7 +19,7 @@ from skbio import (
     Alignment, Protein, DNA, RNA)
 from skbio.core.alignment.pairwise import (
     _make_nt_substitution_matrix, _init_matrices_sw, _init_matrices_nw,
-    _compute_score_and_traceback_matrices, _traceback)
+    _compute_score_and_traceback_matrices, _traceback, _first_largest)
 
 filterwarnings("ignore")
 
@@ -282,6 +282,19 @@ class PairwiseAlignmentTests(TestCase):
         actual = _traceback(tback_m, score_m, 'ACG', 'ACGT', 3, 3)
         self.assertEqual(actual, expected)
 
+    def test_first_largest(self):
+        l = [(5, 'a'), (5, 'b'), (5, 'c')]
+        self.assertEqual(_first_largest(l), (5, 'a'))
+        l = [(5, 'c'), (5, 'b'), (5, 'a')]
+        self.assertEqual(_first_largest(l), (5, 'c'))
+        l = [(5, 'c'), (6, 'b'), (5, 'a')]
+        self.assertEqual(_first_largest(l), (6, 'b'))
+        # works for more than three entries
+        l = [(5, 'c'), (6, 'b'), (5, 'a'), (7, 'd')]
+        self.assertEqual(_first_largest(l), (7, 'd'))
+        # Note that max([(5, 'a'), (5, 'c')]) == max([(5, 'c'), (5, 'a')])
+        # but for the purposes needed here, we want the max to be the same
+        # regardless of what the second item in the tuple is.
 
 if __name__ == "__main__":
     main()
