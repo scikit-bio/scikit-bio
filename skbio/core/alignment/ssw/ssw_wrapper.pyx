@@ -10,7 +10,7 @@ from cpython cimport bool
 import numpy as np
 cimport numpy as cnp
 from skbio.core.alignment import Alignment
-from skbio.core.sequence import ProteinSequence, DNASequence
+from skbio.core.sequence import ProteinSequence, NucleotideSequence
 
 cdef extern from "ssw.h":
 
@@ -778,8 +778,8 @@ def local_pairwise_align_ssw(sequence1, sequence2,
         ]
     else:
         seqs = [
-            DNASequence(alignment.aligned_query_sequence, id='query'),
-            DNASequence(alignment.aligned_target_sequence, id='target')
+            NucleotideSequence(alignment.aligned_query_sequence, id='query'),
+            NucleotideSequence(alignment.aligned_target_sequence, id='target')
         ]
 
     return Alignment(seqs, score=alignment.optimal_alignment_score,
