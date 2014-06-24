@@ -91,7 +91,7 @@ def _filter_clades(clade_counts, cutoff_threshold):
     for clade, count in clade_counts:
         conflict = False
 
-        if count < cutoff_threshold:
+        if count <= cutoff_threshold:
             continue
 
         if len(clade) > 1:
@@ -266,6 +266,29 @@ def majority_rule(trees, weights=None, cutoff=0.5, support_attr='support'):
     Tips: G F I C D J H, support: 6.0
     Tips: E G F I C D J H, support: 9.0
     Tips: E G F I C D J H B, support: 9.0
+
+    In the next example, multiple trees will be returned which can happen if
+    clades are not well supported across the trees. In addition, this can arise
+    if not all tips are present across all trees.
+
+    >>> trees = [
+    ...     TreeNode.from_newick("((a,b),(c,d),(e,f))"),
+    ...     TreeNode.from_newick("(a,(c,d),b,(e,f))"),
+    ...     TreeNode.from_newick("((c,d),(e,f),b)"),
+    ...     TreeNode.from_newick("(a,(c,d),(e,f))")]
+    >>> consensus_trees = majority_rule(trees)
+    >>> print(len(consensus_trees))
+    4
+    >>> for tree in consensus_trees:
+    ...     print(tree.ascii_art())
+    --b
+    --a
+              /-f
+    ---------|
+              \-e
+              /-d
+    ---------|
+              \-c
 
     """
     if weights is None:
