@@ -2,6 +2,15 @@
 
 ## Version 0.1.3-dev (changes since 0.1.3 release go here)
 
+### Backward-incompatible changes
+
+* Function ``skbio.core.alignment.align_striped_smith_waterman`` renamed to ``local_pairwise_align_ssw`` and now returns an ``Alignment`` object instead of an ``AlignmentStructure``
+* The following keyword-arguments for ``StripedSmithWaterman`` and ``local_pairwise_align_ssw`` have been renamed:
+    * ``gap_open`` -> ``gap_open_penalty``
+    * ``gap_extend`` -> ``gap_extend_penalty``
+    * ``match`` -> ``match_score``
+    * ``mismatch`` -> ``mismatch_score``
+
 ### Miscellaneous
 
 * Added powertrip.py script to perform basic sanity-checking of the repo based on recurring issues that weren't being caught until release time; added to Travis build.
