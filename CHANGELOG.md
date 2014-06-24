@@ -2,6 +2,10 @@
 
 ## Version 0.1.3-dev (changes since 0.1.3 release go here)
 
+### Backward-incompatible changes
+
+* Removed ``skbio.util.sort`` module in favor of [natsort](https://pypi.python.org/pypi/natsort) package.
+
 ### Miscellaneous
 
 * Added powertrip.py script to perform basic sanity-checking of the repo based on recurring issues that weren't being caught until release time; added to Travis build.

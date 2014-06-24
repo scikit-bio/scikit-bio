@@ -51,6 +51,7 @@ than using pip), you can find those here:
 -  `matplotlib <http://www.matplotlib.org/>`__ >= 1.1.0
 -  `pandas <http://pandas.pydata.org/>`__
 -  `future <https://pypi.python.org/pypi/future>`__
+-  `natsort <https://pypi.python.org/pypi/natsort>`__
 
 If you have trouble getting these dependencies installed (scipy, in particular, can be tricky), you should try installing `Canopy Express <https://www.enthought.com/canopy-express/>`_, which includes all of these dependencies. You should then be able to easily install scikit-bio by running::
 
