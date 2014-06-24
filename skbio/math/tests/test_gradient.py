@@ -334,6 +334,14 @@ class GradientTests(BaseTests):
                                 w_vector[sample_ids])
         pdt.assert_frame_equal(obs.sort(axis=0), exp.sort(axis=0))
 
+    def test_weight_by_vector_single_element(self):
+        trajectory = pd.DataFrame.from_dict({'s1': np.array([42])},
+                                            orient='index')
+        w_vector = pd.Series(np.array([5]), ['s1']).astype(np.float64)
+
+        obs = _weight_by_vector(trajectory, w_vector)
+        pdt.assert_frame_equal(obs, trajectory)
+
     def test_weight_by_vector_error(self):
         """Raises an error with erroneous inputs"""
         # Different vector lengths

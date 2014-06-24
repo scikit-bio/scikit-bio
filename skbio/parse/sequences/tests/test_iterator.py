@@ -121,6 +121,10 @@ class SeqIterTests(TestCase):
         self.assertTrue((wk.state['Qual'] ==
                          self.seqqual_ok['Qual'][::-1]).all())
 
+    def test_passing_none_for_seqs(self):
+        with self.assertRaises(ValueError):
+            SequenceIterator(None)
+
 
 class FastaTests(TestCase):
     def setUp(self):

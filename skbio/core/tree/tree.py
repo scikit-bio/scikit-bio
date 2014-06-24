@@ -589,8 +589,7 @@ class TreeNode(object):
             edgename = parent.name
             length = parent.length
         else:
-            if parent is not self.parent:
-                raise TreeError("Should never happen...")
+            assert parent is self.parent
             edgename = self.name
             length = self.length
 
@@ -1302,7 +1301,7 @@ class TreeNode(object):
         Raises
         ------
         DuplicateNodeError
-            The tip cache requies that names are unique (with the exception of
+            The tip cache requires that names are unique (with the exception of
             names that are None)
 
         See Also
@@ -1331,7 +1330,8 @@ class TreeNode(object):
 
                 if node.is_tip():
                     if name in tip_cache:
-                        raise DuplicateNodeError("%s already exists!" % name)
+                        raise DuplicateNodeError("Tip with name '%s' already "
+                                                 "exists!" % name)
 
                     tip_cache[name] = node
                 else:
@@ -1911,7 +1911,8 @@ class TreeNode(object):
             last_token = t
 
         if curr_node is not None and curr_node.parent is not None:
-            raise RecordError("Didn't get back to root of tree.")
+            raise RecordError("Didn't get back to root of tree. The newick "
+                              "string may be malformed.")
 
         if curr_node is None:  # no data -- return empty node
             return cls()
@@ -1975,7 +1976,7 @@ class TreeNode(object):
         else:
             for attr, dtype in attrs:
                 if not hasattr(self, attr):
-                    raise AttributeError("%s does not appear in self!" % attr)
+                    raise AttributeError("Invalid attribute '%s'." % attr)
 
         id_index, child_index = self.index_tree()
         n = self.id + 1  # assign_ids starts at 0
@@ -1995,7 +1996,7 @@ class TreeNode(object):
         r"""Return the newick string representation of this tree.
 
         Please see `TreeNode.from_newick` for a further description of the
-        Newick format
+        Newick format.
 
         Parameters
         ----------
@@ -2062,13 +2063,7 @@ class TreeNode(object):
 
                 result.append(',')
 
-        len_result = len(result)
-        if len_result == 2:  # single node no name
-            if semicolon:
-                return ";"
-            else:
-                return ''
-        elif len_result == 3:  # single node with name
+        if len(result) <= 3:  # single node with or without name
             if semicolon:
                 return "%s;" % result[1]
             else:
@@ -2383,7 +2378,8 @@ class TreeNode(object):
             tip_order = [self.find(n) for n in endpoints]
             for n in tip_order:
                 if not n.is_tip():
-                    raise ValueError("%s is not a tip!" % n.name)
+                    raise ValueError("Node with name '%s' is not a tip." %
+                                     n.name)
 
         # linearize all tips in postorder
         # .__start, .__stop compose the slice in tip_order.
@@ -2419,7 +2415,8 @@ class TreeNode(object):
             starts, stops = [], []  # to calc ._start and ._stop for curr node
             for child in node.children:
                 if child.length is None:
-                    raise NoLengthError("%s doesn't have length" % child.name)
+                    raise NoLengthError("Node with name '%s' doesn't have a "
+                                        "length." % child.name)
 
                 distances[child.__start:child.__stop] += child.length
 
@@ -2617,7 +2614,7 @@ class TreeNode(object):
         common_names = list(common_names)
 
         if not common_names:
-            raise ValueError("No names in common between the two trees.")
+            raise ValueError("No tip names in common between the two trees.")
 
         if len(common_names) <= 2:
             return 1  # the two trees must match by definition in this case
