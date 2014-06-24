@@ -61,8 +61,7 @@ Data Structure Examples
 >>> from skbio.core.alignment import StockholmAlignment
 >>> from StringIO import StringIO
 >>> sto_in = StringIO("# STOCKHOLM 1.0\\n"
-...                   "seq1     ACC--G-GGGU\\n
-                      "seq2     TCC--G-GGGA\\n"
+...                   "seq1     ACC--G-GGGU\\nseq2     TCC--G-GGGA\\n"
 ...                   "#=GC SS_cons (((.....)))\\n//")
 >>> sto_records = StockholmAlignment.from_file(sto_in, RNA)
 >>> sto = next(sto_records)
