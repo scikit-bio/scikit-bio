@@ -725,18 +725,22 @@ class StockholmAlignmentTests(TestCase):
         """Setup for stockholm tests."""
         self.seqs = [DNASequence("ACC-G-GGTA", id="seq1"),
                      DNASequence("TCC-G-GGCA", id="seq2")]
-        self.GF = {"RT": ["TITLE1",  "TITLE2"],
-                   "RN": ["[1]", "[2]"],
-                   "AC": "RF00360",
-                   "BM": ["cmbuild  -F CM SEED",
-                          "cmsearch  -Z 274931 -E 1000000"],
-                   "SQ": "9", "RA": ["Auth1;", "Auth2;"],
-                   "RL": ["J Mol Biol", "Cell"],
-                   "RM": ["11469857", "12007400"],
-                   'RN': ['[1]', '[2]']}
-        self.GS = {"seq1": {"AC": "111"}, "seq2": {"AC": "222"}}
-        self.GR = {"seq1": {"SS": "1110101111"},
-                   "seq2": {"SS": "0110101110"}}
+        self.GF = OrderedDict([
+            ("AC", "RF00360"),
+            ("BM", ["cmbuild  -F CM SEED",
+                    "cmsearch  -Z 274931 -E 1000000"]),
+            ("SQ", "9"),
+            ("RT", ["TITLE1",  "TITLE2"]),
+            ("RN", ["[1]", "[2]"]),
+            ("RA", ["Auth1;", "Auth2;"]),
+            ("RL", ["J Mol Biol", "Cell"]),
+            ("RM", ["11469857", "12007400"]),
+            ('RN', ['[1]', '[2]'])
+        ])
+        self.GS = OrderedDict([("seq1", {"AC": "111"}),
+                               ("seq2", {"AC": "222"})])
+        self.GR = OrderedDict([("seq1", {"SS": "1110101111"}),
+                               ("seq2", {"SS": "0110101110"})])
         self.GC = {"SS_cons": "(((....)))"}
         self.st = StockholmAlignment(self.seqs, gc=self.GC, gf=self.GF,
                                      gs=self.GS, gr=self.GR)
@@ -899,14 +903,28 @@ class StockholmAlignmentTests(TestCase):
         st = StockholmAlignment(self.seqs, gc=self.GC, gf=self.GF, gs=self.GS,
                                 gr=self.GR)
         obs = str(st)
-        exp = ('# STOCKHOLM 1.0\n#=GF RN [1]\n#=GF RM 11469857\n'
-               '#=GF RT TITLE1\n#=GF RA Auth1;\n#=GF RL J Mol Biol\n'
-               '#=GF RN [2]\n#=GF RM 12007400\n#=GF RT TITLE2\n#=GF RA Auth2;'
-               '\n#=GF RL Cell\n#=GF AC RF00360\n#=GF BM cmbuild  -F CM SEED\n'
-               '#=GF BM cmsearch  -Z 274931 -E 1000000\n#=GF SQ 9\n'
-               '#=GS seq2 AC 222\n#=GS seq1 AC 111\nseq1          ACC-G-GGTA\n'
-               '#=GR seq1 SS  1110101111\nseq2          TCC-G-GGCA\n'
-               '#=GR seq2 SS  0110101110\n#=GC SS_cons  (((....)))\n//')
+        exp = ('# STOCKHOLM 1.0\n'
+               '#=GF AC RF00360\n'
+               '#=GF BM cmbuild  -F CM SEED\n'
+               '#=GF BM cmsearch  -Z 274931 -E 1000000\n'
+               '#=GF SQ 9\n'
+               '#=GF RN [1]\n'
+               '#=GF RM 11469857\n'
+               '#=GF RT TITLE1\n'
+               '#=GF RA Auth1;\n'
+               '#=GF RL J Mol Biol\n'
+               '#=GF RN [2]\n'
+               '#=GF RM 12007400\n'
+               '#=GF RT TITLE2\n'
+               '#=GF RA Auth2;\n'
+               '#=GF RL Cell\n'
+               '#=GS seq1 AC 111\n'
+               '#=GS seq2 AC 222\n'
+               'seq1          ACC-G-GGTA\n'
+               '#=GR seq1 SS  1110101111\n'
+               'seq2          TCC-G-GGCA\n'
+               '#=GR seq2 SS  0110101110\n'
+               '#=GC SS_cons  (((....)))\n//')
         self.assertEqual(obs, exp)
 
     def test_str_gc(self):
@@ -926,12 +944,23 @@ class StockholmAlignmentTests(TestCase):
         st = StockholmAlignment(self.seqs, gc=None, gf=self.GF, gs=None,
                                 gr=None)
         obs = str(st)
-        exp = ('# STOCKHOLM 1.0\n#=GF RN [1]\n#=GF RM 11469857\n'
-               '#=GF RT TITLE1\n#=GF RA Auth1;\n#=GF RL J Mol Biol\n'
-               '#=GF RN [2]\n#=GF RM 12007400\n#=GF RT TITLE2\n#=GF RA Auth2;'
-               '\n#=GF RL Cell\n#=GF AC RF00360\n#=GF BM cmbuild  -F CM SEED'
-               '\n#=GF BM cmsearch  -Z 274931 -E 1000000\n#=GF SQ 9'
-               '\nseq1          ACC-G-GGTA\nseq2          TCC-G-GGCA\n//')
+        exp = ('# STOCKHOLM 1.0\n'
+               '#=GF AC RF00360\n'
+               '#=GF BM cmbuild  -F CM SEED\n'
+               '#=GF BM cmsearch  -Z 274931 -E 1000000\n'
+               '#=GF SQ 9\n'
+               '#=GF RN [1]\n'
+               '#=GF RM 11469857\n'
+               '#=GF RT TITLE1\n'
+               '#=GF RA Auth1;\n'
+               '#=GF RL J Mol Biol\n'
+               '#=GF RN [2]\n'
+               '#=GF RM 12007400\n'
+               '#=GF RT TITLE2\n'
+               '#=GF RA Auth2;\n'
+               '#=GF RL Cell\n'
+               'seq1          ACC-G-GGTA\n'
+               'seq2          TCC-G-GGCA\n//')
         self.assertEqual(obs, exp)
 
     def test_str_gs(self):
@@ -940,9 +969,11 @@ class StockholmAlignmentTests(TestCase):
         st = StockholmAlignment(self.seqs, gc=None, gf=None, gs=self.GS,
                                 gr=None)
         obs = str(st)
-        exp = ("# STOCKHOLM 1.0\n#=GS seq2 AC 222\n"
-               "#=GS seq1 AC 111\nseq1          ACC-G-GGTA\n"
-               "seq2          TCC-G-GGCA\n//")
+        exp = ('# STOCKHOLM 1.0\n'
+               '#=GS seq1 AC 111\n'
+               '#=GS seq2 AC 222\n'
+               'seq1          ACC-G-GGTA\n'
+               'seq2          TCC-G-GGCA\n//')
         self.assertEqual(obs, exp)
 
     def test_str_gr(self):
@@ -954,26 +985,6 @@ class StockholmAlignmentTests(TestCase):
         exp = ("# STOCKHOLM 1.0\nseq1          ACC-G-GGTA\n"
                "#=GR seq1 SS  1110101111\nseq2          TCC-G-GGCA\n"
                "#=GR seq2 SS  0110101110\n//")
-        self.assertEqual(obs, exp)
-
-    def test_str_refs(self):
-        """ Make sure stockholm with references printed correctly"""
-        GF = OrderedDict({"RT": ["TITLE1",  "TITLE2"],
-                          "AC": "RF00360",
-                          "BM": ["cmbuild  -F CM SEED",
-                                 "cmsearch  -Z 274931 -E 1000000"],
-                          "SQ": 9, "RA": ["Auth1;", "Auth2;"],
-                          "RL": ["J Mol Biol", "Cell"],
-                          "RM": ["11469857", "12007400"]})
-        st = StockholmAlignment(self.seqs, gc=None, gf=GF, gs=None,
-                                gr=None)
-        obs = str(st)
-        exp = ("# STOCKHOLM 1.0\n#=GF RN [1]\n#=GF RM 11469857\n#=GF RT TITLE1"
-               "\n#=GF RA Auth1;\n#=GF RL J Mol Biol\n#=GF RN [2]\n"
-               "#=GF RM 12007400\n#=GF RT TITLE2\n#=GF RA Auth2;\n#=GF RL Cell"
-               "\n#=GF AC RF00360\n#=GF BM cmbuild  -F CM SEED\n"
-               "#=GF BM cmsearch  -Z 274931 -E 1000000\n#=GF SQ 9\n"
-               "seq1          ACC-G-GGTA\nseq2          TCC-G-GGCA\n//")
         self.assertEqual(obs, exp)
 
     def test_str_trees(self):

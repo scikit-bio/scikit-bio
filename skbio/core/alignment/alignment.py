@@ -1829,8 +1829,11 @@ class StockholmAlignment(Alignment):
                 continue
             elif line == "//":
                 # parse the record since we are at its end
+                # build the seuence list for alignment construction
+                seqs = [seq_constructor(seq, id=_id) for _id, seq in
+                        viewitems(seqs)]
                 # get length of sequences in the alignment
-                seqlen = len(next(itervalues(seqs)))
+                seqlen = len(seqs[0][1])
 
                 # parse information lines
                 gf = cls._parse_gf_info(gf_lines)
@@ -1839,8 +1842,7 @@ class StockholmAlignment(Alignment):
                 gc = cls._parse_gc_info(gc_lines, strict, seqlen)
 
                 # yield the actual stockholm object
-                yield cls([seq_constructor(_id, seq) for seq, _id in
-                           viewitems(seqs)], gf, gs, gr, gc)
+                yield cls(seqs, gf, gs, gr, gc)
 
                 # reset all storage variables
                 gs_lines = []
