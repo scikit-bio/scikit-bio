@@ -207,11 +207,18 @@ ACGTGCCTA-GGTACGCAAG
 # ----------------------------------------------------------------------------
 
 from .alignment import Alignment, SequenceCollection
+from .pairwise import (
+    global_pairwise_align, global_pairwise_align_protein,
+    global_pairwise_align_nucleotide, local_pairwise_align,
+    local_pairwise_align_protein, local_pairwise_align_nucleotide)
 from .ssw.ssw_wrapper import (
     StripedSmithWaterman, AlignmentStructure, align_striped_smith_waterman)
 
 __all__ = ['Alignment', 'SequenceCollection', 'StripedSmithWaterman',
-           'AlignmentStructure', 'align_striped_smith_waterman']
+           'AlignmentStructure', 'align_striped_smith_waterman',
+           'global_pairwise_align','global_pairwise_align_protein',
+           'global_pairwise_align_nucleotide', 'local_pairwise_align',
+           'local_pairwise_align_protein', 'local_pairwise_align_nucleotide']
 
 from numpy.testing import Tester
 test = Tester().test

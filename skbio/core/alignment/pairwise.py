@@ -13,7 +13,8 @@ from warnings import warn
 import numpy as np
 
 from skbio.core.warning import EfficiencyWarning
-from skbio import Alignment, BiologicalSequence
+from .alignment import Alignment
+from skbio import BiologicalSequence
 
 # This is temporary: blosum50 does not exist in skbio yet as per
 # issue 161. When the issue is resolved, this should be removed in favor
