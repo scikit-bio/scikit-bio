@@ -1723,8 +1723,8 @@ class TreeNode(object):
 
         newest_cluster_index = cluster_count + 1
         for link in linkage_matrix:
-            child_a = node_lookup[link[0]]
-            child_b = node_lookup[link[1]]
+            child_a = node_lookup[int(link[0])]
+            child_b = node_lookup[int(link[1])]
 
             path_length = link[2] / 2
             child_a.length = path_length - child_a._balanced_distance_to_tip()
