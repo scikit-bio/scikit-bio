@@ -233,6 +233,24 @@ class PairwiseAlignmentTests(TestCase):
         np.testing.assert_array_equal(actual_score_m, expected_score_m)
         np.testing.assert_array_equal(actual_tback_m, expected_tback_m)
 
+        # different sequences
+        # these results were computed manually
+        expected_score_m = [[0, -5, -7, -9],
+                            [-5, 2, -3, -5],
+                            [-7, -3, 4, -1],
+                            [-9, -5, -1, 3],
+                            [-11, -7, -3, -2]]
+        expected_tback_m = [[0, 3, 3, 3],
+                            [2, 1, 3, 3],
+                            [2, 2, 1, 3],
+                            [2, 2, 2, 1],
+                            [2, 2, 2, 1]]
+        m = _make_nt_substitution_matrix(2, -1)
+        actual_score_m, actual_tback_m = _compute_score_and_traceback_matrices(
+            'ACC', 'ACGT', 5, 2, m)
+        np.testing.assert_array_equal(actual_score_m, expected_score_m)
+        np.testing.assert_array_equal(actual_tback_m, expected_tback_m)
+
     def test_traceback(self):
         score_m = [[0, -5, -7, -9],
                    [-5, 2, -3, -5],
