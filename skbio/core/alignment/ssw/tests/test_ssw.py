@@ -660,6 +660,19 @@ class TestStripedSmithWaterman(TestSSW):
 class TestAlignStripedSmithWaterman(TestSSW):
     def _check_Alignment_to_AlignmentStructure(self, alignment, structure):
         self.assertEqual(alignment.score(), structure.optimal_alignment_score)
+        self.assertEqual(str(alignment[0]), structure.aligned_query_sequence)
+        self.assertEqual(str(alignment[1]), structure.aligned_target_sequence)
+        if structure.query_begin == -1:
+            self.assertEqual(alignmnet.start_end_positions(), None)
+        else:
+            for (start, end), (expected_start, expected_end) in \
+                zip(alignment.start_end_positions(),
+                    [(structure.query_begin,
+                      structure.query_end),
+                     (structure.target_begin,
+                      structure.target_end_optimal)]):
+                self.assertEqual(start, expected_start)
+                self.assertEqual(end, expected_end)
 
     def test_same_as_using_StripedSmithWaterman_object(self):
         query_sequence = 'ATGGAAGCTATAAGCGCGGGTGAG'

@@ -122,7 +122,7 @@ ACT-AGGCTCCCTTCTACCCCTCTCAGAGA
 
 from .alignment import Alignment, SequenceCollection
 from .ssw.ssw_wrapper import (
-    StripedSmithWaterman, local_pairwise_align_ssw)
+    StripedSmithWaterman, local_pairwise_align_ssw, AlignmentStructure)
 
 __all__ = ['Alignment', 'SequenceCollection', 'StripedSmithWaterman',
            'AlignmentStructure', 'local_pairwise_align_ssw']
