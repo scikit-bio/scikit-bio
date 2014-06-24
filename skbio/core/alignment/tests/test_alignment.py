@@ -737,10 +737,9 @@ class StockholmAlignmentTests(TestCase):
             ("RM", ["11469857", "12007400"]),
             ('RN', ['[1]', '[2]'])
         ])
-        self.GS = OrderedDict([("seq1", {"AC": "111"}),
-                               ("seq2", {"AC": "222"})])
-        self.GR = OrderedDict([("seq1", {"SS": "1110101111"}),
-                               ("seq2", {"SS": "0110101110"})])
+        self.GS = {"AC": OrderedDict([("seq1", "111"), ("seq2", "222")])}
+        self.GR = {"SS": OrderedDict([("seq1", "1110101111"),
+                                      ("seq2", "0110101110")])}
         self.GC = {"SS_cons": "(((....)))"}
         self.st = StockholmAlignment(self.seqs, gc=self.GC, gf=self.GF,
                                      gs=self.GS, gr=self.GR)

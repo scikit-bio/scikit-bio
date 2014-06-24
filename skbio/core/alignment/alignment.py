@@ -9,7 +9,7 @@
 
 from __future__ import absolute_import, division, print_function
 from future.builtins import zip, range
-from future.utils import viewkeys, viewitems, itervalues
+from future.utils import viewkeys, viewitems
 
 from collections import Counter, defaultdict, OrderedDict
 from warnings import warn
@@ -1509,9 +1509,9 @@ class StockholmAlignment(Alignment):
     gf : dict, optional
         GF info in the format {feature: info}
     gs : dict of dicts, optional
-        GS info in the format {seqlabel: {feature: info}}
+        GS info in the format {feature: {seqlabel: info}}
     gr : dict of dicts, optional
-        GR info in the format {seqlabel: {feature: info}}
+        GR info in the format {feature: {seqlabel: info}}
     gc : dict, optional
         GC info in the format {feature: info}
 
@@ -1667,10 +1667,10 @@ class StockholmAlignment(Alignment):
 
         # add GS information if applicable
         if self.gs:
-            for seqname in self.gs:
-                for feature in self.gs[seqname]:
+            for feature in self.gs:
+                for seqname in self.gs[feature]:
                     GS_lines.append(' '.join(["#=GS", seqname, feature,
-                                             str(self.gs[seqname][feature])]))
+                                             str(self.gs[feature][seqname])]))
 
         # add GC information if applicable
         if self.gc:
@@ -1685,12 +1685,12 @@ class StockholmAlignment(Alignment):
         for label, seq in self.iteritems():
             spacer = ' ' * (infolen - len(label))
             sto_lines.append(spacer.join([label, str(seq)]))
-            # GR info added if exists for sequence
-            if label in self.gr:
-                for feature, value in viewitems(self.gr[label]):
-                    leaderinfo = ' '.join(['#=GR', label, feature])
-                    spacer = ' ' * (infolen - len(leaderinfo))
-                    sto_lines.append(spacer.join([leaderinfo, value]))
+            # GR info added for sequence
+            for feature in viewkeys(self.gr):
+                value = self.gr[feature][label]
+                leaderinfo = ' '.join(['#=GR', label, feature])
+                spacer = ' ' * (infolen - len(leaderinfo))
+                sto_lines.append(spacer.join([leaderinfo, value]))
 
         sto_lines.extend(GC_lines)
         # add final slashes to end of file
@@ -1798,18 +1798,18 @@ class StockholmAlignment(Alignment):
                     raise StockholmParseError("Non-GS/GR line encountered!")
 
             # parse each line, taking into account interleaved format
-            if label in parsed and feature in parsed[label]:
+            if feature in parsed and label in parsed[feature]:
                 # interleaved format, so need list of content
-                parsed[label][feature].append(content)
+                parsed[feature][label].append(content)
             else:
-                parsed[label] = {feature: [content]}
+                parsed[feature] = {label: [content]}
 
         # join all the crazy lists created during parsing
-        for label in parsed:
-            for feature, content in parsed[label].items():
-                parsed[label][feature] = ''.join(content)
+        for feature in parsed:
+            for label, content in parsed[feature].items():
+                parsed[feature][label] = ''.join(content)
                 if strict:
-                    if len(parsed[label][feature]) != seqlen:
+                    if len(parsed[feature][label]) != seqlen:
                         raise StockholmParseError("GR must have exactly one "
                                                   "char per position in the "
                                                   "alignment!")
