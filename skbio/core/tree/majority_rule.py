@@ -91,7 +91,7 @@ def _filter_clades(clade_counts, cutoff_threshold):
     for clade, count in clade_counts:
         conflict = False
 
-        if count <= cutoff_threshold:
+        if count < cutoff_threshold:
             continue
 
         if len(clade) > 1:
