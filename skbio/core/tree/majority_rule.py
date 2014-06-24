@@ -172,7 +172,7 @@ def _build_trees(clade_counts, edge_lengths, support_attr):
 
         queue = new_queue
 
-    return nodes.values()
+    return list(nodes.values())
 
 
 def majority_rule(trees, weights=None, cutoff=0.5, support_attr='support'):
