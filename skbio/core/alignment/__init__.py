@@ -220,7 +220,7 @@ from .ssw.ssw_wrapper import (
 
 __all__ = ['Alignment', 'SequenceCollection', 'StripedSmithWaterman',
            'AlignmentStructure', 'align_striped_smith_waterman',
-           'global_pairwise_align','global_pairwise_align_protein',
+           'global_pairwise_align', 'global_pairwise_align_protein',
            'global_pairwise_align_nucleotide', 'local_pairwise_align',
            'local_pairwise_align_protein', 'local_pairwise_align_nucleotide']
 
