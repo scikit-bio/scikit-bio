@@ -34,6 +34,11 @@ class BaseTests(TestCase):
                    [0, 0, 25, 35, 0, 19, 0]]
         self.ids2 = list('ABCDEF')
 
+    def test_pw_distances_invalid_input(self):
+        # number of ids doesn't match the number of samples
+        self.assertRaises(ValueError, pw_distances, self.t1, list('AB'),
+                          'euclidean')
+
     def test_pw_distances_euclidean(self):
         actual_dm = pw_distances(self.t1, self.ids1, 'euclidean')
         self.assertEqual(actual_dm.shape, (3, 3))
