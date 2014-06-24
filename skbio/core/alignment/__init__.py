@@ -133,6 +133,54 @@ ACTAAGGCT---CTCTACCCCTCTCAGAGA
 >>> print alignments[0].get_aligned_target_sequence()
 ACT-AGGCTCCCTTCTACCCCTCTCAGAGA
 
+scikit-bio also implements Smith-Waterman and Needleman-Wunsch alignment
+in python. These are much slower than the methods described above, but provide
+useful education examples as they're simpler to experiment with. Convenience
+wrappers are provided for local and global alignment of protein and nucleotide
+sequences. The ``global`` and ``local`` functions differ in the underlying
+algorithm that is applied (``global`` uses Needleman-Wunsch while local uses
+Smith-Waterman), and ``protein`` and ``nucleotide`` differ in their scoring of
+matches and mismatches, and the default gap penalties.
+
+Here we locally align a pair of protein sequences using gap open penalty
+of 11 and a gap extend penalty of 1 (in other words, it is much more
+costly to open a new gap than extend an existing one).
+>>> from skbio import local_pairwise_align_protein
+>>> s1 = "HEAGAWGHEE"
+>>> s2 = "PAWHEAE"
+>>> r = local_pairwise_align_protein(s1, s2, 11, 1)
+
+This returns an ``skbio.Alignment`` object. We can look at the aligned
+sequences:
+>>> print(str(r[0]))
+AWGHE
+>>> print(str(r[1]))
+AW-HE
+
+We can identify the start and end positions of each aligned sequence
+as follows:
+>>> r.start_end_positions()
+[(4, 8), (1, 4)]
+
+And we can view the score of the alignment is accessible using the ``score``
+method:
+>>> r.score()
+25.0
+
+Similarly, we can perform global alignment of nucleotide sequences, and print
+the resulting alignment as fasta records:
+>>> from skbio import global_pairwise_align_nucleotide
+>>> s1 = "GCGTGCCTAAGGTATGCAAG"
+>>> s2 = "ACGTGCCTAGGTACGCAAG"
+>>> r = global_pairwise_align_nucleotide(s1, s2)
+>>> print(r.to_fasta())
+>0
+GCGTGCCTAAGGTATGCAAG
+>1
+ACGTGCCTA-GGTACGCAAG
+<BLANKLINE>
+
+
 """
 
 # ----------------------------------------------------------------------------

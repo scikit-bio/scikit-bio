@@ -155,17 +155,6 @@ def local_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
        ``gap_extend_penalty`` parameters are derived from the NCBI BLAST
        Server.
 
-       Examples
-       --------
-       >>> from skbio import local_pairwise_align_nucleotide
-       >>> s1 = "GCGTGCCTAAGGTATGCAAG"
-       >>> s2 = "ACGTGCCTAGGTACGCAAG"
-       >>> r = local_pairwise_align_nucleotide(s1, s2)
-       >>> print(str(r[0]))
-       CGTGCCTAAGGTATGCAAG
-       >>> print(str(r[1]))
-       CGTGCCTA-GGTACGCAAG
-
     """
     substitution_matrix = \
         _make_nt_substitution_matrix(match_score, mismatch_score)
@@ -205,32 +194,6 @@ def local_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
        -----
        Default ``gap_open_penalty`` and ``gap_extend_penalty`` parameters are
        derived from the NCBI BLAST Server.
-
-       Examples
-       --------
-       Here we locally align a pair of protein sequences using gap open penalty
-       of 11 and a gap extend penalty of 1 (in other words, it is much more
-       costly to open a new gap than extend an existing one).
-       >>> from skbio import local_pairwise_align_protein
-       >>> s1 = "HEAGAWGHEE"
-       >>> s2 = "PAWHEAE"
-       >>> r = local_pairwise_align_protein(s1, s2, 11, 1)
-
-       This returns an ``skbio.Alignment`` object. We can look at the aligned
-       sequences as follows:
-       >>> print(str(r[0]))
-       AWGHE
-       >>> print(str(r[1]))
-       AW-HE
-
-       You can identify the start and end positions of each aligned sequence
-       as follows:
-       >>> r.start_end_positions()
-       [(4, 8), (1, 4)]
-
-       The score of the alignment is accessible through the ``score`` method:
-       >>> r.score()
-       25.0
 
     """
     if substitution_matrix is None:
@@ -368,17 +331,6 @@ def global_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
        -----
        Default ``gap_open_penalty`` and ``gap_extend_penalty`` parameters are
        derived from the NCBI BLAST Server.
-
-       Examples
-       --------
-       >>> from skbio import global_pairwise_align_protein
-       >>> s1 = "HEAGAWGHEE"
-       >>> s2 = "PAWHEAE"
-       >>> r = global_pairwise_align_protein(s1, s2, 8, 8)
-       >>> print(str(r[0]))
-       HEAGAWGHE-E
-       >>> print(str(r[1]))
-       -PA--W-HEAE
 
     """
     if substitution_matrix is None:
