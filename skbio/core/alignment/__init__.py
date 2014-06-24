@@ -20,8 +20,8 @@ Data Structures
    SequenceCollection
    Alignment
 
-Alignment Algorithms
---------------------
+Optimized Alignment Algorithms
+------------------------------
 
 .. autosummary::
    :toctree: generated/
@@ -29,10 +29,19 @@ Alignment Algorithms
    StripedSmithWaterman
    AlignmentStructure
    align_striped_smith_waterman
+
+Slow Alignment Algorithms
+-------------------------
+
+.. autosummary::
+   :toctree: generated/
+
    global_pairwise_align_nucleotide
    global_pairwise_align_protein
+   global_pairwise_align
    local_pairwise_align_nucleotide
    local_pairwise_align_protein
+   local_pairwise_align
 
 Data Structure Examples
 -----------------------
@@ -60,8 +69,8 @@ Data Structure Examples
 >>> s1
 <SequenceCollection: n=2; mean +/- std length=26.50 +/- 1.50>
 
-Alignment Algorithm Examples
-----------------------------
+Optimized Alignment Algorithm Examples
+--------------------------------------
 Using the convenient ``align_striped_smith_waterman`` function:
 
 >>> from skbio.core.alignment import align_striped_smith_waterman
@@ -137,6 +146,8 @@ ACTAAGGCT---CTCTACCCCTCTCAGAGA
 >>> print alignments[0].get_aligned_target_sequence()
 ACT-AGGCTCCCTTCTACCCCTCTCAGAGA
 
+Slow Alignment Algorithm Examples
+---------------------------------
 scikit-bio also implements Smith-Waterman and Needleman-Wunsch alignment
 in python. These are much slower than the methods described above, but provide
 useful education examples as they're simpler to experiment with. Convenience
