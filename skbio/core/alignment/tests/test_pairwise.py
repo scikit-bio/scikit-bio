@@ -13,13 +13,12 @@ from warnings import filterwarnings
 
 import numpy as np
 
-from skbio import (
+from skbio.core.alignment.pairwise import (
     global_pairwise_align_protein, local_pairwise_align_protein,
     global_pairwise_align_nucleotide, local_pairwise_align_nucleotide,
-    Alignment, Protein, DNA, RNA)
-from skbio.core.alignment.pairwise import (
     _make_nt_substitution_matrix, _init_matrices_sw, _init_matrices_nw,
     _compute_score_and_traceback_matrices, _traceback, _first_largest)
+from skbio import Alignment, Protein, DNA, RNA
 
 filterwarnings("ignore")
 

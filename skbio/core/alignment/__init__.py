@@ -20,8 +20,8 @@ Data Structures
    SequenceCollection
    Alignment
 
-Optimized Alignment Algorithms
-------------------------------
+Optimized (i.e., production-ready) Alignment Algorithms
+-------------------------------------------------------
 
 .. autosummary::
    :toctree: generated/
@@ -30,8 +30,8 @@ Optimized Alignment Algorithms
    AlignmentStructure
    local_pairwise_align_ssw
 
-Slow Alignment Algorithms
--------------------------
+Slow (i.e., educational-purposes only) Alignment Algorithms
+-----------------------------------------------------------
 
 .. autosummary::
    :toctree: generated/
@@ -139,7 +139,7 @@ Here we locally align a pair of protein sequences using gap open penalty
 of 11 and a gap extend penalty of 1 (in other words, it is much more
 costly to open a new gap than extend an existing one).
 
->>> from skbio import local_pairwise_align_protein
+>>> from skbio.core.alignment.pairwise import local_pairwise_align_protein
 >>> s1 = "HEAGAWGHEE"
 >>> s2 = "PAWHEAE"
 >>> r = local_pairwise_align_protein(s1, s2, 11, 1)
@@ -166,7 +166,7 @@ And we can view the score of the alignment using the ``score`` method:
 Similarly, we can perform global alignment of nucleotide sequences, and print
 the resulting alignment as fasta records:
 
->>> from skbio import global_pairwise_align_nucleotide
+>>> from skbio.core.alignment.pairwise import global_pairwise_align_nucleotide
 >>> s1 = "GCGTGCCTAAGGTATGCAAG"
 >>> s2 = "ACGTGCCTAGGTACGCAAG"
 >>> r = global_pairwise_align_nucleotide(s1, s2)
@@ -189,18 +189,11 @@ ACGTGCCTA-GGTACGCAAG
 # ----------------------------------------------------------------------------
 
 from .alignment import Alignment, SequenceCollection
-from .pairwise import (
-    global_pairwise_align, global_pairwise_align_protein,
-    global_pairwise_align_nucleotide, local_pairwise_align,
-    local_pairwise_align_protein, local_pairwise_align_nucleotide)
 from .ssw.ssw_wrapper import (
     StripedSmithWaterman, local_pairwise_align_ssw, AlignmentStructure)
 
 __all__ = ['Alignment', 'SequenceCollection', 'StripedSmithWaterman',
-           'AlignmentStructure', 'local_pairwise_align_ssw',
-           'global_pairwise_align', 'global_pairwise_align_protein',
-           'global_pairwise_align_nucleotide', 'local_pairwise_align',
-           'local_pairwise_align_protein', 'local_pairwise_align_nucleotide']
+           'AlignmentStructure', 'local_pairwise_align_ssw']
 
 from numpy.testing import Tester
 test = Tester().test
