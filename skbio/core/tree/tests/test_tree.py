@@ -880,9 +880,9 @@ class TreeTests(TestCase):
                               [4.0, 11.0, 34.0,  7.0]])
 
         tree = TreeNode.from_linkage_matrix(linkage, id_list)
-        self.assertEquals("(E:17.0,(C:14.5,((A:4.0,D:4.0):4.25,(G:6.25,(B:0.5,"
-                          "F:0.5):5.75):2.0):6.25):2.5);",
-                          tree.to_newick(with_distances=True))
+        self.assertEqual("(E:17.0,(C:14.5,((A:4.0,D:4.0):4.25,(G:6.25,(B:0.5,"
+                         "F:0.5):5.75):2.0):6.25):2.5);",
+                         tree.to_newick(with_distances=True))
 
     def test_from_newick_empty(self):
         obs = TreeNode.from_newick('')
