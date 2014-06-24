@@ -73,9 +73,9 @@ def _filter_clades(clade_counts, cutoff_threshold):
     Parameters
     ----------
     clade_counts : list of tuple
-        The clade counts, keyed by frozenset of the clade, and valued by the
-        support value. It is expected that this list is sorted by in descending
-        order by support.
+        Where the first element in each tuple is the frozenset of the clade,
+        and the second element is the support value. It is expected that this
+        list is sorted by descending order by support.
     cutoff_threshold : float
         The minimum weighted observation count that a clade must have to be
         considered supported.
@@ -176,7 +176,7 @@ def _build_trees(clade_counts, edge_lengths, support_attr):
 
 
 def majority_rule(trees, weights=None, cutoff=0.5, support_attr='support'):
-    r"""Determines the consensus tree from a list of rooted trees
+    r"""Determines consensus trees from a list of rooted trees
 
     Parameters
     ----------
@@ -184,11 +184,12 @@ def majority_rule(trees, weights=None, cutoff=0.5, support_attr='support'):
         The trees to operate on
     weights : list or np.array of {int, float}, optional
         If provided, the list must be in index order with `trees`. Each tree
-        will receive the corresponding weight. If omitted, a default weight of
-        1.0 will be used
+        will receive the corresponding weight. If omitted, all trees will be
+        equally weighted.
     cutoff : float, 0.0 <= cutoff <= 1.0
-        Any clade that has <= cutoff support will be dropped. Ties are
-        arbitrariliy chosen.
+        Any clade that has <= cutoff support will be dropped. If cutoff is
+        < 0.5, then it is possible that ties will result. If so, ties are
+        broken arbitrarily depending on list sort order.
     support_attr : str
         The attribute to be decorated onto the resulting trees that contain the
         consensus support.
@@ -196,6 +197,8 @@ def majority_rule(trees, weights=None, cutoff=0.5, support_attr='support'):
     Returns
     -------
     list of TreeNode
+        Multiple trees can be returned in the case of two or more disjoint sets
+        of tips represented on input.
 
     Notes
     -----
@@ -204,6 +207,10 @@ def majority_rule(trees, weights=None, cutoff=0.5, support_attr='support'):
     description of consensus trees in [1]_. An additional description can be
     found in the Phylip manual [2]_. This method does not support majority rule
     extended.
+
+    Support is computed as a weighted average of the tree weights in which the
+    clade was observed in. For instance, if {A, B, C} was observed in 5 trees
+    all with a weight of 1, its support would then be 5.
 
     References
     ----------
