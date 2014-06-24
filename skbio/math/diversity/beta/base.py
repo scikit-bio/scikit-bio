@@ -15,15 +15,15 @@ from skbio import DistanceMatrix
 from scipy.spatial.distance import pdist
 
 
-def pw_distances(table, ids, metric):
+def pw_distances(table, ids=None, metric="braycurtis"):
     """Compute distances between all pairs of samples in table
 
         Parameters
         ----------
-        table : 2D np.array or list of ints or floats
-            Table containing count/abundance data where each list/array counts
-            of observations in a given sample.
-        ids : np.array or list
+        table : 2D np.array/list of ints or floats, or biom_format.Table
+            Table containing count/abundance data where each list/array
+            contains counts of observations in a given sample.
+        ids : np.array or list, optional
             Identifiers for each sample in ``table``.
         metric : str
             The name of the pairwise distance (``pdist``) function to use when
@@ -38,8 +38,19 @@ def pw_distances(table, ids, metric):
         ------
         ValueError
             If ``len(ids) != len(table)``.
+        TypeError
+            If ids was not provided, and ``table`` was not provided as a
+            ``biom_format.Table`` object.
 
     """
+    if ids is None:
+        try:
+            ids = table.sample_ids
+        except AttributeError:
+            raise TypeError(
+                "If not passing ids, table must be a type that defines a "
+                "sample_ids attribute, such as a biom_format.Table object.")
+
     num_samples = len(ids)
     if num_samples != len(table):
         raise ValueError(
