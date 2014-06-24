@@ -41,12 +41,12 @@ class BaseTests(TestCase):
 
     def test_equal_results_on_different_table_type(self):
         class FakeBiom(object):
-            
+
             def __init__(self, data, ids):
                 self.sample_ids = ids
                 self._data = data
 
-            def __index__(self, i):
+            def __getitem__(self, i):
                 return self._data[i]
 
             def __len__(self):
