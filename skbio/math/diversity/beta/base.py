@@ -20,22 +20,31 @@ def pw_distances(table, ids, metric):
 
         Parameters
         ----------
-        table : 2D np.array or list
-        ids : 1D iterable
+        table : 2D np.array or list of ints or floats
+            Table containing count data where each list/array counts of
+            observations in a given sample.
+        ids : np.array or list
+            Iterable of identifiers for each sample in ``table``.
         metric : str
             The name of the scipy pairwise distance (``pdist``) function
-            to use when generating pairwise distances.
+            to use when generating pairwise distances. See the scipy ``pdist``
+            docs for available choices: http://bit.ly/1nAfiWf
 
         Returns
         -------
         skbio.core.distance.DistanceMatrix
 
+        Raises
+        ------
+        ValueError
+            If ``len(ids) != len(table)``.
+
     """
     num_samples = len(ids)
     if num_samples != len(table):
         raise ValueError(
-            "Number of columns in table must be equal to number of provided"
-            " ids.")
+            "Number of top-level entries in table must be equal to number of"
+            " provided ids.")
 
     # initialize the result object
     dm = zeros((num_samples, num_samples))
