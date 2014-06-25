@@ -28,6 +28,7 @@ This is a pre-alpha release. At this stage, major backwards-incompatible API cha
     * ``skbio.math.gradient.GroupResults``
     * ``skbio.math.gradient.CategoryResults``
     * ``skbio.math.gradient.GradientANOVAResults``
+* Added coding guidelines draft.
 
 ## Version 0.1.3 (2014-06-12)
 
