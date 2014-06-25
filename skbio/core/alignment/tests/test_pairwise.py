@@ -298,11 +298,13 @@ class PairwiseAlignmentTests(TestCase):
                    [-7, -3, 4, -1],
                    [-9, -5, -1, 6],
                    [-11, -7, -3, 1]]
+        score_m = np.array(score_m)
         tback_m = [[0, 3, 3, 3],
                    [2, 1, 3, 3],
                    [2, 2, 1, 3],
                    [2, 2, 2, 1],
                    [2, 2, 2, 2]]
+        tback_m = np.array(tback_m)
         # start at bottom-right
         expected = ("ACG-", "ACGT", 1, 0, 0)
         actual = _traceback(tback_m, score_m, 'ACG', 'ACGT', 4, 3)
@@ -319,6 +321,7 @@ class PairwiseAlignmentTests(TestCase):
                    [2, 2, 0, 3],
                    [2, 2, 2, 1],
                    [2, 2, 2, 2]]
+        tback_m = np.array(tback_m)
         expected = ("G", "G", 6, 2, 2)
         actual = _traceback(tback_m, score_m, 'ACG', 'ACGT', 3, 3)
         self.assertEqual(actual, expected)

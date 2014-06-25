@@ -605,23 +605,23 @@ def _compute_score_and_traceback_matrices(
         # Analysis'
         for j, c1 in zip(range(1, len(seq1)+1), seq1):
             substitution_score = substitution_matrix[c1][c2]
-            diag_score = (score_matrix[i-1][j-1] + substitution_score, match)
-            if traceback_matrix[i-1][j] == vgap:
+            diag_score = (score_matrix[i-1, j-1] + substitution_score, match)
+            if traceback_matrix[i-1, j] == vgap:
                 # gap extend, because the cell above was also a gap
-                up_score = (score_matrix[i-1][j] - gap_extend_penalty, vgap)
+                up_score = (score_matrix[i-1, j] - gap_extend_penalty, vgap)
             else:
                 # gap open, because the cell above was not a gap
-                up_score = (score_matrix[i-1][j] - gap_open_penalty, vgap)
-            if traceback_matrix[i][j-1] == hgap:
+                up_score = (score_matrix[i-1, j] - gap_open_penalty, vgap)
+            if traceback_matrix[i, j-1] == hgap:
                 # gap extend, because the cell to the left was also a gap
-                left_score = (score_matrix[i][j-1] - gap_extend_penalty, hgap)
+                left_score = (score_matrix[i, j-1] - gap_extend_penalty, hgap)
             else:
                 # gap open, because the cell to the left was not a gap
-                left_score = (score_matrix[i][j-1] - gap_open_penalty, hgap)
+                left_score = (score_matrix[i, j-1] - gap_open_penalty, hgap)
             best_score = _first_largest([new_alignment_score, left_score,
                                          diag_score, up_score])
-            score_matrix[i][j] = best_score[0]
-            traceback_matrix[i][j] = best_score[1]
+            score_matrix[i, j] = best_score[0]
+            traceback_matrix[i, j] = best_score[1]
     return score_matrix, traceback_matrix
 
 
@@ -639,10 +639,10 @@ def _traceback(traceback_matrix, score_matrix, seq1, seq2, start_row,
     current_row = start_row
     current_col = start_col
 
-    best_score = score_matrix[current_row][current_col]
+    best_score = score_matrix[current_row, current_col]
 
     while True:
-        current_value = traceback_matrix[current_row][current_col]
+        current_value = traceback_matrix[current_row, current_col]
 
         if current_value == match:
             aligned_seq1.append(seq1[current_col-1])
