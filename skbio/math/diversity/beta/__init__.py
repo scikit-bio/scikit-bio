@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 Beta diversity measures (:mod:`skbio.math.diversity.beta`)
 ==========================================================
@@ -39,7 +38,7 @@ Create a table object containing 7 OTUs and 6 samples.
 >>> ids = list('ABCDEF')
 
 Compute Bray-Curtis distances between all pairs of samples and return a
-DistanceMatrix object:
+DistanceMatrix object.
 
 >>> bc_dm = pw_distances(data, ids, "braycurtis")
 >>> print(bc_dm)
@@ -71,9 +70,8 @@ Data:
  [ 1.          1.          1.          1.          1.          0.        ]]
 
 Determine if the resulting distance matrices are significantly correlated
-by computing the Mantel correlation between them. (Including the p-value
-won't work for doc testing as it's Monte Carlo-based, so exact matching
-will fail.)
+by computing the Mantel correlation between them. Then determine if the p-value
+is significant based on an alpha of 0.05.
 
 >>> from skbio.math.stats.distance import mantel
 >>> r, p_value = mantel(j_dm, bc_dm)
@@ -83,7 +81,8 @@ will fail.)
 False
 
 Compute PCoA for both distance matrices, and then find the Procrustes
-M-squared value.
+M-squared value that results from comparing the coordinate matrices.
+
 >>> from skbio.math.stats.ordination import PCoA
 >>> bc_pc = PCoA(bc_dm).scores()
 >>> j_pc = PCoA(j_dm).scores()

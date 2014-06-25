@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 from __future__ import absolute_import, division, print_function
 
 # ----------------------------------------------------------------------------
@@ -32,7 +31,7 @@ def pw_distances(counts, ids, metric="braycurtis"):
 
     Returns
     -------
-    skbio.DistanceMatrix
+    skbio.core.distance.DistanceMatrix
 
     Raises
     ------
@@ -62,7 +61,7 @@ def pw_distances(counts, ids, metric="braycurtis"):
 
 
 def pw_distances_from_table(table, metric="braycurtis"):
-    """Compute distances between all pairs of columns in a biom_format.Table
+    """Compute distances between all pairs of samples in table
 
     Parameters
     ----------
@@ -87,6 +86,8 @@ def pw_distances_from_table(table, metric="braycurtis"):
     """
     sample_ids = table.sample_ids
     num_samples = len(sample_ids)
+
+    # initialize the result object
     dm = np.zeros((num_samples, num_samples))
     for i, sid1 in enumerate(sample_ids):
         v1 = table.data(sid1)
