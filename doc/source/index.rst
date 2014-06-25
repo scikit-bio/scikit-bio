@@ -22,6 +22,7 @@ API Reference
    draw.distributions
    format.sequences
    math.diversity.alpha
+   math.diversity.beta
    math.stats.distance
    math.stats.misc
    math.stats.ordination

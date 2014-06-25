@@ -5,6 +5,25 @@ Beta diversity measures (:mod:`skbio.math.diversity.beta`)
 
 .. currentmodule:: skbio.math.diversity.beta
 
+This package contains helper functions for working with scipy's pairwise
+distance (``pdist``) functions in scikit-bio, and will eventually be expanded
+to contain relevant methods that are not implemented (or planned to be
+implemented) in scipy.
+
+The functions in this package currently support applying ``pdist`` functions
+to all pairs of samples in a sample by observation count or abundance matrix
+and returning an ``skbio.DistanceMatrix`` object. This application is
+illustrated below for a few different forms of input.
+
+Functions
+---------
+
+.. autosummary::
+   :toctree: generated/
+
+    pw_distances
+    pw_distances_from_table
+
 Examples
 --------
 Create a table object containing 7 OTUs and 6 samples.
@@ -143,9 +162,9 @@ M-squared value.
 # ----------------------------------------------------------------------------
 
 from .base import (
-    pw_distances)
+    pw_distances, pw_distances_from_table)
 
-__all__ = ["pw_distances"]
+__all__ = ["pw_distances", "pw_distances_from_table"]
 
 from numpy.testing import Tester
 test = Tester().test
