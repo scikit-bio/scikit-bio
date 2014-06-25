@@ -36,12 +36,12 @@ Slow (i.e., educational-purposes only) Alignment Algorithms
 .. autosummary::
    :toctree: generated/
 
-   global_pairwise_align_nucleotide
-   global_pairwise_align_protein
-   global_pairwise_align
-   local_pairwise_align_nucleotide
-   local_pairwise_align_protein
-   local_pairwise_align
+   pairwise.global_pairwise_align_nucleotide
+   pairwise.global_pairwise_align_protein
+   pairwise.global_pairwise_align
+   pairwise.local_pairwise_align_nucleotide
+   pairwise.local_pairwise_align_protein
+   pairwise.local_pairwise_align
 
 Data Structure Examples
 -----------------------

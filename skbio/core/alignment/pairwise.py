@@ -235,8 +235,8 @@ def local_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
     ----------
     .. [1] http://blast.ncbi.nlm.nih.gov/Blast.cgi
     .. [2] Amino acid substitution matrices from protein blocks.
-    S Henikoff and J G Henikoff.
-    Proc Natl Acad Sci U S A. Nov 15, 1992; 89(22): 10915-10919.
+       S Henikoff and J G Henikoff.
+       Proc Natl Acad Sci U S A. Nov 15, 1992; 89(22): 10915-10919.
 
     """
     if substitution_matrix is None:
@@ -320,7 +320,6 @@ def local_pairwise_align(seq1, seq2, gap_open_penalty,
         [BiologicalSequence(aligned1, id=seq1_id),
          BiologicalSequence(aligned2, id=seq2_id)],
         score=score, start_end_positions=start_end_positions)
-    return result
 
 
 def global_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
@@ -439,8 +438,8 @@ def global_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
     ----------
     .. [1] http://blast.ncbi.nlm.nih.gov/Blast.cgi
     .. [2] Amino acid substitution matrices from protein blocks.
-    S Henikoff and J G Henikoff.
-    Proc Natl Acad Sci U S A. Nov 15, 1992; 89(22): 10915-10919.
+       S Henikoff and J G Henikoff.
+       Proc Natl Acad Sci U S A. Nov 15, 1992; 89(22): 10915-10919.
 
     """
     if substitution_matrix is None:
