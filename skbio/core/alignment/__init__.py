@@ -21,8 +21,8 @@ Data Structures
    Alignment
    StockholmAlignment
 
-Alignment Algorithms
---------------------
+Optimized (i.e., production-ready) Alignment Algorithms
+-------------------------------------------------------
 
 .. autosummary::
    :toctree: generated/
@@ -30,6 +30,19 @@ Alignment Algorithms
    StripedSmithWaterman
    AlignmentStructure
    local_pairwise_align_ssw
+
+Slow (i.e., educational-purposes only) Alignment Algorithms
+-----------------------------------------------------------
+
+.. autosummary::
+   :toctree: generated/
+
+   pairwise.global_pairwise_align_nucleotide
+   pairwise.global_pairwise_align_protein
+   pairwise.global_pairwise_align
+   pairwise.local_pairwise_align_nucleotide
+   pairwise.local_pairwise_align_protein
+   pairwise.local_pairwise_align
 
 Data Structure Examples
 -----------------------
@@ -74,6 +87,9 @@ seq2          TCC--G-GGGA
 
 Alignment Algorithm Examples
 ----------------------------
+
+Optimized Alignment Algorithm Examples
+--------------------------------------
 Using the convenient ``local_pairwise_align_ssw`` function:
 
 >>> from skbio.core.alignment import local_pairwise_align_ssw
@@ -125,6 +141,61 @@ Length: 30
 ACTAAGGCT---CTCTACCCCTCTCAGAGA
 >>> print alignments[0].aligned_target_sequence
 ACT-AGGCTCCCTTCTACCCCTCTCAGAGA
+
+Slow Alignment Algorithm Examples
+---------------------------------
+scikit-bio also provides pure-Python implementations of Smith-Waterman and
+Needleman-Wunsch alignment. These are much slower than the methods described
+above, but serve as useful educational examples as they're simpler to
+experiment with. Functions are provided for local and global alignment of
+protein and nucleotide sequences. The ``global*`` and ``local*`` functions
+differ in the underlying algorithm that is applied (``global*`` uses Needleman-
+Wunsch while ``local*`` uses Smith-Waterman), and ``*protein`` and
+``*nucleotide`` differ in their default scoring of matches, mismatches, and
+gaps.
+
+Here we locally align a pair of protein sequences using gap open penalty
+of 11 and a gap extend penalty of 1 (in other words, it is much more
+costly to open a new gap than extend an existing one).
+
+>>> from skbio.core.alignment.pairwise import local_pairwise_align_protein
+>>> s1 = "HEAGAWGHEE"
+>>> s2 = "PAWHEAE"
+>>> r = local_pairwise_align_protein(s1, s2, 11, 1)
+
+This returns an ``skbio.Alignment`` object. We can look at the aligned
+sequences:
+
+>>> print(str(r[0]))
+AWGHE
+>>> print(str(r[1]))
+AW-HE
+
+We can identify the start and end positions of each aligned sequence
+as follows:
+
+>>> r.start_end_positions()
+[(4, 8), (1, 4)]
+
+And we can view the score of the alignment using the ``score`` method:
+
+>>> r.score()
+25.0
+
+Similarly, we can perform global alignment of nucleotide sequences, and print
+the resulting alignment as fasta records:
+
+>>> from skbio.core.alignment.pairwise import global_pairwise_align_nucleotide
+>>> s1 = "GCGTGCCTAAGGTATGCAAG"
+>>> s2 = "ACGTGCCTAGGTACGCAAG"
+>>> r = global_pairwise_align_nucleotide(s1, s2)
+>>> print(r.to_fasta())
+>0
+GCGTGCCTAAGGTATGCAAG
+>1
+ACGTGCCTA-GGTACGCAAG
+<BLANKLINE>
+
 
 """
 

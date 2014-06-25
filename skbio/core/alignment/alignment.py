@@ -41,7 +41,7 @@ class SequenceCollection(object):
     See Also
     --------
     skbio.core.sequence.BiologicalSequence
-    skbio.core.sequence.NucelotideSequence
+    skbio.core.sequence.NucleotideSequence
     skbio.core.sequence.DNASequence
     skbio.core.sequence.RNASequence
     Alignment
@@ -88,7 +88,7 @@ class SequenceCollection(object):
         See Also
         --------
         skbio.core.sequence.BiologicalSequence
-        skbio.core.sequence.NucelotideSequence
+        skbio.core.sequence.NucleotideSequence
         skbio.core.sequence.DNASequence
         skbio.core.sequence.RNASequence
         Alignment
@@ -775,7 +775,7 @@ class Alignment(SequenceCollection):
     See Also
     --------
     skbio.core.sequence.BiologicalSequence
-    skbio.core.sequence.NucelotideSequence
+    skbio.core.sequence.NucleotideSequence
     skbio.core.sequence.DNASequence
     skbio.core.sequence.RNASequence
     SequenceCollection

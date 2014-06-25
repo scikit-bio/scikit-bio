@@ -270,6 +270,23 @@ class TreeTests(TestCase):
         self.assertIs(root, self.simple_t.children[0].root())
         self.assertIs(root, self.simple_t.children[1].children[1].root())
 
+    def test_invalidate_lookup_caches(self):
+        root = self.simple_t
+        root.create_caches()
+        self.assertNotEqual(root._tip_cache, {})
+        self.assertNotEqual(root._non_tip_cache, {})
+        root.invalidate_caches()
+        self.assertEqual(root._tip_cache, {})
+        self.assertEqual(root._non_tip_cache, {})
+
+    def test_invalidate_attr_caches(self):
+        tree = TreeNode.from_newick("((a,b,(c,d)e)f,(g,h)i)root;")
+        f = lambda n: [n.name] if n.is_tip() else []
+        tree.cache_attr(f, 'tip_names')
+        tree.invalidate_caches()
+        for n in tree.traverse(include_self=True):
+            self.assertFalse(hasattr(n, 'tip_names'))
+
     def test_create_caches_duplicate_tip_names(self):
         with self.assertRaises(DuplicateNodeError):
             TreeNode.from_newick('(a, a)').create_caches()
@@ -863,9 +880,9 @@ class TreeTests(TestCase):
                               [4.0, 11.0, 34.0,  7.0]])
 
         tree = TreeNode.from_linkage_matrix(linkage, id_list)
-        self.assertEquals("(E:17.0,(C:14.5,((A:4.0,D:4.0):4.25,(G:6.25,(B:0.5,"
-                          "F:0.5):5.75):2.0):6.25):2.5);",
-                          tree.to_newick(with_distances=True))
+        self.assertEqual("(E:17.0,(C:14.5,((A:4.0,D:4.0):4.25,(G:6.25,(B:0.5,"
+                         "F:0.5):5.75):2.0):6.25):2.5);",
+                         tree.to_newick(with_distances=True))
 
     def test_from_newick_empty(self):
         obs = TreeNode.from_newick('')
@@ -1084,6 +1101,32 @@ class DndParserTests(TestCase):
         self.assertEqual(tree_unesc.children[1].children[1].name, 'C')
         self.assertEqual(tree_unesc.children[2].name, 'D_e')
         self.assertEqual(tree_unesc.children[2].length, 0.5)
+
+    def test_cache_attr_tip_list(self):
+        tree = TreeNode.from_newick("((a,b,(c,d)e)f,(g,h)i)root;")
+        f = lambda n: [n.name] if n.is_tip() else []
+        tree.cache_attr(f, 'tip_names')
+        self.assertEqual(tree.tip_names, ['a', 'b', 'c', 'd', 'g', 'h'])
+        self.assertEqual(tree.children[0].tip_names, ['a', 'b', 'c', 'd'])
+        self.assertEqual(tree.children[1].tip_names, ['g', 'h'])
+        self.assertEqual(tree.children[0].children[2].tip_names, ['c', 'd'])
+
+    def test_cache_attr_nontip_set(self):
+        tree = TreeNode.from_newick("((a,b,(c,d)e)f,(g,h)i)root;")
+        f = lambda n: [n.name] if not n.is_tip() else []
+        tree.cache_attr(f, 'nontip_names')
+        self.assertEqual(tree.nontip_names, ['e', 'f', 'i', 'root'])
+        self.assertEqual(tree.children[0].nontip_names, ['e', 'f'])
+        self.assertEqual(tree.children[1].nontip_names, ['i'])
+        self.assertEqual(tree.children[0].children[2].nontip_names, ['e'])
+
+    def test_cache_attr_bad_type(self):
+        tree = TreeNode.from_newick("((a,b,(c,d)e)f,(g,h)i)root;")
+        f = lambda n: [n.name] if not n.is_tip() else []
+
+        with self.assertRaises(TypeError):
+            tree.cache_attr(f, 'nontip_names', TreeNode)
+
 
 sample = """
 (
