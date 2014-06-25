@@ -15,8 +15,9 @@ import numpy as np
 import numpy.testing as npt
 
 from skbio.math.diversity.beta.base import (
-    pw_distances)
+    pw_distances, pw_distances_from_table)
 from skbio import DistanceMatrix
+from biom.table import Table
 
 
 class BaseTests(TestCase):
@@ -34,28 +35,15 @@ class BaseTests(TestCase):
                    [0, 0, 25, 35, 0, 19, 0]]
         self.ids2 = list('ABCDEF')
 
+        self.table1 = Table(np.array(self.t1).T, observation_ids=range(2),
+                            sample_ids=self.ids1)
+        self.table2 = Table(np.array(self.t2).T, observation_ids=range(7),
+                            sample_ids=self.ids2)
+
     def test_pw_distances_invalid_input(self):
         # number of ids doesn't match the number of samples
         self.assertRaises(ValueError, pw_distances, self.t1, list('AB'),
                           'euclidean')
-
-    # def test_equal_results_on_different_table_type(self):
-    #     class FakeBiom(object):
-    #
-    #         def __init__(self, data, ids):
-    #             self.sample_ids = ids
-    #             self._data = data
-    #
-    #         def __getitem__(self, i):
-    #             return self._data[i]
-    #
-    #         def __len__(self):
-    #             return len(self._data)
-    #
-    #     t = FakeBiom(self.t2, self.ids2)
-    #     t_dm = pw_distances(t)
-    #     t2_dm = pw_distances(self.t2, self.ids2)
-    #     self.assertEqual(t_dm, t2_dm)
 
     def test_pw_distances_euclidean(self):
         actual_dm = pw_distances(self.t1, self.ids1, 'euclidean')
@@ -110,3 +98,31 @@ class BaseTests(TestCase):
             for id2 in self.ids2:
                 npt.assert_almost_equal(actual_dm[id1, id2],
                                         expected_dm[id1, id2], 6)
+
+    def test_pw_distances_from_table_euclidean(self):
+        # results are equal when passed as Table or matrix
+        m_dm = pw_distances(self.t1, self.ids1, 'euclidean')
+        t_dm = pw_distances_from_table(self.table1, 'euclidean')
+        for id1 in self.ids1:
+            for id2 in self.ids1:
+                npt.assert_almost_equal(m_dm[id1, id2], t_dm[id1, id2])
+
+        m_dm = pw_distances(self.t2, self.ids2, 'euclidean')
+        t_dm = pw_distances_from_table(self.table2, 'euclidean')
+        for id1 in self.ids2:
+            for id2 in self.ids2:
+                npt.assert_almost_equal(m_dm[id1, id2], t_dm[id1, id2])
+
+    def test_pw_distances_from_table_braycurtis(self):
+        # results are equal when passed as Table or matrix
+        m_dm = pw_distances(self.t1, self.ids1, 'braycurtis')
+        t_dm = pw_distances_from_table(self.table1, 'braycurtis')
+        for id1 in self.ids1:
+            for id2 in self.ids1:
+                npt.assert_almost_equal(m_dm[id1, id2], t_dm[id1, id2])
+
+        m_dm = pw_distances(self.t2, self.ids2, 'braycurtis')
+        t_dm = pw_distances_from_table(self.table2, 'braycurtis')
+        for id1 in self.ids2:
+            for id2 in self.ids2:
+                npt.assert_almost_equal(m_dm[id1, id2], t_dm[id1, id2])

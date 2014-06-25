@@ -15,29 +15,29 @@ from skbio import DistanceMatrix
 from scipy.spatial.distance import pdist
 
 
-def pw_distances(matrix, ids, metric="braycurtis"):
-    """Compute distances between all pairs of columns in a matrix
+def pw_distances(counts, ids, metric="braycurtis"):
+    """Compute distances between all pairs of columns in a counts matrix
 
     Parameters
     ----------
-    matrix : 2D np.array/list of ints or floats
-        Matrix containing count/abundance data where each list/array
+    counts : 2D np.array or list of ints or floats
+        Matrix containing count/abundance data where each top-level list/array
         contains counts of observations in a given sample.
-    ids : np.array or list, optional
-        Identifiers for each sample in ``table``.
+    ids : np.array or list
+        Identifiers for each sample in ``counts``.
     metric : str, optional
-        The name of the pairwise distance (``pdist``) function to use when
-        generating pairwise distances. See the scipy ``pdist`` docs for
-        available choices: http://bit.ly/1nAfiWf
+        The name of the pairwise distance function to use when generating
+        pairwise distances. See the scipy ``pdist`` docs, linked under *See
+        Also*, for available metrics.
 
     Returns
     -------
-    skbio.core.distance.DistanceMatrix
+    skbio.DistanceMatrix
 
     Raises
     ------
     ValueError
-        If ``len(ids) != len(table)``.
+        If ``len(ids) != len(counts)``.
 
     See Also
     --------
@@ -46,17 +46,17 @@ def pw_distances(matrix, ids, metric="braycurtis"):
 
     """
     num_samples = len(ids)
-    if num_samples != len(matrix):
+    if num_samples != len(counts):
         raise ValueError(
-            "Number of top-level entries in table must be equal to number of"
+            "Number of top-level entries in counts must be equal to number of"
             " provided ids.")
 
     # initialize the result object
     dm = np.zeros((num_samples, num_samples))
     for i, id1 in enumerate(ids):
-        v1 = matrix[i]
+        v1 = counts[i]
         for j, id2 in enumerate(ids[:i]):
-            v2 = matrix[j]
+            v2 = counts[j]
             dm[i, j] = dm[j, i] = pdist([v1, v2], metric)
     return DistanceMatrix(dm, ids)
 
@@ -66,13 +66,13 @@ def pw_distances_from_table(table, metric="braycurtis"):
 
     Parameters
     ----------
-    table : biom_format.Table
+    table : biom_format.table.Table
         ``Table`` containing count/abundance data of observations across
         samples.
     metric : str, optional
-        The name of the pairwise distance (``pdist``) function to use when
-        generating pairwise distances. See the scipy ``pdist`` docs for
-        available choices: http://bit.ly/1nAfiWf
+        The name of the pairwise distance function to use when generating
+        pairwise distances. See the scipy ``pdist`` docs, linked under *See
+        Also*, for available metrics.
 
     Returns
     -------
@@ -81,13 +81,13 @@ def pw_distances_from_table(table, metric="braycurtis"):
     See Also
     --------
     scipy.spatial.distance.pdist
-    biom_format.Table
+    biom_format.table.Table
     pw_distances
 
     """
     sample_ids = table.sample_ids
     num_samples = len(sample_ids)
-    dm = zeros((num_samples, num_samples))
+    dm = np.zeros((num_samples, num_samples))
     for i, sid1 in enumerate(sample_ids):
         v1 = table.data(sid1)
         for j, sid2 in enumerate(sample_ids[:i]):
