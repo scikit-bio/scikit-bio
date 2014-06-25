@@ -18,7 +18,8 @@ from skbio.core.alignment.pairwise import (
     global_pairwise_align_protein, local_pairwise_align_protein,
     global_pairwise_align_nucleotide, local_pairwise_align_nucleotide,
     _make_nt_substitution_matrix, _init_matrices_sw, _init_matrices_nw,
-    _compute_score_and_traceback_matrices, _traceback, _first_largest)
+    _compute_score_and_traceback_matrices, _traceback, _first_largest,
+    _get_seq_id, _get_seq_ids)
 from skbio import Alignment, Protein, DNA, RNA
 from skbio.core.warning import EfficiencyWarning
 
@@ -321,6 +322,17 @@ class PairwiseAlignmentTests(TestCase):
         expected = ("G", "G", 6, 2, 2)
         actual = _traceback(tback_m, score_m, 'ACG', 'ACGT', 3, 3)
         self.assertEqual(actual, expected)
+
+    def test_get_seq_id(self):
+        self.assertEqual(_get_seq_id("AAA", "hello"), "hello")
+        self.assertEqual(_get_seq_id(DNA("AAA"), "hello"), "hello")
+        self.assertEqual(_get_seq_id(DNA("AAA", "s1"), "hello"), "s1")
+
+    def test_get_seq_ids(self):
+        self.assertEqual(_get_seq_ids("AAA", "CCC"), ("0", "1"))
+        self.assertEqual(_get_seq_ids(DNA("AAA"), DNA("CCC")), ("0", "1"))
+        self.assertEqual(_get_seq_ids(DNA("AAA", "s1"), DNA("CCC", "s2")),
+                         ("s1", "s2"))
 
     def test_first_largest(self):
         l = [(5, 'a'), (5, 'b'), (5, 'c')]
