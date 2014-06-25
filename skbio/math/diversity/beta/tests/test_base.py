@@ -17,7 +17,24 @@ import numpy.testing as npt
 from skbio.math.diversity.beta.base import (
     pw_distances, pw_distances_from_table)
 from skbio import DistanceMatrix
-from biom.table import Table
+
+
+class HelperBiomTable(object):
+    """An object that looks like a BIOM table, for use in testing
+
+    This allows us to test passing BIOM-like objects, without having to
+    depend on the biom-format project (since this would ultimately be a
+    circular dependency).
+    """
+
+    def __init__(self, data, observation_ids, sample_ids):
+        self._data = data.T
+        self.observation_ids = observation_ids
+        self.sample_ids = sample_ids
+
+    def data(self, sample_id):
+        i = self.sample_ids.index(sample_id)
+        return self._data[i]
 
 
 class BaseTests(TestCase):
@@ -35,10 +52,17 @@ class BaseTests(TestCase):
                    [0, 0, 25, 35, 0, 19, 0]]
         self.ids2 = list('ABCDEF')
 
-        self.table1 = Table(np.array(self.t1).T, observation_ids=range(2),
-                            sample_ids=self.ids1)
-        self.table2 = Table(np.array(self.t2).T, observation_ids=range(7),
-                            sample_ids=self.ids2)
+        # In the future, if necessary, it should be possible to just replace
+        # the HelperBiomTable with Table to test with the
+        # biom_format.table.Table object directly (i.e., this constructor
+        # interface aligns with the biom_format.table.Table constructor
+        # interface).
+        self.table1 = HelperBiomTable(
+            np.array(self.t1).T, observation_ids=range(2),
+            sample_ids=self.ids1)
+        self.table2 = HelperBiomTable(
+            np.array(self.t2).T, observation_ids=range(7),
+            sample_ids=self.ids2)
 
     def test_pw_distances_invalid_input(self):
         # number of ids doesn't match the number of samples
