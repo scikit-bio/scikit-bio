@@ -31,6 +31,7 @@ This is a pre-alpha release. At this stage, major backwards-incompatible API cha
     * ``skbio.math.gradient.CategoryResults``
     * ``skbio.math.gradient.GradientANOVAResults``
 * Added coding guidelines draft.
+* Added new alpha diversity formulas to the ``skbio.math.diversity.alpha`` documentation.
 
 ## Version 0.1.3 (2014-06-12)
 
