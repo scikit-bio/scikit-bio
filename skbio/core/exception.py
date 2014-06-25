@@ -28,10 +28,10 @@ Exceptions
    MissingNodeError
    NoParentError
    FastqParseError
+   StockholmParseError
    GeneticCodeError
    GeneticCodeInitError
    InvalidCodonError
-
 """
 from __future__ import absolute_import, division, print_function
 
@@ -139,4 +139,8 @@ class GeneticCodeInitError(ValueError, GeneticCodeError):
 
 class InvalidCodonError(KeyError, GeneticCodeError):
     """Exception raised by the GeneticCode class if __getitem__ fails"""
+    pass
+
+
+class StockholmParseError(FileFormatError):
     pass

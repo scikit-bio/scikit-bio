@@ -19,6 +19,7 @@ Data Structures
 
    SequenceCollection
    Alignment
+   StockholmAlignment
 
 Optimized (i.e., production-ready) Alignment Algorithms
 -------------------------------------------------------
@@ -69,6 +70,23 @@ Data Structure Examples
 >>> s1
 <SequenceCollection: n=2; mean +/- std length=26.50 +/- 1.50>
 
+>>> from skbio.core.sequence import RNA
+>>> from skbio.core.alignment import StockholmAlignment
+>>> seqs = [RNA("ACC--G-GGGU", id="seq1"),
+...     RNA("TCC--G-GGGA", id="seq2")]
+>>> gc = {'SS_cons': '(((.....)))'}
+>>> sto = StockholmAlignment(seqs, gc=gc)
+>>> print(sto)
+# STOCKHOLM 1.0
+seq1          ACC--G-GGGU
+seq2          TCC--G-GGGA
+#=GC SS_cons  (((.....)))
+//
+>>> sto.gc
+{'SS_cons': '(((.....)))'}
+
+Alignment Algorithm Examples
+----------------------------
 
 Optimized Alignment Algorithm Examples
 --------------------------------------
@@ -189,12 +207,13 @@ ACGTGCCTA-GGTACGCAAG
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from .alignment import Alignment, SequenceCollection
+from .alignment import Alignment, SequenceCollection, StockholmAlignment
 from .ssw.ssw_wrapper import (
     StripedSmithWaterman, local_pairwise_align_ssw, AlignmentStructure)
 
-__all__ = ['Alignment', 'SequenceCollection', 'StripedSmithWaterman',
-           'AlignmentStructure', 'local_pairwise_align_ssw']
+__all__ = ['Alignment', 'SequenceCollection', 'StockholmAlignment',
+           'StripedSmithWaterman', 'AlignmentStructure',
+           'local_pairwise_align_ssw']
 
 from numpy.testing import Tester
 test = Tester().test
