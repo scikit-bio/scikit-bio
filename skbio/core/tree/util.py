@@ -53,7 +53,7 @@ def shuffle(tree, n=None, names=None, shuffle_f=shuffle_list):
 
     >>> from skbio.core.tree import TreeNode
     >>> tree = TreeNode.from_newick("((a,b),(c,d))")
-    >>> rev = lambda items: items[::-1]
+    >>> rev = lambda items: items.reverse()
     >>> shuffler = shuffle(tree, names=['a', 'b'], shuffle_f=rev)
     >>> for idx, shuffled_tree in zip(range(5), shuffler):
     ...     print(shuffled_tree.to_newick())
