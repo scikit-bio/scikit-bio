@@ -129,16 +129,16 @@ def local_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
         The first unaligned sequence.
     seq2 : str or BiologicalSequence
         The second unaligned sequence.
-    gap_open_penalty : int, float
+    gap_open_penalty : int or float, optional
         Penalty for opening a gap (this is substracted from previous best
         alignment score, so is typically positive).
-    gap_extend_penalty : int, float
+    gap_extend_penalty : int or float, optional
         Penalty for extending a gap (this is substracted from previous best
         alignment score, so is typically positive).
-    match_score : int, float
+    match_score : int or float, optional
         The score to add for a match between a pair of bases (this is added
         to the previous best alignment score, so is typically positive).
-    mismatch_score : int, float
+    mismatch_score : int or float, optional
         The score to add for a mismatch between a pair of bases (this is
         added to the previous best alignment score, so is typically
         negative).
@@ -187,13 +187,13 @@ def local_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
         The first unaligned sequence.
     seq2 : str or BiologicalSequence
         The second unaligned sequence.
-    gap_open_penalty : int, float
+    gap_open_penalty : int or float, optional
         Penalty for opening a gap (this is substracted from previous best
         alignment score, so is typically positive).
-    gap_extend_penalty : int, float
+    gap_extend_penalty : int or float, optional
         Penalty for extending a gap (this is substracted from previous best
         alignment score, so is typically positive).
-    substitution_matrix: 2D dict (or similar)
+    substitution_matrix: 2D dict (or similar), optional
         Lookup for substitution scores (these values are added to the
         previous best alignment score); default is BLOSUM 50.
 
@@ -245,10 +245,10 @@ def local_pairwise_align(seq1, seq2, gap_open_penalty,
         The first unaligned sequence.
     seq2 : str or BiologicalSequence
         The second unaligned sequence.
-    gap_open_penalty : int, float
+    gap_open_penalty : int or float
         Penalty for opening a gap (this is substracted from previous best
         alignment score, so is typically positive).
-    gap_extend_penalty : int, float
+    gap_extend_penalty : int or float
         Penalty for extending a gap (this is substracted from previous best
         alignment score, so is typically positive).
     substitution_matrix: 2D dict (or similar)
@@ -319,16 +319,16 @@ def global_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
         The first unaligned sequence.
     seq2 : str or BiologicalSequence
         The second unaligned sequence.
-    gap_open_penalty : int, float
+    gap_open_penalty : int or float, optional
         Penalty for opening a gap (this is substracted from previous best
         alignment score, so is typically positive).
-    gap_extend_penalty : int, float
+    gap_extend_penalty : int or float, optional
         Penalty for extending a gap (this is substracted from previous best
         alignment score, so is typically positive).
-    match_score : int, float
+    match_score : int or float, optional
         The score to add for a match between a pair of bases (this is added
         to the previous best alignment score, so is typically positive).
-    mismatch_score : int, float
+    mismatch_score : int or float, optional
         The score to add for a mismatch between a pair of bases (this is
         added to the previous best alignment score, so is typically
         negative).
@@ -377,13 +377,13 @@ def global_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
         The first unaligned sequence.
     seq2 : str or BiologicalSequence
         The second unaligned sequence.
-    gap_open_penalty : int, float
+    gap_open_penalty : int or float, optional
         Penalty for opening a gap (this is substracted from previous best
         alignment score, so is typically positive).
-    gap_extend_penalty : int, float
+    gap_extend_penalty : int or float, optional
         Penalty for extending a gap (this is substracted from previous best
         alignment score, so is typically positive).
-    substitution_matrix: 2D dict (or similar)
+    substitution_matrix: 2D dict (or similar), optional
         Lookup for substitution scores (these values are added to the
         previous best alignment score); default is BLOSUM 50.
 
@@ -435,10 +435,10 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
         The first unaligned sequence.
     seq2 : str or BiologicalSequence
         The second unaligned sequence.
-    gap_open_penalty : int, float
+    gap_open_penalty : int or float
         Penalty for opening a gap (this is substracted from previous best
         alignment score, so is typically positive).
-    gap_extend_penalty : int, float
+    gap_extend_penalty : int or float
         Penalty for extending a gap (this is substracted from previous best
         alignment score, so is typically positive).
     substitution_matrix: 2D dict (or similar)
@@ -495,11 +495,10 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
                    end_row_position, end_col_position)
     start_end_positions = [(seq1_start_position, end_col_position-1),
                            (seq2_start_position, end_row_position-1)]
-    result = Alignment(
+    return Alignment(
         [BiologicalSequence(aligned1, id=0),
          BiologicalSequence(aligned2, id=1)],
         score=score, start_end_positions=start_end_positions)
-    return result
 
 # Functions from here allow for generalized (global or local) alignment. I
 # will likely want to put these in a single object to make the naming a little
