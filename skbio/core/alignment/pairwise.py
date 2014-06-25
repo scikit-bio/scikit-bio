@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -124,37 +123,50 @@ def local_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
                                     match_score=2, mismatch_score=-3):
     """Locally align exactly two nucleotide seqs with Smith-Waterman
 
-       Parameters
-       ----------
-       seq1 : str or BiologicalSequence
-           The first unaligned sequence.
-       seq2 : str or BiologicalSequence
-           The second unaligned sequence.
-       gap_open_penalty : int, float
-           Penalty for opening a gap (this is substracted from previous best
-           alignment score, so is typically positive).
-       gap_extend_penalty : int, float
-           Penalty for extending a gap (this is substracted from previous best
-           alignment score, so is typically positive).
-       match_score : int, float
-           The score to add for a match between a pair of bases (this is added
-           to the previous best alignment score, so is typically positive).
-       mismatch_score : int, float
-           The score to add for a mismatch between a pair of bases (this is
-           added to the previous best alignment score, so is typically
-           negative).
+    Parameters
+    ----------
+    seq1 : str or BiologicalSequence
+        The first unaligned sequence.
+    seq2 : str or BiologicalSequence
+        The second unaligned sequence.
+    gap_open_penalty : int, float
+        Penalty for opening a gap (this is substracted from previous best
+        alignment score, so is typically positive).
+    gap_extend_penalty : int, float
+        Penalty for extending a gap (this is substracted from previous best
+        alignment score, so is typically positive).
+    match_score : int, float
+        The score to add for a match between a pair of bases (this is added
+        to the previous best alignment score, so is typically positive).
+    mismatch_score : int, float
+        The score to add for a mismatch between a pair of bases (this is
+        added to the previous best alignment score, so is typically
+        negative).
 
-       Returns
-       -------
-       skbio.Alignment
-           ``Alignment`` object containing the aligned sequences as well as
-           details about the alignment.
+    Returns
+    -------
+    skbio.Alignment
+        ``Alignment`` object containing the aligned sequences as well as
+        details about the alignment.
 
-       Notes
-       -----
-       Default ``match_score``, ``mismatch_score``, ``gap_open_penalty`` and
-       ``gap_extend_penalty`` parameters are derived from the NCBI BLAST
-       Server.
+    See Also
+    --------
+    local_pairwise_align
+    local_pairwise_align_protein
+    skbio.core.alignment.local_pairwise_align_ssw
+    global_pairwise_align
+    global_pairwise_align_protein
+    global_pairwise_align_nucelotide
+
+    Notes
+    -----
+    Default ``match_score``, ``mismatch_score``, ``gap_open_penalty`` and
+    ``gap_extend_penalty`` parameters are derived from the NCBI BLAST
+    Server [1]_.
+
+    References
+    ----------
+    .. [1] http://blast.ncbi.nlm.nih.gov/Blast.cgi
 
     """
     substitution_matrix = \
@@ -169,32 +181,51 @@ def local_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
                                  substitution_matrix=None):
     """Locally align exactly two protein seqs with Smith-Waterman
 
-       Parameters
-       ----------
-       seq1 : str or BiologicalSequence
-           The first unaligned sequence.
-       seq2 : str or BiologicalSequence
-           The second unaligned sequence.
-       gap_open_penalty : int, float
-           Penalty for opening a gap (this is substracted from previous best
-           alignment score, so is typically positive).
-       gap_extend_penalty : int, float
-           Penalty for extending a gap (this is substracted from previous best
-           alignment score, so is typically positive).
-       substitution_matrix: 2D dict (or similar)
-           Lookup for substitution scores (these values are added to the
-           previous best alignment score); default is BLOSUM 50.
+    Parameters
+    ----------
+    seq1 : str or BiologicalSequence
+        The first unaligned sequence.
+    seq2 : str or BiologicalSequence
+        The second unaligned sequence.
+    gap_open_penalty : int, float
+        Penalty for opening a gap (this is substracted from previous best
+        alignment score, so is typically positive).
+    gap_extend_penalty : int, float
+        Penalty for extending a gap (this is substracted from previous best
+        alignment score, so is typically positive).
+    substitution_matrix: 2D dict (or similar)
+        Lookup for substitution scores (these values are added to the
+        previous best alignment score); default is BLOSUM 50.
 
-       Returns
-       -------
-       skbio.Alignment
-           ``Alignment`` object containing the aligned sequences as well as
-           details about the alignment.
+    Returns
+    -------
+    skbio.Alignment
+        ``Alignment`` object containing the aligned sequences as well as
+        details about the alignment.
 
-       Notes
-       -----
-       Default ``gap_open_penalty`` and ``gap_extend_penalty`` parameters are
-       derived from the NCBI BLAST Server.
+    See Also
+    --------
+    local_pairwise_align
+    local_pairwise_align_nucleotide
+    skbio.core.alignment.local_pairwise_align_ssw
+    global_pairwise_align
+    global_pairwise_align_protein
+    global_pairwise_align_nucelotide
+
+    Notes
+    -----
+    Default ``gap_open_penalty`` and ``gap_extend_penalty`` parameters are
+    derived from the NCBI BLAST Server [1]_.
+
+    The BLOSUM (blocks substitution matrices) amino acid substitution matrices
+    were originally defined in [2]_.
+
+    References
+    ----------
+    .. [1] http://blast.ncbi.nlm.nih.gov/Blast.cgi
+    .. [2] Amino acid substitution matrices from protein blocks.
+    S Henikoff and J G Henikoff.
+    Proc Natl Acad Sci U S A. Nov 15, 1992; 89(22): 10915-10919.
 
     """
     if substitution_matrix is None:
@@ -208,40 +239,48 @@ def local_pairwise_align(seq1, seq2, gap_open_penalty,
                          gap_extend_penalty, substitution_matrix):
     """Locally align exactly two seqs with Smith-Waterman
 
-       Parameters
-       ----------
-       seq1 : str or BiologicalSequence
-           The first unaligned sequence.
-       seq2 : str or BiologicalSequence
-           The second unaligned sequence.
-       gap_open_penalty : int, float
-           Penalty for opening a gap (this is substracted from previous best
-           alignment score, so is typically positive).
-       gap_extend_penalty : int, float
-           Penalty for extending a gap (this is substracted from previous best
-           alignment score, so is typically positive).
-       substitution_matrix: 2D dict (or similar)
-           Lookup for substitution scores (these values are added to the
-           previous best alignment score).
+    Parameters
+    ----------
+    seq1 : str or BiologicalSequence
+        The first unaligned sequence.
+    seq2 : str or BiologicalSequence
+        The second unaligned sequence.
+    gap_open_penalty : int, float
+        Penalty for opening a gap (this is substracted from previous best
+        alignment score, so is typically positive).
+    gap_extend_penalty : int, float
+        Penalty for extending a gap (this is substracted from previous best
+        alignment score, so is typically positive).
+    substitution_matrix: 2D dict (or similar)
+        Lookup for substitution scores (these values are added to the
+        previous best alignment score).
 
-       Returns
-       -------
-       skbio.Alignment
-           ``Alignment`` object containing the aligned sequences as well as
-           details about the alignment.
+    Returns
+    -------
+    skbio.Alignment
+       ``Alignment`` object containing the aligned sequences as well as
+        details about the alignment.
 
-       Notes
-       -----
-       This algorithm was originally described in [1]_. The scikit-bio
-       implementation was validated against the EMBOSS water web server [2]_.
+    See Also
+    --------
+    local_pairwise_align_protein
+    local_pairwise_align_nucleotide
+    skbio.core.alignment.local_pairwise_align_ssw
+    global_pairwise_align
+    global_pairwise_align_protein
+    global_pairwise_align_nucelotide
 
-       References
-       ----------
-       .. [1] Identification of common molecular subsequences.
-          Smith TF, Waterman MS.
-          J Mol Biol. 1981 Mar 25;147(1):195-7.
-       .. [2] http://www.ebi.ac.uk/Tools/psa/emboss_water/
+    Notes
+    -----
+    This algorithm was originally described in [1]_. The scikit-bio
+    implementation was validated against the EMBOSS water web server [2]_.
 
+    References
+    ----------
+    .. [1] Identification of common molecular subsequences.
+       Smith TF, Waterman MS.
+       J Mol Biol. 1981 Mar 25;147(1):195-7.
+    .. [2] http://www.ebi.ac.uk/Tools/psa/emboss_water/
 
     """
     warn("You're using skbio's python implementation of Smith-Waterman "
@@ -274,37 +313,50 @@ def global_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
                                      match_score=1, mismatch_score=-2):
     """Globally align exactly two nucleotide seqs with Needleman-Wunsch
 
-       Parameters
-       ----------
-       seq1 : str or BiologicalSequence
-           The first unaligned sequence.
-       seq2 : str or BiologicalSequence
-           The second unaligned sequence.
-       gap_open_penalty : int, float
-           Penalty for opening a gap (this is substracted from previous best
-           alignment score, so is typically positive).
-       gap_extend_penalty : int, float
-           Penalty for extending a gap (this is substracted from previous best
-           alignment score, so is typically positive).
-       match_score : int, float
-           The score to add for a match between a pair of bases (this is added
-           to the previous best alignment score, so is typically positive).
-       mismatch_score : int, float
-           The score to add for a mismatch between a pair of bases (this is
-           added to the previous best alignment score, so is typically
-           negative).
+    Parameters
+    ----------
+    seq1 : str or BiologicalSequence
+        The first unaligned sequence.
+    seq2 : str or BiologicalSequence
+        The second unaligned sequence.
+    gap_open_penalty : int, float
+        Penalty for opening a gap (this is substracted from previous best
+        alignment score, so is typically positive).
+    gap_extend_penalty : int, float
+        Penalty for extending a gap (this is substracted from previous best
+        alignment score, so is typically positive).
+    match_score : int, float
+        The score to add for a match between a pair of bases (this is added
+        to the previous best alignment score, so is typically positive).
+    mismatch_score : int, float
+        The score to add for a mismatch between a pair of bases (this is
+        added to the previous best alignment score, so is typically
+        negative).
 
-       Returns
-       -------
-       skbio.Alignment
-           ``Alignment`` object containing the aligned sequences as well as
-           details about the alignment.
+    Returns
+    -------
+    skbio.Alignment
+        ``Alignment`` object containing the aligned sequences as well as
+        details about the alignment.
 
-       Notes
-       -----
-       Default ``match_score``, ``mismatch_score``, ``gap_open_penalty`` and
-       ``gap_extend_penalty`` parameters are derived from the NCBI BLAST
-       Server.
+    See Also
+    --------
+    local_pairwise_align
+    local_pairwise_align_protein
+    local_pairwise_align_nucleotide
+    skbio.core.alignment.local_pairwise_align_ssw
+    global_pairwise_align
+    global_pairwise_align_protein
+
+    Notes
+    -----
+    Default ``match_score``, ``mismatch_score``, ``gap_open_penalty`` and
+    ``gap_extend_penalty`` parameters are derived from the NCBI BLAST
+    Server [1]_.
+
+    References
+    ----------
+    .. [1] http://blast.ncbi.nlm.nih.gov/Blast.cgi
 
     """
     substitution_matrix = \
@@ -319,32 +371,51 @@ def global_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
                                   substitution_matrix=None):
     """Globally align exactly two protein seqs with Needleman-Wunsch
 
-       Parameters
-       ----------
-       seq1 : str or BiologicalSequence
-           The first unaligned sequence.
-       seq2 : str or BiologicalSequence
-           The second unaligned sequence.
-       gap_open_penalty : int, float
-           Penalty for opening a gap (this is substracted from previous best
-           alignment score, so is typically positive).
-       gap_extend_penalty : int, float
-           Penalty for extending a gap (this is substracted from previous best
-           alignment score, so is typically positive).
-       substitution_matrix: 2D dict (or similar)
-           Lookup for substitution scores (these values are added to the
-           previous best alignment score); default is BLOSUM 50.
+    Parameters
+    ----------
+    seq1 : str or BiologicalSequence
+        The first unaligned sequence.
+    seq2 : str or BiologicalSequence
+        The second unaligned sequence.
+    gap_open_penalty : int, float
+        Penalty for opening a gap (this is substracted from previous best
+        alignment score, so is typically positive).
+    gap_extend_penalty : int, float
+        Penalty for extending a gap (this is substracted from previous best
+        alignment score, so is typically positive).
+    substitution_matrix: 2D dict (or similar)
+        Lookup for substitution scores (these values are added to the
+        previous best alignment score); default is BLOSUM 50.
 
-       Returns
-       -------
-       skbio.Alignment
-           ``Alignment`` object containing the aligned sequences as well as
-           details about the alignment.
+    Returns
+    -------
+    skbio.Alignment
+        ``Alignment`` object containing the aligned sequences as well as
+        details about the alignment.
 
-       Notes
-       -----
-       Default ``gap_open_penalty`` and ``gap_extend_penalty`` parameters are
-       derived from the NCBI BLAST Server.
+    See Also
+    --------
+    local_pairwise_align
+    local_pairwise_align_protein
+    local_pairwise_align_nucleotide
+    skbio.core.alignment.local_pairwise_align_ssw
+    global_pairwise_align
+    global_pairwise_align_nucelotide
+
+    Notes
+    -----
+    Default ``gap_open_penalty`` and ``gap_extend_penalty`` parameters are
+    derived from the NCBI BLAST Server [1]_.
+
+    The BLOSUM (blocks substitution matrices) amino acid substitution matrices
+    were originally defined in [2]_.
+
+    References
+    ----------
+    .. [1] http://blast.ncbi.nlm.nih.gov/Blast.cgi
+    .. [2] Amino acid substitution matrices from protein blocks.
+    S Henikoff and J G Henikoff.
+    Proc Natl Acad Sci U S A. Nov 15, 1992; 89(22): 10915-10919.
 
     """
     if substitution_matrix is None:
@@ -358,41 +429,50 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
                           substitution_matrix):
     """Globally align exactly two seqs with Needleman-Wunsch
 
-       Parameters
-       ----------
-       seq1 : str or BiologicalSequence
-           The first unaligned sequence.
-       seq2 : str or BiologicalSequence
-           The second unaligned sequence.
-       gap_open_penalty : int, float
-           Penalty for opening a gap (this is substracted from previous best
-           alignment score, so is typically positive).
-       gap_extend_penalty : int, float
-           Penalty for extending a gap (this is substracted from previous best
-           alignment score, so is typically positive).
-       substitution_matrix: 2D dict (or similar)
-           Lookup for substitution scores (these values are added to the
-           previous best alignment score).
+    Parameters
+    ----------
+    seq1 : str or BiologicalSequence
+        The first unaligned sequence.
+    seq2 : str or BiologicalSequence
+        The second unaligned sequence.
+    gap_open_penalty : int, float
+        Penalty for opening a gap (this is substracted from previous best
+        alignment score, so is typically positive).
+    gap_extend_penalty : int, float
+        Penalty for extending a gap (this is substracted from previous best
+        alignment score, so is typically positive).
+    substitution_matrix: 2D dict (or similar)
+        Lookup for substitution scores (these values are added to the
+        previous best alignment score).
 
-       Returns
-       -------
-       skbio.Alignment
-           ``Alignment`` object containing the aligned sequences as well as
-           details about the alignment.
+    Returns
+    -------
+    skbio.Alignment
+        ``Alignment`` object containing the aligned sequences as well as
+        details about the alignment.
 
-       Notes
-       -----
-       This algorithm (in a slightly more basic form) was originally described
-       in [1]_. The scikit-bio implementation was validated against the
-       EMBOSS needle web server [2]_.
+    See Also
+    --------
+    local_pairwise_align
+    local_pairwise_align_protein
+    local_pairwise_align_nucleotide
+    skbio.core.alignment.local_pairwise_align_ssw
+    global_pairwise_align_protein
+    global_pairwise_align_nucelotide
 
-       References
-       ----------
-       .. [1] A general method applicable to the search for similarities in
-          the amino acid sequence of two proteins.
-          Needleman SB, Wunsch CD.
-          J Mol Biol. 1970 Mar;48(3):443-53.
-       .. [2] http://www.ebi.ac.uk/Tools/psa/emboss_needle/
+    Notes
+    -----
+    This algorithm (in a slightly more basic form) was originally described
+    in [1]_. The scikit-bio implementation was validated against the
+    EMBOSS needle web server [2]_.
+
+    References
+    ----------
+    .. [1] A general method applicable to the search for similarities in
+       the amino acid sequence of two proteins.
+       Needleman SB, Wunsch CD.
+       J Mol Biol. 1970 Mar;48(3):443-53.
+    .. [2] http://www.ebi.ac.uk/Tools/psa/emboss_needle/
 
     """
     warn("You're using skbio's python implementation of Needleman-Wunsch "
@@ -566,10 +646,10 @@ def _traceback(traceback_matrix, score_matrix, seq1, seq2, start_row,
 def _first_largest(scores):
     """ Similar to max, but returns the first element achieving the high score
 
-        If max receives a tuple, it will break a tie for the highest value
-        of entry[i] with entry[i+1]. We don't want that here - to better match
-        with the results of other tools, we want to be able to define which
-        entry is returned in the case of a tie.
+    If max receives a tuple, it will break a tie for the highest value
+    of entry[i] with entry[i+1]. We don't want that here - to better match
+    with the results of other tools, we want to be able to define which
+    entry is returned in the case of a tie.
     """
     result = scores[0]
     for score, direction in scores[1:]:
