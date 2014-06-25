@@ -94,8 +94,6 @@ Getting help
 
 To get help with scikit-bio, you should use the `skbio <http://stackoverflow.com/questions/tagged/skbio>`_ tag on StackOverflow (SO). Before posting a question, check out StackOverflow's guide on how to `ask a question <http://stackoverflow.com/questions/how-to-ask>`_. The scikit-bio developers regularly monitor the skbio SO tag.
 
-General bioinformatics questions should be posted in more general forums like `Biostars <https://www.biostars.org>`_.
-
 Licensing
 ---------
 
