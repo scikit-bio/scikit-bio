@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.core.alignment.StockholmAlignment.int_map
+===============================================
+
+.. currentmodule:: skbio.core.alignment
+
+.. automethod:: StockholmAlignment.int_map

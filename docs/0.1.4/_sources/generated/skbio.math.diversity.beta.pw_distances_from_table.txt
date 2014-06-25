@@ -1,0 +1,6 @@
+skbio.math.diversity.beta.pw_distances_from_table
+=================================================
+
+.. currentmodule:: skbio.math.diversity.beta
+
+.. autofunction:: pw_distances_from_table

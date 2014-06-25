@@ -1,0 +1,6 @@
+skbio.core.alignment.local_pairwise_align_ssw
+=============================================
+
+.. currentmodule:: skbio.core.alignment
+
+.. autofunction:: local_pairwise_align_ssw

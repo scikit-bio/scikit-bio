@@ -1,0 +1,6 @@
+skbio.core.exception.StockholmParseError
+========================================
+
+.. currentmodule:: skbio.core.exception
+
+.. autoexception:: StockholmParseError

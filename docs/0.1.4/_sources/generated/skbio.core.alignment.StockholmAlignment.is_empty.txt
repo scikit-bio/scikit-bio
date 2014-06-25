@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.core.alignment.StockholmAlignment.is_empty
+================================================
+
+.. currentmodule:: skbio.core.alignment
+
+.. automethod:: StockholmAlignment.is_empty
