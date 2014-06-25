@@ -304,14 +304,7 @@ def local_pairwise_align(seq1, seq2, gap_open_penalty,
                            (seq2_start_position, end_row_position-1)]
 
     # Get ids to assign to the output sequences in the result Alignment object
-    try:
-        seq1_id = seq1.id
-    except AttributeError:
-        seq1_id = '0'
-    try:
-        seq2_id = seq2.id
-    except AttributeError:
-        seq2_id = '1'
+    seq1_id, seq2_id = _get_seq_ids(seq1, seq2)
 
     return Alignment(
         [BiologicalSequence(aligned1, id=seq1_id),
@@ -509,14 +502,7 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
                            (seq2_start_position, end_row_position-1)]
 
     # Get ids to assign to the output sequences in the result Alignment object
-    try:
-        seq1_id = seq1.id
-    except AttributeError:
-        seq1_id = '0'
-    try:
-        seq2_id = seq2.id
-    except AttributeError:
-        seq2_id = '1'
+    seq1_id, seq2_id = _get_seq_ids(seq1, seq2)
 
     return Alignment(
         [BiologicalSequence(aligned1, id=seq1_id),
@@ -529,6 +515,21 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
 
 _traceback_encoding = {'match': 1, 'vertical-gap': 2, 'horizontal-gap': 3,
                        'uninitialized': -1, 'alignment-end': 0}
+
+
+def _get_seq_ids(seq1, seq2):
+    return _get_seq_id(seq1, "0"), _get_seq_id(seq2, "1")
+
+
+def _get_seq_id(seq, default_id):
+    try:
+        result = seq.id
+    except AttributeError:
+        result = default_id
+    else:
+        if result is None or result.strip() == "":
+            result = default_id
+    return result
 
 
 def _make_nt_substitution_matrix(match_score, mismatch_score, alphabet='ACGT'):

@@ -91,6 +91,13 @@ class PairwiseAlignmentTests(TestCase):
         self.assertEqual(actual.start_end_positions(), [(0, 9), (0, 6)])
         self.assertEqual(actual.ids(), ["s1", "s2"])
 
+        # ids are provided if they're not passed in
+        actual = global_pairwise_align_protein(Protein("HEAGAWGHEE"),
+                                               Protein("PAWHEAE"),
+                                               gap_open_penalty=10.,
+                                               gap_extend_penalty=5.)
+        self.assertEqual(actual.ids(), list('01'))
+
     def test_local_pairwise_align_protein(self):
         expected = ("AWGHE", "AW-HE", 26.0, 4, 1)
         actual = local_pairwise_align_protein("HEAGAWGHEE", "PAWHEAE",
@@ -123,6 +130,13 @@ class PairwiseAlignmentTests(TestCase):
         self.assertEqual(actual.score(), expected[2])
         self.assertEqual(actual.start_end_positions(), [(4, 8), (1, 4)])
         self.assertEqual(actual.ids(), ["s1", "s2"])
+
+        # ids are provided if they're not passed in
+        actual = local_pairwise_align_protein(Protein("HEAGAWGHEE"),
+                                              Protein("PAWHEAE"),
+                                              gap_open_penalty=10.,
+                                              gap_extend_penalty=5.)
+        self.assertEqual(actual.ids(), list('01'))
 
     def test_global_pairwise_align_nucleotide(self):
         m = _make_nt_substitution_matrix(5, -4)
@@ -164,6 +178,13 @@ class PairwiseAlignmentTests(TestCase):
         self.assertEqual(actual.start_end_positions(), [(0, 16), (0, 14)])
         self.assertEqual(actual.ids(), ["s1", "s2"])
 
+        # ids are provided if they're not passed in
+        actual = global_pairwise_align_nucleotide(
+            DNA("GACCTTGACCAGGTACC"), DNA("GAACTTTGACGTAAC"),
+            gap_open_penalty=10., gap_extend_penalty=0.5, match_score=5,
+            mismatch_score=-4)
+        self.assertEqual(actual.ids(), list('01'))
+
     def test_local_pairwise_align_nucleotide(self):
         m = _make_nt_substitution_matrix(5, -4)
         expected = ("ACCTTGACCAGGTACC", "ACTTTGAC---GTAAC", 41.0, 1, 2)
@@ -203,6 +224,13 @@ class PairwiseAlignmentTests(TestCase):
         self.assertEqual(actual.score(), expected[2])
         self.assertEqual(actual.start_end_positions(), [(1, 8), (2, 9)])
         self.assertEqual(actual.ids(), ["s1", "s2"])
+
+        # ids are provided if they're not passed in
+        actual = local_pairwise_align_nucleotide(
+            DNA("GACCTTGACCAGGTACC"), DNA("GAACTTTGACGTAAC"),
+            gap_open_penalty=10., gap_extend_penalty=5., match_score=5,
+            mismatch_score=-4)
+        self.assertEqual(actual.ids(), list('01'))
 
     def test_init_matrices_sw(self):
         expected_score_m = np.zeros((5, 4))
