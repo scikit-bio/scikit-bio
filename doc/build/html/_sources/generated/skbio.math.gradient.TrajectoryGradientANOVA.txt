@@ -1,0 +1,30 @@
+skbio.math.gradient.TrajectoryGradientANOVA
+===========================================
+
+.. currentmodule:: skbio.math.gradient
+
+.. autoclass:: TrajectoryGradientANOVA
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         TrajectoryGradientANOVA.__format__
+         TrajectoryGradientANOVA.__init__
+         TrajectoryGradientANOVA.__new__
+         TrajectoryGradientANOVA.__reduce__
+         TrajectoryGradientANOVA.__reduce_ex__
+         TrajectoryGradientANOVA.__sizeof__
+         TrajectoryGradientANOVA.__subclasshook__
+         TrajectoryGradientANOVA._compute_trajectories_results
+         TrajectoryGradientANOVA._get_group_trajectories
+         TrajectoryGradientANOVA._make_groups
+         TrajectoryGradientANOVA._normalize_samples
+         TrajectoryGradientANOVA.get_trajectories
+
+
+
+   
+

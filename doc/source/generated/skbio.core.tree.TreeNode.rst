@@ -1,0 +1,92 @@
+skbio.core.tree.TreeNode
+========================
+
+.. currentmodule:: skbio.core.tree
+
+.. autoclass:: TreeNode
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         TreeNode.__copy__
+         TreeNode.__deepcopy__
+         TreeNode.__format__
+         TreeNode.__getitem__
+         TreeNode.__init__
+         TreeNode.__iter__
+         TreeNode.__len__
+         TreeNode.__new__
+         TreeNode.__reduce__
+         TreeNode.__reduce_ex__
+         TreeNode.__repr__
+         TreeNode.__sizeof__
+         TreeNode.__str__
+         TreeNode.__subclasshook__
+         TreeNode._adopt
+         TreeNode._ascii_art
+         TreeNode._balanced_distance_to_tip
+         TreeNode._get_max_distance_singledesc
+         TreeNode._remove_node
+         TreeNode._set_max_distance
+         TreeNode.accumulate_to_ancestor
+         TreeNode.ancestors
+         TreeNode.append
+         TreeNode.ascii_art
+         TreeNode.assign_ids
+         TreeNode.compare_rfd
+         TreeNode.compare_subsets
+         TreeNode.compare_tip_distances
+         TreeNode.copy
+         TreeNode.count
+         TreeNode.create_caches
+         TreeNode.deepcopy
+         TreeNode.descending_branch_length
+         TreeNode.distance
+         TreeNode.extend
+         TreeNode.find
+         TreeNode.find_by_func
+         TreeNode.find_by_id
+         TreeNode.from_file
+         TreeNode.from_linkage_matrix
+         TreeNode.from_newick
+         TreeNode.get_max_distance
+         TreeNode.has_children
+         TreeNode.index_tree
+         TreeNode.invalidate_caches
+         TreeNode.is_root
+         TreeNode.is_tip
+         TreeNode.lca
+         TreeNode.levelorder
+         TreeNode.lowest_common_ancestor
+         TreeNode.neighbors
+         TreeNode.non_tips
+         TreeNode.pop
+         TreeNode.postorder
+         TreeNode.pre_and_postorder
+         TreeNode.preorder
+         TreeNode.prune
+         TreeNode.remove
+         TreeNode.remove_deleted
+         TreeNode.root
+         TreeNode.root_at
+         TreeNode.root_at_midpoint
+         TreeNode.shear
+         TreeNode.siblings
+         TreeNode.subset
+         TreeNode.subsets
+         TreeNode.subtree
+         TreeNode.tip_tip_distances
+         TreeNode.tips
+         TreeNode.to_array
+         TreeNode.to_newick
+         TreeNode.traverse
+         TreeNode.unrooted_copy
+         TreeNode.unrooted_deepcopy
+
+
+
+   
+

@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>skbio.math.stats.distance.mantel &mdash; scikit-bio 0.1.3-dev documentation</title>
+    
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/style.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.1.0/united/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1.3-dev',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/copybutton.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="top" title="scikit-bio 0.1.3-dev documentation" href="../index.html" />
+    <link rel="up" title="Distance-based statistics (skbio.math.stats.distance)" href="../math.stats.distance.html" />
+    <link rel="next" title="skbio.math.stats.distance.pwmantel" href="skbio.math.stats.distance.pwmantel.html" />
+    <link rel="prev" title="skbio.math.stats.distance.bioenv" href="skbio.math.stats.distance.bioenv.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body>
+  
+  <a href="https://github.com/biocore/scikit-bio"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          scikit-bio docs</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.1.3-dev</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            <li class="divider-vertical"></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../core.alignment.html">Sequence collections and alignments (<tt class="docutils literal"><span class="pre">skbio.core.alignment</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core.sequence.html">Biological sequences (<tt class="docutils literal"><span class="pre">skbio.core.sequence</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core.distance.html">Dissimilarity and distance matrices (<tt class="docutils literal"><span class="pre">skbio.core.distance</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core.exception.html">Exceptions (<tt class="docutils literal"><span class="pre">skbio.core.exception</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core.warning.html">Warnings (<tt class="docutils literal"><span class="pre">skbio.core.warning</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core.genetic_code.html">Genetic Code (<tt class="docutils literal"><span class="pre">skbio.core.genetic_code</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core.tree.html">Tree representations (<tt class="docutils literal"><span class="pre">skbio.core.tree</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core.workflow.html">Constructing workflows (<tt class="docutils literal"><span class="pre">skbio.core.workflow</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../draw.distributions.html">Distribution visualizations (<tt class="docutils literal"><span class="pre">skbio.draw.distributions</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../format.sequences.html">Format biological sequences (<tt class="docutils literal"><span class="pre">skbio.format.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.diversity.alpha.html">Alpha diversity measures (<tt class="docutils literal"><span class="pre">skbio.math.diversity.alpha</span></tt>)</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../math.stats.distance.html">Distance-based statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.distance</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.stats.misc.html">Miscellaneous statistics utilities (<tt class="docutils literal"><span class="pre">skbio.math.stats.misc</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.stats.ordination.html">Ordination methods (<tt class="docutils literal"><span class="pre">skbio.math.stats.ordination</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.stats.spatial.html">Spatial Statistics (<tt class="docutils literal"><span class="pre">skbio.math.stats.spatial</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.gradient.html">Gradient analyses (<tt class="docutils literal"><span class="pre">skbio.math.gradient</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.subsample.html">Subsampling (<tt class="docutils literal"><span class="pre">skbio.math.subsample</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../parse.sequences.html">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.io.html">I/O utils (<tt class="docutils literal"><span class="pre">skbio.util.io</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.misc.html">Miscellaneous Utilities (<tt class="docutils literal"><span class="pre">skbio.util.misc</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.testing.html">Testing utilities (<tt class="docutils literal"><span class="pre">skbio.util.testing</span></tt>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/py3.html">Supporting Python 2 and Python 3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/new_module.html">Adding a new module to skbio</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">skbio.math.stats.distance.mantel</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      
+  <div class="section" id="skbio-math-stats-distance-mantel">
+<h1>skbio.math.stats.distance.mantel<a class="headerlink" href="#skbio-math-stats-distance-mantel" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="skbio.math.stats.distance.mantel">
+<tt class="descclassname">skbio.math.stats.distance.</tt><tt class="descname">mantel</tt><big>(</big><em>x</em>, <em>y</em>, <em>method='pearson'</em>, <em>permutations=999</em>, <em>alternative='two-sided'</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/master/skbio/math/stats/distance/_mantel.py#L23"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.math.stats.distance.mantel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute correlation between distance matrices using the Mantel test.</p>
+<p>The Mantel test compares two distance matrices by computing the correlation
+between the distances in the lower (or upper) triangular portions of the
+symmetric distance matrices. Correlation can be computed using Pearson&#8217;s
+product-moment correlation coefficient or Spearman&#8217;s rank correlation
+coefficient.</p>
+<p>As defined in <a class="reference internal" href="#r73" id="id1">[R73]</a>, the Mantel test computes a test statistic <span class="math">\(r_M\)</span>
+given two symmetric distance matrices <span class="math">\(D_X\)</span> and <span class="math">\(D_Y\)</span>.
+<span class="math">\(r_M\)</span> is defined as</p>
+<div class="math">
+\[r_M=\frac{1}{d-1}\sum_{i=1}^{n-1}\sum_{j=i+1}^{n}
+stand(D_X)_{ij}stand(D_Y)_{ij}\]</div>
+<p>where</p>
+<div class="math">
+\[d=\frac{n(n-1)}{2}\]</div>
+<p>and <span class="math">\(n\)</span> is the number of rows/columns in each of the distance
+matrices. <span class="math">\(stand(D_X)\)</span> and <span class="math">\(stand(D_Y)\)</span> are distance matrices
+with their upper triangles containing standardized distances. Note that
+since <span class="math">\(D_X\)</span> and <span class="math">\(D_Y\)</span> are symmetric, the lower triangular
+portions of the matrices could equivalently have been used instead of the
+upper triangular portions (the current function behaves in this manner).</p>
+<p>If <tt class="docutils literal"><span class="pre">method='spearman'</span></tt>, the above equation operates on ranked distances
+instead of the original distances.</p>
+<p>Statistical significance is assessed via a permutation test. The rows and
+columns of the first distance matrix (<cite>x</cite>) are randomly permuted a
+number of times (controlled via <cite>permutations</cite>). A correlation coefficient
+is computed for each permutation and the p-value is the proportion of
+permuted correlation coefficients that are equal to or more extreme
+than the original (unpermuted) correlation coefficient. Whether a permuted
+correlation coefficient is &#8220;more extreme&#8221; than the original correlation
+coefficient depends on the alternative hypothesis (controlled via
+<cite>alternative</cite>).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>x, y</strong> : array_like or DistanceMatrix</p>
+<blockquote>
+<div><p>Input distance matrices to compare. Both matrices must have the same
+shape and be at least 3x3 in size. If <tt class="docutils literal"><span class="pre">array_like</span></tt>, will be cast to
+<tt class="docutils literal"><span class="pre">DistanceMatrix</span></tt> (thus the requirements of a valid <tt class="docutils literal"><span class="pre">DistanceMatrix</span></tt>
+apply to both <cite>x</cite> and <cite>y</cite>, such as symmetry and hollowness). If inputs
+are already <tt class="docutils literal"><span class="pre">DistanceMatrix</span></tt> instances, the IDs do not need to match
+between them; they are assumed to both be in the same order regardless
+of their IDs (the underlying data matrix is the only thing considered
+by this function).</p>
+</div></blockquote>
+<p><strong>method</strong> : {&#8216;pearson&#8217;, &#8216;spearman&#8217;}</p>
+<blockquote>
+<div><p>Method used to compute the correlation between distance matrices.</p>
+</div></blockquote>
+<p><strong>permutations</strong> : int, optional</p>
+<blockquote>
+<div><p>Number of times to randomly permute <cite>x</cite> when assessing statistical
+significance. Must be greater than or equal to zero. If zero,
+statistical significance calculations will be skipped and the p-value
+will be <tt class="docutils literal"><span class="pre">np.nan</span></tt>.</p>
+</div></blockquote>
+<p><strong>alternative</strong> : {&#8216;two-sided&#8217;, &#8216;greater&#8217;, &#8216;less&#8217;}</p>
+<blockquote>
+<div><p>Alternative hypothesis to use when calculating statistical
+significance. The default <tt class="docutils literal"><span class="pre">'two-sided'</span></tt> alternative hypothesis
+calculates the proportion of permuted correlation coefficients whose
+magnitude (i.e. after taking the absolute value) is greater than or
+equal to the absolute value of the original correlation coefficient.
+<tt class="docutils literal"><span class="pre">'greater'</span></tt> calculates the proportion of permuted coefficients that
+are greater than or equal to the original coefficient. <tt class="docutils literal"><span class="pre">'less'</span></tt>
+calculates the proportion of permuted coefficients that are less than
+or equal to the original coefficient.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">tuple of floats</p>
+<blockquote>
+<div><p>Correlation coefficient and p-value of the test.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><strong>ValueError</strong></p>
+<blockquote class="last">
+<div><p>If <cite>x</cite> and <cite>y</cite> are not the same shape and at least 3x3 in size, or an
+invalid <cite>method</cite>, number of <cite>permutations</cite>, or <cite>alternative</cite> are
+provided.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">DistanceMatrix</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">scipy.stats.pearsonr</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">scipy.stats.spearmanr</span></tt></p>
+</div>
+<p class="rubric">Notes</p>
+<p>The Mantel test was first described in <a class="reference internal" href="#r74" id="id2">[R74]</a>. The general algorithm and
+interface are similar to <tt class="docutils literal"><span class="pre">vegan::mantel</span></tt>, available in R&#8217;s vegan
+package <a class="reference internal" href="#r75" id="id3">[R75]</a>.</p>
+<p><tt class="docutils literal"><span class="pre">np.nan</span></tt> will be returned for the p-value if <cite>permutations</cite> is zero or if
+the correlation coefficient is <tt class="docutils literal"><span class="pre">np.nan</span></tt>. The correlation coefficient will
+be <tt class="docutils literal"><span class="pre">np.nan</span></tt> if one or both of the inputs does not have any variation
+(i.e. the distances are all constant) and <tt class="docutils literal"><span class="pre">method='spearman'</span></tt>.</p>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r73" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R73]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> Legendre, P. and Legendre, L. (2012) Numerical Ecology. 3rd English
+Edition. Elsevier.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r74" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R74]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id5">2</a>)</em> Mantel, N. (1967). &#8220;The detection of disease clustering and a
+generalized regression approach&#8221;. Cancer Research 27 (2): 209-220. PMID
+6018555.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r75" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R75]</td><td><em>(<a class="fn-backref" href="#id3">1</a>, <a class="fn-backref" href="#id6">2</a>)</em> <a class="reference external" href="http://cran.r-project.org/web/packages/vegan/index.html">http://cran.r-project.org/web/packages/vegan/index.html</a></td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Define two 3x3 distance matrices:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+<span class="gp">... </span>     <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+<span class="gp">... </span>     <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span>
+<span class="gp">... </span>     <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span>
+<span class="gp">... </span>     <span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">0</span><span class="p">]]</span>
+</pre></div>
+</div>
+<p>Compute the Pearson correlation between them and assess significance using
+a two-sided test with 999 permutations:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">coeff</span><span class="p">,</span> <span class="n">p_value</span> <span class="o">=</span> <span class="n">mantel</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">round</span><span class="p">(</span><span class="n">coeff</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="go">0.7559</span>
+</pre></div>
+</div>
+<p>Thus, we see a moderate-to-strong positive correlation (<span class="math">\(r_M=0.7559\)</span>)
+between the two matrices.</p>
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+  
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014--, scikit-bio development team.<br/>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.2.2.<br/>
+    </p>
+  </div>
+</footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
+  </body>
+</html>
