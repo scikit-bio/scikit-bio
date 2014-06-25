@@ -53,8 +53,8 @@ class BaseTests(TestCase):
 
         # In the future, if necessary, it should be possible to just replace
         # HelperBiomTable with Table in the following lines to test with the
-        # biom_format.table.Table object directly (i.e., this constructor
-        # interface aligns with the biom_format.table.Table constructor
+        # biom.table.Table object directly (i.e., this constructor
+        # interface aligns with the biom.table.Table constructor
         # interface).
         self.table1 = HelperBiomTable(
             np.array(self.t1).T, observation_ids=range(2),

@@ -8,6 +8,8 @@ from __future__ import absolute_import, division, print_function
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from warnings import warn
+
 import numpy as np
 
 from skbio import DistanceMatrix
@@ -54,7 +56,8 @@ def pw_distances(counts, ids=None, metric="braycurtis"):
             "ids.")
 
     distances = pdist(counts, metric)
-    return DistanceMatrix(squareform(distances), ids)
+    return DistanceMatrix(
+        squareform(distances, force='tomatrix', checks=False), ids)
 
 
 def pw_distances_from_table(table, metric="braycurtis"):
@@ -62,7 +65,7 @@ def pw_distances_from_table(table, metric="braycurtis"):
 
     Parameters
     ----------
-    table : biom_format.table.Table
+    table : biom.table.Table
         ``Table`` containing count/abundance data of observations across
         samples.
     metric : str, optional
@@ -79,10 +82,14 @@ def pw_distances_from_table(table, metric="braycurtis"):
     See Also
     --------
     scipy.spatial.distance.pdist
-    biom_format.table.Table
+    biom.table.Table
     pw_distances
 
     """
+    warn("pw_distances_from_table is deprecated. In the future (tentatively "
+         "scikit-bio 0.2.0), pw_distance will take a biom.table.Table object "
+         "and this function will be removed. You will need to update your "
+         "code to call pw_distances at that time.")
     sample_ids = table.sample_ids
     num_samples = len(sample_ids)
 
