@@ -253,8 +253,6 @@ class PairwiseAlignmentTests(TestCase):
             actual_no_sub = local_pairwise_align_nucleotide(
                 "GACCTTGACCAGGTACC", "GAACTTTGACGTAAC", gap_open_penalty=10.,
                 gap_extend_penalty=5., match_score=5, mismatch_score=-4)
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
             actual_alt_sub = local_pairwise_align_nucleotide(
                 "GACCTTGACCAGGTACC", "GAACTTTGACGTAAC", gap_open_penalty=10.,
                 gap_extend_penalty=5., match_score=5, mismatch_score=-4,
