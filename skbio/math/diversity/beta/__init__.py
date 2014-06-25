@@ -7,8 +7,8 @@ Beta diversity measures (:mod:`skbio.math.diversity.beta`)
 
 This package contains helper functions for working with scipy's pairwise
 distance (``pdist``) functions in scikit-bio, and will eventually be expanded
-to contain relevant methods that are not implemented (or planned to be
-implemented) in scipy.
+to contain pairwise distance/dissimilarity methods that are not implemented
+(or planned to be implemented) in scipy.
 
 The functions in this package currently support applying ``pdist`` functions
 to all pairs of samples in a sample by observation count or abundance matrix
@@ -90,66 +90,6 @@ M-squared value.
 >>> from skbio.math.stats.spatial import procrustes
 >>> print procrustes(bc_pc.site, j_pc.site)[2]
 0.466134984787
-
-# All of this only gets interesting in the context of sample metadata,
-# so let's define some:
-#
-# >>> import pandas as pd
-# >>> sample_md = {
-# ...    'A': {'body_habitat': 'gut', 'person': 'subject 1'},
-# ...    'B': {'body_habitat': 'skin', 'person': 'subject 1'},
-# ...    'C': {'body_habitat': 'tongue', 'person': 'subject 1'},
-# ...    'D': {'body_habitat': 'gut', 'person': 'subject 2'},
-# ...    'E': {'body_habitat': 'tongue', 'person': 'subject 2'},
-# ...    'F': {'body_habitat': 'skin', 'person': 'subject 2'}}
-# >>> sample_md = pd.DataFrame(sample_md).T
-# >>> print(sample_md)
-#   body_habitat     person
-# A          gut  subject 1
-# B         skin  subject 1
-# C       tongue  subject 1
-# D          gut  subject 2
-# E       tongue  subject 2
-# F         skin  subject 2
-# <BLANKLINE>
-# [6 rows x 2 columns]
-#
-# >>> subject_groups = sample_md.groupby('person').groups
-# >>> print(subject_groups)
-# {'subject 1': ['A', 'B', 'C'], 'subject 2': ['D', 'E', 'F']}
-
-# this isn't working yet...
-# And we'll put a quick 3D plotting function together. This function is
-# adapted from the matplotlib gallery here:
-# http://matplotlib.org/examples/mplot3d/scatter3d_demo.html
-#
-# >>> from mpl_toolkits.mplot3d import Axes3D
-# >>> import matplotlib.pyplot as plt
-# >>> def scatter_3d(coord_matrices, title="", axis1=0, axis2=1, axis3=2):
-# ...    fig = plt.figure()
-# ...
-# ...    ax = fig.add_subplot(111, projection='3d')
-# ...
-# ...    for coord_matrix in coord_matrices:
-# ...        xs = [e[axis1] for e in coord_matrix]
-# ...        ys = [e[axis2] for e in coord_matrix]
-# ...        zs = [e[axis3] for e in coord_matrix]
-# ...        plot = ax.scatter(xs, ys, zs)
-# ...
-# ...    ax.set_xlabel('PC %d' % (axis1 + 1))
-# ...    ax.set_ylabel('PC %d' % (axis2 + 1))
-# ...    ax.set_zlabel('PC %d' % (axis3 + 1))
-# ...    ax.set_xticklabels([])
-# ...    ax.set_yticklabels([])
-# ...    ax.set_zticklabels([])
-# ...    ax.set_title(title)
-# ...    return fig
-#
-# .. plot::
-#
-# >>> b = bc_pc.site.T
-# >>> fig = scatter_3d([[b[0], b[1]], [b[2], b[3]], [b[4], b[5]]])
-
 
 """
 
