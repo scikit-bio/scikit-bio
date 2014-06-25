@@ -8,18 +8,12 @@ from __future__ import absolute_import, division, print_function
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from random import shuffle as shuffle_list_inplace
+from random import shuffle as shuffle_list
 
 from future.builtins import zip
 
 
-def _shuffle_list(items):
-    """Python's shuffle is inplace, wrap it to return"""
-    shuffle_list_inplace(items)
-    return items
-
-
-def shuffle(tree, n=None, names=None, inplace=False, shuffle_f=_shuffle_list):
+def shuffle(tree, n=None, names=None, shuffle_f=shuffle_list):
     """Yield trees with shuffled tip names
 
     Parameters
@@ -32,11 +26,12 @@ def shuffle(tree, n=None, names=None, inplace=False, shuffle_f=_shuffle_list):
     names : list, optional
         The specific tip names to shuffle. n and names cannot be specified at
         the same time.
-    inplace : bool
-        If `True`, the names are shuffled on the tree inplace. If `False`, a
-        copy of the tree is made on each iteration.
     shuffle_f : func
-        Shuffle method, this function must accept a list and return a list.
+        Shuffle method, this function must accept a list and modify inplace
+
+    Notes
+    -----
+    Tip names are shuffled inplace.
 
     Returns
     -------
@@ -49,6 +44,8 @@ def shuffle(tree, n=None, names=None, inplace=False, shuffle_f=_shuffle_list):
         If n is < 2
     ValueError
         If n and names are specified
+    MissingNodeError
+        If names are specified and a node name cannot be found
 
     Examples
     --------
@@ -72,30 +69,22 @@ def shuffle(tree, n=None, names=None, inplace=False, shuffle_f=_shuffle_list):
     if n is not None and names is not None:
         raise ValueError("n and names cannot be specified at the sametime")
 
-    original_tree = tree
     tree.assign_ids()
-    all_tips = shuffle_f(list(tree.tips()))
 
     if names is None:
+        all_tips = list(tree.tips())
+
         if n is None:
             n = len(all_tips)
 
-        ids_to_shuffle = [tip.id for tip in all_tips[:n]]
-        names_to_shuffle = [tip.name for tip in all_tips[:n]]
-    else:
-        ids_to_shuffle = [tip.id for tip in all_tips if tip.name in set(names)]
+        shuffle_f(all_tips)
+        names = [tip.name for tip in all_tips[:n]]
 
-        if len(ids_to_shuffle) != len(names):
-            raise ValueError("Cannot find all the names to shuffle!")
-
-        names_to_shuffle = [tree.find_by_id(i).name for i in ids_to_shuffle]
+    nodes = [tree.find(name) for name in names]
 
     while True:
-        if not inplace:
-            tree = original_tree.copy()
-
-        names_to_shuffle = shuffle_f(names_to_shuffle)
-        for id_, name in zip(ids_to_shuffle, names_to_shuffle):
-            tree.find_by_id(id_).name = name
+        shuffle_f(names)
+        for node, name in zip(nodes, names):
+            node.name = name
 
         yield tree
