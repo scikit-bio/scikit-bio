@@ -292,6 +292,13 @@ class PairwiseAlignmentTests(TestCase):
         np.testing.assert_array_equal(actual_score_m, expected_score_m)
         np.testing.assert_array_equal(actual_tback_m, expected_tback_m)
 
+    def test_compute_score_and_traceback_matrices_invalid(self):
+        # if the sequence contains a character that is not in the
+        # substitution matrix, an informative error should be raised
+        m = _make_nt_substitution_matrix(2, -1)
+        self.assertRaises(ValueError, _compute_score_and_traceback_matrices,
+                          'AWG', 'ACGT', 5, 2, m)
+
     def test_traceback(self):
         score_m = [[0, -5, -7, -9],
                    [-5, 2, -3, -5],

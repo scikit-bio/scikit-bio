@@ -604,7 +604,19 @@ def _compute_score_and_traceback_matrices(
         # Note that j corresponds to row numbers, as in 'Biological Sequence
         # Analysis'
         for j, c1 in zip(range(1, len(seq1)+1), seq1):
-            substitution_score = substitution_matrix[c1][c2]
+            try:
+                substitution_score = substitution_matrix[c1][c2]
+            except KeyError:
+                offending_chars = \
+                    [c for c in (c1, c2) if c not in substitution_matrix]
+                raise ValueError(
+                    "One of the sequences contains a character that is not "
+                    "contained in the substitution matrix. Are you using "
+                    "an appropriate substitution matrix for your sequence "
+                    "type (e.g., a nucleotide substitution matrix does not "
+                    "make sense for aligning protein sequences)? Does your "
+                    "sequence contain invalid characters? The offending "
+                    "character(s) is: %s." % ', '.join(offending_chars))
             diag_score = (score_matrix[i-1, j-1] + substitution_score, match)
             if traceback_matrix[i-1, j] == vgap:
                 # gap extend, because the cell above was also a gap
