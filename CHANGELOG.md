@@ -16,6 +16,7 @@ This is a pre-alpha release. At this stage, major backwards-incompatible API cha
     * ``gap_extend`` -> ``gap_extend_penalty``
     * ``match`` -> ``match_score``
     * ``mismatch`` -> ``mismatch_score``
+* Removed ``skbio.util.sort`` module in favor of [natsort](https://pypi.python.org/pypi/natsort) package.
 
 ### Miscellaneous
 

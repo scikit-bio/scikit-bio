@@ -694,6 +694,63 @@ class GradientANOVATests(BaseTests):
                               '20080116': ['PC.634', 'PC.635', 'PC.636']}}
         self.assertEqual(bv._groups, exp_groups)
 
+    def test_make_groups_natural_sorting(self):
+        # Ensure sample IDs are sorted using a natural sorting algorithm.
+        df = pd.DataFrame.from_dict({
+            'a2': {'Col1': 'foo', 'Col2': '1.0'},
+            'a1': {'Col1': 'bar', 'Col2': '-42.0'},
+            'a11.0': {'Col1': 'foo', 'Col2': '2e-5'},
+            'a-10': {'Col1': 'foo', 'Col2': '5'},
+            'a10': {'Col1': 'bar', 'Col2': '5'}},
+            orient='index')
+
+        coords = pd.DataFrame.from_dict({
+            'a10': np.array([-0.212230626531, 0.216034194368, 0.03532727349]),
+            'a11.0': np.array([-0.277487312135, -0.0295483215975,
+                               -0.0744173437992]),
+            'a1': np.array([0.220886492631, 0.0874848360559,
+                            -0.351990132198]),
+            'a2': np.array([0.0308923744062, -0.0446295973489,
+                            0.133996451689]),
+            'a-10': np.array([0.27616778138, -0.0341866951102,
+                              0.0633000238256])},
+            orient='index')
+
+        prop_expl = np.array([25.6216900347, 15.7715955926, 14.1215046787,
+                              11.6913885817, 9.83044890697])
+
+        # Sort by sample IDs.
+        ga = GradientANOVA(coords, prop_expl, df)
+
+        exp_groups = {
+            'Col1': {
+                'foo': ['a-10', 'a2', 'a11.0'],
+                'bar': ['a1', 'a10']
+            },
+            'Col2': {
+                '1.0': ['a2'],
+                '-42.0': ['a1'],
+                '2e-5': ['a11.0'],
+                '5': ['a-10', 'a10']
+            }
+        }
+
+        self.assertEqual(ga._groups, exp_groups)
+
+        # Sort sample IDs by Col2.
+        ga = GradientANOVA(coords, prop_expl, df,
+                           trajectory_categories=['Col1'],
+                           sort_category='Col2')
+
+        exp_groups = {
+            'Col1': {
+                'foo': ['a11.0', 'a2', 'a-10'],
+                'bar': ['a1', 'a10']
+            }
+        }
+
+        self.assertEqual(ga._groups, exp_groups)
+
     def test_get_trajectories(self):
         """Should raise a NotImplementedError as this is a base class"""
         bv = GradientANOVA(self.coords, self.prop_expl, self.metadata_map)
