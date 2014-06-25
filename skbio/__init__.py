@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function
 # ----------------------------------------------------------------------------
 
 __credits__ = "https://github.com/biocore/scikit-bio/graphs/contributors"
-__version__ = "0.1.3-dev"
+__version__ = "0.1.4"
 
 mottos = [
     # 03/15/2014
