@@ -31,7 +31,7 @@ def pw_distances(counts, ids, metric="braycurtis"):
 
     Returns
     -------
-    skbio.core.distance.DistanceMatrix
+    core.distance.DistanceMatrix
 
     Raises
     ------
@@ -75,7 +75,7 @@ def pw_distances_from_table(table, metric="braycurtis"):
 
     Returns
     -------
-    skbio.core.distance.DistanceMatrix
+    core.distance.DistanceMatrix
 
     See Also
     --------

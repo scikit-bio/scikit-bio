@@ -52,7 +52,7 @@ class BaseTests(TestCase):
         self.ids2 = list('ABCDEF')
 
         # In the future, if necessary, it should be possible to just replace
-        # the HelperBiomTable with Table to test with the
+        # HelperBiomTable with Table in the following lines to test with the
         # biom_format.table.Table object directly (i.e., this constructor
         # interface aligns with the biom_format.table.Table constructor
         # interface).
