@@ -1,9 +1,15 @@
 Coding guidelines
 =================
 
-As project size increases, consistency of the code base and documentation becomes more important. We therefore provide guidelines for code and documentation that is contributed to scikit-bio. Our goal is to create a consistent code base where it is easy to find relevant functionality (and to determine when functionality that you're looking for doesn't exist), you can trust that the code that you're working with is sufficiently tested, and names and interfaces are intuitive.
+As project size increases, consistency of the code base and documentation becomes more important. We therefore provide guidelines for code and documentation that is contributed to scikit-bio. Our goal is to create a consistent code base where:
 
-**As scikit-bio is in pre-alpha release stage, our coding guidelines are presented here as a working draft. These guidelines are requirements for all code submitted to scikit-bio, but at this stage the guidelines themselves are malleable. If you disagree with something, or have a suggestion for something new to include, you should `create an issue <https://github.com/biocore/scikit-bio/issues>`_ to initiate a discussion.**
+* it is easy to find relevant functionality (and to determine when functionality that you're looking for doesn't exist),
+* you can trust that the code that you're working with is sufficiently tested, and
+* names and interfaces are intuitive.
+
+**As scikit-bio is in pre-alpha release stage, our coding guidelines are presented here as a working draft. These guidelines are requirements for all code submitted to scikit-bio, but at this stage the guidelines themselves are malleable. If you disagree with something, or have a suggestion for something new to include, you should** `create an issue`_ **to initiate a discussion.**
+
+.. _`create an issue`: https://github.com/biocore/scikit-bio/issues
 
 What are the naming conventions? and How should I format my code?
 -----------------------------------------------------------------
