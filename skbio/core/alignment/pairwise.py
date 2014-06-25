@@ -588,10 +588,12 @@ def _compute_score_and_traceback_matrices(
     hgap = _traceback_encoding['horizontal-gap']
 
     new_alignment_score = (new_alignment_score, aend)
+
     # Initialize a matrix to use for scoring the alignment and for tracing
     # back the best alignment
     score_matrix, traceback_matrix = init_matrices_f(
         seq1, seq2, gap_open_penalty, gap_extend_penalty)
+
     # Iterate over the characters in sequence two (which will correspond
     # to the vertical sequence in the matrix)
     # Note that i corresponds to column numbers, as in 'Biological Sequence
