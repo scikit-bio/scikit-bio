@@ -96,7 +96,7 @@ Control
 from __future__ import absolute_import, division, print_function
 
 from copy import deepcopy
-from collections import namedtuple, defaultdict
+from collections import defaultdict
 from numbers import Integral
 
 import numpy as np
@@ -200,9 +200,8 @@ def _ANOVA_trajectories(category, res_by_group):
     return CategoryResults(category, p_val, res_by_group, None)
 
 
-class GroupResults(namedtuple('GroupResults', ('name', 'trajectory', 'mean',
-                                               'info', 'message'))):
-    r"""Store the trajectory results of a group of a metadata category
+class GroupResults(object):
+    """Store the trajectory results of a group of a metadata category
 
     Attributes
     ----------
@@ -217,8 +216,15 @@ class GroupResults(namedtuple('GroupResults', ('name', 'trajectory', 'mean',
         the algorithm
     message : str
         A message with information of the execution of the algorithm
+
     """
-    __slots__ = ()  # To avoid creating a dict, as a namedtuple doesn't have it
+
+    def __init__(self, name, trajectory, mean, info, message):
+        self.name = name
+        self.trajectory = trajectory
+        self.mean = mean
+        self.info = info
+        self.message = message
 
     def to_files(self, out_f, raw_f):
         r"""Save the trajectory analysis results for a category group to files
@@ -249,9 +255,8 @@ class GroupResults(namedtuple('GroupResults', ('name', 'trajectory', 'mean',
                     % ", ".join(map(str, self.trajectory)))
 
 
-class CategoryResults(namedtuple('CategoryResults', ('category', 'probability',
-                                                     'groups', 'message'))):
-    r"""Store the trajectory results of a metadata category
+class CategoryResults(object):
+    """Store the trajectory results of a metadata category
 
     Attributes
     ----------
@@ -263,8 +268,14 @@ class CategoryResults(namedtuple('CategoryResults', ('category', 'probability',
         The trajectory results for each group in the category
     message : str
         A message with information of the execution of the algorithm
+
     """
-    __slots__ = ()  # To avoid creating a dict, as a namedtuple doesn't have it
+
+    def __init__(self, category, probability, groups, message):
+        self.category = category
+        self.probability = probability
+        self.groups = groups
+        self.message = message
 
     def to_files(self, out_f, raw_f):
         r"""Save the trajectory analysis results for a category to files in
@@ -292,10 +303,8 @@ class CategoryResults(namedtuple('CategoryResults', ('category', 'probability',
                 group.to_files(out_f, raw_f)
 
 
-class GradientANOVAResults(namedtuple('GradientANOVAResults', ('algorithm',
-                                                               'weighted',
-                                                               'categories'))):
-    r"""Store the trajectory results
+class GradientANOVAResults(object):
+    """Store the trajectory results
 
     Attributes
     ----------
@@ -305,8 +314,13 @@ class GradientANOVAResults(namedtuple('GradientANOVAResults', ('algorithm',
         If true, a weighting vector was used
     categories : list of CategoryResults
         The trajectory results for each metadata category
+
     """
-    __slots__ = ()  # To avoid creating a dict, as a namedtuple doesn't have it
+
+    def __init__(self, algorithm, weighted, categories):
+        self.algorithm = algorithm
+        self.weighted = weighted
+        self.categories = categories
 
     def to_files(self, out_f, raw_f):
         r"""Save the trajectory analysis results to files in text format.
