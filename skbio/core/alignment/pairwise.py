@@ -640,8 +640,9 @@ def _traceback(traceback_matrix, score_matrix, seq1, seq2, start_row,
     current_col = start_col
 
     best_score = score_matrix[current_row, current_col]
+    current_value = None
 
-    while True:
+    while current_value != aend:
         current_value = traceback_matrix[current_row, current_col]
 
         if current_value == match:
@@ -658,7 +659,7 @@ def _traceback(traceback_matrix, score_matrix, seq1, seq2, start_row,
             aligned_seq2.append('-')
             current_col -= 1
         elif current_value == aend:
-            break
+            continue
         else:
             raise ValueError(
                 "Invalid value in traceback matrix: %s" % current_value)
