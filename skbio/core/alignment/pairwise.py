@@ -302,9 +302,20 @@ def local_pairwise_align(seq1, seq2, gap_open_penalty,
                    end_row_position, end_col_position)
     start_end_positions = [(seq1_start_position, end_col_position-1),
                            (seq2_start_position, end_row_position-1)]
-    result = Alignment(
-        [BiologicalSequence(aligned1, id=0),
-         BiologicalSequence(aligned2, id=1)],
+
+    # Get ids to assign to the output sequences in the result Alignment object
+    try:
+        seq1_id = seq1.id
+    except AttributeError:
+        seq1_id = '0'
+    try:
+        seq2_id = seq2.id
+    except AttributeError:
+        seq2_id = '1'
+
+    return Alignment(
+        [BiologicalSequence(aligned1, id=seq1_id),
+         BiologicalSequence(aligned2, id=seq2_id)],
         score=score, start_end_positions=start_end_positions)
     return result
 
@@ -496,9 +507,20 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
                    end_row_position, end_col_position)
     start_end_positions = [(seq1_start_position, end_col_position-1),
                            (seq2_start_position, end_row_position-1)]
+
+    # Get ids to assign to the output sequences in the result Alignment object
+    try:
+        seq1_id = seq1.id
+    except AttributeError:
+        seq1_id = '0'
+    try:
+        seq2_id = seq2.id
+    except AttributeError:
+        seq2_id = '1'
+
     return Alignment(
-        [BiologicalSequence(aligned1, id=0),
-         BiologicalSequence(aligned2, id=1)],
+        [BiologicalSequence(aligned1, id=seq1_id),
+         BiologicalSequence(aligned2, id=seq2_id)],
         score=score, start_end_positions=start_end_positions)
 
 # Functions from here allow for generalized (global or local) alignment. I
