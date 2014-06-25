@@ -1,6 +1,0 @@
-core.tree.rst:42: [redirected permanently] http://goo.gl/fIY1Iq to http://evolution.genetics.washington.edu/phylip/newicktree.html
-core.tree.rst:68: [redirected permanently] http://goo.gl/K4Ufl to http://en.wikipedia.org/wiki/Tree_traversal
-development/new_module.rst:48: [broken] https://github.com/biocore/scikit-bio/blob/master/doc/README.md#documenting-a-module-in-scikit-bio: Anchor 'documenting-a-module-in-scikit-bio' not found
-development/py3.rst:237: [redirected with Found] https://ncoghlan_devs-python-notes.readthedocs.org/en/latest/python3/binary_protocols.html to http://ncoghlan-devs-python-notes.readthedocs.org/en/latest/python3/binary_protocols.html
-development/py3.rst:237: [redirected with Found] https://ncoghlan_devs-python-notes.readthedocs.org/en/latest/python3/text_file_processing.html to http://ncoghlan-devs-python-notes.readthedocs.org/en/latest/python3/text_file_processing.html
-generated/skbio.util.misc.safe_md5.rst:24: [redirected permanently] http://stackoverflow.com/a/1131255/379593 to http://stackoverflow.com/questions/1131220/get-md5-hash-of-big-files-in-python/1131255#1131255
