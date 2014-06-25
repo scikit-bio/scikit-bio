@@ -39,23 +39,23 @@ class BaseTests(TestCase):
         self.assertRaises(ValueError, pw_distances, self.t1, list('AB'),
                           'euclidean')
 
-    def test_equal_results_on_different_table_type(self):
-        class FakeBiom(object):
-
-            def __init__(self, data, ids):
-                self.sample_ids = ids
-                self._data = data
-
-            def __getitem__(self, i):
-                return self._data[i]
-
-            def __len__(self):
-                return len(self._data)
-
-        t = FakeBiom(self.t2, self.ids2)
-        t_dm = pw_distances(t)
-        t2_dm = pw_distances(self.t2, self.ids2)
-        self.assertEqual(t_dm, t2_dm)
+    # def test_equal_results_on_different_table_type(self):
+    #     class FakeBiom(object):
+    #
+    #         def __init__(self, data, ids):
+    #             self.sample_ids = ids
+    #             self._data = data
+    #
+    #         def __getitem__(self, i):
+    #             return self._data[i]
+    #
+    #         def __len__(self):
+    #             return len(self._data)
+    #
+    #     t = FakeBiom(self.t2, self.ids2)
+    #     t_dm = pw_distances(t)
+    #     t2_dm = pw_distances(self.t2, self.ids2)
+    #     self.assertEqual(t_dm, t2_dm)
 
     def test_pw_distances_euclidean(self):
         actual_dm = pw_distances(self.t1, self.ids1, 'euclidean')
