@@ -5,6 +5,3 @@
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
-
-from numpy.testing import Tester
-test = Tester().test
