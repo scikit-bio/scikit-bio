@@ -1517,6 +1517,8 @@ class StockholmAlignment(Alignment):
 
     Notes
     -----
+    The Stockholm format is described in [1]_ and [2]_.
+
     If there are multiple references, include information for each R* line
     as a list, with reference 0 information in position 0 for all lists,
     etc. This list will be broken up into the appropriate bits for each
@@ -1525,6 +1527,11 @@ class StockholmAlignment(Alignment):
     If there are multiple trees included, use a list to store identifiers
     and trees, with position 0 holding identifier for tree in position 0,
     etc.
+
+    References
+    ----------
+    .. [1] http://sonnhammer.sbc.su.se/Stockholm.html
+    .. [2] http://en.wikipedia.org/wiki/Stockholm_format
 
     Examples
     --------
@@ -1603,10 +1610,6 @@ class StockholmAlignment(Alignment):
         If references are included in GF data, the RN lines are automatically
         generated if not provided.
 
-        References
-        ----------
-        http://sonnhammer.sbc.su.se/Stockholm.html
-        http://en.wikipedia.org/wiki/Stockholm_format
         """
 
         # find length of leader info needed to make file pretty
