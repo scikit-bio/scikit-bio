@@ -10,6 +10,10 @@ a:active, a:hover, a:focus {
     color: #00B84D !important;
 }
 
+blockquote {
+    font-size: 14px !important;
+}
+
 #navbar {
     background: #24372C !important;
     border: none !important;
