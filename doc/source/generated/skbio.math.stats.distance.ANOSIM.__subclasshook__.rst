@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.math.stats.distance.ANOSIM.__subclasshook__
-=================================================
-
-.. currentmodule:: skbio.math.stats.distance
-
-.. automethod:: ANOSIM.__subclasshook__
