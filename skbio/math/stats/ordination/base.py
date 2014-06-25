@@ -359,6 +359,7 @@ class OrdinationResults(namedtuple('OrdinationResults',
             file. If it's a file-like object, it must have a ``write``
             method, and it won't be closed. Else, it is opened and
             closed after writing.
+
         See Also
         --------
         from_file

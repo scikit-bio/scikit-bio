@@ -15,6 +15,7 @@
 
 * Added powertrip.py script to perform basic sanity-checking of the repo based on recurring issues that weren't being caught until release time; added to Travis build.
 * Added RELEASE.md with release instructions.
+* Added intersphinx mappings to docs so that "See Also" references to numpy, scipy, matplotlib, and pandas are hyperlinks.
 
 ## Version 0.1.3 (2014-06-12)
 
