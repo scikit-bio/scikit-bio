@@ -57,6 +57,9 @@ class GeneticCodeTests(TestCase):
         gc_2 = GeneticCode(self.sgc)
         self.assertEqual(gc_1, gc_2)
 
+    def test_eq_type_mismatch(self):
+        self.assertFalse(GeneticCode(self.sgc) == 'i cracked the code!')
+
     def test_ne(self):
         gc_1 = GeneticCode(self.sgc)
         gc_2 = GeneticCode(self.sgc)

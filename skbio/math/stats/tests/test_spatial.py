@@ -97,6 +97,21 @@ class ProcrustesTests(TestCase):
         res3_2, res1_2, disp31 = procrustes(rand3, rand1)
         np.testing.assert_almost_equal(disp13, disp31)
 
+    def test_procrustes_shape_mismatch(self):
+        with self.assertRaises(ValueError):
+            procrustes(np.array([[1, 2], [3, 4]]),
+                       np.array([[5, 6, 7], [8, 9, 10]]))
+
+    def test_procrustes_empty_rows_or_cols(self):
+        empty = np.array([[]])
+        with self.assertRaises(ValueError):
+            procrustes(empty, empty)
+
+    def test_procrustes_no_variation(self):
+        with self.assertRaises(ValueError):
+            procrustes(np.array([[42, 42], [42, 42]]),
+                       np.array([[45, 45], [45, 45]]))
+
     def test_get_disparity(self):
         """tests get_disparity"""
         disp = _get_disparity(self.data1, self.data3)

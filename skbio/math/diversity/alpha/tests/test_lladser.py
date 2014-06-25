@@ -127,6 +127,11 @@ def test_lladser_point_estimates():
     assert_true(0.45 < sum / reps and sum / reps < 0.55)
 
 
+def test_lladser_point_estimates_invalid_r():
+    with assert_raises(ValueError):
+        list(_lladser_point_estimates([5, 1, 5, 1, 2, 3, 1, 5, 3, 2, 5, 3], 2))
+
+
 def test_get_interval_for_r_new_otus():
     s = [5, 1, 5, 1, 2, 3, 1, 5, 3, 2, 5]
     expected = [(3, set([5]), 4, 0),

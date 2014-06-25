@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -30,11 +28,6 @@ from skbio.util.io import open_file
 def is_empty(line):
     """Returns True empty lines and lines consisting only of whitespace."""
     return (not line) or line.isspace()
-
-
-def never_ignore(line):
-    """Always returns False."""
-    return False
 
 
 def DelimitedRecordFinder(delimiter, constructor=str.strip, ignore=is_empty,
@@ -169,13 +162,6 @@ def LabeledRecordFinder(is_label_line, constructor=str.strip, ignore=is_empty):
             if curr:
                 yield curr
     return parser
-
-
-def is_fasta_label(x):
-    """Checks if x looks like a FASTA label line."""
-    return x.startswith('>')
-# The following is an example of the sorts of iterators RecordFinder returns.
-FastaFinder = LabeledRecordFinder(is_fasta_label)
 
 
 def LineGrouper(num, constructor=str.strip, ignore=is_empty):

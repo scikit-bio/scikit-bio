@@ -295,7 +295,7 @@ class Workflow(object):
 
         for k, v in viewitems(kwargs):
             if hasattr(self, k):
-                raise AttributeError("%s exists in self!" % k)
+                raise AttributeError("'%s' already exists in self." % k)
             setattr(self, k, v)
 
         if self.debug:
@@ -421,8 +421,8 @@ class Workflow(object):
         def wrapped():
             """Track debug information about a method execution"""
             if not hasattr(self, 'debug_trace'):
-                cls = self.__class__
-                raise AttributeError("%s doesn't have debug_trace!" % cls)
+                raise AttributeError(
+                    "%s doesn't have debug_trace!" % self.__class__)
 
             exec_order = self.debug_counter
             name = func.__name__
