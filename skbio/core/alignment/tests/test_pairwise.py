@@ -9,7 +9,6 @@
 from __future__ import absolute_import, division, print_function
 
 from unittest import TestCase, main
-from warnings import filterwarnings
 
 import numpy as np
 import numpy.testing as npt
@@ -22,11 +21,6 @@ from skbio.core.alignment.pairwise import (
     _get_seq_id, _get_seq_ids)
 from skbio import Alignment, Protein, DNA, RNA
 from skbio.core.warning import EfficiencyWarning
-
-# Because we're testing that warnings are raised, we must set this "filter"
-# to always raise warnings (not only the first time a warning is encountered,
-# which is the default).
-filterwarnings("ignore")
 
 
 class PairwiseAlignmentTests(TestCase):
