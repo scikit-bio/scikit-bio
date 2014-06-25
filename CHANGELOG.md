@@ -15,6 +15,11 @@
 
 * Added powertrip.py script to perform basic sanity-checking of the repo based on recurring issues that weren't being caught until release time; added to Travis build.
 * Added RELEASE.md with release instructions.
+* The following classes are no longer ``namedtuple`` subclasses (see [#359](https://github.com/biocore/scikit-bio/issues/359) for the rationale):
+    * ``skbio.math.stats.ordination.OrdinationResults``
+    * ``skbio.math.gradient.GroupResults``
+    * ``skbio.math.gradient.CategoryResults``
+    * ``skbio.math.gradient.GradientANOVAResults``
 
 ## Version 0.1.3 (2014-06-12)
 
