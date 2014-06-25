@@ -96,11 +96,9 @@ def normalize_signs(arr1, arr2):
 
 
 def chi_square_distance(data_table, between_rows=True):
-    """Computes the chi-square distance between two rows or columns of
-    input.
+    """Computes the chi-square distance between two rows or columns of input.
 
-    It is a measure that has no upper limit, and it excludes
-    double-zeros.
+    It is a measure that has no upper limit, and it excludes double-zeros.
 
     Parameters
     ----------
@@ -122,9 +120,7 @@ def chi_square_distance(data_table, between_rows=True):
 
     See Also
     --------
-    `scipy.spatial.distance.squareform` for a routine that transforms
-    condensed distance matrices to square-form distance matrices (and
-    vice-versa).
+    scipy.spatial.distance.squareform
 
     References
     ----------

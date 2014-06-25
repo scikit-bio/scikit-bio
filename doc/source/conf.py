@@ -28,7 +28,8 @@ extensions = [
     'numpydoc',
     'sphinx.ext.coverage',
     'sphinx.ext.doctest',
-    'sphinx.ext.autosummary'
+    'sphinx.ext.autosummary',
+    'sphinx.ext.intersphinx'
 ]
 
 # Determine if the matplotlib has a recent enough version of the
@@ -337,6 +338,17 @@ plot_rcparams = {
 if not use_matplotlib_plot_directive:
     import matplotlib
     matplotlib.rcParams.update(plot_rcparams)
+
+# -----------------------------------------------------------------------------
+# Intersphinx configuration
+# -----------------------------------------------------------------------------
+intersphinx_mapping = {
+        'http://docs.python.org/dev': None,
+        'http://docs.scipy.org/doc/numpy': None,
+        'http://docs.scipy.org/doc/scipy/reference': None,
+        'http://matplotlib.org': None,
+        'http://pandas.pydata.org': None
+}
 
 # -----------------------------------------------------------------------------
 # Source code links
