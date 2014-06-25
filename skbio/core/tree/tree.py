@@ -91,6 +91,8 @@ class TreeNode(object):
         self.parent = parent
         self._tip_cache = {}
         self._non_tip_cache = {}
+        self._registered_caches = set()
+
         self.children = []
         self.id = None
 
@@ -1259,12 +1261,19 @@ class TreeNode(object):
             if not n.is_tip():
                 yield n
 
-    def invalidate_caches(self):
-        r"""Delete lookup caches
+    def invalidate_caches(self, attr=True):
+        r"""Delete lookup and attribute caches
+
+        Parameters
+        ----------
+        attr : bool, optional
+            If ``True``, invalidate attribute caches created by
+            `TreeNode.cache_attr`.
 
         See Also
         --------
         create_caches
+        cache_attr
         find
 
         """
@@ -1273,6 +1282,12 @@ class TreeNode(object):
         else:
             self._tip_cache = {}
             self._non_tip_cache = {}
+
+            if self._registered_caches and attr:
+                for n in self.traverse():
+                    for cache in self._registered_caches:
+                        if hasattr(n, cache):
+                            delattr(n, cache)
 
     def create_caches(self):
         r"""Construct an internal lookups to facilitate searching by name
@@ -1292,6 +1307,7 @@ class TreeNode(object):
         See Also
         --------
         invalidate_caches
+        cache_attr
         find
 
         """
@@ -1301,7 +1317,7 @@ class TreeNode(object):
             if self._tip_cache and self._non_tip_cache:
                 return
 
-            self.invalidate_caches()
+            self.invalidate_caches(attr=False)
 
             tip_cache = {}
             non_tip_cache = defaultdict(list)
@@ -1707,8 +1723,8 @@ class TreeNode(object):
 
         newest_cluster_index = cluster_count + 1
         for link in linkage_matrix:
-            child_a = node_lookup[link[0]]
-            child_b = node_lookup[link[1]]
+            child_a = node_lookup[int(link[0])]
+            child_b = node_lookup[int(link[1])]
 
             path_length = link[2] / 2
             child_a.length = path_length - child_a._balanced_distance_to_tip()
@@ -2732,6 +2748,70 @@ class TreeNode(object):
         else:
             return sum(n.length for n in self.postorder(include_self=True) if
                        n.length is not None)
+
+    def cache_attr(self, func, cache_attrname, cache_type=list):
+        """Cache attributes on internal nodes of the tree
+
+        Parameters
+        ----------
+        func : function
+            func will be provided the node currently being evaluated and must
+            return a list of item (or items) to cache from that node or an
+            empty list.
+        cache_attrname : str
+            Name of the attribute to decorate on containing the cached values
+        cache_type : {set, frozenset, list}
+            The type of the cache
+
+        Notes
+        -----
+        This method is particularly useful if you need to frequently look up
+        attributes that would normally require a traversal of the tree.
+
+        WARNING: any cache created by this method will be invalidated if the
+        topology of the tree changes (e.g., if `TreeNode.invalidate_caches` is
+        called).
+
+        Raises
+        ------
+        TypeError
+            If an cache_type that is not a `set` or a `list` is specified.
+
+        Examples
+        --------
+        Cache the tip names of the tree on its internal nodes
+
+        >>> from skbio.core.tree import TreeNode
+        >>> tree = TreeNode.from_newick("((a,b,(c,d)e)f,(g,h)i)root;")
+        >>> f = lambda n: [n.name] if n.is_tip() else []
+        >>> tree.cache_attr(f, 'tip_names')
+        >>> for n in tree.traverse(include_self=True):
+        ...     print("Node name: %s, cache: %r" % (n.name, n.tip_names))
+        Node name: root, cache: ['a', 'b', 'c', 'd', 'g', 'h']
+        Node name: f, cache: ['a', 'b', 'c', 'd']
+        Node name: a, cache: ['a']
+        Node name: b, cache: ['b']
+        Node name: e, cache: ['c', 'd']
+        Node name: c, cache: ['c']
+        Node name: d, cache: ['d']
+        Node name: i, cache: ['g', 'h']
+        Node name: g, cache: ['g']
+        Node name: h, cache: ['h']
+
+        """
+        if cache_type in [set, frozenset]:
+            reduce_f = lambda a, b: a | b
+        elif cache_type == list:
+            reduce_f = lambda a, b: a + b
+        else:
+            raise TypeError("Only list, set and frozenset are supported!")
+
+        for node in self.postorder(include_self=True):
+            node._registered_caches.add(cache_attrname)
+
+            cached = [getattr(c, cache_attrname) for c in node.children]
+            cached.append(cache_type(func(node)))
+            setattr(node, cache_attrname, reduce(reduce_f, cached))
 
 
 def _dnd_tokenizer(data):

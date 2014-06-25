@@ -100,9 +100,8 @@ from collections import namedtuple, defaultdict
 from numbers import Integral
 
 import numpy as np
+from natsort import natsorted
 from scipy.stats import f_oneway
-
-from skbio.util.sort import signed_natsort
 
 
 def _weight_by_vector(trajectories, w_vector):
@@ -515,9 +514,7 @@ class GradientANOVA(object):
             # Group samples by category
             gb = self._metadata_map.groupby(cat)
             for g, df in gb:
-                sorted_list = signed_natsort([(sort_val(sid), sid)
-                                              for sid in df.index])
-                self._groups[cat][g] = [val[1] for val in sorted_list]
+                self._groups[cat][g] = natsorted(df.index, key=sort_val)
 
     def _get_group_trajectories(self, group_name, sids):
         r"""Compute the trajectory results for `group_name` containing the
@@ -666,7 +663,7 @@ class TrajectoryGradientANOVA(GradientANOVA):
             method
         """
         if len(trajectories) == 1:
-            trajectory = [np.linalg.norm(trajectories)]
+            trajectory = np.array([np.linalg.norm(trajectories)])
             calc = {'trajectory': trajectory[0]}
         else:
             # Loop through all the rows in trajectories and create 'trajectory'
@@ -714,10 +711,11 @@ class FirstDifferenceGradientANOVA(GradientANOVA):
             method
         """
         if len(trajectories) == 1:
-            trajectory = [np.linalg.norm(trajectories)]
+            trajectory = np.array([np.linalg.norm(trajectories)])
             calc = {'mean': trajectory[0], 'std': 0}
         elif len(trajectories) == 2:
-            trajectory = [np.linalg.norm(trajectories[1] - trajectories[0])]
+            trajectory = np.array([np.linalg.norm(trajectories[1] -
+                                                  trajectories[0])])
             calc = {'mean': trajectory[0], 'std': 0}
         else:
             vec_norm = \
@@ -797,10 +795,11 @@ class WindowDifferenceGradientANOVA(GradientANOVA):
             difference method
         """
         if len(trajectories) == 1:
-            trajectory = [np.linalg.norm(trajectories)]
+            trajectory = np.array([np.linalg.norm(trajectories)])
             calc = {'mean': trajectory, 'std': 0}
         elif len(trajectories) == 2:
-            trajectory = [np.linalg.norm(trajectories[1] - trajectories[0])]
+            trajectory = np.array([np.linalg.norm(trajectories[1] -
+                                                  trajectories[0])])
             calc = {'mean': trajectory, 'std': 0}
         else:
             vec_norm = \
