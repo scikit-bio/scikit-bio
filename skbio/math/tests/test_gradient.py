@@ -889,12 +889,12 @@ class TrajectoryGradientANOVATests(BaseTests):
                                                               7.1036434615,
                                                               4.0675712674]),
                                          6.73392072123,
-                                         {'trajectory': 13.874494152}, None)
+                                         {'2-norm': 13.874494152}, None)
         exp_fast_group = GroupResults('Fast', np.array([11.2291654905,
                                                         3.9163741156,
                                                         4.4943507388]),
                                       6.5466301150,
-                                      {'trajectory': 12.713431181}, None)
+                                      {'2-norm': 12.713431181}, None)
         exp_treatment = CategoryResults('Treatment', 0.9374500147,
                                         [exp_control_group, exp_fast_group],
                                         None)
@@ -912,12 +912,12 @@ class TrajectoryGradientANOVATests(BaseTests):
                                                               7.7989125908,
                                                               4.9666249268]),
                                          6.9780887086,
-                                         {'trajectory': 14.2894710091}, None)
+                                         {'2-norm': 14.2894710091}, None)
         exp_fast_group = GroupResults('Fast', np.array([9.6823682852,
                                                         2.9511115209,
                                                         5.2434091953]),
                                       5.9589630005,
-                                      {'trajectory': 11.3995901159}, None)
+                                      {'2-norm': 11.3995901159}, None)
         exp_treatment = CategoryResults('Treatment', 0.6248157720,
                                         [exp_control_group, exp_fast_group],
                                         None)
