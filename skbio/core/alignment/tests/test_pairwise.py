@@ -233,6 +233,36 @@ class PairwiseAlignmentTests(TestCase):
             mismatch_score=-4)
         self.assertEqual(actual.ids(), list('01'))
 
+    def test_nucleotide_aligners_use_substitution_matrices(self):
+        alt_sub = _make_nt_substitution_matrix(10, -10)
+        # alternate substitution matrix yields different alignment (the
+        # aligned sequences and the scores are different) with local alignment
+        actual_no_sub = local_pairwise_align_nucleotide(
+            "GACCTTGACCAGGTACC", "GAACTTTGACGTAAC", gap_open_penalty=10.,
+            gap_extend_penalty=5., match_score=5, mismatch_score=-4)
+        actual_alt_sub = local_pairwise_align_nucleotide(
+            "GACCTTGACCAGGTACC", "GAACTTTGACGTAAC", gap_open_penalty=10.,
+            gap_extend_penalty=5., match_score=5, mismatch_score=-4,
+            substitution_matrix=alt_sub)
+        self.assertNotEqual(str(actual_no_sub[0]), str(actual_alt_sub[0]))
+        self.assertNotEqual(str(actual_no_sub[1]), str(actual_alt_sub[1]))
+        self.assertNotEqual(actual_no_sub.score(),
+                            actual_alt_sub.score())
+
+        # alternate substitution matrix yields different alignment (the
+        # aligned sequences and the scores are different) with global alignment
+        actual_no_sub = local_pairwise_align_nucleotide(
+            "GACCTTGACCAGGTACC", "GAACTTTGACGTAAC", gap_open_penalty=10.,
+            gap_extend_penalty=5., match_score=5, mismatch_score=-4)
+        actual_alt_sub = global_pairwise_align_nucleotide(
+            "GACCTTGACCAGGTACC", "GAACTTTGACGTAAC", gap_open_penalty=10.,
+            gap_extend_penalty=5., match_score=5, mismatch_score=-4,
+            substitution_matrix=alt_sub)
+        self.assertNotEqual(str(actual_no_sub[0]), str(actual_alt_sub[0]))
+        self.assertNotEqual(str(actual_no_sub[1]), str(actual_alt_sub[1]))
+        self.assertNotEqual(actual_no_sub.score(),
+                            actual_alt_sub.score())
+
     def test_init_matrices_sw(self):
         expected_score_m = np.zeros((5, 4))
         expected_tback_m = np.zeros((5, 4)) - 1

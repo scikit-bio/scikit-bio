@@ -121,7 +121,8 @@ blosum50 = \
 
 def local_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
                                     gap_extend_penalty=2,
-                                    match_score=2, mismatch_score=-3):
+                                    match_score=2, mismatch_score=-3,
+                                    substitution_matrix=None):
     """Locally align exactly two nucleotide seqs with Smith-Waterman
 
     Parameters
@@ -143,6 +144,10 @@ def local_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
         The score to add for a mismatch between a pair of bases (this is
         added to the previous best alignment score, so is typically
         negative).
+    substitution_matrix: 2D dict (or similar)
+        Lookup for substitution scores (these values are added to the
+        previous best alignment score). If provided, this overrides
+        ``match_score`` and ``mismatch_score``.
 
     Returns
     -------
@@ -170,8 +175,13 @@ def local_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
     .. [1] http://blast.ncbi.nlm.nih.gov/Blast.cgi
 
     """
-    substitution_matrix = \
-        _make_nt_substitution_matrix(match_score, mismatch_score)
+    # use the substitution matrix provided by the user, or compute from
+    # match_score and mismatch_score if a substitution matrix was not provided
+    if substitution_matrix is None:
+        substitution_matrix = \
+            _make_nt_substitution_matrix(match_score, mismatch_score)
+    else:
+        pass
 
     return local_pairwise_align(seq1, seq2, gap_open_penalty,
                                 gap_extend_penalty, substitution_matrix)
@@ -315,7 +325,8 @@ def local_pairwise_align(seq1, seq2, gap_open_penalty,
 
 def global_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
                                      gap_extend_penalty=2,
-                                     match_score=1, mismatch_score=-2):
+                                     match_score=1, mismatch_score=-2,
+                                     substitution_matrix=None):
     """Globally align exactly two nucleotide seqs with Needleman-Wunsch
 
     Parameters
@@ -337,6 +348,10 @@ def global_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
         The score to add for a mismatch between a pair of bases (this is
         added to the previous best alignment score, so is typically
         negative).
+    substitution_matrix: 2D dict (or similar)
+        Lookup for substitution scores (these values are added to the
+        previous best alignment score). If provided, this overrides
+        ``match_score`` and ``mismatch_score``.
 
     Returns
     -------
@@ -364,8 +379,13 @@ def global_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
     .. [1] http://blast.ncbi.nlm.nih.gov/Blast.cgi
 
     """
-    substitution_matrix = \
-        _make_nt_substitution_matrix(match_score, mismatch_score)
+    # use the substitution matrix provided by the user, or compute from
+    # match_score and mismatch_score if a substitution matrix was not provided
+    if substitution_matrix is None:
+        substitution_matrix = \
+            _make_nt_substitution_matrix(match_score, mismatch_score)
+    else:
+        pass
 
     return global_pairwise_align(seq1, seq2, gap_open_penalty,
                                  gap_extend_penalty, substitution_matrix)
