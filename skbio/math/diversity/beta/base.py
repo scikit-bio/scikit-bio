@@ -22,7 +22,7 @@ def pw_distances(counts, ids=None, metric="braycurtis"):
 
     Parameters
     ----------
-    counts : 2D array-like of ints or floats
+    counts : 2D array_like of ints or floats
         Matrix containing count/abundance data where each row contains counts
         of observations in a given sample.
     ids : iterable of strs, optional
