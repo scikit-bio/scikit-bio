@@ -10,18 +10,13 @@ from future.builtins import zip
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from collections import namedtuple
-
 import numpy as np
 
 from skbio.core.exception import FileFormatError
 from skbio.util.io import open_file
 
 
-class OrdinationResults(namedtuple('OrdinationResults',
-                                   ('eigvals', 'species', 'site', 'biplot',
-                                    'site_constraints', 'proportion_explained',
-                                    'species_ids', 'site_ids'))):
+class OrdinationResults(object):
     """Store ordination results
 
     Attributes
@@ -42,18 +37,20 @@ class OrdinationResults(namedtuple('OrdinationResults',
         The species identifiers
     site_ids : list of str
         The site identifiers
-    """
-    # To avoid creating a dict, as a namedtuple doesn't have it:
-    __slots__ = ()
 
-    def __new__(cls, eigvals, species=None, site=None, biplot=None,
-                site_constraints=None, proportion_explained=None,
-                species_ids=None, site_ids=None):
-        return super(OrdinationResults, cls).__new__(cls, eigvals, species,
-                                                     site, biplot,
-                                                     site_constraints,
-                                                     proportion_explained,
-                                                     species_ids, site_ids)
+    """
+
+    def __init__(self, eigvals, species=None, site=None, biplot=None,
+                 site_constraints=None, proportion_explained=None,
+                 species_ids=None, site_ids=None):
+        self.eigvals = eigvals
+        self.species = species
+        self.site = site
+        self.biplot = biplot
+        self.site_constraints = site_constraints
+        self.proportion_explained = proportion_explained
+        self.species_ids = species_ids
+        self.site_ids = site_ids
 
     @classmethod
     def from_file(cls, ord_res_f):

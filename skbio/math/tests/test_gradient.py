@@ -11,6 +11,7 @@ from __future__ import absolute_import, division, print_function
 from future.utils.six import StringIO
 from future.builtins import zip
 
+from operator import attrgetter
 from unittest import TestCase, main
 
 import numpy as np
@@ -202,7 +203,8 @@ class BaseTests(TestCase):
             self.assertTrue(obs.groups is None)
         else:
             npt.assert_almost_equal(obs.probability, exp.probability)
-            for o, e in zip(sorted(obs.groups), sorted(exp.groups)):
+            for o, e in zip(sorted(obs.groups, key=attrgetter('name')),
+                            sorted(exp.groups, key=attrgetter('name'))):
                 self.assert_group_results_almost_equal(o, e)
 
     def assert_gradientANOVA_results_almost_equal(self, obs, exp):
@@ -210,7 +212,8 @@ class BaseTests(TestCase):
         self.assertEqual(obs.algorithm, exp.algorithm)
         self.assertEqual(obs.weighted, exp.weighted)
 
-        for o, e in zip(sorted(obs.categories), sorted(exp.categories)):
+        for o, e in zip(sorted(obs.categories, key=attrgetter('category')),
+                        sorted(exp.categories, key=attrgetter('category'))):
             self.assert_category_results_almost_equal(o, e)
 
 
