@@ -548,7 +548,7 @@ def _make_nt_substitution_matrix(match_score, mismatch_score, alphabet='ACGT'):
 def _init_matrices_sw(seq1, seq2, gap_open_penalty, gap_extend_penalty):
     shape = (len(seq2)+1, len(seq1)+1)
     score_matrix = np.zeros(shape)
-    traceback_matrix = np.zeros(shape, dtype=np.int16)
+    traceback_matrix = np.zeros(shape, dtype=np.int)
     traceback_matrix += _traceback_encoding['uninitialized']
     traceback_matrix[0, 0] = _traceback_encoding['alignment-end']
     return score_matrix, traceback_matrix
@@ -557,7 +557,7 @@ def _init_matrices_sw(seq1, seq2, gap_open_penalty, gap_extend_penalty):
 def _init_matrices_nw(seq1, seq2, gap_open_penalty, gap_extend_penalty):
     shape = (len(seq2)+1, len(seq1)+1)
     score_matrix = np.zeros(shape)
-    traceback_matrix = np.zeros(shape, dtype=np.int16)
+    traceback_matrix = np.zeros(shape, dtype=np.int)
     traceback_matrix += _traceback_encoding['uninitialized']
     traceback_matrix[0, 0] = _traceback_encoding['alignment-end']
 
