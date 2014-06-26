@@ -569,7 +569,8 @@ def _init_matrices_sw(seq1, seq2, gap_open_penalty, gap_extend_penalty):
     score_matrix = np.zeros(shape)
     traceback_matrix = np.zeros(shape, dtype=np.int)
     traceback_matrix += _traceback_encoding['uninitialized']
-    traceback_matrix[0, 0] = _traceback_encoding['alignment-end']
+    traceback_matrix[0, :] = _traceback_encoding['alignment-end']
+    traceback_matrix[:, 0] = _traceback_encoding['alignment-end']
     return score_matrix, traceback_matrix
 
 
