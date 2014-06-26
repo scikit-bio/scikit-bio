@@ -529,8 +529,7 @@ class EUtils(object):
 
 # The following are convenience wrappers for some of the above functionality
 
-
-def get_primary_ids(term, retmax=100, max_recs=None, **kwargs):
+def _get_primary_ids(term, retmax=100, max_recs=None, **kwargs):
     """Gets primary ids from query."""
     search_result = None
     records_got = 0
@@ -561,18 +560,18 @@ def get_primary_ids(term, retmax=100, max_recs=None, **kwargs):
     return search_result.IdList
 
 
-def ids_to_taxon_ids(ids, db='nucleotide'):
+def _ids_to_taxon_ids(ids, db='nucleotide'):
     """Converts primary ids to taxon ids"""
     link = ELink(id=' '.join(ids), db='taxonomy', dbfrom=db, DEBUG=True)
     return ELinkResultParser(link.read())
 
 
-def get_between_tags(line):
+def _get_between_tags(line):
     """"Returns portion of line between xml tags."""
     return line.split('>', 1)[1].rsplit('<', 1)[0]
 
 
-def taxon_lineage_extractor(lines):
+def _taxon_lineage_extractor(lines):
     """Extracts lineage from taxonomy record lines, not incl. species."""
     for line in lines:
         if '<Lineage>' in line:
@@ -585,7 +584,7 @@ taxon_record_finder = DelimitedRecordFinder('</Taxon>', constructor=None,
                                             strict=False)
 
 
-def get_taxid_name_lineage(rec):
+def _get_taxid_name_lineage(rec):
     """Returns taxon id, name, and lineage from single xml taxon record."""
     tax_tag = '  <TaxId>'
     name_tag = '  <ScientificName>'
@@ -593,19 +592,19 @@ def get_taxid_name_lineage(rec):
     taxid = name = lineage = None
     for line in rec:
         if line.startswith(tax_tag):
-            taxid = get_between_tags(line)
+            taxid = _get_between_tags(line)
         elif line.startswith(name_tag):
-            name = get_between_tags(line)
+            name = _get_between_tags(line)
         elif line.startswith(lineage_tag):
-            lineage = map(strip, get_between_tags(line).split(';'))
+            lineage = map(strip, _get_between_tags(line).split(';'))
     return taxid, name, lineage
 
 
-def get_taxa_names_lineages(lines):
+def _get_taxa_names_lineages(lines):
     """Extracts taxon, name and lineage from each entry in an XML record."""
     empty_result = (None, None, None)
     for rec in taxon_record_finder(lines):
-        curr = get_taxid_name_lineage(rec)
+        curr = _get_taxid_name_lineage(rec)
         if curr != empty_result:
             yield curr
 
@@ -657,47 +656,35 @@ def parse_taxonomy_using_elementtree_xml_parse(search_result):
     return l
 
 
-def taxon_ids_to_names_and_lineages(ids, retmax=1000):
+def _taxon_ids_to_names_and_lineages(ids, retmax=1000):
     """Yields taxon id, name and lineage for a set of taxon ids."""
     e = EUtils(db='taxonomy', rettype='xml', retmode='xml', retmax=retmax,
                DEBUG=False)
-    fids = fix_taxon_ids(ids)
+    fids = _fix_taxon_ids(ids)
     # print '\nids: ',fids
     result = StringIO()
     result.write(e[fids].read())
     result.seek(0)
-    data = parse_taxonomy_using_elementtree_xml_parse(result)
+    data = _parse_taxonomy_using_elementtree_xml_parse(result)
     return [(i['TaxId'], i['ScientificName'], i['Lineage'])for i in data]
 
 
-def taxon_ids_to_lineages(ids, retmax=1000):
+def _taxon_ids_to_lineages(ids, retmax=1000):
     """Returns full taxonomy (excluding species) from set of taxon ids.
 
     WARNING: Resulting lineages aren't in the same order as input. Use
     taxon_ids_to_name_and_lineage if you need the names and/or lineages
     associated with the specific ids.
     """
-    ids = fix_taxon_ids(ids)
+    ids = _fix_taxon_ids(ids)
     e = EUtils(db='taxonomy', rettype='xml', retmode='xml', retmax=retmax,
                DEBUG=False)
     result = e[ids].read().splitlines()
     # print result
-    return taxon_lineage_extractor(result)
-
-# def taxon_ids_to_names(ids, retmax=1000):
-#    """Returns names (e.g. species) from set of taxon ids.
-#
-#    WARNING: Resulting lineages aren't in the same order as input. Use
-#    taxon_ids_to_name_and_lineage if you need the names and/or lineages
-#    associated with the specific ids.
-#    """
-#    e = EUtils(db='taxonomy', rettype='brief', retmode='text', retmax=retmax,
-#        DEBUG=False)
-#    transformed_ids = fix_taxon_ids(ids)
-#    return e[transformed_ids].read().splitlines()
+    return _taxon_lineage_extractor(result)
 
 
-def taxon_ids_to_names(ids, retmax=1000):
+def _taxon_ids_to_names(ids, retmax=1000):
     """Returns names (e.g. species) from set of taxon ids.
 
     WARNING: Resulting lineages aren't in the same order as input. Use
@@ -706,15 +693,15 @@ def taxon_ids_to_names(ids, retmax=1000):
     """
     e = EUtils(db='taxonomy', rettype='xml', retmode='xml', retmax=retmax,
                DEBUG=False)
-    transformed_ids = fix_taxon_ids(ids)
+    transformed_ids = _fix_taxon_ids(ids)
     h = StringIO()
     h.write(e[transformed_ids].read())
     h.seek(0)
-    result = parse_taxonomy_using_elementtree_xml_parse(h)
+    result = _parse_taxonomy_using_elementtree_xml_parse(h)
     return [i['ScientificName'] for i in result]
 
 
-def fix_taxon_ids(ids):
+def _fix_taxon_ids(ids):
     """Fixes list of taxonomy ids by adding [taxid] to each.
 
     Need to add taxid field restriction to each id because NCBI broke taxon
@@ -734,21 +721,17 @@ def fix_taxon_ids(ids):
     return transformed_ids
 
 
-def get_unique_lineages(query, db='protein'):
+def _get_unique_lineages(query, db='protein'):
     """Gets the unique lineages directly from a query."""
-    return set(map(tuple, taxon_ids_to_lineages(ids_to_taxon_ids(
-        get_primary_ids(query, db=db), db=db))))
+    return set(map(tuple, _taxon_ids_to_lineages(_ids_to_taxon_ids(
+        _get_primary_ids(query, db=db), db=db))))
 
 
-def get_unique_taxa(query, db='protein'):
+def _get_unique_taxa(query, db='protein'):
     """Gets the unique lineages directly from a query."""
     return set(
-        taxon_ids_to_names(
-            ids_to_taxon_ids(
-                get_primary_ids(
-                    query,
-                    db=db),
-                db=db)))
+        _taxon_ids_to_names(_ids_to_taxon_ids(_get_primary_ids(query, db=db),
+                                            db=db)))
 
 if __name__ == '__main__':
     main()
