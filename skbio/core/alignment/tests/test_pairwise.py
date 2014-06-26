@@ -280,8 +280,11 @@ class PairwiseAlignmentTests(TestCase):
 
     def test_init_matrices_sw(self):
         expected_score_m = np.zeros((5, 4))
-        expected_tback_m = np.zeros((5, 4)) - 1
-        expected_tback_m[0, 0] = 0
+        expected_tback_m = [[0, 0, 0, 0],
+                            [0, -1, -1, -1],
+                            [0, -1, -1, -1],
+                            [0, -1, -1, -1],
+                            [0, -1, -1, -1]]
         actual_score_m, actual_tback_m = _init_matrices_sw('AAA', 'AAAA', 5, 2)
         np.testing.assert_array_equal(actual_score_m, expected_score_m)
         np.testing.assert_array_equal(actual_tback_m, expected_tback_m)
