@@ -9,14 +9,12 @@ from xml.dom.minidom import parseString
 from xml.etree.ElementTree import parse
 from StringIO import StringIO
 
+from skbio.exception import QueryNotFoundError
 from skbio.db.util import (UrlGetter, expand_slice,
                            make_lists_of_expanded_slices_of_set_size,
                            make_lists_of_accessions_of_set_size)
 from skbio.parse.record_finder import DelimitedRecordFinder
 
-
-class QueryNotFoundError(Exception):
-    pass
 
 # eutils_base='http://eutils.ncbi.nlm.nih.gov/entrez/eutils'
 eutils_base = 'http://www.ncbi.nlm.nih.gov/entrez/eutils'
@@ -262,7 +260,6 @@ for key, val in rettypes.items():
 
 
 class ESearch(UrlGetter):
-
     """Performs an ESearch, getting a list of ids from an arbitrary query."""
     PrintedFields = dict.fromkeys(['db', 'usehistory', 'term', 'retmax',
                                    'retstart', 'tool', 'email'])
@@ -272,7 +269,6 @@ class ESearch(UrlGetter):
 
 
 class EFetch(UrlGetter):
-
     """Retrieves a list of primary ids.
 
     WARNING: retmax (the maximum return value) is only 3 by default, so you
@@ -296,7 +292,6 @@ class EFetch(UrlGetter):
 
 
 class ELink(UrlGetter):
-
     """Retrieves a list of ids from one db that link to another db."""
     PrintedFields = dict.fromkeys(['db',
                                    'id',
@@ -319,7 +314,6 @@ class ELink(UrlGetter):
 
 
 class ESearchResult(object):
-
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 

@@ -140,3 +140,8 @@ class GeneticCodeInitError(ValueError, GeneticCodeError):
 class InvalidCodonError(KeyError, GeneticCodeError):
     """Exception raised by the GeneticCode class if __getitem__ fails"""
     pass
+
+
+class QueryNotFoundError(Exception):
+    """Exception raised by EUtils when no data is retrieved"""
+    pass
