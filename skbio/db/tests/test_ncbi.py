@@ -1,3 +1,12 @@
+from __future__ import absolute_import, division, print_function
+
+# ----------------------------------------------------------------------------
+# Copyright (c) 2013--, scikit-bio development team.
+#
+# Distributed under the terms of the Modified BSD License.
+#
+# The full license is in the file COPYING.txt, distributed with this software.
+# ----------------------------------------------------------------------------
 
 from unittest import TestCase, main
 from string import strip
@@ -11,14 +20,6 @@ from skbio.db.ncbi import (EUtils, ESearch, EFetch, ELink, ESearchResultParser,
                            _get_unique_lineages, _get_unique_taxa,
                            _parse_taxonomy_using_elementtree_xml_parse)
 
-__author__ = "Mike Robeson"
-__copyright__ = "Copyright 2007-2012, The Cogent Project"
-__credits__ = ["Mike Robeson", "Rob Knight", "Zongzhi Liu"]
-__license__ = "GPL"
-__version__ = "1.5.3-dev"
-__maintainer__ = "Mike Robeson"
-__email__ = "mike.robeson@colorado.edu"
-__status__ = "Production"
 
 class EUtilsTests(TestCase):
     """Tests of the EUtils class."""

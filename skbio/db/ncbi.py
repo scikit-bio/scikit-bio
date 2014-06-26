@@ -3,6 +3,16 @@ r"""To automate batch functions provided by EUtils
     (http://www.ncbi..nih.gov/entrez/eutils)
     search and fetch for sets of sequence information
 """
+from __future__ import absolute_import, division, print_function
+
+# ----------------------------------------------------------------------------
+# Copyright (c) 2013--, scikit-bio development team.
+#
+# Distributed under the terms of the Modified BSD License.
+#
+# The full license is in the file COPYING.txt, distributed with this software.
+# ----------------------------------------------------------------------------
+
 from urllib import urlopen, urlretrieve
 from time import sleep
 from xml.dom.minidom import parseString
