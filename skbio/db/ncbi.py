@@ -46,10 +46,11 @@ valid_databases = dict.fromkeys(["pubmed", "protein", "nucleotide",
                                  "unists"])
 
 # rettypes last updated 7/22/05 somehow, I don't think we'll be writing parsers
-# for all these...  WARNING BY RK 4/13/09: THESE RETTYPES ARE HIGHLY MISLEADING
-# AND NO LONGER WORK. See this URL for the list of "official" rettypes, which
-# is highly incomplete and has some important omissions (e.g. rettype 'gi' is
-# missing but is the "official" replacement for 'GiList'):
+# for all these...
+# WARNING BY RK 4/13/09: THESE RETTYPES ARE HIGHLY MISLEADING AND NO LONGER
+# WORK. See this URL for the list of "official" rettypes, which is highly
+# incomplete and has some important omissions (e.g. rettype 'gi' is missing but
+# is the "official" replacement for 'GiList'):
 # http://eutils.ncbi.nlm.nih.gov/entrez/query/static/efetchseq_help.html In
 # particular, use gb or gp for GenBank or GenPept, use gi for GiList, use fasta
 # for FASTA, and several other changes.  Until we get a complete accounting of
