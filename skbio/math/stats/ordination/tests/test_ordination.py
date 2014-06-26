@@ -96,11 +96,9 @@ def normalize_signs(arr1, arr2):
 
 
 def chi_square_distance(data_table, between_rows=True):
-    """Computes the chi-square distance between two rows or columns of
-    input.
+    """Computes the chi-square distance between two rows or columns of input.
 
-    It is a measure that has no upper limit, and it excludes
-    double-zeros.
+    It is a measure that has no upper limit, and it excludes double-zeros.
 
     Parameters
     ----------
@@ -122,9 +120,7 @@ def chi_square_distance(data_table, between_rows=True):
 
     See Also
     --------
-    `scipy.spatial.distance.squareform` for a routine that transforms
-    condensed distance matrices to square-form distance matrices (and
-    vice-versa).
+    scipy.spatial.distance.squareform
 
     References
     ----------
@@ -668,11 +664,12 @@ class TestOrdinationResults(object):
                           'PCoA_sample_data_3_scores', 'example2_scores']
 
         cls.fferror_test_paths = ['error1', 'error2', 'error3', 'error4',
-                                  'error5', 'error6']
+                                  'error5', 'error6', 'error7']
         cls.verror_test_paths = ['v_error1', 'v_error2', 'v_error3',
                                  'v_error4', 'v_error5', 'v_error6',
                                  'v_error7', 'v_error8', 'v_error9',
-                                 'v_error10']
+                                 'v_error10', 'v_error11', 'v_error12',
+                                 'v_error13', 'v_error14']
 
     def test_to_file(self):
         for scores, test_path in zip(self.scores, self.test_paths):

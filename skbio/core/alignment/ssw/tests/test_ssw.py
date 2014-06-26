@@ -18,114 +18,13 @@
 # C API is impractical at this time.
 
 from unittest import TestCase, main
+
 from skbio.core.alignment.ssw.ssw_wrapper import (
-    StripedSmithWaterman, AlignmentStructure, align_striped_smith_waterman)
+    StripedSmithWaterman, AlignmentStructure, local_pairwise_align_ssw)
+from skbio.core.alignment.pairwise import blosum50
 
 
 class TestSSW(TestCase):
-
-    # This is temporary: blosum50 does not exist in skbio yet as per
-    # issue 161. When the issue is resolved, this should be removed in favor
-    # of an import.
-    blosum50 = \
-        {
-            '*': {'*': 1, 'A': -5, 'C': -5, 'B': -5, 'E': -5, 'D': -5, 'G': -5,
-                  'F': -5, 'I': -5, 'H': -5, 'K': -5, 'M': -5, 'L': -5,
-                  'N': -5, 'Q': -5, 'P': -5, 'S': -5, 'R': -5, 'T': -5,
-                  'W': -5, 'V': -5, 'Y': -5, 'X': -5, 'Z': -5},
-            'A': {'*': -5, 'A': 5, 'C': -1, 'B': -2, 'E': -1, 'D': -2, 'G': 0,
-                  'F': -3, 'I': -1, 'H': -2, 'K': -1, 'M': -1, 'L': -2,
-                  'N': -1, 'Q': -1, 'P': -1, 'S': 1, 'R': -2, 'T': 0, 'W': -3,
-                  'V': 0, 'Y': -2, 'X': -1, 'Z': -1},
-            'C': {'*': -5, 'A': -1, 'C': 13, 'B': -3, 'E': -3, 'D': -4,
-                  'G': -3, 'F': -2, 'I': -2, 'H': -3, 'K': -3, 'M': -2,
-                  'L': -2, 'N': -2, 'Q': -3, 'P': -4, 'S': -1, 'R': -4,
-                  'T': -1, 'W': -5, 'V': -1, 'Y': -3, 'X': -1, 'Z': -3},
-            'B': {'*': -5, 'A': -2, 'C': -3, 'B': 6, 'E': 1, 'D': 6, 'G': -1,
-                  'F': -4, 'I': -4, 'H': 0, 'K': 0, 'M': -3, 'L': -4, 'N': 5,
-                  'Q': 0, 'P': -2, 'S': 0, 'R': -1, 'T': 0, 'W': -5, 'V': -3,
-                  'Y': -3, 'X': -1, 'Z': 1},
-            'E': {'*': -5, 'A': -1, 'C': -3, 'B': 1, 'E': 6, 'D': 2, 'G': -3,
-                  'F': -3, 'I': -4, 'H': 0, 'K': 1, 'M': -2, 'L': -3, 'N': 0,
-                  'Q': 2, 'P': -1, 'S': -1, 'R': 0, 'T': -1, 'W': -3, 'V': -3,
-                  'Y': -2, 'X': -1, 'Z': 5},
-            'D': {'*': -5, 'A': -2, 'C': -4, 'B': 6, 'E': 2, 'D': 8, 'G': -1,
-                  'F': -5, 'I': -4, 'H': -1, 'K': -1, 'M': -4, 'L': -4, 'N': 2,
-                  'Q': 0, 'P': -1, 'S': 0, 'R': -2, 'T': -1, 'W': -5, 'V': -4,
-                  'Y': -3, 'X': -1, 'Z': 1},
-            'G': {'*': -5, 'A': 0, 'C': -3, 'B': -1, 'E': -3, 'D': -1, 'G': 8,
-                  'F': -4, 'I': -4, 'H': -2, 'K': -2, 'M': -3, 'L': -4, 'N': 0,
-                  'Q': -2, 'P': -2, 'S': 0, 'R': -3, 'T': -2, 'W': -3, 'V': -4,
-                  'Y': -3, 'X': -1, 'Z': -2},
-            'F': {'*': -5, 'A': -3, 'C': -2, 'B': -4, 'E': -3, 'D': -5,
-                  'G': -4, 'F': 8, 'I': 0, 'H': -1, 'K': -4, 'M': 0, 'L': 1,
-                  'N': -4, 'Q': -4, 'P': -4, 'S': -3, 'R': -3, 'T': -2, 'W': 1,
-                  'V': -1, 'Y': 4, 'X': -1, 'Z': -4},
-            'I': {'*': -5, 'A': -1, 'C': -2, 'B': -4, 'E': -4, 'D': -4,
-                  'G': -4, 'F': 0, 'I': 5, 'H': -4, 'K': -3, 'M': 2, 'L': 2,
-                  'N': -3, 'Q': -3, 'P': -3, 'S': -3, 'R': -4, 'T': -1,
-                  'W': -3, 'V': 4, 'Y': -1, 'X': -1, 'Z': -3},
-            'H': {'*': -5, 'A': -2, 'C': -3, 'B': 0, 'E': 0, 'D': -1, 'G': -2,
-                  'F': -1, 'I': -4, 'H': 10, 'K': 0, 'M': -1, 'L': -3, 'N': 1,
-                  'Q': 1, 'P': -2, 'S': -1, 'R': 0, 'T': -2, 'W': -3, 'V': -4,
-                  'Y': 2, 'X': -1, 'Z': 0},
-            'K': {'*': -5, 'A': -1, 'C': -3, 'B': 0, 'E': 1, 'D': -1, 'G': -2,
-                  'F': -4, 'I': -3, 'H': 0, 'K': 6, 'M': -2, 'L': -3, 'N': 0,
-                  'Q': 2, 'P': -1, 'S': 0, 'R': 3, 'T': -1, 'W': -3, 'V': -3,
-                  'Y': -2, 'X': -1, 'Z': 1},
-            'M': {'*': -5, 'A': -1, 'C': -2, 'B': -3, 'E': -2, 'D': -4,
-                  'G': -3, 'F': 0, 'I': 2, 'H': -1, 'K': -2, 'M': 7, 'L': 3,
-                  'N': -2, 'Q': 0, 'P': -3, 'S': -2, 'R': -2, 'T': -1, 'W': -1,
-                  'V': 1, 'Y': 0, 'X': -1, 'Z': -1},
-            'L': {'*': -5, 'A': -2, 'C': -2, 'B': -4, 'E': -3, 'D': -4,
-                  'G': -4, 'F': 1, 'I': 2, 'H': -3, 'K': -3, 'M': 3, 'L': 5,
-                  'N': -4, 'Q': -2, 'P': -4, 'S': -3, 'R': -3, 'T': -1,
-                  'W': -2, 'V': 1, 'Y': -1, 'X': -1, 'Z': -3},
-            'N': {'*': -5, 'A': -1, 'C': -2, 'B': 5, 'E': 0, 'D': 2, 'G': 0,
-                  'F': -4, 'I': -3, 'H': 1, 'K': 0, 'M': -2, 'L': -4, 'N': 7,
-                  'Q': 0, 'P': -2, 'S': 1, 'R': -1, 'T': 0, 'W': -4, 'V': -3,
-                  'Y': -2, 'X': -1, 'Z': 0},
-            'Q': {'*': -5, 'A': -1, 'C': -3, 'B': 0, 'E': 2, 'D': 0, 'G': -2,
-                  'F': -4, 'I': -3, 'H': 1, 'K': 2, 'M': 0, 'L': -2, 'N': 0,
-                  'Q': 7, 'P': -1, 'S': 0, 'R': 1, 'T': -1, 'W': -1, 'V': -3,
-                  'Y': -1, 'X': -1, 'Z': 4},
-            'P': {'*': -5, 'A': -1, 'C': -4, 'B': -2, 'E': -1, 'D': -1,
-                  'G': -2, 'F': -4, 'I': -3, 'H': -2, 'K': -1, 'M': -3,
-                  'L': -4, 'N': -2, 'Q': -1, 'P': 10, 'S': -1, 'R': -3,
-                  'T': -1, 'W': -4, 'V': -3, 'Y': -3, 'X': -1, 'Z': -1},
-            'S': {'*': -5, 'A': 1, 'C': -1, 'B': 0, 'E': -1, 'D': 0, 'G': 0,
-                  'F': -3, 'I': -3, 'H': -1, 'K': 0, 'M': -2, 'L': -3, 'N': 1,
-                  'Q': 0, 'P': -1, 'S': 5, 'R': -1, 'T': 2, 'W': -4, 'V': -2,
-                  'Y': -2, 'X': -1, 'Z': 0},
-            'R': {'*': -5, 'A': -2, 'C': -4, 'B': -1, 'E': 0, 'D': -2, 'G': -3,
-                  'F': -3, 'I': -4, 'H': 0, 'K': 3, 'M': -2, 'L': -3, 'N': -1,
-                  'Q': 1, 'P': -3, 'S': -1, 'R': 7, 'T': -1, 'W': -3, 'V': -3,
-                  'Y': -1, 'X': -1, 'Z': 0},
-            'T': {'*': -5, 'A': 0, 'C': -1, 'B': 0, 'E': -1, 'D': -1, 'G': -2,
-                  'F': -2, 'I': -1, 'H': -2, 'K': -1, 'M': -1, 'L': -1, 'N': 0,
-                  'Q': -1, 'P': -1, 'S': 2, 'R': -1, 'T': 5, 'W': -3, 'V': 0,
-                  'Y': -2, 'X': -1, 'Z': -1},
-            'W': {'*': -5, 'A': -3, 'C': -5, 'B': -5, 'E': -3, 'D': -5,
-                  'G': -3, 'F': 1, 'I': -3, 'H': -3, 'K': -3, 'M': -1, 'L': -2,
-                  'N': -4, 'Q': -1, 'P': -4, 'S': -4, 'R': -3, 'T': -3,
-                  'W': 15, 'V': -3, 'Y': 2, 'X': -1, 'Z': -2},
-            'V': {'*': -5, 'A': 0, 'C': -1, 'B': -3, 'E': -3, 'D': -4, 'G': -4,
-                  'F': -1, 'I': 4, 'H': -4, 'K': -3, 'M': 1, 'L': 1, 'N': -3,
-                  'Q': -3, 'P': -3, 'S': -2, 'R': -3, 'T': 0, 'W': -3, 'V': 5,
-                  'Y': -1, 'X': -1, 'Z': -3},
-            'Y': {'*': -5, 'A': -2, 'C': -3, 'B': -3, 'E': -2, 'D': -3,
-                  'G': -3, 'F': 4, 'I': -1, 'H': 2, 'K': -2, 'M': 0, 'L': -1,
-                  'N': -2, 'Q': -1, 'P': -3, 'S': -2, 'R': -1, 'T': -2, 'W': 2,
-                  'V': -1, 'Y': 8, 'X': -1, 'Z': -2},
-            'X': {'*': -5, 'A': -1, 'C': -1, 'B': -1, 'E': -1, 'D': -1,
-                  'G': -1, 'F': -1, 'I': -1, 'H': -1, 'K': -1, 'M': -1,
-                  'L': -1, 'N': -1, 'Q': -1, 'P': -1, 'S': -1, 'R': -1,
-                  'T': -1, 'W': -1, 'V': -1, 'Y': -1, 'X': -1, 'Z': -1},
-            'Z': {'*': -5, 'A': -1, 'C': -3, 'B': 1, 'E': 5, 'D': 1, 'G': -2,
-                  'F': -4, 'I': -3, 'H': 0, 'K': 1, 'M': -1, 'L': -3, 'N': 0,
-                  'Q': 4, 'P': -1, 'S': 0, 'R': 0, 'T': -1, 'W': -2, 'V': -3,
-                  'Y': -2, 'X': -1, 'Z': 5}
-        }
 
     align_attributes = [
         "optimal_alignment_score", "suboptimal_alignment_score",
@@ -296,8 +195,8 @@ class TestStripedSmithWaterman(TestSSW):
             'target_sequence': 'AAACGACTACTAAATCCGCGTGATAGGGGA'
         }
         query = StripedSmithWaterman(expected['query_sequence'],
-                                     gap_open=5,
-                                     gap_extend=2,
+                                     gap_open_penalty=5,
+                                     gap_extend_penalty=2,
                                      score_size=2,
                                      mask_length=15,
                                      mask_auto=True,
@@ -306,8 +205,8 @@ class TestStripedSmithWaterman(TestSSW):
                                      distance_filter=None,
                                      override_skip_babp=False,
                                      protein=False,
-                                     match=2,
-                                     mismatch=-3,
+                                     match_score=2,
+                                     mismatch_score=-3,
                                      substitution_matrix=None,
                                      suppress_sequences=False,
                                      zero_index=True)
@@ -331,7 +230,7 @@ class TestStripedSmithWaterman(TestSSW):
         }
         query = StripedSmithWaterman(expected['query_sequence'],
                                      protein=True,
-                                     substitution_matrix=self.blosum50)
+                                     substitution_matrix=blosum50)
         alignment = query(expected['target_sequence'])
         self._check_alignment(alignment, expected)
 
@@ -381,7 +280,7 @@ class TestStripedSmithWaterman(TestSSW):
         self._check_argument_with_inequality_on_optimal_align_score(
             query_sequences=query_sequences,
             target_sequences=target_sequences,
-            arg='match',
+            arg='match_score',
             default=2,
             i_range=range(0, 5),
             compare_lt=self.assertLess,
@@ -401,7 +300,7 @@ class TestStripedSmithWaterman(TestSSW):
         self._check_argument_with_inequality_on_optimal_align_score(
             query_sequences=query_sequences,
             target_sequences=target_sequences,
-            arg='mismatch',
+            arg='mismatch_score',
             default=-3,
             i_range=range(-6, 1),
             # These are intentionally inverted
@@ -422,7 +321,8 @@ class TestStripedSmithWaterman(TestSSW):
             'query_sequence': 'AGAGGGTAATCAGCCGTGTCCACCGGAACACAACGCTATCGGGCGA',
             'target_sequence': 'GTTCGCCCCAGTAAAGTTGCTACCAAATCCGCATG'
         }
-        query = StripedSmithWaterman(expected['query_sequence'], mismatch=-8)
+        query = StripedSmithWaterman(expected['query_sequence'],
+                                     mismatch_score=-8)
         alignment = query(expected['target_sequence'])
         self._check_alignment(alignment, expected)
 
@@ -454,7 +354,7 @@ class TestStripedSmithWaterman(TestSSW):
                 self.assertNotEqual(align1.optimal_alignment_score,
                                     align2.optimal_alignment_score)
 
-    def test_arg_gap_open(self):
+    def test_arg_gap_open_penalty(self):
         query_sequences = [
             "TTATAATTTTCTTAGTTATTATCAATATTTATAATTTGATTTTGTTGTAAT",
             "AGTCCGAAGGGTAATATAGGCGTGTCACCTA",
@@ -466,7 +366,7 @@ class TestStripedSmithWaterman(TestSSW):
         self._check_argument_with_inequality_on_optimal_align_score(
             query_sequences=query_sequences,
             target_sequences=target_sequences,
-            arg='gap_open',
+            arg='gap_open_penalty',
             default=5,
             i_range=range(1, 12),
             # These are intentionally inverted
@@ -488,11 +388,11 @@ class TestStripedSmithWaterman(TestSSW):
             'target_sequence': 'TAGAGATTAATTGCCACTGCCAAAATTCTG'
         }
         query = StripedSmithWaterman(expected['query_sequence'],
-                                     gap_open=1)
+                                     gap_open_penalty=1)
         alignment = query(expected['target_sequence'])
         self._check_alignment(alignment, expected)
 
-    def test_arg_gap_extend(self):
+    def test_arg_gap_extend_penalty(self):
         query_sequences = [
             "TTATAATTTTCTTATTATTATCAATATTTATAATTTGATTTTGTTGTAAT",
             "AGTCGAAGGGTAATACTAGGCGTGTCACCTA",
@@ -504,7 +404,7 @@ class TestStripedSmithWaterman(TestSSW):
         self._check_argument_with_inequality_on_optimal_align_score(
             query_sequences=query_sequences,
             target_sequences=target_sequences,
-            arg='gap_extend',
+            arg='gap_extend_penalty',
             default=2,
             i_range=range(1, 10),
             # These are intentionally inverted
@@ -526,7 +426,7 @@ class TestStripedSmithWaterman(TestSSW):
             'target_sequence': 'GCCCAGTAGCTTCCCAATATGAGAGCATCAATTGTAGATCGGGCC'
         }
         query = StripedSmithWaterman(expected['query_sequence'],
-                                     gap_extend=10)
+                                     gap_extend_penalty=10)
         alignment = query(expected['target_sequence'])
         self._check_alignment(alignment, expected)
 
@@ -657,26 +557,42 @@ class TestStripedSmithWaterman(TestSSW):
 
 
 class TestAlignStripedSmithWaterman(TestSSW):
+    def _check_Alignment_to_AlignmentStructure(self, alignment, structure):
+        self.assertEqual(alignment.score(), structure.optimal_alignment_score)
+        self.assertEqual(str(alignment[0]), structure.aligned_query_sequence)
+        self.assertEqual(str(alignment[1]), structure.aligned_target_sequence)
+        if structure.query_begin == -1:
+            self.assertEqual(alignmnet.start_end_positions(), None)
+        else:
+            for (start, end), (expected_start, expected_end) in \
+                zip(alignment.start_end_positions(),
+                    [(structure.query_begin,
+                      structure.query_end),
+                     (structure.target_begin,
+                      structure.target_end_optimal)]):
+                self.assertEqual(start, expected_start)
+                self.assertEqual(end, expected_end)
+
     def test_same_as_using_StripedSmithWaterman_object(self):
         query_sequence = 'ATGGAAGCTATAAGCGCGGGTGAG'
         target_sequence = 'AACTTATATAATAAAAATTATATATTCGTTGGGTTCTTTTGATATAAATC'
         query = StripedSmithWaterman(query_sequence)
         align1 = query(target_sequence)
-        align2 = align_striped_smith_waterman(query_sequence,
-                                              target_sequence)
-        self._check_alignment(align2, align1)
+        align2 = local_pairwise_align_ssw(query_sequence,
+                                          target_sequence)
+        self._check_Alignment_to_AlignmentStructure(align2, align1)
 
     def test_kwargs_are_usable(self):
         kwargs = {}
-        kwargs['zero_index'] = False
-        kwargs['match'] = 5
+        kwargs['mismatch_score'] = -2
+        kwargs['match_score'] = 5
         query_sequence = 'AGGGTAATTAGGCGTGTTCACCTA'
         target_sequence = 'TACTTATAAGATGTCTCAACGGCATGCGCAACTTGTGAAGTG'
         query = StripedSmithWaterman(query_sequence, **kwargs)
         align1 = query(target_sequence)
-        align2 = align_striped_smith_waterman(query_sequence,
-                                              target_sequence, **kwargs)
-        self._check_alignment(align2, align1)
+        align2 = local_pairwise_align_ssw(query_sequence,
+                                          target_sequence, **kwargs)
+        self._check_Alignment_to_AlignmentStructure(align2, align1)
 
 
 class TestAlignmentStructure(TestSSW):
@@ -805,20 +721,20 @@ class TestAlignmentStructure(TestSSW):
                                  test['cigar_tuples'], test['begin'],
                                  end, test['gap_type']))
 
-    def test_get_aligned_query_target_sequence(self):
+    def test_aligned_query_target_sequence(self):
         query = StripedSmithWaterman("AGGGTAATTAGGCGTGTTCACCTA")
         alignment = query("AGTCGAAGGGTAATATAGGCGTGTCACCTA")
         self.assertEqual("AGGGTAATATAGGCGT-GTCACCTA",
-                         alignment.get_aligned_target_sequence())
+                         alignment.aligned_target_sequence)
         self.assertEqual("AGGGTAAT-TAGGCGTGTTCACCTA",
-                         alignment.get_aligned_query_sequence())
+                         alignment.aligned_query_sequence)
 
-    def test_get_aligned_query_target_sequence_with_suppressed_sequences(self):
+    def test_aligned_query_target_sequence_with_suppressed_sequences(self):
         query = StripedSmithWaterman("AGGGTAATTAGGCGTGTTCACCTA",
                                      suppress_sequences=True)
         alignment = query("AGTCGAAGGGTAATATAGGCGTGTCACCTA")
-        self.assertEqual(None, alignment.get_aligned_target_sequence())
-        self.assertEqual(None, alignment.get_aligned_query_sequence())
+        self.assertEqual(None, alignment.aligned_target_sequence)
+        self.assertEqual(None, alignment.aligned_query_sequence)
 
 if __name__ == '__main__':
     main()

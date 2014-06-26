@@ -28,10 +28,10 @@ Exceptions
    MissingNodeError
    NoParentError
    FastqParseError
+   StockholmParseError
    GeneticCodeError
    GeneticCodeInitError
    InvalidCodonError
-
 """
 from __future__ import absolute_import, division, print_function
 
@@ -144,4 +144,7 @@ class InvalidCodonError(KeyError, GeneticCodeError):
 
 class QueryNotFoundError(Exception):
     """Exception raised by EUtils when no data is retrieved"""
+
+
+class StockholmParseError(FileFormatError):
     pass

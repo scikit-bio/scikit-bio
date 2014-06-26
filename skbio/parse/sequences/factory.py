@@ -101,9 +101,9 @@ def load(seqs, qual=None, constructor=None, **kwargs):
 
     See Also
     --------
-    skbio.parse.sequences.iterator.SequenceIterator
-    skbio.parse.sequences.iterator.FastaIterator
-    skbio.parse.sequences.iterator.FastqIterator
+    SequenceIterator
+    FastaIterator
+    FastqIterator
 
     """
     if not seqs:

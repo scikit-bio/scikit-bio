@@ -8,7 +8,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-__version__ = "0.1.3-dev"
+__version__ = "0.1.4-dev"
 
 import os
 from setuptools import find_packages, setup
@@ -68,7 +68,7 @@ setup(name='scikit-bio',
       ext_modules=extensions,
       include_dirs=[np.get_include()],
       install_requires=['numpy >= 1.7', 'matplotlib >= 1.1.0',
-                        'scipy >= 0.13.0', 'pandas', 'future'],
+                        'scipy >= 0.13.0', 'pandas', 'future', 'natsort'],
       extras_require={'test': ["nose >= 0.10.1", "pep8", "flake8"],
                       'doc': ["Sphinx >= 1.2.2", "sphinx-bootstrap-theme"]},
       classifiers=classifiers,

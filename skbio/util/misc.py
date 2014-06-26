@@ -235,7 +235,7 @@ def get_create_dir_error_codes():
             'OTHER_OS_ERROR': 3}
 
 
-def handle_error_codes(dir_name, supress_errors=False,
+def handle_error_codes(dir_name, suppress_errors=False,
                        error_code=None):
     """Wrapper function for error_handling.
 
@@ -259,7 +259,7 @@ def handle_error_codes(dir_name, supress_errors=False,
 
     if error_code == error_code_lookup['NO_ERROR']:
         return error_code_lookup['NO_ERROR']
-    if supress_errors:
+    if suppress_errors:
         return error_code
     else:
         raise OSError(error_strings[error_code])

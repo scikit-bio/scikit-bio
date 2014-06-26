@@ -39,7 +39,11 @@ def berger_parker_d(counts):
     """Calculate Berger-Parker dominance.
 
     Berger-Parker dominance is defined as the fraction of the sample that
-    belongs to the most abundant OTUs.
+    belongs to the most abundant OTUs:
+
+    .. math::
+
+       d = \\frac{N_{max}}{N}
 
     Parameters
     ----------
@@ -67,7 +71,12 @@ def berger_parker_d(counts):
 
 
 def brillouin_d(counts):
-    """Calculate Brillouin index of alpha diversity.
+    """Calculate Brillouin index of alpha diversity, which is defined as:
+
+    .. math::
+
+       HB = \\frac{\\ln N!-\\sum^5_{i=1}{\\ln n_i!}}{N}
+
 
     Parameters
     ----------
@@ -438,7 +447,15 @@ def kempton_taylor_q(counts, lower_quantile=0.25, upper_quantile=0.75):
 
 
 def margalef(counts):
-    """Calculate Margalef's richness index.
+    """Calculate Margalef's richness index, which is defined as:
+
+    .. math::
+
+       D = \\frac{(S - 1)}{\\ln N}
+
+    where :math:`S` is the species number and :math:`N` is the
+    total number of individuals (sum of abundances for all OTUs).
+
 
     Assumes log accumulation.
 
@@ -467,7 +484,21 @@ def margalef(counts):
 
 
 def mcintosh_d(counts):
-    """Calculate McIntosh dominance index D.
+    """Calculate McIntosh dominance index D, which is defined as:
+
+    .. math::
+
+       D = \\frac{N - U}{N - \\sqrt{N}}
+
+    where :math:`N` is the total number of individuals (sum of abundances for
+    all OTUs) and :math:`U` is given as:
+
+    .. math::
+
+        U = \\sqrt{\\sum{{n_i}^2}}
+
+    where :math:`n_i` is the sum of abundances for all OTUs in the
+    :math:`i_{th}` species.
 
     Parameters
     ----------

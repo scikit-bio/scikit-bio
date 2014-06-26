@@ -117,7 +117,7 @@ def procrustes(data1, data2):
     num_rows, num_cols = np.shape(data1)
     if (num_rows, num_cols) != np.shape(data2):
         raise ValueError("input matrices must be of same shape")
-    if (num_rows == 0 or num_cols == 0):
+    if num_rows == 0 or num_cols == 0:
         raise ValueError("input matrices must be >0 rows, >0 cols")
 
     # add a dimension to allow reflections (rotations in n + 1 dimensions)
@@ -128,7 +128,7 @@ def procrustes(data1, data2):
     mtx1 = _center(mtx1)
     mtx2 = _center(mtx2)
 
-    if ((not np.any(mtx1)) or (not np.any(mtx2))):
+    if (not np.any(mtx1)) or (not np.any(mtx2)):
         raise ValueError("input matrices must contain >1 unique points")
 
     mtx1 = _normalize(mtx1)

@@ -91,6 +91,8 @@ class TreeNode(object):
         self.parent = parent
         self._tip_cache = {}
         self._non_tip_cache = {}
+        self._registered_caches = set()
+
         self.children = []
         self.id = None
 
@@ -587,8 +589,7 @@ class TreeNode(object):
             edgename = parent.name
             length = parent.length
         else:
-            if parent is not self.parent:
-                raise TreeError("Should never happen...")
+            assert parent is self.parent
             edgename = self.name
             length = self.length
 
@@ -1260,12 +1261,19 @@ class TreeNode(object):
             if not n.is_tip():
                 yield n
 
-    def invalidate_caches(self):
-        r"""Delete lookup caches
+    def invalidate_caches(self, attr=True):
+        r"""Delete lookup and attribute caches
+
+        Parameters
+        ----------
+        attr : bool, optional
+            If ``True``, invalidate attribute caches created by
+            `TreeNode.cache_attr`.
 
         See Also
         --------
         create_caches
+        cache_attr
         find
 
         """
@@ -1274,6 +1282,12 @@ class TreeNode(object):
         else:
             self._tip_cache = {}
             self._non_tip_cache = {}
+
+            if self._registered_caches and attr:
+                for n in self.traverse():
+                    for cache in self._registered_caches:
+                        if hasattr(n, cache):
+                            delattr(n, cache)
 
     def create_caches(self):
         r"""Construct an internal lookups to facilitate searching by name
@@ -1287,12 +1301,13 @@ class TreeNode(object):
         Raises
         ------
         DuplicateNodeError
-            The tip cache requies that names are unique (with the exception of
+            The tip cache requires that names are unique (with the exception of
             names that are None)
 
         See Also
         --------
         invalidate_caches
+        cache_attr
         find
 
         """
@@ -1302,7 +1317,7 @@ class TreeNode(object):
             if self._tip_cache and self._non_tip_cache:
                 return
 
-            self.invalidate_caches()
+            self.invalidate_caches(attr=False)
 
             tip_cache = {}
             non_tip_cache = defaultdict(list)
@@ -1315,7 +1330,8 @@ class TreeNode(object):
 
                 if node.is_tip():
                     if name in tip_cache:
-                        raise DuplicateNodeError("%s already exists!" % name)
+                        raise DuplicateNodeError("Tip with name '%s' already "
+                                                 "exists!" % name)
 
                     tip_cache[name] = node
                 else:
@@ -1707,8 +1723,8 @@ class TreeNode(object):
 
         newest_cluster_index = cluster_count + 1
         for link in linkage_matrix:
-            child_a = node_lookup[link[0]]
-            child_b = node_lookup[link[1]]
+            child_a = node_lookup[int(link[0])]
+            child_b = node_lookup[int(link[1])]
 
             path_length = link[2] / 2
             child_a.length = path_length - child_a._balanced_distance_to_tip()
@@ -1895,7 +1911,8 @@ class TreeNode(object):
             last_token = t
 
         if curr_node is not None and curr_node.parent is not None:
-            raise RecordError("Didn't get back to root of tree.")
+            raise RecordError("Didn't get back to root of tree. The newick "
+                              "string may be malformed.")
 
         if curr_node is None:  # no data -- return empty node
             return cls()
@@ -1959,7 +1976,7 @@ class TreeNode(object):
         else:
             for attr, dtype in attrs:
                 if not hasattr(self, attr):
-                    raise AttributeError("%s does not appear in self!" % attr)
+                    raise AttributeError("Invalid attribute '%s'." % attr)
 
         id_index, child_index = self.index_tree()
         n = self.id + 1  # assign_ids starts at 0
@@ -1979,7 +1996,7 @@ class TreeNode(object):
         r"""Return the newick string representation of this tree.
 
         Please see `TreeNode.from_newick` for a further description of the
-        Newick format
+        Newick format.
 
         Parameters
         ----------
@@ -2046,13 +2063,7 @@ class TreeNode(object):
 
                 result.append(',')
 
-        len_result = len(result)
-        if len_result == 2:  # single node no name
-            if semicolon:
-                return ";"
-            else:
-                return ''
-        elif len_result == 3:  # single node with name
+        if len(result) <= 3:  # single node with or without name
             if semicolon:
                 return "%s;" % result[1]
             else:
@@ -2367,7 +2378,8 @@ class TreeNode(object):
             tip_order = [self.find(n) for n in endpoints]
             for n in tip_order:
                 if not n.is_tip():
-                    raise ValueError("%s is not a tip!" % n.name)
+                    raise ValueError("Node with name '%s' is not a tip." %
+                                     n.name)
 
         # linearize all tips in postorder
         # .__start, .__stop compose the slice in tip_order.
@@ -2403,7 +2415,8 @@ class TreeNode(object):
             starts, stops = [], []  # to calc ._start and ._stop for curr node
             for child in node.children:
                 if child.length is None:
-                    raise NoLengthError("%s doesn't have length" % child.name)
+                    raise NoLengthError("Node with name '%s' doesn't have a "
+                                        "length." % child.name)
 
                 distances[child.__start:child.__stop] += child.length
 
@@ -2601,7 +2614,7 @@ class TreeNode(object):
         common_names = list(common_names)
 
         if not common_names:
-            raise ValueError("No names in common between the two trees.")
+            raise ValueError("No tip names in common between the two trees.")
 
         if len(common_names) <= 2:
             return 1  # the two trees must match by definition in this case
@@ -2735,6 +2748,70 @@ class TreeNode(object):
         else:
             return sum(n.length for n in self.postorder(include_self=True) if
                        n.length is not None)
+
+    def cache_attr(self, func, cache_attrname, cache_type=list):
+        """Cache attributes on internal nodes of the tree
+
+        Parameters
+        ----------
+        func : function
+            func will be provided the node currently being evaluated and must
+            return a list of item (or items) to cache from that node or an
+            empty list.
+        cache_attrname : str
+            Name of the attribute to decorate on containing the cached values
+        cache_type : {set, frozenset, list}
+            The type of the cache
+
+        Notes
+        -----
+        This method is particularly useful if you need to frequently look up
+        attributes that would normally require a traversal of the tree.
+
+        WARNING: any cache created by this method will be invalidated if the
+        topology of the tree changes (e.g., if `TreeNode.invalidate_caches` is
+        called).
+
+        Raises
+        ------
+        TypeError
+            If an cache_type that is not a `set` or a `list` is specified.
+
+        Examples
+        --------
+        Cache the tip names of the tree on its internal nodes
+
+        >>> from skbio.core.tree import TreeNode
+        >>> tree = TreeNode.from_newick("((a,b,(c,d)e)f,(g,h)i)root;")
+        >>> f = lambda n: [n.name] if n.is_tip() else []
+        >>> tree.cache_attr(f, 'tip_names')
+        >>> for n in tree.traverse(include_self=True):
+        ...     print("Node name: %s, cache: %r" % (n.name, n.tip_names))
+        Node name: root, cache: ['a', 'b', 'c', 'd', 'g', 'h']
+        Node name: f, cache: ['a', 'b', 'c', 'd']
+        Node name: a, cache: ['a']
+        Node name: b, cache: ['b']
+        Node name: e, cache: ['c', 'd']
+        Node name: c, cache: ['c']
+        Node name: d, cache: ['d']
+        Node name: i, cache: ['g', 'h']
+        Node name: g, cache: ['g']
+        Node name: h, cache: ['h']
+
+        """
+        if cache_type in [set, frozenset]:
+            reduce_f = lambda a, b: a | b
+        elif cache_type == list:
+            reduce_f = lambda a, b: a + b
+        else:
+            raise TypeError("Only list, set and frozenset are supported!")
+
+        for node in self.postorder(include_self=True):
+            node._registered_caches.add(cache_attrname)
+
+            cached = [getattr(c, cache_attrname) for c in node.children]
+            cached.append(cache_type(func(node)))
+            setattr(node, cache_attrname, reduce(reduce_f, cached))
 
 
 def _dnd_tokenizer(data):

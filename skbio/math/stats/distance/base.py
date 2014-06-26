@@ -27,7 +27,8 @@ class CategoricalStats(object):
 
     See Also
     --------
-    ANOSIM, PERMANOVA
+    ANOSIM
+    PERMANOVA
 
     """
 

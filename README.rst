@@ -51,6 +51,7 @@ than using pip), you can find those here:
 -  `matplotlib <http://www.matplotlib.org/>`__ >= 1.1.0
 -  `pandas <http://pandas.pydata.org/>`__
 -  `future <https://pypi.python.org/pypi/future>`__
+-  `natsort <https://pypi.python.org/pypi/natsort>`__
 
 If you have trouble getting these dependencies installed (scipy, in particular, can be tricky), you should try installing `Canopy Express <https://www.enthought.com/canopy-express/>`_, which includes all of these dependencies. You should then be able to easily install scikit-bio by running::
 
@@ -87,6 +88,11 @@ Finally, if you don't want to use ``pip`` to install scikit-bio, and prefer to j
     python setup.py build_ext --inplace
 
 This will build scikit-bio's cython extensions, but not create a link to the scikit-bio source directory in ``site-packages``. If this isn't done, using certain components of scikit-bio will be inefficient and will produce an ``EfficiencyWarning``.
+
+Getting help
+------------
+
+To get help with scikit-bio, you should use the `skbio <http://stackoverflow.com/questions/tagged/skbio>`_ tag on StackOverflow (SO). Before posting a question, check out SO's guide on how to `ask a question <http://stackoverflow.com/questions/how-to-ask>`_. The scikit-bio developers regularly monitor the skbio SO tag.
 
 Licensing
 ---------
@@ -145,8 +151,9 @@ Peter Maxwell, Jeremy Widmann, Zongzhi Liu, Michael Dwan, Logan Knecht
 Jose Carlos Clemente (`@cleme <https://github.com/cleme>`__), Damien
 Coy, Levi McCracken, Andrew Butterfield, Will Van Treuren (`@wdwvt1
 <https://github.com/wdwvt1>`__), Justin Kuczynski (`@justin212k
-<https://github.com/justin212k>`__), and Jose Antonio Navas Molina
-(`@josenavas <https://github.com/josenavas>`__).
+<https://github.com/justin212k>`__), Jose Antonio Navas Molina
+(`@josenavas <https://github.com/josenavas>`__) and Matthew Wakefield
+(`@genomematt <https://github.com/genomematt>`__).
 
 Logo
 ----

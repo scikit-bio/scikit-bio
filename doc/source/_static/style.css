@@ -10,6 +10,30 @@ a:active, a:hover, a:focus {
     color: #00B84D !important;
 }
 
+blockquote {
+    font-size: 14px !important;
+}
+
+.label {
+    display: table-cell !important;
+    color: #000 !important;
+    font-size: 100% !important;
+    text-align: left !important;
+    width: 6em !important;
+}
+
+table.citation {
+    border-left: 1px solid #DDD !important;
+}
+
+table.citation td > em {
+    display: none !important;
+}
+
+.table > tbody > tr > td {
+    border-top: 1px solid #DDD !important;
+}
+
 #navbar {
     background: #24372C !important;
     border: none !important;
