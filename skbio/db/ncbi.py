@@ -609,16 +609,7 @@ def _get_taxa_names_lineages(lines):
             yield curr
 
 
-# def taxon_ids_to_names_and_lineages(ids, retmax=1000):
-#    """Yields taxon id, name and lineage for a set of taxon ids."""
-#    e = EUtils(db='taxonomy', rettype='TxInfo', retmode='xml', retmax=retmax,
-#        DEBUG=False)
-#    ids = fix_taxon_ids(ids)
-#    result = e[ids].read().splitlines()
-# print result
-#    return get_taxa_names_lineages(result)
-
-def parse_taxonomy_using_elementtree_xml_parse(search_result):
+def _parse_taxonomy_using_elementtree_xml_parse(search_result):
     """Returns upper level XML taxonomy information from GenBank.
         search_result: StringIO object
 
