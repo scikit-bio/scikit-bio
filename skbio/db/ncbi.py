@@ -477,16 +477,16 @@ class EUtils(object):
             # don't want the ids, just want to post search
             search_query.retmax = 0
             if self.DEBUG:
-                print 'SEARCH QUERY:'
-                print str(search_query)
+                print('SEARCH QUERY:')
+                print(str(search_query))
             cookie = search_query.read()
             if self.DEBUG:
-                print 'COOKIE:'
-                print repr(cookie)
+                print('COOKIE:')
+                print(repr(cookie))
             search_result = ESearchResultParser(cookie)
             if self.DEBUG:
-                print 'SEARCH RESULT:'
-                print search_result
+                print('SEARCH RESULT:')
+                print(search_result)
             try:
                 self.query_key = search_result.QueryKey
                 self.WebEnv = search_result.WebEnv
@@ -521,9 +521,9 @@ class EUtils(object):
                     fetch_query.retmax = count - curr_rec
                 fetch_query.retstart = curr_rec
                 if self.DEBUG:
-                    print 'FETCH QUERY'
-                    print 'CURR REC:', curr_rec, 'COUNT:', count
-                    print str(fetch_query)
+                    print('FETCH QUERY')
+                    print('CURR REC:', curr_rec, 'COUNT:', count)
+                    print(str(fetch_query))
                 # return the result of the fetch
                 curr = fetch_query.read()
                 result.write(curr)
@@ -664,7 +664,6 @@ def _taxon_ids_to_names_and_lineages(ids, retmax=1000):
     e = EUtils(db='taxonomy', rettype='xml', retmode='xml', retmax=retmax,
                DEBUG=False)
     fids = _fix_taxon_ids(ids)
-    # print '\nids: ',fids
     result = StringIO()
     result.write(e[fids].read())
     result.seek(0)
@@ -683,7 +682,6 @@ def _taxon_ids_to_lineages(ids, retmax=1000):
     e = EUtils(db='taxonomy', rettype='xml', retmode='xml', retmax=retmax,
                DEBUG=False)
     result = e[ids].read().splitlines()
-    # print result
     return _taxon_lineage_extractor(result)
 
 

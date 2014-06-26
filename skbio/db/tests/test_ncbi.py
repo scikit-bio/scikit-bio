@@ -219,8 +219,6 @@ class NcbiTests(TestCase):
         obs = list(_taxon_ids_to_names_and_lineages(taxon_ids))
         #self.assertEqualItems(obs, exp)
 
-        print obs
-        print exp
         if hasattr(self, 'assertItemsEqual'):
             self.assertItemsEqual(obs, exp)
         else:
@@ -229,8 +227,6 @@ class NcbiTests(TestCase):
     def test_get_unique_lineages(self):
         result = _get_unique_lineages('angiotensin[ti] AND rodents[orgn]')
 
-        print self.mouse_taxonomy
-        print result
         assert tuple(self.mouse_taxonomy) in result
         assert len(result) > 2
 
