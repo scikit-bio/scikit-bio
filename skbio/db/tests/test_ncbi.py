@@ -22,63 +22,62 @@ from skbio.db.ncbi import (EUtils, ESearch, EFetch, ELink, ESearchResultParser,
 
 
 class EUtilsTests(TestCase):
+
     """Tests of the EUtils class."""
+
     def test_simple_get(self):
         """EUtils simple access of an item should work"""
-        g = EUtils(db='protein',rettype='gp')
+        g = EUtils(db='protein', rettype='gp')
         result = g['NP_003320'].read()
         assert result.startswith('LOCUS')
         assert 'NP_003320' in result
 
     def test_get_slice(self):
         """EUtils access of a slice should work"""
-        g = EUtils(db='protein',rettype='gp', retmax=1)
+        g = EUtils(db='protein', rettype='gp', retmax=1)
         result = g['NP_003320':'NP_003322'].read()
         lines = result.splitlines()
         is_locus = lambda x: x.startswith('LOCUS')
         loci = filter(is_locus, lines)
         self.assertEqual(len(loci), 3)
 
-        #EUtils access of a slice should work, while limiting 
-        #the esearch term length
-        g = EUtils(db='protein',rettype='gp', retmax=1, url_limit=2)
+        # EUtils access of a slice should work, while limiting
+        # the esearch term length
+        g = EUtils(db='protein', rettype='gp', retmax=1, url_limit=2)
         result = g['NP_003320':'NP_003322'].read()
         lines = result.splitlines()
         is_locus = lambda x: x.startswith('LOCUS')
         loci = filter(is_locus, lines)
         self.assertEqual(len(loci), 3)
-
 
     def test_get_list(self):
         """EUtils access of a list should work"""
-        g = EUtils(db='protein',rettype='gp')
-        result = g['NP_003320','NP_003321','NP_003322'].read()
+        g = EUtils(db='protein', rettype='gp')
+        result = g['NP_003320', 'NP_003321', 'NP_003322'].read()
         lines = result.splitlines()
         is_locus = lambda x: x.startswith('LOCUS')
         loci = filter(is_locus, lines)
         self.assertEqual(len(loci), 3)
 
-        #EUtils access of a slice should work, while limiting
-        #the esearch term length
-        g = EUtils(db='protein',rettype='gp',url_limit=2)
-        result = g['NP_003320','NP_003321','NP_003322'].read()
+        # EUtils access of a slice should work, while limiting
+        # the esearch term length
+        g = EUtils(db='protein', rettype='gp', url_limit=2)
+        result = g['NP_003320', 'NP_003321', 'NP_003322'].read()
         lines = result.splitlines()
         is_locus = lambda x: x.startswith('LOCUS')
         loci = filter(is_locus, lines)
         self.assertEqual(len(loci), 3)
-
 
 #    def test_get_from_taxonomy_db(self):
 #        """EUtils access from taxonomy database should work"""
-#        #note: this is more fragile than the nucleotide databases
+# note: this is more fragile than the nucleotide databases
 #        g = EUtils(db='taxonomy', rettype='Brief', retmode='text')
 #        ids = '9606[taxid] OR 28901[taxid]'
 #        result = sorted(g[ids].read().splitlines())
 #        self.assertEqual(result, ['Homo sapiens', 'Salmonella enterica'])
-
     def test_get_from_taxonomy_db(self):
         """EUtils access from taxonomy database should work"""
-        #note: this is more fragile than the nucleotide databases
+        # note: this is more fragile than the nucleotide databases
         g = EUtils(db='taxonomy', rettype='xml', retmode='xml')
         ids = '9606[taxid] OR 28901[taxid]'
         fh = StringIO()
@@ -88,81 +87,95 @@ class EUtilsTests(TestCase):
         result = sorted([item['ScientificName'] for item in data])
         self.assertEqual(result, ['Homo sapiens', 'Salmonella enterica'])
 
-        
     def test_query(self):
         """EUtils access via a query should work"""
         g = EUtils(db='protein', rettype='gi', retmax=100)
         result = g['homo[organism] AND erf1[ti]'].read().splitlines()
-        assert '5499721' in result  #gi of human eRF1
-        #note: successfully retrieved 841,821 ids on a query for 'rrna',
-        #although it took about 40 min so not in the tests. RK 1/3/07.
+        assert '5499721' in result  # gi of human eRF1
+        # note: successfully retrieved 841,821 ids on a query for 'rrna',
+        # although it took about 40 min so not in the tests. RK 1/3/07.
 
     def test_query_retmax(self):
         """EUtils should join results taken retmax at a time"""
         g = EUtils(db='protein', rettype='gi', retmax=3, DEBUG=False)
         result = g['homo[organism] AND myh7'].read().splitlines()
         assert len(result) > 1
-        assert '83304912' in result  #gi of human myh7
+        assert '83304912' in result  # gi of human myh7
 
     def test_query_max_recs(self):
         """EUtils should stop query at max_recs when max_recs < retmax"""
         g = EUtils(db='protein', rettype='gi', max_recs=5, DEBUG=False,
-            retmax=100)
+                   retmax=100)
         result = g['homo[organism] AND myh7'].read().splitlines()
         self.assertEqual(len(result), 5)
 
     def test_query_max_recs_gt_retmax(self):
         """EUtils should stop query at max_recs when max_recs > retmax"""
         g = EUtils(db='protein', rettype='gi', max_recs=5, DEBUG=False,
-            retmax=3)
+                   retmax=3)
         result = g['homo[organism] AND myh7'].read().splitlines()
         self.assertEqual(len(result), 5)
 
 
 class ESearchTests(TestCase):
+
     """Tests of the ESearch class: gets primary ids from search."""
+
     def test_simple_search(self):
         """ESearch Access via a query should return accessions"""
         s = ESearch(db='protein', rettype='gi', retmax=1000,
-            term='homo[organism] AND myh7')
+                    term='homo[organism] AND myh7')
         result = s.read()
         parsed = ESearchResultParser(result)
-        assert '83304912' in parsed.IdList  #gi of human cardiac beta myh7
+        assert '83304912' in parsed.IdList  # gi of human cardiac beta myh7
+
 
 class ELinkTests(TestCase):
+
     """Tests of the ELink class: converts ids between databases"""
+
     def test_simple_elink(self):
         """ELink should retrieve a link from a single id"""
         l = ELink(db='taxonomy', dbfrom='protein', id='83304912')
         result = l.read()
         parsed = ELinkResultParser(result)
-        self.assertEqual(parsed, ['9606'])  #human sequence
+        self.assertEqual(parsed, ['9606'])  # human sequence
 
     def test_multiple_elink(self):
         """ELink should find unique links in a set of ids"""
-        l = ELink(db='taxonomy', dbfrom='protein', 
-            id='83304912 115496169 119586556 111309484')
+        l = ELink(db='taxonomy', dbfrom='protein',
+                  id='83304912 115496169 119586556 111309484')
         result = l.read()
         parsed = ELinkResultParser(result)
-        self.assertEqual(sorted(parsed), ['10090', '9606'])  
-        #human and mouse sequences
+        self.assertEqual(sorted(parsed), ['10090', '9606'])
+        # human and mouse sequences
+
 
 class EFetchTests(TestCase):
+
     """Tests of the EFetch class: gets records using primary ids."""
+
     def test_simple_efetch(self):
         """EFetch should return records from list of ids"""
-        f = EFetch(db='protein', rettype='fasta', retmode='text', 
-            id='111309484')
+        f = EFetch(db='protein', rettype='fasta', retmode='text',
+                   id='111309484')
         result = f.read().splitlines()
         assert result[0].startswith('>')
         assert result[1].startswith('madaemaafg'.upper())
 
+
 class NcbiTests(TestCase):
+
     """Tests of top-level convenience wrappers."""
+
     def setUp(self):
         """Define some lengthy data."""
-        self.mouse_taxonomy = map(strip, 'cellular organisms; Eukaryota; Opisthokonta; Metazoa; Eumetazoa; Bilateria; Coelomata; Deuterostomia; Chordata; Craniata; Vertebrata; Gnathostomata; Teleostomi; Euteleostomi; Sarcopterygii; Tetrapoda; Amniota; Mammalia; Theria; Eutheria; Euarchontoglires; Glires; Rodentia; Sciurognathi; Muroidea; Muridae; Murinae; Mus; Mus'.split(';'))
-        self.human_taxonomy = map(strip, 'cellular organisms; Eukaryota; Opisthokonta; Metazoa; Eumetazoa; Bilateria; Coelomata; Deuterostomia; Chordata; Craniata; Vertebrata; Gnathostomata; Teleostomi; Euteleostomi; Sarcopterygii; Tetrapoda; Amniota; Mammalia; Theria; Eutheria; Euarchontoglires; Primates; Haplorrhini; Simiiformes; Catarrhini; Hominoidea; Hominidae; Homininae; Homo'.split(';'))
+        self.mouse_taxonomy = map(
+            strip,
+            'cellular organisms; Eukaryota; Opisthokonta; Metazoa; Eumetazoa; Bilateria; Coelomata; Deuterostomia; Chordata; Craniata; Vertebrata; Gnathostomata; Teleostomi; Euteleostomi; Sarcopterygii; Tetrapoda; Amniota; Mammalia; Theria; Eutheria; Euarchontoglires; Glires; Rodentia; Sciurognathi; Muroidea; Muridae; Murinae; Mus; Mus'.split(';'))
+        self.human_taxonomy = map(
+            strip,
+            'cellular organisms; Eukaryota; Opisthokonta; Metazoa; Eumetazoa; Bilateria; Coelomata; Deuterostomia; Chordata; Craniata; Vertebrata; Gnathostomata; Teleostomi; Euteleostomi; Sarcopterygii; Tetrapoda; Amniota; Mammalia; Theria; Eutheria; Euarchontoglires; Primates; Haplorrhini; Simiiformes; Catarrhini; Hominoidea; Hominidae; Homininae; Homo'.split(';'))
 
     def test_get_primary_ids(self):
         """get_primary_ids should get primary ids from query"""
@@ -188,7 +201,7 @@ class NcbiTests(TestCase):
         <Lineage>aaa;bbb</Lineage>
         """
         self.assertEqual(list(_taxon_lineage_extractor(lines.splitlines())),
-            [['xxx','yyy'],['aaa','bbb']])
+                         [['xxx', 'yyy'], ['aaa', 'bbb']])
 
     def test_parse_taxonomy_using_elementtree_xml_parse(self):
         """parse_taxonomy_using_elementtree_xml_parse should return taxonomy associated information"""
@@ -198,13 +211,15 @@ class NcbiTests(TestCase):
         fh.write(g[ids].read())
         fh.seek(0)
         data = _parse_taxonomy_using_elementtree_xml_parse(fh)[0]
-        obs = (data['Lineage'],data['TaxId'],data['ScientificName'],\
+        obs = (data['Lineage'], data['TaxId'], data['ScientificName'],
                data['Rank'])
-        exp = ('cellular organisms; Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacteriales; Enterobacteriaceae; Salmonella',\
-              '28901','Salmonella enterica','species')
-        self.assertEqual(obs,exp)
+        exp = (
+            'cellular organisms; Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacteriales; Enterobacteriaceae; Salmonella',
+            '28901',
+            'Salmonella enterica',
+            'species')
+        self.assertEqual(obs, exp)
 
-    
     def test_taxon_ids_to_lineages(self):
         """taxon_ids_to_lineages should return lineages from taxon ids"""
         taxon_ids = ['10090', '9606']
@@ -218,13 +233,11 @@ class NcbiTests(TestCase):
             self.assertCountEqual(list(_taxon_ids_to_lineages(taxon_ids)),
                                   result)
 
-    
 #    def test_taxon_ids_to_names(self):
 #        """taxon_ids_to_names should return names from taxon ids"""
 #        taxon_ids = ['10090', '9606']
 #        result = set(['Mus musculus', 'Homo sapiens'])
 #        self.assertEqual(set(_taxon_ids_to_names(taxon_ids)), result)
-
     def test_taxon_ids_to_names(self):
         """taxon_ids_to_names should return names from taxon ids"""
         taxon_ids = ['10090', '9606']
@@ -235,10 +248,10 @@ class NcbiTests(TestCase):
         """taxon_ids_to_names should return names/lineages from taxon ids"""
         taxon_ids = ['10090', '9606']
         exp = [('10090', 'Mus musculus', '; '.join(self.mouse_taxonomy)),
-                  ('9606', 'Homo sapiens', '; '.join(self.human_taxonomy))]
+               ('9606', 'Homo sapiens', '; '.join(self.human_taxonomy))]
         obs = list(_taxon_ids_to_names_and_lineages(taxon_ids))
         #self.assertEqualItems(obs, exp)
-  
+
         print obs
         print exp
         if hasattr(self, 'assertItemsEqual'):
@@ -249,7 +262,7 @@ class NcbiTests(TestCase):
     def test_get_unique_lineages(self):
         """get_unique_lineages should return all lineages from a query"""
         result = _get_unique_lineages('angiotensin[ti] AND rodents[orgn]')
-        
+
         print self.mouse_taxonomy
         print result
         assert tuple(self.mouse_taxonomy) in result
@@ -260,7 +273,7 @@ class NcbiTests(TestCase):
         result = _get_unique_taxa('angiotensin[ti] AND primate[orgn]')
         assert 'Homo sapiens' in result
         assert len(result) > 2
-        
+
 
 if __name__ == '__main__':
     main()
