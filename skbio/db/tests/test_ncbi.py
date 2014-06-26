@@ -68,13 +68,6 @@ class EUtilsTests(TestCase):
         loci = filter(is_locus, lines)
         self.assertEqual(len(loci), 3)
 
-#    def test_get_from_taxonomy_db(self):
-#        """EUtils access from taxonomy database should work"""
-# note: this is more fragile than the nucleotide databases
-#        g = EUtils(db='taxonomy', rettype='Brief', retmode='text')
-#        ids = '9606[taxid] OR 28901[taxid]'
-#        result = sorted(g[ids].read().splitlines())
-#        self.assertEqual(result, ['Homo sapiens', 'Salmonella enterica'])
     def test_get_from_taxonomy_db(self):
         """EUtils access from taxonomy database should work"""
         # note: this is more fragile than the nucleotide databases
@@ -233,11 +226,6 @@ class NcbiTests(TestCase):
             self.assertCountEqual(list(_taxon_ids_to_lineages(taxon_ids)),
                                   result)
 
-#    def test_taxon_ids_to_names(self):
-#        """taxon_ids_to_names should return names from taxon ids"""
-#        taxon_ids = ['10090', '9606']
-#        result = set(['Mus musculus', 'Homo sapiens'])
-#        self.assertEqual(set(_taxon_ids_to_names(taxon_ids)), result)
     def test_taxon_ids_to_names(self):
         """taxon_ids_to_names should return names from taxon ids"""
         taxon_ids = ['10090', '9606']
