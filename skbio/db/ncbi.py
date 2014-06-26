@@ -8,8 +8,9 @@ from time import sleep
 from xml.dom.minidom import parseString
 from xml.etree.ElementTree import parse
 from StringIO import StringIO
+from string import strip
 
-from skbio.exception import QueryNotFoundError
+from skbio.core.exception import QueryNotFoundError
 from skbio.db.util import (UrlGetter, expand_slice,
                            make_lists_of_expanded_slices_of_set_size,
                            make_lists_of_accessions_of_set_size)

@@ -1,13 +1,15 @@
-#!/usr/bin/env python
-"""Tests of data retrieval from NCBI."""
+
 from unittest import TestCase, main
-from skbio.db.ncbi import EUtils, ESearch, EFetch, ELink, ESearchResultParser,\
-    ELinkResultParser, get_primary_ids, ids_to_taxon_ids, \
-    taxon_lineage_extractor, taxon_ids_to_lineages, taxon_ids_to_names, \
-    taxon_ids_to_names_and_lineages, \
-    get_unique_lineages, get_unique_taxa, parse_taxonomy_using_elementtree_xml_parse
 from string import strip
 from StringIO import StringIO
+
+from skbio.db.ncbi import (EUtils, ESearch, EFetch, ELink, ESearchResultParser,
+                           ELinkResultParser, _get_primary_ids,
+                           _ids_to_taxon_ids, _taxon_lineage_extractor,
+                           _taxon_ids_to_lineages, _taxon_ids_to_names,
+                           _taxon_ids_to_names_and_lineages,
+                           _get_unique_lineages, _get_unique_taxa,
+                           _parse_taxonomy_using_elementtree_xml_parse)
 
 __author__ = "Mike Robeson"
 __copyright__ = "Copyright 2007-2012, The Cogent Project"
@@ -81,7 +83,7 @@ class EUtilsTests(TestCase):
         fh = StringIO()
         fh.write(g[ids].read())
         fh.seek(0)
-        data = parse_taxonomy_using_elementtree_xml_parse(fh)
+        data = _parse_taxonomy_using_elementtree_xml_parse(fh)
         result = sorted([item['ScientificName'] for item in data])
         self.assertEqual(result, ['Homo sapiens', 'Salmonella enterica'])
 
@@ -163,17 +165,17 @@ class NcbiTests(TestCase):
 
     def test_get_primary_ids(self):
         """get_primary_ids should get primary ids from query"""
-        res = get_primary_ids('homo[orgn] AND myh7[ti]', retmax=5, max_recs=7)
+        res = _get_primary_ids('homo[orgn] AND myh7[ti]', retmax=5, max_recs=7)
         self.assertEqual(len(res), 7)
-        res = get_primary_ids('homo[orgn] AND myh7[ti]', retmax=5, max_recs=2)
+        res = _get_primary_ids('homo[orgn] AND myh7[ti]', retmax=5, max_recs=2)
         self.assertEqual(len(res), 2)
-        res = get_primary_ids('homo[orgn] AND myh7[ti]', retmax=100)
+        res = _get_primary_ids('homo[orgn] AND myh7[ti]', retmax=100)
         assert '115496168' in res
 
     def test_ids_to_taxon_ids(self):
         """ids_to_taxonomy should get taxon ids from primary ids"""
         ids = ['83304912', '115496169', '119586556', '111309484']
-        result = ids_to_taxon_ids(ids, db='protein')
+        result = _ids_to_taxon_ids(ids, db='protein')
         self.assertEqual(sorted(result), ['10090', '9606'])
 
     def test_taxon_lineage_extractor(self):
@@ -184,7 +186,7 @@ class NcbiTests(TestCase):
 
         <Lineage>aaa;bbb</Lineage>
         """
-        self.assertEqual(list(taxon_lineage_extractor(lines.splitlines())),
+        self.assertEqual(list(_taxon_lineage_extractor(lines.splitlines())),
             [['xxx','yyy'],['aaa','bbb']])
 
     def test_parse_taxonomy_using_elementtree_xml_parse(self):
@@ -194,7 +196,7 @@ class NcbiTests(TestCase):
         fh = StringIO()
         fh.write(g[ids].read())
         fh.seek(0)
-        data = parse_taxonomy_using_elementtree_xml_parse(fh)[0]
+        data = _parse_taxonomy_using_elementtree_xml_parse(fh)[0]
         obs = (data['Lineage'],data['TaxId'],data['ScientificName'],\
                data['Rank'])
         exp = ('cellular organisms; Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacteriales; Enterobacteriaceae; Salmonella',\
@@ -206,13 +208,13 @@ class NcbiTests(TestCase):
         """taxon_ids_to_lineages should return lineages from taxon ids"""
         taxon_ids = ['10090', '9606']
         result = [self.mouse_taxonomy, self.human_taxonomy]
-        #self.assertEqualItems(list(taxon_ids_to_lineages(taxon_ids)), result)
+        #self.assertEqualItems(list(_taxon_ids_to_lineages(taxon_ids)), result)
 
         if hasattr(self, 'assertItemsEqual'):
-            self.assertItemsEqual(list(taxon_ids_to_lineages(taxon_ids)),
+            self.assertItemsEqual(list(_taxon_ids_to_lineages(taxon_ids)),
                                   result)
         else:
-            self.assertCountEqual(list(taxon_ids_to_lineages(taxon_ids)),
+            self.assertCountEqual(list(_taxon_ids_to_lineages(taxon_ids)),
                                   result)
 
     
@@ -220,20 +222,20 @@ class NcbiTests(TestCase):
 #        """taxon_ids_to_names should return names from taxon ids"""
 #        taxon_ids = ['10090', '9606']
 #        result = set(['Mus musculus', 'Homo sapiens'])
-#        self.assertEqual(set(taxon_ids_to_names(taxon_ids)), result)
+#        self.assertEqual(set(_taxon_ids_to_names(taxon_ids)), result)
 
     def test_taxon_ids_to_names(self):
         """taxon_ids_to_names should return names from taxon ids"""
         taxon_ids = ['10090', '9606']
         result = set(['Mus musculus', 'Homo sapiens'])
-        self.assertEqual(set(taxon_ids_to_names(taxon_ids)), result)
+        self.assertEqual(set(_taxon_ids_to_names(taxon_ids)), result)
 
     def test_taxon_ids_to_names_and_lineages(self):
         """taxon_ids_to_names should return names/lineages from taxon ids"""
         taxon_ids = ['10090', '9606']
         exp = [('10090', 'Mus musculus', '; '.join(self.mouse_taxonomy)),
                   ('9606', 'Homo sapiens', '; '.join(self.human_taxonomy))]
-        obs = list(taxon_ids_to_names_and_lineages(taxon_ids))
+        obs = list(_taxon_ids_to_names_and_lineages(taxon_ids))
         #self.assertEqualItems(obs, exp)
   
         print obs
@@ -245,7 +247,7 @@ class NcbiTests(TestCase):
 
     def test_get_unique_lineages(self):
         """get_unique_lineages should return all lineages from a query"""
-        result = get_unique_lineages('angiotensin[ti] AND rodents[orgn]')
+        result = _get_unique_lineages('angiotensin[ti] AND rodents[orgn]')
         
         print self.mouse_taxonomy
         print result
@@ -254,7 +256,7 @@ class NcbiTests(TestCase):
 
     def test_get_unique_taxa(self):
         """get_unique_taxa should return all taxa from a query"""
-        result = get_unique_taxa('angiotensin[ti] AND primate[orgn]')
+        result = _get_unique_taxa('angiotensin[ti] AND primate[orgn]')
         assert 'Homo sapiens' in result
         assert len(result) > 2
         
