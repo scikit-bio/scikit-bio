@@ -163,12 +163,25 @@ class NcbiTests(TestCase):
 
     def setUp(self):
         """Define some lengthy data."""
-        self.mouse_taxonomy = map(
-            strip,
-            'cellular organisms; Eukaryota; Opisthokonta; Metazoa; Eumetazoa; Bilateria; Coelomata; Deuterostomia; Chordata; Craniata; Vertebrata; Gnathostomata; Teleostomi; Euteleostomi; Sarcopterygii; Tetrapoda; Amniota; Mammalia; Theria; Eutheria; Euarchontoglires; Glires; Rodentia; Sciurognathi; Muroidea; Muridae; Murinae; Mus; Mus'.split(';'))
-        self.human_taxonomy = map(
-            strip,
-            'cellular organisms; Eukaryota; Opisthokonta; Metazoa; Eumetazoa; Bilateria; Coelomata; Deuterostomia; Chordata; Craniata; Vertebrata; Gnathostomata; Teleostomi; Euteleostomi; Sarcopterygii; Tetrapoda; Amniota; Mammalia; Theria; Eutheria; Euarchontoglires; Primates; Haplorrhini; Simiiformes; Catarrhini; Hominoidea; Hominidae; Homininae; Homo'.split(';'))
+        self.mouse_taxonomy = map(strip, 'cellular organisms; Eukaryota; '
+                                  'Opisthokonta; Metazoa; Eumetazoa; Bilateria'
+                                  '; Coelomata; Deuterostomia; Chordata; '
+                                  'Craniata; Vertebrata; Gnathostomata; '
+                                  'Teleostomi; Euteleostomi; Sarcopterygii; '
+                                  'Tetrapoda; Amniota; Mammalia; Theria; '
+                                  'Eutheria; Euarchontoglires; Glires; '
+                                  'Rodentia; Sciurognathi; Muroidea; Muridae; '
+                                  'Murinae; Mus; Mus'.split(';'))
+        self.human_taxonomy = map(strip, 'cellular organisms; Eukaryota; '
+                                  'Opisthokonta; Metazoa; Eumetazoa; Bilateria'
+                                  '; Coelomata; Deuterostomia; Chordata; '
+                                  'Craniata; Vertebrata; Gnathostomata; '
+                                  'Teleostomi; Euteleostomi; Sarcopterygii; '
+                                  'Tetrapoda; Amniota; Mammalia; Theria; '
+                                  'Eutheria; Euarchontoglires; Primates; '
+                                  'Haplorrhini; Simiiformes; Catarrhini; '
+                                  'Hominoidea; Hominidae; Homininae; '
+                                  'Homo'.split(';'))
 
     def test_get_primary_ids(self):
         """get_primary_ids should get primary ids from query"""
@@ -207,7 +220,8 @@ class NcbiTests(TestCase):
         obs = (data['Lineage'], data['TaxId'], data['ScientificName'],
                data['Rank'])
         exp = (
-            'cellular organisms; Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacteriales; Enterobacteriaceae; Salmonella',
+            'cellular organisms; Bacteria; Proteobacteria; Gammaproteobacteria'
+            '; Enterobacteriales; Enterobacteriaceae; Salmonella',
             '28901',
             'Salmonella enterica',
             'species')
