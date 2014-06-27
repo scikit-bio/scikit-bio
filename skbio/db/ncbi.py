@@ -1,7 +1,37 @@
-r"""To automate batch functions provided by EUtils
+r"""
+E-utilities automation module (:mod:`skbio.db.ncbi`)
+====================================================
 
-    (http://www.ncbi..nih.gov/entrez/eutils)
-    search and fetch for sets of sequence information
+.. currentmodule:: skbio.db.ncbi
+
+This module provides a few core objects and functions to automate the retrieval
+of results using the Entrez Programming Utilities [1]_.
+
+Classes
+-------
+
+.. autosummary::
+   :toctree: generated/
+
+   EFetch
+   ELink
+   ESearch
+   ESearchResult
+   EUtils
+
+Functions
+---------
+
+.. autosummary::
+   :toctree: generated/
+
+   elink_result_parser
+   esearch_result_parser
+
+References
+----------
+.. [1] http://www.ncbi.nih.gov/entrez/eutils
+
 """
 from __future__ import absolute_import, division, print_function
 

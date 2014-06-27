@@ -20,6 +20,7 @@ API Reference
    core.tree
    core.workflow
    draw.distributions
+   db.ncbi
    format.sequences
    math.diversity.alpha
    math.diversity.beta
