@@ -164,7 +164,11 @@ class NcbiTests(TestCase):
         res = _get_primary_ids('homo[orgn] AND myh7[ti]', retmax=5, max_recs=2)
         self.assertEqual(len(res), 2)
         res = _get_primary_ids('homo[orgn] AND myh7[ti]', retmax=100)
-        assert '115496168' in res
+
+        # this may have to be updated as versions change, it previously was
+        # 115496168. See this site and the revision history
+        # http://www.ncbi.nlm.nih.gov/nuccore/NM_000257.3
+        self.assertTrue('657940851' in res)
 
     def test_ids_to_taxon_ids(self):
         ids = ['83304912', '115496169', '119586556', '111309484']
