@@ -135,25 +135,28 @@ class EFetchTests(TestCase):
 
 class NcbiTests(TestCase):
     def setUp(self):
-        self.mouse_taxonomy = map(strip, 'cellular organisms; Eukaryota; '
-                                  'Opisthokonta; Metazoa; Eumetazoa; Bilateria'
-                                  '; Coelomata; Deuterostomia; Chordata; '
-                                  'Craniata; Vertebrata; Gnathostomata; '
-                                  'Teleostomi; Euteleostomi; Sarcopterygii; '
-                                  'Tetrapoda; Amniota; Mammalia; Theria; '
-                                  'Eutheria; Euarchontoglires; Glires; '
-                                  'Rodentia; Sciurognathi; Muroidea; Muridae; '
-                                  'Murinae; Mus; Mus'.split(';'))
-        self.human_taxonomy = map(strip, 'cellular organisms; Eukaryota; '
-                                  'Opisthokonta; Metazoa; Eumetazoa; Bilateria'
-                                  '; Coelomata; Deuterostomia; Chordata; '
-                                  'Craniata; Vertebrata; Gnathostomata; '
-                                  'Teleostomi; Euteleostomi; Sarcopterygii; '
-                                  'Tetrapoda; Amniota; Mammalia; Theria; '
-                                  'Eutheria; Euarchontoglires; Primates; '
-                                  'Haplorrhini; Simiiformes; Catarrhini; '
-                                  'Hominoidea; Hominidae; Homininae; '
-                                  'Homo'.split(';'))
+        self.maxDiff = None
+        self.mouse_taxonomy = ['cellular organisms', 'Eukaryota',
+                               'Opisthokonta', 'Metazoa', 'Eumetazoa',
+                               'Bilateria', 'Deuterostomia', 'Chordata',
+                               'Craniata', 'Vertebrata', 'Gnathostomata',
+                               'Teleostomi', 'Euteleostomi', 'Sarcopterygii',
+                               'Dipnotetrapodomorpha', 'Tetrapoda', 'Amniota',
+                               'Mammalia', 'Theria', 'Eutheria',
+                               'Boreoeutheria', 'Euarchontoglires', 'Glires',
+                               'Rodentia', 'Sciurognathi', 'Muroidea',
+                               'Muridae', 'Murinae', 'Mus', 'Mus']
+
+        self.human_taxonomy = ['cellular organisms', 'Eukaryota',
+                               'Opisthokonta', 'Metazoa', 'Eumetazoa',
+                               'Bilateria', 'Deuterostomia', 'Chordata',
+                               'Craniata', 'Vertebrata', 'Gnathostomata',
+                               'Teleostomi', 'Euteleostomi', 'Sarcopterygii',
+                               'Dipnotetrapodomorpha', 'Tetrapoda', 'Amniota',
+                               'Mammalia', 'Theria', 'Eutheria',
+                               'Boreoeutheria', 'Euarchontoglires', 'Primates',
+                               'Haplorrhini', 'Simiiformes', 'Catarrhini',
+                               'Hominoidea', 'Hominidae', 'Homininae', 'Homo']
 
     def test_get_primary_ids(self):
         res = _get_primary_ids('homo[orgn] AND myh7[ti]', retmax=5, max_recs=7)
@@ -198,7 +201,6 @@ class NcbiTests(TestCase):
     def test_taxon_ids_to_lineages(self):
         taxon_ids = ['10090', '9606']
         result = [self.mouse_taxonomy, self.human_taxonomy]
-        #self.assertEqualItems(list(_taxon_ids_to_lineages(taxon_ids)), result)
 
         if hasattr(self, 'assertItemsEqual'):
             self.assertItemsEqual(list(_taxon_ids_to_lineages(taxon_ids)),
