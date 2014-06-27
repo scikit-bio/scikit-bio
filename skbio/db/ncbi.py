@@ -31,8 +31,8 @@ from skbio.parse.record_finder import DelimitedRecordFinder
 eutils_base = 'http://www.ncbi.nlm.nih.gov/entrez/eutils'
 
 # EUtils requires a tool and and email address
-default_tool_string = 'PyCogent'
-default_email_address = 'Michael.Robeson@colorado.edu'
+default_tool_string = 'scikit-bio'
+default_email_address = 'yoshiki.vazquezbaeza@colorado.edu'
 
 # databases last updated 7/22/05
 valid_databases = dict.fromkeys(["pubmed", "protein", "nucleotide",
