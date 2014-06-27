@@ -13,20 +13,7 @@ Classes
 .. autosummary::
    :toctree: generated/
 
-   EFetch
-   ELink
-   ESearch
-   ESearchResult
    EUtils
-
-Functions
----------
-
-.. autosummary::
-   :toctree: generated/
-
-   elink_result_parser
-   esearch_result_parser
 
 References
 ----------
