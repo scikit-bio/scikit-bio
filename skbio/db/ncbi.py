@@ -461,8 +461,8 @@ class EUtils(object):
         WARNING: if you _really_ have more than 300-400 terms similar to:
             'angiotensin[ti] AND rodents[orgn]'
             The results will not be what you want anyway due do the
-            limitations of the esearch url length at GenBank. You'll just end up
-            returning sets of results from the broken up word based search
+            limitations of the esearch url length at GenBank. You'll just end
+            up returning sets of results from the broken up word based search
             terms.
         """
         # figure out where to put the data
@@ -492,15 +492,15 @@ class EUtils(object):
                 self.WebEnv = search_result.WebEnv
             except AttributeError:
                 # The query_key and/or WebEnv not Found!
-                # GenBank occiasionally does not return these when user attempts
-                # to only fetch data by Accession or UID. So we just
+                # GenBank occiasionally does not return these when user
+                # attempts to only fetch data by Accession or UID. So we just
                 # move on to extract UID list directly from the search result
                 try:
                     self.id = ','.join(search_result.IdList)
                 except AttributeError:
-                    raise QueryNotFoundError(
-                        "WebEnv or query_key not Found! Query %s returned no results.\nURL was:\n%s" %
-                        (repr(query), str(search_query)))
+                    raise QueryNotFoundError("WebEnv or query_key not Found! "
+                        "Query %s returned no results.\nURL was:\n%s" % (
+                        repr(query), str(search_query)))
 
             count = search_result.Count
 
