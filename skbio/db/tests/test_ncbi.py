@@ -12,10 +12,11 @@ from unittest import TestCase, main
 from string import strip
 from StringIO import StringIO
 
-from skbio.db.ncbi import (EUtils, ESearch, EFetch, ELink, ESearchResultParser,
-                           ELinkResultParser, _get_primary_ids,
-                           _ids_to_taxon_ids, _taxon_lineage_extractor,
-                           _taxon_ids_to_lineages, _taxon_ids_to_names,
+from skbio.db.ncbi import (EUtils, ESearch, EFetch, ELink, elink_result_parser,
+                           esearch_result_parser, elink_result_parser,
+                           _get_primary_ids, _ids_to_taxon_ids,
+                           _taxon_lineage_extractor, _taxon_ids_to_lineages,
+                           _taxon_ids_to_names,
                            _taxon_ids_to_names_and_lineages,
                            _get_unique_lineages, _get_unique_taxa,
                            _parse_taxonomy_using_elementtree_xml_parse)
@@ -104,22 +105,22 @@ class ESearchTests(TestCase):
         s = ESearch(db='protein', rettype='gi', retmax=1000,
                     term='homo[organism] AND myh7')
         result = s.read()
-        parsed = ESearchResultParser(result)
-        assert '83304912' in parsed.IdList  # gi of human cardiac beta myh7
+        parsed = esearch_result_parser(result)
+        self.assertTrue('83304912' in parsed.IdList)  # gi of human cardiac beta myh7
 
 
 class ELinkTests(TestCase):
     def test_simple_elink(self):
         l = ELink(db='taxonomy', dbfrom='protein', id='83304912')
         result = l.read()
-        parsed = ELinkResultParser(result)
+        parsed = elink_result_parser(result)
         self.assertEqual(parsed, ['9606'])  # human sequence
 
     def test_multiple_elink(self):
         l = ELink(db='taxonomy', dbfrom='protein',
                   id='83304912 115496169 119586556 111309484')
         result = l.read()
-        parsed = ELinkResultParser(result)
+        parsed = elink_result_parser(result)
         self.assertEqual(sorted(parsed), ['10090', '9606'])
         # human and mouse sequences
 

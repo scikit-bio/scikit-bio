@@ -358,7 +358,7 @@ esearch_constructors = {
     'IdList': id_list_constructor}
 
 
-def ESearchResultParser(result_as_string):
+def esearch_result_parser(result_as_string):
     """Parses an ESearch result. Returns ESearchResult object."""
     if '414 Request-URI Too Large' in result_as_string:
         raise ValueError("Tried to pass too large an URI:\n" +
@@ -379,7 +379,7 @@ def ESearchResultParser(result_as_string):
     return ESearchResult(**result)
 
 
-def ELinkResultParser(text):
+def elink_result_parser(text):
     """Gets the linked ids out of a single ELink result.
 
     Does not use the XML parser because of problems with long results.
@@ -483,7 +483,7 @@ class EUtils(object):
             if self.DEBUG:
                 print('COOKIE:')
                 print(repr(cookie))
-            search_result = ESearchResultParser(cookie)
+            search_result = esearch_result_parser(cookie)
             if self.DEBUG:
                 print('SEARCH RESULT:')
                 print(search_result)
@@ -551,9 +551,9 @@ def _get_primary_ids(term, retmax=100, max_recs=None, **kwargs):
     while True:
         cookie = search_query.read()
         if search_result is None:
-            search_result = ESearchResultParser(cookie)
+            search_result = esearch_result_parser(cookie)
         else:
-            search_result.IdList.extend(ESearchResultParser(cookie).IdList)
+            search_result.IdList.extend(esearch_result_parser(cookie).IdList)
         # set the query key and WebEnv
         search_query.query_key = search_result.QueryKey
         search_query.WebEnv = search_result.WebEnv
@@ -575,7 +575,7 @@ def _get_primary_ids(term, retmax=100, max_recs=None, **kwargs):
 def _ids_to_taxon_ids(ids, db='nucleotide'):
     """Converts primary ids to taxon ids"""
     link = ELink(id=' '.join(ids), db='taxonomy', dbfrom=db, DEBUG=True)
-    return ELinkResultParser(link.read())
+    return elink_result_parser(link.read())
 
 
 def _get_between_tags(line):
