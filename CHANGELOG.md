@@ -2,6 +2,10 @@
 
 ## Version 0.1.4-dev (changes since 0.1.4 release go here)
 
+### Bug fixes
+
+* Fixed bug that resulted in a ``ValueError`` from ``local_align_pairwise_nucleotide`` (see [#504](https://github.com/biocore/scikit-bio/issues/504)) under many circumstances. This would not generate incorrect results, but would cause the code to fail.
+
 ## Version 0.1.4 (2014-06-25)
 
 This is a pre-alpha release. At this stage, major backwards-incompatible API changes can and will happen.
