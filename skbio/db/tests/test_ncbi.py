@@ -26,8 +26,8 @@ class EUtilsTests(TestCase):
     def test_simple_get(self):
         g = EUtils(db='protein', rettype='gp')
         result = g['NP_003320'].read()
-        assert result.startswith('LOCUS')
-        assert 'NP_003320' in result
+        self.assertTrue(result.startswith('LOCUS'))
+        self.assertTrue('NP_003320' in result)
 
     def test_get_slice(self):
         g = EUtils(db='protein', rettype='gp', retmax=1)
@@ -77,15 +77,15 @@ class EUtilsTests(TestCase):
     def test_query(self):
         g = EUtils(db='protein', rettype='gi', retmax=100)
         result = g['homo[organism] AND erf1[ti]'].read().splitlines()
-        assert '5499721' in result  # gi of human eRF1
+        self.assertTrue('5499721' in result)  # gi of human eRF1
         # note: successfully retrieved 841,821 ids on a query for 'rrna',
         # although it took about 40 min so not in the tests. RK 1/3/07.
 
     def test_query_retmax(self):
         g = EUtils(db='protein', rettype='gi', retmax=3, DEBUG=False)
         result = g['homo[organism] AND myh7'].read().splitlines()
-        assert len(result) > 1
-        assert '83304912' in result  # gi of human myh7
+        self.assertTrue(len(result) > 1)
+        self.assertTrue('83304912' in result)  # gi of human myh7
 
     def test_query_max_recs(self):
         g = EUtils(db='protein', rettype='gi', max_recs=5, DEBUG=False,
@@ -122,7 +122,6 @@ class ELinkTests(TestCase):
         result = l.read()
         parsed = elink_result_parser(result)
         self.assertEqual(sorted(parsed), ['10090', '9606'])
-        # human and mouse sequences
 
 
 class EFetchTests(TestCase):
@@ -130,8 +129,8 @@ class EFetchTests(TestCase):
         f = EFetch(db='protein', rettype='fasta', retmode='text',
                    id='111309484')
         result = f.read().splitlines()
-        assert result[0].startswith('>')
-        assert result[1].startswith('madaemaafg'.upper())
+        self.assertTrue(result[0].startswith('>'))
+        self.assertTrue(result[1].startswith('madaemaafg'.upper()))
 
 
 class NcbiTests(TestCase):
@@ -234,13 +233,13 @@ class NcbiTests(TestCase):
     def test_get_unique_lineages(self):
         result = _get_unique_lineages('angiotensin[ti] AND rodents[orgn]')
 
-        assert tuple(self.mouse_taxonomy) in result
-        assert len(result) > 2
+        self.assertTrue(tuple(self.mouse_taxonomy) in result)
+        self.assertTrue(len(result) > 2)
 
     def test_get_unique_taxa(self):
         result = _get_unique_taxa('angiotensin[ti] AND primate[orgn]')
-        assert 'Homo sapiens' in result
-        assert len(result) > 2
+        self.assertTrue('Homo sapiens' in result)
+        self.assertTrue(len(result) > 2)
 
 
 if __name__ == '__main__':
