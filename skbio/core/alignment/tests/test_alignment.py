@@ -19,6 +19,7 @@ except ImportError:  # python3 system
     from io import StringIO
 
 import numpy as np
+from scipy.spatial.distance import hamming
 
 from skbio.core.sequence import (NucleotideSequence, DNASequence, RNASequence,
                                  DNA)
@@ -231,6 +232,25 @@ class SequenceCollectionTests(TestCase):
         exp4 = ""
         self.assertEqual(str(self.empty), exp4)
 
+    def test_distances(self):
+        """distances functions as expected
+        """
+        s1 = SequenceCollection([DNA("ACGT", "d1"), DNA("ACGG", "d2")])
+        expected = [[0, 0.25],
+                    [0.25, 0]]
+        expected = DistanceMatrix(expected, ['d1', 'd2'])
+        actual = s1.distances(hamming)
+        self.assertEqual(actual, expected)
+
+        # alt distance function provided
+        def dumb_distance(s1, s2):
+            return 42.
+        expected = [[0, 42.],
+                    [42., 0]]
+        expected = DistanceMatrix(expected, ['d1', 'd2'])
+        actual = s1.distances(dumb_distance)
+        self.assertEqual(actual, expected)
+
     def test_distribution_stats(self):
         """distribution_stats functions as expected
         """
@@ -404,6 +424,17 @@ class AlignmentTests(TestCase):
         expected = DistanceMatrix(expected, ['d1', 'd2', 'd3'])
         actual = self.a1.distances()
         self.assertEqual(actual, expected)
+
+        # alt distance function provided
+        def dumb_distance(s1, s2):
+            return 42.
+        expected = [[0, 42., 42.],
+                    [42., 0, 42.],
+                    [42., 42., 0]]
+        expected = DistanceMatrix(expected, ['d1', 'd2', 'd3'])
+        actual = self.a1.distances(dumb_distance)
+        self.assertEqual(actual, expected)
+
 
     def test_score(self):
         self.assertEqual(self.a3.score(), 42.0)
