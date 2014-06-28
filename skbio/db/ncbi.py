@@ -445,18 +445,9 @@ def elink_result_parser(text):
 
 
 class EUtils(object):
-
     """Retrieves records from NCBI using EUtils."""
-
-    def __init__(
-            self,
-            filename=None,
-            wait=0.5,
-            retmax=100,
-            url_limit=400,
-            DEBUG=False,
-            max_recs=None,
-            **kwargs):
+    def __init__(self, filename=None, wait=0.5, retmax=100, url_limit=400,
+                 DEBUG=False, max_recs=None, **kwargs):
         self.__dict__.update(kwargs)
         self.filename = filename
         self.wait = wait
@@ -634,7 +625,7 @@ def _taxon_lineage_extractor(lines):
             between_tags = line.split('>', 1)[1].rsplit('<', 1)[0]
             yield map(strip, between_tags.split(';'))
 
-taxon_record_finder = DelimitedRecordFinder('</Taxon>', constructor=None,
+TAXON_RECORD_FINDER = DelimitedRecordFinder('</Taxon>', constructor=None,
                                             strict=False)
 
 
@@ -657,7 +648,7 @@ def _get_taxid_name_lineage(rec):
 def _get_taxa_names_lineages(lines):
     """Extracts taxon, name and lineage from each entry in an XML record."""
     empty_result = (None, None, None)
-    for rec in taxon_record_finder(lines):
+    for rec in TAXON_RECORD_FINDER(lines):
         curr = _get_taxid_name_lineage(rec)
         if curr != empty_result:
             yield curr
