@@ -366,11 +366,6 @@ class SequenceCollection(object):
         skbio.core.distance.DistanceMatrix
         scipy.spatial.distance.hamming
 
-        Notes
-        -----
-        Distances between sequences are computed as hamming distances, though
-        this will be generalized (see #194).
-
         Examples
         --------
         >>> from scipy.spatial.distance import hamming
