@@ -4,8 +4,9 @@ E-utilities automation module (:mod:`skbio.db.ncbi`)
 
 .. currentmodule:: skbio.db.ncbi
 
-This module provides a few core objects and functions to automate the retrieval
-of results using the Entrez Programming Utilities [1]_.
+EUtils [1]_. is a web service offered by the NCBI to access the sequence,
+literature and other databases by a special format of URLs. This module offers
+an interface to construct the URLs and retrieve the results in text format.
 
 Classes
 -------
@@ -13,6 +14,10 @@ Classes
 .. autosummary::
    :toctree: generated/
 
+   EFetch
+   ELink
+   ESearch
+   ESearchResult
    EUtils
 
 References
