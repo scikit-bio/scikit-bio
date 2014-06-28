@@ -13,15 +13,16 @@ __email__ = "rob@spot.colorado.edu"
 __status__ = "Production"
 
 class UrlGetter(object):
-    Defaults = {}       #override in derived classes -- default values
-    PrintedFields = {}  #override in derived classes -- fields to print
-    BaseUrl = ''        #override in derived classes
-    KeyValDelimiter = '='
-    FieldDelimiter = '&'
+    """Base class to submit queries with EUtils"""
+    defaults = {}       #override in derived classes -- default values
+    printed_fields = {}  #override in derived classes -- fields to print
+    base_url = ''        #override in derived classes
+    key_value_delimiter = '='
+    field_delimiter = '&'
     
     def __init__(self, **kwargs):
         """Returns new instance with arbitrary kwargs."""
-        self.__dict__.update(self.Defaults)
+        self.__dict__.update(self.defaults)
         self.__dict__.update(kwargs)
         self._temp_args = {}
 

@@ -288,12 +288,21 @@ for key, val in RETTYPES.items():
 
 
 class ESearch(UrlGetter):
-    """Performs an ESearch, getting a list of ids from an arbitrary query."""
-    PrintedFields = dict.fromkeys(['db', 'usehistory', 'term', 'retmax',
+    """Looks up a given query using EUtils
+
+    Performs an `esearch`, getting a list of ids from an arbitrary query
+
+
+    References
+    ----------
+    .. [1] http://www.ncbi.nih.gov/entrez/eutils
+
+    """
+    printed_fields = dict.fromkeys(['db', 'usehistory', 'term', 'retmax',
                                    'retstart', 'tool', 'email'])
-    Defaults = {'db': 'nucleotide', 'usehistory': 'y', 'retmax': 1000,
+    defaults = {'db': 'nucleotide', 'usehistory': 'y', 'retmax': 1000,
                 'tool': DEFAULT_TOOL_STRING, 'email': DEFAULT_EMAIL_ADDRESS}
-    BaseUrl = EUTILS_BASE_URL + '/esearch.fcgi?'
+    base_url = EUTILS_BASE_URL + '/esearch.fcgi?'
 
 
 class EFetch(UrlGetter):
@@ -303,23 +312,23 @@ class EFetch(UrlGetter):
     will only get 3 records (this is for testing purposes). You will probably
     want to increase for real searches.
     """
-    PrintedFields = dict.fromkeys(['db', 'rettype', 'retmode', 'query_key',
+    printed_fields = dict.fromkeys(['db', 'rettype', 'retmode', 'query_key',
                                    'WebEnv', 'retmax', 'retstart', 'id',
                                    'tool', 'email'])
-    Defaults = {'retmode': 'text', 'rettype': 'fasta', 'db': 'nucleotide',
+    defaults = {'retmode': 'text', 'rettype': 'fasta', 'db': 'nucleotide',
                 'retstart': 0, 'retmax': 100, 'tool': DEFAULT_TOOL_STRING,
                 'email': DEFAULT_EMAIL_ADDRESS}
-    BaseUrl = EUTILS_BASE_URL + '/efetch.fcgi?'
+    base_url = EUTILS_BASE_URL + '/efetch.fcgi?'
 
 
 class ELink(UrlGetter):
     """Retrieves a list of ids from one db that link to another db."""
-    PrintedFields = dict.fromkeys(['db', 'id', 'reldate', 'mindate', 'maxdate',
-                                   'datetype', 'term', 'retmode', 'db',
-                                   'dbfrom', 'WebEnv', 'query_key', 'holding',
-                                   'cmd', 'tool', 'email'])
-    Defaults = {'tool': DEFAULT_TOOL_STRING, 'email': DEFAULT_EMAIL_ADDRESS}
-    BaseUrl = EUTILS_BASE_URL + '/elink.fcgi?'
+    printed_fields = dict.fromkeys(['db', 'id', 'reldate', 'mindate',
+                                    'maxdate', 'datetype', 'term', 'retmode',
+                                    'db', 'dbfrom', 'WebEnv', 'query_key',
+                                    'holding', 'cmd', 'tool', 'email'])
+    defaults = {'tool': DEFAULT_TOOL_STRING, 'email': DEFAULT_EMAIL_ADDRESS}
+    base_url = EUTILS_BASE_URL + '/elink.fcgi?'
 
 
 class ESearchResult(object):
@@ -687,8 +696,11 @@ def _taxon_ids_to_lineages(ids, retmax=1000):
 def _taxon_ids_to_names(ids, retmax=1000):
     """Returns names (e.g. species) from set of taxon ids.
 
-    WARNING: Resulting lineages aren't in the same order as input. Use
-    taxon_ids_to_name_and_lineage if you need the names and/or lineages
+    Notes
+    -----
+
+    Resulting lineages aren't in the same order as input. Use
+    `taxon_ids_to_name_and_lineage` if you need the names and/or lineages
     associated with the specific ids.
     """
     e = EUtils(db='taxonomy', rettype='xml', retmode='xml', retmax=retmax,
