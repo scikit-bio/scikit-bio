@@ -17,7 +17,6 @@ Classes
    EFetch
    ELink
    ESearch
-   ESearchResult
    EUtils
 
 References
@@ -35,7 +34,6 @@ from __future__ import absolute_import, division, print_function
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from urllib import urlopen, urlretrieve
 from time import sleep
 from xml.dom.minidom import parseString
 from xml.etree.ElementTree import parse
@@ -43,7 +41,7 @@ from StringIO import StringIO
 from string import strip
 
 from skbio.core.exception import QueryNotFoundError
-from skbio.db.util import (UrlGetter, expand_slice,
+from skbio.db.util import (UrlGetter,
                            make_lists_of_expanded_slices_of_set_size,
                            make_lists_of_accessions_of_set_size)
 from skbio.parse.record_finder import DelimitedRecordFinder
