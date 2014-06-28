@@ -2,6 +2,14 @@
 
 ## Version 0.1.4-dev (changes since 0.1.4 release go here)
 
+### Bug fixes
+
+* Fixed bug that resulted in a ``ValueError`` from ``local_align_pairwise_nucleotide`` (see [#504](https://github.com/biocore/scikit-bio/issues/504)) under many circumstances. This would not generate incorrect results, but would cause the code to fail.
+
+### Miscellaneous
+
+* Relaxed requirement in ``BiologicalSequence.distance`` that sequences being compared are of equal length. This is relevant for hamming distance, so the check is still performed in that case, but other distance metrics may not have that requirement. See [#504](https://github.com/biocore/scikit-bio/issues/507)).
+
 ## Version 0.1.4 (2014-06-25)
 
 This is a pre-alpha release. At this stage, major backwards-incompatible API changes can and will happen.
