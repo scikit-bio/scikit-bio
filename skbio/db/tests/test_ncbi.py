@@ -106,7 +106,9 @@ class ESearchTests(TestCase):
                     term='homo[organism] AND myh7')
         result = s.read()
         parsed = esearch_result_parser(result)
-        self.assertTrue('83304912' in parsed.IdList)  # gi of human cardiac beta myh7
+
+        # gi of human cardiac beta myh7
+        self.assertTrue('83304912' in parsed.IdList)
 
 
 class ELinkTests(TestCase):
@@ -223,7 +225,6 @@ class NcbiTests(TestCase):
         exp = [('10090', 'Mus musculus', '; '.join(self.mouse_taxonomy)),
                ('9606', 'Homo sapiens', '; '.join(self.human_taxonomy))]
         obs = list(_taxon_ids_to_names_and_lineages(taxon_ids))
-        #self.assertEqualItems(obs, exp)
 
         if hasattr(self, 'assertItemsEqual'):
             self.assertItemsEqual(obs, exp)

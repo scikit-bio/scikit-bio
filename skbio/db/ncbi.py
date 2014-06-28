@@ -89,14 +89,14 @@ RETTYPES['pubmed'] = ('DocSum Brief Abstract Citation MEDLINE XML uilist '
                       'pubmed_unigene pubmed_unists')
 
 RETTYPES['protein'] = ('DocSum ASN1 FASTA XML GenPept GiList graph fasta_xml '
-                      'igp_xml gpc_xml ExternalLink protein_protein '
-                      'protein_cdd protein_domains protein_gene protein_genome'
-                      ' protein_genomeprj protein_homologene '
-                      'protein_nucleotide protein_nucleotide_mgc protein_omim'
-                      ' protein_pcassay protein_pccompound protein_pcsubstance'
-                      ' protein_pmc protein_popset protein_pubmed protein_snp'
-                      ' protein_snp_genegenotype protein_structure '
-                      'protein_taxonomy protein_unigene')
+                       'igp_xml gpc_xml ExternalLink protein_protein '
+                       'protein_cdd protein_domains protein_gene protein_genom'
+                       'e protein_genomeprj protein_homologene '
+                       'protein_nucleotide protein_nucleotide_mgc protein_omim'
+                       ' protein_pcassay protein_pccompound protein_pcsubstanc'
+                       'e protein_pmc protein_popset protein_pubmed protein_sn'
+                       'p protein_snp_genegenotype protein_structure '
+                       'protein_taxonomy protein_unigene')
 
 RETTYPES['nucleotide'] = ('DocSum ASN1 FASTA XML GenBank GiList graph '
                           'fasta_xml gb_xml gbc_xml ExternalLink '
@@ -434,13 +434,11 @@ class EUtils(object):
         """
         # check if it's a slice
         if isinstance(query, slice):
-            #query = expand_slice(query)
             queries = make_lists_of_expanded_slices_of_set_size(query)
             return self.grab_data(queries)
 
         # check if it's a list -- if so, delimit with ' '
         if isinstance(query, list) or isinstance(query, tuple):
-            #query = ' '.join(map(str, query))
             queries = make_lists_of_accessions_of_set_size(query)
             return self.grab_data(queries)
 
@@ -498,8 +496,10 @@ class EUtils(object):
                     self.id = ','.join(search_result.IdList)
                 except AttributeError:
                     raise QueryNotFoundError("WebEnv or query_key not Found! "
-                        "Query %s returned no results.\nURL was:\n%s" % (
-                        repr(query), str(search_query)))
+                                             "Query %s returned no results.\n"
+                                             "URL was:\n%s" % (repr(query),
+                                                               str(search_query
+                                                                   )))
 
             count = search_result.Count
 
@@ -538,8 +538,8 @@ class EUtils(object):
             result.seek(0)
             return result
 
-# The following are convenience wrappers for some of the above functionality
 
+# The following are convenience wrappers for some of the above functionality
 def _get_primary_ids(term, retmax=100, max_recs=None, **kwargs):
     """Gets primary ids from query."""
     search_result = None
@@ -731,7 +731,7 @@ def _get_unique_taxa(query, db='protein'):
     """Gets the unique lineages directly from a query."""
     return set(
         _taxon_ids_to_names(_ids_to_taxon_ids(_get_primary_ids(query, db=db),
-                                            db=db)))
+                                              db=db)))
 
 if __name__ == '__main__':
     main()
