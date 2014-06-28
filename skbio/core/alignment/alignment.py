@@ -359,7 +359,8 @@ class SequenceCollection(object):
         Raises
         ------
         skbio.core.exception.BiologicalSequenceError
-            If ``len(self) != len(other)``.
+            If ``len(self) != len(other)`` and ``distance_fn`` ==
+            ``scipy.spatial.distance.hamming``.
 
         See Also
         --------
@@ -388,6 +389,7 @@ class SequenceCollection(object):
         [[ 0.     0.25   0.25 ]
          [ 0.25   0.     0.125]
          [ 0.25   0.125  0.   ]]
+
         """
         sequence_count = self.sequence_count()
         dm = np.zeros((sequence_count, sequence_count))
@@ -881,7 +883,8 @@ class Alignment(SequenceCollection):
         Raises
         ------
         skbio.core.exception.BiologicalSequenceError
-            If ``len(self) != len(other)``.
+            If ``len(self) != len(other)`` and ``distance_fn`` ==
+            ``scipy.spatial.distance.hamming``.
 
         See Also
         --------
@@ -904,6 +907,7 @@ class Alignment(SequenceCollection):
         [[ 0.          0.42857143  0.28571429]
          [ 0.42857143  0.          0.42857143]
          [ 0.28571429  0.42857143  0.        ]]
+
         """
         return super(Alignment, self).distances(distance_fn)
 
