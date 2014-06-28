@@ -3,7 +3,7 @@ NCBI
 ====
 
 EUtils is a web service offered by the NCBI to access the sequence, literature
-and other databases by a special format of URLs. PyCogent offers an interface
+and other databases by a special format of URLs. scikit-bio offers an interface
 to construct the URLs and retrieve the results in text format.
 
 From Pubmed
@@ -59,17 +59,15 @@ Fortunately, the more general EUtils class allows this kind of complex workflow
 with relatively little intervention. For example, if you want to search for
 articles that mention PyCogent:
 
-.. doctest::
-
-    >>> from skbio.db.ncbi import EUtils
-    >>> eu = EUtils(db='pubmed', rettype='brief')
-    >>> res = eu['PyCogent']
-    >>> print res.read()
-    <BLANKLINE>
-    1: Smit S et al. From knotted to nested RNA st...[PMID: 18230758] 
-    <BLANKLINE>
-    2: Knight R et al. PyCogent: a toolkit for makin...[PMID: 17708774] 
-    <BLANKLINE>
+>>> from skbio.db.ncbi import EUtils
+>>> eu = EUtils(db='pubmed', rettype='brief')
+>>> res = eu['PyCogent']
+>>> print res.read()
+<BLANKLINE>
+1: Smit S et al. From knotted to nested RNA st...[PMID: 18230758]
+<BLANKLINE>
+2: Knight R et al. PyCogent: a toolkit for makin...[PMID: 17708774]
+<BLANKLINE>
 
 Perhaps you want only the ones with PyCogent in the title, in which case you
 can use any qualifier that NCBI supports:
@@ -261,14 +259,12 @@ SOURCE      Mesorhizobium loti MAFF303099...
 Retrieving and parsing GenBank entries
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. doctest::
-
-    >>> from skbio.parse.genbank import RichGenbankParser
-    >>> from skbio.db.ncbi import EUtils
-    >>> e = EUtils(numseqs=100, db='protein', rettype='gp')
-    >>> result = e['"lysyl tRNA-synthetase"[ti] AND bacteria[orgn]']
-    >>> parser = RichGenbankParser(result.readlines())
-    >>> gb = [(accession, seq) for accession, seq in parser]
+>>> from skbio.parse.genbank import RichGenbankParser
+>>> from skbio.db.ncbi import EUtils
+>>> e = EUtils(numseqs=100, db='protein', rettype='gp')
+>>> result = e['"lysyl tRNA-synthetase"[ti] AND bacteria[orgn]']
+>>> parser = RichGenbankParser(result.readlines())
+>>> gb = [(accession, seq) for accession, seq in parser]
 
 Printing the resulting list (``gb``) will generate output like:
 
