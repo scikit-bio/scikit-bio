@@ -291,14 +291,18 @@ for key, val in RETTYPES.items():
 
 
 class ESearch(UrlGetter):
-    """Looks up a given query using EUtils
+    """UrlGetter subclass that uses the `esearch` operator
 
-    Performs an `esearch`, getting a list of ids from an arbitrary query
-
+    Performs an `esearch` operation, getting a list of ids from an arbitrary
+    query.
 
     References
     ----------
     .. [1] http://www.ncbi.nih.gov/entrez/eutils
+
+    See Also
+    --------
+    skbio.db.util.UrlGetter
 
     """
     printed_fields = dict.fromkeys(['db', 'usehistory', 'term', 'retmax',
@@ -309,11 +313,19 @@ class ESearch(UrlGetter):
 
 
 class EFetch(UrlGetter):
-    """Retrieves a list of primary ids.
+    """UrlGetter subclass that uses the `efetch` operator
 
-    WARNING: retmax (the maximum return value) is only 3 by default, so you
-    will only get 3 records (this is for testing purposes). You will probably
-    want to increase for real searches.
+    Performs an `efetch` operation, getting a list of ids from an arbitrary
+    query.
+
+    References
+    ----------
+    .. [1] http://www.ncbi.nih.gov/entrez/eutils
+
+    See Also
+    --------
+    skbio.db.util.UrlGetter
+
     """
     printed_fields = dict.fromkeys(['db', 'rettype', 'retmode', 'query_key',
                                    'WebEnv', 'retmax', 'retstart', 'id',
@@ -325,7 +337,20 @@ class EFetch(UrlGetter):
 
 
 class ELink(UrlGetter):
-    """Retrieves a list of ids from one db that link to another db."""
+    """UrlGetter subclass that uses the `elink` operator
+
+    Performs an `elink` operation, getting a list of ids from an arbitrary
+    query (operates on databases that are linked together).
+
+    References
+    ----------
+    .. [1] http://www.ncbi.nih.gov/entrez/eutils
+
+    See Also
+    --------
+    skbio.db.util.UrlGetter
+
+    """
     printed_fields = dict.fromkeys(['db', 'id', 'reldate', 'mindate',
                                     'maxdate', 'datetype', 'term', 'retmode',
                                     'db', 'dbfrom', 'WebEnv', 'query_key',
@@ -335,7 +360,13 @@ class ELink(UrlGetter):
 
 
 class ESearchResult(object):
-    """Container object for results retrieved on EUtils"""
+    """Container object for results retrieved on EUtils
+
+    Notes
+    -----
+    This class is intended to be used internally ESearch.
+
+    """
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
