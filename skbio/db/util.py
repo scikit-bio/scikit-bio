@@ -3,14 +3,6 @@
 """
 from urllib import urlopen, urlretrieve, quote_plus
 
-__author__ = "Rob Knight"
-__copyright__ = "Copyright 2007-2012, The Cogent Project"
-__credits__ = ["Rob Knight"]
-__license__ = "GPL"
-__version__ = "1.5.3-dev"
-__maintainer__ = "Rob Knight"
-__email__ = "rob@spot.colorado.edu"
-__status__ = "Production"
 
 class UrlGetter(object):
     """Base class to submit queries with EUtils"""
