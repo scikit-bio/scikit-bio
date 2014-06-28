@@ -340,6 +340,66 @@ class SequenceCollection(object):
         """
         return self.to_fasta()
 
+
+    def distances(self, distance_fn):
+        """Compute distances between all pairs of sequences
+
+        Parameters
+        ----------
+        distance_fn : function
+            Function for computing the distance between a pair of sequences.
+            This must take two sequences as input (as BiologicalSequence
+            objects) and return a single integer or float value.
+
+        Returns
+        -------
+        skbio.core.distance.DistanceMatrix
+            Matrix containing the distances between all pairs of sequences.
+
+        Raises
+        ------
+        skbio.core.exception.BiologicalSequenceError
+            If ``len(self) != len(other)``.
+
+        See Also
+        --------
+        skbio.core.distance.DistanceMatrix
+        scipy.spatial.distance.hamming
+
+        Notes
+        -----
+        Distances between sequences are computed as hamming distances, though
+        this will be generalized (see #194).
+
+        Examples
+        --------
+        >>> from scipy.spatial.distance import hamming
+        >>> from skbio.core.alignment import SequenceCollection
+        >>> from skbio.core.sequence import DNA
+        >>> seqs = [DNA("ACCGGGTT", id="s1"),
+        ...         DNA("ACTTGGTT", id="s2"),
+        ...         DNA("ACTAGGTT", id="s3")]
+        >>> a1 = SequenceCollection(seqs)
+        >>> print(a1.distances(hamming))
+        3x3 distance matrix
+        IDs:
+        s1, s2, s3
+        Data:
+        [[ 0.    0.25   0.25]
+         [ 0.25  0.     0.125]
+         [ 0.25  0.125  0.]]
+        """
+        sequence_count = self.sequence_count()
+        dm = np.zeros((sequence_count, sequence_count))
+        ids = []
+        for i in range(sequence_count):
+            self_i = self[i]
+            ids.append(self_i.id)
+            for j in range(i):
+                dm[i, j] = dm[j, i] = self_i.distance(self[j], distance_fn)
+        return DistanceMatrix(dm, ids)
+
+
     def distribution_stats(self, center_f=np.mean, spread_f=np.std):
         r"""Return sequence count, and center and spread of sequence lengths
 
@@ -802,8 +862,16 @@ class Alignment(SequenceCollection):
             self._score = float(score)
         self._start_end_positions = start_end_positions
 
-    def distances(self):
+    def distances(self, distance_fn=None):
         """Compute distances between all pairs of sequences
+
+        Parameters
+        ----------
+        distance_fn : function, optional
+            Function for computing the distance between a pair of sequences.
+            This must take two sequences as input (as BiologicalSequence
+            objects) and return a single integer or float value. Defaults to
+            scipy.spatial.distance.hamming.
 
         Returns
         -------
@@ -819,11 +887,6 @@ class Alignment(SequenceCollection):
         --------
         skbio.core.distance.DistanceMatrix
         scipy.spatial.distance.hamming
-
-        Notes
-        -----
-        Distances between sequences are computed as hamming distances, though
-        this will be generalized (see #194).
 
         Examples
         --------
@@ -842,15 +905,7 @@ class Alignment(SequenceCollection):
          [ 0.42857143  0.          0.42857143]
          [ 0.28571429  0.42857143  0.        ]]
         """
-        sequence_count = self.sequence_count()
-        dm = np.zeros((sequence_count, sequence_count))
-        ids = []
-        for i in range(sequence_count):
-            self_i = self[i]
-            ids.append(self_i.id)
-            for j in range(i):
-                dm[i, j] = dm[j, i] = self_i.distance(self[j])
-        return DistanceMatrix(dm, ids)
+        return super(Alignment, self).distances(distance_fn)
 
     def score(self):
         """Returns the score of the alignment.
