@@ -634,7 +634,8 @@ class BiologicalSequence(Sequence):
         Raises
         ------
         skbio.core.exception.BiologicalSequenceError
-            If ``len(self) != len(other)``.
+            If ``len(self) != len(other)`` when ``distance_fn`` is
+            ``scipy.spatial.distance.hamming``.
 
         See Also
         --------
