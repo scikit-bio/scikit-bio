@@ -657,10 +657,10 @@ class BiologicalSequence(Sequence):
         """
         if distance_fn is None:
             distance_fn = hamming
-        if len(self) != len(other):
-            raise BiologicalSequenceError(
-                "Distance can only be computed between BiologicalSequences "
-                "of equal length.")
+            if len(self) != len(other):
+                raise BiologicalSequenceError(
+                    "Hamming distance can only be computed between "
+                    "BiologicalSequences of equal length.")
         return distance_fn(self, other)
 
     def fraction_diff(self, other):
