@@ -278,7 +278,7 @@ class BiologicalSequenceTests(TestCase):
             self.b1.distance(self.b2)
 
         # alternate distance functions don't have that requirement (unless
-        # they're implemented within the method)
+        # it's implemented within the provided distance function)
         def dumb_distance(x, y):
             return 42
         self.assertEqual(
