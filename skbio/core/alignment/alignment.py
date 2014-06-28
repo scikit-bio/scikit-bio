@@ -385,9 +385,9 @@ class SequenceCollection(object):
         IDs:
         s1, s2, s3
         Data:
-        [[ 0.    0.25   0.25]
-         [ 0.25  0.     0.125]
-         [ 0.25  0.125  0.]]
+        [[ 0.     0.25   0.25 ]
+         [ 0.25   0.     0.125]
+         [ 0.25   0.125  0.   ]]
         """
         sequence_count = self.sequence_count()
         dm = np.zeros((sequence_count, sequence_count))
