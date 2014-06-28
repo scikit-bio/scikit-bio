@@ -435,7 +435,6 @@ class AlignmentTests(TestCase):
         actual = self.a1.distances(dumb_distance)
         self.assertEqual(actual, expected)
 
-
     def test_score(self):
         self.assertEqual(self.a3.score(), 42.0)
         self.assertEqual(self.a4.score(), -42.0)

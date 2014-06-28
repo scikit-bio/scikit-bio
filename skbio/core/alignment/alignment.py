@@ -340,7 +340,6 @@ class SequenceCollection(object):
         """
         return self.to_fasta()
 
-
     def distances(self, distance_fn):
         """Compute distances between all pairs of sequences
 
@@ -400,7 +399,6 @@ class SequenceCollection(object):
             for j in range(i):
                 dm[i, j] = dm[j, i] = self_i.distance(self[j], distance_fn)
         return DistanceMatrix(dm, ids)
-
 
     def distribution_stats(self, center_f=np.mean, spread_f=np.std):
         r"""Return sequence count, and center and spread of sequence lengths
