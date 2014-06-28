@@ -2,6 +2,9 @@
 
 ## Version 0.1.4-dev (changes since 0.1.4 release go here)
 
+### Features
+* Added ability to compute distances between sequences in a ``SequenceCollection`` object ([#509](https://github.com/biocore/scikit-bio/issues/504)), and expanded ``Alignment.distance`` to allow the user to pass a function for computing distances (the default distance metric is still ``scipy.spatial.distance.hamming``) ([#198](https://github.com/biocore/scikit-bio/issues/194)).
+
 ### Bug fixes
 
 * Fixed bug that resulted in a ``ValueError`` from ``local_align_pairwise_nucleotide`` (see [#504](https://github.com/biocore/scikit-bio/issues/504)) under many circumstances. This would not generate incorrect results, but would cause the code to fail.
