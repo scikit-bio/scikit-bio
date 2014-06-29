@@ -10,7 +10,7 @@ class UrlGetter(object):
     base_url = ''        #override in derived classes
     key_value_delimiter = '='
     field_delimiter = '&'
-    
+
     def __init__(self, **kwargs):
         """Returns new instance with arbitrary kwargs."""
         self.__dict__.update(self.defaults)
@@ -20,9 +20,14 @@ class UrlGetter(object):
     def __str__(self):
         to_get = self.__dict__.copy()
         to_get.update(self._temp_args)
-        return self.BaseUrl + self.FieldDelimiter.join(\
-            [quote_plus(k)+self.KeyValDelimiter+quote_plus(str(v)) for k, v in to_get.items()\
-            if k in self.PrintedFields])
+        fields = []
+
+        for key, value in to_get.items():
+            if key in self.printed_fields:
+                fields.append(quote_plus(key)+self.key_value_delimiter+
+                              quote_plus(str(value)))
+
+        return self.base_url + self.field_delimiter.join(fields)
 
     def open(self, **kwargs):
         """Returns a stream handle to URL result, temporarily overriding kwargs.."""
