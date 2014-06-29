@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-"""Retrieve information from web databases.
+r"""Retrieve information from web databases.
 """
 from urllib import urlopen, urlretrieve, quote_plus
 

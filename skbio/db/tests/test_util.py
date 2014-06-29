@@ -1,17 +1,8 @@
 #!/usr/bin/env python
 """Tests of the db utility functions and classes."""
-from cogent.util.unit_test import TestCase, main
-from cogent.db.util import UrlGetter, expand_slice, last_nondigit_index,make_lists_of_expanded_slices_of_set_size,make_lists_of_accessions_of_set_size
+from unittest import TestCase, main
+from skbio.db.util import UrlGetter, expand_slice, last_nondigit_index,make_lists_of_expanded_slices_of_set_size,make_lists_of_accessions_of_set_size
 from os import remove
-
-__author__ = "Rob Knight"
-__copyright__ = "Copyright 2007-2012, The Cogent Project"
-__credits__ = ["Rob Knight"]
-__license__ = "GPL"
-__version__ = "1.5.3-dev"
-__maintainer__ = "Rob Knight"
-__email__ = "rob@spot.colorado.edu"
-__status__ = "Production"
 
 class db_util_tests(TestCase):
     """Tests of top-level functions."""
