@@ -445,17 +445,55 @@ def elink_result_parser(text):
 
 
 class EUtils(object):
-    """Retrieves records from NCBI using EUtils."""
-    def __init__(self, filename=None, wait=0.5, retmax=100, url_limit=400,
-                 DEBUG=False, max_recs=None, **kwargs):
+    """Retrieves records from NCBI using the Entrez utilities
+
+    Parameters
+    ----------
+    fp : str, optional
+        The file path where results are written to. Defaults to ``None``.
+    wait : float, optional
+        Seconds to wait between fetching operations. Defaults to `0.5`.
+    retmax : int, optional
+        Maximum number of records per query. Defaults to `100`.
+    url_limit : int, optional
+        Limits the URL ESearch term size. Defaults to `400`.
+    verbose : bool, optional
+        Sets whether or not debugging information will be printed to standard
+        output. Defaults to ``False``.
+    max_recs : int, optional
+        Total maximum number of records to retrieve. Defaults to None i. e. all
+        records will be returned.
+
+    See Also
+    --------
+    EFetch
+    ELink
+    ESearch
+
+    Examples
+    --------
+    >>> from skbio.db.ncbi import EUtils
+    >>> eu = EUtils(db='pubmed', rettype='brief')
+    >>> res = eu['PyCogent']
+    >>> print(res.read())
+    <BLANKLINE>
+    1: Smit S et al. From knotted to nested RNA st...[PMID: 18230758]
+    <BLANKLINE>
+    2: Knight R et al. PyCogent: a toolkit for makin...[PMID: 17708774]
+    <BLANKLINE>
+
+    """
+    def __init__(self, fp=None, wait=0.5, retmax=100, url_limit=400,
+                 verbose=False, max_recs=None, **kwargs):
         self.__dict__.update(kwargs)
-        self.filename = filename
+        self.fp = fp
         self.wait = wait
-        self.retstart = 0  # was originally set to 1
-        self.DEBUG = DEBUG
         self.retmax = retmax
-        self.url_limit = url_limit  # limits url esearch term size
+        self.url_limit = url_limit
         self.max_recs = max_recs
+        self.verbose = verbose
+        self.term = None
+
         # adjust retmax if max_recs is set: no point getting more records
         if max_recs is not None and max_recs < retmax:
             self.retmax = max_recs
@@ -482,40 +520,46 @@ class EUtils(object):
 
     def grab_data(self, queries):
         """Iterates through list of search terms and combines results.
-            -queries : list of lists of accession lists / query items
 
-        This will mostly only apply whe the user wants to download 1000s of
-        sequences via accessions. This will superced the GenBank url
-        length limit. So, we break up the accession list into sets of 400
-        terms per list.
+        This will mostly only apply when the user wants to download thosands of
+        sequences via accessions. This will supersede the GenBank URL length
+        limit. So, we break up the accession list into sets of `400` terms per
+        list.
 
-        WARNING: if you _really_ have more than 300-400 terms similar to:
-            'angiotensin[ti] AND rodents[orgn]'
-            The results will not be what you want anyway due do the
-            limitations of the esearch url length at GenBank. You'll just end
-            up returning sets of results from the broken up word based search
-            terms.
+        Parameters
+        ----------
+            queries : list of list objects
+                list of lists of accession lists/query items
+
+        Notes
+        -----
+
+        If you *really* have more than 300-400 terms similar to a query. The
+        results will not be what you want anyway due do the limitations of the
+        `esearch` URL length at GenBank. You'll just end up returning sets of
+        results from the broken up word based search terms.
         """
         # figure out where to put the data
-        if self.filename:
-            result = open(self.filename, 'w')
+        if self.fp:
+            result = open(self.fp, 'w')
         else:
             result = StringIO()
 
         for query in queries:
             self.term = query
             search_query = ESearch(**self.__dict__)
+
             # don't want the ids, just want to post search
             search_query.retmax = 0
-            if self.DEBUG:
+            if self.verbose:
                 print('SEARCH QUERY:')
                 print(str(search_query))
             cookie = search_query.read()
-            if self.DEBUG:
+            if self.verbose:
                 print('COOKIE:')
                 print(repr(cookie))
             search_result = esearch_result_parser(cookie)
-            if self.DEBUG:
+            if self.verbose:
                 print('SEARCH RESULT:')
                 print(search_result)
             try:
@@ -553,7 +597,7 @@ class EUtils(object):
                 if count - curr_rec < self.retmax:
                     fetch_query.retmax = count - curr_rec
                 fetch_query.retstart = curr_rec
-                if self.DEBUG:
+                if self.verbose:
                     print('FETCH QUERY')
                     print('CURR REC:', curr_rec, 'COUNT:', count)
                     print(str(fetch_query))
@@ -564,10 +608,11 @@ class EUtils(object):
                     result.write('\n')
                 curr_rec += retmax
                 sleep(self.wait)
-            # clean up after retrieval
-        if self.filename:
+
+        # clean up after retrieval
+        if self.fp:
             result.close()
-            return open(self.filename, 'r')
+            return open(self.fp, 'r')
         else:
             result.seek(0)
             return result
