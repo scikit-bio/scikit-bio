@@ -581,11 +581,10 @@ class EUtils(object):
                 try:
                     self.id = ','.join(search_result.IdList)
                 except AttributeError:
-                    raise QueryNotFoundError("WebEnv or query_key not Found! "
-                                             "Query %s returned no results.\n"
-                                             "URL was:\n%s" % (repr(query),
-                                                               str(search_query
-                                                                   )))
+                    raise QueryNotFoundError(
+                        "WebEnv or query_key not Found! Query %s returned no "
+                        "results.\nURL was:\n%s" %
+                        (repr(query), str(search_query)))
 
             count = search_result.Count
 
