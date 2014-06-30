@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Tests of the db utility functions and classes."""
 from unittest import TestCase, main
-from skbio.db.util import UrlGetter, expand_slice, last_nondigit_index,make_lists_of_expanded_slices_of_set_size,make_lists_of_accessions_of_set_size
+from skbio.db.util import URLGetter, expand_slice, last_nondigit_index,make_lists_of_expanded_slices_of_set_size,make_lists_of_accessions_of_set_size
 from os import remove
 
 class db_util_tests(TestCase):
@@ -40,12 +40,12 @@ class db_util_tests(TestCase):
         self.assertEqual(observed,expected_list)
 
 
-class UrlGetterTests(TestCase):
-    """Tests of the UrlGetter class"""
+class URLGetterTests(TestCase):
+    """Tests of the URLGetter class"""
     def retrieval_test(self):
         """Urlgetter should init, read and retrieve"""
-        class Google(UrlGetter):
-            BaseUrl='http://www.google.com'
+        class Google(URLGetter):
+            base_url='http://www.google.com'
         g = Google()
         #test URL construction
         self.assertEqual(str(g), 'http://www.google.com')

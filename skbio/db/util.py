@@ -13,8 +13,21 @@ from __future__ import absolute_import, division, print_function
 from urllib import urlopen, urlretrieve, quote_plus
 
 
-class UrlGetter(object):
-    """Base class to submit queries with EUtils"""
+class URLGetter(object):
+    """Base class to submit queries with EUtils
+
+    This class provides the base functionality to work with the Entrez database
+    as provided by the National Center of Biotechnology Information (NCBI).
+
+    Attributes
+    ----------
+    defaults
+    printed_fields
+    base_url
+    key_value_delimiter
+    field_delimiter
+
+    """
     defaults = {}       #override in derived classes -- default values
     printed_fields = {}  #override in derived classes -- fields to print
     base_url = ''        #override in derived classes

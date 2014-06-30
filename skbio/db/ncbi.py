@@ -41,7 +41,7 @@ from StringIO import StringIO
 from string import strip
 
 from skbio.core.exception import QueryNotFoundError
-from skbio.db.util import (UrlGetter,
+from skbio.db.util import (URLGetter,
                            make_lists_of_expanded_slices_of_set_size,
                            make_lists_of_accessions_of_set_size)
 from skbio.parse.record_finder import DelimitedRecordFinder
@@ -290,8 +290,8 @@ for key, val in RETTYPES.items():
     RETTYPES[key] = dict.fromkeys(val.split())
 
 
-class ESearch(UrlGetter):
-    """UrlGetter subclass that uses the `esearch` operator
+class ESearch(URLGetter):
+    """URLGetter subclass that uses the `esearch` operator
 
     Performs an `esearch` operation, getting a list of ids from an arbitrary
     query.
@@ -302,7 +302,7 @@ class ESearch(UrlGetter):
 
     See Also
     --------
-    skbio.db.util.UrlGetter
+    skbio.db.util.URLGetter
 
     """
     printed_fields = dict.fromkeys(['db', 'usehistory', 'term', 'retmax',
@@ -312,8 +312,8 @@ class ESearch(UrlGetter):
     base_url = EUTILS_BASE_URL + '/esearch.fcgi?'
 
 
-class EFetch(UrlGetter):
-    """UrlGetter subclass that uses the `efetch` operator
+class EFetch(URLGetter):
+    """URLGetter subclass that uses the `efetch` operator
 
     Performs an `efetch` operation, getting a list of ids from an arbitrary
     query.
@@ -324,7 +324,7 @@ class EFetch(UrlGetter):
 
     See Also
     --------
-    skbio.db.util.UrlGetter
+    skbio.db.util.URLGetter
 
     """
     printed_fields = dict.fromkeys(['db', 'rettype', 'retmode', 'query_key',
@@ -336,8 +336,8 @@ class EFetch(UrlGetter):
     base_url = EUTILS_BASE_URL + '/efetch.fcgi?'
 
 
-class ELink(UrlGetter):
-    """UrlGetter subclass that uses the `elink` operator
+class ELink(URLGetter):
+    """URLGetter subclass that uses the `elink` operator
 
     Performs an `elink` operation, getting a list of ids from an arbitrary
     query (operates on databases that are linked together).
@@ -348,7 +348,7 @@ class ELink(UrlGetter):
 
     See Also
     --------
-    skbio.db.util.UrlGetter
+    skbio.db.util.URLGetter
 
     """
     printed_fields = dict.fromkeys(['db', 'id', 'reldate', 'mindate',
@@ -536,8 +536,8 @@ class EUtils(object):
 
         Parameters
         ----------
-            queries : list of list objects
-                list of lists of accession lists/query items
+        queries : list of list objects
+            list of lists of accession lists/query items
 
         Notes
         -----
