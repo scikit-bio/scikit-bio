@@ -499,10 +499,18 @@ class EUtils(object):
             self.retmax = max_recs
 
     def __getitem__(self, query):
-        """Gets an query from NCBI. Assumes lists are lists of accessions.
+        """Gets a query from NCBI. Assumes lists are lists of accessions.
 
-        Returns a handle to the result (either in memory or file on disk).
-        WARNING: result is not guaranteed to contain any data.
+        Returns
+        -------
+        file-like
+            Returns a handle to the result (either in memory or file on disk).
+
+        Notes
+        -----
+        The result is not guaranteed to contain any data.
+
+        ..shownumpydoc
         """
         # check if it's a slice
         if isinstance(query, slice):
