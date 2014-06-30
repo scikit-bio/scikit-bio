@@ -109,7 +109,9 @@ def make_lists_of_expanded_slices_of_set_size(s,size_limit=200):
     full_list = expand_slice(s)
     ls = len(full_list)
     l = []
-    for i in range(ls/size_limit+1):
+
+    # cast to int to be able to use range
+    for i in range(int(ls/size_limit+1)):
         start = i * size_limit
         end = (i+1) * size_limit
         subset = full_list[start:end]
