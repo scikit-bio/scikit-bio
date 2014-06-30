@@ -21,6 +21,7 @@ API Reference
    core.workflow
    draw.distributions
    db.ncbi
+   db.base
    format.sequences
    math.diversity.alpha
    math.diversity.beta
