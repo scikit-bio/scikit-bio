@@ -710,8 +710,11 @@ def _parse_taxonomy_using_elementtree_xml_parse(search_result):
     """Returns upper level XML taxonomy information from GenBank.
         search_result: StringIO object
 
-    Returns list of all results in the form of:
-        [{result_01},{result_02},{result_03}]
+    Returns
+    -------
+    list
+        Returns list of all results in the form of:
+        `[{result_01},{result_02},{result_03}]`.
     For each dict the key and values would be:
         key,value = xml label, e.g. [{'Lineage':'Bacteria; Proteobacteria...',
                     'TaxId':'28901', 'ScientificName':'Salmonella enterica'},
