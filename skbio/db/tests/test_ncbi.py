@@ -1,3 +1,29 @@
+r"""
+E-utilities automation module (:mod:`skbio.db.ncbi`)
+====================================================
+
+.. currentmodule:: skbio.db.ncbi
+
+EUtils [1]_. is a web service offered by the NCBI to access the sequence,
+literature and other databases by a special format of URLs. This module offers
+an interface to construct the URLs and retrieve the results in text format.
+
+Classes
+-------
+
+.. autosummary::
+   :toctree: generated/
+
+   EFetch
+   ELink
+   ESearch
+   EUtils
+
+References
+----------
+.. [1] http://www.ncbi.nih.gov/entrez/eutils
+
+"""
 from __future__ import absolute_import, division, print_function
 
 # ----------------------------------------------------------------------------
@@ -12,8 +38,8 @@ from unittest import TestCase, main
 from string import strip
 from StringIO import StringIO
 
-from skbio.db.ncbi import (EUtils, ESearch, EFetch, ELink, elink_result_parser,
-                           esearch_result_parser, elink_result_parser,
+from skbio.db.ncbi import (EUtils, ESearch, EFetch, ELink,
+                           _esearch_result_parser, _elink_result_parser,
                            _get_primary_ids, _ids_to_taxon_ids,
                            _taxon_lineage_extractor, _taxon_ids_to_lineages,
                            _taxon_ids_to_names,
@@ -105,7 +131,7 @@ class ESearchTests(TestCase):
         s = ESearch(db='protein', rettype='gi', retmax=1000,
                     term='homo[organism] AND myh7')
         result = s.read()
-        parsed = esearch_result_parser(result)
+        parsed = _esearch_result_parser(result)
 
         # gi of human cardiac beta myh7
         self.assertTrue('83304912' in parsed.IdList)
@@ -115,14 +141,14 @@ class ELinkTests(TestCase):
     def test_simple_elink(self):
         l = ELink(db='taxonomy', dbfrom='protein', id='83304912')
         result = l.read()
-        parsed = elink_result_parser(result)
+        parsed = _elink_result_parser(result)
         self.assertEqual(parsed, ['9606'])  # human sequence
 
     def test_multiple_elink(self):
         l = ELink(db='taxonomy', dbfrom='protein',
                   id='83304912 115496169 119586556 111309484')
         result = l.read()
-        parsed = elink_result_parser(result)
+        parsed = _elink_result_parser(result)
         self.assertEqual(sorted(parsed), ['10090', '9606'])
 
 

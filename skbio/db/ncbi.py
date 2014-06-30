@@ -400,16 +400,31 @@ ESEARCH_CONSTRUCTORS = {
     'IdList': _id_list_constructor}
 
 
-def esearch_result_parser(result_as_string):
-    """Parses an ESearch result. Returns ESearchResult object."""
+def _esearch_result_parser(result_as_string):
+    """Parses an ESearch result. Returns ESearchResult object
+
+    Parameters
+    ----------
+    result_as_string : str
+        the string to be parsed
+
+    Returns
+    -------
+    ESearchResult
+        object representation of the parsed string
+    """
+
     if '414 Request-URI Too Large' in result_as_string:
-        raise ValueError("Tried to pass too large an URI:\n" +
-                         result_as_string)
+        raise ValueError("Tried to pass too large an URI:\n", result_as_string)
+
     doc = parseString(result_as_string)
+
     # assume one query result -- may need to fix
     query = doc.childNodes[-1]
     result = {}
+
     for n in query.childNodes:
+
         # skip top-level text nodes
         if n.nodeType == n.TEXT_NODE:
             continue
@@ -421,7 +436,7 @@ def esearch_result_parser(result_as_string):
     return ESearchResult(**result)
 
 
-def elink_result_parser(text):
+def _elink_result_parser(text):
     """Gets the linked ids out of a single ELink result.
 
     Does not use the XML parser because of problems with long results.
@@ -566,7 +581,7 @@ class EUtils(object):
             if self.verbose:
                 print('COOKIE:')
                 print(repr(cookie))
-            search_result = esearch_result_parser(cookie)
+            search_result = _esearch_result_parser(cookie)
             if self.verbose:
                 print('SEARCH RESULT:')
                 print(search_result)
@@ -636,9 +651,9 @@ def _get_primary_ids(term, retmax=100, max_recs=None, **kwargs):
     while True:
         cookie = search_query.read()
         if search_result is None:
-            search_result = esearch_result_parser(cookie)
+            search_result = _esearch_result_parser(cookie)
         else:
-            search_result.IdList.extend(esearch_result_parser(cookie).IdList)
+            search_result.IdList.extend(_esearch_result_parser(cookie).IdList)
         # set the query key and WebEnv
         search_query.query_key = search_result.QueryKey
         search_query.WebEnv = search_result.WebEnv
@@ -660,7 +675,7 @@ def _get_primary_ids(term, retmax=100, max_recs=None, **kwargs):
 def _ids_to_taxon_ids(ids, db='nucleotide'):
     """Converts primary ids to taxon ids"""
     link = ELink(id=' '.join(ids), db='taxonomy', dbfrom=db, DEBUG=True)
-    return elink_result_parser(link.read())
+    return _elink_result_parser(link.read())
 
 
 def _get_between_tags(line):
@@ -715,10 +730,9 @@ def _parse_taxonomy_using_elementtree_xml_parse(search_result):
     list
         Returns list of all results in the form of:
         `[{result_01},{result_02},{result_03}]`.
-    For each dict the key and values would be:
+        For each dict the key and values would be:
         key,value = xml label, e.g. [{'Lineage':'Bacteria; Proteobacteria...',
-                    'TaxId':'28901', 'ScientificName':'Salmonella enterica'},
-                    {...}...]
+        'TaxId':'28901', 'ScientificName':'Salmonella enterica'}, {...}...]`
     """
     xml_data = parse(search_result)
     xml_data_root = xml_data.getroot()
@@ -762,7 +776,10 @@ def _taxon_ids_to_names_and_lineages(ids, retmax=1000):
 def _taxon_ids_to_lineages(ids, retmax=1000):
     """Returns full taxonomy (excluding species) from set of taxon ids.
 
-    WARNING: Resulting lineages aren't in the same order as input. Use
+    Notes
+    -----
+
+    Resulting lineages aren't in the same order as input. Use
     taxon_ids_to_name_and_lineage if you need the names and/or lineages
     associated with the specific ids.
     """
@@ -824,6 +841,3 @@ def _get_unique_taxa(query, db='protein'):
     return set(
         _taxon_ids_to_names(_ids_to_taxon_ids(_get_primary_ids(query, db=db),
                                               db=db)))
-
-if __name__ == '__main__':
-    main()
