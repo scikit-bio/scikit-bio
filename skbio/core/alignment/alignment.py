@@ -347,8 +347,9 @@ class SequenceCollection(object):
         ----------
         distance_fn : function
             Function for computing the distance between a pair of sequences.
-            This must take two sequences as input (as BiologicalSequence
-            objects) and return a single integer or float value.
+            This must take two sequences as input (as
+            `skbio.core.sequence.BiologicalSequence` objects) and return a
+            single integer or float value.
 
         Returns
         -------
@@ -864,9 +865,10 @@ class Alignment(SequenceCollection):
         ----------
         distance_fn : function, optional
             Function for computing the distance between a pair of sequences.
-            This must take two sequences as input (as BiologicalSequence
-            objects) and return a single integer or float value. Defaults to
-            scipy.spatial.distance.hamming.
+            This must take two sequences as input (as
+            `skbio.core.sequence.BiologicalSequence` objects) and return a
+            single integer or float value. Defaults to
+            `scipy.spatial.distance.hamming`.
 
         Returns
         -------
