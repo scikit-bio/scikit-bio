@@ -302,7 +302,7 @@ class ESearch(URLGetter):
 
     See Also
     --------
-    skbio.db.util.URLGetter
+    skbio.db.base.URLGetter
 
     """
     printed_fields = dict.fromkeys(['db', 'usehistory', 'term', 'retmax',
@@ -324,7 +324,7 @@ class EFetch(URLGetter):
 
     See Also
     --------
-    skbio.db.util.URLGetter
+    skbio.db.base.URLGetter
 
     """
     printed_fields = dict.fromkeys(['db', 'rettype', 'retmode', 'query_key',
@@ -348,7 +348,7 @@ class ELink(URLGetter):
 
     See Also
     --------
-    skbio.db.util.URLGetter
+    skbio.db.base.URLGetter
 
     """
     printed_fields = dict.fromkeys(['db', 'id', 'reldate', 'mindate',
@@ -484,6 +484,7 @@ class EUtils(object):
     EFetch
     ELink
     ESearch
+    skbio.db.base.URLGetter
 
     Examples
     --------

@@ -11,12 +11,12 @@ from __future__ import absolute_import, division, print_function
 from unittest import TestCase, main
 from os import remove
 
-from skbio.db.util import (URLGetter, expand_slice, last_nondigit_index,
+from skbio.db.base import (URLGetter, expand_slice, last_nondigit_index,
                            make_lists_of_expanded_slices_of_set_size,
                            make_lists_of_accessions_of_set_size)
 
 
-class UtilTests(TestCase):
+class BaseTests(TestCase):
     def test_last_nondigit_index(self):
         ldi = last_nondigit_index
         self.assertEqual(ldi('3'), 0)
