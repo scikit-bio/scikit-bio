@@ -48,29 +48,29 @@ class URLGetter(object):
 
     Attributes
     ----------
-    defaults
-    printed_fields
-    base_url
-    key_value_delimiter
-    field_delimiter
-
+    defaults : dict
+        Default values for the URL. Defaults to an empty dictionary.
+    printed_fields : dict
+        Values to be included in the URL. Defaults to an empty dictionary.
+    base_url : str
+        Base URL for the class (should end in `/`). Defaults to an empty
+        string.
+    key_value_delimiter : str
+        Character that delimits keys & values. Defaults to `=`.
+    field_delimiter : str
+        Character that separates key-value pairs. Defaults to `&`.
     """
-    defaults = property(doc="Default values for the URL")
-    printed_fields = property(doc="Values to be included in the URL")
-    base_url = property(doc="Base URL for the class (should end in `/`)")
-    key_value_delimiter = property(doc="Character that delimits keys & values")
-    field_delimiter = property(doc="Character that separates key-value pairs")
+    defaults = {}
+    printed_fields = {}
+    base_url = ''
+    key_value_delimiter = '='
+    field_delimiter = '&'
+
 
     def __init__(self, **kwargs):
         self.__dict__.update(self.defaults)
         self.__dict__.update(kwargs)
         self._temp_args = {}
-
-        self._defaults = {}
-        self._printed_fields = {}
-        self._base_url = ''
-        self._key_value_delimiter = '='
-        self._field_delimiter = '&'
 
     def __str__(self):
         """Returns the formatted URL for this object
