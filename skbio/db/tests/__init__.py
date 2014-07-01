@@ -1,11 +1,9 @@
-#!/usr/bin/env python
-__all__ = ['test_util', 'test_ncbi', 'test_pdb', 'test_rfam', 'test_ensembl']
+from __future__ import absolute_import, division, print_function
 
-__author__ = ""
-__copyright__ = "Copyright 2007-2012, The Cogent Project"
-__credits__ = ["Rob Knight"]
-__license__ = "GPL"
-__version__ = "1.5.3-dev"
-__maintainer__ = "Rob Knight"
-__email__ = "rob@spot.colorado.edu"
-__status__ = "Production"
+# ----------------------------------------------------------------------------
+# Copyright (c) 2013--, scikit-bio development team.
+#
+# Distributed under the terms of the Modified BSD License.
+#
+# The full license is in the file COPYING.txt, distributed with this software.
+# ----------------------------------------------------------------------------
