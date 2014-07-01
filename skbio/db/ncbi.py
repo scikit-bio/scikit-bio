@@ -41,7 +41,7 @@ from StringIO import StringIO
 from string import strip
 
 from skbio.core.exception import QueryNotFoundError
-from skbio.db.util import (URLGetter,
+from skbio.db.base import (URLGetter,
                            make_lists_of_expanded_slices_of_set_size,
                            make_lists_of_accessions_of_set_size)
 from skbio.parse.record_finder import DelimitedRecordFinder
