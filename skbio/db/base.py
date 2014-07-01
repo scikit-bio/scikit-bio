@@ -257,7 +257,7 @@ def make_lists_of_accessions_of_set_size(s,size_limit=200):
     """
     ls = len(s)
     l = []
-    for i in range(ls/size_limit+1):
+    for i in range(int(ls/size_limit+1)):
         start = i * size_limit
         end = (i+1) * size_limit
         subset = s[start:end]
