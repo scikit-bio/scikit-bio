@@ -351,11 +351,14 @@ class ELink(URLGetter):
     skbio.db.base.URLGetter
 
     """
-    printed_fields = dict.fromkeys(['db', 'id', 'reldate', 'mindate',
-                                    'maxdate', 'datetype', 'term', 'retmode',
-                                    'db', 'dbfrom', 'WebEnv', 'query_key',
-                                    'holding', 'cmd', 'tool', 'email'])
-    defaults = {'tool': DEFAULT_TOOL_STRING, 'email': DEFAULT_EMAIL_ADDRESS}
+    printed_fields = dict.fromkeys(['db', 'id', 'reldate',
+                                    'mindate', 'maxdate', 'datetype',
+                                    'term', 'retmode', 'db',
+                                    'dbfrom', 'WebEnv', 'query_key',
+                                    'holding', 'cmd', 'tool',
+                                    'email'])
+    defaults = {'tool': DEFAULT_TOOL_STRING,
+                'email': DEFAULT_EMAIL_ADDRESS}
     base_url = EUTILS_BASE_URL + '/elink.fcgi?'
 
 
