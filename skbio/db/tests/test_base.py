@@ -9,7 +9,8 @@ from __future__ import absolute_import, division, print_function
 # ----------------------------------------------------------------------------
 
 from unittest import TestCase, main
-from os import remove
+from tempfile import mkstemp
+from os import remove, close
 
 from skbio.db.base import (URLGetter, expand_slice, last_nondigit_index,
                            make_lists_of_expanded_slices_of_set_size,
@@ -51,29 +52,34 @@ class BaseTests(TestCase):
 
 class URLGetterTests(TestCase):
     def setUp(self):
-        pass
+        fd, self.input_fp = mkstemp(prefix="google_file_", suffix='.temp')
+        close(fd)
+
+        self.g = URLGetter()
+        self.g.base_url = 'http://www.google.com'
 
     def tearDown(self):
-        pass
+        try:
+            remove(self.input_fp)
+        except OSError:
+            pass
 
-    def retrieval_test(self):
-        class Google(URLGetter):
-            base_url = 'http://www.google.com'
-        g = Google()
-
+    def test_str(self):
         # test URL construction
-        self.assertEqual(str(g), 'http://www.google.com')
+        self.assertEqual(str(self.g), 'http://www.google.com')
+
+    def test_read(self):
         # test reading
-        text = g.read()
+        text = self.g.read()
         self.assertTrue('<title>Google</title>' in text)
+
+    def test_retrieve(self):
         # test file getting
-        fname = '/tmp/google_test'
-        g.retrieve(fname)
-        g_file = open(fname)
+        self.g.retrieve(self.input_fp)
+        g_file = open(self.input_fp)
         g_text = g_file.read()
-        self.assertEqual(g_text, text)
-        g_text.close()
-        remove(fname)
+        self.assertTrue('<title>Google</title>' in g_text)
+        g_file.close()
 
 if __name__ == '__main__':
     main()
