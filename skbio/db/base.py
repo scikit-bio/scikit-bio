@@ -214,7 +214,7 @@ def make_lists_of_expanded_slices_of_set_size(s, size_limit=200):
     --------
     >>> from skbio.db.base import make_lists_of_expanded_slices_of_set_size
     >>> a = make_lists_of_expanded_slices_of_set_size
-    >>> a(slice('HM780503', 'HM780506'), size=3)
+    >>> a(slice('HM780503', 'HM780506'), size_limit=3)
     ['HM780503 HM780504 HM780505', 'HM780506']
     """
     full_list = expand_slice(s)
@@ -252,7 +252,7 @@ def make_lists_of_accessions_of_set_size(s,size_limit=200):
     >>> from skbio.db.base import make_lists_of_accessions_of_set_size
     >>> make_lists_of_accessions_of_set_size(['HM780503', 'HM780506',
     ...     'HM780660', 'HM780780'], size_limit=3)
-    ['HM780503 HM780506 HM780660 HM780780']
+    ['HM780503 HM780506 HM780660', 'HM780780']
 
     """
     ls = len(s)
@@ -285,7 +285,7 @@ def last_nondigit_index(s):
     >>> s = 'foo1234'
     >>> idx = last_nondigit_index(s)
     >>> print(s[idx:])
-    '1234'
+    1234
     """
     for i in range(len(s)):
         if s[i:].isdigit():
