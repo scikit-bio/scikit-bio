@@ -494,11 +494,16 @@ class EUtils(object):
     >>> from skbio.db.ncbi import EUtils
     >>> eu = EUtils(db='pubmed', rettype='brief')
     >>> res = eu['PyCogent']
-    >>> print(res.read())
+    >>> print(res.read()) # doctest: +ELLIPSIS
     <BLANKLINE>
-    1: Smit S et al. From knotted to nested RNA st...[PMID: 18230758]
+    1...[PubMed]
     <BLANKLINE>
-    2: Knight R et al. PyCogent: a toolkit for makin...[PMID: 17708774]
+    <BLANKLINE>
+    2...[PubMed - indexed for MEDLINE]
+    <BLANKLINE>
+    <BLANKLINE>
+    3...[PubMed - indexed for MEDLINE]
+    <BLANKLINE>
     <BLANKLINE>
 
 
