@@ -298,7 +298,7 @@ class ESearch(URLGetter):
 
     References
     ----------
-    .. [1] http://www.ncbi.nih.gov/entrez/eutils
+    .. [1] http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.ESearch
 
     See Also
     --------
@@ -320,7 +320,7 @@ class EFetch(URLGetter):
 
     References
     ----------
-    .. [1] http://www.ncbi.nih.gov/entrez/eutils
+    .. [1] http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.EFetch
 
     See Also
     --------
@@ -344,7 +344,7 @@ class ELink(URLGetter):
 
     References
     ----------
-    .. [1] http://www.ncbi.nih.gov/entrez/eutils
+    .. [1] http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.ELink
 
     See Also
     --------
@@ -501,6 +501,10 @@ class EUtils(object):
     2: Knight R et al. PyCogent: a toolkit for makin...[PMID: 17708774]
     <BLANKLINE>
 
+
+    References
+    ----------
+    .. [1] http://www.ncbi.nlm.nih.gov/books/NBK25499/
     """
     def __init__(self, fp=None, wait=0.5, retmax=100, url_limit=400,
                  verbose=False, max_recs=None, **kwargs):
