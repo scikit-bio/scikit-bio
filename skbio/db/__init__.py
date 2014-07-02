@@ -21,14 +21,28 @@ this:
 
 >>> from skbio.db.ncbi import EFetch
 >>> ef = EFetch(id='17708774', db='pubmed', rettype='brief')
->>> ef.read()
-'\n1: Knight R et al. PyCogent: a toolkit for makin...[PMID: 17708774] \n'
+>>> print(ef.read()) # doctest: +ELLIPSIS
+<BLANKLINE>
+1...]
+<BLANKLINE>
+<BLANKLINE>
 
 If you want more information, there are other rettypes, e.g.
 
 >>> ef = EFetch(id='17708774', db='pubmed', rettype='citation')
->>> ef.read()
-"\n1: Genome Biol. 2007;8(8):R171. \n\nPyCogent: a toolkit for making sense from sequence.\n\nKnight R, Maxwell P, Birmingham A, Carnes J, Caporaso JG, Easton BC, Eaton M,\nHamady M, Lindsay H, Liu Z, Lozupone C, McDonald D, Robeson M, Sammut R, Smit S,\nWakefield MJ, Widmann J, Wikman S, Wilson S, Ying H, Huttley GA.\n\nDepartment of Chemistry and Biochemistry, University of Colorado, Boulder,\nColorado, USA. rob@spot.colorado.edu\n\nWe have implemented in Python the COmparative GENomic Toolkit, a fully\nintegrated and thoroughly tested framework for novel probabilistic analyses of\nbiological sequences, devising workflows, and generating publication quality\ngraphics. PyCogent includes connectors to remote databases, built-in generalized\nprobabilistic techniques for working with biological sequences, and controllers\nfor third-party applications. The toolkit takes advantage of parallel\narchitectures and runs on a range of hardware and operating systems, and is\navailable under the general public license from\nhttp://sourceforge.net/projects/pycogent.\n\nPublication Types:\n    Evaluation Studies\n    Research Support, N.I.H., Extramural\n    Research Support, Non-U.S. Gov't\n\nMeSH Terms:\n    Animals\n    BRCA1 Protein/genetics\n    Databases, Genetic\n    Genomics/methods*\n    Humans\n    Phylogeny\n    Protein Conformation\n    Proteobacteria/classification\n    Proteobacteria/genetics\n    Sequence Analysis/methods*\n    Software*\n    von Willebrand Factor/chemistry\n    von Willebrand Factor/genetics\n\nSubstances:\n    BRCA1 Protein\n    von Willebrand Factor\n\nPMID: 17708774 [PubMed - indexed for MEDLINE]\n"
+>>> print(ef.read()) # doctest: +ELLIPSIS
+<BLANKLINE>
+1. Genome Biol. 2007;8(8):R171.
+<BLANKLINE>
+PyCogent: a toolkit for making sense from sequence.
+<BLANKLINE>
+Knight R(1), Maxwell P, Birmingham A, Carnes J, Caporaso...
+<BLANKLINE>
+PMCID: PMC2375001
+PMID: 17708774  [PubMed - indexed for MEDLINE]
+<BLANKLINE>
+<BLANKLINE>
+
 
 Similarly, if you want something more machine-readable (but quite a lot less
 human-readable), you can specify XML in the retmode:
