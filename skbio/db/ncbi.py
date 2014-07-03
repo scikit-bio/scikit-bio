@@ -851,8 +851,9 @@ def _fix_taxon_ids(ids):
 
 def _get_unique_lineages(query, db='protein'):
     """Gets the unique lineages directly from a query."""
-    return set(map(tuple, _taxon_ids_to_lineages(_ids_to_taxon_ids(
-        _get_primary_ids(query, db=db), db=db))))
+    primary_ids = _get_primary_ids(query, db=db)
+    txon_ids = _ids_to_taxon_ids(primary_ids, db=db)
+    return set([tuple(e) for e in _taxon_ids_to_lineages(txon_ids)])
 
 
 def _get_unique_taxa(query, db='protein'):
