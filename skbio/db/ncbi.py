@@ -709,7 +709,7 @@ def _taxon_lineage_extractor(lines):
             # expect line of form <Lineage>xxxx</Lineage> where xxxx semicolon-
             # delimited
             between_tags = line.split('>', 1)[1].rsplit('<', 1)[0]
-            yield map(strip, between_tags.split(';'))
+            yield [strip(element) for element in between_tags.split(';')]
 
 TAXON_RECORD_FINDER = DelimitedRecordFinder('</Taxon>', constructor=None,
                                             strict=False)
