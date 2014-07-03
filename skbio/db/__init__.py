@@ -25,7 +25,9 @@ this:
 >>> ef = EFetch(id='17708774', db='pubmed', rettype='brief')
 >>> print(ef.read()) # doctest: +ELLIPSIS
 <BLANKLINE>
-1...]
+1. Genome Biol. 2007;8(8):R171.
+<BLANKLINE>
+PyCogent: a toolkit for making sense from sequen...
 <BLANKLINE>
 <BLANKLINE>
 
@@ -275,8 +277,6 @@ accessed using similar mechanisms.
 
 Retrieving PubMed abstracts from NCBI via EUtils:
 
-:options: +NORMALIZE_WHITESPACE
-
 >>> from skbio.db.ncbi import EUtils
 >>> e = EUtils(db='pubmed',rettype='brief')
 >>> result = e['Simon Easteal AND Von Bing Yap'].read()
@@ -298,9 +298,6 @@ Retrieving PubMed abstracts via PMID:
 <BLANKLINE>
 Loops In Proteins (LIP)--a comprehensive loop database for...
 
-Loops In Proteins (LIP)--a comprehensive loop database for homology modelling.
-
-Michalsky E(1), Goede A, Preissner...
 """
 
 from __future__ import absolute_import, division, print_function
