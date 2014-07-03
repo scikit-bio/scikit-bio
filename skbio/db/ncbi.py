@@ -423,7 +423,7 @@ def _esearch_result_parser(result_as_string):
         object representation of the parsed string
     """
 
-    if '414 Request-URI Too Large' in result_as_string:
+    if b'414 Request-URI Too Large' in result_as_string:
         raise ValueError("Tried to pass too large an URI:\n", result_as_string)
 
     doc = parseString(result_as_string)
@@ -455,6 +455,7 @@ def _elink_result_parser(text):
     result = []
     in_links = False
     for line in text.splitlines():
+        line = str(line) # py3k compatibility
         if '<LinkName>' in line:
             in_links = True
         elif in_links and ('<Id>' in line):
@@ -643,7 +644,7 @@ class EUtils(object):
                     print('CURR REC:', curr_rec, 'COUNT:', count)
                     print(str(fetch_query))
                 # return the result of the fetch
-                curr = fetch_query.read()
+                curr = str(fetch_query.read())
                 result.write(curr)
                 if not curr.endswith('\n'):
                     result.write('\n')
