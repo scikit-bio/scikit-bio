@@ -37,8 +37,9 @@ from __future__ import absolute_import, division, print_function
 from time import sleep
 from xml.dom.minidom import parseString
 from xml.etree.ElementTree import parse
-from StringIO import StringIO
-from string import strip
+
+from future.utils import PY3
+from future.utils.six import StringIO
 
 from skbio.core.exception import QueryNotFoundError
 from skbio.db.base import (URLGetter,
@@ -46,6 +47,11 @@ from skbio.db.base import (URLGetter,
                            make_lists_of_accessions_of_set_size)
 from skbio.parse.record_finder import DelimitedRecordFinder
 
+# py3k compatibility
+if PY3:
+    strip = str.strip
+else:
+    from string import strip
 
 # eutils_base='http://eutils.ncbi.nlm.nih.gov/entrez/eutils'
 EUTILS_BASE_URL = 'http://www.ncbi.nlm.nih.gov/entrez/eutils'

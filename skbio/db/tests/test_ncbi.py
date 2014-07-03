@@ -35,8 +35,7 @@ from __future__ import absolute_import, division, print_function
 # ----------------------------------------------------------------------------
 
 from unittest import TestCase, main
-from string import strip
-from StringIO import StringIO
+from future.utils.six import StringIO
 
 from skbio.db.ncbi import (EUtils, ESearch, EFetch, ELink,
                            _esearch_result_parser, _elink_result_parser,
@@ -47,6 +46,11 @@ from skbio.db.ncbi import (EUtils, ESearch, EFetch, ELink,
                            _get_unique_lineages, _get_unique_taxa,
                            _parse_taxonomy_using_elementtree_xml_parse)
 
+# py3k compatibility
+try:
+    from string import strip
+except ImportError:
+    strip = str.strip
 
 class EUtilsTests(TestCase):
     def test_simple_get(self):
