@@ -50,10 +50,10 @@ human-readable), you can specify XML in the retmode:
 >>> ef = EFetch(id='17708774', db='pubmed', rettype='citation', retmode='xml')
 >>> cite = ef.read()
 >>> for line in cite.splitlines()[:5]:
-...     print line
-... 
+...     print(line) # doctest: +ELLIPSIS
+...
 <?xml version="1.0"?>
-<!DOCTYPE PubmedArticleSet PUBLIC "-//NLM//DTD PubMedArticle, 1st January 2011//EN" "http://www.ncbi.nlm.nih.gov/entrez/query/DTD/pubmed_110101.dtd">
+<!DOCTYPE PubmedArticleSet PUBLIC "-//NLM//DTD PubMedArticle, 1st...
 <PubmedArticleSet>
 <PubmedArticle>
     <MedlineCitation Owner="NLM" Status="MEDLINE">
@@ -76,21 +76,20 @@ articles that mention PyCogent:
 >>> from skbio.db.ncbi import EUtils
 >>> eu = EUtils(db='pubmed', rettype='brief')
 >>> res = eu['PyCogent']
->>> print res.read()
+>>> print(res.read()) # doctest: +ELLIPSIS
 <BLANKLINE>
-1: Smit S et al. From knotted to nested RNA st...[PMID: 18230758]
-<BLANKLINE>
-2: Knight R et al. PyCogent: a toolkit for makin...[PMID: 17708774]
-<BLANKLINE>
+1. J Appl Crystallogr. 2011 Apr 1;44(Pt 2):424-428...
+2. RNA. 2008 Mar;14(3):410-6. doi: 10.1261/rna.881...
+3. Genome Biol. 2007;8(8):R...
 
 Perhaps you want only the ones with PyCogent in the title, in which case you
 can use any qualifier that NCBI supports:
 
 >>> res = eu['PyCogent[ti]']
->>> print res.read()
+>>> print(res.read()) # doctest: +ELLIPSIS
 <BLANKLINE>
-1: Knight R et al. PyCogent: a toolkit for makin...[PMID: 17708774] 
-<BLANKLINE>
+1. J Appl Crystallogr. 2011 Apr 1;44(Pt 2):424-4...
+2. Genome Biol. 2007;8(8):R1...
 
 The NCBI-supported list of field qualifiers, and lots of documentation
 generally on how to do pubmed queries, is `here
@@ -103,7 +102,8 @@ example:
 
 >>> eu = EUtils(db='pubmed', rettype='uilist')
 >>> res = eu['PyCogent']
->>> print res.read()
+>>> print(res.read())
+22479120
 18230758
 17708774
 <BLANKLINE>
@@ -135,7 +135,7 @@ each line and printing the first 40 characters.
 >>> ef = EFetch(id='459567', rettype='fasta')
 >>> lines = ef.read().splitlines()
 >>> for line in lines:
-...     print line[:40]
+...     print(line[:40])
 ... 
 >gi|459567|dbj|D28543.1|HPCNS5PC Hepatit
 GAGCACGACATCTACCAATGTTGCCAACTGAACCCAGAGG
@@ -159,10 +159,9 @@ record you get back. For example, if we do the same search with
 >>> ef = EFetch(id='459567', rettype='brief')
 >>> lines = ef.read().splitlines()
 >>> for line in lines:
-...     print line
+...     print(line) # doctest: +SKIP
 ... 
 D28543 Hepatitis C virus... [gi:459567]
-
 
 The current ``rettypes`` (as of this writing on 4/14/2010) for the 'core' NCBI
 databases are native, fasta, gb, gp, gbwithparts, gbc, gpc, est, gss, seqid,
@@ -182,7 +181,7 @@ For example:
 >>> ef = EFetch(id='459567', rettype='fasta', retmode='text')
 >>> lines = ef.read().splitlines()
 >>> for line in lines:
-...     print line[:40]
+...     print(line[:40])
 ... 
 >gi|459567|dbj|D28543.1|HPCNS5PC Hepatit
 GAGCACGACATCTACCAATGTTGCCAACTGAACCCAGAGG
@@ -194,7 +193,7 @@ TC
 >>> ef = EFetch(id='459567', rettype='fasta', retmode='html')
 >>> lines = ef.read().splitlines()
 >>> for line in lines:
-...     print line[:40]
+...     print(line[:40]) # doctest: +SKIP
 ... 
 >gi|459567|dbj|D28543.1|HPCNS5PC Hepatit
 GAGCACGACATCTACCAATGTTGCCAACTGAACCCAGAGG
@@ -206,7 +205,7 @@ TC
 >>> ef = EFetch(id='459567', rettype='fasta', retmode='xml')
 >>> lines = ef.read().splitlines()
 >>> for line in lines:
-...     print line[:40]
+...     print(line[:40])
 ... 
 <?xml version="1.0"?>
  <!DOCTYPE TSeqSet PUBLIC "-//NCBI//NCBI
@@ -223,6 +222,7 @@ TC
 </TSeq>
 <BLANKLINE>
 </TSeqSet>
+<BLANKLINE>
 
 You'll notice that the second case is some funny-looking html. Thanks, NCBI!
 This is not our fault, please don't file a bug report. To figure out whether
@@ -230,7 +230,7 @@ something is actually surprising behavior at NCBI, you can always capture the
 command-line and run it in a web browser. You can do this by calling str() on
 the ``ef``, or by printing it. For example:
 
->>> print ef
+>>> print(ef) # doctest: +ELLIPSIS
 http://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?retmax=100&retmod...
 
 If you paste the resulting string into your web browser and you get the same
@@ -241,15 +241,16 @@ just by passing it in as a parameter. For example, in the unlikely event that I
 want NCBI to contact me instead of Mike if something goes wrong with my script,
 I can achieve that as follows:
 
->>> ef = EFetch(id='459567', rettype='fasta', retmode='xml', email='rob@spot.colorado.edu')
->>> print ef
+>>> ef = EFetch(id='459567', rettype='fasta', retmode='xml',
+...             email='rob@spot.colorado.edu')
+>>> print(ef) # doctest: +ELLIPSIS
 http://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?retmax=100&retmod...
 
 You can also select multiple ids (pass in as comma-delimited list):
 
 >>> ef = EFetch(id='459567,459568', rettype='brief')
->>> ef.read()
-'D28543 Hepatitis C virus... [gi:459567]\nBAA05896 NS5 protein [Hepa... [gi:459568]'
+>>> ef.read() # doctest: +SKIP
+'D28543 Hepatitis C virus... [gi:459567]\nBAA05896 NS5 protein [Hepa...8]'
 
 Retrieving GenPept files from NCBI via Eutils
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -261,99 +262,11 @@ AND bacteria[orgn]'`` in the snippet below.
 >>> from skbio.db.ncbi import EUtils
 >>> e = EUtils(numseqs=100, db='protein', rettype='gp')
 >>> result = e['BAB52044']
->>> print result.read()
+>>> print(result.read()) # doctest: +ELLIPSIS
 LOCUS       BAB52044                 548 aa            linear   BCT 16-MAY-2009
 DEFINITION  lysyl tRNA synthetase [Mesorhizobium loti MAFF303099].
 ACCESSION   BAB52044
-VERSION     BAB52044.1  GI:14025444
-DBSOURCE    accession BA000012.4
-KEYWORDS    .
-SOURCE      Mesorhizobium loti MAFF303099...
-
-Retrieving and parsing GenBank entries
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
->>> from skbio.parse.genbank import RichGenbankParser
->>> from skbio.db.ncbi import EUtils
->>> e = EUtils(numseqs=100, db='protein', rettype='gp')
->>> result = e['"lysyl tRNA-synthetase"[ti] AND bacteria[orgn]']
->>> parser = RichGenbankParser(result.readlines())
->>> gb = [(accession, seq) for accession, seq in parser]
-
-Printing the resulting list (``gb``) will generate output like:
-
-.. code-block:: python
-    
-    [('AAA83071', Sequence(MSEQHAQ... 505)), ('ACS40931', ...
-
-
-Parsing in more detail:  a single GenBank entry:
-
->>> from skbio.db.ncbi import EUtils
->>> from skbio.parse.genbank import RichGenbankParser
->>> e = EUtils(db="nucleotide", rettype="gb")
->>> record = e['154102'].readlines()
->>> parser = RichGenbankParser(record)
->>> accession, seq = [record for record in parser][0]
->>> accession
-'STYHEMAPRF'
->>> type(seq)
-<class 'skbio.core.sequence.DnaSequence'>
->>> def gene_and_cds(f):
-...     return f['type'] == 'CDS' and 'gene' in f
-... 
->>> cds_features = [f for f in seq.Info.features if gene_and_cds(f)]
->>> for cds_feature in cds_features:
-...     print cds_feature['gene'], cds_feature['location']
-... 
-['hemA'] 732..1988
-['prfA'] 2029..3111
-
-Retrieving a bacterial genome file:
-
-To obtain a full bacterial genome, run the following to get the complete
-*Salmonella typhimurium* genome sequence (Genbank) file. (For this
-documentation, we include a partial file for illustration purposes.)
-
-.. code-block:: python
-    
-    from skbio.db.ncbi import EUtils
-    e = EUtils(db="nucleotide", rettype="gb")
-    outfile = open('data/ST.genome.gb','w')
-    outfile.write(e['AE006468'].read())
-    outfile.close()
-
-For larger files, you might want to dump them directly into a file on your hard drive rather than reading them into memory first, e.g.
-
-.. code-block:: python
-
-    e.filename='ST.genome.gb'
-    f = e['AE006468']
-
-dumps the result into the file directly, and returns you a handle to the open
-file where you can read the result, get the path, or do any of the other
-standard file operations. Now do the analysis:
-
->>> from skbio.parse.genbank import RichGenbankParser
->>> infile = open('data/ST_genome_part.gb', 'r')
->>> parser = RichGenbankParser(infile)
->>> accession, seq = [record for record in parser][0]
->>> gene_and_cds = lambda f: f['type'] == 'CDS' and 'gene' in f
->>> gene_name = lambda f: f['gene']
->>> all_cds = [f for f in seq.Info.features if gene_and_cds(f)]
->>> for cds in sorted(all_cds, key=gene_name):
-...     print cds['gene'][0].ljust(6),
-...     print cds['protein_id'], cds['location']
-... 
-mog    ['AAL18972.1'] 8729..9319
-talB   ['AAL18971.1'] 7665..8618
-thrA   ['AAL18966.1'] 337..2799
-thrB   ['AAL18967.1'] 2801..3730
-thrC   ['AAL18968.1'] 3734..5020
-thrL   ['AAL18965.1'] 190..255
-yaaA   ['AAL18969.1'] complement(5114..5887)
-yaaH   ['AAL18973.1'] complement(9376..9942)
-yaaJ   ['AAL18970.1'] complement(5966..7396)
+VERSION     BAB52044.1  GI:14025444...
 
 The EUtils modules are generic, so additional databases like OMIM can be
 accessed using similar mechanisms.
@@ -365,11 +278,11 @@ Retrieving PubMed abstracts from NCBI via EUtils:
 >>> from skbio.db.ncbi import EUtils
 >>> e = EUtils(db='pubmed',rettype='brief')
 >>> result = e['Simon Easteal AND Von Bing Yap'].read()
->>> print result
+>>> print(result) # doctest: +ELLIPSIS
 <BLANKLINE>
-1: Yap VB et al. Estimates of the effect of na...[PMID: 19815689] 
+1. Mol Biol Evol. 2010 Mar;27(3):726-34. doi: 10.1093/molbev/msp232...
 <BLANKLINE>
-2: Schranz HW et al. Pathological rate matrices: f...[PMID: 19099591] 
+2. BMC Bioinformatics. 2008 Dec 19;9:550. doi: 10.1186/1471-2105-9...
 <BLANKLINE>
 
 Retrieving PubMed abstracts via PMID:
@@ -377,7 +290,15 @@ Retrieving PubMed abstracts via PMID:
 >>> from skbio.db.ncbi import EUtils
 >>> e = EUtils(db='pubmed',rettype='abstract')
 >>> result = e['14983078'].read()
+>>> print(result) # doctest: +ELLIPSIS
+<BLANKLINE>
+1. Protein Eng. 2003 Dec;16(12):979-85.
+<BLANKLINE>
+Loops In Proteins (LIP)--a comprehensive loop database for...
 
+Loops In Proteins (LIP)--a comprehensive loop database for homology modelling.
+
+Michalsky E(1), Goede A, Preissner...
 """
 
 from __future__ import absolute_import, division, print_function
