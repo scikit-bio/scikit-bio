@@ -1,6 +1,8 @@
 r"""
-NCBI
-====
+Exploring online databases (:mod:`skbio.db`)
+============================================
+
+.. currentmodule:: skbio.db
 
 EUtils is a web service offered by the NCBI to access the sequence, literature
 and other databases by a special format of URLs. scikit-bio offers an interface

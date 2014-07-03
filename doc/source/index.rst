@@ -20,6 +20,7 @@ API Reference
    core.tree
    core.workflow
    draw.distributions
+   db
    db.ncbi
    db.base
    format.sequences
