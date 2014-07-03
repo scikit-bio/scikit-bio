@@ -37,7 +37,13 @@ from __future__ import absolute_import, division, print_function
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from urllib import urlopen, urlretrieve, quote_plus
+from future.utils import PY3
+if PY3:
+    long = int
+    from urllib.request import urlopen, urlretrieve
+    from urllib.parse import quote_plus
+else:
+    from urllib import urlopen, urlretrieve, quote_plus
 
 
 class URLGetter(object):

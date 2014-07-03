@@ -71,7 +71,7 @@ class URLGetterTests(TestCase):
     def test_read(self):
         # test reading
         text = self.g.read()
-        self.assertTrue('<title>Google</title>' in text)
+        self.assertTrue('<title>Google</title>' in str(text))
 
     def test_retrieve(self):
         # test file getting
