@@ -1,6 +1,6 @@
 r"""
-Retrieve information from web databases (:mod:`skbio.db.base`)
-==============================================================
+Database exploration objects and functions (:mod:`skbio.db.base`)
+=================================================================
 
 .. currentmodule:: skbio.db.base
 

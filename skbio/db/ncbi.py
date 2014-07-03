@@ -1,6 +1,6 @@
 r"""
-E-utilities automation module (:mod:`skbio.db.ncbi`)
-====================================================
+E-utilities core objects (:mod:`skbio.db.ncbi`)
+===============================================
 
 .. currentmodule:: skbio.db.ncbi
 
