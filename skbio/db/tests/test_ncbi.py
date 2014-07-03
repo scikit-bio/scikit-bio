@@ -64,7 +64,7 @@ class EUtilsTests(TestCase):
         result = g['NP_003320':'NP_003322'].read()
         lines = result.splitlines()
         is_locus = lambda x: x.startswith('LOCUS')
-        loci = filter(is_locus, lines)
+        loci = [a for a in lines if is_locus(a)]
         self.assertEqual(len(loci), 3)
 
         # EUtils access of a slice should work, while limiting
@@ -73,7 +73,7 @@ class EUtilsTests(TestCase):
         result = g['NP_003320':'NP_003322'].read()
         lines = result.splitlines()
         is_locus = lambda x: x.startswith('LOCUS')
-        loci = filter(is_locus, lines)
+        loci = [a for a in lines if is_locus(a)]
         self.assertEqual(len(loci), 3)
 
     def test_get_list(self):
@@ -81,7 +81,7 @@ class EUtilsTests(TestCase):
         result = g['NP_003320', 'NP_003321', 'NP_003322'].read()
         lines = result.splitlines()
         is_locus = lambda x: x.startswith('LOCUS')
-        loci = filter(is_locus, lines)
+        loci = [a for a in lines if is_locus(a)]
         self.assertEqual(len(loci), 3)
 
         # EUtils access of a slice should work, while limiting
@@ -90,7 +90,7 @@ class EUtilsTests(TestCase):
         result = g['NP_003320', 'NP_003321', 'NP_003322'].read()
         lines = result.splitlines()
         is_locus = lambda x: x.startswith('LOCUS')
-        loci = filter(is_locus, lines)
+        loci = [a for a in lines if is_locus(a)]
         self.assertEqual(len(loci), 3)
 
     def test_get_from_taxonomy_db(self):
