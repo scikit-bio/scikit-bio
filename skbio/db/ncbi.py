@@ -727,7 +727,7 @@ def _get_taxid_name_lineage(rec):
         elif line.startswith(name_tag):
             name = _get_between_tags(line)
         elif line.startswith(lineage_tag):
-            lineage = map(strip, _get_between_tags(line).split(';'))
+            lineage = [strip(e) for e in _get_between_tags(line).split(';')]
     return taxid, name, lineage
 
 
