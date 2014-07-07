@@ -28,8 +28,6 @@ Examples
 Create a table object containing 7 OTUs and 6 samples.
 
 .. plot::
-   :context:
-   :nofigs:
 
    >>> from skbio.math.diversity.beta import pw_distances
    >>> import numpy as np
@@ -41,11 +39,8 @@ Create a table object containing 7 OTUs and 6 samples.
    ...         [0, 0, 25, 35, 0, 19, 0]]
    >>> ids = list('ABCDEF')
 
-Compute Bray-Curtis distances between all pairs of samples and return a
-DistanceMatrix object.
-
-.. plot::
-   :context:
+   Compute Bray-Curtis distances between all pairs of samples and return a
+   DistanceMatrix object.
 
    >>> bc_dm = pw_distances(data, ids, "braycurtis")
    >>> print(bc_dm)
@@ -60,11 +55,8 @@ DistanceMatrix object.
     [ 0.85714286  0.75        0.09392265  0.87777778  0.          0.68235294]
     [ 0.81521739  0.1627907   0.71597633  0.89285714  0.68235294  0.        ]]
 
-Compute Jaccard distances between all pairs of samples and return a
-DistanceMatrix object.
-
-.. plot::
-   :context:
+   Compute Jaccard distances between all pairs of samples and return a
+   DistanceMatrix object.
 
    >>> j_dm = pw_distances(data, ids, "jaccard")
    >>> print(j_dm)
@@ -79,12 +71,9 @@ DistanceMatrix object.
     [ 0.83333333  0.83333333  1.          1.          0.          1.        ]
     [ 1.          1.          1.          1.          1.          0.        ]]
 
-Determine if the resulting distance matrices are significantly correlated
-by computing the Mantel correlation between them. Then determine if the p-value
-is significant based on an alpha of 0.05.
-
-.. plot::
-   :context:
+   Determine if the resulting distance matrices are significantly correlated
+   by computing the Mantel correlation between them. Then determine if the p-value
+   is significant based on an alpha of 0.05.
 
    >>> from skbio.math.stats.distance import mantel
    >>> r, p_value = mantel(j_dm, bc_dm)
@@ -93,11 +82,8 @@ is significant based on an alpha of 0.05.
    >>> print(p_value < 0.05)
    False
 
-Compute PCoA for both distance matrices, and then find the Procrustes
-M-squared value that results from comparing the coordinate matrices.
-
-.. plot::
-   :context:
+   Compute PCoA for both distance matrices, and then find the Procrustes
+   M-squared value that results from comparing the coordinate matrices.
 
    >>> from skbio.math.stats.ordination import PCoA
    >>> bc_pc = PCoA(bc_dm).scores()
@@ -106,11 +92,8 @@ M-squared value that results from comparing the coordinate matrices.
    >>> print(procrustes(bc_pc.site, j_pc.site)[2])
    0.466134984787
 
-All of this only gets interesting in the context of sample metadata, so let's
-define some:
-
-.. plot::
-   :context:
+   All of this only gets interesting in the context of sample metadata, so let's
+   define some:
 
    >>> import pandas as pd
    >>> sample_md = {
@@ -135,12 +118,9 @@ define some:
    >>> print(subject_groups)
    {'subject 1': ['A', 'B', 'C'], 'subject 2': ['D', 'E', 'F']}
 
-And we'll put a quick 3D plotting function together. This function is
-adapted from the matplotlib gallery here:
-http://matplotlib.org/examples/mplot3d/scatter3d_demo.html
-
-.. plot::
-   :context:
+   And we'll put a quick 3D plotting function together. This function is
+   adapted from the matplotlib gallery here:
+   http://matplotlib.org/examples/mplot3d/scatter3d_demo.html
 
    >>> import matplotlib.pyplot as plt
    >>> from mpl_toolkits.mplot3d import Axes3D
