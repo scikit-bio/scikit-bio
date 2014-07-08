@@ -103,21 +103,21 @@ Create a table containing 7 OTUs and 6 samples:
    ... except KeyError:
    ...     pass
    >>> sample_md = {
-   ...    'A': {'body_habitat': 'gut', 'person': 'subject 1'},
-   ...    'B': {'body_habitat': 'skin', 'person': 'subject 1'},
-   ...    'C': {'body_habitat': 'tongue', 'person': 'subject 1'},
-   ...    'D': {'body_habitat': 'gut', 'person': 'subject 2'},
-   ...    'E': {'body_habitat': 'tongue', 'person': 'subject 2'},
-   ...    'F': {'body_habitat': 'skin', 'person': 'subject 2'}}
+   ...    'A': {'body_site': 'gut', 'subject': '1'},
+   ...    'B': {'body_site': 'skin', 'subject': '1'},
+   ...    'C': {'body_site': 'tongue', 'subject': '1'},
+   ...    'D': {'body_site': 'gut', 'subject': '2'},
+   ...    'E': {'body_site': 'tongue', 'subject': '2'},
+   ...    'F': {'body_site': 'skin', 'subject': '2'}}
    >>> sample_md = pd.DataFrame.from_dict(sample_md, orient='index')
    >>> sample_md
-     body_habitat     person
-   A          gut  subject 1
-   B         skin  subject 1
-   C       tongue  subject 1
-   D          gut  subject 2
-   E       tongue  subject 2
-   F         skin  subject 2
+     subject body_site
+   A       1       gut
+   B       1      skin
+   C       1    tongue
+   D       2       gut
+   E       2    tongue
+   F       2      skin
    <BLANKLINE>
    [6 rows x 2 columns]
 
@@ -149,12 +149,11 @@ Create a table containing 7 OTUs and 6 samples:
    ...    ax.set_title(title)
    ...    return fig
 
-   Now let's plot our PCoA results, coloring each sample by the individual it
+   Now let's plot our PCoA results, coloring each sample by the subject it
    was taken from:
 
-   >>> fig = scatter_3d(bc_pc, sample_md, 'person',
-   ...                  {'subject 1': 'b', 'subject 2': 'r'},
-   ...                  'Samples colored by person')
+   >>> fig = scatter_3d(bc_pc, sample_md, 'subject', {'1': 'b', '2': 'r'},
+   ...                  'Samples colored by subject')
 
 .. plot::
    :context:
@@ -164,9 +163,9 @@ Create a table containing 7 OTUs and 6 samples:
    form three separate groups:
 
    >>> plt.close('all') # not necessary for normal use
-   >>> fig = scatter_3d(bc_pc, sample_md, 'body_habitat',
+   >>> fig = scatter_3d(bc_pc, sample_md, 'body_site',
    ...                  {'gut': 'b', 'skin': 'r', 'tongue': 'g'},
-   ...                  'Samples colored by body habitat')
+   ...                  'Samples colored by body site')
 
 Ordination techniques, such as PCoA, are useful for exploratory analysis. The
 next step is to quantify the strength of the grouping/clustering that we see in
@@ -175,10 +174,10 @@ this; many operate on distance matrices. Let's use ANOSIM to quantify the
 strength of the clustering we see in the ordination plots above, using our
 Bray-Curtis distance matrix and sample metadata.
 
-First test the grouping of samples by individual:
+First test the grouping of samples by subject:
 
 >>> from skbio.math.stats.distance import ANOSIM
->>> anosim = ANOSIM(bc_dm, sample_md, column='person')
+>>> anosim = ANOSIM(bc_dm, sample_md, column='subject')
 >>> results = anosim(999)
 >>> results.statistic
 -0.4074074074074075
@@ -190,7 +189,7 @@ p-value is insignificant at an alpha of 0.05.
 
 Now let's test the grouping of samples by body site:
 
->>> anosim = ANOSIM(bc_dm, sample_md, column='body_habitat')
+>>> anosim = ANOSIM(bc_dm, sample_md, column='body_site')
 >>> results = anosim(999)
 >>> results.statistic
 1.0
@@ -198,7 +197,7 @@ Now let's test the grouping of samples by body site:
 True
 
 The R statistic of 1.0 indicates strong separation of samples based on body
-habitat. The p-value is significant at an alpha of 0.1.
+site. The p-value is significant at an alpha of 0.1.
 
 References
 ----------
