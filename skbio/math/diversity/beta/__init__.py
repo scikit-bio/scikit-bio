@@ -25,7 +25,7 @@ Functions
 
 Examples
 --------
-Create a table object containing 7 OTUs and 6 samples.
+Create a table containing 7 OTUs and 6 samples:
 
 .. plot::
    :context:
@@ -41,7 +41,7 @@ Create a table object containing 7 OTUs and 6 samples.
    >>> ids = list('ABCDEF')
 
    Compute Bray-Curtis distances between all pairs of samples and return a
-   DistanceMatrix object.
+   ``DistanceMatrix`` object:
 
    >>> bc_dm = pw_distances(data, ids, "braycurtis")
    >>> print(bc_dm)
@@ -57,7 +57,7 @@ Create a table object containing 7 OTUs and 6 samples.
     [ 0.81521739  0.1627907   0.71597633  0.89285714  0.68235294  0.        ]]
 
    Compute Jaccard distances between all pairs of samples and return a
-   DistanceMatrix object.
+   ``DistanceMatrix`` object:
 
    >>> j_dm = pw_distances(data, ids, "jaccard")
    >>> print(j_dm)
@@ -73,8 +73,8 @@ Create a table object containing 7 OTUs and 6 samples.
     [ 1.          1.          1.          1.          1.          0.        ]]
 
    Determine if the resulting distance matrices are significantly correlated
-   by computing the Mantel correlation between them. Then determine if the p-value
-   is significant based on an alpha of 0.05.
+   by computing the Mantel correlation between them. Then determine if the
+   p-value is significant based on an alpha of 0.05:
 
    >>> from skbio.math.stats.distance import mantel
    >>> r, p_value = mantel(j_dm, bc_dm)
@@ -84,7 +84,7 @@ Create a table object containing 7 OTUs and 6 samples.
    False
 
    Compute PCoA for both distance matrices, and then find the Procrustes
-   M-squared value that results from comparing the coordinate matrices.
+   M-squared value that results from comparing the coordinate matrices:
 
    >>> from skbio.math.stats.ordination import PCoA
    >>> bc_pc = PCoA(bc_dm).scores()
@@ -93,8 +93,8 @@ Create a table object containing 7 OTUs and 6 samples.
    >>> print(procrustes(bc_pc.site, j_pc.site)[2])
    0.466134984787
 
-   All of this only gets interesting in the context of sample metadata, so let's
-   define some:
+   All of this only gets interesting in the context of sample metadata, so
+   let's define some:
 
    >>> import pandas as pd
    >>> sample_md = {
@@ -104,8 +104,8 @@ Create a table object containing 7 OTUs and 6 samples.
    ...    'D': {'body_habitat': 'gut', 'person': 'subject 2'},
    ...    'E': {'body_habitat': 'tongue', 'person': 'subject 2'},
    ...    'F': {'body_habitat': 'skin', 'person': 'subject 2'}}
-   >>> sample_md = pd.DataFrame(sample_md).T
-   >>> print(sample_md)
+   >>> sample_md = pd.DataFrame.from_dict(sample_md, orient='index')
+   >>> sample_md
      body_habitat     person
    A          gut  subject 1
    B         skin  subject 1
@@ -115,20 +115,19 @@ Create a table object containing 7 OTUs and 6 samples.
    F         skin  subject 2
    <BLANKLINE>
    [6 rows x 2 columns]
-   >>> subject_groups = sample_md.groupby('person').groups
-   >>> print(subject_groups)
-   {'subject 1': ['A', 'B', 'C'], 'subject 2': ['D', 'E', 'F']}
 
-   And we'll put a quick 3D plotting function together. This function is
-   adapted from the matplotlib gallery here:
-   http://matplotlib.org/examples/mplot3d/scatter3d_demo.html
+   We'll put a quick 3D plotting function together. This function is adapted
+   from the matplotlib gallery [1]_.
 
    >>> import matplotlib.pyplot as plt
    >>> from mpl_toolkits.mplot3d import Axes3D
-   >>> def scatter_3d(coord_matrix, colors, title="", axis1=0, axis2=1,
-   ...                axis3=2):
-   ...    fig = plt.figure()
+   >>> def scatter_3d(ord_results, df, column, color_map, title='', axis1=0,
+   ...                axis2=1, axis3=2):
+   ...    coord_matrix = ord_results.site.T
+   ...    ids = ord_results.site_ids
+   ...    colors = [color_map[df[column][id_]] for id_ in ord_results.site_ids]
    ...
+   ...    fig = plt.figure()
    ...    ax = fig.add_subplot(111, projection='3d')
    ...
    ...    xs = coord_matrix[axis1]
@@ -148,27 +147,30 @@ Create a table object containing 7 OTUs and 6 samples.
    Now let's plot our PCoA results, coloring each sample by the individual it
    was taken from:
 
-   >>> b = bc_pc.site.T
-   >>> fig = scatter_3d(b, ['b', 'b', 'b', 'r', 'r', 'r'], 'Samples colored by person')
+   >>> fig = scatter_3d(bc_pc, sample_md, 'person',
+   ...                  {'subject 1': 'b', 'subject 2': 'r'},
+   ...                  'Samples colored by person')
 
 .. plot::
    :context:
 
-   We don't see any clustering or grouping of samples. If we were to instead
-   color the samples by the body site they were taken from, the samples form
-   three separate groups:
+   We don't see any clustering/grouping of samples. If we were to instead color
+   the samples by the body site they were taken from, we see that the samples
+   form three separate groups:
 
-   >>> plt.close('all')
-   >>> fig = scatter_3d(b, ['b', 'r', 'g', 'b', 'g', 'r'], 'Samples colored by body habitat')
+   >>> plt.close('all') # not necessary for normal use
+   >>> fig = scatter_3d(bc_pc, sample_md, 'body_habitat',
+   ...                  {'gut': 'b', 'skin': 'r', 'tongue': 'g'},
+   ...                  'Samples colored by body habitat')
 
-Ordination techniques, such as PCoA, are useful for exploratory analysis. A
-typical next step is to quantify the strength of the grouping/clustering that
-we see in ordination plots. There are many statistical methods available to
-accomplish this; many operate on distance matrices. Let's use ANOSIM to
-quantify the strength of the clustering we see in the ordination plots above,
-using our Bray-Curtis distance matrix and sample metadata.
+Ordination techniques, such as PCoA, are useful for exploratory analysis. The
+next step is to quantify the strength of the grouping/clustering that we see in
+ordination plots. There are many statistical methods available to accomplish
+this; many operate on distance matrices. Let's use ANOSIM to quantify the
+strength of the clustering we see in the ordination plots above, using our
+Bray-Curtis distance matrix and sample metadata.
 
-Let's first test the grouping of samples by individual:
+First test the grouping of samples by individual:
 
 >>> from skbio.math.stats.distance import ANOSIM
 >>> anosim = ANOSIM(bc_dm, sample_md, column='person')
@@ -192,6 +194,10 @@ True
 
 The R statistic of 1.0 indicates strong separation of samples based on body
 habitat. The p-value is significant at an alpha of 0.1.
+
+References
+----------
+.. [1] http://matplotlib.org/examples/mplot3d/scatter3d_demo.html
 
 """
 
