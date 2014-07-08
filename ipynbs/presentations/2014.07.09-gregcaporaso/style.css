@@ -1,8 +1,29 @@
 <style>
 
+#ipython-main-app {  
+  background:linear-gradient(to bottom, white 60%, #EEE);
+  }
+  
+#maintoolbar {
+    height: 30px;
+}
+  
+div.cell.selected {
+  border: none;
+  border-radius: 0px;
+  margin-left: -2px;
+  margin-bottom: 1px;
+  margin-top: 1px;
+  border-left: 3px solid #259D57;
+}
+
+div.out_prompt_overlay {
+    display: none !important;
+    }
+
 .rendered_html
 {
-  color: #2C5494;
+  color: #24372C !important;
   font-family: Ubuntu;
   font-size: 140%;
   line-height: 1.1;
@@ -11,7 +32,7 @@
 
 .title
 {
-  color: #498AF3;
+  color: #259D57;
   font-size: 250%;
   font-weight:bold;
   line-height: 1.2; 
@@ -20,7 +41,7 @@
 
 .subtitle
 {
-  color: #386BBC;
+  color: #259D57;
   font-size: 180%;
   font-weight:bold;
   line-height: 1.2; 
@@ -29,7 +50,7 @@
 
 .slide-header, p.slide-header
 {
-  color: #498AF3;
+  color: #259D57;
   font-size: 200%;
   font-weight:bold;
   margin: 0px 20px 10px;
@@ -39,7 +60,7 @@
 
 .rendered_html h1
 {
-  color: #498AF3;
+  color: #259D57;
   line-height: 1.2; 
   margin: 0.15em 0em 0.5em;
   page-break-before: always;
@@ -49,7 +70,7 @@
 
 .rendered_html h2
 { 
-  color: #386BBC;
+  color: #259D57;
   line-height: 1.2;
   margin: 1.1em 0em 0.5em;
   }
@@ -121,5 +142,9 @@
 {
     padding-bottom: 0.5em;
 }
+
+a, a:visited, a:active, a:hover {
+  color: #00B84D;
+  }
 
 </style>
