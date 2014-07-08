@@ -28,6 +28,7 @@ Examples
 Create a table object containing 7 OTUs and 6 samples.
 
 .. plot::
+   :context:
 
    >>> from skbio.math.diversity.beta import pw_distances
    >>> import numpy as np
@@ -124,16 +125,16 @@ Create a table object containing 7 OTUs and 6 samples.
 
    >>> import matplotlib.pyplot as plt
    >>> from mpl_toolkits.mplot3d import Axes3D
-   >>> def scatter_3d(coord_matrices, title="", axis1=0, axis2=1, axis3=2):
+   >>> def scatter_3d(coord_matrix, colors, title="", axis1=0, axis2=1,
+   ...                axis3=2):
    ...    fig = plt.figure()
    ...
    ...    ax = fig.add_subplot(111, projection='3d')
    ...
-   ...    for coord_matrix in coord_matrices:
-   ...        xs = [e[axis1] for e in coord_matrix]
-   ...        ys = [e[axis2] for e in coord_matrix]
-   ...        zs = [e[axis3] for e in coord_matrix]
-   ...        plot = ax.scatter(xs, ys, zs)
+   ...    xs = coord_matrix[axis1]
+   ...    ys = coord_matrix[axis2]
+   ...    zs = coord_matrix[axis3]
+   ...    plot = ax.scatter(xs, ys, zs, c=colors)
    ...
    ...    ax.set_xlabel('PC %d' % (axis1 + 1))
    ...    ax.set_ylabel('PC %d' % (axis2 + 1))
@@ -143,8 +144,22 @@ Create a table object containing 7 OTUs and 6 samples.
    ...    ax.set_zticklabels([])
    ...    ax.set_title(title)
    ...    return fig
+
+   Now let's plot our PCoA results, coloring each sample by the individual it
+   was taken from:
+
    >>> b = bc_pc.site.T
-   >>> fig = scatter_3d([[b[0], b[1]], [b[2], b[3]], [b[4], b[5]]])
+   >>> fig = scatter_3d(b, ['b', 'b', 'b', 'r', 'r', 'r'], 'Samples colored by person')
+
+.. plot::
+   :context:
+
+   We don't see any clustering or grouping of samples. If we were to instead
+   color the samples by the body site they were taken from, the samples form
+   three separate groups:
+
+   >>> plt.close('all')
+   >>> fig = scatter_3d(b, ['b', 'r', 'g', 'b', 'g', 'r'], 'Samples colored by body habitat')
 
 """
 
@@ -156,8 +171,7 @@ Create a table object containing 7 OTUs and 6 samples.
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from .base import (
-    pw_distances, pw_distances_from_table)
+from .base import pw_distances, pw_distances_from_table
 
 __all__ = ["pw_distances", "pw_distances_from_table"]
 
