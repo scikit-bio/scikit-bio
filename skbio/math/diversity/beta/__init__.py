@@ -97,6 +97,11 @@ Create a table containing 7 OTUs and 6 samples:
    let's define some:
 
    >>> import pandas as pd
+   >>> try:
+   ...     # not necessary for normal use
+   ...     pd.set_option('show_dimensions', True)
+   ... except KeyError:
+   ...     pass
    >>> sample_md = {
    ...    'A': {'body_habitat': 'gut', 'person': 'subject 1'},
    ...    'B': {'body_habitat': 'skin', 'person': 'subject 1'},
