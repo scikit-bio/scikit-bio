@@ -161,6 +161,38 @@ Create a table object containing 7 OTUs and 6 samples.
    >>> plt.close('all')
    >>> fig = scatter_3d(b, ['b', 'r', 'g', 'b', 'g', 'r'], 'Samples colored by body habitat')
 
+Ordination techniques, such as PCoA, are useful for exploratory analysis. A
+typical next step is to quantify the strength of the grouping/clustering that
+we see in ordination plots. There are many statistical methods available to
+accomplish this; many operate on distance matrices. Let's use ANOSIM to
+quantify the strength of the clustering we see in the ordination plots above,
+using our Bray-Curtis distance matrix and sample metadata.
+
+Let's first test the grouping of samples by individual:
+
+>>> from skbio.math.stats.distance import ANOSIM
+>>> anosim = ANOSIM(bc_dm, sample_md, column='person')
+>>> results = anosim(999)
+>>> results.statistic
+-0.4074074074074075
+>>> results.p_value < 0.05
+False
+
+The negative value of ANOSIM's R statistic indicates anti-clustering and the
+p-value is insignificant at an alpha of 0.05.
+
+Now let's test the grouping of samples by body site:
+
+>>> anosim = ANOSIM(bc_dm, sample_md, column='body_habitat')
+>>> results = anosim(999)
+>>> results.statistic
+1.0
+>>> results.p_value < 0.1
+True
+
+The R statistic of 1.0 indicates strong separation of samples based on body
+habitat. The p-value is significant at an alpha of 0.1.
+
 """
 
 # ----------------------------------------------------------------------------
