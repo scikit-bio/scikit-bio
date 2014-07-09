@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>skbio.core.alignment.StockholmAlignment.distances &mdash; scikit-bio 0.1.4 documentation</title>
+    <title>skbio.core.alignment.StockholmAlignment.distances &mdash; scikit-bio 0.1.4-dev documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.1.4',
+        VERSION:     '0.1.4-dev',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -31,7 +31,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="scikit-bio 0.1.4 documentation" href="../index.html" />
+    <link rel="top" title="scikit-bio 0.1.4-dev documentation" href="../index.html" />
     <link rel="up" title="skbio.core.alignment.StockholmAlignment" href="skbio.core.alignment.StockholmAlignment.html" />
     <link rel="next" title="skbio.core.alignment.StockholmAlignment.distribution_stats" href="skbio.core.alignment.StockholmAlignment.distribution_stats.html" />
     <link rel="prev" title="skbio.core.alignment.StockholmAlignment.degap" href="skbio.core.alignment.StockholmAlignment.degap.html" />
@@ -69,7 +69,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.1.4</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.1.4-dev</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -160,21 +160,32 @@
 <h1>skbio.core.alignment.StockholmAlignment.distances<a class="headerlink" href="#skbio-core-alignment-stockholmalignment-distances" title="Permalink to this headline">¶</a></h1>
 <dl class="method">
 <dt id="skbio.core.alignment.StockholmAlignment.distances">
-<tt class="descclassname">StockholmAlignment.</tt><tt class="descname">distances</tt><big>(</big><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.1.4/skbio/core/alignment/alignment.py#L805"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.core.alignment.StockholmAlignment.distances" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">StockholmAlignment.</tt><tt class="descname">distances</tt><big>(</big><em>distance_fn=None</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/master/skbio/core/alignment/alignment.py#L861"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.core.alignment.StockholmAlignment.distances" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute distances between all pairs of sequences</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">skbio.core.distance.DistanceMatrix</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>distance_fn</strong> : function, optional</p>
+<blockquote>
+<div><p>Function for computing the distance between a pair of sequences.
+This must take two sequences as input (as
+<cite>skbio.core.sequence.BiologicalSequence</cite> objects) and return a
+single integer or float value. Defaults to
+<cite>scipy.spatial.distance.hamming</cite>.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">skbio.core.distance.DistanceMatrix</p>
 <blockquote>
 <div><p>Matrix containing the distances between all pairs of sequences.</p>
 </div></blockquote>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><strong>skbio.core.exception.BiologicalSequenceError</strong></p>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><strong>skbio.core.exception.BiologicalSequenceError</strong></p>
 <blockquote class="last">
-<div><p>If <tt class="docutils literal"><span class="pre">len(self)</span> <span class="pre">!=</span> <span class="pre">len(other)</span></tt>.</p>
+<div><p>If <tt class="docutils literal"><span class="pre">len(self)</span> <span class="pre">!=</span> <span class="pre">len(other)</span></tt> and <tt class="docutils literal"><span class="pre">distance_fn</span></tt> ==
+<tt class="docutils literal"><span class="pre">scipy.spatial.distance.hamming</span></tt>.</p>
 </div></blockquote>
 </td>
 </tr>
@@ -184,9 +195,6 @@
 <p class="first admonition-title">See also</p>
 <p class="last"><a class="reference internal" href="skbio.core.distance.DistanceMatrix.html#skbio.core.distance.DistanceMatrix" title="skbio.core.distance.DistanceMatrix"><tt class="xref py py-obj docutils literal"><span class="pre">skbio.core.distance.DistanceMatrix</span></tt></a>, <a class="reference external" href="http://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.hamming.html#scipy.spatial.distance.hamming" title="(in SciPy v0.14.0)"><tt class="xref py py-obj docutils literal"><span class="pre">scipy.spatial.distance.hamming</span></tt></a></p>
 </div>
-<p class="rubric">Notes</p>
-<p>Distances between sequences are computed as hamming distances, though
-this will be generalized (see #194).</p>
 <p class="rubric">Examples</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.core.alignment</span> <span class="kn">import</span> <span class="n">Alignment</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.core.sequence</span> <span class="kn">import</span> <span class="n">DNA</span>

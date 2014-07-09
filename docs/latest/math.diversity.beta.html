@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Beta diversity measures (skbio.math.diversity.beta) &mdash; scikit-bio 0.1.4 documentation</title>
+    <title>Beta diversity measures (skbio.math.diversity.beta) &mdash; scikit-bio 0.1.4-dev documentation</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.1.4',
+        VERSION:     '0.1.4-dev',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -31,7 +31,7 @@
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="scikit-bio 0.1.4 documentation" href="index.html" />
+    <link rel="top" title="scikit-bio 0.1.4-dev documentation" href="index.html" />
     <link rel="next" title="skbio.math.diversity.beta.pw_distances" href="generated/skbio.math.diversity.beta.pw_distances.html" />
     <link rel="prev" title="skbio.math.diversity.alpha.strong" href="generated/skbio.math.diversity.alpha.strong.html" />
 <meta charset='utf-8'>
@@ -68,7 +68,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.1.4</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.1.4-dev</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -128,6 +128,7 @@
 <li><a class="reference internal" href="#">Beta diversity measures (<tt class="docutils literal"><span class="pre">skbio.math.diversity.beta</span></tt>)</a><ul>
 <li><a class="reference internal" href="#functions">Functions</a></li>
 <li><a class="reference internal" href="#examples">Examples</a></li>
+<li><a class="reference internal" href="#references">References</a></li>
 </ul>
 </li>
 </ul>
@@ -188,7 +189,7 @@ illustrated below for a few different forms of input.</p>
 </div>
 <div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
-<p>Create a table object containing 7 OTUs and 6 samples.</p>
+<p>Create a table containing 7 OTUs and 6 samples:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.math.diversity.beta</span> <span class="kn">import</span> <span class="n">pw_distances</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">23</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">14</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
@@ -201,7 +202,7 @@ illustrated below for a few different forms of input.</p>
 </pre></div>
 </div>
 <p>Compute Bray-Curtis distances between all pairs of samples and return a
-DistanceMatrix object.</p>
+<tt class="docutils literal"><span class="pre">DistanceMatrix</span></tt> object:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">bc_dm</span> <span class="o">=</span> <span class="n">pw_distances</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">ids</span><span class="p">,</span> <span class="s">&quot;braycurtis&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">bc_dm</span><span class="p">)</span>
 <span class="go">6x6 distance matrix</span>
@@ -217,7 +218,7 @@ DistanceMatrix object.</p>
 </pre></div>
 </div>
 <p>Compute Jaccard distances between all pairs of samples and return a
-DistanceMatrix object.</p>
+<tt class="docutils literal"><span class="pre">DistanceMatrix</span></tt> object:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">j_dm</span> <span class="o">=</span> <span class="n">pw_distances</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">ids</span><span class="p">,</span> <span class="s">&quot;jaccard&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">j_dm</span><span class="p">)</span>
 <span class="go">6x6 distance matrix</span>
@@ -233,8 +234,8 @@ DistanceMatrix object.</p>
 </pre></div>
 </div>
 <p>Determine if the resulting distance matrices are significantly correlated
-by computing the Mantel correlation between them. Then determine if the p-value
-is significant based on an alpha of 0.05.</p>
+by computing the Mantel correlation between them. Then determine if the
+p-value is significant based on an alpha of 0.05:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.math.stats.distance</span> <span class="kn">import</span> <span class="n">mantel</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="p">,</span> <span class="n">p_value</span> <span class="o">=</span> <span class="n">mantel</span><span class="p">(</span><span class="n">j_dm</span><span class="p">,</span> <span class="n">bc_dm</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
@@ -244,15 +245,132 @@ is significant based on an alpha of 0.05.</p>
 </pre></div>
 </div>
 <p>Compute PCoA for both distance matrices, and then find the Procrustes
-M-squared value that results from comparing the coordinate matrices.</p>
+M-squared value that results from comparing the coordinate matrices:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.math.stats.ordination</span> <span class="kn">import</span> <span class="n">PCoA</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">bc_pc</span> <span class="o">=</span> <span class="n">PCoA</span><span class="p">(</span><span class="n">bc_dm</span><span class="p">)</span><span class="o">.</span><span class="n">scores</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">j_pc</span> <span class="o">=</span> <span class="n">PCoA</span><span class="p">(</span><span class="n">j_dm</span><span class="p">)</span><span class="o">.</span><span class="n">scores</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.math.stats.spatial</span> <span class="kn">import</span> <span class="n">procrustes</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">procrustes</span><span class="p">(</span><span class="n">bc_pc</span><span class="o">.</span><span class="n">site</span><span class="p">,</span> <span class="n">j_pc</span><span class="o">.</span><span class="n">site</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">procrustes</span><span class="p">(</span><span class="n">bc_pc</span><span class="o">.</span><span class="n">site</span><span class="p">,</span> <span class="n">j_pc</span><span class="o">.</span><span class="n">site</span><span class="p">)[</span><span class="mi">2</span><span class="p">])</span>
 <span class="go">0.466134984787</span>
 </pre></div>
 </div>
+<p>All of this only gets interesting in the context of sample metadata, so
+let&#8217;s define some:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="c"># not necessary for normal use</span>
+<span class="gp">... </span>    <span class="n">pd</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="s">&#39;show_dimensions&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">pass</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sample_md</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>   <span class="s">&#39;A&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;body_site&#39;</span><span class="p">:</span> <span class="s">&#39;gut&#39;</span><span class="p">,</span> <span class="s">&#39;subject&#39;</span><span class="p">:</span> <span class="s">&#39;1&#39;</span><span class="p">},</span>
+<span class="gp">... </span>   <span class="s">&#39;B&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;body_site&#39;</span><span class="p">:</span> <span class="s">&#39;skin&#39;</span><span class="p">,</span> <span class="s">&#39;subject&#39;</span><span class="p">:</span> <span class="s">&#39;1&#39;</span><span class="p">},</span>
+<span class="gp">... </span>   <span class="s">&#39;C&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;body_site&#39;</span><span class="p">:</span> <span class="s">&#39;tongue&#39;</span><span class="p">,</span> <span class="s">&#39;subject&#39;</span><span class="p">:</span> <span class="s">&#39;1&#39;</span><span class="p">},</span>
+<span class="gp">... </span>   <span class="s">&#39;D&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;body_site&#39;</span><span class="p">:</span> <span class="s">&#39;gut&#39;</span><span class="p">,</span> <span class="s">&#39;subject&#39;</span><span class="p">:</span> <span class="s">&#39;2&#39;</span><span class="p">},</span>
+<span class="gp">... </span>   <span class="s">&#39;E&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;body_site&#39;</span><span class="p">:</span> <span class="s">&#39;tongue&#39;</span><span class="p">,</span> <span class="s">&#39;subject&#39;</span><span class="p">:</span> <span class="s">&#39;2&#39;</span><span class="p">},</span>
+<span class="gp">... </span>   <span class="s">&#39;F&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;body_site&#39;</span><span class="p">:</span> <span class="s">&#39;skin&#39;</span><span class="p">,</span> <span class="s">&#39;subject&#39;</span><span class="p">:</span> <span class="s">&#39;2&#39;</span><span class="p">}}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sample_md</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">sample_md</span><span class="p">,</span> <span class="n">orient</span><span class="o">=</span><span class="s">&#39;index&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sample_md</span>
+<span class="go">  subject body_site</span>
+<span class="go">A       1       gut</span>
+<span class="go">B       1      skin</span>
+<span class="go">C       1    tongue</span>
+<span class="go">D       2       gut</span>
+<span class="go">E       2    tongue</span>
+<span class="go">F       2      skin</span>
+
+<span class="go">[6 rows x 2 columns]</span>
+</pre></div>
+</div>
+<p>We&#8217;ll put a quick 3D plotting function together. This function is adapted
+from the matplotlib gallery <a class="reference internal" href="#r154" id="id1">[R154]</a>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpl_toolkits.mplot3d</span> <span class="kn">import</span> <span class="n">Axes3D</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">scatter_3d</span><span class="p">(</span><span class="n">ord_results</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">color_map</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">axis1</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+<span class="gp">... </span>               <span class="n">axis2</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">axis3</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+<span class="gp">... </span>   <span class="n">coord_matrix</span> <span class="o">=</span> <span class="n">ord_results</span><span class="o">.</span><span class="n">site</span><span class="o">.</span><span class="n">T</span>
+<span class="gp">... </span>   <span class="n">ids</span> <span class="o">=</span> <span class="n">ord_results</span><span class="o">.</span><span class="n">site_ids</span>
+<span class="gp">... </span>   <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="n">color_map</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="n">column</span><span class="p">][</span><span class="n">id_</span><span class="p">]]</span> <span class="k">for</span> <span class="n">id_</span> <span class="ow">in</span> <span class="n">ord_results</span><span class="o">.</span><span class="n">site_ids</span><span class="p">]</span>
+<span class="gp">...</span>
+<span class="gp">... </span>   <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="gp">... </span>   <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="s">&#39;3d&#39;</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">... </span>   <span class="n">xs</span> <span class="o">=</span> <span class="n">coord_matrix</span><span class="p">[</span><span class="n">axis1</span><span class="p">]</span>
+<span class="gp">... </span>   <span class="n">ys</span> <span class="o">=</span> <span class="n">coord_matrix</span><span class="p">[</span><span class="n">axis2</span><span class="p">]</span>
+<span class="gp">... </span>   <span class="n">zs</span> <span class="o">=</span> <span class="n">coord_matrix</span><span class="p">[</span><span class="n">axis3</span><span class="p">]</span>
+<span class="gp">... </span>   <span class="n">plot</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">zs</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">colors</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">... </span>   <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s">&#39;PC </span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">axis1</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+<span class="gp">... </span>   <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s">&#39;PC </span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">axis2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+<span class="gp">... </span>   <span class="n">ax</span><span class="o">.</span><span class="n">set_zlabel</span><span class="p">(</span><span class="s">&#39;PC </span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">axis3</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+<span class="gp">... </span>   <span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">([])</span>
+<span class="gp">... </span>   <span class="n">ax</span><span class="o">.</span><span class="n">set_yticklabels</span><span class="p">([])</span>
+<span class="gp">... </span>   <span class="n">ax</span><span class="o">.</span><span class="n">set_zticklabels</span><span class="p">([])</span>
+<span class="gp">... </span>   <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+<span class="gp">... </span>   <span class="k">return</span> <span class="n">fig</span>
+</pre></div>
+</div>
+<p>Now let&#8217;s plot our PCoA results, coloring each sample by the subject it
+was taken from:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">fig</span> <span class="o">=</span> <span class="n">scatter_3d</span><span class="p">(</span><span class="n">bc_pc</span><span class="p">,</span> <span class="n">sample_md</span><span class="p">,</span> <span class="s">&#39;subject&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;1&#39;</span><span class="p">:</span> <span class="s">&#39;b&#39;</span><span class="p">,</span> <span class="s">&#39;2&#39;</span><span class="p">:</span> <span class="s">&#39;r&#39;</span><span class="p">},</span>
+<span class="gp">... </span>                 <span class="s">&#39;Samples colored by subject&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>(<a class="reference external" href=".//math-diversity-beta-1.py">Source code</a>, <a class="reference external" href=".//math-diversity-beta-1.png">png</a>, <a class="reference external" href=".//math-diversity-beta-1.hires.png">hires.png</a>, <a class="reference external" href=".//math-diversity-beta-1.pdf">pdf</a>)</p>
+<div class="figure">
+<img alt="_images/math-diversity-beta-1.png" src="_images/math-diversity-beta-1.png" />
+</div>
+<p>We don&#8217;t see any clustering/grouping of samples. If we were to instead color
+the samples by the body site they were taken from, we see that the samples
+form three separate groups:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s">&#39;all&#39;</span><span class="p">)</span> <span class="c"># not necessary for normal use</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fig</span> <span class="o">=</span> <span class="n">scatter_3d</span><span class="p">(</span><span class="n">bc_pc</span><span class="p">,</span> <span class="n">sample_md</span><span class="p">,</span> <span class="s">&#39;body_site&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                 <span class="p">{</span><span class="s">&#39;gut&#39;</span><span class="p">:</span> <span class="s">&#39;b&#39;</span><span class="p">,</span> <span class="s">&#39;skin&#39;</span><span class="p">:</span> <span class="s">&#39;r&#39;</span><span class="p">,</span> <span class="s">&#39;tongue&#39;</span><span class="p">:</span> <span class="s">&#39;g&#39;</span><span class="p">},</span>
+<span class="gp">... </span>                 <span class="s">&#39;Samples colored by body site&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>(<a class="reference external" href=".//math-diversity-beta-2.py">Source code</a>, <a class="reference external" href=".//math-diversity-beta-2.png">png</a>, <a class="reference external" href=".//math-diversity-beta-2.hires.png">hires.png</a>, <a class="reference external" href=".//math-diversity-beta-2.pdf">pdf</a>)</p>
+<div class="figure">
+<img alt="_images/math-diversity-beta-2.png" src="_images/math-diversity-beta-2.png" />
+</div>
+<p>Ordination techniques, such as PCoA, are useful for exploratory analysis. The
+next step is to quantify the strength of the grouping/clustering that we see in
+ordination plots. There are many statistical methods available to accomplish
+this; many operate on distance matrices. Let&#8217;s use ANOSIM to quantify the
+strength of the clustering we see in the ordination plots above, using our
+Bray-Curtis distance matrix and sample metadata.</p>
+<p>First test the grouping of samples by subject:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.math.stats.distance</span> <span class="kn">import</span> <span class="n">ANOSIM</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">anosim</span> <span class="o">=</span> <span class="n">ANOSIM</span><span class="p">(</span><span class="n">bc_dm</span><span class="p">,</span> <span class="n">sample_md</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="s">&#39;subject&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">results</span> <span class="o">=</span> <span class="n">anosim</span><span class="p">(</span><span class="mi">999</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">results</span><span class="o">.</span><span class="n">statistic</span>
+<span class="go">-0.4074074074074075</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">results</span><span class="o">.</span><span class="n">p_value</span> <span class="o">&lt;</span> <span class="mf">0.05</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<p>The negative value of ANOSIM&#8217;s R statistic indicates anti-clustering and the
+p-value is insignificant at an alpha of 0.05.</p>
+<p>Now let&#8217;s test the grouping of samples by body site:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">anosim</span> <span class="o">=</span> <span class="n">ANOSIM</span><span class="p">(</span><span class="n">bc_dm</span><span class="p">,</span> <span class="n">sample_md</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="s">&#39;body_site&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">results</span> <span class="o">=</span> <span class="n">anosim</span><span class="p">(</span><span class="mi">999</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">results</span><span class="o">.</span><span class="n">statistic</span>
+<span class="go">1.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">results</span><span class="o">.</span><span class="n">p_value</span> <span class="o">&lt;</span> <span class="mf">0.1</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>The R statistic of 1.0 indicates strong separation of samples based on body
+site. The p-value is significant at an alpha of 0.1.</p>
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<table class="docutils citation" frame="void" id="r154" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[R154]</a></td><td><a class="reference external" href="http://matplotlib.org/examples/mplot3d/scatter3d_demo.html">http://matplotlib.org/examples/mplot3d/scatter3d_demo.html</a></td></tr>
+</tbody>
+</table>
 </div>
 </div>
 

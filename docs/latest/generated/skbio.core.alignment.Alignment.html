@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>skbio.core.alignment.Alignment &mdash; scikit-bio 0.1.4 documentation</title>
+    <title>skbio.core.alignment.Alignment &mdash; scikit-bio 0.1.4-dev documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.1.4',
+        VERSION:     '0.1.4-dev',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -31,7 +31,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="scikit-bio 0.1.4 documentation" href="../index.html" />
+    <link rel="top" title="scikit-bio 0.1.4-dev documentation" href="../index.html" />
     <link rel="up" title="Sequence collections and alignments (skbio.core.alignment)" href="../core.alignment.html" />
     <link rel="next" title="skbio.core.alignment.Alignment.__contains__" href="skbio.core.alignment.Alignment.__contains__.html" />
     <link rel="prev" title="skbio.core.alignment.SequenceCollection.upper" href="skbio.core.alignment.SequenceCollection.upper.html" />
@@ -69,7 +69,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.1.4</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.1.4-dev</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -160,7 +160,7 @@
 <h1>skbio.core.alignment.Alignment<a class="headerlink" href="#skbio-core-alignment-alignment" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="skbio.core.alignment.Alignment">
-<em class="property">class </em><tt class="descclassname">skbio.core.alignment.</tt><tt class="descname">Alignment</tt><big>(</big><em>seqs</em>, <em>validate=False</em>, <em>score=None</em>, <em>start_end_positions=None</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.1.4/skbio/core/alignment/alignment.py#L739"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.core.alignment.Alignment" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">skbio.core.alignment.</tt><tt class="descname">Alignment</tt><big>(</big><em>seqs</em>, <em>validate=False</em>, <em>score=None</em>, <em>start_end_positions=None</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/master/skbio/core/alignment/alignment.py#L795"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.core.alignment.Alignment" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class for storing alignments of biological sequences.</p>
 <p>The <tt class="docutils literal"><span class="pre">Alignment</span></tt> class adds convenience methods to the
 <tt class="docutils literal"><span class="pre">SequenceCollection</span></tt> class to make it easy to work with alignments of
@@ -257,7 +257,7 @@ sequences (rows) by positions (columns).</p>
 <tr class="row-even"><td><a class="reference internal" href="skbio.core.alignment.Alignment.degap.html#skbio.core.alignment.Alignment.degap" title="skbio.core.alignment.Alignment.degap"><tt class="xref py py-obj docutils literal"><span class="pre">degap</span></tt></a>()</td>
 <td>Return a new <cite>SequenceCollection</cite> with all gap characters removed.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="skbio.core.alignment.Alignment.distances.html#skbio.core.alignment.Alignment.distances" title="skbio.core.alignment.Alignment.distances"><tt class="xref py py-obj docutils literal"><span class="pre">distances</span></tt></a>()</td>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.core.alignment.Alignment.distances.html#skbio.core.alignment.Alignment.distances" title="skbio.core.alignment.Alignment.distances"><tt class="xref py py-obj docutils literal"><span class="pre">distances</span></tt></a>([distance_fn])</td>
 <td>Compute distances between all pairs of sequences</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="skbio.core.alignment.Alignment.distribution_stats.html#skbio.core.alignment.Alignment.distribution_stats" title="skbio.core.alignment.Alignment.distribution_stats"><tt class="xref py py-obj docutils literal"><span class="pre">distribution_stats</span></tt></a>([center_f,&nbsp;spread_f])</td>

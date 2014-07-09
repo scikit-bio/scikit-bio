@@ -29,6 +29,7 @@ skbio.core.alignment.SequenceCollection
          SequenceCollection.__subclasshook__
          SequenceCollection._validate_character_set
          SequenceCollection.degap
+         SequenceCollection.distances
          SequenceCollection.distribution_stats
          SequenceCollection.from_fasta_records
          SequenceCollection.get_seq

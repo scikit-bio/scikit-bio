@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>skbio.core.alignment.SequenceCollection &mdash; scikit-bio 0.1.4 documentation</title>
+    <title>skbio.core.alignment.SequenceCollection &mdash; scikit-bio 0.1.4-dev documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.1.4',
+        VERSION:     '0.1.4-dev',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -31,7 +31,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="scikit-bio 0.1.4 documentation" href="../index.html" />
+    <link rel="top" title="scikit-bio 0.1.4-dev documentation" href="../index.html" />
     <link rel="up" title="Sequence collections and alignments (skbio.core.alignment)" href="../core.alignment.html" />
     <link rel="next" title="skbio.core.alignment.SequenceCollection.__contains__" href="skbio.core.alignment.SequenceCollection.__contains__.html" />
     <link rel="prev" title="skbio.core.alignment.pairwise.local_pairwise_align" href="skbio.core.alignment.pairwise.local_pairwise_align.html" />
@@ -69,7 +69,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.1.4</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.1.4-dev</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -160,7 +160,7 @@
 <h1>skbio.core.alignment.SequenceCollection<a class="headerlink" href="#skbio-core-alignment-sequencecollection" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="skbio.core.alignment.SequenceCollection">
-<em class="property">class </em><tt class="descclassname">skbio.core.alignment.</tt><tt class="descname">SequenceCollection</tt><big>(</big><em>seqs</em>, <em>validate=False</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.1.4/skbio/core/alignment/alignment.py#L24"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.core.alignment.SequenceCollection" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">skbio.core.alignment.</tt><tt class="descname">SequenceCollection</tt><big>(</big><em>seqs</em>, <em>validate=False</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/master/skbio/core/alignment/alignment.py#L24"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.core.alignment.SequenceCollection" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class for storing collections of biological sequences.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -237,49 +237,52 @@ a new <cite>SequenceCollection</cite> object.</p>
 <tr class="row-even"><td><a class="reference internal" href="skbio.core.alignment.SequenceCollection.degap.html#skbio.core.alignment.SequenceCollection.degap" title="skbio.core.alignment.SequenceCollection.degap"><tt class="xref py py-obj docutils literal"><span class="pre">degap</span></tt></a>()</td>
 <td>Return a new <cite>SequenceCollection</cite> with all gap characters removed.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="skbio.core.alignment.SequenceCollection.distribution_stats.html#skbio.core.alignment.SequenceCollection.distribution_stats" title="skbio.core.alignment.SequenceCollection.distribution_stats"><tt class="xref py py-obj docutils literal"><span class="pre">distribution_stats</span></tt></a>([center_f,&nbsp;spread_f])</td>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.core.alignment.SequenceCollection.distances.html#skbio.core.alignment.SequenceCollection.distances" title="skbio.core.alignment.SequenceCollection.distances"><tt class="xref py py-obj docutils literal"><span class="pre">distances</span></tt></a>(distance_fn)</td>
+<td>Compute distances between all pairs of sequences</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.core.alignment.SequenceCollection.distribution_stats.html#skbio.core.alignment.SequenceCollection.distribution_stats" title="skbio.core.alignment.SequenceCollection.distribution_stats"><tt class="xref py py-obj docutils literal"><span class="pre">distribution_stats</span></tt></a>([center_f,&nbsp;spread_f])</td>
 <td>Return sequence count, and center and spread of sequence lengths</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="skbio.core.alignment.SequenceCollection.from_fasta_records.html#skbio.core.alignment.SequenceCollection.from_fasta_records" title="skbio.core.alignment.SequenceCollection.from_fasta_records"><tt class="xref py py-obj docutils literal"><span class="pre">from_fasta_records</span></tt></a>(fasta_records,&nbsp;...[,&nbsp;...])</td>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.core.alignment.SequenceCollection.from_fasta_records.html#skbio.core.alignment.SequenceCollection.from_fasta_records" title="skbio.core.alignment.SequenceCollection.from_fasta_records"><tt class="xref py py-obj docutils literal"><span class="pre">from_fasta_records</span></tt></a>(fasta_records,&nbsp;...[,&nbsp;...])</td>
 <td>Initialize a <cite>SequenceCollection</cite> object</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="skbio.core.alignment.SequenceCollection.get_seq.html#skbio.core.alignment.SequenceCollection.get_seq" title="skbio.core.alignment.SequenceCollection.get_seq"><tt class="xref py py-obj docutils literal"><span class="pre">get_seq</span></tt></a>(id)</td>
+<tr class="row-even"><td><a class="reference internal" href="skbio.core.alignment.SequenceCollection.get_seq.html#skbio.core.alignment.SequenceCollection.get_seq" title="skbio.core.alignment.SequenceCollection.get_seq"><tt class="xref py py-obj docutils literal"><span class="pre">get_seq</span></tt></a>(id)</td>
 <td>Return a sequence from the <cite>SequenceCollection</cite> by its id.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="skbio.core.alignment.SequenceCollection.ids.html#skbio.core.alignment.SequenceCollection.ids" title="skbio.core.alignment.SequenceCollection.ids"><tt class="xref py py-obj docutils literal"><span class="pre">ids</span></tt></a>()</td>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.core.alignment.SequenceCollection.ids.html#skbio.core.alignment.SequenceCollection.ids" title="skbio.core.alignment.SequenceCollection.ids"><tt class="xref py py-obj docutils literal"><span class="pre">ids</span></tt></a>()</td>
 <td>Returns the <cite>BiologicalSequence</cite> ids</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="skbio.core.alignment.SequenceCollection.int_map.html#skbio.core.alignment.SequenceCollection.int_map" title="skbio.core.alignment.SequenceCollection.int_map"><tt class="xref py py-obj docutils literal"><span class="pre">int_map</span></tt></a>([prefix])</td>
+<tr class="row-even"><td><a class="reference internal" href="skbio.core.alignment.SequenceCollection.int_map.html#skbio.core.alignment.SequenceCollection.int_map" title="skbio.core.alignment.SequenceCollection.int_map"><tt class="xref py py-obj docutils literal"><span class="pre">int_map</span></tt></a>([prefix])</td>
 <td>Create an integer-based mapping of sequence ids</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="skbio.core.alignment.SequenceCollection.is_empty.html#skbio.core.alignment.SequenceCollection.is_empty" title="skbio.core.alignment.SequenceCollection.is_empty"><tt class="xref py py-obj docutils literal"><span class="pre">is_empty</span></tt></a>()</td>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.core.alignment.SequenceCollection.is_empty.html#skbio.core.alignment.SequenceCollection.is_empty" title="skbio.core.alignment.SequenceCollection.is_empty"><tt class="xref py py-obj docutils literal"><span class="pre">is_empty</span></tt></a>()</td>
 <td>Return True if the SequenceCollection is empty</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="skbio.core.alignment.SequenceCollection.is_valid.html#skbio.core.alignment.SequenceCollection.is_valid" title="skbio.core.alignment.SequenceCollection.is_valid"><tt class="xref py py-obj docutils literal"><span class="pre">is_valid</span></tt></a>()</td>
+<tr class="row-even"><td><a class="reference internal" href="skbio.core.alignment.SequenceCollection.is_valid.html#skbio.core.alignment.SequenceCollection.is_valid" title="skbio.core.alignment.SequenceCollection.is_valid"><tt class="xref py py-obj docutils literal"><span class="pre">is_valid</span></tt></a>()</td>
 <td>Return True if the SequenceCollection is valid</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="skbio.core.alignment.SequenceCollection.iteritems.html#skbio.core.alignment.SequenceCollection.iteritems" title="skbio.core.alignment.SequenceCollection.iteritems"><tt class="xref py py-obj docutils literal"><span class="pre">iteritems</span></tt></a>()</td>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.core.alignment.SequenceCollection.iteritems.html#skbio.core.alignment.SequenceCollection.iteritems" title="skbio.core.alignment.SequenceCollection.iteritems"><tt class="xref py py-obj docutils literal"><span class="pre">iteritems</span></tt></a>()</td>
 <td>Generator of id, sequence tuples</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="skbio.core.alignment.SequenceCollection.k_word_frequencies.html#skbio.core.alignment.SequenceCollection.k_word_frequencies" title="skbio.core.alignment.SequenceCollection.k_word_frequencies"><tt class="xref py py-obj docutils literal"><span class="pre">k_word_frequencies</span></tt></a>(k[,&nbsp;overlapping,&nbsp;constructor])</td>
+<tr class="row-even"><td><a class="reference internal" href="skbio.core.alignment.SequenceCollection.k_word_frequencies.html#skbio.core.alignment.SequenceCollection.k_word_frequencies" title="skbio.core.alignment.SequenceCollection.k_word_frequencies"><tt class="xref py py-obj docutils literal"><span class="pre">k_word_frequencies</span></tt></a>(k[,&nbsp;overlapping,&nbsp;constructor])</td>
 <td>Return frequencies of length k words for sequences in Alignment</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="skbio.core.alignment.SequenceCollection.lower.html#skbio.core.alignment.SequenceCollection.lower" title="skbio.core.alignment.SequenceCollection.lower"><tt class="xref py py-obj docutils literal"><span class="pre">lower</span></tt></a>()</td>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.core.alignment.SequenceCollection.lower.html#skbio.core.alignment.SequenceCollection.lower" title="skbio.core.alignment.SequenceCollection.lower"><tt class="xref py py-obj docutils literal"><span class="pre">lower</span></tt></a>()</td>
 <td>Converts all sequences to lowercase</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="skbio.core.alignment.SequenceCollection.sequence_count.html#skbio.core.alignment.SequenceCollection.sequence_count" title="skbio.core.alignment.SequenceCollection.sequence_count"><tt class="xref py py-obj docutils literal"><span class="pre">sequence_count</span></tt></a>()</td>
+<tr class="row-even"><td><a class="reference internal" href="skbio.core.alignment.SequenceCollection.sequence_count.html#skbio.core.alignment.SequenceCollection.sequence_count" title="skbio.core.alignment.SequenceCollection.sequence_count"><tt class="xref py py-obj docutils literal"><span class="pre">sequence_count</span></tt></a>()</td>
 <td>Return the count of sequences in the <cite>SequenceCollection</cite></td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="skbio.core.alignment.SequenceCollection.sequence_lengths.html#skbio.core.alignment.SequenceCollection.sequence_lengths" title="skbio.core.alignment.SequenceCollection.sequence_lengths"><tt class="xref py py-obj docutils literal"><span class="pre">sequence_lengths</span></tt></a>()</td>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.core.alignment.SequenceCollection.sequence_lengths.html#skbio.core.alignment.SequenceCollection.sequence_lengths" title="skbio.core.alignment.SequenceCollection.sequence_lengths"><tt class="xref py py-obj docutils literal"><span class="pre">sequence_lengths</span></tt></a>()</td>
 <td>Return lengths of the sequences in the <cite>SequenceCollection</cite></td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="skbio.core.alignment.SequenceCollection.toFasta.html#skbio.core.alignment.SequenceCollection.toFasta" title="skbio.core.alignment.SequenceCollection.toFasta"><tt class="xref py py-obj docutils literal"><span class="pre">toFasta</span></tt></a>()</td>
+<tr class="row-even"><td><a class="reference internal" href="skbio.core.alignment.SequenceCollection.toFasta.html#skbio.core.alignment.SequenceCollection.toFasta" title="skbio.core.alignment.SequenceCollection.toFasta"><tt class="xref py py-obj docutils literal"><span class="pre">toFasta</span></tt></a>()</td>
 <td>Return fasta-formatted string representing the <cite>SequenceCollection</cite></td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="skbio.core.alignment.SequenceCollection.to_fasta.html#skbio.core.alignment.SequenceCollection.to_fasta" title="skbio.core.alignment.SequenceCollection.to_fasta"><tt class="xref py py-obj docutils literal"><span class="pre">to_fasta</span></tt></a>()</td>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.core.alignment.SequenceCollection.to_fasta.html#skbio.core.alignment.SequenceCollection.to_fasta" title="skbio.core.alignment.SequenceCollection.to_fasta"><tt class="xref py py-obj docutils literal"><span class="pre">to_fasta</span></tt></a>()</td>
 <td>Return fasta-formatted string representing the <cite>SequenceCollection</cite></td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="skbio.core.alignment.SequenceCollection.upper.html#skbio.core.alignment.SequenceCollection.upper" title="skbio.core.alignment.SequenceCollection.upper"><tt class="xref py py-obj docutils literal"><span class="pre">upper</span></tt></a>()</td>
+<tr class="row-even"><td><a class="reference internal" href="skbio.core.alignment.SequenceCollection.upper.html#skbio.core.alignment.SequenceCollection.upper" title="skbio.core.alignment.SequenceCollection.upper"><tt class="xref py py-obj docutils literal"><span class="pre">upper</span></tt></a>()</td>
 <td>Converts all sequences to uppercase</td>
 </tr>
 </tbody>
