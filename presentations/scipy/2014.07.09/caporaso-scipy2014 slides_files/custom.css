@@ -1,0 +1,39 @@
+.reveal > .backgrounds {
+    margin-top: 10px;
+    background:linear-gradient(to bottom, white 60%, #EEE);
+    position: fixed;
+}
+
+.reveal .state-background {
+    background:url('skbio.png') 0px -5px no-repeat;
+    
+}
+
+.reveal h1 {
+    color: #259D57;
+    text-shadow: 1px 1px 1px #92ceab;
+}
+
+.reveal a, .reveal a:visited, .reveal a:active, .reveal a:hover {
+    color: #00B84D !important;
+}
+
+.reveal .controls div.navigate-right, .reveal .controls div.navigate-right.enabled, .reveal .controls div.navigate-right.enabled:hover{
+    border-left-color: #00B84D;
+}
+
+.reveal .controls div.navigate-left, .reveal .controls div.navigate-left.enabled, .reveal .controls div.navigate-left.enabled:hover {
+    border-right-color: #00B84D;
+}
+
+.reveal .controls div.navigate-up, .reveal .controls div.navigate-up.enabled, .reveal .controls div.navigate-up.enabled:hover {
+    border-bottom-color: #00B84D;
+}
+
+.reveal .controls div.navigate-down, .reveal .controls div.navigate-down.enabled, .reveal .controls div.navigate-down.enabled:hover {
+    border-top-color: #00B84D;
+}
+
+.reveal .progress span {
+    background: none repeat scroll 0% 0% #259D57;
+}
