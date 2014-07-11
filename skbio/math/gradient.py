@@ -678,15 +678,15 @@ class TrajectoryGradientANOVA(GradientANOVA):
         """
         if len(trajectories) == 1:
             trajectory = np.array([np.linalg.norm(trajectories)])
-            calc = {'trajectory': trajectory[0]}
+            calc = {'2-norm': trajectory[0]}
         else:
-            # Loop through all the rows in trajectories and create 'trajectory'
+            # Loop through all the rows in trajectories and create '2-norm'
             # by taking the norm of the 2nd row - 1st row, 3rd row - 2nd row...
             trajectory = \
                 np.array([np.linalg.norm(trajectories.ix[i+1].get_values() -
                                          trajectories.ix[i].get_values())
                           for i in range(len(trajectories) - 1)])
-            calc = {'trajectory': np.linalg.norm(trajectory)}
+            calc = {'2-norm': np.linalg.norm(trajectory)}
 
         msg = ''.join(self._message_buffer) if self._message_buffer else None
         # Reset the message buffer
