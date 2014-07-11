@@ -1652,7 +1652,7 @@ class StockholmAlignment(Alignment):
         super(StockholmAlignment, self).__init__(seqs, validate)
 
     def __str__(self):
-        r"""Parses StockholmAlignment into a string with stockholm format
+        """Parses StockholmAlignment into a string with stockholm format
 
         Returns
         -------
@@ -1755,11 +1755,23 @@ class StockholmAlignment(Alignment):
 
         return '\n'.join(sto_lines)
 
-    def to_file(self, filename):
-        """Write alignment to a file as text."""
-        f = open(filename, "w")
-        f.write(self.__str__())
-        f.close()
+    def to_file(self, out_f):
+        r"""Save the alignment to file in text format.
+
+        Parameters
+        ----------
+        out_f : file-like object or filename
+            File-like object to write serialized data to, or name of
+            file. If it's a file-like object, it must have a ``write``
+            method, and it won't be closed. Else, it is opened and
+            closed after writing.
+
+        See Also
+        --------
+        from_file           
+        """
+        with open_file(out_f, 'w') as out_f:
+            f.write(self.__str__())
     
     @staticmethod
     def _parse_gf_info(lines):
