@@ -520,6 +520,8 @@ cdef class StripedSmithWaterman:
 
     Notes
     -----
+    This is a wrapper for the SSW package [1]_.
+    
     `mask_length` has to be >= 15, otherwise the suboptimal alignment
     information will NOT be returned.
 
@@ -530,6 +532,13 @@ cdef class StripedSmithWaterman:
     nucleotide sequences.
 
     A substitution matrix must be provided when working with protein sequences.
+    
+    References
+    ----------
+    .. [1] Zhao, Mengyao, Wan-Ping Lee, Erik P. Garrison, & Gabor T.
+       Marth. "SSW Library: An SIMD Smith-Waterman C/C++ Library for
+       Applications". PLOS ONE (2013). Web. 11 July 2014.
+       http://www.plosone.org/article/info:doi/10.1371/journal.pone.0082138
 
     """
     cdef s_profile *profile
@@ -737,6 +746,8 @@ def local_pairwise_align_ssw(sequence1, sequence2,
 
     Notes
     -----
+    This is a wrapper for the SSW package [1]_.
+
     For a complete list of optional keyword-arguments that can be provided,
     see ``skbio.core.alignment.StripedSmithWaterman``.
 
@@ -744,7 +755,14 @@ def local_pairwise_align_ssw(sequence1, sequence2,
     `zero_index`
 
     If an alignment does not meet a provided filter, `None` will be returned.
-
+    
+    References
+    ----------
+    .. [1] Zhao, Mengyao, Wan-Ping Lee, Erik P. Garrison, & Gabor T.
+       Marth. "SSW Library: An SIMD Smith-Waterman C/C++ Library for
+       Applications". PLOS ONE (2013). Web. 11 July 2014.
+       http://www.plosone.org/article/info:doi/10.1371/journal.pone.0082138
+     
     See Also
     --------
     skbio.core.alignment.StripedSmithWaterman
