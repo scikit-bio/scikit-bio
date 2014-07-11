@@ -1769,11 +1769,11 @@ class StockholmAlignment(Alignment):
 
         See Also
         --------
-        from_file           
+        from_file
         """
         with open_file(out_f, 'w') as out_f:
             out_f.write(self.__str__())
-    
+
     @staticmethod
     def _parse_gf_info(lines):
         """Takes care of parsing GF lines in stockholm plus special cases"""
