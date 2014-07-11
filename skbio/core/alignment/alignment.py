@@ -19,6 +19,7 @@ from scipy.stats import entropy
 
 from skbio.core.exception import SequenceCollectionError, StockholmParseError
 from skbio.core.distance import DistanceMatrix
+from skbio.util.io import open_file
 
 
 class SequenceCollection(object):
@@ -1771,7 +1772,7 @@ class StockholmAlignment(Alignment):
         from_file           
         """
         with open_file(out_f, 'w') as out_f:
-            f.write(self.__str__())
+            out_f.write(self.__str__())
     
     @staticmethod
     def _parse_gf_info(lines):
