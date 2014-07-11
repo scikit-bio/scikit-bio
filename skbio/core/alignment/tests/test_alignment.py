@@ -963,7 +963,7 @@ class StockholmAlignmentTests(TestCase):
         st = StockholmAlignment(self.seqs, gc=self.GC, gf=self.GF, gs=self.GS,
                                 gr=self.GR)
         tempfilename = tempfile.NamedTemporaryFile().name
-        st.to_file()
+        st.to_file(tempfilename)
         obs = open(tempfilename).read()
         exp = ('# STOCKHOLM 1.0\n'
                '#=GF AC RF00360\n'
