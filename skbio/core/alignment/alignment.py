@@ -1755,6 +1755,12 @@ class StockholmAlignment(Alignment):
 
         return '\n'.join(sto_lines)
 
+    def to_file(self, filename):
+        """Write alignment to a file as text."""
+        f = open(filename, "w")
+        f.write(self.__str__())
+        f.close()
+    
     @staticmethod
     def _parse_gf_info(lines):
         """Takes care of parsing GF lines in stockholm plus special cases"""
