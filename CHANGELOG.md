@@ -13,6 +13,7 @@
 ### Miscellaneous
 
 * Relaxed requirement in ``BiologicalSequence.distance`` that sequences being compared are of equal length. This is relevant for Hamming distance, so the check is still performed in that case, but other distance metrics may not have that requirement. See [#504](https://github.com/biocore/scikit-bio/issues/507)).
+* Renamed ``powertrip.py`` repo-checking script to ``checklist.py`` for clarity.
 
 ## Version 0.1.4 (2014-06-25)
 
