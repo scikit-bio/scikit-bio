@@ -32,6 +32,7 @@ from skbio.core.distance import DistanceMatrix
 
 
 class SequenceCollectionTests(TestCase):
+
     """Tests of the SequenceCollection class """
 
     def setUp(self):
@@ -204,21 +205,21 @@ class SequenceCollectionTests(TestCase):
         """k_word_frequencies functions as expected
         """
         expected1 = defaultdict(int)
-        expected1['A'] = 3/7.
-        expected1['C'] = 1/7.
-        expected1['G'] = 1/7.
-        expected1['T'] = 2/7.
+        expected1['A'] = 3 / 7.
+        expected1['C'] = 1 / 7.
+        expected1['G'] = 1 / 7.
+        expected1['T'] = 2 / 7.
         expected2 = defaultdict(int)
-        expected2['G'] = 1/3.
-        expected2['T'] = 2/3.
+        expected2['G'] = 1 / 3.
+        expected2['T'] = 2 / 3.
         self.assertEqual(self.s1.k_word_frequencies(k=1),
                          [expected1, expected2])
 
         expected1 = defaultdict(int)
-        expected1['GAT'] = 1/2.
-        expected1['TAC'] = 1/2.
+        expected1['GAT'] = 1 / 2.
+        expected1['TAC'] = 1 / 2.
         expected2 = defaultdict(int)
-        expected2['TTG'] = 1/1.
+        expected2['TTG'] = 1 / 1.
         self.assertEqual(self.s1.k_word_frequencies(k=3, overlapping=False),
                          [expected1, expected2])
 
@@ -420,9 +421,9 @@ class AlignmentTests(TestCase):
     def test_distances(self):
         """distances functions as expected
         """
-        expected = [[0, 6./13, 4./13],
-                    [6./13, 0, 7./13],
-                    [4./13, 7./13, 0]]
+        expected = [[0, 6. / 13, 4. / 13],
+                    [6. / 13, 0, 7. / 13],
+                    [4. / 13, 7. / 13, 0]]
         expected = DistanceMatrix(expected, ['d1', 'd2', 'd3'])
         actual = self.a1.distances()
         self.assertEqual(actual, expected)
@@ -664,8 +665,9 @@ class AlignmentTests(TestCase):
     def test_k_word_frequencies(self):
         """k_word_frequencies functions as expected
         """
-        expected = [defaultdict(int, {'U': 3/5, 'A': 1/5, '-': 1/5}),
-                    defaultdict(int, {'A': 1/5, 'C': 1/5, 'G': 1/5, 'U': 2/5})]
+        expected = [defaultdict(int, {'U': 3 / 5, 'A': 1 / 5, '-': 1 / 5}),
+                    defaultdict(int, {'A': 1 / 5, 'C': 1 / 5, 'G': 1 / 5,
+                                      'U': 2 / 5})]
         actual = self.a2.k_word_frequencies(k=1)
         for a, e in zip(actual, expected):
             self.assertEqual(sorted(a), sorted(e), 5)
@@ -751,6 +753,7 @@ class AlignmentTests(TestCase):
 
 
 class StockholmAlignmentTests(TestCase):
+
     """Tests for stockholmAlignment object"""
 
     def setUp(self):
@@ -957,7 +960,7 @@ class StockholmAlignmentTests(TestCase):
                '#=GR seq2 SS  0110101110\n'
                '#=GC SS_cons  (((....)))\n//')
         self.assertEqual(obs, exp)
-        
+
     def test_to_file(self):
         """Make sure stockholm file output with all information contained is
         formatted correctly. This is the same as __str__ but in a file. """
@@ -990,7 +993,7 @@ class StockholmAlignmentTests(TestCase):
                '#=GC SS_cons  (((....)))\n//')
         self.assertEqual(obs, exp)
         os.remove(tempfilename)
-        
+
     def test_str_gc(self):
         """ Make sure stockholm with only GC information contained is formatted
         correctly """
