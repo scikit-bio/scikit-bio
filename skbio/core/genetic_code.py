@@ -514,7 +514,7 @@ class GeneticCode(object):
         return self[codon] == '*'
 
     def changes(self, other):
-        """Returns dictionary of coddons that differ
+        """Returns dictionary of codons that differ
 
         Parameters
         ----------

@@ -1014,7 +1014,7 @@ class BiologicalSequence(Sequence):
             step = k
 
         for i in range(0, sequence_length - k + 1, step):
-            yield constructor(self[i:i+k])
+            yield self._sequence[i:i+k]
 
     def k_word_counts(self, k, overlapping=True, constructor=str):
         """Get the counts of words of length k

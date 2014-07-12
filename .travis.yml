@@ -20,9 +20,9 @@ install:
   - pip install -e . --no-deps
 script:
   - if [ ${WITH_DOCTEST} ]; then nosetests --with-doctest; else nosetests; fi
-  - pep8 skbio setup.py powertrip.py
-  - flake8 skbio setup.py powertrip.py
-  - ./powertrip.py
+  - pep8 skbio setup.py checklist.py
+  - flake8 skbio setup.py checklist.py
+  - ./checklist.py
   - pushd doc
   - make clean
   - make html

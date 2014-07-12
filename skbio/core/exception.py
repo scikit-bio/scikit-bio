@@ -147,4 +147,5 @@ class QueryNotFoundError(Exception):
 
 
 class StockholmParseError(FileFormatError):
+    """Exception raised when a Stockholm formatted file cannot be parsed"""
     pass
