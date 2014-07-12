@@ -38,12 +38,14 @@ from __future__ import absolute_import, division, print_function
 # ----------------------------------------------------------------------------
 
 from future.utils import PY3
+from future import standard_library
+
 if PY3:
     long = int
+
+with standard_library.hooks():
     from urllib.request import urlopen, urlretrieve
     from urllib.parse import quote_plus
-else:
-    from urllib import urlopen, urlretrieve, quote_plus
 
 
 class URLGetter(object):
