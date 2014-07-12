@@ -161,8 +161,8 @@ class EFetchTests(TestCase):
         f = EFetch(db='protein', rettype='fasta', retmode='text',
                    id='111309484')
         result = f.read().splitlines()
-        self.assertTrue(result[0].startswith(b'>'))
-        self.assertTrue(result[1].startswith(b'madaemaafg'.upper()))
+        self.assertTrue(result[0].startswith('>'))
+        self.assertTrue(result[1].startswith('madaemaafg'.upper()))
 
 
 class NcbiTests(TestCase):

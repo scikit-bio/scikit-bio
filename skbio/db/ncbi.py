@@ -423,7 +423,7 @@ def _esearch_result_parser(result_as_string):
         object representation of the parsed string
     """
 
-    if b'414 Request-URI Too Large' in result_as_string:
+    if '414 Request-URI Too Large' in result_as_string:
         raise ValueError("Tried to pass too large an URI:\n", result_as_string)
 
     doc = parseString(result_as_string)
