@@ -52,7 +52,9 @@ try:
 except ImportError:
     strip = str.strip
 
+
 class EUtilsTests(TestCase):
+
     def test_simple_get(self):
         g = EUtils(db='protein', rettype='gp')
         result = g['NP_003320'].read()
@@ -131,6 +133,7 @@ class EUtilsTests(TestCase):
 
 
 class ESearchTests(TestCase):
+
     def test_simple_search(self):
         s = ESearch(db='protein', rettype='gi', retmax=1000,
                     term='homo[organism] AND myh7')
@@ -142,6 +145,7 @@ class ESearchTests(TestCase):
 
 
 class ELinkTests(TestCase):
+
     def test_simple_elink(self):
         l = ELink(db='taxonomy', dbfrom='protein', id='83304912')
         result = l.read()
@@ -157,6 +161,7 @@ class ELinkTests(TestCase):
 
 
 class EFetchTests(TestCase):
+
     def test_simple_efetch(self):
         f = EFetch(db='protein', rettype='fasta', retmode='text',
                    id='111309484')
@@ -166,6 +171,7 @@ class EFetchTests(TestCase):
 
 
 class NcbiTests(TestCase):
+
     def setUp(self):
         self.maxDiff = None
         self.mouse_taxonomy = ['cellular organisms', 'Eukaryota',

@@ -49,6 +49,7 @@ with standard_library.hooks():
 
 
 class URLGetter(object):
+
     """Base class to submit queries with EUtils
 
     This class provides the base functionality to work with the Entrez database
@@ -73,7 +74,6 @@ class URLGetter(object):
     base_url = ''
     key_value_delimiter = '='
     field_delimiter = '&'
-
 
     def __init__(self, **kwargs):
         self.__dict__.update(self.defaults)
@@ -106,7 +106,7 @@ class URLGetter(object):
 
         for key, value in to_get.items():
             if key in self.printed_fields:
-                fields.append(quote_plus(key)+self.key_value_delimiter+
+                fields.append(quote_plus(key) + self.key_value_delimiter +
                               quote_plus(str(value)))
 
         return self.base_url + self.field_delimiter.join(fields)
@@ -157,6 +157,7 @@ class URLGetter(object):
         urlretrieve(str(self), fp)
         self._temp_args = None
 
+
 def expand_slice(s):
     """Takes a start and end accession, and generate the whole range.
 
@@ -185,7 +186,7 @@ def expand_slice(s):
     """
     start, step, end = s.start, s.step, s.stop
 
-    #find where the number is
+    # find where the number is
     start_index = last_nondigit_index(start)
     end_index = last_nondigit_index(end)
     prefix = start[:start_index]
@@ -198,9 +199,10 @@ def expand_slice(s):
     range_start = long(start[start_index:])
     range_end = long(end[end_index:])
     field_width = str(len(start) - start_index)
-    format_string = '%'+field_width+'.'+field_width+'d'
-    return [prefix + format_string % i \
-        for i in range(range_start, range_end+1, step)]
+    format_string = '%' + field_width + '.' + field_width + 'd'
+    return [prefix + format_string % i
+            for i in range(range_start, range_end + 1, step)]
+
 
 def make_lists_of_expanded_slices_of_set_size(s, size_limit=200):
     """Returns a list of Accessions terms from `expand_slice`
@@ -233,17 +235,18 @@ def make_lists_of_expanded_slices_of_set_size(s, size_limit=200):
     l = []
 
     # cast to int to be able to use range
-    for i in range(int(ls/size_limit+1)):
+    for i in range(int(ls / size_limit + 1)):
         start = i * size_limit
-        end = (i+1) * size_limit
+        end = (i + 1) * size_limit
         subset = full_list[start:end]
         l.append(' '.join(subset))
     return l
 
-def make_lists_of_accessions_of_set_size(s,size_limit=200):
+
+def make_lists_of_accessions_of_set_size(s, size_limit=200):
     """Returns list of search terms  containing accessions up to `size_limit`
 
-    This is to help make friendly GenBank urls for fetching large lists 
+    This is to help make friendly GenBank urls for fetching large lists
     of accessions (1000s).
 
     Parameters
@@ -268,9 +271,9 @@ def make_lists_of_accessions_of_set_size(s,size_limit=200):
     """
     ls = len(s)
     l = []
-    for i in range(int(ls/size_limit+1)):
+    for i in range(int(ls / size_limit + 1)):
         start = i * size_limit
-        end = (i+1) * size_limit
+        end = (i + 1) * size_limit
         subset = s[start:end]
         l.append(' '.join(subset))
     return l
@@ -301,5 +304,5 @@ def last_nondigit_index(s):
     for i in range(len(s)):
         if s[i:].isdigit():
             return i
-    #if we get here, there weren't any trailing digits
+    # if we get here, there weren't any trailing digits
     return None

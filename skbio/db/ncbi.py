@@ -297,6 +297,7 @@ for key, val in RETTYPES.items():
 
 
 class ESearch(URLGetter):
+
     """URLGetter subclass that uses the `esearch` operator
 
     Performs an `esearch` operation, getting a list of ids from an arbitrary
@@ -319,6 +320,7 @@ class ESearch(URLGetter):
 
 
 class EFetch(URLGetter):
+
     """URLGetter subclass that uses the `efetch` operator
 
     Performs an `efetch` operation, getting a list of ids from an arbitrary
@@ -334,8 +336,8 @@ class EFetch(URLGetter):
 
     """
     printed_fields = dict.fromkeys(['db', 'rettype', 'retmode', 'query_key',
-                                   'WebEnv', 'retmax', 'retstart', 'id',
-                                   'tool', 'email'])
+                                    'WebEnv', 'retmax', 'retstart', 'id',
+                                    'tool', 'email'])
     defaults = {'retmode': 'text', 'rettype': 'fasta', 'db': 'nucleotide',
                 'retstart': 0, 'retmax': 100, 'tool': DEFAULT_TOOL_STRING,
                 'email': DEFAULT_EMAIL_ADDRESS}
@@ -343,6 +345,7 @@ class EFetch(URLGetter):
 
 
 class ELink(URLGetter):
+
     """URLGetter subclass that uses the `elink` operator
 
     Performs an `elink` operation, getting a list of ids from an arbitrary
@@ -369,6 +372,7 @@ class ELink(URLGetter):
 
 
 class ESearchResult(object):
+
     """Container object for results retrieved on EUtils
 
     Notes
@@ -376,6 +380,7 @@ class ESearchResult(object):
     This class is intended to be used internally ESearch.
 
     """
+
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
@@ -455,7 +460,7 @@ def _elink_result_parser(text):
     result = []
     in_links = False
     for line in text.splitlines():
-        line = str(line) # py3k compatibility
+        line = str(line)  # py3k compatibility
         if '<LinkName>' in line:
             in_links = True
         elif in_links and ('<Id>' in line):
@@ -470,6 +475,7 @@ def _elink_result_parser(text):
 
 
 class EUtils(object):
+
     """Retrieves records from NCBI using the Entrez utilities
 
     Parameters
@@ -518,6 +524,7 @@ class EUtils(object):
     ----------
     .. [1] http://www.ncbi.nlm.nih.gov/books/NBK25499/
     """
+
     def __init__(self, fp=None, wait=0.5, retmax=100, url_limit=400,
                  verbose=False, max_recs=None, **kwargs):
         self.__dict__.update(kwargs)

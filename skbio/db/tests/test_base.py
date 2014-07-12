@@ -18,6 +18,7 @@ from skbio.db.base import (URLGetter, expand_slice, last_nondigit_index,
 
 
 class BaseTests(TestCase):
+
     def test_last_nondigit_index(self):
         ldi = last_nondigit_index
         self.assertEqual(ldi('3'), 0)
@@ -51,6 +52,7 @@ class BaseTests(TestCase):
 
 
 class URLGetterTests(TestCase):
+
     def setUp(self):
         fd, self.input_fp = mkstemp(prefix="google_file_", suffix='.temp')
         close(fd)

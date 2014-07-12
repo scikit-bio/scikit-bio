@@ -140,7 +140,7 @@ each line and printing the first 40 characters.
 >>> lines = ef.read().splitlines()
 >>> for line in lines:
 ...     print(line[:40])
-... 
+...
 >gi|459567|dbj|D28543.1|HPCNS5PC Hepatit
 GAGCACGACATCTACCAATGTTGCCAACTGAACCCAGAGG
 GGCTTTACCTTGGTGGTCCCATGTTTAACTCGCGAGGTCA
@@ -164,7 +164,7 @@ record you get back. For example, if we do the same search with
 >>> lines = ef.read().splitlines()
 >>> for line in lines:
 ...     print(line) # doctest: +SKIP
-... 
+...
 D28543 Hepatitis C virus... [gi:459567]
 
 The current ``rettypes`` (as of this writing on 4/14/2010) for the 'core' NCBI
@@ -186,7 +186,7 @@ For example:
 >>> lines = ef.read().splitlines()
 >>> for line in lines:
 ...     print(line[:40])
-... 
+...
 >gi|459567|dbj|D28543.1|HPCNS5PC Hepatit
 GAGCACGACATCTACCAATGTTGCCAACTGAACCCAGAGG
 GGCTTTACCTTGGTGGTCCCATGTTTAACTCGCGAGGTCA
@@ -198,7 +198,7 @@ TC
 >>> lines = ef.read().splitlines()
 >>> for line in lines:
 ...     print(line[:40]) # doctest: +SKIP
-... 
+...
 >gi|459567|dbj|D28543.1|HPCNS5PC Hepatit
 GAGCACGACATCTACCAATGTTGCCAACTGAACCCAGAGG
 GGCTTTACCTTGGTGGTCCCATGTTTAACTCGCGAGGTCA
@@ -210,7 +210,7 @@ TC
 >>> lines = ef.read().splitlines()
 >>> for line in lines:
 ...     print(line[:40])
-... 
+...
 <?xml version="1.0"?>
  <!DOCTYPE TSeqSet PUBLIC "-//NCBI//NCBI
  <TSeqSet>
@@ -312,4 +312,3 @@ from __future__ import absolute_import, division, print_function
 
 from numpy.testing import Tester
 test = Tester().test
-
