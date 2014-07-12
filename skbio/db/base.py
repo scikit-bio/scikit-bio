@@ -132,7 +132,10 @@ class URLGetter(object):
             data contained in the URL.
         """
         result = self.open(**kwargs)
-        data = result.read()
+
+        # decode for py3k compatibility
+        data = result.read().decode('utf-8')
+
         result.close()
         return data
 
