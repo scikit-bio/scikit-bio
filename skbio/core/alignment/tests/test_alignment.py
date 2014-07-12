@@ -962,37 +962,37 @@ class StockholmAlignmentTests(TestCase):
         self.assertEqual(obs, exp)
 
     def test_to_file(self):
-        """Make sure stockholm file output with all information contained is
-        formatted correctly. This is the same as __str__ but in a file. """
         st = StockholmAlignment(self.seqs, gc=self.GC, gf=self.GF, gs=self.GS,
                                 gr=self.GR)
-        tempfilename = tempfile.NamedTemporaryFile().name
-        st.to_file(tempfilename)
-        obs = open(tempfilename).read()
-        exp = ('# STOCKHOLM 1.0\n'
-               '#=GF AC RF00360\n'
-               '#=GF BM cmbuild  -F CM SEED\n'
-               '#=GF BM cmsearch  -Z 274931 -E 1000000\n'
-               '#=GF SQ 9\n'
-               '#=GF RN [1]\n'
-               '#=GF RM 11469857\n'
-               '#=GF RT TITLE1\n'
-               '#=GF RA Auth1;\n'
-               '#=GF RL J Mol Biol\n'
-               '#=GF RN [2]\n'
-               '#=GF RM 12007400\n'
-               '#=GF RT TITLE2\n'
-               '#=GF RA Auth2;\n'
-               '#=GF RL Cell\n'
-               '#=GS seq1 AC 111\n'
-               '#=GS seq2 AC 222\n'
-               'seq1          ACC-G-GGTA\n'
-               '#=GR seq1 SS  1110101111\n'
-               'seq2          TCC-G-GGCA\n'
-               '#=GR seq2 SS  0110101110\n'
-               '#=GC SS_cons  (((....)))\n//')
+
+        with tempfile.NamedTemporaryFile('r+') as temp_file:
+            st.to_file(temp_file)
+            temp_file.flush()
+            temp_file.seek(0)
+            obs = temp_file.read()
+            exp = ('# STOCKHOLM 1.0\n'
+                   '#=GF AC RF00360\n'
+                   '#=GF BM cmbuild  -F CM SEED\n'
+                   '#=GF BM cmsearch  -Z 274931 -E 1000000\n'
+                   '#=GF SQ 9\n'
+                   '#=GF RN [1]\n'
+                   '#=GF RM 11469857\n'
+                   '#=GF RT TITLE1\n'
+                   '#=GF RA Auth1;\n'
+                   '#=GF RL J Mol Biol\n'
+                   '#=GF RN [2]\n'
+                   '#=GF RM 12007400\n'
+                   '#=GF RT TITLE2\n'
+                   '#=GF RA Auth2;\n'
+                   '#=GF RL Cell\n'
+                   '#=GS seq1 AC 111\n'
+                   '#=GS seq2 AC 222\n'
+                   'seq1          ACC-G-GGTA\n'
+                   '#=GR seq1 SS  1110101111\n'
+                   'seq2          TCC-G-GGCA\n'
+                   '#=GR seq2 SS  0110101110\n'
+                   '#=GC SS_cons  (((....)))\n//')
         self.assertEqual(obs, exp)
-        os.remove(tempfilename)
 
     def test_str_gc(self):
         """ Make sure stockholm with only GC information contained is formatted
