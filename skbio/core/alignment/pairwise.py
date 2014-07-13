@@ -395,7 +395,8 @@ def global_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
         pass
 
     return global_pairwise_align(seq1, seq2, gap_open_penalty,
-                                 gap_extend_penalty, substitution_matrix)
+                                 gap_extend_penalty, substitution_matrix,
+                                 penalize_terminal_gaps=penalize_terminal_gaps)
 
 
 def global_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
@@ -462,7 +463,8 @@ def global_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
         substitution_matrix = blosum50
 
     return global_pairwise_align(seq1, seq2, gap_open_penalty,
-                                 gap_extend_penalty, substitution_matrix)
+                                 gap_extend_penalty, substitution_matrix,
+                                 penalize_terminal_gaps=penalize_terminal_gaps)
 
 
 def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
@@ -532,7 +534,8 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
         _compute_score_and_traceback_matrices(
             seq1, seq2, gap_open_penalty, gap_extend_penalty,
             substitution_matrix, new_alignment_score=-np.inf,
-            init_matrices_f=_init_matrices_nw)
+            init_matrices_f=_init_matrices_nw,
+            penalize_terminal_gaps=penalize_terminal_gaps)
 
     end_row_position = traceback_matrix.shape[0] - 1
     end_col_position = traceback_matrix.shape[1] - 1
