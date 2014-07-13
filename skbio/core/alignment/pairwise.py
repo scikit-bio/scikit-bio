@@ -598,9 +598,12 @@ def _init_matrices_nw(seq1, seq2, gap_open_penalty, gap_extend_penalty):
 
 def _compute_score_and_traceback_matrices(
         seq1, seq2, gap_open_penalty, gap_extend_penalty, substitution_matrix,
-        new_alignment_score=-np.inf, init_matrices_f=_init_matrices_nw):
+        new_alignment_score=-np.inf, init_matrices_f=_init_matrices_nw,
+        penalize_terminal_gaps=True):
     """Return dynamic programming (score) and traceback matrices
     """
+    seq1_length = len(seq1)
+    seq2_length = len(seq2)
     # cache some values for quicker/simpler access
     aend = _traceback_encoding['alignment-end']
     match = _traceback_encoding['match']
@@ -614,21 +617,18 @@ def _compute_score_and_traceback_matrices(
     score_matrix, traceback_matrix = init_matrices_f(
         seq1, seq2, gap_open_penalty, gap_extend_penalty)
 
-    # Iterate over the characters in sequence two (which will correspond
-    # to the vertical sequence in the matrix)
-    # Note that i corresponds to column numbers, as in 'Biological Sequence
-    # Analysis'
-    for i, c2 in zip(range(1, len(seq2)+1), seq2):
+    # Iterate over the characters in seq2, which will correspond to the
+    # vertical sequence in the matrix
+    for seq2_pos, seq2_char in zip(range(1, seq2_length+1), seq2):
         # Iterate over the characters in sequence one (which will
         # correspond to the horizontal sequence in the matrix)
-        # Note that j corresponds to row numbers, as in 'Biological Sequence
-        # Analysis'
-        for j, c1 in zip(range(1, len(seq1)+1), seq1):
+        for seq1_pos, seq1_char in zip(range(1, seq1_length+1), seq1):
             try:
-                substitution_score = substitution_matrix[c1][c2]
+                substitution_score = substitution_matrix[seq1_char][seq2_char]
             except KeyError:
                 offending_chars = \
-                    [c for c in (c1, c2) if c not in substitution_matrix]
+                    [c for c in (seq1_char, seq2_char)
+                     if c not in substitution_matrix]
                 raise ValueError(
                     "One of the sequences contains a character that is not "
                     "contained in the substitution matrix. Are you using "
@@ -637,23 +637,37 @@ def _compute_score_and_traceback_matrices(
                     "make sense for aligning protein sequences)? Does your "
                     "sequence contain invalid characters? The offending "
                     "character(s) is: %s." % ', '.join(offending_chars))
-            diag_score = (score_matrix[i-1, j-1] + substitution_score, match)
-            if traceback_matrix[i-1, j] == vgap:
+            # compute the score for a match/mismatch
+            diag_score = \
+                (score_matrix[seq2_pos-1, seq1_pos-1] + substitution_score,
+                 match)
+            # compute the score for adding a gap in seq2 (vertical)
+            if not penalize_terminal_gaps and (seq1_pos == seq1_length):
+                # we've reached the end of sequence 1, so adding gaps to
+                # sequence 2 should no longer be penalized
+                up_score = (score_matrix[seq2_pos-1, seq1_pos], vgap)
+            elif traceback_matrix[seq2_pos-1, seq1_pos] == vgap:
                 # gap extend, because the cell above was also a gap
-                up_score = (score_matrix[i-1, j] - gap_extend_penalty, vgap)
+                up_score = (score_matrix[seq2_pos-1, seq1_pos] - gap_extend_penalty, vgap)
             else:
                 # gap open, because the cell above was not a gap
-                up_score = (score_matrix[i-1, j] - gap_open_penalty, vgap)
-            if traceback_matrix[i, j-1] == hgap:
+                up_score = (score_matrix[seq2_pos-1, seq1_pos] - gap_open_penalty, vgap)
+            # compute the score for adding a gap in seq1 (horizontal)
+            if not penalize_terminal_gaps and (seq2_pos == seq2_length):
+                # we've reached the end of sequence 2, so adding gaps to
+                # sequence 1 should no longer be penalized.
+                left_score = (score_matrix[seq2_pos, seq1_pos-1], hgap)
+            elif traceback_matrix[seq2_pos, seq1_pos-1] == hgap:
                 # gap extend, because the cell to the left was also a gap
-                left_score = (score_matrix[i, j-1] - gap_extend_penalty, hgap)
+                left_score = (score_matrix[seq2_pos, seq1_pos-1] - gap_extend_penalty, hgap)
             else:
                 # gap open, because the cell to the left was not a gap
-                left_score = (score_matrix[i, j-1] - gap_open_penalty, hgap)
+                left_score = (score_matrix[seq2_pos, seq1_pos-1] - gap_open_penalty, hgap)
             best_score = _first_largest([new_alignment_score, left_score,
                                          diag_score, up_score])
-            score_matrix[i, j] = best_score[0]
-            traceback_matrix[i, j] = best_score[1]
+            score_matrix[seq2_pos, seq1_pos] = best_score[0]
+            traceback_matrix[seq2_pos, seq1_pos] = best_score[1]
+
     return score_matrix, traceback_matrix
 
 
