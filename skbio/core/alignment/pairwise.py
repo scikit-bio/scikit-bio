@@ -325,7 +325,8 @@ def local_pairwise_align(seq1, seq2, gap_open_penalty,
 def global_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
                                      gap_extend_penalty=2,
                                      match_score=1, mismatch_score=-2,
-                                     substitution_matrix=None):
+                                     substitution_matrix=None,
+                                     penalize_terminal_gaps=False):
     """Globally align exactly two nucleotide seqs with Needleman-Wunsch
 
     Parameters
@@ -351,6 +352,13 @@ def global_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
         Lookup for substitution scores (these values are added to the
         previous best alignment score). If provided, this overrides
         ``match_score`` and ``mismatch_score``.
+    penalize_terminal_gaps: bool, optional
+        If True, will continue to penalize gaps even after one sequence has
+        been aligned through its end. This behavior is true Needleman-Wunsch
+        alignment, but results in (biologically irrelevant) artifacts when
+        the sequences being aligned are of different length. This is ``False``
+        by default, which is very likely to be the behavior you want in all or
+        nearly all cases.
 
     Returns
     -------
@@ -392,7 +400,8 @@ def global_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
 
 def global_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
                                   gap_extend_penalty=1,
-                                  substitution_matrix=None):
+                                  substitution_matrix=None,
+                                  penalize_terminal_gaps=False):
     """Globally align exactly two protein seqs with Needleman-Wunsch
 
     Parameters
@@ -410,6 +419,13 @@ def global_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
     substitution_matrix: 2D dict (or similar), optional
         Lookup for substitution scores (these values are added to the
         previous best alignment score); default is BLOSUM 50.
+    penalize_terminal_gaps: bool, optional
+        If True, will continue to penalize gaps even after one sequence has
+        been aligned through its end. This behavior is true Needleman-Wunsch
+        alignment, but results in (biologically irrelevant) artifacts when
+        the sequences being aligned are of different length. This is ``False``
+        by default, which is very likely to be the behavior you want in all or
+        nearly all cases.
 
     Returns
     -------
@@ -450,7 +466,7 @@ def global_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
 
 
 def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
-                          substitution_matrix):
+                          substitution_matrix, penalize_terminal_gaps=False):
     """Globally align exactly two seqs with Needleman-Wunsch
 
     Parameters
@@ -468,6 +484,13 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
     substitution_matrix: 2D dict (or similar)
         Lookup for substitution scores (these values are added to the
         previous best alignment score).
+    penalize_terminal_gaps: bool, optional
+        If True, will continue to penalize gaps even after one sequence has
+        been aligned through its end. This behavior is true Needleman-Wunsch
+        alignment, but results in (biologically irrelevant) artifacts when
+        the sequences being aligned are of different length. This is ``False``
+        by default, which is very likely to be the behavior you want in all or
+        nearly all cases.
 
     Returns
     -------
@@ -600,7 +623,20 @@ def _compute_score_and_traceback_matrices(
         seq1, seq2, gap_open_penalty, gap_extend_penalty, substitution_matrix,
         new_alignment_score=-np.inf, init_matrices_f=_init_matrices_nw,
         penalize_terminal_gaps=True):
-    """Return dynamic programming (score) and traceback matrices
+    """Return dynamic programming (score) and traceback matrices.
+
+    A note on the ``penalize_terminal_gaps`` parameter. When this value is
+    ``False``, this function is no longer true Smith-Waterman/Needleman-Wunsch
+    scoring, but when ``True`` it can result in biologically irrelevant
+    artifacts in Needleman-Wunsch (global) alignments. Specifically, if one
+    sequence is longer than the other (e.g., if aligning a primer sequence to
+    an amplification product, or searching for a gene in a genome) the shorter
+    sequence will have a long gap inserted. The parameter is ``True`` by
+    default (so that this function computes the score and traceback matrices as
+    described by the original authors) but the global alignment wrappers pass
+    ``False`` by default, so that the global alignment API returns the result
+    that users are most likely to be looking for.
+
     """
     seq1_length = len(seq1)
     seq2_length = len(seq2)
@@ -617,11 +653,11 @@ def _compute_score_and_traceback_matrices(
     score_matrix, traceback_matrix = init_matrices_f(
         seq1, seq2, gap_open_penalty, gap_extend_penalty)
 
-    # Iterate over the characters in seq2, which will correspond to the
-    # vertical sequence in the matrix
+    # Iterate over the characters in seq2 (which corresponds to the horizontal
+    # sequence in the matrix)
     for seq2_pos, seq2_char in zip(range(1, seq2_length+1), seq2):
-        # Iterate over the characters in sequence one (which will
-        # correspond to the horizontal sequence in the matrix)
+        # Iterate over the characters in seq1 (which corresponds to the
+        # horizontal sequence in the matrix)
         for seq1_pos, seq1_char in zip(range(1, seq1_length+1), seq1):
             try:
                 substitution_score = substitution_matrix[seq1_char][seq2_char]
@@ -637,32 +673,48 @@ def _compute_score_and_traceback_matrices(
                     "make sense for aligning protein sequences)? Does your "
                     "sequence contain invalid characters? The offending "
                     "character(s) is: %s." % ', '.join(offending_chars))
+
             # compute the score for a match/mismatch
             diag_score = \
                 (score_matrix[seq2_pos-1, seq1_pos-1] + substitution_score,
                  match)
+
             # compute the score for adding a gap in seq2 (vertical)
             if not penalize_terminal_gaps and (seq1_pos == seq1_length):
                 # we've reached the end of sequence 1, so adding gaps to
-                # sequence 2 should no longer be penalized
+                # sequence 2 should no longer be penalized (if
+                # penalize_terminal_gaps == False)
                 up_score = (score_matrix[seq2_pos-1, seq1_pos], vgap)
             elif traceback_matrix[seq2_pos-1, seq1_pos] == vgap:
                 # gap extend, because the cell above was also a gap
-                up_score = (score_matrix[seq2_pos-1, seq1_pos] - gap_extend_penalty, vgap)
+                up_score = \
+                    (score_matrix[seq2_pos-1, seq1_pos] - gap_extend_penalty,
+                     vgap)
             else:
                 # gap open, because the cell above was not a gap
-                up_score = (score_matrix[seq2_pos-1, seq1_pos] - gap_open_penalty, vgap)
+                up_score = \
+                    (score_matrix[seq2_pos-1, seq1_pos] - gap_open_penalty,
+                     vgap)
+
             # compute the score for adding a gap in seq1 (horizontal)
             if not penalize_terminal_gaps and (seq2_pos == seq2_length):
                 # we've reached the end of sequence 2, so adding gaps to
-                # sequence 1 should no longer be penalized.
+                # sequence 1 should no longer be penalized. (if
+                # penalize_terminal_gaps == False)
                 left_score = (score_matrix[seq2_pos, seq1_pos-1], hgap)
             elif traceback_matrix[seq2_pos, seq1_pos-1] == hgap:
                 # gap extend, because the cell to the left was also a gap
-                left_score = (score_matrix[seq2_pos, seq1_pos-1] - gap_extend_penalty, hgap)
+                left_score = \
+                    (score_matrix[seq2_pos, seq1_pos-1] - gap_extend_penalty,
+                     hgap)
             else:
                 # gap open, because the cell to the left was not a gap
-                left_score = (score_matrix[seq2_pos, seq1_pos-1] - gap_open_penalty, hgap)
+                left_score = \
+                    (score_matrix[seq2_pos, seq1_pos-1] - gap_open_penalty,
+                     hgap)
+
+            # identify the largest score, and use that information to populate
+            # the score and traceback matrices
             best_score = _first_largest([new_alignment_score, left_score,
                                          diag_score, up_score])
             score_matrix[seq2_pos, seq1_pos] = best_score[0]
