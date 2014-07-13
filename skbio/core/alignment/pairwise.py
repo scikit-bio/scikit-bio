@@ -685,7 +685,7 @@ def _compute_score_and_traceback_matrices(
             # compute the score for adding a gap in seq2 (vertical)
             if not penalize_terminal_gaps and (seq1_pos == seq1_length):
                 # we've reached the end of sequence 1, so adding gaps to
-                # sequence 2 should no longer be penalized (if
+                # sequence 1 should no longer be penalized (if
                 # penalize_terminal_gaps == False)
                 up_score = (score_matrix[seq2_pos-1, seq1_pos], vgap)
             elif traceback_matrix[seq2_pos-1, seq1_pos] == vgap:
@@ -702,7 +702,7 @@ def _compute_score_and_traceback_matrices(
             # compute the score for adding a gap in seq1 (horizontal)
             if not penalize_terminal_gaps and (seq2_pos == seq2_length):
                 # we've reached the end of sequence 2, so adding gaps to
-                # sequence 1 should no longer be penalized. (if
+                # sequence 2 should no longer be penalized. (if
                 # penalize_terminal_gaps == False)
                 left_score = (score_matrix[seq2_pos, seq1_pos-1], hgap)
             elif traceback_matrix[seq2_pos, seq1_pos-1] == hgap:
