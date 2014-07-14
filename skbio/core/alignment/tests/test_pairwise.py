@@ -54,7 +54,7 @@ class PairwiseAlignmentTests(TestCase):
         self.assertEqual(_make_nt_substitution_matrix(5, -4), expected)
 
     def test_global_pairwise_align_protein(self):
-        expected = ("HEAGAWGHEE", "---PAWHEAE", 1.0)
+        expected = ("HEAGAWGHEE-", "---PAW-HEAE", 23.0)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             actual = global_pairwise_align_protein(
@@ -66,7 +66,7 @@ class PairwiseAlignmentTests(TestCase):
         self.assertEqual(actual.start_end_positions(), [(0, 9), (0, 6)])
         self.assertEqual(actual.ids(), list('01'))
 
-        expected = ("HEAGAWGHE-E", "---PAW-HEAE", 24.0)
+        expected = ("HEAGAWGHE-E", "---PAW-HEAE", 30.0)
         # EMBOSS result: P---AW-HEAE
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
@@ -80,7 +80,7 @@ class PairwiseAlignmentTests(TestCase):
         self.assertEqual(actual.ids(), list('01'))
 
         # Protein (rather than str) as input
-        expected = ("HEAGAWGHEE", "---PAWHEAE", 1.0)
+        expected = ("HEAGAWGHEE-", "---PAW-HEAE", 23.0)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             actual = global_pairwise_align_protein(
@@ -98,6 +98,19 @@ class PairwiseAlignmentTests(TestCase):
             actual = global_pairwise_align_protein(
                 Protein("HEAGAWGHEE"), Protein("PAWHEAE"),
                 gap_open_penalty=10., gap_extend_penalty=5.)
+        self.assertEqual(actual.ids(), list('01'))
+
+    def test_global_pairwise_align_protein_penalize_terminal_gaps(self):
+        expected = ("HEAGAWGHEE", "---PAWHEAE", 1.0)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            actual = global_pairwise_align_protein(
+                "HEAGAWGHEE", "PAWHEAE", gap_open_penalty=10.,
+                gap_extend_penalty=5., penalize_terminal_gaps=True)
+        self.assertEqual(str(actual[0]), expected[0])
+        self.assertEqual(str(actual[1]), expected[1])
+        self.assertEqual(actual.score(), expected[2])
+        self.assertEqual(actual.start_end_positions(), [(0, 9), (0, 6)])
         self.assertEqual(actual.ids(), list('01'))
 
     def test_local_pairwise_align_protein(self):
