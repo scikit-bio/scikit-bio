@@ -149,7 +149,7 @@ class GeneticCode(object):
     ...                   'RVVVVAAAADDEEGGGG')
 
     .. note:: `*` is used to denote termination as per the NCBI standard.
-        Although the genetic code objecs convert DNA to RNA and vice versa,
+        Although the genetic code objects convert DNA to RNA and vice versa,
         lists of codons that they produce will be provided in DNA format.
 
     """
