@@ -265,12 +265,12 @@ class APIRegressionValidator(RepoValidator):
                 imports = self._parse_file(current_fp, root)
                 if os.path.split(root)[1] == "tests":
                     test_imports.append((current_fp, imports))
-                else:
-                    temp = package.split(os.sep)
-                    if temp[-1] == "__init__":
-                        temp = temp[:-1]
-                    package = ".".join(temp)
-                    self._apply_imports(imports, package=package)
+
+                temp = package.split(os.sep)
+                if temp[-1] == "__init__":
+                    temp = temp[:-1]
+                package = ".".join(temp)
+                self._apply_imports(imports, package=package)
 
         for fp, imports in test_imports:
             for import_ in imports:
@@ -300,7 +300,8 @@ class APIRegressionValidator(RepoValidator):
         if key not in self._imports:
             return (True, None)
         substitute = self._imports[key]
-        if substitute == im:
+        if substitute == im or \
+                len(substitute.split('.')) == len(im.split('.')):
             return (True, None)
         else:
             return (False, substitute)
