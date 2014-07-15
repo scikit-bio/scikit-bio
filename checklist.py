@@ -14,6 +14,7 @@ import collections
 import os
 import os.path
 import sys
+import ast
 
 
 def main():
@@ -33,7 +34,7 @@ def main():
     """
     root = 'skbio'
     validators = [InitValidator(), ExecPermissionValidator(),
-                  GeneratedCythonValidator()]
+                  GeneratedCythonValidator(), APIRegressionValidator()]
 
     return_code = 0
     for validator in validators:
@@ -236,6 +237,109 @@ class GeneratedCythonValidator(RepoValidator):
                 invalid_fps.append(cython_fp)
 
         return invalid_fps
+
+
+class APIRegressionValidator(RepoValidator):
+    """Flag tests that import from a non-minimized subpackage hierarchy.
+
+    Flags tests that aren't imported from a minimally deep API target. (e.g.
+    skbio.parse_fastq vs skbio.parse.sequences.parse_fastq). This should
+    prevent accidental regression in our API because tests will fail if any
+    alias is removed, and this checklist will fail if any test doesn't import
+    from the least deep API target.
+
+    """
+    reason = ("The following tests import `A` but should import `B`"
+              " (file: A => B)")
+
+    def __init__(self):
+        self._imports = {}
+
+    def _validate(self, root, dirs, files):
+        errors = []
+        test_imports = []
+        for file in files:
+            current_fp = os.path.join(root, file)
+            package, ext = os.path.splitext(current_fp)
+            if(ext == ".py"):
+                imports = self._parse_file(current_fp, root)
+                if os.path.split(root)[1] == "tests":
+                    test_imports.append((current_fp, imports))
+                else:
+                    temp = package.split(os.sep)
+                    if temp[-1] == "__init__":
+                        temp = temp[:-1]
+                    package = ".".join(temp)
+                    self._apply_imports(imports, package=package)
+
+        for fp, imports in test_imports:
+            for import_ in imports:
+                minimal, substitute = self._minimal_import(import_)
+                if not minimal:
+                    errors.append("%s: %s => %s" %
+                                  (fp, import_, substitute))
+
+        return errors
+
+    def _apply_imports(self, imports, package=None):
+        for import_ in imports:
+            value = import_
+            key = import_.split(".")[-1]
+            if package is not None and \
+                    len(package.split('.')) + 1 < len(import_.split('.')):
+                value = package + "." + key
+            if key in self._imports:
+                sub = self._imports[key]
+                if len(sub.split('.')) > len(value.split('.')):
+                    self._imports[key] = value
+            else:
+                self._imports[key] = value
+
+    def _minimal_import(self, im):
+        key = im.split(".")[-1]
+        if key not in self._imports:
+            return (True, None)
+        substitute = self._imports[key]
+        if substitute == im:
+            return (True, None)
+        else:
+            return (False, substitute)
+
+    def _parse_file(self, fp, root):
+        """Parse a file and return all skbio imports.
+
+        """
+        imports = []
+        with open(fp, 'U') as f:
+            # Read the file and run it through AST
+            source = ast.parse(f.read())
+            # Get each top-level element, this is where imports ~should~ be.
+            for node in ast.iter_child_nodes(source):
+                if isinstance(node, ast.Import):
+                    # Standard imports are easy, just get the names from the
+                    # ast.Alias list `node.names`
+                    imports += [x.name for x in node.names]
+                elif isinstance(node, ast.ImportFrom):
+                    prefix = ""
+                    # Relative import handling.
+                    if node.level > 0:
+                        prefix = root
+                        extra = node.level - 1
+                        while(extra > 0):
+                            # Keep dropping...
+                            prefix = os.path.split(prefix)[0]
+                            extra -= 1
+                        # We need this in '.' form not '/'
+                        prefix = prefix.replace(os.sep, ".") + "."
+                    # Prefix should be empty unless node.level > 0
+                    imports += [prefix + node.module + "." + x.name
+                                for x in node.names]
+        skbio_imports = []
+        for import_ in imports:
+            # Filter by skbio
+            if import_.split(".")[0] == "skbio":
+                skbio_imports.append(import_)
+        return skbio_imports
 
 
 if __name__ == '__main__':
