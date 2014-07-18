@@ -173,7 +173,7 @@ class PairwiseAlignmentTests(TestCase):
         self.assertEqual(actual.start_end_positions(), [(0, 16), (0, 14)])
         self.assertEqual(actual.ids(), list('01'))
 
-        expected = ("G-ACCTTGACCAGGTACC", "GAACTTTGAC---GTAAC", 31.0, 0, 0)
+        expected = ("-GACCTTGACCAGGTACC", "GAACTTTGAC---GTAAC", 32.0, 0, 0)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             actual = global_pairwise_align_nucleotide(
@@ -186,7 +186,7 @@ class PairwiseAlignmentTests(TestCase):
         self.assertEqual(actual.ids(), list('01'))
 
         # DNA (rather than str) as input
-        expected = ("G-ACCTTGACCAGGTACC", "GAACTTTGAC---GTAAC", 31.0, 0, 0)
+        expected = ("-GACCTTGACCAGGTACC", "GAACTTTGAC---GTAAC", 32.0, 0, 0)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             actual = global_pairwise_align_nucleotide(
