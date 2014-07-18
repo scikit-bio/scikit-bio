@@ -626,6 +626,7 @@ def _init_matrices_nw(seq1, seq2, gap_open_penalty, gap_extend_penalty):
 
     return score_matrix, traceback_matrix
 
+
 def _init_matrices_nw_no_terminal_gap_penalty(
         seq1, seq2, gap_open_penalty, gap_extend_penalty):
     shape = (len(seq2)+1, len(seq1)+1)
@@ -645,6 +646,7 @@ def _init_matrices_nw_no_terminal_gap_penalty(
         traceback_matrix[0, i] = hgap
 
     return score_matrix, traceback_matrix
+
 
 def _compute_score_and_traceback_matrices(
         seq1, seq2, gap_open_penalty, gap_extend_penalty, substitution_matrix,
