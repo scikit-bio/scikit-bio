@@ -530,11 +530,16 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
          "version soon (see https://github.com/biocore/scikit-bio/issues/254 "
          "to track progress on this).", EfficiencyWarning)
 
+    if penalize_terminal_gaps:
+        init_matrices_f = _init_matrices_nw
+    else:
+        init_matrices_f = _init_matrices_nw_no_terminal_gap_penalty
+
     score_matrix, traceback_matrix = \
         _compute_score_and_traceback_matrices(
             seq1, seq2, gap_open_penalty, gap_extend_penalty,
             substitution_matrix, new_alignment_score=-np.inf,
-            init_matrices_f=_init_matrices_nw,
+            init_matrices_f=init_matrices_f,
             penalize_terminal_gaps=penalize_terminal_gaps)
 
     end_row_position = traceback_matrix.shape[0] - 1
@@ -621,6 +626,25 @@ def _init_matrices_nw(seq1, seq2, gap_open_penalty, gap_extend_penalty):
 
     return score_matrix, traceback_matrix
 
+def _init_matrices_nw_no_terminal_gap_penalty(
+        seq1, seq2, gap_open_penalty, gap_extend_penalty):
+    shape = (len(seq2)+1, len(seq1)+1)
+    score_matrix = np.zeros(shape)
+    traceback_matrix = np.zeros(shape, dtype=np.int)
+    traceback_matrix += _traceback_encoding['uninitialized']
+    traceback_matrix[0, 0] = _traceback_encoding['alignment-end']
+
+    # cache some values for quicker access
+    vgap = _traceback_encoding['vertical-gap']
+    hgap = _traceback_encoding['horizontal-gap']
+
+    for i in range(1, shape[0]):
+        traceback_matrix[i, 0] = vgap
+
+    for i in range(1, shape[1]):
+        traceback_matrix[0, i] = hgap
+
+    return score_matrix, traceback_matrix
 
 def _compute_score_and_traceback_matrices(
         seq1, seq2, gap_open_penalty, gap_extend_penalty, substitution_matrix,
