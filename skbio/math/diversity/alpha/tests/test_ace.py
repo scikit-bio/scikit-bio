@@ -12,7 +12,7 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 from nose.tools import assert_almost_equal, assert_raises
 
-from skbio.math.diversity.alpha.ace import ace
+from skbio.math.diversity.alpha import ace
 
 
 def test_ace():

@@ -10,10 +10,9 @@ from __future__ import absolute_import, division, print_function
 
 from unittest import TestCase, main
 
-from skbio.core.distance import DistanceMatrix
-from skbio.core.tree import TreeNode
+from skbio import DistanceMatrix, TreeNode, nj
 from skbio.core.tree._nj import (
-    nj, _compute_q, _compute_collapsed_dm, _lowest_index, _otu_to_new_node,
+    _compute_q, _compute_collapsed_dm, _lowest_index, _otu_to_new_node,
     _pair_members_to_new_node)
 
 

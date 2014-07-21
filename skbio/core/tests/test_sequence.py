@@ -13,7 +13,7 @@ from __future__ import absolute_import, division, print_function
 from collections import Counter, defaultdict
 from unittest import TestCase, main
 
-from skbio.core.sequence import (
+from skbio import (
     BiologicalSequence, NucleotideSequence, DNASequence, RNASequence,
     ProteinSequence)
 from skbio.core.exception import BiologicalSequenceError

@@ -23,12 +23,10 @@ import tempfile
 import numpy as np
 from scipy.spatial.distance import hamming
 
-from skbio.core.sequence import (NucleotideSequence, DNASequence, RNASequence,
-                                 DNA)
-from skbio.core.alignment import (SequenceCollection, Alignment,
-                                  StockholmAlignment)
+from skbio import (NucleotideSequence, DNASequence, RNASequence, DNA,
+                   DistanceMatrix, Alignment, SequenceCollection)
+from skbio.core.alignment import StockholmAlignment
 from skbio.core.exception import SequenceCollectionError, StockholmParseError
-from skbio.core.distance import DistanceMatrix
 
 
 class SequenceCollectionTests(TestCase):

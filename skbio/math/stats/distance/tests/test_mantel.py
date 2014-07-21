@@ -14,7 +14,7 @@ import numpy.testing as npt
 import pandas as pd
 from pandas.util.testing import assert_frame_equal
 
-from skbio.core.distance import DistanceMatrix
+from skbio import DistanceMatrix
 from skbio.core.exception import DissimilarityMatrixError, DistanceMatrixError
 from skbio.math.stats.distance import mantel, pwmantel
 from skbio.util.testing import get_data_path

@@ -14,7 +14,8 @@ from unittest import TestCase, main
 import numpy as np
 import numpy.testing as npt
 
-from skbio.math.diversity.alpha.chao1 import chao1, chao1_ci, _chao1_var
+from skbio.math.diversity.alpha import chao1, chao1_ci
+from skbio.math.diversity.alpha._chao1 import _chao1_var
 
 
 class Chao1Tests(TestCase):

@@ -14,9 +14,8 @@ import warnings
 import numpy as np
 import numpy.testing as npt
 
-from skbio.math.diversity.beta.base import (
-    pw_distances, pw_distances_from_table)
 from skbio import DistanceMatrix
+from skbio.math.diversity.beta import pw_distances, pw_distances_from_table
 
 
 class HelperBiomTable(object):

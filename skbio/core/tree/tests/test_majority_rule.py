@@ -12,9 +12,10 @@ from unittest import TestCase, main
 
 import numpy as np
 
-from skbio.core.tree import TreeNode
-from skbio.core.tree.majority_rule import (_walk_clades, _filter_clades,
-                                           _build_trees, majority_rule)
+from skbio import TreeNode
+from skbio.core.tree import majority_rule
+from skbio.core.tree._majority_rule import (_walk_clades, _filter_clades,
+                                            _build_trees)
 
 
 class MajorityRuleTests(TestCase):

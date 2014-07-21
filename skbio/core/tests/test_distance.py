@@ -18,7 +18,8 @@ from unittest import TestCase, main
 import numpy as np
 import numpy.testing as npt
 
-from skbio.core.distance import randdm, DissimilarityMatrix, DistanceMatrix
+from skbio import DistanceMatrix
+from skbio.core.distance import randdm, DissimilarityMatrix
 from skbio.core.exception import (DissimilarityMatrixError,
                                   DistanceMatrixError,
                                   DissimilarityMatrixFormatError,

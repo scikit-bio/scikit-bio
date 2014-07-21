@@ -235,7 +235,7 @@ Create a new trie with a list of sequences
 from .tree import TreeNode
 from .trie import CompressedTrie, fasta_to_pairlist
 from ._nj import nj
-from .majority_rule import majority_rule
+from ._majority_rule import majority_rule
 
 __all__ = ['TreeNode', 'CompressedTrie', 'fasta_to_pairlist', 'nj',
            'majority_rule']
