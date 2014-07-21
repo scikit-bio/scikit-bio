@@ -267,27 +267,30 @@ class APIRegressionValidator(RepoValidator):
                     test_imports.append((current_fp, imports))
 
                 temp = package.split(os.sep)
+                # Remove the __init__ if it is a directory import
                 if temp[-1] == "__init__":
                     temp = temp[:-1]
                 package = ".".join(temp)
-                self._apply_imports(imports, package=package)
-
+                self._add_imports(imports, package)
         for fp, imports in test_imports:
             for import_ in imports:
-                minimal, substitute = self._minimal_import(import_)
-                if not minimal:
+                substitute = self._minimal_import(import_)
+                if substitute is not None:
                     errors.append("%s: %s => %s" %
                                   (fp, import_, substitute))
 
         return errors
 
-    def _apply_imports(self, imports, package=None):
+    def _add_imports(self, imports, package):
+        """Add the minimum depth import to our collection."""
         for import_ in imports:
             value = import_
+            # The actual object imported will be the key.
             key = import_.split(".")[-1]
-            if package is not None and \
-                    len(package.split('.')) + 1 < len(import_.split('.')):
-                value = package + "." + key
+            # If package importing the behavior is shorter than it's import:
+            if len(package.split('.')) + 1 < len(import_.split('.')):
+                value = ".".join([package, key])
+
             if key in self._imports:
                 sub = self._imports[key]
                 if len(sub.split('.')) > len(value.split('.')):
@@ -295,26 +298,25 @@ class APIRegressionValidator(RepoValidator):
             else:
                 self._imports[key] = value
 
-    def _minimal_import(self, im):
-        key = im.split(".")[-1]
+    def _minimal_import(self, import_):
+        """Given an normalized import, return a shorter substitute or None."""
+        key = import_.split(".")[-1]
         if key not in self._imports:
-            return (True, None)
+            return None
         substitute = self._imports[key]
-        if substitute == im or \
-                len(substitute.split('.')) == len(im.split('.')):
-            return (True, None)
+        if substitute == import_ or \
+                len(substitute.split('.')) == len(import_.split('.')):
+            return None
         else:
-            return (False, substitute)
+            return substitute
 
     def _parse_file(self, fp, root):
-        """Parse a file and return all skbio imports.
-
-        """
+        """Parse a file and return all normalized skbio imports."""
         imports = []
         with open(fp, 'U') as f:
             # Read the file and run it through AST
             source = ast.parse(f.read())
-            # Get each top-level element, this is where imports ~should~ be.
+            # Get each top-level element, this is where API imports should be.
             for node in ast.iter_child_nodes(source):
                 if isinstance(node, ast.Import):
                     # Standard imports are easy, just get the names from the
@@ -333,7 +335,7 @@ class APIRegressionValidator(RepoValidator):
                         # We need this in '.' form not '/'
                         prefix = prefix.replace(os.sep, ".") + "."
                     # Prefix should be empty unless node.level > 0
-                    imports += [prefix + node.module + "." + x.name
+                    imports += [".".join([prefix + node.module, x.name])
                                 for x in node.names]
         skbio_imports = []
         for import_ in imports:
