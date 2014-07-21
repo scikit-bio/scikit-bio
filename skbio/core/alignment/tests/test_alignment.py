@@ -11,7 +11,6 @@
 from __future__ import absolute_import, division, print_function
 
 import warnings
-import os
 from unittest import TestCase, main
 from collections import Counter, defaultdict, OrderedDict
 try:
