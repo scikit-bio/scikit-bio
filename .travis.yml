@@ -16,10 +16,10 @@ install:
   - conda create --yes -n env_name python=$PYTHON_VERSION pip numpy=$NUMPY_VERSION scipy matplotlib pandas nose pep8 flake8 Sphinx
   - if [ ${USE_CYTHON} ]; then conda install --yes -n env_name cython; fi
   - source activate env_name
-  - pip install sphinx-bootstrap-theme future coverage coveralls natsort
+  - pip install sphinx-bootstrap-theme future coveralls natsort
   - pip install -e . --no-deps
 script:
-  - if [ ${WITH_DOCTEST} ]; then nosetests --with-doctest; else nosetests; fi
+  - if [ ${WITH_DOCTEST} ]; then nosetests --with-doctest --with-coverage; else nosetests --with-coverage; fi
   - pep8 skbio setup.py checklist.py
   - flake8 skbio setup.py checklist.py
   - ./checklist.py
@@ -27,7 +27,6 @@ script:
   - make clean
   - make html
   - popd
-  # we need to run the test suite from setup.py for coveralls to grab the info
-  - coverage run setup.py test
-  - coverage report -m
+after_success:
   - coveralls
+
