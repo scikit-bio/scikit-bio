@@ -19,7 +19,7 @@ install:
   - pip install sphinx-bootstrap-theme future coverage coveralls natsort
   - pip install -e . --no-deps
 script:
-  - if [ ${WITH_DOCTEST} ]; then nosetests --with-doctest; else nosetests; fi
+  - if [ ${WITH_DOCTEST} ]; then nosetests --with-doctest --with-coverage; else nosetests --with-coverage; fi
   - pep8 skbio setup.py checklist.py
   - flake8 skbio setup.py checklist.py
   - ./checklist.py
@@ -27,7 +27,6 @@ script:
   - make clean
   - make html
   - popd
-  # we need to run the test suite from setup.py for coveralls to grab the info
-  - coverage run setup.py test
-  - coverage report -m
+after_success:
   - coveralls
+
