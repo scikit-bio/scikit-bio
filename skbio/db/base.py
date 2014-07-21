@@ -40,8 +40,12 @@ from __future__ import absolute_import, division, print_function
 from future.utils import PY3
 from future import standard_library
 
+# do nothing if it's not python 3
+decode_bytes = lambda x: x
+
 if PY3:
     long = int
+    decode_bytes = lambda x : x.decode('utf-8')
 
 with standard_library.hooks():
     from urllib.request import urlopen, urlretrieve
@@ -135,8 +139,8 @@ class URLGetter(object):
         """
         result = self.open(**kwargs)
 
-        # decode for py3k compatibility
-        data = result.read().decode('utf-8')
+        # will only decode if it's py3k
+        data = decode_bytes(result.read())
 
         result.close()
         return data
