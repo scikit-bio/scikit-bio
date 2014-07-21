@@ -45,7 +45,7 @@ decode_bytes = lambda x: x
 
 if PY3:
     long = int
-    decode_bytes = lambda x : x.decode('utf-8')
+    decode_bytes = lambda x: x.decode('utf-8')
 
 with standard_library.hooks():
     from urllib.request import urlopen, urlretrieve
