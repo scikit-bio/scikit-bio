@@ -26,9 +26,8 @@ def create_fake_observation():
     # Create a subsample of a larger sample such that we can compute
     # the expected probability of the unseen portion.
     # This is used in the tests of lladser_pe and lladser_ci
-    c = [9000]
-    c.extend([1] * 1000)
-    counts = np.array(c)
+    counts = np.ones(1001)
+    counts[0] = 9000
     total = counts.sum()
 
     fake_obs = subsample(counts, 1000)
