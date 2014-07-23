@@ -22,6 +22,7 @@ script:
   - if [ ${WITH_DOCTEST} ]; then nosetests --with-doctest --with-coverage; else nosetests --with-coverage; fi
   - pep8 skbio setup.py checklist.py
   - flake8 skbio setup.py checklist.py
+  - flake8 --version
   - ./checklist.py
   - pushd doc
   - make clean
