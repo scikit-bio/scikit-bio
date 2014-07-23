@@ -83,7 +83,7 @@ def procrustes(data1, data2):
       to be scaled such that ``trace(AA') = 1``.
 
     - Duplicate datapoints are generally ok, duplicating a data point will
-      increase it's effect on the procrustes fit.
+      increase its effect on the procrustes fit.
 
     - The disparity scales as the number of points per input matrix.
 
@@ -112,21 +112,15 @@ def procrustes(data1, data2):
 
 
     """
-    SMALL_NUM = 1e-6  # used to check for zero values in added dimension
-
     num_rows, num_cols = np.shape(data1)
     if (num_rows, num_cols) != np.shape(data2):
         raise ValueError("input matrices must be of same shape")
     if num_rows == 0 or num_cols == 0:
         raise ValueError("input matrices must be >0 rows, >0 cols")
 
-    # add a dimension to allow reflections (rotations in n + 1 dimensions)
-    mtx1 = np.append(data1, np.zeros((num_rows, 1)), 1)
-    mtx2 = np.append(data2, np.zeros((num_rows, 1)), 1)
-
     # standardize each matrix
-    mtx1 = _center(mtx1)
-    mtx2 = _center(mtx2)
+    mtx1 = _center(data1)
+    mtx2 = _center(data2)
 
     if (not np.any(mtx1)) or (not np.any(mtx2)):
         raise ValueError("input matrices must contain >1 unique points")
@@ -136,20 +130,6 @@ def procrustes(data1, data2):
 
     # transform mtx2 to minimize disparity (sum( (mtx1[i,j] - mtx2[i,j])^2) )
     mtx2 = _match_points(mtx1, mtx2)
-
-    # WARNING: I haven't proven that after matching the matrices, no point has
-    # a nonzero component in the added dimension.  I believe it is true,
-    # though, since the unchanged matrix has no points extending into
-    # that dimension
-
-    if np.any(np.abs(mtx2[:, -1]) > SMALL_NUM):
-        raise RuntimeError("We have accidentially added a dimension to the "
-                           "matrix, and the vectors have nonzero components in"
-                           " that dimension")
-
-    # strip extra dimension which was added to allow reflections
-    mtx1 = mtx1[:, :-1]
-    mtx2 = mtx2[:, :-1]
 
     disparity = _get_disparity(mtx1, mtx2)
 
