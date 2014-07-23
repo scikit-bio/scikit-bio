@@ -17,6 +17,7 @@ import sys
 
 import skbio as biolopy
 
+
 def main():
     """Go on a power trip by nitpicking the scikit-bio repo.
 
