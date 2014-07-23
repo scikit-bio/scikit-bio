@@ -13,7 +13,7 @@ before_install:
   # Update conda itself
   - conda update --yes conda
 install:
-  - conda create --yes -n env_name python=$PYTHON_VERSION pip numpy=$NUMPY_VERSION scipy matplotlib pandas nose pep8 flake8 Sphinx
+  - conda create --yes -n env_name python=$PYTHON_VERSION pip numpy=$NUMPY_VERSION scipy matplotlib pandas nose pep8 flake8 Sphinx pyflakes
   - if [ ${USE_CYTHON} ]; then conda install --yes -n env_name cython; fi
   - source activate env_name
   - pip install sphinx-bootstrap-theme future coveralls natsort
