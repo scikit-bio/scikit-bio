@@ -190,12 +190,8 @@ def _normalize(mtx):
     mtx' denotes the transpose of mtx
 
     """
-    result = np.array(mtx, 'd')
-    num_pts, num_dims = np.shape(result)
-    mag = np.trace(np.dot(result, np.transpose(result)))
-    norm = np.sqrt(mag)
-    result /= norm
-    return result
+    mtx = np.asarray(mtx, dtype=float)
+    return mtx / np.linalg.norm(mtx)
 
 
 def _match_points(mtx1, mtx2):
