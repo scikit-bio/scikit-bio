@@ -12,7 +12,6 @@ from unittest import TestCase, main
 import warnings
 
 import numpy as np
-import numpy.testing as npt
 
 from skbio.core.alignment.pairwise import (
     global_pairwise_align_protein, local_pairwise_align_protein,
@@ -20,8 +19,7 @@ from skbio.core.alignment.pairwise import (
     _make_nt_substitution_matrix, _init_matrices_sw, _init_matrices_nw,
     _compute_score_and_traceback_matrices, _traceback, _first_largest,
     _get_seq_id, _get_seq_ids)
-from skbio import Alignment, Protein, DNA, RNA
-from skbio.core.warning import EfficiencyWarning
+from skbio import Protein, DNA
 
 
 class PairwiseAlignmentTests(TestCase):
@@ -195,7 +193,6 @@ class PairwiseAlignmentTests(TestCase):
         self.assertEqual(actual.ids(), list('01'))
 
     def test_global_pairwise_align_nucleotide(self):
-        m = _make_nt_substitution_matrix(5, -4)
         expected = ("G-ACCTTGACCAGGTACC", "GAACTTTGAC---GTAAC", 41.0, 0, 0)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
@@ -244,7 +241,6 @@ class PairwiseAlignmentTests(TestCase):
         self.assertEqual(actual.ids(), list('01'))
 
     def test_local_pairwise_align_nucleotide(self):
-        m = _make_nt_substitution_matrix(5, -4)
         expected = ("ACCTTGACCAGGTACC", "ACTTTGAC---GTAAC", 41.0, 1, 2)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")

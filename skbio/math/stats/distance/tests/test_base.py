@@ -10,7 +10,6 @@ from __future__ import absolute_import, division, print_function
 from future.utils.six import StringIO
 from unittest import TestCase, main
 
-import numpy as np
 import pandas as pd
 
 from skbio.core.distance import DissimilarityMatrix, DistanceMatrix
