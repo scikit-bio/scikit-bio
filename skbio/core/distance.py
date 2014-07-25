@@ -533,7 +533,7 @@ class DissimilarityMatrix(object):
                     idxs.append(self.index(id_))
                     found_ids.append(id_)
                 except MissingIDError:
-                    continue
+                    pass
             ids = found_ids
 
         filtered_data = self._data[idxs][:, idxs]
