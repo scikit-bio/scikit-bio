@@ -412,6 +412,13 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         with self.assertRaises(MissingIDError):
             self.dm_3x3.filter(['c', 'bro'])
 
+    def test_filter_missing_ids_strict_false(self):
+        # no exception should be raised
+        ids = ('c', 'a')
+        exp = DissimilarityMatrix([[0, 4.2], [4.2, 0]], ids)
+        obs = self.dm_3x3.filter(['c', 'a', 'not found'], strict=False)
+        self.assertEqual(obs, exp)
+
     def test_filter_empty_ids(self):
         with self.assertRaises(DissimilarityMatrixError):
             self.dm_3x3.filter([])

@@ -497,7 +497,7 @@ class DissimilarityMatrix(object):
         # point in the future.
         return self.__class__(self.data.copy(), deepcopy(self.ids))
 
-    def filter(self, ids):
+    def filter(self, ids, strict=True):
         """Filter the dissimilarity matrix by IDs.
 
         Parameters
@@ -505,6 +505,10 @@ class DissimilarityMatrix(object):
         ids : iterable of str
             IDs to retain. May not contain duplicates or be empty. Each ID must
             be present in the dissimilarity matrix.
+        strict : bool, optional
+            If `strict` is ``True`` and an ID that is not found in the distance
+            matrix is found in `ids`, a ``MissingIDError`` exception will be
+            raised, otherwise the ID will be ignored.
 
         Returns
         -------
@@ -512,8 +516,26 @@ class DissimilarityMatrix(object):
             Filtered dissimilarity matrix containing only the IDs specified in
             `ids`. IDs will be in the same order as they appear in `ids`.
 
+        Raises
+        ------
+        MissingIDError
+            If an ID in `ids` is not in the object's list of IDs.
         """
-        idxs = [self.index(id_) for id_ in ids]
+        if strict:
+            idxs = [self.index(id_) for id_ in ids]
+        else:
+            # get the indices to slice the inner numpy array
+            idxs = []
+            # save the IDs that were found in the distance matrix
+            found_ids = []
+            for id_ in ids:
+                try:
+                    idxs.append(self.index(id_))
+                    found_ids.append(id_)
+                except MissingIDError:
+                    pass
+            ids = found_ids
+
         filtered_data = self._data[idxs][:, idxs]
         return self.__class__(filtered_data, ids)
 
