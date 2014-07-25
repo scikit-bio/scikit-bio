@@ -520,7 +520,6 @@ class DissimilarityMatrix(object):
         ------
         MissingIDError
             If an ID in `ids` is not in the object's list of IDs.
-
         """
         if strict:
             idxs = [self.index(id_) for id_ in ids]
