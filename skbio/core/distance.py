@@ -505,10 +505,10 @@ class DissimilarityMatrix(object):
         ids : iterable of str
             IDs to retain. May not contain duplicates or be empty. Each ID must
             be present in the dissimilarity matrix.
-        strict : bool
+        strict : bool, optional
             If `strict` is ``True`` and an ID that is not found in the distance
             matrix is found in `ids`, a ``MissingIDError`` exception will be
-            raised, otherwise the ID will be ignored.  Defaults to ``True``.
+            raised, otherwise the ID will be ignored.
 
         Returns
         -------
