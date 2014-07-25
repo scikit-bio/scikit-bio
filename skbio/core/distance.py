@@ -507,8 +507,8 @@ class DissimilarityMatrix(object):
             be present in the dissimilarity matrix.
         strict : bool
             If `strict` is ``True`` and an ID that is not found in the distance
-            matrix is found, a ``MissingIDError`` exception will be raised,
-            otherwise the ID will be ignored.  Defaults to ``False``.
+            matrix is found in `ids`, a ``MissingIDError`` exception will be
+            raised, otherwise the ID will be ignored.  Defaults to ``True``.
 
         Returns
         -------
