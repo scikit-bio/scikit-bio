@@ -536,7 +536,6 @@ class DissimilarityMatrix(object):
                     continue
             ids = found_ids
 
-
         filtered_data = self._data[idxs][:, idxs]
         return self.__class__(filtered_data, ids)
 
