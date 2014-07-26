@@ -261,7 +261,7 @@ class APIRegressionValidator(RepoValidator):
         for file in files:
             current_fp = os.path.join(root, file)
             package, ext = os.path.splitext(current_fp)
-            if(ext == ".py"):
+            if ext == ".py":
                 imports = self._parse_file(current_fp, root)
                 if os.path.split(root)[1] == "tests":
                     test_imports.append((current_fp, imports))
@@ -287,7 +287,7 @@ class APIRegressionValidator(RepoValidator):
             value = import_
             # The actual object imported will be the key.
             key = import_.split(".")[-1]
-            # If package importing the behavior is shorter than it's import:
+            # If package importing the behavior is shorter than its import:
             if len(package.split('.')) + 1 < len(import_.split('.')):
                 value = ".".join([package, key])
 
@@ -304,8 +304,7 @@ class APIRegressionValidator(RepoValidator):
         if key not in self._imports:
             return None
         substitute = self._imports[key]
-        if substitute == import_ or \
-                len(substitute.split('.')) == len(import_.split('.')):
+        if len(substitute.split('.')) == len(import_.split('.')):
             return None
         else:
             return substitute
