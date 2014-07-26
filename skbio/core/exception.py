@@ -144,6 +144,7 @@ class InvalidCodonError(KeyError, GeneticCodeError):
 
 class QueryNotFoundError(Exception):
     """Exception raised by EUtils when no data is retrieved"""
+    pass
 
 
 class StockholmParseError(FileFormatError):
