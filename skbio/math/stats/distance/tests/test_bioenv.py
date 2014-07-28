@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 from pandas.util.testing import assert_frame_equal
 
-from skbio.core.distance import DistanceMatrix
+from skbio import DistanceMatrix
 from skbio.math.stats.distance import bioenv
 from skbio.math.stats.distance._bioenv import _scale
 from skbio.util.testing import get_data_path

@@ -19,8 +19,8 @@
 
 from unittest import TestCase, main
 
-from skbio.core.alignment.ssw.ssw_wrapper import (
-    StripedSmithWaterman, AlignmentStructure, local_pairwise_align_ssw)
+from skbio import local_pairwise_align_ssw
+from skbio.core.alignment import StripedSmithWaterman, AlignmentStructure
 from skbio.core.alignment.pairwise import blosum50
 
 

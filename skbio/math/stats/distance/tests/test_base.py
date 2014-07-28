@@ -12,9 +12,10 @@ from unittest import TestCase, main
 
 import pandas as pd
 
-from skbio.core.distance import DissimilarityMatrix, DistanceMatrix
-from skbio.math.stats.distance.base import (CategoricalStats,
-                                            CategoricalStatsResults)
+from skbio import DistanceMatrix
+from skbio.core.distance import DissimilarityMatrix
+from skbio.math.stats.distance import CategoricalStatsResults
+from skbio.math.stats.distance.base import CategoricalStats
 
 
 class CategoricalStatsTests(TestCase):

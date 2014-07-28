@@ -16,8 +16,8 @@ import numpy as np
 import numpy.testing as npt
 import pandas as pd
 
-from skbio.core.distance import DistanceMatrix
-from skbio.math.stats.distance.anosim import ANOSIM
+from skbio import DistanceMatrix
+from skbio.math.stats.distance import ANOSIM
 
 
 class ANOSIMTests(TestCase):
