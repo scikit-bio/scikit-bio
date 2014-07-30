@@ -32,7 +32,7 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations):
     This test for host/parasite cospeciation is as described in [1]_. This test 
     is a modification of a Mantel test, with a correction for the case where 
     multiple hosts map to a single parasite (and vice versa).
-    
+
     Parameters
     ----------
     host_dist : numpy.array
@@ -52,7 +52,7 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations):
         Correlation coefficient of host : parasite association
     perm_stats : list of floats
         List of r values observed using permuted host : parasite interactions
-    
+
     Examples
     --------
 
@@ -159,4 +159,3 @@ def _get_dist(labels, dists, index):
             vec.append(dists[k, t])
 
     return vec
-
