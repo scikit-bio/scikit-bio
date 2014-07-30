@@ -13,7 +13,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from nose.tools import assert_almost_equal, assert_raises, assert_equal
 
-from skbio.math.stats.evolve.hommola import hommola_cospeciation, get_dist
+from skbio.math.stats.evolve.hommola import hommola_cospeciation, _get_dist
 
 def test_hommola_cospeciation_sig():
   
@@ -67,7 +67,7 @@ def test_get_dist():
     index = [2, 3, 1, 0]
 
     expected_vec = [7, 7, 5, 6, 0, 4, 3, 4, 3, 2]
-    actual_vec = get_dist(labels, dists, index)
+    actual_vec = _get_dist(labels, dists, index)
 
     assert_equal(actual_vec, expected_vec)
 

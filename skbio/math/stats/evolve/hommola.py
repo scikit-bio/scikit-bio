@@ -1,22 +1,21 @@
 r"""
-Numbers (:mod:`skbio.core.numbers`)
-===================================
+Cospeciation test (:mod:`skbio.math.stats.evolve.hommola`)
+==========================================================
 
-.. currentmodule:: skbio.core.numbers
+.. currentmodule:: skbio.math.stats.evolve.hommola
 
-Numbers holds a sequence of numbers, and defines several statistical
-operations (mean, stdev, etc.) FrequencyDistribution holds a mapping from
-items (not necessarily numbers) to counts, and defines operations such as
-Shannon entropy and frequency normalization.
+Performs the test for host/parasite cospeciation described in Hommola 
+et al 2009 Molecular Biology and Evolution. This test is a modification
+of a Mantel test, with a correction for the case where multiple hosts 
+map to a single parasite (and vice versa). 
 
-
-Classes
--------
+Functions
+---------
 
 .. autosummary::
    :toctree: generated/
 
-   Numbers
+   hommola_cospeciation
 
 """
 # ----------------------------------------------------------------------------
@@ -72,8 +71,8 @@ def hommola_cospeciation(host_dist, par_dist, matrix, permutations):
                     s += 1
 
     # get a vector of pairwise distances for each interaction edge
-    x = get_dist(hosts, host_dist, range(matrix.shape[1]))
-    y = get_dist(pars, par_dist, range(matrix.shape[0]))
+    x = _get_dist(hosts, host_dist, range(matrix.shape[1]))
+    y = _get_dist(pars, par_dist, range(matrix.shape[0]))
 
     # calculate the observed correlation coefficient for this host/symbionts
     r = pearsonr(x, y)[0]
@@ -93,8 +92,8 @@ def hommola_cospeciation(host_dist, par_dist, matrix, permutations):
         shuffle(mh)
 
         # Get pairwise distances in shuffled order
-        y_p = get_dist(pars, par_dist, mp)
-        x_p = get_dist(hosts, host_dist, mh)
+        y_p = _get_dist(pars, par_dist, mp)
+        x_p = _get_dist(hosts, host_dist, mh)
 
         # calculate shuffled correlation.
         # If greater than observed value, iterate counter below.
@@ -111,7 +110,7 @@ def hommola_cospeciation(host_dist, par_dist, matrix, permutations):
     return p_val, r, perm_stats
 
 
-def get_dist(labels, dists, index):
+def _get_dist(labels, dists, index):
     """Function for picking a subset of pairwise distances from a distance matrix
     according to a set of (randomizable) indices. Derived from Hommola et al R code"""
 
