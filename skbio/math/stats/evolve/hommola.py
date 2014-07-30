@@ -23,6 +23,7 @@ from __future__ import absolute_import, division, print_function
 from random import shuffle
 import math
 
+import numpy as np
 from scipy.stats import pearsonr
 
 
@@ -93,22 +94,12 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations):
        1457-1468.
     """
 
-    m = interaction.sum()
-
-    hosts = [0] * m
-    pars = [0] * m
-
     # Generate lists of host and symbiont edges, such that the index
     # of the lists represents an edge connecting the host to the parasite.
-    s = 0
-    while s < m:
-        for i in range(interaction.shape[0]):
-            for j in range(interaction.shape[1]):
-                if interaction[i, j] == 1:
-                    hosts[s] = j
-                    pars[s] = i
-                    s += 1
 
+    pars, hosts = np.nonzero(interaction)
+
+    # print(hosts2, pars2)
     # get a vector of pairwise distances for each interaction edge
     x = _get_dist(hosts, host_dist, range(interaction.shape[1]))
     y = _get_dist(pars, par_dist, range(interaction.shape[0]))
@@ -141,10 +132,7 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations):
         if r_p >= r:
             below += 1
 
-    # print "Below: " + str(below)
-    # print "Pemutations: " + str(permutations)
-
-    p_val = float(below + 1) / float(permutations + 1)
+    p_val = (below + 1) / (permutations + 1)
 
     return p_val, r, perm_stats
 
@@ -173,6 +161,8 @@ def _get_dist(labels, dists, index):
     m = len(labels)
     vec = []
 
+    # Note: in original R code for this function, the indexing is slightly
+    # different due to the fact that R indices start at 1.
     for i in range(m - 1):
         k = index[labels[i]]
         for j in range(i + 1, m):
