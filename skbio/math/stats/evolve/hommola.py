@@ -32,9 +32,7 @@ from __future__ import absolute_import, division, print_function
 from random import shuffle
 import math
 
-import numpy
-
-import cogent.maths.stats.test as stats
+from scipy.stats import pearsonr
 
 
 def hommola_cospeciation(host_dist, par_dist, matrix, permutations):
@@ -78,7 +76,7 @@ def hommola_cospeciation(host_dist, par_dist, matrix, permutations):
     y = get_dist(pars, par_dist, range(matrix.shape[0]))
 
     # calculate the observed correlation coefficient for this host/symbionts
-    r = stats.correlation(x, y)[0]
+    r = pearsonr(x, y)[0]
 
     # now do permutaitons. Initialize index lists of the appropriate size.
     mp = range(par_dist.shape[1])
@@ -100,7 +98,7 @@ def hommola_cospeciation(host_dist, par_dist, matrix, permutations):
 
         # calculate shuffled correlation.
         # If greater than observed value, iterate counter below.
-        r_p = stats.correlation(x_p, y_p)[0]
+        r_p = pearsonr(x_p, y_p)[0]
         perm_stats.append(r_p)
         if r_p >= r:
             below += 1
