@@ -4,7 +4,7 @@ Evolutionary statistics (:mod:`skbio.math.stats.evolve`)
 
 .. currentmodule:: skbio.math.stats.evolve
 
-This package contains statistics pertaining to phylogenies and evolution. 
+This package contains statistics pertaining to phylogenies and evolution.
 
 Subpackages
 -----------

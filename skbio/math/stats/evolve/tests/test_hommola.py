@@ -33,12 +33,10 @@ def test_hommola_cospeciation_sig():
     exp_p = .1
     exp_r = 0.83170965463247915
     exp_perm_stats = np.array([-0.09826424,  0.63310285, -0.17556286,
-                               0.73840484,  0., -0.02529993,  0.47279242,  0.10184894,  0.42742399])
+                               0.73840484,  0., -0.02529993,  0.47279242,
+                               0.10184894,  0.42742399])
     assert_almost_equal(obs_p, exp_p)
     assert_almost_equal(obs_r, exp_r)
-
-    # print(obs_perm_stats)
-    # print(exp_perm_stats)
 
     assert_allclose(obs_perm_stats, exp_perm_stats)
 
@@ -51,18 +49,20 @@ def test_hommola_cospeciation_no_sig():
         8, 7, 0, 6, 7], [8, 7, 6, 0, 3], [9, 8, 7, 3, 0]])
     pdist = np.array([[0, 5, 8, 8, 8], [5, 0, 7, 7, 7], [
         8, 7, 0, 4, 4], [8, 7, 4, 0, 2], [8, 7, 4, 2, 0]])
-    # this matrix was picked because it will generate an r value that's less than
-    # a standard deviation away from the mean of the normal distribution of
-    # r vals
+    # this matrix was picked because it will generate an r value that's less
+    # than a standard deviation away from the mean of the normal distribution
+    # of r vals
     randomized_matrix = np.array(
-        [[0, 0, 0, 1, 0], [0, 0, 0, 0, 1], [1, 0, 0, 0, 0], [1, 0, 0, 0, 0], [0, 0, 0, 0, 1]])
+        [[0, 0, 0, 1, 0], [0, 0, 0, 0, 1], [1, 0, 0, 0, 0], [1, 0, 0, 0, 0],
+         [0, 0, 0, 0, 1]])
 
     obs_p, obs_r, obs_perm_stats = hommola_cospeciation(
         hdist, pdist, randomized_matrix, 9)
     exp_p = .5
     exp_r = -0.013679391379114569
-    exp_perm_stats = np.array([-0.15686395, -0.14836061,  0.27165268, -0.21887026, -0.37597226,
-                               0.28203804, -0.42305706,  0.56395839,  0.25098232])
+    exp_perm_stats = np.array([-0.15686395, -0.14836061,  0.27165268,
+                              -0.21887026, -0.37597226, 0.28203804,
+                              -0.42305706,  0.56395839,  0.25098232])
     assert_almost_equal(obs_p, exp_p)
     assert_almost_equal(obs_r, exp_r)
     assert_allclose(obs_perm_stats, exp_perm_stats)
