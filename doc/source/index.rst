@@ -24,6 +24,7 @@ API Reference
    math.diversity.alpha
    math.diversity.beta
    math.stats.distance
+   math.stats.evolve
    math.stats.misc
    math.stats.ordination
    math.stats.spatial

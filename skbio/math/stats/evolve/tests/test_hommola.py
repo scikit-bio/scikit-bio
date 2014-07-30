@@ -13,7 +13,8 @@ import numpy as np
 from numpy.testing import assert_allclose
 from nose.tools import assert_almost_equal, assert_raises, assert_equal
 
-from skbio.math.stats.evolve.hommola import hommola_cospeciation, _get_dist
+from skbio.math.stats.evolve import hommola_cospeciation
+from skbio.math.stats.evolve.hommola import _get_dist
 
 def test_hommola_cospeciation_sig():
   

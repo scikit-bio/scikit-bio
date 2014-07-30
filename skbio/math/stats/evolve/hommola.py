@@ -9,14 +9,6 @@ et al 2009 Molecular Biology and Evolution. This test is a modification
 of a Mantel test, with a correction for the case where multiple hosts 
 map to a single parasite (and vice versa). 
 
-Functions
----------
-
-.. autosummary::
-   :toctree: generated/
-
-   hommola_cospeciation
-
 """
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -34,27 +26,70 @@ import math
 from scipy.stats import pearsonr
 
 
-def hommola_cospeciation(host_dist, par_dist, matrix, permutations):
-    """Performs the cospeciation test from Hommola et al recursively over a tree.
+def hommola_cospeciation(host_dist, par_dist, interaction, permutations):
+    """Performs a cospeciation test
 
-    Takes numpy matrices of jxj host distances, ixi 'parasite' (OTU) distances, 
-    and a binary ixj association matrix. 
+    This test for host/parasite cospeciation is as described in [1]_. This test 
+    is a modification of a Mantel test, with a correction for the case where 
+    multiple hosts map to a single parasite (and vice versa).
+    
+    Parameters
+    ----------
+    host_dist : numpy.array
+        Symmetric matrix of m x m pairwise distances between hosts
+    par_dist : numpy.array
+        Symmetric matrix of n x n pairwise distances between parasites
+    interaction : numpy.array
+        n x m binary matrix of parasite x host interactions
+    permutations : int
+        Number of permutations to run
 
-    test data from Hommola et al MB&E 2009: 
-    hdist = numpy.array([[0,3,8,8,9],[3,0,7,7,8],[8,7,0,6,7],[8,7,6,0,3],[9,8,7,3,0]])
-    pdist = numpy.array([[0,5,8,8,8],[5,0,7,7,7],[8,7,0,4,4],[8,7,4,0,2],[8,7,4,2,0]])
-    int = numpy.array([[1,0,0,0,0],[0,1,0,0,0],[0,0,1,0,0],[0,0,0,1,0],[0,0,0,1,1]])
+    Returns
+    -------
+    p_val : float
+        Significance of host : parasite association
+    r : float
+        Correlation coefficient of host : parasite association
+    perm_stats : list of floats
+        List of r values observed using permuted host : parasite interactions
+    
+    Examples
+    --------
 
-    This is basically a direct translation from the R code, and not optimized
-    in any way for Python.
+    >>> import numpy as np
+    >>> from skbio.math.stats.evolve.hommola import hommola_cospeciation
 
-    NOTE: the method return signature is now changed.
-    For backwards compatibility purposes - 
-    when this method is called, 'result' has changed to 'result[0]'
+    Import arrays for host distances, parasite distances, and the interactions
+
+    >>> hdist = np.array([[0,3,8,8,9],[3,0,7,7,8],[8,7,0,6,7],[8,7,6,0,3],[9,8,7,3,0]])
+    >>> pdist = np.array([[0,5,8,8,8],[5,0,7,7,7],[8,7,0,4,4],[8,7,4,0,2],[8,7,4,2,0]])
+    >>> interaction = np.array([[1,0,0,0,0],[0,1,0,0,0],[0,0,1,0,0],[0,0,0,1,0],[0,0,0,1,1]])
+
+    Run the permutation test. Note that the correlation coefficient for the
+    observed values counts against the final reported p value.
+
+    >>> p_val, r_val, perm_stats = hommola_cospeciation(hdist, pdist, interaction, 99)
+    >>> r_val
+    0.83170965463247903
+
+    In this case, the host distances explain about 80%% of the variation in
+    symbiont distances. However, this may also reflect structure inherent in the 
+    phylogeny, and is not itself indicative of significance.
+
+    >>> print(p_val <= 0.05)
+    True
+
+    After permuting host : parasite interactions, we find that the observed
+    correlation is indeed greater than we would expect by chance. 
+
+    References
+    ----------
+    .. [1] Hommola K, Smith JE, Qiu Y, Gilks WR (2009) A Permutation Test of 
+       Host-Parasite Cospeciation. Molecular Biology and Evolution, 26, 
+       1457-1468.
     """
 
-
-    m = matrix.sum()
+    m = interaction.sum()
 
     hosts = [0] * m
     pars = [0] * m
@@ -63,16 +98,16 @@ def hommola_cospeciation(host_dist, par_dist, matrix, permutations):
     # of the lists represents an edge connecting the host to the parasite.
     s = 0
     while s < m:
-        for i in range(matrix.shape[0]):
-            for j in range(matrix.shape[1]):
-                if matrix[i, j] == 1:
+        for i in range(interaction.shape[0]):
+            for j in range(interaction.shape[1]):
+                if interaction[i, j] == 1:
                     hosts[s] = j
                     pars[s] = i
                     s += 1
 
     # get a vector of pairwise distances for each interaction edge
-    x = _get_dist(hosts, host_dist, range(matrix.shape[1]))
-    y = _get_dist(pars, par_dist, range(matrix.shape[0]))
+    x = _get_dist(hosts, host_dist, range(interaction.shape[1]))
+    y = _get_dist(pars, par_dist, range(interaction.shape[0]))
 
     # calculate the observed correlation coefficient for this host/symbionts
     r = pearsonr(x, y)[0]
