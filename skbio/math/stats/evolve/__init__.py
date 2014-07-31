@@ -12,7 +12,7 @@ Subpackages
 .. autosummary::
    :toctree: generated/
 
-   hommola
+   hommola_cospeciation
 
 """
 

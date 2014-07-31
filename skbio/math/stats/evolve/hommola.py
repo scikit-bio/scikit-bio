@@ -1,15 +1,3 @@
-r"""
-Cospeciation test (:mod:`skbio.math.stats.evolve.hommola`)
-==========================================================
-
-.. currentmodule:: skbio.math.stats.evolve.hommola
-
-Performs the test for host/parasite cospeciation described in Hommola
-et al 2009 Molecular Biology and Evolution. This test is a modification
-of a Mantel test, with a correction for the case where multiple hosts
-map to a single parasite (and vice versa).
-
-"""
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
