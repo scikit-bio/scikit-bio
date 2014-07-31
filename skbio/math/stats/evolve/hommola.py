@@ -20,9 +20,6 @@ map to a single parasite (and vice versa).
 
 from __future__ import absolute_import, division, print_function
 
-from random import shuffle
-import math
-
 import numpy as np
 from scipy.stats import pearsonr
 
@@ -108,8 +105,8 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations):
     r = pearsonr(x, y)[0]
 
     # now do permutaitons. Initialize index lists of the appropriate size.
-    mp = range(par_dist.shape[1])
-    mh = range(host_dist.shape[1])
+    mp = list(range(par_dist.shape[1]))
+    mh = list(range(host_dist.shape[1]))
     below = 0
 
     perm_stats = []  # initialize list of shuffled correlation vals
@@ -118,8 +115,8 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations):
         # Generate a shuffled list of indexes for each permutation. This
         # effectively randomizes which host is associated with which symbiont,
         # but maintains the distribution of genetic distances.
-        shuffle(mp)
-        shuffle(mh)
+        np.random.shuffle(mp)
+        np.random.shuffle(mh)
 
         # Get pairwise distances in shuffled order
         y_p = _get_dist(pars, par_dist, mp)

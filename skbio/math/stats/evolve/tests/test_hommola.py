@@ -11,7 +11,7 @@ from random import seed
 
 import numpy as np
 from numpy.testing import assert_allclose
-from nose.tools import assert_almost_equal, assert_raises, assert_equal
+from nose.tools import assert_almost_equal, assert_equal
 
 from skbio.math.stats.evolve import hommola_cospeciation
 from skbio.math.stats.evolve.hommola import _get_dist
@@ -19,7 +19,7 @@ from skbio.math.stats.evolve.hommola import _get_dist
 
 def test_hommola_cospeciation_sig():
 
-    seed(1)
+    np.random.seed(1)
 
     hdist = np.array([[0, 3, 8, 8, 9], [3, 0, 7, 7, 8], [
         8, 7, 0, 6, 7], [8, 7, 6, 0, 3], [9, 8, 7, 3, 0]])
@@ -32,9 +32,9 @@ def test_hommola_cospeciation_sig():
         hdist, pdist, matrix, 9)
     exp_p = .1
     exp_r = 0.83170965463247915
-    exp_perm_stats = np.array([-0.09826424,  0.63310285, -0.17556286,
-                               0.73840484,  0., -0.02529993,  0.47279242,
-                               0.10184894,  0.42742399])
+    exp_perm_stats = np.array([-0.14928122, 0.26299538, -0.21125858,
+                               0.24143838, 0.61557855, -0.24258293,
+                               0.09885203, 0.02858, 0.42742399])
     assert_almost_equal(obs_p, exp_p)
     assert_almost_equal(obs_r, exp_r)
 
@@ -43,7 +43,7 @@ def test_hommola_cospeciation_sig():
 
 def test_hommola_cospeciation_no_sig():
 
-    seed(1)
+    np.random.seed(1)
 
     hdist = np.array([[0, 3, 8, 8, 9], [3, 0, 7, 7, 8], [
         8, 7, 0, 6, 7], [8, 7, 6, 0, 3], [9, 8, 7, 3, 0]])
@@ -58,11 +58,11 @@ def test_hommola_cospeciation_no_sig():
 
     obs_p, obs_r, obs_perm_stats = hommola_cospeciation(
         hdist, pdist, randomized_matrix, 9)
-    exp_p = .5
+    exp_p = .6
     exp_r = -0.013679391379114569
-    exp_perm_stats = np.array([-0.15686395, -0.14836061,  0.27165268,
-                              -0.21887026, -0.37597226, 0.28203804,
-                              -0.42305706,  0.56395839,  0.25098232])
+    exp_perm_stats = np.array([-0.22216543, -0.14836061, -0.04434843,
+                               0.1478281, -0.29105645, 0.56395839, 0.47304992,
+                               0.79125657, 0.06804138])
     assert_almost_equal(obs_p, exp_p)
     assert_almost_equal(obs_r, exp_r)
     assert_allclose(obs_perm_stats, exp_perm_stats)
