@@ -7,7 +7,6 @@ from __future__ import absolute_import, division, print_function
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
-from random import seed
 
 import numpy as np
 from numpy.testing import assert_allclose
