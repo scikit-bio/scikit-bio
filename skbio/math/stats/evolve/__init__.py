@@ -26,5 +26,7 @@ Subpackages
 
 from .hommola import hommola_cospeciation
 
+__all__ = ['hommola_cospeciation']
+
 from numpy.testing import Tester
 test = Tester().test

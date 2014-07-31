@@ -20,9 +20,6 @@ map to a single parasite (and vice versa).
 
 from __future__ import absolute_import, division, print_function
 
-from random import shuffle
-import math
-
 import numpy as np
 from scipy.stats import pearsonr
 
