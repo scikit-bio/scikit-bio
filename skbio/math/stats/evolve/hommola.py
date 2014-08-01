@@ -86,20 +86,20 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations):
 
     # print(hosts2, pars2)
     # get a vector of pairwise distances for each interaction edge
-    x = _get_dist(hosts, host_dist, range(interaction.shape[1]))
-    y = _get_dist(pars, par_dist, range(interaction.shape[0]))
+    x = _get_dist(hosts, host_dist, np.arange(interaction.shape[1]))
+    y = _get_dist(pars, par_dist, np.arange(interaction.shape[0]))
 
     # calculate the observed correlation coefficient for this host/symbionts
     r = pearsonr(x, y)[0]
 
     # now do permutaitons. Initialize index lists of the appropriate size.
-    mp = list(range(par_dist.shape[1]))
-    mh = list(range(host_dist.shape[1]))
+    mp = np.arange(par_dist.shape[1])
+    mh = np.arange(host_dist.shape[1])
     below = 0
 
     perm_stats = []  # initialize list of shuffled correlation vals
 
-    for i in range(permutations):
+    for i in np.arange(permutations):
         # Generate a shuffled list of indexes for each permutation. This
         # effectively randomizes which host is associated with which symbiont,
         # but maintains the distribution of genetic distances.
@@ -121,6 +121,9 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations):
 
     return p_val, r, perm_stats
 
+def _distget(dists,k_array,t_array):
+    vec = dists[k_array,t_array]
+    return vec
 
 def _get_dist(labels, dists, index):
     """Function for picking a subset of pairwise distances from a distance
@@ -149,12 +152,12 @@ def _get_dist(labels, dists, index):
     ctr = 0
     # Note: in original R code for this function, the indexing is slightly
     # different due to the fact that R indices start at 1.
-    for i in range(m - 1):
+    for i in np.arange(m - 1):
         k = index[labels[i]]
-        for j in range(i + 1, m):
+        for j in np.arange(i + 1, m):
             t = index[labels[j]]
             k_array[ctr]=k
             t_array[ctr]=t
             ctr+=1
-    vec = dists[k_array,t_array]
+    vec = _distget(dists,k_array,t_array)
     return vec
