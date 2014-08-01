@@ -8,8 +8,12 @@
 
 from __future__ import absolute_import, division, print_function
 
+import sys
 import numpy as np
 from scipy.stats import pearsonr
+
+if sys.hexversion > 0x03000000:
+    xrange = range
 
 
 def hommola_cospeciation(host_dist, par_dist, interaction, permutations):
@@ -85,10 +89,12 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations):
     pars, hosts = np.nonzero(interaction)
     pars_k_labels, pars_t_labels = _gen_lists(pars)
     hosts_k_labels, hosts_t_labels = _gen_lists(hosts)
-    # print(hosts2, pars2)
+
     # get a vector of pairwise distances for each interaction edge
-    x = _get_dist(hosts_k_labels, hosts_t_labels, host_dist, np.arange(interaction.shape[1]))
-    y = _get_dist(pars_k_labels, pars_t_labels, par_dist, np.arange(interaction.shape[0]))
+    x = _get_dist(hosts_k_labels, hosts_t_labels, host_dist,
+                  np.arange(interaction.shape[1]))
+    y = _get_dist(pars_k_labels, pars_t_labels, par_dist,
+                  np.arange(interaction.shape[0]))
 
     # calculate the observed correlation coefficient for this host/symbionts
     r = pearsonr(x, y)[0]
@@ -122,6 +128,7 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations):
 
     return p_val, r, perm_stats
 
+
 def _get_dist(k_labels, t_labels, dists, index):
     """Function for picking a subset of pairwise distances from a distance
     matrix according to a set of (randomizable) indices.
@@ -142,10 +149,12 @@ def _get_dist(k_labels, t_labels, dists, index):
         Returns list of distances associated with host:parasite edges, per
         description in Hommola et al. 2009.
     """
-    vec = dists[index[k_labels],index[t_labels]]
+
+    vec = dists[index[k_labels], index[t_labels]]
     return vec
 
-def _gen_lists(labels): 
+
+def _gen_lists(labels):
     i_array, j_array = np.transpose(np.tri(len(labels)-1)).nonzero()
     j_array = j_array + 1
     k_labels = labels[i_array]
