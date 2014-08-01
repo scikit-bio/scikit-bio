@@ -68,9 +68,9 @@ def test_hommola_cospeciation_no_sig():
 
 
 def test_get_dist():
-    labels = [0, 1, 1, 2, 3]
+    labels = np.array([0, 1, 1, 2, 3])
     dists = np.array([[0, 2, 6, 3], [2, 0, 5, 4], [6, 5, 0, 7], [3, 4, 7, 0]])
-    index = [2, 3, 1, 0]
+    index = np.array([2, 3, 1, 0])
 
     expected_vec = np.array([7, 7, 5, 6, 0, 4, 3, 4, 3, 2])
     actual_vec = _get_dist(labels, dists, index)

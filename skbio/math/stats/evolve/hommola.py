@@ -83,11 +83,12 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations):
     # of the lists represents an edge connecting the host to the parasite.
 
     pars, hosts = np.nonzero(interaction)
-
+    pars_k_labels, pars_t_labels = _gen_lists(pars)
+    hosts_k_labels, hosts_t_labels = _gen_lists(hosts)
     # print(hosts2, pars2)
     # get a vector of pairwise distances for each interaction edge
-    x = _get_dist(hosts, host_dist, np.arange(interaction.shape[1]))
-    y = _get_dist(pars, par_dist, np.arange(interaction.shape[0]))
+    x = _get_dist(hosts_k_labels, hosts_t_labels, host_dist, np.arange(interaction.shape[1]))
+    y = _get_dist(pars_k_labels, pars_t_labels, par_dist, np.arange(interaction.shape[0]))
 
     # calculate the observed correlation coefficient for this host/symbionts
     r = pearsonr(x, y)[0]
@@ -99,7 +100,7 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations):
 
     perm_stats = []  # initialize list of shuffled correlation vals
 
-    for i in np.arange(permutations):
+    for i in xrange(permutations):
         # Generate a shuffled list of indexes for each permutation. This
         # effectively randomizes which host is associated with which symbiont,
         # but maintains the distribution of genetic distances.
@@ -107,8 +108,8 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations):
         np.random.shuffle(mh)
 
         # Get pairwise distances in shuffled order
-        y_p = _get_dist(pars, par_dist, mp)
-        x_p = _get_dist(hosts, host_dist, mh)
+        y_p = _get_dist(pars_k_labels, pars_t_labels, par_dist, mp)
+        x_p = _get_dist(hosts_k_labels, hosts_t_labels, host_dist, mh)
 
         # calculate shuffled correlation.
         # If greater than observed value, iterate counter below.
@@ -121,11 +122,7 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations):
 
     return p_val, r, perm_stats
 
-def _distget(dists,k_array,t_array):
-    vec = dists[k_array,t_array]
-    return vec
-
-def _get_dist(labels, dists, index):
+def _get_dist(k_labels, t_labels, dists, index):
     """Function for picking a subset of pairwise distances from a distance
     matrix according to a set of (randomizable) indices.
     Derived from Hommola et al R code
@@ -145,19 +142,12 @@ def _get_dist(labels, dists, index):
         Returns list of distances associated with host:parasite edges, per
         description in Hommola et al. 2009.
     """
-
-    m = len(labels)
-    k_array = np.empty(np.arange(m).sum(), dtype=int)
-    t_array = np.empty(np.arange(m).sum(), dtype=int)
-    ctr = 0
-    # Note: in original R code for this function, the indexing is slightly
-    # different due to the fact that R indices start at 1.
-    for i in np.arange(m - 1):
-        k = index[labels[i]]
-        for j in np.arange(i + 1, m):
-            t = index[labels[j]]
-            k_array[ctr]=k
-            t_array[ctr]=t
-            ctr+=1
-    vec = _distget(dists,k_array,t_array)
+    vec = dists[index[k_labels],index[t_labels]]
     return vec
+
+def _gen_lists(labels): 
+    i_array, j_array = np.transpose(np.tri(len(labels)-1)).nonzero()
+    j_array = j_array + 1
+    k_labels = labels[i_array]
+    t_labels = labels[j_array]
+    return k_labels, t_labels
