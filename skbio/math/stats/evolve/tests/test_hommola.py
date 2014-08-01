@@ -13,7 +13,7 @@ from numpy.testing import assert_allclose
 from nose.tools import assert_almost_equal, assert_equal
 
 from skbio.math.stats.evolve import hommola_cospeciation
-from skbio.math.stats.evolve.hommola import _get_dist
+from skbio.math.stats.evolve.hommola import _get_dist, _gen_lists
 
 
 def test_hommola_cospeciation_sig():
@@ -68,14 +68,30 @@ def test_hommola_cospeciation_no_sig():
 
 
 def test_get_dist():
-    labels = [0, 1, 1, 2, 3]
+    labels = np.array([0, 1, 1, 2, 3])
+    k_labels, t_labels = _gen_lists(labels)
     dists = np.array([[0, 2, 6, 3], [2, 0, 5, 4], [6, 5, 0, 7], [3, 4, 7, 0]])
-    index = [2, 3, 1, 0]
+    index = np.array([2, 3, 1, 0])
 
     expected_vec = np.array([7, 7, 5, 6, 0, 4, 3, 4, 3, 2])
-    actual_vec = _get_dist(labels, dists, index)
+    actual_vec = _get_dist(k_labels, t_labels, dists, index)
 
     assert_allclose(actual_vec, expected_vec)
+
+def test_gen_lists():
+     matrix = np.array([[1, 0, 0, 0, 0], [0, 1, 0, 0, 0], [
+        0, 0, 1, 0, 0], [0, 0, 0, 1, 0], [0, 0, 0, 1, 1]])
+     exp_pars_k_labels = np.array([0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 3, 3, 4])
+     exp_pars_t_labels = np.array([1, 2, 3, 4, 4, 2, 3, 4, 4, 3, 4, 4, 4, 4, 4])
+     exp_hosts_k_labels = np.array([0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 3, 3, 3])
+     exp_hosts_t_labels = np.array([1, 2, 3, 3, 4, 2, 3, 3, 4, 3, 3, 4, 3, 4, 4])
+     pars, hosts = np.nonzero(matrix)
+     obs_pars_k_labels, obs_pars_t_labels = _gen_lists(pars)
+     obs_hosts_k_labels, obs_hosts_t_labels = _gen_lists(hosts)
+     assert_allclose(exp_pars_k_labels, obs_pars_k_labels)
+     assert_allclose(exp_pars_t_labels, obs_pars_t_labels)
+     assert_allclose(exp_hosts_k_labels, obs_hosts_k_labels)
+     assert_allclose(exp_hosts_t_labels, obs_hosts_t_labels)
 
 if __name__ == '__main__':
     import nose
