@@ -144,14 +144,18 @@ def _get_dist(labels, dists, index):
     """
 
     m = len(labels)
-    vec = []
-
+    k_array = np.empty(np.arange(m).sum(), dtype=int)
+    t_array = np.empty(np.arange(m).sum(), dtype=int)
+    ctr = 0
+    print(labels)
     # Note: in original R code for this function, the indexing is slightly
     # different due to the fact that R indices start at 1.
     for i in range(m - 1):
         k = index[labels[i]]
         for j in range(i + 1, m):
             t = index[labels[j]]
-            vec.append(dists[k, t])
-
+            k_array[ctr]=k
+            t_array[ctr]=t
+            ctr+=1
+    vec = dists[np.array(k_array),np.array(t_array)]
     return vec
