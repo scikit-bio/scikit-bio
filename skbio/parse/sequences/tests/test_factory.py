@@ -53,10 +53,6 @@ class SequenceLoadTests(TestCase):
 
         it = load(self.qs1)
         obs = [rec.copy() for rec in it]
-        exp = [{'Sequence': '', 'SequenceID': '',
-                'QualID': '', 'Qual': ''},
-               {'Sequence': '', 'SequenceID': '',
-                'QualID': '', 'Qual': ''}]
         exp = [{'Qual': array([2, 27, 27, 27]),
                 'QualID': 'CRESSIA_242:1:2204:1453:1918#0/1',
                 'Sequence': 'TTAA',
@@ -93,10 +89,6 @@ class SequenceLoadTests(TestCase):
 
         it = load(self.qs1gz)
         obs = [rec.copy() for rec in it]
-        exp = [{'Sequence': '', 'SequenceID': '',
-                'QualID': '', 'Qual': ''},
-               {'Sequence': '', 'SequenceID': '',
-                'QualID': '', 'Qual': ''}]
         exp = [{'Qual': array([2, 27, 27, 27]),
                 'QualID': 'CRESSIA_242:1:2204:1453:1918#0/1',
                 'Sequence': 'TTAA',
