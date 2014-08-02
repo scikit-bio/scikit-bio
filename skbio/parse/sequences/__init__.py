@@ -31,6 +31,7 @@ Classes
    SequenceIterator
    FastaIterator
    FastqIterator
+   QseqIterator
 
 Functions
 ^^^^^^^^^
@@ -165,6 +166,7 @@ Functions
     parse_fasta
     parse_fastq
     parse_qual
+    parse_qseq
 """
 
 # ----------------------------------------------------------------------------
@@ -178,11 +180,13 @@ Functions
 from .clustal import parse_clustal
 from .fasta import parse_fasta, parse_qual
 from .fastq import parse_fastq
+from .qseq import parse_qseq
 from .iterator import FastaIterator, FastqIterator, SequenceIterator
 from .factory import load
 
 __all__ = ['parse_clustal', 'parse_fasta', 'parse_fastq', 'parse_qual',
-           'FastqIterator', 'FastaIterator', 'SequenceIterator', 'load']
+           'parse_qseq', 'FastqIterator', 'FastaIterator', 'SequenceIterator',
+           'load']
 
 from numpy.testing import Tester
 test = Tester().test

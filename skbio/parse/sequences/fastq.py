@@ -31,7 +31,7 @@ def _ascii_to_phred33(s):
     return _ascii_to_phred(s, 33)
 
 
-def _ascii_to_phred64(s):
+def ascii_to_phred64(s):
     """Convert ascii string to Phred quality score with ASCII offset of 64.
 
     Illumina-specific ASCII offset of 64. This is used by Illumina in CASAVA
@@ -112,7 +112,7 @@ def parse_fastq(data, strict=False, enforce_qual_range=True, phred_offset=33):
     if phred_offset == 33:
         phred_f = _ascii_to_phred33
     elif phred_offset == 64:
-        phred_f = _ascii_to_phred64
+        phred_f = ascii_to_phred64
     else:
         raise ValueError("Unknown PHRED offset of %s" % phred_offset)
 
