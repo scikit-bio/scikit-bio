@@ -86,7 +86,11 @@ def parse_qseq(infile, strict=True):
 
     with open_file(infile) as lines:
         for rec in lines:
-            rec = rec.decode('utf-8').strip('\n').split('\t')
+            try:
+                rec = str(rec.decode('utf-8'))
+            except AttributeError:
+                pass
+            rec = rec.strip('\n').split('\t')
             # record must have at least ten items
             if len(rec) < 11:
                 if strict:
