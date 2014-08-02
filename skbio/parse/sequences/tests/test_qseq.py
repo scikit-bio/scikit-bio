@@ -19,17 +19,17 @@ from skbio.core.exception import RecordError
 
 
 QSEQ_PARSERS_DATA = {
-    'one_seq': 'CRESSIA\t242\t1\t2204\t1491\t1930\t0\t1\t' \
-               '.TTGATAAGAATGTCTGTTGTGGCTTAAAA\t' \
+    'one_seq': 'CRESSIA\t242\t1\t2204\t1491\t1930\t0\t1\t'
+               '.TTGATAAGAATGTCTGTTGTGGCTTAAAA\t'
                'B[[[W][Y[Zcdccccccc\cccac_____\t1',
-    'two_seq': 'CRESSIA\t242\t1\t2204\t1453\t1918\t0\t1\t' \
-               '.TTAATAAGAATGTCTGTTGTGGCTTAAAA\t' \
-               'B[[[W][Y[Zccccccccc\cccac_____\t1\n' \
-               'CRESSIA\t242\t1\t2204\t1490\t1921\t0\t2\t' \
-               '..GTAAAACCCATATATTGAAAACTACAAA\t' \
+    'two_seq': 'CRESSIA\t242\t1\t2204\t1453\t1918\t0\t1\t'
+               '.TTAATAAGAATGTCTGTTGTGGCTTAAAA\t'
+               'B[[[W][Y[Zccccccccc\cccac_____\t1\n'
+               'CRESSIA\t242\t1\t2204\t1490\t1921\t0\t2\t'
+               '..GTAAAACCCATATATTGAAAACTACAAA\t'
                'BWUTWcXVXXcccc_cccccccccc_cccc\t1',
-    'missing_items': 'CRESSIA\t242\t1\t1491\t0\t1\t' \
-                     '.TTGATAAGAATGTCTGTTGTGGCTTAAAA\t' \
+    'missing_items': 'CRESSIA\t242\t1\t1491\t0\t1\t'
+                     '.TTGATAAGAATGTCTGTTGTGGCTTAAAA\t'
                      'B[[[W][Y[Zcdccccccc\cccac_____\t1',
     }
 
@@ -73,8 +73,8 @@ class ParseQseqTests(object):
         self.assertEqual(a[0], 'CRESSIA_242:1:2204:1491:1930#0/1')
         self.assertEqual(a[1], '.TTGATAAGAATGTCTGTTGTGGCTTAAAA')
         npt.assert_equal(a[2], [2, 27, 27, 27, 23, 29, 27, 25, 27, 26, 35, 36,
-            35, 35, 35, 35, 35, 35, 35, 28, 35, 35, 35, 33, 35, 31, 31, 31, 31,
-            31])
+                                35, 35, 35, 35, 35, 35, 35, 28, 35, 35, 35, 33,
+                                35, 31, 31, 31, 31, 31])
         record = a[3]
         self.assertEqual(record.machine_name, 'CRESSIA')
         self.assertEqual(record.run, 242)
@@ -96,8 +96,8 @@ class ParseQseqTests(object):
         self.assertEqual(a[0], 'CRESSIA_242:1:2204:1453:1918#0/1')
         self.assertEqual(a[1], '.TTAATAAGAATGTCTGTTGTGGCTTAAAA')
         npt.assert_equal(a[2], [2, 27, 27, 27, 23, 29, 27, 25, 27, 26, 35, 35,
-            35, 35, 35, 35, 35, 35, 35, 28, 35, 35, 35, 33, 35, 31, 31, 31, 31,
-            31])
+                                35, 35, 35, 35, 35, 35, 35, 28, 35, 35, 35, 33,
+                                35, 31, 31, 31, 31, 31])
         record = a[3]
         self.assertEqual(record.machine_name, 'CRESSIA')
         self.assertEqual(record.run, 242)
@@ -112,8 +112,8 @@ class ParseQseqTests(object):
         self.assertEqual(b[0], 'CRESSIA_242:1:2204:1490:1921#0/2')
         self.assertEqual(b[1], '..GTAAAACCCATATATTGAAAACTACAAA')
         npt.assert_equal(b[2], [2, 23, 21, 20, 23, 35, 24, 22, 24, 24, 35, 35,
-            35, 35, 31, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 31, 35, 35, 35,
-            35])
+                                35, 35, 31, 35, 35, 35, 35, 35, 35, 35, 35, 35,
+                                35, 31, 35, 35, 35, 35])
         record = b[3]
         self.assertEqual(record.machine_name, 'CRESSIA')
         self.assertEqual(record.run, 242)

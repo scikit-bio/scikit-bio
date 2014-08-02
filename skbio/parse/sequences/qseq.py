@@ -72,7 +72,8 @@ def parse_qseq(infile, strict=True):
     1
     """
     # namedtuple to store all other record information
-    Record = collections.namedtuple('Record',
+    Record = collections.namedtuple(
+        'Record',
         ['machine_name',
          'run',
          'lane',
