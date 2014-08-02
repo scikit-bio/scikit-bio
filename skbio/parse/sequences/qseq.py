@@ -25,7 +25,7 @@ def parse_qseq(infile, strict=True):
         An open qseq file.
 
     strict : bool
-        If ``True`` a ``RecordError`` will be raised if there is record
+        If ``True`` a ``RecordError`` will be raised if there is a record
         without enough items.  If ``False``, partial records will be skipped.
 
     Returns
@@ -83,7 +83,7 @@ def parse_qseq(infile, strict=True):
 
     with open_file(infile) as lines:
         for rec in lines:
-            rec = rec.split('\t')
+            rec = rec.strip('\n').split('\t')
             # record must have at least ten items
             if len(rec) < 11:
                 if strict:

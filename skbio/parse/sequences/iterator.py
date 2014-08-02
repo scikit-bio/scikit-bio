@@ -212,7 +212,7 @@ class QseqIterator(SequenceIterator):
     def _gen(self):
         """Construct internal iterators"""
         # construct qseq generators
-        qseq_gens = chain(*[qseq_fasta(f) for f in self.seq])
+        qseq_gens = chain(*[parse_qseq(f) for f in self.seq])
 
         gen = self._qseq_gen(qseq_gens)
 
@@ -221,9 +221,11 @@ class QseqIterator(SequenceIterator):
     def _qseq_gen(self, qseq_gens):
         """Yield qseq data"""
         _iter = qseq_gens
-        for (seq_id, seq) in _iter:
+        for (seq_id, seq, qual, record) in _iter:
             self.state['SequenceID'] = seq_id
             self.state['Sequence'] = seq
+            self.state['QualID'] = seq_id
+            self.state['Qual'] = qual
 
             # as we're updating state in place and effectively circumventing
             # Workflow.initialize_state, we do not need to yield anything
