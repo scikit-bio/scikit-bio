@@ -21,8 +21,8 @@ def parse_qseq(infile, strict=True):
 
     Parameters
     ----------
-    infile : open file object
-        An open qseq file.
+    infile : open file object or str
+        An open qseq file or a path to a qseq file.
 
     strict : bool
         If ``True`` a ``RecordError`` will be raised if there is a record
