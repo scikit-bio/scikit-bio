@@ -292,16 +292,16 @@ class QseqTests(TestCase):
                 'QualID': 'CRESSIA_242:1:2204:1491:1920#0/1',
                 'Qual': array([2, 2, 2, 2])}
         exp3 = {'SequenceID': 'CRESSIA_242:1:2204:1454:1919#0/1',
-                'Sequence': 'TTAB', 
+                'Sequence': 'TTAB',
                 'QualID': 'CRESSIA_242:1:2204:1454:1919#0/1',
                 'Qual': array([2, 27, 27, 1])}
-       
+
         obs1 = next(gen)
         self.assertTrue((obs1['Qual'] == exp1['Qual']).all())
         obs1.pop('Qual')
         exp1.pop('Qual')
         self.assertEqual(obs1, exp1)
-        
+
         obs2 = next(gen)
         self.assertTrue((obs2['Qual'] == exp2['Qual']).all())
         obs2.pop('Qual')

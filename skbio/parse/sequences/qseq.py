@@ -15,6 +15,7 @@ from skbio.util.io import open_file
 
 from .fastq import ascii_to_phred64
 
+
 def parse_qseq(infile, strict=True):
     r"""Generator of sequence ids, sequences, quals and other records
     from a qseq file.
@@ -47,7 +48,8 @@ def parse_qseq(infile, strict=True):
     >>> qseq_f = StringIO('CRESSIA\t242\t1\t2204\t1453\t1918\t0\t1\t'
     ...   '.TTAATAAGAATGTCTGTTGTGGCTTAAAA\tB[[[W][Y[Zccccccccc\cccac_____\t1\n'
     ...                   'CRESSIA\t242\t1\t2204\t1490\t1921\t0\t2\t'
-    ...   '..GTAAAACCCATATATTGAAAACTACAAA\tBWUTWcXVXXcccc_cccccccccc_cccc\t1\n')
+    ...   '..GTAAAACCCATATATTGAAAACTACAAA\tBWUTWcXVXXcccc_cccccccccc_cccc\t1\n'
+    ... )
 
     We can parse this as follows:
 

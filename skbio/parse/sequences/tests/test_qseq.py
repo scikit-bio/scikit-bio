@@ -72,7 +72,7 @@ class ParseQseqTests(object):
         # First record.
         self.assertEqual(a[0], 'CRESSIA_242:1:2204:1491:1930#0/1')
         self.assertEqual(a[1], '.TTGATAAGAATGTCTGTTGTGGCTTAAAA')
-        npt.assert_equal(a[2], [ 2, 27, 27, 27, 23, 29, 27, 25, 27, 26, 35, 36,
+        npt.assert_equal(a[2], [2, 27, 27, 27, 23, 29, 27, 25, 27, 26, 35, 36,
             35, 35, 35, 35, 35, 35, 35, 28, 35, 35, 35, 33, 35, 31, 31, 31, 31,
             31])
         record = a[3]
@@ -95,7 +95,7 @@ class ParseQseqTests(object):
         # First record.
         self.assertEqual(a[0], 'CRESSIA_242:1:2204:1453:1918#0/1')
         self.assertEqual(a[1], '.TTAATAAGAATGTCTGTTGTGGCTTAAAA')
-        npt.assert_equal(a[2], [ 2, 27, 27, 27, 23, 29, 27, 25, 27, 26, 35, 35,
+        npt.assert_equal(a[2], [2, 27, 27, 27, 23, 29, 27, 25, 27, 26, 35, 35,
             35, 35, 35, 35, 35, 35, 35, 28, 35, 35, 35, 33, 35, 31, 31, 31, 31,
             31])
         record = a[3]
@@ -111,7 +111,7 @@ class ParseQseqTests(object):
         # Second record.
         self.assertEqual(b[0], 'CRESSIA_242:1:2204:1490:1921#0/2')
         self.assertEqual(b[1], '..GTAAAACCCATATATTGAAAACTACAAA')
-        npt.assert_equal(b[2], [ 2, 23, 21, 20, 23, 35, 24, 22, 24, 24, 35, 35,
+        npt.assert_equal(b[2], [2, 23, 21, 20, 23, 35, 24, 22, 24, 24, 35, 35,
             35, 35, 31, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 31, 35, 35, 35,
             35])
         record = b[3]
@@ -129,6 +129,7 @@ class ParseQseqTests(object):
         """parse_qseq should raise RecordError.
         """
         self.assertRaises(RecordError, list, parse_qseq(self.missing_items))
+
 
 class ParseQseqTestsInputIsIterable(IterableData, ParseQseqTests, TestCase):
     """Mixin: `parse_qseq` in ParseQseqTests gets lists
