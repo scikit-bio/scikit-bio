@@ -27,7 +27,7 @@ QSEQ_PARSERS_DATA = {
                'B[[[W][Y[Zccccccccc\cccac_____\t1\n'
                'CRESSIA\t242\t1\t2204\t1490\t1921\t0\t2\t'
                '..GTAAAACCCATATATTGAAAACTACAAA\t'
-               'BWUTWcXVXXcccc_cccccccccc_cccc\t1',
+               'BWUTWcXVXXcccc_cccccccccc_cccc\t0',
     'missing_items': 'CRESSIA\t242\t1\t1491\t0\t1\t'
                      '.TTGATAAGAATGTCTGTTGTGGCTTAAAA\t'
                      'B[[[W][Y[Zcdccccccc\cccac_____\t1',
@@ -84,7 +84,7 @@ class ParseQseqTests(object):
         self.assertEqual(record.y, 1930)
         self.assertEqual(record.index, 0)
         self.assertEqual(record.read, 1)
-        self.assertEqual(record.filter_, 1)
+        self.assertTrue(record.filtered)
 
     def test_two_seq(self):
         """parse_qseq should return two records as tuple.
@@ -107,7 +107,7 @@ class ParseQseqTests(object):
         self.assertEqual(record.y, 1918)
         self.assertEqual(record.index, 0)
         self.assertEqual(record.read, 1)
-        self.assertEqual(record.filter_, 1)
+        self.assertTrue(record.filtered)
         # Second record.
         self.assertEqual(b[0], 'CRESSIA_242:1:2204:1490:1921#0/2')
         self.assertEqual(b[1], '..GTAAAACCCATATATTGAAAACTACAAA')
@@ -123,7 +123,7 @@ class ParseQseqTests(object):
         self.assertEqual(record.y, 1921)
         self.assertEqual(record.index, 0)
         self.assertEqual(record.read, 2)
-        self.assertEqual(record.filter_, 1)
+        self.assertFalse(record.filtered)
 
     def test_missing_items(self):
         """parse_qseq should raise RecordError.

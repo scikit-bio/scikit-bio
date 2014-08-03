@@ -33,7 +33,10 @@ def parse_qseq(infile, strict=True):
     -------
     four-item tuple: (str, str, np.array(dtype=int), namedtuple)
         yields the sequence id, sequence, qual array and other record
-        information for each entry.
+        information for each entry.  The sequence ID format is:
+        <Machine name>_<Run number>:<Lane number>:<Tile number>:<x>:<y>#
+        <Index>/<Read number>.  The namedtuple attributes are:
+        machine_name, run, lane, tile, x, y, index, read and filtered.
 
     Examples
     --------
@@ -82,7 +85,7 @@ def parse_qseq(infile, strict=True):
          'y',
          'index',
          'read',
-         'filter_'])
+         'filtered'])
 
     with open_file(infile) as lines:
         for rec in lines:
@@ -115,6 +118,6 @@ def parse_qseq(infile, strict=True):
                 y=int(rec[5]),
                 index=int(rec[6]),
                 read=int(rec[7]),
-                filter_=int(rec[10]))
+                filtered=bool(int(rec[10])))
 
             yield seq_id, seq, qual, record
