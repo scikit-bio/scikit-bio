@@ -21,14 +21,13 @@ API Reference
    core.workflow
    draw.distributions
    format.sequences
-   math.diversity.alpha
-   math.diversity.beta
-   math.stats.distance
-   math.stats.misc
-   math.stats.ordination
-   math.stats.spatial
-   math.gradient
-   math.subsample
+   diversity.alpha
+   diversity.beta
+   stats
+   stats.distance
+   stats.ordination
+   stats.spatial
+   stats.gradient
    parse.sequences
    util.io
    util.misc
