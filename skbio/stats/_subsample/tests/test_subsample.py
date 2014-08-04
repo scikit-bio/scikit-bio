@@ -21,10 +21,12 @@ import warnings
 import numpy as np
 
 
-cy_subsample = import_fresh_module('skbio.math.subsample',
-                                   fresh=['skbio.math._subsample'])
-py_subsample = import_fresh_module('skbio.math.subsample',
-                                   blocked=['skbio.math._subsample'])
+cy_subsample = import_fresh_module('skbio.stats._subsample.subsample',
+                                   fresh=['skbio.stats._subsample._subsample'])
+py_subsample = import_fresh_module('skbio.stats._subsample.subsample',
+                                   blocked=[
+                                       'skbio.stats._subsample._subsample'
+                                   ])
 
 
 def setup():
