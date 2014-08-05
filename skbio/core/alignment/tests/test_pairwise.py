@@ -262,6 +262,24 @@ class PairwiseAlignmentTests(TestCase):
         self.assertEqual(actual.start_end_positions(), [(0, 16), (0, 14)])
         self.assertEqual(actual.ids(), ["s1", "s2"])
 
+        # Align one DNA sequence and one Alignment, score computed manually
+        expected = ("-GACCTTGACCAGGTACC", "-GACCATGACCAGGTACC",
+                    "GAACTTTGAC---GTAAC", 27.5, 0, 0)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            actual = global_pairwise_align_nucleotide(
+                Alignment([DNA("GACCTTGACCAGGTACC", "s1"),
+                           DNA("GACCATGACCAGGTACC", "s2")]),
+                DNA("GAACTTTGACGTAAC", "s3"),
+                gap_open_penalty=10., gap_extend_penalty=0.5, match_score=5,
+                mismatch_score=-4)
+        self.assertEqual(str(actual[0]), expected[0])
+        self.assertEqual(str(actual[1]), expected[1])
+        self.assertEqual(str(actual[2]), expected[2])
+        self.assertEqual(actual.score(), expected[3])
+        self.assertEqual(actual.start_end_positions(), [(0, 16), (0, 14)])
+        self.assertEqual(actual.ids(), ["s1", "s2", "s3"])
+
         # ids are provided if they're not passed in
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
