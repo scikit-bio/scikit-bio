@@ -596,7 +596,7 @@ def _make_nt_substitution_matrix(match_score, mismatch_score, alphabet='ACGT'):
 
 
 def _init_matrices_sw(seq1, seq2, gap_open_penalty, gap_extend_penalty):
-    shape = (len(seq2)+1, len(seq1)+1)
+    shape = (seq2.sequence_length()+1, seq1.sequence_length()+1)
     score_matrix = np.zeros(shape)
     traceback_matrix = np.zeros(shape, dtype=np.int)
     traceback_matrix += _traceback_encoding['uninitialized']
@@ -606,7 +606,7 @@ def _init_matrices_sw(seq1, seq2, gap_open_penalty, gap_extend_penalty):
 
 
 def _init_matrices_nw(seq1, seq2, gap_open_penalty, gap_extend_penalty):
-    shape = (len(seq2)+1, len(seq1)+1)
+    shape = (seq2.sequence_length()+1, seq1.sequence_length()+1)
     score_matrix = np.zeros(shape)
     traceback_matrix = np.zeros(shape, dtype=np.int)
     traceback_matrix += _traceback_encoding['uninitialized']
@@ -629,7 +629,7 @@ def _init_matrices_nw(seq1, seq2, gap_open_penalty, gap_extend_penalty):
 
 def _init_matrices_nw_no_terminal_gap_penalty(
         seq1, seq2, gap_open_penalty, gap_extend_penalty):
-    shape = (len(seq2)+1, len(seq1)+1)
+    shape = (seq2.sequence_length()+1, seq1.sequence_length()+1)
     score_matrix = np.zeros(shape)
     traceback_matrix = np.zeros(shape, dtype=np.int)
     traceback_matrix += _traceback_encoding['uninitialized']
@@ -667,8 +667,8 @@ def _compute_score_and_traceback_matrices(
     that users are most likely to be looking for.
 
     """
-    seq1_length = len(seq1)
-    seq2_length = len(seq2)
+    seq1_length = seq1.sequence_length()
+    seq2_length = seq2.sequence_length()
     # cache some values for quicker/simpler access
     aend = _traceback_encoding['alignment-end']
     match = _traceback_encoding['match']
@@ -684,26 +684,37 @@ def _compute_score_and_traceback_matrices(
 
     # Iterate over the characters in seq2 (which corresponds to the horizontal
     # sequence in the matrix)
-    for seq2_pos, seq2_char in zip(range(1, seq2_length+1), seq2):
+    for seq2_pos, seq2_chars in zip(range(1, seq2_length+1),
+                                   seq2.iter_positions(str)):
         # Iterate over the characters in seq1 (which corresponds to the
         # horizontal sequence in the matrix)
-        for seq1_pos, seq1_char in zip(range(1, seq1_length+1), seq1):
-            try:
-                substitution_score = substitution_matrix[seq1_char][seq2_char]
-            except KeyError:
-                offending_chars = \
-                    [c for c in (seq1_char, seq2_char)
-                     if c not in substitution_matrix]
-                raise ValueError(
-                    "One of the sequences contains a character that is not "
-                    "contained in the substitution matrix. Are you using "
-                    "an appropriate substitution matrix for your sequence "
-                    "type (e.g., a nucleotide substitution matrix does not "
-                    "make sense for aligning protein sequences)? Does your "
-                    "sequence contain invalid characters? The offending "
-                    "character(s) is: %s." % ', '.join(offending_chars))
-
+        for seq1_pos, seq1_chars in zip(range(1, seq1_length+1),
+                                       seq1.iter_positions(str)):
             # compute the score for a match/mismatch
+            substitution_score = 0
+            for seq2_char in seq2_chars:
+                for seq1_char in seq1_chars:
+                    if BiologicalSequence.is_gap(seq2_char) or\
+                       BiologicalSequence.is_gap(seq1_char):
+                           substitution_score += gap_substitution
+                    else:
+                        try:
+                            substitution_score += \
+                                substitution_matrix[seq1_char][seq2_char]
+                        except KeyError:
+                            offending_chars = \
+                                [c for c in (seq1_char, seq2_char)
+                                 if c not in substitution_matrix]
+                            raise ValueError(
+                                "One of the sequences contains a character that is not "
+                                "contained in the substitution matrix. Are you using "
+                                "an appropriate substitution matrix for your sequence "
+                                "type (e.g., a nucleotide substitution matrix does not "
+                                "make sense for aligning protein sequences)? Does your "
+                                "sequence contain invalid characters? The offending "
+                                "character(s) is: %s." % ', '.join(offending_chars))
+            substitution_score /= (seq2.sequence_count() * seq1.sequence_count())
+
             diag_score = \
                 (score_matrix[seq2_pos-1, seq1_pos-1] + substitution_score,
                  match)
