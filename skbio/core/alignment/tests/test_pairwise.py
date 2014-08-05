@@ -18,7 +18,7 @@ from skbio.core.alignment.pairwise import (
     global_pairwise_align_nucleotide, local_pairwise_align_nucleotide,
     _make_nt_substitution_matrix, _init_matrices_sw, _init_matrices_nw,
     _compute_score_and_traceback_matrices, _traceback, _first_largest,
-    _get_seq_id, _get_seq_ids, _compute_substitution_score)
+    _get_seq_id, _compute_substitution_score)
 from skbio import Protein, DNA, Alignment, BiologicalSequence
 
 
@@ -219,13 +219,13 @@ class PairwiseAlignmentTests(TestCase):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             self.assertRaises(TypeError, local_pairwise_align_protein,
-                Alignment([Protein("HEAGAWGHEE", "s1")]),
-                Protein("PAWHEAE", "s2"), gap_open_penalty=10.,
-                gap_extend_penalty=5.)
+                              Alignment([Protein("HEAGAWGHEE", "s1")]),
+                              Protein("PAWHEAE", "s2"), gap_open_penalty=10.,
+                              gap_extend_penalty=5.)
             self.assertRaises(TypeError, local_pairwise_align_protein,
-                Protein("HEAGAWGHEE", "s1"),
-                Alignment([Protein("PAWHEAE", "s2")]),
-                gap_open_penalty=10., gap_extend_penalty=5.)
+                              Protein("HEAGAWGHEE", "s1"),
+                              Alignment([Protein("PAWHEAE", "s2")]),
+                              gap_open_penalty=10., gap_extend_penalty=5.)
 
         # ids are provided if they're not passed in
         with warnings.catch_warnings():
@@ -344,15 +344,15 @@ class PairwiseAlignmentTests(TestCase):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             self.assertRaises(TypeError, local_pairwise_align_nucleotide,
-                Alignment([DNA("GACCTTGACCAGGTACC", "s1")]),
-                DNA("GAACTTTGACGTAAC", "s2"),
-                gap_open_penalty=10., gap_extend_penalty=5., match_score=5,
-                mismatch_score=-4)
+                              Alignment([DNA("GACCTTGACCAGGTACC", "s1")]),
+                              DNA("GAACTTTGACGTAAC", "s2"),
+                              gap_open_penalty=10., gap_extend_penalty=5.,
+                              match_score=5, mismatch_score=-4)
             self.assertRaises(TypeError, local_pairwise_align_nucleotide,
-                DNA("GACCTTGACCAGGTACC", "s1"),
-                Alignment([DNA("GAACTTTGACGTAAC", "s2")]),
-                gap_open_penalty=10., gap_extend_penalty=5., match_score=5,
-                mismatch_score=-4)
+                              DNA("GACCTTGACCAGGTACC", "s1"),
+                              Alignment([DNA("GAACTTTGACGTAAC", "s2")]),
+                              gap_open_penalty=10., gap_extend_penalty=5.,
+                              match_score=5, mismatch_score=-4)
 
         # ids are provided if they're not passed in
         with warnings.catch_warnings():
@@ -435,16 +435,19 @@ class PairwiseAlignmentTests(TestCase):
         self.assertEqual(
             _compute_substitution_score(['A', 'C'], ['A'], subs_m, 0), 0.5)
         self.assertEqual(
-            _compute_substitution_score(['A', 'C'], ['A', 'C'], subs_m, 0), 0.5)
+            _compute_substitution_score(['A', 'C'], ['A', 'C'], subs_m, 0),
+            0.5)
         self.assertEqual(
-            _compute_substitution_score(['A', 'A'], ['A', '-'], subs_m, 0), 2.5)
+            _compute_substitution_score(['A', 'A'], ['A', '-'], subs_m, 0),
+            2.5)
         self.assertEqual(
             _compute_substitution_score(['A', 'A'], ['A', '-'], subs_m, 1), 3)
 
         # alt subs_m
         subs_m = _make_nt_substitution_matrix(1, -2)
         self.assertEqual(
-            _compute_substitution_score(['A', 'A'], ['A', '-'], subs_m, 0), 0.5)
+            _compute_substitution_score(['A', 'A'], ['A', '-'], subs_m, 0),
+            0.5)
 
     def test_compute_score_and_traceback_matrices(self):
         # these results were computed manually
@@ -528,7 +531,7 @@ class PairwiseAlignmentTests(TestCase):
         expected = ([BiologicalSequence("ACG-")],
                     [BiologicalSequence("ACGT")], 1, 0, 0)
         actual = _traceback(tback_m, score_m, Alignment([DNA('ACG')]),
-            Alignment([DNA('ACGT')]), 4, 3)
+                            Alignment([DNA('ACGT')]), 4, 3)
         self.assertEqual(actual, expected)
 
         # four sequences in two alignments
@@ -549,15 +552,16 @@ class PairwiseAlignmentTests(TestCase):
                     [BiologicalSequence("ACGT"), BiologicalSequence("ACGT")],
                     1, 0, 0)
         actual = _traceback(tback_m, score_m,
-            Alignment([DNA('ACG', 's1'), DNA('ACG', 's2')]),
-            Alignment([DNA('ACGT', 's3'), DNA('ACGT', 's4')]), 4, 3)
+                            Alignment([DNA('ACG', 's1'), DNA('ACG', 's2')]),
+                            Alignment([DNA('ACGT', 's3'), DNA('ACGT', 's4')]),
+                            4, 3)
         self.assertEqual(actual, expected)
 
         # start at highest-score
         expected = ([BiologicalSequence("ACG")],
                     [BiologicalSequence("ACG")], 6, 0, 0)
         actual = _traceback(tback_m, score_m, Alignment([DNA('ACG')]),
-            Alignment([DNA('ACGT')]), 3, 3)
+                            Alignment([DNA('ACGT')]), 3, 3)
         self.assertEqual(actual, expected)
 
         # terminate traceback before top-right
@@ -571,19 +575,13 @@ class PairwiseAlignmentTests(TestCase):
         expected = ([BiologicalSequence("G")],
                     [BiologicalSequence("G")], 6, 2, 2)
         actual = _traceback(tback_m, score_m, Alignment([DNA('ACG')]),
-            Alignment([DNA('ACGT')]), 3, 3)
+                            Alignment([DNA('ACGT')]), 3, 3)
         self.assertEqual(actual, expected)
 
     def test_get_seq_id(self):
         self.assertEqual(_get_seq_id("AAA", "hello"), "hello")
         self.assertEqual(_get_seq_id(DNA("AAA"), "hello"), "hello")
         self.assertEqual(_get_seq_id(DNA("AAA", "s1"), "hello"), "s1")
-
-    def test_get_seq_ids(self):
-        self.assertEqual(_get_seq_ids("AAA", "CCC"), ("0", "1"))
-        self.assertEqual(_get_seq_ids(DNA("AAA"), DNA("CCC")), ("0", "1"))
-        self.assertEqual(_get_seq_ids(DNA("AAA", "s1"), DNA("CCC", "s2")),
-                         ("s1", "s2"))
 
     def test_first_largest(self):
         l = [(5, 'a'), (5, 'b'), (5, 'c')]
