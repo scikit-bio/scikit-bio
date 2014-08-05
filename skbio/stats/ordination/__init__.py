@@ -20,6 +20,19 @@ Classes
    CCA
    OrdinationResults
 
+
+Functions
+---------
+
+.. autosumary::
+   :toctree: generated/
+
+   mean_and_std
+   corr
+   scale
+   svd_rank
+   
+
 Examples
 --------
 
@@ -92,8 +105,10 @@ from .redundancy_analysis import RDA
 from .canonical_correspondence_analysis import CCA
 from .principal_coordinate_analysis import PCoA
 from .base import OrdinationResults
+from ._utils import mean_and_std, scale, svd_rank, corr
 
-__all__ = ['CA', 'RDA', 'CCA', 'PCoA', 'OrdinationResults']
+__all__ = ['CA', 'RDA', 'CCA', 'PCoA', 'OrdinationResults', 'mean_and_std',
+           'scale', 'svd_rank', 'corr']
 
 from numpy.testing import Tester
 test = Tester().test

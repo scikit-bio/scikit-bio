@@ -11,7 +11,7 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 
 from .base import Ordination, OrdinationResults
-from .utils import svd_rank
+from ._utils import svd_rank
 
 
 class CA(Ordination):

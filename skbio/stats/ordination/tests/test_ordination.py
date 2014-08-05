@@ -20,8 +20,8 @@ import numpy.testing as npt
 from scipy.spatial.distance import pdist
 
 from skbio import DistanceMatrix
-from skbio.stats.ordination import CA, RDA, CCA, PCoA, OrdinationResults
-from skbio.stats.ordination.utils import corr, mean_and_std
+from skbio.stats.ordination import (CA, RDA, CCA, PCoA, OrdinationResults,
+                                    corr, mean_and_std)
 from skbio.util.testing import get_data_path
 from skbio.core.exception import FileFormatError
 
