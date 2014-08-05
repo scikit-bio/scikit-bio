@@ -43,8 +43,8 @@ with open('README.rst') as f:
 # Dealing with Cython
 USE_CYTHON = os.environ.get('USE_CYTHON', False)
 ext = '.pyx' if USE_CYTHON else '.c'
-extensions = [Extension("skbio.math._subsample",
-                        ["skbio/math/_subsample" + ext]),
+extensions = [Extension("skbio.stats._subsample._subsample",
+                        ["skbio/stats/_subsample/_subsample" + ext]),
               Extension("skbio.core.alignment.ssw.ssw_wrapper",
                         ["skbio/core/alignment/ssw/ssw_wrapper" + ext,
                          "skbio/core/alignment/ssw/ssw.c"])]
@@ -74,9 +74,9 @@ setup(name='scikit-bio',
       classifiers=classifiers,
       package_data={
           'skbio.core.tests': ['data/*.txt'],
-          'skbio.math.tests': ['data/*'],
-          'skbio.math.stats.distance.tests': ['data/*'],
-          'skbio.math.stats.ordination.tests': ['data/*'],
+          'skbio.stats.tests': ['data/*'],
+          'skbio.stats.distance.tests': ['data/*'],
+          'skbio.stats.ordination.tests': ['data/*'],
           'skbio.parse.sequences.tests': ['data/*'],
           }
       )
