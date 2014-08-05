@@ -844,11 +844,11 @@ def _traceback(traceback_matrix, score_matrix, aln1, aln2, start_row,
     for i in range(aln1_sequence_count):
         aligned_seqs1[i] = BiologicalSequence(
             ''.join(map(str, aligned_seqs1[i][::-1])),
-            id=_get_seq_id(aln1[0], str(i)))
+            id=_get_seq_id(aln1[i], str(i)))
     for i in range(aln2_sequence_count):
         aligned_seqs2[i] = BiologicalSequence(
             ''.join(map(str, aligned_seqs2[i][::-1])),
-            id=_get_seq_id(aln2[0], str(aln1_sequence_count + i)))
+            id=_get_seq_id(aln2[i], str(aln1_sequence_count + i)))
 
     return (aligned_seqs1, aligned_seqs2, best_score,
             current_col, current_row)

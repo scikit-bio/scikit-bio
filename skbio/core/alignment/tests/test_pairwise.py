@@ -90,6 +90,37 @@ class PairwiseAlignmentTests(TestCase):
         self.assertEqual(actual.start_end_positions(), [(0, 9), (0, 6)])
         self.assertEqual(actual.ids(), ["s1", "s2"])
 
+        # One Alignment and one Protein as input
+        expected = ("HEAGAWGHEE-", "---PAW-HEAE", 23.0)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            actual = global_pairwise_align_protein(
+                Alignment([Protein("HEAGAWGHEE", "s1")]),
+                Protein("PAWHEAE", "s2"),
+                gap_open_penalty=10., gap_extend_penalty=5.)
+        self.assertEqual(str(actual[0]), expected[0])
+        self.assertEqual(str(actual[1]), expected[1])
+        self.assertEqual(actual.score(), expected[2])
+        self.assertEqual(actual.start_end_positions(), [(0, 9), (0, 6)])
+        self.assertEqual(actual.ids(), ["s1", "s2"])
+
+        # One single-sequence alignment as input and one double-sequence
+        # alignment as input. Score confirmed manually.
+        expected = ("HEAGAWGHEE-", "HDAGAWGHDE-", "---PAW-HEAE", 21.0)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            actual = global_pairwise_align_protein(
+                Alignment([Protein("HEAGAWGHEE", "s1"),
+                           Protein("HDAGAWGHDE", "s2")]),
+                Alignment([Protein("PAWHEAE", "s3")]),
+                gap_open_penalty=10., gap_extend_penalty=5.)
+        self.assertEqual(str(actual[0]), expected[0])
+        self.assertEqual(str(actual[1]), expected[1])
+        self.assertEqual(str(actual[2]), expected[2])
+        self.assertEqual(actual.score(), expected[3])
+        self.assertEqual(actual.start_end_positions(), [(0, 9), (0, 6)])
+        self.assertEqual(actual.ids(), ["s1", "s2", "s3"])
+
         # ids are provided if they're not passed in
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
