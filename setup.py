@@ -46,8 +46,8 @@ ext = '.pyx' if USE_CYTHON else '.c'
 extensions = [Extension("skbio.stats._subsample._subsample",
                         ["skbio/stats/_subsample/_subsample" + ext]),
               Extension("skbio.alignment.ssw.ssw_wrapper",
-                        ["skbio.alignment/ssw/ssw_wrapper" + ext,
-                         "skbio.alignment/ssw/ssw.c"])]
+                        ["skbio/alignment/ssw/ssw_wrapper" + ext,
+                         "skbio/alignment/ssw/ssw.c"])]
 
 if USE_CYTHON:
     from Cython.Build import cythonize
