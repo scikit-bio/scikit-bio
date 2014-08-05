@@ -215,6 +215,18 @@ class PairwiseAlignmentTests(TestCase):
         self.assertEqual(actual.start_end_positions(), [(4, 8), (1, 4)])
         self.assertEqual(actual.ids(), ["s1", "s2"])
 
+        # Fails when either input is passed as an Alignment
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            self.assertRaises(TypeError, local_pairwise_align_protein,
+                Alignment([Protein("HEAGAWGHEE", "s1")]),
+                Protein("PAWHEAE", "s2"), gap_open_penalty=10.,
+                gap_extend_penalty=5.)
+            self.assertRaises(TypeError, local_pairwise_align_protein,
+                Protein("HEAGAWGHEE", "s1"),
+                Alignment([Protein("PAWHEAE", "s2")]),
+                gap_open_penalty=10., gap_extend_penalty=5.)
+
         # ids are provided if they're not passed in
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
@@ -327,6 +339,20 @@ class PairwiseAlignmentTests(TestCase):
         self.assertEqual(actual.score(), expected[2])
         self.assertEqual(actual.start_end_positions(), [(1, 8), (2, 9)])
         self.assertEqual(actual.ids(), ["s1", "s2"])
+
+        # Fails when either input is passed as an Alignment
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            self.assertRaises(TypeError, local_pairwise_align_nucleotide,
+                Alignment([DNA("GACCTTGACCAGGTACC", "s1")]),
+                DNA("GAACTTTGACGTAAC", "s2"),
+                gap_open_penalty=10., gap_extend_penalty=5., match_score=5,
+                mismatch_score=-4)
+            self.assertRaises(TypeError, local_pairwise_align_nucleotide,
+                DNA("GACCTTGACCAGGTACC", "s1"),
+                Alignment([DNA("GAACTTTGACGTAAC", "s2")]),
+                gap_open_penalty=10., gap_extend_penalty=5., match_score=5,
+                mismatch_score=-4)
 
         # ids are provided if they're not passed in
         with warnings.catch_warnings():

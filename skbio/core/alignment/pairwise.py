@@ -303,6 +303,10 @@ def local_pairwise_align(seq1, seq2, gap_open_penalty,
         seq1 = Alignment([BiologicalSequence(seq1)])
     elif isinstance(seq1, BiologicalSequence):
         seq1 = Alignment([seq1])
+    elif isinstance(seq1, Alignment):
+        raise TypeError("Local alignment is not currently supported for "
+                         "aligning alignments to sequences or alignments to "
+                         "alignments.")
     else:
         pass
 
@@ -310,6 +314,10 @@ def local_pairwise_align(seq1, seq2, gap_open_penalty,
         seq2 = Alignment([BiologicalSequence(seq2)])
     elif isinstance(seq2, BiologicalSequence):
         seq2 = Alignment([seq2])
+    elif isinstance(seq2, Alignment):
+        raise TypeError("Local alignment is not currently supported for "
+                         "aligning alignments to sequences or alignments to "
+                         "alignments.")
     else:
         pass
 
