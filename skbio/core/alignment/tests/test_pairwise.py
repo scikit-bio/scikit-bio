@@ -388,6 +388,25 @@ class PairwiseAlignmentTests(TestCase):
         np.testing.assert_array_equal(actual_score_m, expected_score_m)
         np.testing.assert_array_equal(actual_tback_m, expected_tback_m)
 
+        # four sequences provided in two alignments
+        # these results were computed manually
+        expected_score_m = [[0, -5, -7, -9],
+                            [-5, 2, -3, -5],
+                            [-7, -3, 4, -1],
+                            [-9, -5, -1, 3],
+                            [-11, -7, -3, -2]]
+        expected_tback_m = [[0, 3, 3, 3],
+                            [2, 1, 3, 3],
+                            [2, 2, 1, 3],
+                            [2, 2, 2, 1],
+                            [2, 2, 2, 1]]
+        m = _make_nt_substitution_matrix(2, -1)
+        actual_score_m, actual_tback_m = _compute_score_and_traceback_matrices(
+            Alignment([DNA('ACC', 's1'), DNA('ACC', 's2')]),
+            Alignment([DNA('ACGT', 's3'), DNA('ACGT', 's4')]), 5, 2, m)
+        np.testing.assert_array_equal(actual_score_m, expected_score_m)
+        np.testing.assert_array_equal(actual_tback_m, expected_tback_m)
+
     def test_compute_score_and_traceback_matrices_invalid(self):
         # if the sequence contains a character that is not in the
         # substitution matrix, an informative error should be raised
@@ -414,6 +433,28 @@ class PairwiseAlignmentTests(TestCase):
                     [BiologicalSequence("ACGT")], 1, 0, 0)
         actual = _traceback(tback_m, score_m, Alignment([DNA('ACG')]),
             Alignment([DNA('ACGT')]), 4, 3)
+        self.assertEqual(actual, expected)
+
+        # four sequences in two alignments
+        score_m = [[0, -5, -7, -9],
+                   [-5, 2, -3, -5],
+                   [-7, -3, 4, -1],
+                   [-9, -5, -1, 6],
+                   [-11, -7, -3, 1]]
+        score_m = np.array(score_m)
+        tback_m = [[0, 3, 3, 3],
+                   [2, 1, 3, 3],
+                   [2, 2, 1, 3],
+                   [2, 2, 2, 1],
+                   [2, 2, 2, 2]]
+        tback_m = np.array(tback_m)
+        # start at bottom-right
+        expected = ([BiologicalSequence("ACG-"), BiologicalSequence("ACG-")],
+                    [BiologicalSequence("ACGT"), BiologicalSequence("ACGT")],
+                    1, 0, 0)
+        actual = _traceback(tback_m, score_m,
+            Alignment([DNA('ACG', 's1'), DNA('ACG', 's2')]),
+            Alignment([DNA('ACGT', 's3'), DNA('ACGT', 's4')]), 4, 3)
         self.assertEqual(actual, expected)
 
         # start at highest-score
