@@ -24,7 +24,7 @@ Classes
 Functions
 ---------
 
-.. autosumary::
+.. autosummary::
    :toctree: generated/
 
    mean_and_std
