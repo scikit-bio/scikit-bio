@@ -763,7 +763,7 @@ def _compute_score_and_traceback_matrices(
     return score_matrix, traceback_matrix
 
 
-def _traceback(traceback_matrix, score_matrix, seq1, seq2, start_row,
+def _traceback(traceback_matrix, score_matrix, aln1, aln2, start_row,
                start_col, gap_character='-'):
     # cache some values for simpler
     aend = _traceback_encoding['alignment-end']
@@ -771,8 +771,16 @@ def _traceback(traceback_matrix, score_matrix, seq1, seq2, start_row,
     vgap = _traceback_encoding['vertical-gap']
     hgap = _traceback_encoding['horizontal-gap']
 
-    aligned_seq1 = []
-    aligned_seq2 = []
+    # initialize the result alignments
+    aln1_sequence_count = aln1.sequence_count()
+    aligned_seqs1 = []
+    for e in range(aln1_sequence_count):
+        aligned_seqs1.append([])
+
+    aln2_sequence_count = aln2.sequence_count()
+    aligned_seqs2 = []
+    for e in range(aln2_sequence_count):
+        aligned_seqs2.append([])
 
     current_row = start_row
     current_col = start_col
@@ -784,17 +792,23 @@ def _traceback(traceback_matrix, score_matrix, seq1, seq2, start_row,
         current_value = traceback_matrix[current_row, current_col]
 
         if current_value == match:
-            aligned_seq1.append(seq1[current_col-1])
-            aligned_seq2.append(seq2[current_row-1])
+            for i in range(aln1_sequence_count):
+                aligned_seqs1[i].append(aln1[i][current_col-1])
+            for i in range(aln2_sequence_count):
+                aligned_seqs2[i].append(aln2[i][current_row-1])
             current_row -= 1
             current_col -= 1
         elif current_value == vgap:
-            aligned_seq1.append('-')
-            aligned_seq2.append(seq2[current_row-1])
+            for i in range(aln1_sequence_count):
+                aligned_seqs1[i].append('-')
+            for i in range(aln2_sequence_count):
+                aligned_seqs2[i].append(aln2[i][current_row-1])
             current_row -= 1
         elif current_value == hgap:
-            aligned_seq1.append(seq1[current_col-1])
-            aligned_seq2.append('-')
+            for i in range(aln1_sequence_count):
+                aligned_seqs1[i].append(aln1[i][current_col-1])
+            for i in range(aln2_sequence_count):
+                aligned_seqs2[i].append('-')
             current_col -= 1
         elif current_value == aend:
             continue
@@ -802,9 +816,15 @@ def _traceback(traceback_matrix, score_matrix, seq1, seq2, start_row,
             raise ValueError(
                 "Invalid value in traceback matrix: %s" % current_value)
 
-    return (''.join(map(str, aligned_seq1[::-1])),
-            ''.join(map(str, aligned_seq2[::-1])),
-            best_score, current_col, current_row)
+    for i in range(aln1_sequence_count):
+        aligned_seqs1[i] = BiologicalSequence(
+            ''.join(map(str, aligned_seqs1[i][::-1])))
+    for i in range(aln2_sequence_count):
+        aligned_seqs2[i] = BiologicalSequence(
+            ''.join(map(str, aligned_seqs2[i][::-1])))
+
+    return (Alignment(aligned_seqs1), Alignment(aligned_seqs2), best_score,
+            current_col, current_row)
 
 
 def _first_largest(scores):

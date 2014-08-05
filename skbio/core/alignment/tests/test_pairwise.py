@@ -19,7 +19,7 @@ from skbio.core.alignment.pairwise import (
     _make_nt_substitution_matrix, _init_matrices_sw, _init_matrices_nw,
     _compute_score_and_traceback_matrices, _traceback, _first_largest,
     _get_seq_id, _get_seq_ids)
-from skbio import Protein, DNA, Alignment
+from skbio import Protein, DNA, Alignment, BiologicalSequence
 
 
 class PairwiseAlignmentTests(TestCase):
@@ -408,13 +408,15 @@ class PairwiseAlignmentTests(TestCase):
                    [2, 2, 2, 2]]
         tback_m = np.array(tback_m)
         # start at bottom-right
-        expected = ("ACG-", "ACGT", 1, 0, 0)
+        expected = (Alignment([BiologicalSequence("ACG-")]),
+                    Alignment([BiologicalSequence("ACGT")]), 1, 0, 0)
         actual = _traceback(tback_m, score_m, Alignment([DNA('ACG')]),
             Alignment([DNA('ACGT')]), 4, 3)
         self.assertEqual(actual, expected)
 
         # start at highest-score
-        expected = ("ACG", "ACG", 6, 0, 0)
+        expected = (Alignment([BiologicalSequence("ACG")]),
+                    Alignment([BiologicalSequence("ACG")]), 6, 0, 0)
         actual = _traceback(tback_m, score_m, Alignment([DNA('ACG')]),
             Alignment([DNA('ACGT')]), 3, 3)
         self.assertEqual(actual, expected)
@@ -427,6 +429,8 @@ class PairwiseAlignmentTests(TestCase):
                    [2, 2, 2, 2]]
         tback_m = np.array(tback_m)
         expected = ("G", "G", 6, 2, 2)
+        expected = (Alignment([BiologicalSequence("G")]),
+                    Alignment([BiologicalSequence("G")]), 6, 2, 2)
         actual = _traceback(tback_m, score_m, Alignment([DNA('ACG')]),
             Alignment([DNA('ACGT')]), 3, 3)
         self.assertEqual(actual, expected)
