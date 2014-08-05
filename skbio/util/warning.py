@@ -1,10 +1,10 @@
 """
-Warnings (:mod:`skbio.core.warning`)
+Warnings (:mod:`skbio.util.warning`)
 ====================================
 
-.. currentmodule:: skbio.core.warning
+.. currentmodule:: skbio.util.warning
 
-This module defines custom warning classes used throughout the core scikit-bio
+This module defines custom warning classes used throughout the scikit-bio
 codebase.
 
 Warnings

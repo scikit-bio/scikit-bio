@@ -22,7 +22,7 @@ import numpy as np
 from scipy.stats import pearsonr
 
 from skbio.core.distance import DistanceMatrix
-from skbio.core.exception import (NoLengthError, DuplicateNodeError,
+from skbio.util.exception import (NoLengthError, DuplicateNodeError,
                                   NoParentError, MissingNodeError, TreeError,
                                   RecordError)
 from skbio.util.io import open_file

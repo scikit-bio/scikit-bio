@@ -147,7 +147,7 @@ from copy import deepcopy
 import numpy as np
 from scipy.spatial.distance import squareform
 
-from skbio.core.exception import (DissimilarityMatrixError,
+from skbio.util.exception import (DissimilarityMatrixError,
                                   DissimilarityMatrixFormatError,
                                   DistanceMatrixError, MissingIDError)
 from skbio.util.io import open_file
