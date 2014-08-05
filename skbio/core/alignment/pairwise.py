@@ -299,27 +299,8 @@ def local_pairwise_align(seq1, seq2, gap_open_penalty,
          "than skbio.core.alignment.local_pairwise_align_ssw.",
          EfficiencyWarning)
 
-    if isinstance(seq1, unicode) or isinstance(seq1, str):
-        seq1 = Alignment([BiologicalSequence(seq1)])
-    elif isinstance(seq1, BiologicalSequence):
-        seq1 = Alignment([seq1])
-    elif isinstance(seq1, Alignment):
-        raise TypeError("Local alignment is not currently supported for "
-                         "aligning alignments to sequences or alignments to "
-                         "alignments.")
-    else:
-        pass
-
-    if isinstance(seq2, unicode) or isinstance(seq2, str):
-        seq2 = Alignment([BiologicalSequence(seq2)])
-    elif isinstance(seq2, BiologicalSequence):
-        seq2 = Alignment([seq2])
-    elif isinstance(seq2, Alignment):
-        raise TypeError("Local alignment is not currently supported for "
-                         "aligning alignments to sequences or alignments to "
-                         "alignments.")
-    else:
-        pass
+    seq1 = _coerce_type(seq1, disallow_alignment=True)
+    seq2 = _coerce_type(seq2, disallow_alignment=True)
 
     score_matrix, traceback_matrix = _compute_score_and_traceback_matrices(
         seq1, seq2, gap_open_penalty, gap_extend_penalty,
@@ -337,6 +318,18 @@ def local_pairwise_align(seq1, seq2, gap_open_penalty,
 
     return Alignment(aligned1 + aligned2, score=score,
                       start_end_positions=start_end_positions)
+
+def _coerce_type(seq, disallow_alignment):
+    if isinstance(seq, unicode) or isinstance(seq, str):
+        return Alignment([BiologicalSequence(seq)])
+    elif isinstance(seq, BiologicalSequence):
+        return Alignment([seq])
+    elif isinstance(seq, Alignment) and disallow_alignment:
+        raise TypeError("Local alignment is not currently supported for "
+                         "aligning alignments to sequences or alignments to "
+                         "alignments.")
+    else:
+        return seq
 
 def global_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
                                      gap_extend_penalty=2,
@@ -546,19 +539,8 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
          "version soon (see https://github.com/biocore/scikit-bio/issues/254 "
          "to track progress on this).", EfficiencyWarning)
 
-    if isinstance(seq1, unicode) or isinstance(seq1, str):
-        seq1 = Alignment([BiologicalSequence(seq1)])
-    elif isinstance(seq1, BiologicalSequence):
-        seq1 = Alignment([seq1])
-    else:
-        pass
-
-    if isinstance(seq2, unicode) or isinstance(seq2, str):
-        seq2 = Alignment([BiologicalSequence(seq2)])
-    elif isinstance(seq2, BiologicalSequence):
-        seq2 = Alignment([seq2])
-    else:
-        pass
+    seq1 = _coerce_type(seq1, disallow_alignment=False)
+    seq2 = _coerce_type(seq2, disallow_alignment=False)
 
     if penalize_terminal_gaps:
         init_matrices_f = _init_matrices_nw
