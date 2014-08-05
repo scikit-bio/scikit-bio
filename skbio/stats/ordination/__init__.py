@@ -31,7 +31,7 @@ Functions
    corr
    scale
    svd_rank
-   
+
 
 Examples
 --------
