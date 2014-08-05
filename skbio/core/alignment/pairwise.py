@@ -299,6 +299,20 @@ def local_pairwise_align(seq1, seq2, gap_open_penalty,
          "than skbio.core.alignment.local_pairwise_align_ssw.",
          EfficiencyWarning)
 
+    if isinstance(seq1, unicode) or isinstance(seq1, str):
+        seq1 = Alignment([BiologicalSequence(seq1)])
+    elif isinstance(seq1, BiologicalSequence):
+        seq1 = Alignment([seq1])
+    else:
+        pass
+
+    if isinstance(seq2, unicode) or isinstance(seq2, str):
+        seq2 = Alignment([BiologicalSequence(seq2)])
+    elif isinstance(seq2, BiologicalSequence):
+        seq2 = Alignment([seq2])
+    else:
+        pass
+
     score_matrix, traceback_matrix = _compute_score_and_traceback_matrices(
         seq1, seq2, gap_open_penalty, gap_extend_penalty,
         substitution_matrix, new_alignment_score=0.0,
@@ -313,14 +327,8 @@ def local_pairwise_align(seq1, seq2, gap_open_penalty,
     start_end_positions = [(seq1_start_position, end_col_position-1),
                            (seq2_start_position, end_row_position-1)]
 
-    # Get ids to assign to the output sequences in the result Alignment object
-    seq1_id, seq2_id = _get_seq_ids(seq1, seq2)
-
-    return Alignment(
-        [BiologicalSequence(aligned1, id=seq1_id),
-         BiologicalSequence(aligned2, id=seq2_id)],
-        score=score, start_end_positions=start_end_positions)
-
+    return Alignment(aligned1 + aligned2, score=score,
+                      start_end_positions=start_end_positions)
 
 def global_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
                                      gap_extend_penalty=2,
@@ -530,6 +538,20 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
          "version soon (see https://github.com/biocore/scikit-bio/issues/254 "
          "to track progress on this).", EfficiencyWarning)
 
+    if isinstance(seq1, unicode) or isinstance(seq1, str):
+        seq1 = Alignment([BiologicalSequence(seq1)])
+    elif isinstance(seq1, BiologicalSequence):
+        seq1 = Alignment([seq1])
+    else:
+        pass
+
+    if isinstance(seq2, unicode) or isinstance(seq2, str):
+        seq2 = Alignment([BiologicalSequence(seq2)])
+    elif isinstance(seq2, BiologicalSequence):
+        seq2 = Alignment([seq2])
+    else:
+        pass
+
     if penalize_terminal_gaps:
         init_matrices_f = _init_matrices_nw
     else:
@@ -551,13 +573,8 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
     start_end_positions = [(seq1_start_position, end_col_position-1),
                            (seq2_start_position, end_row_position-1)]
 
-    # Get ids to assign to the output sequences in the result Alignment object
-    seq1_id, seq2_id = _get_seq_ids(seq1, seq2)
-
-    return Alignment(
-        [BiologicalSequence(aligned1, id=seq1_id),
-         BiologicalSequence(aligned2, id=seq2_id)],
-        score=score, start_end_positions=start_end_positions)
+    return Alignment(aligned1 + aligned2, score=score,
+                      start_end_positions=start_end_positions)
 
 # Functions from here allow for generalized (global or local) alignment. I
 # will likely want to put these in a single object to make the naming a little
@@ -818,12 +835,14 @@ def _traceback(traceback_matrix, score_matrix, aln1, aln2, start_row,
 
     for i in range(aln1_sequence_count):
         aligned_seqs1[i] = BiologicalSequence(
-            ''.join(map(str, aligned_seqs1[i][::-1])))
+            ''.join(map(str, aligned_seqs1[i][::-1])),
+            id=_get_seq_id(aln1[0], str(i)))
     for i in range(aln2_sequence_count):
         aligned_seqs2[i] = BiologicalSequence(
-            ''.join(map(str, aligned_seqs2[i][::-1])))
+            ''.join(map(str, aligned_seqs2[i][::-1])),
+            id=_get_seq_id(aln2[0], str(aln1_sequence_count + i)))
 
-    return (Alignment(aligned_seqs1), Alignment(aligned_seqs2), best_score,
+    return (aligned_seqs1, aligned_seqs2, best_score,
             current_col, current_row)
 
 
