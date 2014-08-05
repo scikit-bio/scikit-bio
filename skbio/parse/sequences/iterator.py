@@ -10,7 +10,7 @@ from itertools import chain
 
 from future.builtins import zip
 
-from skbio.core.workflow import Workflow, not_none, method, requires
+from skbio.workflow import Workflow, not_none, method, requires
 from .fasta import parse_fasta, parse_qual
 from .fastq import parse_fastq
 

@@ -34,7 +34,7 @@ def pw_distances(counts, ids=None, metric="braycurtis"):
 
     Returns
     -------
-    skbio.core.distance.DistanceMatrix
+    skbio.distance.DistanceMatrix
         Distances between all pairs of samples (i.e., rows). The number of
         row and columns will be equal to the number of rows in ``counts``.
 
@@ -75,7 +75,7 @@ def pw_distances_from_table(table, metric="braycurtis"):
 
     Returns
     -------
-    skbio.core.distance.DistanceMatrix
+    skbio.distance.DistanceMatrix
         Distances between all pairs of samples. The number of row and columns
         will be equal to the number of samples in ``table``.
 

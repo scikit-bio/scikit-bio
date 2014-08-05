@@ -270,8 +270,8 @@ class APIRegressionValidator(RepoValidator):
                 # Remove the __init__ if it is a directory import
                 if temp[-1] == "__init__":
                     temp = temp[:-1]
-                package = ".".join(temp)
-                self._add_imports(imports, package)
+                    package = ".".join(temp)
+                    self._add_imports(imports, package)
         for fp, imports in test_imports:
             for import_ in imports:
                 substitute = self._minimal_import(import_)
