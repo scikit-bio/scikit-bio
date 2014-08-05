@@ -366,6 +366,11 @@ class PairwiseAlignmentTests(TestCase):
         self.assertEqual(
             _compute_substitution_score(['A', 'A'], ['A', '-'], subs_m, 1), 3)
 
+        # alt subs_m
+        subs_m = _make_nt_substitution_matrix(1, -2)
+        self.assertEqual(
+            _compute_substitution_score(['A', 'A'], ['A', '-'], subs_m, 0), 0.5)
+
     def test_compute_score_and_traceback_matrices(self):
         # these results were computed manually
         expected_score_m = [[0, -5, -7, -9],
