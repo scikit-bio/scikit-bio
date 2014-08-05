@@ -23,7 +23,7 @@ from skbio import DistanceMatrix
 from skbio.stats.ordination import (CA, RDA, CCA, PCoA, OrdinationResults,
                                     corr, mean_and_std)
 from skbio.util.testing import get_data_path
-from skbio.core.exception import FileFormatError
+from skbio.util.exception import FileFormatError
 
 
 def normalize_signs(arr1, arr2):

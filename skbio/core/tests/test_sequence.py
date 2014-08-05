@@ -16,7 +16,7 @@ from unittest import TestCase, main
 from skbio import (
     BiologicalSequence, NucleotideSequence, DNASequence, RNASequence,
     ProteinSequence)
-from skbio.core.exception import BiologicalSequenceError
+from skbio.util.exception import BiologicalSequenceError
 
 
 class BiologicalSequenceTests(TestCase):

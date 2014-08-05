@@ -12,7 +12,7 @@ from unittest import TestCase, main
 
 from skbio import DNA, RNA, Protein
 from skbio.core.genetic_code import GeneticCode, GeneticCodes
-from skbio.core.exception import GeneticCodeInitError, InvalidCodonError
+from skbio.util.exception import GeneticCodeInitError, InvalidCodonError
 
 
 class GeneticCodeTests(TestCase):

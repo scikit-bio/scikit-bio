@@ -17,7 +17,7 @@ from warnings import warn
 import numpy as np
 from scipy.stats import entropy
 
-from skbio.core.exception import SequenceCollectionError, StockholmParseError
+from skbio.util.exception import SequenceCollectionError, StockholmParseError
 from skbio.core.distance import DistanceMatrix
 from skbio.util.io import open_file
 
@@ -36,7 +36,7 @@ class SequenceCollection(object):
 
     Raises
     ------
-    skbio.core.exception.SequenceCollectionError
+    skbio.util.exception.SequenceCollectionError
         If ``validate == True`` and ``is_valid == False``.
 
     See Also
@@ -83,7 +83,7 @@ class SequenceCollection(object):
 
         Raises
         ------
-        skbio.core.exception.SequenceCollectionError
+        skbio.util.exception.SequenceCollectionError
             If ``validate == True`` and ``is_valid == False``.
 
         See Also
@@ -359,7 +359,7 @@ class SequenceCollection(object):
 
         Raises
         ------
-        skbio.core.exception.BiologicalSequenceError
+        skbio.util.exception.BiologicalSequenceError
             If ``len(self) != len(other)`` and ``distance_fn`` ==
             ``scipy.spatial.distance.hamming``.
 
@@ -820,7 +820,7 @@ class Alignment(SequenceCollection):
 
     Raises
     ------
-    skbio.core.exception.SequenceCollectionError
+    skbio.util.exception.SequenceCollectionError
         If ``validate == True`` and ``is_valid == False``.
 
     Notes
@@ -878,7 +878,7 @@ class Alignment(SequenceCollection):
 
         Raises
         ------
-        skbio.core.exception.BiologicalSequenceError
+        skbio.util.exception.BiologicalSequenceError
             If ``len(self) != len(other)`` and ``distance_fn`` ==
             ``scipy.spatial.distance.hamming``.
 

@@ -1,11 +1,11 @@
 """
-Exceptions (:mod:`skbio.core.exception`)
+Exceptions (:mod:`skbio.util.exception`)
 ========================================
 
-.. currentmodule:: skbio.core.exception
+.. currentmodule:: skbio.util.exception
 
-This module defines custom exception classes used throughout the core
-scikit-bio codebase.
+This module defines custom exception classes used throughout the scikit-bio
+codebase.
 
 Exceptions
 ----------
@@ -32,6 +32,7 @@ Exceptions
    GeneticCodeError
    GeneticCodeInitError
    InvalidCodonError
+
 """
 from __future__ import absolute_import, division, print_function
 

@@ -14,8 +14,6 @@ API Reference
    core.alignment
    core.sequence
    core.distance
-   core.exception
-   core.warning
    core.genetic_code
    core.tree
    core.workflow
@@ -29,6 +27,8 @@ API Reference
    stats.spatial
    stats.gradient
    parse.sequences
+   util.exception
+   util.warning
    util.io
    util.misc
    util.testing
