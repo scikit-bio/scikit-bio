@@ -299,8 +299,8 @@ def local_pairwise_align(seq1, seq2, gap_open_penalty,
          "than skbio.core.alignment.local_pairwise_align_ssw.",
          EfficiencyWarning)
 
-    seq1 = _coerce_type(seq1, disallow_alignment=True)
-    seq2 = _coerce_type(seq2, disallow_alignment=True)
+    seq1 = _coerce_alignment_input_type(seq1, disallow_alignment=True)
+    seq2 = _coerce_alignment_input_type(seq2, disallow_alignment=True)
 
     score_matrix, traceback_matrix = _compute_score_and_traceback_matrices(
         seq1, seq2, gap_open_penalty, gap_extend_penalty,
@@ -319,31 +319,19 @@ def local_pairwise_align(seq1, seq2, gap_open_penalty,
     return Alignment(aligned1 + aligned2, score=score,
                       start_end_positions=start_end_positions)
 
-def _coerce_type(seq, disallow_alignment):
-    if isinstance(seq, unicode) or isinstance(seq, str):
-        return Alignment([BiologicalSequence(seq)])
-    elif isinstance(seq, BiologicalSequence):
-        return Alignment([seq])
-    elif isinstance(seq, Alignment) and disallow_alignment:
-        raise TypeError("Local alignment is not currently supported for "
-                         "aligning alignments to sequences or alignments to "
-                         "alignments.")
-    else:
-        return seq
-
 def global_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
                                      gap_extend_penalty=2,
                                      match_score=1, mismatch_score=-2,
                                      substitution_matrix=None,
                                      penalize_terminal_gaps=False):
-    """Globally align exactly two nucleotide seqs with Needleman-Wunsch
+    """Globally align pair of nuc. seqs or alignments with Needleman-Wunsch
 
     Parameters
     ----------
-    seq1 : str or BiologicalSequence
-        The first unaligned sequence.
-    seq2 : str or BiologicalSequence
-        The second unaligned sequence.
+    seq1 : str, BiologicalSequence or Alignment
+        The first unaligned sequence(s).
+    seq2 : str, BiologicalSequence or Alignment
+        The second unaligned sequence(s).
     gap_open_penalty : int or float, optional
         Penalty for opening a gap (this is substracted from previous best
         alignment score, so is typically positive).
@@ -390,6 +378,9 @@ def global_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
     ``gap_extend_penalty`` parameters are derived from the NCBI BLAST
     Server [1]_.
 
+    This function can be use to align either a pair of sequences, a pair of
+    alignments, or a sequence and an alignment.
+
     References
     ----------
     .. [1] http://blast.ncbi.nlm.nih.gov/Blast.cgi
@@ -412,14 +403,14 @@ def global_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
                                   gap_extend_penalty=1,
                                   substitution_matrix=None,
                                   penalize_terminal_gaps=False):
-    """Globally align exactly two protein seqs with Needleman-Wunsch
+    """Globally align pair of protein seqs or alignments with Needleman-Wunsch
 
     Parameters
     ----------
-    seq1 : str or BiologicalSequence
-        The first unaligned sequence.
-    seq2 : str or BiologicalSequence
-        The second unaligned sequence.
+    seq1 : str, BiologicalSequence or Alignment
+        The first unaligned sequence(s).
+    seq2 : str, BiologicalSequence or Alignment
+        The second unaligned sequence(s).
     gap_open_penalty : int or float, optional
         Penalty for opening a gap (this is substracted from previous best
         alignment score, so is typically positive).
@@ -460,6 +451,9 @@ def global_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
     The BLOSUM (blocks substitution matrices) amino acid substitution matrices
     were originally defined in [2]_.
 
+    This function can be use to align either a pair of sequences, a pair of
+    alignments, or a sequence and an alignment.
+
     References
     ----------
     .. [1] http://blast.ncbi.nlm.nih.gov/Blast.cgi
@@ -478,14 +472,14 @@ def global_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
 
 def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
                           substitution_matrix, penalize_terminal_gaps=False):
-    """Globally align exactly two seqs with Needleman-Wunsch
+    """Globally align a pair of seqs or alignments with Needleman-Wunsch
 
     Parameters
     ----------
-    seq1 : str or BiologicalSequence
-        The first unaligned sequence.
-    seq2 : str or BiologicalSequence
-        The second unaligned sequence.
+    seq1 : str, BiologicalSequence or Alignment
+        The first unaligned sequence(s).
+    seq2 : str, BiologicalSequence or Alignment
+        The second unaligned sequence(s).
     gap_open_penalty : int or float
         Penalty for opening a gap (this is substracted from previous best
         alignment score, so is typically positive).
@@ -524,6 +518,9 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
     in [1]_. The scikit-bio implementation was validated against the
     EMBOSS needle web server [2]_.
 
+    This function can be use to align either a pair of sequences, a pair of
+    alignments, or a sequence and an alignment.
+
     References
     ----------
     .. [1] A general method applicable to the search for similarities in
@@ -539,8 +536,8 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
          "version soon (see https://github.com/biocore/scikit-bio/issues/254 "
          "to track progress on this).", EfficiencyWarning)
 
-    seq1 = _coerce_type(seq1, disallow_alignment=False)
-    seq2 = _coerce_type(seq2, disallow_alignment=False)
+    seq1 = _coerce_alignment_input_type(seq1, disallow_alignment=False)
+    seq2 = _coerce_alignment_input_type(seq2, disallow_alignment=False)
 
     if penalize_terminal_gaps:
         init_matrices_f = _init_matrices_nw
@@ -569,6 +566,21 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
 # Functions from here allow for generalized (global or local) alignment. I
 # will likely want to put these in a single object to make the naming a little
 # less clunky.
+
+def _coerce_alignment_input_type(seq, disallow_alignment):
+    """ Converts variety of types into an skbio.Alignment object
+    """
+    if isinstance(seq, unicode) or isinstance(seq, str):
+        return Alignment([BiologicalSequence(seq)])
+    elif isinstance(seq, BiologicalSequence):
+        return Alignment([seq])
+    elif isinstance(seq, Alignment) and disallow_alignment:
+        raise TypeError("Local alignment is not currently supported for "
+                         "aligning alignments to sequences or alignments to "
+                         "alignments.")
+    else:
+        return seq
+
 
 _traceback_encoding = {'match': 1, 'vertical-gap': 2, 'horizontal-gap': 3,
                        'uninitialized': -1, 'alignment-end': 0}
