@@ -1,6 +1,6 @@
 r"""
 Sequence collections and alignments (:mod:`skbio.alignment`)
-=================================================================
+============================================================
 
 .. currentmodule:: skbio.alignment
 

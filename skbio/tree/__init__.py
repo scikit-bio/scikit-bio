@@ -1,6 +1,6 @@
 r"""
 Tree representations (:mod:`skbio.tree`)
-=============================================
+========================================
 
 .. currentmodule:: skbio.tree
 

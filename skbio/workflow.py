@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 r"""
 Constructing workflows (:mod:`skbio.workflow`)
-===================================================
+==============================================
 
 .. currentmodule:: skbio.workflow
 

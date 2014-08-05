@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 r"""
 Genetic Code (:mod:`skbio.genetic_code`)
-=============================================
+========================================
 
 .. currentmodule:: skbio.genetic_code
 

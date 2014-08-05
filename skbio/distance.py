@@ -1,6 +1,6 @@
 r"""
 Dissimilarity and distance matrices (:mod:`skbio.distance`)
-================================================================
+===========================================================
 
 .. currentmodule:: skbio.distance
 
