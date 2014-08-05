@@ -19,7 +19,7 @@ from future.utils.six import StringIO
 
 from skbio import TreeNode, DistanceMatrix
 from skbio.core.tree.tree import _dnd_tokenizer
-from skbio.core.exception import (DuplicateNodeError, NoLengthError, TreeError,
+from skbio.util.exception import (DuplicateNodeError, NoLengthError, TreeError,
                                   RecordError, MissingNodeError, NoParentError)
 
 

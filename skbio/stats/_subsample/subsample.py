@@ -30,7 +30,7 @@ from warnings import warn
 
 import numpy as np
 
-from skbio.core.warning import EfficiencyWarning
+from skbio.util.warning import EfficiencyWarning
 try:
     from ._subsample import _subsample_without_replacement
 except ImportError:

@@ -74,7 +74,7 @@ import re
 
 from collections import defaultdict
 
-from skbio.core.exception import GeneticCodeInitError, InvalidCodonError
+from skbio.util.exception import GeneticCodeInitError, InvalidCodonError
 from skbio.core.sequence import Protein
 
 # py3k compatibility
