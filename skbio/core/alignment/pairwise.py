@@ -665,10 +665,38 @@ def _init_matrices_nw_no_terminal_gap_penalty(
     return score_matrix, traceback_matrix
 
 
+def _compute_substituion_score(seq1_chars, seq2_chars, substitution_matrix,
+        gap_substitution_score):
+    substitution_score = 0
+    for seq2_char in seq2_chars:
+        for seq1_char in seq1_chars:
+            if BiologicalSequence.is_gap(seq2_char) or\
+               BiologicalSequence.is_gap(seq1_char):
+                   substitution_score += gap_substitution_score
+            else:
+                try:
+                    substitution_score += \
+                        substitution_matrix[seq1_char][seq2_char]
+                except KeyError:
+                    offending_chars = \
+                        [c for c in (seq1_char, seq2_char)
+                         if c not in substitution_matrix]
+                    raise ValueError(
+                        "One of the sequences contains a character that is not "
+                        "contained in the substitution matrix. Are you using "
+                        "an appropriate substitution matrix for your sequence "
+                        "type (e.g., a nucleotide substitution matrix does not "
+                        "make sense for aligning protein sequences)? Does your "
+                        "sequence contain invalid characters? The offending "
+                        "character(s) is: %s." % ', '.join(offending_chars))
+    substitution_score /= (len(seq2_chars) * len(seq1_chars))
+    return substitution_score
+
+
 def _compute_score_and_traceback_matrices(
         seq1, seq2, gap_open_penalty, gap_extend_penalty, substitution_matrix,
         new_alignment_score=-np.inf, init_matrices_f=_init_matrices_nw,
-        penalize_terminal_gaps=True):
+        penalize_terminal_gaps=True, gap_substitution_score=0):
     """Return dynamic programming (score) and traceback matrices.
 
     A note on the ``penalize_terminal_gaps`` parameter. When this value is
@@ -708,29 +736,9 @@ def _compute_score_and_traceback_matrices(
         for seq1_pos, seq1_chars in zip(range(1, seq1_length+1),
                                        seq1.iter_positions(str)):
             # compute the score for a match/mismatch
-            substitution_score = 0
-            for seq2_char in seq2_chars:
-                for seq1_char in seq1_chars:
-                    if BiologicalSequence.is_gap(seq2_char) or\
-                       BiologicalSequence.is_gap(seq1_char):
-                           substitution_score += gap_substitution
-                    else:
-                        try:
-                            substitution_score += \
-                                substitution_matrix[seq1_char][seq2_char]
-                        except KeyError:
-                            offending_chars = \
-                                [c for c in (seq1_char, seq2_char)
-                                 if c not in substitution_matrix]
-                            raise ValueError(
-                                "One of the sequences contains a character that is not "
-                                "contained in the substitution matrix. Are you using "
-                                "an appropriate substitution matrix for your sequence "
-                                "type (e.g., a nucleotide substitution matrix does not "
-                                "make sense for aligning protein sequences)? Does your "
-                                "sequence contain invalid characters? The offending "
-                                "character(s) is: %s." % ', '.join(offending_chars))
-            substitution_score /= (seq2.sequence_count() * seq1.sequence_count())
+            substitution_score = _compute_substituion_score(
+                seq1_chars, seq2_chars, substitution_matrix,
+                gap_substitution_score)
 
             diag_score = \
                 (score_matrix[seq2_pos-1, seq1_pos-1] + substitution_score,
