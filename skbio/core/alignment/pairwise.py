@@ -574,12 +574,19 @@ def _coerce_alignment_input_type(seq, disallow_alignment):
         return Alignment([BiologicalSequence(seq)])
     elif isinstance(seq, BiologicalSequence):
         return Alignment([seq])
-    elif isinstance(seq, Alignment) and disallow_alignment:
-        raise TypeError("Local alignment is not currently supported for "
-                         "aligning alignments to sequences or alignments to "
-                         "alignments.")
+    elif isinstance(seq, Alignment):
+        if disallow_alignment:
+            # This will disallow aligning either a pair of alignments, or an
+            # alignment and a sequence. We don't currently support this for
+            # local alignment as there is not a clear usecase, and it's also
+            # not exactly clear how this would work.
+            raise TypeError("Aligning alignments is not currently supported "
+                             "with the aligner function that you're calling.")
+        else:
+            return seq
     else:
-        return seq
+        raise TypeError(
+            "Unsupported type provided to aligner: %r." % type(seq))
 
 
 _traceback_encoding = {'match': 1, 'vertical-gap': 2, 'horizontal-gap': 3,
