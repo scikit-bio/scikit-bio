@@ -19,7 +19,7 @@ from skbio.core.alignment.pairwise import (
     _make_nt_substitution_matrix, _init_matrices_sw, _init_matrices_nw,
     _compute_score_and_traceback_matrices, _traceback, _first_largest,
     _get_seq_id, _get_seq_ids)
-from skbio import Protein, DNA
+from skbio import Protein, DNA, SequenceCollection
 
 
 class PairwiseAlignmentTests(TestCase):
@@ -362,7 +362,8 @@ class PairwiseAlignmentTests(TestCase):
                             [2, 2, 2, 2]]
         m = _make_nt_substitution_matrix(2, -1)
         actual_score_m, actual_tback_m = _compute_score_and_traceback_matrices(
-            'ACG', 'ACGT', 5, 2, m)
+            SequenceCollection([DNA('ACG')]),
+            SequenceCollection([DNA('ACGT')]), 5, 2, m)
         np.testing.assert_array_equal(actual_score_m, expected_score_m)
         np.testing.assert_array_equal(actual_tback_m, expected_tback_m)
 
@@ -380,7 +381,8 @@ class PairwiseAlignmentTests(TestCase):
                             [2, 2, 2, 1]]
         m = _make_nt_substitution_matrix(2, -1)
         actual_score_m, actual_tback_m = _compute_score_and_traceback_matrices(
-            'ACC', 'ACGT', 5, 2, m)
+            SequenceCollection([DNA('ACC')]),
+            SequenceCollection([DNA('ACGT')]), 5, 2, m)
         np.testing.assert_array_equal(actual_score_m, expected_score_m)
         np.testing.assert_array_equal(actual_tback_m, expected_tback_m)
 
@@ -389,7 +391,8 @@ class PairwiseAlignmentTests(TestCase):
         # substitution matrix, an informative error should be raised
         m = _make_nt_substitution_matrix(2, -1)
         self.assertRaises(ValueError, _compute_score_and_traceback_matrices,
-                          'AWG', 'ACGT', 5, 2, m)
+                          SequenceCollection([DNA('AWG')]),
+                          SequenceCollection([DNA('ACGT')]), 5, 2, m)
 
     def test_traceback(self):
         score_m = [[0, -5, -7, -9],
@@ -406,12 +409,14 @@ class PairwiseAlignmentTests(TestCase):
         tback_m = np.array(tback_m)
         # start at bottom-right
         expected = ("ACG-", "ACGT", 1, 0, 0)
-        actual = _traceback(tback_m, score_m, 'ACG', 'ACGT', 4, 3)
+        actual = _traceback(tback_m, score_m, SequenceCollection([DNA('ACG')]),
+            SequenceCollection([DNA('ACGT')]), 4, 3)
         self.assertEqual(actual, expected)
 
         # start at highest-score
         expected = ("ACG", "ACG", 6, 0, 0)
-        actual = _traceback(tback_m, score_m, 'ACG', 'ACGT', 3, 3)
+        actual = _traceback(tback_m, score_m, SequenceCollection([DNA('ACG')]),
+            SequenceCollection([DNA('ACGT')]), 3, 3)
         self.assertEqual(actual, expected)
 
         # terminate traceback before top-right
@@ -422,7 +427,8 @@ class PairwiseAlignmentTests(TestCase):
                    [2, 2, 2, 2]]
         tback_m = np.array(tback_m)
         expected = ("G", "G", 6, 2, 2)
-        actual = _traceback(tback_m, score_m, 'ACG', 'ACGT', 3, 3)
+        actual = _traceback(tback_m, score_m, SequenceCollection([DNA('ACG')]),
+            SequenceCollection([DNA('ACGT')]), 3, 3)
         self.assertEqual(actual, expected)
 
     def test_get_seq_id(self):
