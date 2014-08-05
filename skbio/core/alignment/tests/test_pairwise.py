@@ -18,7 +18,7 @@ from skbio.core.alignment.pairwise import (
     global_pairwise_align_nucleotide, local_pairwise_align_nucleotide,
     _make_nt_substitution_matrix, _init_matrices_sw, _init_matrices_nw,
     _compute_score_and_traceback_matrices, _traceback, _first_largest,
-    _get_seq_id, _get_seq_ids)
+    _get_seq_id, _get_seq_ids, _compute_substitution_score)
 from skbio import Protein, DNA, Alignment, BiologicalSequence
 
 
@@ -349,6 +349,22 @@ class PairwiseAlignmentTests(TestCase):
             Alignment([DNA('AAA')]), Alignment([DNA('AAAA')]), 5, 2)
         np.testing.assert_array_equal(actual_score_m, expected_score_m)
         np.testing.assert_array_equal(actual_tback_m, expected_tback_m)
+
+    def test_compute_substitution_score(self):
+        # these results were computed manually
+        subs_m = _make_nt_substitution_matrix(5, -4)
+        self.assertEqual(
+            _compute_substitution_score(['A'], ['A'], subs_m, 0), 5.0)
+        self.assertEqual(
+            _compute_substitution_score(['A', 'A'], ['A'], subs_m, 0), 5.0)
+        self.assertEqual(
+            _compute_substitution_score(['A', 'C'], ['A'], subs_m, 0), 0.5)
+        self.assertEqual(
+            _compute_substitution_score(['A', 'C'], ['A', 'C'], subs_m, 0), 0.5)
+        self.assertEqual(
+            _compute_substitution_score(['A', 'A'], ['A', '-'], subs_m, 0), 2.5)
+        self.assertEqual(
+            _compute_substitution_score(['A', 'A'], ['A', '-'], subs_m, 1), 3)
 
     def test_compute_score_and_traceback_matrices(self):
         # these results were computed manually

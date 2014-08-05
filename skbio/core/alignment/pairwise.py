@@ -665,7 +665,7 @@ def _init_matrices_nw_no_terminal_gap_penalty(
     return score_matrix, traceback_matrix
 
 
-def _compute_substituion_score(seq1_chars, seq2_chars, substitution_matrix,
+def _compute_substitution_score(seq1_chars, seq2_chars, substitution_matrix,
         gap_substitution_score):
     substitution_score = 0
     for seq2_char in seq2_chars:
@@ -736,7 +736,7 @@ def _compute_score_and_traceback_matrices(
         for seq1_pos, seq1_chars in zip(range(1, seq1_length+1),
                                        seq1.iter_positions(str)):
             # compute the score for a match/mismatch
-            substitution_score = _compute_substituion_score(
+            substitution_score = _compute_substitution_score(
                 seq1_chars, seq2_chars, substitution_matrix,
                 gap_substitution_score)
 
