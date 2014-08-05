@@ -9,8 +9,8 @@
 from cpython cimport bool
 import numpy as np
 cimport numpy as cnp
-from skbio.core.alignment import Alignment
-from skbio.core.sequence import ProteinSequence, NucleotideSequence
+from skbio.alignment import Alignment
+from skbio.sequence import ProteinSequence, NucleotideSequence
 
 cdef extern from "ssw.h":
 
@@ -638,7 +638,7 @@ cdef class StripedSmithWaterman:
 
         Returns
         -------
-        ``skbio.core.alignment.ssw.AlignmentStructure``
+        ``skbio.alignment.ssw.AlignmentStructure``
             The resulting alignment.
 
         """
@@ -741,7 +741,7 @@ def local_pairwise_align_ssw(sequence1, sequence2,
 
     Returns
     -------
-    ``skbio.core.alignment.Alignment``
+    ``skbio.alignment.Alignment``
         The resulting alignment as an Alignment object
 
     Notes
@@ -749,7 +749,7 @@ def local_pairwise_align_ssw(sequence1, sequence2,
     This is a wrapper for the SSW package [1]_.
 
     For a complete list of optional keyword-arguments that can be provided,
-    see ``skbio.core.alignment.StripedSmithWaterman``.
+    see ``skbio.alignment.StripedSmithWaterman``.
 
     The following kwargs will not have any effect: `suppress_sequences` and
     `zero_index`
@@ -765,7 +765,7 @@ def local_pairwise_align_ssw(sequence1, sequence2,
      
     See Also
     --------
-    skbio.core.alignment.StripedSmithWaterman
+    skbio.alignment.StripedSmithWaterman
 
     """
     # We need the sequences for `Alignment` to make sense, so don't let the
