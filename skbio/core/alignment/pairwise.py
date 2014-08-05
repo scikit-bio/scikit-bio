@@ -7,10 +7,11 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.builtins import range, zip
 from warnings import warn
 
 import numpy as np
+from future.builtins import range, zip
+from future.utils.six import string_types
 
 from skbio.core.warning import EfficiencyWarning
 from .alignment import Alignment
@@ -572,7 +573,7 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
 def _coerce_alignment_input_type(seq, disallow_alignment):
     """ Converts variety of types into an skbio.Alignment object
     """
-    if isinstance(seq, unicode) or isinstance(seq, str):
+    if isinstance(seq, string_types):
         return Alignment([BiologicalSequence(seq)])
     elif isinstance(seq, BiologicalSequence):
         return Alignment([seq])
