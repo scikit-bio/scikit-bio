@@ -20,8 +20,8 @@
 from unittest import TestCase, main
 
 from skbio import local_pairwise_align_ssw
-from skbio.core.alignment import StripedSmithWaterman, AlignmentStructure
-from skbio.core.alignment.pairwise import blosum50
+from skbio.alignment import StripedSmithWaterman, AlignmentStructure
+from skbio.alignment.pairwise import blosum50
 
 
 class TestSSW(TestCase):

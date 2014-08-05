@@ -14,7 +14,7 @@ import csv
 import numpy as np
 import pandas as pd
 
-from skbio.core.distance import DistanceMatrix
+from skbio.distance import DistanceMatrix
 from skbio.stats import p_value_to_str
 
 

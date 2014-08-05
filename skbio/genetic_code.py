@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 r"""
-Genetic Code (:mod:`skbio.core.genetic_code`)
+Genetic Code (:mod:`skbio.genetic_code`)
 =============================================
 
-.. currentmodule:: skbio.core.genetic_code
+.. currentmodule:: skbio.genetic_code
 
 This module defines the ``GeneticCode`` class, which represents an immutable
 object that translates RNA or DNA strings to amino acid sequences.
@@ -22,7 +22,7 @@ Examples
 
 Creating and using a ``GeneticCode`` object
 
->>> from skbio.core.genetic_code import GeneticCodes
+>>> from skbio.genetic_code import GeneticCodes
 >>> from pprint import pprint
 >>> sgc = GeneticCodes[1]
 >>> sgc
@@ -75,7 +75,7 @@ import re
 from collections import defaultdict
 
 from skbio.util.exception import GeneticCodeInitError, InvalidCodonError
-from skbio.core.sequence import Protein
+from skbio.sequence import Protein
 
 # py3k compatibility
 try:
@@ -144,7 +144,7 @@ class GeneticCode(object):
 
     Examples
     --------
-    >>> from skbio.core.genetic_code import GeneticCode
+    >>> from skbio.genetic_code import GeneticCode
     >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSR'
     ...                   'RVVVVAAAADDEEGGGG')
 
@@ -361,7 +361,7 @@ class GeneticCode(object):
 
         Examples
         --------
-        >>> from skbio.core.genetic_code import GeneticCode
+        >>> from skbio.genetic_code import GeneticCode
         >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSS'
         ...                   'RRVVVVAAAADDEEGGGG')
         >>> sgc.translate('AUGCAUGACUUUUGA', 1)
@@ -398,8 +398,8 @@ class GeneticCode(object):
 
         Examples
         --------
-        >>> from skbio.core.genetic_code import GeneticCode
-        >>> from skbio.core.sequence import DNA
+        >>> from skbio.genetic_code import GeneticCode
+        >>> from skbio.sequence import DNA
         >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSS'
         ...                   'RRVVVVAAAADDEEGGGG')
         >>> seq = DNA('ATGCTAACATAAA')
@@ -434,8 +434,8 @@ class GeneticCode(object):
 
         Examples
         --------
-        >>> from skbio.core.genetic_code import GeneticCode
-        >>> from skbio.core.sequence import RNA
+        >>> from skbio.genetic_code import GeneticCode
+        >>> from skbio.sequence import RNA
         >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSS'
         ...                   'RRVVVVAAAADDEEGGGG')
         >>> results = sgc.translate_six_frames(RNA('AUGCUAACAUAAA'))
@@ -475,7 +475,7 @@ class GeneticCode(object):
 
         Examples
         --------
-        >>> from skbio.core.genetic_code import GeneticCode
+        >>> from skbio.genetic_code import GeneticCode
         >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSS'
         ...                   'RRVVVVAAAADDEEGGGG')
         >>> sgc.is_start('ATG')
@@ -502,7 +502,7 @@ class GeneticCode(object):
 
         Examples
         --------
-        >>> from skbio.core.genetic_code import GeneticCode
+        >>> from skbio.genetic_code import GeneticCode
         >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSS'
         ...                   'RRVVVVAAAADDEEGGGG')
         >>> sgc.is_stop('UAA')
@@ -531,7 +531,7 @@ class GeneticCode(object):
 
         Examples
         --------
-        >>> from skbio.core.genetic_code import GeneticCode
+        >>> from skbio.genetic_code import GeneticCode
         >>> from pprint import pprint
         >>> sgc = GeneticCode('FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIMMTTTTNNKKSS*'
         ...                   '*VVVVAAAADDEEGGGG')

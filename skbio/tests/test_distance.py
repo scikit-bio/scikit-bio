@@ -19,7 +19,7 @@ import numpy as np
 import numpy.testing as npt
 
 from skbio import DistanceMatrix
-from skbio.core.distance import randdm, DissimilarityMatrix
+from skbio.distance import randdm, DissimilarityMatrix
 from skbio.util.exception import (DissimilarityMatrixError,
                                   DistanceMatrixError,
                                   DissimilarityMatrixFormatError,
@@ -141,7 +141,7 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
     def test_from_file_real_file(self):
         """Should correctly parse a real on-disk file."""
         with tempfile.TemporaryFile(mode='r+',
-                                    prefix='skbio.core.tests.test_distance',
+                                    prefix='skbio.tests.test_distance',
                                     suffix='.txt') as fh:
             fh.write('\n'.join(DM_3x3_WHITESPACE_F))
             fh.seek(0)
@@ -670,7 +670,7 @@ class DistanceMatrixTests(DissimilarityMatrixTestData):
 
 
 class RandomDistanceMatrixTests(TestCase):
-    """Tests for skbio.core.distance.randdm."""
+    """Tests for skbio.distance.randdm."""
 
     def test_default_usage(self):
         """Test generating random distance matrices."""

@@ -1,8 +1,8 @@
 r"""
-Sequence collections and alignments (:mod:`skbio.core.alignment`)
+Sequence collections and alignments (:mod:`skbio.alignment`)
 =================================================================
 
-.. currentmodule:: skbio.core.alignment
+.. currentmodule:: skbio.alignment
 
 This module provides functionality for working with biological sequence
 collections and alignments. These can be composed of generic sequences,
@@ -47,8 +47,8 @@ Slow (i.e., educational-purposes only) Alignment Algorithms
 Data Structure Examples
 -----------------------
 >>> from StringIO import StringIO
->>> from skbio.core.alignment import SequenceCollection, Alignment
->>> from skbio.core.sequence import DNA
+>>> from skbio.alignment import SequenceCollection, Alignment
+>>> from skbio.sequence import DNA
 >>> seqs = [DNA("ACC--G-GGTA..", id="seq1"),
 ...     DNA("TCC--G-GGCA..", id="seqs2")]
 >>> a1 = Alignment(seqs)
@@ -70,8 +70,8 @@ Data Structure Examples
 >>> s1
 <SequenceCollection: n=2; mean +/- std length=26.50 +/- 1.50>
 
->>> from skbio.core.sequence import RNA
->>> from skbio.core.alignment import StockholmAlignment
+>>> from skbio.sequence import RNA
+>>> from skbio.alignment import StockholmAlignment
 >>> seqs = [RNA("ACC--G-GGGU", id="seq1"),
 ...     RNA("TCC--G-GGGA", id="seq2")]
 >>> gc = {'SS_cons': '(((.....)))'}
@@ -92,7 +92,7 @@ Optimized Alignment Algorithm Examples
 --------------------------------------
 Using the convenient ``local_pairwise_align_ssw`` function:
 
->>> from skbio.core.alignment import local_pairwise_align_ssw
+>>> from skbio.alignment import local_pairwise_align_ssw
 >>> alignment = local_pairwise_align_ssw(
 ...                 "ACTAAGGCTCTCTACCCCTCTCAGAGA",
 ...                 "ACTAAGGCTCCTAACCCCCTTTTCTCAGA"
@@ -106,7 +106,7 @@ ACTAAGGCTC-CTAACCCCCTTTTCTCAGA
 
 Using the ``StripedSmithWaterman`` object:
 
->>> from skbio.core.alignment import StripedSmithWaterman
+>>> from skbio.alignment import StripedSmithWaterman
 >>> query = StripedSmithWaterman("ACTAAGGCTCTCTACCCCTCTCAGAGA")
 >>> alignment = query("AAAAAACTCTCTAAACTCACTAAGGCTCTCTACCCCTCTTCAGAGAAGTCGA")
 >>> print alignment
@@ -118,7 +118,7 @@ Length: 28
 Using the ``StripedSmithWaterman`` object for multiple targets in an efficient
 way and finding the aligned sequence representations:
 
->>> from skbio.core.alignment import StripedSmithWaterman
+>>> from skbio.alignment import StripedSmithWaterman
 >>> alignments = []
 >>> target_sequences = [
 ...     "GCTAACTAGGCTCCCTTCTACCCCTCTCAGAGA",
@@ -158,7 +158,7 @@ Here we locally align a pair of protein sequences using gap open penalty
 of 11 and a gap extend penalty of 1 (in other words, it is much more
 costly to open a new gap than extend an existing one).
 
->>> from skbio.core.alignment.pairwise import local_pairwise_align_protein
+>>> from skbio.alignment.pairwise import local_pairwise_align_protein
 >>> s1 = "HEAGAWGHEE"
 >>> s2 = "PAWHEAE"
 >>> r = local_pairwise_align_protein(s1, s2, 11, 1)
@@ -185,7 +185,7 @@ And we can view the score of the alignment using the ``score`` method:
 Similarly, we can perform global alignment of nucleotide sequences, and print
 the resulting alignment as fasta records:
 
->>> from skbio.core.alignment.pairwise import global_pairwise_align_nucleotide
+>>> from skbio.alignment.pairwise import global_pairwise_align_nucleotide
 >>> s1 = "GCGTGCCTAAGGTATGCAAG"
 >>> s2 = "ACGTGCCTAGGTACGCAAG"
 >>> r = global_pairwise_align_nucleotide(s1, s2)

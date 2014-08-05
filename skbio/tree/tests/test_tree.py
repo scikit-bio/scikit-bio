@@ -18,7 +18,7 @@ from scipy.stats import pearsonr
 from future.utils.six import StringIO
 
 from skbio import TreeNode, DistanceMatrix
-from skbio.core.tree.tree import _dnd_tokenizer
+from skbio.tree.tree import _dnd_tokenizer
 from skbio.util.exception import (DuplicateNodeError, NoLengthError, TreeError,
                                   RecordError, MissingNodeError, NoParentError)
 

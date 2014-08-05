@@ -13,7 +13,7 @@ import warnings
 
 import numpy as np
 
-from skbio.core.alignment.pairwise import (
+from skbio.alignment.pairwise import (
     global_pairwise_align_protein, local_pairwise_align_protein,
     global_pairwise_align_nucleotide, local_pairwise_align_nucleotide,
     _make_nt_substitution_matrix, _init_matrices_sw, _init_matrices_nw,

@@ -10,7 +10,7 @@
 
 from future.builtins import zip
 from collections import defaultdict
-from skbio.core.workflow import (Exists, NotExecuted, NotNone, Workflow,
+from skbio.workflow import (Exists, NotExecuted, NotNone, Workflow,
                                  not_none, requires, method)
 from unittest import TestCase, main
 

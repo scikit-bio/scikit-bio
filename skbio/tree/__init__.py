@@ -1,8 +1,8 @@
 r"""
-Tree representations (:mod:`skbio.core.tree`)
+Tree representations (:mod:`skbio.tree`)
 =============================================
 
-.. currentmodule:: skbio.core.tree
+.. currentmodule:: skbio.tree
 
 This module provides functionality for working with trees, including
 phylogenetic trees and hierarchies, and prefix trees (i.e., tries).
@@ -39,7 +39,7 @@ Utility Functions
 Examples
 --------
 
->>> from skbio.core.tree import TreeNode
+>>> from skbio.tree import TreeNode
 
 A new tree can be constructed from a Newick string. Newick is a common format
 used to represent tree objects within a file. Newick was part of the original
@@ -163,7 +163,7 @@ Prefix trees (i.e., tries) examples
 
 Construct a Trie from a (key, value) list
 
->>> from skbio.core.tree import CompressedTrie
+>>> from skbio.tree import CompressedTrie
 >>> pair_list = [("ab",  "0"),
 ...              ("abababa", "1"),
 ...              ("abab", "2"),
@@ -205,7 +205,7 @@ Add a new (key, value) pair to the Trie
 
 Create a new trie with a list of sequences
 
->>> from skbio.core.tree import fasta_to_pairlist
+>>> from skbio.tree import fasta_to_pairlist
 
 >>> seqs = [("s0", "ACA"),
 ...         ("s1", "ACAGTC"),

@@ -15,7 +15,7 @@ import pandas as pd
 from scipy.spatial.distance import pdist
 from scipy.stats import spearmanr
 
-from skbio.core.distance import DistanceMatrix
+from skbio.distance import DistanceMatrix
 
 
 def bioenv(distance_matrix, data_frame, columns=None):
@@ -110,7 +110,7 @@ def bioenv(distance_matrix, data_frame, columns=None):
     use; it is only included here so that the doctests will pass.
 
     >>> import pandas as pd
-    >>> from skbio.core.distance import DistanceMatrix
+    >>> from skbio.distance import DistanceMatrix
     >>> from skbio.math.stats.distance import bioenv
     >>> try:
     ...     # not necessary for normal use

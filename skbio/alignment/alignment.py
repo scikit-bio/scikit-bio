@@ -18,7 +18,7 @@ import numpy as np
 from scipy.stats import entropy
 
 from skbio.util.exception import SequenceCollectionError, StockholmParseError
-from skbio.core.distance import DistanceMatrix
+from skbio.distance import DistanceMatrix
 from skbio.util.io import open_file
 
 
@@ -27,8 +27,8 @@ class SequenceCollection(object):
 
     Parameters
     ----------
-    seqs : list of `skbio.core.sequence.BiologicalSequence` objects
-        The `skbio.core.sequence.BiologicalSequence` objects to load into
+    seqs : list of `skbio.sequence.BiologicalSequence` objects
+        The `skbio.sequence.BiologicalSequence` objects to load into
         a new `SequenceCollection` object.
     validate : bool, optional
         If True, runs the `is_valid` method after construction and raises
@@ -41,18 +41,18 @@ class SequenceCollection(object):
 
     See Also
     --------
-    skbio.core.sequence.BiologicalSequence
-    skbio.core.sequence.NucleotideSequence
-    skbio.core.sequence.DNASequence
-    skbio.core.sequence.RNASequence
+    skbio.sequence.BiologicalSequence
+    skbio.sequence.NucleotideSequence
+    skbio.sequence.DNASequence
+    skbio.sequence.RNASequence
     Alignment
     skbio.parse.sequences
     skbio.parse.sequences.parse_fasta
 
     Examples
     --------
-    >>> from skbio.core.alignment import SequenceCollection
-    >>> from skbio.core.sequence import DNA
+    >>> from skbio.alignment import SequenceCollection
+    >>> from skbio.sequence import DNA
     >>> sequences = [DNA('ACCGT', id="seq1"),
     ...              DNA('AACCGGT', id="seq2")]
     >>> s1 = SequenceCollection(sequences)
@@ -71,7 +71,7 @@ class SequenceCollection(object):
         fasta_records : iterator of tuples
             The records to load into a new `SequenceCollection` object. These
             should be tuples of ``(sequence_id, sequence)``.
-        seq_constructor : skbio.core.sequence.BiologicalSequence
+        seq_constructor : skbio.sequence.BiologicalSequence
         validate : bool, optional
             If True, runs the `is_valid` method after construction and raises
             `SequenceCollectionError` if ``is_valid == False``.
@@ -88,20 +88,20 @@ class SequenceCollection(object):
 
         See Also
         --------
-        skbio.core.sequence.BiologicalSequence
-        skbio.core.sequence.NucleotideSequence
-        skbio.core.sequence.DNASequence
-        skbio.core.sequence.RNASequence
+        skbio.sequence.BiologicalSequence
+        skbio.sequence.NucleotideSequence
+        skbio.sequence.DNASequence
+        skbio.sequence.RNASequence
         Alignment
         skbio.parse.sequences
         skbio.parse.sequences.parse_fasta
 
         Examples
         --------
-        >>> from skbio.core.alignment import SequenceCollection
+        >>> from skbio.alignment import SequenceCollection
         >>> from skbio.parse.sequences import parse_fasta
         >>> from StringIO import StringIO
-        >>> from skbio.core.sequence import DNA
+        >>> from skbio.sequence import DNA
         >>> fasta_f = StringIO('>seq1\nACCGT\n>seq2\nAACCGGT\n')
         >>> s1 = SequenceCollection.from_fasta_records(
         ...     parse_fasta(fasta_f), DNA)
@@ -182,7 +182,7 @@ class SequenceCollection(object):
         -----
         `SequenceCollection` objects are equal if they are the same type,
         contain the same number of sequences, and if each of the
-        `skbio.core.sequence.BiologicalSequence` objects, in order, are equal.
+        `skbio.sequence.BiologicalSequence` objects, in order, are equal.
 
         .. shownumpydoc
 
@@ -204,19 +204,19 @@ class SequenceCollection(object):
         ----------
         index : int, str
             The position or sequence id of the
-            `skbio.core.sequence.BiologicalSequence` to return from the
+            `skbio.sequence.BiologicalSequence` to return from the
             `SequenceCollection`.
 
         Returns
         -------
-        `skbio.core.sequence.BiologicalSequence`
-            The `skbio.core.sequence.BiologicalSequence` at the specified
+        `skbio.sequence.BiologicalSequence`
+            The `skbio.sequence.BiologicalSequence` at the specified
             index in the `SequenceCollection`.
 
         Examples
         --------
-        >>> from skbio.core.alignment import SequenceCollection
-        >>> from skbio.core.sequence import DNA
+        >>> from skbio.alignment import SequenceCollection
+        >>> from skbio.sequence import DNA
         >>> sequences = [DNA('ACCGT', id="seq1"),
         ...              DNA('AACCGGT', id="seq2")]
         >>> s1 = SequenceCollection(sequences)
@@ -239,7 +239,7 @@ class SequenceCollection(object):
         Returns
         -------
         iterator
-            `skbio.core.sequence.BiologicalSequence` iterator for the
+            `skbio.sequence.BiologicalSequence` iterator for the
             `SequenceCollection`.
 
         .. shownumpydoc
@@ -298,8 +298,8 @@ class SequenceCollection(object):
 
         Examples
         --------
-        >>> from skbio.core.alignment import SequenceCollection
-        >>> from skbio.core.sequence import DNA
+        >>> from skbio.alignment import SequenceCollection
+        >>> from skbio.sequence import DNA
         >>> sequences = [DNA('ACCGT', id="seq1"),
         ...              DNA('AACCGGT', id="seq2")]
         >>> s1 = SequenceCollection(sequences)
@@ -320,7 +320,7 @@ class SequenceCollection(object):
         Returns
         -------
         iterator
-            `skbio.core.sequence.BiologicalSequence` iterator for the
+            `skbio.sequence.BiologicalSequence` iterator for the
             `SequenceCollection` in reverse order.
 
         .. shownumpydoc
@@ -349,12 +349,12 @@ class SequenceCollection(object):
         distance_fn : function
             Function for computing the distance between a pair of sequences.
             This must take two sequences as input (as
-            `skbio.core.sequence.BiologicalSequence` objects) and return a
+            `skbio.sequence.BiologicalSequence` objects) and return a
             single integer or float value.
 
         Returns
         -------
-        skbio.core.distance.DistanceMatrix
+        skbio.distance.DistanceMatrix
             Matrix containing the distances between all pairs of sequences.
 
         Raises
@@ -365,14 +365,14 @@ class SequenceCollection(object):
 
         See Also
         --------
-        skbio.core.distance.DistanceMatrix
+        skbio.distance.DistanceMatrix
         scipy.spatial.distance.hamming
 
         Examples
         --------
         >>> from scipy.spatial.distance import hamming
-        >>> from skbio.core.alignment import SequenceCollection
-        >>> from skbio.core.sequence import DNA
+        >>> from skbio.alignment import SequenceCollection
+        >>> from skbio.sequence import DNA
         >>> seqs = [DNA("ACCGGGTT", id="s1"),
         ...         DNA("ACTTGGTT", id="s2"),
         ...         DNA("ACTAGGTT", id="s3")]
@@ -422,8 +422,8 @@ class SequenceCollection(object):
 
         Examples
         --------
-        >>> from skbio.core.alignment import SequenceCollection
-        >>> from skbio.core.sequence import DNA
+        >>> from skbio.alignment import SequenceCollection
+        >>> from skbio.sequence import DNA
         >>> sequences = [DNA('ACCGT', id="seq1"),
         ...              DNA('AACCGGT', id="seq2")]
         >>> s1 = SequenceCollection(sequences)
@@ -446,13 +446,13 @@ class SequenceCollection(object):
         -------
         SequenceCollection
             A new `SequenceCollection` where
-            `skbio.core.sequence.BiologicalSequence.degap` has been called on
+            `skbio.sequence.BiologicalSequence.degap` has been called on
             each sequence.
 
         Examples
         --------
-        >>> from skbio.core.alignment import SequenceCollection
-        >>> from skbio.core.sequence import DNA
+        >>> from skbio.alignment import SequenceCollection
+        >>> from skbio.sequence import DNA
         >>> sequences = [DNA('A--CCGT.', id="seq1"),
         ...              DNA('.AACCG-GT.', id="seq2")]
         >>> s1 = SequenceCollection(sequences)
@@ -473,8 +473,8 @@ class SequenceCollection(object):
 
         Returns
         -------
-        skbio.core.sequence.BiologicalSequence
-            The `skbio.core.sequence.BiologicalSequence` with `id`.
+        skbio.sequence.BiologicalSequence
+            The `skbio.sequence.BiologicalSequence` with `id`.
 
         Raises
         ------
@@ -483,8 +483,8 @@ class SequenceCollection(object):
 
         Examples
         --------
-        >>> from skbio.core.alignment import SequenceCollection
-        >>> from skbio.core.sequence import DNA
+        >>> from skbio.alignment import SequenceCollection
+        >>> from skbio.sequence import DNA
         >>> sequences = [DNA('A--CCGT.', id="seq1"),
         ...              DNA('.AACCG-GT.', id="seq2")]
         >>> s1 = SequenceCollection(sequences)
@@ -501,13 +501,13 @@ class SequenceCollection(object):
         -------
         list
             The ordered list of ids for the
-            `skbio.core.sequence.BiologicalSequence` objects in the
+            `skbio.sequence.BiologicalSequence` objects in the
             `SequenceCollection`.
 
         Examples
         --------
-        >>> from skbio.core.alignment import SequenceCollection
-        >>> from skbio.core.sequence import DNA
+        >>> from skbio.alignment import SequenceCollection
+        >>> from skbio.sequence import DNA
         >>> sequences = [DNA('A--CCGT.', id="seq1"),
         ...              DNA('.AACCG-GT.', id="seq2")]
         >>> s1 = SequenceCollection(sequences)
@@ -547,8 +547,8 @@ class SequenceCollection(object):
 
         Examples
         --------
-        >>> from skbio.core.alignment import SequenceCollection
-        >>> from skbio.core.sequence import DNA
+        >>> from skbio.alignment import SequenceCollection
+        >>> from skbio.sequence import DNA
         >>> sequences = [DNA('ACCGT', id="seq1"),
         ...              DNA('AACCGGT', id="seq2")]
         >>> s1 = SequenceCollection(sequences)
@@ -598,12 +598,12 @@ class SequenceCollection(object):
 
         See Also
         --------
-        skbio.core.alignment.BiologicalSequence.is_valid
+        skbio.alignment.BiologicalSequence.is_valid
 
         Examples
         --------
-        >>> from skbio.core.alignment import SequenceCollection
-        >>> from skbio.core.sequence import DNA, RNA
+        >>> from skbio.alignment import SequenceCollection
+        >>> from skbio.sequence import DNA, RNA
         >>> sequences = [DNA('ACCGT', id="seq1"),
         ...              DNA('AACCGGT', id="seq2")]
         >>> s1 = SequenceCollection(sequences)
@@ -625,8 +625,8 @@ class SequenceCollection(object):
         -------
         generator of tuples
             Each tuple contains ordered
-            (`skbio.core.sequence.BiologicalSequence.id`,
-            `skbio.core.sequence.BiologicalSequence`) pairs.
+            (`skbio.sequence.BiologicalSequence.id`,
+            `skbio.sequence.BiologicalSequence`) pairs.
 
         """
         for seq in self:
@@ -639,12 +639,12 @@ class SequenceCollection(object):
         -------
         SequenceCollection
             New `SequenceCollection` object where
-            `skbio.core.sequence.BiologicalSequence.lower()` has been called
+            `skbio.sequence.BiologicalSequence.lower()` has been called
             on each sequence.
 
         See Also
         --------
-        skbio.core.sequence.BiologicalSequence.lower
+        skbio.sequence.BiologicalSequence.lower
         upper
 
         """
@@ -692,8 +692,8 @@ class SequenceCollection(object):
 
         Examples
         --------
-        >>> from skbio.core.alignment import Alignment
-        >>> from skbio.core.sequence import DNA
+        >>> from skbio.alignment import Alignment
+        >>> from skbio.sequence import DNA
         >>> sequences = [DNA('A', id="seq1"),
         ...              DNA('AT', id="seq2"),
         ...              DNA('TTTT', id="seq3")]
@@ -802,8 +802,8 @@ class Alignment(SequenceCollection):
 
     Parameters
     ----------
-    seqs : list of `skbio.core.sequence.BiologicalSequence` objects
-        The `skbio.core.sequence.BiologicalSequence` objects to load into
+    seqs : list of `skbio.sequence.BiologicalSequence` objects
+        The `skbio.sequence.BiologicalSequence` objects to load into
         a new `Alignment` object.
     validate : bool, optional
         If True, runs the `is_valid` method after construction and raises
@@ -831,18 +831,18 @@ class Alignment(SequenceCollection):
 
     See Also
     --------
-    skbio.core.sequence.BiologicalSequence
-    skbio.core.sequence.NucleotideSequence
-    skbio.core.sequence.DNASequence
-    skbio.core.sequence.RNASequence
+    skbio.sequence.BiologicalSequence
+    skbio.sequence.NucleotideSequence
+    skbio.sequence.DNASequence
+    skbio.sequence.RNASequence
     SequenceCollection
     skbio.parse.sequences
     skbio.parse.sequences.parse_fasta
 
     Examples
     --------
-    >>> from skbio.core.alignment import Alignment
-    >>> from skbio.core.sequence import DNA
+    >>> from skbio.alignment import Alignment
+    >>> from skbio.sequence import DNA
     >>> sequences = [DNA('A--CCGT', id="seq1"),
     ...              DNA('AACCGGT', id="seq2")]
     >>> a1 = Alignment(sequences)
@@ -867,13 +867,13 @@ class Alignment(SequenceCollection):
         distance_fn : function, optional
             Function for computing the distance between a pair of sequences.
             This must take two sequences as input (as
-            `skbio.core.sequence.BiologicalSequence` objects) and return a
+            `skbio.sequence.BiologicalSequence` objects) and return a
             single integer or float value. Defaults to
             `scipy.spatial.distance.hamming`.
 
         Returns
         -------
-        skbio.core.distance.DistanceMatrix
+        skbio.distance.DistanceMatrix
             Matrix containing the distances between all pairs of sequences.
 
         Raises
@@ -884,13 +884,13 @@ class Alignment(SequenceCollection):
 
         See Also
         --------
-        skbio.core.distance.DistanceMatrix
+        skbio.distance.DistanceMatrix
         scipy.spatial.distance.hamming
 
         Examples
         --------
-        >>> from skbio.core.alignment import Alignment
-        >>> from skbio.core.sequence import DNA
+        >>> from skbio.alignment import Alignment
+        >>> from skbio.sequence import DNA
         >>> seqs = [DNA("A-CCGGG", id="s1"),
         ...         DNA("ATCC--G", id="s2"),
         ...         DNA("ATCCGGA", id="s3")]
@@ -982,8 +982,8 @@ class Alignment(SequenceCollection):
 
         Examples
         --------
-        >>> from skbio.core.alignment import Alignment
-        >>> from skbio.core.sequence import DNA
+        >>> from skbio.alignment import Alignment
+        >>> from skbio.sequence import DNA
         >>> seqs = [DNA("A-CCGGG", id="s1"),
         ...         DNA("ATCC--G", id="s2"),
         ...         DNA("ATCCGGA", id="s3")]
@@ -1100,12 +1100,12 @@ class Alignment(SequenceCollection):
 
         See Also
         --------
-        skbio.core.alignment.BiologicalSequence.is_valid
+        skbio.alignment.BiologicalSequence.is_valid
 
         Examples
         --------
-        >>> from skbio.core.alignment import Alignment
-        >>> from skbio.core.sequence import DNA, RNA
+        >>> from skbio.alignment import Alignment
+        >>> from skbio.sequence import DNA, RNA
         >>> sequences = [DNA('ACCGT--', id="seq1"),
         ...              DNA('AACCGGT', id="seq2")]
         >>> a1 = Alignment(sequences)
@@ -1134,9 +1134,9 @@ class Alignment(SequenceCollection):
         constructor : type, optional
             Constructor function for creating the positional values. By
             default, these will be the same type as corresponding
-            `skbio.core.sequence.BiologicalSequence` in the
+            `skbio.sequence.BiologicalSequence` in the
             `SequenceCollection` object, but you can pass a
-            `skbio.core.sequence.BiologicalSequence` class here to ensure
+            `skbio.sequence.BiologicalSequence` class here to ensure
             that they are all of consistent type, or ``str`` to have them
             returned as strings.
 
@@ -1152,8 +1152,8 @@ class Alignment(SequenceCollection):
 
         Examples
         --------
-        >>> from skbio.core.alignment import Alignment
-        >>> from skbio.core.sequence import DNA
+        >>> from skbio.alignment import Alignment
+        >>> from skbio.sequence import DNA
         >>> sequences = [DNA('ACCGT--', id="seq1"),
         ...              DNA('AACCGGT', id="seq2")]
         >>> a1 = Alignment(sequences)
@@ -1197,7 +1197,7 @@ class Alignment(SequenceCollection):
 
         Returns
         -------
-        skbio.core.sequence.BiologicalSequence
+        skbio.sequence.BiologicalSequence
             The consensus sequence of the `Alignment`. In other words, at each
             position the most common character is chosen, and those characters
             are combined to create a new sequence.
@@ -1210,8 +1210,8 @@ class Alignment(SequenceCollection):
 
         Examples
         --------
-        >>> from skbio.core.alignment import Alignment
-        >>> from skbio.core.sequence import DNA
+        >>> from skbio.alignment import Alignment
+        >>> from skbio.sequence import DNA
         >>> sequences = [DNA('AC--', id="seq1"),
         ...              DNA('AT-C', id="seq2"),
         ...              DNA('TT-C', id="seq3")]
@@ -1255,8 +1255,8 @@ class Alignment(SequenceCollection):
 
         Examples
         --------
-        >>> from skbio.core.alignment import Alignment
-        >>> from skbio.core.sequence import DNA
+        >>> from skbio.alignment import Alignment
+        >>> from skbio.sequence import DNA
         >>> sequences = [DNA('AC--', id="seq1"),
         ...              DNA('AT-C', id="seq2"),
         ...              DNA('TT-C', id="seq3")]
@@ -1304,8 +1304,8 @@ class Alignment(SequenceCollection):
 
         Examples
         --------
-        >>> from skbio.core.alignment import Alignment
-        >>> from skbio.core.sequence import DNA
+        >>> from skbio.alignment import Alignment
+        >>> from skbio.sequence import DNA
         >>> sequences = [DNA('AC--', id="seq1"),
         ...              DNA('AT-C', id="seq2"),
         ...              DNA('TT-C', id="seq3")]
@@ -1348,8 +1348,8 @@ class Alignment(SequenceCollection):
 
         Examples
         --------
-        >>> from skbio.core.alignment import Alignment
-        >>> from skbio.core.sequence import DNA
+        >>> from skbio.alignment import Alignment
+        >>> from skbio.sequence import DNA
         >>> sequences = [DNA('AC--', id="seq1"),
         ...              DNA('AT-C', id="seq2"),
         ...              DNA('TT-C', id="seq3")]
@@ -1382,8 +1382,8 @@ class Alignment(SequenceCollection):
 
         Examples
         --------
-        >>> from skbio.core.alignment import Alignment
-        >>> from skbio.core.sequence import DNA
+        >>> from skbio.alignment import Alignment
+        >>> from skbio.sequence import DNA
         >>> sequences = [DNA('AC--', id="seq1"),
         ...              DNA('AT-C', id="seq2"),
         ...              DNA('TT-C', id="seq3")]
@@ -1447,8 +1447,8 @@ class Alignment(SequenceCollection):
 
         Examples
         --------
-        >>> from skbio.core.alignment import Alignment
-        >>> from skbio.core.sequence import DNA
+        >>> from skbio.alignment import Alignment
+        >>> from skbio.sequence import DNA
         >>> sequences = [DNA('AC--', id="seq1"),
         ...              DNA('AT-C', id="seq2"),
         ...              DNA('TT-C', id="seq3")]
@@ -1486,8 +1486,8 @@ class Alignment(SequenceCollection):
 
         Examples
         --------
-        >>> from skbio.core.alignment import Alignment
-        >>> from skbio.core.sequence import DNA
+        >>> from skbio.alignment import Alignment
+        >>> from skbio.sequence import DNA
         >>> sequences = [DNA('AC--', id="seq1"),
         ...              DNA('AT-C', id="seq2"),
         ...              DNA('TT-C', id="seq3")]
@@ -1559,8 +1559,8 @@ class StockholmAlignment(Alignment):
 
     Parameters
     ----------
-    seqs : list of `skbio.core.sequence.BiologicalSequence` objects
-        The `skbio.core.sequence.BiologicalSequence` objects to load.
+    seqs : list of `skbio.sequence.BiologicalSequence` objects
+        The `skbio.sequence.BiologicalSequence` objects to load.
     gf : dict, optional
         GF info in the format {feature: info}
     gs : dict of dicts, optional
@@ -1598,8 +1598,8 @@ class StockholmAlignment(Alignment):
         #=GC SS_cons (((.....)))
         //
 
-    >>> from skbio.core.sequence import RNA
-    >>> from skbio.core.alignment import StockholmAlignment
+    >>> from skbio.sequence import RNA
+    >>> from skbio.alignment import StockholmAlignment
     >>> from StringIO import StringIO
     >>> sto_in = StringIO("# STOCKHOLM 1.0\\n"
     ...                   "seq1     ACC--G-GGGU\\nseq2     TCC--G-GGGA\\n"
@@ -1618,8 +1618,8 @@ class StockholmAlignment(Alignment):
     We can also write out information by instantiating the StockholmAlignment
     object and then printing it.
 
-    >>> from skbio.core.sequence import RNA
-    >>> from skbio.core.alignment import StockholmAlignment
+    >>> from skbio.sequence import RNA
+    >>> from skbio.alignment import StockholmAlignment
     >>> seqs = [RNA("ACC--G-GGGU", id="seq1"),
     ...     RNA("TCC--G-GGGA", id="seq2")]
     >>> gf = {
@@ -1902,7 +1902,7 @@ class StockholmAlignment(Alignment):
 
         seq_constructor : BiologicalSequence object
             The biologicalsequence object that corresponds to what the
-            stockholm file holds. See skbio.core.sequence
+            stockholm file holds. See skbio.sequence
 
         strict : bool (optional)
             Turns on strict parsing of GR and GC lines to ensure one char per

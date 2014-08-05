@@ -13,7 +13,7 @@ from unittest import TestCase, main
 import pandas as pd
 
 from skbio import DistanceMatrix
-from skbio.core.distance import DissimilarityMatrix
+from skbio.distance import DissimilarityMatrix
 from skbio.stats.distance import CategoricalStatsResults
 from skbio.stats.distance.base import CategoricalStats
 

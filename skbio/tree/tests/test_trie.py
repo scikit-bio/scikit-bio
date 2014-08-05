@@ -14,8 +14,8 @@ from future.builtins import zip
 
 from unittest import TestCase, main
 
-from skbio.core.tree import CompressedTrie, fasta_to_pairlist
-from skbio.core.tree.trie import _CompressedNode
+from skbio.tree import CompressedTrie, fasta_to_pairlist
+from skbio.tree.trie import _CompressedNode
 
 
 class CompressedNodeTests(TestCase):

@@ -224,7 +224,7 @@ def majority_rule(trees, weights=None, cutoff=0.5, support_attr='support'):
     with the exception that we are computing majority rule and not majority
     rule extended.
 
-    >>> from skbio.core.tree import TreeNode
+    >>> from skbio.tree import TreeNode
     >>> trees = [
     ... TreeNode.from_newick("(A,(B,(H,(D,(J,(((G,E),(F,I)),C))))));"),
     ... TreeNode.from_newick("(A,(B,(D,((J,H),(((G,E),(F,I)),C)))));"),

@@ -159,7 +159,7 @@ def local_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
     --------
     local_pairwise_align
     local_pairwise_align_protein
-    skbio.core.alignment.local_pairwise_align_ssw
+    skbio.alignment.local_pairwise_align_ssw
     global_pairwise_align
     global_pairwise_align_protein
     global_pairwise_align_nucelotide
@@ -218,7 +218,7 @@ def local_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
     --------
     local_pairwise_align
     local_pairwise_align_nucleotide
-    skbio.core.alignment.local_pairwise_align_ssw
+    skbio.alignment.local_pairwise_align_ssw
     global_pairwise_align
     global_pairwise_align_protein
     global_pairwise_align_nucelotide
@@ -276,7 +276,7 @@ def local_pairwise_align(seq1, seq2, gap_open_penalty,
     --------
     local_pairwise_align_protein
     local_pairwise_align_nucleotide
-    skbio.core.alignment.local_pairwise_align_ssw
+    skbio.alignment.local_pairwise_align_ssw
     global_pairwise_align
     global_pairwise_align_protein
     global_pairwise_align_nucelotide
@@ -296,7 +296,7 @@ def local_pairwise_align(seq1, seq2, gap_open_penalty,
     """
     warn("You're using skbio's python implementation of Smith-Waterman "
          "alignment. This will be very slow (e.g., thousands of times slower) "
-         "than skbio.core.alignment.local_pairwise_align_ssw.",
+         "than skbio.alignment.local_pairwise_align_ssw.",
          EfficiencyWarning)
 
     score_matrix, traceback_matrix = _compute_score_and_traceback_matrices(
@@ -371,7 +371,7 @@ def global_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
     local_pairwise_align
     local_pairwise_align_protein
     local_pairwise_align_nucleotide
-    skbio.core.alignment.local_pairwise_align_ssw
+    skbio.alignment.local_pairwise_align_ssw
     global_pairwise_align
     global_pairwise_align_protein
 
@@ -439,7 +439,7 @@ def global_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
     local_pairwise_align
     local_pairwise_align_protein
     local_pairwise_align_nucleotide
-    skbio.core.alignment.local_pairwise_align_ssw
+    skbio.alignment.local_pairwise_align_ssw
     global_pairwise_align
     global_pairwise_align_nucelotide
 
@@ -505,7 +505,7 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
     local_pairwise_align
     local_pairwise_align_protein
     local_pairwise_align_nucleotide
-    skbio.core.alignment.local_pairwise_align_ssw
+    skbio.alignment.local_pairwise_align_ssw
     global_pairwise_align_protein
     global_pairwise_align_nucelotide
 

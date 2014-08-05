@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 r"""
-Biological sequences (:mod:`skbio.core.sequence`)
+Biological sequences (:mod:`skbio.sequence`)
 =================================================
 
-.. currentmodule:: skbio.core.sequence
+.. currentmodule:: skbio.sequence
 
 This module provides functionality for working with biological sequences,
 including generic sequences, nucelotide sequences, DNA sequences, and RNA
@@ -25,7 +25,7 @@ Classes
 
 Examples
 --------
->>> from skbio.core.sequence import DNASequence, RNASequence
+>>> from skbio.sequence import DNASequence, RNASequence
 
 New sequences are created with optional id and description fields.
 
@@ -70,7 +70,7 @@ True
 NucleotideSequences can be translated using a GeneticCode object.
 
 >>> d6 = DNASequence('ATGTCTAAATGA')
->>> from skbio.core.genetic_code import GeneticCodes
+>>> from skbio.genetic_code import GeneticCodes
 >>> gc = GeneticCodes[11]
 >>> gc.translate(d6)
 <ProteinSequence: MSK* (length: 4)>
@@ -136,7 +136,7 @@ class BiologicalSequence(Sequence):
 
     Examples
     --------
-    >>> from skbio.core.sequence import BiologicalSequence
+    >>> from skbio.sequence import BiologicalSequence
     >>> s = BiologicalSequence('GGUCGUGAAGGA')
     >>> t = BiologicalSequence('GGUCCUGAAGGU')
 
@@ -266,7 +266,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from skbio.core.sequence import BiologicalSequence
+        >>> from skbio.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUCGUGAAGGA')
         >>> 'GGU' in s
         True
@@ -298,7 +298,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from skbio.core.sequence import BiologicalSequence
+        >>> from skbio.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUCGUGAAGGA')
         >>> t = BiologicalSequence('GGUCGUGAAGGA')
         >>> s == t
@@ -332,7 +332,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from skbio.core.sequence import BiologicalSequence
+        >>> from skbio.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUCGUGAAGGA')
         >>> s[1]
         <BiologicalSequence: G (length: 1)>
@@ -357,7 +357,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from skbio.core.sequence import BiologicalSequence
+        >>> from skbio.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUCGUGAAGGA')
         >>> hash(s)
         -1080059835405276950
@@ -377,7 +377,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from skbio.core.sequence import BiologicalSequence
+        >>> from skbio.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUC')
         >>> for c in s: print(c)
         G
@@ -400,7 +400,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from skbio.core.sequence import BiologicalSequence
+        >>> from skbio.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUC')
         >>> len(s)
         4
@@ -430,7 +430,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from skbio.core.sequence import BiologicalSequence
+        >>> from skbio.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUCGUGAAGGA')
         >>> t = BiologicalSequence('GGUCGUGAAGGA')
         >>> s != t
@@ -461,7 +461,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from skbio.core.sequence import BiologicalSequence
+        >>> from skbio.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUCGUGAAGGA')
         >>> repr(s)
         '<BiologicalSequence: GGUCGUGAAG... (length: 12)>'
@@ -493,7 +493,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from skbio.core.sequence import BiologicalSequence
+        >>> from skbio.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUC')
         >>> for c in reversed(s): print(c)
         C
@@ -525,7 +525,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from skbio.core.sequence import BiologicalSequence
+        >>> from skbio.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUC')
         >>> str(s)
         'GGUC'
@@ -576,7 +576,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from skbio.core.sequence import BiologicalSequence
+        >>> from skbio.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUC')
         >>> s.count('G')
         2
@@ -600,7 +600,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from skbio.core.sequence import BiologicalSequence
+        >>> from skbio.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUC-C--ACGTT-C.')
         >>> t = s.degap()
         >>> t
@@ -641,12 +641,12 @@ class BiologicalSequence(Sequence):
         --------
         fraction_diff
         fraction_same
-        skbio.core.distance.DistanceMatrix
+        skbio.distance.DistanceMatrix
         scipy.spatial.distance.hamming
 
         Examples
         --------
-        >>> from skbio.core.sequence import BiologicalSequence
+        >>> from skbio.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUC')
         >>> t = BiologicalSequence('AGUC')
         >>> s.distance(t)
@@ -699,7 +699,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from skbio.core.sequence import BiologicalSequence
+        >>> from skbio.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUC')
         >>> t = BiologicalSequence('AGUC')
         >>> s.fraction_diff(t)
@@ -735,7 +735,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from skbio.core.sequence import BiologicalSequence
+        >>> from skbio.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUC')
         >>> t = BiologicalSequence('AGUC')
         >>> s.fraction_same(t)
@@ -779,7 +779,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from skbio.core.sequence import BiologicalSequence
+        >>> from skbio.sequence import BiologicalSequence
         >>> s = BiologicalSequence('-ACCGA-TA-')
         >>> m = s.gap_maps()
         >>> m[0]
@@ -817,7 +817,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from skbio.core.sequence import BiologicalSequence
+        >>> from skbio.sequence import BiologicalSequence
         >>> s = BiologicalSequence('..ACG--TT-')
         >>> s.gap_vector()
         [True, True, False, False, False, True, True, False, False, True]
@@ -882,7 +882,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from skbio.core.sequence import BiologicalSequence
+        >>> from skbio.sequence import BiologicalSequence
         >>> s = BiologicalSequence('ACACGACGTT-')
         >>> s.index('ACG')
         2
@@ -916,7 +916,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from skbio.core.sequence import BiologicalSequence
+        >>> from skbio.sequence import BiologicalSequence
         >>> BiologicalSequence.is_gap('.')
         True
         >>> BiologicalSequence.is_gap('P')
@@ -939,7 +939,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from skbio.core.sequence import BiologicalSequence
+        >>> from skbio.sequence import BiologicalSequence
         >>> s = BiologicalSequence('ACACGACGTT')
         >>> s.is_gapped()
         False
@@ -995,7 +995,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from skbio.core.sequence import BiologicalSequence
+        >>> from skbio.sequence import BiologicalSequence
         >>> s = BiologicalSequence('ACACGACGTT')
         >>> list(s.k_words(4, overlapping=False))
         ['ACAC', 'GACG']
@@ -1037,7 +1037,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from skbio.core.sequence import BiologicalSequence
+        >>> from skbio.sequence import BiologicalSequence
         >>> s = BiologicalSequence('ACACAT')
         >>> s.k_word_counts(3, overlapping=True)
         Counter({'ACA': 2, 'CAC': 1, 'CAT': 1})
@@ -1067,7 +1067,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from skbio.core.sequence import BiologicalSequence
+        >>> from skbio.sequence import BiologicalSequence
         >>> s = BiologicalSequence('ACACAT')
         >>> s.k_word_frequencies(3, overlapping=True)
         defaultdict(<type 'int'>, {'CAC': 0.25, 'ACA': 0.5, 'CAT': 0.25})
@@ -1126,7 +1126,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from skbio.core.sequence import NucleotideSequence
+        >>> from skbio.sequence import NucleotideSequence
         >>> seq = NucleotideSequence('TRG')
         >>> seq_generator = seq.nondegenerates()
         >>> for s in sorted(seq_generator, key=str): print(s)
@@ -1188,7 +1188,7 @@ class BiologicalSequence(Sequence):
 
         Examples
         --------
-        >>> from skbio.core.sequence import BiologicalSequence
+        >>> from skbio.sequence import BiologicalSequence
         >>> s = BiologicalSequence('ACACGACGTT')
         >>> print(s.to_fasta(terminal_character=""))
         >

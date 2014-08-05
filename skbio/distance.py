@@ -1,8 +1,8 @@
 r"""
-Dissimilarity and distance matrices (:mod:`skbio.core.distance`)
+Dissimilarity and distance matrices (:mod:`skbio.distance`)
 ================================================================
 
-.. currentmodule:: skbio.core.distance
+.. currentmodule:: skbio.distance
 
 This module provides functionality for serializing, deserializing, and
 manipulating dissimilarity and distance matrices in memory. There are two
@@ -62,7 +62,7 @@ three objects with IDs ``a``, ``b``, and ``c``::
 Load a distance matrix from the file:
 
 >>> from StringIO import StringIO
->>> from skbio.core.distance import DistanceMatrix
+>>> from skbio.distance import DistanceMatrix
 >>> dm_f = StringIO("\ta\tb\tc\n"
 ...                 "a\t0.0\t0.5\t1.0\n"
 ...                 "b\t0.5\t0.0\t0.75\n"

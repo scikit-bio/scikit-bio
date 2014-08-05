@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 r"""
-Constructing workflows (:mod:`skbio.core.workflow`)
+Constructing workflows (:mod:`skbio.workflow`)
 ===================================================
 
-.. currentmodule:: skbio.core.workflow
+.. currentmodule:: skbio.workflow
 
 Construct arbitrarily complex workflows in which the specific methods run are
 determined at runtime. This module supports short circuiting a workflow if an
@@ -29,7 +29,7 @@ Decorators
 
 Examples
 --------
->>> from skbio.core.workflow import Workflow
+>>> from skbio.workflow import Workflow
 
 As an example of the ``Workflow`` object, let's construct a sequence processor
 that will filter sequences that are < 10 nucleotides, reverse the sequence
@@ -176,7 +176,7 @@ Three final components of the workflow that are quite handy are objects that
 allow you to indicate ``anything`` as an option value, anything that is
 ``not_none``, and a mechanism to define a range of valid values.
 
->>> from skbio.core.workflow import not_none, anything
+>>> from skbio.workflow import not_none, anything
 >>> class Ex(Workflow):
 ...     @method()
 ...     @requires(option='foo', values=not_none)

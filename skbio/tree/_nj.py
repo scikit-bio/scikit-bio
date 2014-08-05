@@ -10,8 +10,8 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
-from skbio.core.distance import DistanceMatrix
-from skbio.core.tree import TreeNode
+from skbio.distance import DistanceMatrix
+from skbio.tree import TreeNode
 
 
 def nj(dm, disallow_negative_branch_length=True, result_constructor=None):
@@ -19,7 +19,7 @@ def nj(dm, disallow_negative_branch_length=True, result_constructor=None):
 
     Parameters
     ----------
-    dm : skbio.core.distance.DistanceMatrix
+    dm : skbio.distance.DistanceMatrix
         Input distance matrix containing distances between OTUs.
     disallow_negative_branch_length : bool, optional
         Neighbor joining can result in negative branch lengths, which don't
@@ -66,8 +66,8 @@ def nj(dm, disallow_negative_branch_length=True, result_constructor=None):
     Define a new distance matrix object describing the distances between five
     OTUs: a, b, c, d, and e.
 
-    >>> from skbio.core.distance import DistanceMatrix
-    >>> from skbio.core.tree import nj
+    >>> from skbio.distance import DistanceMatrix
+    >>> from skbio.tree import nj
 
     >>> data = [[0,  5,  9,  9,  8],
     ...         [5,  0, 10, 10,  9],
@@ -228,7 +228,7 @@ def _otu_to_new_node(dm, i, j, k, disallow_negative_branch_length):
 
     Parameters
     ----------
-    dm : skbio.core.distance.DistanceMatrix
+    dm : skbio.distance.DistanceMatrix
         The input distance matrix.
     i, j : str
         Identifiers of entries in the distance matrix to be collapsed. These
@@ -256,7 +256,7 @@ def _pair_members_to_new_node(dm, i, j, disallow_negative_branch_length):
 
     Parameters
     ----------
-    dm : skbio.core.distance.DistanceMatrix
+    dm : skbio.distance.DistanceMatrix
         The input distance matrix.
     i, j : str
         Identifiers of entries in the distance matrix to be collapsed (i.e.,
