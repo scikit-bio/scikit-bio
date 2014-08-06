@@ -822,23 +822,23 @@ def _traceback(traceback_matrix, score_matrix, aln1, aln2, start_row,
         current_value = traceback_matrix[current_row, current_col]
 
         if current_value == match:
-            for i in range(aln1_sequence_count):
-                aligned_seqs1[i].append(aln1[i][current_col-1])
-            for i in range(aln2_sequence_count):
-                aligned_seqs2[i].append(aln2[i][current_row-1])
+            for aligned_seq, input_seq in zip(aligned_seqs1, aln1):
+                aligned_seq.append(str(input_seq[current_col-1]))
+            for aligned_seq, input_seq in zip(aligned_seqs2, aln2):
+                aligned_seq.append(str(input_seq[current_row-1]))
             current_row -= 1
             current_col -= 1
         elif current_value == vgap:
-            for i in range(aln1_sequence_count):
-                aligned_seqs1[i].append('-')
-            for i in range(aln2_sequence_count):
-                aligned_seqs2[i].append(aln2[i][current_row-1])
+            for aligned_seq in aligned_seqs1:
+                aligned_seq.append('-')
+            for aligned_seq, input_seq in zip(aligned_seqs2, aln2):
+                aligned_seq.append(str(input_seq[current_row-1]))
             current_row -= 1
         elif current_value == hgap:
-            for i in range(aln1_sequence_count):
-                aligned_seqs1[i].append(aln1[i][current_col-1])
-            for i in range(aln2_sequence_count):
-                aligned_seqs2[i].append('-')
+            for aligned_seq, input_seq in zip(aligned_seqs1, aln1):
+                aligned_seq.append(str(input_seq[current_col-1]))
+            for aligned_seq in aligned_seqs2:
+                aligned_seq.append('-')
             current_col -= 1
         elif current_value == aend:
             continue
@@ -847,13 +847,14 @@ def _traceback(traceback_matrix, score_matrix, aln1, aln2, start_row,
                 "Invalid value in traceback matrix: %s" % current_value)
 
     for i in range(aln1_sequence_count):
-        aligned_seqs1[i] = BiologicalSequence(
-            ''.join(map(str, aligned_seqs1[i][::-1])),
-            id=_get_seq_id(aln1[i], str(i)))
+        aligned_seq = ''.join(aligned_seqs1[i][::-1])
+        seq_id = _get_seq_id(aln1[i], str(i))
+        aligned_seqs1[i] = BiologicalSequence(aligned_seq, id=seq_id)
+
     for i in range(aln2_sequence_count):
-        aligned_seqs2[i] = BiologicalSequence(
-            ''.join(map(str, aligned_seqs2[i][::-1])),
-            id=_get_seq_id(aln2[i], str(aln1_sequence_count + i)))
+        aligned_seq = ''.join(aligned_seqs2[i][::-1])
+        seq_id = _get_seq_id(aln2[i], str(i + aln1_sequence_count))
+        aligned_seqs2[i] = BiologicalSequence(aligned_seq, id=seq_id)
 
     return (aligned_seqs1, aligned_seqs2, best_score,
             current_col, current_row)
