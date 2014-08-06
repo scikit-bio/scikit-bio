@@ -21,10 +21,6 @@ API Reference
    format.sequences
    diversity
    stats
-   stats.distance
-   stats.ordination
-   stats.spatial
-   stats.gradient
    parse.sequences
    util
 
