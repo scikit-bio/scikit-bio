@@ -9,7 +9,7 @@ API Reference
 -------------
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    alignment
    sequence
@@ -19,8 +19,7 @@ API Reference
    workflow
    draw.distributions
    format.sequences
-   diversity.alpha
-   diversity.beta
+   diversity
    stats
    stats.distance
    stats.ordination
