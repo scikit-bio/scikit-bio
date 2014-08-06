@@ -15,8 +15,9 @@ from .base import _validate
 
 
 def ace(counts, rare_threshold=10):
-    """Calculate the ACE metric (Abundance-based Coverage Estimator), which is
-    defined as:
+    """Calculate the ACE metric (Abundance-based Coverage Estimator).
+
+    The ACE metric is defined as:
 
     .. math::
 

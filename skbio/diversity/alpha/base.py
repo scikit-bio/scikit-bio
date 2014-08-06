@@ -75,7 +75,9 @@ def berger_parker_d(counts):
 
 
 def brillouin_d(counts):
-    """Calculate Brillouin index of alpha diversity, which is defined as:
+    """Calculate Brillouin index of alpha diversity.
+
+    This is calculated as follows:
 
     .. math::
 
@@ -182,7 +184,7 @@ def enspie(counts):
       ENS_{pie} = \\frac{1}{\\sum_{i=1}^5{P_i^2}}
 
     where :math:`P_i` is the proportion of the community represented by species
-    i
+    i.
 
 
     Parameters
@@ -304,15 +306,16 @@ def esty_ci(counts):
 
 
 def fisher_alpha(counts):
-    """Calculate Fisher's alpha, which is a metric of diversity. Alpha is the
-    index of the following log series distribution:
+    """Calculate Fisher's alpha, a metric of diversity.
+
+    Alpha is the index of the following log series distribution:
 
     .. math::
 
       \\alpha x,\\frac{\\alpha x^2}{2},\\frac{\\alpha x^3}{3},...,
       \\frac{\\alpha x^n}{n}
 
-    Each term in the series is equal to the number of species predicited to
+    Each term in the series is equal to the number of species predicted to
     have 1,2,3,...,n individuals in the sample.
 
     Parameters
@@ -393,7 +396,9 @@ def goods_coverage(counts):
 
 
 def heip_e(counts):
-    """Calculate Heip's evenness measure, which is defined as:
+    """Calculate Heip's evenness measure.
+
+    Heip's evenness is defined as:
 
     .. math::
 
@@ -430,20 +435,20 @@ def heip_e(counts):
 def kempton_taylor_q(counts, lower_quantile=0.25, upper_quantile=0.75):
     """Calculate Kempton-Taylor Q index of alpha diversity.
 
-    Estimates the slope of the cumulative abundance curve in the interquantile
-    range. By default, uses lower and upper quartiles, rounding inwards. The Q
-    index is defined as:
+    The Q index is defined as:
 
     .. math::
 
       Q = \\frac{\\frac{1}{2}n_{R1}+\\sum_{R1+1}^{R2-1}n_r+\\frac{1}{2}n_{R2}}
       {\\log\\frac{R2}{R1}}
 
-    Where :math:`S` is the total number of species in the sample, :math:`R1`
-    and :math:`R2` are the :math:`25%` and :math:`75%` on the cumulative
-    species curve. :math:`n_{R1}` and :math:`n_{R2}` are the number of
-    individuals in those classes. :math:`n_r` is the number of species with R
-    abundance.
+    This estimates the slope of the cumulative abundance curve in the
+    interquantile range. By default, uses lower and upper quartiles, rounding
+    inwards. Where :math:`S` is the total number of species in the sample,
+    :math:`R1` and :math:`R2` are the :math:`25%` and :math:`75%` on the
+    cumulative species curve. :math:`n_{R1}` and :math:`n_{R2}` are the number
+    of individuals in those classes. :math:`n_r` is the number of species with
+    R abundance.
 
     Parameters
     ----------
@@ -490,7 +495,7 @@ def kempton_taylor_q(counts, lower_quantile=0.25, upper_quantile=0.75):
 
 
 def margalef(counts):
-    """Calculate Margalef's richness index, which is defined as:
+    """Calculate Margalef's richness index.
 
     .. math::
 
@@ -527,7 +532,9 @@ def margalef(counts):
 
 
 def mcintosh_d(counts):
-    """Calculate McIntosh dominance index D, which is defined as:
+    """Calculate McIntosh dominance index D.
+
+    The McIntosh dominance index D is defined as:
 
     .. math::
 
@@ -576,7 +583,9 @@ def mcintosh_d(counts):
 
 
 def mcintosh_e(counts):
-    """Calculate McIntosh's evenness measure E, which is defined as:
+    """Calculate McIntosh's evenness measure E.
+
+    The McIntosh evenness measure E is defined as:
 
     .. math::
 
@@ -619,7 +628,9 @@ def mcintosh_e(counts):
 
 
 def menhinick(counts):
-    """Calculate Menhinick's richness index, which is defined as:
+    """Calculate Menhinick's richness index.
+
+    The Menhinick's richness index is defined as:
 
     .. math::
 
@@ -657,7 +668,7 @@ def menhinick(counts):
 def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
     """Calculate Michaelis-Menten fit to rarefaction curve of observed OTUs.
 
-    The Michaelis-Menten equation is defined as
+    The Michaelis-Menten equation is defined as:
 
     .. math::
 
