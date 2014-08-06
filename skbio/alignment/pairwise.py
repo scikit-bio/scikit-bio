@@ -807,14 +807,10 @@ def _traceback(traceback_matrix, score_matrix, aln1, aln2, start_row,
 
     # initialize the result alignments
     aln1_sequence_count = aln1.sequence_count()
-    aligned_seqs1 = []
-    for e in range(aln1_sequence_count):
-        aligned_seqs1.append([])
+    aligned_seqs1 = [[] for e in range(aln1_sequence_count)]
 
     aln2_sequence_count = aln2.sequence_count()
-    aligned_seqs2 = []
-    for e in range(aln2_sequence_count):
-        aligned_seqs2.append([])
+    aligned_seqs2 = [[] for e in range(aln2_sequence_count)]
 
     current_row = start_row
     current_col = start_col
