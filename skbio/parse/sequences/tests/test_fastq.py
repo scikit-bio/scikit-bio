@@ -13,8 +13,8 @@ import tempfile
 
 from numpy import array
 
-from skbio.parse.sequences import parse_fastq
-from skbio.core.exception import FastqParseError
+from skbio import parse_fastq
+from skbio.util.exception import FastqParseError
 
 
 class IterableData(object):

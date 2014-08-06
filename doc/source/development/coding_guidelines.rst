@@ -168,10 +168,10 @@ The structure of your module should be similar to the example below. scikit-bio 
 .. code-block:: python
 
     r"""
-    Numbers (:mod:`skbio.core.numbers`)
-    ===================================
+    Numbers (:mod:`skbio.numbers`)
+    ==============================
 
-    .. currentmodule:: skbio.core.numbers
+    .. currentmodule:: skbio.numbers
 
     Numbers holds a sequence of numbers, and defines several statistical
     operations (mean, stdev, etc.) FrequencyDistribution holds a mapping from
@@ -240,7 +240,7 @@ There are several different approaches for testing code in python: ``nose``, ``u
 
 Whatever approach is employed, the general principle is every line of code should be tested. It is critical that your code be fully tested before you draw conclusions from results it produces. For scientific work, bugs don't just mean unhappy users who you'll never actually meet: **they may mean retracted publications**.
 
-Tests are an opportunity to invent the interface(s) you want. Write the test for a method before you write the method: often, this helps you figure out what you would want to call it and what parameters it should take. It's OK to write the tests a few methods at a time, and to change them as your ideas about the interface change. However, you shouldn't change them once you've told other people what the interface is.
+Tests are an opportunity to invent the interface(s) you want. Write the test for a method before you write the method: often, this helps you figure out what you would want to call it and what parameters it should take. It's OK to write the tests a few methods at a time, and to change them as your ideas about the interface change. However, you shouldn't change them once you've told other people what the interface is. In the spirit of this, your tests should also import the functionality that they test from the shortest alias possible. This way any change to the API will cause your tests to break, and rightly so!
 
 Never treat prototypes as production code. It's fine to write prototype code without tests to try things out, but when you've figured out the algorithm and interfaces you must rewrite it *with tests* to consider it finished. Often, this helps you decide what interfaces and functionality you actually need and what you can get rid of.
 
@@ -256,6 +256,8 @@ Some pointers
 - *Use the* ``unittest`` *or the* ``nose`` *framework with tests in a separate file for each module.* Name the test file ``test_module_name.py`` and include it inside the tests folder of the module. Keeping the tests separate from the code reduces the temptation to change the tests when the code doesn't work, and makes it easy to verify that a completely new implementation presents the same interface (behaves the same) as the old.
 
 - *Always include an* ``__init__.py`` *file in your tests directory*. This is required for the module to be included when the package is built and installed via ``setup.py``.
+
+- *Always import from a minimally deep API target*. That means you would use ``from skbio import DistanceMatrix`` instead of ``from skbio.distance import DistanceMatrix``. This allows us prevent most cases of accidental regression in our API.
 
 - *Use* ``numpy.testing`` *if you are doing anything with floating point numbers, arrays or permutations* (use ``numpy.testing.assert_almost_equal``). Do *not* try to compare floating point numbers using ``assertEqual`` if you value your sanity.
 

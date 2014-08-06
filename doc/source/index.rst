@@ -11,25 +11,24 @@ API Reference
 .. toctree::
    :maxdepth: 1
 
-   core.alignment
-   core.sequence
-   core.distance
-   core.exception
-   core.warning
-   core.genetic_code
-   core.tree
-   core.workflow
+   alignment
+   sequence
+   distance
+   genetic_code
+   tree
+   workflow
    draw.distributions
    format.sequences
-   math.diversity.alpha
-   math.diversity.beta
-   math.stats.distance
-   math.stats.misc
-   math.stats.ordination
-   math.stats.spatial
-   math.gradient
-   math.subsample
+   diversity.alpha
+   diversity.beta
+   stats
+   stats.distance
+   stats.ordination
+   stats.spatial
+   stats.gradient
    parse.sequences
+   util.exception
+   util.warning
    util.io
    util.misc
    util.testing

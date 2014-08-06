@@ -106,6 +106,7 @@ All code that is added to scikit-bio must be unit tested, and the unit test code
 - C code can be correctly compiled.
 - Cython code is correctly generated.
 - All code is valid in Python 2.7 and >=3.3.
+- All tests import functionality from the appropriate minimally deep API.
 
 The scikit-bio coding guidelines describe our [expectations for unit tests](http://scikit-bio.org/development/coding_guidelines.html). You should review the unit test section before working on your test code.
 
