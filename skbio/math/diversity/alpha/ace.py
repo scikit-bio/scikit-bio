@@ -15,7 +15,30 @@ from .base import _validate
 
 
 def ace(counts, rare_threshold=10):
-    """Calculate the ACE metric (Abundance-based Coverage Estimator).
+    """Calculate the ACE metric (Abundance-based Coverage Estimator), which is
+    defined as:
+
+    .. math::
+
+      S_{ace} = S_{abund}+\\frac{S_{rare}}{C_{ace}}+
+      \\frac{F_1}{C_{ace}}\\gamma^2_{ace}
+
+    where :math:`S_{ace}` is the number of abundant species (with more than 10
+    individuals) when all samples are pooled, :math:`S_{rare}` is the number of
+    rare species (with more than 10 individuals) when all samples are pooled,
+    :math:`C_{ace}` is the sample abundance coverage estimator, :math:`F_1` is
+    the frequency of singletons, and :math:`gamma^2_{ace}` is the estimated
+    coefficient of variation for rare species.
+
+    The estimated coefficient of varation is defined as:
+
+    .. math::
+
+      \\gamma^2_{ace} = max\\left[\\frac{S_{rare}}{C_{ace}}
+      \\frac{\\sum^{10}_{i=1}{{i\\left(i-1\\right)}}F_i}
+      {\\left(N_{rare}\\right)\\left(N_{rare}-1\\right)} -1,0\\right]
+
+
 
     Parameters
     ----------
