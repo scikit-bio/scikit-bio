@@ -72,13 +72,13 @@ the scikit-bio docs.
 
 The easiest way to get started with documenting your code is to look at the
 docstrings in existing scikit-bio modules. A couple of modules to start with
-are ```skbio.core.sequence``` and ```skbio.core.distance```. Go ahead and look
-through those now. We've structured our docs in a similar way to
+are ```skbio.sequence``` and ```skbio.distance```. Go ahead and look through
+those now. We've structured our docs in a similar way to
 [SciPy's documentation](http://docs.scipy.org/doc/scipy/reference/), so that
 may be another good place to look for examples.
 
 We'll take a top-down approach by discussing how to document a new module that
-you'd like to add to scikit-bio (let's call it ```skbio/core/example.py```).
+you'd like to add to scikit-bio (let's call it ```skbio/example.py```).
 
 #### Module docstring
 
@@ -88,8 +88,8 @@ start with a title for the module:
 
     #!/usr/bin/env python
     """
-    Documentation examples (:mod:`skbio.core.example`)
-    ==================================================
+    Documentation examples (:mod:`skbio.example`)
+    =============================================
 
 It is important to include the ```:mod:``` Sphinx directive in the title, as
 this title will be included in the table of contents. Also make sure that the
@@ -97,10 +97,10 @@ title underline is the same length as the title.
 
 We also need to include another Sphinx directive below this:
 
-    .. currentmodule:: skbio.core.example
+    .. currentmodule:: skbio.example
 
 This directive tells Sphinx that other classes, functions, etc. that we will
-reference are located in the ```skbio.core.example``` module.
+reference are located in the ```skbio.example``` module.
 
 Next, include a more detailed description of the module. For example:
 
@@ -157,7 +157,7 @@ that they can be automatically tested (e.g., using ```nosetests
 
     Run the ``example_function1`` function:
 
-    >>> from skbio.core.example import example_function1
+    >>> from skbio.example import example_function1
     >>> example_function1("hello", "world")
     hello world!
 
@@ -211,19 +211,19 @@ documentation build system:
 1. Make sure you're within the ```scikit-bio/doc``` directory.
 2. Create a new file with the same name as your module under the ```source```
    directory. Do not include ```skbio``` as part of the name, and use
-   ```.rst``` as the suffix. For example, ```source/core.example.rst```.
-3. Add the following line to ```source/core.example.rst``` to have your
-   module's docstring pulled into the document:
+   ```.rst``` as the suffix. For example, ```source/example.rst```.
+3. Add the following line to ```source/example.rst``` to have your module's
+   docstring pulled into the document:
 
     ```
-    .. automodule:: skbio.core.example
+    .. automodule:: skbio.example
     ```
 
 4. Add the following line to ```source/index.rst``` to add the new page to the
    top-level table of contents:
 
     ```
-    core.example
+    example
     ```
 
 That's it! You can now try building the documentation, which should include the

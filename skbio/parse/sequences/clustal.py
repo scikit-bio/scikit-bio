@@ -7,7 +7,7 @@
 # -----------------------------------------------------------------------------
 from __future__ import absolute_import, division, print_function
 
-from skbio.core.exception import RecordError
+from skbio.util.exception import RecordError
 from skbio.parse.record import DelimitedSplitter
 
 
