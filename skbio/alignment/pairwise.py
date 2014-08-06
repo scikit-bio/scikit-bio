@@ -8,6 +8,7 @@
 
 from __future__ import absolute_import, division, print_function
 from warnings import warn
+from itertools import product
 
 import numpy as np
 from future.builtins import range, zip
@@ -676,29 +677,28 @@ def _init_matrices_nw_no_terminal_gap_penalty(
 def _compute_substitution_score(aln1_chars, aln2_chars, substitution_matrix,
                                 gap_substitution_score):
     substitution_score = 0
-    for aln2_char in aln2_chars:
-        for aln1_char in aln1_chars:
-            if BiologicalSequence.is_gap(aln2_char) or\
-               BiologicalSequence.is_gap(aln1_char):
-                    substitution_score += gap_substitution_score
-            else:
-                try:
-                    substitution_score += \
-                        substitution_matrix[aln1_char][aln2_char]
-                except KeyError:
-                    offending_chars = \
-                        [c for c in (aln1_char, aln2_char)
-                         if c not in substitution_matrix]
-                    raise ValueError(
-                        "One of the sequences contains a character that is "
-                        "not contained in the substitution matrix. Are you "
-                        "using an appropriate substitution matrix for your "
-                        "sequence type (e.g., a nucleotide substitution "
-                        "matrix does not make sense for aligning protein "
-                        "sequences)? Does your sequence contain invalid "
-                        "characters? The offending character(s) is: "
+    for aln1_char, aln2_char in product(aln1_chars, aln2_chars):
+        if BiologicalSequence.is_gap(aln1_char) or\
+           BiologicalSequence.is_gap(aln2_char):
+                substitution_score += gap_substitution_score
+        else:
+            try:
+                substitution_score += \
+                    substitution_matrix[aln1_char][aln2_char]
+            except KeyError:
+                offending_chars = \
+                    [c for c in (aln1_char, aln2_char)
+                     if c not in substitution_matrix]
+                raise ValueError(
+                    "One of the sequences contains a character that is "
+                    "not contained in the substitution matrix. Are you "
+                    "using an appropriate substitution matrix for your "
+                    "sequence type (e.g., a nucleotide substitution "
+                    "matrix does not make sense for aligning protein "
+                    "sequences)? Does your sequence contain invalid "
+                    "characters? The offending character(s) is: "
                         " %s." % ', '.join(offending_chars))
-    substitution_score /= (len(aln2_chars) * len(aln1_chars))
+    substitution_score /= (len(aln1_chars) * len(aln2_chars))
     return substitution_score
 
 
