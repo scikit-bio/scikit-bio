@@ -19,20 +19,10 @@ API Reference
    workflow
    draw.distributions
    format.sequences
-   diversity.alpha
-   diversity.beta
+   diversity
    stats
-   stats.distance
-   stats.ordination
-   stats.spatial
-   stats.gradient
    parse.sequences
-   util.exception
-   util.warning
-   util.io
-   util.misc
-   util.testing
-
+   util
 
 Developer Documentation
 -----------------------
