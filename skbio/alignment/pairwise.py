@@ -330,9 +330,9 @@ def global_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
 
     Parameters
     ----------
-    seq1 : str, BiologicalSequence or Alignment
+    seq1 : str, BiologicalSequence, or Alignment
         The first unaligned sequence(s).
-    seq2 : str, BiologicalSequence or Alignment
+    seq2 : str, BiologicalSequence, or Alignment
         The second unaligned sequence(s).
     gap_open_penalty : int or float, optional
         Penalty for opening a gap (this is substracted from previous best
@@ -409,9 +409,9 @@ def global_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
 
     Parameters
     ----------
-    seq1 : str, BiologicalSequence or Alignment
+    seq1 : str, BiologicalSequence, or Alignment
         The first unaligned sequence(s).
-    seq2 : str, BiologicalSequence or Alignment
+    seq2 : str, BiologicalSequence, or Alignment
         The second unaligned sequence(s).
     gap_open_penalty : int or float, optional
         Penalty for opening a gap (this is substracted from previous best
@@ -478,9 +478,9 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
 
     Parameters
     ----------
-    seq1 : str, BiologicalSequence or Alignment
+    seq1 : str, BiologicalSequence, or Alignment
         The first unaligned sequence(s).
-    seq2 : str, BiologicalSequence or Alignment
+    seq2 : str, BiologicalSequence, or Alignment
         The second unaligned sequence(s).
     gap_open_penalty : int or float
         Penalty for opening a gap (this is substracted from previous best
