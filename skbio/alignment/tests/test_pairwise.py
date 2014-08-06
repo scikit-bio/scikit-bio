@@ -129,6 +129,14 @@ class PairwiseAlignmentTests(TestCase):
                 gap_open_penalty=10., gap_extend_penalty=5.)
         self.assertEqual(actual.ids(), list('01'))
 
+        # TypeError on invalid input
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            self.assertRaises(TypeError, global_pairwise_align_protein,
+                              42, "HEAGAWGHEE")
+            self.assertRaises(TypeError, global_pairwise_align_protein,
+                              "HEAGAWGHEE", 42)
+
     def test_global_pairwise_align_protein_penalize_terminal_gaps(self):
         expected = ("HEAGAWGHEE", "---PAWHEAE", 1.0)
         with warnings.catch_warnings():
@@ -235,6 +243,14 @@ class PairwiseAlignmentTests(TestCase):
                 gap_open_penalty=10., gap_extend_penalty=5.)
         self.assertEqual(actual.ids(), list('01'))
 
+        # TypeError on invalid input
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            self.assertRaises(TypeError, local_pairwise_align_protein,
+                              42, "HEAGAWGHEE")
+            self.assertRaises(TypeError, local_pairwise_align_protein,
+                              "HEAGAWGHEE", 42)
+
     def test_global_pairwise_align_nucleotide(self):
         expected = ("G-ACCTTGACCAGGTACC", "GAACTTTGAC---GTAAC", 41.0, 0, 0)
         with warnings.catch_warnings():
@@ -301,6 +317,14 @@ class PairwiseAlignmentTests(TestCase):
                 mismatch_score=-4)
         self.assertEqual(actual.ids(), list('01'))
 
+        # TypeError on invalid input
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            self.assertRaises(TypeError, global_pairwise_align_nucleotide,
+                              42, "HEAGAWGHEE")
+            self.assertRaises(TypeError, global_pairwise_align_nucleotide,
+                              "HEAGAWGHEE", 42)
+
     def test_local_pairwise_align_nucleotide(self):
         expected = ("ACCTTGACCAGGTACC", "ACTTTGAC---GTAAC", 41.0, 1, 2)
         with warnings.catch_warnings():
@@ -362,6 +386,14 @@ class PairwiseAlignmentTests(TestCase):
                 gap_open_penalty=10., gap_extend_penalty=5., match_score=5,
                 mismatch_score=-4)
         self.assertEqual(actual.ids(), list('01'))
+
+        # TypeError on invalid input
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            self.assertRaises(TypeError, local_pairwise_align_nucleotide,
+                              42, "HEAGAWGHEE")
+            self.assertRaises(TypeError, local_pairwise_align_nucleotide,
+                              "HEAGAWGHEE", 42)
 
     def test_nucleotide_aligners_use_substitution_matrices(self):
         alt_sub = _make_nt_substitution_matrix(10, -10)
