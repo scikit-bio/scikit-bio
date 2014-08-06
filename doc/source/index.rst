@@ -9,7 +9,7 @@ API Reference
 -------------
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    alignment
    sequence
@@ -26,12 +26,7 @@ API Reference
    stats.spatial
    stats.gradient
    parse.sequences
-   util.exception
-   util.warning
-   util.io
-   util.misc
-   util.testing
-
+   util
 
 Developer Documentation
 -----------------------
