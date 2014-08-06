@@ -697,7 +697,7 @@ def _compute_substitution_score(aln1_chars, aln2_chars, substitution_matrix,
                     "matrix does not make sense for aligning protein "
                     "sequences)? Does your sequence contain invalid "
                     "characters? The offending character(s) is: "
-                        " %s." % ', '.join(offending_chars))
+                    " %s." % ', '.join(offending_chars))
     substitution_score /= (len(aln1_chars) * len(aln2_chars))
     return substitution_score
 
