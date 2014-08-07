@@ -301,10 +301,12 @@ class TreeTests(TestCase):
         self.assertEqual(obs, exp)
 
         identity = t.find_all(t)
-        self.assertEqual(identity, t)
+        self.assertEqual(len(identity), 1)
+        self.assertEqual(identity[0], t)
 
         identity_name = t.find_all('root')
-        self.assertEqual(identity_name, t)
+        self.assertEqual(len(identity_name), 1)
+        self.assertEqual(identity_name[0], t)
 
         with self.assertRaises(MissingNodeError):
             t.find_all('missing')

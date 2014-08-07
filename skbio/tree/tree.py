@@ -1346,7 +1346,9 @@ class TreeNode(object):
         The first call to `find_all` will cache all nodes in the tree on the
         assumption that additional calls to `find_all` will be made.
 
-        This method will only search over internal nodes of a tree.
+        This method will only search over internal nodes of a tree. As such,
+        this method will raise a `MissingNodeError` if the node name is a tip
+        within the tree but not an internal node.
 
         Parameters
         ----------
@@ -1379,8 +1381,21 @@ class TreeNode(object):
         c a b
         c f g
 
-       """
-       pass
+        """
+        root = self.root()
+
+        # if what is being passed in looks like a node, just return it
+        if isinstance(name, root.__class__):
+            return [name]
+
+        root.create_caches()
+
+        nodes = root._non_tip_cache.get(name)
+
+        if nodes is None:
+            raise MissingNodeError("Node %s is not in self" % name)
+        else:
+            return nodes
 
     def find(self, name):
         r"""Find a node by `name`.
