@@ -14,9 +14,9 @@ try:
     from future.backports.test.support import import_fresh_module
 except ImportError:
     from future.standard_library.test.support import import_fresh_module
+from io import StringIO
 
 import unittest
-from StringIO import StringIO
 from tempfile import mkstemp
 
 from skbio.io import (DuplicateRegistrationError,
@@ -379,7 +379,7 @@ class TestGuessFormat(RegistryTest):
             return
 
     def test_no_matches(self):
-        fh = StringIO("no matches here")
+        fh = StringIO(u"no matches here")
         with self.assertRaises(FormatIdentificationError) as cm:
             self.module.guess_format(fh)
         self.assertTrue(str(fh) in cm.exception.message)
@@ -393,11 +393,11 @@ class TestGuessFormat(RegistryTest):
         fh.close()
 
     def test_one_match(self):
-        fh = StringIO("contains a 3")
+        fh = StringIO(u"contains a 3")
         self.assertEqual('format3', self.module.guess_format(fh))
 
     def test_many_matches(self):
-        fh = StringIO("1234 will match all")
+        fh = StringIO(u"1234 will match all")
         with self.assertRaises(FormatIdentificationError) as cm:
             self.module.guess_format(fh)
         self.assertTrue("format1" in cm.exception.message)
@@ -407,18 +407,18 @@ class TestGuessFormat(RegistryTest):
         fh.close()
 
     def test_no_matches_w_cls(self):
-        fh = StringIO("no matches here")
+        fh = StringIO(u"no matches here")
         with self.assertRaises(FormatIdentificationError) as cm:
             self.module.guess_format(fh, cls=self.cls)
         self.assertTrue(str(fh) in cm.exception.message)
         fh.close()
 
     def test_one_match_w_cls(self):
-        fh = StringIO("contains a 3")
+        fh = StringIO(u"contains a 3")
         self.assertEqual('format3', self.module.guess_format(fh, cls=self.cls))
 
     def test_many_matches_w_cls(self):
-        fh = StringIO("1234 will only format3 and format4 w/ class")
+        fh = StringIO(u"1234 will only format3 and format4 w/ class")
         with self.assertRaises(FormatIdentificationError) as cm:
             self.module.guess_format(fh, cls=self.cls)
         self.assertTrue("format1" not in cm.exception.message)
@@ -439,7 +439,7 @@ class TestRead(RegistryTest):
         fh.close()
 
     def test_format_is_none(self):
-        fh = StringIO('1\n2\n3\n4')
+        fh = StringIO(u'1\n2\n3\n4')
 
         @self.module.register_identifier('format')
         def identifier(fh):
@@ -454,7 +454,7 @@ class TestRead(RegistryTest):
         fh.close()
 
     def test_into_is_none(self):
-        fh = StringIO('1\n2\n3\n4')
+        fh = StringIO(u'1\n2\n3\n4')
 
         @self.module.register_reader('format')
         def reader(fh):
@@ -495,7 +495,7 @@ class TestRead(RegistryTest):
         self.assertTrue('not_a_format2' in cm.exception.message)
 
     def test_reader_exists(self):
-        fh = StringIO('1\n2\n3\n4')
+        fh = StringIO(u'1\n2\n3\n4')
 
         @self.module.register_identifier('format')
         def identifier(fh):
@@ -556,7 +556,7 @@ class TestWrite(RegistryTest):
 
         @self.module.register_writer('format', self.cls)
         def writer(obj, fh):
-            fh.write('\n'.join(obj.list))
+            fh.write(u'\n'.join(obj.list))
 
         self.module.write(obj, format='format', into=fh)
         fh.seek(0)
