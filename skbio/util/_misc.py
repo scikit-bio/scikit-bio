@@ -29,7 +29,7 @@ def is_casava_v180_or_later(header_line):
 
     Examples
     --------
-    >>> from skbio.util.misc import is_casava_v180_or_later
+    >>> from skbio.util import is_casava_v180_or_later
     >>> print(is_casava_v180_or_later('@foo'))
     False
     >>> id_ = '@M00176:17:000000000-A0CNA:1:1:15487:1773 1:N:0:0'
@@ -68,7 +68,7 @@ def safe_md5(open_file, block_size=2 ** 20):
     Examples
     --------
     >>> from StringIO import StringIO
-    >>> from skbio.util.misc import safe_md5
+    >>> from skbio.util import safe_md5
     >>> fd = StringIO("foo bar baz") # open file like object
     >>> x = safe_md5(fd)
     >>> x.hexdigest()
@@ -105,7 +105,7 @@ def remove_files(list_of_filepaths, error_on_missing=True):
     --------
     >>> from tempfile import NamedTemporaryFile
     >>> from os.path import exists
-    >>> from skbio.util.misc import remove_files
+    >>> from skbio.util import remove_files
     >>> h = NamedTemporaryFile(delete=False)
     >>> exists(h.name) # it exists
     True
@@ -159,7 +159,7 @@ def create_dir(dir_name, fail_on_exist=False, handle_errors_externally=False):
 
     Examples
     --------
-    >>> from skbio.util.misc import create_dir
+    >>> from skbio.util import create_dir
     >>> from os.path import exists, join
     >>> from tempfile import gettempdir
     >>> from os import rmdir
@@ -211,7 +211,7 @@ def flatten(items):
 
     Examples
     --------
-    >>> from skbio.util.misc import flatten
+    >>> from skbio.util import flatten
     >>> h = [['a', 'b', 'c', 'd'], [1, 2, 3, 4, 5], ['x', 'y'], ['foo']]
     >>> print(flatten(h))
     ['a', 'b', 'c', 'd', 1, 2, 3, 4, 5, 'x', 'y', 'foo']

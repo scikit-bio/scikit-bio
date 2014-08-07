@@ -2834,7 +2834,7 @@ def _dnd_tokenizer(data):
 
     Examples
     --------
-    >>> from skbio.tree.tree import _dnd_tokenizer
+    >>> from skbio.tree._tree import _dnd_tokenizer
     >>> for token in _dnd_tokenizer("((tip1, tip2)internal1)"):
     ...     print(token)
     (
