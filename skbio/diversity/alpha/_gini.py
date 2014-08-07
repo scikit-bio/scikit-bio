@@ -11,7 +11,7 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
-from .base import _validate
+from ._base import _validate
 
 
 def gini_index(data, method='rectangles'):

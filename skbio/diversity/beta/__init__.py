@@ -213,7 +213,7 @@ References
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from .base import pw_distances, pw_distances_from_table
+from ._base import pw_distances, pw_distances_from_table
 
 __all__ = ["pw_distances", "pw_distances_from_table"]
 

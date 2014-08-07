@@ -15,7 +15,7 @@ import pandas as pd
 from skbio import DistanceMatrix
 from skbio.distance import DissimilarityMatrix
 from skbio.stats.distance import CategoricalStatsResults
-from skbio.stats.distance.base import CategoricalStats
+from skbio.stats.distance._base import CategoricalStats
 
 
 class CategoricalStatsTests(TestCase):

@@ -17,16 +17,12 @@ from matplotlib import use
 use('Agg', warn=False)
 import matplotlib.pyplot as plt
 
-from skbio.draw.distributions import (boxplots, grouped_distributions,
-                                      _calc_data_point_locations,
-                                      _calc_data_point_ticks, _color_box_plot,
-                                      _create_legend,
-                                      _get_distribution_markers,
-                                      _is_single_matplotlib_color,
-                                      _plot_bar_data, _plot_box_data,
-                                      _plot_scatter_data, _set_axes_options,
-                                      _set_figure_size, _validate_input,
-                                      _validate_x_values)
+from skbio.draw import boxplots, grouped_distributions
+from skbio.draw._distributions import (
+    _calc_data_point_locations, _calc_data_point_ticks, _color_box_plot,
+    _create_legend, _get_distribution_markers, _is_single_matplotlib_color,
+    _plot_bar_data, _plot_box_data, _plot_scatter_data, _set_axes_options,
+    _set_figure_size, _validate_input, _validate_x_values)
 
 
 class DistributionsTests(TestCase):

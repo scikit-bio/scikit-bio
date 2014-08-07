@@ -22,8 +22,7 @@ from scipy.spatial.distance import pdist
 from skbio import DistanceMatrix
 from skbio.stats.ordination import (CA, RDA, CCA, PCoA, OrdinationResults,
                                     corr, mean_and_std)
-from skbio.util import FileFormatError
-from skbio.util.testing import get_data_path
+from skbio.util import FileFormatError, get_data_path
 
 
 def normalize_signs(arr1, arr2):
