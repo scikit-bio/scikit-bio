@@ -9,5 +9,8 @@
 from .ssw_wrapper import (
     StripedSmithWaterman, local_pairwise_align_ssw, AlignmentStructure)
 
+__all__ = ['StripedSmithWaterman', 'AlignmentStructure',
+           'local_pairwise_align_ssw']
+
 from numpy.testing import Tester
 test = Tester().test

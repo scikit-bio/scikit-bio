@@ -229,7 +229,10 @@ from ._exception import SequenceCollectionError, StockholmParseError
 __all__ = ['Alignment', 'SequenceCollection', 'StockholmAlignment',
            'StripedSmithWaterman', 'AlignmentStructure',
            'local_pairwise_align_ssw', 'SequenceCollectionError',
-           'StockholmParseError']
+           'StockholmParseError', 'global_pairwise_align',
+           'global_pairwise_align_nucleotide', 'global_pairwise_align_protein',
+           'local_pairwise_align', 'local_pairwise_align_nucleotide',
+           'local_pairwise_align_protein']
 
 from numpy.testing import Tester
 test = Tester().test
