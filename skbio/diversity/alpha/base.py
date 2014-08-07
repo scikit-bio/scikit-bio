@@ -45,6 +45,10 @@ def berger_parker_d(counts):
 
        d = \\frac{N_{max}}{N}
 
+    :math:`N_{max}` is defined as the number of individuals in the most
+    abundant OTUs, and :math:`N` is defined as the total number of individuals
+    in the sample.
+
     Parameters
     ----------
     counts : 1-D array_like, int
@@ -71,11 +75,17 @@ def berger_parker_d(counts):
 
 
 def brillouin_d(counts):
-    """Calculate Brillouin index of alpha diversity, which is defined as:
+    """Calculate Brillouin index of alpha diversity.
+
+    This is calculated as follows:
 
     .. math::
 
-       HB = \\frac{\\ln N!-\\sum^5_{i=1}{\\ln n_i!}}{N}
+       HB = \\frac{\\ln N!-\\sum^s_{i=1}{\\ln n_i!}}{N}
+
+    :math:`N` is defined as the total number of individuals in the sample,
+    :math:`s` is the number of OTUs, and :math:`n_i` is defined as the number
+    of individuals in the ith OTUs.
 
 
     Parameters
@@ -168,7 +178,15 @@ def doubles(counts):
 def enspie(counts):
     """Calculate ENS_pie alpha diversity measure.
 
-    ENS_pie is equivalent to ``1 / dominance``.
+    ENS_pie is equivalent to ``1 / dominance``:
+
+    .. math::
+
+      ENS_{pie} = \\frac{1}{\\sum_{i=1}^s{p_i^2}}
+
+    where :math:`s` is the number of OTUs and :math:`p_i` is the proportion of
+    the community represented by OTU i.
+
 
     Parameters
     ----------
@@ -289,7 +307,17 @@ def esty_ci(counts):
 
 
 def fisher_alpha(counts):
-    """Calculate Fisher's alpha.
+    """Calculate Fisher's alpha, a metric of diversity.
+
+    Alpha is the index of the following log series distribution:
+
+    .. math::
+
+      \\alpha x,\\frac{\\alpha x^2}{2},\\frac{\\alpha x^3}{3},...,
+      \\frac{\\alpha x^n}{n}
+
+    Each term in the series is equal to the number of OTUs predicted to
+    have 1,2,3,...,n individuals in the sample.
 
     Parameters
     ----------
@@ -371,6 +399,15 @@ def goods_coverage(counts):
 def heip_e(counts):
     """Calculate Heip's evenness measure.
 
+    Heip's evenness is defined as:
+
+    .. math::
+
+      \\frac{(e^H-1)}{(S-1)}
+
+    Where :math:`H` is defined as the Shannon-Wiener entropy of counts and
+    :math:`S` is defined as the number of OTUs.
+
     Parameters
     ----------
     counts : 1-D array_like, int
@@ -399,8 +436,19 @@ def heip_e(counts):
 def kempton_taylor_q(counts, lower_quantile=0.25, upper_quantile=0.75):
     """Calculate Kempton-Taylor Q index of alpha diversity.
 
-    Estimates the slope of the cumulative abundance curve in the interquantile
-    range. By default, uses lower and upper quartiles, rounding inwards.
+    The Q index is defined as:
+
+    .. math::
+
+      Q = \\frac{\\frac{1}{2}n_{R1}+\\sum_{R1+1}^{R2-1}n_r+\\frac{1}{2}n_{R2}}
+      {\\log\\frac{R2}{R1}}
+
+    This estimates the slope of the cumulative abundance curve in the
+    interquantile range. By default, uses lower and upper quartiles, rounding
+    inwards. Where :math:`R1` and :math:`R2` are the 25\\% and 75\\% on the
+    cumulative OTUs curve. :math:`n_{R1}` and :math:`n_{R2}` are the number
+    of individuals in those classes. :math:`n_r` is the number of OTUs with
+    R abundance.
 
     Parameters
     ----------
@@ -433,7 +481,7 @@ def kempton_taylor_q(counts, lower_quantile=0.25, upper_quantile=0.75):
     References
     ----------
     .. [1] Kempton, R. A. and Taylor, L. R. (1976) Models and statistics for
-       species diversity. Nature, 262, 818-820.
+       OTUs diversity. Nature, 262, 818-820.
     .. [2] http://www.pisces-conservation.com/sdrhelp/index.html
 
     """
@@ -447,13 +495,13 @@ def kempton_taylor_q(counts, lower_quantile=0.25, upper_quantile=0.75):
 
 
 def margalef(counts):
-    """Calculate Margalef's richness index, which is defined as:
+    """Calculate Margalef's richness index.
 
     .. math::
 
        D = \\frac{(S - 1)}{\\ln N}
 
-    where :math:`S` is the species number and :math:`N` is the
+    where :math:`S` is the OTUs number and :math:`N` is the
     total number of individuals (sum of abundances for all OTUs).
 
 
@@ -484,7 +532,9 @@ def margalef(counts):
 
 
 def mcintosh_d(counts):
-    """Calculate McIntosh dominance index D, which is defined as:
+    """Calculate McIntosh dominance index D.
+
+    The McIntosh dominance index D is defined as:
 
     .. math::
 
@@ -498,7 +548,7 @@ def mcintosh_d(counts):
         U = \\sqrt{\\sum{{n_i}^2}}
 
     where :math:`n_i` is the sum of abundances for all OTUs in the
-    :math:`i_{th}` species.
+    :math:`i_{th}` OTUs.
 
     Parameters
     ----------
@@ -535,6 +585,16 @@ def mcintosh_d(counts):
 def mcintosh_e(counts):
     """Calculate McIntosh's evenness measure E.
 
+    The McIntosh evenness measure E is defined as:
+
+    .. math::
+
+      E = \\frac{\\sqrt{\\sum{n_i^2}}}{\\sqrt{((N-S+1)^2 + S -1}}
+
+    Where :math:`n_i` is the number of individuals in the ith OTUs,
+    :math:`N` is the total number of individuals, and :math:`S` is the number
+    of OTUs.
+
     Parameters
     ----------
     counts : 1-D array_like, int
@@ -570,6 +630,15 @@ def mcintosh_e(counts):
 def menhinick(counts):
     """Calculate Menhinick's richness index.
 
+    The Menhinick's richness index is defined as:
+
+    .. math::
+
+      D_{Mn} = \\frac{S}{\\sqrt{N}}
+
+    Where :math:`S` is the number of OTUs recorded and :math:`N` is the
+    total number of individuals in the sample.
+
     Assumes square-root accumulation.
 
     Parameters
@@ -599,7 +668,7 @@ def menhinick(counts):
 def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
     """Calculate Michaelis-Menten fit to rarefaction curve of observed OTUs.
 
-    The Michaelis-Menten equation is defined as
+    The Michaelis-Menten equation is defined as:
 
     .. math::
 
@@ -759,6 +828,14 @@ def robbins(counts):
 def shannon(counts, base=2):
     """Calculate Shannon entropy of counts (H), default in bits.
 
+    .. math::
+
+      H = -\\sum_{i=1}^s\\left(p_i\\log_2 p_i\\right)
+
+    Where :math:`p_i` is the proportion of individuals in the ith OTUs,
+    :math:`s` is the number of OTUs, and :math:`N` is the total number of
+    individuals in the sample.
+
     Parameters
     ----------
     counts : 1-D array_like, int
@@ -791,7 +868,14 @@ def shannon(counts, base=2):
 def simpson(counts):
     """Calculate Simpson's index.
 
-    Simpson's index is defined as 1 - dominance.
+    Simpson's index is defined as 1 - dominance:
+
+    .. math::
+
+       1 - \\sum{p_i^2}
+
+    where :math:`p_i` is the proportion of the entire community that OTU
+    :math:`i` represents.
 
     Parameters
     ----------
@@ -884,6 +968,17 @@ def singles(counts):
 def strong(counts):
     """Calculate Strong's dominance index (Dw).
 
+    Strong's dominance index is defined as:
+
+    .. math::
+
+      D_w = max_i[(\\frac{b_i}{Q})-\\frac{i}{R}]
+
+    where :math:`b_i` is sequential cumulative totaling of the ith OTUs
+    abundance values ranked from largest to smallest, :math:`Q` is the total
+    number of individuals in the sample, :math:`R` is the number of OTUs in the
+    sample, and :math:`max_i` is the largest calculated ith values.
+
     Parameters
     ----------
     counts : 1-D array_like, int
@@ -901,7 +996,7 @@ def strong(counts):
 
     References
     ----------
-    .. [1] Strong, W. L., 2002 Assessing species abundance uneveness within and
+    .. [1] Strong, W. L., 2002 Assessing OTUs abundance uneveness within and
        between plant communities. Community Ecology, 3, 237-246.
     .. [2] http://www.pisces-conservation.com/sdrhelp/index.html
 
