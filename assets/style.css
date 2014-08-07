@@ -20,6 +20,7 @@ h1, h2, h3 {
     border-bottom: 4px solid #259D57;
 }
 
+
 a {
     color: #259D57;
 }
@@ -39,9 +40,15 @@ a:hover {
     padding: 0px 10px;
 }
 
-#skbio{
-    font-size: 18px !important;
+
+#skbio {
+    padding-top: 5px;
 }
+
+#navlogo {
+    float: left;
+}
+
 
 #nav > ul {
     margin: 0px auto;
@@ -62,6 +69,11 @@ a:hover {
     color: #FFF;
 }
 
+#navlogo:hover {
+    background: none !important;
+}
+
+
 #decorationWrapper {
     position:relative;
     width: 100%;
@@ -73,11 +85,17 @@ a:hover {
     margin: 0px auto;
     width: 924px;
     margin-bottom: 100px;
+    background: -moz-linear-gradient(left,  rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 1%, rgba(255,255,255,1) 5%, rgba(255,255,255,1) 95%, rgba(255,255,255,0) 100%); /* FF3.6+ */
+    background: -webkit-gradient(linear, left top, right top, color-stop(0%,rgba(255,255,255,0)), color-stop(1%,rgba(255,255,255,0.2)), color-stop(5%,rgba(255,255,255,1)), color-stop(95%,rgba(255,255,255,1)), color-stop(100%,rgba(255,255,255,0))); /* Chrome,Safari4+ */
+    background: -webkit-linear-gradient(left,  rgba(255,255,255,0) 0%,rgba(255,255,255,0.2) 1%,rgba(255,255,255,1) 5%,rgba(255,255,255,1) 95%,rgba(255,255,255,0) 100%); /* Chrome10+,Safari5.1+ */
+    background: -o-linear-gradient(left,  rgba(255,255,255,0) 0%,rgba(255,255,255,0.2) 1%,rgba(255,255,255,1) 5%,rgba(255,255,255,1) 95%,rgba(255,255,255,0) 100%); /* Opera 11.10+ */
+    background: -ms-linear-gradient(left,  rgba(255,255,255,0) 0%,rgba(255,255,255,0.2) 1%,rgba(255,255,255,1) 5%,rgba(255,255,255,1) 95%,rgba(255,255,255,0) 100%); /* IE10+ */
+    background: linear-gradient(to right,  rgba(255,255,255,0) 0%,rgba(255,255,255,0.2) 1%,rgba(255,255,255,1) 5%,rgba(255,255,255,1) 95%,rgba(255,255,255,0) 100%); /* W3C */
 }
 
 #heading {
-    padding-top: 10px;
-    height: 300px;
+    padding-top: 50px;
+    text-align: center;
     position: relative;
     border-bottom: solid 7px black;
 }
@@ -85,23 +103,13 @@ a:hover {
 #content {
 }
 
-#logo {
-    float: left;
-}
-
-#pitchWrapper {
-    position:absolute;
-    bottom: 0;
-    left: 324px;
-    width: 600px;
-    height: 300px;
-}
 
 #pitch {
     color: #24372C;
     font-size: 19px;
-    margin-top: 182px;
+    font-size: 20px;
     text-align: left;
+    padding: 50px;
 }
 pre {
     background-color: #F8F8F8;
