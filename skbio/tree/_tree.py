@@ -2813,28 +2813,27 @@ class TreeNode(object):
             cached.append(cache_type(func(node)))
             setattr(node, cache_attrname, reduce(reduce_f, cached))
 
-    def shuffle(self, n=None, names=None, shuffle_f=np.random.shuffle,
-                iter_=1):
+    def shuffle(self, k=None, names=None, shuffle_f=np.random.shuffle, n=1):
         """Yield trees with shuffled tip names
 
         Parameters
         ----------
-        n : int, optional
-            The number of tips to shuffle. If n is not `None`, n tips are
+        k : int, optional
+            The number of tips to shuffle. If k is not `None`, k tips are
             randomly selected, and only those names will be shuffled.
         names : list, optional
-            The specific tip names to shuffle. n and names cannot be specified
+            The specific tip names to shuffle. k and names cannot be specified
             at the same time.
         shuffle_f : func
             Shuffle method, this function must accept a list and modify
             inplace.
-        iter_ : int, optional
+        n : int, optional
             The number of iterations to perform. Value must be > 0 and `np.inf`
             can be specified for an infinite number of iterations.
 
         Notes
         -----
-        Tip names are shuffled inplace. If neither `n` nor `names` are
+        Tip names are shuffled inplace. If neither `k` nor `names` are
         provided, all tips are shuffled.
 
         Returns
@@ -2845,10 +2844,10 @@ class TreeNode(object):
         Raises
         ------
         ValueError
-            If `n` is < 2
-            If `iter_` is < 1
+            If `k` is < 2
+            If `n` is < 1
         ValueError
-            If both `n` and `names` are specified
+            If both `k` and `names` are specified
         MissingNodeError
             If `names` is specified but one of the names cannot be found
 
@@ -2860,7 +2859,7 @@ class TreeNode(object):
         >>> from skbio import TreeNode
         >>> tree = TreeNode.from_newick("((a,b),(c,d))")
         >>> rev = lambda items: items.reverse()
-        >>> shuffler = tree.shuffle(names=['a', 'b'], shuffle_f=rev, iter_=5)
+        >>> shuffler = tree.shuffle(names=['a', 'b'], shuffle_f=rev, n=5)
         >>> for shuffled_tree in shuffler:
         ...     print(shuffled_tree.to_newick())
         ((b,a),(c,d));
@@ -2870,12 +2869,12 @@ class TreeNode(object):
         ((b,a),(c,d));
 
         """
-        if n is not None and n < 2:
-            raise ValueError("n must be None or >= 2")
-        if n is not None and names is not None:
+        if k is not None and k < 2:
+            raise ValueError("k must be None or >= 2")
+        if k is not None and names is not None:
             raise ValueError("n and names cannot be specified at the sametime")
-        if iter_ < 1:
-            raise ValueError("iter_ must be > 0")
+        if n < 1:
+            raise ValueError("n must be > 0")
 
         self.assign_ids()
 
@@ -2886,7 +2885,7 @@ class TreeNode(object):
                 n = len(all_tips)
 
             shuffle_f(all_tips)
-            names = [tip.name for tip in all_tips[:n]]
+            names = [tip.name for tip in all_tips[:k]]
 
         nodes = [self.find(name) for name in names]
 
@@ -2895,7 +2894,7 @@ class TreeNode(object):
         self.invalidate_caches()
 
         counter = 0
-        while counter < iter_:
+        while counter < n:
             shuffle_f(names)
             for node, name in zip(nodes, names):
                 node.name = name
