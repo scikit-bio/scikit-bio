@@ -8,12 +8,12 @@
 # -----------------------------------------------------------------------------
 from __future__ import absolute_import, division, print_function
 
-from skbio.parse.sequences.clustal import (_is_clustal_seq_line, last_space,
-                                           _delete_trailing_number,
-                                           parse_clustal)
-from skbio.core.exception import RecordError
-
 from unittest import TestCase, main
+
+from skbio.parse.sequences import parse_clustal
+from skbio.parse.sequences.clustal import (_is_clustal_seq_line, last_space,
+                                           _delete_trailing_number)
+from skbio.util import RecordError
 
 
 class ClustalTests(TestCase):

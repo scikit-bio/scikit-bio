@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-r"""
+"""
 Miscellaneous Utilities (:mod:`skbio.util.misc`)
 ================================================
 
@@ -19,6 +18,7 @@ Functions
    remove_files
    safe_md5
    is_casava_v180_or_later
+
 """
 from __future__ import absolute_import, division, print_function
 
@@ -57,6 +57,7 @@ def is_casava_v180_or_later(header_line):
     >>> id_ = '@M00176:17:000000000-A0CNA:1:1:15487:1773 1:N:0:0'
     >>> print(is_casava_v180_or_later(id_))
     True
+
     """
     if not header_line.startswith(b'@'):
         raise ValueError("Non-header line passed in!")
@@ -78,19 +79,16 @@ def safe_md5(open_file, block_size=2 ** 20):
 
     Returns
     -------
-
     md5 : md5 object from the hashlib module
         object with the loaded file
 
     Notes
     -----
-
     This method is based on the answers given in:
     http://stackoverflow.com/a/1131255/379593
 
     Examples
     --------
-
     >>> from StringIO import StringIO
     >>> from skbio.util.misc import safe_md5
     >>> fd = StringIO("foo bar baz") # open file like object
@@ -122,14 +120,11 @@ def remove_files(list_of_filepaths, error_on_missing=True):
 
     Raises
     ------
-
     OSError
         If a filepath in the list does not exist
 
-
     Examples
     --------
-
     >>> from tempfile import NamedTemporaryFile
     >>> from os.path import exists
     >>> from skbio.util.misc import remove_files
@@ -158,7 +153,6 @@ def create_dir(dir_name, fail_on_exist=False, handle_errors_externally=False):
 
     Parameters
     ----------
-
     dir_name: string
         name of directory to create
 
@@ -172,7 +166,6 @@ def create_dir(dir_name, fail_on_exist=False, handle_errors_externally=False):
 
     Returns
     -------
-
     return_value : int
         These values are only returned if no error is raised:
 
@@ -183,13 +176,11 @@ def create_dir(dir_name, fail_on_exist=False, handle_errors_externally=False):
 
     Notes
     -----
-
     Depending  of how thorough we want to be we could add tests, e.g. for
     testing actual write permission in an existing dir.
 
     Examples
     --------
-
     >>> from skbio.util.misc import create_dir
     >>> from os.path import exists, join
     >>> from tempfile import gettempdir
@@ -242,6 +233,7 @@ def handle_error_codes(dir_name, suppress_errors=False,
     dir_name: name of directory that raised the error
     suppress_errors: if True raise Errors, otherwise return error_code
     error_code: the code for the error
+
     """
     error_code_lookup = get_create_dir_error_codes()
 
@@ -270,20 +262,17 @@ def flatten(items):
 
     Parameters
     ----------
-
     items : iterable
         list of items to flatten one level
 
     Returns
     -------
-
     flattened_items : list
         list of flattened items, items can be any sequence, but flatten always
         returns a list.
 
     Examples
     --------
-
     >>> from skbio.util.misc import flatten
     >>> h = [['a', 'b', 'c', 'd'], [1, 2, 3, 4, 5], ['x', 'y'], ['foo']]
     >>> print(flatten(h))

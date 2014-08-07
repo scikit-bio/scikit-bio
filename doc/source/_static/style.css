@@ -10,6 +10,40 @@ a:active, a:hover, a:focus {
     color: #00B84D !important;
 }
 
+blockquote {
+    font-size: 14px !important;
+}
+
+cite {
+    padding: 2px 4px;
+    font-size: 90%;
+    color: #C7254E;
+    background-color: #F9F2F4;
+    white-space: nowrap;
+    border-radius: 4px;
+    font-family: Menlo,Monaco,Consolas,"Courier New",monospace;
+}
+
+.label {
+    display: table-cell !important;
+    color: #000 !important;
+    font-size: 100% !important;
+    text-align: left !important;
+    width: 6em !important;
+}
+
+table.citation {
+    border-left: 1px solid #DDD !important;
+}
+
+table.citation td > em {
+    display: none !important;
+}
+
+.table > tbody > tr > td {
+    border-top: 1px solid #DDD !important;
+}
+
 #navbar {
     background: #24372C !important;
     border: none !important;
