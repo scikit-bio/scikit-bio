@@ -216,7 +216,7 @@ ACGTGCCTA-GGTACGCAAG
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from .alignment import Alignment, SequenceCollection, StockholmAlignment
+from ._alignment import Alignment, SequenceCollection, StockholmAlignment
 from .ssw.ssw_wrapper import (
     StripedSmithWaterman, local_pairwise_align_ssw, AlignmentStructure)
 from ._exception import SequenceCollectionError, StockholmParseError
