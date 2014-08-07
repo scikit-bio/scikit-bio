@@ -1341,7 +1341,7 @@ class TreeNode(object):
             self._non_tip_cache = non_tip_cache
 
     def find_all(self, name):
-        r"""Find all internal nodes that match `name`
+        r"""Find all nodes that match `name`
 
         The first call to `find_all` will cache all nodes in the tree on the
         assumption that additional calls to `find_all` will be made.
