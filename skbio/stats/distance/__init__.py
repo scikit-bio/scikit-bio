@@ -148,10 +148,10 @@ data frame or an error will be raised.
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from .base import CategoricalStatsResults
+from ._base import CategoricalStatsResults
 from ._bioenv import bioenv
-from .anosim import ANOSIM
-from .permanova import PERMANOVA
+from ._anosim import ANOSIM
+from ._permanova import PERMANOVA
 from ._mantel import mantel, pwmantel
 
 __all__ = ['ANOSIM', 'PERMANOVA', 'CategoricalStatsResults', 'bioenv',
