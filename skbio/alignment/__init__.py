@@ -222,7 +222,7 @@ from ._pairwise import (
     local_pairwise_align, global_pairwise_align_nucleotide,
     global_pairwise_align_protein, global_pairwise_align
 )
-from .ssw.ssw_wrapper import (
+from ._ssw import (
     StripedSmithWaterman, local_pairwise_align_ssw, AlignmentStructure)
 from ._exception import SequenceCollectionError, StockholmParseError
 

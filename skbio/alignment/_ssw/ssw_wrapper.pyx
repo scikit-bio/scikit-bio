@@ -638,7 +638,7 @@ cdef class StripedSmithWaterman:
 
         Returns
         -------
-        ``skbio.alignment.ssw.AlignmentStructure``
+        ``skbio.alignment._ssw.AlignmentStructure``
             The resulting alignment.
 
         """
