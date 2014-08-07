@@ -449,7 +449,8 @@ class TestPCoAResults(object):
 
     def test_negative_eigenvalue_warning(self):
         """This data has some small negative eigenvalues."""
-        npt.assert_warns(RuntimeWarning, PCoA, self.dist_matrix)
+        with warnings.catch_warnings():
+            npt.assert_warns(RuntimeWarning, PCoA, self.dist_matrix)
 
     def test_values(self):
         """Adapted from cogent's `test_principal_coordinate_analysis`:
@@ -458,6 +459,7 @@ class TestPCoAResults(object):
         right"."""
         with warnings.catch_warnings():
             warnings.filterwarnings('ignore', category=RuntimeWarning)
+            warnings.filterwarnings('ignore', category=UserWarning)
             ordination = PCoA(self.dist_matrix)
         scores = ordination.scores()
 
@@ -482,7 +484,9 @@ class TestPCoAResultsExtensive(object):
         matrix = np.loadtxt(get_data_path('PCoA_sample_data_2'))
         self.ids = [str(i) for i in range(matrix.shape[0])]
         dist_matrix = DistanceMatrix(matrix, self.ids)
-        self.ordination = PCoA(dist_matrix)
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore', category=UserWarning)
+            self.ordination = PCoA(dist_matrix)
 
     def test_values(self):
         results = self.ordination.scores()
@@ -518,7 +522,11 @@ class TestPCoAEigenResults(object):
     def setup(self):
         with open(get_data_path('PCoA_sample_data_3'), 'U') as lines:
             dist_matrix = DistanceMatrix.from_file(lines)
-        self.ordination = PCoA(dist_matrix)
+
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore', category=UserWarning)
+            self.ordination = PCoA(dist_matrix)
+
         self.ids = ['PC.636', 'PC.635', 'PC.356', 'PC.481', 'PC.354', 'PC.593',
                     'PC.355', 'PC.607', 'PC.634']
 
@@ -563,8 +571,10 @@ class TestPCoAPrivateMethods(object):
 
 class TestPCoAErrors(object):
     def test_input(self):
-        with npt.assert_raises(TypeError):
-            PCoA([[1, 2], [3, 4]])
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore', category=UserWarning)
+            with npt.assert_raises(TypeError):
+                PCoA([[1, 2], [3, 4]])
 
 
 class TestOrdinationResults(object):
