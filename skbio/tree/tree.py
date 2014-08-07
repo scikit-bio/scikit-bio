@@ -2903,6 +2903,7 @@ class TreeNode(object):
             yield self
             counter += 1
 
+
 def _dnd_tokenizer(data):
     r"""Tokenizes data into a stream of punctuation, labels and lengths.
 
