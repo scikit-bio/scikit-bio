@@ -1,6 +1,15 @@
+# ----------------------------------------------------------------------------
+# Copyright (c) 2013--, scikit-bio development team.
+#
+# Distributed under the terms of the Modified BSD License.
+#
+# The full license is in the file COPYING.txt, distributed with this software.
+# ----------------------------------------------------------------------------
+
 from .util import open_file, _get_filehandle
 from skbio.io import (FormatIdentificationError, FileFormatError,
                       DuplicateRegistrationError)
+
 _formats = {}
 _identifiers = {}
 
@@ -469,7 +478,7 @@ def read(fp, format=None, into=None, mode='U', *args, **kwargs):
 
     See Also
     --------
-    skbio.io.register_writer
+    skbio.io.register_reader
     skbio.io.register_identifier
 
     """
