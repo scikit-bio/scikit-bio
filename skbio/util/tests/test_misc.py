@@ -105,7 +105,7 @@ class MiscTests(TestCase):
         self.assertEqual(create_dir(tmp_dir_path2), 0)
         self.assertEqual(create_dir(tmp_dir_path3, fail_on_exist=True), 0)
 
-    def test__handle_error_codes_no_error(self):
+    def test_handle_error_codes_no_error(self):
         obs = _handle_error_codes('/foo/bar/baz')
         self.assertEqual(obs, 0)
 
