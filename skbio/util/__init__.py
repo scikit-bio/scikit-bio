@@ -5,8 +5,8 @@ Utility functionality (:mod:`skbio.util`)
 .. currentmodule:: skbio.util
 
 This package provides general exception/warning definitions used throughout
-scikit-bio, as well as several subpackages containing various utility
-functionality, including I/O and unit-testing convenience functions.
+scikit-bio, as well as various utility functionality, including I/O and
+unit-testing convenience functions.
 
 Testing functionality
 ---------------------
@@ -21,7 +21,7 @@ Common functionality to support testing in skbio.
 Miscellaneous functionality
 ---------------------------
 
-Generally useful functions that don't fit in any more specific location.
+Generally useful functions that don't fit in more specific locations.
 
 .. autosummary::
    :toctree: generated/
