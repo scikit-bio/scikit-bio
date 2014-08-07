@@ -7,10 +7,12 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.builtins import range, zip
 from warnings import warn
+from itertools import product
 
 import numpy as np
+from future.builtins import range, zip
+from future.utils.six import string_types
 
 from skbio.util.warning import EfficiencyWarning
 from .alignment import Alignment
@@ -299,6 +301,9 @@ def local_pairwise_align(seq1, seq2, gap_open_penalty,
          "than skbio.alignment.local_pairwise_align_ssw.",
          EfficiencyWarning)
 
+    seq1 = _coerce_alignment_input_type(seq1, disallow_alignment=True)
+    seq2 = _coerce_alignment_input_type(seq2, disallow_alignment=True)
+
     score_matrix, traceback_matrix = _compute_score_and_traceback_matrices(
         seq1, seq2, gap_open_penalty, gap_extend_penalty,
         substitution_matrix, new_alignment_score=0.0,
@@ -313,13 +318,8 @@ def local_pairwise_align(seq1, seq2, gap_open_penalty,
     start_end_positions = [(seq1_start_position, end_col_position-1),
                            (seq2_start_position, end_row_position-1)]
 
-    # Get ids to assign to the output sequences in the result Alignment object
-    seq1_id, seq2_id = _get_seq_ids(seq1, seq2)
-
-    return Alignment(
-        [BiologicalSequence(aligned1, id=seq1_id),
-         BiologicalSequence(aligned2, id=seq2_id)],
-        score=score, start_end_positions=start_end_positions)
+    return Alignment(aligned1 + aligned2, score=score,
+                     start_end_positions=start_end_positions)
 
 
 def global_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
@@ -327,14 +327,14 @@ def global_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
                                      match_score=1, mismatch_score=-2,
                                      substitution_matrix=None,
                                      penalize_terminal_gaps=False):
-    """Globally align exactly two nucleotide seqs with Needleman-Wunsch
+    """Globally align pair of nuc. seqs or alignments with Needleman-Wunsch
 
     Parameters
     ----------
-    seq1 : str or BiologicalSequence
-        The first unaligned sequence.
-    seq2 : str or BiologicalSequence
-        The second unaligned sequence.
+    seq1 : str, BiologicalSequence, or Alignment
+        The first unaligned sequence(s).
+    seq2 : str, BiologicalSequence, or Alignment
+        The second unaligned sequence(s).
     gap_open_penalty : int or float, optional
         Penalty for opening a gap (this is substracted from previous best
         alignment score, so is typically positive).
@@ -381,6 +381,9 @@ def global_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
     ``gap_extend_penalty`` parameters are derived from the NCBI BLAST
     Server [1]_.
 
+    This function can be use to align either a pair of sequences, a pair of
+    alignments, or a sequence and an alignment.
+
     References
     ----------
     .. [1] http://blast.ncbi.nlm.nih.gov/Blast.cgi
@@ -403,14 +406,14 @@ def global_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
                                   gap_extend_penalty=1,
                                   substitution_matrix=None,
                                   penalize_terminal_gaps=False):
-    """Globally align exactly two protein seqs with Needleman-Wunsch
+    """Globally align pair of protein seqs or alignments with Needleman-Wunsch
 
     Parameters
     ----------
-    seq1 : str or BiologicalSequence
-        The first unaligned sequence.
-    seq2 : str or BiologicalSequence
-        The second unaligned sequence.
+    seq1 : str, BiologicalSequence, or Alignment
+        The first unaligned sequence(s).
+    seq2 : str, BiologicalSequence, or Alignment
+        The second unaligned sequence(s).
     gap_open_penalty : int or float, optional
         Penalty for opening a gap (this is substracted from previous best
         alignment score, so is typically positive).
@@ -451,6 +454,9 @@ def global_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
     The BLOSUM (blocks substitution matrices) amino acid substitution matrices
     were originally defined in [2]_.
 
+    This function can be use to align either a pair of sequences, a pair of
+    alignments, or a sequence and an alignment.
+
     References
     ----------
     .. [1] http://blast.ncbi.nlm.nih.gov/Blast.cgi
@@ -469,14 +475,14 @@ def global_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
 
 def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
                           substitution_matrix, penalize_terminal_gaps=False):
-    """Globally align exactly two seqs with Needleman-Wunsch
+    """Globally align a pair of seqs or alignments with Needleman-Wunsch
 
     Parameters
     ----------
-    seq1 : str or BiologicalSequence
-        The first unaligned sequence.
-    seq2 : str or BiologicalSequence
-        The second unaligned sequence.
+    seq1 : str, BiologicalSequence, or Alignment
+        The first unaligned sequence(s).
+    seq2 : str, BiologicalSequence, or Alignment
+        The second unaligned sequence(s).
     gap_open_penalty : int or float
         Penalty for opening a gap (this is substracted from previous best
         alignment score, so is typically positive).
@@ -515,6 +521,9 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
     in [1]_. The scikit-bio implementation was validated against the
     EMBOSS needle web server [2]_.
 
+    This function can be use to align either a pair of sequences, a pair of
+    alignments, or a sequence and an alignment.
+
     References
     ----------
     .. [1] A general method applicable to the search for similarities in
@@ -529,6 +538,9 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
          "slower than a native C implementation). We'll be adding a faster "
          "version soon (see https://github.com/biocore/scikit-bio/issues/254 "
          "to track progress on this).", EfficiencyWarning)
+
+    seq1 = _coerce_alignment_input_type(seq1, disallow_alignment=False)
+    seq2 = _coerce_alignment_input_type(seq2, disallow_alignment=False)
 
     if penalize_terminal_gaps:
         init_matrices_f = _init_matrices_nw
@@ -551,24 +563,38 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
     start_end_positions = [(seq1_start_position, end_col_position-1),
                            (seq2_start_position, end_row_position-1)]
 
-    # Get ids to assign to the output sequences in the result Alignment object
-    seq1_id, seq2_id = _get_seq_ids(seq1, seq2)
-
-    return Alignment(
-        [BiologicalSequence(aligned1, id=seq1_id),
-         BiologicalSequence(aligned2, id=seq2_id)],
-        score=score, start_end_positions=start_end_positions)
+    return Alignment(aligned1 + aligned2, score=score,
+                     start_end_positions=start_end_positions)
 
 # Functions from here allow for generalized (global or local) alignment. I
 # will likely want to put these in a single object to make the naming a little
 # less clunky.
 
+
+def _coerce_alignment_input_type(seq, disallow_alignment):
+    """ Converts variety of types into an skbio.Alignment object
+    """
+    if isinstance(seq, string_types):
+        return Alignment([BiologicalSequence(seq)])
+    elif isinstance(seq, BiologicalSequence):
+        return Alignment([seq])
+    elif isinstance(seq, Alignment):
+        if disallow_alignment:
+            # This will disallow aligning either a pair of alignments, or an
+            # alignment and a sequence. We don't currently support this for
+            # local alignment as there is not a clear usecase, and it's also
+            # not exactly clear how this would work.
+            raise TypeError("Aligning alignments is not currently supported "
+                            "with the aligner function that you're calling.")
+        else:
+            return seq
+    else:
+        raise TypeError(
+            "Unsupported type provided to aligner: %r." % type(seq))
+
+
 _traceback_encoding = {'match': 1, 'vertical-gap': 2, 'horizontal-gap': 3,
                        'uninitialized': -1, 'alignment-end': 0}
-
-
-def _get_seq_ids(seq1, seq2):
-    return _get_seq_id(seq1, "0"), _get_seq_id(seq2, "1")
 
 
 def _get_seq_id(seq, default_id):
@@ -595,8 +621,8 @@ def _make_nt_substitution_matrix(match_score, mismatch_score, alphabet='ACGT'):
     return result
 
 
-def _init_matrices_sw(seq1, seq2, gap_open_penalty, gap_extend_penalty):
-    shape = (len(seq2)+1, len(seq1)+1)
+def _init_matrices_sw(aln1, aln2, gap_open_penalty, gap_extend_penalty):
+    shape = (aln2.sequence_length()+1, aln1.sequence_length()+1)
     score_matrix = np.zeros(shape)
     traceback_matrix = np.zeros(shape, dtype=np.int)
     traceback_matrix += _traceback_encoding['uninitialized']
@@ -605,8 +631,8 @@ def _init_matrices_sw(seq1, seq2, gap_open_penalty, gap_extend_penalty):
     return score_matrix, traceback_matrix
 
 
-def _init_matrices_nw(seq1, seq2, gap_open_penalty, gap_extend_penalty):
-    shape = (len(seq2)+1, len(seq1)+1)
+def _init_matrices_nw(aln1, aln2, gap_open_penalty, gap_extend_penalty):
+    shape = (aln2.sequence_length()+1, aln1.sequence_length()+1)
     score_matrix = np.zeros(shape)
     traceback_matrix = np.zeros(shape, dtype=np.int)
     traceback_matrix += _traceback_encoding['uninitialized']
@@ -628,8 +654,8 @@ def _init_matrices_nw(seq1, seq2, gap_open_penalty, gap_extend_penalty):
 
 
 def _init_matrices_nw_no_terminal_gap_penalty(
-        seq1, seq2, gap_open_penalty, gap_extend_penalty):
-    shape = (len(seq2)+1, len(seq1)+1)
+        aln1, aln2, gap_open_penalty, gap_extend_penalty):
+    shape = (aln2.sequence_length()+1, aln1.sequence_length()+1)
     score_matrix = np.zeros(shape)
     traceback_matrix = np.zeros(shape, dtype=np.int)
     traceback_matrix += _traceback_encoding['uninitialized']
@@ -648,10 +674,38 @@ def _init_matrices_nw_no_terminal_gap_penalty(
     return score_matrix, traceback_matrix
 
 
+def _compute_substitution_score(aln1_chars, aln2_chars, substitution_matrix,
+                                gap_substitution_score):
+    substitution_score = 0
+    for aln1_char, aln2_char in product(aln1_chars, aln2_chars):
+        if BiologicalSequence.is_gap(aln1_char) or\
+           BiologicalSequence.is_gap(aln2_char):
+                substitution_score += gap_substitution_score
+        else:
+            try:
+                substitution_score += \
+                    substitution_matrix[aln1_char][aln2_char]
+            except KeyError:
+                offending_chars = \
+                    [c for c in (aln1_char, aln2_char)
+                     if c not in substitution_matrix]
+                raise ValueError(
+                    "One of the sequences contains a character that is "
+                    "not contained in the substitution matrix. Are you "
+                    "using an appropriate substitution matrix for your "
+                    "sequence type (e.g., a nucleotide substitution "
+                    "matrix does not make sense for aligning protein "
+                    "sequences)? Does your sequence contain invalid "
+                    "characters? The offending character(s) is: "
+                    " %s." % ', '.join(offending_chars))
+    substitution_score /= (len(aln1_chars) * len(aln2_chars))
+    return substitution_score
+
+
 def _compute_score_and_traceback_matrices(
-        seq1, seq2, gap_open_penalty, gap_extend_penalty, substitution_matrix,
+        aln1, aln2, gap_open_penalty, gap_extend_penalty, substitution_matrix,
         new_alignment_score=-np.inf, init_matrices_f=_init_matrices_nw,
-        penalize_terminal_gaps=True):
+        penalize_terminal_gaps=True, gap_substitution_score=0):
     """Return dynamic programming (score) and traceback matrices.
 
     A note on the ``penalize_terminal_gaps`` parameter. When this value is
@@ -667,8 +721,8 @@ def _compute_score_and_traceback_matrices(
     that users are most likely to be looking for.
 
     """
-    seq1_length = len(seq1)
-    seq2_length = len(seq2)
+    aln1_length = aln1.sequence_length()
+    aln2_length = aln2.sequence_length()
     # cache some values for quicker/simpler access
     aend = _traceback_encoding['alignment-end']
     match = _traceback_encoding['match']
@@ -680,79 +734,70 @@ def _compute_score_and_traceback_matrices(
     # Initialize a matrix to use for scoring the alignment and for tracing
     # back the best alignment
     score_matrix, traceback_matrix = init_matrices_f(
-        seq1, seq2, gap_open_penalty, gap_extend_penalty)
+        aln1, aln2, gap_open_penalty, gap_extend_penalty)
 
-    # Iterate over the characters in seq2 (which corresponds to the horizontal
+    # Iterate over the characters in aln2 (which corresponds to the horizontal
     # sequence in the matrix)
-    for seq2_pos, seq2_char in zip(range(1, seq2_length+1), seq2):
-        # Iterate over the characters in seq1 (which corresponds to the
+    for aln2_pos, aln2_chars in zip(range(1, aln2_length+1),
+                                    aln2.iter_positions(str)):
+        # Iterate over the characters in aln1 (which corresponds to the
         # horizontal sequence in the matrix)
-        for seq1_pos, seq1_char in zip(range(1, seq1_length+1), seq1):
-            try:
-                substitution_score = substitution_matrix[seq1_char][seq2_char]
-            except KeyError:
-                offending_chars = \
-                    [c for c in (seq1_char, seq2_char)
-                     if c not in substitution_matrix]
-                raise ValueError(
-                    "One of the sequences contains a character that is not "
-                    "contained in the substitution matrix. Are you using "
-                    "an appropriate substitution matrix for your sequence "
-                    "type (e.g., a nucleotide substitution matrix does not "
-                    "make sense for aligning protein sequences)? Does your "
-                    "sequence contain invalid characters? The offending "
-                    "character(s) is: %s." % ', '.join(offending_chars))
-
+        for aln1_pos, aln1_chars in zip(range(1, aln1_length+1),
+                                        aln1.iter_positions(str)):
             # compute the score for a match/mismatch
+            substitution_score = _compute_substitution_score(
+                aln1_chars, aln2_chars, substitution_matrix,
+                gap_substitution_score)
+
             diag_score = \
-                (score_matrix[seq2_pos-1, seq1_pos-1] + substitution_score,
+                (score_matrix[aln2_pos-1, aln1_pos-1] + substitution_score,
                  match)
 
-            # compute the score for adding a gap in seq2 (vertical)
-            if not penalize_terminal_gaps and (seq1_pos == seq1_length):
-                # we've reached the end of seq1, so adding vertical gaps
-                # (which become gaps in seq1) should no longer
+            # compute the score for adding a gap in aln2 (vertical)
+            if not penalize_terminal_gaps and (aln1_pos == aln1_length):
+                # we've reached the end of aln1, so adding vertical gaps
+                # (which become gaps in aln1) should no longer
                 # be penalized (if penalize_terminal_gaps == False)
-                up_score = (score_matrix[seq2_pos-1, seq1_pos], vgap)
-            elif traceback_matrix[seq2_pos-1, seq1_pos] == vgap:
+                up_score = (score_matrix[aln2_pos-1, aln1_pos], vgap)
+            elif traceback_matrix[aln2_pos-1, aln1_pos] == vgap:
                 # gap extend, because the cell above was also a gap
                 up_score = \
-                    (score_matrix[seq2_pos-1, seq1_pos] - gap_extend_penalty,
+                    (score_matrix[aln2_pos-1, aln1_pos] - gap_extend_penalty,
                      vgap)
             else:
                 # gap open, because the cell above was not a gap
                 up_score = \
-                    (score_matrix[seq2_pos-1, seq1_pos] - gap_open_penalty,
+                    (score_matrix[aln2_pos-1, aln1_pos] - gap_open_penalty,
                      vgap)
 
-            # compute the score for adding a gap in seq1 (horizontal)
-            if not penalize_terminal_gaps and (seq2_pos == seq2_length):
-                # we've reached the end of seq2, so adding horizontal gaps
-                # (which become gaps in seq2) should no longer
+            # compute the score for adding a gap in aln1 (horizontal)
+            if not penalize_terminal_gaps and (aln2_pos == aln2_length):
+                # we've reached the end of aln2, so adding horizontal gaps
+                # (which become gaps in aln2) should no longer
                 # be penalized (if penalize_terminal_gaps == False)
-                left_score = (score_matrix[seq2_pos, seq1_pos-1], hgap)
-            elif traceback_matrix[seq2_pos, seq1_pos-1] == hgap:
+                left_score = (score_matrix[aln2_pos, aln1_pos-1], hgap)
+            elif traceback_matrix[aln2_pos, aln1_pos-1] == hgap:
                 # gap extend, because the cell to the left was also a gap
                 left_score = \
-                    (score_matrix[seq2_pos, seq1_pos-1] - gap_extend_penalty,
+                    (score_matrix[aln2_pos, aln1_pos-1] - gap_extend_penalty,
                      hgap)
             else:
                 # gap open, because the cell to the left was not a gap
                 left_score = \
-                    (score_matrix[seq2_pos, seq1_pos-1] - gap_open_penalty,
+                    (score_matrix[aln2_pos, aln1_pos-1] - gap_open_penalty,
                      hgap)
 
             # identify the largest score, and use that information to populate
             # the score and traceback matrices
             best_score = _first_largest([new_alignment_score, left_score,
                                          diag_score, up_score])
-            score_matrix[seq2_pos, seq1_pos] = best_score[0]
-            traceback_matrix[seq2_pos, seq1_pos] = best_score[1]
+            score_matrix[aln2_pos, aln1_pos] = best_score[0]
+            traceback_matrix[aln2_pos, aln1_pos] = best_score[1]
 
     return score_matrix, traceback_matrix
 
 
-def _traceback(traceback_matrix, score_matrix, seq1, seq2, start_row,
+def _traceback(traceback_matrix, score_matrix, aln1, aln2, start_row,
                start_col, gap_character='-'):
     # cache some values for simpler
     aend = _traceback_encoding['alignment-end']
@@ -760,8 +805,12 @@ def _traceback(traceback_matrix, score_matrix, seq1, seq2, start_row,
     vgap = _traceback_encoding['vertical-gap']
     hgap = _traceback_encoding['horizontal-gap']
 
-    aligned_seq1 = []
-    aligned_seq2 = []
+    # initialize the result alignments
+    aln1_sequence_count = aln1.sequence_count()
+    aligned_seqs1 = [[] for e in range(aln1_sequence_count)]
+
+    aln2_sequence_count = aln2.sequence_count()
+    aligned_seqs2 = [[] for e in range(aln2_sequence_count)]
 
     current_row = start_row
     current_col = start_col
@@ -773,17 +822,23 @@ def _traceback(traceback_matrix, score_matrix, seq1, seq2, start_row,
         current_value = traceback_matrix[current_row, current_col]
 
         if current_value == match:
-            aligned_seq1.append(seq1[current_col-1])
-            aligned_seq2.append(seq2[current_row-1])
+            for aligned_seq, input_seq in zip(aligned_seqs1, aln1):
+                aligned_seq.append(str(input_seq[current_col-1]))
+            for aligned_seq, input_seq in zip(aligned_seqs2, aln2):
+                aligned_seq.append(str(input_seq[current_row-1]))
             current_row -= 1
             current_col -= 1
         elif current_value == vgap:
-            aligned_seq1.append('-')
-            aligned_seq2.append(seq2[current_row-1])
+            for aligned_seq in aligned_seqs1:
+                aligned_seq.append('-')
+            for aligned_seq, input_seq in zip(aligned_seqs2, aln2):
+                aligned_seq.append(str(input_seq[current_row-1]))
             current_row -= 1
         elif current_value == hgap:
-            aligned_seq1.append(seq1[current_col-1])
-            aligned_seq2.append('-')
+            for aligned_seq, input_seq in zip(aligned_seqs1, aln1):
+                aligned_seq.append(str(input_seq[current_col-1]))
+            for aligned_seq in aligned_seqs2:
+                aligned_seq.append('-')
             current_col -= 1
         elif current_value == aend:
             continue
@@ -791,9 +846,18 @@ def _traceback(traceback_matrix, score_matrix, seq1, seq2, start_row,
             raise ValueError(
                 "Invalid value in traceback matrix: %s" % current_value)
 
-    return (''.join(map(str, aligned_seq1[::-1])),
-            ''.join(map(str, aligned_seq2[::-1])),
-            best_score, current_col, current_row)
+    for i in range(aln1_sequence_count):
+        aligned_seq = ''.join(aligned_seqs1[i][::-1])
+        seq_id = _get_seq_id(aln1[i], str(i))
+        aligned_seqs1[i] = BiologicalSequence(aligned_seq, id=seq_id)
+
+    for i in range(aln2_sequence_count):
+        aligned_seq = ''.join(aligned_seqs2[i][::-1])
+        seq_id = _get_seq_id(aln2[i], str(i + aln1_sequence_count))
+        aligned_seqs2[i] = BiologicalSequence(aligned_seq, id=seq_id)
+
+    return (aligned_seqs1, aligned_seqs2, best_score,
+            current_col, current_row)
 
 
 def _first_largest(scores):
