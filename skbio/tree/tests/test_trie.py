@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-"""Unit tests for the skbio.util.trie module"""
-
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #

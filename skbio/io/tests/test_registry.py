@@ -19,8 +19,8 @@ import unittest
 from StringIO import StringIO
 from tempfile import mkstemp
 
-from skbio.util.exception import (DuplicateRegistrationError,
-                                  FormatIdentificationError, FileFormatError)
+from skbio.io import (DuplicateRegistrationError,
+                      FormatIdentificationError, FileFormatError)
 
 
 class RegistryTest(unittest.TestCase):
@@ -50,6 +50,7 @@ class TestRegisterAndReader(RegistryTest):
     def test_get_reader_no_match(self):
         self.assertEqual(None, self.module.get_reader('not_a_format',
                                                       self.cls))
+
     def test_get_reader_too_many_args(self):
         with self.assertRaises(TypeError) as cm:
             self.module.get_reader('not_a_format', self.cls, 1)
@@ -220,6 +221,7 @@ class TestRegisterAndGetWriter(RegistryTest):
         self.assertTrue('writer' in cm.exception.message)
         self.assertTrue(self.clsA.__name__ in cm.exception.message)
 
+
 class TestRegisterAndGetIdentifer(RegistryTest):
     def test_get_identifier_no_match(self):
         self.assertEqual(None, self.module.get_identifier('not_a_format'))
@@ -274,7 +276,6 @@ class TestListReadFormats(RegistryTest):
 
         self.assertEqual(['format1'], self.module.list_read_formats(self.cls))
 
-
     def test_many_read_formats(self):
         @self.module.register_reader('format1', self.clsA)
         def format1_clsA(fh):
@@ -303,6 +304,7 @@ class TestListReadFormats(RegistryTest):
         self.assertTrue('format3' in formats)
         self.assertTrue('format4' not in formats)
 
+
 class TestListWriteFormats(RegistryTest):
     def test_no_read_formats(self):
         @self.module.register_writer('format1', self.clsA)
@@ -317,7 +319,6 @@ class TestListWriteFormats(RegistryTest):
             return
 
         self.assertEqual(['format1'], self.module.list_write_formats(self.cls))
-
 
     def test_many_read_formats(self):
         @self.module.register_writer('format1', self.clsA)
@@ -452,7 +453,6 @@ class TestRead(RegistryTest):
         self.assertEqual([1, 2, 3, 4], instance.list)
         fh.close()
 
-
     def test_into_is_none(self):
         fh = StringIO('1\n2\n3\n4')
 
@@ -494,7 +494,6 @@ class TestRead(RegistryTest):
         self.assertTrue('generator' in cm.exception.message)
         self.assertTrue('not_a_format2' in cm.exception.message)
 
-
     def test_reader_exists(self):
         fh = StringIO('1\n2\n3\n4')
 
@@ -532,14 +531,13 @@ class TestWrite(RegistryTest):
 
     def test_format_is_none(self):
         fh = StringIO()
-        with self.assertRaises(ValueError) as cm:
+        with self.assertRaises(ValueError):
             self.module.write({}, into=fh)
         fh.close()
 
-
     def test_into_is_none(self):
         fh = StringIO()
-        with self.assertRaises(ValueError) as cm:
+        with self.assertRaises(ValueError):
             self.module.write({}, format='format')
         fh.close()
 
@@ -555,6 +553,7 @@ class TestWrite(RegistryTest):
     def test_writer_exists(self):
         obj = self.cls(['1', '2', '3', '4'])
         fh = StringIO()
+
         @self.module.register_writer('format', self.cls)
         def writer(obj, fh):
             fh.write('\n'.join(obj.list))
@@ -567,6 +566,7 @@ class TestWrite(RegistryTest):
     def test_writer_exists_real_file(self):
         obj = self.cls(['1', '2', '3', '4'])
         _, fp = mkstemp()
+
         @self.module.register_writer('format', self.cls)
         def writer(obj, fh):
             fh.write('\n'.join(obj.list))

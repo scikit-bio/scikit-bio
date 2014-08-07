@@ -1,6 +1,6 @@
 from .util import open_file, _get_filehandle
-from skbio.util.exception import (FormatIdentificationError, FileFormatError,
-                                  DuplicateRegistrationError)
+from skbio.io import (FormatIdentificationError, FileFormatError,
+                      DuplicateRegistrationError)
 _formats = {}
 _identifiers = {}
 
@@ -75,12 +75,14 @@ def _rw_list_formats(name, cls):
                 formats.append(fmt)
     return formats
 
+
 def get_identifier(fmt):
     """
     """
     if fmt in _identifiers:
         return _identifiers[fmt]
     return None
+
 
 def get_reader(fmt, *args):
     """
@@ -108,6 +110,7 @@ def _rw_getter(name, fmt, *args):
             if name in _formats[fmt][cls]:
                 return _formats[fmt][cls][name]
     return None
+
 
 def guess_format(fh, cls=None):
     """
