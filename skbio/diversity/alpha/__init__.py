@@ -145,8 +145,8 @@ from ._base import (
     esty_ci, fisher_alpha, goods_coverage, heip_e, kempton_taylor_q, margalef,
     mcintosh_d, mcintosh_e, menhinick, michaelis_menten_fit, observed_otus,
     osd, robbins, shannon, simpson, simpson_e, singles, strong)
-from .gini import gini_index
-from .lladser import lladser_pe, lladser_ci
+from ._gini import gini_index
+from ._lladser import lladser_pe, lladser_ci
 
 __all__ = ['ace', 'chao1', 'chao1_ci', 'berger_parker_d', 'brillouin_d',
            'dominance', 'doubles', 'enspie', 'equitability', 'esty_ci',
