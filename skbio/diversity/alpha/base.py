@@ -969,15 +969,7 @@ def singles(counts):
 def strong(counts):
     """Calculate Strong's dominance index (Dw).
 
-    Parameters
-    ----------
-    counts : 1-D array_like, int
-        Vector of counts.
-
-    Returns
-    -------
-    double
-        Strong's dominance index (Dw), which is defined as:
+    Strong's dominance index is defined as:
 
     .. math::
 
@@ -987,6 +979,16 @@ def strong(counts):
     abundance values ranked from largest to smallest, :math:`Q` is the number
     of OTUs in the sample, :math:`R` is the number of individuals in the
     sample, and :math:`max_i` is the largest calculated ith values.
+
+    Parameters
+    ----------
+    counts : 1-D array_like, int
+        Vector of counts.
+
+    Returns
+    -------
+    double
+        Strong's dominance index (Dw).
 
     Notes
     -----
