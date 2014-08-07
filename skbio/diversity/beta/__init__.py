@@ -84,11 +84,18 @@ Create a table containing 7 OTUs and 6 samples:
    False
 
    Compute PCoA for both distance matrices, and then find the Procrustes
-   M-squared value that results from comparing the coordinate matrices:
+   M-squared value that results from comparing the coordinate matrices. Note
+   that the PCoA function being called here is deprecated, and by default
+   raises a deprecation warning. Here we're catching that and ignoring it. For
+   information on the deprecation of PCoA, see:
+   https://github.com/biocore/scikit-bio/issues/579
 
    >>> from skbio.stats.ordination import PCoA
-   >>> bc_pc = PCoA(bc_dm).scores()
-   >>> j_pc = PCoA(j_dm).scores()
+   >>> import warnings
+   >>> with warnings.catch_warnings():
+   ...     warnings.filterwarnings('ignore', category=UserWarning)
+   ...     bc_pc = PCoA(bc_dm).scores()
+   ...     j_pc = PCoA(j_dm).scores()
    >>> from skbio.stats.spatial import procrustes
    >>> print(procrustes(bc_pc.site, j_pc.site)[2])
    0.466134984787
