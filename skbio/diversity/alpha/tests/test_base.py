@@ -19,7 +19,7 @@ from skbio.diversity.alpha import (
     esty_ci, fisher_alpha, goods_coverage, heip_e, kempton_taylor_q, margalef,
     mcintosh_d, mcintosh_e, menhinick, michaelis_menten_fit, observed_otus,
     osd, robbins, shannon, simpson, simpson_e, singles, strong)
-from skbio.diversity.alpha.base import _validate
+from skbio.diversity.alpha._base import _validate
 
 
 class BaseTests(TestCase):
