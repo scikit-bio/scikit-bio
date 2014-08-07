@@ -20,6 +20,7 @@ from collections import defaultdict
 
 import numpy as np
 from scipy.stats import pearsonr
+from future.builtins import zip
 
 from skbio.distance import DistanceMatrix
 from skbio.util import RecordError
@@ -2812,6 +2813,86 @@ class TreeNode(object):
             cached = [getattr(c, cache_attrname) for c in node.children]
             cached.append(cache_type(func(node)))
             setattr(node, cache_attrname, reduce(reduce_f, cached))
+
+    def shuffle(self, n=None, names=None, shuffle_f=shuffle):
+        """Yield trees with shuffled tip names
+
+        Parameters
+        ----------
+        n : int, optional
+            The number of tips to shuffle. If n is not `None`, n tips are
+            randomly selected, and only those names will be shuffled.
+        names : list, optional
+            The specific tip names to shuffle. n and names cannot be specified
+            at the same time.
+        shuffle_f : func
+            Shuffle method, this function must accept a list and modify
+            inplace.
+
+        Notes
+        -----
+        Tip names are shuffled inplace.
+
+        Returns
+        -------
+        GeneratorType
+            Yielding TreeNode
+
+        Raises
+        ------
+        ValueError
+            If n is < 2
+        ValueError
+            If n and names are specified
+        MissingNodeError
+            If names are specified and a node name cannot be found
+
+        Examples
+        --------
+        Alternate the names on two of the tips, 'a', and 'b', and do this 5
+        times.
+
+        >>> from skbio.tree import TreeNode
+        >>> tree = TreeNode.from_newick("((a,b),(c,d))")
+        >>> rev = lambda items: items.reverse()
+        >>> shuffler = tree.shuffle(names=['a', 'b'], shuffle_f=rev)
+        >>> for _, shuffled_tree in zip(range(5), shuffler):
+        ...     print(shuffled_tree.to_newick())
+        ((b,a),(c,d));
+        ((a,b),(c,d));
+        ((b,a),(c,d));
+        ((a,b),(c,d));
+        ((b,a),(c,d));
+
+        """
+        if n is not None and n < 2:
+            raise ValueError("n must be None or >= 2")
+        if n is not None and names is not None:
+            raise ValueError("n and names cannot be specified at the sametime")
+
+        self.assign_ids()
+
+        if names is None:
+            all_tips = list(self.tips())
+
+            if n is None:
+                n = len(all_tips)
+
+            shuffle_f(all_tips)
+            names = [tip.name for tip in all_tips[:n]]
+
+        nodes = [self.find(name) for name in names]
+
+        # Since the names are being shuffled, the association between ID and
+        # name is no longer reliable
+        self.invalidate_caches()
+
+        while True:
+            shuffle_f(names)
+            for node, name in zip(nodes, names):
+                node.name = name
+
+            yield self
 
 
 def _dnd_tokenizer(data):
