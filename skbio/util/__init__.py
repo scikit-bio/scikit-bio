@@ -4,9 +4,9 @@ Utility functionality (:mod:`skbio.util`)
 
 .. currentmodule:: skbio.util
 
-This package provides several subpackages containing various utility
-functionality, including custom exception/warning definitions and I/O and
-unit-testing convenience functions.
+This package provides general exception/warning definitions used throughout
+scikit-bio, as well as several subpackages containing various utility
+functionality, including I/O and unit-testing convenience functions.
 
 Subpackages
 -----------
