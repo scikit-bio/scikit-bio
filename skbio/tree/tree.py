@@ -2830,7 +2830,8 @@ class TreeNode(object):
 
         Notes
         -----
-        Tip names are shuffled inplace.
+        Tip names are shuffled inplace. If neither `n` nor `names` are
+        provided, all tips are shuffled.
 
         Returns
         -------
@@ -2840,11 +2841,11 @@ class TreeNode(object):
         Raises
         ------
         ValueError
-            If n is < 2
+            If `n` is < 2
         ValueError
-            If n and names are specified
+            If both `n` and `names` are specified
         MissingNodeError
-            If names are specified and a node name cannot be found
+            If `names` is specified but one of the names cannot be found
 
         Examples
         --------
