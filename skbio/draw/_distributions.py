@@ -95,14 +95,14 @@ def boxplots(distributions, x_values=None, x_tick_labels=None, title=None,
 
     .. plot::
 
-       >>> from skbio.draw.distributions import boxplots
+       >>> from skbio.draw import boxplots
        >>> fig = boxplots([[2, 2, 1, 3, 4, 4.2, 7], [0, -1, 4, 5, 6, 7]])
 
     Plot three distributions with custom colors and labels:
 
     .. plot::
 
-       >>> from skbio.draw.distributions import boxplots
+       >>> from skbio.draw import boxplots
        >>> fig = boxplots(
        ...     [[2, 2, 1, 3], [0, -1, 0, 0.1, 0.3], [4, 5, 6, 3]],
        ...     x_tick_labels=('Control', 'Treatment 1', 'Treatment 2'),
@@ -237,7 +237,7 @@ def grouped_distributions(plot_type, data, x_values=None,
 
     .. plot::
 
-       >>> from skbio.draw.distributions import grouped_distributions
+       >>> from skbio.draw import grouped_distributions
        >>> fig = grouped_distributions('bar',
        ...                             [[[2, 2, 1,], [0, 1, 4]],
        ...                             [[1, 1, 1], [4, 4.5]],
