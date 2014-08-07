@@ -159,7 +159,7 @@ def read(fp, format=None, into=None, mode='U', *args, **kwargs):
             original = reader(fh, *args, **kwargs)
             try:
                 while(True):
-                    yield original.next()
+                    yield next(original)
             finally:
                 if is_own:
                     fh.close()

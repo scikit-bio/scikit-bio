@@ -54,7 +54,7 @@ class TestRegisterAndReader(RegistryTest):
     def test_get_reader_too_many_args(self):
         with self.assertRaises(TypeError) as cm:
             self.module.get_reader('not_a_format', self.cls, 1)
-        self.assertTrue('get_reader' in cm.exception.message)
+        self.assertTrue('get_reader' in str(cm.exception))
 
     def test_register_reader_on_generator(self):
         @self.module.register_reader('format1')
@@ -82,7 +82,7 @@ class TestRegisterAndReader(RegistryTest):
             @self.module.register_reader('format1', self.cls, 1)
             def too_many_args(fh):
                 return
-        self.assertTrue('register_reader' in cm.exception.message)
+        self.assertTrue('register_reader' in str(cm.exception))
 
     def test_register_reader_on_many(self):
         @self.module.register_reader('format1', self.clsA)
@@ -129,9 +129,9 @@ class TestRegisterAndReader(RegistryTest):
             def duplicate_format1_reader(fh):
                 return
 
-        self.assertTrue('format1' in cm.exception.message)
-        self.assertTrue('reader' in cm.exception.message)
-        self.assertTrue(self.clsA.__name__ in cm.exception.message)
+        self.assertTrue('format1' in str(cm.exception))
+        self.assertTrue('reader' in str(cm.exception))
+        self.assertTrue(self.clsA.__name__ in str(cm.exception))
 
 
 class TestRegisterAndGetWriter(RegistryTest):
@@ -142,7 +142,7 @@ class TestRegisterAndGetWriter(RegistryTest):
     def test_get_writer_too_many_args(self):
         with self.assertRaises(TypeError) as cm:
             self.module.get_writer('not_a_format', self.cls, 1)
-        self.assertTrue('get_writer' in cm.exception.message)
+        self.assertTrue('get_writer' in str(cm.exception))
 
     def test_register_writer_on_generator(self):
         @self.module.register_writer('format1')
@@ -170,7 +170,7 @@ class TestRegisterAndGetWriter(RegistryTest):
             @self.module.register_writer('format1', self.cls, 1)
             def too_many_args(obj, fh):
                 return
-        self.assertTrue('register_writer' in cm.exception.message)
+        self.assertTrue('register_writer' in str(cm.exception))
 
     def test_register_writer_on_many(self):
         @self.module.register_writer('format1', self.clsA)
@@ -217,9 +217,9 @@ class TestRegisterAndGetWriter(RegistryTest):
             def duplicate_format1_writer(obj, fh):
                 return
 
-        self.assertTrue('format1' in cm.exception.message)
-        self.assertTrue('writer' in cm.exception.message)
-        self.assertTrue(self.clsA.__name__ in cm.exception.message)
+        self.assertTrue('format1' in str(cm.exception))
+        self.assertTrue('writer' in str(cm.exception))
+        self.assertTrue(self.clsA.__name__ in str(cm.exception))
 
 
 class TestRegisterAndGetIdentifer(RegistryTest):
@@ -258,7 +258,7 @@ class TestRegisterAndGetIdentifer(RegistryTest):
             def duplicate_format1_identifier(fh):
                 return
 
-        self.assertTrue('format1' in cm.exception.message)
+        self.assertTrue('format1' in str(cm.exception))
 
 
 class TestListReadFormats(RegistryTest):
@@ -382,7 +382,7 @@ class TestGuessFormat(RegistryTest):
         fh = StringIO(u"no matches here")
         with self.assertRaises(FormatIdentificationError) as cm:
             self.module.guess_format(fh)
-        self.assertTrue(str(fh) in cm.exception.message)
+        self.assertTrue(str(fh) in str(cm.exception))
 
         with self.assertRaises(FormatIdentificationError) as cm:
             self.module.guess_format(fh, cls=self.cls)
@@ -400,17 +400,17 @@ class TestGuessFormat(RegistryTest):
         fh = StringIO(u"1234 will match all")
         with self.assertRaises(FormatIdentificationError) as cm:
             self.module.guess_format(fh)
-        self.assertTrue("format1" in cm.exception.message)
-        self.assertTrue("format2" in cm.exception.message)
-        self.assertTrue("format3" in cm.exception.message)
-        self.assertTrue("format4" in cm.exception.message)
+        self.assertTrue("format1" in str(cm.exception))
+        self.assertTrue("format2" in str(cm.exception))
+        self.assertTrue("format3" in str(cm.exception))
+        self.assertTrue("format4" in str(cm.exception))
         fh.close()
 
     def test_no_matches_w_cls(self):
         fh = StringIO(u"no matches here")
         with self.assertRaises(FormatIdentificationError) as cm:
             self.module.guess_format(fh, cls=self.cls)
-        self.assertTrue(str(fh) in cm.exception.message)
+        self.assertTrue(str(fh) in str(cm.exception))
         fh.close()
 
     def test_one_match_w_cls(self):
@@ -421,11 +421,11 @@ class TestGuessFormat(RegistryTest):
         fh = StringIO(u"1234 will only format3 and format4 w/ class")
         with self.assertRaises(FormatIdentificationError) as cm:
             self.module.guess_format(fh, cls=self.cls)
-        self.assertTrue("format1" not in cm.exception.message)
-        self.assertTrue("format2" not in cm.exception.message)
+        self.assertTrue("format1" not in str(cm.exception))
+        self.assertTrue("format2" not in str(cm.exception))
         # Only format3 and format4 have a definition for the provided class.
-        self.assertTrue("format3" in cm.exception.message)
-        self.assertTrue("format4" in cm.exception.message)
+        self.assertTrue("format3" in str(cm.exception))
+        self.assertTrue("format4" in str(cm.exception))
         fh.close()
 
 
@@ -485,14 +485,14 @@ class TestRead(RegistryTest):
         with self.assertRaises(FileFormatError) as cm:
             self.module.read(None, format='not_a_format', into=self.cls)
 
-        self.assertTrue(self.cls.__name__ in cm.exception.message)
-        self.assertTrue('not_a_format' in cm.exception.message)
+        self.assertTrue(self.cls.__name__ in str(cm.exception))
+        self.assertTrue('not_a_format' in str(cm.exception))
 
         with self.assertRaises(FileFormatError) as cm:
             self.module.read(None, format='not_a_format2')
 
-        self.assertTrue('generator' in cm.exception.message)
-        self.assertTrue('not_a_format2' in cm.exception.message)
+        self.assertTrue('generator' in str(cm.exception))
+        self.assertTrue('not_a_format2' in str(cm.exception))
 
     def test_reader_exists(self):
         fh = StringIO(u'1\n2\n3\n4')
@@ -546,8 +546,8 @@ class TestWrite(RegistryTest):
         with self.assertRaises(FileFormatError) as cm:
             self.module.write({}, format='not_a_format', into=fh)
 
-        self.assertTrue('not_a_format' in cm.exception.message)
-        self.assertTrue(str(fh) in cm.exception.message)
+        self.assertTrue('not_a_format' in str(cm.exception))
+        self.assertTrue(str(fh) in str(cm.exception))
         fh.close()
 
     def test_writer_exists(self):
