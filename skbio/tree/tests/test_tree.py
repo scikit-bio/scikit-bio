@@ -17,9 +17,9 @@ import numpy.testing as nptest
 from scipy.stats import pearsonr
 from future.utils.six import StringIO
 
-from skbio.distance import DistanceMatrix
+from skbio import DistanceMatrix, TreeNode
 from skbio.tree._tree import _dnd_tokenizer
-from skbio.tree import (TreeNode, DuplicateNodeError, NoLengthError,
+from skbio.tree import (DuplicateNodeError, NoLengthError,
                         TreeError, MissingNodeError, NoParentError)
 from skbio.util import RecordError
 

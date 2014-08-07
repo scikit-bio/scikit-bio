@@ -13,11 +13,10 @@ import warnings
 
 import numpy as np
 
-from skbio.sequence import Protein, DNA, BiologicalSequence
+from skbio import Protein, DNA, BiologicalSequence, Alignment
 from skbio.alignment import (
     global_pairwise_align_protein, local_pairwise_align_protein,
-    global_pairwise_align_nucleotide, local_pairwise_align_nucleotide,
-    Alignment)
+    global_pairwise_align_nucleotide, local_pairwise_align_nucleotide)
 from skbio.alignment._pairwise import (
     _make_nt_substitution_matrix, _init_matrices_sw, _init_matrices_nw,
     _compute_score_and_traceback_matrices, _traceback, _first_largest,
