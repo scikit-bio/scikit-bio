@@ -568,7 +568,7 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
 
 
 def make_identity_substitution_matrix(match_score, mismatch_score,
-                                      alphabet='ACGT'):
+                                      alphabet='ACGTU'):
     """Generate substitution matrix where all matches are scored equally
 
     Parameters
