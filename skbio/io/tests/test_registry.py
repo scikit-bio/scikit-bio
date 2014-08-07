@@ -23,37 +23,32 @@ from skbio.io import (DuplicateRegistrationError,
                       FormatIdentificationError, FileFormatError)
 
 
+class TestClass(object):
+    def __init__(self, l):
+        self.list = l
+
+
+class TestClassA(TestClass):
+    pass
+
+
+class TestClassB(TestClass):
+    pass
+
+
 class RegistryTest(unittest.TestCase):
     def setUp(self):
         self.module = import_fresh_module('skbio.io._registry')
-
-        class TestClass(object):
-            def __init__(self, l):
-                self.list = l
-
-        self.cls = TestClass
-
-        class TestClassA(object):
-            def __init__(self, l):
-                self.list = l
-
-        self.clsA = TestClassA
-
-        class TestClassB(object):
-            def __init__(self, l):
-                self.list = l
-
-        self.clsB = TestClassB
 
 
 class TestRegisterAndReader(RegistryTest):
     def test_get_reader_no_match(self):
         self.assertEqual(None, self.module.get_reader('not_a_format',
-                                                      self.cls))
+                                                      TestClass))
 
     def test_get_reader_too_many_args(self):
         with self.assertRaises(TypeError) as cm:
-            self.module.get_reader('not_a_format', self.cls, 1)
+            self.module.get_reader('not_a_format', TestClass, 1)
         self.assertTrue('get_reader' in str(cm.exception))
 
     def test_register_reader_on_generator(self):
@@ -79,69 +74,69 @@ class TestRegisterAndReader(RegistryTest):
 
     def test_register_reader_with_too_many_args(self):
         with self.assertRaises(TypeError) as cm:
-            @self.module.register_reader('format1', self.cls, 1)
+            @self.module.register_reader('format1', TestClass, 1)
             def too_many_args(fh):
                 return
         self.assertTrue('register_reader' in str(cm.exception))
 
     def test_register_reader_on_many(self):
-        @self.module.register_reader('format1', self.clsA)
+        @self.module.register_reader('format1', TestClassA)
         def format1_reader(fh):
             return
 
-        @self.module.register_reader('format1', self.clsB)
+        @self.module.register_reader('format1', TestClassB)
         def format1_reader_b(fh):
             return
 
-        @self.module.register_reader('format2', self.clsA)
+        @self.module.register_reader('format2', TestClassA)
         def format2_reader(fh):
             return
 
-        @self.module.register_reader('format3', self.clsB)
+        @self.module.register_reader('format3', TestClassB)
         def format3_reader(fh):
             return
 
         self.assertEqual(format1_reader,
-                         self.module.get_reader('format1', self.clsA))
+                         self.module.get_reader('format1', TestClassA))
 
         self.assertEqual(format1_reader_b,
-                         self.module.get_reader('format1', self.clsB))
+                         self.module.get_reader('format1', TestClassB))
 
         self.assertEqual(format2_reader,
-                         self.module.get_reader('format2', self.clsA))
+                         self.module.get_reader('format2', TestClassA))
 
         self.assertEqual(None,
-                         self.module.get_reader('format2', self.clsB))
+                         self.module.get_reader('format2', TestClassB))
 
         self.assertEqual(None,
-                         self.module.get_reader('format3', self.clsA))
+                         self.module.get_reader('format3', TestClassA))
 
         self.assertEqual(format3_reader,
-                         self.module.get_reader('format3', self.clsB))
+                         self.module.get_reader('format3', TestClassB))
 
     def test_register_reader_over_existing(self):
         with self.assertRaises(DuplicateRegistrationError) as cm:
-            @self.module.register_reader('format1', self.clsA)
+            @self.module.register_reader('format1', TestClassA)
             def format1_reader(fh):
                 return
 
-            @self.module.register_reader('format1', self.clsA)
+            @self.module.register_reader('format1', TestClassA)
             def duplicate_format1_reader(fh):
                 return
 
         self.assertTrue('format1' in str(cm.exception))
         self.assertTrue('reader' in str(cm.exception))
-        self.assertTrue(self.clsA.__name__ in str(cm.exception))
+        self.assertTrue(TestClassA.__name__ in str(cm.exception))
 
 
 class TestRegisterAndGetWriter(RegistryTest):
     def test_get_writer_no_match(self):
         self.assertEqual(None, self.module.get_writer('not_a_format',
-                                                      self.cls))
+                                                      TestClass))
 
     def test_get_writer_too_many_args(self):
         with self.assertRaises(TypeError) as cm:
-            self.module.get_writer('not_a_format', self.cls, 1)
+            self.module.get_writer('not_a_format', TestClass, 1)
         self.assertTrue('get_writer' in str(cm.exception))
 
     def test_register_writer_on_generator(self):
@@ -167,59 +162,59 @@ class TestRegisterAndGetWriter(RegistryTest):
 
     def test_register_writer_with_too_many_args(self):
         with self.assertRaises(TypeError) as cm:
-            @self.module.register_writer('format1', self.cls, 1)
+            @self.module.register_writer('format1', TestClass, 1)
             def too_many_args(obj, fh):
                 return
         self.assertTrue('register_writer' in str(cm.exception))
 
     def test_register_writer_on_many(self):
-        @self.module.register_writer('format1', self.clsA)
+        @self.module.register_writer('format1', TestClassA)
         def format1_writer(obj, fh):
             return
 
-        @self.module.register_writer('format1', self.clsB)
+        @self.module.register_writer('format1', TestClassB)
         def format1_writer_b(obj, fh):
             return
 
-        @self.module.register_writer('format2', self.clsA)
+        @self.module.register_writer('format2', TestClassA)
         def format2_writer(obj, fh):
             return
 
-        @self.module.register_writer('format3', self.clsB)
+        @self.module.register_writer('format3', TestClassB)
         def format3_writer(obj, fh):
             return
 
         self.assertEqual(format1_writer,
-                         self.module.get_writer('format1', self.clsA))
+                         self.module.get_writer('format1', TestClassA))
 
         self.assertEqual(format1_writer_b,
-                         self.module.get_writer('format1', self.clsB))
+                         self.module.get_writer('format1', TestClassB))
 
         self.assertEqual(format2_writer,
-                         self.module.get_writer('format2', self.clsA))
+                         self.module.get_writer('format2', TestClassA))
 
         self.assertEqual(None,
-                         self.module.get_writer('format2', self.clsB))
+                         self.module.get_writer('format2', TestClassB))
 
         self.assertEqual(None,
-                         self.module.get_writer('format3', self.clsA))
+                         self.module.get_writer('format3', TestClassA))
 
         self.assertEqual(format3_writer,
-                         self.module.get_writer('format3', self.clsB))
+                         self.module.get_writer('format3', TestClassB))
 
     def test_register_writer_over_existing(self):
         with self.assertRaises(DuplicateRegistrationError) as cm:
-            @self.module.register_writer('format1', self.clsA)
+            @self.module.register_writer('format1', TestClassA)
             def format1_writer(obj, fh):
                 return
 
-            @self.module.register_writer('format1', self.clsA)
+            @self.module.register_writer('format1', TestClassA)
             def duplicate_format1_writer(obj, fh):
                 return
 
         self.assertTrue('format1' in str(cm.exception))
         self.assertTrue('writer' in str(cm.exception))
-        self.assertTrue(self.clsA.__name__ in str(cm.exception))
+        self.assertTrue(TestClassA.__name__ in str(cm.exception))
 
 
 class TestRegisterAndGetIdentifer(RegistryTest):
@@ -263,41 +258,41 @@ class TestRegisterAndGetIdentifer(RegistryTest):
 
 class TestListReadFormats(RegistryTest):
     def test_no_read_formats(self):
-        @self.module.register_reader('format1', self.clsA)
+        @self.module.register_reader('format1', TestClassA)
         def this_isnt_on_clsB(fh):
             return
 
-        self.assertEqual([], self.module.list_read_formats(self.clsB))
+        self.assertEqual([], self.module.list_read_formats(TestClassB))
 
     def test_one_read_format(self):
-        @self.module.register_reader('format1', self.cls)
+        @self.module.register_reader('format1', TestClass)
         def format1_cls(fh):
             return
 
-        self.assertEqual(['format1'], self.module.list_read_formats(self.cls))
+        self.assertEqual(['format1'], self.module.list_read_formats(TestClass))
 
     def test_many_read_formats(self):
-        @self.module.register_reader('format1', self.clsA)
+        @self.module.register_reader('format1', TestClassA)
         def format1_clsA(fh):
             return
 
-        @self.module.register_reader('format2', self.clsA)
+        @self.module.register_reader('format2', TestClassA)
         def format2_clsA(fh):
             return
 
-        @self.module.register_reader('format3', self.clsA)
+        @self.module.register_reader('format3', TestClassA)
         def format3_clsA(fh):
             return
 
-        @self.module.register_reader('format3', self.clsB)
+        @self.module.register_reader('format3', TestClassB)
         def format3_clsB(fh):
             return
 
-        @self.module.register_reader('format4', self.clsB)
+        @self.module.register_reader('format4', TestClassB)
         def format4_clsB(fh):
             return
 
-        formats = self.module.list_read_formats(self.clsA)
+        formats = self.module.list_read_formats(TestClassA)
 
         self.assertTrue('format1' in formats)
         self.assertTrue('format2' in formats)
@@ -307,41 +302,42 @@ class TestListReadFormats(RegistryTest):
 
 class TestListWriteFormats(RegistryTest):
     def test_no_read_formats(self):
-        @self.module.register_writer('format1', self.clsA)
+        @self.module.register_writer('format1', TestClassA)
         def this_isnt_on_clsB(fh):
             return
 
-        self.assertEqual([], self.module.list_write_formats(self.clsB))
+        self.assertEqual([], self.module.list_write_formats(TestClassB))
 
     def test_one_read_format(self):
-        @self.module.register_writer('format1', self.cls)
+        @self.module.register_writer('format1', TestClass)
         def format1_cls(fh):
             return
 
-        self.assertEqual(['format1'], self.module.list_write_formats(self.cls))
+        self.assertEqual(['format1'],
+                         self.module.list_write_formats(TestClass))
 
     def test_many_read_formats(self):
-        @self.module.register_writer('format1', self.clsA)
+        @self.module.register_writer('format1', TestClassA)
         def format1_clsA(fh):
             return
 
-        @self.module.register_writer('format2', self.clsA)
+        @self.module.register_writer('format2', TestClassA)
         def format2_clsA(fh):
             return
 
-        @self.module.register_writer('format3', self.clsA)
+        @self.module.register_writer('format3', TestClassA)
         def format3_clsA(fh):
             return
 
-        @self.module.register_writer('format3', self.clsB)
+        @self.module.register_writer('format3', TestClassB)
         def format3_clsB(fh):
             return
 
-        @self.module.register_writer('format4', self.clsB)
+        @self.module.register_writer('format4', TestClassB)
         def format4_clsB(fh):
             return
 
-        formats = self.module.list_write_formats(self.clsA)
+        formats = self.module.list_write_formats(TestClassA)
 
         self.assertTrue('format1' in formats)
         self.assertTrue('format2' in formats)
@@ -350,7 +346,6 @@ class TestListWriteFormats(RegistryTest):
 
 
 class TestGuessFormat(RegistryTest):
-
     def setUp(self):
         super(TestGuessFormat, self).setUp()
 
@@ -370,11 +365,11 @@ class TestGuessFormat(RegistryTest):
         def format4_identifier(fh):
             return '4' in fh.readline()
 
-        @self.module.register_reader('format3', self.cls)
+        @self.module.register_reader('format3', TestClass)
         def reader3(fh):
             return
 
-        @self.module.register_reader('format4', self.cls)
+        @self.module.register_reader('format4', TestClass)
         def reader4(fh):
             return
 
@@ -385,10 +380,10 @@ class TestGuessFormat(RegistryTest):
         self.assertTrue(str(fh) in str(cm.exception))
 
         with self.assertRaises(FormatIdentificationError) as cm:
-            self.module.guess_format(fh, cls=self.cls)
+            self.module.guess_format(fh, cls=TestClass)
 
         with self.assertRaises(FormatIdentificationError) as cm:
-            self.module.guess_format(fh, cls=self.clsB)
+            self.module.guess_format(fh, cls=TestClassB)
 
         fh.close()
 
@@ -409,18 +404,19 @@ class TestGuessFormat(RegistryTest):
     def test_no_matches_w_cls(self):
         fh = StringIO(u"no matches here")
         with self.assertRaises(FormatIdentificationError) as cm:
-            self.module.guess_format(fh, cls=self.cls)
+            self.module.guess_format(fh, cls=TestClass)
         self.assertTrue(str(fh) in str(cm.exception))
         fh.close()
 
     def test_one_match_w_cls(self):
         fh = StringIO(u"contains a 3")
-        self.assertEqual('format3', self.module.guess_format(fh, cls=self.cls))
+        self.assertEqual('format3',
+                         self.module.guess_format(fh, cls=TestClass))
 
     def test_many_matches_w_cls(self):
         fh = StringIO(u"1234 will only format3 and format4 w/ class")
         with self.assertRaises(FormatIdentificationError) as cm:
-            self.module.guess_format(fh, cls=self.cls)
+            self.module.guess_format(fh, cls=TestClass)
         self.assertTrue("format1" not in str(cm.exception))
         self.assertTrue("format2" not in str(cm.exception))
         # Only format3 and format4 have a definition for the provided class.
@@ -430,7 +426,6 @@ class TestGuessFormat(RegistryTest):
 
 
 class TestRead(RegistryTest):
-
     def test_format_and_into_are_none(self):
         fh = StringIO()
         with self.assertRaises(ValueError):
@@ -445,11 +440,11 @@ class TestRead(RegistryTest):
         def identifier(fh):
             return '1' in fh.readline()
 
-        @self.module.register_reader('format', self.cls)
+        @self.module.register_reader('format', TestClass)
         def reader(fh):
-            return self.cls([int(x) for x in fh.read().split('\n')])
+            return TestClass([int(x) for x in fh.read().split('\n')])
 
-        instance = self.module.read(fh, into=self.cls)
+        instance = self.module.read(fh, into=TestClass)
         self.assertEqual([1, 2, 3, 4], instance.list)
         fh.close()
 
@@ -464,7 +459,8 @@ class TestRead(RegistryTest):
         generator = self.module.read(fh, format='format')
         for a, b in zip([1, 2, 3, 4], generator):
             self.assertEqual(a, b)
-        self.assertTrue(True, fh.closed)
+        self.assertTrue(not fh.closed)
+        fh.close()
 
     def test_into_is_none_real_file(self):
         _, fp = mkstemp()
@@ -479,13 +475,13 @@ class TestRead(RegistryTest):
         generator = self.module.read(fp, format='format')
         for a, b in zip([1, 2, 3, 4], generator):
             self.assertEqual(a, b)
-        self.assertTrue(True, fh.closed)
+        self.assertTrue(fh.closed)
 
     def test_reader_does_not_exist(self):
         with self.assertRaises(FileFormatError) as cm:
-            self.module.read(None, format='not_a_format', into=self.cls)
+            self.module.read(None, format='not_a_format', into=TestClass)
 
-        self.assertTrue(self.cls.__name__ in str(cm.exception))
+        self.assertTrue(TestClass.__name__ in str(cm.exception))
         self.assertTrue('not_a_format' in str(cm.exception))
 
         with self.assertRaises(FileFormatError) as cm:
@@ -501,11 +497,11 @@ class TestRead(RegistryTest):
         def identifier(fh):
             return '1' in fh.readline()
 
-        @self.module.register_reader('format', self.cls)
+        @self.module.register_reader('format', TestClass)
         def reader(fh):
-            return self.cls([int(x) for x in fh.read().split('\n')])
+            return TestClass([int(x) for x in fh.read().split('\n')])
 
-        instance = self.module.read(fh, format='format', into=self.cls)
+        instance = self.module.read(fh, format='format', into=TestClass)
         self.assertEqual([1, 2, 3, 4], instance.list)
         fh.close()
 
@@ -518,17 +514,15 @@ class TestRead(RegistryTest):
         def identifier(fh):
             return '1' in fh.readline()
 
-        @self.module.register_reader('format', self.cls)
+        @self.module.register_reader('format', TestClass)
         def reader(fh):
-            return self.cls([int(x) for x in fh.read().split('\n')])
+            return TestClass([int(x) for x in fh.read().split('\n')])
 
-        instance = self.module.read(fp, format='format', into=self.cls)
+        instance = self.module.read(fp, format='format', into=TestClass)
         self.assertEqual([1, 2, 3, 4], instance.list)
-        fh.close()
 
 
 class TestWrite(RegistryTest):
-
     def test_format_is_none(self):
         fh = StringIO()
         with self.assertRaises(ValueError):
@@ -551,10 +545,10 @@ class TestWrite(RegistryTest):
         fh.close()
 
     def test_writer_exists(self):
-        obj = self.cls(['1', '2', '3', '4'])
+        obj = TestClass(['1', '2', '3', '4'])
         fh = StringIO()
 
-        @self.module.register_writer('format', self.cls)
+        @self.module.register_writer('format', TestClass)
         def writer(obj, fh):
             fh.write(u'\n'.join(obj.list))
 
@@ -564,10 +558,10 @@ class TestWrite(RegistryTest):
         fh.close()
 
     def test_writer_exists_real_file(self):
-        obj = self.cls(['1', '2', '3', '4'])
+        obj = TestClass(['1', '2', '3', '4'])
         _, fp = mkstemp()
 
-        @self.module.register_writer('format', self.cls)
+        @self.module.register_writer('format', TestClass)
         def writer(obj, fh):
             fh.write('\n'.join(obj.list))
 
