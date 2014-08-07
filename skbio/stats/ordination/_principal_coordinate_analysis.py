@@ -12,7 +12,7 @@ from warnings import warn
 
 import numpy as np
 
-from .base import Ordination, OrdinationResults
+from ._base import Ordination, OrdinationResults
 from skbio.distance import DistanceMatrix
 
 # - In cogent, after computing eigenvalues/vectors, the imaginary part

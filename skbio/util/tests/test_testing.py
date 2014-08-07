@@ -12,7 +12,7 @@ import os
 
 import numpy.testing as npt
 
-from skbio.util.testing import get_data_path
+from skbio.util import get_data_path
 
 
 def test_get_data_path():

@@ -22,7 +22,7 @@ from skbio import DistanceMatrix
 from skbio.distance import randdm, DissimilarityMatrix
 from skbio.distance import (DissimilarityMatrixError, DistanceMatrixError,
                             DissimilarityMatrixFormatError, MissingIDError)
-from skbio.util.testing import get_data_path
+from skbio.util import get_data_path
 
 
 class DissimilarityMatrixTestData(TestCase):

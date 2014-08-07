@@ -111,7 +111,7 @@ def bioenv(distance_matrix, data_frame, columns=None):
 
     >>> import pandas as pd
     >>> from skbio.distance import DistanceMatrix
-    >>> from skbio.math.stats.distance import bioenv
+    >>> from skbio.stats.distance import bioenv
     >>> try:
     ...     # not necessary for normal use
     ...     pd.set_option('show_dimensions', True)

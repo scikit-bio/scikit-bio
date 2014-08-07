@@ -15,7 +15,7 @@ from future.builtins import range, zip
 from future.utils.six import string_types
 
 from skbio.util import EfficiencyWarning
-from .alignment import Alignment
+from skbio.alignment import Alignment
 from skbio import BiologicalSequence
 
 # This is temporary: blosum50 does not exist in skbio yet as per

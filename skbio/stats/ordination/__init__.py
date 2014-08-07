@@ -100,11 +100,11 @@ References
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from .correspondence_analysis import CA
-from .redundancy_analysis import RDA
-from .canonical_correspondence_analysis import CCA
-from .principal_coordinate_analysis import PCoA
-from .base import OrdinationResults
+from ._correspondence_analysis import CA
+from ._redundancy_analysis import RDA
+from ._canonical_correspondence_analysis import CCA
+from ._principal_coordinate_analysis import PCoA
+from ._base import OrdinationResults
 from ._utils import mean_and_std, scale, svd_rank, corr
 
 __all__ = ['CA', 'RDA', 'CCA', 'PCoA', 'OrdinationResults', 'mean_and_std',

@@ -1,25 +1,3 @@
-"""
-Miscellaneous Utilities (:mod:`skbio.util.misc`)
-================================================
-
-.. currentmodule:: skbio.util.misc
-
-This module provides miscellaneous useful utility classes and methods that do
-not fit in any specific module.
-
-Functions
----------
-
-.. autosummary::
-   :toctree: generated/
-
-   create_dir
-   flatten
-   remove_files
-   safe_md5
-   is_casava_v180_or_later
-
-"""
 from __future__ import absolute_import, division, print_function
 
 # ----------------------------------------------------------------------------
@@ -51,7 +29,7 @@ def is_casava_v180_or_later(header_line):
 
     Examples
     --------
-    >>> from skbio.util.misc import is_casava_v180_or_later
+    >>> from skbio.util import is_casava_v180_or_later
     >>> print(is_casava_v180_or_later('@foo'))
     False
     >>> id_ = '@M00176:17:000000000-A0CNA:1:1:15487:1773 1:N:0:0'
@@ -90,7 +68,7 @@ def safe_md5(open_file, block_size=2 ** 20):
     Examples
     --------
     >>> from StringIO import StringIO
-    >>> from skbio.util.misc import safe_md5
+    >>> from skbio.util import safe_md5
     >>> fd = StringIO("foo bar baz") # open file like object
     >>> x = safe_md5(fd)
     >>> x.hexdigest()
@@ -127,7 +105,7 @@ def remove_files(list_of_filepaths, error_on_missing=True):
     --------
     >>> from tempfile import NamedTemporaryFile
     >>> from os.path import exists
-    >>> from skbio.util.misc import remove_files
+    >>> from skbio.util import remove_files
     >>> h = NamedTemporaryFile(delete=False)
     >>> exists(h.name) # it exists
     True
@@ -181,7 +159,7 @@ def create_dir(dir_name, fail_on_exist=False, handle_errors_externally=False):
 
     Examples
     --------
-    >>> from skbio.util.misc import create_dir
+    >>> from skbio.util import create_dir
     >>> from os.path import exists, join
     >>> from tempfile import gettempdir
     >>> from os import rmdir
@@ -193,9 +171,9 @@ def create_dir(dir_name, fail_on_exist=False, handle_errors_externally=False):
     >>> rmdir(new_dir)
 
     """
-    error_code_lookup = get_create_dir_error_codes()
+    error_code_lookup = _get_create_dir_error_codes()
     # pre-instanciate function with
-    ror = partial(handle_error_codes, dir_name, handle_errors_externally)
+    ror = partial(_handle_error_codes, dir_name, handle_errors_externally)
 
     if exists(dir_name):
         if isdir(dir_name):
@@ -216,18 +194,47 @@ def create_dir(dir_name, fail_on_exist=False, handle_errors_externally=False):
 
     return error_code_lookup['NO_ERROR']
 
-# some error codes for creating a dir
+
+def flatten(items):
+    """Removes one level of nesting from items
+
+    Parameters
+    ----------
+    items : iterable
+        list of items to flatten one level
+
+    Returns
+    -------
+    flattened_items : list
+        list of flattened items, items can be any sequence, but flatten always
+        returns a list.
+
+    Examples
+    --------
+    >>> from skbio.util import flatten
+    >>> h = [['a', 'b', 'c', 'd'], [1, 2, 3, 4, 5], ['x', 'y'], ['foo']]
+    >>> print(flatten(h))
+    ['a', 'b', 'c', 'd', 1, 2, 3, 4, 5, 'x', 'y', 'foo']
+
+    """
+    result = []
+    for i in items:
+        try:
+            result.extend(i)
+        except TypeError:
+            result.append(i)
+    return result
 
 
-def get_create_dir_error_codes():
+def _get_create_dir_error_codes():
     return {'NO_ERROR':      0,
             'DIR_EXISTS':    1,
             'FILE_EXISTS':   2,
             'OTHER_OS_ERROR': 3}
 
 
-def handle_error_codes(dir_name, suppress_errors=False,
-                       error_code=None):
+def _handle_error_codes(dir_name, suppress_errors=False,
+                        error_code=None):
     """Wrapper function for error_handling.
 
     dir_name: name of directory that raised the error
@@ -235,7 +242,7 @@ def handle_error_codes(dir_name, suppress_errors=False,
     error_code: the code for the error
 
     """
-    error_code_lookup = get_create_dir_error_codes()
+    error_code_lookup = _get_create_dir_error_codes()
 
     if error_code is None:
         error_code = error_code_lookup['NO_ERROR']
@@ -255,34 +262,3 @@ def handle_error_codes(dir_name, suppress_errors=False,
         return error_code
     else:
         raise OSError(error_strings[error_code])
-
-
-def flatten(items):
-    """Removes one level of nesting from items
-
-    Parameters
-    ----------
-    items : iterable
-        list of items to flatten one level
-
-    Returns
-    -------
-    flattened_items : list
-        list of flattened items, items can be any sequence, but flatten always
-        returns a list.
-
-    Examples
-    --------
-    >>> from skbio.util.misc import flatten
-    >>> h = [['a', 'b', 'c', 'd'], [1, 2, 3, 4, 5], ['x', 'y'], ['foo']]
-    >>> print(flatten(h))
-    ['a', 'b', 'c', 'd', 1, 2, 3, 4, 5, 'x', 'y', 'foo']
-
-    """
-    result = []
-    for i in items:
-        try:
-            result.extend(i)
-        except TypeError:
-            result.append(i)
-    return result
