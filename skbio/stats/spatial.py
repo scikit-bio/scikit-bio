@@ -100,16 +100,9 @@ def procrustes(data1, data2):
     >>> from skbio.stats.spatial import procrustes
     >>> a = np.array([[1, 3], [1, 2], [1, 1], [2, 1]], 'd')
     >>> b = np.array([[4, -2], [4, -4], [4, -6], [2, -6]], 'd')
-    >>> p = procrustes(a, b)
-    >>> print(p)
-    (array([[-0.13363062,  0.6681531 ],
-           [-0.13363062,  0.13363062],
-           [-0.13363062, -0.40089186],
-           [ 0.40089186, -0.40089186]]), array([[-0.13363062,  0.6681531 ],
-           [-0.13363062,  0.13363062],
-           [-0.13363062, -0.40089186],
-           [ 0.40089186, -0.40089186]]), 1.6177811532852781e-32)
-
+    >>> mtx1, mtx2, disparity = procrustes(a, b)
+    >>> print(round(disparity))
+    0.0
 
     """
     num_rows, num_cols = np.shape(data1)
