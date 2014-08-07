@@ -12,7 +12,6 @@ from __future__ import absolute_import, division, print_function
 
 import re
 from operator import or_
-from random import shuffle
 from copy import deepcopy
 from itertools import combinations
 from functools import reduce
@@ -2553,7 +2552,7 @@ class TreeNode(object):
         return 1 - (2 * intersection_length / float(total_subsets))
 
     def compare_tip_distances(self, other, sample=None, dist_f=distance_from_r,
-                              shuffle_f=shuffle):
+                              shuffle_f=np.random.shuffle):
         """Compares self to other using tip-to-tip distance matrices.
 
         Value returned is `dist_f(m1, m2)` for the two matrices. Default is
@@ -2814,7 +2813,7 @@ class TreeNode(object):
             cached.append(cache_type(func(node)))
             setattr(node, cache_attrname, reduce(reduce_f, cached))
 
-    def shuffle(self, n=None, names=None, shuffle_f=shuffle):
+    def shuffle(self, n=None, names=None, shuffle_f=np.random.shuffle):
         """Yield trees with shuffled tip names
 
         Parameters
