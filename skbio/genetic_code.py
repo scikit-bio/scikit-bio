@@ -17,6 +17,16 @@ Classes
 
    GeneticCode
 
+Exceptions
+----------
+
+.. autosummary::
+   :toctree: generated/
+
+   GeneticCodeError
+   GeneticCodeInitError
+   InvalidCodonError
+
 Examples
 --------
 
@@ -74,7 +84,6 @@ import re
 
 from collections import defaultdict
 
-from skbio.util.exception import GeneticCodeInitError, InvalidCodonError
 from skbio.sequence import Protein
 
 # py3k compatibility
@@ -84,6 +93,21 @@ except ImportError:
     maketrans = str.maketrans
 
 _dna_trans = maketrans('TCAG', 'AGTC')
+
+
+class GeneticCodeError(Exception):
+    """Base class exception used by the GeneticCode class"""
+    pass
+
+
+class GeneticCodeInitError(ValueError, GeneticCodeError):
+    """Exception raised by the GeneticCode class upon a bad initialization"""
+    pass
+
+
+class InvalidCodonError(KeyError, GeneticCodeError):
+    """Exception raised by the GeneticCode class if __getitem__ fails"""
+    pass
 
 
 def _simple_rc(seq):

@@ -12,7 +12,7 @@ from future.builtins import zip
 
 import numpy as np
 
-from skbio.util.exception import FileFormatError
+from skbio.util import FileFormatError
 from skbio.util.io import open_file
 
 

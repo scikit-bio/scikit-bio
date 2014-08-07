@@ -24,8 +24,8 @@ from scipy.spatial.distance import hamming
 
 from skbio import (NucleotideSequence, DNASequence, RNASequence, DNA,
                    DistanceMatrix, Alignment, SequenceCollection)
-from skbio.alignment import StockholmAlignment
-from skbio.util.exception import SequenceCollectionError, StockholmParseError
+from skbio.alignment import (StockholmAlignment, SequenceCollectionError,
+                             StockholmParseError)
 
 
 class SequenceCollectionTests(TestCase):

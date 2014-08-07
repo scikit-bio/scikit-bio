@@ -19,8 +19,9 @@ from future.utils.six import StringIO
 
 from skbio import TreeNode, DistanceMatrix
 from skbio.tree.tree import _dnd_tokenizer
-from skbio.util.exception import (DuplicateNodeError, NoLengthError, TreeError,
-                                  RecordError, MissingNodeError, NoParentError)
+from skbio.tree import (DuplicateNodeError, NoLengthError, TreeError,
+                        MissingNodeError, NoParentError)
+from skbio.util import RecordError
 
 
 class TreeTests(TestCase):

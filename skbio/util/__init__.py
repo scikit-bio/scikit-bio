@@ -14,11 +14,27 @@ Subpackages
 .. autosummary::
    :toctree: generated/
 
-   exception
-   warning
    io
    misc
    testing
+
+Exceptions
+----------
+
+.. autosummary::
+   :toctree: generated/
+
+   FileFormatError
+   RecordError
+   FieldError
+
+Warnings
+--------
+
+.. autosummary::
+   :toctree: generated/
+
+   EfficiencyWarning
 
 """
 
@@ -29,6 +45,11 @@ Subpackages
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # -----------------------------------------------------------------------------
+
+from ._exception import FileFormatError, RecordError, FieldError
+from ._warning import EfficiencyWarning
+
+__all__ = ['FileFormatError', 'RecordError', 'FieldError', 'EfficiencyWarning']
 
 from numpy.testing import Tester
 test = Tester().test

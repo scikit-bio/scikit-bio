@@ -12,8 +12,8 @@ with standard_library.hooks():
 
 import numpy as np
 
-from skbio.util.exception import FastqParseError
 from skbio.util.io import open_file
+from ._exception import FastqParseError
 
 
 def _ascii_to_phred(s, offset):

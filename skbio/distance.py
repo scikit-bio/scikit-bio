@@ -44,6 +44,17 @@ Functions
 
    randdm
 
+Exceptions
+----------
+
+.. autosummary::
+   :toctree: generated/
+
+   DissimilarityMatrixError
+   DistanceMatrixError
+   DissimilarityMatrixFormatError
+   MissingIDError
+
 References
 ----------
 .. [1] Faith, D. P. (1992). "Conservation evaluation and phylogenetic
@@ -147,10 +158,35 @@ from copy import deepcopy
 import numpy as np
 from scipy.spatial.distance import squareform
 
-from skbio.util.exception import (DissimilarityMatrixError,
-                                  DissimilarityMatrixFormatError,
-                                  DistanceMatrixError, MissingIDError)
 from skbio.util.io import open_file
+
+
+class DissimilarityMatrixError(Exception):
+    """General error for dissimilarity matrix validation failures."""
+    pass
+
+
+class DistanceMatrixError(DissimilarityMatrixError):
+    """General error for distance matrix validation failures."""
+    pass
+
+
+class MissingIDError(DissimilarityMatrixError):
+    """Error for ID lookup that doesn't exist in the dissimilarity matrix."""
+
+    def __init__(self, missing_id):
+        super(MissingIDError, self).__init__()
+        self.args = ("The ID '%s' is not in the dissimilarity matrix." %
+                     missing_id,)
+
+
+class DissimilarityMatrixFormatError(DissimilarityMatrixError):
+    """Error for reporting issues in dissimilarity matrix file format.
+
+    Typically used during parsing.
+
+    """
+    pass
 
 
 class DissimilarityMatrix(object):

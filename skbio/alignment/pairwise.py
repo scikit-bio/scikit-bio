@@ -12,7 +12,7 @@ from warnings import warn
 
 import numpy as np
 
-from skbio.util.warning import EfficiencyWarning
+from skbio.util import EfficiencyWarning
 from .alignment import Alignment
 from skbio import BiologicalSequence
 
