@@ -1413,6 +1413,11 @@ class TreeNode(object):
         TreeNode
             The tree node with the matcing id
 
+        Notes
+        -----
+        This method does not cache id associations. A full traversal of the
+        tree is performed to find a node by an id on every call.
+
         Raises
         ------
         MissingNodeError
@@ -1440,6 +1445,7 @@ class TreeNode(object):
         for n in self.traverse(include_self=True):
             if n.id == node_id:
                 node = n
+                break
 
         if node is None:
             raise MissingNodeError("ID %d is not in self" % node_id)
