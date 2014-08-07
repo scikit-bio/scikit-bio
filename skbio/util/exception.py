@@ -146,3 +146,11 @@ class InvalidCodonError(KeyError, GeneticCodeError):
 class StockholmParseError(FileFormatError):
     """Exception raised when a Stockholm formatted file cannot be parsed"""
     pass
+
+class FormatIdentificationError(FileFormatError):
+    """Exception raised when a file's format cannot be identified"""
+    pass
+
+class DuplicateRegistrationError(Exception):
+    """Exception raised a function is already registered in skbio.io"""
+    pass
