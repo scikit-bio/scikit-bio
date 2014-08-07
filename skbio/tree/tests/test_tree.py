@@ -291,6 +291,28 @@ class TreeTests(TestCase):
         with self.assertRaises(DuplicateNodeError):
             TreeNode.from_newick('(a, a)').create_caches()
 
+    def test_find_all(self):
+        t = TreeNode.from_newick("((a,b)c,((d,e)c)c,(f,(g,h)c)i)root;")
+        exp = [t.children[0],
+               t.children[1].children[0],
+               t.children[1],
+               t.children[2].children[1]]
+        obs = t.find_all('c')
+        self.assertEqual(obs, exp)
+
+        identity = t.find_all(t)
+        self.assertEqual(identity, t)
+
+        identity_name = t.find_all('root')
+        self.assertEqual(identity_name, t)
+
+        with self.assertRaises(MissingNodeError):
+            t.find_all('missing')
+
+        # should not get tips
+        with self.assertRaises(MissingNodeError):
+            t.find_all('a')
+
     def test_find(self):
         """Find a node in a tree"""
         t = TreeNode.from_newick("((a,b)c,(d,e)f);")
