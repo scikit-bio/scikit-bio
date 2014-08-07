@@ -19,7 +19,7 @@ import pandas as pd
 import numpy.testing as npt
 import pandas.util.testing as pdt
 
-from skbio.util.testing import get_data_path
+from skbio.util._testing import get_data_path
 from skbio.stats.gradient import (GradientANOVA, AverageGradientANOVA,
                                   TrajectoryGradientANOVA,
                                   FirstDifferenceGradientANOVA,

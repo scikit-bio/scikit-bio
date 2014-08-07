@@ -16,7 +16,7 @@ from pandas.util.testing import assert_frame_equal
 from skbio import DistanceMatrix
 from skbio.stats.distance import bioenv
 from skbio.stats.distance._bioenv import _scale
-from skbio.util.testing import get_data_path
+from skbio.util._testing import get_data_path
 
 
 class BIOENVTests(TestCase):

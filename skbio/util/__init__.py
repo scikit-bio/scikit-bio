@@ -8,6 +8,16 @@ This package provides general exception/warning definitions used throughout
 scikit-bio, as well as several subpackages containing various utility
 functionality, including I/O and unit-testing convenience functions.
 
+Testing functionality
+---------------------
+
+Common functionality to support testing in skbio.
+
+.. autosummary::
+   :toctree: generated/
+
+   get_data_path
+
 Miscellaneous functionality
 ---------------------------
 
@@ -54,10 +64,11 @@ from ._exception import FileFormatError, RecordError, FieldError
 from ._warning import EfficiencyWarning
 from ._misc import (create_dir, flatten, remove_files, safe_md5,
                     is_casava_v180_or_later)
+from ._testing import get_data_path
 
 __all__ = ['FileFormatError', 'RecordError', 'FieldError', 'EfficiencyWarning',
            'create_dir', 'flatten', 'remove_files', 'safe_md5',
-           'is_casava_v180_or_later']
+           'is_casava_v180_or_later', 'get_data_path']
 
 from numpy.testing import Tester
 test = Tester().test

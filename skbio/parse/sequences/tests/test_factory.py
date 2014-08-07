@@ -16,7 +16,7 @@ from skbio import FastaIterator
 from skbio.parse.sequences import load
 from skbio.parse.sequences.factory import (
     _open_or_none, _is_single_iterator_type)
-from skbio.util.testing import get_data_path
+from skbio.util._testing import get_data_path
 
 
 class SequenceLoadTests(TestCase):
