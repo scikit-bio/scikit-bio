@@ -1,25 +1,3 @@
-"""
-Miscellaneous Utilities (:mod:`skbio.util.misc`)
-================================================
-
-.. currentmodule:: skbio.util.misc
-
-This module provides miscellaneous useful utility classes and methods that do
-not fit in any specific module.
-
-Functions
----------
-
-.. autosummary::
-   :toctree: generated/
-
-   create_dir
-   flatten
-   remove_files
-   safe_md5
-   is_casava_v180_or_later
-
-"""
 from __future__ import absolute_import, division, print_function
 
 # ----------------------------------------------------------------------------
@@ -193,9 +171,9 @@ def create_dir(dir_name, fail_on_exist=False, handle_errors_externally=False):
     >>> rmdir(new_dir)
 
     """
-    error_code_lookup = get_create_dir_error_codes()
+    error_code_lookup = _get_create_dir_error_codes()
     # pre-instanciate function with
-    ror = partial(handle_error_codes, dir_name, handle_errors_externally)
+    ror = partial(_handle_error_codes, dir_name, handle_errors_externally)
 
     if exists(dir_name):
         if isdir(dir_name):
@@ -215,46 +193,6 @@ def create_dir(dir_name, fail_on_exist=False, handle_errors_externally=False):
             return ror(error_code_lookup['OTHER_OS_ERROR'])
 
     return error_code_lookup['NO_ERROR']
-
-# some error codes for creating a dir
-
-
-def get_create_dir_error_codes():
-    return {'NO_ERROR':      0,
-            'DIR_EXISTS':    1,
-            'FILE_EXISTS':   2,
-            'OTHER_OS_ERROR': 3}
-
-
-def handle_error_codes(dir_name, suppress_errors=False,
-                       error_code=None):
-    """Wrapper function for error_handling.
-
-    dir_name: name of directory that raised the error
-    suppress_errors: if True raise Errors, otherwise return error_code
-    error_code: the code for the error
-
-    """
-    error_code_lookup = get_create_dir_error_codes()
-
-    if error_code is None:
-        error_code = error_code_lookup['NO_ERROR']
-
-    error_strings = \
-        {error_code_lookup['DIR_EXISTS']:
-         "Directory already exists: %s" % dir_name,
-         error_code_lookup['FILE_EXISTS']:
-         "File with same name exists: %s" % dir_name,
-         error_code_lookup['OTHER_OS_ERROR']:
-         "Could not create output directory: %s. " % dir_name +
-         "Check the permissions."}
-
-    if error_code == error_code_lookup['NO_ERROR']:
-        return error_code_lookup['NO_ERROR']
-    if suppress_errors:
-        return error_code
-    else:
-        raise OSError(error_strings[error_code])
 
 
 def flatten(items):
@@ -286,3 +224,41 @@ def flatten(items):
         except TypeError:
             result.append(i)
     return result
+
+
+def _get_create_dir_error_codes():
+    return {'NO_ERROR':      0,
+            'DIR_EXISTS':    1,
+            'FILE_EXISTS':   2,
+            'OTHER_OS_ERROR': 3}
+
+
+def _handle_error_codes(dir_name, suppress_errors=False,
+                        error_code=None):
+    """Wrapper function for error_handling.
+
+    dir_name: name of directory that raised the error
+    suppress_errors: if True raise Errors, otherwise return error_code
+    error_code: the code for the error
+
+    """
+    error_code_lookup = _get_create_dir_error_codes()
+
+    if error_code is None:
+        error_code = error_code_lookup['NO_ERROR']
+
+    error_strings = \
+        {error_code_lookup['DIR_EXISTS']:
+         "Directory already exists: %s" % dir_name,
+         error_code_lookup['FILE_EXISTS']:
+         "File with same name exists: %s" % dir_name,
+         error_code_lookup['OTHER_OS_ERROR']:
+         "Could not create output directory: %s. " % dir_name +
+         "Check the permissions."}
+
+    if error_code == error_code_lookup['NO_ERROR']:
+        return error_code_lookup['NO_ERROR']
+    if suppress_errors:
+        return error_code
+    else:
+        raise OSError(error_strings[error_code])
