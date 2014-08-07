@@ -14,7 +14,7 @@ import numpy as np
 from future.builtins import range, zip
 from future.utils.six import string_types
 
-from skbio.util.warning import EfficiencyWarning
+from skbio.util import EfficiencyWarning
 from .alignment import Alignment
 from skbio import BiologicalSequence
 

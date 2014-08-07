@@ -13,7 +13,7 @@ from future.utils import viewitems
 from numbers import Integral
 from copy import deepcopy
 
-from skbio.util.exception import FieldError
+from skbio.util import FieldError
 
 
 def string_and_strip(*items):

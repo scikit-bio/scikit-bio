@@ -20,10 +20,8 @@ import numpy.testing as npt
 
 from skbio import DistanceMatrix
 from skbio.distance import randdm, DissimilarityMatrix
-from skbio.util.exception import (DissimilarityMatrixError,
-                                  DistanceMatrixError,
-                                  DissimilarityMatrixFormatError,
-                                  MissingIDError)
+from skbio.distance import (DissimilarityMatrixError, DistanceMatrixError,
+                            DissimilarityMatrixFormatError, MissingIDError)
 from skbio.util.testing import get_data_path
 
 

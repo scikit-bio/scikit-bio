@@ -36,6 +36,18 @@ Utility Functions
     fasta_to_pairlist
     majority_rule
 
+Exceptions
+----------
+
+.. autosummary::
+   :toctree: generated/
+
+   TreeError
+   NoLengthError
+   DuplicateNodeError
+   MissingNodeError
+   NoParentError
+
 Examples
 --------
 
@@ -236,9 +248,12 @@ from .tree import TreeNode
 from .trie import CompressedTrie, fasta_to_pairlist
 from ._nj import nj
 from ._majority_rule import majority_rule
+from ._exception import (TreeError, NoLengthError, DuplicateNodeError,
+                         MissingNodeError, NoParentError)
 
 __all__ = ['TreeNode', 'CompressedTrie', 'fasta_to_pairlist', 'nj',
-           'majority_rule']
+           'majority_rule', 'TreeError', 'NoLengthError', 'DuplicateNodeError',
+           'MissingNodeError', 'NoParentError']
 
 from numpy.testing import Tester
 test = Tester().test

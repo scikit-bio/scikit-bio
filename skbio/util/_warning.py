@@ -1,21 +1,4 @@
-"""
-Warnings (:mod:`skbio.util.warning`)
-====================================
-
-.. currentmodule:: skbio.util.warning
-
-This module defines custom warning classes used throughout the scikit-bio
-codebase.
-
-Warnings
---------
-
-.. autosummary::
-   :toctree: generated/
-
-   EfficiencyWarning
-
-"""
+from __future__ import absolute_import, division, print_function
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -24,8 +7,6 @@ Warnings
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
-
-from __future__ import absolute_import, division, print_function
 
 
 class EfficiencyWarning(Warning):

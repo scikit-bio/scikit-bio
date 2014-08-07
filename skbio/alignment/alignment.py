@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -17,9 +16,9 @@ from warnings import warn
 import numpy as np
 from scipy.stats import entropy
 
-from skbio.util.exception import SequenceCollectionError, StockholmParseError
 from skbio.distance import DistanceMatrix
 from skbio.util.io import open_file
+from ._exception import SequenceCollectionError, StockholmParseError
 
 
 class SequenceCollection(object):

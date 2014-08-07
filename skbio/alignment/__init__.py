@@ -44,6 +44,15 @@ Slow (i.e., educational-purposes only) Alignment Algorithms
    pairwise.local_pairwise_align_protein
    pairwise.local_pairwise_align
 
+Exceptions
+----------
+
+.. autosummary::
+   :toctree: generated/
+
+   SequenceCollectionError
+   StockholmParseError
+
 Data Structure Examples
 -----------------------
 >>> from StringIO import StringIO
@@ -210,10 +219,12 @@ ACGTGCCTA-GGTACGCAAG
 from .alignment import Alignment, SequenceCollection, StockholmAlignment
 from .ssw.ssw_wrapper import (
     StripedSmithWaterman, local_pairwise_align_ssw, AlignmentStructure)
+from ._exception import SequenceCollectionError, StockholmParseError
 
 __all__ = ['Alignment', 'SequenceCollection', 'StockholmAlignment',
            'StripedSmithWaterman', 'AlignmentStructure',
-           'local_pairwise_align_ssw']
+           'local_pairwise_align_ssw', 'SequenceCollectionError',
+           'StockholmParseError']
 
 from numpy.testing import Tester
 test = Tester().test

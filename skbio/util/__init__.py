@@ -4,9 +4,9 @@ Utility functionality (:mod:`skbio.util`)
 
 .. currentmodule:: skbio.util
 
-This package provides several subpackages containing various utility
-functionality, including custom exception/warning definitions and I/O and
-unit-testing convenience functions.
+This package provides general exception/warning definitions used throughout
+scikit-bio, as well as several subpackages containing various utility
+functionality, including I/O and unit-testing convenience functions.
 
 Subpackages
 -----------
@@ -14,11 +14,27 @@ Subpackages
 .. autosummary::
    :toctree: generated/
 
-   exception
-   warning
    io
    misc
    testing
+
+Exceptions
+----------
+
+.. autosummary::
+   :toctree: generated/
+
+   FileFormatError
+   RecordError
+   FieldError
+
+Warnings
+--------
+
+.. autosummary::
+   :toctree: generated/
+
+   EfficiencyWarning
 
 """
 
@@ -29,6 +45,11 @@ Subpackages
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # -----------------------------------------------------------------------------
+
+from ._exception import FileFormatError, RecordError, FieldError
+from ._warning import EfficiencyWarning
+
+__all__ = ['FileFormatError', 'RecordError', 'FieldError', 'EfficiencyWarning']
 
 from numpy.testing import Tester
 test = Tester().test

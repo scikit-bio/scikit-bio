@@ -23,6 +23,14 @@ Classes
    RNASequence
    ProteinSequence
 
+Exceptions
+----------
+
+.. autosummary::
+   :toctree: generated/
+
+   BiologicalSequenceError
+
 Examples
 --------
 >>> from skbio.sequence import DNASequence, RNASequence
@@ -91,7 +99,10 @@ from itertools import product
 
 from scipy.spatial.distance import hamming
 
-from skbio.util.exception import BiologicalSequenceError
+
+class BiologicalSequenceError(Exception):
+    """General error for biological sequence validation failures."""
+    pass
 
 
 class BiologicalSequence(Sequence):

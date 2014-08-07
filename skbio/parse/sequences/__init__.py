@@ -165,6 +165,15 @@ Functions
     parse_fasta
     parse_fastq
     parse_qual
+
+Exceptions
+----------
+
+.. autosummary::
+   :toctree: generated/
+
+   FastqParseError
+
 """
 
 # ----------------------------------------------------------------------------
@@ -180,9 +189,11 @@ from .fasta import parse_fasta, parse_qual
 from .fastq import parse_fastq
 from .iterator import FastaIterator, FastqIterator, SequenceIterator
 from .factory import load
+from ._exception import FastqParseError
 
 __all__ = ['parse_clustal', 'parse_fasta', 'parse_fastq', 'parse_qual',
-           'FastqIterator', 'FastaIterator', 'SequenceIterator', 'load']
+           'FastqIterator', 'FastaIterator', 'SequenceIterator', 'load',
+           'FastqParseError']
 
 from numpy.testing import Tester
 test = Tester().test
