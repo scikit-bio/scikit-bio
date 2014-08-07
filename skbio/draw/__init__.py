@@ -1,10 +1,8 @@
-#!/usr/bin/env python
-
 """
 Visualizations (:mod:`skbio.draw`)
 ==================================
 
-.. currentmodule:: skbio.draw.distributions
+.. currentmodule:: skbio.draw
 
 This module provides functionality for visualization of data.
 
@@ -12,7 +10,7 @@ Distribution visualizations
 ---------------------------
 
 Functions
----------
+^^^^^^^^^
 
 .. autosummary::
    :toctree: generated/
