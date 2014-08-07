@@ -6,7 +6,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from .ssw_wrapper import (
+from skbio.alignment._ssw._ssw_wrapper import (
     StripedSmithWaterman, local_pairwise_align_ssw, AlignmentStructure)
 
 __all__ = ['StripedSmithWaterman', 'AlignmentStructure',

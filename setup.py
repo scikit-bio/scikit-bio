@@ -46,7 +46,7 @@ ext = '.pyx' if USE_CYTHON else '.c'
 extensions = [Extension("skbio.stats._subsample._subsample",
                         ["skbio/stats/_subsample/_subsample" + ext]),
               Extension("skbio.alignment._ssw._ssw_wrapper",
-                        ["skbio/alignment/_ssw/ssw_wrapper" + ext,
+                        ["skbio/alignment/_ssw/_ssw_wrapper" + ext,
                          "skbio/alignment/_ssw/ssw.c"])]
 
 if USE_CYTHON:
