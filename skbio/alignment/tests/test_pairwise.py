@@ -13,13 +13,15 @@ import warnings
 
 import numpy as np
 
-from skbio.alignment.pairwise import (
+from skbio.sequence import Protein, DNA, BiologicalSequence
+from skbio.alignment import (
     global_pairwise_align_protein, local_pairwise_align_protein,
     global_pairwise_align_nucleotide, local_pairwise_align_nucleotide,
+    Alignment)
+from skbio.alignment._pairwise import (
     _make_nt_substitution_matrix, _init_matrices_sw, _init_matrices_nw,
     _compute_score_and_traceback_matrices, _traceback, _first_largest,
     _get_seq_id, _compute_substitution_score)
-from skbio import Protein, DNA, Alignment, BiologicalSequence
 
 
 class PairwiseAlignmentTests(TestCase):
