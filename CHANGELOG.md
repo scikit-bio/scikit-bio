@@ -17,8 +17,8 @@
 * The module ``skbio.math.gradient`` as well as the contents of ``skbio.math.subsample`` and ``skbio.math.stats.misc`` are now found in ``skbio.stats``. As an example, to import subsample: ``from skbio.stats import subsample``; to import everything from gradient: ``from skbio.stats.gradient import *``.
 * The contents of ``skbio.math.stats.ordination.utils`` are now in ``skbio.stats.ordination``.
 * Removed ``skbio.app`` subpackage (i.e., the *application controller framework*) as this code has been ported to the standalone [burrito](https://github.com/biocore/burrito) Python package. This code was not specific to bioinformatics and is useful for wrapping command-line applications in general.
-* ``skbio.core.exception`` has been moved to ``skbio.util.exception``, and ``skbio.core.warning`` has been moved to ``skbio.util.warning``.
 * Removed ``skbio.core``, leaving ``alignment``, ``distance``, ``genetic_code``, ``sequence``, ``tree``, and ``workflow`` to become top level packages. For example, instead of ``from skbio.core.distance import DistanceMatrix`` you would now import ``from skbio.distance import DistanceMatrix``.
+* Removed ``skbio.util.exception`` and ``skbio.util.warning``. ``FileFormatError``, ``RecordError``, ``FieldError``, and ``EfficiencyWarning`` have been moved to ``skbio.util``. ``BiologicalSequenceError`` has been moved to ``skbio.sequence``. ``SequenceCollectionError`` and ``StockholmParseError`` have been moved to ``skbio.alignment``. ``DissimilarityMatrixError``, ``DistanceMatrixError``, ``DissimilarityMatrixFormatError``, and ``MissingIDError`` have been moved to ``skbio.distance``. ``TreeError``, ``NoLengthError``, ``DuplicateNodeError``, ``MissingNodeError``, and ``NoParentError`` have been moved to ``skbio.tree``. ``FastqParseError`` has been moved to ``skbio.parse.sequences``. ``GeneticCodeError``, ``GeneticCodeInitError``, and ``InvalidCodonError`` have been moved to ``skbio.genetic_code``.
 
 ### Miscellaneous
 
