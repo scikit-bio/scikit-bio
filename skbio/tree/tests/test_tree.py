@@ -52,6 +52,7 @@ class TreeTests(TestCase):
         self.rotate_f = rotate_f
         self.complex_tree = TreeNode.from_newick("(((a,b)int1,(x,y,(w,z)int2,"
                                                  "(c,d)int3)int4),(e,f)int5);")
+
     def test_count(self):
         """Get node counts"""
         exp = 7
