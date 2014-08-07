@@ -46,8 +46,8 @@ def berger_parker_d(counts):
        d = \\frac{N_{max}}{N}
 
     :math:`N_{max}` is defined as the number of individuals in the most
-    abundant species, and :math:`N` is defined as the total number of
-    individuals in the sample.
+    abundant OTUs, and :math:`N` is defined as the total number of individuals
+    in the sample.
 
     Parameters
     ----------
@@ -81,10 +81,11 @@ def brillouin_d(counts):
 
     .. math::
 
-       HB = \\frac{\\ln N!-\\sum^5_{i=1}{\\ln n_i!}}{N}
+       HB = \\frac{\\ln N!-\\sum^s_{i=1}{\\ln n_i!}}{N}
 
-    :math:`N` is defined as the total number of individuals in the sample, and
-    :math:`n_i` is defined as the number of individuals in the ith species.
+    :math:`N` is defined as the total number of individuals in the sample,
+    :math:`s` is the number of OTUs, and :math:`n_i` is defined as the number
+    of individuals in the ith OTUs.
 
 
     Parameters
@@ -181,10 +182,10 @@ def enspie(counts):
 
     .. math::
 
-      ENS_{pie} = \\frac{1}{\\sum_{i=1}^5{P_i^2}}
+      ENS_{pie} = \\frac{1}{\\sum_{i=1}^s{p_i^2}}
 
-    where :math:`P_i` is the proportion of the community represented by species
-    i.
+    where :math:`s` is the number of OTUs and :math:`p_i` is the proportion of
+    the community represented by OTU i.
 
 
     Parameters
@@ -315,7 +316,7 @@ def fisher_alpha(counts):
       \\alpha x,\\frac{\\alpha x^2}{2},\\frac{\\alpha x^3}{3},...,
       \\frac{\\alpha x^n}{n}
 
-    Each term in the series is equal to the number of species predicted to
+    Each term in the series is equal to the number of OTUs predicted to
     have 1,2,3,...,n individuals in the sample.
 
     Parameters
@@ -405,7 +406,7 @@ def heip_e(counts):
       \\frac{(e^H-1)}{(S-1)}
 
     Where :math:`H` is defined as the Shannon-Wiener entropy of counts and
-    :math:`S` is defined as the number of species.
+    :math:`S` is defined as the number of OTUs.
 
     Parameters
     ----------
@@ -444,10 +445,9 @@ def kempton_taylor_q(counts, lower_quantile=0.25, upper_quantile=0.75):
 
     This estimates the slope of the cumulative abundance curve in the
     interquantile range. By default, uses lower and upper quartiles, rounding
-    inwards. Where :math:`S` is the total number of species in the sample,
-    :math:`R1` and :math:`R2` are the :math:`25%` and :math:`75%` on the
-    cumulative species curve. :math:`n_{R1}` and :math:`n_{R2}` are the number
-    of individuals in those classes. :math:`n_r` is the number of species with
+    inwards. Where :math:`R1` and :math:`R2` are the 25\\% and 75\\% on the
+    cumulative OTUs curve. :math:`n_{R1}` and :math:`n_{R2}` are the number
+    of individuals in those classes. :math:`n_r` is the number of OTUs with
     R abundance.
 
     Parameters
@@ -481,7 +481,7 @@ def kempton_taylor_q(counts, lower_quantile=0.25, upper_quantile=0.75):
     References
     ----------
     .. [1] Kempton, R. A. and Taylor, L. R. (1976) Models and statistics for
-       species diversity. Nature, 262, 818-820.
+       OTUs diversity. Nature, 262, 818-820.
     .. [2] http://www.pisces-conservation.com/sdrhelp/index.html
 
     """
@@ -501,7 +501,7 @@ def margalef(counts):
 
        D = \\frac{(S - 1)}{\\ln N}
 
-    where :math:`S` is the species number and :math:`N` is the
+    where :math:`S` is the OTUs number and :math:`N` is the
     total number of individuals (sum of abundances for all OTUs).
 
 
@@ -548,7 +548,7 @@ def mcintosh_d(counts):
         U = \\sqrt{\\sum{{n_i}^2}}
 
     where :math:`n_i` is the sum of abundances for all OTUs in the
-    :math:`i_{th}` species.
+    :math:`i_{th}` OTUs.
 
     Parameters
     ----------
@@ -591,9 +591,9 @@ def mcintosh_e(counts):
 
       E = \\frac{\\sqrt{\\sum{n_i^2}}}{\\sqrt{((N-S+1)^2 + S -1}}
 
-    Where :math:`n_i` is the number of individuals in the ith species,
+    Where :math:`n_i` is the number of individuals in the ith OTUs,
     :math:`N` is the total number of individuals, and :math:`S` is the number
-    of species.
+    of OTUs.
 
     Parameters
     ----------
@@ -636,7 +636,7 @@ def menhinick(counts):
 
       D_{Mn} = \\frac{S}{\\sqrt{N}}
 
-    Where :math:`S` is the number of species recorded and :math:`N` is the
+    Where :math:`S` is the number of OTUs recorded and :math:`N` is the
     total number of individuals in the sample.
 
     Assumes square-root accumulation.
@@ -830,12 +830,11 @@ def shannon(counts, base=2):
 
     .. math::
 
-      H = \\log_2 N-\\frac{1}{N}\\sum_{i=1}^\\infty\\left(P_i\\log_2 Pi\\right)
-      n_i
+      H = -\\sum_{i=1}^s\\left(p_i\\log_2 p_i\\right)
 
-    Where :math:`P_i` is the proportion of individuals in the ith species,
-    :math:`n_i` is the number of species with i individuals, and :math:`N` is
-    the total number of individuals in the sample.
+    Where :math:`p_i` is the proportion of individuals in the ith OTUs,
+    :math:`s` is the number of OTUs, and :math:`N` is the total number of
+    individuals in the sample.
 
     Parameters
     ----------
@@ -975,9 +974,9 @@ def strong(counts):
 
       D_w = max_i[(\\frac{b_i}{Q})-\\frac{i}{R}]
 
-    where :math:`b_i` is sequential cumulative totaling of the ith species
-    abundance values ranked from largest to smallest, :math:`Q` is the number
-    of OTUs in the sample, :math:`R` is the number of individuals in the
+    where :math:`b_i` is sequential cumulative totaling of the ith OTUs
+    abundance values ranked from largest to smallest, :math:`Q` is the total
+    number of individuals in the sample, :math:`R` is the number of OTUs in the
     sample, and :math:`max_i` is the largest calculated ith values.
 
     Parameters
@@ -997,7 +996,7 @@ def strong(counts):
 
     References
     ----------
-    .. [1] Strong, W. L., 2002 Assessing species abundance uneveness within and
+    .. [1] Strong, W. L., 2002 Assessing OTUs abundance uneveness within and
        between plant communities. Community Ecology, 3, 237-246.
     .. [2] http://www.pisces-conservation.com/sdrhelp/index.html
 

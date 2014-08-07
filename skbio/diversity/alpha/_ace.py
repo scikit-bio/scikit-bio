@@ -24,12 +24,13 @@ def ace(counts, rare_threshold=10):
       S_{ace} = S_{abund}+\\frac{S_{rare}}{C_{ace}}+
       \\frac{F_1}{C_{ace}}\\gamma^2_{ace}
 
-    where :math:`S_{ace}` is the number of abundant species (with more than 10
-    individuals) when all samples are pooled, :math:`S_{rare}` is the number of
-    rare species (with more than 10 individuals) when all samples are pooled,
-    :math:`C_{ace}` is the sample abundance coverage estimator, :math:`F_1` is
-    the frequency of singletons, and :math:`gamma^2_{ace}` is the estimated
-    coefficient of variation for rare species.
+    where :math:`S_{abund}` is the number of abundant OTUs (with more than
+    `rare_threshold`  individuals) when all samples are pooled,
+    :math:`S_{rare}` is the number of rare OTUs (with less than or equal to
+    `rare_threshold` individuals) when all samples are pooled, :math:`C_{ace}`
+    is the sample abundance coverage estimator, :math:`F_1` is the frequency of
+    singletons, and :math:`\\gamma^2_{ace}` is the estimated coefficient of
+    variation for rare OTUs.
 
     The estimated coefficient of varation is defined as:
 
