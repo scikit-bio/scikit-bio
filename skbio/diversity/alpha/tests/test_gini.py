@@ -15,8 +15,8 @@ import numpy as np
 import numpy.testing as npt
 
 from skbio.diversity.alpha import gini_index
-from skbio.diversity.alpha.gini import (_lorenz_curve,
-                                        _lorenz_curve_integrator)
+from skbio.diversity.alpha._gini import (
+    _lorenz_curve, _lorenz_curve_integrator)
 
 
 class GiniTests(TestCase):

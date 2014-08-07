@@ -20,6 +20,29 @@
 * Removed ``skbio.app`` subpackage (i.e., the *application controller framework*) as this code has been ported to the standalone [burrito](https://github.com/biocore/burrito) Python package. This code was not specific to bioinformatics and is useful for wrapping command-line applications in general.
 * Removed ``skbio.core``, leaving ``alignment``, ``distance``, ``genetic_code``, ``sequence``, ``tree``, and ``workflow`` to become top level packages. For example, instead of ``from skbio.core.distance import DistanceMatrix`` you would now import ``from skbio.distance import DistanceMatrix``.
 * Removed ``skbio.util.exception`` and ``skbio.util.warning`` (see [#577](https://github.com/biocore/scikit-bio/issues/577) for the reasoning behind this change). ``FileFormatError``, ``RecordError``, ``FieldError``, and ``EfficiencyWarning`` have been moved to ``skbio.util``. ``BiologicalSequenceError`` has been moved to ``skbio.sequence``. ``SequenceCollectionError`` and ``StockholmParseError`` have been moved to ``skbio.alignment``. ``DissimilarityMatrixError``, ``DistanceMatrixError``, ``DissimilarityMatrixFormatError``, and ``MissingIDError`` have been moved to ``skbio.distance``. ``TreeError``, ``NoLengthError``, ``DuplicateNodeError``, ``MissingNodeError``, and ``NoParentError`` have been moved to ``skbio.tree``. ``FastqParseError`` has been moved to ``skbio.parse.sequences``. ``GeneticCodeError``, ``GeneticCodeInitError``, and ``InvalidCodonError`` have been moved to ``skbio.genetic_code``.
+* Many submodules have been made private with the intention of simplifying imports for users. See [#562](https://github.com/biocore/scikit-bio/issues/562) for discussion of this change. The following list contains the previous module name and where imports from that module should now come from.
+ - ``skbio.alignment.ssw`` to ``skbio.alignment``
+ - ``skbio.alignment.alignment`` to ``skbio.alignment``
+ - ``skbio.alignment.pairwise`` to ``skbio.alignment``
+ - ``skbio.diversity.alpha.base`` to ``skbio.diversity.alpha``
+ - ``skbio.diversity.alpha.gini`` to ``skbio.diversity.alpha``
+ - ``skbio.diversity.alpha.lladser`` to ``skbio.diversity.alpha``
+ - ``skbio.diversity.beta.base`` to ``skbio.diversity.beta``
+ - ``skbio.draw.distributions`` to ``skbio.draw``
+ - ``skbio.stats.distance.anosim`` to ``skbio.stats.distance``
+ - ``skbio.stats.distance.base`` to ``skbio.stats.distance``
+ - ``skbio.stats.distance.permanova`` to ``skbio.stats.distance``
+ - ``skbio.stats.ordination.base`` to ``skbio.stats.ordination``
+ - ``skbio.stats.ordination.canonical_correspondence_analysis`` to ``skbio.stats.ordination``
+ - ``skbio.stats.ordination.correspondence_analysis`` to ``skbio.stats.ordination``
+ - ``skbio.stats.ordination.principal_coordinate_analysis`` to ``skbio.stats.ordination``
+ - ``skbio.stats.ordination.redundancy_analysis`` to ``skbio.stats.ordination``
+ - ``skbio.tree.tree`` to ``skbio.tree``
+ - ``skbio.tree.trie`` to ``skbio.tree``
+ - ``skbio.util.misc`` to ``skbio.util``
+ - ``skbio.util.testing`` to ``skbio.util``
+ - ``skbio.util.exception`` to ``skbio.util``
+ - ``skbio.util.warning`` to ``skbio.util``
 
 ### Miscellaneous
 

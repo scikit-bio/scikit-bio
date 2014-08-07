@@ -140,13 +140,13 @@ Let's see how many singletons and doubletons there are in the sample:
 
 from ._ace import ace
 from ._chao1 import chao1, chao1_ci
-from .base import (
+from ._base import (
     berger_parker_d, brillouin_d, dominance, doubles, enspie, equitability,
     esty_ci, fisher_alpha, goods_coverage, heip_e, kempton_taylor_q, margalef,
     mcintosh_d, mcintosh_e, menhinick, michaelis_menten_fit, observed_otus,
     osd, robbins, shannon, simpson, simpson_e, singles, strong)
-from .gini import gini_index
-from .lladser import lladser_pe, lladser_ci
+from ._gini import gini_index
+from ._lladser import lladser_pe, lladser_ci
 
 __all__ = ['ace', 'chao1', 'chao1_ci', 'berger_parker_d', 'brillouin_d',
            'dominance', 'doubles', 'enspie', 'equitability', 'esty_ci',

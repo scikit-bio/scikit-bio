@@ -13,7 +13,7 @@ from future.builtins import zip
 
 import numpy as np
 
-from .tree import TreeNode
+from skbio.tree import TreeNode
 
 
 def _walk_clades(trees, weights):

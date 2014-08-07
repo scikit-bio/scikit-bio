@@ -16,8 +16,9 @@ from shutil import rmtree
 from tempfile import mkdtemp
 from uuid import uuid4
 
-from skbio.util.misc import (safe_md5, remove_files, create_dir, flatten,
-                             is_casava_v180_or_later, handle_error_codes)
+from skbio.util import (safe_md5, remove_files, create_dir, flatten,
+                        is_casava_v180_or_later)
+from skbio.util._misc import _handle_error_codes
 
 
 class MiscTests(TestCase):
@@ -105,7 +106,7 @@ class MiscTests(TestCase):
         self.assertEqual(create_dir(tmp_dir_path3, fail_on_exist=True), 0)
 
     def test_handle_error_codes_no_error(self):
-        obs = handle_error_codes('/foo/bar/baz')
+        obs = _handle_error_codes('/foo/bar/baz')
         self.assertEqual(obs, 0)
 
     def test_flatten(self):
