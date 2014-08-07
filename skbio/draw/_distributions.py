@@ -1,22 +1,5 @@
 #!/usr/bin/env python
-"""
-Distribution visualizations (:mod:`skbio.draw.distributions`)
-=============================================================
 
-.. currentmodule:: skbio.draw.distributions
-
-This module provides plotting functionality for visualizing distributions.
-
-Functions
----------
-
-.. autosummary::
-   :toctree: generated/
-
-   boxplots
-   grouped_distributions
-
-"""
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
