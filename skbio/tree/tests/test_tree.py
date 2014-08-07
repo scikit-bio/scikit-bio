@@ -937,6 +937,11 @@ class TreeTests(TestCase):
         obs = t.to_newick(semicolon=False)
         self.assertEqual(obs, '(abc,def)')
 
+    def test_shuffle_invalid_iter(self):
+        shuffler = self.simple_t.shuffle(iter_=-1)
+        with self.assertRaises(ValueError):
+            next(shuffler)
+
     def test_shuffle_n_2(self):
         exp = ["((a,b)i1,(d,c)i2)root;",
                "((a,b)i1,(c,d)i2)root;",
@@ -944,7 +949,7 @@ class TreeTests(TestCase):
                "((a,b)i1,(c,d)i2)root;",
                "((a,b)i1,(d,c)i2)root;"]
 
-        obs_g = self.simple_t.shuffle(n=2, shuffle_f=self.rev_f)
+        obs_g = self.simple_t.shuffle(n=2, shuffle_f=self.rev_f, iter_=np.inf)
         obs = [next(obs_g).to_newick() for i in range(5)]
         self.assertEqual(obs, exp)
 
@@ -953,7 +958,7 @@ class TreeTests(TestCase):
                "((a,b)i1,(c,d)i2)root;",
                "((d,c)i1,(b,a)i2)root;",
                "((a,b)i1,(c,d)i2)root;"]
-        obs_g = self.simple_t.shuffle(shuffle_f=self.rev_f)
+        obs_g = self.simple_t.shuffle(shuffle_f=self.rev_f, iter_=4)
         obs = [next(obs_g).to_newick() for i in range(4)]
         self.assertEqual(obs, exp)
 
@@ -964,7 +969,7 @@ class TreeTests(TestCase):
                "(((a,b)int1,(x,y,(w,z)int2,(c,d)int3)int4),(e,f)int5);"]
 
         obs_g = self.complex_tree.shuffle(shuffle_f=self.rev_f,
-                                          names=['c', 'd', 'e', 'f'])
+                                          names=['c', 'd', 'e', 'f'], iter_=4)
         obs = [next(obs_g).to_newick() for i in range(4)]
         self.assertEqual(obs, exp)
 
@@ -975,7 +980,7 @@ class TreeTests(TestCase):
                "((c,a)i1,(b,d)i2)root;"]
 
         obs_g = self.simple_t.shuffle(names=['a', 'b', 'c'],
-                                      shuffle_f=self.rotate_f)
+                                      shuffle_f=self.rotate_f, iter_=np.inf)
         obs = [next(obs_g).to_newick() for i in range(4)]
         self.assertEqual(obs, exp)
 
