@@ -2874,6 +2874,8 @@ class TreeNode(object):
             raise ValueError("n must be None or >= 2")
         if n is not None and names is not None:
             raise ValueError("n and names cannot be specified at the sametime")
+        if iter_ < 1:
+            raise ValueError("iter_ must be > 0")
 
         self.assign_ids()
 
@@ -2892,13 +2894,14 @@ class TreeNode(object):
         # name is no longer reliable
         self.invalidate_caches()
 
-        while True:
+        counter = 0
+        while counter < iter_:
             shuffle_f(names)
             for node, name in zip(nodes, names):
                 node.name = name
 
             yield self
-
+            counter += 1
 
 def _dnd_tokenizer(data):
     r"""Tokenizes data into a stream of punctuation, labels and lengths.
