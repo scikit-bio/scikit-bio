@@ -8,6 +8,7 @@ from __future__ import absolute_import, division, print_function
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+
 class EfficiencyWarning(Warning):
     """Warn about potentially accidental use of inefficient code.
 
