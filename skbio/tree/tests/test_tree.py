@@ -292,7 +292,7 @@ class TreeTests(TestCase):
             TreeNode.from_newick('(a, a)').create_caches()
 
     def test_find_all(self):
-        t = TreeNode.from_newick("((a,b)c,((d,e)c)c,(f,(g,h)c)i)root;")
+        t = TreeNode.from_newick("((a,b)c,((d,e)c)c,(f,(g,h)c)a)root;")
         exp = [t.children[0],
                t.children[1].children[0],
                t.children[1],
@@ -308,12 +308,13 @@ class TreeTests(TestCase):
         self.assertEqual(len(identity_name), 1)
         self.assertEqual(identity_name[0], t)
 
+        exp = [t.children[2],
+               t.children[0].children[0]]
+        obs = t.find_all('a')
+        self.assertEqual(obs, exp)
+
         with self.assertRaises(MissingNodeError):
             t.find_all('missing')
-
-        # should not get tips
-        with self.assertRaises(MissingNodeError):
-            t.find_all('a')
 
     def test_find(self):
         """Find a node in a tree"""
