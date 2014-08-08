@@ -1,12 +1,18 @@
 # scikit-bio changelog
 
-## Version 0.1.4-dev (changes since 0.1.4 release go here)
+## Version 0.1.5 (2014-08-07)
+
+This is an initial alpha release of scikit-bio. At this stage, major backwards-incompatible API changes can and will happen. Many backwards-incompatible API changes were made since the previous release.
 
 ### Features
 
 * Added ability to compute distances between sequences in a ``SequenceCollection`` object ([#509](https://github.com/biocore/scikit-bio/issues/509)), and expanded ``Alignment.distance`` to allow the user to pass a function for computing distances (the default distance metric is still ``scipy.spatial.distance.hamming``) ([#194](https://github.com/biocore/scikit-bio/issues/194)).
 * Added functionality to not penalize terminal gaps in global alignment. This functionality results in more biologically relevant global alignments (see [#537](https://github.com/biocore/scikit-bio/issues/537) for discussion of the issue) and is now the default behavior for global alignment.
 * The python global aligners (``global_pairwise_align``, ``global_pairwise_align_nucleotide``, and ``global_pairwise_align_protein``) now support aligning pairs of sequences, pairs of alignments, and a sequence and an alignment (see [#550](https://github.com/biocore/scikit-bio/issues/550)). This functionality supports progressive multiple sequence alignment, among other things such as adding a sequence to an existing alignment.
+* Added ``StockholmAlignment.to_file`` for writing Stockholm-formatted files.
+* Added ``strict=True`` optional parameter to ``DissimilarityMatrix.filter``.
+* Added ``TreeNode.find_all`` for finding all tree nodes that match a given name.
+
 
 ### Bug fixes
 
@@ -59,6 +65,9 @@
 * Relaxed requirement in ``BiologicalSequence.distance`` that sequences being compared are of equal length. This is relevant for Hamming distance, so the check is still performed in that case, but other distance metrics may not have that requirement. See [#504](https://github.com/biocore/scikit-bio/issues/507)).
 * Renamed ``powertrip.py`` repo-checking script to ``checklist.py`` for clarity.
 * ``checklist.py`` now ensures that all unit tests import from a minimally deep API. For example, it will produce an error if ``skbio.core.distance.DistanceMatrix`` is used over ``skbio.DistanceMatrix``.
+* Extra dimension is no longer calculated in ``skbio.stats.spatial.procrustes``.
+* Expanded documentation in various subpackages.
+* Added new scikit-bio logo. Thanks [Alina Prassas](http://cargocollective.com/alinaprassas)!
 
 ## Version 0.1.4 (2014-06-25)
 
