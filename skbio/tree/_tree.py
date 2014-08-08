@@ -12,7 +12,6 @@ from __future__ import absolute_import, division, print_function
 
 import re
 from operator import or_
-from random import shuffle
 from copy import deepcopy
 from itertools import combinations
 from functools import reduce
@@ -20,6 +19,7 @@ from collections import defaultdict
 
 import numpy as np
 from scipy.stats import pearsonr
+from future.builtins import zip
 
 from skbio import DistanceMatrix
 from skbio.util import RecordError
@@ -114,7 +114,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tree = TreeNode.from_newick("((a,b)c, d)root;")
         >>> repr(tree)
         '<TreeNode, name: root, internal node count: 1, tips count: 3>'
@@ -145,7 +145,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tree = TreeNode.from_newick("((a,b)c);")
         >>> str(tree)
         '((a,b)c);'
@@ -192,7 +192,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> root = TreeNode(name="root")
         >>> child1 = TreeNode(name="child1")
         >>> child2 = TreeNode(name="child2")
@@ -222,7 +222,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> root = TreeNode(name="root")
         >>> root.extend([TreeNode(name="child1"), TreeNode(name="child2")])
         >>> print(root)
@@ -255,7 +255,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tree = TreeNode.from_newick("(a,b)c;")
         >>> print(tree.pop(0))
         a;
@@ -292,7 +292,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tree = TreeNode.from_newick("(a,b)c;")
         >>> tree.remove(tree.children[0])
         True
@@ -322,7 +322,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tree = TreeNode.from_newick("(a,b)c;")
         >>> tree.remove_deleted(lambda x: x.name == 'b')
         >>> print(tree)
@@ -354,7 +354,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tree = TreeNode.from_newick("((a,b)c,(d,e)f)root;")
         >>> to_delete = tree.find('b')
         >>> tree.remove_deleted(lambda x: x == to_delete)
@@ -411,7 +411,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> t = TreeNode.from_newick('((H:1,G:1):2,(R:0.5,M:0.7):3);')
         >>> sheared = t.shear(['G', 'M'])
         >>> print(sheared.to_newick(with_distances=True))
@@ -453,7 +453,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tree = TreeNode.from_newick("((a,b)c,(d,e)f)root;")
         >>> tree_copy = tree.copy()
         >>> tree_nodes = set([id(n) for n in tree.traverse()])
@@ -524,7 +524,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tree = TreeNode.from_newick("((a,(b,c)d)e,(f,g)h)i;")
         >>> new_tree = tree.find('d').unrooted_deepcopy()
         >>> print(new_tree)
@@ -569,7 +569,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tree = TreeNode.from_newick("((a,(b,c)d)e,(f,g)h)i;")
         >>> new_tree = tree.find('d').unrooted_copy()
         >>> print(new_tree)
@@ -616,7 +616,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tree = TreeNode.from_newick("((a,(b,c)d)e,(f,g)h)i;")
         >>> print(tree.count())
         9
@@ -650,7 +650,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tree = TreeNode.from_newick("((a,(b,c)d)e,(f,g)h)i;")
         >>> sorted(tree.subset())
         ['a', 'b', 'c', 'f', 'g']
@@ -675,7 +675,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tree = TreeNode.from_newick("(((a,b)c,(d,e)f)h)root;")
         >>> for s in sorted(tree.subsets()):
         ...     print(sorted(s))
@@ -722,7 +722,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tree = TreeNode.from_newick("(((a,b)c,(d,e)f)g,h)i;")
         >>> print(tree.root_at('c'))
         (a,b,((d,e)f,(h)g)c)root;
@@ -763,7 +763,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tree = TreeNode.from_newick("(((d:1,e:1,(g:1)f:1)c:1)b:1,h:1)a:1;")
         >>> print(tree.root_at_midpoint())
         ((d:1.0,e:1.0,(g:1.0)f:1.0)c:0.5,((h:1.0)b:1.0):0.5)root;
@@ -828,7 +828,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tree = TreeNode.from_newick("((a,b)c);")
         >>> print(tree.is_tip())
         False
@@ -853,7 +853,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tree = TreeNode.from_newick("((a,b)c);")
         >>> print(tree.is_root())
         True
@@ -878,7 +878,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tree = TreeNode.from_newick("((a,b)c);")
         >>> print(tree.has_children())
         True
@@ -926,7 +926,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tree = TreeNode.from_newick("((a,b)c);")
         >>> for node in tree.traverse():
         ...     print(node.name)
@@ -971,7 +971,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tree = TreeNode.from_newick("((a,b)c);")
         >>> for node in tree.preorder():
         ...     print(node.name)
@@ -1017,7 +1017,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tree = TreeNode.from_newick("((a,b)c);")
         >>> for node in tree.postorder():
         ...     print(node.name)
@@ -1084,7 +1084,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tree = TreeNode.from_newick("((a,b)c);")
         >>> for node in tree.pre_and_postorder():
         ...     print(node.name)
@@ -1158,7 +1158,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tree = TreeNode.from_newick("((a,b)c,(d,e)f);")
         >>> for node in tree.levelorder():
         ...     print(node.name)
@@ -1206,7 +1206,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tree = TreeNode.from_newick("((a,b)c,(d,e)f);")
         >>> for node in tree.tips():
         ...     print(node.name)
@@ -1249,7 +1249,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tree = TreeNode.from_newick("((a,b)c,(d,e)f);")
         >>> for node in tree.non_tips():
         ...     print(node.name)
@@ -1340,10 +1340,69 @@ class TreeNode(object):
             self._tip_cache = tip_cache
             self._non_tip_cache = non_tip_cache
 
+    def find_all(self, name):
+        r"""Find all nodes that match `name`
+
+        The first call to `find_all` will cache all nodes in the tree on the
+        assumption that additional calls to `find_all` will be made.
+
+        Parameters
+        ----------
+        name : TreeNode or str
+            The name or node to find. If `name` is `TreeNode` then all other
+            nodes with the same name will be returned.
+
+        Raises
+        ------
+        MissingNodeError
+            Raises if the node to be searched for is not found
+
+        Returns
+        -------
+        list of TreeNode
+            The nodes found
+
+        See Also
+        --------
+        find
+        find_by_id
+        find_by_func
+
+        Examples
+        --------
+        >>> from skbio.tree import TreeNode
+        >>> tree = TreeNode.from_newick("((a,b)c,(d,e)d,(f,g)c);")
+        >>> for node in tree.find_all('c'):
+        ...     print(node.name, node.children[0].name, node.children[1].name)
+        c a b
+        c f g
+        >>> for node in tree.find_all('d'):
+        ...     print(node.name, node.to_newick())
+        d (d,e)d;
+        d d;
+        """
+        root = self.root()
+
+        # if what is being passed in looks like a node, just return it
+        if isinstance(name, root.__class__):
+            return [name]
+
+        root.create_caches()
+
+        tip = root._tip_cache.get(name, None)
+        nodes = root._non_tip_cache.get(name, [])
+
+        nodes.append(tip) if tip is not None else None
+
+        if not nodes:
+            raise MissingNodeError("Node %s is not in self" % name)
+        else:
+            return nodes
+
     def find(self, name):
         r"""Find a node by `name`.
 
-        The first call to find will cache all tips in the tree on the
+        The first call to `find` will cache all nodes in the tree on the
         assumption that additional calls to `find` will be made.
 
         `find` will first attempt to find the node in the tips. If it cannot
@@ -1371,12 +1430,13 @@ class TreeNode(object):
 
         See Also
         --------
+        find_all
         find_by_id
         find_by_func
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tree = TreeNode.from_newick("((a,b)c,(d,e)f);")
         >>> print(tree.find('c').name)
         c
@@ -1413,6 +1473,11 @@ class TreeNode(object):
         TreeNode
             The tree node with the matcing id
 
+        Notes
+        -----
+        This method does not cache id associations. A full traversal of the
+        tree is performed to find a node by an id on every call.
+
         Raises
         ------
         MissingNodeError
@@ -1421,11 +1486,12 @@ class TreeNode(object):
         See Also
         --------
         find
+        find_all
         find_by_func
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tree = TreeNode.from_newick("((a,b)c,(d,e)f);")
         >>> print(tree.find_by_id(2).name)
         d
@@ -1440,6 +1506,7 @@ class TreeNode(object):
         for n in self.traverse(include_self=True):
             if n.id == node_id:
                 node = n
+                break
 
         if node is None:
             raise MissingNodeError("ID %d is not in self" % node_id)
@@ -1465,11 +1532,12 @@ class TreeNode(object):
         See Also
         --------
         find
+        find_all
         find_by_id
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tree = TreeNode.from_newick("((a,b)c,(d,e)f);")
         >>> func = lambda x: x.parent == tree.find('c')
         >>> [n.name for n in tree.find_by_func(func)]
@@ -1492,7 +1560,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tree = TreeNode.from_newick("((a,b)c,(d,e)f)root;")
         >>> [node.name for node in tree.find('a').ancestors()]
         ['c', 'root']
@@ -1516,7 +1584,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tree = TreeNode.from_newick("((a,b)c,(d,e)f)root;")
         >>> tip_a = tree.find('a')
         >>> root = tip_a.root()
@@ -1545,7 +1613,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tree = TreeNode.from_newick("((a,b)c,(d,e,f)g)root;")
         >>> tip_e = tree.find('e')
         >>> [n.name for n in tip_e.siblings()]
@@ -1577,7 +1645,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tree = TreeNode.from_newick("((a,b)c,(d,e)f)root;")
         >>> node_c = tree.find('c')
         >>> [n.name for n in node_c.neighbors()]
@@ -1610,7 +1678,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tree = TreeNode.from_newick("((a,b)c,(d,e)f)root;")
         >>> nodes = [tree.find('a'), tree.find('b')]
         >>> lca = tree.lowest_common_ancestor(nodes)
@@ -1742,7 +1810,7 @@ class TreeNode(object):
     def from_newick(cls, lines, unescape_name=True):
         r"""Returns tree from the Clustal .dnd file format and equivalent
 
-        The tree is made of `skbio.tree.TreeNode` objects, with branch
+        The tree is made of `skbio.TreeNode` objects, with branch
         lengths if specified by the format.
 
         More information on the Newick format can be found here [1]. In brief,
@@ -1806,7 +1874,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> TreeNode.from_newick("((a,b)c,(d,e)f)root;")
         <TreeNode, name: root, internal node count: 2, tips count: 4>
         >>> from StringIO import StringIO
@@ -1947,7 +2015,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> t = TreeNode.from_newick('(((a:1,b:2,c:3)x:4,(d:5)y:6)z:7)')
         >>> res = t.to_array()
         >>> res.keys()
@@ -2018,7 +2086,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tree = TreeNode.from_newick("((a,b)c,(d,e)f)root;")
         >>> print(tree.to_newick())
         ((a,b)c,(d,e)f)root;
@@ -2130,7 +2198,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tree = TreeNode.from_newick("((a,b)c,(d,e)f)root;")
         >>> print(tree.ascii_art())
                             /-a
@@ -2173,7 +2241,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tree = TreeNode.from_newick("((a:1,b:2)c:3,(d:4,e:5)f:6)root;")
         >>> root = tree
         >>> tree.find('a').accumulate_to_ancestor(root)
@@ -2225,7 +2293,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tree = TreeNode.from_newick("((a:1,b:2)c:3,(d:4,e:5)f:6)root;")
         >>> tip_a = tree.find('a')
         >>> tip_d = tree.find('d')
@@ -2299,7 +2367,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tree = TreeNode.from_newick("((a:1,b:2)c:3,(d:4,e:5)f:6)root;")
         >>> dist, tips = tree.get_max_distance()
         >>> dist
@@ -2357,7 +2425,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tree = TreeNode.from_newick("((a:1,b:2)c:3,(d:4,e:5)f:6)root;")
         >>> mat = tree.tip_tip_distances()
         >>> print(mat)
@@ -2467,7 +2535,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tree1 = TreeNode.from_newick("((a,b),(c,d));")
         >>> tree2 = TreeNode.from_newick("(((a,b),c),d);")
         >>> tree1.compare_rfd(tree2)
@@ -2527,7 +2595,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tree1 = TreeNode.from_newick("((a,b),(c,d));")
         >>> tree2 = TreeNode.from_newick("(((a,b),c),d);")
         >>> tree1.compare_subsets(tree2)
@@ -2552,7 +2620,7 @@ class TreeNode(object):
         return 1 - (2 * intersection_length / float(total_subsets))
 
     def compare_tip_distances(self, other, sample=None, dist_f=distance_from_r,
-                              shuffle_f=shuffle):
+                              shuffle_f=np.random.shuffle):
         """Compares self to other using tip-to-tip distance matrices.
 
         Value returned is `dist_f(m1, m2)` for the two matrices. Default is
@@ -2599,7 +2667,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> # note, only three common taxa between the trees
         >>> tree1 = TreeNode.from_newick("((a:1,b:1):2,(c:0.5,X:0.7):3);")
         >>> tree2 = TreeNode.from_newick("(((a:1,b:1,Y:1):2,c:3):1,Z:4);")
@@ -2720,7 +2788,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tr = TreeNode.from_newick("(((A:.1,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2."
         ...                           "4,(H:.4,I:.5)J:1.3)K;")
         >>> tdbl = tr.descending_branch_length()
@@ -2781,7 +2849,7 @@ class TreeNode(object):
         --------
         Cache the tip names of the tree on its internal nodes
 
-        >>> from skbio.tree import TreeNode
+        >>> from skbio import TreeNode
         >>> tree = TreeNode.from_newick("((a,b,(c,d)e)f,(g,h)i)root;")
         >>> f = lambda n: [n.name] if n.is_tip() else []
         >>> tree.cache_attr(f, 'tip_names')
@@ -2812,6 +2880,95 @@ class TreeNode(object):
             cached = [getattr(c, cache_attrname) for c in node.children]
             cached.append(cache_type(func(node)))
             setattr(node, cache_attrname, reduce(reduce_f, cached))
+
+    def shuffle(self, k=None, names=None, shuffle_f=np.random.shuffle, n=1):
+        """Yield trees with shuffled tip names
+
+        Parameters
+        ----------
+        k : int, optional
+            The number of tips to shuffle. If k is not `None`, k tips are
+            randomly selected, and only those names will be shuffled.
+        names : list, optional
+            The specific tip names to shuffle. k and names cannot be specified
+            at the same time.
+        shuffle_f : func
+            Shuffle method, this function must accept a list and modify
+            inplace.
+        n : int, optional
+            The number of iterations to perform. Value must be > 0 and `np.inf`
+            can be specified for an infinite number of iterations.
+
+        Notes
+        -----
+        Tip names are shuffled inplace. If neither `k` nor `names` are
+        provided, all tips are shuffled.
+
+        Returns
+        -------
+        GeneratorType
+            Yielding TreeNode
+
+        Raises
+        ------
+        ValueError
+            If `k` is < 2
+            If `n` is < 1
+        ValueError
+            If both `k` and `names` are specified
+        MissingNodeError
+            If `names` is specified but one of the names cannot be found
+
+        Examples
+        --------
+        Alternate the names on two of the tips, 'a', and 'b', and do this 5
+        times.
+
+        >>> from skbio import TreeNode
+        >>> tree = TreeNode.from_newick("((a,b),(c,d))")
+        >>> rev = lambda items: items.reverse()
+        >>> shuffler = tree.shuffle(names=['a', 'b'], shuffle_f=rev, n=5)
+        >>> for shuffled_tree in shuffler:
+        ...     print(shuffled_tree.to_newick())
+        ((b,a),(c,d));
+        ((a,b),(c,d));
+        ((b,a),(c,d));
+        ((a,b),(c,d));
+        ((b,a),(c,d));
+
+        """
+        if k is not None and k < 2:
+            raise ValueError("k must be None or >= 2")
+        if k is not None and names is not None:
+            raise ValueError("n and names cannot be specified at the sametime")
+        if n < 1:
+            raise ValueError("n must be > 0")
+
+        self.assign_ids()
+
+        if names is None:
+            all_tips = list(self.tips())
+
+            if n is None:
+                n = len(all_tips)
+
+            shuffle_f(all_tips)
+            names = [tip.name for tip in all_tips[:k]]
+
+        nodes = [self.find(name) for name in names]
+
+        # Since the names are being shuffled, the association between ID and
+        # name is no longer reliable
+        self.invalidate_caches()
+
+        counter = 0
+        while counter < n:
+            shuffle_f(names)
+            for node, name in zip(nodes, names):
+                node.name = name
+
+            yield self
+            counter += 1
 
 
 def _dnd_tokenizer(data):

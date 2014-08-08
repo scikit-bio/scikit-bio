@@ -1,91 +1,3 @@
-#!/usr/bin/env python
-r"""
-Biological sequences (:mod:`skbio.sequence`)
-============================================
-
-.. currentmodule:: skbio.sequence
-
-This module provides functionality for working with biological sequences,
-including generic sequences, nucelotide sequences, DNA sequences, and RNA
-sequences. Class methods and attributes are also available to obtain valid
-character sets, complement maps for different sequence types, and for
-obtaining degenerate character definitions.
-
-Classes
--------
-
-.. autosummary::
-   :toctree: generated/
-
-   BiologicalSequence
-   NucleotideSequence
-   DNASequence
-   RNASequence
-   ProteinSequence
-
-Exceptions
-----------
-
-.. autosummary::
-   :toctree: generated/
-
-   BiologicalSequenceError
-
-Examples
---------
->>> from skbio.sequence import DNASequence, RNASequence
-
-New sequences are created with optional id and description fields.
-
->>> d1 = DNASequence('ACC--G-GGTA..')
->>> d1 = DNASequence('ACC--G-GGTA..',id="seq1")
->>> d1 = DNASequence('ACC--G-GGTA..',id="seq1",description="GFP")
-
-New sequences can also be created from existing sequences, for example as their
-reverse complement or degapped (i.e., unaligned) version.
-
->>> d2 = d1.degap()
->>> d1
-<DNASequence: ACC--G-GGT... (length: 13)>
->>> d2
-<DNASequence: ACCGGGTA (length: 8)>
->>> d3 = d2.reverse_complement()
->>> d3
-<DNASequence: TACCCGGT (length: 8)>
-
-It's also straight-forward to compute distances between sequences (optionally
-using user-defined distance metrics, default is Hamming distance) for use in
-sequence clustering, phylogenetic reconstruction, etc.
-
->>> d4 = DNASequence('GACCCGCT')
->>> d5 = DNASequence('GACCCCCT')
->>> d3.distance(d4)
-0.25
->>> d3.distance(d5)
-0.375
-
-Class-level methods contain information about the molecule types.
-
->>> DNASequence.iupac_degeneracies()['B']
-set(['C', 'T', 'G'])
-
->>> RNASequence.iupac_degeneracies()['B']
-set(['C', 'U', 'G'])
-
->>> DNASequence.is_gap('-')
-True
-
-NucleotideSequences can be translated using a GeneticCode object.
-
->>> d6 = DNASequence('ATGTCTAAATGA')
->>> from skbio.genetic_code import GeneticCodes
->>> gc = GeneticCodes[11]
->>> gc.translate(d6)
-<ProteinSequence: MSK* (length: 4)>
-
-"""
-from __future__ import absolute_import, division, print_function
-
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -94,15 +6,13 @@ from __future__ import absolute_import, division, print_function
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from __future__ import absolute_import, division, print_function
+
 from collections import Sequence, Counter, defaultdict
 from itertools import product
+from skbio.sequence import BiologicalSequenceError
 
 from scipy.spatial.distance import hamming
-
-
-class BiologicalSequenceError(Exception):
-    """General error for biological sequence validation failures."""
-    pass
 
 
 class BiologicalSequence(Sequence):

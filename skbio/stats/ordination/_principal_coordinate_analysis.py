@@ -67,13 +67,6 @@ class PCoA(Ordination):
     long_method_name = 'Principal Coordinate Analysis'
 
     def __init__(self, distance_matrix):
-        warn("skbio.stats.ordination.PCoA() will be deprecated in favor of "
-             "sklearn.manifold.MDS in scikit-bio 0.2.1. This will involve "
-             "changes to the interface and the resulting object, so it is "
-             "a good idea to not rely too heavily on the current interface "
-             "in your own code. For details and discussion of this change, "
-             "see https://github.com/biocore/scikit-bio/issues/579.")
-
         if isinstance(distance_matrix, DistanceMatrix):
             self.dm = np.asarray(distance_matrix.data, dtype=np.float64)
             self.ids = distance_matrix.ids

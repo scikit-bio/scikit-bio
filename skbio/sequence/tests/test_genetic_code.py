@@ -11,8 +11,8 @@
 from unittest import TestCase, main
 
 from skbio import DNA, RNA, Protein
-from skbio.genetic_code import (GeneticCode, GeneticCodes,
-                                GeneticCodeInitError, InvalidCodonError)
+from skbio.sequence import (GeneticCode, genetic_code,
+                            GeneticCodeInitError, InvalidCodonError)
 
 
 class GeneticCodeTests(TestCase):
@@ -87,11 +87,12 @@ class GeneticCodeTests(TestCase):
         self.assertFalse('TGA' in sgc.sense_codons)
 
     def test_standard_code_lookup(self):
-        """GeneticCodes should hold codes keyed by id as string and number"""
+        """genetic_code should hold codes keyed by id as string and number"""
         sgc_new = GeneticCode(*self.ncbi_standard)
-        sgc_number = GeneticCodes[1]
-        sgc_string = GeneticCodes['1']
-        for sgc in sgc_new, sgc_number, sgc_string:
+        sgc_number = genetic_code(1)
+        sgc_string = genetic_code('1')
+        sgc_empty = genetic_code()
+        for sgc in sgc_new, sgc_number, sgc_string, sgc_empty:
             self.assertEqual(sgc.code_sequence, 'FFLLSSSSYY**CC*WLLLLPPPPHHQQR'
                              'RRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG')
             self.assertEqual(sgc.start_codon_sequence, '---M---------------M--'
@@ -106,7 +107,7 @@ class GeneticCodeTests(TestCase):
             self.assertEqual(sgc.is_stop('TAA'), True)
             self.assertEqual(sgc.is_stop('AAA'), False)
 
-        mtgc = GeneticCodes[2]
+        mtgc = genetic_code(2)
         self.assertEqual(mtgc.name, 'Vertebrate Mitochondrial')
         self.assertEqual(mtgc.is_start('AUU'), True)
         self.assertEqual(mtgc.is_stop('UGA'), False)
@@ -362,6 +363,14 @@ class GeneticCodeTests(TestCase):
                 self.assertItemsEqual(obs_synonyms[i], expected_synonyms[i])
             else:
                 self.assertCountEqual(obs_synonyms[i], expected_synonyms[i])
+
+    def test_genetic_code_with_too_many_args(self):
+        with self.assertRaises(TypeError):
+            genetic_code(1, 2)
+
+    def test_genetic_code_with_invalid_id(self):
+        with self.assertRaises(ValueError):
+            genetic_code(30)
 
 
 if __name__ == '__main__':

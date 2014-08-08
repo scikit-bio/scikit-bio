@@ -13,7 +13,6 @@ API Reference
 
    alignment
    sequence
-   genetic_code
    tree
    workflow
    draw

@@ -44,6 +44,14 @@ Slow (i.e., educational-purposes only) Alignment Algorithms
    local_pairwise_align_protein
    local_pairwise_align
 
+General functionality
+---------------------
+
+.. autosummary::
+   :toctree: generated/
+
+    make_identity_substitution_matrix
+
 Exceptions
 ----------
 
@@ -220,7 +228,8 @@ from ._alignment import Alignment, SequenceCollection, StockholmAlignment
 from ._pairwise import (
     local_pairwise_align_nucleotide, local_pairwise_align_protein,
     local_pairwise_align, global_pairwise_align_nucleotide,
-    global_pairwise_align_protein, global_pairwise_align
+    global_pairwise_align_protein, global_pairwise_align,
+    make_identity_substitution_matrix
 )
 from ._ssw import (
     StripedSmithWaterman, local_pairwise_align_ssw, AlignmentStructure)
@@ -232,7 +241,7 @@ __all__ = ['Alignment', 'SequenceCollection', 'StockholmAlignment',
            'StockholmParseError', 'global_pairwise_align',
            'global_pairwise_align_nucleotide', 'global_pairwise_align_protein',
            'local_pairwise_align', 'local_pairwise_align_nucleotide',
-           'local_pairwise_align_protein']
+           'local_pairwise_align_protein', 'make_identity_substitution_matrix']
 
 from numpy.testing import Tester
 test = Tester().test
