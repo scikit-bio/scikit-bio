@@ -15,6 +15,7 @@ from unittest import TestCase, main
 import numpy.testing as npt
 
 from skbio import parse_qseq
+from skbio.parse.sequences import QseqParseError
 
 
 QSEQ_PARSERS_DATA = {
@@ -29,7 +30,10 @@ QSEQ_PARSERS_DATA = {
                'BWUTWcXVXXcccc_cccccccccc_cccc\t0',
     'phred33': 'CRESSIA\t242\t1\t2204\t1491\t1930\t0\t1\t'
                '.TTGATAAGAATGTCTGTTGTGGCTTAAAA\t'
-               'B[[[W][Y[Zcdccccccc\cccac_____\t1'
+               'B[[[W][Y[Zcdccccccc\cccac_____\t1',
+    'missing': 'CRESSIA\t242\t1\t2204\t1491\t1930\t0\t1\t'
+               '.TTGATAAGAATGTCTGTTGTGGCTTAAAA\t'
+               'B[[[W][Y[Zcdccccccc\cccac_____'
     }
 
 
@@ -149,6 +153,11 @@ class ParseQseqTests(object):
         """parse_qseq should raise ValueError with invalid phred offset."""
         with self.assertRaises(ValueError):
             list(parse_qseq(self.one_seq, phred_offset=99))
+
+    def test_invalid_record(self):
+        """parse_qseq should raise QseqParseError with invalid record."""
+        with self.assertRaises(QseqParseError):
+            list(parse_qseq(self.missing, phred_offset=64))
 
 
 class ParseQseqTestsInputIsIterable(IterableData, ParseQseqTests, TestCase):

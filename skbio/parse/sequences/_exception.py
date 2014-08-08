@@ -14,3 +14,8 @@ from skbio.util import FileFormatError
 class FastqParseError(FileFormatError):
     """Exception raised when a FASTQ formatted file cannot be parsed"""
     pass
+
+
+class QseqParseError(FileFormatError):
+    """Exception raised when a QSEQ formatted file cannot be parsed"""
+    pass

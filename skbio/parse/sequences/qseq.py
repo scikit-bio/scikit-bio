@@ -13,6 +13,7 @@ import collections
 from skbio.util.io import open_file
 
 from .fastq import ascii_to_phred33, ascii_to_phred64
+from ._exception import QseqParseError
 
 
 def parse_qseq(infile, phred_offset=33):
@@ -97,8 +98,12 @@ def parse_qseq(infile, phred_offset=33):
                 rec = str(rec.decode('utf-8'))
             except AttributeError:
                 pass
-            (machine_name, run, lane, tile, x, y, index, read, seq, qual,
-             filtered) = rec.split()
+            # parse record.
+            try:
+                (machine_name, run, lane, tile, x, y, index, read, seq, qual,
+                 filtered) = rec.split()
+            except ValueError:
+                raise QseqParseError("Invalid QSEQ record found.")
             # sequence ID is formatted using the first eight items.
             seq_id = '%s_%s:%s:%s:%s:%s#%s/%s' % (
                 machine_name, run, lane, tile, x, y, index, read)
