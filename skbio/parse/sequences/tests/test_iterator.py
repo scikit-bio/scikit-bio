@@ -280,7 +280,7 @@ class QseqTests(TestCase):
         self.qseqs = [StringIO(qseq1), StringIO(qseq2)]
 
     def test_qseq_gen(self):
-        wk = QseqIterator(seq=self.qseqs)
+        wk = QseqIterator(seq=self.qseqs, phred_offset=64)
         gen = wk()
 
         exp1 = {'SequenceID': 'CRESSIA_242:1:2204:1453:1918#0/1',

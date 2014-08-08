@@ -51,7 +51,7 @@ class SequenceLoadTests(TestCase):
             self.assertEqual(o['QualID'], e['QualID'])
             self.assertTrue((o['Qual'] == e['Qual']).all())
 
-        it = load(self.qs1)
+        it = load(self.qs1, phred_offset=64)
         obs = [rec.copy() for rec in it]
         exp = [{'Qual': array([2, 27, 27, 27]),
                 'QualID': 'CRESSIA_242:1:2204:1453:1918#0/1',
@@ -87,7 +87,7 @@ class SequenceLoadTests(TestCase):
             self.assertEqual(o['QualID'], e['QualID'])
             self.assertTrue((o['Qual'] == e['Qual']).all())
 
-        it = load(self.qs1gz)
+        it = load(self.qs1gz, phred_offset=64)
         obs = [rec.copy() for rec in it]
         exp = [{'Qual': array([2, 27, 27, 27]),
                 'QualID': 'CRESSIA_242:1:2204:1453:1918#0/1',

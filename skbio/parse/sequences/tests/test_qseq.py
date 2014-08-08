@@ -15,7 +15,6 @@ from unittest import TestCase, main
 import numpy.testing as npt
 
 from skbio import parse_qseq
-from skbio.core.exception import RecordError
 
 
 QSEQ_PARSERS_DATA = {
@@ -28,9 +27,9 @@ QSEQ_PARSERS_DATA = {
                'CRESSIA\t242\t1\t2204\t1490\t1921\t0\t2\t'
                '..GTAAAACCCATATATTGAAAACTACAAA\t'
                'BWUTWcXVXXcccc_cccccccccc_cccc\t0',
-    'missing_items': 'CRESSIA\t242\t1\t1491\t0\t1\t'
-                     '.TTGATAAGAATGTCTGTTGTGGCTTAAAA\t'
-                     'B[[[W][Y[Zcdccccccc\cccac_____\t1',
+    'phred33': 'CRESSIA\t242\t1\t2204\t1491\t1930\t0\t1\t'
+               '.TTGATAAGAATGTCTGTTGTGGCTTAAAA\t'
+               'B[[[W][Y[Zcdccccccc\cccac_____\t1'
     }
 
 
@@ -66,7 +65,7 @@ class ParseQseqTests(object):
     def test_one_seq(self):
         """parse_qseq should return one record as tuple.
         """
-        f = list(parse_qseq(self.one_seq))
+        f = list(parse_qseq(self.one_seq, phred_offset=64))
         self.assertEqual(len(f), 1)
         a = f[0]
         # First record.
@@ -89,7 +88,7 @@ class ParseQseqTests(object):
     def test_two_seq(self):
         """parse_qseq should return two records as tuple.
         """
-        f = list(parse_qseq(self.two_seq))
+        f = list(parse_qseq(self.two_seq, phred_offset=64))
         self.assertEqual(len(f), 2)
         a, b = f
         # First record.
@@ -125,10 +124,28 @@ class ParseQseqTests(object):
         self.assertEqual(record.read, 2)
         self.assertFalse(record.filtered)
 
-    def test_missing_items(self):
-        """parse_qseq should raise RecordError.
+    def test_phred33(self):
+        """parse_qseq should return one record as tuple.
         """
-        self.assertRaises(RecordError, list, parse_qseq(self.missing_items))
+        f = list(parse_qseq(self.one_seq, phred_offset=33))
+        self.assertEqual(len(f), 1)
+        a = f[0]
+        # First record.
+        self.assertEqual(a[0], 'CRESSIA_242:1:2204:1491:1930#0/1')
+        self.assertEqual(a[1], '.TTGATAAGAATGTCTGTTGTGGCTTAAAA')
+        npt.assert_equal(a[2], [33, 58, 58, 58, 54, 60, 58, 56, 58, 57, 66, 67,
+                                66, 66, 66, 66, 66, 66, 66, 59, 66, 66, 66, 64,
+                                66, 62, 62, 62, 62, 62])
+        record = a[3]
+        self.assertEqual(record.machine_name, 'CRESSIA')
+        self.assertEqual(record.run, 242)
+        self.assertEqual(record.lane, 1)
+        self.assertEqual(record.tile, 2204)
+        self.assertEqual(record.x, 1491)
+        self.assertEqual(record.y, 1930)
+        self.assertEqual(record.index, 0)
+        self.assertEqual(record.read, 1)
+        self.assertTrue(record.filtered)
 
 
 class ParseQseqTestsInputIsIterable(IterableData, ParseQseqTests, TestCase):

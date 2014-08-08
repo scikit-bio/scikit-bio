@@ -21,7 +21,7 @@ def _ascii_to_phred(s, offset):
     return np.fromstring(s, dtype='|S1').view(np.int8) - offset
 
 
-def _ascii_to_phred33(s):
+def ascii_to_phred33(s):
     """Convert ascii string to Phred quality score with ASCII offset of 33.
 
     Standard "Sanger" ASCII offset of 33. This is used by Illumina in CASAVA
@@ -110,7 +110,7 @@ def parse_fastq(data, strict=False, enforce_qual_range=True, phred_offset=33):
      35 32 28 33 20 32 32 34 34 34]
     """
     if phred_offset == 33:
-        phred_f = _ascii_to_phred33
+        phred_f = ascii_to_phred33
     elif phred_offset == 64:
         phred_f = ascii_to_phred64
     else:
