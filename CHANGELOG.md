@@ -1,5 +1,7 @@
 # scikit-bio changelog
 
+## Version 0.2.0-dev (changes since 0.2.0 release go here)
+
 ## Version 0.2.0 (2014-08-07)
 
 This is an initial alpha release of scikit-bio. At this stage, major backwards-incompatible API changes can and will happen. Many backwards-incompatible API changes were made since the previous release.
