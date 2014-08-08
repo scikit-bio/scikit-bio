@@ -40,6 +40,19 @@ class TreeTests(TestCase):
         self.TreeNode = nodes
         self.TreeRoot = nodes['a']
 
+        def rev_f(items):
+            items.reverse()
+
+        def rotate_f(items):
+            tmp = items[-1]
+            items[1:] = items[:-1]
+            items[0] = tmp
+
+        self.rev_f = rev_f
+        self.rotate_f = rotate_f
+        self.complex_tree = TreeNode.from_newick("(((a,b)int1,(x,y,(w,z)int2,"
+                                                 "(c,d)int3)int4),(e,f)int5);")
+
     def test_count(self):
         """Get node counts"""
         exp = 7
@@ -948,6 +961,63 @@ class TreeTests(TestCase):
         # without semicolon
         obs = t.to_newick(semicolon=False)
         self.assertEqual(obs, '(abc,def)')
+
+    def test_shuffle_invalid_iter(self):
+        shuffler = self.simple_t.shuffle(n=-1)
+        with self.assertRaises(ValueError):
+            next(shuffler)
+
+    def test_shuffle_n_2(self):
+        exp = ["((a,b)i1,(d,c)i2)root;",
+               "((a,b)i1,(c,d)i2)root;",
+               "((a,b)i1,(d,c)i2)root;",
+               "((a,b)i1,(c,d)i2)root;",
+               "((a,b)i1,(d,c)i2)root;"]
+
+        obs_g = self.simple_t.shuffle(k=2, shuffle_f=self.rev_f, n=np.inf)
+        obs = [next(obs_g).to_newick() for i in range(5)]
+        self.assertEqual(obs, exp)
+
+    def test_shuffle_n_none(self):
+        exp = ["((d,c)i1,(b,a)i2)root;",
+               "((a,b)i1,(c,d)i2)root;",
+               "((d,c)i1,(b,a)i2)root;",
+               "((a,b)i1,(c,d)i2)root;"]
+        obs_g = self.simple_t.shuffle(shuffle_f=self.rev_f, n=4)
+        obs = [next(obs_g).to_newick() for i in range(4)]
+        self.assertEqual(obs, exp)
+
+    def test_shuffle_complex(self):
+        exp = ["(((a,b)int1,(x,y,(w,z)int2,(f,e)int3)int4),(d,c)int5);",
+               "(((a,b)int1,(x,y,(w,z)int2,(c,d)int3)int4),(e,f)int5);",
+               "(((a,b)int1,(x,y,(w,z)int2,(f,e)int3)int4),(d,c)int5);",
+               "(((a,b)int1,(x,y,(w,z)int2,(c,d)int3)int4),(e,f)int5);"]
+
+        obs_g = self.complex_tree.shuffle(shuffle_f=self.rev_f,
+                                          names=['c', 'd', 'e', 'f'], n=4)
+        obs = [next(obs_g).to_newick() for i in range(4)]
+        self.assertEqual(obs, exp)
+
+    def test_shuffle_names(self):
+        exp = ["((c,a)i1,(b,d)i2)root;",
+               "((b,c)i1,(a,d)i2)root;",
+               "((a,b)i1,(c,d)i2)root;",
+               "((c,a)i1,(b,d)i2)root;"]
+
+        obs_g = self.simple_t.shuffle(names=['a', 'b', 'c'],
+                                      shuffle_f=self.rotate_f, n=np.inf)
+        obs = [next(obs_g).to_newick() for i in range(4)]
+        self.assertEqual(obs, exp)
+
+    def test_shuffle_raises(self):
+        with self.assertRaises(ValueError):
+            next(self.simple_t.shuffle(k=1))
+
+        with self.assertRaises(ValueError):
+            next(self.simple_t.shuffle(k=5, names=['a', 'b']))
+
+        with self.assertRaises(MissingNodeError):
+            next(self.simple_t.shuffle(names=['x', 'y']))
 
 
 class DndTokenizerTests(TestCase):

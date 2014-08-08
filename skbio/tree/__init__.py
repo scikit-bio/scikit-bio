@@ -51,7 +51,7 @@ Exceptions
 Examples
 --------
 
->>> from skbio.tree import TreeNode
+>>> from skbio import TreeNode
 
 A new tree can be constructed from a Newick string. Newick is a common format
 used to represent tree objects within a file. Newick was part of the original
