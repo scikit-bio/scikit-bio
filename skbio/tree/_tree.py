@@ -1340,10 +1340,69 @@ class TreeNode(object):
             self._tip_cache = tip_cache
             self._non_tip_cache = non_tip_cache
 
+    def find_all(self, name):
+        r"""Find all nodes that match `name`
+
+        The first call to `find_all` will cache all nodes in the tree on the
+        assumption that additional calls to `find_all` will be made.
+
+        Parameters
+        ----------
+        name : TreeNode or str
+            The name or node to find. If `name` is `TreeNode` then all other
+            nodes with the same name will be returned.
+
+        Raises
+        ------
+        MissingNodeError
+            Raises if the node to be searched for is not found
+
+        Returns
+        -------
+        list of TreeNode
+            The nodes found
+
+        See Also
+        --------
+        find
+        find_by_id
+        find_by_func
+
+        Examples
+        --------
+        >>> from skbio.tree import TreeNode
+        >>> tree = TreeNode.from_newick("((a,b)c,(d,e)d,(f,g)c);")
+        >>> for node in tree.find_all('c'):
+        ...     print(node.name, node.children[0].name, node.children[1].name)
+        c a b
+        c f g
+        >>> for node in tree.find_all('d'):
+        ...     print(node.name, node.to_newick())
+        d (d,e)d;
+        d d;
+        """
+        root = self.root()
+
+        # if what is being passed in looks like a node, just return it
+        if isinstance(name, root.__class__):
+            return [name]
+
+        root.create_caches()
+
+        tip = root._tip_cache.get(name, None)
+        nodes = root._non_tip_cache.get(name, [])
+
+        nodes.append(tip) if tip is not None else None
+
+        if not nodes:
+            raise MissingNodeError("Node %s is not in self" % name)
+        else:
+            return nodes
+
     def find(self, name):
         r"""Find a node by `name`.
 
-        The first call to find will cache all tips in the tree on the
+        The first call to `find` will cache all nodes in the tree on the
         assumption that additional calls to `find` will be made.
 
         `find` will first attempt to find the node in the tips. If it cannot
@@ -1371,6 +1430,7 @@ class TreeNode(object):
 
         See Also
         --------
+        find_all
         find_by_id
         find_by_func
 
@@ -1413,6 +1473,11 @@ class TreeNode(object):
         TreeNode
             The tree node with the matcing id
 
+        Notes
+        -----
+        This method does not cache id associations. A full traversal of the
+        tree is performed to find a node by an id on every call.
+
         Raises
         ------
         MissingNodeError
@@ -1421,6 +1486,7 @@ class TreeNode(object):
         See Also
         --------
         find
+        find_all
         find_by_func
 
         Examples
@@ -1440,6 +1506,7 @@ class TreeNode(object):
         for n in self.traverse(include_self=True):
             if n.id == node_id:
                 node = n
+                break
 
         if node is None:
             raise MissingNodeError("ID %d is not in self" % node_id)
@@ -1465,6 +1532,7 @@ class TreeNode(object):
         See Also
         --------
         find
+        find_all
         find_by_id
 
         Examples
