@@ -16,9 +16,10 @@ import numpy as np
 from skbio import Protein, DNA, BiologicalSequence, Alignment
 from skbio.alignment import (
     global_pairwise_align_protein, local_pairwise_align_protein,
-    global_pairwise_align_nucleotide, local_pairwise_align_nucleotide)
+    global_pairwise_align_nucleotide, local_pairwise_align_nucleotide,
+    make_identity_substitution_matrix)
 from skbio.alignment._pairwise import (
-    _make_nt_substitution_matrix, _init_matrices_sw, _init_matrices_nw,
+    _init_matrices_sw, _init_matrices_nw,
     _compute_score_and_traceback_matrices, _traceback, _first_largest,
     _get_seq_id, _compute_substitution_score)
 
@@ -39,18 +40,20 @@ class PairwiseAlignmentTests(TestCase):
 
     """
 
-    def test_make_nt_substitution_matrix(self):
-        expected = {'A': {'A':  1, 'C': -2, 'G': -2, 'T': -2},
-                    'C': {'A': -2, 'C':  1, 'G': -2, 'T': -2},
-                    'G': {'A': -2, 'C': -2, 'G':  1, 'T': -2},
-                    'T': {'A': -2, 'C': -2, 'G': -2, 'T':  1}}
-        self.assertEqual(_make_nt_substitution_matrix(1, -2), expected)
+    def testmake_identity_substitution_matrix(self):
+        expected = {'A': {'A':  1, 'C': -2, 'G': -2, 'T': -2, 'U': -2},
+                    'C': {'A': -2, 'C':  1, 'G': -2, 'T': -2, 'U': -2},
+                    'G': {'A': -2, 'C': -2, 'G':  1, 'T': -2, 'U': -2},
+                    'T': {'A': -2, 'C': -2, 'G': -2, 'T':  1, 'U': -2},
+                    'U': {'A': -2, 'C': -2, 'G': -2, 'T': -2, 'U':  1}}
+        self.assertEqual(make_identity_substitution_matrix(1, -2), expected)
 
-        expected = {'A': {'A':  5, 'C': -4, 'G': -4, 'T': -4},
-                    'C': {'A': -4, 'C':  5, 'G': -4, 'T': -4},
-                    'G': {'A': -4, 'C': -4, 'G':  5, 'T': -4},
-                    'T': {'A': -4, 'C': -4, 'G': -4, 'T':  5}}
-        self.assertEqual(_make_nt_substitution_matrix(5, -4), expected)
+        expected = {'A': {'A':  5, 'C': -4, 'G': -4, 'T': -4, 'U': -4},
+                    'C': {'A': -4, 'C':  5, 'G': -4, 'T': -4, 'U': -4},
+                    'G': {'A': -4, 'C': -4, 'G':  5, 'T': -4, 'U': -4},
+                    'T': {'A': -4, 'C': -4, 'G': -4, 'T':  5, 'U': -4},
+                    'U': {'A': -4, 'C': -4, 'G': -4, 'T': -4, 'U':  5}}
+        self.assertEqual(make_identity_substitution_matrix(5, -4), expected)
 
     def test_global_pairwise_align_protein(self):
         expected = ("HEAGAWGHEE-", "---PAW-HEAE", 23.0)
@@ -397,7 +400,7 @@ class PairwiseAlignmentTests(TestCase):
                               "HEAGAWGHEE", 42)
 
     def test_nucleotide_aligners_use_substitution_matrices(self):
-        alt_sub = _make_nt_substitution_matrix(10, -10)
+        alt_sub = make_identity_substitution_matrix(10, -10)
         # alternate substitution matrix yields different alignment (the
         # aligned sequences and the scores are different) with local alignment
         with warnings.catch_warnings():
@@ -460,7 +463,7 @@ class PairwiseAlignmentTests(TestCase):
 
     def test_compute_substitution_score(self):
         # these results were computed manually
-        subs_m = _make_nt_substitution_matrix(5, -4)
+        subs_m = make_identity_substitution_matrix(5, -4)
         self.assertEqual(
             _compute_substitution_score(['A'], ['A'], subs_m, 0), 5.0)
         self.assertEqual(
@@ -477,7 +480,7 @@ class PairwiseAlignmentTests(TestCase):
             _compute_substitution_score(['A', 'A'], ['A', '-'], subs_m, 1), 3)
 
         # alt subs_m
-        subs_m = _make_nt_substitution_matrix(1, -2)
+        subs_m = make_identity_substitution_matrix(1, -2)
         self.assertEqual(
             _compute_substitution_score(['A', 'A'], ['A', '-'], subs_m, 0),
             0.5)
@@ -494,7 +497,7 @@ class PairwiseAlignmentTests(TestCase):
                             [2, 2, 1, 3],
                             [2, 2, 2, 1],
                             [2, 2, 2, 2]]
-        m = _make_nt_substitution_matrix(2, -1)
+        m = make_identity_substitution_matrix(2, -1)
         actual_score_m, actual_tback_m = _compute_score_and_traceback_matrices(
             Alignment([DNA('ACG')]),
             Alignment([DNA('ACGT')]), 5, 2, m)
@@ -513,7 +516,7 @@ class PairwiseAlignmentTests(TestCase):
                             [2, 2, 1, 3],
                             [2, 2, 2, 1],
                             [2, 2, 2, 1]]
-        m = _make_nt_substitution_matrix(2, -1)
+        m = make_identity_substitution_matrix(2, -1)
         actual_score_m, actual_tback_m = _compute_score_and_traceback_matrices(
             Alignment([DNA('ACC')]),
             Alignment([DNA('ACGT')]), 5, 2, m)
@@ -532,7 +535,7 @@ class PairwiseAlignmentTests(TestCase):
                             [2, 2, 1, 3],
                             [2, 2, 2, 1],
                             [2, 2, 2, 1]]
-        m = _make_nt_substitution_matrix(2, -1)
+        m = make_identity_substitution_matrix(2, -1)
         actual_score_m, actual_tback_m = _compute_score_and_traceback_matrices(
             Alignment([DNA('ACC', 's1'), DNA('ACC', 's2')]),
             Alignment([DNA('ACGT', 's3'), DNA('ACGT', 's4')]), 5, 2, m)
@@ -542,7 +545,7 @@ class PairwiseAlignmentTests(TestCase):
     def test_compute_score_and_traceback_matrices_invalid(self):
         # if the sequence contains a character that is not in the
         # substitution matrix, an informative error should be raised
-        m = _make_nt_substitution_matrix(2, -1)
+        m = make_identity_substitution_matrix(2, -1)
         self.assertRaises(ValueError, _compute_score_and_traceback_matrices,
                           Alignment([DNA('AWG')]),
                           Alignment([DNA('ACGT')]), 5, 2, m)

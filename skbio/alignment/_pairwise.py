@@ -181,7 +181,7 @@ def local_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
     # match_score and mismatch_score if a substitution matrix was not provided
     if substitution_matrix is None:
         substitution_matrix = \
-            _make_nt_substitution_matrix(match_score, mismatch_score)
+            make_identity_substitution_matrix(match_score, mismatch_score)
     else:
         pass
 
@@ -393,7 +393,7 @@ def global_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
     # match_score and mismatch_score if a substitution matrix was not provided
     if substitution_matrix is None:
         substitution_matrix = \
-            _make_nt_substitution_matrix(match_score, mismatch_score)
+            make_identity_substitution_matrix(match_score, mismatch_score)
     else:
         pass
 
@@ -566,6 +566,48 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
     return Alignment(aligned1 + aligned2, score=score,
                      start_end_positions=start_end_positions)
 
+
+def make_identity_substitution_matrix(match_score, mismatch_score,
+                                      alphabet='ACGTU'):
+    """Generate substitution matrix where all matches are scored equally
+
+    Parameters
+    ----------
+    match_score : int, float
+        The score that should be assigned for all matches. This value is
+        typically positive.
+    mismatch_score : int, float
+        The score that should be assigned for all mismatches. This value is
+        typically negative.
+    alphabet : iterable of str, optional
+        The characters that should be included in the substitution matrix.
+
+    Returns
+    -------
+    dict of dicts
+        All characters in alphabet are keys in both dictionaries, so that any
+        pair of characters can be looked up to get their match or mismatch
+        score.
+
+    """
+
+    warn("make_identity_substitution_matrix is deprecated and will soon be "
+         "replaced, though at the time of this writing the new name has not "
+         "been finalized. Updates will be posted to issue #161: "
+         "https://github.com/biocore/scikit-bio/issues/161")
+
+    result = {}
+    for c1 in alphabet:
+        row = {}
+        for c2 in alphabet:
+            if c1 == c2:
+                row[c2] = match_score
+            else:
+                row[c2] = mismatch_score
+        result[c1] = row
+    return result
+
+
 # Functions from here allow for generalized (global or local) alignment. I
 # will likely want to put these in a single object to make the naming a little
 # less clunky.
@@ -605,19 +647,6 @@ def _get_seq_id(seq, default_id):
     else:
         if result is None or result.strip() == "":
             result = default_id
-    return result
-
-
-def _make_nt_substitution_matrix(match_score, mismatch_score, alphabet='ACGT'):
-    result = {}
-    for c1 in alphabet:
-        row = {}
-        for c2 in alphabet:
-            if c1 == c2:
-                row[c2] = match_score
-            else:
-                row[c2] = mismatch_score
-        result[c1] = row
     return result
 
 
