@@ -13,8 +13,11 @@ from __future__ import absolute_import, division, print_function
 import collections
 import os
 import os.path
+import subprocess
 import sys
 import ast
+
+import dateutil.parser
 
 
 def main():
@@ -123,6 +126,23 @@ class RepoValidator(object):
         """
         raise NotImplementedError("Subclasses must implement _validate.")
 
+    def _system_call(self, cmd):
+        """Issue a system call, returning stdout, stderr, and return value.
+
+        This code was taken from verman's
+        ``verman.Version.verman_system_call``. See licenses/verman.txt and
+        https://github.com/biocore/verman for more details.
+
+        """
+        proc = subprocess.Popen(cmd, shell=True, universal_newlines=True,
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        # communicate pulls all stdout/stderr from the PIPEs to
+        # avoid blocking -- don't remove this line!
+        stdout, stderr = proc.communicate()
+        return_value = proc.returncode
+        return stdout, stderr, return_value
+
 
 class InitValidator(RepoValidator):
     """Flag library code directories that are missing init files.
@@ -194,12 +214,13 @@ class ExecPermissionValidator(RepoValidator):
 
 
 class GeneratedCythonValidator(RepoValidator):
-    """Flag Cython files that are missing generated C files.
+    """Flag Cython files that have missing or outdated generated C files.
 
-    Flags Cython files that aren't paired with a generated C file. The
-    generated C file must be in the same directory as the Cython file, and its
-    name (besides the file extension) must match. The validator also ensures
-    that the generated C file is not empty.
+    Flags Cython files that aren't paired with an up-to-date generated C file.
+    The generated C file must be in the same directory as the Cython file, and
+    its name (besides the file extension) must match. The validator also
+    ensures that the generated C file is not empty and that it was generated at
+    the same time or later than the Cython file's timestamp.
 
     Parameters
     ----------
@@ -209,7 +230,7 @@ class GeneratedCythonValidator(RepoValidator):
         File extension for generated C files.
 
     """
-    reason = "Cython code missing generated C code"
+    reason = "Cython code with missing or outdated generated C code"
 
     def __init__(self, cython_ext='.pyx', c_ext='.c'):
         self.cython_ext = cython_ext
@@ -226,7 +247,8 @@ class GeneratedCythonValidator(RepoValidator):
             ext_to_base[ext].append(base)
 
         # For each Cython file, try to find a matching C file. If we have a
-        # match, make sure the C file isn't empty.
+        # match, make sure the C file isn't empty and that it was generated at
+        # the same time or later than the Cython file.
         for cython_base in ext_to_base[self.cython_ext]:
             cython_fp = os.path.join(root, cython_base + self.cython_ext)
             c_fp = os.path.join(root, cython_base + self.c_ext)
@@ -235,8 +257,23 @@ class GeneratedCythonValidator(RepoValidator):
                 invalid_fps.append(cython_fp)
             elif os.path.getsize(c_fp) <= 0:
                 invalid_fps.append(cython_fp)
+            else:
+                cython_ts = self._get_timestamp(cython_fp)
+                c_ts = self._get_timestamp(c_fp)
+
+                if c_ts < cython_ts:
+                    invalid_fps.append(cython_fp)
 
         return invalid_fps
+
+    def _get_timestamp(self, fp):
+        cmd = 'git log -1 --format="%%ad" -- %s' % fp
+        stdout, stderr, retval = self._system_call(cmd)
+
+        if retval != 0:
+            raise RuntimeError("Could not execute 'git log' command to "
+                               "determine file timestamp.")
+        return dateutil.parser.parse(stdout.strip())
 
 
 class APIRegressionValidator(RepoValidator):
