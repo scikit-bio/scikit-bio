@@ -41,16 +41,18 @@ class PairwiseAlignmentTests(TestCase):
     """
 
     def testmake_identity_substitution_matrix(self):
-        expected = {'A': {'A':  1, 'C': -2, 'G': -2, 'T': -2},
-                    'C': {'A': -2, 'C':  1, 'G': -2, 'T': -2},
-                    'G': {'A': -2, 'C': -2, 'G':  1, 'T': -2},
-                    'T': {'A': -2, 'C': -2, 'G': -2, 'T':  1}}
+        expected = {'A': {'A':  1, 'C': -2, 'G': -2, 'T': -2, 'U': -2},
+                    'C': {'A': -2, 'C':  1, 'G': -2, 'T': -2, 'U': -2},
+                    'G': {'A': -2, 'C': -2, 'G':  1, 'T': -2, 'U': -2},
+                    'T': {'A': -2, 'C': -2, 'G': -2, 'T':  1, 'U': -2},
+                    'U': {'A': -2, 'C': -2, 'G': -2, 'T': -2, 'U':  1}}
         self.assertEqual(make_identity_substitution_matrix(1, -2), expected)
 
-        expected = {'A': {'A':  5, 'C': -4, 'G': -4, 'T': -4},
-                    'C': {'A': -4, 'C':  5, 'G': -4, 'T': -4},
-                    'G': {'A': -4, 'C': -4, 'G':  5, 'T': -4},
-                    'T': {'A': -4, 'C': -4, 'G': -4, 'T':  5}}
+        expected = {'A': {'A':  5, 'C': -4, 'G': -4, 'T': -4, 'U': -4},
+                    'C': {'A': -4, 'C':  5, 'G': -4, 'T': -4, 'U': -4},
+                    'G': {'A': -4, 'C': -4, 'G':  5, 'T': -4, 'U': -4},
+                    'T': {'A': -4, 'C': -4, 'G': -4, 'T':  5, 'U': -4},
+                    'U': {'A': -4, 'C': -4, 'G': -4, 'T': -4, 'U':  5}}
         self.assertEqual(make_identity_substitution_matrix(5, -4), expected)
 
     def test_global_pairwise_align_protein(self):
