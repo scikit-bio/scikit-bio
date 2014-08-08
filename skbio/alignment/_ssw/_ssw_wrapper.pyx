@@ -634,7 +634,7 @@ cdef class StripedSmithWaterman:
 
         Parameters
         ----------
-        target_sequence : string
+        target_sequence : str
 
         Returns
         -------
