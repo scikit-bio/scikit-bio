@@ -18,8 +18,15 @@
 * The module ``skbio.math.gradient`` as well as the contents of ``skbio.math.subsample`` and ``skbio.math.stats.misc`` are now found in ``skbio.stats``. As an example, to import subsample: ``from skbio.stats import subsample``; to import everything from gradient: ``from skbio.stats.gradient import *``.
 * The contents of ``skbio.math.stats.ordination.utils`` are now in ``skbio.stats.ordination``.
 * Removed ``skbio.app`` subpackage (i.e., the *application controller framework*) as this code has been ported to the standalone [burrito](https://github.com/biocore/burrito) Python package. This code was not specific to bioinformatics and is useful for wrapping command-line applications in general.
-* Removed ``skbio.core``, leaving ``alignment``, ``distance``, ``genetic_code``, ``sequence``, ``tree``, and ``workflow`` to become top level packages. For example, instead of ``from skbio.core.distance import DistanceMatrix`` you would now import ``from skbio.distance import DistanceMatrix``.
-* Removed ``skbio.util.exception`` and ``skbio.util.warning`` (see [#577](https://github.com/biocore/scikit-bio/issues/577) for the reasoning behind this change). ``FileFormatError``, ``RecordError``, ``FieldError``, and ``EfficiencyWarning`` have been moved to ``skbio.util``. ``BiologicalSequenceError`` has been moved to ``skbio.sequence``. ``SequenceCollectionError`` and ``StockholmParseError`` have been moved to ``skbio.alignment``. ``DissimilarityMatrixError``, ``DistanceMatrixError``, ``DissimilarityMatrixFormatError``, and ``MissingIDError`` have been moved to ``skbio.distance``. ``TreeError``, ``NoLengthError``, ``DuplicateNodeError``, ``MissingNodeError``, and ``NoParentError`` have been moved to ``skbio.tree``. ``FastqParseError`` has been moved to ``skbio.parse.sequences``. ``GeneticCodeError``, ``GeneticCodeInitError``, and ``InvalidCodonError`` have been moved to ``skbio.genetic_code``.
+* Removed ``skbio.core``, leaving ``alignment``, ``genetic_code``, ``sequence``, ``tree``, and ``workflow`` to become top level packages. For example, instead of ``from skbio.core.sequence import DNA`` you would now import ``from skbio.sequence import DNA``.
+* Removed ``skbio.util.exception`` and ``skbio.util.warning`` (see [#577](https://github.com/biocore/scikit-bio/issues/577) for the reasoning behind this change). The exceptions/warnings were moved to the following locations:
+ - ``FileFormatError``, ``RecordError``, ``FieldError``, and ``EfficiencyWarning`` have been moved to ``skbio.util``
+ - ``BiologicalSequenceError`` has been moved to ``skbio.sequence``
+ - ``SequenceCollectionError`` and ``StockholmParseError`` have been moved to ``skbio.alignment``
+ - ``DissimilarityMatrixError``, ``DistanceMatrixError``, ``DissimilarityMatrixFormatError``, and ``MissingIDError`` have been moved to ``skbio.stats.distance``
+ - ``TreeError``, ``NoLengthError``, ``DuplicateNodeError``, ``MissingNodeError``, and ``NoParentError`` have been moved to ``skbio.tree``
+ - ``FastqParseError`` has been moved to ``skbio.parse.sequences``
+ - ``GeneticCodeError``, ``GeneticCodeInitError``, and ``InvalidCodonError`` have been moved to ``skbio.genetic_code``
 * Many submodules have been made private with the intention of simplifying imports for users. See [#562](https://github.com/biocore/scikit-bio/issues/562) for discussion of this change. The following list contains the previous module name and where imports from that module should now come from.
  - ``skbio.alignment.ssw`` to ``skbio.alignment``
  - ``skbio.alignment.alignment`` to ``skbio.alignment``
@@ -32,6 +39,7 @@
  - ``skbio.stats.distance.anosim`` to ``skbio.stats.distance``
  - ``skbio.stats.distance.base`` to ``skbio.stats.distance``
  - ``skbio.stats.distance.permanova`` to ``skbio.stats.distance``
+ - ``skbio.distance`` to ``skbio.stats.distance``
  - ``skbio.stats.ordination.base`` to ``skbio.stats.ordination``
  - ``skbio.stats.ordination.canonical_correspondence_analysis`` to ``skbio.stats.ordination``
  - ``skbio.stats.ordination.correspondence_analysis`` to ``skbio.stats.ordination``
@@ -43,6 +51,7 @@
  - ``skbio.util.testing`` to ``skbio.util``
  - ``skbio.util.exception`` to ``skbio.util``
  - ``skbio.util.warning`` to ``skbio.util``
+* Moved ``skbio.distance`` contents into ``skbio.stats.distance``.
 
 ### Miscellaneous
 

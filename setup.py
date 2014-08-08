@@ -73,7 +73,6 @@ setup(name='scikit-bio',
                       'doc': ["Sphinx >= 1.2.2", "sphinx-bootstrap-theme"]},
       classifiers=classifiers,
       package_data={
-          'skbio.tests': ['data/*.txt'],
           'skbio.stats.tests': ['data/*'],
           'skbio.stats.distance.tests': ['data/*'],
           'skbio.stats.ordination.tests': ['data/*'],
