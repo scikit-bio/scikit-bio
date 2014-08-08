@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.NucleotideSequence.fraction_same
+===============================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: NucleotideSequence.fraction_same

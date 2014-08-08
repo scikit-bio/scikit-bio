@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.SequenceCollection.iteritems
+============================================
+
+.. currentmodule:: skbio.alignment
+
+.. automethod:: SequenceCollection.iteritems

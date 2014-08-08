@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.tree.TreeNode.compare_subsets
+===================================
+
+.. currentmodule:: skbio.tree
+
+.. automethod:: TreeNode.compare_subsets

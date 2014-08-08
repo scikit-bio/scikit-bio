@@ -1,0 +1,6 @@
+skbio.diversity.alpha.lladser_pe
+================================
+
+.. currentmodule:: skbio.diversity.alpha
+
+.. autofunction:: lladser_pe

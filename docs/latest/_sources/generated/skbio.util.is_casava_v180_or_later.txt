@@ -1,0 +1,6 @@
+skbio.util.is_casava_v180_or_later
+==================================
+
+.. currentmodule:: skbio.util
+
+.. autofunction:: is_casava_v180_or_later

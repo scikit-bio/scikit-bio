@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>skbio.alignment.StockholmAlignment &mdash; scikit-bio 0.2.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/style.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.1.0/united/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.2.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/copybutton.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="top" title="scikit-bio 0.2.0 documentation" href="../index.html" />
+    <link rel="up" title="Sequence collections and alignments (skbio.alignment)" href="../alignment.html" />
+    <link rel="next" title="skbio.alignment.StockholmAlignment.__contains__" href="skbio.alignment.StockholmAlignment.__contains__.html" />
+    <link rel="prev" title="skbio.alignment.Alignment.upper" href="skbio.alignment.Alignment.upper.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body>
+  
+  <a href="https://github.com/biocore/scikit-bio"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          scikit-bio docs</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.2.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            <li class="divider-vertical"></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../alignment.html">Sequence collections and alignments (<tt class="docutils literal"><span class="pre">skbio.alignment</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sequence.html">Biological sequences (<tt class="docutils literal"><span class="pre">skbio.sequence</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tree.html">Tree representations (<tt class="docutils literal"><span class="pre">skbio.tree</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../workflow.html">Constructing workflows (<tt class="docutils literal"><span class="pre">skbio.workflow</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../draw.html">Visualizations (<tt class="docutils literal"><span class="pre">skbio.draw</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../format.sequences.html">Format biological sequences (<tt class="docutils literal"><span class="pre">skbio.format.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../diversity.html">Diversity calculations (<tt class="docutils literal"><span class="pre">skbio.diversity</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stats.html">Statistics (<tt class="docutils literal"><span class="pre">skbio.stats</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../parse.sequences.html">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.html">Utility functionality (<tt class="docutils literal"><span class="pre">skbio.util</span></tt>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/py3.html">Supporting Python 2 and Python 3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/coding_guidelines.html">Coding guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/new_module.html">Adding a new module to skbio</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">skbio.alignment.StockholmAlignment</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      
+  <div class="section" id="skbio-alignment-stockholmalignment">
+<h1>skbio.alignment.StockholmAlignment<a class="headerlink" href="#skbio-alignment-stockholmalignment" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="skbio.alignment.StockholmAlignment">
+<em class="property">class </em><tt class="descclassname">skbio.alignment.</tt><tt class="descname">StockholmAlignment</tt><big>(</big><em>seqs</em>, <em>gf=None</em>, <em>gs=None</em>, <em>gr=None</em>, <em>gc=None</em>, <em>validate=False</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.2.0/skbio/alignment/_alignment.py#L1556"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.alignment.StockholmAlignment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Contains the metadata information in a Stockholm file alignment</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>seqs</strong> : list of <cite>skbio.sequence.BiologicalSequence</cite> objects</p>
+<blockquote>
+<div><p>The <cite>skbio.sequence.BiologicalSequence</cite> objects to load.</p>
+</div></blockquote>
+<p><strong>gf</strong> : dict, optional</p>
+<blockquote>
+<div><p>GF info in the format {feature: info}</p>
+</div></blockquote>
+<p><strong>gs</strong> : dict of dicts, optional</p>
+<blockquote>
+<div><p>GS info in the format {feature: {seqlabel: info}}</p>
+</div></blockquote>
+<p><strong>gr</strong> : dict of dicts, optional</p>
+<blockquote>
+<div><p>GR info in the format {feature: {seqlabel: info}}</p>
+</div></blockquote>
+<p><strong>gc</strong> : dict, optional</p>
+<blockquote class="last">
+<div><p>GC info in the format {feature: info}</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>The Stockholm format is described in <a class="reference internal" href="#r87" id="id1">[R87]</a> and <a class="reference internal" href="#r88" id="id2">[R88]</a>.</p>
+<p>If there are multiple references, include information for each R* line
+as a list, with reference 0 information in position 0 for all lists,
+etc. This list will be broken up into the appropriate bits for each
+reference on string formatting.</p>
+<p>If there are multiple trees included, use a list to store identifiers
+and trees, with position 0 holding identifier for tree in position 0,
+etc.</p>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r87" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R87]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id3">2</a>)</em> <a class="reference external" href="http://sonnhammer.sbc.su.se/Stockholm.html">http://sonnhammer.sbc.su.se/Stockholm.html</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r88" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R88]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> <a class="reference external" href="http://en.wikipedia.org/wiki/Stockholm_format">http://en.wikipedia.org/wiki/Stockholm_format</a></td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Assume we have a basic stockholm file with the following contents:</p>
+<div class="highlight-python"><div class="highlight"><pre># STOCKHOLM 1.0
+seq1         ACC--G-GGGU
+seq2         TCC--G-GGGA
+#=GC SS_cons (((.....)))
+//
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.sequence</span> <span class="kn">import</span> <span class="n">RNA</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.alignment</span> <span class="kn">import</span> <span class="n">StockholmAlignment</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">StringIO</span> <span class="kn">import</span> <span class="n">StringIO</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sto_in</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">(</span><span class="s">&quot;# STOCKHOLM 1.0</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="gp">... </span>                  <span class="s">&quot;seq1     ACC--G-GGGU</span><span class="se">\n</span><span class="s">seq2     TCC--G-GGGA</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="gp">... </span>                  <span class="s">&quot;#=GC SS_cons (((.....)))</span><span class="se">\n</span><span class="s">//&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sto_records</span> <span class="o">=</span> <span class="n">StockholmAlignment</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">sto_in</span><span class="p">,</span> <span class="n">RNA</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sto</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">sto_records</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">sto</span><span class="p">)</span>
+<span class="go"># STOCKHOLM 1.0</span>
+<span class="go">seq1          ACC--G-GGGU</span>
+<span class="go">seq2          TCC--G-GGGA</span>
+<span class="go">#=GC SS_cons  (((.....)))</span>
+<span class="go">//</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sto</span><span class="o">.</span><span class="n">gc</span>
+<span class="go">{&#39;SS_cons&#39;: &#39;(((.....)))&#39;}</span>
+</pre></div>
+</div>
+<p>We can also write out information by instantiating the StockholmAlignment
+object and then printing it.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.sequence</span> <span class="kn">import</span> <span class="n">RNA</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.alignment</span> <span class="kn">import</span> <span class="n">StockholmAlignment</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seqs</span> <span class="o">=</span> <span class="p">[</span><span class="n">RNA</span><span class="p">(</span><span class="s">&quot;ACC--G-GGGU&quot;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="s">&quot;seq1&quot;</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">RNA</span><span class="p">(</span><span class="s">&quot;TCC--G-GGGA&quot;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="s">&quot;seq2&quot;</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gf</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span><span class="s">&quot;RT&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s">&quot;TITLE1&quot;</span><span class="p">,</span>  <span class="s">&quot;TITLE2&quot;</span><span class="p">],</span>
+<span class="gp">... </span><span class="s">&quot;RA&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s">&quot;Auth1;&quot;</span><span class="p">,</span> <span class="s">&quot;Auth2;&quot;</span><span class="p">],</span>
+<span class="gp">... </span><span class="s">&quot;RL&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s">&quot;J Mol Biol&quot;</span><span class="p">,</span> <span class="s">&quot;Cell&quot;</span><span class="p">],</span>
+<span class="gp">... </span><span class="s">&quot;RM&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s">&quot;11469857&quot;</span><span class="p">,</span> <span class="s">&quot;12007400&quot;</span><span class="p">]}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sto</span> <span class="o">=</span> <span class="n">StockholmAlignment</span><span class="p">(</span><span class="n">seqs</span><span class="p">,</span> <span class="n">gf</span><span class="o">=</span><span class="n">gf</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">sto</span><span class="p">)</span>
+<span class="go"># STOCKHOLM 1.0</span>
+<span class="go">#=GF RN [1]</span>
+<span class="go">#=GF RM 11469857</span>
+<span class="go">#=GF RT TITLE1</span>
+<span class="go">#=GF RA Auth1;</span>
+<span class="go">#=GF RL J Mol Biol</span>
+<span class="go">#=GF RN [2]</span>
+<span class="go">#=GF RM 12007400</span>
+<span class="go">#=GF RT TITLE2</span>
+<span class="go">#=GF RA Auth2;</span>
+<span class="go">#=GF RL Cell</span>
+<span class="go">seq1          ACC--G-GGGU</span>
+<span class="go">seq2          TCC--G-GGGA</span>
+<span class="go">//</span>
+</pre></div>
+</div>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="skbio.alignment.StockholmAlignment.__contains__.html#skbio.alignment.StockholmAlignment.__contains__" title="skbio.alignment.StockholmAlignment.__contains__"><tt class="xref py py-obj docutils literal"><span class="pre">__contains__</span></tt></a>(id)</td>
+<td>The in operator.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.alignment.StockholmAlignment.__eq__.html#skbio.alignment.StockholmAlignment.__eq__" title="skbio.alignment.StockholmAlignment.__eq__"><tt class="xref py py-obj docutils literal"><span class="pre">__eq__</span></tt></a>(other)</td>
+<td>The equality operator.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.alignment.StockholmAlignment.__getitem__.html#skbio.alignment.StockholmAlignment.__getitem__" title="skbio.alignment.StockholmAlignment.__getitem__"><tt class="xref py py-obj docutils literal"><span class="pre">__getitem__</span></tt></a>(index)</td>
+<td>The indexing operator.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.alignment.StockholmAlignment.__iter__.html#skbio.alignment.StockholmAlignment.__iter__" title="skbio.alignment.StockholmAlignment.__iter__"><tt class="xref py py-obj docutils literal"><span class="pre">__iter__</span></tt></a>()</td>
+<td>The iter operator.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.alignment.StockholmAlignment.__len__.html#skbio.alignment.StockholmAlignment.__len__" title="skbio.alignment.StockholmAlignment.__len__"><tt class="xref py py-obj docutils literal"><span class="pre">__len__</span></tt></a>()</td>
+<td>The len operator.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.alignment.StockholmAlignment.__ne__.html#skbio.alignment.StockholmAlignment.__ne__" title="skbio.alignment.StockholmAlignment.__ne__"><tt class="xref py py-obj docutils literal"><span class="pre">__ne__</span></tt></a>(other)</td>
+<td>The inequality operator.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.alignment.StockholmAlignment.__repr__.html#skbio.alignment.StockholmAlignment.__repr__" title="skbio.alignment.StockholmAlignment.__repr__"><tt class="xref py py-obj docutils literal"><span class="pre">__repr__</span></tt></a>()</td>
+<td>The repr method.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.alignment.StockholmAlignment.__reversed__.html#skbio.alignment.StockholmAlignment.__reversed__" title="skbio.alignment.StockholmAlignment.__reversed__"><tt class="xref py py-obj docutils literal"><span class="pre">__reversed__</span></tt></a>()</td>
+<td>The reversed method.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.alignment.StockholmAlignment.degap.html#skbio.alignment.StockholmAlignment.degap" title="skbio.alignment.StockholmAlignment.degap"><tt class="xref py py-obj docutils literal"><span class="pre">degap</span></tt></a>()</td>
+<td>Return a new <cite>SequenceCollection</cite> with all gap characters removed.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.alignment.StockholmAlignment.distances.html#skbio.alignment.StockholmAlignment.distances" title="skbio.alignment.StockholmAlignment.distances"><tt class="xref py py-obj docutils literal"><span class="pre">distances</span></tt></a>([distance_fn])</td>
+<td>Compute distances between all pairs of sequences</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.alignment.StockholmAlignment.distribution_stats.html#skbio.alignment.StockholmAlignment.distribution_stats" title="skbio.alignment.StockholmAlignment.distribution_stats"><tt class="xref py py-obj docutils literal"><span class="pre">distribution_stats</span></tt></a>([center_f,&nbsp;spread_f])</td>
+<td>Return sequence count, and center and spread of sequence lengths</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.alignment.StockholmAlignment.from_fasta_records.html#skbio.alignment.StockholmAlignment.from_fasta_records" title="skbio.alignment.StockholmAlignment.from_fasta_records"><tt class="xref py py-obj docutils literal"><span class="pre">from_fasta_records</span></tt></a>(fasta_records,&nbsp;...[,&nbsp;...])</td>
+<td>Initialize a <cite>SequenceCollection</cite> object</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.alignment.StockholmAlignment.from_file.html#skbio.alignment.StockholmAlignment.from_file" title="skbio.alignment.StockholmAlignment.from_file"><tt class="xref py py-obj docutils literal"><span class="pre">from_file</span></tt></a>(infile,&nbsp;seq_constructor[,&nbsp;strict])</td>
+<td>yields StockholmAlignment objects from a stockholm file.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.alignment.StockholmAlignment.get_seq.html#skbio.alignment.StockholmAlignment.get_seq" title="skbio.alignment.StockholmAlignment.get_seq"><tt class="xref py py-obj docutils literal"><span class="pre">get_seq</span></tt></a>(id)</td>
+<td>Return a sequence from the <cite>SequenceCollection</cite> by its id.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.alignment.StockholmAlignment.ids.html#skbio.alignment.StockholmAlignment.ids" title="skbio.alignment.StockholmAlignment.ids"><tt class="xref py py-obj docutils literal"><span class="pre">ids</span></tt></a>()</td>
+<td>Returns the <cite>BiologicalSequence</cite> ids</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.alignment.StockholmAlignment.int_map.html#skbio.alignment.StockholmAlignment.int_map" title="skbio.alignment.StockholmAlignment.int_map"><tt class="xref py py-obj docutils literal"><span class="pre">int_map</span></tt></a>([prefix])</td>
+<td>Create an integer-based mapping of sequence ids</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.alignment.StockholmAlignment.is_empty.html#skbio.alignment.StockholmAlignment.is_empty" title="skbio.alignment.StockholmAlignment.is_empty"><tt class="xref py py-obj docutils literal"><span class="pre">is_empty</span></tt></a>()</td>
+<td>Return True if the SequenceCollection is empty</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.alignment.StockholmAlignment.is_valid.html#skbio.alignment.StockholmAlignment.is_valid" title="skbio.alignment.StockholmAlignment.is_valid"><tt class="xref py py-obj docutils literal"><span class="pre">is_valid</span></tt></a>()</td>
+<td>Return True if the Alignment is valid</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.alignment.StockholmAlignment.iter_positions.html#skbio.alignment.StockholmAlignment.iter_positions" title="skbio.alignment.StockholmAlignment.iter_positions"><tt class="xref py py-obj docutils literal"><span class="pre">iter_positions</span></tt></a>([constructor])</td>
+<td>Generator of Alignment positions (i.e., columns)</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.alignment.StockholmAlignment.iteritems.html#skbio.alignment.StockholmAlignment.iteritems" title="skbio.alignment.StockholmAlignment.iteritems"><tt class="xref py py-obj docutils literal"><span class="pre">iteritems</span></tt></a>()</td>
+<td>Generator of id, sequence tuples</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.alignment.StockholmAlignment.k_word_frequencies.html#skbio.alignment.StockholmAlignment.k_word_frequencies" title="skbio.alignment.StockholmAlignment.k_word_frequencies"><tt class="xref py py-obj docutils literal"><span class="pre">k_word_frequencies</span></tt></a>(k[,&nbsp;overlapping,&nbsp;constructor])</td>
+<td>Return frequencies of length k words for sequences in Alignment</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.alignment.StockholmAlignment.lower.html#skbio.alignment.StockholmAlignment.lower" title="skbio.alignment.StockholmAlignment.lower"><tt class="xref py py-obj docutils literal"><span class="pre">lower</span></tt></a>()</td>
+<td>Converts all sequences to lowercase</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.alignment.StockholmAlignment.majority_consensus.html#skbio.alignment.StockholmAlignment.majority_consensus" title="skbio.alignment.StockholmAlignment.majority_consensus"><tt class="xref py py-obj docutils literal"><span class="pre">majority_consensus</span></tt></a>([constructor])</td>
+<td>Return the majority consensus sequence for the <cite>Alignment</cite></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.alignment.StockholmAlignment.omit_gap_positions.html#skbio.alignment.StockholmAlignment.omit_gap_positions" title="skbio.alignment.StockholmAlignment.omit_gap_positions"><tt class="xref py py-obj docutils literal"><span class="pre">omit_gap_positions</span></tt></a>(maximum_gap_frequency)</td>
+<td>Returns Alignment with positions filtered based on gap frequency</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.alignment.StockholmAlignment.omit_gap_sequences.html#skbio.alignment.StockholmAlignment.omit_gap_sequences" title="skbio.alignment.StockholmAlignment.omit_gap_sequences"><tt class="xref py py-obj docutils literal"><span class="pre">omit_gap_sequences</span></tt></a>(maximum_gap_frequency)</td>
+<td>Returns Alignment with sequences filtered based on gap frequency</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.alignment.StockholmAlignment.position_counters.html#skbio.alignment.StockholmAlignment.position_counters" title="skbio.alignment.StockholmAlignment.position_counters"><tt class="xref py py-obj docutils literal"><span class="pre">position_counters</span></tt></a>()</td>
+<td>Return collection.Counter object for positions in Alignment</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.alignment.StockholmAlignment.position_entropies.html#skbio.alignment.StockholmAlignment.position_entropies" title="skbio.alignment.StockholmAlignment.position_entropies"><tt class="xref py py-obj docutils literal"><span class="pre">position_entropies</span></tt></a>([base,&nbsp;...])</td>
+<td>Return Shannon entropy of positions in Alignment</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.alignment.StockholmAlignment.position_frequencies.html#skbio.alignment.StockholmAlignment.position_frequencies" title="skbio.alignment.StockholmAlignment.position_frequencies"><tt class="xref py py-obj docutils literal"><span class="pre">position_frequencies</span></tt></a>()</td>
+<td>Return frequencies of characters for positions in Alignment</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.alignment.StockholmAlignment.score.html#skbio.alignment.StockholmAlignment.score" title="skbio.alignment.StockholmAlignment.score"><tt class="xref py py-obj docutils literal"><span class="pre">score</span></tt></a>()</td>
+<td>Returns the score of the alignment.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.alignment.StockholmAlignment.sequence_count.html#skbio.alignment.StockholmAlignment.sequence_count" title="skbio.alignment.StockholmAlignment.sequence_count"><tt class="xref py py-obj docutils literal"><span class="pre">sequence_count</span></tt></a>()</td>
+<td>Return the count of sequences in the <cite>SequenceCollection</cite></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.alignment.StockholmAlignment.sequence_length.html#skbio.alignment.StockholmAlignment.sequence_length" title="skbio.alignment.StockholmAlignment.sequence_length"><tt class="xref py py-obj docutils literal"><span class="pre">sequence_length</span></tt></a>()</td>
+<td>Return the number of positions in Alignment</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.alignment.StockholmAlignment.sequence_lengths.html#skbio.alignment.StockholmAlignment.sequence_lengths" title="skbio.alignment.StockholmAlignment.sequence_lengths"><tt class="xref py py-obj docutils literal"><span class="pre">sequence_lengths</span></tt></a>()</td>
+<td>Return lengths of the sequences in the <cite>SequenceCollection</cite></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.alignment.StockholmAlignment.start_end_positions.html#skbio.alignment.StockholmAlignment.start_end_positions" title="skbio.alignment.StockholmAlignment.start_end_positions"><tt class="xref py py-obj docutils literal"><span class="pre">start_end_positions</span></tt></a>()</td>
+<td>Returns the (start, end) positions for each aligned sequence.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.alignment.StockholmAlignment.subalignment.html#skbio.alignment.StockholmAlignment.subalignment" title="skbio.alignment.StockholmAlignment.subalignment"><tt class="xref py py-obj docutils literal"><span class="pre">subalignment</span></tt></a>([seqs_to_keep,&nbsp;...])</td>
+<td>Returns new <cite>Alignment</cite> that is a subset of the current <cite>Alignment</cite></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.alignment.StockholmAlignment.toFasta.html#skbio.alignment.StockholmAlignment.toFasta" title="skbio.alignment.StockholmAlignment.toFasta"><tt class="xref py py-obj docutils literal"><span class="pre">toFasta</span></tt></a>()</td>
+<td>Return fasta-formatted string representing the <cite>SequenceCollection</cite></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.alignment.StockholmAlignment.to_fasta.html#skbio.alignment.StockholmAlignment.to_fasta" title="skbio.alignment.StockholmAlignment.to_fasta"><tt class="xref py py-obj docutils literal"><span class="pre">to_fasta</span></tt></a>()</td>
+<td>Return fasta-formatted string representing the <cite>SequenceCollection</cite></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.alignment.StockholmAlignment.to_file.html#skbio.alignment.StockholmAlignment.to_file" title="skbio.alignment.StockholmAlignment.to_file"><tt class="xref py py-obj docutils literal"><span class="pre">to_file</span></tt></a>(out_f)</td>
+<td>Save the alignment to file in text format.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.alignment.StockholmAlignment.to_phylip.html#skbio.alignment.StockholmAlignment.to_phylip" title="skbio.alignment.StockholmAlignment.to_phylip"><tt class="xref py py-obj docutils literal"><span class="pre">to_phylip</span></tt></a>([map_labels,&nbsp;label_prefix])</td>
+<td>Return phylip-formatted string representing the <cite>SequenceCollection</cite></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.alignment.StockholmAlignment.upper.html#skbio.alignment.StockholmAlignment.upper" title="skbio.alignment.StockholmAlignment.upper"><tt class="xref py py-obj docutils literal"><span class="pre">upper</span></tt></a>()</td>
+<td>Converts all sequences to uppercase</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+  
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014--, scikit-bio development team.<br/>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.2.2.<br/>
+    </p>
+  </div>
+</footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
+  </body>
+</html>

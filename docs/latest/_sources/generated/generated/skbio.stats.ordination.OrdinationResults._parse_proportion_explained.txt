@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.stats.ordination.OrdinationResults._parse_proportion_explained
+====================================================================
+
+.. currentmodule:: skbio.stats.ordination
+
+.. automethod:: OrdinationResults._parse_proportion_explained

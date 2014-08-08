@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.core.alignment.StockholmAlignment._parse_gf_info
-======================================================
-
-.. currentmodule:: skbio.core.alignment
-
-.. automethod:: StockholmAlignment._parse_gf_info

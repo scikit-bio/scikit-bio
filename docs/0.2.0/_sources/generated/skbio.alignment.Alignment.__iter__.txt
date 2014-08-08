@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.Alignment.__iter__
+==================================
+
+.. currentmodule:: skbio.alignment
+
+.. automethod:: Alignment.__iter__

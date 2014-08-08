@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.tree.CompressedTrie.__subclasshook__
+==========================================
+
+.. currentmodule:: skbio.tree
+
+.. automethod:: CompressedTrie.__subclasshook__

@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.core.alignment.StockholmAlignment.get_seq
-===============================================
-
-.. currentmodule:: skbio.core.alignment
-
-.. automethod:: StockholmAlignment.get_seq

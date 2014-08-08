@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.GeneticCode.translate_six_frames
+===============================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: GeneticCode.translate_six_frames

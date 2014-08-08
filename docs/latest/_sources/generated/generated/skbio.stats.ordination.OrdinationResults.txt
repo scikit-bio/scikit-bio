@@ -1,0 +1,32 @@
+skbio.stats.ordination.OrdinationResults
+========================================
+
+.. currentmodule:: skbio.stats.ordination
+
+.. autoclass:: OrdinationResults
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         OrdinationResults.__format__
+         OrdinationResults.__init__
+         OrdinationResults.__new__
+         OrdinationResults.__reduce__
+         OrdinationResults.__reduce_ex__
+         OrdinationResults.__sizeof__
+         OrdinationResults.__subclasshook__
+         OrdinationResults._check_empty_line
+         OrdinationResults._parse_biplot
+         OrdinationResults._parse_coords
+         OrdinationResults._parse_eigvals
+         OrdinationResults._parse_proportion_explained
+         OrdinationResults.from_file
+         OrdinationResults.to_file
+
+
+
+   
+

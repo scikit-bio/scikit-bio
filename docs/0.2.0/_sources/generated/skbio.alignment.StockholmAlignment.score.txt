@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.StockholmAlignment.score
+========================================
+
+.. currentmodule:: skbio.alignment
+
+.. automethod:: StockholmAlignment.score

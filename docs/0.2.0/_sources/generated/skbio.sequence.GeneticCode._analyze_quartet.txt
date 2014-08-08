@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.GeneticCode._analyze_quartet
+===========================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: GeneticCode._analyze_quartet

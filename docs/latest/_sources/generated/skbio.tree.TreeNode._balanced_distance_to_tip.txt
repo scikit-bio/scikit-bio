@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.tree.TreeNode._balanced_distance_to_tip
+=============================================
+
+.. currentmodule:: skbio.tree
+
+.. automethod:: TreeNode._balanced_distance_to_tip

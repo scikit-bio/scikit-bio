@@ -1,0 +1,6 @@
+skbio.stats.distance.bioenv
+===========================
+
+.. currentmodule:: skbio.stats.distance
+
+.. autofunction:: bioenv

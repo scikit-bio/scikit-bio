@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.Alignment.majority_consensus
+============================================
+
+.. currentmodule:: skbio.alignment
+
+.. automethod:: Alignment.majority_consensus

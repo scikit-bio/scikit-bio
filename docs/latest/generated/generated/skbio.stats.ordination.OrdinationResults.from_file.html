@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>skbio.stats.ordination.OrdinationResults.from_file &mdash; scikit-bio 0.2.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/style.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/bootswatch-3.1.0/united/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.2.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/copybutton.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-sphinx.js"></script>
+    <link rel="top" title="scikit-bio 0.2.0 documentation" href="../../index.html" />
+    <link rel="up" title="skbio.stats.ordination.OrdinationResults" href="skbio.stats.ordination.OrdinationResults.html" />
+    <link rel="next" title="skbio.stats.ordination.OrdinationResults.to_file" href="skbio.stats.ordination.OrdinationResults.to_file.html" />
+    <link rel="prev" title="skbio.stats.ordination.OrdinationResults" href="skbio.stats.ordination.OrdinationResults.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body>
+  
+  <a href="https://github.com/biocore/scikit-bio"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../index.html">
+          scikit-bio docs</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.2.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            <li class="divider-vertical"></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../alignment.html">Sequence collections and alignments (<tt class="docutils literal"><span class="pre">skbio.alignment</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sequence.html">Biological sequences (<tt class="docutils literal"><span class="pre">skbio.sequence</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tree.html">Tree representations (<tt class="docutils literal"><span class="pre">skbio.tree</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../workflow.html">Constructing workflows (<tt class="docutils literal"><span class="pre">skbio.workflow</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../draw.html">Visualizations (<tt class="docutils literal"><span class="pre">skbio.draw</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../format.sequences.html">Format biological sequences (<tt class="docutils literal"><span class="pre">skbio.format.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../diversity.html">Diversity calculations (<tt class="docutils literal"><span class="pre">skbio.diversity</span></tt>)</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../stats.html">Statistics (<tt class="docutils literal"><span class="pre">skbio.stats</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../parse.sequences.html">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../util.html">Utility functionality (<tt class="docutils literal"><span class="pre">skbio.util</span></tt>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../development/py3.html">Supporting Python 2 and Python 3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/coding_guidelines.html">Coding guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/new_module.html">Adding a new module to skbio</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">skbio.stats.ordination.OrdinationResults.from_file</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      
+  <div class="section" id="skbio-stats-ordination-ordinationresults-from-file">
+<h1>skbio.stats.ordination.OrdinationResults.from_file<a class="headerlink" href="#skbio-stats-ordination-ordinationresults-from-file" title="Permalink to this headline">¶</a></h1>
+<dl class="classmethod">
+<dt id="skbio.stats.ordination.OrdinationResults.from_file">
+<em class="property">classmethod </em><tt class="descclassname">OrdinationResults.</tt><tt class="descname">from_file</tt><big>(</big><em>ord_res_f</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.2.0/skbio/stats/ordination/_base.py#L55"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.stats.ordination.OrdinationResults.from_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load ordination results from text file.</p>
+<p>Creates a <cite>OrdinationResults</cite> instance from serialized results
+stored as text.</p>
+<p><cite>ord_res_f</cite> must be a file-like object containing text.</p>
+<p>The ord_res_f format should look like:</p>
+<div class="highlight-python"><div class="highlight"><pre>Eigvals&lt;tab&gt;2
+0.096&lt;tab&gt;0.040
+
+Proportion explained&lt;tab&gt;2
+0.512&lt;tab&gt;0.488
+
+Species&lt;tab&gt;3&lt;tab&gt;2
+Species1&lt;tab&gt;0.408&lt;tab&gt;0.069
+Species2&lt;tab&gt;-0.115&lt;tab&gt;-0.299
+Species3&lt;tab&gt;-0.309&lt;tab&gt;0.187
+
+Site&lt;tab&gt;3&lt;tab&gt;2
+Site1&lt;tab&gt;-0.848&lt;tab&gt;0.882
+Site2&lt;tab&gt;-0.220&lt;tab&gt;-1.344
+Site3&lt;tab&gt;1.666&lt;tab&gt;0.470
+
+Biplot&lt;tab&gt;4&lt;tab&gt;3
+0.422&lt;tab&gt;-0.559&lt;tab&gt;-0.713
+0.988&lt;tab&gt;0.150&lt;tab&gt;-0.011
+-0.556&lt;tab&gt;0.817&lt;tab&gt;0.147
+-0.404&lt;tab&gt;-0.905&lt;tab&gt;-0.127
+
+Site constraints&lt;tab&gt;3&lt;tab&gt;2
+Site1&lt;tab&gt;-0.848&lt;tab&gt;0.882
+Site2&lt;tab&gt;-0.220&lt;tab&gt;-1.344
+Site3&lt;tab&gt;1.666&lt;tab&gt;0.470
+</pre></div>
+</div>
+<p>If a given result attribute is not present (e.g. Biplot), it should be
+still defined and declare its dimensions as 0:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">Biplot</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">0</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">0</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>ord_res_f</strong> : iterable of str or str</p>
+<blockquote>
+<div><p>Iterable of strings (e.g., open file handle, file-like object, list
+of strings, etc.) or a file path (a string) containing the
+serialized ordination results.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">OrdinationResults</p>
+<blockquote>
+<div><p>Instance of type <cite>cls</cite> containing the parsed contents of
+<cite>ord_res_f</cite>.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><strong>ValueError</strong></p>
+<blockquote>
+<div><p>if the shapes of the different sections of the file are not
+consistent</p>
+</div></blockquote>
+<p><strong>FileFormatError</strong></p>
+<blockquote class="last">
+<div><p>if the format of the file is not recognized</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Assume we have the following tab-delimited text file storing the
+ordination results:</p>
+<div class="highlight-python"><div class="highlight"><pre>Eigvals\t2
+0.0961330159181\t0.0409418140138
+
+Proportion explained\t0
+
+Species\t3\t2
+Species1\t0.408869425742\t0.0695518116298
+Species2\t-0.1153860437\t-0.299767683538
+Species3\t-0.309967102571\t0.187391917117
+
+Site\t3\t2
+Site1\t-0.848956053187\t0.882764759014
+Site2\t-0.220458650578\t-1.34482000302
+Site3\t1.66697179591\t0.470324389808
+
+Biplot\t0\t0
+
+Site constraints\t0\t0
+</pre></div>
+</div>
+<p>Load the ordination results from the file:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">StringIO</span> <span class="kn">import</span> <span class="n">StringIO</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.stats.ordination</span> <span class="kn">import</span> <span class="n">OrdinationResults</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">or_f</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">(</span><span class="s">&quot;Eigvals</span><span class="se">\t</span><span class="s">2</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="gp">... </span>                <span class="s">&quot;0.0961330159181</span><span class="se">\t</span><span class="s">0.0409418140138</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="gp">... </span>                <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="gp">... </span>                <span class="s">&quot;Proportion explained</span><span class="se">\t</span><span class="s">0</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="gp">... </span>                <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="gp">... </span>                <span class="s">&quot;Species</span><span class="se">\t</span><span class="s">3</span><span class="se">\t</span><span class="s">2</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="gp">... </span>                <span class="s">&quot;Species1</span><span class="se">\t</span><span class="s">0.408869425742</span><span class="se">\t</span><span class="s">0.0695518116298</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="gp">... </span>                <span class="s">&quot;Species2</span><span class="se">\t</span><span class="s">-0.1153860437</span><span class="se">\t</span><span class="s">-0.299767683538</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="gp">... </span>                <span class="s">&quot;Species3</span><span class="se">\t</span><span class="s">-0.309967102571</span><span class="se">\t</span><span class="s">0.187391917117</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="gp">... </span>                <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="gp">... </span>                <span class="s">&quot;Site</span><span class="se">\t</span><span class="s">3</span><span class="se">\t</span><span class="s">2</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="gp">... </span>                <span class="s">&quot;Site1</span><span class="se">\t</span><span class="s">-0.848956053187</span><span class="se">\t</span><span class="s">0.882764759014</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="gp">... </span>                <span class="s">&quot;Site2</span><span class="se">\t</span><span class="s">-0.220458650578</span><span class="se">\t</span><span class="s">-1.34482000302</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="gp">... </span>                <span class="s">&quot;Site3</span><span class="se">\t</span><span class="s">1.66697179591</span><span class="se">\t</span><span class="s">0.470324389808</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="gp">... </span>                <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="gp">... </span>                <span class="s">&quot;Biplot</span><span class="se">\t</span><span class="s">0</span><span class="se">\t</span><span class="s">0</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="gp">... </span>                <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="gp">... </span>                <span class="s">&quot;Site constraints</span><span class="se">\t</span><span class="s">0</span><span class="se">\t</span><span class="s">0</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ord_res</span> <span class="o">=</span> <span class="n">OrdinationResults</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">or_f</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+  
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014--, scikit-bio development team.<br/>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.2.2.<br/>
+    </p>
+  </div>
+</footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
+  </body>
+</html>

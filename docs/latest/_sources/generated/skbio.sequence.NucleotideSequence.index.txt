@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.NucleotideSequence.index
+=======================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: NucleotideSequence.index
