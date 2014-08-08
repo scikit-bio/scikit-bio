@@ -10,7 +10,10 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 from scipy.stats import pearsonr
+import sys
 
+if sys.hexversion > 0x03000000:
+    xrange = range
 
 def hommola_cospeciation(host_dist, par_dist, interaction, permutations):
     """Performs a cospeciation test
