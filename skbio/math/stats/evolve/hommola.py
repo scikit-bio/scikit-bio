@@ -13,6 +13,8 @@ import numpy as np
 from scipy.stats import pearsonr
 import sys
 
+from skbio.core.distance import DistanceMatrix
+
 if sys.hexversion > 0x03000000:
     xrange = range
 
@@ -26,9 +28,9 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations):
 
     Parameters
     ----------
-    host_dist : numpy.array
+    host_dist : array_like or DistanceMatrix 
         Symmetric matrix of m x m pairwise distances between hosts
-    par_dist : numpy.array
+    par_dist : array_like or DistanceMatrix
         Symmetric matrix of n x n pairwise distances between parasites
     interaction : numpy.array
         n x m binary matrix of parasite x host interactions
@@ -86,23 +88,25 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations):
 
     # Generate lists of host and symbiont edges, such that the index
     # of the lists represents an edge connecting the host to the parasite.
+    host_dist = DistanceMatrix(host_dist)
+    par_dist = DistanceMatrix(par_dist)
 
     pars, hosts = np.nonzero(interaction)
     pars_k_labels, pars_t_labels = _gen_lists(pars)
     hosts_k_labels, hosts_t_labels = _gen_lists(hosts)
 
     # get a vector of pairwise distances for each interaction edge
-    x = _get_dist(hosts_k_labels, hosts_t_labels, host_dist,
+    x = _get_dist(hosts_k_labels, hosts_t_labels, host_dist.data,
                   np.arange(interaction.shape[1]))
-    y = _get_dist(pars_k_labels, pars_t_labels, par_dist,
+    y = _get_dist(pars_k_labels, pars_t_labels, par_dist.data,
                   np.arange(interaction.shape[0]))
 
     # calculate the observed correlation coefficient for this host/symbionts
     r = pearsonr(x, y)[0]
 
     # now do permutaitons. Initialize index lists of the appropriate size.
-    mp = np.arange(par_dist.shape[1])
-    mh = np.arange(host_dist.shape[1])
+    mp = np.arange(par_dist.data.shape[1])
+    mh = np.arange(host_dist.data.shape[1])
     below = 0
 
     perm_stats = []  # initialize list of shuffled correlation vals
@@ -115,8 +119,8 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations):
         np.random.shuffle(mh)
 
         # Get pairwise distances in shuffled order
-        y_p = _get_dist(pars_k_labels, pars_t_labels, par_dist, mp)
-        x_p = _get_dist(hosts_k_labels, hosts_t_labels, host_dist, mh)
+        y_p = _get_dist(pars_k_labels, pars_t_labels, par_dist.data, mp)
+        x_p = _get_dist(hosts_k_labels, hosts_t_labels, host_dist.data, mh)
 
         # calculate shuffled correlation.
         # If greater than observed value, iterate counter below.
