@@ -1,78 +1,3 @@
-#!/usr/bin/env python
-r"""
-Genetic Code (:mod:`skbio.genetic_code`)
-========================================
-
-.. currentmodule:: skbio.genetic_code
-
-This module defines the ``GeneticCode`` class, which represents an immutable
-object that translates RNA or DNA strings to amino acid sequences.
-
-
-Classes
--------
-
-.. autosummary::
-   :toctree: generated/
-
-   GeneticCode
-
-Exceptions
-----------
-
-.. autosummary::
-   :toctree: generated/
-
-   GeneticCodeError
-   GeneticCodeInitError
-   InvalidCodonError
-
-Examples
---------
-
-Creating and using a ``GeneticCode`` object
-
->>> from skbio.genetic_code import GeneticCodes
->>> from pprint import pprint
->>> sgc = GeneticCodes[1]
->>> sgc
-GeneticCode(FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG)
->>> sgc['UUU'] == 'F'
-True
->>> sgc['TTT'] == 'F'
-True
->>> sgc['F'] == ['TTT', 'TTC']          #in arbitrary order
-True
->>> sgc['*'] == ['TAA', 'TAG', 'TGA']   #in arbitrary order
-True
-
-Retrieving the anticodons of the object
-
->>> pprint(sgc.anticodons)
-{'*': ['TTA', 'CTA', 'TCA'],
- 'A': ['AGC', 'GGC', 'TGC', 'CGC'],
- 'C': ['ACA', 'GCA'],
- 'D': ['ATC', 'GTC'],
- 'E': ['TTC', 'CTC'],
- 'F': ['AAA', 'GAA'],
- 'G': ['ACC', 'GCC', 'TCC', 'CCC'],
- 'H': ['ATG', 'GTG'],
- 'I': ['AAT', 'GAT', 'TAT'],
- 'K': ['TTT', 'CTT'],
- 'L': ['TAA', 'CAA', 'AAG', 'GAG', 'TAG', 'CAG'],
- 'M': ['CAT'],
- 'N': ['ATT', 'GTT'],
- 'P': ['AGG', 'GGG', 'TGG', 'CGG'],
- 'Q': ['TTG', 'CTG'],
- 'R': ['ACG', 'GCG', 'TCG', 'CCG', 'TCT', 'CCT'],
- 'S': ['AGA', 'GGA', 'TGA', 'CGA', 'ACT', 'GCT'],
- 'T': ['AGT', 'GGT', 'TGT', 'CGT'],
- 'V': ['AAC', 'GAC', 'TAC', 'CAC'],
- 'W': ['CCA'],
- 'Y': ['ATA', 'GTA']}
-
-"""
-
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -80,11 +5,12 @@ Retrieving the anticodons of the object
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
+
 import re
 
 from collections import defaultdict
 
-from skbio.sequence import Protein
+from skbio.sequence import Protein, InvalidCodonError, GeneticCodeInitError
 
 # py3k compatibility
 try:
@@ -93,21 +19,6 @@ except ImportError:
     maketrans = str.maketrans
 
 _dna_trans = maketrans('TCAG', 'AGTC')
-
-
-class GeneticCodeError(Exception):
-    """Base class exception used by the GeneticCode class"""
-    pass
-
-
-class GeneticCodeInitError(ValueError, GeneticCodeError):
-    """Exception raised by the GeneticCode class upon a bad initialization"""
-    pass
-
-
-class InvalidCodonError(KeyError, GeneticCodeError):
-    """Exception raised by the GeneticCode class if __getitem__ fails"""
-    pass
 
 
 def _simple_rc(seq):
@@ -168,7 +79,7 @@ class GeneticCode(object):
 
     Examples
     --------
-    >>> from skbio.genetic_code import GeneticCode
+    >>> from skbio.sequence import GeneticCode
     >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSR'
     ...                   'RVVVVAAAADDEEGGGG')
 
@@ -385,7 +296,7 @@ class GeneticCode(object):
 
         Examples
         --------
-        >>> from skbio.genetic_code import GeneticCode
+        >>> from skbio.sequence import GeneticCode
         >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSS'
         ...                   'RRVVVVAAAADDEEGGGG')
         >>> sgc.translate('AUGCAUGACUUUUGA', 1)
@@ -422,8 +333,7 @@ class GeneticCode(object):
 
         Examples
         --------
-        >>> from skbio.genetic_code import GeneticCode
-        >>> from skbio.sequence import DNA
+        >>> from skbio.sequence import GeneticCode, DNA
         >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSS'
         ...                   'RRVVVVAAAADDEEGGGG')
         >>> seq = DNA('ATGCTAACATAAA')
@@ -458,8 +368,7 @@ class GeneticCode(object):
 
         Examples
         --------
-        >>> from skbio.genetic_code import GeneticCode
-        >>> from skbio.sequence import RNA
+        >>> from skbio.sequence import GeneticCode, RNA
         >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSS'
         ...                   'RRVVVVAAAADDEEGGGG')
         >>> results = sgc.translate_six_frames(RNA('AUGCUAACAUAAA'))
@@ -499,7 +408,7 @@ class GeneticCode(object):
 
         Examples
         --------
-        >>> from skbio.genetic_code import GeneticCode
+        >>> from skbio.sequence import GeneticCode
         >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSS'
         ...                   'RRVVVVAAAADDEEGGGG')
         >>> sgc.is_start('ATG')
@@ -526,7 +435,7 @@ class GeneticCode(object):
 
         Examples
         --------
-        >>> from skbio.genetic_code import GeneticCode
+        >>> from skbio.sequence import GeneticCode
         >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSS'
         ...                   'RRVVVVAAAADDEEGGGG')
         >>> sgc.is_stop('UAA')
@@ -555,7 +464,7 @@ class GeneticCode(object):
 
         Examples
         --------
-        >>> from skbio.genetic_code import GeneticCode
+        >>> from skbio.sequence import GeneticCode
         >>> from pprint import pprint
         >>> sgc = GeneticCode('FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIMMTTTTNNKKSS*'
         ...                   '*VVVVAAAADDEEGGGG')
@@ -576,7 +485,7 @@ class GeneticCode(object):
         return changes
 
 
-NCBIGeneticCodeData = [GeneticCode(*data) for data in [
+_ncbi_genetic_code_data = [
     [
         'FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG',
         1,
@@ -679,12 +588,32 @@ NCBIGeneticCodeData = [GeneticCode(*data) for data in [
         23,
         'Thraustochytrium Mitochondrial',
     ],
-]]
+]
 
-# build dict of GeneticCodes keyed by ID (as int, not str)
-GeneticCodes = dict([(i.id, i) for i in NCBIGeneticCodeData])
-# add str versions for convenience
-for key, value in list(GeneticCodes.items()):
-    GeneticCodes[str(key)] = value
 
-DEFAULT = GeneticCodes[1]
+def genetic_code(*id):
+    """``skbio.sequence.GeneticCode`` factory given an optional id.
+
+    Parameters
+    ----------
+    id : int or str optional
+        Indicates the ``skbio.sequence.GeneticCode`` to return. Must be in the
+        range of [1, 23] inclusive. If `id` is not provided, the Standard
+        Nuclear genetic code will be returned.
+
+    Returns
+    -------
+    skbio.sequence.GeneticCode
+
+    """
+    key = 1
+    if len(id) == 1:
+        key = int(id[0])
+    if len(id) > 1:
+        raise TypeError('genetic_code takes 0 or 1 arguments (%d given)'
+                        % len(id))
+    for n in _ncbi_genetic_code_data:
+        if n[1] == key:
+            return GeneticCode(*n)
+
+    raise ValueError('Genetic code could not be found for %d.' % id)
