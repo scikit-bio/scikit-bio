@@ -16,7 +16,7 @@ from warnings import warn
 import numpy as np
 from scipy.stats import entropy
 
-from skbio.distance import DistanceMatrix
+from skbio import DistanceMatrix
 from skbio.util.io import open_file
 from ._exception import SequenceCollectionError, StockholmParseError
 
@@ -353,7 +353,7 @@ class SequenceCollection(object):
 
         Returns
         -------
-        skbio.distance.DistanceMatrix
+        skbio.DistanceMatrix
             Matrix containing the distances between all pairs of sequences.
 
         Raises
@@ -364,7 +364,7 @@ class SequenceCollection(object):
 
         See Also
         --------
-        skbio.distance.DistanceMatrix
+        skbio.DistanceMatrix
         scipy.spatial.distance.hamming
 
         Examples
@@ -872,7 +872,7 @@ class Alignment(SequenceCollection):
 
         Returns
         -------
-        skbio.distance.DistanceMatrix
+        skbio.DistanceMatrix
             Matrix containing the distances between all pairs of sequences.
 
         Raises
@@ -883,7 +883,7 @@ class Alignment(SequenceCollection):
 
         See Also
         --------
-        skbio.distance.DistanceMatrix
+        skbio.DistanceMatrix
         scipy.spatial.distance.hamming
 
         Examples

@@ -562,7 +562,7 @@ class BiologicalSequence(Sequence):
         --------
         fraction_diff
         fraction_same
-        skbio.distance.DistanceMatrix
+        skbio.DistanceMatrix
         scipy.spatial.distance.hamming
 
         Examples

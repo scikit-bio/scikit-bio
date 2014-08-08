@@ -16,7 +16,7 @@ import pandas as pd
 import scipy.misc
 from scipy.stats import pearsonr, spearmanr
 
-from skbio.distance import DistanceMatrix
+from skbio.stats.distance import DistanceMatrix
 from skbio.stats import p_value_to_str
 
 

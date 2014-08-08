@@ -257,7 +257,7 @@ Some pointers
 
 - *Always include an* ``__init__.py`` *file in your tests directory*. This is required for the module to be included when the package is built and installed via ``setup.py``.
 
-- *Always import from a minimally deep API target*. That means you would use ``from skbio import DistanceMatrix`` instead of ``from skbio.distance import DistanceMatrix``. This allows us prevent most cases of accidental regression in our API.
+- *Always import from a minimally deep API target*. That means you would use ``from skbio import DistanceMatrix`` instead of ``from skbio.stats.distance import DistanceMatrix``. This allows us prevent most cases of accidental regression in our API.
 
 - *Use* ``numpy.testing`` *if you are doing anything with floating point numbers, arrays or permutations* (use ``numpy.testing.assert_almost_equal``). Do *not* try to compare floating point numbers using ``assertEqual`` if you value your sanity.
 

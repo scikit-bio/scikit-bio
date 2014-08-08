@@ -13,7 +13,6 @@ API Reference
 
    alignment
    sequence
-   distance
    tree
    workflow
    draw

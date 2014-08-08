@@ -61,7 +61,7 @@ else:
 from skbio.sequence import (
     BiologicalSequence, NucleotideSequence, DNA, DNASequence, RNA, RNASequence,
     Protein, ProteinSequence)
-from skbio.distance import DistanceMatrix
+from skbio.stats.distance import DistanceMatrix
 from skbio.alignment import (
     local_pairwise_align_ssw, SequenceCollection, Alignment)
 from skbio.tree import (
