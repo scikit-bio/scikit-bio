@@ -86,8 +86,7 @@ class ParseQseqTests(object):
         self.assertTrue(record.filtered)
 
     def test_two_seq(self):
-        """parse_qseq should return two records as tuple.
-        """
+        """parse_qseq should return two records as tuple."""
         f = list(parse_qseq(self.two_seq, phred_offset=64))
         self.assertEqual(len(f), 2)
         a, b = f
@@ -125,8 +124,7 @@ class ParseQseqTests(object):
         self.assertFalse(record.filtered)
 
     def test_phred33(self):
-        """parse_qseq should return one record as tuple.
-        """
+        """parse_qseq should return one record as tuple."""
         f = list(parse_qseq(self.one_seq, phred_offset=33))
         self.assertEqual(len(f), 1)
         a = f[0]
@@ -146,6 +144,11 @@ class ParseQseqTests(object):
         self.assertEqual(record.index, 0)
         self.assertEqual(record.read, 1)
         self.assertTrue(record.filtered)
+
+    def test_phred_offset_error(self):
+        """parse_qseq should raise ValueError with invalid phred offset."""
+        with self.assertRaises(ValueError):
+            list(parse_qseq(self.one_seq, phred_offset=99))
 
 
 class ParseQseqTestsInputIsIterable(IterableData, ParseQseqTests, TestCase):
