@@ -54,7 +54,7 @@ def parse_qseq(infile, phred_offset=33):
 
     We can parse this as follows:
 
-    >>> from skbio.parse.sequences import parse_qseq
+    >>> from skbio import parse_qseq
     >>> for seq_id, seq, qual, record in parse_qseq(qseq_f, phred_offset=64):
     ...     print(seq_id)
     ...     print(seq)
