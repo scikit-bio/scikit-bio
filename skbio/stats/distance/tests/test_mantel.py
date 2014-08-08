@@ -15,9 +15,9 @@ import pandas as pd
 from pandas.util.testing import assert_frame_equal
 
 from skbio import DistanceMatrix
-from skbio.distance import DissimilarityMatrixError, DistanceMatrixError
-from skbio.stats.distance import mantel, pwmantel
-from skbio.util.testing import get_data_path
+from skbio.stats.distance import (DissimilarityMatrixError,
+                                  DistanceMatrixError, mantel, pwmantel)
+from skbio.util import get_data_path
 
 
 class MantelTests(TestCase):

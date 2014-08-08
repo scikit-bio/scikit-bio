@@ -7,7 +7,7 @@ As project size increases, consistency of the code base and documentation become
 * you can trust that the code that you're working with is sufficiently tested, and
 * names and interfaces are intuitive.
 
-**As scikit-bio is in pre-alpha release stage, our coding guidelines are presented here as a working draft. These guidelines are requirements for all code submitted to scikit-bio, but at this stage the guidelines themselves are malleable. If you disagree with something, or have a suggestion for something new to include, you should** `create an issue`_ **to initiate a discussion.**
+**As scikit-bio is in alpha, our coding guidelines are presented here as a working draft. These guidelines are requirements for all code submitted to scikit-bio, but at this stage the guidelines themselves are malleable. If you disagree with something, or have a suggestion for something new to include, you should** `create an issue`_ **to initiate a discussion.**
 
 .. _`create an issue`: https://github.com/biocore/scikit-bio/issues
 
@@ -257,7 +257,7 @@ Some pointers
 
 - *Always include an* ``__init__.py`` *file in your tests directory*. This is required for the module to be included when the package is built and installed via ``setup.py``.
 
-- *Always import from a minimally deep API target*. That means you would use ``from skbio import DistanceMatrix`` instead of ``from skbio.distance import DistanceMatrix``. This allows us prevent most cases of accidental regression in our API.
+- *Always import from a minimally deep API target*. That means you would use ``from skbio import DistanceMatrix`` instead of ``from skbio.stats.distance import DistanceMatrix``. This allows us prevent most cases of accidental regression in our API.
 
 - *Use* ``numpy.testing`` *if you are doing anything with floating point numbers, arrays or permutations* (use ``numpy.testing.assert_almost_equal``). Do *not* try to compare floating point numbers using ``assertEqual`` if you value your sanity.
 

@@ -5,17 +5,32 @@ Utility functionality (:mod:`skbio.util`)
 .. currentmodule:: skbio.util
 
 This package provides general exception/warning definitions used throughout
-scikit-bio, as well as several subpackages containing various utility
-functionality, including I/O and unit-testing convenience functions.
+scikit-bio, as well as various utility functionality, including I/O and
+unit-testing convenience functions.
 
-Subpackages
------------
+Testing functionality
+---------------------
+
+Common functionality to support testing in skbio.
 
 .. autosummary::
    :toctree: generated/
 
-   misc
-   testing
+   get_data_path
+
+Miscellaneous functionality
+---------------------------
+
+Generally useful functions that don't fit in more specific locations.
+
+.. autosummary::
+   :toctree: generated/
+
+   create_dir
+   flatten
+   remove_files
+   safe_md5
+   is_casava_v180_or_later
 
 Warnings
 --------
@@ -36,8 +51,13 @@ Warnings
 # -----------------------------------------------------------------------------
 
 from ._warning import EfficiencyWarning
+from ._misc import (create_dir, flatten, remove_files, safe_md5,
+                    is_casava_v180_or_later)
+from ._testing import get_data_path
 
-__all__ = ['EfficiencyWarning']
+__all__ = ['EfficiencyWarning',
+           'create_dir', 'flatten', 'remove_files', 'safe_md5',
+           'is_casava_v180_or_later', 'get_data_path']
 
 from numpy.testing import Tester
 test = Tester().test

@@ -13,11 +13,9 @@ API Reference
 
    alignment
    sequence
-   distance
-   genetic_code
    tree
    workflow
-   draw.distributions
+   draw
    format.sequences
    diversity
    stats

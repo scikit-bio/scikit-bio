@@ -8,7 +8,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-__version__ = "0.1.4-dev"
+__version__ = "0.2.0-dev"
 
 import os
 from setuptools import find_packages, setup
@@ -45,9 +45,9 @@ USE_CYTHON = os.environ.get('USE_CYTHON', False)
 ext = '.pyx' if USE_CYTHON else '.c'
 extensions = [Extension("skbio.stats._subsample._subsample",
                         ["skbio/stats/_subsample/_subsample" + ext]),
-              Extension("skbio.alignment.ssw.ssw_wrapper",
-                        ["skbio/alignment/ssw/ssw_wrapper" + ext,
-                         "skbio/alignment/ssw/ssw.c"])]
+              Extension("skbio.alignment._ssw._ssw_wrapper",
+                        ["skbio/alignment/_ssw/_ssw_wrapper" + ext,
+                         "skbio/alignment/_ssw/ssw.c"])]
 
 if USE_CYTHON:
     from Cython.Build import cythonize
@@ -73,7 +73,6 @@ setup(name='scikit-bio',
                       'doc': ["Sphinx >= 1.2.2", "sphinx-bootstrap-theme"]},
       classifiers=classifiers,
       package_data={
-          'skbio.tests': ['data/*.txt'],
           'skbio.stats.tests': ['data/*'],
           'skbio.stats.distance.tests': ['data/*'],
           'skbio.stats.ordination.tests': ['data/*'],

@@ -13,6 +13,7 @@ from future.builtins import zip
 from skbio.workflow import Workflow, not_none, method, requires
 from .fasta import parse_fasta, parse_qual
 from .fastq import parse_fastq
+from .qseq import parse_qseq
 
 
 def _has_qual(item):
@@ -30,9 +31,9 @@ class SequenceIterator(Workflow):
     in place. For instance, to reverse sequences, you could pass in the
     following function:
 
-    def reverse(st):
-        st['Sequence']= st['Sequence'][::-1]
-        st['Qual'] = st['Qual'][::-1] if st['Qual'] is not None else None
+    >>> def reverse(st):
+    ...    st['Sequence']= st['Sequence'][::-1]
+    ...    st['Qual'] = st['Qual'][::-1] if st['Qual'] is not None else None
 
     as ``transform``. The primary intention is to support reverse complementing
     of sequences.
@@ -40,10 +41,10 @@ class SequenceIterator(Workflow):
     All subclasses of this object are expected to update the following in
     ``state``:
 
-        SequenceID : str, the sequence identifier
-        Sequence   : str, the sequence itself
-        QualID     : str or None, the quality ID (for completeness)
-        Qual       : np.array or None, the quality scores
+        * SequenceID : str, the sequence identifier
+        * Sequence   : str, the sequence itself
+        * QualID     : str or None, the quality ID (for completeness)
+        * Qual       : np.array or None, the quality scores
 
     ``state`` is preallocated a single time to avoid repetitive allocations.
     What this means is that the object being yielded is updated in place. If
@@ -196,6 +197,41 @@ class FastqIterator(SequenceIterator):
     def _fastq_gen(self, fastq_gens):
         """Yield fastq data"""
         for (seq_id, seq, qual) in fastq_gens:
+            self.state['SequenceID'] = seq_id
+            self.state['Sequence'] = seq
+            self.state['QualID'] = seq_id
+            self.state['Qual'] = qual
+
+            # as we're updating state in place and effectively circumventing
+            # Workflow.initialize_state, we do not need to yield anything
+            yield None
+
+
+class QseqIterator(SequenceIterator):
+    """Populate state based on qseq sequence."""
+    def __init__(self, *args, **kwargs):
+        if 'phred_offset' in kwargs:
+            self._fpo = kwargs.pop('phred_offset')
+        else:
+            # force to an offset of 33
+            self._fpo = 33
+
+        super(QseqIterator, self).__init__(*args, **kwargs)
+
+    def _gen(self):
+        """Construct internal iterators"""
+        # construct qseq generators
+        qseq_gens = chain(*[parse_qseq(f,  phred_offset=self._fpo)
+                            for f in self.seq])
+
+        gen = self._qseq_gen(qseq_gens)
+
+        return gen
+
+    def _qseq_gen(self, qseq_gens):
+        """Yield qseq data"""
+        _iter = qseq_gens
+        for (seq_id, seq, qual, record) in _iter:
             self.state['SequenceID'] = seq_id
             self.state['Sequence'] = seq
             self.state['QualID'] = seq_id

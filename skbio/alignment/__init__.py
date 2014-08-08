@@ -37,12 +37,20 @@ Slow (i.e., educational-purposes only) Alignment Algorithms
 .. autosummary::
    :toctree: generated/
 
-   pairwise.global_pairwise_align_nucleotide
-   pairwise.global_pairwise_align_protein
-   pairwise.global_pairwise_align
-   pairwise.local_pairwise_align_nucleotide
-   pairwise.local_pairwise_align_protein
-   pairwise.local_pairwise_align
+   global_pairwise_align_nucleotide
+   global_pairwise_align_protein
+   global_pairwise_align
+   local_pairwise_align_nucleotide
+   local_pairwise_align_protein
+   local_pairwise_align
+
+General functionality
+---------------------
+
+.. autosummary::
+   :toctree: generated/
+
+    make_identity_substitution_matrix
 
 Exceptions
 ----------
@@ -167,7 +175,7 @@ Here we locally align a pair of protein sequences using gap open penalty
 of 11 and a gap extend penalty of 1 (in other words, it is much more
 costly to open a new gap than extend an existing one).
 
->>> from skbio.alignment.pairwise import local_pairwise_align_protein
+>>> from skbio.alignment import local_pairwise_align_protein
 >>> s1 = "HEAGAWGHEE"
 >>> s2 = "PAWHEAE"
 >>> r = local_pairwise_align_protein(s1, s2, 11, 1)
@@ -194,7 +202,7 @@ And we can view the score of the alignment using the ``score`` method:
 Similarly, we can perform global alignment of nucleotide sequences, and print
 the resulting alignment as fasta records:
 
->>> from skbio.alignment.pairwise import global_pairwise_align_nucleotide
+>>> from skbio.alignment import global_pairwise_align_nucleotide
 >>> s1 = "GCGTGCCTAAGGTATGCAAG"
 >>> s2 = "ACGTGCCTAGGTACGCAAG"
 >>> r = global_pairwise_align_nucleotide(s1, s2)
@@ -216,15 +224,24 @@ ACGTGCCTA-GGTACGCAAG
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from .alignment import Alignment, SequenceCollection, StockholmAlignment
-from .ssw.ssw_wrapper import (
+from ._alignment import Alignment, SequenceCollection, StockholmAlignment
+from ._pairwise import (
+    local_pairwise_align_nucleotide, local_pairwise_align_protein,
+    local_pairwise_align, global_pairwise_align_nucleotide,
+    global_pairwise_align_protein, global_pairwise_align,
+    make_identity_substitution_matrix
+)
+from ._ssw import (
     StripedSmithWaterman, local_pairwise_align_ssw, AlignmentStructure)
 from ._exception import SequenceCollectionError, StockholmParseError
 
 __all__ = ['Alignment', 'SequenceCollection', 'StockholmAlignment',
            'StripedSmithWaterman', 'AlignmentStructure',
            'local_pairwise_align_ssw', 'SequenceCollectionError',
-           'StockholmParseError']
+           'StockholmParseError', 'global_pairwise_align',
+           'global_pairwise_align_nucleotide', 'global_pairwise_align_protein',
+           'local_pairwise_align', 'local_pairwise_align_nucleotide',
+           'local_pairwise_align_protein', 'make_identity_substitution_matrix']
 
 from numpy.testing import Tester
 test = Tester().test

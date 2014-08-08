@@ -51,7 +51,7 @@ Exceptions
 Examples
 --------
 
->>> from skbio.tree import TreeNode
+>>> from skbio import TreeNode
 
 A new tree can be constructed from a Newick string. Newick is a common format
 used to represent tree objects within a file. Newick was part of the original
@@ -244,8 +244,8 @@ Create a new trie with a list of sequences
 # The full license is in the file COPYING.txt, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from .tree import TreeNode
-from .trie import CompressedTrie, fasta_to_pairlist
+from ._tree import TreeNode
+from ._trie import CompressedTrie, fasta_to_pairlist
 from ._nj import nj
 from ._majority_rule import majority_rule
 from ._exception import (TreeError, NoLengthError, DuplicateNodeError,

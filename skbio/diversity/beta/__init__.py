@@ -84,7 +84,7 @@ Create a table containing 7 OTUs and 6 samples:
    False
 
    Compute PCoA for both distance matrices, and then find the Procrustes
-   M-squared value that results from comparing the coordinate matrices:
+   M-squared value that results from comparing the coordinate matrices.
 
    >>> from skbio.stats.ordination import PCoA
    >>> bc_pc = PCoA(bc_dm).scores()
@@ -213,7 +213,7 @@ References
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from .base import pw_distances, pw_distances_from_table
+from ._base import pw_distances, pw_distances_from_table
 
 __all__ = ["pw_distances", "pw_distances_from_table"]
 

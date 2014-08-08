@@ -16,7 +16,7 @@ from nose.tools import (assert_equal, assert_almost_equal, assert_raises,
 
 from skbio.stats import subsample
 from skbio.diversity.alpha import lladser_pe, lladser_ci
-from skbio.diversity.alpha.lladser import (
+from skbio.diversity.alpha._lladser import (
     _expand_counts, _lladser_point_estimates,
     _get_interval_for_r_new_otus, _lladser_ci_series, _lladser_ci_from_r)
 

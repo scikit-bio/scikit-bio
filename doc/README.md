@@ -72,8 +72,8 @@ the scikit-bio docs.
 
 The easiest way to get started with documenting your code is to look at the
 docstrings in existing scikit-bio modules. A couple of modules to start with
-are ```skbio.sequence``` and ```skbio.distance```. Go ahead and look through
-those now. We've structured our docs in a similar way to
+are ```skbio.sequence``` and ```skbio.stats.distance```. Go ahead and look
+through those now. We've structured our docs in a similar way to
 [SciPy's documentation](http://docs.scipy.org/doc/scipy/reference/), so that
 may be another good place to look for examples.
 
