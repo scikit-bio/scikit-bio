@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function
 # ----------------------------------------------------------------------------
 
 __credits__ = "https://github.com/biocore/scikit-bio/graphs/contributors"
-__version__ = "0.1.4-dev"
+__version__ = "0.1.5"
 
 mottos = [
     # 03/15/2014
@@ -58,13 +58,13 @@ else:
     __doc__ = title + art + __doc__
 
 # imports included for convenience
-from skbio.core.sequence import (
+from skbio.sequence import (
     BiologicalSequence, NucleotideSequence, DNA, DNASequence, RNA, RNASequence,
     Protein, ProteinSequence)
-from skbio.core.distance import DistanceMatrix
-from skbio.core.alignment import (
+from skbio.stats.distance import DistanceMatrix
+from skbio.alignment import (
     local_pairwise_align_ssw, SequenceCollection, Alignment)
-from skbio.core.tree import (
+from skbio.tree import (
     TreeNode, nj)
 from skbio.parse.sequences import (
     parse_fasta, parse_fastq, parse_qual, parse_qseq, FastaIterator,

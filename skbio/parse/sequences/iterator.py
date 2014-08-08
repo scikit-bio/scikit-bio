@@ -10,7 +10,7 @@ from itertools import chain
 
 from future.builtins import zip
 
-from skbio.core.workflow import Workflow, not_none, method, requires
+from skbio.workflow import Workflow, not_none, method, requires
 from .fasta import parse_fasta, parse_qual
 from .fastq import parse_fastq
 from .qseq import parse_qseq
@@ -31,9 +31,9 @@ class SequenceIterator(Workflow):
     in place. For instance, to reverse sequences, you could pass in the
     following function:
 
-    def reverse(st):
-        st['Sequence']= st['Sequence'][::-1]
-        st['Qual'] = st['Qual'][::-1] if st['Qual'] is not None else None
+    >>> def reverse(st):
+    ...    st['Sequence']= st['Sequence'][::-1]
+    ...    st['Qual'] = st['Qual'][::-1] if st['Qual'] is not None else None
 
     as ``transform``. The primary intention is to support reverse complementing
     of sequences.
@@ -41,10 +41,10 @@ class SequenceIterator(Workflow):
     All subclasses of this object are expected to update the following in
     ``state``:
 
-        SequenceID : str, the sequence identifier
-        Sequence   : str, the sequence itself
-        QualID     : str or None, the quality ID (for completeness)
-        Qual       : np.array or None, the quality scores
+        * SequenceID : str, the sequence identifier
+        * Sequence   : str, the sequence itself
+        * QualID     : str or None, the quality ID (for completeness)
+        * Qual       : np.array or None, the quality scores
 
     ``state`` is preallocated a single time to avoid repetitive allocations.
     What this means is that the object being yielded is updated in place. If

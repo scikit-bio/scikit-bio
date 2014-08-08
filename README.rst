@@ -111,6 +111,7 @@ Some of the projects that we know of that are using scikit-bio are:
 -  `Emperor <http://biocore.github.io/emperor/>`__
 -  `An Introduction to Applied
    Bioinformatics <http://caporasolab.us/An-Introduction-To-Applied-Bioinformatics/>`__
+-  `tax2tree <https://github.com/biocore/tax2tree>`__
 
 If you're using scikit-bio in your own projects, you can issue a
 pull request to add them to this list.
