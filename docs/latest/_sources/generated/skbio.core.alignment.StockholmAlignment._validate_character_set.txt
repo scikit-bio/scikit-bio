@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.core.alignment.StockholmAlignment._validate_character_set
-===============================================================
-
-.. currentmodule:: skbio.core.alignment
-
-.. automethod:: StockholmAlignment._validate_character_set

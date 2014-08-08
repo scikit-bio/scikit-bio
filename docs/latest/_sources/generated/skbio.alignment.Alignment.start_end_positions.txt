@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.Alignment.start_end_positions
+=============================================
+
+.. currentmodule:: skbio.alignment
+
+.. automethod:: Alignment.start_end_positions

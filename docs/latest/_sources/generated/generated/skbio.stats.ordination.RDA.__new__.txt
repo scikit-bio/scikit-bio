@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.stats.ordination.RDA.__new__
+==================================
+
+.. currentmodule:: skbio.stats.ordination
+
+.. automethod:: RDA.__new__

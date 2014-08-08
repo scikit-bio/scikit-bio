@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.core.alignment.StockholmAlignment.to_phylip
-=================================================
-
-.. currentmodule:: skbio.core.alignment
-
-.. automethod:: StockholmAlignment.to_phylip

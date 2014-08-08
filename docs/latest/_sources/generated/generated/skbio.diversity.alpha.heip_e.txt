@@ -1,0 +1,6 @@
+skbio.diversity.alpha.heip_e
+============================
+
+.. currentmodule:: skbio.diversity.alpha
+
+.. autofunction:: heip_e

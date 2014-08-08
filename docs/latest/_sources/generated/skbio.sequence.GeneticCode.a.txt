@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.GeneticCode.a
+============================
+
+.. currentmodule:: skbio.sequence
+
+.. autoattribute:: GeneticCode.a

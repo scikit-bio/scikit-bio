@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.tree.TreeNode.__subclasshook__
+====================================
+
+.. currentmodule:: skbio.tree
+
+.. automethod:: TreeNode.__subclasshook__

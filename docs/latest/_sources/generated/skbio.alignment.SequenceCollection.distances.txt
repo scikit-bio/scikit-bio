@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.SequenceCollection.distances
+============================================
+
+.. currentmodule:: skbio.alignment
+
+.. automethod:: SequenceCollection.distances

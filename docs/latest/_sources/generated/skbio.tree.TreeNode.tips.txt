@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.tree.TreeNode.tips
+========================
+
+.. currentmodule:: skbio.tree
+
+.. automethod:: TreeNode.tips

@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.stats.distance.ANOSIM.short_method_name
+=============================================
+
+.. currentmodule:: skbio.stats.distance
+
+.. autoattribute:: ANOSIM.short_method_name

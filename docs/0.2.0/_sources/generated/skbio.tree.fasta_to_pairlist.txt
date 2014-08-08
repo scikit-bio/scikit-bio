@@ -1,0 +1,6 @@
+skbio.tree.fasta_to_pairlist
+============================
+
+.. currentmodule:: skbio.tree
+
+.. autofunction:: fasta_to_pairlist

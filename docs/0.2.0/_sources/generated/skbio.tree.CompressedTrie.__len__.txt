@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.tree.CompressedTrie.__len__
+=================================
+
+.. currentmodule:: skbio.tree
+
+.. automethod:: CompressedTrie.__len__

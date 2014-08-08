@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.SequenceCollection._validate_character_set
+==========================================================
+
+.. currentmodule:: skbio.alignment
+
+.. automethod:: SequenceCollection._validate_character_set

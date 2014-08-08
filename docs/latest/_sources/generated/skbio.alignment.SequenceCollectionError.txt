@@ -1,0 +1,6 @@
+skbio.alignment.SequenceCollectionError
+=======================================
+
+.. currentmodule:: skbio.alignment
+
+.. autoexception:: SequenceCollectionError

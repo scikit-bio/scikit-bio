@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.ProteinSequence.distance
+=======================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: ProteinSequence.distance

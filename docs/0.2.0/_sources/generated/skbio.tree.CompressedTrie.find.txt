@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.tree.CompressedTrie.find
+==============================
+
+.. currentmodule:: skbio.tree
+
+.. automethod:: CompressedTrie.find

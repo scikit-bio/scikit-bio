@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.core.alignment.StockholmAlignment.sequence_lengths
-========================================================
-
-.. currentmodule:: skbio.core.alignment
-
-.. automethod:: StockholmAlignment.sequence_lengths

@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.Alignment.__sizeof__
+====================================
+
+.. currentmodule:: skbio.alignment
+
+.. automethod:: Alignment.__sizeof__

@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.ProteinSequence.k_words
+======================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: ProteinSequence.k_words

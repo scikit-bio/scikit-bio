@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.NucleotideSequence.description
+=============================================
+
+.. currentmodule:: skbio.sequence
+
+.. autoattribute:: NucleotideSequence.description

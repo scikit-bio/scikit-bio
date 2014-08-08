@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.StockholmAlignment._validate_lengths
+====================================================
+
+.. currentmodule:: skbio.alignment
+
+.. automethod:: StockholmAlignment._validate_lengths

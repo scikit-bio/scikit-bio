@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.stats.ordination.PCoA.__reduce__
+======================================
+
+.. currentmodule:: skbio.stats.ordination
+
+.. automethod:: PCoA.__reduce__

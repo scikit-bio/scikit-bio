@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.tree.TreeNode.unrooted_deepcopy
+=====================================
+
+.. currentmodule:: skbio.tree
+
+.. automethod:: TreeNode.unrooted_deepcopy

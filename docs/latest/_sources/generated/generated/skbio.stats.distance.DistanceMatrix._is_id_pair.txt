@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.stats.distance.DistanceMatrix._is_id_pair
+===============================================
+
+.. currentmodule:: skbio.stats.distance
+
+.. automethod:: DistanceMatrix._is_id_pair

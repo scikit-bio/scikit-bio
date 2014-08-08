@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.stats.ordination.OrdinationResults.__sizeof__
+===================================================
+
+.. currentmodule:: skbio.stats.ordination
+
+.. automethod:: OrdinationResults.__sizeof__

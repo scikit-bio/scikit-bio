@@ -1,0 +1,6 @@
+skbio.diversity.alpha.equitability
+==================================
+
+.. currentmodule:: skbio.diversity.alpha
+
+.. autofunction:: equitability

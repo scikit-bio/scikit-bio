@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.RNASequence.index
+================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: RNASequence.index

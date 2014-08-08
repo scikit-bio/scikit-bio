@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.math.gradient.GroupResults.__init__
-=========================================
-
-.. currentmodule:: skbio.math.gradient
-
-.. automethod:: GroupResults.__init__

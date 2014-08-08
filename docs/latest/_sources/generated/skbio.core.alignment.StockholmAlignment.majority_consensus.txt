@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.core.alignment.StockholmAlignment.majority_consensus
-==========================================================
-
-.. currentmodule:: skbio.core.alignment
-
-.. automethod:: StockholmAlignment.majority_consensus

@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.NucleotideSequence.complement
+============================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: NucleotideSequence.complement

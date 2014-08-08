@@ -1,0 +1,6 @@
+skbio.util.FieldError
+=====================
+
+.. currentmodule:: skbio.util
+
+.. autoexception:: FieldError

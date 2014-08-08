@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.NucleotideSequence.__new__
+=========================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: NucleotideSequence.__new__

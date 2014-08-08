@@ -1,0 +1,70 @@
+skbio.alignment.StockholmAlignment
+==================================
+
+.. currentmodule:: skbio.alignment
+
+.. autoclass:: StockholmAlignment
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         StockholmAlignment.__contains__
+         StockholmAlignment.__eq__
+         StockholmAlignment.__format__
+         StockholmAlignment.__getitem__
+         StockholmAlignment.__init__
+         StockholmAlignment.__iter__
+         StockholmAlignment.__len__
+         StockholmAlignment.__ne__
+         StockholmAlignment.__new__
+         StockholmAlignment.__reduce__
+         StockholmAlignment.__reduce_ex__
+         StockholmAlignment.__repr__
+         StockholmAlignment.__reversed__
+         StockholmAlignment.__sizeof__
+         StockholmAlignment.__str__
+         StockholmAlignment.__subclasshook__
+         StockholmAlignment._parse_gc_info
+         StockholmAlignment._parse_gf_info
+         StockholmAlignment._parse_gs_gr_info
+         StockholmAlignment._validate_character_set
+         StockholmAlignment._validate_lengths
+         StockholmAlignment.degap
+         StockholmAlignment.distances
+         StockholmAlignment.distribution_stats
+         StockholmAlignment.from_fasta_records
+         StockholmAlignment.from_file
+         StockholmAlignment.get_seq
+         StockholmAlignment.ids
+         StockholmAlignment.int_map
+         StockholmAlignment.is_empty
+         StockholmAlignment.is_valid
+         StockholmAlignment.iter_positions
+         StockholmAlignment.iteritems
+         StockholmAlignment.k_word_frequencies
+         StockholmAlignment.lower
+         StockholmAlignment.majority_consensus
+         StockholmAlignment.omit_gap_positions
+         StockholmAlignment.omit_gap_sequences
+         StockholmAlignment.position_counters
+         StockholmAlignment.position_entropies
+         StockholmAlignment.position_frequencies
+         StockholmAlignment.score
+         StockholmAlignment.sequence_count
+         StockholmAlignment.sequence_length
+         StockholmAlignment.sequence_lengths
+         StockholmAlignment.start_end_positions
+         StockholmAlignment.subalignment
+         StockholmAlignment.toFasta
+         StockholmAlignment.to_fasta
+         StockholmAlignment.to_file
+         StockholmAlignment.to_phylip
+         StockholmAlignment.upper
+
+
+
+   
+

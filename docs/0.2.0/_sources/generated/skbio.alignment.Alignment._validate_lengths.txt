@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.Alignment._validate_lengths
+===========================================
+
+.. currentmodule:: skbio.alignment
+
+.. automethod:: Alignment._validate_lengths

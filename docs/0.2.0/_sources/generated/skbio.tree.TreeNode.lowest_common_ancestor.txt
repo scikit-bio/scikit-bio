@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.tree.TreeNode.lowest_common_ancestor
+==========================================
+
+.. currentmodule:: skbio.tree
+
+.. automethod:: TreeNode.lowest_common_ancestor

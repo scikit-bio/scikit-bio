@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.RNASequence.iupac_standard_characters
+====================================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: RNASequence.iupac_standard_characters

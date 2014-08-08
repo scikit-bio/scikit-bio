@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Beta diversity measures (skbio.diversity.beta) &mdash; scikit-bio 0.2.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/style.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.1.0/united/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.2.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/copybutton.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="top" title="scikit-bio 0.2.0 documentation" href="../index.html" />
+    <link rel="up" title="Diversity calculations (skbio.diversity)" href="../diversity.html" />
+    <link rel="next" title="skbio.diversity.beta.pw_distances" href="generated/skbio.diversity.beta.pw_distances.html" />
+    <link rel="prev" title="skbio.diversity.alpha.strong" href="generated/skbio.diversity.alpha.strong.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body>
+  
+  <a href="https://github.com/biocore/scikit-bio"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          scikit-bio docs</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.2.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            <li class="divider-vertical"></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../alignment.html">Sequence collections and alignments (<tt class="docutils literal"><span class="pre">skbio.alignment</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sequence.html">Biological sequences (<tt class="docutils literal"><span class="pre">skbio.sequence</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tree.html">Tree representations (<tt class="docutils literal"><span class="pre">skbio.tree</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../workflow.html">Constructing workflows (<tt class="docutils literal"><span class="pre">skbio.workflow</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../draw.html">Visualizations (<tt class="docutils literal"><span class="pre">skbio.draw</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../format.sequences.html">Format biological sequences (<tt class="docutils literal"><span class="pre">skbio.format.sequences</span></tt>)</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../diversity.html">Diversity calculations (<tt class="docutils literal"><span class="pre">skbio.diversity</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stats.html">Statistics (<tt class="docutils literal"><span class="pre">skbio.stats</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../parse.sequences.html">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.html">Utility functionality (<tt class="docutils literal"><span class="pre">skbio.util</span></tt>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/py3.html">Supporting Python 2 and Python 3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/coding_guidelines.html">Coding guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/new_module.html">Adding a new module to skbio</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Beta diversity measures (<tt class="docutils literal"><span class="pre">skbio.diversity.beta</span></tt>)</a><ul>
+<li><a class="reference internal" href="#functions">Functions</a></li>
+<li><a class="reference internal" href="#examples">Examples</a></li>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      
+  <span class="target" id="module-skbio.diversity.beta"></span><div class="section" id="beta-diversity-measures-skbio-diversity-beta">
+<h1>Beta diversity measures (<a class="reference internal" href="#module-skbio.diversity.beta" title="skbio.diversity.beta"><tt class="xref py py-mod docutils literal"><span class="pre">skbio.diversity.beta</span></tt></a>)<a class="headerlink" href="#beta-diversity-measures-skbio-diversity-beta" title="Permalink to this headline">¶</a></h1>
+<p>This package contains helper functions for working with scipy&#8217;s pairwise
+distance (<tt class="docutils literal"><span class="pre">pdist</span></tt>) functions in scikit-bio, and will eventually be expanded
+to contain pairwise distance/dissimilarity methods that are not implemented
+(or planned to be implemented) in scipy.</p>
+<p>The functions in this package currently support applying <tt class="docutils literal"><span class="pre">pdist</span></tt> functions
+to all pairs of samples in a sample by observation count or abundance matrix
+and returning an <tt class="docutils literal"><span class="pre">skbio.DistanceMatrix</span></tt> object. This application is
+illustrated below for a few different forms of input.</p>
+<div class="section" id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.diversity.beta.pw_distances.html#skbio.diversity.beta.pw_distances" title="skbio.diversity.beta.pw_distances"><tt class="xref py py-obj docutils literal"><span class="pre">pw_distances</span></tt></a>(counts[,&nbsp;ids,&nbsp;metric])</td>
+<td>Compute distances between all pairs of columns in a counts matrix</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.diversity.beta.pw_distances_from_table.html#skbio.diversity.beta.pw_distances_from_table" title="skbio.diversity.beta.pw_distances_from_table"><tt class="xref py py-obj docutils literal"><span class="pre">pw_distances_from_table</span></tt></a>(table[,&nbsp;metric])</td>
+<td>Compute distances between all pairs of samples in table</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>Create a table containing 7 OTUs and 6 samples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.diversity.beta</span> <span class="kn">import</span> <span class="n">pw_distances</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">23</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">14</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+<span class="gp">... </span>        <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">35</span><span class="p">,</span> <span class="mi">42</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+<span class="gp">... </span>        <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+<span class="gp">... </span>        <span class="p">[</span><span class="mi">44</span><span class="p">,</span> <span class="mi">35</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+<span class="gp">... </span>        <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">35</span><span class="p">,</span> <span class="mi">45</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+<span class="gp">... </span>        <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="mi">35</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">19</span><span class="p">,</span> <span class="mi">0</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ids</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="s">&#39;ABCDEF&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Compute Bray-Curtis distances between all pairs of samples and return a
+<tt class="docutils literal"><span class="pre">DistanceMatrix</span></tt> object:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">bc_dm</span> <span class="o">=</span> <span class="n">pw_distances</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">ids</span><span class="p">,</span> <span class="s">&quot;braycurtis&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">bc_dm</span><span class="p">)</span>
+<span class="go">6x6 distance matrix</span>
+<span class="go">IDs:</span>
+<span class="go">A, B, C, D, E, F</span>
+<span class="go">Data:</span>
+<span class="go">[[ 0.          0.78787879  0.86666667  0.30927835  0.85714286  0.81521739]</span>
+<span class="go"> [ 0.78787879  0.          0.78142077  0.86813187  0.75        0.1627907 ]</span>
+<span class="go"> [ 0.86666667  0.78142077  0.          0.87709497  0.09392265  0.71597633]</span>
+<span class="go"> [ 0.30927835  0.86813187  0.87709497  0.          0.87777778  0.89285714]</span>
+<span class="go"> [ 0.85714286  0.75        0.09392265  0.87777778  0.          0.68235294]</span>
+<span class="go"> [ 0.81521739  0.1627907   0.71597633  0.89285714  0.68235294  0.        ]]</span>
+</pre></div>
+</div>
+<p>Compute Jaccard distances between all pairs of samples and return a
+<tt class="docutils literal"><span class="pre">DistanceMatrix</span></tt> object:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">j_dm</span> <span class="o">=</span> <span class="n">pw_distances</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">ids</span><span class="p">,</span> <span class="s">&quot;jaccard&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">j_dm</span><span class="p">)</span>
+<span class="go">6x6 distance matrix</span>
+<span class="go">IDs:</span>
+<span class="go">A, B, C, D, E, F</span>
+<span class="go">Data:</span>
+<span class="go">[[ 0.          0.83333333  1.          1.          0.83333333  1.        ]</span>
+<span class="go"> [ 0.83333333  0.          1.          1.          0.83333333  1.        ]</span>
+<span class="go"> [ 1.          1.          0.          1.          1.          1.        ]</span>
+<span class="go"> [ 1.          1.          1.          0.          1.          1.        ]</span>
+<span class="go"> [ 0.83333333  0.83333333  1.          1.          0.          1.        ]</span>
+<span class="go"> [ 1.          1.          1.          1.          1.          0.        ]]</span>
+</pre></div>
+</div>
+<p>Determine if the resulting distance matrices are significantly correlated
+by computing the Mantel correlation between them. Then determine if the
+p-value is significant based on an alpha of 0.05:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.stats.distance</span> <span class="kn">import</span> <span class="n">mantel</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="p">,</span> <span class="n">p_value</span> <span class="o">=</span> <span class="n">mantel</span><span class="p">(</span><span class="n">j_dm</span><span class="p">,</span> <span class="n">bc_dm</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+<span class="go">-0.209362157621</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">p_value</span> <span class="o">&lt;</span> <span class="mf">0.05</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<p>Compute PCoA for both distance matrices, and then find the Procrustes
+M-squared value that results from comparing the coordinate matrices.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.stats.ordination</span> <span class="kn">import</span> <span class="n">PCoA</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bc_pc</span> <span class="o">=</span> <span class="n">PCoA</span><span class="p">(</span><span class="n">bc_dm</span><span class="p">)</span><span class="o">.</span><span class="n">scores</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">j_pc</span> <span class="o">=</span> <span class="n">PCoA</span><span class="p">(</span><span class="n">j_dm</span><span class="p">)</span><span class="o">.</span><span class="n">scores</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.stats.spatial</span> <span class="kn">import</span> <span class="n">procrustes</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">procrustes</span><span class="p">(</span><span class="n">bc_pc</span><span class="o">.</span><span class="n">site</span><span class="p">,</span> <span class="n">j_pc</span><span class="o">.</span><span class="n">site</span><span class="p">)[</span><span class="mi">2</span><span class="p">])</span>
+<span class="go">0.466134984787</span>
+</pre></div>
+</div>
+<p>All of this only gets interesting in the context of sample metadata, so
+let&#8217;s define some:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="c"># not necessary for normal use</span>
+<span class="gp">... </span>    <span class="n">pd</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="s">&#39;show_dimensions&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">pass</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sample_md</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>   <span class="s">&#39;A&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;body_site&#39;</span><span class="p">:</span> <span class="s">&#39;gut&#39;</span><span class="p">,</span> <span class="s">&#39;subject&#39;</span><span class="p">:</span> <span class="s">&#39;1&#39;</span><span class="p">},</span>
+<span class="gp">... </span>   <span class="s">&#39;B&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;body_site&#39;</span><span class="p">:</span> <span class="s">&#39;skin&#39;</span><span class="p">,</span> <span class="s">&#39;subject&#39;</span><span class="p">:</span> <span class="s">&#39;1&#39;</span><span class="p">},</span>
+<span class="gp">... </span>   <span class="s">&#39;C&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;body_site&#39;</span><span class="p">:</span> <span class="s">&#39;tongue&#39;</span><span class="p">,</span> <span class="s">&#39;subject&#39;</span><span class="p">:</span> <span class="s">&#39;1&#39;</span><span class="p">},</span>
+<span class="gp">... </span>   <span class="s">&#39;D&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;body_site&#39;</span><span class="p">:</span> <span class="s">&#39;gut&#39;</span><span class="p">,</span> <span class="s">&#39;subject&#39;</span><span class="p">:</span> <span class="s">&#39;2&#39;</span><span class="p">},</span>
+<span class="gp">... </span>   <span class="s">&#39;E&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;body_site&#39;</span><span class="p">:</span> <span class="s">&#39;tongue&#39;</span><span class="p">,</span> <span class="s">&#39;subject&#39;</span><span class="p">:</span> <span class="s">&#39;2&#39;</span><span class="p">},</span>
+<span class="gp">... </span>   <span class="s">&#39;F&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;body_site&#39;</span><span class="p">:</span> <span class="s">&#39;skin&#39;</span><span class="p">,</span> <span class="s">&#39;subject&#39;</span><span class="p">:</span> <span class="s">&#39;2&#39;</span><span class="p">}}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sample_md</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">sample_md</span><span class="p">,</span> <span class="n">orient</span><span class="o">=</span><span class="s">&#39;index&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sample_md</span>
+<span class="go">  subject body_site</span>
+<span class="go">A       1       gut</span>
+<span class="go">B       1      skin</span>
+<span class="go">C       1    tongue</span>
+<span class="go">D       2       gut</span>
+<span class="go">E       2    tongue</span>
+<span class="go">F       2      skin</span>
+
+<span class="go">[6 rows x 2 columns]</span>
+</pre></div>
+</div>
+<p>We&#8217;ll put a quick 3D plotting function together. This function is adapted
+from the matplotlib gallery <a class="reference internal" href="#r140" id="id1">[R140]</a>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpl_toolkits.mplot3d</span> <span class="kn">import</span> <span class="n">Axes3D</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">scatter_3d</span><span class="p">(</span><span class="n">ord_results</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">color_map</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">axis1</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+<span class="gp">... </span>               <span class="n">axis2</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">axis3</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+<span class="gp">... </span>   <span class="n">coord_matrix</span> <span class="o">=</span> <span class="n">ord_results</span><span class="o">.</span><span class="n">site</span><span class="o">.</span><span class="n">T</span>
+<span class="gp">... </span>   <span class="n">ids</span> <span class="o">=</span> <span class="n">ord_results</span><span class="o">.</span><span class="n">site_ids</span>
+<span class="gp">... </span>   <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="n">color_map</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="n">column</span><span class="p">][</span><span class="n">id_</span><span class="p">]]</span> <span class="k">for</span> <span class="n">id_</span> <span class="ow">in</span> <span class="n">ord_results</span><span class="o">.</span><span class="n">site_ids</span><span class="p">]</span>
+<span class="gp">...</span>
+<span class="gp">... </span>   <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="gp">... </span>   <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="s">&#39;3d&#39;</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">... </span>   <span class="n">xs</span> <span class="o">=</span> <span class="n">coord_matrix</span><span class="p">[</span><span class="n">axis1</span><span class="p">]</span>
+<span class="gp">... </span>   <span class="n">ys</span> <span class="o">=</span> <span class="n">coord_matrix</span><span class="p">[</span><span class="n">axis2</span><span class="p">]</span>
+<span class="gp">... </span>   <span class="n">zs</span> <span class="o">=</span> <span class="n">coord_matrix</span><span class="p">[</span><span class="n">axis3</span><span class="p">]</span>
+<span class="gp">... </span>   <span class="n">plot</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">zs</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">colors</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">... </span>   <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s">&#39;PC </span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">axis1</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+<span class="gp">... </span>   <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s">&#39;PC </span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">axis2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+<span class="gp">... </span>   <span class="n">ax</span><span class="o">.</span><span class="n">set_zlabel</span><span class="p">(</span><span class="s">&#39;PC </span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">axis3</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+<span class="gp">... </span>   <span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">([])</span>
+<span class="gp">... </span>   <span class="n">ax</span><span class="o">.</span><span class="n">set_yticklabels</span><span class="p">([])</span>
+<span class="gp">... </span>   <span class="n">ax</span><span class="o">.</span><span class="n">set_zticklabels</span><span class="p">([])</span>
+<span class="gp">... </span>   <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+<span class="gp">... </span>   <span class="k">return</span> <span class="n">fig</span>
+</pre></div>
+</div>
+<p>Now let&#8217;s plot our PCoA results, coloring each sample by the subject it
+was taken from:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">fig</span> <span class="o">=</span> <span class="n">scatter_3d</span><span class="p">(</span><span class="n">bc_pc</span><span class="p">,</span> <span class="n">sample_md</span><span class="p">,</span> <span class="s">&#39;subject&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;1&#39;</span><span class="p">:</span> <span class="s">&#39;b&#39;</span><span class="p">,</span> <span class="s">&#39;2&#39;</span><span class="p">:</span> <span class="s">&#39;r&#39;</span><span class="p">},</span>
+<span class="gp">... </span>                 <span class="s">&#39;Samples colored by subject&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>(<a class="reference external" href="../generated/skbio-diversity-beta-1.py">Source code</a>, <a class="reference external" href="../generated/skbio-diversity-beta-1.png">png</a>, <a class="reference external" href="../generated/skbio-diversity-beta-1.hires.png">hires.png</a>, <a class="reference external" href="../generated/skbio-diversity-beta-1.pdf">pdf</a>)</p>
+<div class="figure">
+<img alt="../_images/skbio-diversity-beta-1.png" src="../_images/skbio-diversity-beta-1.png" />
+</div>
+<p>We don&#8217;t see any clustering/grouping of samples. If we were to instead color
+the samples by the body site they were taken from, we see that the samples
+form three separate groups:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s">&#39;all&#39;</span><span class="p">)</span> <span class="c"># not necessary for normal use</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fig</span> <span class="o">=</span> <span class="n">scatter_3d</span><span class="p">(</span><span class="n">bc_pc</span><span class="p">,</span> <span class="n">sample_md</span><span class="p">,</span> <span class="s">&#39;body_site&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                 <span class="p">{</span><span class="s">&#39;gut&#39;</span><span class="p">:</span> <span class="s">&#39;b&#39;</span><span class="p">,</span> <span class="s">&#39;skin&#39;</span><span class="p">:</span> <span class="s">&#39;r&#39;</span><span class="p">,</span> <span class="s">&#39;tongue&#39;</span><span class="p">:</span> <span class="s">&#39;g&#39;</span><span class="p">},</span>
+<span class="gp">... </span>                 <span class="s">&#39;Samples colored by body site&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>(<a class="reference external" href="../generated/skbio-diversity-beta-2.py">Source code</a>, <a class="reference external" href="../generated/skbio-diversity-beta-2.png">png</a>, <a class="reference external" href="../generated/skbio-diversity-beta-2.hires.png">hires.png</a>, <a class="reference external" href="../generated/skbio-diversity-beta-2.pdf">pdf</a>)</p>
+<div class="figure">
+<img alt="../_images/skbio-diversity-beta-2.png" src="../_images/skbio-diversity-beta-2.png" />
+</div>
+<p>Ordination techniques, such as PCoA, are useful for exploratory analysis. The
+next step is to quantify the strength of the grouping/clustering that we see in
+ordination plots. There are many statistical methods available to accomplish
+this; many operate on distance matrices. Let&#8217;s use ANOSIM to quantify the
+strength of the clustering we see in the ordination plots above, using our
+Bray-Curtis distance matrix and sample metadata.</p>
+<p>First test the grouping of samples by subject:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.stats.distance</span> <span class="kn">import</span> <span class="n">ANOSIM</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">anosim</span> <span class="o">=</span> <span class="n">ANOSIM</span><span class="p">(</span><span class="n">bc_dm</span><span class="p">,</span> <span class="n">sample_md</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="s">&#39;subject&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">results</span> <span class="o">=</span> <span class="n">anosim</span><span class="p">(</span><span class="mi">999</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">results</span><span class="o">.</span><span class="n">statistic</span>
+<span class="go">-0.4074074074074075</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">results</span><span class="o">.</span><span class="n">p_value</span> <span class="o">&lt;</span> <span class="mf">0.05</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<p>The negative value of ANOSIM&#8217;s R statistic indicates anti-clustering and the
+p-value is insignificant at an alpha of 0.05.</p>
+<p>Now let&#8217;s test the grouping of samples by body site:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">anosim</span> <span class="o">=</span> <span class="n">ANOSIM</span><span class="p">(</span><span class="n">bc_dm</span><span class="p">,</span> <span class="n">sample_md</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="s">&#39;body_site&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">results</span> <span class="o">=</span> <span class="n">anosim</span><span class="p">(</span><span class="mi">999</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">results</span><span class="o">.</span><span class="n">statistic</span>
+<span class="go">1.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">results</span><span class="o">.</span><span class="n">p_value</span> <span class="o">&lt;</span> <span class="mf">0.1</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>The R statistic of 1.0 indicates strong separation of samples based on body
+site. The p-value is significant at an alpha of 0.1.</p>
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<table class="docutils citation" frame="void" id="r140" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[R140]</a></td><td><a class="reference external" href="http://matplotlib.org/examples/mplot3d/scatter3d_demo.html">http://matplotlib.org/examples/mplot3d/scatter3d_demo.html</a></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+  
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014--, scikit-bio development team.<br/>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.2.2.<br/>
+    </p>
+  </div>
+</footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
+  </body>
+</html>

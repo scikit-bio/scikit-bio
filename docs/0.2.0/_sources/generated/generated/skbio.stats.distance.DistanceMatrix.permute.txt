@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.stats.distance.DistanceMatrix.permute
+===========================================
+
+.. currentmodule:: skbio.stats.distance
+
+.. automethod:: DistanceMatrix.permute
