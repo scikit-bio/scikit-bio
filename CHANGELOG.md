@@ -2,6 +2,10 @@
 
 ## Version 0.2.0-dev (changes since 0.2.0 release go here)
 
+### Features
+
+* Added QSEQ parsing function ``parse_qseq`` and iterator ``QseqIterator`` to ``skbio.parse.sequences``.
+
 ### Miscellaneous
 
 * Added git timestamp checking to checklist.py, ensuring that when changes are made to Cython (.pyx) files, their corresponding generated C files are also updated.
