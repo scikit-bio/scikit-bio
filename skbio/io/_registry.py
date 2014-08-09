@@ -20,10 +20,13 @@ def register_identifier(fmt):
     A decorator factory for identifier functions.
 
     An identifier function should have at least the following signature:
-    ``<format_name>_identifier(fh)``. `fh` is an open fileobject.
+    ``<format_name>_identifier(fp)``. `fp` is either a filepath or
+    an open fileobject.
 
-    **The idientifier must not close the fileobject** `fh`, cleanup must be
-    handled external to the identifier and is not it's concern.
+    **The identifier must not close an open fileobject**, cleanup must be
+    handled external to the identifier and is not it's concern. If it is a
+    filepath, then opening and closing the file will be the responsibility of
+    the identifier.
 
     Any additional `*args` and `**kwargs` will be passed to the identifier and
     may be used if necessary.
@@ -75,11 +78,13 @@ def register_reader(fmt, *cls):
     A decorator factory for reader functions.
 
     A reader function should have at least the following signature:
-    ``<format_name>_to_<class_name_or_generator>(fh)``. `fh` is an open
-    fileobject.
+    ``<format_name>_to_<class_name_or_generator>(fp)``. `fp` is either a
+    filepath or an open fileobject.
 
-    **The reader must not close the fileobject** `fh`, cleanup must be handled
-    external to the reader and is not it's concern.
+    **The reader must not close an open fileobject**, cleanup must be
+    handled external to the reader and is not it's concern. If it is a
+    filepath, then opening and closing the file will be the responsibility of
+    the reader.
 
     Any additional `*args` and `**kwargs` will be passed to the reader and may
     be used if necessary.
@@ -134,13 +139,15 @@ def register_writer(fmt, *cls):
     A decorator factory for writer functions.
 
     A writer function should have at least the following signature:
-    ``<class_name_or_generator>_to_<format_name>(obj, fh)`` where `obj` will
+    ``<class_name_or_generator>_to_<format_name>(obj, fp)`` where `obj` will
     be either an instance of <class_name> or a generator that is *identical* to
-    the result of calling ``get_reader(<format>, None)``. `fh` is an open
-    fileobject.
+    the result of calling ``get_reader(<format>, None)``. `fp` is either a
+    filepath or an open fileobject.
 
-    **The writer must not close the fileobject** `fh`, cleanup must be handled
-    external to the writer and is not it's concern.
+    **The writer must not close an open fileobject**, cleanup must be
+    handled external to the writer and is not it's concern. If it is a
+    filepath, then opening and closing the file will be the responsibility of
+    the writer.
 
     Any additional `*args` and `**kwargs` will be passed to the writer and may
     be used if necessary.
@@ -185,6 +192,7 @@ def register_writer(fmt, *cls):
     See Also
     --------
     skbio.io.write
+    skbio.io.get_reader
 
     """
     return _rw_decorator('writer', fmt, *cls)
@@ -195,7 +203,7 @@ def _rw_decorator(name, fmt, *args):
     arg_len = len(args)
     if arg_len > 1:
         raise TypeError("register_%s takes 1 or 2 arguments (%d given)"
-                        % (name, arg_len))
+                        % (name, arg_len + 1))
     if arg_len == 1:
         cls = args[0]
 
@@ -358,7 +366,7 @@ def _rw_getter(name, fmt, *args):
     arg_len = len(args)
     if arg_len > 1:
         raise TypeError("get_%s takes 1 or 2 arguments (%d given)"
-                        % (name, arg_len))
+                        % (name, arg_len + 1))
     if arg_len == 1:
         cls = args[0]
 
@@ -489,6 +497,12 @@ def read(fp, format=None, into=None, mode='U', *args, **kwargs):
 
     if format is None:
         format = guess_format(fh, cls=into)
+    else if verify:
+        identifier = get_identifier(format)
+        if identifier is not None:
+            if not identifier(fh):
+                warn("", None)
+            fh.seek(0)
 
     reader = get_reader(format, into)
     if reader is None:
@@ -564,3 +578,11 @@ def write(obj, format=None, into=None, mode='w', *args, **kwargs):
                                   % (format, str(fh)))
 
         writer(obj, fh, *args, **kwargs)
+
+
+@register_identifier('<empty file>')
+def empty_file_identifier(fh):
+    for line in fh:
+        if line.strip():
+            return False
+    return True

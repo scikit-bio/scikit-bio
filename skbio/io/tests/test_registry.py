@@ -19,6 +19,7 @@ from tempfile import mkstemp
 
 from skbio.io import (DuplicateRegistrationError,
                       FormatIdentificationError, FileFormatError)
+from skbio.io._registry import empty_file_identifier
 
 
 class TestClass(object):
@@ -567,6 +568,33 @@ class TestWrite(RegistryTest):
 
         with open(fp, 'U') as fh:
             self.assertEqual("1\n2\n3\n4", fh.read())
+
+class TestEmptyFileIdentifier(unittest.TestCase):
+    def test_blank_file(self):
+        fh = StringIO()
+        self.assertTrue(empty_file_identifier(fh))
+        fh.close()
+
+    def test_whitespace_file(self):
+        fh = StringIO(u' ')
+        self.assertTrue(empty_file_identifier(fh))
+        fh.close()
+        fh = StringIO(u'\n')
+        self.assertTrue(empty_file_identifier(fh))
+        fh.close()
+        fh = StringIO(u'\t')
+        self.assertTrue(empty_file_identifier(fh))
+        fh.close()
+
+    def test_mixed_whitespace_file(self):
+        fh = StringIO(u'\n\n\t\n \t \t \n \n \n\n')
+        self.assertTrue(empty_file_identifier(fh))
+        fh.close()
+    
+    def test_not_empty_file(self):
+        fh = StringIO(u'\n\n\t\n a\t \t \n \n \n\n')
+        self.assertFalse(empty_file_identifier(fh))
+        fh.close()
 
 if __name__ == '__main__':
     unittest.main()
