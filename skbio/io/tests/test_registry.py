@@ -551,31 +551,23 @@ class TestRead(RegistryTest):
         def reader(fh):
             return TestClass([int(x) for x in fh.read().split('\n')])
 
-        # Based on https://docs.python.org/2/library/warnings.html
-        with warnings.catch_warnings(record=True) as w:
-            # Cause all warnings to always be triggered.
-            warnings.simplefilter("always")
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("error")
+            with self.assertRaises(UnprovenFormatWarning):
+                self.was_verified = False
+                instance = self.module.read(fh, format='format',
+                                            into=TestClass, verify=True)
+                self.assertEqual([1, 2, 3, 4], instance.list)
+                self.assertTrue(self.was_verified)
 
-            self.was_verified = False
-            instance = self.module.read(fh, format='format', into=TestClass,
-                                        verify=True)
-            self.assertEqual([1, 2, 3, 4], instance.list)
-            self.assertTrue(self.was_verified)
-
-            self.assertEquals(1, len(w))
-            self.assertTrue(issubclass(w[-1].category, UnprovenFormatWarning))
-
-        with warnings.catch_warnings(record=True) as w:
-            # Cause all warnings to always be triggered.
-            warnings.simplefilter("always")
-
-            self.was_verified = False
-            instance = self.module.read(fh, format='format', into=TestClass)
-            self.assertEqual([1, 2, 3, 4], instance.list)
-            self.assertTrue(self.was_verified)
-
-            self.assertEquals(1, len(w))
-            self.assertTrue(issubclass(w[-1].category, UnprovenFormatWarning))
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("error")
+            with self.assertRaises(UnprovenFormatWarning):
+                self.was_verified = False
+                instance = self.module.read(fh, format='format',
+                                            into=TestClass)
+                self.assertEqual([1, 2, 3, 4], instance.list)
+                self.assertTrue(self.was_verified)
 
         fh.close()
 
