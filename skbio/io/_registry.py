@@ -6,9 +6,11 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from warnings import warn
+
 from .util import open_file, _get_filehandle
 from skbio.io import (FormatIdentificationError, FileFormatError,
-                      DuplicateRegistrationError)
+                      DuplicateRegistrationError, UnprovenFormatWarning)
 
 _formats = {}
 _identifiers = {}
@@ -434,7 +436,7 @@ def guess_format(fp, cls=None):
         return possibles[0]
 
 
-def read(fp, format=None, into=None, mode='U', *args, **kwargs):
+def read(fp, format=None, into=None, verify=True, mode='U', *args, **kwargs):
     """Generalized read function: multiplex read functionality in skbio.
 
     This function is able to reference and execute all *registered* read
@@ -459,6 +461,11 @@ def read(fp, format=None, into=None, mode='U', *args, **kwargs):
         A class which has a registered reader for a given `format`. If `into`
         is not provided or is None, read will return a generator.
         Default is None.
+    verify : bool, optional
+        Whether or not to confirm the format of a file if `format` is provided.
+        Will raise a ``skbio.io.UnprovenFormatWarning`` if the identifier of
+        `format` returns False.
+        Default is True.
     mode : str, optional
         The read mode. This is passed to `open(fp, mode)` internally.
         Default is 'U'.
@@ -479,6 +486,7 @@ def read(fp, format=None, into=None, mode='U', *args, **kwargs):
     ValueError
     skbio.io.FileFormatError
     skbio.io.FormatIdentificationError
+    skbio.io.UnprovenFormatWarning
 
     Note
     -----
@@ -497,11 +505,14 @@ def read(fp, format=None, into=None, mode='U', *args, **kwargs):
 
     if format is None:
         format = guess_format(fh, cls=into)
-    else if verify:
+    elif verify:
         identifier = get_identifier(format)
         if identifier is not None:
+            fh.seek(0)
             if not identifier(fh):
-                warn("", None)
+                warn("%s could not be positively identified as a %s file." %
+                     (fp, format),
+                     UnprovenFormatWarning)
             fh.seek(0)
 
     reader = get_reader(format, into)
@@ -515,7 +526,7 @@ def read(fp, format=None, into=None, mode='U', *args, **kwargs):
         def wrapper_generator():
             original = reader(fh, *args, **kwargs)
             try:
-                while(True):
+                while True:
                     yield next(original)
             finally:
                 if is_own:

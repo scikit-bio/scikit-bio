@@ -15,9 +15,10 @@ except ImportError:
 from io import StringIO
 
 import unittest
+import warnings
 from tempfile import mkstemp
 
-from skbio.io import (DuplicateRegistrationError,
+from skbio.io import (DuplicateRegistrationError, UnprovenFormatWarning,
                       FormatIdentificationError, FileFormatError)
 from skbio.io._registry import empty_file_identifier
 
@@ -78,6 +79,13 @@ class TestRegisterAndReader(RegistryTest):
                 return
         self.assertTrue('register_reader' in str(cm.exception))
 
+    def test_get_writer_when_only_writer_exists(self):
+        @self.module.register_writer('format', TestClass)
+        def format_reader(fh):
+            return
+
+        self.assertEqual(None, self.module.get_reader('format', TestClass))
+
     def test_register_reader_on_many(self):
         @self.module.register_reader('format1', TestClassA)
         def format1_reader(fh):
@@ -137,6 +145,13 @@ class TestRegisterAndGetWriter(RegistryTest):
         with self.assertRaises(TypeError) as cm:
             self.module.get_writer('not_a_format', TestClass, 1)
         self.assertTrue('get_writer' in str(cm.exception))
+
+    def test_get_writer_when_only_reader_exists(self):
+        @self.module.register_reader('format', TestClass)
+        def format_reader(fh):
+            return
+
+        self.assertEqual(None, self.module.get_writer('format', TestClass))
 
     def test_register_writer_on_generator(self):
         @self.module.register_writer('format1')
@@ -291,12 +306,17 @@ class TestListReadFormats(RegistryTest):
         def format4_clsB(fh):
             return
 
+        @self.module.register_writer('format5', TestClassA)
+        def format5_clsA(fh):
+            return
+
         formats = self.module.list_read_formats(TestClassA)
 
         self.assertTrue('format1' in formats)
         self.assertTrue('format2' in formats)
         self.assertTrue('format3' in formats)
         self.assertTrue('format4' not in formats)
+        self.assertTrue('format5' not in formats)
 
 
 class TestListWriteFormats(RegistryTest):
@@ -336,12 +356,17 @@ class TestListWriteFormats(RegistryTest):
         def format4_clsB(fh):
             return
 
+        @self.module.register_reader('format5', TestClassA)
+        def format5_clsA(fh):
+            return
+
         formats = self.module.list_write_formats(TestClassA)
 
         self.assertTrue('format1' in formats)
         self.assertTrue('format2' in formats)
         self.assertTrue('format3' in formats)
         self.assertTrue('format4' not in formats)
+        self.assertTrue('format5' not in formats)
 
 
 class TestGuessFormat(RegistryTest):
@@ -489,19 +514,88 @@ class TestRead(RegistryTest):
         self.assertTrue('generator' in str(cm.exception))
         self.assertTrue('not_a_format2' in str(cm.exception))
 
-    def test_reader_exists(self):
+    def test_reader_exists_with_verify_true(self):
         fh = StringIO(u'1\n2\n3\n4')
 
         @self.module.register_identifier('format')
         def identifier(fh):
+            self.was_verified = True
             return '1' in fh.readline()
 
         @self.module.register_reader('format', TestClass)
         def reader(fh):
             return TestClass([int(x) for x in fh.read().split('\n')])
 
+        self.was_verified = False
+        instance = self.module.read(fh, format='format', into=TestClass,
+                                    verify=True)
+        self.assertEqual([1, 2, 3, 4], instance.list)
+        self.assertTrue(self.was_verified)
+
+        self.was_verified = False
         instance = self.module.read(fh, format='format', into=TestClass)
         self.assertEqual([1, 2, 3, 4], instance.list)
+        self.assertTrue(self.was_verified)
+
+        fh.close()
+
+    def test_warning_raised(self):
+        fh = StringIO(u'1\n2\n3\n4')
+
+        @self.module.register_identifier('format')
+        def identifier(fh):
+            self.was_verified = True
+            return False
+
+        @self.module.register_reader('format', TestClass)
+        def reader(fh):
+            return TestClass([int(x) for x in fh.read().split('\n')])
+
+        # Based on https://docs.python.org/2/library/warnings.html
+        with warnings.catch_warnings(record=True) as w:
+            # Cause all warnings to always be triggered.
+            warnings.simplefilter("always")
+
+            self.was_verified = False
+            instance = self.module.read(fh, format='format', into=TestClass,
+                                        verify=True)
+            self.assertEqual([1, 2, 3, 4], instance.list)
+            self.assertTrue(self.was_verified)
+
+            self.assertEquals(1, len(w))
+            self.assertTrue(issubclass(w[-1].category, UnprovenFormatWarning))
+
+        with warnings.catch_warnings(record=True) as w:
+            # Cause all warnings to always be triggered.
+            warnings.simplefilter("always")
+
+            self.was_verified = False
+            instance = self.module.read(fh, format='format', into=TestClass)
+            self.assertEqual([1, 2, 3, 4], instance.list)
+            self.assertTrue(self.was_verified)
+
+            self.assertEquals(1, len(w))
+            self.assertTrue(issubclass(w[-1].category, UnprovenFormatWarning))
+
+        fh.close()
+
+    def test_reader_exists_with_verify_false(self):
+        fh = StringIO(u'1\n2\n3\n4')
+
+        @self.module.register_identifier('format')
+        def identifier(fh):
+            self.was_verified = True
+            return '1' in fh.readline()
+
+        @self.module.register_reader('format', TestClass)
+        def reader(fh):
+            return TestClass([int(x) for x in fh.read().split('\n')])
+
+        self.was_verified = False
+        instance = self.module.read(fh, format='format', into=TestClass,
+                                    verify=False)
+        self.assertEqual([1, 2, 3, 4], instance.list)
+        self.assertFalse(self.was_verified)
         fh.close()
 
     def test_reader_exists_real_file(self):
@@ -569,6 +663,7 @@ class TestWrite(RegistryTest):
         with open(fp, 'U') as fh:
             self.assertEqual("1\n2\n3\n4", fh.read())
 
+
 class TestEmptyFileIdentifier(unittest.TestCase):
     def test_blank_file(self):
         fh = StringIO()
@@ -590,7 +685,7 @@ class TestEmptyFileIdentifier(unittest.TestCase):
         fh = StringIO(u'\n\n\t\n \t \t \n \n \n\n')
         self.assertTrue(empty_file_identifier(fh))
         fh.close()
-    
+
     def test_not_empty_file(self):
         fh = StringIO(u'\n\n\t\n a\t \t \n \n \n\n')
         self.assertFalse(empty_file_identifier(fh))

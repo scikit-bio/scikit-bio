@@ -76,9 +76,9 @@ Exceptions
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from ._warning import UnprovenFormatWarning
 from ._exception import (DuplicateRegistrationError, RecordError, FieldError,
                          FormatIdentificationError, FileFormatError)
-
 from ._registry import (write, read, guess_format, get_writer, get_reader,
                         get_identifier, list_write_formats, list_read_formats,
                         register_writer, register_reader, register_identifier)
@@ -87,7 +87,8 @@ __all__ = ['write', 'read', 'guess_format', 'get_writer', 'get_reader',
            'get_identifier', 'list_write_formats', 'list_read_formats',
            'register_writer', 'register_reader', 'register_identifier',
            'DuplicateRegistrationError', 'RecordError', 'FieldError',
-           'FormatIdentificationError', 'FileFormatError']
+           'FormatIdentificationError', 'FileFormatError',
+           'UnprovenFormatWarning']
 
 from numpy.testing import Tester
 test = Tester().test
