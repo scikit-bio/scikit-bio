@@ -40,7 +40,7 @@ class PairwiseAlignmentTests(TestCase):
 
     """
 
-    def testmake_identity_substitution_matrix(self):
+    def test_make_identity_substitution_matrix(self):
         expected = {'A': {'A':  1, 'C': -2, 'G': -2, 'T': -2, 'U': -2},
                     'C': {'A': -2, 'C':  1, 'G': -2, 'T': -2, 'U': -2},
                     'G': {'A': -2, 'C': -2, 'G':  1, 'T': -2, 'U': -2},
