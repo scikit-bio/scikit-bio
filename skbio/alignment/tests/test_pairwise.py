@@ -40,6 +40,14 @@ class PairwiseAlignmentTests(TestCase):
 
     """
 
+    def setUp(self):
+        """Ignore warnings during tests."""
+        warnings.simplefilter("ignore")
+
+    def tearDown(self):
+        """Clear the list of warning filters, so that no filters are active."""
+        warnings.resetwarnings()
+
     def test_make_identity_substitution_matrix(self):
         expected = {'A': {'A':  1, 'C': -2, 'G': -2, 'T': -2, 'U': -2},
                     'C': {'A': -2, 'C':  1, 'G': -2, 'T': -2, 'U': -2},
@@ -57,11 +65,9 @@ class PairwiseAlignmentTests(TestCase):
 
     def test_global_pairwise_align_protein(self):
         expected = ("HEAGAWGHEE-", "---PAW-HEAE", 23.0)
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            actual = global_pairwise_align_protein(
-                "HEAGAWGHEE", "PAWHEAE", gap_open_penalty=10.,
-                gap_extend_penalty=5.)
+        actual = global_pairwise_align_protein(
+            "HEAGAWGHEE", "PAWHEAE", gap_open_penalty=10.,
+            gap_extend_penalty=5.)
         self.assertEqual(str(actual[0]), expected[0])
         self.assertEqual(str(actual[1]), expected[1])
         self.assertEqual(actual.score(), expected[2])
@@ -70,11 +76,9 @@ class PairwiseAlignmentTests(TestCase):
 
         expected = ("HEAGAWGHE-E", "---PAW-HEAE", 30.0)
         # EMBOSS result: P---AW-HEAE
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            actual = global_pairwise_align_protein(
-                "HEAGAWGHEE", "PAWHEAE", gap_open_penalty=5.,
-                gap_extend_penalty=0.5)
+        actual = global_pairwise_align_protein(
+            "HEAGAWGHEE", "PAWHEAE", gap_open_penalty=5.,
+            gap_extend_penalty=0.5)
         self.assertEqual(str(actual[0]), expected[0])
         self.assertEqual(str(actual[1]), expected[1])
         self.assertEqual(actual.score(), expected[2])
@@ -83,11 +87,9 @@ class PairwiseAlignmentTests(TestCase):
 
         # Protein (rather than str) as input
         expected = ("HEAGAWGHEE-", "---PAW-HEAE", 23.0)
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            actual = global_pairwise_align_protein(
-                Protein("HEAGAWGHEE", "s1"), Protein("PAWHEAE", "s2"),
-                gap_open_penalty=10., gap_extend_penalty=5.)
+        actual = global_pairwise_align_protein(
+            Protein("HEAGAWGHEE", "s1"), Protein("PAWHEAE", "s2"),
+            gap_open_penalty=10., gap_extend_penalty=5.)
         self.assertEqual(str(actual[0]), expected[0])
         self.assertEqual(str(actual[1]), expected[1])
         self.assertEqual(actual.score(), expected[2])
@@ -96,12 +98,10 @@ class PairwiseAlignmentTests(TestCase):
 
         # One Alignment and one Protein as input
         expected = ("HEAGAWGHEE-", "---PAW-HEAE", 23.0)
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            actual = global_pairwise_align_protein(
-                Alignment([Protein("HEAGAWGHEE", "s1")]),
-                Protein("PAWHEAE", "s2"),
-                gap_open_penalty=10., gap_extend_penalty=5.)
+        actual = global_pairwise_align_protein(
+            Alignment([Protein("HEAGAWGHEE", "s1")]),
+            Protein("PAWHEAE", "s2"),
+            gap_open_penalty=10., gap_extend_penalty=5.)
         self.assertEqual(str(actual[0]), expected[0])
         self.assertEqual(str(actual[1]), expected[1])
         self.assertEqual(actual.score(), expected[2])
@@ -111,13 +111,11 @@ class PairwiseAlignmentTests(TestCase):
         # One single-sequence alignment as input and one double-sequence
         # alignment as input. Score confirmed manually.
         expected = ("HEAGAWGHEE-", "HDAGAWGHDE-", "---PAW-HEAE", 21.0)
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            actual = global_pairwise_align_protein(
-                Alignment([Protein("HEAGAWGHEE", "s1"),
-                           Protein("HDAGAWGHDE", "s2")]),
-                Alignment([Protein("PAWHEAE", "s3")]),
-                gap_open_penalty=10., gap_extend_penalty=5.)
+        actual = global_pairwise_align_protein(
+            Alignment([Protein("HEAGAWGHEE", "s1"),
+                       Protein("HDAGAWGHDE", "s2")]),
+            Alignment([Protein("PAWHEAE", "s3")]),
+            gap_open_penalty=10., gap_extend_penalty=5.)
         self.assertEqual(str(actual[0]), expected[0])
         self.assertEqual(str(actual[1]), expected[1])
         self.assertEqual(str(actual[2]), expected[2])
@@ -126,28 +124,22 @@ class PairwiseAlignmentTests(TestCase):
         self.assertEqual(actual.ids(), ["s1", "s2", "s3"])
 
         # ids are provided if they're not passed in
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            actual = global_pairwise_align_protein(
-                Protein("HEAGAWGHEE"), Protein("PAWHEAE"),
-                gap_open_penalty=10., gap_extend_penalty=5.)
+        actual = global_pairwise_align_protein(
+            Protein("HEAGAWGHEE"), Protein("PAWHEAE"),
+            gap_open_penalty=10., gap_extend_penalty=5.)
         self.assertEqual(actual.ids(), list('01'))
 
         # TypeError on invalid input
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            self.assertRaises(TypeError, global_pairwise_align_protein,
-                              42, "HEAGAWGHEE")
-            self.assertRaises(TypeError, global_pairwise_align_protein,
-                              "HEAGAWGHEE", 42)
+        self.assertRaises(TypeError, global_pairwise_align_protein,
+                          42, "HEAGAWGHEE")
+        self.assertRaises(TypeError, global_pairwise_align_protein,
+                          "HEAGAWGHEE", 42)
 
     def test_global_pairwise_align_protein_penalize_terminal_gaps(self):
         expected = ("HEAGAWGHEE", "---PAWHEAE", 1.0)
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            actual = global_pairwise_align_protein(
-                "HEAGAWGHEE", "PAWHEAE", gap_open_penalty=10.,
-                gap_extend_penalty=5., penalize_terminal_gaps=True)
+        actual = global_pairwise_align_protein(
+            "HEAGAWGHEE", "PAWHEAE", gap_open_penalty=10.,
+            gap_extend_penalty=5., penalize_terminal_gaps=True)
         self.assertEqual(str(actual[0]), expected[0])
         self.assertEqual(str(actual[1]), expected[1])
         self.assertEqual(actual.score(), expected[2])
@@ -166,11 +158,9 @@ class PairwiseAlignmentTests(TestCase):
         aln2 = ("TTTTTTTTTTTTTTTTTTTTTTTTTACCGTGGACCGT-AGGA"
                 "TTGGACC-AAGGTTAAAAAAAAAAAAAAAAAAAAAAAAAA")
         expected = (aln1, aln2, 131.0)
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            actual = global_pairwise_align_nucleotide(
-                seq1, seq2, gap_open_penalty=5., gap_extend_penalty=0.5,
-                match_score=5, mismatch_score=-4, penalize_terminal_gaps=False)
+        actual = global_pairwise_align_nucleotide(
+            seq1, seq2, gap_open_penalty=5., gap_extend_penalty=0.5,
+            match_score=5, mismatch_score=-4, penalize_terminal_gaps=False)
         self.assertEqual(str(actual[0]), expected[0])
         self.assertEqual(str(actual[1]), expected[1])
         self.assertEqual(actual.score(), expected[2])
@@ -180,22 +170,18 @@ class PairwiseAlignmentTests(TestCase):
         aln2 = ("TTTTTTTTTTTTTTTTTTTTTTTTTACCGTGGACCGT-AGGA"
                 "TTGGACC-AAGGTTAAAAAAAAAAAAAAAAAAAAAAAAAA")
         expected = (aln1, aln2, 97.0)
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            actual = global_pairwise_align_nucleotide(
-                seq1, seq2, gap_open_penalty=5., gap_extend_penalty=0.5,
-                match_score=5, mismatch_score=-4, penalize_terminal_gaps=True)
+        actual = global_pairwise_align_nucleotide(
+            seq1, seq2, gap_open_penalty=5., gap_extend_penalty=0.5,
+            match_score=5, mismatch_score=-4, penalize_terminal_gaps=True)
         self.assertEqual(str(actual[0]), expected[0])
         self.assertEqual(str(actual[1]), expected[1])
         self.assertEqual(actual.score(), expected[2])
 
     def test_local_pairwise_align_protein(self):
         expected = ("AWGHE", "AW-HE", 26.0, 4, 1)
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            actual = local_pairwise_align_protein(
-                "HEAGAWGHEE", "PAWHEAE", gap_open_penalty=10.,
-                gap_extend_penalty=5.)
+        actual = local_pairwise_align_protein(
+            "HEAGAWGHEE", "PAWHEAE", gap_open_penalty=10.,
+            gap_extend_penalty=5.)
         self.assertEqual(str(actual[0]), expected[0])
         self.assertEqual(str(actual[1]), expected[1])
         self.assertEqual(actual.score(), expected[2])
@@ -203,11 +189,9 @@ class PairwiseAlignmentTests(TestCase):
         self.assertEqual(actual.ids(), list('01'))
 
         expected = ("AWGHE-E", "AW-HEAE", 32.0, 4, 1)
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            actual = local_pairwise_align_protein(
-                "HEAGAWGHEE", "PAWHEAE", gap_open_penalty=5.,
-                gap_extend_penalty=0.5)
+        actual = local_pairwise_align_protein(
+            "HEAGAWGHEE", "PAWHEAE", gap_open_penalty=5.,
+            gap_extend_penalty=0.5)
         self.assertEqual(str(actual[0]), expected[0])
         self.assertEqual(str(actual[1]), expected[1])
         self.assertEqual(actual.score(), expected[2])
@@ -216,11 +200,9 @@ class PairwiseAlignmentTests(TestCase):
 
         expected = ("AWGHE", "AW-HE", 26.0, 4, 1)
         # Protein (rather than str) as input
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            actual = local_pairwise_align_protein(
-                Protein("HEAGAWGHEE", "s1"), Protein("PAWHEAE", "s2"),
-                gap_open_penalty=10., gap_extend_penalty=5.)
+        actual = local_pairwise_align_protein(
+            Protein("HEAGAWGHEE", "s1"), Protein("PAWHEAE", "s2"),
+            gap_open_penalty=10., gap_extend_penalty=5.)
         self.assertEqual(str(actual[0]), expected[0])
         self.assertEqual(str(actual[1]), expected[1])
         self.assertEqual(actual.score(), expected[2])
@@ -228,40 +210,32 @@ class PairwiseAlignmentTests(TestCase):
         self.assertEqual(actual.ids(), ["s1", "s2"])
 
         # Fails when either input is passed as an Alignment
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            self.assertRaises(TypeError, local_pairwise_align_protein,
-                              Alignment([Protein("HEAGAWGHEE", "s1")]),
-                              Protein("PAWHEAE", "s2"), gap_open_penalty=10.,
-                              gap_extend_penalty=5.)
-            self.assertRaises(TypeError, local_pairwise_align_protein,
-                              Protein("HEAGAWGHEE", "s1"),
-                              Alignment([Protein("PAWHEAE", "s2")]),
-                              gap_open_penalty=10., gap_extend_penalty=5.)
+        self.assertRaises(TypeError, local_pairwise_align_protein,
+                          Alignment([Protein("HEAGAWGHEE", "s1")]),
+                          Protein("PAWHEAE", "s2"), gap_open_penalty=10.,
+                          gap_extend_penalty=5.)
+        self.assertRaises(TypeError, local_pairwise_align_protein,
+                          Protein("HEAGAWGHEE", "s1"),
+                          Alignment([Protein("PAWHEAE", "s2")]),
+                          gap_open_penalty=10., gap_extend_penalty=5.)
 
         # ids are provided if they're not passed in
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            actual = local_pairwise_align_protein(
-                Protein("HEAGAWGHEE"), Protein("PAWHEAE"),
-                gap_open_penalty=10., gap_extend_penalty=5.)
+        actual = local_pairwise_align_protein(
+            Protein("HEAGAWGHEE"), Protein("PAWHEAE"),
+            gap_open_penalty=10., gap_extend_penalty=5.)
         self.assertEqual(actual.ids(), list('01'))
 
         # TypeError on invalid input
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            self.assertRaises(TypeError, local_pairwise_align_protein,
-                              42, "HEAGAWGHEE")
-            self.assertRaises(TypeError, local_pairwise_align_protein,
-                              "HEAGAWGHEE", 42)
+        self.assertRaises(TypeError, local_pairwise_align_protein,
+                          42, "HEAGAWGHEE")
+        self.assertRaises(TypeError, local_pairwise_align_protein,
+                          "HEAGAWGHEE", 42)
 
     def test_global_pairwise_align_nucleotide(self):
         expected = ("G-ACCTTGACCAGGTACC", "GAACTTTGAC---GTAAC", 41.0, 0, 0)
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            actual = global_pairwise_align_nucleotide(
-                "GACCTTGACCAGGTACC", "GAACTTTGACGTAAC", gap_open_penalty=5.,
-                gap_extend_penalty=0.5, match_score=5, mismatch_score=-4)
+        actual = global_pairwise_align_nucleotide(
+            "GACCTTGACCAGGTACC", "GAACTTTGACGTAAC", gap_open_penalty=5.,
+            gap_extend_penalty=0.5, match_score=5, mismatch_score=-4)
         self.assertEqual(str(actual[0]), expected[0])
         self.assertEqual(str(actual[1]), expected[1])
         self.assertEqual(actual.score(), expected[2])
@@ -269,11 +243,9 @@ class PairwiseAlignmentTests(TestCase):
         self.assertEqual(actual.ids(), list('01'))
 
         expected = ("-GACCTTGACCAGGTACC", "GAACTTTGAC---GTAAC", 32.0, 0, 0)
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            actual = global_pairwise_align_nucleotide(
-                "GACCTTGACCAGGTACC", "GAACTTTGACGTAAC", gap_open_penalty=10.,
-                gap_extend_penalty=0.5, match_score=5, mismatch_score=-4)
+        actual = global_pairwise_align_nucleotide(
+            "GACCTTGACCAGGTACC", "GAACTTTGACGTAAC", gap_open_penalty=10.,
+            gap_extend_penalty=0.5, match_score=5, mismatch_score=-4)
         self.assertEqual(str(actual[0]), expected[0])
         self.assertEqual(str(actual[1]), expected[1])
         self.assertEqual(actual.score(), expected[2])
@@ -282,12 +254,10 @@ class PairwiseAlignmentTests(TestCase):
 
         # DNA (rather than str) as input
         expected = ("-GACCTTGACCAGGTACC", "GAACTTTGAC---GTAAC", 32.0, 0, 0)
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            actual = global_pairwise_align_nucleotide(
-                DNA("GACCTTGACCAGGTACC", "s1"), DNA("GAACTTTGACGTAAC", "s2"),
-                gap_open_penalty=10., gap_extend_penalty=0.5, match_score=5,
-                mismatch_score=-4)
+        actual = global_pairwise_align_nucleotide(
+            DNA("GACCTTGACCAGGTACC", "s1"), DNA("GAACTTTGACGTAAC", "s2"),
+            gap_open_penalty=10., gap_extend_penalty=0.5, match_score=5,
+            mismatch_score=-4)
         self.assertEqual(str(actual[0]), expected[0])
         self.assertEqual(str(actual[1]), expected[1])
         self.assertEqual(actual.score(), expected[2])
@@ -297,14 +267,12 @@ class PairwiseAlignmentTests(TestCase):
         # Align one DNA sequence and one Alignment, score computed manually
         expected = ("-GACCTTGACCAGGTACC", "-GACCATGACCAGGTACC",
                     "GAACTTTGAC---GTAAC", 27.5, 0, 0)
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            actual = global_pairwise_align_nucleotide(
-                Alignment([DNA("GACCTTGACCAGGTACC", "s1"),
-                           DNA("GACCATGACCAGGTACC", "s2")]),
-                DNA("GAACTTTGACGTAAC", "s3"),
-                gap_open_penalty=10., gap_extend_penalty=0.5, match_score=5,
-                mismatch_score=-4)
+        actual = global_pairwise_align_nucleotide(
+            Alignment([DNA("GACCTTGACCAGGTACC", "s1"),
+                       DNA("GACCATGACCAGGTACC", "s2")]),
+            DNA("GAACTTTGACGTAAC", "s3"),
+            gap_open_penalty=10., gap_extend_penalty=0.5, match_score=5,
+            mismatch_score=-4)
         self.assertEqual(str(actual[0]), expected[0])
         self.assertEqual(str(actual[1]), expected[1])
         self.assertEqual(str(actual[2]), expected[2])
@@ -313,29 +281,23 @@ class PairwiseAlignmentTests(TestCase):
         self.assertEqual(actual.ids(), ["s1", "s2", "s3"])
 
         # ids are provided if they're not passed in
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            actual = global_pairwise_align_nucleotide(
-                DNA("GACCTTGACCAGGTACC"), DNA("GAACTTTGACGTAAC"),
-                gap_open_penalty=10., gap_extend_penalty=0.5, match_score=5,
-                mismatch_score=-4)
+        actual = global_pairwise_align_nucleotide(
+            DNA("GACCTTGACCAGGTACC"), DNA("GAACTTTGACGTAAC"),
+            gap_open_penalty=10., gap_extend_penalty=0.5, match_score=5,
+            mismatch_score=-4)
         self.assertEqual(actual.ids(), list('01'))
 
         # TypeError on invalid input
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            self.assertRaises(TypeError, global_pairwise_align_nucleotide,
-                              42, "HEAGAWGHEE")
-            self.assertRaises(TypeError, global_pairwise_align_nucleotide,
-                              "HEAGAWGHEE", 42)
+        self.assertRaises(TypeError, global_pairwise_align_nucleotide,
+                          42, "HEAGAWGHEE")
+        self.assertRaises(TypeError, global_pairwise_align_nucleotide,
+                          "HEAGAWGHEE", 42)
 
     def test_local_pairwise_align_nucleotide(self):
         expected = ("ACCTTGACCAGGTACC", "ACTTTGAC---GTAAC", 41.0, 1, 2)
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            actual = local_pairwise_align_nucleotide(
-                "GACCTTGACCAGGTACC", "GAACTTTGACGTAAC", gap_open_penalty=5.,
-                gap_extend_penalty=0.5, match_score=5, mismatch_score=-4)
+        actual = local_pairwise_align_nucleotide(
+            "GACCTTGACCAGGTACC", "GAACTTTGACGTAAC", gap_open_penalty=5.,
+            gap_extend_penalty=0.5, match_score=5, mismatch_score=-4)
         self.assertEqual(str(actual[0]), expected[0])
         self.assertEqual(str(actual[1]), expected[1])
         self.assertEqual(actual.score(), expected[2])
@@ -343,11 +305,9 @@ class PairwiseAlignmentTests(TestCase):
         self.assertEqual(actual.ids(), list('01'))
 
         expected = ("ACCTTGAC", "ACTTTGAC", 31.0, 1, 2)
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            actual = local_pairwise_align_nucleotide(
-                "GACCTTGACCAGGTACC", "GAACTTTGACGTAAC", gap_open_penalty=10.,
-                gap_extend_penalty=5., match_score=5, mismatch_score=-4)
+        actual = local_pairwise_align_nucleotide(
+            "GACCTTGACCAGGTACC", "GAACTTTGACGTAAC", gap_open_penalty=10.,
+            gap_extend_penalty=5., match_score=5, mismatch_score=-4)
         self.assertEqual(str(actual[0]), expected[0])
         self.assertEqual(str(actual[1]), expected[1])
         self.assertEqual(actual.score(), expected[2])
@@ -356,12 +316,10 @@ class PairwiseAlignmentTests(TestCase):
 
         # DNA (rather than str) as input
         expected = ("ACCTTGAC", "ACTTTGAC", 31.0, 1, 2)
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            actual = local_pairwise_align_nucleotide(
-                DNA("GACCTTGACCAGGTACC", "s1"), DNA("GAACTTTGACGTAAC", "s2"),
-                gap_open_penalty=10., gap_extend_penalty=5., match_score=5,
-                mismatch_score=-4)
+        actual = local_pairwise_align_nucleotide(
+            DNA("GACCTTGACCAGGTACC", "s1"), DNA("GAACTTTGACGTAAC", "s2"),
+            gap_open_penalty=10., gap_extend_penalty=5., match_score=5,
+            mismatch_score=-4)
         self.assertEqual(str(actual[0]), expected[0])
         self.assertEqual(str(actual[1]), expected[1])
         self.assertEqual(actual.score(), expected[2])
@@ -369,49 +327,41 @@ class PairwiseAlignmentTests(TestCase):
         self.assertEqual(actual.ids(), ["s1", "s2"])
 
         # Fails when either input is passed as an Alignment
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            self.assertRaises(TypeError, local_pairwise_align_nucleotide,
-                              Alignment([DNA("GACCTTGACCAGGTACC", "s1")]),
-                              DNA("GAACTTTGACGTAAC", "s2"),
-                              gap_open_penalty=10., gap_extend_penalty=5.,
-                              match_score=5, mismatch_score=-4)
-            self.assertRaises(TypeError, local_pairwise_align_nucleotide,
-                              DNA("GACCTTGACCAGGTACC", "s1"),
-                              Alignment([DNA("GAACTTTGACGTAAC", "s2")]),
-                              gap_open_penalty=10., gap_extend_penalty=5.,
-                              match_score=5, mismatch_score=-4)
+        self.assertRaises(TypeError, local_pairwise_align_nucleotide,
+                          Alignment([DNA("GACCTTGACCAGGTACC", "s1")]),
+                          DNA("GAACTTTGACGTAAC", "s2"),
+                          gap_open_penalty=10., gap_extend_penalty=5.,
+                          match_score=5, mismatch_score=-4)
+        self.assertRaises(TypeError, local_pairwise_align_nucleotide,
+                          DNA("GACCTTGACCAGGTACC", "s1"),
+                          Alignment([DNA("GAACTTTGACGTAAC", "s2")]),
+                          gap_open_penalty=10., gap_extend_penalty=5.,
+                          match_score=5, mismatch_score=-4)
 
         # ids are provided if they're not passed in
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            actual = local_pairwise_align_nucleotide(
-                DNA("GACCTTGACCAGGTACC"), DNA("GAACTTTGACGTAAC"),
-                gap_open_penalty=10., gap_extend_penalty=5., match_score=5,
-                mismatch_score=-4)
+        actual = local_pairwise_align_nucleotide(
+            DNA("GACCTTGACCAGGTACC"), DNA("GAACTTTGACGTAAC"),
+            gap_open_penalty=10., gap_extend_penalty=5., match_score=5,
+            mismatch_score=-4)
         self.assertEqual(actual.ids(), list('01'))
 
         # TypeError on invalid input
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            self.assertRaises(TypeError, local_pairwise_align_nucleotide,
-                              42, "HEAGAWGHEE")
-            self.assertRaises(TypeError, local_pairwise_align_nucleotide,
-                              "HEAGAWGHEE", 42)
+        self.assertRaises(TypeError, local_pairwise_align_nucleotide,
+                          42, "HEAGAWGHEE")
+        self.assertRaises(TypeError, local_pairwise_align_nucleotide,
+                          "HEAGAWGHEE", 42)
 
     def test_nucleotide_aligners_use_substitution_matrices(self):
         alt_sub = make_identity_substitution_matrix(10, -10)
         # alternate substitution matrix yields different alignment (the
         # aligned sequences and the scores are different) with local alignment
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            actual_no_sub = local_pairwise_align_nucleotide(
-                "GACCTTGACCAGGTACC", "GAACTTTGACGTAAC", gap_open_penalty=10.,
-                gap_extend_penalty=5., match_score=5, mismatch_score=-4)
-            actual_alt_sub = local_pairwise_align_nucleotide(
-                "GACCTTGACCAGGTACC", "GAACTTTGACGTAAC", gap_open_penalty=10.,
-                gap_extend_penalty=5., match_score=5, mismatch_score=-4,
-                substitution_matrix=alt_sub)
+        actual_no_sub = local_pairwise_align_nucleotide(
+            "GACCTTGACCAGGTACC", "GAACTTTGACGTAAC", gap_open_penalty=10.,
+            gap_extend_penalty=5., match_score=5, mismatch_score=-4)
+        actual_alt_sub = local_pairwise_align_nucleotide(
+            "GACCTTGACCAGGTACC", "GAACTTTGACGTAAC", gap_open_penalty=10.,
+            gap_extend_penalty=5., match_score=5, mismatch_score=-4,
+            substitution_matrix=alt_sub)
         self.assertNotEqual(str(actual_no_sub[0]), str(actual_alt_sub[0]))
         self.assertNotEqual(str(actual_no_sub[1]), str(actual_alt_sub[1]))
         self.assertNotEqual(actual_no_sub.score(),
@@ -419,15 +369,13 @@ class PairwiseAlignmentTests(TestCase):
 
         # alternate substitution matrix yields different alignment (the
         # aligned sequences and the scores are different) with global alignment
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            actual_no_sub = local_pairwise_align_nucleotide(
-                "GACCTTGACCAGGTACC", "GAACTTTGACGTAAC", gap_open_penalty=10.,
-                gap_extend_penalty=5., match_score=5, mismatch_score=-4)
-            actual_alt_sub = global_pairwise_align_nucleotide(
-                "GACCTTGACCAGGTACC", "GAACTTTGACGTAAC", gap_open_penalty=10.,
-                gap_extend_penalty=5., match_score=5, mismatch_score=-4,
-                substitution_matrix=alt_sub)
+        actual_no_sub = local_pairwise_align_nucleotide(
+            "GACCTTGACCAGGTACC", "GAACTTTGACGTAAC", gap_open_penalty=10.,
+            gap_extend_penalty=5., match_score=5, mismatch_score=-4)
+        actual_alt_sub = global_pairwise_align_nucleotide(
+            "GACCTTGACCAGGTACC", "GAACTTTGACGTAAC", gap_open_penalty=10.,
+            gap_extend_penalty=5., match_score=5, mismatch_score=-4,
+            substitution_matrix=alt_sub)
         self.assertNotEqual(str(actual_no_sub[0]), str(actual_alt_sub[0]))
         self.assertNotEqual(str(actual_no_sub[1]), str(actual_alt_sub[1]))
         self.assertNotEqual(actual_no_sub.score(),
