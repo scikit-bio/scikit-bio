@@ -8,6 +8,7 @@
 
 from __future__ import absolute_import, division, print_function
 
+from re import compile as re_compile
 from collections import Sequence, Counter, defaultdict
 from itertools import product
 from skbio.sequence import BiologicalSequenceError
@@ -1142,6 +1143,31 @@ class BiologicalSequence(Sequence):
         return self.__class__(self._sequence.upper(),
                               self.id, self.description)
 
+    def regex_iter(self, regex, retrieve_group_0=False):
+        """Find patterns specified by regular expression
+
+        Parameters
+        ----------
+        regex : SRE_Pattern
+            A compiled regular expression (e.g., from re.compile) with
+            finditer method
+        retrieve_group_0 : bool, optional
+            Defaults to ``False``. If ``True``, group(0) will be included in
+            each list of tuples, which represents the shortest possible
+            substring of the full sequence that contains all the other groups
+
+        Returns
+        -------
+        generator
+            yields lists of 3-tuples. Each 3-tuple represents a group from the
+            matched regular expression, and contains the start of the hit, the
+            end of the hit, and the substring that was hit
+        """
+        start = 0 if retrieve_group_0 else 1
+        for match in regex.finditer(self._sequence):
+            for g in range(start, len(match.groups())+1):
+                yield (match.start(g), match.end(g), match.group(g))
+
 
 class NucleotideSequence(BiologicalSequence):
     """Base class for nucleotide sequences.
@@ -1324,6 +1350,34 @@ class NucleotideSequence(BiologicalSequence):
         return self._complement(reversed(self))
     rc = reverse_complement
 
+    def find_features(self, feature_type, min_length=1):
+        """Search the sequence for features
+
+        Parameters
+        ----------
+        feature_type : {'purine_run', 'pyrimidine_run'}
+            The type of feature to find
+        min_length : int, optional
+            Defaults to 1. Only features at least as long as this will be
+            returned
+
+        Returns
+        -------
+        generator
+            Yields the start of the feature, the end of the feature, and the
+            subsequence that composes the feature
+        """
+        if feature_type not in ('purine_run', 'pyrimidine_run'):
+            raise ValueError("Unknown feature type: %s" % feature_type)
+
+        if feature_type == 'purine_run':
+            pat = re_compile('([AGag]{%d,}?)(?:[CTUctu]|$)' % min_length)
+        if feature_type == 'pyrimidine_run':
+            pat = re_compile('([CTUctu]{%d,}?)(?:[AGag]|$)' % min_length)
+
+        for hits in self.regex_iter(pat):
+            yield hits
+
 
 class DNASequence(NucleotideSequence):
     """Base class for DNA sequences.
@@ -1400,6 +1454,7 @@ class DNASequence(NucleotideSequence):
                 ''.join(nondegen_chars).lower())
 
         return degen_map
+
 
 # class is accessible with alternative name for convenience
 DNA = DNASequence

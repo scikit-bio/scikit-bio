@@ -10,6 +10,7 @@
 
 from __future__ import absolute_import, division, print_function
 
+from re import compile as re_compile
 from collections import Counter, defaultdict
 from unittest import TestCase, main
 
@@ -388,6 +389,17 @@ class BiologicalSequenceTests(TestCase):
                                       description='42')
         self.assertEqual(b.lower(), expected)
 
+    def test_regex_iter(self):
+        pat = re_compile('(T+A)(CA)')
+
+        obs = list(self.b1.regex_iter(pat))
+        exp = [(2, 5, 'TTA'), (5, 7, 'CA')]
+        self.assertEqual(obs, exp)
+
+        obs = list(self.b1.regex_iter(pat, retrieve_group_0=True))
+        exp = [(2, 7, 'TTACA'), (2, 5, 'TTA'), (5, 7, 'CA')]
+        self.assertEqual(obs, exp)
+
 
 class NucelotideSequenceTests(TestCase):
 
@@ -516,6 +528,40 @@ class NucelotideSequenceTests(TestCase):
         exp = [NucleotideSequence('-A.a'), NucleotideSequence('-A.c'),
                NucleotideSequence('-C.a'), NucleotideSequence('-C.c')]
         obs = sorted(NucleotideSequence('-M.m').nondegenerates(), key=str)
+        self.assertEqual(obs, exp)
+
+    def test_find_features(self):
+        exp = [(0, 2, 'GA'), (4, 5, 'A'), (6, 7, 'A')]
+        obs = list(self.b1.find_features('purine_run'))
+        self.assertEqual(obs, exp)
+
+        exp = [(2, 4, 'TT'), (5, 6, 'C')]
+        obs = list(self.b1.find_features('pyrimidine_run'))
+        self.assertEqual(obs, exp)
+
+        exp = [(0, 1, 'A'), (3, 5, 'GG'), (6, 7, 'A')]
+        obs = list(self.b2.find_features('purine_run'))
+        self.assertEqual(obs, exp)
+
+        exp = [(1, 3, 'CC'), (5, 6, 'U'), (7, 9, 'CC')]
+        obs = list(self.b2.find_features('pyrimidine_run'))
+        self.assertEqual(obs, exp)
+
+    def test_find_features_min_length(self):
+        exp = [(0, 2, 'GA')]
+        obs = list(self.b1.find_features('purine_run', 2))
+        self.assertEqual(obs, exp)
+
+        exp = [(2, 4, 'TT')]
+        obs = list(self.b1.find_features('pyrimidine_run', 2))
+        self.assertEqual(obs, exp)
+
+        exp = [(3, 5, 'GG')]
+        obs = list(self.b2.find_features('purine_run', 2))
+        self.assertEqual(obs, exp)
+
+        exp = [(1, 3, 'CC'), (7, 9, 'CC')]
+        obs = list(self.b2.find_features('pyrimidine_run', 2))
         self.assertEqual(obs, exp)
 
 
