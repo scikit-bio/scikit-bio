@@ -32,18 +32,17 @@ class MantelTestData(TestCase):
         self.minz = [[0, 0.5, 0.25], [0.5, 0, 0.1], [0.25, 0.1, 0]]
 
         # Version of the above dataset stored as DistanceMatrix instances.
-        self.minx_dm = DistanceMatrix([[0, 1, 2], [1, 0, 3], [2, 3, 0]])
-        self.miny_dm = DistanceMatrix([[0, 2, 7], [2, 0, 6], [7, 6, 0]])
-        self.minz_dm = DistanceMatrix([[0, 0.5, 0.25],
-                                       [0.5, 0, 0.1],
-                                       [0.25, 0.1, 0]])
+        self.minx_dm = DistanceMatrix(self.minx)
+        self.miny_dm = DistanceMatrix(self.miny)
+        self.minz_dm = DistanceMatrix(self.minz)
 
         # Versions of self.minx_dm and self.minz_dm that each have an extra ID
         # on the end.
         self.minx_dm_extra = DistanceMatrix([[0, 1, 2, 7],
-                                       [1, 0, 3, 2],
-                                       [2, 3, 0, 4],
-                                       [7, 2, 4, 0]], ['0', '1', '2', 'foo'])
+                                             [1, 0, 3, 2],
+                                             [2, 3, 0, 4],
+                                             [7, 2, 4, 0]],
+                                            ['0', '1', '2', 'foo'])
         self.minz_dm_extra = DistanceMatrix([[0, 0.5, 0.25, 3],
                                              [0.5, 0, 0.1, 24],
                                              [0.25, 0.1, 0, 5],
