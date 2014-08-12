@@ -1164,6 +1164,7 @@ class BiologicalSequence(Sequence):
             end of the hit, and the substring that was hit
         """
         start = 0 if retrieve_group_0 else 1
+
         for match in regex.finditer(self._sequence):
             for g in range(start, len(match.groups())+1):
                 yield (match.start(g), match.end(g), match.group(g))
@@ -1364,16 +1365,18 @@ class NucleotideSequence(BiologicalSequence):
         Returns
         -------
         generator
-            Yields the start of the feature, the end of the feature, and the
-            subsequence that composes the feature
+            Yields tuples of the start of the feature, the end of the feature,
+            and the subsequence that composes the feature
         """
         if feature_type not in ('purine_run', 'pyrimidine_run'):
             raise ValueError("Unknown feature type: %s" % feature_type)
 
         if feature_type == 'purine_run':
-            pat = re_compile('([AGag]{%d,}?)(?:[CTUctu]|$)' % min_length)
+            pat_str = '([AGag%s]{%d,})' % (acceptable, min_length)
         if feature_type == 'pyrimidine_run':
-            pat = re_compile('([CTUctu]{%d,}?)(?:[AGag]|$)' % min_length)
+            pat_str = '([CTUctu%s]{%d,})' % (acceptable, min_length)
+
+        pat = re_compile(pat_str)
 
         for hits in self.regex_iter(pat):
             yield hits
