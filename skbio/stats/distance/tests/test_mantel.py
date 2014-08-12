@@ -17,10 +17,29 @@ from pandas.util.testing import assert_frame_equal
 from skbio import DistanceMatrix
 from skbio.stats.distance import (DissimilarityMatrixError,
                                   DistanceMatrixError, mantel, pwmantel)
+from skbio.stats.distance._mantel import _order_dms
 from skbio.util import get_data_path
 
 
-class MantelTests(TestCase):
+class MantelTestData(TestCase):
+    """Shared test data used in ``mantel`` and ``pwmantel`` unit tests."""
+
+    def setUp(self):
+        # Small dataset of minimal size (3x3). Mix of floats and ints in a
+        # native Python nested list structure.
+        self.minx = [[0, 1, 2], [1, 0, 3], [2, 3, 0]]
+        self.miny = [[0, 2, 7], [2, 0, 6], [7, 6, 0]]
+        self.minz = [[0, 0.5, 0.25], [0.5, 0, 0.1], [0.25, 0.1, 0]]
+
+        # Version of the above dataset stored as DistanceMatrix instances.
+        self.minx_dm = DistanceMatrix([[0, 1, 2], [1, 0, 3], [2, 3, 0]])
+        self.miny_dm = DistanceMatrix([[0, 2, 7], [2, 0, 6], [7, 6, 0]])
+        self.minz_dm = DistanceMatrix([[0, 0.5, 0.25],
+                                       [0.5, 0, 0.1],
+                                       [0.25, 0.1, 0]])
+
+
+class MantelTests(MantelTestData):
     """Results were verified with R 3.1.0 and vegan 2.0-10 (vegan::mantel).
 
     vegan::mantel performs a one-sided (greater) test and does not have the
@@ -31,14 +50,10 @@ class MantelTests(TestCase):
     """
 
     def setUp(self):
+        super(MantelTests, self).setUp()
+
         self.methods = ('pearson', 'spearman')
         self.alternatives = ('two-sided', 'greater', 'less')
-
-        # Small dataset of minimal size (3x3). Mix of floats and ints in a
-        # native Python nested list structure.
-        self.minx = [[0, 1, 2], [1, 0, 3], [2, 3, 0]]
-        self.miny = [[0, 2, 7], [2, 0, 6], [7, 6, 0]]
-        self.minz = [[0, 0.5, 0.25], [0.5, 0, 0.1], [0.25, 0.1, 0]]
 
         # No variation in distances. Taken from Figure 10.20(b), pg. 603 in L&L
         # 3rd edition. Their example is 4x4 but using 3x3 here for easy
@@ -252,18 +267,19 @@ class MantelTests(TestCase):
         with self.assertRaises(ValueError):
             mantel([[0, 3], [3, 0]], [[0, 2], [2, 0]])
 
+    #def test_order_dms_invalid_input(self):
+    #    # mixed input types (DistanceMatrix and array_like)
+    #    _order_dms(self
 
-class PairwiseMantelTests(TestCase):
+
+class PairwiseMantelTests(MantelTestData):
     def setUp(self):
-        self.minx = DistanceMatrix([[0, 1, 2], [1, 0, 3], [2, 3, 0]])
-        self.miny = DistanceMatrix([[0, 2, 7], [2, 0, 6], [7, 6, 0]])
-        self.minz = DistanceMatrix([[0, 0.5, 0.25],
-                                    [0.5, 0, 0.1],
-                                    [0.25, 0.1, 0]])
-        self.min_dms = (self.minx, self.miny, self.minz)
+        super(PairwiseMantelTests, self).setUp()
 
-        # Versions of self.minx and self.minz (above) that each have an extra
-        # ID on the end.
+        self.min_dms = (self.minx_dm, self.miny_dm, self.minz_dm)
+
+        # Versions of self.minx_dm and self.minz_dm that each have an extra ID
+        # on the end.
         self.x_extra = DistanceMatrix([[0, 1, 2, 7],
                                        [1, 0, 3, 2],
                                        [2, 3, 0, 4],
@@ -321,24 +337,25 @@ class PairwiseMantelTests(TestCase):
         assert_frame_equal(obs, self.exp_results_minimal_with_labels)
 
     def test_duplicate_dms(self):
-        obs = pwmantel((self.minx, self.minx, self.minx), alternative='less')
+        obs = pwmantel((self.minx_dm, self.minx_dm, self.minx_dm),
+                       alternative='less')
         assert_frame_equal(obs, self.exp_results_duplicate_dms)
 
     def test_na_p_value(self):
-        obs = pwmantel((self.miny, self.minx), method='spearman',
+        obs = pwmantel((self.miny_dm, self.minx_dm), method='spearman',
                        permutations=0)
         assert_frame_equal(obs, self.exp_results_na_p_value)
 
     def test_too_few_permutations_for_p_value(self):
-        obs = pwmantel((self.miny, self.minx), method='spearman',
+        obs = pwmantel((self.miny_dm, self.minx_dm), method='spearman',
                        permutations=9)
         assert_frame_equal(obs, self.exp_results_too_few_permutations)
 
     def test_reordered_distance_matrices(self):
         # Matrices have matching IDs but they all have different ordering.
-        x = self.minx.filter(['1', '0', '2'])
-        y = self.miny.filter(['0', '2', '1'])
-        z = self.minz.filter(['1', '2', '0'])
+        x = self.minx_dm.filter(['1', '0', '2'])
+        y = self.miny_dm.filter(['0', '2', '1'])
+        z = self.minz_dm.filter(['1', '2', '0'])
 
         np.random.seed(0)
 
@@ -349,7 +366,7 @@ class PairwiseMantelTests(TestCase):
         # Matrices have some matching and nonmatching IDs, with different
         # ordering.
         x = self.x_extra.filter(['1', '0', 'foo', '2'])
-        y = self.miny.filter(['0', '2', '1'])
+        y = self.miny_dm.filter(['0', '2', '1'])
         z = self.z_extra.filter(['bar', '1', '2', '0'])
 
         np.random.seed(0)
@@ -370,7 +387,7 @@ class PairwiseMantelTests(TestCase):
                   '0': '0', '1': '1', '2': '2'}
 
         x = self.x_extra.filter(['b', 'a', 'foo', 'c'])
-        y = self.miny.filter(['0', '2', '1'])
+        y = self.miny_dm.filter(['0', '2', '1'])
         z = self.z_extra.filter(['bar', 'e', 'f', 'd'])
 
         x_copy = x.copy()
@@ -390,11 +407,11 @@ class PairwiseMantelTests(TestCase):
 
     def test_too_few_dms(self):
         with self.assertRaises(ValueError):
-            pwmantel([self.miny])
+            pwmantel([self.miny_dm])
 
     def test_invalid_input_type(self):
         with self.assertRaises(TypeError):
-            pwmantel([self.miny, self.minx, [[0, 42], [42, 0]]])
+            pwmantel([self.miny_dm, self.minx_dm, [[0, 42], [42, 0]]])
 
     def test_wrong_number_of_labels(self):
         with self.assertRaises(ValueError):
@@ -412,11 +429,11 @@ class PairwiseMantelTests(TestCase):
             pwmantel(self.min_dms, lookup=lookup)
 
     def test_no_matching_ids(self):
-        self.minx.ids = ['foo', 'bar', 'baz']
-        self.miny.ids = ['bro', 'fist', 'breh']
+        self.minx_dm.ids = ['foo', 'bar', 'baz']
+        self.miny_dm.ids = ['bro', 'fist', 'breh']
 
         with self.assertRaises(ValueError):
-            pwmantel((self.minx, self.miny, self.minz), strict=False)
+            pwmantel((self.minx_dm, self.miny_dm, self.minz_dm), strict=False)
 
 
 if __name__ == '__main__':
