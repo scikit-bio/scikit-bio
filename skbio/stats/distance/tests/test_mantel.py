@@ -419,7 +419,23 @@ class OrderDistanceMatricesTests(MantelTestData):
         obs = _order_dms(self.minx, self.miny)
         self.assertEqual(obs, (self.minx_dm, self.miny_dm))
 
-    # error-raising tests below
+    def test_reordered_distance_matrices(self):
+        # All matching IDs but with different orderings.
+        x = self.minx_dm.filter(['1', '0', '2'])
+        y = self.miny_dm.filter(['0', '2', '1'])
+
+        exp = (x, y.filter(['1', '0', '2']))
+        obs = _order_dms(x, y)
+        self.assertEqual(obs, exp)
+
+    def test_reordered_and_nonmatching_distance_matrices(self):
+        # Some matching and nonmatching IDs, with different ordering.
+        x = self.minx_dm_extra.filter(['1', '0', 'foo', '2'])
+        z = self.minz_dm_extra.filter(['bar', '0', '2', '1'])
+
+        exp = (x.filter(['1', '0', '2']), z.filter(['1', '0', '2']))
+        obs = _order_dms(x, z, strict=False)
+        self.assertEqual(obs, exp)
 
     def test_lookup_with_array_like(self):
         lookup = {'0': 'a', '1': 'b', '2': 'c'}
@@ -431,7 +447,7 @@ class OrderDistanceMatricesTests(MantelTestData):
             _order_dms(self.minx, [[0, 2], [2, 0]])
 
     def test_missing_ids_in_lookup(self):
-        # mapping for '1' is missing
+        # Mapping for '1' is missing.
         lookup = {'0': 'a', '2': 'c'}
 
         with self.assertRaises(KeyError):
