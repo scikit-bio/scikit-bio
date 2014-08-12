@@ -10,7 +10,6 @@
 
 from __future__ import absolute_import, division, print_function
 
-import warnings
 from unittest import TestCase, main
 from collections import Counter, defaultdict, OrderedDict
 try:
@@ -20,6 +19,7 @@ except ImportError:  # python3 system
 import tempfile
 
 import numpy as np
+import numpy.testing as npt
 from scipy.spatial.distance import hamming
 
 from skbio import (NucleotideSequence, DNASequence, RNASequence, DNA,
@@ -364,10 +364,9 @@ class SequenceCollectionTests(TestCase):
         self.assertEqual(self.s2.to_fasta(), exp2)
 
     def test_toFasta(self):
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            exp = ">d1\nGATTACA\n>d2\nTTG\n"
-            self.assertEqual(self.s1.toFasta(), exp)
+        exp = ">d1\nGATTACA\n>d2\nTTG\n"
+        obs = npt.assert_warns(UserWarning, self.s1.toFasta)
+        self.assertEqual(obs, exp)
 
     def test_upper(self):
         """upper functions as expected
