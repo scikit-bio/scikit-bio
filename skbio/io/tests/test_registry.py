@@ -77,6 +77,7 @@ class TestRegisterAndReader(RegistryTest):
             @self.module.register_reader('format1', TestClass, 1)
             def too_many_args(fh):
                 return
+
         self.assertTrue('register_reader' in str(cm.exception))
 
     def test_get_writer_when_only_writer_exists(self):
@@ -481,9 +482,9 @@ class TestRead(RegistryTest):
                 yield value
 
         generator = self.module.read(fh, format='format')
-        for a, b in zip([1, 2, 3, 4], generator):
+        for a, b in zip(generator, [1, 2, 3, 4]):
             self.assertEqual(a, b)
-        self.assertTrue(not fh.closed)
+        self.assertEqual(0, fh.tell())
         fh.close()
 
     def test_into_is_none_real_file(self):
@@ -491,15 +492,17 @@ class TestRead(RegistryTest):
         with open(fp, 'w') as fh:
             fh.write('1\n2\n3\n4')
 
+        self._test_fh = None
         @self.module.register_reader('format')
         def reader(fh):
+            self._test_fh = fh
             for value in [int(x) for x in fh.read().split('\n')]:
                 yield value
 
         generator = self.module.read(fp, format='format')
-        for a, b in zip([1, 2, 3, 4], generator):
+        for a, b in zip(generator, [1, 2, 3, 4]):
             self.assertEqual(a, b)
-        self.assertTrue(fh.closed)
+        self.assertTrue(self._test_fh.closed)
 
     def test_reader_does_not_exist(self):
         with self.assertRaises(FileFormatError) as cm:

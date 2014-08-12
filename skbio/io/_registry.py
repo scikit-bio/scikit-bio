@@ -8,7 +8,7 @@
 
 from warnings import warn
 
-from .util import open_file, _get_filehandle
+from .util import open_file, _is_string_or_bytes
 from skbio.io import (FormatIdentificationError, FileFormatError,
                       DuplicateRegistrationError, UnprovenFormatWarning)
 
@@ -69,8 +69,20 @@ def register_identifier(fmt):
         if fmt in _identifiers:
             raise DuplicateRegistrationError("'%s' already has an identifier."
                                              % fmt)
-        _identifiers[fmt] = identifier
-        return identifier
+
+        def wrapped_identifier(fp, mode='U', **kwargs):
+            with open_file(fp, mode) as fh:
+                orig_pos = fh.tell()
+                fh.seek(0)
+                result = identifier(fh, **kwargs)
+                fh.seek(orig_pos)
+                return result
+
+        wrapped_identifier.__doc__ = identifier.__doc__
+        wrapped_identifier.__name__ = identifier.__name__
+
+        _identifiers[fmt] = wrapped_identifier
+        return wrapped_identifier
     return decorator
 
 
@@ -132,7 +144,59 @@ def register_reader(fmt, *cls):
     skbio.io.read
 
     """
-    return _rw_decorator('reader', fmt, *cls)
+    arg_len = len(cls)
+    if arg_len > 1:
+        raise TypeError("register_reader takes 1 or 2 arguments (%d given)"
+                        % (arg_len + 1))
+
+    cls = None if arg_len == 0 else cls[0]
+
+    def decorator(reader):
+        format_class = _formats.setdefault(fmt, {}).setdefault(cls, {})
+
+        if 'reader' in format_class:
+            raise DuplicateRegistrationError("'%s' already has a %s for %s."
+                                             % (fmt, 'reader', cls.__name__))
+
+        if cls is None:
+            def wrapped_reader(fp, mode='U', mutate_fh=False, **kwargs):
+                with open_file(fp, mode) as fh:
+                    generator = reader(fh, **kwargs)
+                    if not mutate_fh and not _is_string_or_bytes(fp):
+                        orig_pos = fh.tell()
+                        read_pos = orig_pos
+                        try:
+                            while True:
+                                orig_pos = fh.tell()
+
+                                fh.seek(read_pos)
+                                next_result = next(generator)
+                                read_pos = fh.tell()
+
+                                fh.seek(orig_pos)
+
+                                yield next_result
+                        finally:
+                            fh.seek(orig_pos)
+                    else:
+                        while True:
+                            yield next(generator)
+
+        else:
+            def wrapped_reader(fp, mode='U', mutate_fh=False, **kwargs):
+                with open_file(fp, mode) as fh:
+                    orig_pos = fh.tell()
+                    result = reader(fh, **kwargs)
+                    if not mutate_fh:
+                        fh.seek(orig_pos)
+                    return result
+
+        wrapped_reader.__doc__ = reader.__doc__
+        wrapped_reader.__name__ = reader.__name__
+
+        format_class['reader'] = wrapped_reader
+        return wrapped_reader
+    return decorator
 
 
 def register_writer(fmt, *cls):
@@ -197,32 +261,29 @@ def register_writer(fmt, *cls):
     skbio.io.get_reader
 
     """
-    return _rw_decorator('writer', fmt, *cls)
-
-
-def _rw_decorator(name, fmt, *args):
-    cls = None
-    arg_len = len(args)
+    arg_len = len(cls)
     if arg_len > 1:
-        raise TypeError("register_%s takes 1 or 2 arguments (%d given)"
-                        % (name, arg_len + 1))
-    if arg_len == 1:
-        cls = args[0]
+        raise TypeError("register_writer takes 1 or 2 arguments (%d given)"
+                        % (arg_len + 1))
 
-    def decorator(func):
-        if fmt not in _formats:
-            _formats[fmt] = {}
-        format_dict = _formats[fmt]
-        if cls not in format_dict:
-            format_dict[cls] = {}
-        format_class = format_dict[cls]
-        if name not in format_class:
-            format_class[name] = func
-        else:
+    cls = None if arg_len == 0 else cls[0]
+
+    def decorator(writer):
+        format_class = _formats.setdefault(fmt, {}).setdefault(cls, {})
+
+        if 'writer' in format_class:
             raise DuplicateRegistrationError("'%s' already has a %s for %s."
-                                             % (fmt, name, cls.__name__))
+                                             % (fmt, 'writer', cls.__name__))
 
-        return func
+        def wrapped_writer(obj, fp, mode='w', **kwargs):
+            with open_file(fp, mode) as fh:
+                writer(obj, fh, **kwargs)
+
+        wrapped_writer.__doc__ = writer.__doc__
+        wrapped_writer.__name__ = writer.__name__
+
+        format_class['writer'] = wrapped_writer
+        return wrapped_writer
     return decorator
 
 
@@ -415,25 +476,23 @@ def guess_format(fp, cls=None):
     skbio.io.register_identifier
 
     """
-    with open_file(fp, 'U') as fh:
-        possibles = []
-        fh.seek(0)
-        for fmt in _identifiers:
-            if cls is not None and (fmt not in _formats or
-                                    cls not in _formats[fmt]):
-                continue
-            test = _identifiers[fmt]
-            if test(fh):
-                possibles.append(fmt)
-            fh.seek(0)
-        if not possibles:
-            raise FormatIdentificationError("Cannot guess the format for %s."
-                                            % str(fh))
-        if len(possibles) > 1:
-            raise FormatIdentificationError("File format is ambiguous, may be"
-                                            " one of %s." % str(possibles))
+    possibles = []
+    for fmt in _identifiers:
+        if cls is not None and (fmt not in _formats or
+                                cls not in _formats[fmt]):
+            continue
+        format_identifier = _identifiers[fmt]
+        if format_identifier(fp, mode='U'):
+            possibles.append(fmt)
 
-        return possibles[0]
+    if not possibles:
+        raise FormatIdentificationError("Cannot guess the format for %s."
+                                        % str(fp))
+    if len(possibles) > 1:
+        raise FormatIdentificationError("File format is ambiguous, may be"
+                                        " one of %s." % str(possibles))
+
+    return possibles[0]
 
 
 def read(fp, format=None, into=None, verify=True, mode='U', *args, **kwargs):
@@ -501,19 +560,15 @@ def read(fp, format=None, into=None, verify=True, mode='U', *args, **kwargs):
     if format is None and into is None:
         raise ValueError("`format` and `into` cannot both be None.")
 
-    fh, is_own = _get_filehandle(fp, mode)
-
     if format is None:
-        format = guess_format(fh, cls=into)
+        format = guess_format(fp, cls=into)
     elif verify:
         identifier = get_identifier(format)
         if identifier is not None:
-            fh.seek(0)
-            if not identifier(fh):
+            if not identifier(fp):
                 warn("%s could not be positively identified as a %s file." %
-                     (fp, format),
+                     (str(fp), format),
                      UnprovenFormatWarning)
-            fh.seek(0)
 
     reader = get_reader(format, into)
     if reader is None:
@@ -522,24 +577,7 @@ def read(fp, format=None, into=None, verify=True, mode='U', *args, **kwargs):
                                  if into is not None
                                  else 'generator'))
 
-    if into is None:
-        def wrapper_generator():
-            original = reader(fh, *args, **kwargs)
-            try:
-                while True:
-                    yield next(original)
-            finally:
-                if is_own:
-                    fh.close()
-
-        return wrapper_generator()
-
-    else:
-        result = reader(fh, *args, **kwargs)
-        if is_own:
-            fh.close()
-
-        return result
+    return reader(fp, mode=mode, **kwargs)
 
 
 def write(obj, format=None, into=None, mode='w', *args, **kwargs):
@@ -582,13 +620,12 @@ def write(obj, format=None, into=None, mode='w', *args, **kwargs):
     if into is None:
         raise ValueError("Must provide a filepath or filehandle for `into`")
 
-    with open_file(into, mode) as fh:
-        writer = get_writer(format, obj.__class__)
-        if writer is None:
-            raise FileFormatError("Cannot write %s into %s, no writer found."
-                                  % (format, str(fh)))
+    writer = get_writer(format, obj.__class__)
+    if writer is None:
+        raise FileFormatError("Cannot write %s into %s, no writer found."
+                              % (format, str(into)))
 
-        writer(obj, fh, *args, **kwargs)
+    writer(obj, into, mode=mode, **kwargs)
 
 
 @register_identifier('<empty file>')
