@@ -256,6 +256,11 @@ def pwmantel(dms, labels=None, strict=True, lookup=None, method='pearson',
 
     Examples
     --------
+    Import the functionality we'll use in the following examples. The call to
+    ``pd.set_option`` ensures consistent data frame formatting across
+    different versions of pandas. This call is not necessary for normal
+    use; it is only included here so that the doctests will pass.
+
     >>> import pandas as pd
     >>> from skbio import DistanceMatrix
     >>> from skbio.stats.distance import pwmantel
@@ -292,6 +297,57 @@ def pwmantel(dms, labels=None, strict=True, lookup=None, method='pearson',
 
     Note that we passed ``permutations=0`` to suppress significance tests; the
     p-values in the output are labelled ``N/A``.
+
+    In the previous example, the three distance matrices (``x``, ``y``, and
+    ``z``) have the same IDs, in the same order:
+
+    >>> x.ids
+    ('0', '1', '2')
+    >>> y.ids
+    ('0', '1', '2')
+    >>> z.ids
+    ('0', '1', '2')
+
+    If necessary, ``pwmantel`` will reorder the distance matrices prior to
+    running the tests. The function also supports a ``lookup`` dictionary that
+    maps distance matrix IDs to new IDs, providing a way to match IDs between
+    distance matrices prior to running the Mantel tests.
+
+    For example, let's reassign the IDs for the three distance matrices so that
+    there are no matching IDs between any pair:
+
+    >>> x.ids = ('a', 'b', 'c')
+    >>> y.ids = ('d', 'e', 'f')
+    >>> z.ids = ('g', 'h', 'i')
+
+    If we rerun ``pwmantel``, passing ``strict=False`` to ignore non-matching
+    IDs, we see that no matches exist, so the Mantel tests cannot be run:
+
+    >>> pwmantel((x, y, z), strict=False)
+    Traceback (most recent call last):
+        ...
+    ValueError: No matching IDs exist between the distance matrices.
+
+    We can define a ``lookup`` to specify how the IDs should be matched between
+    distance matrices:
+
+    >>> lookup = {'a': 'A', 'b': 'B', 'c': 'C',
+    ...           'd': 'A', 'e': 'B', 'f': 'C',
+    ...           'g': 'A', 'h': 'B', 'i': 'C'}
+
+    ``lookup`` maps each ID to ``'A'``, ``'B'``, or ``'C'``. If we rerun
+    ``pwmantel`` with ``lookup``, we get the same results as the original
+    example where all distance matrix IDs matched:
+
+    >>> pwmantel((x, y, z), labels=('x', 'y', 'z'), permutations=0,
+    ...          lookup=lookup) # doctest: +NORMALIZE_WHITESPACE
+                 statistic p-value  n   method  permutations alternative
+    dm1 dm2
+    x   y     0.755929     N/A  3  pearson             0   two-sided
+        z    -0.755929     N/A  3  pearson             0   two-sided
+    y   z    -0.142857     N/A  3  pearson             0   two-sided
+    <BLANKLINE>
+    [3 rows x 6 columns]
 
     """
     num_dms = len(dms)
