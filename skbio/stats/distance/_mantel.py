@@ -254,6 +254,45 @@ def pwmantel(dms, labels=None, strict=True, lookup=None, method='pearson',
     --------
     mantel
 
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> from skbio import DistanceMatrix
+    >>> from skbio.stats.distance import pwmantel
+    >>> try:
+    ...     # not necessary for normal use
+    ...     pd.set_option('show_dimensions', True)
+    ... except KeyError:
+    ...     pass
+
+    Define three 3x3 distance matrices:
+
+    >>> x = DistanceMatrix([[0, 1, 2],
+    ...                     [1, 0, 3],
+    ...                     [2, 3, 0]])
+    >>> y = DistanceMatrix([[0, 2, 7],
+    ...                     [2, 0, 6],
+    ...                     [7, 6, 0]])
+    >>> z = DistanceMatrix([[0, 5, 6],
+    ...                     [5, 0, 1],
+    ...                     [6, 1, 0]])
+
+    Run Mantel tests for each pair of distance matrices (there are 3 possible
+    pairs):
+
+    >>> pwmantel((x, y, z), labels=('x', 'y', 'z'),
+    ...          permutations=0) # doctest: +NORMALIZE_WHITESPACE
+                 statistic p-value  n   method  permutations alternative
+    dm1 dm2
+    x   y     0.755929     N/A  3  pearson             0   two-sided
+        z    -0.755929     N/A  3  pearson             0   two-sided
+    y   z    -0.142857     N/A  3  pearson             0   two-sided
+    <BLANKLINE>
+    [3 rows x 6 columns]
+
+    Note that we passed ``permutations=0`` to suppress significance tests; the
+    p-values in the output are labelled ``N/A``.
+
     """
     num_dms = len(dms)
 
