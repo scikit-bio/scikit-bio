@@ -1351,7 +1351,7 @@ class NucleotideSequence(BiologicalSequence):
         return self._complement(reversed(self))
     rc = reverse_complement
 
-    def find_features(self, feature_type, min_length=1):
+    def find_features(self, feature_type, min_length=1, allow_gaps=False):
         """Search the sequence for features
 
         Parameters
@@ -1361,6 +1361,9 @@ class NucleotideSequence(BiologicalSequence):
         min_length : int, optional
             Defaults to 1. Only features at least as long as this will be
             returned
+        allow_gaps : bool, optional
+            Defaults to ``False``. If ``True``, then gaps will not be
+            considered to disrupt a feature
 
         Returns
         -------
@@ -1371,6 +1374,8 @@ class NucleotideSequence(BiologicalSequence):
         if feature_type not in ('purine_run', 'pyrimidine_run'):
             raise ValueError("Unknown feature type: %s" % feature_type)
 
+        acceptable = '-' if allow_gaps else ''
+
         if feature_type == 'purine_run':
             pat_str = '([AGag%s]{%d,})' % (acceptable, min_length)
         if feature_type == 'pyrimidine_run':
@@ -1379,7 +1384,11 @@ class NucleotideSequence(BiologicalSequence):
         pat = re_compile(pat_str)
 
         for hits in self.regex_iter(pat):
-            yield hits
+            if allow_gaps:
+                if len(hits[2].replace('-', '')) >= min_length:
+                    yield hits
+            else:
+                yield hits
 
 
 class DNASequence(NucleotideSequence):
