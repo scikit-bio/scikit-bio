@@ -38,6 +38,18 @@ class MantelTestData(TestCase):
                                        [0.5, 0, 0.1],
                                        [0.25, 0.1, 0]])
 
+        # Versions of self.minx_dm and self.minz_dm that each have an extra ID
+        # on the end.
+        self.minx_dm_extra = DistanceMatrix([[0, 1, 2, 7],
+                                       [1, 0, 3, 2],
+                                       [2, 3, 0, 4],
+                                       [7, 2, 4, 0]], ['0', '1', '2', 'foo'])
+        self.minz_dm_extra = DistanceMatrix([[0, 0.5, 0.25, 3],
+                                             [0.5, 0, 0.1, 24],
+                                             [0.25, 0.1, 0, 5],
+                                             [3, 24, 5, 0]],
+                                            ['0', '1', '2', 'bar'])
+
 
 class MantelTests(MantelTestData):
     """Results were verified with R 3.1.0 and vegan 2.0-10 (vegan::mantel).
@@ -259,10 +271,6 @@ class MantelTests(MantelTestData):
         with self.assertRaises(ValueError):
             mantel([[1]], [[1]], alternative='no cog yay')
 
-        # mismatched shape
-        with self.assertRaises(ValueError):
-            mantel(self.minx, [[0, 2], [2, 0]])
-
         # too small dms
         with self.assertRaises(ValueError):
             mantel([[0, 3], [3, 0]], [[0, 2], [2, 0]])
@@ -273,17 +281,6 @@ class PairwiseMantelTests(MantelTestData):
         super(PairwiseMantelTests, self).setUp()
 
         self.min_dms = (self.minx_dm, self.miny_dm, self.minz_dm)
-
-        # Versions of self.minx_dm and self.minz_dm that each have an extra ID
-        # on the end.
-        self.x_extra = DistanceMatrix([[0, 1, 2, 7],
-                                       [1, 0, 3, 2],
-                                       [2, 3, 0, 4],
-                                       [7, 2, 4, 0]], ['0', '1', '2', 'foo'])
-        self.z_extra = DistanceMatrix([[0, 0.5, 0.25, 3],
-                                       [0.5, 0, 0.1, 24],
-                                       [0.25, 0.1, 0, 5],
-                                       [3, 24, 5, 0]], ['0', '1', '2', 'bar'])
 
         # Load expected results. We have to load the p-value column (column
         # index 3) as a string dtype in order to compare with the in-memory
@@ -361,9 +358,9 @@ class PairwiseMantelTests(MantelTestData):
     def test_strict(self):
         # Matrices have some matching and nonmatching IDs, with different
         # ordering.
-        x = self.x_extra.filter(['1', '0', 'foo', '2'])
+        x = self.minx_dm_extra.filter(['1', '0', 'foo', '2'])
         y = self.miny_dm.filter(['0', '2', '1'])
-        z = self.z_extra.filter(['bar', '1', '2', '0'])
+        z = self.minz_dm_extra.filter(['bar', '1', '2', '0'])
 
         np.random.seed(0)
 
@@ -371,20 +368,17 @@ class PairwiseMantelTests(MantelTestData):
         obs = pwmantel((x, y, z), alternative='greater', strict=False)
         assert_frame_equal(obs, self.exp_results_reordered_distance_matrices)
 
-        with self.assertRaises(ValueError):
-            pwmantel((x, y, z), strict=True)
-
     def test_id_lookup(self):
         # Matrices have mismatched IDs but a lookup is provided.
-        self.x_extra.ids = ['a', 'b', 'c', 'foo']
-        self.z_extra.ids = ['d', 'e', 'f', 'bar']
+        self.minx_dm_extra.ids = ['a', 'b', 'c', 'foo']
+        self.minz_dm_extra.ids = ['d', 'e', 'f', 'bar']
         lookup = {'a': '0', 'b': '1', 'c': '2', 'foo': 'foo',
                   'd': '0', 'e': '1', 'f': '2', 'bar': 'bar',
                   '0': '0', '1': '1', '2': '2'}
 
-        x = self.x_extra.filter(['b', 'a', 'foo', 'c'])
+        x = self.minx_dm_extra.filter(['b', 'a', 'foo', 'c'])
         y = self.miny_dm.filter(['0', '2', '1'])
-        z = self.z_extra.filter(['bar', 'e', 'f', 'd'])
+        z = self.minz_dm_extra.filter(['bar', 'e', 'f', 'd'])
 
         x_copy = x.copy()
         y_copy = y.copy()
@@ -417,24 +411,43 @@ class PairwiseMantelTests(MantelTestData):
         with self.assertRaises(ValueError):
             pwmantel(self.min_dms, labels=['foo', 'bar', 'foo'])
 
+
+class OrderDistanceMatricesTests(MantelTestData):
+    def setUp(self):
+        super(OrderDistanceMatricesTests, self).setUp()
+
+    def test_array_like_input(self):
+        obs = _order_dms(self.minx, self.miny)
+        self.assertEqual(obs, (self.minx_dm, self.miny_dm))
+
+    # error-raising tests below
+
+    def test_lookup_with_array_like(self):
+        lookup = {'0': 'a', '1': 'b', '2': 'c'}
+        with self.assertRaises(ValueError):
+            _order_dms(self.minx, self.miny, lookup=lookup)
+
+    def test_shape_mismatch(self):
+        with self.assertRaises(ValueError):
+            _order_dms(self.minx, [[0, 2], [2, 0]])
+
     def test_missing_ids_in_lookup(self):
         # mapping for '1' is missing
         lookup = {'0': 'a', '2': 'c'}
 
         with self.assertRaises(KeyError):
-            pwmantel(self.min_dms, lookup=lookup)
+            _order_dms(self.minx_dm, self.miny_dm, lookup=lookup)
+
+    def test_nonmatching_ids_strict_true(self):
+        with self.assertRaises(ValueError):
+            _order_dms(self.minx_dm, self.minz_dm_extra, strict=True)
 
     def test_no_matching_ids(self):
         self.minx_dm.ids = ['foo', 'bar', 'baz']
-        self.miny_dm.ids = ['bro', 'fist', 'breh']
+        self.miny_dm.ids = ['a', 'b', 'c']
 
         with self.assertRaises(ValueError):
-            pwmantel((self.minx_dm, self.miny_dm, self.minz_dm), strict=False)
-
-
-class OrderDistanceMatricesTests(MantelTestData):
-    def setUp(self):
-        super(OrderDistanceMatricesTests, self).setUp()
+            _order_dms(self.minx_dm, self.miny_dm, strict=False)
 
     def test_mixed_input_types(self):
         with self.assertRaises(TypeError):

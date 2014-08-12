@@ -398,6 +398,10 @@ def _order_dms(x, y, strict=True, lookup=None):
     """Intersect distance matrices and put them in the same order."""
     if (not isinstance(x, DistanceMatrix) and
         not isinstance(y, DistanceMatrix)):
+        if lookup is not None:
+            raise ValueError("ID lookup can only be provided if inputs are "
+                             "DistanceMatrix instances.")
+
         x = DistanceMatrix(x)
         y = DistanceMatrix(y)
 
