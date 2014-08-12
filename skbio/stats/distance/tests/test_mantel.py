@@ -103,10 +103,8 @@ class MantelTests(TestCase):
                 npt.assert_equal(obs[1], np.nan)
 
     def test_distance_matrix_instances_as_input(self):
-        # IDs shouldn't matter -- the function should only care about the
-        # matrix data
         dmx = DistanceMatrix(self.minx)
-        dmy = DistanceMatrix(self.miny, ['no', 'cog', 'yay'])
+        dmy = DistanceMatrix(self.miny)
 
         np.random.seed(0)
 
@@ -132,7 +130,7 @@ class MantelTests(TestCase):
         for method in self.methods:
             obs = mantel(self.minx, self.minx, method=method,
                          alternative='less')
-            self.assertEqual(obs, (1, 1))
+            self.assertEqual(obs, (1, 1, 3))
 
         np.random.seed(0)
 
@@ -186,18 +184,18 @@ class MantelTests(TestCase):
             # distances
             obs = mantel(self.miny, self.no_variation, method='pearson',
                          alternative=alt)
-            npt.assert_equal(obs, (0.0, 1.0))
+            npt.assert_equal(obs, (0.0, 1.0, 3))
 
             obs = mantel(self.no_variation, self.miny, method='pearson',
                          alternative=alt)
-            npt.assert_equal(obs, (0.0, 1.0))
+            npt.assert_equal(obs, (0.0, 1.0, 3))
 
             obs = mantel(self.no_variation, self.no_variation,
                          method='pearson', alternative=alt)
-            npt.assert_equal(obs, (1.0, 1.0))
+            npt.assert_equal(obs, (1.0, 1.0, 3))
 
     def test_no_variation_spearman(self):
-        exp = (np.nan, np.nan)
+        exp = (np.nan, np.nan, 3)
         for alt in self.alternatives:
             obs = mantel(self.miny, self.no_variation, method='spearman',
                          alternative=alt)
