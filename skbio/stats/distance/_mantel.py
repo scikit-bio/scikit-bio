@@ -437,4 +437,4 @@ def _order_dms(x, y, strict=True, lookup=None):
         raise TypeError(
             "Mixing DistanceMatrix and array_like input types is not "
             "supported. Both x and y must either be DistanceMatrix instances "
-            "or array_like.")
+            "or array_like, but not mixed.")

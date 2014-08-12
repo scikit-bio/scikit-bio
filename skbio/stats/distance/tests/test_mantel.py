@@ -267,10 +267,6 @@ class MantelTests(MantelTestData):
         with self.assertRaises(ValueError):
             mantel([[0, 3], [3, 0]], [[0, 2], [2, 0]])
 
-    #def test_order_dms_invalid_input(self):
-    #    # mixed input types (DistanceMatrix and array_like)
-    #    _order_dms(self
-
 
 class PairwiseMantelTests(MantelTestData):
     def setUp(self):
@@ -434,6 +430,15 @@ class PairwiseMantelTests(MantelTestData):
 
         with self.assertRaises(ValueError):
             pwmantel((self.minx_dm, self.miny_dm, self.minz_dm), strict=False)
+
+
+class OrderDistanceMatricesTests(MantelTestData):
+    def setUp(self):
+        super(OrderDistanceMatricesTests, self).setUp()
+
+    def test_mixed_input_types(self):
+        with self.assertRaises(TypeError):
+            _order_dms(self.minx, self.minz_dm)
 
 
 if __name__ == '__main__':
