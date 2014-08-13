@@ -67,15 +67,14 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided',
 
     Parameters
     ----------
-    x, y : array_like or DistanceMatrix
-        Input distance matrices to compare. Both matrices must have the same
-        shape and be at least 3x3 in size. If ``array_like``, will be cast to
-        ``DistanceMatrix`` (thus the requirements of a valid ``DistanceMatrix``
-        apply to both `x` and `y`, such as symmetry and hollowness). If inputs
-        are already ``DistanceMatrix`` instances, the IDs do not need to match
-        between them; they are assumed to both be in the same order regardless
-        of their IDs (the underlying data matrix is the only thing considered
-        by this function).
+    x, y : DistanceMatrix or array_like
+        Input distance matrices to compare. If `x` and `y` are both
+        ``DistanceMatrix`` instances, they will be reordered based on matching
+        IDs (see `strict` and `lookup` below for handling matching/mismatching
+        IDs); thus they are not required to be in the same ID order. If `x` and
+        `y` are ``array_like``, no reordering is applied and both matrices must
+        have the same shape. In either case, `x` and `y` must be at least 3x3
+        in size *after* reordering and matching of IDs.
     method : {'pearson', 'spearman'}
         Method used to compute the correlation between distance matrices.
     permutations : int, optional
@@ -95,32 +94,46 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided',
         or equal to the original coefficient.
     strict : bool, optional
         If ``True``, raises a ``ValueError`` if IDs are found that do not exist
-        in both distance matrices for the current pairwise test. If ``False``,
-        these "extra" (nonmatching) IDs are discarded before running the
-        pairwise Mantel test.
+        in both distance matrices. If ``False``, any nonmatching IDs are
+        discarded before running the test. See `n` (in Returns section below)
+        for the number of matching IDs that were used in the test. This
+        parameter is ignored if `x` and `y` are ``array_like``.
     lookup : dict, optional
         Maps each ID in the distance matrices to a new ID. Used to match up IDs
         across distance matrices prior to running the Mantel test. If the IDs
-        already match between the distance matrices in `dms`, this parameter is
-        not necessary.
+        already match between the distance matrices, this parameter is not
+        necessary. This parameter is disallowed if `x` and `y` are
+        ``array_like``.
 
     Returns
     -------
-    tuple of floats
-        Correlation coefficient and p-value of the test.
+    corr_coeff : float
+        Correlation coefficient of the test (depends on `method`).
+    p_value : float
+        p-value of the test.
+    n : int
+        Number of rows/columns in each of the distance matrices, after any
+        reordering/matching of IDs. If ``strict=False``, nonmatching IDs may
+        have been discarded from one or both of the distance matrices prior to
+        running the Mantel test, so this value may be important as it indicates
+        the *actual* size of the matrices that were compared.
 
     Raises
     ------
     ValueError
-        If `x` and `y` are not the same shape and at least 3x3 in size, or an
-        invalid `method`, number of `permutations`, or `alternative` are
-        provided.
+        If `x` and `y` are not at least 3x3 in size after reordering/matching
+        of IDs, or an invalid `method`, number of `permutations`, or
+        `alternative` are provided.
+    TypeError
+        If `x` and `y` are not both ``DistanceMatrix`` instances or
+        ``array_like``.
 
     See Also
     --------
     DistanceMatrix
     scipy.stats.pearsonr
     scipy.stats.spearmanr
+    pwmantel
 
     Notes
     -----
@@ -146,14 +159,19 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided',
 
     Examples
     --------
+    Import the functionality we'll use in the following examples:
+
+    >>> from skbio import DistanceMatrix
+    >>> from skbio.stats.distance import mantel
+
     Define two 3x3 distance matrices:
 
-    >>> x = [[0, 1, 2],
-    ...      [1, 0, 3],
-    ...      [2, 3, 0]]
-    >>> y = [[0, 2, 7],
-    ...      [2, 0, 6],
-    ...      [7, 6, 0]]
+    >>> x = DistanceMatrix([[0, 1, 2],
+    ...                     [1, 0, 3],
+    ...                     [2, 3, 0]])
+    >>> y = DistanceMatrix([[0, 2, 7],
+    ...                     [2, 0, 6],
+    ...                     [7, 6, 0]])
 
     Compute the Pearson correlation between them and assess significance using
     a two-sided test with 999 permutations:
@@ -161,11 +179,77 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided',
     >>> coeff, p_value, n = mantel(x, y)
     >>> round(coeff, 4)
     0.7559
-    >>> n
-    3
 
     Thus, we see a moderate-to-strong positive correlation (:math:`r_M=0.7559`)
     between the two matrices.
+
+    In the previous example, the distance matrices (``x`` and ``y``) have the
+    same IDs, in the same order:
+
+    >>> x.ids
+    ('0', '1', '2')
+    >>> y.ids
+    ('0', '1', '2')
+
+    If necessary, ``mantel`` will reorder the distance matrices prior to
+    running the test. The function also supports a ``lookup`` dictionary that
+    maps distance matrix IDs to new IDs, providing a way to match IDs between
+    distance matrices prior to running the Mantel test.
+
+    For example, let's reassign the distance matrices' IDs so that there are no
+    matching IDs between them:
+
+    >>> x.ids = ('a', 'b', 'c')
+    >>> y.ids = ('d', 'e', 'f')
+
+    If we rerun ``mantel``, we get the following error notifying us that there
+    are nonmatching IDs (this is the default behavior with ``strict=True``):
+
+    >>> mantel(x, y)
+    Traceback (most recent call last):
+        ...
+    ValueError: IDs exist that are not in both distance matrices.
+
+    If we pass ``strict=False`` to ignore/discard nonmatching IDs, we see that
+    no matches exist between `x` and `y`, so the Mantel test still cannot be
+    run:
+
+    >>> mantel(x, y, strict=False)
+    Traceback (most recent call last):
+        ...
+    ValueError: No matching IDs exist between the distance matrices.
+
+    To work around this, we can define a ``lookup`` dictionary to specify how
+    the IDs should be matched between distance matrices:
+
+    >>> lookup = {'a': 'A', 'b': 'B', 'c': 'C',
+    ...           'd': 'A', 'e': 'B', 'f': 'C'}
+
+    ``lookup`` maps each ID to ``'A'``, ``'B'``, or ``'C'``. If we rerun
+    ``mantel`` with ``lookup``, we get the same results as the original
+    example where all distance matrix IDs matched:
+
+    >>> coeff, p_value, n = mantel(x, y, lookup=lookup)
+    >>> round(coeff, 4)
+    0.7559
+
+    ``mantel`` also accepts input that is ``array_like``. For example, if we
+    redefine `x` and `y` as nested Python lists instead of ``DistanceMatrix``
+    instances, we obtain the same result:
+
+    >>> x = [[0, 1, 2],
+    ...      [1, 0, 3],
+    ...      [2, 3, 0]]
+    >>> y = [[0, 2, 7],
+    ...      [2, 0, 6],
+    ...      [7, 6, 0]]
+    >>> coeff, p_value, n = mantel(x, y)
+    >>> round(coeff, 4)
+    0.7559
+
+    It is import to note that reordering/matching of IDs (and hence the
+    ``strict`` and ``lookup`` parameters) do not apply when input is
+    ``array_like`` because there is no notion of IDs.
 
     """
     if method == 'pearson':
@@ -219,22 +303,23 @@ def pwmantel(dms, labels=None, method='pearson', permutations=999,
 
     Runs a Mantel test for each pair of distance matrices and collates the
     results in a data frame. Distance matrices do not need to be in the same
-    ID order (contrary to how the ``mantel`` function behaves). Distance
-    matrices will be re-ordered prior to running each pairwise test, and if
-    ``strict=False``, IDs that don't match between a pair of distance matrices
-    will be dropped prior to running the test (otherwise a ``ValueError`` will
-    be raised if there are non-matching IDs between any pair of distance
-    matrices).
+    ID order if they are ``DistanceMatrix`` instances. Distance matrices will
+    be re-ordered prior to running each pairwise test, and if ``strict=False``,
+    IDs that don't match between a pair of distance matrices will be dropped
+    prior to running the test (otherwise a ``ValueError`` will be raised if
+    there are nonmatching IDs between any pair of distance matrices).
 
     Parameters
     ----------
-    dms : iterable of DistanceMatrix objects
-        DistanceMatrix instances to perform pairwise Mantel tests upon.
+    dms : iterable of DistanceMatrix objects or array_like objects
+        Distance matrices to perform pairwise Mantel tests upon. If they are
+        ``array_like`` (but not ``DistanceMatrix`` instances), no
+        reordering/matching of IDs will be performed.
     labels : iterable of str or int, optional
-        Labels for each ``DistanceMatrix`` in `dms`. These are
-        used in the results data frame to identify the pair of distance
-        matrices used in a pairwise Mantel test. If ``None``, defaults to
-        monotonically-increasing integers starting at zero.
+        Labels for each distance matrix in `dms`. These are used in the results
+        data frame to identify the pair of distance matrices used in a pairwise
+        Mantel test. If ``None``, defaults to monotonically-increasing integers
+        starting at zero.
     method : {'pearson', 'spearman'}
         Correlation method. See ``mantel`` function for more details.
     permutations : int, optional
@@ -251,7 +336,7 @@ def pwmantel(dms, labels=None, method='pearson', permutations=999,
     pandas.DataFrame
         Data frame containing the results of each pairwise test (one per row).
         Includes the number of objects considered in each test as column ``n``
-        (after applying `lookup` and filtering non-matching IDs if
+        (after applying `lookup` and filtering nonmatching IDs if
         ``strict=False``). Column ``p-value`` has the p-values formatted as
         strings with the correct number of decimal places, or ``N/A`` if a
         p-value could not be computed.
@@ -303,57 +388,6 @@ def pwmantel(dms, labels=None, method='pearson', permutations=999,
 
     Note that we passed ``permutations=0`` to suppress significance tests; the
     p-values in the output are labelled ``N/A``.
-
-    In the previous example, the three distance matrices (``x``, ``y``, and
-    ``z``) have the same IDs, in the same order:
-
-    >>> x.ids
-    ('0', '1', '2')
-    >>> y.ids
-    ('0', '1', '2')
-    >>> z.ids
-    ('0', '1', '2')
-
-    If necessary, ``pwmantel`` will reorder the distance matrices prior to
-    running the tests. The function also supports a ``lookup`` dictionary that
-    maps distance matrix IDs to new IDs, providing a way to match IDs between
-    distance matrices prior to running the Mantel tests.
-
-    For example, let's reassign the IDs for the three distance matrices so that
-    there are no matching IDs between any pair:
-
-    >>> x.ids = ('a', 'b', 'c')
-    >>> y.ids = ('d', 'e', 'f')
-    >>> z.ids = ('g', 'h', 'i')
-
-    If we rerun ``pwmantel``, passing ``strict=False`` to ignore non-matching
-    IDs, we see that no matches exist, so the Mantel tests cannot be run:
-
-    >>> pwmantel((x, y, z), strict=False)
-    Traceback (most recent call last):
-        ...
-    ValueError: No matching IDs exist between the distance matrices.
-
-    We can define a ``lookup`` to specify how the IDs should be matched between
-    distance matrices:
-
-    >>> lookup = {'a': 'A', 'b': 'B', 'c': 'C',
-    ...           'd': 'A', 'e': 'B', 'f': 'C',
-    ...           'g': 'A', 'h': 'B', 'i': 'C'}
-
-    ``lookup`` maps each ID to ``'A'``, ``'B'``, or ``'C'``. If we rerun
-    ``pwmantel`` with ``lookup``, we get the same results as the original
-    example where all distance matrix IDs matched:
-
-    >>> pwmantel((x, y, z), labels=('x', 'y', 'z'), permutations=0,
-    ...          lookup=lookup) # doctest: +NORMALIZE_WHITESPACE
-                 statistic p-value  n   method  permutations alternative
-    dm1 dm2
-    x   y     0.755929     N/A  3  pearson             0   two-sided
-        z    -0.755929     N/A  3  pearson             0   two-sided
-    y   z    -0.142857     N/A  3  pearson             0   two-sided
-    <BLANKLINE>
-    [3 rows x 6 columns]
 
     """
     num_dms = len(dms)
