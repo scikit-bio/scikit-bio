@@ -12,8 +12,8 @@ from future.builtins import zip
 
 import numpy as np
 
-from skbio.util import FileFormatError
-from skbio.util.io import open_file
+from skbio.io import FileFormatError
+from skbio.io.util import open_file
 
 
 class OrdinationResults(object):

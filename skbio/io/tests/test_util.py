@@ -11,7 +11,7 @@ from future.utils.six import StringIO, BytesIO
 import unittest
 import tempfile
 
-from skbio.util.io import open_file, _is_string_or_bytes
+from skbio.io.util import open_file, _is_string_or_bytes
 
 
 class TestFilePathOpening(unittest.TestCase):

@@ -22,8 +22,8 @@ from scipy.stats import pearsonr
 from future.builtins import zip
 
 from skbio import DistanceMatrix
-from skbio.util import RecordError
-from skbio.util.io import open_file
+from skbio.io import RecordError
+from skbio.io.util import open_file
 from ._exception import (NoLengthError, DuplicateNodeError, NoParentError,
                          MissingNodeError, TreeError)
 

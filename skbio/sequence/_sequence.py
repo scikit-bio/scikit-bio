@@ -38,7 +38,7 @@ class BiologicalSequence(Sequence):
 
     Raises
     ------
-    skbio.util.exception.BiologicalSequenceError
+    skbio.sequence.BiologicalSequenceError
       If ``validate == True`` and ``is_valid == False``.
 
     See Also
@@ -554,7 +554,7 @@ class BiologicalSequence(Sequence):
 
         Raises
         ------
-        skbio.util.exception.BiologicalSequenceError
+        skbio.sequence.BiologicalSequenceError
             If ``len(self) != len(other)`` and ``distance_fn`` ==
             ``scipy.spatial.distance.hamming``.
 
@@ -600,7 +600,7 @@ class BiologicalSequence(Sequence):
 
         Raises
         ------
-        skbio.util.exception.BiologicalSequenceError
+        skbio.sequence.BiologicalSequenceError
             If ``len(self) != len(other)``.
 
         See Also
@@ -645,7 +645,7 @@ class BiologicalSequence(Sequence):
 
         Raises
         ------
-        skbio.util.exception.BiologicalSequenceError
+        skbio.sequence.BiologicalSequenceError
             If ``len(self) != len(other)``.
 
         See Also
@@ -1232,7 +1232,7 @@ class NucleotideSequence(BiologicalSequence):
 
         Raises
         ------
-        skbio.util.exception.BiologicalSequenceError
+        skbio.sequence.BiologicalSequenceError
             If a character is present in the `NucleotideSequence` that is not
             in the complement map.
 
@@ -1265,7 +1265,7 @@ class NucleotideSequence(BiologicalSequence):
 
         Raises
         ------
-        skbio.util.exception.BiologicalSequenceError
+        skbio.sequence.BiologicalSequenceError
             If a character is present in the `NucleotideSequence` that is not
             in `self.complement_map`.
 
@@ -1288,7 +1288,7 @@ class NucleotideSequence(BiologicalSequence):
 
         Raises
         ------
-        skbio.util.exception.BiologicalSequenceError
+        skbio.sequence.BiologicalSequenceError
             If a character is present in `other` that is not in the
             `self.complement_map`.
 
@@ -1310,7 +1310,7 @@ class NucleotideSequence(BiologicalSequence):
 
         Raises
         ------
-        skbio.util.exception.BiologicalSequenceError
+        skbio.sequence.BiologicalSequenceError
             If a character is present in the `NucleotideSequence` that is not
             in `self.complement_map`.
 

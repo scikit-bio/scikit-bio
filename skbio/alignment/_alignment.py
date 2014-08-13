@@ -17,7 +17,7 @@ import numpy as np
 from scipy.stats import entropy
 
 from skbio import DistanceMatrix
-from skbio.util.io import open_file
+from skbio.io.util import open_file
 from ._exception import SequenceCollectionError, StockholmParseError
 
 
@@ -35,7 +35,7 @@ class SequenceCollection(object):
 
     Raises
     ------
-    skbio.util.exception.SequenceCollectionError
+    skbio.alignment.SequenceCollectionError
         If ``validate == True`` and ``is_valid == False``.
 
     See Also
@@ -82,7 +82,7 @@ class SequenceCollection(object):
 
         Raises
         ------
-        skbio.util.exception.SequenceCollectionError
+        skbio.alignment.SequenceCollectionError
             If ``validate == True`` and ``is_valid == False``.
 
         See Also
@@ -819,7 +819,7 @@ class Alignment(SequenceCollection):
 
     Raises
     ------
-    skbio.util.exception.SequenceCollectionError
+    skbio.alignment.SequenceCollectionError
         If ``validate == True`` and ``is_valid == False``.
 
     Notes
@@ -1913,7 +1913,7 @@ class StockholmAlignment(Alignment):
 
         Raises
         ------
-        StockholmParseError
+        skbio.alignment.StockholmParseError
             If any lines are found that don't conform to stockholm format
         """
         # make sure first line is corect
