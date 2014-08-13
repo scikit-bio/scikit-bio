@@ -426,8 +426,7 @@ def pwmantel(dms, labels=None, method='pearson', permutations=999,
 
 def _order_dms(x, y, strict=True, lookup=None):
     """Intersect distance matrices and put them in the same order."""
-    if (not isinstance(x, DistanceMatrix) and
-        not isinstance(y, DistanceMatrix)):
+    if not isinstance(x, DistanceMatrix) and not isinstance(y, DistanceMatrix):
         if lookup is not None:
             raise ValueError("ID lookup can only be provided if inputs are "
                              "DistanceMatrix instances.")
@@ -457,8 +456,8 @@ def _order_dms(x, y, strict=True, lookup=None):
         id_order = [id_ for id_ in x.ids if id_ in y]
         num_matches = len(id_order)
 
-        if (strict and
-            ((num_matches != len(x.ids)) or (num_matches != len(y.ids)))):
+        if (strict and ((num_matches != len(x.ids)) or
+                        (num_matches != len(y.ids)))):
             raise ValueError("IDs exist that are not in both distance "
                              "matrices.")
 
