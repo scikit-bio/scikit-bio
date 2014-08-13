@@ -121,23 +121,24 @@ class MantelTests(MantelTestData):
                              method=method, alternative=alt)
                 self.assertAlmostEqual(obs[0], exp)
                 npt.assert_equal(obs[1], np.nan)
+                self.assertEqual(obs[2], 3)
 
                 # swapping order of matrices should give same result
                 obs = mantel(self.miny, self.minx, permutations=0,
                              method=method, alternative=alt)
                 self.assertAlmostEqual(obs[0], exp)
                 npt.assert_equal(obs[1], np.nan)
+                self.assertEqual(obs[2], 3)
 
     def test_distance_matrix_instances_as_input(self):
-        dmx = DistanceMatrix(self.minx)
-        dmy = DistanceMatrix(self.miny)
-
+        # Matrices with all matching IDs in the same order.
         np.random.seed(0)
 
-        obs = mantel(dmx, dmy, alternative='less')
+        obs = mantel(self.minx_dm, self.miny_dm, alternative='less')
 
         self.assertAlmostEqual(obs[0], self.exp_x_vs_y)
         self.assertAlmostEqual(obs[1], 0.843)
+        self.assertEqual(obs[2], 3)
 
     def test_one_sided_greater(self):
         np.random.seed(0)
@@ -145,10 +146,12 @@ class MantelTests(MantelTestData):
         obs = mantel(self.minx, self.miny, alternative='greater')
         self.assertAlmostEqual(obs[0], self.exp_x_vs_y)
         self.assertAlmostEqual(obs[1], 0.324)
+        self.assertEqual(obs[2], 3)
 
         obs = mantel(self.minx, self.minx, alternative='greater')
         self.assertAlmostEqual(obs[0], 1)
         self.assertAlmostEqual(obs[1], 0.172)
+        self.assertEqual(obs[2], 3)
 
     def test_one_sided_less(self):
         # no need to seed here as permuted test statistics will all be less
@@ -163,10 +166,12 @@ class MantelTests(MantelTestData):
         obs = mantel(self.minx, self.miny, alternative='less')
         self.assertAlmostEqual(obs[0], self.exp_x_vs_y)
         self.assertAlmostEqual(obs[1], 0.843)
+        self.assertEqual(obs[2], 3)
 
         obs = mantel(self.minx, self.minz, alternative='less')
         self.assertAlmostEqual(obs[0], self.exp_x_vs_z)
         self.assertAlmostEqual(obs[1], 0.172)
+        self.assertEqual(obs[2], 3)
 
     def test_two_sided(self):
         np.random.seed(0)
@@ -175,16 +180,19 @@ class MantelTests(MantelTestData):
                      alternative='two-sided')
         self.assertEqual(obs[0], 1)
         self.assertAlmostEqual(obs[1], 0.328)
+        self.assertEqual(obs[2], 3)
 
         obs = mantel(self.minx, self.miny, method='spearman',
                      alternative='two-sided')
         self.assertAlmostEqual(obs[0], 0.5)
         self.assertAlmostEqual(obs[1], 1.0)
+        self.assertEqual(obs[2], 3)
 
         obs = mantel(self.minx, self.minz, method='spearman',
                      alternative='two-sided')
         self.assertAlmostEqual(obs[0], -1)
         self.assertAlmostEqual(obs[1], 0.322)
+        self.assertEqual(obs[2], 3)
 
     def test_vegan_example(self):
         np.random.seed(0)
@@ -194,12 +202,14 @@ class MantelTests(MantelTestData):
                      alternative='greater')
         self.assertAlmostEqual(obs[0], 0.3047454)
         self.assertAlmostEqual(obs[1], 0.002)
+        self.assertEqual(obs[2], 24)
 
         # spearman
         obs = mantel(self.veg_dm_vegan, self.env_dm_vegan,
                      alternative='greater', method='spearman')
         self.assertAlmostEqual(obs[0], 0.283791)
         self.assertAlmostEqual(obs[1], 0.003)
+        self.assertEqual(obs[2], 24)
 
     def test_no_variation_pearson(self):
         # Output doesn't match vegan::mantel with method='pearson'. Consider
