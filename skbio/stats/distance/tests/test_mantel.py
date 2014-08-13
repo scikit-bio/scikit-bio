@@ -22,8 +22,6 @@ from skbio.util import get_data_path
 
 
 class MantelTestData(TestCase):
-    """Shared test data used in ``mantel`` and ``pwmantel`` unit tests."""
-
     def setUp(self):
         # Small dataset of minimal size (3x3). Mix of floats and ints in a
         # native Python nested list structure.
@@ -359,7 +357,15 @@ class PairwiseMantelTests(MantelTestData):
         # Matrices are already in the correct order and have matching IDs.
         np.random.seed(0)
 
+        # input as DistanceMatrix instances
         obs = pwmantel(self.min_dms, alternative='greater')
+        assert_frame_equal(obs, self.exp_results_minimal)
+
+        np.random.seed(0)
+
+        # input as array_like
+        obs = pwmantel((self.minx, self.miny, self.minz),
+                       alternative='greater')
         assert_frame_equal(obs, self.exp_results_minimal)
 
     def test_minimal_compatible_input_with_labels(self):
@@ -439,10 +445,6 @@ class PairwiseMantelTests(MantelTestData):
         with self.assertRaises(ValueError):
             pwmantel([self.miny_dm])
 
-    def test_invalid_input_type(self):
-        with self.assertRaises(TypeError):
-            pwmantel([self.miny_dm, self.minx_dm, [[0, 42], [42, 0]]])
-
     def test_wrong_number_of_labels(self):
         with self.assertRaises(ValueError):
             pwmantel(self.min_dms, labels=['foo', 'bar'])
@@ -450,6 +452,11 @@ class PairwiseMantelTests(MantelTestData):
     def test_duplicate_labels(self):
         with self.assertRaises(ValueError):
             pwmantel(self.min_dms, labels=['foo', 'bar', 'foo'])
+
+    def test_mixed_input_types(self):
+        # DistanceMatrix, DistanceMatrix, array_like
+        with self.assertRaises(TypeError):
+            pwmantel((self.miny_dm, self.minx_dm, self.minz))
 
 
 class OrderDistanceMatricesTests(MantelTestData):
