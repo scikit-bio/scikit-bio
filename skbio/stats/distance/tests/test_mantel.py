@@ -140,6 +140,37 @@ class MantelTests(MantelTestData):
         self.assertAlmostEqual(obs[1], 0.843)
         self.assertEqual(obs[2], 3)
 
+    def test_distance_matrix_instances_with_reordering_and_nonmatching(self):
+        x = self.minx_dm_extra.filter(['1', '0', 'foo', '2'])
+        y = self.miny_dm.filter(['0', '2', '1'])
+
+        # strict=True should disallow IDs that aren't found in both matrices
+        with self.assertRaises(ValueError):
+            mantel(x, y, alternative='less', strict=True)
+
+        np.random.seed(0)
+
+        # strict=False should ignore IDs that aren't found in both matrices
+        obs = mantel(x, y, alternative='less', strict=False)
+
+        self.assertAlmostEqual(obs[0], self.exp_x_vs_y)
+        self.assertAlmostEqual(obs[1], 0.843)
+        self.assertEqual(obs[2], 3)
+
+    def test_distance_matrix_instances_with_lookup(self):
+        self.minx_dm.ids = ('a', 'b', 'c')
+        self.miny_dm.ids = ('d', 'e', 'f')
+        lookup = {'a': 'A', 'b': 'B', 'c': 'C',
+                  'd': 'A', 'e': 'B', 'f': 'C'}
+
+        np.random.seed(0)
+
+        obs = mantel(self.minx_dm, self.miny_dm, alternative='less',
+                     lookup=lookup)
+        self.assertAlmostEqual(obs[0], self.exp_x_vs_y)
+        self.assertAlmostEqual(obs[1], 0.843)
+        self.assertEqual(obs[2], 3)
+
     def test_one_sided_greater(self):
         np.random.seed(0)
 
