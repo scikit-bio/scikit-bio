@@ -437,6 +437,28 @@ class OrderDistanceMatricesTests(MantelTestData):
         obs = _order_dms(x, z, strict=False)
         self.assertEqual(obs, exp)
 
+    def test_id_lookup(self):
+        # Matrices have mismatched IDs but a lookup is provided.
+        self.minx_dm_extra.ids = ['a', 'b', 'c', 'foo']
+        self.minz_dm_extra.ids = ['d', 'e', 'f', 'bar']
+        lookup = {'a': '0', 'b': '1', 'c': '2', 'foo': 'foo',
+                  'd': '0', 'e': '1', 'f': '2', 'bar': 'bar'}
+
+        x = self.minx_dm_extra.filter(['b', 'a', 'foo', 'c'])
+        z = self.minz_dm_extra.filter(['bar', 'e', 'f', 'd'])
+
+        x_copy = x.copy()
+        z_copy = z.copy()
+
+        exp = (self.minx_dm.filter(['1', '0', '2']),
+               self.minz_dm.filter(['1', '0', '2']))
+        obs = _order_dms(x, z, strict=False, lookup=lookup)
+        self.assertEqual(obs, exp)
+
+        # Make sure the inputs aren't modified.
+        self.assertEqual(x, x_copy)
+        self.assertEqual(z, z_copy)
+
     def test_lookup_with_array_like(self):
         lookup = {'0': 'a', '1': 'b', '2': 'c'}
         with self.assertRaises(ValueError):
