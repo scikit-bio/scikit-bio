@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
-from skbio import DistanceMatrix
+from skbio.stats.distance import DistanceMatrix
 from skbio.tree import TreeNode
 
 
