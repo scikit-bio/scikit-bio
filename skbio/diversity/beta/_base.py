@@ -11,10 +11,9 @@ from __future__ import absolute_import, division, print_function
 from warnings import warn
 
 import numpy as np
+from scipy.spatial.distance import pdist, squareform
 
-from skbio import DistanceMatrix
-from scipy.spatial.distance import pdist
-from scipy.spatial.distance import squareform
+from skbio.stats.distance import DistanceMatrix
 
 
 def pw_distances(counts, ids=None, metric="braycurtis"):
