@@ -29,6 +29,11 @@ class FormatIdentificationError(FileFormatError):
     pass
 
 
+class DMFormatError(FileFormatError):
+    """Exception raised when a dissimilarity matrix file cannot be parsed."""
+    pass
+
+
 class DuplicateRegistrationError(Exception):
     """Exception raised a function is already registered in skbio.io"""
     pass

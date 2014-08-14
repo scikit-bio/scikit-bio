@@ -57,6 +57,8 @@ if __doc__ is None:
 else:
     __doc__ = title + art + __doc__
 
+import skbio.io
+
 # imports included for convenience
 from skbio.sequence import (
     BiologicalSequence, NucleotideSequence, DNA, DNASequence, RNA, RNASequence,

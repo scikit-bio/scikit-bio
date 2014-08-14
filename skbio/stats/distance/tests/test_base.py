@@ -106,78 +106,6 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
             dm2 = DissimilarityMatrix.from_file(out_f)
             self.assertEqual(dm1, dm2)
 
-    def test_from_file(self):
-        """Should parse and return a valid DissimilarityMatrix given a file."""
-        for dm_f, dm in zip(self.dm_fs, self.dms):
-            obs = DissimilarityMatrix.from_file(dm_f)
-            self.assertEqual(obs, dm)
-
-    def test_from_file_with_file_path(self):
-        """Should identify the filepath correctly and parse from it."""
-
-        # should fail with the expected exception
-        with self.assertRaises(DissimilarityMatrixFormatError):
-            DissimilarityMatrix.from_file(self.bad_dm_fp)
-
-        obs = DissimilarityMatrix.from_file(self.dm_2x2_asym_fp)
-        self.assertEqual(self.dm_2x2_asym, obs)
-        self.assertTrue(isinstance(obs, DissimilarityMatrix))
-
-        obs = DissimilarityMatrix.from_file(self.dm_3x3_fp)
-        self.assertEqual(self.dm_3x3, obs)
-        self.assertTrue(isinstance(obs, DissimilarityMatrix))
-
-    def test_from_file_extra_junk(self):
-        """Should correctly parse a file with extra whitespace and comments."""
-        obs = DissimilarityMatrix.from_file(self.dm_3x3_whitespace_f)
-        self.assertEqual(obs, self.dm_3x3)
-
-    def test_from_file_list_of_strings(self):
-        """Should correctly parse a list of strings."""
-        obs = DissimilarityMatrix.from_file(DM_3x3_WHITESPACE_F)
-        self.assertEqual(obs, self.dm_3x3)
-
-    def test_from_file_real_file(self):
-        """Should correctly parse a real on-disk file."""
-        with tempfile.TemporaryFile(mode='r+',
-                                    prefix='skbio.tests.test_distance',
-                                    suffix='.txt') as fh:
-            fh.write('\n'.join(DM_3x3_WHITESPACE_F))
-            fh.seek(0)
-
-            obs = DissimilarityMatrix.from_file(fh)
-        self.assertEqual(obs, self.dm_3x3)
-
-    def test_from_file_invalid_input(self):
-        """Raises error on ill-formatted dissimilarity matrix file."""
-        # Empty dm.
-        with self.assertRaises(DissimilarityMatrixFormatError):
-            DissimilarityMatrix.from_file([])
-
-        # Number of values don't match number of IDs.
-        with self.assertRaises(DissimilarityMatrixFormatError):
-            DissimilarityMatrix.from_file(self.bad_dm_f1)
-
-        # Mismatched IDs.
-        with self.assertRaises(DissimilarityMatrixFormatError):
-            DissimilarityMatrix.from_file(self.bad_dm_f2)
-
-        # Extra data at end.
-        with self.assertRaises(DissimilarityMatrixFormatError):
-            DissimilarityMatrix.from_file(self.bad_dm_f3)
-
-        # Missing data.
-        with self.assertRaises(DissimilarityMatrixFormatError):
-            DissimilarityMatrix.from_file(self.bad_dm_f4)
-
-        # Header, but no data.
-        with self.assertRaises(DissimilarityMatrixFormatError):
-            DissimilarityMatrix.from_file(self.bad_dm_f5)
-
-        # Non-hollow.
-        with self.assertRaises(DissimilarityMatrixError):
-            DissimilarityMatrix.from_file(self.bad_dm_f6)
-
     def test_to_file(self):
         """Should serialize a DissimilarityMatrix to file."""
         for dm_f_line, dm in zip(self.dm_f_lines, self.dms):
@@ -528,10 +456,6 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
 
         with self.assertRaises(IndexError):
             self.dm_3x3[:, 3]
-
-    def test_parse_ids(self):
-        """Empty stub: DissimilarityMatrix._parse_ids tested elsewhere."""
-        pass
 
     def test_validate_invalid_dtype(self):
         with self.assertRaises(DissimilarityMatrixError):

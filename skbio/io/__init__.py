@@ -64,6 +64,7 @@ Exceptions
    FileFormatError
    RecordError
    FieldError
+   DMFormatError
    DuplicateRegistrationError
    FormatIdentificationError
 
@@ -78,7 +79,8 @@ Exceptions
 
 from ._warning import UnprovenFormatWarning
 from ._exception import (DuplicateRegistrationError, RecordError, FieldError,
-                         FormatIdentificationError, FileFormatError)
+                         DMFormatError, FormatIdentificationError,
+                         FileFormatError)
 from ._registry import (write, read, guess_format, get_writer, get_reader,
                         get_identifier, list_write_formats, list_read_formats,
                         register_writer, register_reader, register_identifier)
@@ -87,8 +89,10 @@ __all__ = ['write', 'read', 'guess_format', 'get_writer', 'get_reader',
            'get_identifier', 'list_write_formats', 'list_read_formats',
            'register_writer', 'register_reader', 'register_identifier',
            'DuplicateRegistrationError', 'RecordError', 'FieldError',
-           'FormatIdentificationError', 'FileFormatError',
+           'DMFormatError', 'FormatIdentificationError', 'FileFormatError',
            'UnprovenFormatWarning']
+
+from . import newick as _
 
 from numpy.testing import Tester
 test = Tester().test

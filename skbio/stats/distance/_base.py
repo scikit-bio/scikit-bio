@@ -40,15 +40,6 @@ class MissingIDError(DissimilarityMatrixError):
                      missing_id,)
 
 
-class DissimilarityMatrixFormatError(DissimilarityMatrixError):
-    """Error for reporting issues in dissimilarity matrix file format.
-
-    Typically used during parsing.
-
-    """
-    pass
-
-
 class DissimilarityMatrix(object):
     """Store dissimilarities between objects.
 
@@ -104,126 +95,6 @@ class DissimilarityMatrix(object):
 
     # Used in __str__
     _matrix_element_name = 'dissimilarity'
-
-    @classmethod
-    def from_file(cls, dm_f, delimiter='\t'):
-        """Load dissimilarity matrix from a delimited text file or file path.
-
-        Creates a `DissimilarityMatrix` instance from a serialized
-        dissimilarity matrix stored as delimited text.
-
-        `dm_f` can be a file-like or a file path object containing delimited
-        text. The first line (header) must contain the IDs of each object. The
-        subsequent lines must contain an ID followed by each dissimilarity
-        (float) between the current object and all other objects, where the
-        order of objects is determined by the header line.  For example, a 2x2
-        dissimilarity matrix with IDs ``'a'`` and ``'b'`` might look like::
-
-            <del>a<del>b
-            a<del>0.0<del>1.0
-            b<del>1.0<del>0.0
-
-        where ``<del>`` is the delimiter between elements.
-
-        Parameters
-        ----------
-        dm_f : iterable of str or str
-            Iterable of strings (e.g., open file handle, file-like object, list
-            of strings, etc.) or a file path (a string) containing a serialized
-            dissimilarity matrix.
-        delimiter : str, optional
-            String delimiting elements in `dm_f`.
-
-        Returns
-        -------
-        DissimilarityMatrix
-            Instance of type `cls` containing the parsed contents of `dm_f`.
-
-        Notes
-        -----
-        Whitespace-only lines can occur anywhere throughout the "file" and are
-        ignored. Lines starting with ``#`` are treated as comments and ignored.
-        These comments can only occur *before* the ID header.
-
-        IDs will have any leading/trailing whitespace removed when they are
-        parsed.
-
-        .. note::
-            File-like objects passed to this method will not be closed upon the
-            completion of the parsing, it is responsibility of the owner of the
-            object to perform this operation.
-
-        """
-        # We aren't using np.loadtxt because it uses *way* too much memory
-        # (e.g, a 2GB matrix eats up 10GB, which then isn't freed after parsing
-        # has finished). See:
-        # http://mail.scipy.org/pipermail/numpy-tickets/2012-August/006749.html
-
-        with open_file(dm_f, 'U') as dm_f:
-
-            # We use iter() as we want to take a single pass over the
-            # iterable and maintain our current position after finding
-            # the header (mainly necessary for something like a list
-            # of strings).
-            dm_f = iter(dm_f)
-
-            # Strategy:
-            #   - find the header
-            #   - initialize an empty ndarray
-            #   - for each row of data in the input file:
-            #     - populate the corresponding row in the ndarray with floats
-
-            ids = cls._parse_ids(dm_f, delimiter)
-            num_ids = len(ids)
-            data = np.empty((num_ids, num_ids), dtype=np.float64)
-
-            # curr_row_idx keeps track of the row index within the data matrix.
-            # We're not using enumerate() because there may be
-            # empty/whitespace-only lines throughout the data matrix. We want
-            # to ignore those and only count the actual rows of data.
-            curr_row_idx = 0
-            for line in dm_f:
-                line = line.strip()
-
-                if not line:
-                    continue
-                elif curr_row_idx >= num_ids:
-                    # We've hit a nonempty line after we already filled the
-                    # data matrix. Raise an error because we shouldn't ignore
-                    # extra data.
-                    raise DissimilarityMatrixFormatError(
-                        "Encountered extra rows without corresponding IDs in"
-                        " the header.")
-
-                tokens = line.split(delimiter)
-
-                # -1 because the first element contains the current ID.
-                if len(tokens) - 1 != num_ids:
-                    raise DissimilarityMatrixFormatError(
-                        "There are %d values in row number %d, which is not"
-                        " equal to the number of IDs in the header (%d)."
-                        % (len(tokens) - 1, curr_row_idx + 1, num_ids))
-
-                curr_id = tokens[0].strip()
-                expected_id = ids[curr_row_idx]
-                if curr_id == expected_id:
-                    data[curr_row_idx, :] = np.asarray(tokens[1:], dtype=float)
-                else:
-                    raise DissimilarityMatrixFormatError(
-                        "Encountered mismatched IDs while parsing the "
-                        "dissimilarity matrix file. Found '%s' but expected "
-                        "'%s'. Please ensure that the IDs match between the "
-                        "dissimilarity matrix header (first row) and the row "
-                        "labels (first column)." % (curr_id, expected_id))
-
-                curr_row_idx += 1
-
-        if curr_row_idx != num_ids:
-            raise DissimilarityMatrixFormatError(
-                "Expected %d row(s) of data, but found %d." % (num_ids,
-                                                               curr_row_idx))
-
-        return cls(data, ids)
 
     def __init__(self, data, ids=None):
         if isinstance(data, DissimilarityMatrix):
@@ -624,25 +495,6 @@ class DissimilarityMatrix(object):
                 out_f.write(delimiter)
                 out_f.write(delimiter.join(np.asarray(vals, dtype=np.str)))
                 out_f.write('\n')
-
-    @staticmethod
-    def _parse_ids(dm_f, delimiter):
-        header_line = None
-
-        for line in dm_f:
-            line = line.strip()
-
-            if line and not line.startswith('#'):
-                header_line = line
-                break
-
-        if header_line is None:
-            raise DissimilarityMatrixFormatError(
-                "Could not find a header line containing IDs in the "
-                "dissimilarity matrix file. Please verify that the file is "
-                "not empty.")
-        else:
-            return [e.strip() for e in header_line.split(delimiter)]
 
     def _validate(self, data, ids):
         """Validate the data array and IDs.
