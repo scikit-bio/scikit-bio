@@ -498,23 +498,6 @@ class DistanceMatrixTests(DissimilarityMatrixTestData):
         self.dm_condensed_forms = [np.array([]), np.array([0.123]),
                                    np.array([0.01, 4.2, 12.0])]
 
-    def test_from_file_with_file_path(self):
-        """Should identify the filepath correctly and parse from it."""
-
-        # should fail with the expected exception
-        with self.assertRaises(DissimilarityMatrixFormatError):
-            DistanceMatrix.from_file(self.bad_dm_fp)
-
-        obs = DistanceMatrix.from_file(self.dm_3x3_fp)
-        self.assertEqual(self.dm_3x3, obs)
-        self.assertTrue(isinstance(obs, DistanceMatrix))
-
-    def test_from_file_invalid_input(self):
-        """Raises error on invalid distance matrix file."""
-        # Asymmetric.
-        with self.assertRaises(DistanceMatrixError):
-            DistanceMatrix.from_file(self.dm_2x2_asym_f)
-
     def test_init_invalid_input(self):
         """Raises error on invalid distance matrix data / IDs."""
         # Asymmetric.
