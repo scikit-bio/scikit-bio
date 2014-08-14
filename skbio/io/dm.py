@@ -10,13 +10,20 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
-from skbio.stats.distance import DissimilarityMatrix
+from skbio.stats.distance import DissimilarityMatrix, DistanceMatrix
 from skbio.io import (register_reader, register_writer, register_identifier,
                       DMFormatError)
 
 
 @register_reader('dm', DissimilarityMatrix)
 def dm_to_DissimilarityMatrix(fh, delimiter='\t'):
+    return _dm_to_matrix(DissimilarityMatrix, fh, delimiter)
+
+@register_reader('dm', DistanceMatrix)
+def dm_to_DistanceMatrix(fh, delimiter='\t'):
+    return _dm_to_matrix(DistanceMatrix, fh, delimiter)
+
+def _dm_to_matrix(cls, fh, delimiter):
     """Load dissimilarity matrix from a delimited text file or file path.
 
     Creates a `DissimilarityMatrix` instance from a serialized
@@ -125,7 +132,7 @@ def dm_to_DissimilarityMatrix(fh, delimiter='\t'):
             "Expected %d row(s) of data, but found %d." % (num_ids,
                                                            curr_row_idx))
 
-    return DissimilarityMatrix(data, ids)
+    return cls(data, ids)
 
 
 def _parse_ids(fh, delimiter):
