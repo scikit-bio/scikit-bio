@@ -16,8 +16,8 @@ from warnings import warn
 import numpy as np
 from scipy.stats import entropy
 
-from skbio import DistanceMatrix
 from skbio.io.util import open_file
+from skbio.stats.distance import DistanceMatrix
 from ._exception import SequenceCollectionError, StockholmParseError
 
 
