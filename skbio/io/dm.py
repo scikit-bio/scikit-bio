@@ -1,4 +1,8 @@
-"""Load dissimilarity matrix from a delimited text file or file path.
+"""
+
+read:
+
+Load dissimilarity matrix from a delimited text file or file path.
 
 Creates a `DissimilarityMatrix` instance from a serialized
 dissimilarity matrix stored as delimited text.
@@ -44,6 +48,24 @@ parsed.
     completion of the parsing, it is responsibility of the owner of the
     object to perform this operation.
 
+write:
+
+Save the dissimilarity matrix to file in delimited text format.
+
+Parameters
+----------
+out_f : file-like object or filename
+    File-like object to write serialized data to, or name of
+    file. If it's a file-like object, it must have a ``write``
+    method, and it won't be closed. Else, it is opened and
+    closed after writing.
+delimiter : str, optional
+    Delimiter used to separate elements in output format.
+
+See Also
+--------
+from_file
+
 """
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -66,9 +88,36 @@ from skbio.io import (register_reader, register_writer, register_identifier,
 def dm_to_DissimilarityMatrix(fh, delimiter='\t'):
     return _dm_to_matrix(DissimilarityMatrix, fh, delimiter)
 
+
 @register_reader('dm', DistanceMatrix)
 def dm_to_DistanceMatrix(fh, delimiter='\t'):
     return _dm_to_matrix(DistanceMatrix, fh, delimiter)
+
+
+@register_writer('dm', DissimilarityMatrix)
+def DissimilarityMatrix_to_dm(obj, fh, delimiter='\t'):
+    _matrix_to_dm(obj, fh, delimiter)
+
+@register_writer('dm', DistanceMatrix)
+def DistanceMatrix_to_dm(obj, fh, delimiter='\t'):
+    _matrix_to_dm(obj, fh, delimiter)
+
+
+def _matrix_to_dm(obj, fh, delimiter):
+    ids = obj.ids
+    fh.write(_format_ids(ids, delimiter))
+    fh.write('\n')
+
+    for id_, vals in zip(ids, obj.data):
+        fh.write(id_)
+        fh.write(delimiter)
+        fh.write(delimiter.join(np.asarray(vals, dtype=np.str)))
+        fh.write('\n')
+
+
+def _format_ids(ids, delimiter):
+    return delimiter.join([''] + list(ids))
+
 
 def _dm_to_matrix(cls, fh, delimiter):
     # We aren't using np.loadtxt because it uses *way* too much memory
@@ -152,8 +201,3 @@ def _parse_ids(fh, delimiter):
             "not empty.")
     else:
         return [e.strip() for e in header_line.split(delimiter)]
-
-
-#@register_writer('dm', DistanceMatrix)
-#def DistanceMatrix_to_dm(obj, fh):
-#    fh.write(obj.to_file())

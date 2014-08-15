@@ -467,35 +467,6 @@ class DissimilarityMatrix(object):
         else:
             return self.data.__getitem__(index)
 
-    def to_file(self, out_f, delimiter='\t'):
-        """Save the dissimilarity matrix to file in delimited text format.
-
-        Parameters
-        ----------
-        out_f : file-like object or filename
-            File-like object to write serialized data to, or name of
-            file. If it's a file-like object, it must have a ``write``
-            method, and it won't be closed. Else, it is opened and
-            closed after writing.
-        delimiter : str, optional
-            Delimiter used to separate elements in output format.
-
-        See Also
-        --------
-        from_file
-
-        """
-        with open_file(out_f, 'w') as out_f:
-            formatted_ids = self._format_ids(delimiter)
-            out_f.write(formatted_ids)
-            out_f.write('\n')
-
-            for id_, vals in zip(self.ids, self.data):
-                out_f.write(id_)
-                out_f.write(delimiter)
-                out_f.write(delimiter.join(np.asarray(vals, dtype=np.str)))
-                out_f.write('\n')
-
     def _validate(self, data, ids):
         """Validate the data array and IDs.
 
@@ -546,9 +517,6 @@ class DissimilarityMatrix(object):
         return (isinstance(index, tuple) and
                 len(index) == 2 and
                 all(map(lambda e: isinstance(e, string_types), index)))
-
-    def _format_ids(self, delimiter):
-        return delimiter.join([''] + list(self.ids))
 
     def _pprint_ids(self, max_chars=80, delimiter=', ', suffix='...',):
         # Adapted from http://stackoverflow.com/a/250373
