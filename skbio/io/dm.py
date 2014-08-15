@@ -98,6 +98,7 @@ def dm_to_DistanceMatrix(fh, delimiter='\t'):
 def DissimilarityMatrix_to_dm(obj, fh, delimiter='\t'):
     _matrix_to_dm(obj, fh, delimiter)
 
+
 @register_writer('dm', DistanceMatrix)
 def DistanceMatrix_to_dm(obj, fh, delimiter='\t'):
     _matrix_to_dm(obj, fh, delimiter)

@@ -91,21 +91,6 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
                                    np.array(self.dm_2x2_asym_data),
                                    np.array(self.dm_3x3_data)]
 
-    def test_round_trip_read_write(self):
-        """Test reading, writing, and reading again works as expected."""
-        for dm_f in self.dm_fs:
-            # Read.
-            dm1 = DissimilarityMatrix.from_file(dm_f)
-
-            # Write.
-            out_f = StringIO()
-            dm1.to_file(out_f)
-            out_f.seek(0)
-
-            # Read.
-            dm2 = DissimilarityMatrix.from_file(out_f)
-            self.assertEqual(dm1, dm2)
-
     def test_init_from_dm(self):
         """Constructs a dm from a dm."""
         ids = ['foo', 'bar', 'baz']

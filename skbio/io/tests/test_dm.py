@@ -18,7 +18,7 @@ from skbio.stats.distance import (DissimilarityMatrix, DistanceMatrix,
                                   DistanceMatrixError)
 
 
-class DMToMatrixTests(TestCase):
+class DissimilarityAndDistanceMatrixReaderWriterTests(TestCase):
     def setUp(self):
         self.dm_1x1_data = [[0.0]]
         self.dm_1x1_fh = StringIO(DM_1x1)
@@ -104,6 +104,27 @@ class DMToMatrixTests(TestCase):
                 obs = fh.getvalue()
                 fh.close()
                 self.assertEqual(obs, str_)
+
+    def test_roundtrip_read_write(self):
+        for reader_fn, writer_fn, fhs in ((dm_to_DissimilarityMatrix,
+                                           DissimilarityMatrix_to_dm,
+                                           self.dissim_fhs),
+                                          (dm_to_DistanceMatrix,
+                                           DistanceMatrix_to_dm,
+                                           self.dist_fhs)):
+            for fh in fhs:
+                # Read.
+                dm1 = reader_fn(fh)
+
+                # Write.
+                out_fh = StringIO()
+                writer_fn(dm1, out_fh)
+                out_fh.seek(0)
+
+                # Read.
+                dm2 = reader_fn(out_fh)
+
+                self.assertEqual(dm1, dm2)
 
 
 DM_1x1 = "\ta\na\t0.0\n"
