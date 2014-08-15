@@ -104,22 +104,6 @@ def DistanceMatrix_to_dm(obj, fh, delimiter='\t'):
     _matrix_to_dm(obj, fh, delimiter)
 
 
-def _matrix_to_dm(obj, fh, delimiter):
-    ids = obj.ids
-    fh.write(_format_ids(ids, delimiter))
-    fh.write('\n')
-
-    for id_, vals in zip(ids, obj.data):
-        fh.write(id_)
-        fh.write(delimiter)
-        fh.write(delimiter.join(np.asarray(vals, dtype=np.str)))
-        fh.write('\n')
-
-
-def _format_ids(ids, delimiter):
-    return delimiter.join([''] + list(ids))
-
-
 def _dm_to_matrix(cls, fh, delimiter):
     # We aren't using np.loadtxt because it uses *way* too much memory
     # (e.g, a 2GB matrix eats up 10GB, which then isn't freed after parsing
@@ -202,3 +186,19 @@ def _parse_ids(fh, delimiter):
             "not empty.")
     else:
         return [e.strip() for e in header_line.split(delimiter)]
+
+
+def _matrix_to_dm(obj, fh, delimiter):
+    ids = obj.ids
+    fh.write(_format_ids(ids, delimiter))
+    fh.write('\n')
+
+    for id_, vals in zip(ids, obj.data):
+        fh.write(id_)
+        fh.write(delimiter)
+        fh.write(delimiter.join(np.asarray(vals, dtype=np.str)))
+        fh.write('\n')
+
+
+def _format_ids(ids, delimiter):
+    return delimiter.join([''] + list(ids))
