@@ -12,7 +12,8 @@ from future.utils.six import StringIO
 from unittest import TestCase, main
 
 from skbio.io import DMFormatError
-from skbio.io.dm import dm_to_DissimilarityMatrix, dm_to_DistanceMatrix
+from skbio.io.dm import (dm_to_DissimilarityMatrix, dm_to_DistanceMatrix,
+                         DissimilarityMatrix_to_dm, DistanceMatrix_to_dm)
 from skbio.stats.distance import (DissimilarityMatrix, DistanceMatrix,
                                   DistanceMatrixError)
 
@@ -42,6 +43,10 @@ class DMToMatrixTests(TestCase):
             StringIO(INVALID_5)
         ]
 
+        # We repeat the 3x3 example because there are two file format
+        # representations of it, one that is messy and one that is not. Both
+        # should be read into an equivalent object and written to an equivalent
+        # format though, which is why we duplicate the 3x3 objects and strings.
         self.dissim_objs = [
             DissimilarityMatrix(self.dm_1x1_data, ['a']),
             DissimilarityMatrix(self.dm_2x2_data, ['a', 'b']),
@@ -49,6 +54,8 @@ class DMToMatrixTests(TestCase):
             DissimilarityMatrix(self.dm_3x3_data, ['a', 'b', 'c']),
             DissimilarityMatrix(self.dm_3x3_data, ['a', 'b', 'c'])
         ]
+
+        self.dissim_strs = [DM_1x1, DM_2x2, DM_2x2_ASYM, DM_3x3, DM_3x3]
 
         self.dissim_fhs = [self.dm_1x1_fh, self.dm_2x2_fh, self.dm_2x2_asym_fh,
                            self.dm_3x3_fh, self.dm_3x3_whitespace_fh]
@@ -60,10 +67,12 @@ class DMToMatrixTests(TestCase):
             DistanceMatrix(self.dm_3x3_data, ['a', 'b', 'c'])
         ]
 
+        self.dist_strs = [DM_1x1, DM_2x2, DM_3x3, DM_3x3]
+
         self.dist_fhs = [self.dm_1x1_fh, self.dm_2x2_fh, self.dm_3x3_fh,
                          self.dm_3x3_whitespace_fh]
 
-    def test_valid_files(self):
+    def test_read_valid_files(self):
         for fn, cls, objs, fhs in ((dm_to_DissimilarityMatrix,
                                     DissimilarityMatrix, self.dissim_objs,
                                     self.dissim_fhs),
@@ -74,7 +83,7 @@ class DMToMatrixTests(TestCase):
                 self.assertEqual(obs, obj)
                 self.assertIsInstance(obs, cls)
 
-    def test_invalid_files(self):
+    def test_read_invalid_files(self):
         for fn in dm_to_DissimilarityMatrix, dm_to_DistanceMatrix:
             for invalid_fh in self.invalid_fhs:
                 with self.assertRaises(DMFormatError):
@@ -84,6 +93,18 @@ class DMToMatrixTests(TestCase):
         with self.assertRaises(DistanceMatrixError):
             dm_to_DistanceMatrix(self.dm_2x2_asym_fh)
 
+    def test_write(self):
+        for fn, objs, strs in ((DissimilarityMatrix_to_dm, self.dissim_objs,
+                                self.dissim_strs),
+                               (DistanceMatrix_to_dm, self.dist_objs,
+                                self.dist_strs)):
+            for obj, str_ in zip(objs, strs):
+                fh = StringIO()
+                fn(obj, fh)
+                obs = fh.getvalue()
+                fh.close()
+                self.assertEqual(obs, str_)
+
 
 DM_1x1 = "\ta\na\t0.0\n"
 
@@ -91,7 +112,8 @@ DM_2x2 = "\ta\tb\na\t0.0\t0.123\nb\t0.123\t0.0\n"
 
 DM_2x2_ASYM = "\ta\tb\na\t0.0\t1.0\nb\t-2.0\t0.0\n"
 
-DM_3x3 = "a\tb\tc\na\t0.0\t0.01\t4.2\nb\t0.01\t0.0\t12.0\nc\t4.2\t12.0\t0.0"
+DM_3x3 = ("\ta\tb\tc\na\t0.0\t0.01\t4.2\nb\t0.01\t0.0\t12.0\nc\t4.2\t12.0\t"
+          "0.0\n")
 
 # Extra whitespace-only lines throughout. Also has comments before the header.
 DM_3x3_WHITESPACE = '\n'.join(['# foo',
