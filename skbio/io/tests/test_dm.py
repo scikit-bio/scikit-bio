@@ -14,12 +14,14 @@ from unittest import TestCase, main
 import numpy as np
 
 from skbio.io import DMFormatError
-from skbio.io.dm import dm_to_DissimilarityMatrix
-from skbio.stats.distance import DissimilarityMatrix
+from skbio.io.dm import (dm_to_DissimilarityMatrix, dm_to_DistanceMatrix,
+                         _dm_to_matrix)
+from skbio.stats.distance import (DissimilarityMatrix, DistanceMatrix,
+                                  DistanceMatrixError)
 from skbio.util import get_data_path
 
 
-class DMToDissimilarityMatrixTests(TestCase):
+class DMToMatrixTests(TestCase):
     def setUp(self):
         self.dm_1x1_data = [[0.0]]
         self.dm_1x1_f = StringIO(DM_1x1_F)
@@ -35,62 +37,53 @@ class DMToDissimilarityMatrixTests(TestCase):
         self.dm_3x3_f = StringIO(DM_3x3_F)
         self.dm_3x3_whitespace_f = StringIO('\n'.join(DM_3x3_WHITESPACE_F))
 
-        self.bad_dm_f1 = StringIO(BAD_DM_F1)
-        self.bad_dm_f2 = StringIO(BAD_DM_F2)
-        self.bad_dm_f3 = StringIO(BAD_DM_F3)
-        self.bad_dm_f4 = StringIO(BAD_DM_F4)
-        self.bad_dm_f5 = StringIO(BAD_DM_F5)
+        self.invalid_fhs = [
+            StringIO(),
+            StringIO(BAD_DM_F1),
+            StringIO(BAD_DM_F2),
+            StringIO(BAD_DM_F3),
+            StringIO(BAD_DM_F4),
+            StringIO(BAD_DM_F5)
+        ]
 
-        self.dm_1x1 = DissimilarityMatrix(self.dm_1x1_data, ['a'])
-        self.dm_2x2 = DissimilarityMatrix(self.dm_2x2_data, ['a', 'b'])
-        self.dm_2x2_asym = DissimilarityMatrix(self.dm_2x2_asym_data,
-                                               ['a', 'b'])
-        self.dm_3x3 = DissimilarityMatrix(self.dm_3x3_data, ['a', 'b', 'c'])
+        self.dissim_objs = [
+            DissimilarityMatrix(self.dm_1x1_data, ['a']),
+            DissimilarityMatrix(self.dm_2x2_data, ['a', 'b']),
+            DissimilarityMatrix(self.dm_2x2_asym_data, ['a', 'b']),
+            DissimilarityMatrix(self.dm_3x3_data, ['a', 'b', 'c']),
+            DissimilarityMatrix(self.dm_3x3_data, ['a', 'b', 'c'])
+        ]
 
-        self.dms = [self.dm_1x1, self.dm_2x2, self.dm_2x2_asym, self.dm_3x3,
-                    self.dm_3x3]
-        self.dm_fs = [self.dm_1x1_f, self.dm_2x2_f, self.dm_2x2_asym_f,
-                      self.dm_3x3_f, self.dm_3x3_whitespace_f]
-        self.dm_shapes = [(1, 1), (2, 2), (2, 2), (3, 3)]
-        self.dm_sizes = [1, 4, 4, 9]
-        self.dm_transposes = [
-            self.dm_1x1, self.dm_2x2,
-            DissimilarityMatrix([[0, -2], [1, 0]], ['a', 'b']), self.dm_3x3]
-        self.dm_redundant_forms = [np.array(self.dm_1x1_data),
-                                   np.array(self.dm_2x2_data),
-                                   np.array(self.dm_2x2_asym_data),
-                                   np.array(self.dm_3x3_data)]
+        self.dissim_fhs = [self.dm_1x1_f, self.dm_2x2_f, self.dm_2x2_asym_f,
+                           self.dm_3x3_f, self.dm_3x3_whitespace_f]
+
+        self.dist_objs = [
+            DistanceMatrix(self.dm_1x1_data, ['a']),
+            DistanceMatrix(self.dm_2x2_data, ['a', 'b']),
+            DistanceMatrix(self.dm_3x3_data, ['a', 'b', 'c']),
+            DistanceMatrix(self.dm_3x3_data, ['a', 'b', 'c'])
+        ]
+
+        self.dist_fhs = [self.dm_1x1_f, self.dm_2x2_f, self.dm_3x3_f,
+                         self.dm_3x3_whitespace_f]
 
     def test_valid_files(self):
-        for dm_f, dm in zip(self.dm_fs, self.dms):
-            obs = dm_to_DissimilarityMatrix(dm_f)
-            self.assertEqual(obs, dm)
-            self.assertIsInstance(obs, DissimilarityMatrix)
+        for fn, cls, objs, fhs in (dm_to_DissimilarityMatrix, DissimilarityMatrix,
+                self.dissim_objs, self.dissim_fhs), (dm_to_DistanceMatrix, DistanceMatrix, self.dist_objs, self.dist_fhs):
+            for fh, obj in zip(fhs, objs):
+                obs = fn(fh)
+                self.assertEqual(obs, obj)
+                self.assertIsInstance(obs, cls)
 
     def test_invalid_files(self):
-        # Empty dm.
-        with self.assertRaises(DMFormatError):
-            dm_to_DissimilarityMatrix(StringIO())
+        for fn in dm_to_DissimilarityMatrix, dm_to_DistanceMatrix:
+            for invalid_fh in self.invalid_fhs:
+                with self.assertRaises(DMFormatError):
+                    fn(invalid_fh)
 
-        # Number of values don't match number of IDs.
-        with self.assertRaises(DMFormatError):
-            dm_to_DissimilarityMatrix(self.bad_dm_f1)
-
-        # Mismatched IDs.
-        with self.assertRaises(DMFormatError):
-            dm_to_DissimilarityMatrix(self.bad_dm_f2)
-
-        # Extra data at end.
-        with self.assertRaises(DMFormatError):
-            dm_to_DissimilarityMatrix(self.bad_dm_f3)
-
-        # Missing data.
-        with self.assertRaises(DMFormatError):
-            dm_to_DissimilarityMatrix(self.bad_dm_f4)
-
-        # Header, but no data.
-        with self.assertRaises(DMFormatError):
-            dm_to_DissimilarityMatrix(self.bad_dm_f5)
+        # Asymmetric data only raises an error for DistanceMatrix.
+        with self.assertRaises(DistanceMatrixError):
+            dm_to_DistanceMatrix(self.dm_2x2_asym_f)
 
 
 # 1x1:
