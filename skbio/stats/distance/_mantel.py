@@ -426,19 +426,15 @@ def pwmantel(dms, labels=None, method='pearson', permutations=999,
 
 def _order_dms(x, y, strict=True, lookup=None):
     """Intersect distance matrices and put them in the same order."""
-    if not isinstance(x, DistanceMatrix) and not isinstance(y, DistanceMatrix):
-        if lookup is not None:
-            raise ValueError("ID lookup can only be provided if inputs are "
-                             "DistanceMatrix instances.")
+    x_is_dm = isinstance(x, DistanceMatrix)
+    y_is_dm = isinstance(y, DistanceMatrix)
 
-        x = DistanceMatrix(x)
-        y = DistanceMatrix(y)
-
-        if x.shape != y.shape:
-            raise ValueError("Distance matrices must have the same shape.")
-
-        return x, y
-    elif isinstance(x, DistanceMatrix) and isinstance(y, DistanceMatrix):
+    if (x_is_dm and not y_is_dm) or (y_is_dm and not x_is_dm):
+        raise TypeError(
+            "Mixing DistanceMatrix and array_like input types is not "
+            "supported. Both x and y must either be DistanceMatrix instances "
+            "or array_like, but not mixed.")
+    elif x_is_dm and y_is_dm:
         if lookup is not None:
             # Create copy as we'll be modifying the IDs in place.
             x = x.copy()
@@ -467,7 +463,15 @@ def _order_dms(x, y, strict=True, lookup=None):
 
         return x.filter(id_order), y.filter(id_order)
     else:
-        raise TypeError(
-            "Mixing DistanceMatrix and array_like input types is not "
-            "supported. Both x and y must either be DistanceMatrix instances "
-            "or array_like, but not mixed.")
+        # Both x and y aren't DistanceMatrix instances.
+        if lookup is not None:
+            raise ValueError("ID lookup can only be provided if inputs are "
+                             "DistanceMatrix instances.")
+
+        x = DistanceMatrix(x)
+        y = DistanceMatrix(y)
+
+        if x.shape != y.shape:
+            raise ValueError("Distance matrices must have the same shape.")
+
+        return x, y

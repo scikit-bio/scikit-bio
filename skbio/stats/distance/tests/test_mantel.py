@@ -538,6 +538,9 @@ class OrderDistanceMatricesTests(MantelTestData):
         with self.assertRaises(TypeError):
             _order_dms(self.minx, self.minz_dm)
 
+        with self.assertRaises(TypeError):
+            _order_dms(self.minz_dm, self.minx)
+
 
 if __name__ == '__main__':
     main()
