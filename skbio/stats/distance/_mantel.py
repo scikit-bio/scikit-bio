@@ -436,18 +436,8 @@ def _order_dms(x, y, strict=True, lookup=None):
             "or array_like, but not mixed.")
     elif x_is_dm and y_is_dm:
         if lookup is not None:
-            # Create copy as we'll be modifying the IDs in place.
-            x = x.copy()
-            y = y.copy()
-
-            try:
-                x_ids = [lookup[id_] for id_ in x.ids]
-                y_ids = [lookup[id_] for id_ in y.ids]
-            except KeyError as e:
-                raise KeyError("All IDs in both distance matrices must be in "
-                               "the lookup. Missing ID: %s" % str(e))
-            x.ids = x_ids
-            y.ids = y_ids
+            x = _remap_ids(x, lookup, 'x', 'first')
+            y = _remap_ids(y, lookup, 'y', 'second')
 
         id_order = [id_ for id_ in x.ids if id_ in y]
         num_matches = len(id_order)
@@ -475,3 +465,17 @@ def _order_dms(x, y, strict=True, lookup=None):
             raise ValueError("Distance matrices must have the same shape.")
 
         return x, y
+
+
+def _remap_ids(dm, lookup, label, order):
+    "Return a copy of `dm` with its IDs remapped based on `lookup`."""
+    try:
+        remapped_ids = [lookup[id_] for id_ in dm.ids]
+    except KeyError as e:
+        raise KeyError("All IDs in the %s distance matrix (%s) must be in "
+                       "the lookup. Missing ID: %s" % (order, label, str(e)))
+
+    # Create a copy as we'll be modifying the IDs in place.
+    dm_copy = dm.copy()
+    dm_copy.ids = remapped_ids
+    return dm_copy

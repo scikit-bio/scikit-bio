@@ -517,10 +517,20 @@ class OrderDistanceMatricesTests(MantelTestData):
             _order_dms(self.minx, [[0, 2], [2, 0]])
 
     def test_missing_ids_in_lookup(self):
-        # Mapping for '1' is missing.
+        # Mapping for '1' is missing. Should get an error while remapping IDs
+        # for the first distance matrix.
         lookup = {'0': 'a', '2': 'c'}
 
-        with self.assertRaises(KeyError):
+        with self.assertRaisesRegexp(KeyError, "first.*(x).*'1'\"$"):
+            _order_dms(self.minx_dm, self.miny_dm, lookup=lookup)
+
+        # Mapping for 'bar' is missing. Should get an error while remapping IDs
+        # for the second distance matrix.
+        lookup = {'0': 'a', '1': 'b', '2': 'c',
+                  'foo': 'a', 'baz': 'c'}
+        self.miny_dm.ids = ('foo', 'bar', 'baz')
+
+        with self.assertRaisesRegexp(KeyError, "second.*(y).*'bar'\"$"):
             _order_dms(self.minx_dm, self.miny_dm, lookup=lookup)
 
     def test_nonmatching_ids_strict_true(self):
