@@ -302,7 +302,7 @@ def pwmantel(dms, labels=None, method='pearson', permutations=999,
     """Run Mantel tests for every pair of distance matrices.
 
     Runs a Mantel test for each pair of distance matrices and collates the
-    results in a data frame. Distance matrices do not need to be in the same
+    results in a ``DataFrame``. Distance matrices do not need to be in the same
     ID order if they are ``DistanceMatrix`` instances. Distance matrices will
     be re-ordered prior to running each pairwise test, and if ``strict=False``,
     IDs that don't match between a pair of distance matrices will be dropped
@@ -317,9 +317,9 @@ def pwmantel(dms, labels=None, method='pearson', permutations=999,
         reordering/matching of IDs will be performed.
     labels : iterable of str or int, optional
         Labels for each distance matrix in `dms`. These are used in the results
-        data frame to identify the pair of distance matrices used in a pairwise
-        Mantel test. If ``None``, defaults to monotonically-increasing integers
-        starting at zero.
+        ``DataFrame`` to identify the pair of distance matrices used in a
+        pairwise Mantel test. If ``None``, defaults to monotonically-increasing
+        integers starting at zero.
     method : {'pearson', 'spearman'}
         Correlation method. See ``mantel`` function for more details.
     permutations : int, optional
@@ -334,9 +334,9 @@ def pwmantel(dms, labels=None, method='pearson', permutations=999,
     Returns
     -------
     pandas.DataFrame
-        Data frame containing the results of each pairwise test (one per row).
-        Includes the number of objects considered in each test as column ``n``
-        (after applying `lookup` and filtering nonmatching IDs if
+        ``DataFrame`` containing the results of each pairwise test (one per
+        row). Includes the number of objects considered in each test as column
+        ``n`` (after applying `lookup` and filtering nonmatching IDs if
         ``strict=False``). Column ``p-value`` has the p-values formatted as
         strings with the correct number of decimal places, or ``N/A`` if a
         p-value could not be computed.
@@ -348,7 +348,7 @@ def pwmantel(dms, labels=None, method='pearson', permutations=999,
     Examples
     --------
     Import the functionality we'll use in the following examples. The call to
-    ``pd.set_option`` ensures consistent data frame formatting across
+    ``pd.set_option`` ensures consistent ``DataFrame`` formatting across
     different versions of pandas. This call is not necessary for normal
     use; it is only included here so that the doctests will pass.
 
