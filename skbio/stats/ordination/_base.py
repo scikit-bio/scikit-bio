@@ -1,7 +1,3 @@
-#! /usr/bin/env python
-from __future__ import absolute_import, division, print_function
-from future.builtins import zip
-
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -10,7 +6,12 @@ from future.builtins import zip
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from __future__ import absolute_import, division, print_function
+from future.builtins import zip
+
 import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 from skbio.util import FileFormatError
 from skbio.util.io import open_file
@@ -416,6 +417,46 @@ class OrdinationResults(object):
                 for id_, vals in zip(self.site_ids, self.site_constraints):
                     out_f.write("%s\t%s\n" % (id_, '\t'.join(
                         np.asarray(vals, dtype=np.str))))
+
+    def plot(self, df=None, column=None, title='', axis1=0, axis2=1, axis3=2):
+        # derived from
+        # http://matplotlib.org/examples/mplot3d/scatter3d_demo.html
+        coord_matrix = self.site.T
+
+        colors = None
+        # TODO error if only one of df or column is provided
+        if df is not None and column is not None:
+            colors = [df[column][id_] for id_ in self.site_ids]
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+
+        # TODO handle case where there aren't three dimensions to plot
+        xs = coord_matrix[axis1]
+        ys = coord_matrix[axis2]
+        zs = coord_matrix[axis3]
+
+        if colors is not None:
+            plot = ax.scatter(xs, ys, zs, c=colors)
+        else:
+            plot = ax.scatter(xs, ys, zs)
+
+        # TODO don't harcode axis labels (specific to PCoA)
+        ax.set_xlabel('PC %d' % (axis1 + 1))
+        ax.set_ylabel('PC %d' % (axis2 + 1))
+        ax.set_zlabel('PC %d' % (axis3 + 1))
+        ax.set_xticklabels([])
+        ax.set_yticklabels([])
+        ax.set_zticklabels([])
+        ax.set_title(title)
+
+        if colors is not None:
+            fig.colorbar(plot)
+
+        # TODO should return figure, but then it's displayed twice in the
+        # notebook
+        #return fig
+        plt.show()
 
 
 class Ordination(object):
