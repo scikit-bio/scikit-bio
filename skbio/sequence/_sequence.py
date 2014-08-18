@@ -1524,10 +1524,13 @@ class ProteinSequence(BiologicalSequence):
             "X": set("ACDEFGHIKLMNPQRSTVWY")
         }
 
-        for degen_char in list(degen_map.keys()):
+        degen_map_lower = {}
+        for degen_char in degen_map:
             nondegen_chars = degen_map[degen_char]
-            degen_map[degen_char.lower()] = set(
+            degen_map_lower[degen_char.lower()] = set(
                 ''.join(nondegen_chars).lower())
+
+        degen_map.update(degen_map_lower)
 
         return degen_map
 
