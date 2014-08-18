@@ -77,7 +77,7 @@ Create a table containing 7 OTUs and 6 samples:
    p-value is significant based on an alpha of 0.05:
 
    >>> from skbio.stats.distance import mantel
-   >>> r, p_value = mantel(j_dm, bc_dm)
+   >>> r, p_value, n = mantel(j_dm, bc_dm)
    >>> print(r)
    -0.209362157621
    >>> print(p_value < 0.05)
