@@ -17,7 +17,7 @@ User Functions
 
    write
    read
-   guess_format
+   sniff
 
 Developer Documentation
 -----------------------
@@ -27,7 +27,7 @@ named after the functionality it provides.
 For example, if you were to create readers and writers for a `fasta` file, you
 would create a submodule `skbio/io/fasta.py`.
 In this submodule you would use the following decorator factories:
-``register_writer``, ``register_reader``, and ``register_identifier``.
+``register_writer``, ``register_reader``, and ``register_sniffer``.
 These associate your functionality to a format string and potentially an skbio
 class.
 
@@ -48,12 +48,12 @@ Developer Functions
 
     register_writer
     register_reader
-    register_identifier
+    register_sniffer
     list_write_formats
     list_read_formats
     get_writer
     get_reader
-    get_identifier
+    get_sniffer
 
 Exceptions
 ----------
@@ -76,19 +76,19 @@ Exceptions
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from ._warning import UnprovenFormatWarning
+from ._warning import UnprovenFormatWarning, ArgumentOverrideWarning
 from ._exception import (DuplicateRegistrationError, RecordError, FieldError,
                          FormatIdentificationError, FileFormatError)
-from ._registry import (write, read, guess_format, get_writer, get_reader,
-                        get_identifier, list_write_formats, list_read_formats,
-                        register_writer, register_reader, register_identifier)
+from ._registry import (write, read, sniff, get_writer, get_reader,
+                        get_sniffer, list_write_formats, list_read_formats,
+                        register_writer, register_reader, register_sniffer)
 
-__all__ = ['write', 'read', 'guess_format', 'get_writer', 'get_reader',
-           'get_identifier', 'list_write_formats', 'list_read_formats',
-           'register_writer', 'register_reader', 'register_identifier',
+__all__ = ['write', 'read', 'sniff', 'get_writer', 'get_reader',
+           'get_sniffer', 'list_write_formats', 'list_read_formats',
+           'register_writer', 'register_reader', 'register_sniffer',
            'DuplicateRegistrationError', 'RecordError', 'FieldError',
            'FormatIdentificationError', 'FileFormatError',
-           'UnprovenFormatWarning']
+           'UnprovenFormatWarning', 'ArgumentOverrideWarning']
 
 from numpy.testing import Tester
 test = Tester().test

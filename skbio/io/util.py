@@ -85,3 +85,14 @@ def open_file(filepath_or, *args, **kwargs):
     finally:
         if own_fh:
             fh.close()
+
+
+@contextmanager
+def open_files(fp_list, *args, **kwargs):
+    fhs, owns = zip(*[_get_filehandle(f, *args, **kwargs) for f in fp_list])
+    try:
+        yield fhs
+    finally:
+        for fh, is_own in zip(fhs, owns):
+            if is_own:
+                fh.close()

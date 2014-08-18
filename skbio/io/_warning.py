@@ -12,3 +12,8 @@ from __future__ import absolute_import, division, print_function
 class UnprovenFormatWarning(Warning):
     """Warn when the identifer of a format cannot confirm expected value."""
     pass
+
+
+class ArgumentOverrideWarning(Warning):
+    """Warn when a user provided kwarg differs from a guessed kwarg."""
+    pass
