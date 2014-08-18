@@ -453,10 +453,7 @@ class OrdinationResults(object):
         if colors is not None:
             fig.colorbar(plot)
 
-        # TODO should return figure, but then it's displayed twice in the
-        # notebook
-        #return fig
-        plt.show()
+        return fig
 
 
 class Ordination(object):
