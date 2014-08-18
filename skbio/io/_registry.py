@@ -82,29 +82,32 @@ def _overwrite_kwargs(kw, fmt_kw, fmt_len, warn_user):
 def register_sniffer(format):
     """Return a decorator for an sniffer function.
 
-    A decorator factory for sniffer functions.
+    A decorator factory for sniffer functions. Sniffers may only be registered
+    to simple formats. Sniffers for compound formats are automatically
+    generated from their component simple formats.
 
     An sniffer function should have at least the following signature:
-    ``<format_name>_sniffer(fp)``. `fp` is either a filepath or
-    an open fileobject.
+    ``<format_name>_sniffer(fh)``. `fh` is **always** an open filehandle.
+    This decorator provides the ability to use filepaths in the same argument
+    position as `fh`. They will automatically be opened and closed.
 
-    **The sniffer must not close an open fileobject**, cleanup must be
-    handled external to the sniffer and is not it's concern. If it is a
-    filepath, then opening and closing the file will be the responsibility of
-    the sniffer.
+    **The sniffer must not close the filehandle**, cleanup will be
+    handled external to the sniffer and is not it's concern.
 
-    Any additional `*args` and `**kwargs` will be passed to the sniffer and
-    may be used if necessary.
+    `**kwargs` are not passed to a sniffer, and a sniffer must not use them.
 
-    The sniffer **must** return an True if it believes `fh` is a given
-    `fmt`. Otherwise it should return False.
+    The job of a sniffer is to determine membership of a file for a format and
+    to 'sniff' out any kwargs that would be of use to a reader function.
+
+    The sniffer **must** return a tuple of (True, <kwargs dict>) if it believes
+    `fh` is a given `format`. Otherwise it should return (False, {}).
 
     The sniffer may determine membership of a file in as many or as few
     lines of the file as it deems necessary.
 
     Parameters
     ----------
-    fmt : str
+    format : str
         A format name which a decorated sniffer will be bound to.
 
     Returns
@@ -118,10 +121,6 @@ def register_sniffer(format):
     -----
         Failure to adhere to the above interface specified for an sniffer
         will result in unintended side-effects.
-
-        The returned decorator does not mutate the decorated function in any
-        way, it only adds the function to a global registry for use with
-        ``skbio.io.sniff``
 
     See Also
     --------
@@ -159,26 +158,31 @@ def register_reader(format, *cls):
     A decorator factory for reader functions.
 
     A reader function should have at least the following signature:
-    ``<format_name>_to_<class_name_or_generator>(fp)``. `fp` is either a
-    filepath or an open fileobject.
+    ``<format_name>_to_<class_name_or_generator>(fh)``. `fh` is **always** an
+    open filehandle. This decorator provides the ability to use filepaths in
+    the same argument position as `fh`. They will automatically be opened and
+    closed.
 
-    **The reader must not close an open fileobject**, cleanup must be
-    handled external to the reader and is not it's concern. If it is a
-    filepath, then opening and closing the file will be the responsibility of
-    the reader.
+    **The reader must not close the filehandle**, cleanup will be
+    handled external to the reader and is not it's concern. This is true even
+    in the case of generators.
 
-    Any additional `*args` and `**kwargs` will be passed to the reader and may
+    Any additional `**kwargs` will be passed to the reader and may
     be used if necessary.
+
+    In the event of a compound format (`['format1', 'format2']`) filehandles
+    will be unrolled in the same order as the format and ALL kwarg arguments
+    will be passed as tuples in the same order as the format. i.e.
+    ``def format1_format2_to_generator(fmt1_fh, fmt2_fh, some_arg=(1, 2)):``
 
     The reader **must** return an instance of `cls` if `cls` is not None.
     Otherwise the reader must return a generator. The generator need not deal
-    with closing the `fh` this is the responsibility of the caller and is
-    handled for you in ``skbio.io.read``.
+    with closing the `fh`. That is already handled by this decorator.
 
 
     Parameters
     ----------
-    fmt : str
+    format : str
         A format name which a decorated reader will be bound to.
     cls : type, optional
         Positional argument.
@@ -201,10 +205,6 @@ def register_reader(format, *cls):
     -----
         Failure to adhere to the above interface specified for a reader will
         result in unintended side-effects.
-
-        The returned decorator does not mutate the decorated function in any
-        way, it only adds the function to a global registry for use with
-        ``skbio.io.read``
 
     See Also
     --------
@@ -288,21 +288,24 @@ def register_writer(format, *cls):
     A decorator factory for writer functions.
 
     A writer function should have at least the following signature:
-    ``<class_name_or_generator>_to_<format_name>(obj, fp)`` where `obj` will
-    be either an instance of <class_name> or a generator that is *identical* to
-    the result of calling ``get_reader(<format>, None)``. `fp` is either a
-    filepath or an open fileobject.
+    ``<class_name_or_generator>_to_<format_name>(obj, fh)``. `fh` is **always**
+    an open filehandle. This decorator provides the ability to use filepaths in
+    the same argument position as `fh`. They will automatically be opened and
+    closed.
 
-    **The writer must not close an open fileobject**, cleanup must be
-    handled external to the writer and is not it's concern. If it is a
-    filepath, then opening and closing the file will be the responsibility of
-    the writer.
+    **The writer must not close the filehandle**, cleanup will be
+    handled external to the reader and is not it's concern.
 
-    Any additional `*args` and `**kwargs` will be passed to the writer and may
+    Any additional and `**kwargs` will be passed to the writer and may
     be used if necessary.
 
     The writer must not return a value. Instead it should only mutate the `fh`
     in a way consistent with it's purpose.
+
+    In the event of a compound format (`['format1', 'format2']`) filehandles
+    will be unrolled in the same order as the format and ALL kwarg arguments
+    will be passed as tuples in the same order as the format. i.e.
+    ``def gen_to_format1_format2(gen, fmt1_fh, fmt2_fh, some_arg=(1, 2)):``
 
     If the writer accepts a generator, it should exhaust the generator to
     ensure that the potentially open fileobject backing said generator is
@@ -310,7 +313,7 @@ def register_writer(format, *cls):
 
     Parameters
     ----------
-    fmt : str
+    format : str
         A format name which a decorated writer will be bound to.
     cls : type, optional
         Positional argument.
@@ -333,10 +336,6 @@ def register_writer(format, *cls):
     -----
         Failure to adhere to the above interface specified for a writer will
         result in unintended side-effects.
-
-        The returned decorator does not mutate the decorated function in any
-        way, it only adds the function to a global registry for use with
-        ``skbio.io.write``
 
     See Also
     --------
@@ -437,7 +436,7 @@ def get_sniffer(format):
 
     Parameters
     ----------
-    fmt : str
+    format : str
         A format string which has a registered sniffer.
 
     Returns
@@ -486,7 +485,7 @@ def get_reader(format, *cls):
 
     Parameters
     ----------
-    fmt : str
+    format : str
         A registered format string.
     cls : type, optional
         Positional argument.
@@ -536,7 +535,7 @@ def get_writer(format, *cls):
 
     Parameters
     ----------
-    fmt : str
+    format : str
         A registered format string.
     cls : type, optional
         Positional argument.
@@ -612,8 +611,8 @@ def sniff(fp, cls=None, mode='U'):
 
     Returns
     -------
-    str
-        A registered format name.
+    (str, kwargs)
+        A format name and kwargs for the corresponding reader.
 
     Raises
     ------
@@ -621,8 +620,6 @@ def sniff(fp, cls=None, mode='U'):
 
     Note
     -----
-        If a fileobject is provided, the current read offset will be reset.
-
         If the file is 'claimed' by multiple sniffers, or no sniffer
         'claims' the file, an ``skbio.io.FormatIdentificationError`` will be
         raised.
@@ -674,10 +671,11 @@ def read(fp, format=None, into=None, verify=True, mode='U', **kwargs):
         when ``StopIteration`` is raised; fileobjects are still the
         responsibility of the caller.
     format : str, optional
-        The format must be a reigstered format name with a reader for the given
-        `into` class. If a `format` is not provided or is None, all registered
-        sniffers for the provied `into` class will be evaluated to attempt
-        to guess the format. Will raise an
+        The format must be a format name with a reader for the given
+        `into` class. In the case of compound formats, any order of the simple
+        formats will work. If a `format` is not provided or is None, all
+        registered sniffers for the provied `into` class will be evaluated to
+        attempt to guess the format. Will raise an
         ``skbio.io.FormatIdentificationError`` if it is unable to guess.
         Default is None.
     into : type, optional
@@ -691,9 +689,7 @@ def read(fp, format=None, into=None, verify=True, mode='U', **kwargs):
         Default is True.
     mode : str, optional
         The read mode. This is passed to `open(fp, mode)` internally.
-        Default is 'U'.
-    args : tuple, optional
-        Will be passed directly to the appropriate reader.
+        Default is 'U'
     kwargs : dict, optional
         Will be passed directly to the appropriate reader.
 
@@ -761,7 +757,8 @@ def write(obj, format=None, into=None, mode='w', **kwargs):
         The object must have a registered writer for a provided `format`.
     format : str
         The format must be a reigstered format name with a writer for the given
-        `obj`
+        `obj`. In the case of compound formats, any order of the simple
+        formats will work.
     into : filepath or fileobject
         The location to write the given `format` from `obj` into. Filepaths are
         automatically closed when written; fileobjects are the responsibility
@@ -769,8 +766,6 @@ def write(obj, format=None, into=None, mode='w', **kwargs):
     mode : str, optional
         The write mode. This is passed to `open(fp, mode)` internally.
         Default is 'w'.
-    args : tuple, optional
-        Will be passed directly to the appropriate writer.
     kwargs : dict, optional
         Will be passed directly to the appropriate writer.
 
