@@ -12,7 +12,7 @@ with standard_library.hooks():
 
 import numpy as np
 
-from skbio.util.io import open_file
+from skbio.io.util import open_file
 from ._exception import FastqParseError
 
 

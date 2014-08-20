@@ -17,7 +17,7 @@ import numpy as np
 import pandas as pd
 from scipy.spatial.distance import squareform
 
-from skbio.util.io import open_file
+from skbio.io.util import open_file
 from skbio.stats import p_value_to_str
 
 

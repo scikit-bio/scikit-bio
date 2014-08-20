@@ -371,6 +371,8 @@ class APIRegressionValidator(RepoValidator):
                         # We need this in '.' form not '/'
                         prefix = prefix.replace(os.sep, ".") + "."
                     # Prefix should be empty unless node.level > 0
+                    if node.module is None:
+                        node.module = ""
                     imports += [".".join([prefix + node.module, x.name])
                                 for x in node.names]
         skbio_imports = []

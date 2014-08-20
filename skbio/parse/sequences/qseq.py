@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function
 
 import collections
 
-from skbio.util.io import open_file
+from skbio.io.util import open_file
 
 from .fastq import ascii_to_phred33, ascii_to_phred64
 from ._exception import QseqParseError
