@@ -12,7 +12,6 @@ import types
 
 from future.builtins import zip
 
-
 from . import (UnrecognizedFormatError, ArgumentOverrideWarning,
                DuplicateRegistrationError, UnprovenFormatWarning)
 from .util import open_file, open_files, _is_string_or_bytes
@@ -89,7 +88,7 @@ def register_sniffer(format):
     to simple formats. Sniffers for compound formats are automatically
     generated from their component simple formats.
 
-    a sniffer function should have at least the following signature:
+    A sniffer function should have at least the following signature:
     ``<format_name>_sniffer(fh)``. `fh` is **always** an open filehandle.
     This decorator provides the ability to use filepaths in the same argument
     position as `fh`. They will automatically be opened and closed.
@@ -121,7 +120,7 @@ def register_sniffer(format):
     -------
     function
         A decorator to be used on a sniffer. The decorator will raise a
-        ``skbio.io.DuplicateRegistrationError`` if there already exists an
+        ``skbio.io.DuplicateRegistrationError`` if there already exists a
         *sniffer* bound to the `format`.
 
     See Also
@@ -182,7 +181,7 @@ def register_reader(format, cls=None):
     Otherwise the reader must return a generator. The generator need not deal
     with closing the `fh`. That is already handled by this decorator.
 
-    .. note:: Failure to adhere to the above interface specified for a sniffer
+    .. note:: Failure to adhere to the above interface specified for a reader
        will result in unintended side-effects.
 
     Parameters
@@ -191,7 +190,7 @@ def register_reader(format, cls=None):
         A format name which a decorated reader will be bound to.
     cls : type, optional
         The class which a decorated reader will be bound to. When `cls` is None
-        the reader will be bound as a generator.
+        the reader will be bound as returning a generator.
         Default is None.
 
     Returns
@@ -298,7 +297,7 @@ def register_writer(format, cls=None):
     ensure that the potentially open filehandle backing said generator is
     closed.
 
-    .. note:: Failure to adhere to the above interface specified for a sniffer
+    .. note:: Failure to adhere to the above interface specified for a writer
        will result in unintended side-effects.
 
     Parameters
@@ -457,8 +456,8 @@ def get_reader(format, cls=None):
 
     Parameters
     ----------
-    format : str
-        A registered format string.
+    format : str or iterable of str
+        A registered format string or compound format.
     cls : type, optional
         The class which the reader will return an instance of. If `cls` is
         None, the reader will return a generator.
@@ -505,11 +504,11 @@ def get_writer(format, cls=None):
 
     Parameters
     ----------
-    format : str
-        A registered format string.
+    format : str or iterable of str
+        A registered format string or compound format.
     cls : type, optional
         The class which the writer will expect an instance of. If `cls` is
-        None, the writer will expect a generator that identical to what
+        None, the writer will expect a generator that is identical to what
         is returned by ``get_reader(<some_format>, None)``.
         Default is None.
 
@@ -631,7 +630,7 @@ def read(fp, format=None, into=None, verify=True, mode='U', **kwargs):
         when ``StopIteration`` is raised; filehandles are still the
         responsibility of the caller. If `format` is a compound format, then
         `fp` **must** be an iterable of the same length as the compound format.
-    format : str or [str], optional
+    format : str or iterable of str, optional
         The format must be a format name with a reader for the given
         `into` class. In the case of compound formats, any order of the simple
         formats will work. If a `format` is not provided or is None, all
@@ -698,10 +697,10 @@ def read(fp, format=None, into=None, verify=True, mode='U', **kwargs):
 
     reader = get_reader(format, into)
     if reader is None:
-        raise UnrecognizedFormatError("Cannot read %s into %s, no reader \
-                                      found." % (format, into.__name__
-                                                 if into is not None
-                                                 else 'generator'))
+        raise UnrecognizedFormatError("Cannot read %s into %s, no reader "
+                                      "found." % (format, into.__name__
+                                                  if into is not None
+                                                  else 'generator'))
     return reader(fp, mode=mode, **kwargs)
 
 
@@ -715,7 +714,7 @@ def write(obj, format=None, into=None, mode='w', **kwargs):
     ----------
     obj : object
         The object must have a registered writer for a provided `format`.
-    format : str or [str]
+    format : str or iterable of str, optional
         The format must be a reigstered format name with a writer for the given
         `obj`. In the case of compound formats, any order of the simple
         formats will work.
@@ -752,10 +751,10 @@ def write(obj, format=None, into=None, mode='w', **kwargs):
         cls = obj.__class__
     writer = get_writer(format, cls)
     if writer is None:
-        raise UnrecognizedFormatError("Cannot write %s into %s, no %s writer \
-                                      found." % (format, str(into), 'generator'
-                                                 if cls is None
-                                                 else str(cls)))
+        raise UnrecognizedFormatError("Cannot write %s into %s, no %s writer "
+                                      "found." % (format, str(into),
+                                                  'generator' if cls is None
+                                                  else str(cls)))
 
     writer(obj, into, mode=mode, **kwargs)
 

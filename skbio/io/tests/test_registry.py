@@ -48,6 +48,14 @@ class TestClassB(TestClass):
 class RegistryTest(unittest.TestCase):
     def setUp(self):
         self.module = import_fresh_module('skbio.io._registry')
+        self.fd1, self.fp1 = mkstemp()
+        self.fd2, self.fp2 = mkstemp()
+
+    def tearDown(self):
+        os.remove(self.fp1)
+        os.close(self.fd1)
+        os.remove(self.fp2)
+        os.close(self.fd2)
 
 
 class TestRegisterAndGetReader(RegistryTest):
@@ -566,17 +574,49 @@ class TestSniff(RegistryTest):
         self.assertEqual('format4, format3',
                          self.module.sniff([fh2, fh], cls=TestClass)[0])
 
+    def test_that_mode_is_used(self):
+        fp = self.fp1
+        with open(fp, 'w') as fh:
+            fh.write('@\n#\n')
+
+        @self.module.register_sniffer('format')
+        def sniffer(fh):
+            self.assertEqual(self.expected_mode, fh.mode)
+            return '@' in fh.readline(), {}
+
+        self.expected_mode = 'U'
+        self.module.sniff(fp)
+
+        self.expected_mode = 'r'
+        self.module.sniff(fp, mode='r')
+
+    def test_that_mode_is_used_compound(self):
+        fp1 = self.fp1
+        with open(fp1, 'w') as fh:
+            fh.write('@\n#\n')
+
+        fp2 = self.fp2
+        with open(fp2, 'w') as fh:
+            fh.write('!\n#\n')
+
+        @self.module.register_sniffer('c1')
+        def c1_sniffer(fh):
+            self.assertEqual(self.expected_mode, fh.mode)
+            return '@' in fh.readline(), {}
+
+        @self.module.register_sniffer('c2')
+        def c2_sniffer(fh):
+            self.assertEqual(self.expected_mode, fh.mode)
+            return '!' in fh.readline(), {}
+
+        self.expected_mode = 'U'
+        self.module.sniff([fp1, fp2])
+
+        self.expected_mode = 'r'
+        self.module.sniff([fp1, fp2], mode='r')
+
 
 class TestRead(RegistryTest):
-    def setUp(self):
-        super(TestRead, self).setUp()
-        self.fd1, self.fp1 = mkstemp()
-
-    def tearDown(self):
-        super(TestRead, self).tearDown()
-        os.remove(self.fp1)
-        os.close(self.fd1)
-
     def test_format_and_into_are_none(self):
         fh = StringIO()
         with self.assertRaises(ValueError):
@@ -972,18 +1012,6 @@ class TestRead(RegistryTest):
 
 
 class TestWrite(RegistryTest):
-    def setUp(self):
-        super(TestWrite, self).setUp()
-        self.fd1, self.fp1 = mkstemp()
-        self.fd2, self.fp2 = mkstemp()
-
-    def tearDown(self):
-        super(TestWrite, self).tearDown()
-        os.remove(self.fp1)
-        os.close(self.fd1)
-        os.remove(self.fp2)
-        os.close(self.fd2)
-
     def test_format_is_none(self):
         fh = StringIO()
         with self.assertRaises(ValueError):

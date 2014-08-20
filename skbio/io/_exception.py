@@ -25,7 +25,7 @@ class FieldError(RecordError):
 
 
 class UnrecognizedFormatError(FileFormatError):
-    """Raised when a file's format cannot be recognized."""
+    """Raised when a file's format is unkown, ambiguous, or unidentifiable."""
     pass
 
 
