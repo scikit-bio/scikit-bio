@@ -418,9 +418,8 @@ class OrdinationResults(object):
                     out_f.write("%s\t%s\n" % (id_, '\t'.join(
                         np.asarray(vals, dtype=np.str))))
 
-    def plot(self, df=None, column=None, title='', axis1=0, axis2=1, axis3=2):
-        # TODO add colormap option
-
+    def plot(self, df=None, column=None, title='', axis1=0, axis2=1, axis3=2,
+             cmap=None):
         # derived from
         # http://matplotlib.org/examples/mplot3d/scatter3d_demo.html
         coord_matrix = self.site.T
@@ -456,7 +455,7 @@ class OrdinationResults(object):
         zs = coord_matrix[axis3]
 
         if colors is not None:
-            plot = ax.scatter(xs, ys, zs, c=colors)
+            plot = ax.scatter(xs, ys, zs, c=colors, cmap=cmap)
         else:
             plot = ax.scatter(xs, ys, zs)
 
