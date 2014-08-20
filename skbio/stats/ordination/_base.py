@@ -442,7 +442,28 @@ class OrdinationResults(object):
         if df is None and column is None:
             colors = None
         elif df is not None and column is not None:
-            colors = [df[column][id_] for id_ in self.site_ids]
+            if column not in df:
+                raise ValueError("Column '%s' not in data frame." % column)
+
+            colors = df.loc[self.site_ids, column]
+
+            if colors.isnull().any():
+                raise ValueError("One or more IDs in the ordination results "
+                                 "are not in the data frame, or there is "
+                                 "missing data in the data frame.")
+
+            is_numeric = True
+            try:
+                colors = colors.astype(float)
+            except ValueError:
+                is_numeric = False
+
+            if not is_numeric:
+                # derived from http://stackoverflow.com/a/14887119
+                categories = colors.unique()
+                category_colors = np.linspace(0, 1, len(categories))
+                color_dict = dict(zip(categories, category_colors))
+                colors = colors.apply(lambda x: color_dict[x])
         else:
             raise ValueError("Both df and column must be provided, or both "
                              "must be omitted.")
@@ -469,7 +490,10 @@ class OrdinationResults(object):
         ax.set_title(title)
 
         if colors is not None:
-            fig.colorbar(plot)
+            if is_numeric:
+                fig.colorbar(plot)
+            else:
+                pass
 
         return fig
 
