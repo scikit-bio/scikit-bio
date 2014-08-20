@@ -422,7 +422,42 @@ class OrdinationResults(object):
     def plot(self, df=None, column=None, title='', axis1=0, axis2=1, axis3=2,
              cmap=None):
         coord_matrix = self.site.T
+        self._validate_plot_axes(coord_matrix, axis1, axis2, axis3)
 
+        # derived from
+        # http://matplotlib.org/examples/mplot3d/scatter3d_demo.html
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+
+        xs = coord_matrix[axis1]
+        ys = coord_matrix[axis2]
+        zs = coord_matrix[axis3]
+
+        point_colors, category_to_color = self._get_plot_point_colors(
+            df, column, self.site_ids, cmap)
+        if point_colors is not None:
+            plot = ax.scatter(xs, ys, zs, c=point_colors, cmap=cmap)
+        else:
+            plot = ax.scatter(xs, ys, zs)
+
+        # TODO don't harcode axis labels (specific to PCoA)
+        ax.set_xlabel('PC %d' % (axis1 + 1))
+        ax.set_ylabel('PC %d' % (axis2 + 1))
+        ax.set_zlabel('PC %d' % (axis3 + 1))
+        ax.set_xticklabels([])
+        ax.set_yticklabels([])
+        ax.set_zticklabels([])
+        ax.set_title(title)
+
+        if point_colors is not None:
+            if category_to_color is None:
+                fig.colorbar(plot)
+            else:
+                self._plot_categorical_legend(ax, category_to_color)
+
+        return fig
+
+    def _validate_plot_axes(self, coord_matrix, axis1, axis2, axis3):
         num_dims = coord_matrix.shape[0]
         if num_dims < 3:
             raise ValueError("At least three dimensions are required to plot "
@@ -438,67 +473,40 @@ class OrdinationResults(object):
                 raise ValueError("axis%d must be >= 0 and < %d." %
                                  (idx + 1, num_dims))
 
-        if df is None and column is None:
-            colors = None
-        elif df is not None and column is not None:
+    def _get_plot_point_colors(self, df, column, ids, cmap):
+        if ((df is None and column is not None) or
+            (df is not None and column is None)):
+            raise ValueError("Both df and column must be provided, or both "
+                             "must be None.")
+        elif df is None and column is None:
+            point_colors, category_to_color = None, None
+        else:
             if column not in df:
                 raise ValueError("Column '%s' not in data frame." % column)
 
-            colors = df.loc[self.site_ids, column]
+            col_vals = df.loc[ids, column]
 
-            if colors.isnull().any():
+            if col_vals.isnull().any():
                 raise ValueError("One or more IDs in the ordination results "
                                  "are not in the data frame, or there is "
-                                 "missing data in the data frame.")
+                                 "missing data in the data frame's '%s' "
+                                 "column." % column)
 
-            is_numeric = True
+            category_to_color = None
             try:
-                colors = colors.astype(float)
+                point_colors = col_vals.astype(float)
             except ValueError:
-                is_numeric = False
-
-            if not is_numeric:
                 # derived from http://stackoverflow.com/a/14887119
+                categories = col_vals.unique()
                 cmap = plt.get_cmap(cmap)
-                categories = colors.unique()
                 category_colors = cmap(np.linspace(0, 1, len(categories)))
-                color_dict = dict(zip(categories, category_colors))
-                colors = colors.apply(lambda x: color_dict[x])
-                colors = colors.tolist()
-        else:
-            raise ValueError("Both df and column must be provided, or both "
-                             "must be omitted.")
 
-        # derived from
-        # http://matplotlib.org/examples/mplot3d/scatter3d_demo.html
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
+                category_to_color = dict(zip(categories, category_colors))
+                point_colors = col_vals.apply(lambda x: category_to_color[x])
 
-        xs = coord_matrix[axis1]
-        ys = coord_matrix[axis2]
-        zs = coord_matrix[axis3]
+            point_colors = point_colors.tolist()
 
-        if colors is not None:
-            plot = ax.scatter(xs, ys, zs, c=colors, cmap=cmap)
-        else:
-            plot = ax.scatter(xs, ys, zs)
-
-        # TODO don't harcode axis labels (specific to PCoA)
-        ax.set_xlabel('PC %d' % (axis1 + 1))
-        ax.set_ylabel('PC %d' % (axis2 + 1))
-        ax.set_zlabel('PC %d' % (axis3 + 1))
-        ax.set_xticklabels([])
-        ax.set_yticklabels([])
-        ax.set_zticklabels([])
-        ax.set_title(title)
-
-        if colors is not None:
-            if is_numeric:
-                fig.colorbar(plot)
-            else:
-                self._plot_categorical_legend(ax, color_dict)
-
-        return fig
+        return point_colors, category_to_color
 
     def _plot_categorical_legend(self, ax, color_dict):
         # derived from http://stackoverflow.com/a/20505720
