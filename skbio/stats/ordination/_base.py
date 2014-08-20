@@ -496,22 +496,24 @@ class OrdinationResults(object):
             if is_numeric:
                 fig.colorbar(plot)
             else:
-                # derived from http://stackoverflow.com/a/20505720
-                proxies = []
-                labels = []
-                for category in color_dict:
-                    proxy = mpl.lines.Line2D(
-                        [0], [0], linestyle='none', c=color_dict[category],
-                        marker='o')
-                    proxies.append(proxy)
-                    labels.append(category)
-
-                # place legend outside of the axes (centered)
-                # derived from http://matplotlib.org/users/legend_guide.html
-                ax.legend(proxies, labels, numpoints=1, loc=6,
-                          bbox_to_anchor=(1.05, 0.5), borderaxespad=0.)
+                self._plot_categorical_legend(ax, color_dict)
 
         return fig
+
+    def _plot_categorical_legend(self, ax, color_dict):
+        # derived from http://stackoverflow.com/a/20505720
+        proxies = []
+        labels = []
+        for category in color_dict:
+            proxy = mpl.lines.Line2D([0], [0], linestyle='none',
+                                     c=color_dict[category], marker='o')
+            proxies.append(proxy)
+            labels.append(category)
+
+        # place legend outside of the axes (centered)
+        # derived from http://matplotlib.org/users/legend_guide.html
+        ax.legend(proxies, labels, numpoints=1, loc=6,
+                  bbox_to_anchor=(1.05, 0.5), borderaxespad=0.)
 
 
 class Ordination(object):
