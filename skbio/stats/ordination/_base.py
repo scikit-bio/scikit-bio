@@ -9,6 +9,8 @@
 from __future__ import absolute_import, division, print_function
 from future.builtins import zip
 
+from functools import partial
+
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -435,10 +437,12 @@ class OrdinationResults(object):
 
         point_colors, category_to_color = self._get_plot_point_colors(
             df, column, self.site_ids, cmap)
-        if point_colors is not None:
-            plot = ax.scatter(xs, ys, zs, c=point_colors, cmap=cmap)
+
+        scatter_fn = partial(ax.scatter, xs, ys, zs)
+        if point_colors is None:
+            plot = scatter_fn()
         else:
-            plot = ax.scatter(xs, ys, zs)
+            plot = scatter_fn(c=point_colors, cmap=cmap)
 
         # TODO don't harcode axis labels (specific to PCoA)
         ax.set_xlabel('PC %d' % (axis1 + 1))
