@@ -466,7 +466,7 @@ class OrdinationResults(object):
         if num_dims < 3:
             raise ValueError("At least three dimensions are required to plot "
                              "ordination results. There are only %d "
-                             "dimensions." % num_dims)
+                             "dimension(s)." % num_dims)
 
         axes = [axis1, axis2, axis3]
         if len(set(axes)) != 3:

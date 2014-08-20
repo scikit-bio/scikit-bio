@@ -18,6 +18,7 @@ import tempfile
 import numpy as np
 import numpy.testing as npt
 from scipy.spatial.distance import pdist
+from nose.tools import assert_raises_regexp
 
 from skbio import DistanceMatrix
 from skbio.stats.ordination import (CA, RDA, CCA, PCoA, OrdinationResults,
@@ -660,6 +661,7 @@ class TestOrdinationResults(object):
                                        species_ids=species_ids,
                                        site_ids=site_ids)
 
+        cls.pcoa_scores = pcoa_scores
         cls.scores = [ca_scores, cca_scores, pcoa_scores, rda_scores]
         cls.test_paths = ['L&L_CA_data_scores', 'example3_scores',
                           'PCoA_sample_data_3_scores', 'example2_scores']
@@ -747,6 +749,34 @@ class TestOrdinationResults(object):
             with open(get_data_path(test_path), 'U') as f:
                 with npt.assert_raises(ValueError):
                     OrdinationResults.from_file(f)
+
+    def test_validate_plot_axes_valid_input(self):
+        # shouldn't raise an error on valid input. nothing is returned, so
+        # nothing to check here
+        coord_matrix = np.asarray([[0.1, 0.2, 0.3, 0.4],
+                                   [0.2, 0.3, 0.4, 0.5],
+                                   [0.3, 0.4, 0.5, 0.6]])
+        self.pcoa_scores._validate_plot_axes(coord_matrix, 1, 2, 0)
+
+    def test_validate_plot_axes_invalid_input(self):
+        # not enough dimensions
+        with assert_raises_regexp(ValueError, '2 dimension\(s\)'):
+            self.pcoa_scores._validate_plot_axes(
+                np.asarray([[0.1, 0.2, 0.3], [0.2, 0.3, 0.4]]), 0, 1, 2)
+
+        coord_matrix = np.asarray([[0.1, 0.2, 0.3, 0.4],
+                                   [0.2, 0.3, 0.4, 0.5],
+                                   [0.3, 0.4, 0.5, 0.6]])
+
+        # duplicate axes
+        with assert_raises_regexp(ValueError, 'must be unique'):
+            self.pcoa_scores._validate_plot_axes(coord_matrix, 0, 1, 0)
+
+        # out of range axes
+        with assert_raises_regexp(ValueError, 'axis2.*3'):
+            self.pcoa_scores._validate_plot_axes(coord_matrix, 0, -1, 2)
+        with assert_raises_regexp(ValueError, 'axis3.*3'):
+            self.pcoa_scores._validate_plot_axes(coord_matrix, 0, 2, 3)
 
 
 if __name__ == '__main__':
