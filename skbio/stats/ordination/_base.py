@@ -10,6 +10,7 @@ from __future__ import absolute_import, division, print_function
 from future.builtins import zip
 
 import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
@@ -420,8 +421,6 @@ class OrdinationResults(object):
 
     def plot(self, df=None, column=None, title='', axis1=0, axis2=1, axis3=2,
              cmap=None):
-        # derived from
-        # http://matplotlib.org/examples/mplot3d/scatter3d_demo.html
         coord_matrix = self.site.T
 
         num_dims = coord_matrix.shape[0]
@@ -460,14 +459,18 @@ class OrdinationResults(object):
 
             if not is_numeric:
                 # derived from http://stackoverflow.com/a/14887119
+                cmap = plt.get_cmap(cmap)
                 categories = colors.unique()
-                category_colors = np.linspace(0, 1, len(categories))
+                category_colors = cmap(np.linspace(0, 1, len(categories)))
                 color_dict = dict(zip(categories, category_colors))
                 colors = colors.apply(lambda x: color_dict[x])
+                colors = colors.tolist()
         else:
             raise ValueError("Both df and column must be provided, or both "
                              "must be omitted.")
 
+        # derived from
+        # http://matplotlib.org/examples/mplot3d/scatter3d_demo.html
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
 
@@ -493,7 +496,20 @@ class OrdinationResults(object):
             if is_numeric:
                 fig.colorbar(plot)
             else:
-                pass
+                # derived from http://stackoverflow.com/a/20505720
+                proxies = []
+                labels = []
+                for category in color_dict:
+                    proxy = mpl.lines.Line2D(
+                        [0], [0], linestyle='none', c=color_dict[category],
+                        marker='o')
+                    proxies.append(proxy)
+                    labels.append(category)
+
+                # place legend outside of the axes (centered)
+                # derived from http://matplotlib.org/users/legend_guide.html
+                ax.legend(proxies, labels, numpoints=1, loc=6,
+                          bbox_to_anchor=(1.05, 0.5), borderaxespad=0.)
 
         return fig
 
