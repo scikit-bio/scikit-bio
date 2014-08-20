@@ -15,10 +15,11 @@ from future.builtins import zip
 import warnings
 import tempfile
 
+import matplotlib.pyplot as plt
+from nose.tools import assert_items_equal, assert_raises_regexp, assert_true
 import numpy as np
 import numpy.testing as npt
 from scipy.spatial.distance import pdist
-from nose.tools import assert_raises_regexp
 
 from skbio import DistanceMatrix
 from skbio.stats.ordination import (CA, RDA, CCA, PCoA, OrdinationResults,
@@ -777,6 +778,28 @@ class TestOrdinationResults(object):
             self.pcoa_scores._validate_plot_axes(coord_matrix, 0, -1, 2)
         with assert_raises_regexp(ValueError, 'axis3.*3'):
             self.pcoa_scores._validate_plot_axes(coord_matrix, 0, 2, 3)
+
+    def test_plot_categorical_legend(self):
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+
+        # we shouldn't have a legend yet
+        assert_true(ax.get_legend() is None)
+
+        self.pcoa_scores._plot_categorical_legend(
+            ax, {'foo': 'red', 'bar': 'green'})
+
+        # make sure we have a legend now
+        legend = ax.get_legend()
+        assert_true(legend is not None)
+
+        # do some light sanity checking to make sure our input labels and
+        # colors are present
+        labels = [t.get_text() for t in legend.get_texts()]
+        assert_items_equal(labels, ['foo', 'bar'])
+
+        colors = [l.get_color() for l in legend.get_lines()]
+        assert_items_equal(colors, ['red', 'green'])
 
 
 if __name__ == '__main__':
