@@ -13,20 +13,28 @@ try:
 except ImportError:
     from future.standard_library.test.support import import_fresh_module
 from io import StringIO
+import os
 
 import unittest
 import warnings
 from tempfile import mkstemp
 
 from skbio.io import (DuplicateRegistrationError, UnprovenFormatWarning,
-                      FormatIdentificationError, FileFormatError,
-                      ArgumentOverrideWarning)
+                      UnrecognizedFormatError, ArgumentOverrideWarning)
 from skbio.io._registry import empty_file_sniffer
 
 
 class TestClass(object):
     def __init__(self, l):
         self.list = l
+
+    def __eq__(self, other):
+        # They are only equal when the class is EXACTLY the same. We don't want
+        # readers to return knockoff instances...
+        return self.__class__ is other.__class__ and self.list == other.list
+
+    def __repr__(self):
+        return "%s(%s)" % (str(self.__class__.__name__), str(self.list))
 
 
 class TestClassA(TestClass):
@@ -54,18 +62,13 @@ class TestRegisterAndGetReader(RegistryTest):
         self.assertEqual(None, self.module.get_reader('Nope, Sorry',
                                                       TestClass))
 
-    def test_get_reader_too_many_args(self):
-        with self.assertRaises(TypeError) as cm:
-            self.module.get_reader('not_a_format', TestClass, 1)
-        self.assertTrue('get_reader' in str(cm.exception))
-
     def test_register_reader_on_generator(self):
         @self.module.register_reader('format1')
         def format1_reader_generator(fh):
             yield
 
         @self.module.register_reader(['compound', 'format'])
-        def compound_format_reader(fh):
+        def compound_format_reader(fh1, fh2):
             yield
 
         self.assertEqual(format1_reader_generator,
@@ -90,15 +93,7 @@ class TestRegisterAndGetReader(RegistryTest):
         self.assertEqual(format2_reader_generator,
                          self.module.get_reader('format2', None))
 
-    def test_register_reader_with_too_many_args(self):
-        with self.assertRaises(TypeError) as cm:
-            @self.module.register_reader('format1', TestClass, 1)
-            def too_many_args(fh):
-                return
-
-        self.assertTrue('register_reader' in str(cm.exception))
-
-    def test_get_writer_when_only_writer_exists(self):
+    def test_get_reader_when_only_writer_exists(self):
         @self.module.register_writer('format', TestClass)
         def format_reader(fh):
             return
@@ -167,11 +162,6 @@ class TestRegisterAndGetWriter(RegistryTest):
         self.assertEqual(None, self.module.get_writer('Nope, Sorry',
                                                       TestClass))
 
-    def test_get_writer_too_many_args(self):
-        with self.assertRaises(TypeError) as cm:
-            self.module.get_writer('not_a_format', TestClass, 1)
-        self.assertTrue('get_writer' in str(cm.exception))
-
     def test_get_writer_when_only_reader_exists(self):
         @self.module.register_reader('format', TestClass)
         def format_reader(fh):
@@ -185,7 +175,7 @@ class TestRegisterAndGetWriter(RegistryTest):
             yield
 
         @self.module.register_writer(['compound', 'format'])
-        def compound_format_writer(fh):
+        def compound_format_writer(fh1, fh2):
             yield
 
         self.assertEqual(format1_writer_generator,
@@ -209,13 +199,6 @@ class TestRegisterAndGetWriter(RegistryTest):
 
         self.assertEqual(format2_writer_generator,
                          self.module.get_writer('format2', None))
-
-    def test_register_writer_with_too_many_args(self):
-        with self.assertRaises(TypeError) as cm:
-            @self.module.register_writer('format1', TestClass, 1)
-            def too_many_args(obj, fh):
-                return
-        self.assertTrue('register_writer' in str(cm.exception))
 
     def test_register_writer_on_many(self):
         @self.module.register_writer('format1', TestClassA)
@@ -266,20 +249,34 @@ class TestRegisterAndGetWriter(RegistryTest):
         self.assertTrue('writer' in str(cm.exception))
         self.assertTrue(TestClassA.__name__ in str(cm.exception))
 
+    def test_register_writer_over_existing_generator(self):
+        with self.assertRaises(DuplicateRegistrationError) as cm:
+            @self.module.register_writer('format1')
+            def format1_writer(obj, fh):
+                return
 
-class TestRegisterAndGetIdentifer(RegistryTest):
+            @self.module.register_writer('format1')
+            def duplicate_format1_writer(obj, fh):
+                return
+
+        self.assertTrue('format1' in str(cm.exception))
+        self.assertTrue('writer' in str(cm.exception))
+        self.assertTrue('generator' in str(cm.exception))
+
+
+class TestRegisterAndGetSniffer(RegistryTest):
     def test_get_sniffer_no_match(self):
         self.assertEqual(None, self.module.get_sniffer('not_a_format'))
 
     def test_register_compound_sniffer(self):
         with self.assertRaises(ValueError):
             @self.module.register_sniffer(['f1', 'f2'])
-            def this_wont_work(fh):
+            def this_wont_work(fh1, fh2):
                 return False, {}
 
         with self.assertRaises(ValueError):
             @self.module.register_sniffer('f1, f2')
-            def this_still_wont_work(fh):
+            def this_still_wont_work(fh1, fh2):
                 return False, {}
 
     def test_register_sniffer_on_many(self):
@@ -468,9 +465,9 @@ class TestListWriteFormats(RegistryTest):
         self.assertTrue('formatM, formatN' not in formats)
 
 
-class TestGuessFormat(RegistryTest):
+class TestSniff(RegistryTest):
     def setUp(self):
-        super(TestGuessFormat, self).setUp()
+        super(TestSniff, self).setUp()
 
         @self.module.register_sniffer('format1')
         def format1_sniffer(fh):
@@ -499,17 +496,17 @@ class TestGuessFormat(RegistryTest):
     def test_no_matches(self):
         fh = StringIO(u"no matches here")
         fh2 = StringIO(u"no matches here")
-        with self.assertRaises(FormatIdentificationError) as cm:
+        with self.assertRaises(UnrecognizedFormatError) as cm:
             self.module.sniff(fh)
         self.assertTrue(str(fh) in str(cm.exception))
 
-        with self.assertRaises(FormatIdentificationError) as cm:
+        with self.assertRaises(UnrecognizedFormatError) as cm:
             self.module.sniff(fh, cls=TestClass)
 
-        with self.assertRaises(FormatIdentificationError) as cm:
+        with self.assertRaises(UnrecognizedFormatError) as cm:
             self.module.sniff(fh, cls=TestClassB)
 
-        with self.assertRaises(FormatIdentificationError) as cm:
+        with self.assertRaises(UnrecognizedFormatError) as cm:
             self.module.sniff([fh, fh2], cls=TestClassB)
 
         fh.close()
@@ -520,7 +517,7 @@ class TestGuessFormat(RegistryTest):
 
     def test_many_matches(self):
         fh = StringIO(u"1234 will match all")
-        with self.assertRaises(FormatIdentificationError) as cm:
+        with self.assertRaises(UnrecognizedFormatError) as cm:
             self.module.sniff(fh)
         self.assertTrue("format1" in str(cm.exception))
         self.assertTrue("format2" in str(cm.exception))
@@ -538,7 +535,7 @@ class TestGuessFormat(RegistryTest):
 
     def test_no_matches_w_cls(self):
         fh = StringIO(u"no matches here")
-        with self.assertRaises(FormatIdentificationError) as cm:
+        with self.assertRaises(UnrecognizedFormatError) as cm:
             self.module.sniff(fh, cls=TestClass)
         self.assertTrue(str(fh) in str(cm.exception))
         fh.close()
@@ -550,7 +547,7 @@ class TestGuessFormat(RegistryTest):
 
     def test_many_matches_w_cls(self):
         fh = StringIO(u"1234 will only format3 and format4 w/ class")
-        with self.assertRaises(FormatIdentificationError) as cm:
+        with self.assertRaises(UnrecognizedFormatError) as cm:
             self.module.sniff(fh, cls=TestClass)
         self.assertTrue("format1" not in str(cm.exception))
         self.assertTrue("format2" not in str(cm.exception))
@@ -571,6 +568,15 @@ class TestGuessFormat(RegistryTest):
 
 
 class TestRead(RegistryTest):
+    def setUp(self):
+        super(TestRead, self).setUp()
+        self.fd1, self.fp1 = mkstemp()
+
+    def tearDown(self):
+        super(TestRead, self).tearDown()
+        os.remove(self.fp1)
+        os.close(self.fd1)
+
     def test_format_and_into_are_none(self):
         fh = StringIO()
         with self.assertRaises(ValueError):
@@ -590,7 +596,7 @@ class TestRead(RegistryTest):
             return TestClass([int(x) for x in fh.read().split('\n')])
 
         instance = self.module.read(fh, into=TestClass)
-        self.assertEqual([1, 2, 3, 4], instance.list)
+        self.assertEqual(TestClass([1, 2, 3, 4]), instance)
         fh.close()
 
     def test_into_is_none(self):
@@ -653,7 +659,7 @@ class TestRead(RegistryTest):
         fh2.close()
 
     def test_into_is_none_real_file(self):
-        _, fp = mkstemp()
+        fp = self.fp1
         with open(fp, 'w') as fh:
             fh.write('1\n2\n3\n4')
 
@@ -671,13 +677,13 @@ class TestRead(RegistryTest):
         self.assertTrue(self._test_fh.closed)
 
     def test_reader_does_not_exist(self):
-        with self.assertRaises(FileFormatError) as cm:
+        with self.assertRaises(UnrecognizedFormatError) as cm:
             self.module.read(None, format='not_a_format', into=TestClass)
 
         self.assertTrue(TestClass.__name__ in str(cm.exception))
         self.assertTrue('not_a_format' in str(cm.exception))
 
-        with self.assertRaises(FileFormatError) as cm:
+        with self.assertRaises(UnrecognizedFormatError) as cm:
             self.module.read(None, format='not_a_format2')
 
         self.assertTrue('generator' in str(cm.exception))
@@ -698,12 +704,12 @@ class TestRead(RegistryTest):
         self.was_verified = False
         instance = self.module.read(fh, format='format', into=TestClass,
                                     verify=True)
-        self.assertEqual([1, 2, 3, 4], instance.list)
+        self.assertEqual(TestClass([1, 2, 3, 4]), instance)
         self.assertTrue(self.was_verified)
 
         self.was_verified = False
         instance = self.module.read(fh, format='format', into=TestClass)
-        self.assertEqual([1, 2, 3, 4], instance.list)
+        self.assertEqual(TestClass([1, 2, 3, 4]), instance)
         self.assertTrue(self.was_verified)
 
         fh.close()
@@ -743,7 +749,7 @@ class TestRead(RegistryTest):
         instance = self.module.read([fh2, fh3, fh], format=['even', 'nines',
                                                             'odd'],
                                     into=TestClass, verify=True)
-        self.assertEqual([1, 2, 9, 3, 4, 9], instance.list)
+        self.assertEqual(TestClass([1, 2, 9, 3, 4, 9]), instance)
         self.assertTrue(self.was_verified_e)
         self.assertTrue(self.was_verified_o)
         self.assertTrue(self.was_verified_n)
@@ -754,7 +760,7 @@ class TestRead(RegistryTest):
         instance = self.module.read([fh, fh2, fh3], format=['odd',
                                                             'even', 'nines'],
                                     into=TestClass)
-        self.assertEqual([1, 2, 9, 3, 4, 9], instance.list)
+        self.assertEqual(TestClass([1, 2, 9, 3, 4, 9]), instance)
         self.assertTrue(self.was_verified_e)
         self.assertTrue(self.was_verified_o)
         self.assertTrue(self.was_verified_n)
@@ -781,7 +787,7 @@ class TestRead(RegistryTest):
                 self.was_verified = False
                 instance = self.module.read(fh, format='format',
                                             into=TestClass, verify=True)
-                self.assertEqual([1, 2, 3, 4], instance.list)
+                self.assertEqual(TestClass([1, 2, 3, 4]), instance)
                 self.assertTrue(self.was_verified)
 
         with warnings.catch_warnings(record=True):
@@ -790,7 +796,7 @@ class TestRead(RegistryTest):
                 self.was_verified = False
                 instance = self.module.read(fh, format='format',
                                             into=TestClass)
-                self.assertEqual([1, 2, 3, 4], instance.list)
+                self.assertEqual(TestClass([1, 2, 3, 4]), instance)
                 self.assertTrue(self.was_verified)
 
         fh.close()
@@ -810,12 +816,12 @@ class TestRead(RegistryTest):
         self.was_verified = False
         instance = self.module.read(fh, format='format', into=TestClass,
                                     verify=False)
-        self.assertEqual([1, 2, 3, 4], instance.list)
+        self.assertEqual(TestClass([1, 2, 3, 4]), instance)
         self.assertFalse(self.was_verified)
         fh.close()
 
     def test_reader_exists_real_file(self):
-        _, fp = mkstemp()
+        fp = self.fp1
         with open(fp, 'w') as fh:
             fh.write('1\n2\n3\n4')
 
@@ -828,7 +834,7 @@ class TestRead(RegistryTest):
             return TestClass([int(x) for x in fh.read().split('\n')])
 
         instance = self.module.read(fp, format='format', into=TestClass)
-        self.assertEqual([1, 2, 3, 4], instance.list)
+        self.assertEqual(TestClass([1, 2, 3, 4]), instance)
 
     def test_reader_into_none_w_mutate_fh(self):
         fh = StringIO(u'1\n2\n3\n4')
@@ -865,7 +871,7 @@ class TestRead(RegistryTest):
                                     mutate_fh=True)
         self.assertNotEqual(0, fh.tell())
 
-        self.assertEqual([1, 2, 3, 4], instance.list)
+        self.assertEqual(TestClass([1, 2, 3, 4]), instance)
         fh.close()
 
     def test_read_kwargs_passed_generator(self):
@@ -941,8 +947,43 @@ class TestRead(RegistryTest):
         fh2.close()
         fh3.close()
 
+    def test_that_mode_is_used(self):
+        fp = self.fp1
+        with open(fp, 'w') as fh:
+            fh.write('1\n2\n3\n4')
+
+        @self.module.register_sniffer('format')
+        def sniffer(fh):
+            return '1' in fh.readline(), {}
+
+        @self.module.register_reader('format', TestClass)
+        def reader(fh):
+            self.assertEqual(self.expected_mode, fh.mode)
+            return TestClass([int(x) for x in fh.read().split('\n')])
+
+        self.expected_mode = 'U'
+        instance = self.module.read(fp, format='format', into=TestClass)
+        self.assertEqual(TestClass([1, 2, 3, 4]), instance)
+
+        self.expected_mode = 'r'
+        instance = self.module.read(fp, format='format', into=TestClass,
+                                    mode='r')
+        self.assertEqual(TestClass([1, 2, 3, 4]), instance)
+
 
 class TestWrite(RegistryTest):
+    def setUp(self):
+        super(TestWrite, self).setUp()
+        self.fd1, self.fp1 = mkstemp()
+        self.fd2, self.fp2 = mkstemp()
+
+    def tearDown(self):
+        super(TestWrite, self).tearDown()
+        os.remove(self.fp1)
+        os.close(self.fd1)
+        os.remove(self.fp2)
+        os.close(self.fd2)
+
     def test_format_is_none(self):
         fh = StringIO()
         with self.assertRaises(ValueError):
@@ -957,7 +998,7 @@ class TestWrite(RegistryTest):
 
     def test_writer_does_not_exist(self):
         fh = StringIO()
-        with self.assertRaises(FileFormatError) as cm:
+        with self.assertRaises(UnrecognizedFormatError) as cm:
             self.module.write({}, format='not_a_format', into=fh)
 
         self.assertTrue('not_a_format' in str(cm.exception))
@@ -1030,7 +1071,7 @@ class TestWrite(RegistryTest):
 
     def test_writer_exists_real_file(self):
         obj = TestClass(['1', '2', '3', '4'])
-        _, fp = mkstemp()
+        fp = self.fp1
 
         @self.module.register_writer('format', TestClass)
         def writer(obj, fh):
@@ -1053,6 +1094,28 @@ class TestWrite(RegistryTest):
         generator = self.module.get_reader('format')(None)
         self.module.write(generator, format='format',
                           into=StringIO(), passed=True)
+
+    def test_that_mode_is_used(self):
+        obj = TestClass(['1', '2', '3', '4'])
+        fp = self.fp1
+
+        @self.module.register_writer('format', TestClass)
+        def writer(obj, fh):
+            fh.write('\n'.join(obj.list))
+            self.assertEqual(self.expected_mode, fh.mode)
+
+        self.expected_mode = 'w'
+        self.module.write(obj, format='format', into=fp)
+
+        with open(fp, 'U') as fh:
+            self.assertEqual("1\n2\n3\n4", fh.read())
+
+        fp = self.fp2
+        self.expected_mode = 'a'
+        self.module.write(obj, format='format', into=fp, mode='a')
+
+        with open(fp, 'U') as fh:
+            self.assertEqual("1\n2\n3\n4", fh.read())
 
 
 class TestEmptyFileSniffer(unittest.TestCase):

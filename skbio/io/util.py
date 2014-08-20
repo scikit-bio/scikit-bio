@@ -14,6 +14,7 @@ Functions
     :toctree: generated/
 
     open_file
+    open_files
 
 """
 
