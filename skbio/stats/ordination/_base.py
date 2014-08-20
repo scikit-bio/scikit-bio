@@ -419,19 +419,38 @@ class OrdinationResults(object):
                         np.asarray(vals, dtype=np.str))))
 
     def plot(self, df=None, column=None, title='', axis1=0, axis2=1, axis3=2):
+        # TODO add colormap option
+
         # derived from
         # http://matplotlib.org/examples/mplot3d/scatter3d_demo.html
         coord_matrix = self.site.T
 
-        colors = None
-        # TODO error if only one of df or column is provided
-        if df is not None and column is not None:
+        num_dims = coord_matrix.shape[0]
+        if num_dims < 3:
+            raise ValueError("At least three dimensions are required to plot "
+                             "ordination results. There are only %d "
+                             "dimensions." % num_dims)
+
+        axes = [axis1, axis2, axis3]
+        if len(set(axes)) != 3:
+            raise ValueError("The values provided for axis1, axis2, and axis3 "
+                             "must be unique.")
+        for idx, axis in enumerate(axes):
+            if axis < 0 or axis >= num_dims:
+                raise ValueError("axis%d must be >= 0 and < %d." %
+                                 (idx + 1, num_dims))
+
+        if df is None and column is None:
+            colors = None
+        elif df is not None and column is not None:
             colors = [df[column][id_] for id_ in self.site_ids]
+        else:
+            raise ValueError("Both df and column must be provided, or both "
+                             "must be omitted.")
 
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
 
-        # TODO handle case where there aren't three dimensions to plot
         xs = coord_matrix[axis1]
         ys = coord_matrix[axis2]
         zs = coord_matrix[axis3]
