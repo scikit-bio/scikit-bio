@@ -3,11 +3,9 @@
 
 from __future__ import division
 from unittest import TestCase, main
-import random
-from numpy import ones, arange, ndarray, power, array, round as nround
+from numpy import ones, ndarray, power, array, round as nround
 from numpy.testing import (assert_almost_equal,
-                           assert_allclose,
-                           assert_array_equal)
+                           assert_allclose)
 from scipy.stats import kruskal
 from skbio.stats.power_analysis import (confidence_bound,
                                         calculate_power,
@@ -33,9 +31,6 @@ class PowerAnalysisTest(TestCase):
         self.num_samps = arange(10, 100, 10)
         # Sets up the test function, a rank-sum test
         self.f = lambda x: kruskal(*x)[1]
-
-    def tearDown(self):
-        pass
 
     def test_confidence_bound_default(self):
         """Checks confidence_bound correctly determines an interval"""
@@ -81,7 +76,8 @@ class PowerAnalysisTest(TestCase):
 
         """
         self.assertRaises(ValueError, calculate_power_curve, self.f,
-                          self.pop, self.samples, ratio=array([0.1, 0.2, 0.3]))
+                          self.pop, self.num_samps,
+                          ratio=array([0.1, 0.2, 0.3]))
 
     def test_calculate_power_curve_default(self):
         """Checks the power array is within a sane range for default values"""
@@ -144,10 +140,6 @@ class PowerAnalysisTest(TestCase):
         # Checks the function returned sanely
         assert_allclose(test_mean, known_mean, rtol=0.05, atol=0.05)
         assert_allclose(test_bound, known_bound, rtol=0.05, atol=0.01)
-
-
-
-
 
 
 if __name__ == '__main__':

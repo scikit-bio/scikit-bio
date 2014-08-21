@@ -100,13 +100,13 @@ def compare_distributions(test, samples, num_samps=5, num_iter=1000):
     # Determines the number of groups
     num_groups = len(samples)
 
-     # Handles the number of samples for later instances
+    # Handles the number of samples for later instances
     if isinstance(num_samps, int):
         num_samps = array([num_samps]*num_groups)
     elif isinstance(num_samps, int) and len(num_samps) == 1:
         num_samps = array([num_samps*num_groups])
     elif isinstance(num_samps, ndarray) and len(num_samps) == 1:
-        num_samps = num_samps*ones((len(pops)))
+        num_samps = num_samps*ones(num_groups)
 
     # Prealocates the pvalue matrix
     p_values = zeros((num_iter))
@@ -165,9 +165,6 @@ def calculate_power_curve(test, samples, sample_counts, ratio=None,
         ratio = ones((num_groups))
     elif not ratio.shape == (num_groups,):
         raise ValueError('There must be a ratio for each group.')
-
-    # Prealocates the power object
-    counts = zeros((num_samps))
 
     # Loops through the sample sizes
     for id2, s in enumerate(sample_counts):
