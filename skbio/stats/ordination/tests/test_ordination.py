@@ -16,9 +16,10 @@ import warnings
 import tempfile
 
 import matplotlib.pyplot as plt
-from nose.tools import assert_items_equal, assert_raises_regexp, assert_true
 import numpy as np
 import numpy.testing as npt
+import pandas as pd
+from nose.tools import assert_items_equal, assert_raises_regexp, assert_true
 from scipy.spatial.distance import pdist
 
 from skbio import DistanceMatrix
@@ -778,6 +779,44 @@ class TestOrdinationResults(object):
             self.pcoa_scores._validate_plot_axes(coord_matrix, 0, -1, 2)
         with assert_raises_regexp(ValueError, 'axis3.*3'):
             self.pcoa_scores._validate_plot_axes(coord_matrix, 0, 2, 3)
+
+    def test_get_plot_point_colors_invalid_input(self):
+        # column provided without df
+        with npt.assert_raises(ValueError):
+            self.pcoa_scores._get_plot_point_colors(None, 'numeric',
+                                                    ['B', 'C'], 'jet')
+
+        df = pd.DataFrame([['foo', '42', 10],
+                           [22, 0, 8],
+                           [22, -4.2, np.nan],
+                           ['foo', '42.0', 11]],
+                          index=['A', 'B', 'C', 'D'],
+                          columns=['categorical', 'numeric', 'nancolumn'])
+
+        # df provided without column
+        with npt.assert_raises(ValueError):
+            self.pcoa_scores._get_plot_point_colors(df, None, ['B', 'C'],
+                                                    'jet')
+
+        # column not in df
+        with assert_raises_regexp(ValueError, 'missingcol'):
+            self.pcoa_scores._get_plot_point_colors(df, 'missingcol',
+                                                    ['B', 'C'], 'jet')
+
+        # id not in df
+        with assert_raises_regexp(ValueError, 'numeric'):
+            self.pcoa_scores._get_plot_point_colors(
+                df, 'numeric', ['B', 'C', 'missingid', 'A'], 'jet')
+
+        # missing data in df
+        with assert_raises_regexp(ValueError, 'nancolumn'):
+            self.pcoa_scores._get_plot_point_colors(df, 'nancolumn',
+                                                    ['B', 'C', 'A'], 'jet')
+
+    def test_get_plot_point_colors_no_df_or_column(self):
+        obs = self.pcoa_scores._get_plot_point_colors(None, None, ['B', 'C'],
+                                                      'jet')
+        npt.assert_equal(obs, (None, None))
 
     def test_plot_categorical_legend(self):
         fig = plt.figure()
