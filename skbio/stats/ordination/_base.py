@@ -540,6 +540,11 @@ class OrdinationResults(object):
            ...                        title='Sites colored by body site',
            ...                        cmap='jet')
 
+           Unfortunately the legend is partially cut off here, though this will
+           display just fine within the IPython Notebook. We haven't been able
+           to track down the source of this problem yet. In the meantime, feel
+           free to copy the source code and try it out in the IPython Notebook!
+
         """
         coord_matrix = self.site.T
         self._validate_plot_axes(coord_matrix, axis1, axis2, axis3)
