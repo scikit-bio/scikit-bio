@@ -13,6 +13,7 @@ from functools import partial
 
 import numpy as np
 import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 # avoid flake8 unused import error
@@ -425,6 +426,121 @@ class OrdinationResults(object):
 
     def plot(self, df=None, column=None, title='', axis1=0, axis2=1, axis3=2,
              cmap=None):
+        """Create a 3-D scatterplot of ordination results colored by metadata.
+
+        Creates a 3-D scatterplot of the ordination results, where each point
+        represents a site. The points can optionally be colored by metadata
+        (see `df` and `column` below).
+
+        Parameters
+        ----------
+        df : pandas.DataFrame, optional
+            ``DataFrame`` containing site metadata. Must be indexed by site ID,
+            and all site IDs in the ordination results must exist in the
+            ``DataFrame``. If ``None``, sites (i.e., points) will not be
+            colored by metadata.
+        column : str, optional
+            Column name in `df` to color sites (i.e., points in the plot) by.
+            Cannot have missing data (i.e., ``np.nan``). `column` can be
+            numeric or categorical. If numeric, all values in the column will
+            be cast to ``float`` and mapped to colors using `cmap`. A colorbar
+            will be included to serve as a legend. If categorical (i.e., not
+            all values in `column` could be cast to ``float``), colors will be
+            chosen for each category using evenly-spaced points along `cmap`. A
+            legend will be included. If ``None``, sites (i.e., points) will not
+            be colored by metadata.
+        title : str, optional
+            Plot title.
+        axis1, axis2, axis3 : int, optional
+            Indices of site coordinates to plot on the x-, y-, and z-axes. For
+            example, if plotting PCoA results, ``axis1=0`` will plot PC 1 on
+            the x-axis.
+        cmap : str or matplotlib.colors.Colormap, optional
+            Name or instance of matplotlib colormap to use for mapping `column`
+            values to colors. If ``None``, defaults to the colormap specified
+            in the matplotlib rc file.
+
+        Returns
+        -------
+        matplotlib.figure.Figure
+            Figure containing the scatterplot and legend/colorbar if metadata
+            were provided.
+
+        Raises
+        ------
+        ValueError
+            Raised on invalid input, including the following situations:
+
+            - there are not at least three dimensions to plot
+            - `axis1`, `axis2`, and `axis3` are not unique or are out of
+              range
+            - either `df` or `column` is provided without the other
+            - `column` is not in the ``DataFrame``
+            - site IDs in the ordination results are not in `df` or have
+              missing data in `column`
+
+        Notes
+        -----
+        This method creates basic plots of ordination results, and is intended
+        to provide a quick look at the results in the context of metadata
+        (e.g., from within the IPython Notebook). For more customization and to
+        generate publication-quality figures, we recommend EMPeror [1]_.
+
+        References
+        ----------
+        .. [1] EMPeror: a tool for visualizing high-throughput microbial
+           community data. Vazquez-Baeza Y, Pirrung M, Gonzalez A, Knight R.
+           Gigascience. 2013 Nov 26;2(1):16. http://biocore.github.io/emperor/
+
+        Examples
+        --------
+        .. plot::
+
+           Define ordination results with six sites. Note that these typically
+           aren't instantiated directly by the user, but rather through running
+           an ordination method on a distance matrix.
+
+           >>> import numpy as np
+           >>> from skbio.stats.ordination import OrdinationResults
+           >>> eigvals = np.array([0.77000588, 0.53104038, 0.04345975,
+           ...                     0.00928105, 0.00356211, 0.])
+           >>> site_ids = ('A', 'B', 'C', 'D', 'E', 'F')
+           >>> site = np.array(
+           ...     [[-0.47777725, 0.00816882, 0.15240482, 0.00069517,
+           ...       0.0028298, -0.],
+           ...      [0.16210984, -0.414624, -0.01515041, -0.06597665,
+           ...       -0.00205253, -0.],
+           ...      [0.30157269, 0.3508721, -0.00481348, -0.00925416,
+           ...       0.04107464, -0.],
+           ...      [-0.52530113, 0.09575822, -0.14029563, 0.00449851,
+           ...       -0.00305748, -0.],
+           ...      [0.30902909, 0.31604685, 0.01546212, 0.00060072,
+           ...       -0.04285896, -0.],
+           ...      [0.23036675, -0.35622199, -0.00760742, 0.06943641,
+           ...       0.00406452, -0.]])
+           >>> ord_results = OrdinationResults(eigvals=eigvals,
+           ...                                 site_ids=site_ids, site=site)
+
+           Define metadata for each site as a ``pandas.DataFrame``:
+
+           >>> import pandas as pd
+           >>> metadata = {
+           ...     'A': {'body_site': 'gut'},
+           ...     'B': {'body_site': 'skin'},
+           ...     'C': {'body_site': 'tongue'},
+           ...     'D': {'body_site': 'gut'},
+           ...     'E': {'body_site': 'tongue'},
+           ...     'F': {'body_site': 'skin'}}
+           >>> df = pd.DataFrame.from_dict(metadata, orient='index')
+
+           Plot the ordination results, where each site is colored by body site
+           (a categorical variable):
+
+           >>> fig = ord_results.plot(df=df, column='body_site',
+           ...                        title='Sites colored by body site',
+           ...                        cmap='jet')
+
+        """
         coord_matrix = self.site.T
         self._validate_plot_axes(coord_matrix, axis1, axis2, axis3)
 
