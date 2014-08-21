@@ -1,7 +1,7 @@
-"""Emperical Power Estimation
+"""Empirical Power Estimation
 ==============================
 
-The purpose of this module is to provide emperical, post-hoc power estimation
+The purpose of this module is to provide empirical, post-hoc power estimation
 of microbiome data.
 
 The power estimates here can use be used in conjunction with the statsmodel
@@ -50,7 +50,7 @@ def confidence_bound(vec, alpha=0.05, df=None):
 
 
 def calculate_power(p_values, alpha=0.05):
-    """Calculates statical power emperically
+    """Calculates statical power empirically
 
     Parameters
     ----------
@@ -120,7 +120,7 @@ def compare_distributions(test, samples, num_samps=5, num_iter=1000):
 
 def calculate_power_curve(test, samples, sample_counts, ratio=None,
                           num_iter=1000, alpha=0.05):
-    """Generates an emperical power curve for the samples
+    """Generates an empirical power curve for the samples
 
     Parameters
     ----------
