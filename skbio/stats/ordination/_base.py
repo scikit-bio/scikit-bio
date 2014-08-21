@@ -576,6 +576,7 @@ class OrdinationResults(object):
         ax.set_zticklabels([])
         ax.set_title(title)
 
+        # create legend/colorbar
         if point_colors is not None:
             if category_to_color is None:
                 fig.colorbar(plot)
@@ -585,6 +586,7 @@ class OrdinationResults(object):
         return fig
 
     def _validate_plot_axes(self, coord_matrix, axis1, axis2, axis3):
+        """Validate `axis1`, `axis2`, and `axis3` against coordinates."""
         num_dims = coord_matrix.shape[0]
         if num_dims < 3:
             raise ValueError("At least three dimensions are required to plot "
@@ -601,6 +603,12 @@ class OrdinationResults(object):
                                  (idx + 1, num_dims))
 
     def _get_plot_point_colors(self, df, column, ids, cmap):
+        """Return a list of colors for each plot point given a metadata column.
+
+        If `column` is categorical, additionally returns a dictionary mapping
+        each category (str) to color (used for legend creation).
+
+        """
         if ((df is None and column is not None) or (df is not None and
                                                     column is None)):
             raise ValueError("Both df and column must be provided, or both "
@@ -623,6 +631,9 @@ class OrdinationResults(object):
             try:
                 point_colors = col_vals.astype(float)
             except ValueError:
+                # we have categorical data, so choose a color for each
+                # category, where colors are evenly spaced across the
+                # colormap.
                 # derived from http://stackoverflow.com/a/14887119
                 categories = col_vals.unique()
                 cmap = plt.get_cmap(cmap)
@@ -636,6 +647,7 @@ class OrdinationResults(object):
         return point_colors, category_to_color
 
     def _plot_categorical_legend(self, ax, color_dict):
+        """Add legend to plot using specified mapping of category to color."""
         # derived from http://stackoverflow.com/a/20505720
         proxies = []
         labels = []
