@@ -51,6 +51,8 @@ class OrdinationResults(object):
         The species identifiers
     site_ids : list of str
         The site identifiers
+    png
+    svg
 
     """
 
