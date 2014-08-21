@@ -15,11 +15,13 @@ from future.builtins import zip
 import warnings
 import tempfile
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
-from nose.tools import assert_items_equal, assert_raises_regexp, assert_true
+from nose.tools import (assert_is_instance, assert_items_equal,
+                        assert_raises_regexp, assert_true)
 from scipy.spatial.distance import pdist
 
 from skbio import DistanceMatrix
@@ -687,6 +689,17 @@ class TestOrdinationResults(object):
                               index=['A', 'B', 'C', 'D'],
                               columns=['categorical', 'numeric', 'nancolumn'])
 
+        # Minimal ordination results for easier testing of plotting method.
+        # Paired with df above.
+        eigvals = np.array([0.25, 0.25, 0.25, 0.25])
+        site = np.array([[0.1, 0.2, 0.3],
+                         [0.2, 0.3, 0.4],
+                         [0.3, 0.4, 0.5],
+                         [0.4, 0.5, 0.6]])
+        cls.min_ord_results = OrdinationResults(eigvals=eigvals, site=site,
+                                                site_ids=['A', 'B', 'C', 'D'])
+
+
     def test_to_file(self):
         for scores, test_path in zip(self.scores, self.test_paths):
             for file_type in ('file like', 'file name'):
@@ -763,13 +776,61 @@ class TestOrdinationResults(object):
                 with npt.assert_raises(ValueError):
                     OrdinationResults.from_file(f)
 
+    def check_basic_figure_sanity(self, fig, exp_num_subplots, exp_title,
+                                  exp_legend_exists, exp_xlabel, exp_ylabel,
+                                  exp_zlabel):
+        # check type
+        assert_is_instance(fig, mpl.figure.Figure)
+
+        # check number of subplots
+        axes = fig.get_axes()
+        npt.assert_equal(len(axes), exp_num_subplots)
+
+        # check title
+        ax = axes[0]
+        npt.assert_equal(ax.get_title(), exp_title)
+
+        # shouldn't have tick labels
+        for tick_label in (ax.get_xticklabels() + ax.get_yticklabels() +
+                           ax.get_zticklabels()):
+            npt.assert_equal(tick_label.get_text(), '')
+
+        # check if legend is present
+        legend = ax.get_legend()
+        if exp_legend_exists:
+            assert_true(legend is not None)
+        else:
+            assert_true(legend is None)
+
+        # check axis labels
+        npt.assert_equal(ax.get_xlabel(), exp_xlabel)
+        npt.assert_equal(ax.get_ylabel(), exp_ylabel)
+        npt.assert_equal(ax.get_zlabel(), exp_zlabel)
+
+    def test_plot_no_metadata(self):
+        fig = self.pcoa_scores.plot()
+        self.check_basic_figure_sanity(
+            fig, 1, '', False, 'PC 1', 'PC 2', 'PC 3')
+
+    def test_plot_with_numeric_metadata_and_plot_options(self):
+        fig = self.min_ord_results.plot(
+            self.df, 'numeric', axis1=1, axis2=0, axis3=2, title='a title',
+            cmap='Reds')
+        self.check_basic_figure_sanity(
+            fig, 2, 'a title', False, 'PC 2', 'PC 1', 'PC 3')
+
+    def test_plot_with_categorical_metadata_and_plot_options(self):
+        fig = self.min_ord_results.plot(
+            self.df, 'categorical', axis1=2, axis2=0, axis3=1, title='a title',
+            cmap='Accent')
+        self.check_basic_figure_sanity(
+            fig, 1, 'a title', True, 'PC 3', 'PC 1', 'PC 2')
+
     def test_validate_plot_axes_valid_input(self):
         # shouldn't raise an error on valid input. nothing is returned, so
         # nothing to check here
-        coord_matrix = np.asarray([[0.1, 0.2, 0.3, 0.4],
-                                   [0.2, 0.3, 0.4, 0.5],
-                                   [0.3, 0.4, 0.5, 0.6]])
-        self.pcoa_scores._validate_plot_axes(coord_matrix, 1, 2, 0)
+        self.pcoa_scores._validate_plot_axes(
+            self.min_ord_results.site.T, 1, 2, 0)
 
     def test_validate_plot_axes_invalid_input(self):
         # not enough dimensions
@@ -777,9 +838,7 @@ class TestOrdinationResults(object):
             self.pcoa_scores._validate_plot_axes(
                 np.asarray([[0.1, 0.2, 0.3], [0.2, 0.3, 0.4]]), 0, 1, 2)
 
-        coord_matrix = np.asarray([[0.1, 0.2, 0.3, 0.4],
-                                   [0.2, 0.3, 0.4, 0.5],
-                                   [0.3, 0.4, 0.5, 0.6]])
+        coord_matrix = self.min_ord_results.site.T
 
         # duplicate axes
         with assert_raises_regexp(ValueError, 'must be unique'):
