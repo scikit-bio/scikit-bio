@@ -18,13 +18,20 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 # avoid flake8 unused import error
 Axes3D
+from IPython.core.pylabtools import print_figure
+from IPython.display import Image, SVG
 
 from skbio.util import FileFormatError
 from skbio.util.io import open_file
 
 
 class OrdinationResults(object):
-    """Store ordination results
+    """Store ordination results, providing serialization and plotting support.
+
+    Stores various components of ordination results. Provides methods for
+    serializing/deserializing results, as well as generation of basic
+    matplotlib 3-D scatterplots. Will automatically display PNG/SVG
+    representations of itself within the IPython Notebook.
 
     Attributes
     ----------
@@ -661,6 +668,39 @@ class OrdinationResults(object):
         # derived from http://matplotlib.org/users/legend_guide.html
         ax.legend(proxies, labels, numpoints=1, loc=6,
                   bbox_to_anchor=(1.05, 0.5), borderaxespad=0.)
+
+    # Here we define the special repr methods that provide the IPython display
+    # protocol. Code derived from:
+    #     https://github.com/ipython/ipython/blob/2.x/examples/Notebook/
+    #         Custom%20Display%20Logic.ipynb
+    # See licenses/ipython.txt for more details.
+
+    def _repr_png_(self):
+        return self._figure_data('png')
+
+    def _repr_svg_(self):
+        return self._figure_data('svg').decode('utf-8')
+
+    # We expose the above reprs as properties, so that the user can see them
+    # directly (since otherwise the client dictates which one it shows by
+    # default)
+    @property
+    def png(self):
+        """Display basic 3-D scatterplot in IPython Notebook as PNG."""
+        return Image(self._repr_png_(), embed=True)
+
+    @property
+    def svg(self):
+        """Display basic 3-D scatterplot in IPython Notebook as SVG."""
+        return SVG(self._repr_svg_())
+
+    def _figure_data(self, format):
+        fig = self.plot()
+        data = print_figure(fig, format)
+        # We MUST close the figure, otherwise IPython's display machinery
+        # will pick it up and send it as output, resulting in a double display
+        plt.close(fig)
+        return data
 
 
 class Ordination(object):

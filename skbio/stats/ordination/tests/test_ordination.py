@@ -21,6 +21,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
+from IPython.display import Image, SVG
 from nose.tools import (assert_is_instance, assert_items_equal,
                         assert_raises_regexp, assert_true)
 from scipy.spatial.distance import pdist
@@ -938,6 +939,22 @@ class TestOrdinationResults(object):
 
         colors = [l.get_color() for l in legend.get_lines()]
         assert_items_equal(colors, ['red', 'green'])
+
+    def test_repr_png(self):
+        obs = self.min_ord_results._repr_png_()
+        assert_is_instance(obs, str)
+        assert_true(len(obs) > 0)
+
+    def test_repr_svg(self):
+        obs = self.min_ord_results._repr_svg_()
+        assert_is_instance(obs, unicode)
+        assert_true(len(obs) > 0)
+
+    def test_png(self):
+        assert_is_instance(self.min_ord_results.png, Image)
+
+    def test_svg(self):
+        assert_is_instance(self.min_ord_results.svg, SVG)
 
 
 if __name__ == '__main__':
