@@ -676,6 +676,17 @@ class TestOrdinationResults(object):
                                  'v_error10', 'v_error11', 'v_error12',
                                  'v_error13', 'v_error14']
 
+        # DataFrame for testing plot method. Has a categorical column with a
+        # mix of numbers and strings. Has a numeric column with a mix of ints,
+        # floats, and strings that can be converted to floats. Has a numeric
+        # column with missing data (np.nan).
+        cls.df = pd.DataFrame([['foo', '42', 10],
+                               [22, 0, 8],
+                               [22, -4.2, np.nan],
+                               ['foo', '42.19', 11]],
+                              index=['A', 'B', 'C', 'D'],
+                              columns=['categorical', 'numeric', 'nancolumn'])
+
     def test_to_file(self):
         for scores, test_path in zip(self.scores, self.test_paths):
             for file_type in ('file like', 'file name'):
@@ -786,37 +797,45 @@ class TestOrdinationResults(object):
             self.pcoa_scores._get_plot_point_colors(None, 'numeric',
                                                     ['B', 'C'], 'jet')
 
-        df = pd.DataFrame([['foo', '42', 10],
-                           [22, 0, 8],
-                           [22, -4.2, np.nan],
-                           ['foo', '42.0', 11]],
-                          index=['A', 'B', 'C', 'D'],
-                          columns=['categorical', 'numeric', 'nancolumn'])
-
         # df provided without column
         with npt.assert_raises(ValueError):
-            self.pcoa_scores._get_plot_point_colors(df, None, ['B', 'C'],
+            self.pcoa_scores._get_plot_point_colors(self.df, None, ['B', 'C'],
                                                     'jet')
 
         # column not in df
         with assert_raises_regexp(ValueError, 'missingcol'):
-            self.pcoa_scores._get_plot_point_colors(df, 'missingcol',
+            self.pcoa_scores._get_plot_point_colors(self.df, 'missingcol',
                                                     ['B', 'C'], 'jet')
 
         # id not in df
         with assert_raises_regexp(ValueError, 'numeric'):
             self.pcoa_scores._get_plot_point_colors(
-                df, 'numeric', ['B', 'C', 'missingid', 'A'], 'jet')
+                self.df, 'numeric', ['B', 'C', 'missingid', 'A'], 'jet')
 
         # missing data in df
         with assert_raises_regexp(ValueError, 'nancolumn'):
-            self.pcoa_scores._get_plot_point_colors(df, 'nancolumn',
+            self.pcoa_scores._get_plot_point_colors(self.df, 'nancolumn',
                                                     ['B', 'C', 'A'], 'jet')
 
     def test_get_plot_point_colors_no_df_or_column(self):
         obs = self.pcoa_scores._get_plot_point_colors(None, None, ['B', 'C'],
                                                       'jet')
         npt.assert_equal(obs, (None, None))
+
+    def test_get_plot_point_colors_numeric_column(self):
+        # subset of the ids in df
+        exp = [0.0, -4.2, 42.0]
+        obs = self.pcoa_scores._get_plot_point_colors(self.df, 'numeric',
+                                                      ['B', 'C', 'A'], 'jet')
+        npt.assert_almost_equal(obs[0], exp)
+        assert_true(obs[1] is None)
+
+        # all ids in df
+        exp = [0.0, 42.0, 42.19, -4.2]
+        obs = self.pcoa_scores._get_plot_point_colors(
+            self.df, 'numeric', ['B', 'A', 'D', 'C'], 'jet')
+        npt.assert_almost_equal(obs[0], exp)
+        assert_true(obs[1] is None)
 
     def test_plot_categorical_legend(self):
         fig = plt.figure()
