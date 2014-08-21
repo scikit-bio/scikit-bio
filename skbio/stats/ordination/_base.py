@@ -15,6 +15,8 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+# avoid flake8 unused import error
+Axes3D
 
 from skbio.util import FileFormatError
 from skbio.util.io import open_file
@@ -478,8 +480,8 @@ class OrdinationResults(object):
                                  (idx + 1, num_dims))
 
     def _get_plot_point_colors(self, df, column, ids, cmap):
-        if ((df is None and column is not None) or
-            (df is not None and column is None)):
+        if ((df is None and column is not None) or (df is not None and
+                                                    column is None)):
             raise ValueError("Both df and column must be provided, or both "
                              "must be None.")
         elif df is None and column is None:

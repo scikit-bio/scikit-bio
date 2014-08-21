@@ -699,7 +699,6 @@ class TestOrdinationResults(object):
         cls.min_ord_results = OrdinationResults(eigvals=eigvals, site=site,
                                                 site_ids=['A', 'B', 'C', 'D'])
 
-
     def test_to_file(self):
         for scores, test_path in zip(self.scores, self.test_paths):
             for file_type in ('file like', 'file name'):
