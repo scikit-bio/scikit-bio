@@ -837,6 +837,27 @@ class TestOrdinationResults(object):
         npt.assert_almost_equal(obs[0], exp)
         assert_true(obs[1] is None)
 
+    def test_get_plot_point_colors_categorical_column(self):
+        # subset of the ids in df
+        exp_colors = [[0., 0., 0.5, 1.], [0., 0., 0.5, 1.], [0.5, 0., 0., 1.]]
+        exp_color_dict = {
+            'foo': [0.5, 0., 0., 1.],
+            22: [0., 0., 0.5, 1.]
+        }
+        obs = self.pcoa_scores._get_plot_point_colors(self.df, 'categorical',
+                                                      ['B', 'C', 'A'], 'jet')
+        npt.assert_almost_equal(obs[0], exp_colors)
+        npt.assert_equal(obs[1], exp_color_dict)
+
+        # all ids in df
+        exp_colors = [[0., 0., 0.5, 1.], [0.5, 0., 0., 1.], [0.5, 0., 0., 1.],
+                      [0., 0., 0.5, 1.]]
+        obs = self.pcoa_scores._get_plot_point_colors(
+            self.df, 'categorical', ['B', 'A', 'D', 'C'], 'jet')
+        npt.assert_almost_equal(obs[0], exp_colors)
+        # should get same color dict as before
+        npt.assert_equal(obs[1], exp_color_dict)
+
     def test_plot_categorical_legend(self):
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
