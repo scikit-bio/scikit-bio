@@ -4,7 +4,7 @@
 from __future__ import division
 from unittest import TestCase, main
 import random
-from numpy import ones, ndarray, power, array, round as nround
+from numpy import ones, ndarray, power, array, round as nround, arange
 from numpy.testing import (assert_almost_equal,
                            assert_allclose)
 from scipy.stats import kruskal
