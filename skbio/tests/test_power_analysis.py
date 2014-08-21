@@ -100,7 +100,7 @@ class PowerAnalysisTest(TestCase):
         known = array([0.182, 0.568, 0.842, 0.954, 0.995, 1.000, 1.000, 1.000,
                        1.000])
 
-         # Generates the test values
+        # Generates the test values
         test = calculate_power_curve(self.f,
                                      self.pop,
                                      self.num_samps,
@@ -116,7 +116,7 @@ class PowerAnalysisTest(TestCase):
         known = array([0.096, 0.333, 0.493, 0.743, 0.824, 0.937, 0.969,
                        0.996, 0.998])
 
-         # Generates the test values
+        # Generates the test values
         test = calculate_power_curve(self.f,
                                      self.pop,
                                      self.num_samps,
