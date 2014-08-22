@@ -22,8 +22,7 @@ import numpy as np
 import numpy.testing as npt
 import pandas as pd
 from IPython.display import Image, SVG
-from nose.tools import (assert_is_instance, assert_items_equal,
-                        assert_raises_regexp, assert_true)
+from nose.tools import assert_is_instance, assert_raises_regexp, assert_true
 from scipy.spatial.distance import pdist
 
 from skbio import DistanceMatrix
@@ -933,12 +932,13 @@ class TestOrdinationResults(object):
         assert_true(legend is not None)
 
         # do some light sanity checking to make sure our input labels and
-        # colors are present
+        # colors are present. we're not using nose.tools.assert_items_equal
+        # because it isn't available in Python 3.
         labels = [t.get_text() for t in legend.get_texts()]
-        assert_items_equal(labels, ['foo', 'bar'])
+        npt.assert_equal(sorted(labels), ['bar', 'foo'])
 
         colors = [l.get_color() for l in legend.get_lines()]
-        assert_items_equal(colors, ['red', 'green'])
+        npt.assert_equal(sorted(colors), ['green', 'red'])
 
     def test_repr_png(self):
         obs = self.min_ord_results._repr_png_()
