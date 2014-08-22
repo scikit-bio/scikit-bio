@@ -56,6 +56,9 @@ if __doc__ is None:
     __doc__ = title + art
 else:
     __doc__ = title + art + __doc__
+# Add skbio.io to sys.modules to prevent cycles in our imports
+import skbio.io
+skbio.io  # Stop flake8 error
 
 import skbio.io
 
