@@ -481,8 +481,7 @@ class OrdinationResults(object):
             Raised on invalid input, including the following situations:
 
             - there are not at least three dimensions to plot
-            - `axis1`, `axis2`, and `axis3` are not unique or are out of
-              range
+            - `axis1`, `axis2`, or `axis3` are not unique or are out of range
             - either `df` or `column` is provided without the other
             - `column` is not in the ``DataFrame``
             - site IDs in the ordination results are not in `df` or have
