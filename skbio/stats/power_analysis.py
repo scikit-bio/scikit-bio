@@ -12,9 +12,8 @@ values (i.e. sample ids) and returns a p-value.
 
 """
 
-import random
 from random import sample
-from numpy import ndarray, array, zeros, ones, arange, round as nround
+from numpy import ndarray, array, zeros, ones, round as nround
 from scipy.stats import sem, t
 
 
