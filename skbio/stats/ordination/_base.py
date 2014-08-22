@@ -504,49 +504,36 @@ class OrdinationResults(object):
         --------
         .. plot::
 
-           Define ordination results with six sites. Note that these typically
-           aren't instantiated directly by the user, but rather through running
-           an ordination method on a distance matrix.
+           Define a distance matrix with four sites labelled A-D:
 
-           >>> import numpy as np
-           >>> from skbio.stats.ordination import OrdinationResults
-           >>> eigvals = np.array([0.77000588, 0.53104038, 0.04345975,
-           ...                     0.00928105, 0.00356211, 0.])
-           >>> site_ids = ('A', 'B', 'C', 'D', 'E', 'F')
-           >>> site = np.array(
-           ...     [[-0.47777725, 0.00816882, 0.15240482, 0.00069517,
-           ...       0.0028298, -0.],
-           ...      [0.16210984, -0.414624, -0.01515041, -0.06597665,
-           ...       -0.00205253, -0.],
-           ...      [0.30157269, 0.3508721, -0.00481348, -0.00925416,
-           ...       0.04107464, -0.],
-           ...      [-0.52530113, 0.09575822, -0.14029563, 0.00449851,
-           ...       -0.00305748, -0.],
-           ...      [0.30902909, 0.31604685, 0.01546212, 0.00060072,
-           ...       -0.04285896, -0.],
-           ...      [0.23036675, -0.35622199, -0.00760742, 0.06943641,
-           ...       0.00406452, -0.]])
-           >>> ord_results = OrdinationResults(eigvals=eigvals,
-           ...                                 site_ids=site_ids, site=site)
+           >>> from skbio import DistanceMatrix
+           >>> dm = DistanceMatrix([[0., 0.21712454, 0.5007512, 0.91769271],
+           ...                      [0.21712454, 0., 0.45995501, 0.80332382],
+           ...                      [0.5007512, 0.45995501, 0., 0.65463348],
+           ...                      [0.91769271, 0.80332382, 0.65463348, 0.]],
+           ...                     ['A', 'B', 'C', 'D'])
 
-           Define metadata for each site as a ``pandas.DataFrame``:
+           Define metadata for each site in a ``pandas.DataFrame``:
 
            >>> import pandas as pd
            >>> metadata = {
-           ...     'A': {'body_site': 'gut'},
-           ...     'B': {'body_site': 'skin'},
-           ...     'C': {'body_site': 'tongue'},
-           ...     'D': {'body_site': 'gut'},
-           ...     'E': {'body_site': 'tongue'},
-           ...     'F': {'body_site': 'skin'}}
+           ...     'A': {'body_site': 'skin'},
+           ...     'B': {'body_site': 'gut'},
+           ...     'C': {'body_site': 'gut'},
+           ...     'D': {'body_site': 'skin'}}
            >>> df = pd.DataFrame.from_dict(metadata, orient='index')
+
+           Run principal coordinate analysis (PCoA) on the distance matrix:
+
+           >>> from skbio.stats.ordination import PCoA
+           >>> pcoa_results = PCoA(dm).scores()
 
            Plot the ordination results, where each site is colored by body site
            (a categorical variable):
 
-           >>> fig = ord_results.plot(df=df, column='body_site',
-           ...                        title='Sites colored by body site',
-           ...                        cmap='jet')
+           >>> fig = pcoa_results.plot(df=df, column='body_site',
+           ...                         title='Sites colored by body site',
+           ...                         cmap='jet')
 
         """
         coord_matrix = self.site.T
