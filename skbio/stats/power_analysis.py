@@ -12,8 +12,8 @@ values (i.e. sample ids) and returns a p-value.
 
 """
 
-from random import sample
 from numpy import ndarray, array, zeros, ones, round as nround
+from numpy.random import choice
 from scipy.stats import sem, t
 
 
@@ -111,7 +111,8 @@ def compare_distributions(test, samples, num_samps=5, num_iter=1000):
     p_values = zeros((num_iter))
 
     for idx in range(num_iter):
-        subs = [sample(pop, num_samps[i]) for i, pop in enumerate(samples)]
+        subs = [choice(array(pop), num_samps[i])
+                for i, pop in enumerate(samples)]
         p_values[idx] = test(subs)
 
     return p_values
