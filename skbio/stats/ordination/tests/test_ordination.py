@@ -9,7 +9,7 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.utils.six import StringIO
+from future.utils.six import binary_type, text_type, StringIO
 from future.builtins import zip
 
 import warnings
@@ -942,12 +942,12 @@ class TestOrdinationResults(object):
 
     def test_repr_png(self):
         obs = self.min_ord_results._repr_png_()
-        assert_is_instance(obs, str)
+        assert_is_instance(obs, binary_type)
         assert_true(len(obs) > 0)
 
     def test_repr_svg(self):
         obs = self.min_ord_results._repr_svg_()
-        assert_is_instance(obs, unicode)
+        assert_is_instance(obs, text_type)
         assert_true(len(obs) > 0)
 
     def test_png(self):

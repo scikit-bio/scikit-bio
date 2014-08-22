@@ -669,7 +669,7 @@ class OrdinationResults(object):
         return self._figure_data('png')
 
     def _repr_svg_(self):
-        return self._figure_data('svg').decode('utf-8')
+        return self._figure_data('svg')
 
     # We expose the above reprs as properties, so that the user can see them
     # directly (since otherwise the client dictates which one it shows by
