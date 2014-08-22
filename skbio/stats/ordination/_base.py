@@ -434,7 +434,7 @@ class OrdinationResults(object):
                         np.asarray(vals, dtype=np.str))))
 
     def plot(self, df=None, column=None, title='', axis1=0, axis2=1, axis3=2,
-             cmap=None):
+             cmap=None, s=20):
         """Create a 3-D scatterplot of ordination results colored by metadata.
 
         Creates a 3-D scatterplot of the ordination results, where each point
@@ -468,6 +468,9 @@ class OrdinationResults(object):
             Name or instance of matplotlib colormap to use for mapping `column`
             values to colors. If ``None``, defaults to the colormap specified
             in the matplotlib rc file.
+        s : scalar or iterable of scalars, optional
+            Size of points. See matplotlib's ``Axes3D.scatter`` documentation
+            for more details.
 
         Returns
         -------
@@ -486,6 +489,10 @@ class OrdinationResults(object):
             - `column` is not in the ``DataFrame``
             - site IDs in the ordination results are not in `df` or have
               missing data in `column`
+
+        See Also
+        --------
+        mpl_toolkits.mplot3d.Axes3D.scatter
 
         Notes
         -----
@@ -533,7 +540,7 @@ class OrdinationResults(object):
 
            >>> fig = pcoa_results.plot(df=df, column='body_site',
            ...                         title='Sites colored by body site',
-           ...                         cmap='jet')
+           ...                         cmap='Set1', s=50)
 
         """
         coord_matrix = self.site.T
@@ -551,7 +558,7 @@ class OrdinationResults(object):
         point_colors, category_to_color = self._get_plot_point_colors(
             df, column, self.site_ids, cmap)
 
-        scatter_fn = partial(ax.scatter, xs, ys, zs)
+        scatter_fn = partial(ax.scatter, xs, ys, zs, s=s)
         if point_colors is None:
             plot = scatter_fn()
         else:

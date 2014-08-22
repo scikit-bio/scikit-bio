@@ -125,7 +125,7 @@ Create a table containing 7 OTUs and 6 samples:
    was taken from:
 
    >>> fig = bc_pc.plot(sample_md, 'subject', 'Samples colored by subject',
-   ...                  cmap='jet')
+   ...                  cmap='jet', s=50)
 
 .. plot::
    :context:
@@ -137,7 +137,7 @@ Create a table containing 7 OTUs and 6 samples:
    >>> import matplotlib.pyplot as plt
    >>> plt.close('all') # not necessary for normal use
    >>> fig = bc_pc.plot(sample_md, 'body_site', 'Samples colored by body site',
-   ...                  cmap='jet')
+   ...                  cmap='jet', s=50)
 
 Ordination techniques, such as PCoA, are useful for exploratory analysis. The
 next step is to quantify the strength of the grouping/clustering that we see in
