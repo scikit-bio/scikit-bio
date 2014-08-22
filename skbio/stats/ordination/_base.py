@@ -438,7 +438,7 @@ class OrdinationResults(object):
         """Create a 3-D scatterplot of ordination results colored by metadata.
 
         Creates a 3-D scatterplot of the ordination results, where each point
-        represents a site. The points can optionally be colored by metadata
+        represents a site. Optionally, these points can be colored by metadata
         (see `df` and `column` below).
 
         Parameters
