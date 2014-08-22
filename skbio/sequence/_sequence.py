@@ -71,6 +71,8 @@ class BiologicalSequence(Sequence):
 
     """
 
+    feature_types = set([])
+
     @classmethod
     def alphabet(cls):
         """Return the set of characters allowed in a `BiologicalSequence`.
@@ -1169,6 +1171,46 @@ class BiologicalSequence(Sequence):
             for g in range(start, len(match.groups())+1):
                 yield (match.start(g), match.end(g), match.group(g))
 
+    def find_features(self, feature_type, min_length=1, allow_gaps=False):
+        """Search the sequence for features
+
+        Parameters
+        ----------
+        feature_type : str
+            The type of feature to find
+        min_length : int, optional
+            Defaults to 1. Only features at least as long as this will be
+            returned
+        allow_gaps : bool, optional
+            Defaults to ``False``. If ``True``, then gaps will not be
+            considered to disrupt a feature
+
+        Returns
+        -------
+        generator
+            Yields tuples of the start of the feature, the end of the feature,
+            and the subsequence that composes the feature
+        """
+        if feature_type not in self.feature_types:
+            raise ValueError("Unknown feature type: %s" % feature_type)
+
+        acceptable = '-' if allow_gaps else ''
+
+        if isinstance(self, NucleotideSequence):
+            if feature_type == 'purine_run':
+                pat_str = '([AGag%s]{%d,})' % (acceptable, min_length)
+            if feature_type == 'pyrimidine_run':
+                pat_str = '([CTUctu%s]{%d,})' % (acceptable, min_length)
+
+        pat = re_compile(pat_str)
+
+        for hits in self.regex_iter(pat):
+            if allow_gaps:
+                if len(hits[2].replace('-', '')) >= min_length:
+                    yield hits
+            else:
+                yield hits
+
 
 class NucleotideSequence(BiologicalSequence):
     """Base class for nucleotide sequences.
@@ -1186,6 +1228,8 @@ class NucleotideSequence(BiologicalSequence):
     All uppercase and lowercase IUPAC DNA/RNA characters are supported.
 
     """
+
+    feature_types = set(['purine_run', 'pyrimidine_run'])
 
     @classmethod
     def complement_map(cls):
@@ -1350,45 +1394,6 @@ class NucleotideSequence(BiologicalSequence):
         """
         return self._complement(reversed(self))
     rc = reverse_complement
-
-    def find_features(self, feature_type, min_length=1, allow_gaps=False):
-        """Search the sequence for features
-
-        Parameters
-        ----------
-        feature_type : {'purine_run', 'pyrimidine_run'}
-            The type of feature to find
-        min_length : int, optional
-            Defaults to 1. Only features at least as long as this will be
-            returned
-        allow_gaps : bool, optional
-            Defaults to ``False``. If ``True``, then gaps will not be
-            considered to disrupt a feature
-
-        Returns
-        -------
-        generator
-            Yields tuples of the start of the feature, the end of the feature,
-            and the subsequence that composes the feature
-        """
-        if feature_type not in ('purine_run', 'pyrimidine_run'):
-            raise ValueError("Unknown feature type: %s" % feature_type)
-
-        acceptable = '-' if allow_gaps else ''
-
-        if feature_type == 'purine_run':
-            pat_str = '([AGag%s]{%d,})' % (acceptable, min_length)
-        if feature_type == 'pyrimidine_run':
-            pat_str = '([CTUctu%s]{%d,})' % (acceptable, min_length)
-
-        pat = re_compile(pat_str)
-
-        for hits in self.regex_iter(pat):
-            if allow_gaps:
-                if len(hits[2].replace('-', '')) >= min_length:
-                    yield hits
-            else:
-                yield hits
 
 
 class DNASequence(NucleotideSequence):

@@ -400,6 +400,10 @@ class BiologicalSequenceTests(TestCase):
         exp = [(2, 7, 'TTACA'), (2, 5, 'TTA'), (5, 7, 'CA')]
         self.assertEqual(obs, exp)
 
+    def test_find_features_nonexistent_feature_type(self):
+        with self.assertRaises(ValueError):
+            list(self.b1.find_features('purine_run'))
+
 
 class NucelotideSequenceTests(TestCase):
 
@@ -563,6 +567,10 @@ class NucelotideSequenceTests(TestCase):
         exp = [(1, 3, 'CC'), (7, 9, 'CC')]
         obs = list(self.b2.find_features('pyrimidine_run', 2))
         self.assertEqual(obs, exp)
+
+    def test_find_features_no_feature_type(self):
+        with self.assertRaises(ValueError):
+            list(self.b1.find_features('nonexistent_feature_type'))
 
 
 class DNASequenceTests(TestCase):
