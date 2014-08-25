@@ -19,19 +19,11 @@ from skbio.stats.distance import (DissimilarityMatrix, DistanceMatrix,
                                   DistanceMatrixError)
 
 
-class DissimilarityAndDistanceMatrixReaderWriterTests(TestCase):
+class DMTestData(TestCase):
     def setUp(self):
-        self.dm_1x1_data = [[0.0]]
         self.dm_1x1_fh = StringIO(DM_1x1)
-
-        self.dm_2x2_data = [[0.0, 0.123], [0.123, 0.0]]
         self.dm_2x2_fh = StringIO(DM_2x2)
-
-        self.dm_2x2_asym_data = [[0.0, 1.0], [-2.0, 0.0]]
         self.dm_2x2_asym_fh = StringIO(DM_2x2_ASYM)
-
-        self.dm_3x3_data = [[0.0, 0.01, 4.2], [0.01, 0.0, 12.0],
-                            [4.2, 12.0, 0.0]]
         self.dm_3x3_fh = StringIO(DM_3x3)
         self.dm_3x3_whitespace_fh = StringIO(DM_3x3_WHITESPACE)
 
@@ -43,6 +35,17 @@ class DissimilarityAndDistanceMatrixReaderWriterTests(TestCase):
             StringIO(INVALID_4),
             StringIO(INVALID_5)
         ]
+
+
+class DissimilarityAndDistanceMatrixReaderWriterTests(DMTestData):
+    def setUp(self):
+        super(DissimilarityAndDistanceMatrixReaderWriterTests, self).setUp()
+
+        self.dm_1x1_data = [[0.0]]
+        self.dm_2x2_data = [[0.0, 0.123], [0.123, 0.0]]
+        self.dm_2x2_asym_data = [[0.0, 1.0], [-2.0, 0.0]]
+        self.dm_3x3_data = [[0.0, 0.01, 4.2], [0.01, 0.0, 12.0],
+                            [4.2, 12.0, 0.0]]
 
         # We repeat the 3x3 example because there are two file format
         # representations of it, one that is messy and one that is not. Both
@@ -128,9 +131,12 @@ class DissimilarityAndDistanceMatrixReaderWriterTests(TestCase):
                 self.assertEqual(dm1, dm2)
 
 
-class SnifferTests(TestCase):
+class SnifferTests(DMTestData):
+    def setUp(self):
+        super(SnifferTests, self).setUp()
+
     def test_valid(self):
-        obs = dm_sniffer(StringIO(DM_3x3))
+        obs = dm_sniffer(self.dm_3x3_fh)
         self.assertEqual(obs, (True, {'delimiter': '\t'}))
 
 
