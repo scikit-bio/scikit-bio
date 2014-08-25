@@ -103,16 +103,19 @@ def dm_sniffer(fh):
 
             first_data_line = None
             for line in fh:
-                line = line.strip()
+                stripped_line = line.strip()
 
-                if line:
+                if stripped_line:
                     first_data_line = line
                     break
 
             if first_data_line is not None:
-                first_id = _parse_ids(first_data_line, delimiter)[0]
+                parsed_line = first_data_line.strip().split(delimiter)
+                first_id, first_element = parsed_line[:2]
+                first_id = first_id.strip()
+                first_element = float(first_element)
 
-                if first_id == ids[0]:
+                if first_id == ids[0] and first_element == 0.0:
                     valid = True
                     kwargs['delimiter'] = delimiter
 
@@ -214,9 +217,11 @@ def _find_header(fh):
     header = None
 
     for line in fh:
-        line = line.strip()
+        stripped_line = line.strip()
 
-        if line and not line.startswith('#'):
+        if stripped_line and not stripped_line.startswith('#'):
+            # Don't strip the header because the first delimiter might be
+            # whitespace (e.g., tab).
             header = line
             break
 
@@ -224,7 +229,8 @@ def _find_header(fh):
 
 
 def _parse_ids(header, delimiter):
-    return [e.strip() for e in header.split(delimiter)]
+    # TODO add check for empty first cell
+    return [e.strip() for e in header.rstrip().split(delimiter)[1:]]
 
 
 def _matrix_to_dm(obj, fh, delimiter):

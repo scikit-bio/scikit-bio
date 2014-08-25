@@ -27,13 +27,28 @@ class DMTestData(TestCase):
         self.dm_3x3_fh = StringIO(DM_3x3)
         self.dm_3x3_whitespace_fh = StringIO(DM_3x3_WHITESPACE)
 
+        self.valid_fhs = [
+            self.dm_1x1_fh,
+            self.dm_2x2_fh,
+            self.dm_2x2_asym_fh,
+            self.dm_3x3_fh,
+            self.dm_3x3_whitespace_fh
+        ]
+
+        self.empty_fh = StringIO()
+        self.invalid_1_fh = StringIO(INVALID_1)
+        self.invalid_2_fh = StringIO(INVALID_2)
+        self.invalid_3_fh = StringIO(INVALID_3)
+        self.invalid_4_fh = StringIO(INVALID_4)
+        self.invalid_5_fh = StringIO(INVALID_5)
+
         self.invalid_fhs = [
-            StringIO(),
-            StringIO(INVALID_1),
-            StringIO(INVALID_2),
-            StringIO(INVALID_3),
-            StringIO(INVALID_4),
-            StringIO(INVALID_5)
+            self.empty_fh,
+            self.invalid_1_fh,
+            self.invalid_2_fh,
+            self.invalid_3_fh,
+            self.invalid_4_fh,
+            self.invalid_5_fh
         ]
 
 
@@ -136,8 +151,12 @@ class SnifferTests(DMTestData):
         super(SnifferTests, self).setUp()
 
     def test_valid(self):
-        obs = dm_sniffer(self.dm_3x3_fh)
-        self.assertEqual(obs, (True, {'delimiter': '\t'}))
+        for fh in self.valid_fhs:
+            self.assertEqual(dm_sniffer(fh), (True, {'delimiter': '\t'}))
+
+    #def test_invalid(self):
+    #    for fh in self.invalid_2_fh, self.invalid_5_fh:
+    #        self.assertEqual(dm_sniffer(fh), (False, {}))
 
 
 DM_1x1 = "\ta\na\t0.0\n"
@@ -169,10 +188,10 @@ DM_3x3_WHITESPACE = '\n'.join(['# foo',
                                ' '])
 
 # missing data
-INVALID_1 = 'a\tb\na\t0\t1\nb\t1'
+INVALID_1 = '\ta\tb\na\t0\t1\nb\t1'
 
 # mismatched IDs
-INVALID_2 = 'a\tb\nb\t0\t1\na\t1\t0'
+INVALID_2 = '\ta\tb\nb\t0\t1\na\t1\t0'
 
 # extra data lines
 INVALID_3 = '\ta\tb\na\t0\t1\nb\t1\t0\n  \nfoo\n\n\n'
