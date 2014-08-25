@@ -103,6 +103,14 @@ class DissimilarityAndDistanceMatrixReaderWriterTests(DMTestData):
                 self.assertEqual(obs, obj)
                 self.assertIsInstance(obs, cls)
 
+        # Above files are TSV (default delimiter). Test that CSV works too.
+        for fn, cls in ((dm_to_DissimilarityMatrix, DissimilarityMatrix),
+                        (dm_to_DistanceMatrix, DistanceMatrix)):
+            exp = cls(self.dm_3x3_data, ['a', 'b', 'c'])
+            obs = fn(self.dm_3x3_csv_fh, delimiter=',')
+            self.assertEqual(obs, exp)
+            self.assertIsInstance(obs, cls)
+
     def test_read_invalid_files(self):
         for fn in dm_to_DissimilarityMatrix, dm_to_DistanceMatrix:
             for invalid_fh in self.invalid_fhs:
@@ -124,6 +132,16 @@ class DissimilarityAndDistanceMatrixReaderWriterTests(DMTestData):
                 obs = fh.getvalue()
                 fh.close()
                 self.assertEqual(obs, str_)
+
+        # Test writing CSV (TSV is written above).
+        for fn, cls in ((DissimilarityMatrix_to_dm, DissimilarityMatrix),
+                        (DistanceMatrix_to_dm, DistanceMatrix)):
+            obj = cls(self.dm_3x3_data, ['a', 'b', 'c'])
+            fh = StringIO()
+            fn(obj, fh, delimiter=',')
+            obs = fh.getvalue()
+            fh.close()
+            self.assertEqual(obs, DM_3x3_CSV)
 
     def test_roundtrip_read_write(self):
         for reader_fn, writer_fn, fhs in ((dm_to_DissimilarityMatrix,
