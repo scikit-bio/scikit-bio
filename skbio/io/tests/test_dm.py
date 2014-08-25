@@ -42,6 +42,7 @@ class DMTestData(TestCase):
         self.invalid_3_fh = StringIO(INVALID_3)
         self.invalid_4_fh = StringIO(INVALID_4)
         self.invalid_5_fh = StringIO(INVALID_5)
+        self.invalid_6_fh = StringIO(INVALID_6)
 
         self.invalid_fhs = [
             self.empty_fh,
@@ -49,7 +50,8 @@ class DMTestData(TestCase):
             self.invalid_2_fh,
             self.invalid_3_fh,
             self.invalid_4_fh,
-            self.invalid_5_fh
+            self.invalid_5_fh,
+            self.invalid_6_fh
         ]
 
 
@@ -182,7 +184,8 @@ class SnifferTests(DMTestData):
                          (True, {'delimiter': ','}))
 
     def test_no_match(self):
-        for fh in self.empty_fh, self.invalid_2_fh, self.invalid_5_fh:
+        for fh in (self.empty_fh, self.invalid_2_fh, self.invalid_5_fh,
+                   self.invalid_6_fh):
             self.assertEqual(dm_sniffer(fh), (False, {}))
 
 
@@ -231,6 +234,9 @@ INVALID_4 = '\ta\tb\na\t0\t1\n  \n'
 
 # no data lines
 INVALID_5 = '\ta\tb\n'
+
+# missing leading delimiter in header
+INVALID_6 = "a\tb\na\t0.0\t0.123\nb\t0.123\t0.0\n"
 
 
 if __name__ == '__main__':

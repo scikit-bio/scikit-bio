@@ -67,6 +67,7 @@ See Also
 from_file
 
 """
+
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -99,25 +100,29 @@ def dm_sniffer(fh):
             pass
         else:
             delimiter = dialect.delimiter
-            ids = _parse_ids(header, delimiter)
 
-            first_data_line = None
-            for line in fh:
-                stripped_line = line.strip()
+            try:
+                ids = _parse_header(header, delimiter)
+            except DMFormatError:
+                pass
+            else:
+                first_data_line = None
+                for line in fh:
+                    stripped_line = line.strip()
 
-                if stripped_line:
-                    first_data_line = line
-                    break
+                    if stripped_line:
+                        first_data_line = line
+                        break
 
-            if first_data_line is not None:
-                parsed_line = first_data_line.strip().split(delimiter)
-                first_id, first_element = parsed_line[:2]
-                first_id = first_id.strip()
-                first_element = float(first_element)
+                if first_data_line is not None:
+                    parsed_line = first_data_line.strip().split(delimiter)
+                    first_id, first_element = parsed_line[:2]
+                    first_id = first_id.strip()
+                    first_element = float(first_element)
 
-                if first_id == ids[0]:
-                    valid = True
-                    kwargs['delimiter'] = delimiter
+                    if first_id == ids[0]:
+                        valid = True
+                        kwargs['delimiter'] = delimiter
 
     return valid, kwargs
 
@@ -160,7 +165,7 @@ def _dm_to_matrix(cls, fh, delimiter):
             "dissimilarity matrix file. Please verify that the file is "
             "not empty.")
 
-    ids = _parse_ids(header, delimiter)
+    ids = _parse_header(header, delimiter)
     num_ids = len(ids)
     data = np.empty((num_ids, num_ids), dtype=np.float64)
 
@@ -228,9 +233,14 @@ def _find_header(fh):
     return header
 
 
-def _parse_ids(header, delimiter):
-    # TODO add check for empty first cell
-    return [e.strip() for e in header.rstrip().split(delimiter)[1:]]
+def _parse_header(header, delimiter):
+    tokens = header.rstrip().split(delimiter)
+
+    if tokens[0]:
+        raise DMFormatError(
+            "Header must start with delimiter %r." % delimiter)
+
+    return [e.strip() for e in tokens[1:]]
 
 
 def _matrix_to_dm(obj, fh, delimiter):
