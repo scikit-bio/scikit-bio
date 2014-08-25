@@ -93,34 +93,26 @@ def dm_sniffer(fh):
 
     header = _find_header(fh)
 
-    if header is not None:
-        try:
-            dialect = csv.Sniffer().sniff(header)
-        except csv.Error:
-            pass
-        else:
-            delimiter = dialect.delimiter
+    if header is None:
+        return valid, kwargs
 
-            try:
-                ids = _parse_header(header, delimiter)
-            except DMFormatError:
-                pass
-            else:
-                first_data_line = None
-                for line in fh:
-                    stripped_line = line.strip()
+    try:
+        dialect = csv.Sniffer().sniff(header)
+    except csv.Error:
+        return valid, kwargs
 
-                    if stripped_line:
-                        first_data_line = line
-                        break
+    delimiter = dialect.delimiter
 
-                if first_data_line is not None:
-                    parsed_line = first_data_line.strip().split(delimiter)
-                    first_id = parsed_line[0].strip()
+    try:
+        ids = _parse_header(header, delimiter)
+    except DMFormatError:
+        return valid, kwargs
 
-                    if first_id == ids[0]:
-                        valid = True
-                        kwargs['delimiter'] = delimiter
+    first_id, _ = next(_parse_data(fh, delimiter), (None, None))
+
+    if first_id is not None and first_id == ids[0]:
+        valid = True
+        kwargs['delimiter'] = delimiter
 
     return valid, kwargs
 
