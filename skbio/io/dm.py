@@ -115,7 +115,7 @@ def dm_sniffer(fh):
                 first_id = first_id.strip()
                 first_element = float(first_element)
 
-                if first_id == ids[0] and first_element == 0.0:
+                if first_id == ids[0]:
                     valid = True
                     kwargs['delimiter'] = delimiter
 

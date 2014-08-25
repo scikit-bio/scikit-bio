@@ -26,6 +26,7 @@ class DMTestData(TestCase):
         self.dm_2x2_asym_fh = StringIO(DM_2x2_ASYM)
         self.dm_3x3_fh = StringIO(DM_3x3)
         self.dm_3x3_whitespace_fh = StringIO(DM_3x3_WHITESPACE)
+        self.dm_3x3_csv_fh = StringIO(DM_3x3_CSV)
 
         self.valid_fhs = [
             self.dm_1x1_fh,
@@ -150,13 +151,21 @@ class SnifferTests(DMTestData):
     def setUp(self):
         super(SnifferTests, self).setUp()
 
-    def test_valid(self):
-        for fh in self.valid_fhs:
+    def test_match_tsv(self):
+        # Sniffer should match all valid files, and will match some invalid
+        # ones too because it doesn't exhaustively check the entire file.
+        fhs = self.valid_fhs + [self.invalid_1_fh, self.invalid_3_fh,
+                                self.invalid_4_fh]
+        for fh in fhs:
             self.assertEqual(dm_sniffer(fh), (True, {'delimiter': '\t'}))
 
-    #def test_invalid(self):
-    #    for fh in self.invalid_2_fh, self.invalid_5_fh:
-    #        self.assertEqual(dm_sniffer(fh), (False, {}))
+    def test_match_csv(self):
+        self.assertEqual(dm_sniffer(self.dm_3x3_csv_fh),
+                         (True, {'delimiter': ','}))
+
+    def test_no_match(self):
+        for fh in self.empty_fh, self.invalid_2_fh, self.invalid_5_fh:
+            self.assertEqual(dm_sniffer(fh), (False, {}))
 
 
 DM_1x1 = "\ta\na\t0.0\n"
@@ -186,6 +195,9 @@ DM_3x3_WHITESPACE = '\n'.join(['# foo',
                                '   \t ',
                                '\t\t\t',
                                ' '])
+
+# Same matrix as above, but delimited by commas instead of tabs.
+DM_3x3_CSV = ",a,b,c\na,0.0,0.01,4.2\nb,0.01,0.0,12.0\nc,4.2,12.0,0.0\n"
 
 # missing data
 INVALID_1 = '\ta\tb\na\t0\t1\nb\t1'
