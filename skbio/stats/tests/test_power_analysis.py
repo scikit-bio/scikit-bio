@@ -3,8 +3,8 @@
 
 from __future__ import division
 from unittest import TestCase, main
-import random
 from numpy import ones, power, array, arange
+import numpy.random
 from numpy.testing import (assert_almost_equal,
                            assert_allclose)
 from scipy.stats import kruskal
@@ -14,7 +14,7 @@ from skbio.stats.power_analysis import (confidence_bound,
                                         calculate_power_curve,
                                         bootstrap_power_curve)
 
-random.seed(5)
+numpy.random.seed(5)
 
 
 class PowerAnalysisTest(TestCase):
@@ -98,7 +98,7 @@ class PowerAnalysisTest(TestCase):
     def test_calculate_power_curve_alpha(self):
         """Checks the power array is in a sane range when alpha is varied"""
         # Sets the know output
-        known = array([0.182, 0.568, 0.842, 0.954, 0.995, 1.000, 1.000, 1.000,
+        known = array([0.31, 0.568, 0.842, 0.954, 0.995, 1.000, 1.000, 1.000,
                        1.000])
 
         # Generates the test values
@@ -132,7 +132,7 @@ class PowerAnalysisTest(TestCase):
         # Sets the known values
         known_mean = array([0.500, 0.82, 0.965, 0.995, 1.000, 1.000,
                             1.000, 1.000,  1.000])
-        known_bound = array([0.04, 0.025, 0.02, 0.01, 0.01, 0.01, 0.00, 0.00,
+        known_bound = array([0.03, 0.02, 0.01, 0.01, 0.00, 0.00, 0.00, 0.00,
                              0.00])
         # Generates the test values
         test_mean, test_bound = bootstrap_power_curve(self.f,

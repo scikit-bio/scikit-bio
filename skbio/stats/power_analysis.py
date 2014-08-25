@@ -111,7 +111,7 @@ def compare_distributions(test, samples, num_samps=5, num_iter=1000):
     p_values = zeros((num_iter))
 
     for idx in range(num_iter):
-        subs = [choice(array(pop), num_samps[i])
+        subs = [choice(array(pop), num_samps[i], replace=False)
                 for i, pop in enumerate(samples)]
         p_values[idx] = test(subs)
 
