@@ -77,12 +77,46 @@ from_file
 
 from __future__ import absolute_import, division, print_function
 
+import csv
+
 import numpy as np
 
 from skbio.stats.distance import DissimilarityMatrix, DistanceMatrix
-from skbio.io import (register_reader, register_writer, register_identifier,
+from skbio.io import (register_reader, register_writer, register_sniffer,
                       DMFormatError)
 
+@register_sniffer('dm')
+def dm_sniffer(fh):
+    valid = False
+    kwargs = {}
+
+    header = _find_header(fh)
+
+    if header is not None:
+        try:
+            dialect = csv.Sniffer().sniff(header)
+        except csv.Error:
+            pass
+        else:
+            delimiter = dialect.delimiter
+            ids = _parse_ids(header, delimiter)
+
+            first_data_line = None
+            for line in fh:
+                line = line.strip()
+
+                if line:
+                    first_data_line = line
+                    break
+
+            if first_data_line is not None:
+                first_id = _parse_ids(first_data_line, delimiter)[0]
+
+                if first_id == ids[0]:
+                    valid = True
+                    kwargs['delimiter'] = delimiter
+
+    return valid, kwargs
 
 @register_reader('dm', DissimilarityMatrix)
 def dm_to_DissimilarityMatrix(fh, delimiter='\t'):
@@ -116,7 +150,14 @@ def _dm_to_matrix(cls, fh, delimiter):
     #   - for each row of data in the input file:
     #     - populate the corresponding row in the ndarray with floats
 
-    ids = _parse_ids(fh, delimiter)
+    header = _find_header(fh)
+    if header is None:
+        raise DMFormatError(
+            "Could not find a header line containing IDs in the "
+            "dissimilarity matrix file. Please verify that the file is "
+            "not empty.")
+
+    ids = _parse_ids(header, delimiter)
     num_ids = len(ids)
     data = np.empty((num_ids, num_ids), dtype=np.float64)
 
@@ -169,23 +210,21 @@ def _dm_to_matrix(cls, fh, delimiter):
     return cls(data, ids)
 
 
-def _parse_ids(fh, delimiter):
-    header_line = None
+def _find_header(fh):
+    header = None
 
     for line in fh:
         line = line.strip()
 
         if line and not line.startswith('#'):
-            header_line = line
+            header = line
             break
 
-    if header_line is None:
-        raise DMFormatError(
-            "Could not find a header line containing IDs in the "
-            "dissimilarity matrix file. Please verify that the file is "
-            "not empty.")
-    else:
-        return [e.strip() for e in header_line.split(delimiter)]
+    return header
+
+
+def _parse_ids(header, delimiter):
+    return [e.strip() for e in header.split(delimiter)]
 
 
 def _matrix_to_dm(obj, fh, delimiter):

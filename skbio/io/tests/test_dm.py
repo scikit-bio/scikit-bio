@@ -13,7 +13,8 @@ from unittest import TestCase, main
 
 from skbio.io import DMFormatError
 from skbio.io.dm import (dm_to_DissimilarityMatrix, dm_to_DistanceMatrix,
-                         DissimilarityMatrix_to_dm, DistanceMatrix_to_dm)
+                         DissimilarityMatrix_to_dm, DistanceMatrix_to_dm,
+                         dm_sniffer)
 from skbio.stats.distance import (DissimilarityMatrix, DistanceMatrix,
                                   DistanceMatrixError)
 
@@ -125,6 +126,12 @@ class DissimilarityAndDistanceMatrixReaderWriterTests(TestCase):
                 dm2 = reader_fn(out_fh)
 
                 self.assertEqual(dm1, dm2)
+
+
+class SnifferTests(TestCase):
+    def test_valid(self):
+        obs = dm_sniffer(StringIO(DM_3x3))
+        self.assertEqual(obs, (True, {'delimiter': '\t'}))
 
 
 DM_1x1 = "\ta\na\t0.0\n"
