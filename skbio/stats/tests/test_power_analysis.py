@@ -14,13 +14,13 @@ from skbio.stats.power_analysis import (confidence_bound,
                                         calculate_power_curve,
                                         bootstrap_power_curve)
 
-numpy.random.seed(5)
-
 
 class PowerAnalysisTest(TestCase):
 
     def setUp(self):
         """Initializes data for each test instance"""
+        # Sets the random seed
+        numpy.random.seed(5)
         # Sets up the distributions of data for use
         self.s1 = arange(0, 10, 1)
         # Sets up two distributions which will never be equal by a rank-sum
