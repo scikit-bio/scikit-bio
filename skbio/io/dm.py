@@ -116,9 +116,7 @@ def dm_sniffer(fh):
 
                 if first_data_line is not None:
                     parsed_line = first_data_line.strip().split(delimiter)
-                    first_id, first_element = parsed_line[:2]
-                    first_id = first_id.strip()
-                    first_element = float(first_element)
+                    first_id = parsed_line[0].strip()
 
                     if first_id == ids[0]:
                         valid = True
@@ -169,51 +167,36 @@ def _dm_to_matrix(cls, fh, delimiter):
     num_ids = len(ids)
     data = np.empty((num_ids, num_ids), dtype=np.float64)
 
-    # curr_row_idx keeps track of the row index within the data matrix.
-    # We're not using enumerate() because there may be
-    # empty/whitespace-only lines throughout the data matrix. We want
-    # to ignore those and only count the actual rows of data.
-    curr_row_idx = 0
-    for line in fh:
-        line = line.strip()
-
-        if not line:
-            continue
-        elif curr_row_idx >= num_ids:
-            # We've hit a nonempty line after we already filled the
-            # data matrix. Raise an error because we shouldn't ignore
-            # extra data.
+    row_idx = -1
+    for row_idx, (row_id, row_data) in enumerate(_parse_data(fh, delimiter)):
+        if row_idx >= num_ids:
+            # We've hit a nonempty line after we already filled the data
+            # matrix. Raise an error because we shouldn't ignore extra data.
             raise DMFormatError(
                 "Encountered extra row(s) without corresponding IDs in "
                 "the header.")
 
-        tokens = line.split(delimiter)
-
-        # -1 because the first element contains the current ID.
-        if len(tokens) - 1 != num_ids:
+        num_vals = len(row_data)
+        if num_vals != num_ids:
             raise DMFormatError(
-                "There are %d value(s) in row number %d, which is not"
-                " equal to the number of ID(s) in the header (%d)."
-                % (len(tokens) - 1, curr_row_idx + 1, num_ids))
+                "There are %d value(s) in row number %d, which is not "
+                "equal to the number of ID(s) in the header (%d)."
+                % (num_vals, row_idx + 1, num_ids))
 
-        curr_id = tokens[0].strip()
-        expected_id = ids[curr_row_idx]
-        if curr_id == expected_id:
-            data[curr_row_idx, :] = np.asarray(tokens[1:], dtype=float)
+        expected_id = ids[row_idx]
+        if row_id == expected_id:
+            data[row_idx, :] = np.asarray(row_data, dtype=float)
         else:
             raise DMFormatError(
                 "Encountered mismatched IDs while parsing the "
                 "dissimilarity matrix file. Found '%s' but expected "
                 "'%s'. Please ensure that the IDs match between the "
                 "dissimilarity matrix header (first row) and the row "
-                "labels (first column)." % (curr_id, expected_id))
+                "labels (first column)." % (row_id, expected_id))
 
-        curr_row_idx += 1
-
-    if curr_row_idx != num_ids:
+    if row_idx != num_ids - 1:
         raise DMFormatError(
-            "Expected %d row(s) of data, but found %d." % (num_ids,
-                                                           curr_row_idx))
+            "Expected %d row(s) of data, but found %d." % (num_ids, row_idx + 1))
 
     return cls(data, ids)
 
@@ -241,6 +224,19 @@ def _parse_header(header, delimiter):
             "Header must start with delimiter %r." % delimiter)
 
     return [e.strip() for e in tokens[1:]]
+
+
+def _parse_data(fh, delimiter):
+    for line in fh:
+        stripped_line = line.strip()
+
+        if not stripped_line:
+            continue
+
+        tokens = line.rstrip().split(delimiter)
+        id_ = tokens[0].strip()
+
+        yield id_, tokens[1:]
 
 
 def _matrix_to_dm(obj, fh, delimiter):
