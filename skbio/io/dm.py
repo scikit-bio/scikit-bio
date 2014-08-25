@@ -184,16 +184,16 @@ def _dm_to_matrix(cls, fh, delimiter):
             # data matrix. Raise an error because we shouldn't ignore
             # extra data.
             raise DMFormatError(
-                "Encountered extra rows without corresponding IDs in"
-                " the header.")
+                "Encountered extra row(s) without corresponding IDs in "
+                "the header.")
 
         tokens = line.split(delimiter)
 
         # -1 because the first element contains the current ID.
         if len(tokens) - 1 != num_ids:
             raise DMFormatError(
-                "There are %d values in row number %d, which is not"
-                " equal to the number of IDs in the header (%d)."
+                "There are %d value(s) in row number %d, which is not"
+                " equal to the number of ID(s) in the header (%d)."
                 % (len(tokens) - 1, curr_row_idx + 1, num_ids))
 
         curr_id = tokens[0].strip()

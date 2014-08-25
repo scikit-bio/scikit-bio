@@ -45,13 +45,13 @@ class DMTestData(TestCase):
         self.invalid_6_fh = StringIO(INVALID_6)
 
         self.invalid_fhs = [
-            self.empty_fh,
-            self.invalid_1_fh,
-            self.invalid_2_fh,
-            self.invalid_3_fh,
-            self.invalid_4_fh,
-            self.invalid_5_fh,
-            self.invalid_6_fh
+            (self.empty_fh, 'empty'),
+            (self.invalid_1_fh, '1 value\(s\).*2.*\(2\)'),
+            (self.invalid_2_fh, "'b'.*'a'"),
+            (self.invalid_3_fh, 'extra row\(s\)'),
+            (self.invalid_4_fh, '2 row\(s\).*found 1'),
+            (self.invalid_5_fh, '2 row\(s\).*found 0'),
+            (self.invalid_6_fh, r"delimiter '\\t'")
         ]
 
 
@@ -115,9 +115,11 @@ class DissimilarityAndDistanceMatrixReaderWriterTests(DMTestData):
 
     def test_read_invalid_files(self):
         for fn in dm_to_DissimilarityMatrix, dm_to_DistanceMatrix:
-            for invalid_fh in self.invalid_fhs:
-                with self.assertRaises(DMFormatError):
+            for invalid_fh, error_msg_regexp in self.invalid_fhs:
+                with self.assertRaisesRegexp(DMFormatError, error_msg_regexp):
                     fn(invalid_fh)
+                # TODO should reader reset file position if error occurs?
+                invalid_fh.seek(0)
 
         # Asymmetric data only raises an error for DistanceMatrix.
         with self.assertRaises(DistanceMatrixError):
