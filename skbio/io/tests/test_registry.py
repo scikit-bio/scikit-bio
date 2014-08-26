@@ -368,6 +368,12 @@ class TestRegisterAndGetSniffer(RegistryTest):
             with self.assertRaises(FormatIdentificationWarning):
                 sniffer(fh)
 
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("ignore")
+            result, kwargs = sniffer(fh)
+            self.assertFalse(result)
+            self.assertEqual({}, kwargs)
+
         fh.close()
 
 
