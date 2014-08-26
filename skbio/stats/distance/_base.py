@@ -7,7 +7,6 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.builtins import zip
 from future.utils.six import StringIO, string_types
 
 import csv
@@ -17,7 +16,6 @@ import numpy as np
 import pandas as pd
 from scipy.spatial.distance import squareform
 
-from skbio.io.util import open_file
 from skbio.stats import p_value_to_str
 
 

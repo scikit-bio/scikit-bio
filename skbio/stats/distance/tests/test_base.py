@@ -10,7 +10,6 @@ from __future__ import absolute_import, division, print_function
 from future.builtins import zip
 from future.utils.six import StringIO
 
-import tempfile
 from unittest import TestCase, main
 
 import numpy as np
@@ -19,51 +18,19 @@ import pandas as pd
 
 from skbio import DistanceMatrix
 from skbio.stats.distance import (
-    DissimilarityMatrixError, DistanceMatrixError,
-    DissimilarityMatrixFormatError, MissingIDError, DissimilarityMatrix,
-    randdm, CategoricalStatsResults)
+    DissimilarityMatrixError, DistanceMatrixError, MissingIDError,
+    DissimilarityMatrix, randdm, CategoricalStatsResults)
 from skbio.stats.distance._base import CategoricalStats
 from skbio.util import get_data_path
 
 
 class DissimilarityMatrixTestData(TestCase):
-    """Test data used in DissimilarityMatrix and subclass unit tests."""
-
     def setUp(self):
-        self.bad_dm_fp = get_data_path('bad_dm.txt')
-        self.dm_2x2_asym_fp = get_data_path('dm_2x2_asym.txt')
-        self.dm_3x3_fp = get_data_path('dm_3x3.txt')
-
-        fd = open(self.bad_dm_fp, 'U')
-        self.bad_dm_f2_lines = ''.join(fd.readlines())
-        fd.close()
-        fd = open(self.dm_2x2_asym_fp, 'U')
-        self.dm_2x2_asym_lines = ''.join(fd.readlines())
-        fd.close()
-        fd = open(self.dm_3x3_fp, 'U')
-        self.dm_3x3_lines = ''.join(fd.readlines())
-        fd.close()
-
         self.dm_1x1_data = [[0.0]]
-        self.dm_1x1_f = StringIO(DM_1x1_F)
-
         self.dm_2x2_data = [[0.0, 0.123], [0.123, 0.0]]
-        self.dm_2x2_f = StringIO(DM_2x2_F)
-
         self.dm_2x2_asym_data = [[0.0, 1.0], [-2.0, 0.0]]
-        self.dm_2x2_asym_f = StringIO(self.dm_2x2_asym_lines)
-
         self.dm_3x3_data = [[0.0, 0.01, 4.2], [0.01, 0.0, 12.0],
                             [4.2, 12.0, 0.0]]
-        self.dm_3x3_f = StringIO(self.dm_3x3_lines)
-        self.dm_3x3_whitespace_f = StringIO('\n'.join(DM_3x3_WHITESPACE_F))
-
-        self.bad_dm_f1 = StringIO(BAD_DM_F1)
-        self.bad_dm_f2 = StringIO(self.bad_dm_f2_lines)
-        self.bad_dm_f3 = StringIO(BAD_DM_F3)
-        self.bad_dm_f4 = StringIO(BAD_DM_F4)
-        self.bad_dm_f5 = StringIO(BAD_DM_F5)
-        self.bad_dm_f6 = StringIO(BAD_DM_F6)
 
 
 class DissimilarityMatrixTests(DissimilarityMatrixTestData):
@@ -77,10 +44,6 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         self.dm_3x3 = DissimilarityMatrix(self.dm_3x3_data, ['a', 'b', 'c'])
 
         self.dms = [self.dm_1x1, self.dm_2x2, self.dm_2x2_asym, self.dm_3x3]
-        self.dm_f_lines = [DM_1x1_F, DM_2x2_F, self.dm_2x2_asym_lines,
-                           self.dm_3x3_lines]
-        self.dm_fs = [self.dm_1x1_f, self.dm_2x2_f, self.dm_2x2_asym_f,
-                      self.dm_3x3_f]
         self.dm_shapes = [(1, 1), (2, 2), (2, 2), (3, 3)]
         self.dm_sizes = [1, 4, 4, 9]
         self.dm_transposes = [
@@ -92,7 +55,6 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
                                    np.array(self.dm_3x3_data)]
 
     def test_init_from_dm(self):
-        """Constructs a dm from a dm."""
         ids = ['foo', 'bar', 'baz']
 
         # DissimilarityMatrix -> DissimilarityMatrix
@@ -121,7 +83,6 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         self.assertEqual(obs['1', '2'], 12.0)
 
     def test_init_invalid_input(self):
-        """Raises error on invalid dissimilarity matrix data / IDs."""
         # Empty data.
         with self.assertRaises(DissimilarityMatrixError):
             DissimilarityMatrix([], [])
@@ -154,7 +115,6 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
             DissimilarityMatrix(data, ['a', 'b'])
 
     def test_data(self):
-        """Test retrieving/setting data matrix."""
         for dm, exp in zip(self.dms, self.dm_redundant_forms):
             obs = dm.data
             self.assertTrue(np.array_equal(obs, exp))
@@ -163,7 +123,6 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
             self.dm_3x3.data = 'foo'
 
     def test_ids(self):
-        """Test retrieving/setting IDs."""
         obs = self.dm_3x3.ids
         self.assertEqual(obs, ('a', 'b', 'c'))
 
@@ -179,7 +138,6 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
             self.dm_3x3['b']
 
     def test_ids_invalid_input(self):
-        """Test setting invalid IDs raises an error."""
         with self.assertRaises(DissimilarityMatrixError):
             self.dm_3x3.ids = ['foo', 'bar']
         # Make sure that we can still use the dissimilarity matrix after trying
@@ -188,22 +146,18 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         self.assertEqual(obs, ('a', 'b', 'c'))
 
     def test_dtype(self):
-        """Test retrieving dtype of data matrix."""
         for dm in self.dms:
             self.assertEqual(dm.dtype, np.float64)
 
     def test_shape(self):
-        """Test retrieving shape of data matrix."""
         for dm, shape in zip(self.dms, self.dm_shapes):
             self.assertEqual(dm.shape, shape)
 
     def test_size(self):
-        """Test retrieving size of data matrix."""
         for dm, size in zip(self.dms, self.dm_sizes):
             self.assertEqual(dm.size, size)
 
     def test_transpose(self):
-        """Test retrieving transpose of dissimilarity matrix."""
         for dm, transpose in zip(self.dms, self.dm_transposes):
             self.assertEqual(dm.T, transpose)
             self.assertEqual(dm.transpose(), transpose)
@@ -223,13 +177,11 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
             self.dm_3x3.index(1)
 
     def test_redundant_form(self):
-        """Test retrieving the data matrix in redundant form."""
         for dm, redundant in zip(self.dms, self.dm_redundant_forms):
             obs = dm.redundant_form()
             self.assertTrue(np.array_equal(obs, redundant))
 
     def test_copy(self):
-        """Test correct copying of a DissimilarityMatrix."""
         copy = self.dm_2x2.copy()
         self.assertEqual(copy, self.dm_2x2)
         self.assertFalse(copy.data is self.dm_2x2.data)
@@ -320,7 +272,6 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
             self.dm_3x3.filter([])
 
     def test_str(self):
-        """Test retrieving string representation of a DissimilarityMatrix."""
         for dm in self.dms:
             obs = str(dm)
             # Do some very light testing here to make sure we're getting a
@@ -329,7 +280,6 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
             self.assertTrue(obs)
 
     def test_eq(self):
-        """DissimilarityMatrix equality test functions correctly."""
         for dm in self.dms:
             copy = dm.copy()
             self.assertTrue(dm == dm)
@@ -340,7 +290,6 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         self.assertFalse(self.dm_1x1 == self.dm_3x3)
 
     def test_ne(self):
-        """Test unequal dms are identified as such."""
         # Wrong class.
         self.assertTrue(self.dm_3x3 != 'foo')
 
@@ -366,14 +315,13 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         self.assertFalse('d' in self.dm_3x3)
 
     def test_getslice(self):
-        """Test that __getslice__ defers to __getitem__."""
-        # Slice of first dimension only.
+        # Slice of first dimension only. Test that __getslice__ defers to
+        # __getitem__.
         obs = self.dm_2x2[1:]
         self.assertTrue(np.array_equal(obs, np.array([[0.123, 0.0]])))
         self.assertEqual(type(obs), np.ndarray)
 
     def test_getitem_by_id(self):
-        """Test retrieving row vectors by ID."""
         obs = self.dm_1x1['a']
         self.assertTrue(np.array_equal(obs, np.array([0.0])))
 
@@ -387,7 +335,6 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
             self.dm_2x2['c']
 
     def test_getitem_by_id_pair(self):
-        """Test retrieving elements by ID pair."""
         # Same object.
         self.assertEqual(self.dm_1x1['a', 'a'], 0.0)
 
@@ -403,7 +350,6 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
             self.dm_2x2['a', 'c']
 
     def test_getitem_ndarray_indexing(self):
-        """Test __getitem__ delegates to underlying ndarray."""
         # Single element access.
         obs = self.dm_3x3[0, 1]
         self.assertEqual(obs, 0.01)
@@ -429,16 +375,7 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         with self.assertRaises(DissimilarityMatrixError):
             self.dm_3x3._validate(np.array([[0, 42], [42, 0]]), ['a', 'b'])
 
-    def test_index_list(self):
-        """Empty stub: DissimilarityMatrix._index_list tested elsewhere."""
-        pass
-
-    def test_is_id_pair(self):
-        """Empty stub: DissimilarityMatrix._is_id_pair tested elsewhere."""
-        pass
-
     def test_pprint_ids(self):
-        """Test pretty-print formatting of IDs."""
         # No truncation.
         exp = 'a, b, c'
         obs = self.dm_3x3._pprint_ids()
@@ -463,7 +400,6 @@ class DistanceMatrixTests(DissimilarityMatrixTestData):
                                    np.array([0.01, 4.2, 12.0])]
 
     def test_init_invalid_input(self):
-        """Raises error on invalid distance matrix data / IDs."""
         # Asymmetric.
         data = [[0.0, 2.0], [1.0, 0.0]]
         with self.assertRaises(DistanceMatrixError):
@@ -474,7 +410,6 @@ class DistanceMatrixTests(DissimilarityMatrixTestData):
             DistanceMatrix([[1, 2, 3]], ['a'])
 
     def test_condensed_form(self):
-        """Test retrieving the data matrix in condensed form."""
         for dm, condensed in zip(self.dms, self.dm_condensed_forms):
             obs = dm.condensed_form()
             self.assertTrue(np.array_equal(obs, condensed))
@@ -527,21 +462,15 @@ class DistanceMatrixTests(DissimilarityMatrixTestData):
         self.assertEqual(obs, exp)
 
     def test_eq(self):
-        """Test data equality between different matrix types."""
         # Compare DistanceMatrix to DissimilarityMatrix, where both have the
         # same data and IDs.
         eq_dm = DissimilarityMatrix(self.dm_3x3_data, ['a', 'b', 'c'])
         self.assertTrue(self.dm_3x3 == eq_dm)
         self.assertTrue(eq_dm == self.dm_3x3)
 
-    def test_validate(self):
-        """Empty stub: DistanceMatrix._validate tested elsewhere."""
-        pass
-
 
 class RandomDistanceMatrixTests(TestCase):
     def test_default_usage(self):
-        """Test generating random distance matrices."""
         exp = DistanceMatrix(np.asarray([[0.0]]), ['1'])
         obs = randdm(1)
         self.assertEqual(obs, exp)
@@ -563,21 +492,18 @@ class RandomDistanceMatrixTests(TestCase):
         self.assertTrue(found_diff)
 
     def test_ids(self):
-        """Test generating random distance matrices with specific IDs."""
         ids = ['foo', 'bar', 'baz']
         obs = randdm(3, ids=ids)
         self.assertEqual(obs.shape, (3, 3))
         self.assertEqual(obs.ids, tuple(ids))
 
     def test_constructor(self):
-        """Test generating random dist mats with a specific constructor."""
         exp = DissimilarityMatrix(np.asarray([[0.0]]), ['1'])
         obs = randdm(1, constructor=DissimilarityMatrix)
         self.assertEqual(obs, exp)
         self.assertEqual(type(obs), DissimilarityMatrix)
 
     def test_random_fn(self):
-        """Test passing a different random function than the default."""
         def myrand(num_rows, num_cols):
             # One dm to rule them all...
             data = np.empty((num_rows, num_cols))
@@ -590,7 +516,6 @@ class RandomDistanceMatrixTests(TestCase):
         self.assertEqual(obs, exp)
 
     def test_invalid_input(self):
-        """Test error-handling upon invalid input."""
         # Invalid dimensions.
         with self.assertRaises(DissimilarityMatrixError):
             randdm(0)
@@ -693,50 +618,6 @@ class CategoricalStatsResultsTests(TestCase):
                'Number of permutations\nfoo\t42\t4\t0.0123456789\t0.12\t99\n')
         obs = self.results.summary()
         self.assertEqual(obs, exp)
-
-
-# 1x1:
-#     0.0
-DM_1x1_F = "\ta\na\t0.0\n"
-
-# 2x2:
-#       0.0  0.123
-#     0.123    0.0
-DM_2x2_F = "\ta\tb\na\t0.0\t0.123\nb\t0.123\t0.0\n"
-
-# Extra whitespace-only lines throughout. Also has comments before the header.
-DM_3x3_WHITESPACE_F = ['# foo',
-                       '      \t \t ',
-                       ' #bar',
-                       '',
-                       '',
-                       '\ta\t b \tc',
-                       'a  \t0.0\t0.01\t4.2',
-                       '     \t',
-                       'b\t0.01\t0.0\t12.0',
-                       '',
-                       '\t     \t',
-                       '',
-                       'c\t4.2\t12.0\t0.0',
-                       '',
-                       '   \t ',
-                       '\t\t\t',
-                       ' ']
-
-# missing data
-BAD_DM_F1 = 'a\tb\na\t0\t1\nb\t1'
-
-# extra data lines
-BAD_DM_F3 = '\ta\tb\na\t0\t1\nb\t1\t0\n  \nfoo\n\n\n'
-
-# missing data lines
-BAD_DM_F4 = '\ta\tb\na\t0\t1\n  \n'
-
-# no data lines
-BAD_DM_F5 = '\ta\tb\n'
-
-# non-hollow
-BAD_DM_F6 = '\ta\tb\na\t0\t1\nb\t1\t0.1\n'
 
 
 if __name__ == '__main__':

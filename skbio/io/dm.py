@@ -86,6 +86,7 @@ from skbio.stats.distance import DissimilarityMatrix, DistanceMatrix
 from skbio.io import (register_reader, register_writer, register_sniffer,
                       DMFormatError)
 
+
 @register_sniffer('dm')
 def dm_sniffer(fh):
     valid = False
@@ -115,6 +116,7 @@ def dm_sniffer(fh):
         kwargs['delimiter'] = delimiter
 
     return valid, kwargs
+
 
 @register_reader('dm', DissimilarityMatrix)
 def dm_to_DissimilarityMatrix(fh, delimiter='\t'):
@@ -187,8 +189,8 @@ def _dm_to_matrix(cls, fh, delimiter):
                 "labels (first column)." % (row_id, expected_id))
 
     if row_idx != num_ids - 1:
-        raise DMFormatError(
-            "Expected %d row(s) of data, but found %d." % (num_ids, row_idx + 1))
+        raise DMFormatError("Expected %d row(s) of data, but found %d." %
+                            (num_ids, row_idx + 1))
 
     return cls(data, ids)
 

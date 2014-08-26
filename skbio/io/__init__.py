@@ -93,6 +93,8 @@ Developer Exceptions
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from importlib import import_module
+
 from ._warning import UnprovenFormatWarning, ArgumentOverrideWarning
 from ._exception import (DuplicateRegistrationError, RecordError, FieldError,
                          UnrecognizedFormatError, FileFormatError,
@@ -108,7 +110,7 @@ __all__ = ['write', 'read', 'sniff', 'get_writer', 'get_reader',
            'UnrecognizedFormatError', 'FileFormatError', 'DMFormatError',
            'UnprovenFormatWarning', 'ArgumentOverrideWarning']
 
-from . import dm as _
+import_module('skbio.io.dm')
 
 from numpy.testing import Tester
 test = Tester().test
