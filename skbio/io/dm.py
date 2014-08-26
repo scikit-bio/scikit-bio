@@ -1,18 +1,26 @@
 """
+Delimited square matrix format (:mod:`skbio.io.dm`)
+===================================================
 
-read:
+.. currentmodule:: skbio.io.dm
 
-Load dissimilarity matrix from a delimited text file or file path.
+The delimited square matrix file format (``dm``) stores square matrix data
+relating a set of objects, as well as labels/identifiers for the objects, in
+delimited text format (e.g., TSV or CSV). This format supports storing a
+variety of data types including dissimilarity/distance matrices and
+substitution matrices.
 
-Creates a `DissimilarityMatrix` instance from a serialized
-dissimilarity matrix stored as delimited text.
+Format Specification
+--------------------
+The square matrix and identifiers for the objects along each axis are stored as
+delimited text. The first line of the file is the header, which must start with
+the delimiter, followed by the IDs for all objects in the matrix. Each of the
+following lines must contain an object's ID, followed by numbers (floats or
+integers) relating the object to all other objects in the matrix. The order of
+objects is determined by the IDs in the header.
 
-`dm_f` can be a file-like or a file path object containing delimited
-text. The first line (header) must contain the IDs of each object. The
-subsequent lines must contain an ID followed by each dissimilarity
-(float) between the current object and all other objects, where the
-order of objects is determined by the header line.  For example, a 2x2
-dissimilarity matrix with IDs ``'a'`` and ``'b'`` might look like::
+For example, assume we have a 2x2 distance matrix with IDs ``'a'`` and ``'b'``.
+When serialized in this format, the distance matrix might look like::
 
     <del>a<del>b
     a<del>0.0<del>1.0
@@ -20,51 +28,17 @@ dissimilarity matrix with IDs ``'a'`` and ``'b'`` might look like::
 
 where ``<del>`` is the delimiter between elements.
 
-Parameters
-----------
-dm_f : iterable of str or str
-    Iterable of strings (e.g., open file handle, file-like object, list
-    of strings, etc.) or a file path (a string) containing a serialized
-    dissimilarity matrix.
-delimiter : str, optional
-    String delimiting elements in `dm_f`.
-
-Returns
--------
-DissimilarityMatrix
-    Instance of type `cls` containing the parsed contents of `dm_f`.
-
-Notes
------
-Whitespace-only lines can occur anywhere throughout the "file" and are
+Lines containing only whitespace may occur anywhere throughout the file and are
 ignored. Lines starting with ``#`` are treated as comments and ignored.
-These comments can only occur *before* the ID header.
+Comments may only occur *before* the header.
 
-IDs will have any leading/trailing whitespace removed when they are
-parsed.
+IDs will have any leading/trailing whitespace removed when they are parsed.
 
-.. note::
-    File-like objects passed to this method will not be closed upon the
-    completion of the parsing, it is responsibility of the owner of the
-    object to perform this operation.
-
-write:
-
-Save the dissimilarity matrix to file in delimited text format.
-
-Parameters
-----------
-out_f : file-like object or filename
-    File-like object to write serialized data to, or name of
-    file. If it's a file-like object, it must have a ``write``
-    method, and it won't be closed. Else, it is opened and
-    closed after writing.
-delimiter : str, optional
-    Delimiter used to separate elements in output format.
-
-See Also
---------
-from_file
+.. note:: This file format is most useful for storing small matrices, or when
+   it is desirable to represent the matrix in a human-readable format, or
+   easily import the file into another program that supports delimited text
+   (e.g., a spreadsheet program). If efficiency is a concern, this format may
+   not be the most appropriate choice.
 
 """
 

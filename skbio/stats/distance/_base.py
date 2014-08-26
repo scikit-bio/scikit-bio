@@ -97,6 +97,27 @@ class DissimilarityMatrix(object):
 
     @classmethod
     def read(cls, fp, format=None, delimiter='\t', **kwargs):
+        """Load dissimilarity matrix from file.
+
+        Creates a ``DissimilarityMatrix`` (or subclass) instance from a
+        supported file format.
+
+        Parameters
+        ----------
+        fp : filepath or filehandle
+        delimiter : str, optional
+            String delimiting elements in `fp`.
+
+        Returns
+        -------
+        DissimilarityMatrix
+            Instance of type `cls` containing the parsed contents of `fp`.
+
+        See Also
+        --------
+        write
+
+        """
         return skbio.io.read(fp, format=format, into=cls, delimiter=delimiter,
                              **kwargs)
 

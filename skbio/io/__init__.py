@@ -9,6 +9,14 @@ This package provides I/O functionality for skbio.
 For information about extending the I/O functionality of skbio, see the
 associated Developer Documentation.
 
+Supported File Formats
+----------------------
+
+.. autosummary::
+   :toctree: generated/
+
+   dm
+
 User Functions
 --------------
 

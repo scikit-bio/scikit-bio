@@ -21,7 +21,6 @@ from skbio.stats.distance import (
     DissimilarityMatrixError, DistanceMatrixError, MissingIDError,
     DissimilarityMatrix, randdm, CategoricalStatsResults)
 from skbio.stats.distance._base import CategoricalStats
-from skbio.util import get_data_path
 
 
 class DissimilarityMatrixTestData(TestCase):
