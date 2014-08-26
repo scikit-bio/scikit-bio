@@ -146,7 +146,7 @@ def register_sniffer(format):
                 fh.seek(0)
                 try:
                     return sniffer(fh, **kwargs)
-                except StandardError as e:
+                except StandardError:
                     warn("'%s' has encountered a problem.\n"
                          "Please send the following to our issue tracker at\n"
                          "https://github.com/biocore/scikit-bio/issues\n\n"
