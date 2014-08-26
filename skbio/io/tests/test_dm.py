@@ -11,12 +11,12 @@ from future.utils.six import StringIO
 
 from unittest import TestCase, main
 
+from skbio import DistanceMatrix
 from skbio.io import DMFormatError
 from skbio.io.dm import (dm_to_DissimilarityMatrix, dm_to_DistanceMatrix,
                          DissimilarityMatrix_to_dm, DistanceMatrix_to_dm,
                          dm_sniffer)
-from skbio.stats.distance import (DissimilarityMatrix, DistanceMatrix,
-                                  DistanceMatrixError)
+from skbio.stats.distance import DissimilarityMatrix, DistanceMatrixError
 
 
 class DMTestData(TestCase):
