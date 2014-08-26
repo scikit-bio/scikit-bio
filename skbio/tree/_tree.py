@@ -1731,6 +1731,78 @@ class TreeNode(object):
     lca = lowest_common_ancestor  # for convenience
 
     @classmethod
+    def from_taxonomy(cls, lineage_map):
+        """Construct a tree from a taxonomy
+
+        Parameters
+        ----------
+        lineage_map : dict
+            A id to lineage mapping where the lineage is a list of str
+
+        Returns
+        -------
+        TreeNode
+            The constructed taxonomy
+
+        Examples
+        --------
+        >>> from skbio.tree import TreeNode
+        >>> lineages = {'1': ['Bacteria', 'Firmicutes', 'Clostridia'],
+        ...             '2': ['Bacteria', 'Firmicutes', 'Bacilli'],
+        ...             '3': ['Bacteria', 'Bacteroidetes', 'Sphingobacteria'],
+        ...             '4': ['Archaea', 'Euryarchaeota', 'Thermoplasmata'],
+        ...             '5': ['Archaea', 'Euryarchaeota', 'Thermoplasmata'],
+        ...             '6': ['Archaea', 'Euryarchaeota', 'Halobacteria'],
+        ...             '7': ['Archaea', 'Euryarchaeota', 'Halobacteria'],
+        ...             '8': ['Bacteria', 'Bacteroidetes', 'Sphingobacteria'],
+        ...             '9': ['Bacteria', 'Bacteroidetes', 'Cytophagia']}
+        >>> tree = TreeNode.from_taxonomy(lineages)
+        >>> print(tree.ascii_art())
+                                      /Clostridia-1
+                            /Firmicutes
+                           |          \Bacilli- /-2
+                  /Bacteria|
+                 |         |                    /-3
+                 |         |          /Sphingobacteria
+                 |          \Bacteroidetes      \-8
+                 |                   |
+        ---------|                    \Cytophagia-9
+                 |
+                 |                              /-5
+                 |                    /Thermoplasmata
+                 |                   |          \-4
+                  \Archaea- /Euryarchaeota
+                                     |          /-7
+                                      \Halobacteria
+                                                \-6
+
+        """
+        root = cls(name=None)
+        root._lookup = {}
+
+        for id_, lineage in lineage_map.items():
+            cur_node = root
+
+            # for each name, see if we've seen it, if not, add that puppy on
+            for name in lineage:
+                if name in cur_node._lookup:
+                    cur_node = cur_node._lookup[name]
+                else:
+                    new_node = TreeNode(name=name)
+                    new_node._lookup = {}
+                    cur_node._lookup[name] = new_node
+                    cur_node.append(new_node)
+                    cur_node = new_node
+
+            cur_node.append(TreeNode(name=id_))
+
+        # scrub the lookups
+        for node in root.non_tips(include_self=True):
+            del node._lookup
+
+        return root
+
+    @classmethod
     def from_file(cls, tree_f):
         """Load a tree from a file or file-like object"""
         with open_file(tree_f) as data:

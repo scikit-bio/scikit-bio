@@ -901,6 +901,20 @@ class TreeTests(TestCase):
         with self.assertRaises(AttributeError):
             t.to_array(attrs=[('name', object), ('brofist', int)])
 
+    def test_from_taxonomy(self):
+        """correctly gets parent consensus counts"""
+        input_lineages = {'1': ['a', 'b', 'c', 'd', 'e', 'f', 'g'],
+                          '2': ['a', 'b', 'c', None, None, 'x', 'y'],
+                          '3': ['h', 'i', 'j', 'k', 'l', 'm', 'n'],
+                          '4': ['h', 'i', 'j', 'k', 'l', 'm', 'q'],
+                          '5': ['h', 'i', 'j', 'k', 'l', 'm', 'n']}
+        exp_str = ("((((((((1)g)f)e)d,((((2)y)x)))c)b)a,(((((((3,5)n,"
+                   "(4)q)m)l)k)j)i)h);")
+
+        root = TreeNode.from_taxonomy(input_lineages)
+
+        self.assertEqual(root.to_newick(), exp_str)
+
     def test_from_file(self):
         """Parse a tree from a file"""
         t_io = StringIO("((a,b)c,(d,e)f)g;")
