@@ -4,20 +4,21 @@ Delimited square matrix format (:mod:`skbio.io.dm`)
 
 .. currentmodule:: skbio.io.dm
 
-The delimited square matrix file format (``dm``) stores square matrix data
-relating a set of objects, as well as labels/identifiers for the objects, in
-delimited text format (e.g., TSV or CSV). This format supports storing a
-variety of data types including dissimilarity/distance matrices and
-substitution matrices.
+The delimited square matrix file format (``dm``) stores numeric square matrix
+data relating a set of objects along each axis. The format also stores
+identifiers (i.e., unique labels) for the objects. The matrix data and
+identifiers are stored in delimited text format (e.g., TSV or CSV). This format
+supports storing a variety of data types including dissimilarity/distance
+matrices and substitution matrices.
 
 Format Specification
 --------------------
-The square matrix and identifiers for the objects along each axis are stored as
-delimited text. The first line of the file is the header, which must start with
-the delimiter, followed by the IDs for all objects in the matrix. Each of the
-following lines must contain an object's ID, followed by numbers (floats or
-integers) relating the object to all other objects in the matrix. The order of
-objects is determined by the IDs in the header.
+The square matrix and object identifiers are stored as delimited text. The
+first line of the file is the header, which must start with the delimiter,
+followed by the IDs for all objects in the matrix. Each of the following lines
+must contain an object's ID, followed by a numeric (float or integer) vector
+relating the object to all other objects in the matrix. The order of objects is
+determined by the IDs in the header.
 
 For example, assume we have a 2x2 distance matrix with IDs ``'a'`` and ``'b'``.
 When serialized in this format, the distance matrix might look like::
@@ -29,7 +30,7 @@ When serialized in this format, the distance matrix might look like::
 where ``<del>`` is the delimiter between elements.
 
 Lines containing only whitespace may occur anywhere throughout the file and are
-ignored. Lines starting with ``#`` are treated as comments and ignored.
+ignored. Lines starting with ``#`` are treated as comments and are ignored.
 Comments may only occur *before* the header.
 
 IDs will have any leading/trailing whitespace removed when they are parsed.

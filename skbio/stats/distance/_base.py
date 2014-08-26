@@ -106,7 +106,8 @@ class DissimilarityMatrix(object):
         ----------
         fp : filepath or filehandle
         delimiter : str, optional
-            String delimiting elements in `fp`.
+            String delimiting elements in `fp`. Only applies if reading a
+            ``dm`` formatted file.
 
         Returns
         -------
@@ -122,6 +123,20 @@ class DissimilarityMatrix(object):
                              **kwargs)
 
     def write(self, fp, format='dm', delimiter='\t', **kwargs):
+        """Save dissimilarity matrix to file.
+
+        Parameters
+        ----------
+        fp : filepath or filehandle
+        delimiter : str, optional
+            Delimiter used to separate elements in output format. Only applies
+            if writing a ``dm`` formatted file.
+
+        See Also
+        --------
+        read
+
+        """
         skbio.io.write(self, into=fp, format=format, delimiter=delimiter,
                        **kwargs)
 
