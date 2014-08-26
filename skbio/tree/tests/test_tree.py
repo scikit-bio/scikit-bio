@@ -908,12 +908,12 @@ class TreeTests(TestCase):
                           '3': ['h', 'i', 'j', 'k', 'l', 'm', 'n'],
                           '4': ['h', 'i', 'j', 'k', 'l', 'm', 'q'],
                           '5': ['h', 'i', 'j', 'k', 'l', 'm', 'n']}
-        exp_str = ("((((((((1)g)f)e)d,((((2)y)x)))c)b)a,(((((((3,5)n,"
-                   "(4)q)m)l)k)j)i)h);")
+        exp = TreeNode.from_newick("((((((((1)g)f)e)d,((((2)y)x)))c)b)a,"
+                                   "(((((((3,5)n,(4)q)m)l)k)j)i)h);")
 
         root = TreeNode.from_taxonomy(input_lineages)
 
-        self.assertEqual(root.to_newick(), exp_str)
+        self.assertEqual(root.compare_subsets(exp), 0.0)
 
     def test_from_file(self):
         """Parse a tree from a file"""
