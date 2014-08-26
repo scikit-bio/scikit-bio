@@ -53,6 +53,17 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
                                    np.array(self.dm_2x2_asym_data),
                                    np.array(self.dm_3x3_data)]
 
+    def test_io(self):
+        # Very basic check that read/write public API is present and appears to
+        # be functioning. Roundtrip from memory -> disk -> memory and ensure
+        # results match.
+        fh = StringIO()
+        self.dm_3x3.write(fh)
+        fh.seek(0)
+        deserialized = DissimilarityMatrix.read(fh)
+        self.assertEqual(deserialized, self.dm_3x3)
+        self.assertTrue(type(deserialized) == DissimilarityMatrix)
+
     def test_init_from_dm(self):
         ids = ['foo', 'bar', 'baz']
 
@@ -397,6 +408,17 @@ class DistanceMatrixTests(DissimilarityMatrixTestData):
         self.dms = [self.dm_1x1, self.dm_2x2, self.dm_3x3]
         self.dm_condensed_forms = [np.array([]), np.array([0.123]),
                                    np.array([0.01, 4.2, 12.0])]
+
+    def test_io(self):
+        # Very basic check that read/write public API is present and appears to
+        # be functioning. Roundtrip from memory -> disk -> memory and ensure
+        # results match.
+        fh = StringIO()
+        self.dm_3x3.write(fh)
+        fh.seek(0)
+        deserialized = DistanceMatrix.read(fh)
+        self.assertEqual(deserialized, self.dm_3x3)
+        self.assertTrue(type(deserialized) == DistanceMatrix)
 
     def test_init_invalid_input(self):
         # Asymmetric.

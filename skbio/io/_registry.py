@@ -715,7 +715,7 @@ def write(obj, format=None, into=None, mode='w', **kwargs):
     obj : object
         The object must have a registered writer for a provided `format`.
     format : str or iterable of str
-        The format must be a reigstered format name with a writer for the given
+        The format must be a registered format name with a writer for the given
         `obj`. In the case of compound formats, any order of the simple
         formats will work.
     into : filepath, filehandle or iterable of either

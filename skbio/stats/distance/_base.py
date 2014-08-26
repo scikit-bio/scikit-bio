@@ -96,18 +96,23 @@ class DissimilarityMatrix(object):
     _matrix_element_name = 'dissimilarity'
 
     @classmethod
-    def read(cls, fp, format=None, delimiter='\t', **kwargs):
+    def read(cls, fp, **kwargs):
         """Load dissimilarity matrix from file.
 
         Creates a ``DissimilarityMatrix`` (or subclass) instance from a
         supported file format.
 
+        Supported file formats include:
+
+        - ``dm`` (:mod:`skbio.io.dm`)
+
         Parameters
         ----------
         fp : filepath or filehandle
-        delimiter : str, optional
-            String delimiting elements in `fp`. Only applies if reading a
-            ``dm`` formatted file.
+            File to read from.
+        kwargs : dict, optional
+            Keyword arguments passed to :mod:`skbio.io.read` and the file format
+            reader.
 
         Returns
         -------
@@ -117,28 +122,37 @@ class DissimilarityMatrix(object):
         See Also
         --------
         write
+        skbio.io.dm
+        skbio.io.read
 
         """
-        return skbio.io.read(fp, format=format, into=cls, delimiter=delimiter,
-                             **kwargs)
+        return skbio.io.read(fp, into=cls, **kwargs)
 
-    def write(self, fp, format='dm', delimiter='\t', **kwargs):
+    def write(self, fp, format='dm', **kwargs):
         """Save dissimilarity matrix to file.
+
+        Supported file formats include:
+
+        - ``dm`` (:mod:`skbio.io.dm`)
 
         Parameters
         ----------
         fp : filepath or filehandle
-        delimiter : str, optional
-            Delimiter used to separate elements in output format. Only applies
-            if writing a ``dm`` formatted file.
+            File to write to.
+        format : str, optional
+            File format to write.
+        kwargs : dict, optional
+            Keyword arguments passed to :mod:`skbio.io.write` and the file
+            format writer.
 
         See Also
         --------
         read
+        skbio.io.dm
+        skbio.io.write
 
         """
-        skbio.io.write(self, into=fp, format=format, delimiter=delimiter,
-                       **kwargs)
+        skbio.io.write(self, into=fp, format=format, **kwargs)
 
     def __init__(self, data, ids=None):
         if isinstance(data, DissimilarityMatrix):

@@ -41,6 +41,13 @@ IDs will have any leading/trailing whitespace removed when they are parsed.
    (e.g., a spreadsheet program). If efficiency is a concern, this format may
    not be the most appropriate choice.
 
+Format Parameters
+-----------------
+The only supported format parameter is ``delimiter``, which defaults to the tab
+character (``'\\t'``). ``delimiter`` is used to separate elements in the file
+format. ``delimiter`` can be specified as a keyword argument when reading from
+or writing to a file.
+
 """
 
 # ----------------------------------------------------------------------------
