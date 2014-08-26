@@ -36,7 +36,7 @@ User Warnings
 .. autosummary::
    :toctree: generated/
 
-   UnprovenFormatWarning
+   FormatIdentificationWarning
    ArgumentOverrideWarning
 
 Developer Documentation
@@ -82,6 +82,7 @@ Developer Exceptions
    :toctree: generated/
 
    DuplicateRegistrationError
+   InvalidRegistrationError
 
 """
 # ----------------------------------------------------------------------------
@@ -92,9 +93,10 @@ Developer Exceptions
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from ._warning import UnprovenFormatWarning, ArgumentOverrideWarning
-from ._exception import (DuplicateRegistrationError, RecordError, FieldError,
-                         UnrecognizedFormatError, FileFormatError)
+from ._warning import FormatIdentificationWarning, ArgumentOverrideWarning
+from ._exception import (DuplicateRegistrationError, InvalidRegistrationError,
+                         RecordError, FieldError, UnrecognizedFormatError,
+                         FileFormatError)
 from ._registry import (write, read, sniff, get_writer, get_reader,
                         get_sniffer, list_write_formats, list_read_formats,
                         register_writer, register_reader, register_sniffer)
@@ -102,9 +104,10 @@ from ._registry import (write, read, sniff, get_writer, get_reader,
 __all__ = ['write', 'read', 'sniff', 'get_writer', 'get_reader',
            'get_sniffer', 'list_write_formats', 'list_read_formats',
            'register_writer', 'register_reader', 'register_sniffer',
-           'DuplicateRegistrationError', 'RecordError', 'FieldError',
-           'UnrecognizedFormatError', 'FileFormatError',
-           'UnprovenFormatWarning', 'ArgumentOverrideWarning']
+           'DuplicateRegistrationError', 'InvalidRegistrationError',
+           'RecordError', 'FieldError', 'UnrecognizedFormatError',
+           'FileFormatError', 'FormatIdentificationWarning',
+           'ArgumentOverrideWarning']
 
 from numpy.testing import Tester
 test = Tester().test

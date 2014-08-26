@@ -7,3 +7,8 @@ from __future__ import absolute_import, division, print_function
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
+
+
+class TestingUtilError(StandardError):
+    """Raised when an exception is needed to test exception handling."""
+    pass

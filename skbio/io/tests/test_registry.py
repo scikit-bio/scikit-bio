@@ -19,9 +19,11 @@ import unittest
 import warnings
 from tempfile import mkstemp
 
-from skbio.io import (DuplicateRegistrationError, UnprovenFormatWarning,
-                      UnrecognizedFormatError, ArgumentOverrideWarning)
+from skbio.io import (DuplicateRegistrationError, FormatIdentificationWarning,
+                      InvalidRegistrationError, UnrecognizedFormatError,
+                      ArgumentOverrideWarning)
 from skbio.io._registry import empty_file_sniffer
+from skbio.util import TestingUtilError
 
 
 class TestClass(object):
@@ -156,6 +158,16 @@ class TestRegisterAndGetReader(RegistryTest):
         self.assertTrue('format1' in str(cm.exception))
         self.assertTrue('reader' in str(cm.exception))
         self.assertTrue(TestClassA.__name__ in str(cm.exception))
+
+    def test_register_reader_generator_with_not_a_generator(self):
+        @self.module.register_reader('format')
+        def not_a_generator(fp):
+            return 'oops'
+
+        fh = StringIO()
+        with self.assertRaises(InvalidRegistrationError):
+            next(self.module.get_reader('format')(fh))
+        fh.close()
 
 
 class TestRegisterAndGetWriter(RegistryTest):
@@ -343,6 +355,20 @@ class TestRegisterAndGetSniffer(RegistryTest):
                 return False, {}
 
         self.assertTrue('format1' in str(cm.exception))
+
+    def test_sniffer_warns_on_exception(self):
+        @self.module.register_sniffer('format')
+        def format_sniffer(fh):
+            raise TestingUtilError("Sniffer will return False and warn.")
+
+        fh = StringIO()
+        sniffer = self.module.get_sniffer('format')
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("error")
+            with self.assertRaises(FormatIdentificationWarning):
+                sniffer(fh)
+
+        fh.close()
 
 
 class TestListReadFormats(RegistryTest):
@@ -729,6 +755,23 @@ class TestRead(RegistryTest):
         self.assertTrue('generator' in str(cm.exception))
         self.assertTrue('not_a_format2' in str(cm.exception))
 
+    def test_reader_is_not_generator(self):
+        fh = StringIO(u'1\n2\n3\n4')
+
+        @self.module.register_sniffer('format')
+        def sniffer(fh):
+            return '1' in fh.readline(), {}
+
+        @self.module.register_reader('format')
+        def reader(fh):
+            # Not a generator!
+            return TestClass([int(x) for x in fh.read().split('\n')])
+
+        with self.assertRaises(InvalidRegistrationError):
+            next(self.module.read(fh, format='format'))
+
+        fh.close()
+
     def test_reader_exists_with_verify_true(self):
         fh = StringIO(u'1\n2\n3\n4')
 
@@ -823,7 +866,7 @@ class TestRead(RegistryTest):
 
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("error")
-            with self.assertRaises(UnprovenFormatWarning):
+            with self.assertRaises(FormatIdentificationWarning):
                 self.was_verified = False
                 instance = self.module.read(fh, format='format',
                                             into=TestClass, verify=True)
@@ -832,7 +875,7 @@ class TestRead(RegistryTest):
 
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("error")
-            with self.assertRaises(UnprovenFormatWarning):
+            with self.assertRaises(FormatIdentificationWarning):
                 self.was_verified = False
                 instance = self.module.read(fh, format='format',
                                             into=TestClass)
@@ -875,6 +918,89 @@ class TestRead(RegistryTest):
 
         instance = self.module.read(fp, format='format', into=TestClass)
         self.assertEqual(TestClass([1, 2, 3, 4]), instance)
+
+    def test_reader_into_none_w_exception_and_test_compound(self):
+        fh1 = StringIO(u'1\n2\n3\n4')
+        fh2 = StringIO(u'2\n3\n4\n5')
+
+        @self.module.register_sniffer('format1')
+        def f1_sniffer(fh):
+            return '1' in fh.readline(), {}
+
+        @self.module.register_sniffer('format2')
+        def f2_sniffer(fh):
+            return '2' in fh.readline(), {}
+
+        @self.module.register_reader('format1')
+        def f1_reader(fh):
+            fh.read()
+            raise TestingUtilError("File position should be reset now.")
+            yield
+
+        @self.module.register_reader('format1, format2')
+        def f1_f2_reader(fh1, fh2):
+            fh1.read()
+            fh2.read()
+            raise TestingUtilError("File position should be reset now.")
+            yield
+
+        fh1.seek(0)
+        with self.assertRaises(TestingUtilError):
+            next(self.module.read(fh1, format='format1'))
+
+        self.assertEqual(0, fh1.tell())
+
+        fh1.seek(0)
+        fh2.seek(0)
+        with self.assertRaises(TestingUtilError):
+            next(self.module.read([fh1, fh2], format='format1, format2'))
+
+        self.assertEqual(0, fh1.tell())
+        self.assertEqual(0, fh2.tell())
+
+        fh1.close()
+        fh2.close()
+
+    def test_reader_w_exception_and_test_compound(self):
+        fh1 = StringIO(u'1\n2\n3\n4')
+        fh2 = StringIO(u'2\n3\n4\n5')
+
+        @self.module.register_sniffer('format1')
+        def f1_sniffer(fh):
+            return '1' in fh.readline(), {}
+
+        @self.module.register_sniffer('format2')
+        def f2_sniffer(fh):
+            return '2' in fh.readline(), {}
+
+        @self.module.register_reader('format1', TestClass)
+        def f1_reader(fh):
+            fh.read()
+            raise TestingUtilError("File position should be reset now.")
+
+        @self.module.register_reader('format1, format2', TestClass)
+        def f1_f2_reader(fh1, fh2):
+            fh1.read()
+            fh2.read()
+            raise TestingUtilError("File position should be reset now.")
+
+        fh1.seek(0)
+        with self.assertRaises(TestingUtilError):
+            self.module.read(fh1, format='format1', into=TestClass)
+
+        self.assertEqual(0, fh1.tell())
+
+        fh1.seek(0)
+        fh2.seek(0)
+        with self.assertRaises(TestingUtilError):
+            self.module.read([fh1, fh2], format='format1, format2',
+                             into=TestClass)
+
+        self.assertEqual(0, fh1.tell())
+        self.assertEqual(0, fh2.tell())
+
+        fh1.close()
+        fh2.close()
 
     def test_reader_into_none_w_mutate_fh(self):
         fh = StringIO(u'1\n2\n3\n4')
@@ -1012,18 +1138,6 @@ class TestRead(RegistryTest):
 
 
 class TestWrite(RegistryTest):
-    def test_format_is_none(self):
-        fh = StringIO()
-        with self.assertRaises(ValueError):
-            self.module.write({}, into=fh)
-        fh.close()
-
-    def test_into_is_none(self):
-        fh = StringIO()
-        with self.assertRaises(ValueError):
-            self.module.write({}, format='format')
-        fh.close()
-
     def test_writer_does_not_exist(self):
         fh = StringIO()
         with self.assertRaises(UnrecognizedFormatError) as cm:
