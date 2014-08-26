@@ -16,6 +16,7 @@ import numpy as np
 import pandas as pd
 from scipy.spatial.distance import squareform
 
+import skbio.io
 from skbio.stats import p_value_to_str
 
 
@@ -93,6 +94,15 @@ class DissimilarityMatrix(object):
 
     # Used in __str__
     _matrix_element_name = 'dissimilarity'
+
+    @classmethod
+    def read(cls, fp, format=None, delimiter='\t', **kwargs):
+        return skbio.io.read(fp, format=format, into=cls, delimiter=delimiter,
+                             **kwargs)
+
+    def write(self, fp, format='dm', delimiter='\t', **kwargs):
+        skbio.io.write(self, into=fp, format=format, delimiter=delimiter,
+                       **kwargs)
 
     def __init__(self, data, ids=None):
         if isinstance(data, DissimilarityMatrix):

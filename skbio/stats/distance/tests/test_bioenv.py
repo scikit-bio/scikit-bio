@@ -40,11 +40,11 @@ class BIOENVTests(TestCase):
         # This dataset is also useful because it is non-trivial in size (6
         # samples, 11 environment variables) and it includes positive/negative
         # floats and integers in the data frame.
-        self.dm = DistanceMatrix.from_file(get_data_path('dm.txt'))
+        self.dm = DistanceMatrix.read(get_data_path('dm.txt'))
 
         # Reordered rows and columns (i.e., different ID order). Still
         # conceptually the same distance matrix.
-        self.dm_reordered = DistanceMatrix.from_file(
+        self.dm_reordered = DistanceMatrix.read(
             get_data_path('dm_reordered.txt'))
 
         self.df = pd.read_csv(get_data_path('df.txt'), sep='\t', index_col=0)
@@ -68,7 +68,7 @@ class BIOENVTests(TestCase):
         # provided an OTU table, using their default distance measure). The
         # data frame only includes the numeric environmental variables we're
         # interested in for these tests: log(N), P, K, Ca, pH, Al
-        self.dm_vegan = DistanceMatrix.from_file(
+        self.dm_vegan = DistanceMatrix.read(
             get_data_path('bioenv_dm_vegan.txt'))
         self.df_vegan = pd.read_csv(
             get_data_path('bioenv_df_vegan.txt'), sep='\t',
