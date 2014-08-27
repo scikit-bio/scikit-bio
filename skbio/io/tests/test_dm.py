@@ -118,8 +118,6 @@ class DissimilarityAndDistanceMatrixReaderWriterTests(DMTestData):
             for invalid_fh, error_msg_regexp in self.invalid_fhs:
                 with self.assertRaisesRegexp(DMFormatError, error_msg_regexp):
                     fn(invalid_fh)
-                # TODO should reader reset file position if error occurs?
-                invalid_fh.seek(0)
 
         # Asymmetric data only raises an error for DistanceMatrix.
         with self.assertRaises(DistanceMatrixError):
