@@ -69,7 +69,7 @@ from skbio.io import (register_reader, register_writer, register_sniffer,
 
 
 @register_sniffer('dm')
-def dm_sniffer(fh):
+def _dm_sniffer(fh):
     header = _find_header(fh)
 
     if header is not None:
@@ -89,22 +89,22 @@ def dm_sniffer(fh):
 
 
 @register_reader('dm', DissimilarityMatrix)
-def dm_to_DissimilarityMatrix(fh, delimiter='\t'):
+def _dm_to_dissimilarity_matrix(fh, delimiter='\t'):
     return _dm_to_matrix(DissimilarityMatrix, fh, delimiter)
 
 
 @register_reader('dm', DistanceMatrix)
-def dm_to_DistanceMatrix(fh, delimiter='\t'):
+def _dm_to_distance_matrix(fh, delimiter='\t'):
     return _dm_to_matrix(DistanceMatrix, fh, delimiter)
 
 
 @register_writer('dm', DissimilarityMatrix)
-def DissimilarityMatrix_to_dm(obj, fh, delimiter='\t'):
+def _dissimilarity_matrix_to_dm(obj, fh, delimiter='\t'):
     _matrix_to_dm(obj, fh, delimiter)
 
 
 @register_writer('dm', DistanceMatrix)
-def DistanceMatrix_to_dm(obj, fh, delimiter='\t'):
+def _distance_matrix_to_dm(obj, fh, delimiter='\t'):
     _matrix_to_dm(obj, fh, delimiter)
 
 

@@ -13,9 +13,9 @@ from unittest import TestCase, main
 
 from skbio import DistanceMatrix
 from skbio.io import DMFormatError
-from skbio.io.dm import (dm_to_DissimilarityMatrix, dm_to_DistanceMatrix,
-                         DissimilarityMatrix_to_dm, DistanceMatrix_to_dm,
-                         dm_sniffer)
+from skbio.io.dm import (_dm_to_dissimilarity_matrix, _dm_to_distance_matrix,
+                         _dissimilarity_matrix_to_dm, _distance_matrix_to_dm,
+                         _dm_sniffer)
 from skbio.stats.distance import DissimilarityMatrix, DistanceMatrixError
 
 
@@ -95,10 +95,10 @@ class DissimilarityAndDistanceMatrixReaderWriterTests(DMTestData):
                          self.dm_3x3_whitespace_fh]
 
     def test_read_valid_files(self):
-        for fn, cls, objs, fhs in ((dm_to_DissimilarityMatrix,
+        for fn, cls, objs, fhs in ((_dm_to_dissimilarity_matrix,
                                     DissimilarityMatrix, self.dissim_objs,
                                     self.dissim_fhs),
-                                   (dm_to_DistanceMatrix, DistanceMatrix,
+                                   (_dm_to_distance_matrix, DistanceMatrix,
                                     self.dist_objs, self.dist_fhs)):
             for fh, obj in zip(fhs, objs):
                 obs = fn(fh)
@@ -106,27 +106,27 @@ class DissimilarityAndDistanceMatrixReaderWriterTests(DMTestData):
                 self.assertIsInstance(obs, cls)
 
         # Above files are TSV (default delimiter). Test that CSV works too.
-        for fn, cls in ((dm_to_DissimilarityMatrix, DissimilarityMatrix),
-                        (dm_to_DistanceMatrix, DistanceMatrix)):
+        for fn, cls in ((_dm_to_dissimilarity_matrix, DissimilarityMatrix),
+                        (_dm_to_distance_matrix, DistanceMatrix)):
             exp = cls(self.dm_3x3_data, ['a', 'b', 'c'])
             obs = fn(self.dm_3x3_csv_fh, delimiter=',')
             self.assertEqual(obs, exp)
             self.assertIsInstance(obs, cls)
 
     def test_read_invalid_files(self):
-        for fn in dm_to_DissimilarityMatrix, dm_to_DistanceMatrix:
+        for fn in _dm_to_dissimilarity_matrix, _dm_to_distance_matrix:
             for invalid_fh, error_msg_regexp in self.invalid_fhs:
                 with self.assertRaisesRegexp(DMFormatError, error_msg_regexp):
                     fn(invalid_fh)
 
         # Asymmetric data only raises an error for DistanceMatrix.
         with self.assertRaises(DistanceMatrixError):
-            dm_to_DistanceMatrix(self.dm_2x2_asym_fh)
+            _dm_to_distance_matrix(self.dm_2x2_asym_fh)
 
     def test_write(self):
-        for fn, objs, strs in ((DissimilarityMatrix_to_dm, self.dissim_objs,
+        for fn, objs, strs in ((_dissimilarity_matrix_to_dm, self.dissim_objs,
                                 self.dissim_strs),
-                               (DistanceMatrix_to_dm, self.dist_objs,
+                               (_distance_matrix_to_dm, self.dist_objs,
                                 self.dist_strs)):
             for obj, str_ in zip(objs, strs):
                 fh = StringIO()
@@ -136,8 +136,8 @@ class DissimilarityAndDistanceMatrixReaderWriterTests(DMTestData):
                 self.assertEqual(obs, str_)
 
         # Test writing CSV (TSV is written above).
-        for fn, cls in ((DissimilarityMatrix_to_dm, DissimilarityMatrix),
-                        (DistanceMatrix_to_dm, DistanceMatrix)):
+        for fn, cls in ((_dissimilarity_matrix_to_dm, DissimilarityMatrix),
+                        (_distance_matrix_to_dm, DistanceMatrix)):
             obj = cls(self.dm_3x3_data, ['a', 'b', 'c'])
             fh = StringIO()
             fn(obj, fh, delimiter=',')
@@ -146,11 +146,11 @@ class DissimilarityAndDistanceMatrixReaderWriterTests(DMTestData):
             self.assertEqual(obs, DM_3x3_CSV)
 
     def test_roundtrip_read_write(self):
-        for reader_fn, writer_fn, fhs in ((dm_to_DissimilarityMatrix,
-                                           DissimilarityMatrix_to_dm,
+        for reader_fn, writer_fn, fhs in ((_dm_to_dissimilarity_matrix,
+                                           _dissimilarity_matrix_to_dm,
                                            self.dissim_fhs),
-                                          (dm_to_DistanceMatrix,
-                                           DistanceMatrix_to_dm,
+                                          (_dm_to_distance_matrix,
+                                           _distance_matrix_to_dm,
                                            self.dist_fhs)):
             for fh in fhs:
                 # Read.
@@ -177,16 +177,16 @@ class SnifferTests(DMTestData):
         fhs = self.valid_fhs + [self.invalid_1_fh, self.invalid_3_fh,
                                 self.invalid_4_fh]
         for fh in fhs:
-            self.assertEqual(dm_sniffer(fh), (True, {'delimiter': '\t'}))
+            self.assertEqual(_dm_sniffer(fh), (True, {'delimiter': '\t'}))
 
     def test_match_csv(self):
-        self.assertEqual(dm_sniffer(self.dm_3x3_csv_fh),
+        self.assertEqual(_dm_sniffer(self.dm_3x3_csv_fh),
                          (True, {'delimiter': ','}))
 
     def test_no_match(self):
         for fh in (self.empty_fh, self.invalid_2_fh, self.invalid_5_fh,
                    self.invalid_6_fh):
-            self.assertEqual(dm_sniffer(fh), (False, {}))
+            self.assertEqual(_dm_sniffer(fh), (False, {}))
 
 
 DM_1x1 = "\ta\na\t0.0\n"
