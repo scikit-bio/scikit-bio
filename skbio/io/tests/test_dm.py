@@ -163,6 +163,7 @@ class DissimilarityAndDistanceMatrixReaderWriterTests(DMTestData):
 
                 # Read.
                 dm2 = reader_fn(out_fh)
+                out_fh.close()
 
                 self.assertEqual(dm1, dm2)
 

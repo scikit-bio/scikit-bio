@@ -183,26 +183,6 @@ class OrdinationResultsReaderWriterTests(OrdResTestData):
             npt.assert_equal(obs.proportion_explained,
                              exp.proportion_explained)
 
-#    def test_to_file(self):
-#        for scores, test_path in zip(self.scores, self.test_paths):
-#            for file_type in ('file like', 'file name'):
-#                if file_type == 'file like':
-#                    obs_f = StringIO()
-#                    scores.to_file(obs_f)
-#                    obs = obs_f.getvalue()
-#                    obs_f.close()
-#                elif file_type == 'file name':
-#                    with tempfile.NamedTemporaryFile('r+') as temp_file:
-#                        scores.to_file(temp_file.name)
-#                        temp_file.flush()
-#                        temp_file.seek(0)
-#                        obs = temp_file.read()
-#
-#                with open(get_data_path(test_path), 'U') as f:
-#                    exp = f.read()
-#
-#                yield npt.assert_equal, obs, exp
-
     def test_read_valid_files(self):
         for fp, obj in zip(self.valid_fps, self.ordination_results_objs):
                 obs = _ordres_to_ordination_results(fp)
@@ -212,6 +192,34 @@ class OrdinationResultsReaderWriterTests(OrdResTestData):
         for invalid_fp, error_msg_regexp  in self.invalid_fps:
             with self.assertRaisesRegexp(OrdResFormatError, error_msg_regexp):
                 _ordres_to_ordination_results(invalid_fp)
+
+    def test_write(self):
+        for fp, obj in zip(self.valid_fps, self.ordination_results_objs):
+            fh = StringIO()
+            _ordination_results_to_ordres(obj, fh)
+            obs = fh.getvalue()
+            fh.close()
+
+            with open(fp, 'U') as fh:
+                exp = fh.read()
+
+            npt.assert_equal(obs, exp)
+
+    def test_roundtrip_read_write(self):
+        for fp in self.valid_fps:
+            # Read.
+            obj1 = _ordres_to_ordination_results(fp)
+
+            # Write.
+            fh = StringIO()
+            _ordination_results_to_ordres(obj1, fh)
+            fh.seek(0)
+
+            # Read.
+            obj2 = _ordres_to_ordination_results(fh)
+            fh.close()
+
+            self.check_ordination_results_equal(obj1, obj2)
 
 
 if __name__ == '__main__':
