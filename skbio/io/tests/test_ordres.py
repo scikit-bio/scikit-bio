@@ -28,15 +28,29 @@ class OrdResTestData(TestCase):
             ['ordres_L&L_CA_data_scores', 'ordres_example3_scores',
              'ordres_PCoA_sample_data_3_scores', 'ordres_example2_scores'])
 
-        self.invalid_fps = map(
-            get_data_path,
-            ['ordres_error1', 'ordres_error2', 'ordres_error3',
-             'ordres_error4', 'ordres_error5', 'ordres_error6',
-             'ordres_error7', 'ordres_error8', 'ordres_error9',
-             'ordres_error10', 'ordres_error11', 'ordres_error12',
-             'ordres_error13', 'ordres_error14', 'ordres_error15',
-             'ordres_error16', 'ordres_error17', 'ordres_error18',
-             'ordres_error19', 'ordres_error20', 'ordres_error21'])
+        self.invalid_fps = map(lambda e: (get_data_path(e[0]), e[1]), [
+            ('ordres_error1', 'Eigvals header'),
+            ('ordres_error2', 'Proportion explained header'),
+            ('ordres_error3', 'Species header'),
+            ('ordres_error4', 'Site header'),
+            ('ordres_error5', 'Biplot header'),
+            ('ordres_error6', 'Site constraints header'),
+            ('ordres_error7', 'empty line'),
+            ('ordres_error8', '9 proportion explained.*8'),
+            ('ordres_error9', '2 values.*1 in row 1'),
+            ('ordres_error10', '2 values.*1 in row 1'),
+            ('ordres_error11', 'Site constraints ids and site ids'),
+            ('ordres_error12', '9 eigvals.*8'),
+            ('ordres_error13', '9 proportion explained.*8'),
+            ('ordres_error14', 'Site is 0: 9 x 0'),
+            ('ordres_error15', '9 values.*8 in row 1'),
+            ('ordres_error16', 'Biplot is 0: 3 x 0'),
+            ('ordres_error17', '3 values.*2 in row 1'),
+            ('ordres_error18', 'proportion explained.*eigvals: 8 != 9'),
+            ('ordres_error19', 'coordinates per species.*eigvals: 1 != 2'),
+            ('ordres_error20', 'coordinates per site.*eigvals: 1 != 2'),
+            ('ordres_error21', 'one eigval')
+        ])
 
 
 class OrdinationResultsReaderWriterTests(OrdResTestData):
@@ -194,17 +208,11 @@ class OrdinationResultsReaderWriterTests(OrdResTestData):
                 obs = _ordres_to_ordination_results(fp)
                 self.check_ordination_results_equal(obs, obj)
 
-#    def test_from_file_error(self):
-#        for test_path in self.fferror_test_paths:
-#            with open(get_data_path(test_path), 'U') as f:
-#                with npt.assert_raises(FileFormatError):
-#                    OrdinationResults.from_file(f)
-#
-#        for test_path in self.verror_test_paths:
-#            with open(get_data_path(test_path), 'U') as f:
-#                with npt.assert_raises(ValueError):
-#                    OrdinationResults.from_file(f)
-#
+    def test_read_invalid_files(self):
+        for invalid_fp, error_msg_regexp  in self.invalid_fps:
+            with self.assertRaisesRegexp(OrdResFormatError, error_msg_regexp):
+                _ordres_to_ordination_results(invalid_fp)
+
 
 if __name__ == '__main__':
     main()

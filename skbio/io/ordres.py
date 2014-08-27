@@ -209,7 +209,7 @@ def _parse_coords(fh, header_id):
     elif (rows == 0 and cols != 0) or (rows != 0 and cols == 0):
         # Both dimensions should be 0 or none of them are zero
         raise OrdResFormatError("One dimension of %s is 0: %d x %d" %
-                                (header, rows, cols))
+                                (header_id, rows, cols))
     else:
         # Parse the coords
         coords = np.empty((rows, cols), dtype=np.float64)
@@ -221,7 +221,7 @@ def _parse_coords(fh, header_id):
             if len(vals) != cols + 1:
                 raise OrdResFormatError(
                     "Expected %d values, but found %d in row %d." %
-                    (cols, len(vals) - 1, i))
+                    (cols, len(vals) - 1, i + 1))
             ids.append(vals[0])
             coords[i, :] = np.asarray(vals[1:], dtype=np.float64)
     return coords, ids
@@ -244,7 +244,7 @@ def _parse_biplot(fh):
     elif (rows == 0 and cols != 0) or (rows != 0 and cols == 0):
         # Both dimensions should be 0 or none of them are zero
         raise OrdResFormatError("One dimension of %s is 0: %d x %d" %
-                                (header, rows, cols))
+                                (header[0], rows, cols))
     else:
         # Parse the biplot matrix
         biplot = np.empty((rows, cols), dtype=np.float64)
@@ -254,7 +254,7 @@ def _parse_biplot(fh):
             if len(vals) != cols:
                 raise OrdResFormatError(
                     "Expected %d values, but found %d in row %d." %
-                    (cols, len(vals), i))
+                    (cols, len(vals), i + 1))
             biplot[i, :] = np.asarray(vals, dtype=np.float64)
     return biplot
 
