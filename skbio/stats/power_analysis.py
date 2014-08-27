@@ -18,7 +18,8 @@ from scipy.stats import sem, t
 
 
 def confidence_bound(vec, alpha=0.05, df=None):
-    """Calculates a confidence bound assuming a normal distribution
+    """
+    Calculates a confidence bound assuming a normal distribution
 
     Parameters
     ----------
@@ -49,7 +50,8 @@ def confidence_bound(vec, alpha=0.05, df=None):
 
 
 def calculate_power(p_values, alpha=0.05):
-    """Calculates statical power empirically
+    """
+    Calculates statical power empirically
 
     Parameters
     ----------
@@ -70,7 +72,8 @@ def calculate_power(p_values, alpha=0.05):
 
 
 def compare_distributions(test, samples, num_samps=5, num_iter=1000):
-    """Compares two distribution arrays iteratively
+    """
+    Compares two distribution arrays iteratively
 
     Parameters
     ----------
@@ -233,3 +236,89 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
 
     # Calculates summary statitics
     return power_mean, power_bound
+
+
+def get_signifigant_subsample(tests, samples, sub_size=None, p_crit=0.05,
+                              num_rounds=500, p_scaling=5):
+    """
+    Subsamples data to an even sample number for all groups
+
+    Parameters
+    ----------
+    tests : list
+        the statistical tests to performed on the data. These tests should
+        take a list of integers or sample ids, and return a p-value.
+
+    samples : array-like
+        samples can be a list of lists or an array where each sublist or row in
+        the array corresponds to a sampled group.
+
+    sub_size : {None, int}
+        the maximum number of samples to select from a group. If no value is
+        provided, this will be the same as the size of the smallest group.
+        Otherwise, this will be compared to the size of the smallest group, and
+        which ever is lower will be used.
+
+    p_crit : {float, list}
+        The critical p value or p values for the function.
+
+    num_rounds : {500, int}
+        the number of times the code should attempt to subsample the data
+        before determining it has tried too many times and should quit.
+
+    p_scaling : {5, int}
+        a penalty scale on p_crit, so that the total distribution must be less
+        than p_crit/p_scaling.
+
+    Returns
+    -------
+    ids : array
+        All sample ids in the subset
+
+    sub_size : float
+        the number of samples selected from each group
+
+    """
+
+    # Determines the size of the groups
+    check_size = array([len(i) for i in samples])
+    if sub_size is None:
+        sub_size = check_size.min()
+    else:
+        sub_size = min([sub_size, check_size])
+
+    # Checks the critical value is the same length as the tests
+    if isinstance(p_crit, float) and isinstance(tests, list):
+        p_crit = p_crit*ones((len(tests)))
+    elif isinstance(p_crit, list):
+        p_crit = array(p_crit)
+
+    # Verifies testing is reasonable for the
+    for idx, f in enumerate(tests):
+        if f is not None and p_crit[idx]/p_scaling < f(samples):
+            tests[idx] = None
+            print f(samples)
+    # Checks the functions are defined
+    if (tests == array([None]*len(tests))).all():
+        raise ValueError('There is no test defined')
+
+    # Loops through to get a signfigant difference
+    for i in xrange(num_rounds+1):
+        # Subsamples the larger dataset
+        sub_samps = []
+        for ids in samples:
+            sub_samps.append(choice(ids, size=sub_size, replace=False))
+
+        # Tests the subsample
+        test_res = ones((len(tests)))
+        for idx, f in enumerate(tests):
+            test_res[idx] = f(sub_samps)
+
+        # Checks the critical values have been satisifed
+        if (test_res < p_crit).all():
+            return sub_samps
+            break
+        # If no iteration has been found, this is supplied
+        elif i == num_rounds:
+            raise ValueError('There is no iteration which satisfies your '
+                             'requirements.')

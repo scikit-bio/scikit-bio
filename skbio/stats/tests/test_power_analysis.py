@@ -12,7 +12,8 @@ from skbio.stats.power_analysis import (confidence_bound,
                                         calculate_power,
                                         compare_distributions,
                                         calculate_power_curve,
-                                        bootstrap_power_curve)
+                                        bootstrap_power_curve,
+                                        get_signifigant_subsample)
 
 
 class PowerAnalysisTest(TestCase):
@@ -142,6 +143,36 @@ class PowerAnalysisTest(TestCase):
         # Checks the function returned sanely
         assert_allclose(test_mean, known_mean, rtol=0.05, atol=0.05)
         assert_allclose(test_bound, known_bound, rtol=0.1, atol=0.01)
+
+    def test_get_signifigant_subsample_no_tests(self):
+        """Checks get_signifigant_subsample errors when inputs are too similar
+        """
+        self.assertRaises(ValueError, get_signifigant_subsample, [None],
+                          self.samps)
+
+    def test_get_signifigant_subsample_no_results(self):
+        """Checks get_signifigant_subsample errors when inputs are too similar
+        """
+        # Sets up a function which will all testing
+        def test_f(x):
+            if len(x[0]) == 100:
+                return 0.001
+            else:
+                return 0.5
+        # Tests a value error is raised
+        self.assertRaises(ValueError, get_signifigant_subsample, [test_f],
+                          self.samps, sub_size=10, num_rounds=5)
+
+    def test_get_signifigant_subsample_default(self):
+        """Checks get_signifigant_subsample functions sanely under defaults"""
+        pop = [arange(0, 10, 1), arange(0, 20, 0.2)]
+        # Checks the overall data meets the parameters
+        self.assertNotEqual(len(pop[0]), len(pop[1]))
+        # Generates subsamples
+        test_ids = get_signifigant_subsample([self.f], pop)
+        # Checks the results
+        self.assertEqual(len(test_ids[0]), len(test_ids[1]))
+        self.assertTrue(self.f(test_ids) < 0.05)
 
 
 if __name__ == '__main__':
