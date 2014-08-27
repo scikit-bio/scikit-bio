@@ -143,9 +143,9 @@ def _dm_to_matrix(cls, fh, delimiter):
         num_vals = len(row_data)
         if num_vals != num_ids:
             raise DMFormatError(
-                "There are %d value(s) in row number %d, which is not "
-                "equal to the number of ID(s) in the header (%d)."
-                % (num_vals, row_idx + 1, num_ids))
+                "There are %d value(s) in row %d, which is not equal to the "
+                "number of ID(s) in the header (%d)." %
+                (num_vals, row_idx + 1, num_ids))
 
         expected_id = ids[row_idx]
         if row_id == expected_id:
