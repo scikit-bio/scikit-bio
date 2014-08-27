@@ -9,8 +9,8 @@ from __future__ import absolute_import, division, print_function
 # ----------------------------------------------------------------------------
 
 
-class UnprovenFormatWarning(Warning):
-    """Warn when the sniffer of a format cannot confirm expected value."""
+class FormatIdentificationWarning(Warning):
+    """Warn when the sniffer of a format cannot confirm the format."""
     pass
 
 
