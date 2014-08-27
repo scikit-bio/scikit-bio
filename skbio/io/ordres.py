@@ -90,7 +90,23 @@ from skbio.io import (register_reader, register_writer, register_sniffer,
 
 @register_sniffer('ordres')
 def _ordres_sniffer(fh):
-    # TODO finish implementation
+    # Smells an ordres file if *all* of the following lines are present *from
+    # the beginning* of the file:
+    #   - eigvals header (minimally parsed)
+    #   - another line (contents ignored)
+    #   - a whitespace-only line
+    #   - proportion explained header (minimally parsed)
+    try:
+        _parse_header(fh, 'Eigvals', 1)
+        next_line = next(fh, None)
+
+        if next_line is not None:
+            _check_empty_line(fh)
+            _parse_header(fh, 'Proportion explained', 1)
+            return True, {}
+    except OrdResFormatError:
+        pass
+
     return False, {}
 
 
@@ -141,12 +157,34 @@ def _ordres_to_ordination_results(fh):
         species_ids=species_ids, site_ids=site_ids)
 
 
+def _parse_header(fh, header_id, num_dimensions):
+    line = next(fh, None)
+    if line is None:
+        raise OrdResFormatError("Reached end of file while looking for %s "
+                                "header." % header_id)
+
+    header = line.strip().split('\t')
+    # +1 for the header ID
+    if len(header) != num_dimensions + 1 or header[0] != header_id:
+        raise OrdResFormatError("%s header not found." % header_id)
+    return header
+
+
+def _check_empty_line(fh):
+    """Check that the next line in `fh` is empty or whitespace-only."""
+    line = next(fh, None)
+    if line is None:
+        raise OrdResFormatError("Reached end of file while looking for blank "
+                                "line separating sections.")
+
+    if line.strip():
+        raise OrdResFormatError("Expected an empty line.")
+
+
 def _parse_eigvals(fh):
     # The first line should contain the Eigvals header:
     # Eigvals<tab>NumEigvals
-    header = next(fh).strip().split('\t')
-    if len(header) != 2 or header[0] != 'Eigvals':
-        raise OrdResFormatError("Eigvals header not found.")
+    header = _parse_header(fh, 'Eigvals', 1)
 
     # Parse how many eigvals we are waiting for
     num_eigvals = int(header[1])
@@ -162,18 +200,10 @@ def _parse_eigvals(fh):
     return eigvals
 
 
-def _check_empty_line(fh):
-    """Check that the next line in `fh` is empty or whitespace-only."""
-    if next(fh).strip():
-        raise OrdResFormatError("Expected an empty line.")
-
-
 def _parse_proportion_explained(fh):
     # Parse the proportion explained header:
     # Proportion explained<tab>NumPropExpl
-    header = next(fh).strip().split('\t')
-    if len(header) != 2 or header[0] != 'Proportion explained':
-        raise OrdResFormatError("Proportion explained header not found.")
+    header = _parse_header(fh, 'Proportion explained', 1)
 
     # Parse how many prop expl values are we waiting for
     num_prop_expl = int(header[1])
@@ -194,9 +224,7 @@ def _parse_proportion_explained(fh):
 def _parse_coords(fh, header_id):
     """Parse a coordinates section of `fh` identified by `header_id`."""
     # Parse the coords header
-    header = next(fh).strip().split('\t')
-    if len(header) != 3 or header[0] != header_id:
-        raise OrdResFormatError("%s header not found." % header_id)
+    header = _parse_header(fh, header_id, 2)
 
     # Parse the dimensions of the coord matrix
     rows = int(header[1])
@@ -230,9 +258,7 @@ def _parse_coords(fh, header_id):
 
 def _parse_biplot(fh):
     # Parse the biplot header
-    header = next(fh).strip().split('\t')
-    if len(header) != 3 or header[0] != 'Biplot':
-        raise OrdResFormatError("Biplot header not found.")
+    header = _parse_header(fh, 'Biplot', 2)
 
     # Parse the dimensions of the Biplot matrix
     rows = int(header[1])

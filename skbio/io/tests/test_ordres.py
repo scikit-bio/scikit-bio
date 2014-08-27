@@ -28,28 +28,33 @@ class OrdResTestData(TestCase):
             ['ordres_L&L_CA_data_scores', 'ordres_example3_scores',
              'ordres_PCoA_sample_data_3_scores', 'ordres_example2_scores'])
 
-        self.invalid_fps = map(lambda e: (get_data_path(e[0]), e[1]), [
-            ('ordres_error1', 'Eigvals header'),
-            ('ordres_error2', 'Proportion explained header'),
-            ('ordres_error3', 'Species header'),
-            ('ordres_error4', 'Site header'),
-            ('ordres_error5', 'Biplot header'),
-            ('ordres_error6', 'Site constraints header'),
-            ('ordres_error7', 'empty line'),
-            ('ordres_error8', '9 proportion explained.*8'),
-            ('ordres_error9', '2 values.*1 in row 1'),
-            ('ordres_error10', '2 values.*1 in row 1'),
-            ('ordres_error11', 'Site constraints ids and site ids'),
-            ('ordres_error12', '9 eigvals.*8'),
-            ('ordres_error13', '9 proportion explained.*8'),
-            ('ordres_error14', 'Site is 0: 9 x 0'),
-            ('ordres_error15', '9 values.*8 in row 1'),
-            ('ordres_error16', 'Biplot is 0: 3 x 0'),
-            ('ordres_error17', '3 values.*2 in row 1'),
-            ('ordres_error18', 'proportion explained.*eigvals: 8 != 9'),
-            ('ordres_error19', 'coordinates per species.*eigvals: 1 != 2'),
-            ('ordres_error20', 'coordinates per site.*eigvals: 1 != 2'),
-            ('ordres_error21', 'one eigval')
+        # Store filepath, regex for matching the error message that should be
+        # raised when reading the file, and whether the file should be matched
+        # by the sniffer (True) or not (False).
+        self.invalid_fps = map(lambda e: (get_data_path(e[0]), e[1], e[2]), [
+            ('empty', 'Reached end of file.*Eigvals header', False),
+            ('whitespace_only', 'Eigvals header not found', False),
+            ('ordres_error1', 'Eigvals header not found', False),
+            ('ordres_error2', 'Proportion explained header not found', False),
+            ('ordres_error3', 'Species header not found', True),
+            ('ordres_error4', 'Site header not found', True),
+            ('ordres_error5', 'Biplot header not found', True),
+            ('ordres_error6', 'Site constraints header not found', True),
+            ('ordres_error7', 'empty line', False),
+            ('ordres_error8', '9 proportion explained.*8', True),
+            ('ordres_error9', '2 values.*1 in row 1', True),
+            ('ordres_error10', '2 values.*1 in row 1', True),
+            ('ordres_error11', 'Site constraints ids and site ids', True),
+            ('ordres_error12', '9 eigvals.*8', True),
+            ('ordres_error13', '9 proportion explained.*8', True),
+            ('ordres_error14', 'Site is 0: 9 x 0', True),
+            ('ordres_error15', '9 values.*8 in row 1', True),
+            ('ordres_error16', 'Biplot is 0: 3 x 0', True),
+            ('ordres_error17', '3 values.*2 in row 1', True),
+            ('ordres_error18', 'proportion explained.*eigvals: 8 != 9', True),
+            ('ordres_error19', 'coordinates.*species.*eigvals: 1 != 2', True),
+            ('ordres_error20', 'coordinates.*site.*eigvals: 1 != 2', True),
+            ('ordres_error21', 'one eigval', False)
         ])
 
 
@@ -189,7 +194,7 @@ class OrdinationResultsReaderWriterTests(OrdResTestData):
                 self.check_ordination_results_equal(obs, obj)
 
     def test_read_invalid_files(self):
-        for invalid_fp, error_msg_regexp  in self.invalid_fps:
+        for invalid_fp, error_msg_regexp, _ in self.invalid_fps:
             with self.assertRaisesRegexp(OrdResFormatError, error_msg_regexp):
                 _ordres_to_ordination_results(invalid_fp)
 
@@ -220,6 +225,20 @@ class OrdinationResultsReaderWriterTests(OrdResTestData):
             fh.close()
 
             self.check_ordination_results_equal(obj1, obj2)
+
+
+class SnifferTests(OrdResTestData):
+    def setUp(self):
+        super(SnifferTests, self).setUp()
+
+    def test_matches_and_nonmatches(self):
+        # Sniffer should match all valid files, and will match some invalid
+        # ones too because it doesn't exhaustively check the entire file.
+        for fp in self.valid_fps:
+            self.assertEqual(_ordres_sniffer(fp), (True, {}))
+
+        for fp, _, expected_sniffer_match in self.invalid_fps:
+            self.assertEqual(_ordres_sniffer(fp), (expected_sniffer_match, {}))
 
 
 if __name__ == '__main__':
