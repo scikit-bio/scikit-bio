@@ -9,11 +9,13 @@ from __future__ import absolute_import, division, print_function
 
 from warnings import warn
 import types
+import traceback
 
 from future.builtins import zip
 
-from . import (UnrecognizedFormatError, ArgumentOverrideWarning,
-               DuplicateRegistrationError, UnprovenFormatWarning)
+from . import (UnrecognizedFormatError, InvalidRegistrationError,
+               DuplicateRegistrationError, ArgumentOverrideWarning,
+               FormatIdentificationWarning)
 from .util import open_file, open_files, _is_string_or_bytes
 from skbio.util import flatten
 
@@ -142,9 +144,17 @@ def register_sniffer(format):
             with open_file(fp, mode) as fh:
                 orig_pos = fh.tell()
                 fh.seek(0)
-                result = sniffer(fh, **kwargs)
-                fh.seek(orig_pos)
-                return result
+                try:
+                    return sniffer(fh, **kwargs)
+                except Exception:
+                    warn("'%s' has encountered a problem.\n"
+                         "Please send the following to our issue tracker at\n"
+                         "https://github.com/biocore/scikit-bio/issues\n\n"
+                         "%s" % (sniffer.__name__, traceback.format_exc()),
+                         FormatIdentificationWarning)
+                    return False, {}
+                finally:
+                    fh.seek(orig_pos)
 
         wrapped_sniffer.__doc__ = sniffer.__doc__
         wrapped_sniffer.__name__ = sniffer.__name__
@@ -219,7 +229,22 @@ def register_reader(format, cls=None):
                     fp = [fp]
 
                 with open_files(fp, mode) as fhs:
-                    generator = reader(*fhs, **kwargs)
+                    try:
+                        generator = reader(*fhs, **kwargs)
+                        if not isinstance(generator, types.GeneratorType):
+                            # Raise an exception to be handled next line,
+                            # because although reader executed without error,
+                            # it is not a generator.
+                            raise Exception()
+                    # If an exception is thrown at this point, it cannot
+                    # be a generator. If there was a `yield` statment, then
+                    # Python would have returned a generator regardless of the
+                    # content. This does not preclude the generator from
+                    # throwing exceptions.
+                    except Exception:
+                            raise InvalidRegistrationError("'%s' is not a "
+                                                           "generator." %
+                                                           reader.__name__)
 
                     if mutate_fh or (not is_compound and
                                      _is_string_or_bytes(fp[0])):
@@ -252,12 +277,13 @@ def register_reader(format, cls=None):
                     fp = [fp]
 
                 with open_files(fp, mode) as fhs:
-                    orig_positions = [fh.tell() for fh in fhs]
-                    result = reader(*fhs, **kwargs)
-                    if not mutate_fh:
-                        for fh, pos in zip(fhs, orig_positions):
-                            fh.seek(pos)
-                    return result
+                    try:
+                        orig_positions = [fh.tell() for fh in fhs]
+                        return reader(*fhs, **kwargs)
+                    finally:
+                        if not mutate_fh:
+                            for fh, pos in zip(fhs, orig_positions):
+                                fh.seek(pos)
 
         wrapped_reader.__doc__ = reader.__doc__
         wrapped_reader.__name__ = reader.__name__
@@ -643,7 +669,7 @@ def read(fp, format=None, into=None, verify=True, mode='U', **kwargs):
         Default is None.
     verify : bool, optional
         Whether or not to confirm the format of a file if `format` is provided.
-        Will raise a ``skbio.io.UnprovenFormatWarning`` if the sniffer of
+        Will raise a ``skbio.io.FormatIdentificationWarning`` if the sniffer of
         `format` returns False.
         Default is True.
     mode : str, optional
@@ -666,7 +692,7 @@ def read(fp, format=None, into=None, verify=True, mode='U', **kwargs):
     skbio.io.UnrecognizedFormatError
         Raised when a reader could not be found for a given `format` or the
         format could not be guessed.
-    skbio.io.UnprovenFormatWarning
+    skbio.io.FormatIdentificationWarning
         Raised when `verify` is True and the sniffer of a `format` provided a
         kwarg value that did not match the user's kwarg value.
 
@@ -690,7 +716,7 @@ def read(fp, format=None, into=None, verify=True, mode='U', **kwargs):
             if not is_format:
                 warn("%s could not be positively identified as %s file." %
                      (str(fp), format),
-                     UnprovenFormatWarning)
+                     FormatIdentificationWarning)
             else:
                 kwargs = _override_kwargs(kwargs, fmt_kwargs,
                                           _format_len(format), True)
@@ -704,7 +730,7 @@ def read(fp, format=None, into=None, verify=True, mode='U', **kwargs):
     return reader(fp, mode=mode, **kwargs)
 
 
-def write(obj, format=None, into=None, mode='w', **kwargs):
+def write(obj, format, into, mode='w', **kwargs):
     """Write a supported skbio file format from an instance or a generator.
 
     This function is able to reference and execute all *registered* write
@@ -731,8 +757,6 @@ def write(obj, format=None, into=None, mode='w', **kwargs):
 
     Raises
     ------
-    ValueError
-        Raised when `format` or `into` are None.
     skbio.io.UnrecognizedFormatError
         Raised when a writer could not be found for the given `format` and
         `obj`.
@@ -742,10 +766,6 @@ def write(obj, format=None, into=None, mode='w', **kwargs):
     skbio.io.register_writer
 
     """
-    if format is None:
-        raise ValueError("Must specify a `format` to write out as.")
-    if into is None:
-        raise ValueError("Must provide a filepath or filehandle for `into`")
     cls = None
     if not isinstance(obj, types.GeneratorType):
         cls = obj.__class__
