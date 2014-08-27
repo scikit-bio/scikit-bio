@@ -111,8 +111,8 @@ class DissimilarityMatrix(object):
         fp : filepath or filehandle
             File to read from.
         kwargs : dict, optional
-            Keyword arguments passed to :mod:`skbio.io.read` and the file format
-            reader.
+            Keyword arguments passed to :mod:`skbio.io.read` and the file
+            format reader.
 
         Returns
         -------

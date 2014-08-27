@@ -49,7 +49,6 @@ format. ``delimiter`` can be specified as a keyword argument when reading from
 or writing to a file.
 
 """
-
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
