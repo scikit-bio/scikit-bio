@@ -9,6 +9,14 @@ This package provides I/O functionality for skbio.
 For information about extending the I/O functionality of skbio, see the
 associated Developer Documentation.
 
+Supported File Formats
+----------------------
+
+.. autosummary::
+   :toctree: generated/
+
+   ordres
+
 User Functions
 --------------
 
@@ -29,6 +37,7 @@ User Exceptions
    RecordError
    FieldError
    UnrecognizedFormatError
+   OrdResFormatError
 
 User Warnings
 -------------
@@ -92,9 +101,12 @@ Developer Exceptions
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from importlib import import_module
+
 from ._warning import UnprovenFormatWarning, ArgumentOverrideWarning
 from ._exception import (DuplicateRegistrationError, RecordError, FieldError,
-                         UnrecognizedFormatError, FileFormatError)
+                         UnrecognizedFormatError, FileFormatError,
+                         OrdResFormatError)
 from ._registry import (write, read, sniff, get_writer, get_reader,
                         get_sniffer, list_write_formats, list_read_formats,
                         register_writer, register_reader, register_sniffer)
@@ -103,8 +115,10 @@ __all__ = ['write', 'read', 'sniff', 'get_writer', 'get_reader',
            'get_sniffer', 'list_write_formats', 'list_read_formats',
            'register_writer', 'register_reader', 'register_sniffer',
            'DuplicateRegistrationError', 'RecordError', 'FieldError',
-           'UnrecognizedFormatError', 'FileFormatError',
+           'UnrecognizedFormatError', 'FileFormatError', 'OrdResFormatError',
            'UnprovenFormatWarning', 'ArgumentOverrideWarning']
+
+import_module('skbio.io.ordres')
 
 from numpy.testing import Tester
 test = Tester().test

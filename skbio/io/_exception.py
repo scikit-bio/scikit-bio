@@ -29,6 +29,11 @@ class UnrecognizedFormatError(FileFormatError):
     pass
 
 
+class OrdResFormatError(FileFormatError):
+    """Raised when an ``ordres`` file cannot be parsed."""
+    pass
+
+
 class DuplicateRegistrationError(Exception):
     """Raised when a function is already registered in skbio.io"""
 
