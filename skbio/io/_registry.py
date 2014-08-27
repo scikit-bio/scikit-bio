@@ -146,7 +146,7 @@ def register_sniffer(format):
                 fh.seek(0)
                 try:
                     return sniffer(fh, **kwargs)
-                except StandardError:
+                except Exception:
                     warn("'%s' has encountered a problem.\n"
                          "Please send the following to our issue tracker at\n"
                          "https://github.com/biocore/scikit-bio/issues\n\n"
@@ -235,13 +235,13 @@ def register_reader(format, cls=None):
                             # Raise an exception to be handled next line,
                             # because although reader executed without error,
                             # it is not a generator.
-                            raise StandardError()
+                            raise Exception()
                     # If an exception is thrown at this point, it cannot
                     # be a generator. If there was a `yield` statment, then
                     # Python would have returned a generator regardless of the
                     # content. This does not preclude the generator from
                     # throwing exceptions.
-                    except StandardError:
+                    except Exception:
                             raise InvalidRegistrationError("'%s' is not a "
                                                            "generator." %
                                                            reader.__name__)

@@ -9,6 +9,6 @@ from __future__ import absolute_import, division, print_function
 # ----------------------------------------------------------------------------
 
 
-class TestingUtilError(StandardError):
+class TestingUtilError(Exception):
     """Raised when an exception is needed to test exception handling."""
     pass
