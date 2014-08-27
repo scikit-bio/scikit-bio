@@ -7,17 +7,17 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.builtins import zip
 from future.utils.six import StringIO, string_types
 
 import csv
+import warnings
 from copy import deepcopy
 
 import numpy as np
 import pandas as pd
 from scipy.spatial.distance import squareform
 
-from skbio.io.util import open_file
+import skbio.io
 from skbio.stats import p_value_to_str
 
 
@@ -38,15 +38,6 @@ class MissingIDError(DissimilarityMatrixError):
         super(MissingIDError, self).__init__()
         self.args = ("The ID '%s' is not in the dissimilarity matrix." %
                      missing_id,)
-
-
-class DissimilarityMatrixFormatError(DissimilarityMatrixError):
-    """Error for reporting issues in dissimilarity matrix file format.
-
-    Typically used during parsing.
-
-    """
-    pass
 
 
 class DissimilarityMatrix(object):
@@ -106,31 +97,83 @@ class DissimilarityMatrix(object):
     _matrix_element_name = 'dissimilarity'
 
     @classmethod
-    def from_file(cls, dm_f, delimiter='\t'):
-        """Load dissimilarity matrix from a delimited text file or file path.
+    def read(cls, fp, **kwargs):
+        """Load dissimilarity matrix from file.
 
-        Creates a `DissimilarityMatrix` instance from a serialized
-        dissimilarity matrix stored as delimited text.
+        Creates a ``DissimilarityMatrix`` (or subclass) instance from a
+        supported file format.
 
-        `dm_f` can be a file-like or a file path object containing delimited
-        text. The first line (header) must contain the IDs of each object. The
-        subsequent lines must contain an ID followed by each dissimilarity
-        (float) between the current object and all other objects, where the
-        order of objects is determined by the header line.  For example, a 2x2
-        dissimilarity matrix with IDs ``'a'`` and ``'b'`` might look like::
+        Supported file formats include:
 
-            <del>a<del>b
-            a<del>0.0<del>1.0
-            b<del>1.0<del>0.0
-
-        where ``<del>`` is the delimiter between elements.
+        - ``dm`` (:mod:`skbio.io.dm`)
 
         Parameters
         ----------
-        dm_f : iterable of str or str
-            Iterable of strings (e.g., open file handle, file-like object, list
-            of strings, etc.) or a file path (a string) containing a serialized
-            dissimilarity matrix.
+        fp : filepath or filehandle
+            File to read from.
+        kwargs : dict, optional
+            Keyword arguments passed to :mod:`skbio.io.read` and the file
+            format reader.
+
+        Returns
+        -------
+        DissimilarityMatrix
+            Instance of type `cls` containing the parsed contents of `fp`.
+
+        See Also
+        --------
+        write
+        skbio.io.dm
+        skbio.io.read
+
+        """
+        return skbio.io.read(fp, into=cls, **kwargs)
+
+    def write(self, fp, format='dm', **kwargs):
+        """Save dissimilarity matrix to file.
+
+        Supported file formats include:
+
+        - ``dm`` (:mod:`skbio.io.dm`)
+
+        Parameters
+        ----------
+        fp : filepath or filehandle
+            File to write to.
+        format : str, optional
+            File format to write.
+        kwargs : dict, optional
+            Keyword arguments passed to :mod:`skbio.io.write` and the file
+            format writer.
+
+        See Also
+        --------
+        read
+        skbio.io.dm
+        skbio.io.write
+
+        """
+        skbio.io.write(self, into=fp, format=format, **kwargs)
+
+    @classmethod
+    def from_file(cls, dm_f, delimiter='\t'):
+        """Load dissimilarity matrix from delimited text file.
+
+        .. note:: Deprecated in scikit-bio 0.2.0-dev
+           ``from_file`` will be removed in scikit-bio 0.3.0. It is replaced by
+           ``read``, which is a more general method for deserializing
+           dissimilarity/distance matrices. ``read`` supports multiple file
+           formats, automatic file format detection, etc. by taking advantage
+           of scikit-bio's I/O registry system. See :mod:`skbio.io` for more
+           details.
+
+        Creates a ``DissimilarityMatrix`` (or subclass) instance from a ``dm``
+        formatted file. See :mod:`skbio.io.dm` for the format specification.
+
+        Parameters
+        ----------
+        dm_f: filepath or filehandle
+            File to read from.
         delimiter : str, optional
             String delimiting elements in `dm_f`.
 
@@ -139,91 +182,49 @@ class DissimilarityMatrix(object):
         DissimilarityMatrix
             Instance of type `cls` containing the parsed contents of `dm_f`.
 
-        Notes
-        -----
-        Whitespace-only lines can occur anywhere throughout the "file" and are
-        ignored. Lines starting with ``#`` are treated as comments and ignored.
-        These comments can only occur *before* the ID header.
-
-        IDs will have any leading/trailing whitespace removed when they are
-        parsed.
-
-        .. note::
-            File-like objects passed to this method will not be closed upon the
-            completion of the parsing, it is responsibility of the owner of the
-            object to perform this operation.
+        See Also
+        --------
+        read
 
         """
-        # We aren't using np.loadtxt because it uses *way* too much memory
-        # (e.g, a 2GB matrix eats up 10GB, which then isn't freed after parsing
-        # has finished). See:
-        # http://mail.scipy.org/pipermail/numpy-tickets/2012-August/006749.html
+        warnings.warn(
+            "DissimilarityMatrix.from_file and DistanceMatrix.from_file are "
+            "deprecated and will be removed in scikit-bio 0.3.0. Please "
+            "update your code to use DissimilarityMatrix.read and "
+            "DistanceMatrix.read.", UserWarning)
+        return cls.read(dm_f, format='dm', delimiter=delimiter)
 
-        with open_file(dm_f, 'U') as dm_f:
+    def to_file(self, out_f, delimiter='\t'):
+        """Save dissimilarity matrix to file as delimited text.
 
-            # We use iter() as we want to take a single pass over the
-            # iterable and maintain our current position after finding
-            # the header (mainly necessary for something like a list
-            # of strings).
-            dm_f = iter(dm_f)
+        .. note:: Deprecated in scikit-bio 0.2.0-dev
+           ``to_file`` will be removed in scikit-bio 0.3.0. It is replaced by
+           ``write``, which is a more general method for serializing
+           dissimilarity/distance matrices. ``write`` supports multiple file
+           formats by taking advantage of scikit-bio's I/O registry system.
+           See :mod:`skbio.io` for more details.
 
-            # Strategy:
-            #   - find the header
-            #   - initialize an empty ndarray
-            #   - for each row of data in the input file:
-            #     - populate the corresponding row in the ndarray with floats
+        Serializes dissimilarity matrix as a ``dm`` formatted file. See
+        :mod:`skbio.io.dm` for the format specification.
 
-            ids = cls._parse_ids(dm_f, delimiter)
-            num_ids = len(ids)
-            data = np.empty((num_ids, num_ids), dtype=np.float64)
+        Parameters
+        ----------
+        fp : filepath or filehandle
+            File to write to.
+        delimiter : str, optional
+            Delimiter used to separate elements in output format.
 
-            # curr_row_idx keeps track of the row index within the data matrix.
-            # We're not using enumerate() because there may be
-            # empty/whitespace-only lines throughout the data matrix. We want
-            # to ignore those and only count the actual rows of data.
-            curr_row_idx = 0
-            for line in dm_f:
-                line = line.strip()
+        See Also
+        --------
+        write
 
-                if not line:
-                    continue
-                elif curr_row_idx >= num_ids:
-                    # We've hit a nonempty line after we already filled the
-                    # data matrix. Raise an error because we shouldn't ignore
-                    # extra data.
-                    raise DissimilarityMatrixFormatError(
-                        "Encountered extra rows without corresponding IDs in"
-                        " the header.")
-
-                tokens = line.split(delimiter)
-
-                # -1 because the first element contains the current ID.
-                if len(tokens) - 1 != num_ids:
-                    raise DissimilarityMatrixFormatError(
-                        "There are %d values in row number %d, which is not"
-                        " equal to the number of IDs in the header (%d)."
-                        % (len(tokens) - 1, curr_row_idx + 1, num_ids))
-
-                curr_id = tokens[0].strip()
-                expected_id = ids[curr_row_idx]
-                if curr_id == expected_id:
-                    data[curr_row_idx, :] = np.asarray(tokens[1:], dtype=float)
-                else:
-                    raise DissimilarityMatrixFormatError(
-                        "Encountered mismatched IDs while parsing the "
-                        "dissimilarity matrix file. Found '%s' but expected "
-                        "'%s'. Please ensure that the IDs match between the "
-                        "dissimilarity matrix header (first row) and the row "
-                        "labels (first column)." % (curr_id, expected_id))
-
-                curr_row_idx += 1
-
-        if curr_row_idx != num_ids:
-            raise DissimilarityMatrixFormatError(
-                "Expected %d row(s) of data, but found %d." % (num_ids,
-                                                               curr_row_idx))
-
-        return cls(data, ids)
+        """
+        warnings.warn(
+            "DissimilarityMatrix.to_file and DistanceMatrix.to_file are "
+            "deprecated and will be removed in scikit-bio 0.3.0. Please "
+            "update your code to use DissimilarityMatrix.write and "
+            "DistanceMatrix.write.", UserWarning)
+        self.write(out_f, format='dm', delimiter=delimiter)
 
     def __init__(self, data, ids=None):
         if isinstance(data, DissimilarityMatrix):
@@ -596,54 +597,6 @@ class DissimilarityMatrix(object):
         else:
             return self.data.__getitem__(index)
 
-    def to_file(self, out_f, delimiter='\t'):
-        """Save the dissimilarity matrix to file in delimited text format.
-
-        Parameters
-        ----------
-        out_f : file-like object or filename
-            File-like object to write serialized data to, or name of
-            file. If it's a file-like object, it must have a ``write``
-            method, and it won't be closed. Else, it is opened and
-            closed after writing.
-        delimiter : str, optional
-            Delimiter used to separate elements in output format.
-
-        See Also
-        --------
-        from_file
-
-        """
-        with open_file(out_f, 'w') as out_f:
-            formatted_ids = self._format_ids(delimiter)
-            out_f.write(formatted_ids)
-            out_f.write('\n')
-
-            for id_, vals in zip(self.ids, self.data):
-                out_f.write(id_)
-                out_f.write(delimiter)
-                out_f.write(delimiter.join(np.asarray(vals, dtype=np.str)))
-                out_f.write('\n')
-
-    @staticmethod
-    def _parse_ids(dm_f, delimiter):
-        header_line = None
-
-        for line in dm_f:
-            line = line.strip()
-
-            if line and not line.startswith('#'):
-                header_line = line
-                break
-
-        if header_line is None:
-            raise DissimilarityMatrixFormatError(
-                "Could not find a header line containing IDs in the "
-                "dissimilarity matrix file. Please verify that the file is "
-                "not empty.")
-        else:
-            return [e.strip() for e in header_line.split(delimiter)]
-
     def _validate(self, data, ids):
         """Validate the data array and IDs.
 
@@ -694,9 +647,6 @@ class DissimilarityMatrix(object):
         return (isinstance(index, tuple) and
                 len(index) == 2 and
                 all(map(lambda e: isinstance(e, string_types), index)))
-
-    def _format_ids(self, delimiter):
-        return delimiter.join([''] + list(self.ids))
 
     def _pprint_ids(self, max_chars=80, delimiter=', ', suffix='...',):
         # Adapted from http://stackoverflow.com/a/250373

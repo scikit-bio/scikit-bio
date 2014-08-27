@@ -29,6 +29,16 @@ class UnrecognizedFormatError(FileFormatError):
     pass
 
 
+class DMFormatError(FileFormatError):
+    """Raised when a ``dm`` formatted file cannot be parsed."""
+    pass
+
+
+class InvalidRegistrationError(Exception):
+    """Raised if function doesn't meet the expected API of its registration."""
+    pass
+
+
 class DuplicateRegistrationError(Exception):
     """Raised when a function is already registered in skbio.io"""
 
