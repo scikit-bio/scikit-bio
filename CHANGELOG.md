@@ -6,7 +6,8 @@
 
 * Added QSEQ parsing function ``parse_qseq`` and iterator ``QseqIterator`` to ``skbio.parse.sequences``.
 * Added ``strict`` and ``lookup`` optional parameters to ``skbio.stats.distance.mantel`` for handling reordering and matching of IDs when provided ``DistanceMatrix`` instances as input (these parameters were previously only available in ``skbio.stats.distance.pwmantel``).
-* ``skbio.stats.distance.pwmantel`` now accepts an iterable of ``array_like`` objects. Previously, only ``DistanceMatrix`` instances were allowed. 
+* ``skbio.stats.distance.pwmantel`` now accepts an iterable of ``array_like`` objects. Previously, only ``DistanceMatrix`` instances were allowed.
+* Added ``read`` and ``write`` methods to ``DissimilarityMatrix`` and ``DistanceMatrix``. These methods can support multiple file formats, automatic file format detection when reading, etc. by taking advantage of scikit-bio's I/O registry system. See ``skbio.io`` and ``skbio.io.dm`` for more details. Deprecated ``from_file`` and ``to_file`` methods in favor of ``read`` and ``write``. These methods will be removed in scikit-bio 0.3.0.
 
 ### Backward-incompatible changes
 

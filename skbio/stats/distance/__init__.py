@@ -61,7 +61,6 @@ Exceptions
 
    DissimilarityMatrixError
    DistanceMatrixError
-   DissimilarityMatrixFormatError
    MissingIDError
 
 Examples
@@ -78,11 +77,11 @@ Load a distance matrix from the file:
 
 >>> from StringIO import StringIO
 >>> from skbio import DistanceMatrix
->>> dm_f = StringIO("\\ta\\tb\\tc\\n"
-...                 "a\\t0.0\\t0.5\\t1.0\\n"
-...                 "b\\t0.5\\t0.0\\t0.75\\n"
-...                 "c\\t1.0\\t0.75\\t0.0\\n")
->>> dm = DistanceMatrix.from_file(dm_f)
+>>> dm_fh = StringIO("\\ta\\tb\\tc\\n"
+...                  "a\\t0.0\\t0.5\\t1.0\\n"
+...                  "b\\t0.5\\t0.0\\t0.75\\n"
+...                  "c\\t1.0\\t0.75\\t0.0\\n")
+>>> dm = DistanceMatrix.read(dm_fh)
 >>> print(dm)
 3x3 distance matrix
 IDs:
@@ -109,9 +108,9 @@ array([ 1.  ,  0.75,  0.  ])
 
 Serialize the distance matrix to delimited text file:
 
->>> out_f = StringIO()
->>> dm.to_file(out_f)
->>> out_f.getvalue() == dm_f.getvalue()
+>>> out_fh = StringIO()
+>>> dm.write(out_fh)
+>>> out_fh.getvalue() == dm_fh.getvalue()
 True
 
 A distance matrix object can also be created from an existing ``numpy.array``
@@ -291,8 +290,7 @@ References
 # ----------------------------------------------------------------------------
 
 from ._base import (DissimilarityMatrixError, DistanceMatrixError,
-                    MissingIDError, DissimilarityMatrixFormatError,
-                    DissimilarityMatrix, DistanceMatrix,
+                    MissingIDError, DissimilarityMatrix, DistanceMatrix,
                     CategoricalStatsResults, randdm)
 from ._bioenv import bioenv
 from ._anosim import ANOSIM
@@ -300,9 +298,9 @@ from ._permanova import PERMANOVA
 from ._mantel import mantel, pwmantel
 
 __all__ = ['DissimilarityMatrixError', 'DistanceMatrixError', 'MissingIDError',
-           'DissimilarityMatrixFormatError', 'DissimilarityMatrix',
-           'DistanceMatrix', 'randdm', 'ANOSIM', 'PERMANOVA',
-           'CategoricalStatsResults', 'bioenv', 'mantel', 'pwmantel']
+           'DissimilarityMatrix', 'DistanceMatrix', 'randdm', 'ANOSIM',
+           'PERMANOVA', 'CategoricalStatsResults', 'bioenv', 'mantel',
+           'pwmantel']
 
 from numpy.testing import Tester
 test = Tester().test
