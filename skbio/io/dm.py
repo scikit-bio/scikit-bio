@@ -70,33 +70,22 @@ from skbio.io import (register_reader, register_writer, register_sniffer,
 
 @register_sniffer('dm')
 def dm_sniffer(fh):
-    valid = False
-    kwargs = {}
-
     header = _find_header(fh)
 
-    if header is None:
-        return valid, kwargs
+    if header is not None:
+        try:
+            dialect = csv.Sniffer().sniff(header)
+            delimiter = dialect.delimiter
 
-    try:
-        dialect = csv.Sniffer().sniff(header)
-    except csv.Error:
-        return valid, kwargs
+            ids = _parse_header(header, delimiter)
+            first_id, _ = next(_parse_data(fh, delimiter), (None, None))
 
-    delimiter = dialect.delimiter
+            if first_id is not None and first_id == ids[0]:
+                return True, {'delimiter': delimiter}
+        except (csv.Error, DMFormatError):
+            pass
 
-    try:
-        ids = _parse_header(header, delimiter)
-    except DMFormatError:
-        return valid, kwargs
-
-    first_id, _ = next(_parse_data(fh, delimiter), (None, None))
-
-    if first_id is not None and first_id == ids[0]:
-        valid = True
-        kwargs['delimiter'] = delimiter
-
-    return valid, kwargs
+    return False, {}
 
 
 @register_reader('dm', DissimilarityMatrix)
