@@ -10,6 +10,7 @@ from __future__ import absolute_import, division, print_function
 from future.utils.six import StringIO, string_types
 
 import csv
+import warnings
 from copy import deepcopy
 
 import numpy as np
@@ -153,6 +154,77 @@ class DissimilarityMatrix(object):
 
         """
         skbio.io.write(self, into=fp, format=format, **kwargs)
+
+    @classmethod
+    def from_file(cls, dm_f, delimiter='\t'):
+        """Load dissimilarity matrix from delimited text file.
+
+        .. note:: Deprecated in scikit-bio 0.2.0-dev
+           ``from_file`` will be removed in scikit-bio 0.3.0. It is replaced by
+           ``read``, which is a more general method for deserializing
+           dissimilarity/distance matrices. ``read`` supports multiple file
+           formats, automatic file format detection, etc. by taking advantage
+           of scikit-bio's I/O registry system. See :mod:`skbio.io` for more
+           details.
+
+        Creates a ``DissimilarityMatrix`` (or subclass) instance from a ``dm``
+        formatted file. See :mod:`skbio.io.dm` for the format specification.
+
+        Parameters
+        ----------
+        dm_f: filepath or filehandle
+            File to read from.
+        delimiter : str, optional
+            String delimiting elements in `dm_f`.
+
+        Returns
+        -------
+        DissimilarityMatrix
+            Instance of type `cls` containing the parsed contents of `dm_f`.
+
+        See Also
+        --------
+        read
+
+        """
+        warnings.warn(
+            "DissimilarityMatrix.from_file and DistanceMatrix.from_file are "
+            "deprecated and will be removed in scikit-bio 0.3.0. Please "
+            "update your code to use DissimilarityMatrix.read and "
+            "DistanceMatrix.read.", UserWarning)
+        return cls.read(dm_f, format='dm', delimiter=delimiter)
+
+    def to_file(self, out_f, delimiter='\t'):
+        """Save dissimilarity matrix to file as delimited text.
+
+        .. note:: Deprecated in scikit-bio 0.2.0-dev
+           ``to_file`` will be removed in scikit-bio 0.3.0. It is replaced by
+           ``write``, which is a more general method for serializing
+           dissimilarity/distance matrices. ``write`` supports multiple file
+           formats by taking advantage of scikit-bio's I/O registry system.
+           See :mod:`skbio.io` for more details.
+
+        Serializes dissimilarity matrix as a ``dm`` formatted file. See
+        :mod:`skbio.io.dm` for the format specification.
+
+        Parameters
+        ----------
+        fp : filepath or filehandle
+            File to write to.
+        delimiter : str, optional
+            Delimiter used to separate elements in output format.
+
+        See Also
+        --------
+        write
+
+        """
+        warnings.warn(
+            "DissimilarityMatrix.to_file and DistanceMatrix.to_file are "
+            "deprecated and will be removed in scikit-bio 0.3.0. Please "
+            "update your code to use DissimilarityMatrix.write and "
+            "DistanceMatrix.write.", UserWarning)
+        self.write(out_f, format='dm', delimiter=delimiter)
 
     def __init__(self, data, ids=None):
         if isinstance(data, DissimilarityMatrix):

@@ -64,6 +64,15 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         self.assertEqual(deserialized, self.dm_3x3)
         self.assertTrue(type(deserialized) == DissimilarityMatrix)
 
+    def test_deprecated_io(self):
+        fh = StringIO()
+        npt.assert_warns(UserWarning, self.dm_3x3.to_file, fh)
+        fh.seek(0)
+        deserialized = npt.assert_warns(UserWarning,
+                                        DissimilarityMatrix.from_file, fh)
+        self.assertEqual(deserialized, self.dm_3x3)
+        self.assertTrue(type(deserialized) == DissimilarityMatrix)
+
     def test_init_from_dm(self):
         ids = ['foo', 'bar', 'baz']
 
@@ -417,6 +426,15 @@ class DistanceMatrixTests(DissimilarityMatrixTestData):
         self.dm_3x3.write(fh)
         fh.seek(0)
         deserialized = DistanceMatrix.read(fh)
+        self.assertEqual(deserialized, self.dm_3x3)
+        self.assertTrue(type(deserialized) == DistanceMatrix)
+
+    def test_deprecated_io(self):
+        fh = StringIO()
+        npt.assert_warns(UserWarning, self.dm_3x3.to_file, fh)
+        fh.seek(0)
+        deserialized = npt.assert_warns(UserWarning,
+                                        DistanceMatrix.from_file, fh)
         self.assertEqual(deserialized, self.dm_3x3)
         self.assertTrue(type(deserialized) == DistanceMatrix)
 
