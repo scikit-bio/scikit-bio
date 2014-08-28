@@ -289,46 +289,53 @@ def _parse_biplot(fh):
 
 @register_writer('ordres', OrdinationResults)
 def _ordination_results_to_ordres(obj, fh):
-    fh.write("Eigvals\t%d\n" % obj.eigvals.shape)
-    fh.write("%s\n\n" % '\t'.join(np.asarray(obj.eigvals, dtype=np.str)))
+    _write_vector_section(fh, 'Eigvals', obj.eigvals)
+    _write_vector_section(fh, 'Proportion explained', obj.proportion_explained)
+    _write_array_section(fh, 'Species', obj.species, obj.species_ids)
+    _write_array_section(fh, 'Site', obj.site, obj.site_ids)
+    _write_array_section(fh, 'Biplot', obj.biplot)
+    _write_array_section(fh, 'Site constraints', obj.site_constraints,
+                         obj.site_ids, include_section_separator=False)
 
-    if obj.proportion_explained is None:
-        fh.write("Proportion explained\t0\n\n")
-    else:
-        fh.write("Proportion explained\t%d\n" % obj.proportion_explained.shape)
-        fh.write("%s\n\n" %
-                 '\t'.join(np.asarray(obj.proportion_explained, dtype=np.str)))
 
-    if obj.species is None:
-        fh.write("Species\t0\t0\n\n")
+def _write_vector_section(fh, header_id, vector):
+    if vector is None:
+        shape = 0
     else:
-        fh.write("Species\t%d\t%d\n" % obj.species.shape)
-        for id_, vals in zip(obj.species_ids, obj.species):
-            fh.write("%s\t%s\n" %
-                     (id_, '\t'.join(np.asarray(vals, dtype=np.str))))
+        shape = vector.shape[0]
+    fh.write("%s\t%d\n" % (header_id, shape))
+
+    if vector is not None:
+        fh.write(_format_vector(vector))
+    fh.write("\n")
+
+
+def _write_array_section(fh, header_id, data, ids=None,
+                         include_section_separator=True):
+    # write section header
+    if data is None:
+        shape = (0, 0)
+    else:
+        shape = data.shape
+    fh.write("%s\t%d\t%d\n" % (header_id, shape[0], shape[1]))
+
+    # write section data
+    if data is not None:
+        if ids is None:
+            for vals in data:
+                fh.write(_format_vector(vals))
+        else:
+            for id_, vals in zip(ids, data):
+                fh.write(_format_vector(vals, id_))
+
+    if include_section_separator:
         fh.write("\n")
 
-    if obj.site is None:
-        fh.write("Site\t0\t0\n\n")
-    else:
-        fh.write("Site\t%d\t%d\n" % obj.site.shape)
-        for id_, vals in zip(obj.site_ids, obj.site):
-            fh.write("%s\t%s\n" %
-                     (id_, '\t'.join(np.asarray(vals, dtype=np.str))))
-        fh.write("\n")
 
-    if obj.biplot is None:
-        fh.write("Biplot\t0\t0\n\n")
-    else:
-        fh.write("Biplot\t%d\t%d\n" % obj.biplot.shape)
-        for vals in obj.biplot:
-            fh.write("%s\n" % '\t'.join(np.asarray(vals, dtype=np.str)))
-        fh.write("\n")
+def _format_vector(vector, id_=None):
+    formatted_vector = '\t'.join(np.asarray(vector, dtype=np.str))
 
-    if obj.site_constraints is None:
-        fh.write("Site constraints\t0\t0\n")
+    if id_ is None:
+        return "%s\n" % formatted_vector
     else:
-        fh.write("Site constraints\t%d\t%d\n" % obj.site_constraints.shape)
-        for id_, vals in zip(obj.site_ids, obj.site_constraints):
-            fh.write("%s\t%s\n" %
-                     (id_, '\t'.join(np.asarray(vals, dtype=np.str))))
+        return "%s\t%s\n" % (id_, formatted_vector)
