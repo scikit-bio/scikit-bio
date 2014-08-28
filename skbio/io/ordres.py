@@ -113,9 +113,12 @@ def _ordres_sniffer(fh):
 
 @register_reader('ordres', OrdinationResults)
 def _ordres_to_ordination_results(fh):
-    eigvals = _parse_eigvals(fh)
+    eigvals = _parse_vector_section(fh, 'Eigvals')
+    if eigvals is None:
+        raise OrdResFormatError("At least one eigval must be present.")
+
     _check_empty_line(fh)
-    prop_expl = _parse_proportion_explained(fh)
+    prop_expl = _parse_vector_section(fh, 'Proportion explained')
 
     if prop_expl is not None:
         if len(prop_expl) != len(eigvals):
@@ -124,7 +127,7 @@ def _ordres_to_ordination_results(fh):
                 "eigvals: %d != %d" % (len(prop_expl), len(eigvals)))
 
     _check_empty_line(fh)
-    species, species_ids = _parse_coords(fh, 'Species')
+    species, species_ids = _parse_array_section(fh, 'Species')
 
     if species is not None:
         if len(species[0]) != len(eigvals):
@@ -133,7 +136,7 @@ def _ordres_to_ordination_results(fh):
                 "%d != %d" % (len(species[0]), len(eigvals)))
 
     _check_empty_line(fh)
-    site, site_ids = _parse_coords(fh, 'Site')
+    site, site_ids = _parse_array_section(fh, 'Site')
 
     if site is not None:
         if len(site[0]) != len(eigvals):
@@ -143,9 +146,9 @@ def _ordres_to_ordination_results(fh):
 
     _check_empty_line(fh)
     # biplot does not have ids to parse (the other arrays do)
-    biplot, _ = _parse_coords(fh, 'Biplot', has_ids=False)
+    biplot, _ = _parse_array_section(fh, 'Biplot', has_ids=False)
     _check_empty_line(fh)
-    cons, cons_ids = _parse_coords(fh, 'Site constraints')
+    cons, cons_ids = _parse_array_section(fh, 'Site constraints')
 
     if cons_ids is not None and site_ids is not None:
         if cons_ids != site_ids:
@@ -183,67 +186,45 @@ def _check_empty_line(fh):
         raise OrdResFormatError("Expected an empty line.")
 
 
-def _parse_eigvals(fh):
-    # The first line should contain the Eigvals header:
-    # Eigvals<tab>NumEigvals
-    header = _parse_header(fh, 'Eigvals', 1)
+def _parse_vector_section(fh, header_id):
+    header = _parse_header(fh, header_id, 1)
 
-    # Parse how many eigvals we are waiting for
-    num_eigvals = int(header[1])
-    if num_eigvals == 0:
-        raise OrdResFormatError("At least one eigval should be present.")
-
-    # Parse the eigvals, present on the next line
-    # Eigval_1<tab>Eigval_2<tab>Eigval_3<tab>...
-    eigvals = np.asarray(next(fh).strip().split('\t'), dtype=np.float64)
-    if len(eigvals) != num_eigvals:
-        raise OrdResFormatError("Expected %d eigvals, but found %d." %
-                                (num_eigvals, len(eigvals)))
-    return eigvals
-
-
-def _parse_proportion_explained(fh):
-    # Parse the proportion explained header:
-    # Proportion explained<tab>NumPropExpl
-    header = _parse_header(fh, 'Proportion explained', 1)
-
-    # Parse how many prop expl values are we waiting for
-    num_prop_expl = int(header[1])
-    if num_prop_expl == 0:
-        # The ordination method didn't generate the prop explained vector
-        # set it to None
-        prop_expl = None
+    # Parse how many values we are waiting for
+    num_vals = int(header[1])
+    if num_vals == 0:
+        # The ordination method didn't generate the vector, so set it to None
+        vals = None
     else:
-        # Parse the line with the proportion explained values
-        prop_expl = np.asarray(next(fh).strip().split('\t'), dtype=np.float64)
-        if len(prop_expl) != num_prop_expl:
+        # Parse the line with the vector values
+        vals = np.asarray(next(fh).strip().split('\t'), dtype=np.float64)
+        if len(vals) != num_vals:
             raise OrdResFormatError(
-                "Expected %d proportion explained values, but found %d." %
-                (num_prop_expl, len(prop_expl)))
-    return prop_expl
+                "Expected %d values in %s section, but found %d." %
+                (num_vals, header_id, len(vals)))
+    return vals
 
 
-def _parse_coords(fh, header_id, has_ids=True):
-    """Parse a coordinates section of `fh` identified by `header_id`."""
-    # Parse the coords header
+def _parse_array_section(fh, header_id, has_ids=True):
+    """Parse an array section of `fh` identified by `header_id`."""
+    # Parse the array header
     header = _parse_header(fh, header_id, 2)
 
-    # Parse the dimensions of the coord matrix
+    # Parse the dimensions of the array
     rows = int(header[1])
     cols = int(header[2])
 
     ids = None
     if rows == 0 and cols == 0:
-        # The ordination method didn't generate the coords for 'header'
-        # Set the results to None
-        coords = None
+        # The ordination method didn't generate the array data for 'header', so
+        # set it to None
+        data = None
     elif rows == 0 or cols == 0:
         # Both dimensions should be 0 or none of them are zero
         raise OrdResFormatError("One dimension of %s is 0: %d x %d" %
                                 (header_id, rows, cols))
     else:
-        # Parse the coords
-        coords = np.empty((rows, cols), dtype=np.float64)
+        # Parse the data
+        data = np.empty((rows, cols), dtype=np.float64)
 
         if has_ids:
             ids = []
@@ -260,8 +241,8 @@ def _parse_coords(fh, header_id, has_ids=True):
                 raise OrdResFormatError(
                     "Expected %d values, but found %d in row %d." %
                     (cols, len(vals), i + 1))
-            coords[i, :] = np.asarray(vals, dtype=np.float64)
-    return coords, ids
+            data[i, :] = np.asarray(vals, dtype=np.float64)
+    return data, ids
 
 
 @register_writer('ordres', OrdinationResults)
