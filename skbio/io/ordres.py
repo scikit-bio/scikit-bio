@@ -142,7 +142,8 @@ def _ordres_to_ordination_results(fh):
                 "%d != %d" % (len(site[0]), len(eigvals)))
 
     _check_empty_line(fh)
-    biplot = _parse_biplot(fh)
+    # biplot does not have ids to parse (the other arrays do)
+    biplot, _ = _parse_coords(fh, 'Biplot', has_ids=False)
     _check_empty_line(fh)
     cons, cons_ids = _parse_coords(fh, 'Site constraints')
 
@@ -222,7 +223,7 @@ def _parse_proportion_explained(fh):
     return prop_expl
 
 
-def _parse_coords(fh, header_id):
+def _parse_coords(fh, header_id, has_ids=True):
     """Parse a coordinates section of `fh` identified by `header_id`."""
     # Parse the coords header
     header = _parse_header(fh, header_id, 2)
@@ -231,60 +232,36 @@ def _parse_coords(fh, header_id):
     rows = int(header[1])
     cols = int(header[2])
 
+    ids = None
     if rows == 0 and cols == 0:
         # The ordination method didn't generate the coords for 'header'
         # Set the results to None
         coords = None
-        ids = None
-    elif (rows == 0 and cols != 0) or (rows != 0 and cols == 0):
+    elif rows == 0 or cols == 0:
         # Both dimensions should be 0 or none of them are zero
         raise OrdResFormatError("One dimension of %s is 0: %d x %d" %
                                 (header_id, rows, cols))
     else:
         # Parse the coords
         coords = np.empty((rows, cols), dtype=np.float64)
-        ids = []
+
+        if has_ids:
+            ids = []
+
         for i in range(rows):
             # Parse the next row of data
             vals = next(fh).strip().split('\t')
-            # The +1 comes from the row header (which contains the row id)
-            if len(vals) != cols + 1:
-                raise OrdResFormatError(
-                    "Expected %d values, but found %d in row %d." %
-                    (cols, len(vals) - 1, i + 1))
-            ids.append(vals[0])
-            coords[i, :] = np.asarray(vals[1:], dtype=np.float64)
-    return coords, ids
 
+            if has_ids:
+                ids.append(vals[0])
+                vals = vals[1:]
 
-def _parse_biplot(fh):
-    # Parse the biplot header
-    header = _parse_header(fh, 'Biplot', 2)
-
-    # Parse the dimensions of the Biplot matrix
-    rows = int(header[1])
-    cols = int(header[2])
-
-    if rows == 0 and cols == 0:
-        # The ordination method didn't generate the biplot matrix
-        # Set the results to None
-        biplot = None
-    elif (rows == 0 and cols != 0) or (rows != 0 and cols == 0):
-        # Both dimensions should be 0 or none of them are zero
-        raise OrdResFormatError("One dimension of %s is 0: %d x %d" %
-                                (header[0], rows, cols))
-    else:
-        # Parse the biplot matrix
-        biplot = np.empty((rows, cols), dtype=np.float64)
-        for i in range(rows):
-            # Parse the next row of data
-            vals = next(fh).strip().split('\t')
             if len(vals) != cols:
                 raise OrdResFormatError(
                     "Expected %d values, but found %d in row %d." %
                     (cols, len(vals), i + 1))
-            biplot[i, :] = np.asarray(vals, dtype=np.float64)
-    return biplot
+            coords[i, :] = np.asarray(vals, dtype=np.float64)
+    return coords, ids
 
 
 @register_writer('ordres', OrdinationResults)
