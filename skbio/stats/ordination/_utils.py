@@ -7,7 +7,10 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
+
 import numpy as np
+import numpy.testing as npt
+from nose.tools import assert_is
 
 
 def mean_and_std(a, axis=None, weights=None, with_mean=True, with_std=True,
@@ -169,3 +172,53 @@ def corr(x, y=None):
     # the default), so now we need to remove it by also using ddof=0
     # (dividing by n)
     return x.T.dot(y) / x.shape[0]
+
+
+def assert_ordination_results_equal(left, right):
+    """Assert that ordination results objects are equal.
+
+    This is a helper function intended to be used in unit tests that need to
+    compare ``OrdinationResults`` objects.
+
+    For numeric attributes (e.g., eigvals, site, etc.),
+    ``numpy.testing.assert_almost_equal`` is used. Otherwise,
+    ``numpy.testing.assert_equal`` is used for comparisons. An assertion is
+    in place to ensure the two objects are exactly the same type.
+
+    Parameters
+    ----------
+    left, right : OrdinationResults
+        Ordination results to be compared for equality.
+
+    Raises
+    ------
+    AssertionError
+        If the two objects are not equal.
+
+    """
+    assert_is(type(left), type(right))
+
+    # eigvals should always be present
+    npt.assert_almost_equal(left.eigvals, right.eigvals)
+
+    # these attributes are strings, so can compare directly, even if one or
+    # both are None
+    npt.assert_equal(left.species_ids, right.species_ids)
+    npt.assert_equal(left.site_ids, right.site_ids)
+
+    # these attributes need to be checked that they are almost equal, but one
+    # or both can be None, which npt.assert_almost_equal doesn't like
+    _assert_optional_numeric_attr_equal(left.species, right.species)
+    _assert_optional_numeric_attr_equal(left.site, right.site)
+    _assert_optional_numeric_attr_equal(left.biplot, right.biplot)
+    _assert_optional_numeric_attr_equal(left.site_constraints,
+                                        right.site_constraints)
+    _assert_optional_numeric_attr_equal(left.proportion_explained,
+                                        right.proportion_explained)
+
+
+def _assert_optional_numeric_attr_equal(left, right):
+    if left is None or right is None:
+        npt.assert_equal(left, right)
+    else:
+        npt.assert_almost_equal(left, right)

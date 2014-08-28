@@ -17,7 +17,8 @@ import numpy.testing as npt
 from skbio.io import OrdResFormatError
 from skbio.io.ordres import (_ordres_to_ordination_results,
                              _ordination_results_to_ordres, _ordres_sniffer)
-from skbio.stats.ordination import OrdinationResults
+from skbio.stats.ordination import (
+    OrdinationResults, assert_ordination_results_equal)
 from skbio.util import get_data_path
 
 
@@ -157,41 +158,10 @@ class OrdinationResultsReaderWriterTests(OrdResTestData):
         self.ordination_results_objs = [ca_scores, cca_scores, pcoa_scores,
                                         rda_scores]
 
-    def check_ordination_results_equal(self, obs, exp):
-        npt.assert_almost_equal(obs.eigvals, exp.eigvals)
-        if exp.species is not None:
-            npt.assert_almost_equal(obs.species, exp.species)
-        else:
-            npt.assert_equal(obs.species, exp.species)
-        npt.assert_equal(obs.species_ids, exp.species_ids)
-
-        if exp.site is not None:
-            npt.assert_almost_equal(obs.site, exp.site)
-        else:
-            npt.assert_equal(obs.site, exp.site)
-        npt.assert_equal(obs.site_ids, exp.site_ids)
-
-        if exp.biplot is not None:
-            npt.assert_almost_equal(obs.biplot, exp.biplot)
-        else:
-            npt.assert_equal(obs.biplot, exp.biplot)
-
-        if exp.site_constraints is not None:
-            npt.assert_almost_equal(obs.site_constraints, exp.site_constraints)
-        else:
-            npt.assert_equal(obs.site_constraints, exp.site_constraints)
-
-        if exp.proportion_explained is not None:
-            npt.assert_almost_equal(obs.proportion_explained,
-                                    exp.proportion_explained)
-        else:
-            npt.assert_equal(obs.proportion_explained,
-                             exp.proportion_explained)
-
     def test_read_valid_files(self):
         for fp, obj in zip(self.valid_fps, self.ordination_results_objs):
                 obs = _ordres_to_ordination_results(fp)
-                self.check_ordination_results_equal(obs, obj)
+                assert_ordination_results_equal(obs, obj)
 
     def test_read_invalid_files(self):
         for invalid_fp, error_msg_regexp, _ in self.invalid_fps:
@@ -224,7 +194,7 @@ class OrdinationResultsReaderWriterTests(OrdResTestData):
             obj2 = _ordres_to_ordination_results(fh)
             fh.close()
 
-            self.check_ordination_results_equal(obj1, obj2)
+            assert_ordination_results_equal(obj1, obj2)
 
 
 class SnifferTests(OrdResTestData):

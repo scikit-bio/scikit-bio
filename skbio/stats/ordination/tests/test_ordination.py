@@ -17,8 +17,9 @@ import numpy.testing as npt
 from scipy.spatial.distance import pdist
 
 from skbio import DistanceMatrix
-from skbio.stats.ordination import (CA, RDA, CCA, PCoA, OrdinationResults,
-                                    corr, mean_and_std)
+from skbio.stats.ordination import (
+    CA, RDA, CCA, PCoA, OrdinationResults, corr, mean_and_std,
+    assert_ordination_results_equal)
 from skbio.util import get_data_path
 
 
@@ -262,6 +263,56 @@ class TestUtils(object):
     def test_corr_shape_mismatch(self):
         with npt.assert_raises(ValueError):
             corr(self.x, self.y)
+
+    def test_assert_ordination_results_equal(self):
+        minimal1 = OrdinationResults([1, 2])
+
+        # a minimal set of results should be equal to itself
+        assert_ordination_results_equal(minimal1, minimal1)
+
+        # type mismatch
+        with npt.assert_raises(AssertionError):
+            assert_ordination_results_equal(minimal1, 'foo')
+
+        # numeric values should be checked that they're almost equal
+        almost_minimal1 = OrdinationResults([1.0000001, 1.9999999])
+        assert_ordination_results_equal(minimal1, almost_minimal1)
+
+        # species_ids missing in one, present in the other
+        almost_minimal1.species_ids = ['abc', 'def']
+        with npt.assert_raises(AssertionError):
+            assert_ordination_results_equal(minimal1, almost_minimal1)
+        almost_minimal1.species_ids = None
+
+        # site_ids missing in one, present in the other
+        almost_minimal1.site_ids = ['abc', 'def']
+        with npt.assert_raises(AssertionError):
+            assert_ordination_results_equal(minimal1, almost_minimal1)
+        almost_minimal1.site_ids = None
+
+        # test each of the optional numeric attributes
+        for attr in ('species', 'site', 'biplot', 'site_constraints',
+                     'proportion_explained'):
+            # missing optional numeric attribute in one, present in the other
+            setattr(almost_minimal1, attr, [[1, 2], [3, 4]])
+            with npt.assert_raises(AssertionError):
+                assert_ordination_results_equal(minimal1, almost_minimal1)
+            setattr(almost_minimal1, attr, None)
+
+            # optional numeric attributes present in both, but not almost equal
+            setattr(minimal1, attr, [[1, 2], [3, 4]])
+            setattr(almost_minimal1, attr, [[1, 2], [3.00002, 4]])
+            with npt.assert_raises(AssertionError):
+                assert_ordination_results_equal(minimal1, almost_minimal1)
+            setattr(minimal1, attr, None)
+            setattr(almost_minimal1, attr, None)
+
+            # optional numeric attributes present in both, and almost equal
+            setattr(minimal1, attr, [[1, 2], [3, 4]])
+            setattr(almost_minimal1, attr, [[1, 2], [3.00000002, 4]])
+            assert_ordination_results_equal(minimal1, almost_minimal1)
+            setattr(minimal1, attr, None)
+            setattr(almost_minimal1, attr, None)
 
 
 class TestCAResults(object):
@@ -584,39 +635,6 @@ class TestOrdinationResults(unittest.TestCase):
             proportion_explained=prop_explained, species_ids=species_ids,
             site_ids=site_ids)
 
-    def check_OrdinationResults_equal(self, obs_scores, exp_scores):
-        npt.assert_almost_equal(obs_scores.eigvals, exp_scores.eigvals)
-        if exp_scores.species is not None:
-            npt.assert_almost_equal(obs_scores.species, exp_scores.species)
-        else:
-            npt.assert_equal(obs_scores.species, exp_scores.species)
-        npt.assert_equal(obs_scores.species_ids, exp_scores.species_ids)
-
-        if exp_scores.site is not None:
-            npt.assert_almost_equal(obs_scores.site, exp_scores.site)
-        else:
-            npt.assert_equal(obs_scores.site, exp_scores.site)
-        npt.assert_equal(obs_scores.site_ids, exp_scores.site_ids)
-
-        if exp_scores.biplot is not None:
-            npt.assert_almost_equal(obs_scores.biplot, exp_scores.biplot)
-        else:
-            npt.assert_equal(obs_scores.biplot, exp_scores.biplot)
-
-        if exp_scores.site_constraints is not None:
-            npt.assert_almost_equal(obs_scores.site_constraints,
-                                    exp_scores.site_constraints)
-        else:
-            npt.assert_equal(obs_scores.site_constraints,
-                             exp_scores.site_constraints)
-
-        if exp_scores.proportion_explained is not None:
-            npt.assert_almost_equal(obs_scores.proportion_explained,
-                                    exp_scores.proportion_explained)
-        else:
-            npt.assert_equal(obs_scores.proportion_explained,
-                             exp_scores.proportion_explained)
-
     def test_io(self):
         # Very basic check that read/write public API is present and appears to
         # be functioning. Roundtrip from memory -> disk -> memory and ensure
@@ -625,8 +643,7 @@ class TestOrdinationResults(unittest.TestCase):
         self.ordination_results.write(fh)
         fh.seek(0)
         deserialized = OrdinationResults.read(fh)
-        self.check_OrdinationResults_equal(deserialized,
-                                           self.ordination_results)
+        assert_ordination_results_equal(deserialized, self.ordination_results)
         self.assertTrue(type(deserialized) == OrdinationResults)
 
     def test_deprecated_io(self):
@@ -635,8 +652,7 @@ class TestOrdinationResults(unittest.TestCase):
         fh.seek(0)
         deserialized = npt.assert_warns(UserWarning,
                                         OrdinationResults.from_file, fh)
-        self.check_OrdinationResults_equal(deserialized,
-                                           self.ordination_results)
+        assert_ordination_results_equal(deserialized, self.ordination_results)
         self.assertTrue(type(deserialized) == OrdinationResults)
 
 
