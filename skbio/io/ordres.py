@@ -116,38 +116,27 @@ def _ordres_to_ordination_results(fh):
     eigvals = _parse_vector_section(fh, 'Eigvals')
     if eigvals is None:
         raise OrdResFormatError("At least one eigval must be present.")
-
     _check_empty_line(fh)
+
     prop_expl = _parse_vector_section(fh, 'Proportion explained')
-
-    if prop_expl is not None:
-        if len(prop_expl) != len(eigvals):
-            raise OrdResFormatError(
-                "There should be as many proportion explained values as "
-                "eigvals: %d != %d" % (len(prop_expl), len(eigvals)))
-
+    _check_length_against_eigvals(prop_expl, eigvals,
+                                  'proportion explained values')
     _check_empty_line(fh)
+
     species, species_ids = _parse_array_section(fh, 'Species')
-
-    if species is not None:
-        if len(species[0]) != len(eigvals):
-            raise OrdResFormatError(
-                "There should be as many coordinates per species as eigvals: "
-                "%d != %d" % (len(species[0]), len(eigvals)))
-
+    _check_length_against_eigvals(species, eigvals,
+                                  'coordinates per species')
     _check_empty_line(fh)
+
     site, site_ids = _parse_array_section(fh, 'Site')
-
-    if site is not None:
-        if len(site[0]) != len(eigvals):
-            raise OrdResFormatError(
-                "There should be as many coordinates per site as eigvals: "
-                "%d != %d" % (len(site[0]), len(eigvals)))
-
+    _check_length_against_eigvals(site, eigvals,
+                                  'coordinates per site')
     _check_empty_line(fh)
+
     # biplot does not have ids to parse (the other arrays do)
     biplot, _ = _parse_array_section(fh, 'Biplot', has_ids=False)
     _check_empty_line(fh)
+
     cons, cons_ids = _parse_array_section(fh, 'Site constraints')
 
     if cons_ids is not None and site_ids is not None:
@@ -184,6 +173,17 @@ def _check_empty_line(fh):
 
     if line.strip():
         raise OrdResFormatError("Expected an empty line.")
+
+
+def _check_length_against_eigvals(data, eigvals, label):
+    if data is not None:
+        num_vals = data.shape[-1]
+        num_eigvals = eigvals.shape[-1]
+
+        if num_vals != num_eigvals:
+            raise OrdResFormatError(
+                "There should be as many %s as eigvals: %d != %d" %
+                (label, num_vals, num_eigvals))
 
 
 def _parse_vector_section(fh, header_id):
