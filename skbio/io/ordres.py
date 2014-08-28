@@ -14,25 +14,24 @@ Format Specification
 The format is text-based, consisting of six attributes that describe the
 ordination results:
 
-- ``Eigvals``
-- ``Proportion explained``
-- ``Species``
-- ``Site``
-- ``Biplot``
-- ``Site constraints``
+- ``Eigvals``: 1-D
+- ``Proportion explained``: 1-D
+- ``Species``: 2-D
+- ``Site``: 2-D
+- ``Biplot``: 2-D
+- ``Site constraints``: 2-D
 
 The attributes in the file *must* be in this order.
 
 Each attribute is defined in its own section of the file, where sections are
 separated by a blank (or whitespace-only) line. Each attribute begins with a
 header line, which contains the attribute's name (as listed above), followed by
-a tab character, followed by one or more tab-separated dimensions that describe
-the shape of the attribute.
+a tab character, followed by one or more tab-separated dimensions (integers)
+that describe the shape of the attribute's data.
 
 The attribute's data follows its header line, and is stored in tab-separated
-format.
-
-TODO add descriptions of each attribute
+format. ``Species``, ``Site``, and ``Site constraints`` store species and site
+IDs, respectively, as the first column, followed by the 2-D data array.
 
 An example of this file format might look like::
 
@@ -64,9 +63,11 @@ An example of this file format might look like::
     Site3<tab>1.666<tab>0.470
 
 If a given result attribute is not present (e.g. ``Biplot``), it should still
-be defined and declare its dimensions as 0::
+be defined and declare its dimensions as 0. For example::
 
     Biplot<tab>0<tab>0
+
+All attributes are optional except for ``Eigvals``.
 
 """
 
