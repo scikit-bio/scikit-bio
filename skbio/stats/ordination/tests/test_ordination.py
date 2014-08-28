@@ -14,6 +14,7 @@ from future.builtins import zip
 
 import warnings
 import tempfile
+import unittest
 
 import numpy as np
 import numpy.testing as npt
@@ -567,10 +568,9 @@ class TestPCoAErrors(object):
             PCoA([[1, 2], [3, 4]])
 
 
-class TestOrdinationResults(object):
-    @classmethod
-    def setup_class(cls):
-        # CA results
+class TestOrdinationResults(unittest.TestCase):
+    def setUp(self):
+        # Define in-memory CA results to serialize and deserialize.
         eigvals = np.array([0.0961330159181, 0.0409418140138])
         species = np.array([[0.408869425742, 0.0695518116298],
                             [-0.1153860437, -0.299767683538],
@@ -583,125 +583,11 @@ class TestOrdinationResults(object):
         prop_explained = None
         species_ids = ['Species1', 'Species2', 'Species3']
         site_ids = ['Site1', 'Site2', 'Site3']
-        ca_scores = OrdinationResults(eigvals=eigvals, species=species,
-                                      site=site, biplot=biplot,
-                                      site_constraints=site_constraints,
-                                      proportion_explained=prop_explained,
-                                      species_ids=species_ids,
-                                      site_ids=site_ids)
-        # CCA results
-        eigvals = np.array([0.366135830393, 0.186887643052, 0.0788466514249,
-                            0.082287840501, 0.0351348475787, 0.0233265839374,
-                            0.0099048981912, 0.00122461669234,
-                            0.000417454724117])
-        species = np.loadtxt(get_data_path('exp_OrdRes_CCA_species'))
-        site = np.loadtxt(get_data_path('exp_OrdRes_CCA_site'))
-        biplot = np.array([[-0.169746767979, 0.63069090084, 0.760769036049],
-                           [-0.994016563505, 0.0609533148724,
-                            -0.0449369418179],
-                           [0.184352565909, -0.974867543612, 0.0309865007541]])
-        site_constraints = np.loadtxt(
-            get_data_path('exp_OrdRes_CCA_site_constraints'))
-        prop_explained = None
-        species_ids = ['Species0', 'Species1', 'Species2', 'Species3',
-                       'Species4', 'Species5', 'Species6', 'Species7',
-                       'Species8']
-        site_ids = ['Site0', 'Site1', 'Site2', 'Site3', 'Site4', 'Site5',
-                    'Site6', 'Site7', 'Site8', 'Site9']
-        cca_scores = OrdinationResults(eigvals=eigvals, species=species,
-                                       site=site, biplot=biplot,
-                                       site_constraints=site_constraints,
-                                       proportion_explained=prop_explained,
-                                       species_ids=species_ids,
-                                       site_ids=site_ids)
-        # PCoA results
-        eigvals = np.array([0.512367260461, 0.300719094427, 0.267912066004,
-                            0.208988681078, 0.19169895326, 0.16054234528,
-                            0.15017695712, 0.122457748167, 0.0])
-        species = None
-        site = np.loadtxt(get_data_path('exp_OrdRes_PCoA_site'))
-        biplot = None
-        site_constraints = None
-        prop_explained = np.array([0.267573832777, 0.15704469605,
-                                   0.139911863774, 0.109140272454,
-                                   0.100111048503, 0.0838401161912,
-                                   0.0784269939011, 0.0639511763509, 0.0])
-        species_ids = None
-        site_ids = ['PC.636', 'PC.635', 'PC.356', 'PC.481', 'PC.354', 'PC.593',
-                    'PC.355', 'PC.607', 'PC.634']
-        pcoa_scores = OrdinationResults(eigvals=eigvals, species=species,
-                                        site=site, biplot=biplot,
-                                        site_constraints=site_constraints,
-                                        proportion_explained=prop_explained,
-                                        species_ids=species_ids,
-                                        site_ids=site_ids)
-        # RDA results
-        eigvals = np.array([25.8979540892, 14.9825779819, 8.93784077262,
-                            6.13995623072, 1.68070536498, 0.57735026919,
-                            0.275983624351])
-        species = np.loadtxt(get_data_path('exp_OrdRes_RDA_species'))
-        site = np.loadtxt(get_data_path('exp_OrdRes_RDA_site'))
-        biplot = np.array([[0.422650019179, -0.559142585857, -0.713250678211],
-                           [0.988495963777, 0.150787422017, -0.0117848614073],
-                           [-0.556516618887, 0.817599992718, 0.147714267459],
-                           [-0.404079676685, -0.9058434809, -0.127150316558]])
-        site_constraints = np.loadtxt(
-            get_data_path('exp_OrdRes_RDA_site_constraints'))
-        prop_explained = None
-        species_ids = ['Species0', 'Species1', 'Species2', 'Species3',
-                       'Species4', 'Species5']
-        site_ids = ['Site0', 'Site1', 'Site2', 'Site3', 'Site4', 'Site5',
-                    'Site6', 'Site7', 'Site8', 'Site9']
-        rda_scores = OrdinationResults(eigvals=eigvals, species=species,
-                                       site=site, biplot=biplot,
-                                       site_constraints=site_constraints,
-                                       proportion_explained=prop_explained,
-                                       species_ids=species_ids,
-                                       site_ids=site_ids)
-
-        cls.scores = [ca_scores, cca_scores, pcoa_scores, rda_scores]
-        cls.test_paths = ['L&L_CA_data_scores', 'example3_scores',
-                          'PCoA_sample_data_3_scores', 'example2_scores']
-
-        cls.fferror_test_paths = ['error1', 'error2', 'error3', 'error4',
-                                  'error5', 'error6', 'error7']
-        cls.verror_test_paths = ['v_error1', 'v_error2', 'v_error3',
-                                 'v_error4', 'v_error5', 'v_error6',
-                                 'v_error7', 'v_error8', 'v_error9',
-                                 'v_error10', 'v_error11', 'v_error12',
-                                 'v_error13', 'v_error14']
-
-    def test_to_file(self):
-        for scores, test_path in zip(self.scores, self.test_paths):
-            for file_type in ('file like', 'file name'):
-                if file_type == 'file like':
-                    obs_f = StringIO()
-                    scores.to_file(obs_f)
-                    obs = obs_f.getvalue()
-                    obs_f.close()
-                elif file_type == 'file name':
-                    with tempfile.NamedTemporaryFile('r+') as temp_file:
-                        scores.to_file(temp_file.name)
-                        temp_file.flush()
-                        temp_file.seek(0)
-                        obs = temp_file.read()
-
-                with open(get_data_path(test_path), 'U') as f:
-                    exp = f.read()
-
-                yield npt.assert_equal, obs, exp
-
-    def test_from_file(self):
-        for exp_scores, test_path in zip(self.scores, self.test_paths):
-            for file_type in ('file like', 'file name'):
-                fname = get_data_path(test_path)
-                if file_type == 'file like':
-                    with open(fname) as fh:
-                        obs = OrdinationResults.from_file(fh)
-                elif file_type == 'file name':
-                    obs = OrdinationResults.from_file(fname)
-
-                yield self.check_OrdinationResults_equal, obs, exp_scores
+        self.ordination_results = OrdinationResults(
+            eigvals=eigvals, species=species, site=site, biplot=biplot,
+            site_constraints=site_constraints,
+            proportion_explained=prop_explained, species_ids=species_ids,
+            site_ids=site_ids)
 
     def check_OrdinationResults_equal(self, obs_scores, exp_scores):
         npt.assert_almost_equal(obs_scores.eigvals, exp_scores.eigvals)
@@ -736,16 +622,27 @@ class TestOrdinationResults(object):
             npt.assert_equal(obs_scores.proportion_explained,
                              exp_scores.proportion_explained)
 
-    def test_from_file_error(self):
-        for test_path in self.fferror_test_paths:
-            with open(get_data_path(test_path), 'U') as f:
-                with npt.assert_raises(FileFormatError):
-                    OrdinationResults.from_file(f)
+    def test_io(self):
+        # Very basic check that read/write public API is present and appears to
+        # be functioning. Roundtrip from memory -> disk -> memory and ensure
+        # results match.
+        fh = StringIO()
+        self.ordination_results.write(fh)
+        fh.seek(0)
+        deserialized = OrdinationResults.read(fh)
+        self.check_OrdinationResults_equal(deserialized,
+                                           self.ordination_results)
+        self.assertTrue(type(deserialized) == OrdinationResults)
 
-        for test_path in self.verror_test_paths:
-            with open(get_data_path(test_path), 'U') as f:
-                with npt.assert_raises(ValueError):
-                    OrdinationResults.from_file(f)
+    def test_deprecated_io(self):
+        fh = StringIO()
+        npt.assert_warns(UserWarning, self.ordination_results.to_file, fh)
+        fh.seek(0)
+        deserialized = npt.assert_warns(UserWarning,
+                                        OrdinationResults.from_file, fh)
+        self.check_OrdinationResults_equal(deserialized,
+                                           self.ordination_results)
+        self.assertTrue(type(deserialized) == OrdinationResults)
 
 
 if __name__ == '__main__':

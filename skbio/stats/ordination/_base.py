@@ -9,10 +9,11 @@ from future.builtins import zip
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import warnings
+
 import numpy as np
 
-from skbio.io import FileFormatError
-from skbio.io.util import open_file
+import skbio.io
 
 
 class OrdinationResults(object):
