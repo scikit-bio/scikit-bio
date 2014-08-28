@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -10,10 +8,8 @@
 
 from __future__ import absolute_import, division, print_function
 from future.utils.six import StringIO
-from future.builtins import zip
 
 import warnings
-import tempfile
 import unittest
 
 import numpy as np
@@ -23,7 +19,6 @@ from scipy.spatial.distance import pdist
 from skbio import DistanceMatrix
 from skbio.stats.ordination import (CA, RDA, CCA, PCoA, OrdinationResults,
                                     corr, mean_and_std)
-from skbio.io import FileFormatError
 from skbio.util import get_data_path
 
 

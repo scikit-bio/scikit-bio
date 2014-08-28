@@ -1,6 +1,3 @@
-from __future__ import absolute_import, division, print_function
-from future.builtins import zip
-
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -9,9 +6,9 @@ from future.builtins import zip
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import warnings
+from __future__ import absolute_import, division, print_function
 
-import numpy as np
+import warnings
 
 import skbio.io
 
@@ -54,7 +51,7 @@ class OrdinationResults(object):
 
     @classmethod
     def read(cls, fp, **kwargs):
-        """Load ordination results from file.
+        r"""Load ordination results from file.
 
         Creates an ``OrdinationResults`` instance from a supported file format.
 
@@ -160,7 +157,7 @@ class OrdinationResults(object):
 
     @classmethod
     def from_file(cls, ord_res_f):
-        r"""Load ordination results from text file.
+        """Load ordination results from text file.
 
         .. note:: Deprecated in scikit-bio 0.2.0-dev
            ``from_file`` will be removed in scikit-bio 0.3.0. It is replaced by
@@ -170,7 +167,7 @@ class OrdinationResults(object):
            scikit-bio's I/O registry system. See :mod:`skbio.io` for more
            details.
 
-        Creates an `OrdinationResults` instance from a ``ordres`` formatted
+        Creates an ``OrdinationResults`` instance from a ``ordres`` formatted
         file. See :mod:`skbio.io.ordres` for the format specification.
 
         Parameters
