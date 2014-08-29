@@ -33,7 +33,7 @@ class OrdResTestData(TestCase):
         # raised when reading the file, and whether the file should be matched
         # by the sniffer (True) or not (False).
         self.invalid_fps = map(lambda e: (get_data_path(e[0]), e[1], e[2]), [
-            ('empty', 'Reached end of file.*Eigvals header', False),
+            ('empty', 'end of file.*Eigvals header', False),
             ('whitespace_only', 'Eigvals header not found', False),
             ('ordres_error1', 'Eigvals header not found', False),
             ('ordres_error2', 'Proportion explained header not found', False),
@@ -56,7 +56,10 @@ class OrdResTestData(TestCase):
             ('ordres_error19', 'coordinates.*species.*eigvals: 1 != 2', True),
             ('ordres_error20', 'coordinates.*site.*eigvals: 1 != 2', True),
             ('ordres_error21', 'one eigval', False),
-            ('ordres_error22', 'Reached end of file.*blank line', False),
+            ('ordres_error22', 'end of file.*blank line', False),
+            ('ordres_error23', 'end of file.*Proportion explained section',
+             True),
+            ('ordres_error24', 'end of file.*row 2.*Species section', True)
         ])
 
 

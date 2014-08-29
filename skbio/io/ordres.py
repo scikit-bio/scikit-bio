@@ -70,7 +70,6 @@ be defined and declare its dimensions as 0. For example::
 All attributes are optional except for ``Eigvals``.
 
 """
-
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -196,7 +195,12 @@ def _parse_vector_section(fh, header_id):
         vals = None
     else:
         # Parse the line with the vector values
-        vals = np.asarray(next(fh).strip().split('\t'), dtype=np.float64)
+        line = next(fh, None)
+        if line is None:
+            raise OrdResFormatError("Reached end of file while looking for "
+                                    "line containing values for %s section."
+                                    % header_id)
+        vals = np.asarray(line.strip().split('\t'), dtype=np.float64)
         if len(vals) != num_vals:
             raise OrdResFormatError(
                 "Expected %d values in %s section, but found %d." %
@@ -231,7 +235,12 @@ def _parse_array_section(fh, header_id, has_ids=True):
 
         for i in range(rows):
             # Parse the next row of data
-            vals = next(fh).strip().split('\t')
+            line = next(fh, None)
+            if line is None:
+                raise OrdResFormatError(
+                    "Reached end of file while looking for row %d in %s "
+                    "section." % (i + 1, header_id))
+            vals = line.strip().split('\t')
 
             if has_ids:
                 ids.append(vals[0])
