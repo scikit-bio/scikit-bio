@@ -10,7 +10,6 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 import numpy.testing as npt
-from nose.tools import assert_is
 
 
 def mean_and_std(a, axis=None, weights=None, with_mean=True, with_std=True,
@@ -196,7 +195,7 @@ def assert_ordination_results_equal(left, right):
         If the two objects are not equal.
 
     """
-    assert_is(type(left), type(right))
+    npt.assert_equal(type(left) is type(right), True)
 
     # eigvals should always be present
     npt.assert_almost_equal(left.eigvals, right.eigvals)
