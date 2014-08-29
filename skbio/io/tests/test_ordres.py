@@ -55,7 +55,8 @@ class OrdResTestData(TestCase):
             ('ordres_error18', 'proportion explained.*eigvals: 8 != 9', True),
             ('ordres_error19', 'coordinates.*species.*eigvals: 1 != 2', True),
             ('ordres_error20', 'coordinates.*site.*eigvals: 1 != 2', True),
-            ('ordres_error21', 'one eigval', False)
+            ('ordres_error21', 'one eigval', False),
+            ('ordres_error22', 'Reached end of file.*blank line', False),
         ])
 
 
