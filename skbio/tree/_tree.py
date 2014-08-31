@@ -2058,13 +2058,18 @@ class TreeNode(object):
             return cls()
         return curr_node  # this should be the root of the tree
 
-    def to_taxonomy(self, allow_empty=False):
+    def to_taxonomy(self, allow_empty=False, filter_f=None):
         """Returns a taxonomy representation of self
 
         Parameters
         ----------
-        allow_empty : bool
+        allow_empty : bool, optional
             Allow gaps the taxonomy (e.g., internal nodes without names).
+        filter_f : function, optional
+            Specify a filtering function that returns True if the lineage is
+            to be returned. This function must accept a ``TreeNode`` as its
+            first parameter, and a ``list`` that represents the lineage as the
+            second parameter.
 
         Returns
         -------
@@ -2108,6 +2113,9 @@ class TreeNode(object):
         9 Bacteria; Bacteroidetes; Cytophagia
 
         """
+        if filter_f is None:
+            filter_f = lambda a, b: True
+
         self.assign_ids()
         seen = set()
         lineage = []
@@ -2116,7 +2124,8 @@ class TreeNode(object):
         # way back up
         for node in self.traverse(self_before=True, self_after=True):
             if node.is_tip():
-                yield (node, lineage[:])
+                if filter_f(node, lineage):
+                    yield (node, lineage[:])
             else:
                 if allow_empty:
                     if node.is_root() and not node.name:
