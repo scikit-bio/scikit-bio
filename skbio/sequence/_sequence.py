@@ -10,9 +10,11 @@ from __future__ import absolute_import, division, print_function
 
 from collections import Sequence, Counter, defaultdict
 from itertools import product
-from skbio.sequence import BiologicalSequenceError
 
+import numpy as np
 from scipy.spatial.distance import hamming
+
+from skbio.sequence import BiologicalSequenceError
 
 
 class BiologicalSequence(Sequence):
@@ -27,6 +29,14 @@ class BiologicalSequence(Sequence):
     description : str, optional
         A description or comment about the sequence (e.g., "green
         fluorescent protein").
+    quality : 1-D array_like, int, optional
+        Integer quality scores, one per sequence character. If provided, must
+        be the same length as the biological sequence. Can be a 1-D
+        ``numpy.ndarray`` of integers, or a structure that can be converted to
+        this representation using ``numpy.asarray``. A copy will *not* be made
+        if `quality` is already a 1-D ``numpy.ndarray`` with an ``int``
+        ``dtype``. The array will be made read-only (i.e., its ``WRITEABLE``
+        flag will be set to ``False``).
     validate : bool, optional
         If True, runs the `is_valid` method after construction and raises
         BiologicalSequenceError if ``is_valid == False``.
@@ -35,11 +45,13 @@ class BiologicalSequence(Sequence):
     ----------
     description
     id
+    quality
 
     Raises
     ------
     skbio.sequence.BiologicalSequenceError
-      If ``validate == True`` and ``is_valid == False``.
+        If ``validate == True`` and ``is_valid == False``, or if `quality` is
+        not the correct shape.
 
     See Also
     --------
@@ -160,11 +172,12 @@ class BiologicalSequence(Sequence):
         """
         return {}
 
-    def __init__(self, sequence, id="", description="",
+    def __init__(self, sequence, id="", description="", quality=None,
                  validate=False):
         self._sequence = ''.join(sequence)
         self._id = id
         self._description = description
+        self._set_quality(quality)
 
         if validate and not self.is_valid():
             unsupported_chars = self.unsupported_characters()
@@ -460,27 +473,46 @@ class BiologicalSequence(Sequence):
 
     @property
     def description(self):
-        """Return the description of the `BiologicalSequence`
+        """Description of the biological sequence.
 
-        Returns
-        -------
-        str
-            The description attribute of the `BiologicalSequence`
+        A string representing the description of the biological sequence.
+
+        Notes
+        -----
+        This property is not writeable.
 
         """
         return self._description
 
     @property
     def id(self):
-        """Return the id of the `BiologicalSequence`
+        """ID of the biological sequence.
 
-        Returns
-        -------
-        str
-            The id attribute of the `BiologicalSequence`
+        A string representing the identifier (ID) of the biological sequence.
+
+        Notes
+        -----
+        This property is not writeable.
 
         """
         return self._id
+
+    @property
+    def quality(self):
+        """Quality scores of the characters in the biological sequence.
+
+        A 1-D ``numpy.ndarray`` of integers representing quality scores for
+        each character in the biological sequence, or ``None`` if quality
+        scores are not available.
+
+        Notes
+        -----
+        This property is not writeable. A copy of the array is *not* returned.
+        The array is read-only (i.e., its ``WRITEABLE`` flag is set to
+        ``False``).
+
+        """
+        return self._quality
 
     def count(self, subsequence):
         """Returns the number of occurences of subsequence.
@@ -1141,6 +1173,20 @@ class BiologicalSequence(Sequence):
         """
         return self.__class__(self._sequence.upper(),
                               self.id, self.description)
+
+    def _set_quality(self, quality):
+        if quality is not None:
+            quality = np.asarray(quality)
+            quality = quality.astype(int, casting='safe', copy=False)
+            quality.flags.writeable = False
+
+            if quality.ndim != 1:
+                raise BiologicalSequenceError("Quality scores must be 1-D.")
+            elif len(quality) != len(self._sequence):
+                raise BiologicalSequenceError("Number of quality scores must "
+                                              "match the number of characters in "
+                                              "the biological sequence.")
+        self._quality = quality
 
 
 class NucleotideSequence(BiologicalSequence):
