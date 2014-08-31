@@ -1736,8 +1736,9 @@ class TreeNode(object):
 
         Parameters
         ----------
-        lineage_map : dict
-            A id to lineage mapping where the lineage is a list of str
+        lineage_map : iterable of tuple
+            A id to lineage mapping where the first index is an ID and the
+            second index is an iterable of the lineage.
 
         Returns
         -------
@@ -1756,7 +1757,7 @@ class TreeNode(object):
         ...             '7': ['Archaea', 'Euryarchaeota', 'Halobacteria'],
         ...             '8': ['Bacteria', 'Bacteroidetes', 'Sphingobacteria'],
         ...             '9': ['Bacteria', 'Bacteroidetes', 'Cytophagia']}
-        >>> tree = TreeNode.from_taxonomy(lineages)
+        >>> tree = TreeNode.from_taxonomy(lineages.items())
         >>> print(tree.ascii_art())
                                       /Clostridia-1
                             /Firmicutes
@@ -1780,7 +1781,7 @@ class TreeNode(object):
         root = cls(name=None)
         root._lookup = {}
 
-        for id_, lineage in lineage_map.items():
+        for id_, lineage in lineage_map:
             cur_node = root
 
             # for each name, see if we've seen it, if not, add that puppy on
@@ -2098,7 +2099,7 @@ class TreeNode(object):
         ...             '7': ['Archaea', 'Euryarchaeota', 'Halobacteria'],
         ...             '8': ['Bacteria', 'Bacteroidetes', 'Sphingobacteria'],
         ...             '9': ['Bacteria', 'Bacteroidetes', 'Cytophagia']}
-        >>> tree = TreeNode.from_taxonomy(lineages)
+        >>> tree = TreeNode.from_taxonomy(lineages.items())
         >>> lineages = sorted([(n.name, l) for n, l in tree.to_taxonomy()])
         >>> for name, lineage in lineages:
         ...     print(name, '; '.join(lineage))

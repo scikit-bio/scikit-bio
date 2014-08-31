@@ -910,7 +910,7 @@ class TreeTests(TestCase):
         exp = TreeNode.from_newick("((((((((1)g)f)e)d,((((2)y)x)))c)b)a,"
                                    "(((((((3,5)n,(4)q)m)l)k)j)i)h);")
 
-        root = TreeNode.from_taxonomy(input_lineages)
+        root = TreeNode.from_taxonomy(input_lineages.items())
 
         self.assertEqual(root.compare_subsets(exp), 0.0)
 
@@ -920,7 +920,7 @@ class TreeTests(TestCase):
                           '3': ['h', 'i', 'j', 'k', 'l', 'm', 'n'],
                           '4': ['h', 'i', 'j', 'k', 'l', 'm', 'q'],
                           '5': ['h', 'i', 'j', 'k', 'l', 'm', 'n']}
-        tree = TreeNode.from_taxonomy(input_lineages)
+        tree = TreeNode.from_taxonomy(input_lineages.items())
         exp = sorted(input_lineages.items())
         obs = [(n.name, lin) for n, lin in tree.to_taxonomy(allow_empty=True)]
         self.assertEqual(sorted(obs), exp)
@@ -931,7 +931,7 @@ class TreeTests(TestCase):
                           '3': ['h', 'i', 'j', 'k', 'l'],  # test jagged
                           '4': ['h', 'i', 'j', 'k', 'l', 'm', 'q'],
                           '5': ['h', 'i', 'j', 'k', 'l', 'm', 'n']}
-        tree = TreeNode.from_taxonomy(input_lineages)
+        tree = TreeNode.from_taxonomy(input_lineages.items())
         f = lambda node, lin: 'k' in lin or 'x' in lin
 
         exp = [('2', ['a', 'b', 'c', 'x', 'y']),
