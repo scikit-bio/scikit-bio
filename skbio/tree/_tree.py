@@ -2058,6 +2058,79 @@ class TreeNode(object):
             return cls()
         return curr_node  # this should be the root of the tree
 
+    def to_taxonomy(self, allow_empty=False):
+        """Returns a taxonomy representation of self
+
+        Parameters
+        ----------
+        allow_empty : bool
+            Allow gaps the taxonomy (e.g., internal nodes without names).
+
+        Returns
+        -------
+        generator
+            (tip, [lineage]) where tip corresponds to a tip in the tree and
+            the [lineage] is the expanded names from root to tip. Nones and
+            empty strings are omitted from the lineage
+
+        Notes
+        -----
+        If ``allow_empty`` is ``True`` and the root node does not have a name,
+        then that name will not be included. This is because it is common to
+        have multiple domains represented in the taxonomy, which would result
+        in a root node that does not have a name and does not make sense to
+        represent in the output.
+
+        Examples
+        --------
+        >>> from skbio.tree import TreeNode
+        >>> lineages = {'1': ['Bacteria', 'Firmicutes', 'Clostridia'],
+        ...             '2': ['Bacteria', 'Firmicutes', 'Bacilli'],
+        ...             '3': ['Bacteria', 'Bacteroidetes', 'Sphingobacteria'],
+        ...             '4': ['Archaea', 'Euryarchaeota', 'Thermoplasmata'],
+        ...             '5': ['Archaea', 'Euryarchaeota', 'Thermoplasmata'],
+        ...             '6': ['Archaea', 'Euryarchaeota', 'Halobacteria'],
+        ...             '7': ['Archaea', 'Euryarchaeota', 'Halobacteria'],
+        ...             '8': ['Bacteria', 'Bacteroidetes', 'Sphingobacteria'],
+        ...             '9': ['Bacteria', 'Bacteroidetes', 'Cytophagia']}
+        >>> tree = TreeNode.from_taxonomy(lineages)
+        >>> lineages = sorted([(n.name, l) for n, l in tree.to_taxonomy()])
+        >>> for name, lineage in lineages:
+        ...     print(name, '; '.join(lineage))
+        1 Bacteria; Firmicutes; Clostridia
+        2 Bacteria; Firmicutes; Bacilli
+        3 Bacteria; Bacteroidetes; Sphingobacteria
+        4 Archaea; Euryarchaeota; Thermoplasmata
+        5 Archaea; Euryarchaeota; Thermoplasmata
+        6 Archaea; Euryarchaeota; Halobacteria
+        7 Archaea; Euryarchaeota; Halobacteria
+        8 Bacteria; Bacteroidetes; Sphingobacteria
+        9 Bacteria; Bacteroidetes; Cytophagia
+
+        """
+        self.assign_ids()
+        seen = set()
+        lineage = []
+
+        # visit internal nodes while traversing out to the tips, and on the
+        # way back up
+        for node in self.traverse(self_before=True, self_after=True):
+            if node.is_tip():
+                yield (node, lineage[:])
+            else:
+                if allow_empty:
+                    if node.is_root() and not node.name:
+                        continue
+                else:
+                    if not node.name:
+                        continue
+
+                if node.id in seen:
+                    lineage.pop(-1)
+                else:
+                    lineage.append(node.name)
+                    seen.add(node.id)
+
     def to_array(self, attrs=None):
         """Return an array representation of self
 

@@ -902,7 +902,6 @@ class TreeTests(TestCase):
             t.to_array(attrs=[('name', object), ('brofist', int)])
 
     def test_from_taxonomy(self):
-        """correctly gets parent consensus counts"""
         input_lineages = {'1': ['a', 'b', 'c', 'd', 'e', 'f', 'g'],
                           '2': ['a', 'b', 'c', None, None, 'x', 'y'],
                           '3': ['h', 'i', 'j', 'k', 'l', 'm', 'n'],
@@ -914,6 +913,17 @@ class TreeTests(TestCase):
         root = TreeNode.from_taxonomy(input_lineages)
 
         self.assertEqual(root.compare_subsets(exp), 0.0)
+
+    def test_to_taxonomy(self):
+        input_lineages = {'1': ['a', 'b', 'c', 'd', 'e', 'f', 'g'],
+                          '2': ['a', 'b', 'c', None, None, 'x', 'y'],
+                          '3': ['h', 'i', 'j', 'k', 'l', 'm', 'n'],
+                          '4': ['h', 'i', 'j', 'k', 'l', 'm', 'q'],
+                          '5': ['h', 'i', 'j', 'k', 'l', 'm', 'n']}
+        tree = TreeNode.from_taxonomy(input_lineages)
+        exp = sorted(input_lineages.items())
+        obs = [(n.name, lin) for n, lin in tree.to_taxonomy(allow_empty=True)]
+        self.assertEqual(sorted(obs), exp)
 
     def test_from_file(self):
         """Parse a tree from a file"""
