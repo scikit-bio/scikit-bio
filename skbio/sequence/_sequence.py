@@ -661,14 +661,14 @@ class BiologicalSequence(Sequence):
         if 'id' not in ignore and self.id != other.id:
             return False
 
-        if ('description' not in ignore and
-            self.description != other.description):
+        if 'description' not in ignore and \
+                self.description != other.description:
             return False
 
         # Use array_equal instead of (a == b).all() because of this issue:
         #     http://stackoverflow.com/a/10582030
-        if ('quality' not in ignore and
-            not np.array_equal(self.quality, other.quality)):
+        if 'quality' not in ignore and not np.array_equal(self.quality,
+                                                          other.quality):
             return False
 
         if 'sequence' not in ignore and self.sequence != other.sequence:
@@ -1355,9 +1355,9 @@ class BiologicalSequence(Sequence):
             if quality.ndim != 1:
                 raise BiologicalSequenceError("Quality scores must be 1-D.")
             elif len(quality) != len(self._sequence):
-                raise BiologicalSequenceError("Number of quality scores must "
-                                              "match the number of characters in "
-                                              "the biological sequence.")
+                raise BiologicalSequenceError(
+                    "Number of quality scores must match the number of "
+                    "characters in the biological sequence.")
         self._quality = quality
 
 
