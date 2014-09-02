@@ -271,8 +271,11 @@ class BiologicalSequence(Sequence):
 
         Returns
         -------
-        str
-            The character at position `i` in the `BiologicalSequence`.
+        BiologicalSequence
+            New biological sequence containing the character at position `i` in
+            the current `BiologicalSequence`. If quality scores are present,
+            the quality score at position `i` will be included in the returned
+            sequence.
 
         Examples
         --------
@@ -1301,19 +1304,19 @@ class NucleotideSequence(BiologicalSequence):
 
         return degen_map
 
-    def _complement(self, seq_iterator):
-        """Returns `NucleotideSequence` that is complement of `seq_iterator`
+    def _complement(self, reverse=False):
+        """Returns `NucleotideSequence` that is (reverse) complement of `self`.
 
         Parameters
         ----------
-        seq_iterator : iterator
-            The `BiologicalSequence` to be complemented.
+        reverse : bool, optional
+            If ``True``, reverse `self` before complementing.
 
         Returns
         -------
         NucelotideSequence
-            The complement of the sequence represented by `seq_iterator`.
-            Specific type will be the same as ``type(self)``.
+            The (reverse) complement of `self`. Specific type will be the same
+            as ``type(self)``.
 
         Raises
         ------
@@ -1324,12 +1327,12 @@ class NucleotideSequence(BiologicalSequence):
         Notes
         -----
         This private method centralizes the logic for `complement` and
-        `reverse_complement` by taking the sequence as an iterator (so it can
-        be passed the result of either `iter` or `reversed`).
+        `reverse_complement`.
 
         """
         result = []
         complement_map = self.complement_map()
+        seq_iterator = reversed(self) if reverse else self
         for base in seq_iterator:
             try:
                 result.append(complement_map[base])
@@ -1337,7 +1340,12 @@ class NucleotideSequence(BiologicalSequence):
                 raise BiologicalSequenceError(
                     "Don't know how to complement base %s. Is it in "
                     "%s.complement_map?" % (base, self.__class__.__name__))
-        return self.__class__(result, self._id, self._description)
+
+        quality = self.quality
+        if self.has_quality() and reverse:
+            quality = self.quality[::-1]
+
+        return self.__class__(result, self._id, self._description, quality)
 
     def complement(self):
         """Return the complement of the `NucleotideSequence`
@@ -1359,8 +1367,13 @@ class NucleotideSequence(BiologicalSequence):
         reverse_complement
         complement_map
 
+        Notes
+        -----
+        The type, id, description, and quality scores of the result will be the
+        same as `self`.
+
         """
-        return self._complement(self)
+        return self._complement()
 
     def is_reverse_complement(self, other):
         """Return True if `other` is the reverse complement of `self`
@@ -1405,8 +1418,14 @@ class NucleotideSequence(BiologicalSequence):
         complement_map
         is_reverse_complement
 
+        Notes
+        -----
+        The type, id, and description of the result will be the same as `self`.
+        If quality scores are present, they will be reversed and included in
+        the resulting biological sequence.
+
         """
-        return self._complement(reversed(self))
+        return self._complement(reverse=True)
     rc = reverse_complement
 
 
