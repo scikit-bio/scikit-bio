@@ -249,6 +249,11 @@ class BiologicalSequenceTests(TestCase):
     def test_gap_alphabet(self):
         self.assertEqual(self.b1.gap_alphabet(), set('-.'))
 
+    def test_sequence(self):
+        self.assertEqual(self.b1.sequence, "GATTACA")
+        self.assertEqual(self.b2.sequence, "ACCGGTACC")
+        self.assertEqual(self.b3.sequence, "GREG")
+
     def test_id(self):
         self.assertEqual(self.b1.id, "")
         self.assertEqual(self.b2.id, "test-seq-2")
