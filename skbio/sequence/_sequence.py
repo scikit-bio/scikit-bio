@@ -215,6 +215,9 @@ class BiologicalSequence(Sequence):
     def __eq__(self, other):
         """The equality operator.
 
+        ``BiologicalSequence``s are equal if their sequence and quality scores
+        are the same and they are the same type.
+
         Parameters
         ----------
         other : `BiologicalSequence`
@@ -224,11 +227,6 @@ class BiologicalSequence(Sequence):
         -------
         bool
             Indicates whether `self` and `other` are equal.
-
-        Notes
-        -----
-        `BiologicalSequences` are equal if their sequence is the same and
-        they are the same type.
 
         Examples
         --------
@@ -240,16 +238,28 @@ class BiologicalSequence(Sequence):
         >>> u = BiologicalSequence('GGUCGUGACCGA')
         >>> u == t
         False
+        >>> v = BiologicalSequence('GGUCGUGACCGA',
+        ...                        quality=[1, 5, 3, 3, 2, 42, 100, 9, 10, 55,
+        ...                                 42, 42])
+        >>> u == v
+        False
 
         .. shownumpydoc
 
         """
+        eq = True
+
+        # Checks are ordered from least to most expensive.
         if self.__class__ != other.__class__:
-            return False
+            eq = False
+        # Use array_equal instead of (a == b).all() because of this issue:
+        #     http://stackoverflow.com/a/10582030
+        elif not np.array_equal(self._quality, other._quality):
+            eq = False
         elif self._sequence != other._sequence:
-            return False
-        else:
-            return True
+            eq = False
+
+        return eq
 
     def __getitem__(self, i):
         """The indexing operator.
@@ -347,6 +357,9 @@ class BiologicalSequence(Sequence):
     def __ne__(self, other):
         """The inequality operator.
 
+        ``BiologicalSequence``s are not equal if their sequence or quality
+        scores are different, or they are not the same type.
+
         Parameters
         ----------
         other : `BiologicalSequence`
@@ -356,11 +369,6 @@ class BiologicalSequence(Sequence):
         -------
         bool
             Indicates whether `self` and `other` are not equal.
-
-        Notes
-        -----
-        `BiologicalSequences` are not equal if their sequence is different or
-        they are not the same type.
 
         Examples
         --------
@@ -388,9 +396,9 @@ class BiologicalSequence(Sequence):
 
         Notes
         -----
-        String representation contains the class name, the first ten
-        characters of the sequence followed by elipses (or the full sequence
-        and no elipses, if the sequence is less than 11 characters long),
+        String representation contains the class name, the first ten characters
+        of the sequence followed by ellipses (or the full sequence
+        and no ellipses, if the sequence is less than 11 characters long),
         followed by the sequence length.
 
         Examples
@@ -412,10 +420,10 @@ class BiologicalSequence(Sequence):
         cn = self.__class__.__name__
         length = len(self)
         if length > 10:
-            elipses = "..."
+            ellipses = "..."
         else:
-            elipses = ""
-        return '<%s: %s%s (length: %d)>' % (cn, first_ten, elipses, length)
+            ellipses = ""
+        return '<%s: %s%s (length: %d)>' % (cn, first_ten, ellipses, length)
 
     def __reversed__(self):
         """The reversed operator.
@@ -447,8 +455,8 @@ class BiologicalSequence(Sequence):
         -------
         str
             String representation of the `BiologicalSequence`. This will be the
-            full sequence, but will not contain information about the type, or
-            `self.id` or `self.description`.
+            full sequence, but will not contain information about the type,
+            identifier, description, or quality scores.
 
         See Also
         --------
