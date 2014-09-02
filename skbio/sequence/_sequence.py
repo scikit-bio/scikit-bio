@@ -1089,7 +1089,7 @@ class BiologicalSequence(Sequence):
 
         """
         return self.__class__(self._sequence.lower(),
-                              self.id, self.description)
+                              self.id, self.description, self.quality)
 
     def nondegenerates(self):
         """Yield all nondegenerate versions of the sequence.
@@ -1210,7 +1210,7 @@ class BiologicalSequence(Sequence):
 
         """
         return self.__class__(self._sequence.upper(),
-                              self.id, self.description)
+                              self.id, self.description, self.quality)
 
     def _set_quality(self, quality):
         if quality is not None:
