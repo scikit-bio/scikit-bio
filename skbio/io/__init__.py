@@ -16,6 +16,7 @@ Supported File Formats
    :toctree: generated/
 
    dm
+   ordres
 
 User Functions
 --------------
@@ -38,6 +39,7 @@ User Exceptions
    FieldError
    UnrecognizedFormatError
    DMFormatError
+   OrdResFormatError
 
 User Warnings
 -------------
@@ -107,7 +109,7 @@ from importlib import import_module
 from ._warning import FormatIdentificationWarning, ArgumentOverrideWarning
 from ._exception import (DuplicateRegistrationError, InvalidRegistrationError,
                          RecordError, FieldError, UnrecognizedFormatError,
-                         FileFormatError, DMFormatError)
+                         FileFormatError, DMFormatError, OrdResFormatError)
 from ._registry import (write, read, sniff, get_writer, get_reader,
                         get_sniffer, list_write_formats, list_read_formats,
                         register_writer, register_reader, register_sniffer)
@@ -117,10 +119,14 @@ __all__ = ['write', 'read', 'sniff', 'get_writer', 'get_reader',
            'register_writer', 'register_reader', 'register_sniffer',
            'DuplicateRegistrationError', 'InvalidRegistrationError',
            'RecordError', 'FieldError', 'UnrecognizedFormatError',
-           'FileFormatError', 'DMFormatError', 'FormatIdentificationWarning',
-           'ArgumentOverrideWarning']
+           'FileFormatError', 'DMFormatError', 'OrdResFormatError',
+           'FormatIdentificationWarning', 'ArgumentOverrideWarning']
 
+# Necessary to import each file format module to have them added to the I/O
+# registry. We use import_module instead of a typical import to avoid flake8
+# unused import errors.
 import_module('skbio.io.dm')
+import_module('skbio.io.ordres')
 
 from numpy.testing import Tester
 test = Tester().test
