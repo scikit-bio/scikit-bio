@@ -216,8 +216,9 @@ class BiologicalSequence(Sequence):
     def __eq__(self, other):
         """The equality operator.
 
-        ``BiologicalSequence``s are equal if their sequence and quality scores
-        are the same and they are the same type.
+        ``BiologicalSequence``s are equal if their sequence is the same and
+        they are the same type. Identifier, description, and quality scores
+        **are ignored**.
 
         Parameters
         ----------
@@ -229,6 +230,19 @@ class BiologicalSequence(Sequence):
         bool
             Indicates whether `self` and `other` are equal.
 
+        See Also
+        --------
+        __ne__
+        equals
+
+        Notes
+        -----
+        See ``BiologicalSequence.equals`` for more fine-grained control of
+        equality testing.
+
+        This method is equivalent to
+        ``self.equals(other, ignore=['id', 'description', 'quality'])``.
+
         Examples
         --------
         >>> from skbio.sequence import BiologicalSequence
@@ -239,28 +253,20 @@ class BiologicalSequence(Sequence):
         >>> u = BiologicalSequence('GGUCGUGACCGA')
         >>> u == t
         False
+
+        Note that even though the quality scores do not match between ``u`` and
+        ``v``, they are considered equal:
+
         >>> v = BiologicalSequence('GGUCGUGACCGA',
         ...                        quality=[1, 5, 3, 3, 2, 42, 100, 9, 10, 55,
         ...                                 42, 42])
         >>> u == v
-        False
+        True
 
         .. shownumpydoc
 
         """
-        eq = True
-
-        # Checks are ordered from least to most expensive.
-        if self.__class__ != other.__class__:
-            eq = False
-        # Use array_equal instead of (a == b).all() because of this issue:
-        #     http://stackoverflow.com/a/10582030
-        elif not np.array_equal(self.quality, other.quality):
-            eq = False
-        elif self._sequence != other._sequence:
-            eq = False
-
-        return eq
+        return self.equals(other, ignore=['id', 'description', 'quality'])
 
     def __getitem__(self, i):
         """The indexing operator.
@@ -362,8 +368,9 @@ class BiologicalSequence(Sequence):
     def __ne__(self, other):
         """The inequality operator.
 
-        ``BiologicalSequence``s are not equal if their sequence or quality
-        scores are different, or they are not the same type.
+        ``BiologicalSequence``s are not equal if their sequence is different or
+        they are not the same type. Identifier, description, and quality scores
+        **are ignored**.
 
         Parameters
         ----------
@@ -374,6 +381,16 @@ class BiologicalSequence(Sequence):
         -------
         bool
             Indicates whether `self` and `other` are not equal.
+
+        See Also
+        --------
+        __eq__
+        equals
+
+        Notes
+        -----
+        See ``BiologicalSequence.equals`` for more fine-grained control of
+        equality testing.
 
         Examples
         --------
@@ -389,7 +406,7 @@ class BiologicalSequence(Sequence):
         .. shownumpydoc
 
         """
-        return not self.__eq__(other)
+        return not (self == other)
 
     def __repr__(self):
         """The repr method.
