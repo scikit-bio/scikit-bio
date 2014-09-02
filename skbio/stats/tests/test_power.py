@@ -3,17 +3,21 @@
 
 from __future__ import division
 from unittest import TestCase, main
-from numpy import ones, power, array, arange
+from numpy import ones, power, array, arange, nan
 import numpy.random
 from numpy.testing import (assert_almost_equal,
+                           assert_array_equal,
                            assert_allclose)
+from pandas import DataFrame
 from scipy.stats import kruskal
-from skbio.stats.power_analysis import (confidence_bound,
-                                        calculate_power,
-                                        compare_distributions,
-                                        calculate_power_curve,
-                                        bootstrap_power_curve,
-                                        get_signifigant_subsample)
+from skbio.stats.power import (_check_strs,
+                               _confidence_bound,
+                               _calculate_power,
+                               compare_distributions,
+                               calculate_power_curve,
+                               bootstrap_power_curve,
+                               get_signifigant_subsample,
+                               get_paired_subsamples)
 
 
 class PowerAnalysisTest(TestCase):
@@ -34,34 +38,83 @@ class PowerAnalysisTest(TestCase):
         self.num_samps = arange(10, 100, 10)
         # Sets up the test function, a rank-sum test
         self.f = lambda x: kruskal(*x)[1]
+        # Sets up a mapping file
+        meta = {'NR': {'RANGE': 'M', 'SEX': 'F', 'AGE': nan, 'ABX': 'Y'},
+                'MH': {'RANGE': 'L', 'SEX': 'F', 'AGE': '30s', 'ABX': 'Y'},
+                'PP': {'RANGE': 'M', 'SEX': 'F', 'AGE': '30s', 'ABX': 'N'},
+                'CD': {'RANGE': 'L', 'SEX': 'F', 'AGE': '30s', 'ABX': 'Y'},
+                'MM': {'RANGE': 'C', 'SEX': 'F', 'AGE': '30s', 'ABX': 'Y'},
+                'SW': {'RANGE': 'M', 'SEX': 'M', 'AGE': nan, 'ABX': 'N'},
+                'TS': {'RANGE': 'M', 'SEX': 'M', 'AGE': '40s', 'ABX': 'Y'},
+                'CB': {'RANGE': 'L', 'SEX': 'M', 'AGE': '40s', 'ABX': 'Y'},
+                'BB': {'RANGE': 'C', 'SEX': 'M', 'AGE': '40s', 'ABX': 'Y'}}
 
-    def test_confidence_bound_default(self):
+        self.meta = DataFrame.from_dict(meta, orient='index')
+
+    def test_get_paired_subsamples_default(self):
+        """Checks controlled subsets can be generated sanely"""
+        # Sets the known array set
+        known_array = [array(['BB']), array(['CB']), array(['TS'])]
+        # Gets the test value
+        cat = 'RANGE'
+        control_cats = ['SEX', 'AGE', 'ABX']
+        test_array = get_paired_subsamples(self.meta, cat, control_cats)
+        assert_array_equal(known_array, test_array)
+
+    def test_get_paired_subsamples_not_strict(self):
+        """Checks controlled subsets can be generated with missing values"""
+        known_array = [array(['SW']), array(['NR'])]
+        # Gets the test values
+        cat = 'ABX'
+        control_cats = ['AGE', 'RANGE']
+        order = ['N', 'Y']
+        test_array = get_paired_subsamples(self.meta, cat, control_cats,
+                                           order, strict=False)
+        assert_array_equal(known_array, test_array)
+
+    def test__check_strs_str(self):
+        """Test check_strs returns sanely when passed a string"""
+        self.assertTrue(_check_strs('string'))
+
+    def test__check_strs_num(self):
+        """Tests check_strs returns sanely when passed a number"""
+        self.assertTrue(_check_strs(4))
+
+    def test__check_str_nan(self):
+        """Tests check_strs retruns sanely when passed a nan"""
+        self.assertFalse(_check_strs(nan))
+
+    def test__check_str_error(self):
+        """Tests check_strs errors when not passed a string or number"""
+        self.assertRaises(TypeError, _check_strs, {1, 2, 3})
+
+    def test__confidence_bound_default(self):
         """Checks confidence_bound correctly determines an interval"""
         # Sets the know confidence bound
         known = 2.1658506
-        test = confidence_bound(self.s1)
+        test = _confidence_bound(self.s1)
         assert_almost_equal(known, test, 5)
 
-    def test_confidence_bound_df(self):
+    def test__confidence_bound_df(self):
         """Checks a custom df for confidence_bound"""
         known = 2.0407076
-        test = confidence_bound(self.s1, df=15)
+        test = _confidence_bound(self.s1, df=15)
         assert_almost_equal(known, test, 5)
 
-    def test_confidence_bound_alpha(self):
+    def test__confidence_bound_alpha(self):
         """Checks a custom df for confidence_bound"""
         known = 3.111481
-        test = confidence_bound(self.s1, alpha=0.01)
+        test = _confidence_bound(self.s1, alpha=0.01)
         assert_almost_equal(known, test, 5)
 
-    def test_calculate_power(self):
+    def test__calculate_power(self):
         """Tests calculate_power is sane"""
         # Sets up the values to test
         crit = 0.025
         # Sets the known value
         known = 0.5
         # Calculates the test value
-        test = calculate_power(self.alpha, crit)
+        test = _calculate_power(self.alpha, crit)
         # Checks the test value
         assert_almost_equal(known, test)
 
@@ -173,7 +226,6 @@ class PowerAnalysisTest(TestCase):
         # Checks the results
         self.assertEqual(len(test_ids[0]), len(test_ids[1]))
         self.assertTrue(self.f(test_ids) < 0.05)
-
 
 if __name__ == '__main__':
     main()
