@@ -43,8 +43,9 @@ class BiologicalSequence(Sequence):
 
     Attributes
     ----------
-    description
+    sequence
     id
+    description
     quality
 
     Raises
@@ -420,7 +421,7 @@ class BiologicalSequence(Sequence):
         .. shownumpydoc
 
         """
-        first_ten = str(self)[:10]
+        first_ten = self.sequence[:10]
         cn = self.__class__.__name__
         length = len(self)
         if length > 10:
@@ -481,20 +482,20 @@ class BiologicalSequence(Sequence):
         .. shownumpydoc
 
         """
-        return ''.join(self._sequence)
+        return self.sequence
 
     @property
-    def description(self):
-        """Description of the biological sequence.
+    def sequence(self):
+        """String containing underlying biological sequence characters.
 
-        A string representing the description of the biological sequence.
+        A string representing the characters of the biological sequence.
 
         Notes
         -----
         This property is not writeable.
 
         """
-        return self._description
+        return self._sequence
 
     @property
     def id(self):
@@ -508,6 +509,19 @@ class BiologicalSequence(Sequence):
 
         """
         return self._id
+
+    @property
+    def description(self):
+        """Description of the biological sequence.
+
+        A string representing the description of the biological sequence.
+
+        Notes
+        -----
+        This property is not writeable.
+
+        """
+        return self._description
 
     @property
     def quality(self):
@@ -541,6 +555,109 @@ class BiologicalSequence(Sequence):
 
         """
         return self.quality is not None
+
+    def equals(self, other, ignore=None):
+        """Compare two biological sequences for equality.
+
+        By default, ``BiologicalSequence``s are equal if their sequence,
+        identifier, description, and quality scores are the same and they are
+        the same type.
+
+        Parameters
+        ----------
+        other : BiologicalSequence
+            The sequence to test for equality against.
+        ignore : iterable of str, optional
+            List of ``BiologicalSequence`` attributes to ignore in the equality
+            test. By default, all attributes must be equal for two
+            biological sequences to be considered equal. Valid attributes are
+            ``'sequence'``, ``'id'``, ``'description'``, and ``'quality'``.
+
+        Returns
+        -------
+        bool
+            Indicates whether `self` and `other` are equal.
+
+        See Also
+        --------
+        __eq__
+        __ne__
+
+        Notes
+        -----
+        Biological sequences must *always* have the same type to be considered
+        equal. This check cannot be ignored via `ignore`.
+
+        Examples
+        --------
+        Define two biological sequences that have the same underlying sequence
+        of characters:
+
+        >>> from skbio import BiologicalSequence
+        >>> s = BiologicalSequence('GGUCGUGAAGGA')
+        >>> t = BiologicalSequence('GGUCGUGAAGGA')
+
+        The two sequences are considered equal because their underlying
+        sequence of characters are the same and their optional attributes (id,
+        description, and quality scores) were not provided:
+
+        >>> s.equals(t)
+        True
+        >>> t.equals(s)
+        True
+
+        Define another biological sequence with a different sequence of
+        characters than the previous two biological sequences:
+
+        >>> u = BiologicalSequence('GGUCGUGACCGA')
+        >>> u.equals(t)
+        False
+
+        Define a biological sequence with the same sequence of characters as
+        ``u``, but with different identifier and quality scores:
+        >>> v = BiologicalSequence('GGUCGUGACCGA', id='abc',
+        ...                        quality=[1, 5, 3, 3, 2, 42, 100, 9, 10, 55,
+        ...                                 42, 42])
+
+        By default, the two sequences are *not* considered equal because their
+        identifiers and quality scores do not match:
+
+        >>> u.equals(v)
+        False
+
+        By specifying that the quality scores and identifier should be ignored,
+        they now compare equal:
+
+        >>> u.equals(v, ignore=['quality', 'id'])
+        True
+
+        .. shownumpydoc
+
+        """
+        if ignore is None:
+            ignore = {}
+
+        # Checks are ordered from least to most expensive.
+        if self.__class__ != other.__class__:
+            return False
+
+        if 'id' not in ignore and self.id != other.id:
+            return False
+
+        if ('description' not in ignore and
+            self.description != other.description):
+            return False
+
+        # Use array_equal instead of (a == b).all() because of this issue:
+        #     http://stackoverflow.com/a/10582030
+        if ('quality' not in ignore and
+            not np.array_equal(self.quality, other.quality)):
+            return False
+
+        if 'sequence' not in ignore and self.sequence != other.sequence:
+            return False
+
+        return True
 
     def count(self, subsequence):
         """Returns the number of occurences of subsequence.
@@ -1177,10 +1294,6 @@ class BiologicalSequence(Sequence):
         str
             The `BiologicalSequence` as a fasta-formatted string.
 
-        See Also
-        --------
-        __str__
-
         Examples
         --------
         >>> from skbio.sequence import BiologicalSequence
@@ -1201,7 +1314,7 @@ class BiologicalSequence(Sequence):
             header_line = self._id
 
         return '>%s\n%s%s' % (
-            header_line, str(self), terminal_character)
+            header_line, self.sequence, terminal_character)
 
     def upper(self):
         """Convert the BiologicalSequence to uppercase
