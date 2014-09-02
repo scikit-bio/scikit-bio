@@ -1098,8 +1098,8 @@ class BiologicalSequence(Sequence):
         -------
         generator
             Generator yielding all possible nondegenerate versions of the
-            sequence. Each sequence will have the same type, id, and
-            description as `self`.
+            sequence. Each sequence will have the same type, id, description,
+            and quality scores as `self`.
 
         Raises
         ------
@@ -1150,9 +1150,10 @@ class BiologicalSequence(Sequence):
         # than this method.
         id_ = self.id
         desc = self.description
+        qual = self.quality
         cls = self.__class__
 
-        return (cls(nondegen_seq, id_, desc) for nondegen_seq in result)
+        return (cls(nondegen_seq, id_, desc, qual) for nondegen_seq in result)
 
     def to_fasta(self, field_delimiter=" ", terminal_character="\n"):
         """Return the sequence as a fasta-formatted string
