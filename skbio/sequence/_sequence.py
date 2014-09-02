@@ -254,7 +254,7 @@ class BiologicalSequence(Sequence):
             eq = False
         # Use array_equal instead of (a == b).all() because of this issue:
         #     http://stackoverflow.com/a/10582030
-        elif not np.array_equal(self._quality, other._quality):
+        elif not np.array_equal(self.quality, other.quality):
             eq = False
         elif self._sequence != other._sequence:
             eq = False
@@ -285,8 +285,9 @@ class BiologicalSequence(Sequence):
 
         """
         try:
-            return self.__class__(self._sequence[i],
-                                  self.id, self.description)
+            qual = self.quality[i] if self.has_quality() else None
+            return self.__class__(self._sequence[i], self.id, self.description,
+                                  qual)
         except IndexError:
             raise IndexError(
                 "Position %d is out of range for %r." % (i, self))
@@ -511,7 +512,7 @@ class BiologicalSequence(Sequence):
 
         A 1-D ``numpy.ndarray`` of integers representing quality scores for
         each character in the biological sequence, or ``None`` if quality
-        scores are not available.
+        scores are not present.
 
         Notes
         -----
@@ -521,6 +522,22 @@ class BiologicalSequence(Sequence):
 
         """
         return self._quality
+
+    def has_quality(self):
+        """Return bool indicating presence of quality scores in the sequence.
+
+        Returns
+        -------
+        bool
+            ``True`` if the biological sequence has quality scores, ``False``
+            otherwise.
+
+        See Also
+        --------
+        quality
+
+        """
+        return self.quality is not None
 
     def count(self, subsequence):
         """Returns the number of occurences of subsequence.
@@ -546,7 +563,7 @@ class BiologicalSequence(Sequence):
         return self._sequence.count(subsequence)
 
     def degap(self):
-        """Returns a new `BiologicalSequence` with gaps characters removed.
+        """Returns a new `BiologicalSequence` with gap characters removed.
 
         Returns
         -------
@@ -557,7 +574,9 @@ class BiologicalSequence(Sequence):
         Notes
         -----
         The type, id, and description of the result will be the
-        same as `self`.
+        same as `self`. If quality scores are present, they will be filtered in
+        the same manner as the sequence and included in the resulting
+        biological sequence.
 
         Examples
         --------
@@ -571,9 +590,20 @@ class BiologicalSequence(Sequence):
 
         """
         gaps = self.gap_alphabet()
-        result = [e for e in self._sequence if e not in gaps]
-        return self.__class__(result, id=self._id,
-                              description=self._description)
+        filtered_seq = []
+        indices = []
+        for i, e in enumerate(self._sequence):
+            if e not in gaps:
+                filtered_seq.append(e)
+                indices.append(i)
+
+        filtered_quality = None
+        if self.has_quality():
+            filtered_quality = self.quality[indices]
+
+        return self.__class__(filtered_seq, id=self._id,
+                              description=self._description,
+                              quality=filtered_quality)
 
     def distance(self, other, distance_fn=None):
         """Returns the distance to other
