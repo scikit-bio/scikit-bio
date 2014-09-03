@@ -517,10 +517,13 @@ class BiologicalSequenceTests(TestCase):
         self.assertEqual(b.upper(), expected)
 
     def test_lower(self):
-        b = NucleotideSequence('GAt.ACa-', id='x', description='42')
+        b = NucleotideSequence('GAt.ACa-', id='x', description='42',
+                               quality=range(8))
         expected = NucleotideSequence('gat.aca-', id='x',
-                                      description='42')
-        self.assertEqual(b.lower(), expected)
+                                      description='42', quality=range(8))
+        # use equals method to ensure that id, description, and quality are
+        # correctly propagated to the resulting sequence
+        self.assertTrue(b.lower().equals(expected))
 
 
 class NucelotideSequenceTests(TestCase):
