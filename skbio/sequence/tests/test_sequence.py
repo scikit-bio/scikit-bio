@@ -25,7 +25,7 @@ from skbio.sequence import BiologicalSequenceError
 class BiologicalSequenceTests(TestCase):
 
     def setUp(self):
-        self.b1 = BiologicalSequence('GATTACA')
+        self.b1 = BiologicalSequence('GATTACA', quality=range(7))
         self.b2 = BiologicalSequence(
             'ACCGGTACC', id="test-seq-2",
             description="A test sequence")
@@ -36,8 +36,10 @@ class BiologicalSequenceTests(TestCase):
         self.b5 = BiologicalSequence(
             'LLPRTEIN', description="some description")
         self.b6 = BiologicalSequence('ACGTACGTACGT')
-        self.b7 = BiologicalSequence('..--..')
-        self.b8 = BiologicalSequence('HE..--..LLO')
+        self.b7 = BiologicalSequence('..--..', quality=range(6))
+        self.b8 = BiologicalSequence('HE..--..LLO', id='hello',
+                                     description='gapped hello',
+                                     quality=range(11))
 
     def test_init_varied_input(self):
         # init as string
@@ -86,10 +88,6 @@ class BiologicalSequenceTests(TestCase):
         # wrong number of dimensions (2-D)
         with self.assertRaisesRegexp(BiologicalSequenceError, '1-D'):
             BiologicalSequence('ACGT', quality=[[2, 3], [4, 5]])
-
-        # wrong number of dimensions (single element)
-        with self.assertRaisesRegexp(BiologicalSequenceError, '1-D'):
-            BiologicalSequence('G', quality=2)
 
         # wrong number of elements
         with self.assertRaisesRegexp(BiologicalSequenceError, '\(3\).*\(4\)'):
@@ -295,8 +293,25 @@ class BiologicalSequenceTests(TestCase):
         with self.assertRaises(AttributeError):
             a.quality = (22, 22, 42)
 
+    def test_quality_not_provided(self):
         b = BiologicalSequence('ACA')
         self.assertIs(b.quality, None)
+
+    def test_quality_scalar(self):
+        b = BiologicalSequence('G', quality=2)
+
+        self.assertIsInstance(b.quality, np.ndarray)
+        self.assertEqual(b.quality.dtype, np.int)
+        self.assertEqual(b.quality.shape, (1,))
+        npt.assert_equal(b.quality, np.array([2]))
+
+    def test_quality_empty(self):
+        b = BiologicalSequence('', quality=[])
+
+        self.assertIsInstance(b.quality, np.ndarray)
+        self.assertEqual(b.quality.dtype, np.int)
+        self.assertEqual(b.quality.shape, (0,))
+        npt.assert_equal(b.quality, np.array([]))
 
     def test_quality_no_copy(self):
         qual = np.array([22, 22, 1])
@@ -389,9 +404,23 @@ class BiologicalSequenceTests(TestCase):
         self.assertEqual(self.b1.count('TT'), 1)
 
     def test_degap(self):
-        self.assertEqual(self.b1.degap(), self.b1)
-        self.assertEqual(self.b7.degap(), BiologicalSequence(''))
-        self.assertEqual(self.b8.degap(), BiologicalSequence('HELLO'))
+        # use equals method to ensure that id, description, and filtered
+        # quality are correctly propagated to the resulting sequence
+
+        # no filtering, has quality
+        self.assertTrue(self.b1.degap().equals(self.b1))
+
+        # no filtering, doesn't have quality
+        self.assertTrue(self.b2.degap().equals(self.b2))
+
+        # everything is filtered, has quality
+        self.assertTrue(self.b7.degap().equals(
+            BiologicalSequence('', quality=[])))
+
+        # some filtering, has quality
+        self.assertTrue(self.b8.degap().equals(
+            BiologicalSequence('HELLO', id='hello', description='gapped hello',
+                               quality=[0, 1, 8, 9, 10])))
 
     def test_distance(self):
         # note that test_hamming_distance covers default behavior more

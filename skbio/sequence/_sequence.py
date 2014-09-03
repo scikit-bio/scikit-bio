@@ -712,17 +712,19 @@ class BiologicalSequence(Sequence):
         The type, id, and description of the result will be the
         same as `self`. If quality scores are present, they will be filtered in
         the same manner as the sequence and included in the resulting
-        biological sequence.
+        degapped biological sequence.
 
         Examples
         --------
         >>> from skbio.sequence import BiologicalSequence
-        >>> s = BiologicalSequence('GGUC-C--ACGTT-C.')
+        >>> s = BiologicalSequence('GGUC-C--ACGTT-C.', quality=range(16))
         >>> t = s.degap()
         >>> t
         <BiologicalSequence: GGUCCACGTT... (length: 11)>
         >>> print(t)
         GGUCCACGTTC
+        >>> t.quality
+        array([ 0,  1,  2,  3,  5,  8,  9, 10, 11, 12, 14])
 
         """
         gaps = self.gap_alphabet()
@@ -1348,7 +1350,19 @@ class BiologicalSequence(Sequence):
     def _set_quality(self, quality):
         if quality is not None:
             quality = np.asarray(quality)
-            quality = quality.astype(int, casting='safe', copy=False)
+
+            if quality.ndim == 0:
+                # We have something scalar-like, so create a single-element
+                # vector to store it.
+                quality = np.reshape(quality, 1)
+
+            if quality.shape == (0,):
+                # cannot safe cast an empty vector from float to int
+                cast_type = 'unsafe'
+            else:
+                cast_type = 'safe'
+
+            quality = quality.astype(int, casting=cast_type, copy=False)
             quality.flags.writeable = False
 
             if quality.ndim != 1:
@@ -1358,6 +1372,7 @@ class BiologicalSequence(Sequence):
                     "Number of quality scores (%d) must match the number of "
                     "characters in the biological sequence (%d)." %
                     (len(quality), len(self._sequence)))
+
         self._quality = quality
 
 
