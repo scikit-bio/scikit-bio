@@ -13,6 +13,9 @@ from __future__ import absolute_import, division, print_function
 from collections import Counter, defaultdict
 from unittest import TestCase, main
 
+import numpy as np
+import numpy.testing as npt
+
 from skbio import (
     BiologicalSequence, NucleotideSequence, DNASequence, RNASequence,
     ProteinSequence)
@@ -74,6 +77,23 @@ class BiologicalSequenceTests(TestCase):
             BiologicalSequence("..--..", validate=True)
         except BiologicalSequenceError:
             self.assertTrue(False)
+
+    def test_init_with_invalid_quality(self):
+        # invalid dtype
+        with self.assertRaises(TypeError):
+            BiologicalSequence('ACGT', quality=[2, 3, 4.1, 5])
+
+        # wrong number of dimensions (2-D)
+        with self.assertRaisesRegexp(BiologicalSequenceError, '1-D'):
+            BiologicalSequence('ACGT', quality=[[2, 3], [4, 5]])
+
+        # wrong number of dimensions (single element)
+        with self.assertRaisesRegexp(BiologicalSequenceError, '1-D'):
+            BiologicalSequence('G', quality=2)
+
+        # wrong number of elements
+        with self.assertRaisesRegexp(BiologicalSequenceError, '\(3\).*\(4\)'):
+            BiologicalSequence('ACGT', quality=[2, 3, 4])
 
     def test_contains(self):
         self.assertTrue('G' in self.b1)
@@ -241,11 +261,6 @@ class BiologicalSequenceTests(TestCase):
     def test_alphabet(self):
         self.assertEqual(self.b1.alphabet(), set())
 
-    def test_description(self):
-        self.assertEqual(self.b1.description, "")
-        self.assertEqual(self.b2.description, "A test sequence")
-        self.assertEqual(self.b3.description, "A protein sequence")
-
     def test_gap_alphabet(self):
         self.assertEqual(self.b1.gap_alphabet(), set('-.'))
 
@@ -258,6 +273,48 @@ class BiologicalSequenceTests(TestCase):
         self.assertEqual(self.b1.id, "")
         self.assertEqual(self.b2.id, "test-seq-2")
         self.assertEqual(self.b3.id, "test-seq-3")
+
+    def test_description(self):
+        self.assertEqual(self.b1.description, "")
+        self.assertEqual(self.b2.description, "A test sequence")
+        self.assertEqual(self.b3.description, "A protein sequence")
+
+    def test_quality(self):
+        a = BiologicalSequence('ACA', quality=(22, 22, 1))
+
+        # should get back a read-only numpy array of int dtype
+        self.assertIsInstance(a.quality, np.ndarray)
+        self.assertEqual(a.quality.dtype, np.int)
+        npt.assert_equal(a.quality, np.array((22, 22, 1)))
+
+        # test that we can't mutate the quality scores
+        with self.assertRaises(ValueError):
+            a.quality[1] = 42
+
+        # test that we can't set the property
+        with self.assertRaises(AttributeError):
+            a.quality = (22, 22, 42)
+
+        b = BiologicalSequence('ACA')
+        self.assertIs(b.quality, None)
+
+    def test_quality_no_copy(self):
+        qual = np.array([22, 22, 1])
+        a = BiologicalSequence('ACA', quality=qual)
+        self.assertIs(a.quality, qual)
+
+        with self.assertRaises(ValueError):
+            a.quality[1] = 42
+
+        with self.assertRaises(ValueError):
+            qual[1] = 42
+
+    def test_has_quality(self):
+        a = BiologicalSequence('ACA', quality=(5, 4, 67))
+        self.assertTrue(a.has_quality())
+
+        b = BiologicalSequence('ACA')
+        self.assertFalse(b.has_quality())
 
     def test_equals_true(self):
         # sequences match, all other attributes are not provided

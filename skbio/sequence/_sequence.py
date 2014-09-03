@@ -1356,8 +1356,9 @@ class BiologicalSequence(Sequence):
                 raise BiologicalSequenceError("Quality scores must be 1-D.")
             elif len(quality) != len(self._sequence):
                 raise BiologicalSequenceError(
-                    "Number of quality scores must match the number of "
-                    "characters in the biological sequence.")
+                    "Number of quality scores (%d) must match the number of "
+                    "characters in the biological sequence (%d)." %
+                    (len(quality), len(self._sequence)))
         self._quality = quality
 
 
