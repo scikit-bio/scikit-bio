@@ -587,8 +587,8 @@ class BiologicalSequence(Sequence):
         ignore : iterable of str, optional
             List of ``BiologicalSequence`` attributes to ignore in the equality
             test. By default, all attributes must be equal for two
-            biological sequences to be considered equal. Valid attributes are
-            ``'sequence'``, ``'id'``, ``'description'``, and ``'quality'``.
+            biological sequences to be considered equal. Attributes that can be
+            ignored are ``'id'``, ``'description'``, and ``'quality'``.
 
         Returns
         -------
@@ -602,8 +602,9 @@ class BiologicalSequence(Sequence):
 
         Notes
         -----
-        Biological sequences must *always* have the same type to be considered
-        equal. This check cannot be ignored via `ignore`.
+        Biological sequences must *always* have the same type and underlying
+        sequence of characters to be considered equal. These checks cannot be
+        ignored via `ignore`.
 
         Examples
         --------
@@ -648,8 +649,6 @@ class BiologicalSequence(Sequence):
         >>> u.equals(v, ignore=['quality', 'id'])
         True
 
-        .. shownumpydoc
-
         """
         if ignore is None:
             ignore = {}
@@ -671,7 +670,7 @@ class BiologicalSequence(Sequence):
                                                           other.quality):
             return False
 
-        if 'sequence' not in ignore and self.sequence != other.sequence:
+        if self.sequence != other.sequence:
             return False
 
         return True

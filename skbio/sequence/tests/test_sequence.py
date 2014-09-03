@@ -343,27 +343,20 @@ class BiologicalSequenceTests(TestCase):
         b = BiologicalSequence('ACGT', quality=[5, 6, 7, 8])
         self.assertTrue(a.equals(b, ignore=['quality']))
 
-        # ignore sequence
-        a = BiologicalSequence('ACGA')
-        b = BiologicalSequence('ACGT')
-        self.assertTrue(a.equals(b, ignore=['sequence']))
-
-        # ignore everything (except type)
-        a = BiologicalSequence('ACGA', id='foo', description='abc',
+        # ignore everything (except type and sequence)
+        a = BiologicalSequence('ACGT', id='foo', description='abc',
                                quality=[1, 2, 3, 4])
         b = BiologicalSequence('ACGT', id='bar', description='def',
                                quality=[5, 6, 7, 8])
-        self.assertTrue(a.equals(b, ignore=['sequence', 'quality',
-                                            'description', 'id']))
+        self.assertTrue(a.equals(b, ignore=['quality', 'description', 'id']))
 
     def test_equals_false(self):
         # type mismatch
-        a = BiologicalSequence('ACGA', id='foo', description='abc',
+        a = BiologicalSequence('ACGT', id='foo', description='abc',
                                quality=[1, 2, 3, 4])
         b = NucleotideSequence('ACGT', id='bar', description='def',
                                quality=[5, 6, 7, 8])
-        self.assertFalse(a.equals(b, ignore=['sequence', 'quality',
-                                             'description', 'id']))
+        self.assertFalse(a.equals(b, ignore=['quality', 'description', 'id']))
 
         # id mismatch
         a = BiologicalSequence('ACGT', id='foo')
@@ -375,9 +368,14 @@ class BiologicalSequenceTests(TestCase):
         b = BiologicalSequence('ACGT', description='bar')
         self.assertFalse(a.equals(b))
 
-        # quality mismatch
+        # quality mismatch (both provided)
         a = BiologicalSequence('ACGT', quality=[1, 2, 3, 4])
         b = BiologicalSequence('ACGT', quality=[1, 2, 3, 5])
+        self.assertFalse(a.equals(b))
+
+        # quality mismatch (one provided)
+        a = BiologicalSequence('ACGT', quality=[1, 2, 3, 4])
+        b = BiologicalSequence('ACGT')
         self.assertFalse(a.equals(b))
 
         # sequence mismatch
