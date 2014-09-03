@@ -130,9 +130,21 @@ class BiologicalSequenceTests(TestCase):
             BiologicalSequence('ACGT') == NucleotideSequence('ACGT'))
 
     def test_getitem(self):
-        self.assertEqual(self.b1[0], BiologicalSequence('G'))
-        self.assertEqual(self.b1[:], BiologicalSequence('GATTACA'))
-        self.assertEqual(self.b1[::-1], BiologicalSequence('ACATTAG'))
+        # use equals method to ensure that id, description, and filtered
+        # quality are correctly propagated to the resulting sequence
+        self.assertTrue(self.b1[0].equals(
+            BiologicalSequence('G', quality=(0,))))
+
+        self.assertTrue(self.b1[:].equals(
+            BiologicalSequence('GATTACA', quality=range(7))))
+
+        self.assertTrue(self.b1[::-1].equals(
+            BiologicalSequence('ACATTAG', quality=range(7)[::-1])))
+
+        # test a sequence without quality scores
+        b = BiologicalSequence('ACGT', id='foo', description='bar')
+        self.assertTrue(b[2:].equals(
+            BiologicalSequence('GT', id='foo', description='bar')))
 
     def test_getitem_out_of_range(self):
         with self.assertRaises(IndexError):
