@@ -664,9 +664,8 @@ class DNASequenceTests(TestCase):
     def setUp(self):
         self.empty = DNASequence('')
         self.b1 = DNASequence('GATTACA')
-        self.b2 = DNASequence(
-            'ACCGGTACC', id="test-seq-2",
-            description="A test sequence")
+        self.b2 = DNASequence('ACCGGTACC', id="test-seq-2",
+                              description="A test sequence", quality=range(9))
         self.b3 = DNASequence(
             'ACCGGUACC', id="bad-seq-1",
             description="Not a DNA sequence")
@@ -737,11 +736,22 @@ class DNASequenceTests(TestCase):
         self.assertEqual(DNASequence.iupac_characters(), exp)
 
     def test_complement(self):
-        self.assertEqual(self.b1.complement(), DNASequence("CTAATGT"))
-        self.assertEqual(self.b2.complement(), DNASequence("TGGCCATGG"))
+        # use equals method to ensure that id, description, and quality are
+        # correctly propagated to the resulting sequence
+        self.assertTrue(self.b1.complement().equals(DNASequence("CTAATGT")))
+
+        self.assertTrue(self.b2.complement().equals(
+            DNASequence("TGGCCATGG", id="test-seq-2",
+                        description="A test sequence", quality=range(9))))
+
         self.assertRaises(BiologicalSequenceError, self.b3.complement)
-        self.assertEqual(self.b4.complement(), DNASequence("KYWSRMBDHVN"))
-        self.assertEqual(self.b5.complement(), DNASequence(".C--TAATG-T..."))
+
+        self.assertTrue(self.b4.complement().equals(
+            DNASequence("KYWSRMBDHVN", id="degen",
+                        description="All of the degenerate bases")))
+
+        self.assertTrue(self.b5.complement().equals(
+            DNASequence(".C--TAATG-T...")))
 
     def test_reverse_complement(self):
         self.assertEqual(self.b1.reverse_complement(), DNASequence("TGTAATC"))
@@ -816,9 +826,8 @@ class RNASequenceTests(TestCase):
     def setUp(self):
         self.empty = RNASequence('')
         self.b1 = RNASequence('GAUUACA')
-        self.b2 = RNASequence(
-            'ACCGGUACC', id="test-seq-2",
-            description="A test sequence")
+        self.b2 = RNASequence('ACCGGUACC', id="test-seq-2",
+                              description="A test sequence", quality=range(9))
         self.b3 = RNASequence(
             'ACCGGTACC', id="bad-seq-1",
             description="Not a RNA sequence")
@@ -889,11 +898,22 @@ class RNASequenceTests(TestCase):
         self.assertEqual(RNASequence.iupac_characters(), exp)
 
     def test_complement(self):
-        self.assertEqual(self.b1.complement(), RNASequence("CUAAUGU"))
-        self.assertEqual(self.b2.complement(), RNASequence("UGGCCAUGG"))
+        # use equals method to ensure that id, description, and quality are
+        # correctly propagated to the resulting sequence
+        self.assertTrue(self.b1.complement().equals(RNASequence("CUAAUGU")))
+
+        self.assertTrue(self.b2.complement().equals(
+            RNASequence("UGGCCAUGG", id="test-seq-2",
+                        description="A test sequence", quality=range(9))))
+
         self.assertRaises(BiologicalSequenceError, self.b3.complement)
-        self.assertEqual(self.b4.complement(), RNASequence("KYWSRMBDHVN"))
-        self.assertEqual(self.b5.complement(), RNASequence(".C--UAAUG-U..."))
+
+        self.assertTrue(self.b4.complement().equals(
+            RNASequence("KYWSRMBDHVN", id="degen",
+                        description="All of the degenerate bases")))
+
+        self.assertTrue(self.b5.complement().equals(
+            RNASequence(".C--UAAUG-U...")))
 
     def test_reverse_complement(self):
         self.assertEqual(self.b1.reverse_complement(), RNASequence("UGUAAUC"))
