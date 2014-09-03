@@ -784,8 +784,12 @@ class DNASequenceTests(TestCase):
 
     def test_is_reverse_complement(self):
         self.assertFalse(self.b1.is_reverse_complement(self.b1))
-        self.assertTrue(
-            self.b1.is_reverse_complement(DNASequence('TGTAATC')))
+
+        # id, description, and quality scores should be ignored (only sequence
+        # data and type should be compared)
+        self.assertTrue(self.b1.is_reverse_complement(
+            DNASequence('TGTAATC', quality=range(7))))
+
         self.assertTrue(
             self.b4.is_reverse_complement(DNASequence('NVHDBMRSWYK')))
 
@@ -955,8 +959,12 @@ class RNASequenceTests(TestCase):
 
     def test_is_reverse_complement(self):
         self.assertFalse(self.b1.is_reverse_complement(self.b1))
-        self.assertTrue(
-            self.b1.is_reverse_complement(RNASequence('UGUAAUC')))
+
+        # id, description, and quality scores should be ignored (only sequence
+        # data and type should be compared)
+        self.assertTrue(self.b1.is_reverse_complement(
+            RNASequence('UGUAAUC', quality=range(7))))
+
         self.assertTrue(
             self.b4.is_reverse_complement(RNASequence('NVHDBMRSWYK')))
 
