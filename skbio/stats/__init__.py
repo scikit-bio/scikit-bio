@@ -38,9 +38,9 @@ Functions
 # ----------------------------------------------------------------------------
 
 from ._misc import p_value_to_str
-from ._subsample import subsample
+from ._subsample import subsample, uneven_subsample
 
-__all__ = ['p_value_to_str', 'subsample']
+__all__ = ['p_value_to_str', 'subsample', 'uneven_subsample']
 
 from numpy.testing import Tester
 test = Tester().test

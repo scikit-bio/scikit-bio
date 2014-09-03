@@ -91,7 +91,7 @@ def uneven_subsample(iter_, maximum, minimum=1, random_buf_size=100000,
     Randomly keep up to 2 sequences per sample from a set of demultiplexed
     sequences:
 
-    >>> from skbio.math.subsample import uneven_subsample
+    >>> from skbio.stats import uneven_subsample
     >>> import numpy as np
     >>> np.random.seed(123)
     >>> sequences = [('sampleA', 'AATTGG'),
@@ -195,7 +195,7 @@ def subsample(counts, n, replace=False):
     Subsample 4 items (without replacement) from a vector of counts:
 
     >>> import numpy as np
-    >>> from skbio.math.subsample import subsample
+    >>> from skbio.stats import subsample
     >>> a = np.array([4, 5, 0, 2, 1])
     >>> sub = subsample(a, 4)
     >>> sub.sum()
