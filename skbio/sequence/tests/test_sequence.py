@@ -130,7 +130,7 @@ class BiologicalSequenceTests(TestCase):
             BiologicalSequence('ACGT') == NucleotideSequence('ACGT'))
 
     def test_getitem(self):
-        # use equals method to ensure that id, description, and filtered
+        # use equals method to ensure that id, description, and sliced
         # quality are correctly propagated to the resulting sequence
         self.assertTrue(self.b1[0].equals(
             BiologicalSequence('G', quality=(0,))))
@@ -698,6 +698,28 @@ class NucelotideSequenceTests(TestCase):
                NucleotideSequence('-C.a'), NucleotideSequence('-C.c')]
         obs = sorted(NucleotideSequence('-M.m').nondegenerates(), key=str)
         self.assertEqual(obs, exp)
+
+    def test_nondegenerates_propagate_optional_properties(self):
+        seq = NucleotideSequence('RS', id='foo', description='bar',
+                                 quality=[42, 999])
+
+        exp = [
+            NucleotideSequence('AC', id='foo', description='bar',
+                               quality=[42, 999]),
+            NucleotideSequence('AG', id='foo', description='bar',
+                               quality=[42, 999]),
+            NucleotideSequence('GC', id='foo', description='bar',
+                               quality=[42, 999]),
+            NucleotideSequence('GG', id='foo', description='bar',
+                               quality=[42, 999])
+        ]
+
+        obs = sorted(seq.nondegenerates(), key=str)
+
+        for o, e in zip(obs, exp):
+            # use equals method to ensure that id, description, and quality are
+            # correctly propagated to the resulting sequence
+            self.assertTrue(o.equals(e))
 
 
 class DNASequenceTests(TestCase):
