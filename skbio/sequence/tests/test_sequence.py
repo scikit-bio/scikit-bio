@@ -754,12 +754,21 @@ class DNASequenceTests(TestCase):
             DNASequence(".C--TAATG-T...")))
 
     def test_reverse_complement(self):
-        self.assertEqual(self.b1.reverse_complement(), DNASequence("TGTAATC"))
-        self.assertEqual(self.b2.reverse_complement(),
-                         DNASequence("GGTACCGGT"))
+        # use equals method to ensure that id, description, and (reversed)
+        # quality scores are correctly propagated to the resulting sequence
+        self.assertTrue(self.b1.reverse_complement().equals(
+            DNASequence("TGTAATC")))
+
+        self.assertTrue(self.b2.reverse_complement().equals(
+            DNASequence("GGTACCGGT", id="test-seq-2",
+                        description="A test sequence",
+                        quality=range(9)[::-1])))
+
         self.assertRaises(BiologicalSequenceError, self.b3.reverse_complement)
-        self.assertEqual(self.b4.reverse_complement(),
-                         DNASequence("NVHDBMRSWYK"))
+
+        self.assertTrue(self.b4.reverse_complement().equals(
+            DNASequence("NVHDBMRSWYK", id="degen",
+                        description="All of the degenerate bases")))
 
     def test_unsupported_characters(self):
         self.assertEqual(self.b1.unsupported_characters(), set())
@@ -916,12 +925,21 @@ class RNASequenceTests(TestCase):
             RNASequence(".C--UAAUG-U...")))
 
     def test_reverse_complement(self):
-        self.assertEqual(self.b1.reverse_complement(), RNASequence("UGUAAUC"))
-        self.assertEqual(self.b2.reverse_complement(),
-                         RNASequence("GGUACCGGU"))
+        # use equals method to ensure that id, description, and (reversed)
+        # quality scores are correctly propagated to the resulting sequence
+        self.assertTrue(self.b1.reverse_complement().equals(
+            RNASequence("UGUAAUC")))
+
+        self.assertTrue(self.b2.reverse_complement().equals(
+            RNASequence("GGUACCGGU", id="test-seq-2",
+                        description="A test sequence",
+                        quality=range(9)[::-1])))
+
         self.assertRaises(BiologicalSequenceError, self.b3.reverse_complement)
-        self.assertEqual(self.b4.reverse_complement(),
-                         RNASequence("NVHDBMRSWYK"))
+
+        self.assertTrue(self.b4.reverse_complement().equals(
+            RNASequence("NVHDBMRSWYK", id="degen",
+                        description="All of the degenerate bases")))
 
     def test_unsupported_characters(self):
         self.assertEqual(self.b1.unsupported_characters(), set())
