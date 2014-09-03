@@ -26,15 +26,125 @@ Functions
 
 from __future__ import absolute_import, division, print_function
 
+import sys
 from warnings import warn
+from heapq import heappush, heappop
 
 import numpy as np
+from future.utils import viewitems
+from collections import defaultdict
+from copy import copy
 
 from skbio.util import EfficiencyWarning
 try:
     from ._subsample import _subsample_without_replacement
 except ImportError:
     pass
+
+
+def uneven_subsample(iter_, maximum, minimum=1, random_buf_size=100000,
+                     bin_f=None):
+    """Get a random subset of items per bin
+
+    Parameters
+    ----------
+    iter_ : skbio.parse.sequences.SequenceIterator
+        The sequences to walk over
+    maximum : unsigned int
+        The maximum number of items per bin.
+    minimum : unsigned int, optional
+        The minimum number of items per bin.
+    random_buf_size : unsigned int, optional
+        The size of the random value buffer.
+    bin_f : function, optional
+        Method to determine what bin an item is associated with. If None, then
+        all items are considered to be part of the same bin.
+
+    Notes
+    -----
+    Randomly get ``maximum`` items for each bin. If the bin has less than
+    ``maximum``, only those bins that have > ``minimum`` items are
+    returned.
+
+    This method will at most hold ``maximum`` * N data, where N is the number
+    of bins.
+
+    All items associated to a bin have an equal probability of being retained.
+
+    If ``maximum`` is equal to ``minimum``, then this method should be the
+    same as ``subsample``.
+
+    Raises
+    ------
+    ValueError
+        If ``minimum`` is > ``maximum``.
+    ValueError
+        If ``minimum`` < 1 or if ``maximum`` < 1.
+
+    Returns
+    -------
+    generator
+        (bin, item)
+
+    Examples
+    --------
+    Randomly keep up to 2 sequences per sample from a set of demultiplexed
+    sequences:
+
+    >>> from skbio.math.subsample import uneven_subsample
+    >>> import numpy as np
+    >>> np.random.seed(123)
+    >>> sequences = [('sampleA', 'AATTGG'),
+    ...              ('sampleB', 'ATATATAT'),
+    ...              ('sampleC', 'ATGGCC'),
+    ...              ('sampleB', 'ATGGCT'),
+    ...              ('sampleB', 'ATGGCG'),
+    ...              ('sampleA', 'ATGGCA')]
+    >>> bin_f = lambda item: item[0]
+    >>> for bin_, item in sorted(uneven_subsample(sequences, 2, bin_f=bin_f)):
+    ...     print(bin_, item[1])
+    sampleA AATTGG
+    sampleA ATGGCA
+    sampleB ATATATAT
+    sampleB ATGGCG
+    sampleC ATGGCC
+    """
+    if minimum > maximum:
+        raise ValueError("minimum cannot be > maximum!")
+    if minimum < 1 or maximum < 1:
+        raise ValueError("minimum and maximum must be > 0!")
+    if bin_f is None:
+        bin_f = lambda x: True
+
+    # buffer some random values
+    random_values = np.random.randint(0, sys.maxint, random_buf_size)
+    random_idx = 0
+
+    result = defaultdict(list)
+    for item in iter_:
+        bin_ = bin_f(item)
+        heap = result[bin_]
+
+        # pull a random value, and recompute random values if we've consumed
+        # our buffer
+        random_value = random_values[random_idx]
+        random_idx += 1
+        if random_idx >= random_buf_size:
+            random_values = np.random.randint(0, sys.maxint, random_buf_size)
+            random_idx = 0
+
+        # push our item on to the heap and drop the smallest if necessary
+        heappush(heap, (random_value, copy(item)))
+        if len(heap) > maximum:
+            heappop(heap)
+
+    # yield items
+    for bin_, heap in viewitems(result):
+        if len(heap) < minimum:
+            continue
+
+        for _, item in heap:
+            yield (bin_, item)
 
 
 def subsample(counts, n, replace=False):
