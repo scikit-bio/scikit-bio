@@ -44,8 +44,8 @@ with open('README.rst') as f:
 USE_CYTHON = os.environ.get('USE_CYTHON', False)
 ext = '.pyx' if USE_CYTHON else '.c'
 extensions = [
-    Extension("skbio.stats._subsample._subsample",
-              ["skbio/stats/_subsample/_subsample" + ext]),
+    Extension("skbio.stats.__subsample",
+              ["skbio/stats/__subsample" + ext]),
     Extension("skbio.alignment._ssw._ssw_wrapper",
               ["skbio/alignment/_ssw/_ssw_wrapper" + ext,
                "skbio/alignment/_ssw/ssw.c"],

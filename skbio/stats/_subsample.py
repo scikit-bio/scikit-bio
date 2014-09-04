@@ -32,7 +32,7 @@ import numpy as np
 
 from skbio.util import EfficiencyWarning
 try:
-    from ._subsample import _subsample_without_replacement
+    from .__subsample import _subsample_without_replacement
 except ImportError:
     pass
 
