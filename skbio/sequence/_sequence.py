@@ -585,10 +585,10 @@ class BiologicalSequence(Sequence):
         other : BiologicalSequence
             The sequence to test for equality against.
         ignore : iterable of str, optional
-            List of ``BiologicalSequence`` attributes to ignore in the equality
-            test. By default, all attributes must be equal for two
-            biological sequences to be considered equal. Attributes that can be
-            ignored are ``'id'``, ``'description'``, and ``'quality'``.
+            List of properties to ignore in the equality test. By default, all
+            properties must be the same for two biological sequences to be
+            considered equal. Properties that can be ignored are ``'type'``,
+            ``'id'``, ``'description'``, ``'quality'``, and ``'sequence'``.
 
         Returns
         -------
@@ -600,12 +600,6 @@ class BiologicalSequence(Sequence):
         __eq__
         __ne__
 
-        Notes
-        -----
-        Biological sequences must *always* have the same type and underlying
-        sequence of characters to be considered equal. These checks cannot be
-        ignored via `ignore`.
-
         Examples
         --------
         Define two biological sequences that have the same underlying sequence
@@ -615,9 +609,10 @@ class BiologicalSequence(Sequence):
         >>> s = BiologicalSequence('GGUCGUGAAGGA')
         >>> t = BiologicalSequence('GGUCGUGAAGGA')
 
-        The two sequences are considered equal because their underlying
-        sequence of characters are the same and their optional attributes (id,
-        description, and quality scores) were not provided:
+        The two sequences are considered equal because they are the same type,
+        their underlying sequence of characters are the same, and their
+        optional attributes (id, description, and quality scores) were not
+        provided:
 
         >>> s.equals(t)
         True
@@ -654,7 +649,7 @@ class BiologicalSequence(Sequence):
             ignore = {}
 
         # Checks are ordered from least to most expensive.
-        if self.__class__ != other.__class__:
+        if 'type' not in ignore and self.__class__ != other.__class__:
             return False
 
         if 'id' not in ignore and self.id != other.id:
@@ -670,7 +665,7 @@ class BiologicalSequence(Sequence):
                                                           other.quality):
             return False
 
-        if self.sequence != other.sequence:
+        if 'sequence' not in ignore and self.sequence != other.sequence:
             return False
 
         return True

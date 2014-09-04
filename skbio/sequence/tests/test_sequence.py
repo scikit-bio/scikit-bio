@@ -355,6 +355,11 @@ class BiologicalSequenceTests(TestCase):
                                quality=[1, 2, 3, 4])
         self.assertTrue(a.equals(b))
 
+        # ignore type
+        a = BiologicalSequence('ACGT')
+        b = DNASequence('ACGT')
+        self.assertTrue(a.equals(b, ignore=['type']))
+
         # ignore id
         a = BiologicalSequence('ACGT', id='foo')
         b = BiologicalSequence('ACGT', id='bar')
@@ -370,12 +375,18 @@ class BiologicalSequenceTests(TestCase):
         b = BiologicalSequence('ACGT', quality=[5, 6, 7, 8])
         self.assertTrue(a.equals(b, ignore=['quality']))
 
-        # ignore everything (except type and sequence)
-        a = BiologicalSequence('ACGT', id='foo', description='abc',
+        # ignore sequence
+        a = BiologicalSequence('ACGA')
+        b = BiologicalSequence('ACGT')
+        self.assertTrue(a.equals(b, ignore=['sequence']))
+
+        # ignore everything
+        a = BiologicalSequence('ACGA', id='foo', description='abc',
                                quality=[1, 2, 3, 4])
-        b = BiologicalSequence('ACGT', id='bar', description='def',
-                               quality=[5, 6, 7, 8])
-        self.assertTrue(a.equals(b, ignore=['quality', 'description', 'id']))
+        b = DNASequence('ACGT', id='bar', description='def',
+                        quality=[5, 6, 7, 8])
+        self.assertTrue(a.equals(b, ignore=['quality', 'description', 'id',
+                                            'sequence', 'type']))
 
     def test_equals_false(self):
         # type mismatch
