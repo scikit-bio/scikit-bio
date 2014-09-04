@@ -12,7 +12,7 @@ cimport numpy as cnp
 from skbio.alignment import Alignment
 from skbio.sequence import ProteinSequence, NucleotideSequence
 
-cdef extern from "ssw.h":
+cdef extern from "_lib/ssw.h":
 
     ctypedef struct s_align:
         cnp.uint16_t score1
