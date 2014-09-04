@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
+from future.utils.six import string_types
 
 from collections import Sequence, Counter, defaultdict
 from itertools import product
@@ -175,7 +176,10 @@ class BiologicalSequence(Sequence):
 
     def __init__(self, sequence, id="", description="", quality=None,
                  validate=False):
-        self._sequence = ''.join(sequence)
+        if not isinstance(sequence, string_types):
+            sequence = ''.join(sequence)
+        self._sequence = sequence
+
         self._id = id
         self._description = description
         self._set_quality(quality)
