@@ -356,6 +356,10 @@ class OrdinationResults(object):
            ...                         cmap='Set1', s=50)
 
         """
+        # Note: New features should not be added to this method and should
+        # instead be added to EMPeror (http://biocore.github.io/emperor/).
+        # Only bug fixes and minor updates should be made to this method.
+
         coord_matrix = self.site.T
         self._validate_plot_axes(coord_matrix, axis1, axis2, axis3)
 
