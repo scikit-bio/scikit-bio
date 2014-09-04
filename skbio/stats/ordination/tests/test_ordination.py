@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -10,10 +8,9 @@
 
 from __future__ import absolute_import, division, print_function
 from future.utils.six import binary_type, text_type, StringIO
-from future.builtins import zip
 
 import warnings
-import tempfile
+import unittest
 
 import matplotlib as mpl
 mpl.use('Agg')
@@ -26,9 +23,10 @@ from nose.tools import assert_is_instance, assert_raises_regexp, assert_true
 from scipy.spatial.distance import pdist
 
 from skbio import DistanceMatrix
-from skbio.stats.ordination import (CA, RDA, CCA, PCoA, OrdinationResults,
-                                    corr, mean_and_std)
-from skbio.util import FileFormatError, get_data_path
+from skbio.stats.ordination import (
+    CA, RDA, CCA, PCoA, OrdinationResults, corr, mean_and_std,
+    assert_ordination_results_equal)
+from skbio.util import get_data_path
 
 
 def normalize_signs(arr1, arr2):
@@ -271,6 +269,56 @@ class TestUtils(object):
     def test_corr_shape_mismatch(self):
         with npt.assert_raises(ValueError):
             corr(self.x, self.y)
+
+    def test_assert_ordination_results_equal(self):
+        minimal1 = OrdinationResults([1, 2])
+
+        # a minimal set of results should be equal to itself
+        assert_ordination_results_equal(minimal1, minimal1)
+
+        # type mismatch
+        with npt.assert_raises(AssertionError):
+            assert_ordination_results_equal(minimal1, 'foo')
+
+        # numeric values should be checked that they're almost equal
+        almost_minimal1 = OrdinationResults([1.0000001, 1.9999999])
+        assert_ordination_results_equal(minimal1, almost_minimal1)
+
+        # species_ids missing in one, present in the other
+        almost_minimal1.species_ids = ['abc', 'def']
+        with npt.assert_raises(AssertionError):
+            assert_ordination_results_equal(minimal1, almost_minimal1)
+        almost_minimal1.species_ids = None
+
+        # site_ids missing in one, present in the other
+        almost_minimal1.site_ids = ['abc', 'def']
+        with npt.assert_raises(AssertionError):
+            assert_ordination_results_equal(minimal1, almost_minimal1)
+        almost_minimal1.site_ids = None
+
+        # test each of the optional numeric attributes
+        for attr in ('species', 'site', 'biplot', 'site_constraints',
+                     'proportion_explained'):
+            # missing optional numeric attribute in one, present in the other
+            setattr(almost_minimal1, attr, [[1, 2], [3, 4]])
+            with npt.assert_raises(AssertionError):
+                assert_ordination_results_equal(minimal1, almost_minimal1)
+            setattr(almost_minimal1, attr, None)
+
+            # optional numeric attributes present in both, but not almost equal
+            setattr(minimal1, attr, [[1, 2], [3, 4]])
+            setattr(almost_minimal1, attr, [[1, 2], [3.00002, 4]])
+            with npt.assert_raises(AssertionError):
+                assert_ordination_results_equal(minimal1, almost_minimal1)
+            setattr(minimal1, attr, None)
+            setattr(almost_minimal1, attr, None)
+
+            # optional numeric attributes present in both, and almost equal
+            setattr(minimal1, attr, [[1, 2], [3, 4]])
+            setattr(almost_minimal1, attr, [[1, 2], [3.00000002, 4]])
+            assert_ordination_results_equal(minimal1, almost_minimal1)
+            setattr(minimal1, attr, None)
+            setattr(almost_minimal1, attr, None)
 
 
 class TestCAResults(object):
@@ -521,9 +569,7 @@ class TestPCoAResultsExtensive(object):
 
 class TestPCoAEigenResults(object):
     def setup(self):
-        with open(get_data_path('PCoA_sample_data_3'), 'U') as lines:
-            dist_matrix = DistanceMatrix.from_file(lines)
-
+        dist_matrix = DistanceMatrix.read(get_data_path('PCoA_sample_data_3'))
         self.ordination = PCoA(dist_matrix)
 
         self.ids = ['PC.636', 'PC.635', 'PC.356', 'PC.481', 'PC.354', 'PC.593',
@@ -574,10 +620,9 @@ class TestPCoAErrors(object):
             PCoA([[1, 2], [3, 4]])
 
 
-class TestOrdinationResults(object):
-    @classmethod
-    def setup_class(cls):
-        # CA results
+class TestOrdinationResults(unittest.TestCase):
+    def setUp(self):
+        # Define in-memory CA results to serialize and deserialize.
         eigvals = np.array([0.0961330159181, 0.0409418140138])
         species = np.array([[0.408869425742, 0.0695518116298],
                             [-0.1153860437, -0.299767683538],
@@ -590,191 +635,53 @@ class TestOrdinationResults(object):
         prop_explained = None
         species_ids = ['Species1', 'Species2', 'Species3']
         site_ids = ['Site1', 'Site2', 'Site3']
-        ca_scores = OrdinationResults(eigvals=eigvals, species=species,
-                                      site=site, biplot=biplot,
-                                      site_constraints=site_constraints,
-                                      proportion_explained=prop_explained,
-                                      species_ids=species_ids,
-                                      site_ids=site_ids)
-        # CCA results
-        eigvals = np.array([0.366135830393, 0.186887643052, 0.0788466514249,
-                            0.082287840501, 0.0351348475787, 0.0233265839374,
-                            0.0099048981912, 0.00122461669234,
-                            0.000417454724117])
-        species = np.loadtxt(get_data_path('exp_OrdRes_CCA_species'))
-        site = np.loadtxt(get_data_path('exp_OrdRes_CCA_site'))
-        biplot = np.array([[-0.169746767979, 0.63069090084, 0.760769036049],
-                           [-0.994016563505, 0.0609533148724,
-                            -0.0449369418179],
-                           [0.184352565909, -0.974867543612, 0.0309865007541]])
-        site_constraints = np.loadtxt(
-            get_data_path('exp_OrdRes_CCA_site_constraints'))
-        prop_explained = None
-        species_ids = ['Species0', 'Species1', 'Species2', 'Species3',
-                       'Species4', 'Species5', 'Species6', 'Species7',
-                       'Species8']
-        site_ids = ['Site0', 'Site1', 'Site2', 'Site3', 'Site4', 'Site5',
-                    'Site6', 'Site7', 'Site8', 'Site9']
-        cca_scores = OrdinationResults(eigvals=eigvals, species=species,
-                                       site=site, biplot=biplot,
-                                       site_constraints=site_constraints,
-                                       proportion_explained=prop_explained,
-                                       species_ids=species_ids,
-                                       site_ids=site_ids)
-        # PCoA results
-        eigvals = np.array([0.512367260461, 0.300719094427, 0.267912066004,
-                            0.208988681078, 0.19169895326, 0.16054234528,
-                            0.15017695712, 0.122457748167, 0.0])
-        species = None
-        site = np.loadtxt(get_data_path('exp_OrdRes_PCoA_site'))
-        biplot = None
-        site_constraints = None
-        prop_explained = np.array([0.267573832777, 0.15704469605,
-                                   0.139911863774, 0.109140272454,
-                                   0.100111048503, 0.0838401161912,
-                                   0.0784269939011, 0.0639511763509, 0.0])
-        species_ids = None
-        site_ids = ['PC.636', 'PC.635', 'PC.356', 'PC.481', 'PC.354', 'PC.593',
-                    'PC.355', 'PC.607', 'PC.634']
-        pcoa_scores = OrdinationResults(eigvals=eigvals, species=species,
-                                        site=site, biplot=biplot,
-                                        site_constraints=site_constraints,
-                                        proportion_explained=prop_explained,
-                                        species_ids=species_ids,
-                                        site_ids=site_ids)
-        # RDA results
-        eigvals = np.array([25.8979540892, 14.9825779819, 8.93784077262,
-                            6.13995623072, 1.68070536498, 0.57735026919,
-                            0.275983624351])
-        species = np.loadtxt(get_data_path('exp_OrdRes_RDA_species'))
-        site = np.loadtxt(get_data_path('exp_OrdRes_RDA_site'))
-        biplot = np.array([[0.422650019179, -0.559142585857, -0.713250678211],
-                           [0.988495963777, 0.150787422017, -0.0117848614073],
-                           [-0.556516618887, 0.817599992718, 0.147714267459],
-                           [-0.404079676685, -0.9058434809, -0.127150316558]])
-        site_constraints = np.loadtxt(
-            get_data_path('exp_OrdRes_RDA_site_constraints'))
-        prop_explained = None
-        species_ids = ['Species0', 'Species1', 'Species2', 'Species3',
-                       'Species4', 'Species5']
-        site_ids = ['Site0', 'Site1', 'Site2', 'Site3', 'Site4', 'Site5',
-                    'Site6', 'Site7', 'Site8', 'Site9']
-        rda_scores = OrdinationResults(eigvals=eigvals, species=species,
-                                       site=site, biplot=biplot,
-                                       site_constraints=site_constraints,
-                                       proportion_explained=prop_explained,
-                                       species_ids=species_ids,
-                                       site_ids=site_ids)
 
-        cls.pcoa_scores = pcoa_scores
-        cls.scores = [ca_scores, cca_scores, pcoa_scores, rda_scores]
-        cls.test_paths = ['L&L_CA_data_scores', 'example3_scores',
-                          'PCoA_sample_data_3_scores', 'example2_scores']
-
-        cls.fferror_test_paths = ['error1', 'error2', 'error3', 'error4',
-                                  'error5', 'error6', 'error7']
-        cls.verror_test_paths = ['v_error1', 'v_error2', 'v_error3',
-                                 'v_error4', 'v_error5', 'v_error6',
-                                 'v_error7', 'v_error8', 'v_error9',
-                                 'v_error10', 'v_error11', 'v_error12',
-                                 'v_error13', 'v_error14']
+        self.ordination_results = OrdinationResults(
+            eigvals=eigvals, species=species, site=site, biplot=biplot,
+            site_constraints=site_constraints,
+            proportion_explained=prop_explained, species_ids=species_ids,
+            site_ids=site_ids)
 
         # DataFrame for testing plot method. Has a categorical column with a
         # mix of numbers and strings. Has a numeric column with a mix of ints,
         # floats, and strings that can be converted to floats. Has a numeric
         # column with missing data (np.nan).
-        cls.df = pd.DataFrame([['foo', '42', 10],
-                               [22, 0, 8],
-                               [22, -4.2, np.nan],
-                               ['foo', '42.19', 11]],
-                              index=['A', 'B', 'C', 'D'],
-                              columns=['categorical', 'numeric', 'nancolumn'])
+        self.df = pd.DataFrame([['foo', '42', 10],
+                                [22, 0, 8],
+                                [22, -4.2, np.nan],
+                                ['foo', '42.19', 11]],
+                               index=['A', 'B', 'C', 'D'],
+                               columns=['categorical', 'numeric', 'nancolumn'])
 
         # Minimal ordination results for easier testing of plotting method.
         # Paired with df above.
-        eigvals = np.array([0.25, 0.25, 0.25, 0.25])
+        eigvals = np.array([0.50, 0.25, 0.25])
         site = np.array([[0.1, 0.2, 0.3],
                          [0.2, 0.3, 0.4],
                          [0.3, 0.4, 0.5],
                          [0.4, 0.5, 0.6]])
-        cls.min_ord_results = OrdinationResults(eigvals=eigvals, site=site,
-                                                site_ids=['A', 'B', 'C', 'D'])
+        self.min_ord_results = OrdinationResults(eigvals=eigvals, site=site,
+                                                 site_ids=['A', 'B', 'C', 'D'])
 
-    def test_to_file(self):
-        for scores, test_path in zip(self.scores, self.test_paths):
-            for file_type in ('file like', 'file name'):
-                if file_type == 'file like':
-                    obs_f = StringIO()
-                    scores.to_file(obs_f)
-                    obs = obs_f.getvalue()
-                    obs_f.close()
-                elif file_type == 'file name':
-                    with tempfile.NamedTemporaryFile('r+') as temp_file:
-                        scores.to_file(temp_file.name)
-                        temp_file.flush()
-                        temp_file.seek(0)
-                        obs = temp_file.read()
+    def test_io(self):
+        # Very basic check that read/write public API is present and appears to
+        # be functioning. Roundtrip from memory -> disk -> memory and ensure
+        # results match.
+        fh = StringIO()
+        self.ordination_results.write(fh)
+        fh.seek(0)
+        deserialized = OrdinationResults.read(fh)
+        assert_ordination_results_equal(deserialized, self.ordination_results)
+        self.assertTrue(type(deserialized) == OrdinationResults)
 
-                with open(get_data_path(test_path), 'U') as f:
-                    exp = f.read()
-
-                yield npt.assert_equal, obs, exp
-
-    def test_from_file(self):
-        for exp_scores, test_path in zip(self.scores, self.test_paths):
-            for file_type in ('file like', 'file name'):
-                fname = get_data_path(test_path)
-                if file_type == 'file like':
-                    with open(fname) as fh:
-                        obs = OrdinationResults.from_file(fh)
-                elif file_type == 'file name':
-                    obs = OrdinationResults.from_file(fname)
-
-                yield self.check_OrdinationResults_equal, obs, exp_scores
-
-    def check_OrdinationResults_equal(self, obs_scores, exp_scores):
-        npt.assert_almost_equal(obs_scores.eigvals, exp_scores.eigvals)
-        if exp_scores.species is not None:
-            npt.assert_almost_equal(obs_scores.species, exp_scores.species)
-        else:
-            npt.assert_equal(obs_scores.species, exp_scores.species)
-        npt.assert_equal(obs_scores.species_ids, exp_scores.species_ids)
-
-        if exp_scores.site is not None:
-            npt.assert_almost_equal(obs_scores.site, exp_scores.site)
-        else:
-            npt.assert_equal(obs_scores.site, exp_scores.site)
-        npt.assert_equal(obs_scores.site_ids, exp_scores.site_ids)
-
-        if exp_scores.biplot is not None:
-            npt.assert_almost_equal(obs_scores.biplot, exp_scores.biplot)
-        else:
-            npt.assert_equal(obs_scores.biplot, exp_scores.biplot)
-
-        if exp_scores.site_constraints is not None:
-            npt.assert_almost_equal(obs_scores.site_constraints,
-                                    exp_scores.site_constraints)
-        else:
-            npt.assert_equal(obs_scores.site_constraints,
-                             exp_scores.site_constraints)
-
-        if exp_scores.proportion_explained is not None:
-            npt.assert_almost_equal(obs_scores.proportion_explained,
-                                    exp_scores.proportion_explained)
-        else:
-            npt.assert_equal(obs_scores.proportion_explained,
-                             exp_scores.proportion_explained)
-
-    def test_from_file_error(self):
-        for test_path in self.fferror_test_paths:
-            with open(get_data_path(test_path), 'U') as f:
-                with npt.assert_raises(FileFormatError):
-                    OrdinationResults.from_file(f)
-
-        for test_path in self.verror_test_paths:
-            with open(get_data_path(test_path), 'U') as f:
-                with npt.assert_raises(ValueError):
-                    OrdinationResults.from_file(f)
+    def test_deprecated_io(self):
+        fh = StringIO()
+        npt.assert_warns(UserWarning, self.ordination_results.to_file, fh)
+        fh.seek(0)
+        deserialized = npt.assert_warns(UserWarning,
+                                        OrdinationResults.from_file, fh)
+        assert_ordination_results_equal(deserialized, self.ordination_results)
+        self.assertTrue(type(deserialized) == OrdinationResults)
 
     def check_basic_figure_sanity(self, fig, exp_num_subplots, exp_title,
                                   exp_legend_exists, exp_xlabel, exp_ylabel,
@@ -808,7 +715,7 @@ class TestOrdinationResults(object):
         npt.assert_equal(ax.get_zlabel(), exp_zlabel)
 
     def test_plot_no_metadata(self):
-        fig = self.pcoa_scores.plot()
+        fig = self.min_ord_results.plot()
         self.check_basic_figure_sanity(
             fig, 1, '', False, 'PC 1', 'PC 2', 'PC 3')
 
@@ -829,69 +736,69 @@ class TestOrdinationResults(object):
     def test_validate_plot_axes_valid_input(self):
         # shouldn't raise an error on valid input. nothing is returned, so
         # nothing to check here
-        self.pcoa_scores._validate_plot_axes(
+        self.min_ord_results._validate_plot_axes(
             self.min_ord_results.site.T, 1, 2, 0)
 
     def test_validate_plot_axes_invalid_input(self):
         # not enough dimensions
         with assert_raises_regexp(ValueError, '2 dimension\(s\)'):
-            self.pcoa_scores._validate_plot_axes(
+            self.min_ord_results._validate_plot_axes(
                 np.asarray([[0.1, 0.2, 0.3], [0.2, 0.3, 0.4]]), 0, 1, 2)
 
         coord_matrix = self.min_ord_results.site.T
 
         # duplicate axes
         with assert_raises_regexp(ValueError, 'must be unique'):
-            self.pcoa_scores._validate_plot_axes(coord_matrix, 0, 1, 0)
+            self.min_ord_results._validate_plot_axes(coord_matrix, 0, 1, 0)
 
         # out of range axes
         with assert_raises_regexp(ValueError, 'axis2.*3'):
-            self.pcoa_scores._validate_plot_axes(coord_matrix, 0, -1, 2)
+            self.min_ord_results._validate_plot_axes(coord_matrix, 0, -1, 2)
         with assert_raises_regexp(ValueError, 'axis3.*3'):
-            self.pcoa_scores._validate_plot_axes(coord_matrix, 0, 2, 3)
+            self.min_ord_results._validate_plot_axes(coord_matrix, 0, 2, 3)
 
     def test_get_plot_point_colors_invalid_input(self):
         # column provided without df
         with npt.assert_raises(ValueError):
-            self.pcoa_scores._get_plot_point_colors(None, 'numeric',
-                                                    ['B', 'C'], 'jet')
+            self.min_ord_results._get_plot_point_colors(None, 'numeric',
+                                                        ['B', 'C'], 'jet')
 
         # df provided without column
         with npt.assert_raises(ValueError):
-            self.pcoa_scores._get_plot_point_colors(self.df, None, ['B', 'C'],
-                                                    'jet')
+            self.min_ord_results._get_plot_point_colors(self.df, None,
+                                                        ['B', 'C'], 'jet')
 
         # column not in df
         with assert_raises_regexp(ValueError, 'missingcol'):
-            self.pcoa_scores._get_plot_point_colors(self.df, 'missingcol',
-                                                    ['B', 'C'], 'jet')
+            self.min_ord_results._get_plot_point_colors(self.df, 'missingcol',
+                                                        ['B', 'C'], 'jet')
 
         # id not in df
         with assert_raises_regexp(ValueError, 'numeric'):
-            self.pcoa_scores._get_plot_point_colors(
+            self.min_ord_results._get_plot_point_colors(
                 self.df, 'numeric', ['B', 'C', 'missingid', 'A'], 'jet')
 
         # missing data in df
         with assert_raises_regexp(ValueError, 'nancolumn'):
-            self.pcoa_scores._get_plot_point_colors(self.df, 'nancolumn',
-                                                    ['B', 'C', 'A'], 'jet')
+            self.min_ord_results._get_plot_point_colors(self.df, 'nancolumn',
+                                                        ['B', 'C', 'A'], 'jet')
 
     def test_get_plot_point_colors_no_df_or_column(self):
-        obs = self.pcoa_scores._get_plot_point_colors(None, None, ['B', 'C'],
-                                                      'jet')
+        obs = self.min_ord_results._get_plot_point_colors(None, None,
+                                                          ['B', 'C'], 'jet')
         npt.assert_equal(obs, (None, None))
 
     def test_get_plot_point_colors_numeric_column(self):
         # subset of the ids in df
         exp = [0.0, -4.2, 42.0]
-        obs = self.pcoa_scores._get_plot_point_colors(self.df, 'numeric',
-                                                      ['B', 'C', 'A'], 'jet')
+        obs = self.min_ord_results._get_plot_point_colors(
+            self.df, 'numeric', ['B', 'C', 'A'], 'jet')
         npt.assert_almost_equal(obs[0], exp)
         assert_true(obs[1] is None)
 
         # all ids in df
         exp = [0.0, 42.0, 42.19, -4.2]
-        obs = self.pcoa_scores._get_plot_point_colors(
+        obs = self.min_ord_results._get_plot_point_colors(
             self.df, 'numeric', ['B', 'A', 'D', 'C'], 'jet')
         npt.assert_almost_equal(obs[0], exp)
         assert_true(obs[1] is None)
@@ -903,15 +810,15 @@ class TestOrdinationResults(object):
             'foo': [0.5, 0., 0., 1.],
             22: [0., 0., 0.5, 1.]
         }
-        obs = self.pcoa_scores._get_plot_point_colors(self.df, 'categorical',
-                                                      ['B', 'C', 'A'], 'jet')
+        obs = self.min_ord_results._get_plot_point_colors(
+            self.df, 'categorical', ['B', 'C', 'A'], 'jet')
         npt.assert_almost_equal(obs[0], exp_colors)
         npt.assert_equal(obs[1], exp_color_dict)
 
         # all ids in df
         exp_colors = [[0., 0., 0.5, 1.], [0.5, 0., 0., 1.], [0.5, 0., 0., 1.],
                       [0., 0., 0.5, 1.]]
-        obs = self.pcoa_scores._get_plot_point_colors(
+        obs = self.min_ord_results._get_plot_point_colors(
             self.df, 'categorical', ['B', 'A', 'D', 'C'], 'jet')
         npt.assert_almost_equal(obs[0], exp_colors)
         # should get same color dict as before
@@ -924,7 +831,7 @@ class TestOrdinationResults(object):
         # we shouldn't have a legend yet
         assert_true(ax.get_legend() is None)
 
-        self.pcoa_scores._plot_categorical_legend(
+        self.min_ord_results._plot_categorical_legend(
             ax, {'foo': 'red', 'bar': 'green'})
 
         # make sure we have a legend now

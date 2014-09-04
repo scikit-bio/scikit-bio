@@ -20,6 +20,7 @@ API Reference
    diversity
    stats
    parse.sequences
+   io
    util
 
 Developer Documentation
