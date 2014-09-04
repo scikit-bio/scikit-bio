@@ -589,9 +589,9 @@ class BiologicalSequence(Sequence):
         other : BiologicalSequence
             The sequence to test for equality against.
         ignore : iterable of str, optional
-            List of properties to ignore in the equality test. By default, all
-            properties must be the same for two biological sequences to be
-            considered equal. Properties that can be ignored are ``'type'``,
+            List of features to ignore in the equality test. By default, all
+            features must be the same for two biological sequences to be
+            considered equal. Features that can be ignored are ``'type'``,
             ``'id'``, ``'description'``, ``'quality'``, and ``'sequence'``.
 
         Returns
@@ -1366,7 +1366,7 @@ class BiologicalSequence(Sequence):
 
             if quality.ndim != 1:
                 raise BiologicalSequenceError("Quality scores must be 1-D.")
-            elif len(quality) != len(self._sequence):
+            elif len(quality) != len(self):
                 raise BiologicalSequenceError(
                     "Number of quality scores (%d) must match the number of "
                     "characters in the biological sequence (%d)." %
