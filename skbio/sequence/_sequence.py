@@ -220,8 +220,8 @@ class BiologicalSequence(Sequence):
     def __eq__(self, other):
         """The equality operator.
 
-        ``BiologicalSequence``s are equal if their sequence is the same and
-        they are the same type. Identifier, description, and quality scores
+        Biological sequences are equal if their sequence is the same and they
+        are the same type. Identifier, description, and quality scores
         **are ignored**.
 
         Parameters
@@ -372,7 +372,7 @@ class BiologicalSequence(Sequence):
     def __ne__(self, other):
         """The inequality operator.
 
-        ``BiologicalSequence``s are not equal if their sequence is different or
+        Biological sequences are not equal if their sequence is different or
         they are not the same type. Identifier, description, and quality scores
         **are ignored**.
 
@@ -580,7 +580,7 @@ class BiologicalSequence(Sequence):
     def equals(self, other, ignore=None):
         """Compare two biological sequences for equality.
 
-        By default, ``BiologicalSequence``s are equal if their sequence,
+        By default, biological sequences are equal if their sequence,
         identifier, description, and quality scores are the same and they are
         the same type.
 
