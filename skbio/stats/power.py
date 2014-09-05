@@ -13,38 +13,6 @@ power module to estimate effect size.
 The general format is to define a test for the data which takes a list of
 values (i.e. sample ids) and returns a p-value.
 
-
-Examples
---------
-Suppose we have 100 samples randomly drawn from two normal distribitions, the
-first with mean 0 and standard devation 1, and the second with mean 3 and
-standard deviation 1.5
-
->>> import numpy as np
->>> samples_1 = np.random.randn(100)
->>> samples_2 = 1.5*np.random.randn(100) + 1
-
-We want to test the statistical power of a kruskal-wallis test comparing the
-two populations. We can define a test function, f, to perform the comparison.
-The test function will take a list of value vectors and return a p value.
-
->>> from scipy.stats import ttest_ind
->>> f = lambda x: ttest_ind(x[0], x[1])[1]
-
-Now, we can determine the statitical power, or the probability that do not have
-a false positive given that we do not have a false negative by varying a number
-of subsamples.
-
->>> sample_counts = np.arange(5, 80, 5)
->>> power_mean, power_bound = bootstrap_power_curve(f, [samples_1, samples_2],
-...                                                 sample_counts)
->>> print power_mean
-    [ 0.2772  0.569   0.7744  0.9052  0.969   0.9898  0.9984  0.9998  1.
-      1.      1.      1.      1.      1.      1.    ]
->>> print power_bound
-    [ 0.0178  0.0124  0.0145  0.0097  0.0053  0.0027  0.0013  0.0004  0.
-      0.      0.      0.      0.      0.      0.    ]
-
 """
 
 # -----------------------------------------------------------------------------
@@ -269,6 +237,40 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
 
     p_std : vector
         the variance in the p-values
+
+    Examples
+    --------
+    Suppose we have 100 samples randomly drawn from two normal distribitions,
+    the first with mean 0 and standard devation 1, and the second with mean 3
+    and standard deviation 1.5
+
+    >>> import numpy as np
+    >>> samples_1 = np.random.randn(100)
+    >>> samples_2 = 1.5*np.random.randn(100) + 1
+
+    We want to test the statistical power of a kruskal-wallis test comparing
+    the two populations. We can define a test function, f, to perform the
+    comparison. The test function will take a list of value vectors and
+    return a p value.
+
+    >>> from scipy.stats import ttest_ind
+    >>> f = lambda x: ttest_ind(x[0], x[1])[1]
+
+    Now, we can determine the statitical power, or the probability that do not
+    have a false positive given that we do not have a false negative by varying
+    a number of subsamples.
+
+    >>> sample_counts = np.arange(5, 80, 5)
+    >>> power_mean, power_bound = bootstrap_power_curve(f,
+    ...                                                 [samples_1, samples_2],
+    ...                                                 sample_counts)
+    >>> print power_mean
+        [ 0.2772  0.569   0.7744  0.9052  0.969   0.9898  0.9984  0.9998  1.
+          1.      1.      1.      1.      1.      1.    ]
+    >>> print power_bound
+        [ 0.0178  0.0124  0.0145  0.0097  0.0053  0.0027  0.0013  0.0004  0.
+          0.      0.      0.      0.      0.      0.    ]
+
     """
 
     # Corrects the alpha value into a matrix
