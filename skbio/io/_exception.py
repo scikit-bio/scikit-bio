@@ -34,6 +34,11 @@ class DMFormatError(FileFormatError):
     pass
 
 
+class OrdResFormatError(FileFormatError):
+    """Raised when an ``ordres`` formatted file cannot be parsed."""
+    pass
+
+
 class NewickFormatError(FileFormatError):
     """Raised when a ``newick`` formatted file cannot be parsed."""
     pass

@@ -209,7 +209,7 @@ class DissimilarityMatrix(object):
 
         Parameters
         ----------
-        fp : filepath or filehandle
+        out_f : filepath or filehandle
             File to write to.
         delimiter : str, optional
             Delimiter used to separate elements in output format.
