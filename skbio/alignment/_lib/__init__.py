@@ -5,9 +5,6 @@
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
-from .subsample import subsample
-
-__all__ = ['subsample']
 
 from numpy.testing import Tester
 test = Tester().test

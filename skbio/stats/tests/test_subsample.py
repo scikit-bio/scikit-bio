@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -21,12 +19,10 @@ import warnings
 import numpy as np
 
 
-cy_subsample = import_fresh_module('skbio.stats._subsample.subsample',
-                                   fresh=['skbio.stats._subsample._subsample'])
-py_subsample = import_fresh_module('skbio.stats._subsample.subsample',
-                                   blocked=[
-                                       'skbio.stats._subsample._subsample'
-                                   ])
+cy_subsample = import_fresh_module('skbio.stats._subsample',
+                                   fresh=['skbio.stats.__subsample'])
+py_subsample = import_fresh_module('skbio.stats._subsample',
+                                   blocked=['skbio.stats.__subsample'])
 
 
 def setup():
