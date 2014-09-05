@@ -16,6 +16,7 @@ Supported File Formats
    :toctree: generated/
 
    dm
+   newick
 
 User Functions
 --------------
@@ -38,6 +39,7 @@ User Exceptions
    FieldError
    UnrecognizedFormatError
    DMFormatError
+   NewickFormatError
 
 User Warnings
 -------------
@@ -107,20 +109,27 @@ from importlib import import_module
 from ._warning import FormatIdentificationWarning, ArgumentOverrideWarning
 from ._exception import (DuplicateRegistrationError, InvalidRegistrationError,
                          RecordError, FieldError, UnrecognizedFormatError,
-                         FileFormatError, DMFormatError)
+                         FileFormatError, DMFormatError, NewickFormatError)
 from ._registry import (write, read, sniff, get_writer, get_reader,
                         get_sniffer, list_write_formats, list_read_formats,
                         register_writer, register_reader, register_sniffer)
 
-__all__ = ['write', 'read', 'sniff', 'get_writer', 'get_reader',
-           'get_sniffer', 'list_write_formats', 'list_read_formats',
+__all__ = ['write', 'read', 'sniff',
+           'list_write_formats', 'list_read_formats',
+           'get_writer', 'get_reader', 'get_sniffer',
            'register_writer', 'register_reader', 'register_sniffer',
+
+           'FormatIdentificationWarning', 'ArgumentOverrideWarning',
+
            'DuplicateRegistrationError', 'InvalidRegistrationError',
            'RecordError', 'FieldError', 'UnrecognizedFormatError',
-           'FileFormatError', 'DMFormatError', 'FormatIdentificationWarning',
-           'ArgumentOverrideWarning']
+           'FileFormatError',
+
+           'DMFormatError',
+           'NewickFormatError']
 
 import_module('skbio.io.dm')
+import_module('skbio.io.newick')
 
 from numpy.testing import Tester
 test = Tester().test
