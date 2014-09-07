@@ -9,6 +9,15 @@ This package provides I/O functionality for skbio.
 For information about extending the I/O functionality of skbio, see the
 associated Developer Documentation.
 
+Supported File Formats
+----------------------
+
+.. autosummary::
+   :toctree: generated/
+
+   dm
+   ordres
+
 User Functions
 --------------
 
@@ -29,6 +38,8 @@ User Exceptions
    RecordError
    FieldError
    UnrecognizedFormatError
+   DMFormatError
+   OrdResFormatError
 
 User Warnings
 -------------
@@ -36,7 +47,7 @@ User Warnings
 .. autosummary::
    :toctree: generated/
 
-   UnprovenFormatWarning
+   FormatIdentificationWarning
    ArgumentOverrideWarning
 
 Developer Documentation
@@ -82,6 +93,7 @@ Developer Exceptions
    :toctree: generated/
 
    DuplicateRegistrationError
+   InvalidRegistrationError
 
 """
 # ----------------------------------------------------------------------------
@@ -92,9 +104,12 @@ Developer Exceptions
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from ._warning import UnprovenFormatWarning, ArgumentOverrideWarning
-from ._exception import (DuplicateRegistrationError, RecordError, FieldError,
-                         UnrecognizedFormatError, FileFormatError)
+from importlib import import_module
+
+from ._warning import FormatIdentificationWarning, ArgumentOverrideWarning
+from ._exception import (DuplicateRegistrationError, InvalidRegistrationError,
+                         RecordError, FieldError, UnrecognizedFormatError,
+                         FileFormatError, DMFormatError, OrdResFormatError)
 from ._registry import (write, read, sniff, get_writer, get_reader,
                         get_sniffer, list_write_formats, list_read_formats,
                         register_writer, register_reader, register_sniffer)
@@ -102,9 +117,16 @@ from ._registry import (write, read, sniff, get_writer, get_reader,
 __all__ = ['write', 'read', 'sniff', 'get_writer', 'get_reader',
            'get_sniffer', 'list_write_formats', 'list_read_formats',
            'register_writer', 'register_reader', 'register_sniffer',
-           'DuplicateRegistrationError', 'RecordError', 'FieldError',
-           'UnrecognizedFormatError', 'FileFormatError',
-           'UnprovenFormatWarning', 'ArgumentOverrideWarning']
+           'DuplicateRegistrationError', 'InvalidRegistrationError',
+           'RecordError', 'FieldError', 'UnrecognizedFormatError',
+           'FileFormatError', 'DMFormatError', 'OrdResFormatError',
+           'FormatIdentificationWarning', 'ArgumentOverrideWarning']
+
+# Necessary to import each file format module to have them added to the I/O
+# registry. We use import_module instead of a typical import to avoid flake8
+# unused import errors.
+import_module('skbio.io.dm')
+import_module('skbio.io.ordres')
 
 from numpy.testing import Tester
 test = Tester().test
