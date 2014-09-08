@@ -14,9 +14,9 @@ import numpy as np
 from future.builtins import range, zip
 from future.utils.six import string_types
 
-from skbio.util import EfficiencyWarning
 from skbio.alignment import Alignment
-from skbio import BiologicalSequence
+from skbio.sequence import BiologicalSequence
+from skbio.util import EfficiencyWarning
 
 # This is temporary: blosum50 does not exist in skbio yet as per
 # issue 161. When the issue is resolved, this should be removed in favor

@@ -5,10 +5,25 @@
 ### Features
 
 * Added QSEQ parsing function ``parse_qseq`` and iterator ``QseqIterator`` to ``skbio.parse.sequences``.
+* Added ``strict`` and ``lookup`` optional parameters to ``skbio.stats.distance.mantel`` for handling reordering and matching of IDs when provided ``DistanceMatrix`` instances as input (these parameters were previously only available in ``skbio.stats.distance.pwmantel``).
+* ``skbio.stats.distance.pwmantel`` now accepts an iterable of ``array_like`` objects. Previously, only ``DistanceMatrix`` instances were allowed.
+* Added ``read`` and ``write`` methods to ``DissimilarityMatrix`` and ``DistanceMatrix``. These methods can support multiple file formats, automatic file format detection when reading, etc. by taking advantage of scikit-bio's I/O registry system. See ``skbio.io`` and ``skbio.io.dm`` for more details. Deprecated ``from_file`` and ``to_file`` methods in favor of ``read`` and ``write``. These methods will be removed in scikit-bio 0.3.0.
+* Added ``read`` and ``write`` methods to ``OrdinationResults``. These methods can support multiple file formats, automatic file format detection when reading, etc. by taking advantage of scikit-bio's I/O registry system. See ``skbio.io`` and ``skbio.io.ordres`` for more details. Deprecated ``from_file`` and ``to_file`` methods in favor of ``read`` and ``write``. These methods will be removed in scikit-bio 0.3.0.
+* Added ``skbio.stats.ordination.assert_ordination_results_equal`` for comparing ``OrdinationResults`` objects for equality in unit tests.
+* ``BiologicalSequence`` (and its subclasses) now optionally store quality scores. A biological sequence's quality scores are stored as a 1-D ``numpy.ndarray`` of integers that is the same length as the biological sequence. Quality scores can be provided upon object instantiation via the keyword argument ``quality``, and can be retrieved via the ``BiologicalSequence.quality`` property. ``BiologicalSequence.has_quality`` is also provided for determining whether a biological sequence has quality scores or not. See [#616](https://github.com/biocore/scikit-bio/issues/616) for more details.
+* Added ``BiologicalSequence.sequence`` property for retrieving the underlying string representing the sequence characters. This was previously (and still is) accessible via ``BiologicalSequence.__str__``. It is provided via a property for convenience and explicitness.
+* Added ``BiologicalSequence.equals`` for full control over equality testing of biological sequences. By default, biological sequences must have the same type, underlying sequence of characters, identifier, description, and quality scores to compare equal. These properties can be ignored via the keyword argument ``ignore``. The behavior of ``BiologicalSequence.__eq__``/``__ne__`` remains unchanged (only type and underlying sequence of characters are compared).
+
+### Backward-incompatible changes
+
+* ``skbio.stats.distance.mantel`` now returns a 3-element tuple containing correlation coefficient, p-value, and the number of matching rows/cols in the distance matrices (``n``). The return value was previously a 2-element tuple containing only the correlation coefficient and p-value.
+* ``skbio.stats.distance.mantel`` reorders input ``DistanceMatrix`` instances based on matching IDs (see optional parameters ``strict`` and ``lookup`` for controlling this behavior). In the past, ``DistanceMatrix`` instances were treated the same as ``array_like`` input and no reordering took place, regardless of ID (mis)matches. ``array_like`` input behavior remains the same.
+* If mismatched types are provided to ``skbio.stats.distance.mantel`` (e.g., a ``DistanceMatrix`` and ``array_like``), a ``TypeError`` will be raised.
 
 ### Miscellaneous
 
 * Added git timestamp checking to checklist.py, ensuring that when changes are made to Cython (.pyx) files, their corresponding generated C files are also updated.
+* Fixed performance bug when instantiating ``BiologicalSequence`` objects. The previous runtime scaled linearly with sequence length; it is now constant time when the sequence is already a string. See [#623](https://github.com/biocore/scikit-bio/issues/623) for details.
 
 ## Version 0.2.0 (2014-08-07)
 

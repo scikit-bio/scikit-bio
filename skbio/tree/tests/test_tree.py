@@ -21,7 +21,7 @@ from skbio import DistanceMatrix, TreeNode
 from skbio.tree._tree import _dnd_tokenizer
 from skbio.tree import (DuplicateNodeError, NoLengthError,
                         TreeError, MissingNodeError, NoParentError)
-from skbio.util import RecordError
+from skbio.io import RecordError
 
 
 class TreeTests(TestCase):

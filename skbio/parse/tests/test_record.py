@@ -15,7 +15,7 @@ from skbio.parse.record import (DelimitedSplitter,
                                 bool_setter, string_and_strip, FieldWrapper,
                                 StrictFieldWrapper, raise_unknown_field,
                                 FieldMorpher)
-from skbio.util import FieldError
+from skbio.io import FieldError
 
 
 class recordsTests(TestCase):

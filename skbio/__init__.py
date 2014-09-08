@@ -57,6 +57,10 @@ if __doc__ is None:
 else:
     __doc__ = title + art + __doc__
 
+# Add skbio.io to sys.modules to prevent cycles in our imports
+import skbio.io
+skbio.io  # Stop flake8 error
+
 # imports included for convenience
 from skbio.sequence import (
     BiologicalSequence, NucleotideSequence, DNA, DNASequence, RNA, RNASequence,

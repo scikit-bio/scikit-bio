@@ -38,9 +38,7 @@ Exceptions
 .. autosummary::
    :toctree: generated/
 
-   FileFormatError
-   RecordError
-   FieldError
+   TestingUtilError
 
 Warnings
 --------
@@ -60,13 +58,13 @@ Warnings
 # The full license is in the file COPYING.txt, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from ._exception import FileFormatError, RecordError, FieldError
 from ._warning import EfficiencyWarning
+from ._exception import TestingUtilError
 from ._misc import (create_dir, flatten, remove_files, safe_md5,
                     is_casava_v180_or_later)
 from ._testing import get_data_path
 
-__all__ = ['FileFormatError', 'RecordError', 'FieldError', 'EfficiencyWarning',
+__all__ = ['EfficiencyWarning', 'TestingUtilError',
            'create_dir', 'flatten', 'remove_files', 'safe_md5',
            'is_casava_v180_or_later', 'get_data_path']
 
