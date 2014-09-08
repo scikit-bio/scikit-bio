@@ -18,7 +18,7 @@ import warnings
 
 import numpy as np
 
-from skbio.stats._subsample.subsample import uneven_subsample
+from skbio.stats._subsample import uneven_subsample
 
 
 cy_subsample = import_fresh_module('skbio.stats._subsample',
