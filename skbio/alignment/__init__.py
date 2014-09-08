@@ -231,7 +231,7 @@ from ._pairwise import (
     global_pairwise_align_protein, global_pairwise_align,
     make_identity_substitution_matrix
 )
-from ._ssw import (
+from skbio.alignment._ssw_wrapper import (
     StripedSmithWaterman, local_pairwise_align_ssw, AlignmentStructure)
 from ._exception import SequenceCollectionError, StockholmParseError
 

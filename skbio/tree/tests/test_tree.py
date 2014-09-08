@@ -901,6 +901,46 @@ class TreeTests(TestCase):
         with self.assertRaises(AttributeError):
             t.to_array(attrs=[('name', object), ('brofist', int)])
 
+    def test_from_taxonomy(self):
+        input_lineages = {'1': ['a', 'b', 'c', 'd', 'e', 'f', 'g'],
+                          '2': ['a', 'b', 'c', None, None, 'x', 'y'],
+                          '3': ['h', 'i', 'j', 'k', 'l', 'm', 'n'],
+                          '4': ['h', 'i', 'j', 'k', 'l', 'm', 'q'],
+                          '5': ['h', 'i', 'j', 'k', 'l', 'm', 'n']}
+        exp = TreeNode.from_newick("((((((((1)g)f)e)d,((((2)y)x)))c)b)a,"
+                                   "(((((((3,5)n,(4)q)m)l)k)j)i)h);")
+
+        root = TreeNode.from_taxonomy(input_lineages.items())
+
+        self.assertEqual(root.compare_subsets(exp), 0.0)
+
+    def test_to_taxonomy(self):
+        input_lineages = {'1': ['a', 'b', 'c', 'd', 'e', 'f', 'g'],
+                          '2': ['a', 'b', 'c', None, None, 'x', 'y'],
+                          '3': ['h', 'i', 'j', 'k', 'l', 'm', 'n'],
+                          '4': ['h', 'i', 'j', 'k', 'l', 'm', 'q'],
+                          '5': ['h', 'i', 'j', 'k', 'l', 'm', 'n']}
+        tree = TreeNode.from_taxonomy(input_lineages.items())
+        exp = sorted(input_lineages.items())
+        obs = [(n.name, lin) for n, lin in tree.to_taxonomy(allow_empty=True)]
+        self.assertEqual(sorted(obs), exp)
+
+    def test_to_taxonomy_filter(self):
+        input_lineages = {'1': ['a', 'b', 'c', 'd', 'e', 'f', 'g'],
+                          '2': ['a', 'b', 'c', None, None, 'x', 'y'],
+                          '3': ['h', 'i', 'j', 'k', 'l'],  # test jagged
+                          '4': ['h', 'i', 'j', 'k', 'l', 'm', 'q'],
+                          '5': ['h', 'i', 'j', 'k', 'l', 'm', 'n']}
+        tree = TreeNode.from_taxonomy(input_lineages.items())
+        f = lambda node, lin: 'k' in lin or 'x' in lin
+
+        exp = [('2', ['a', 'b', 'c', 'x', 'y']),
+               ('3', ['h', 'i', 'j', 'k', 'l']),
+               ('4', ['h', 'i', 'j', 'k', 'l', 'm', 'q']),
+               ('5', ['h', 'i', 'j', 'k', 'l', 'm', 'n'])]
+        obs = [(n.name, lin) for n, lin in tree.to_taxonomy(filter_f=f)]
+        self.assertEqual(sorted(obs), exp)
+
     def test_from_file(self):
         """Parse a tree from a file"""
         t_io = StringIO("((a,b)c,(d,e)f)g;")

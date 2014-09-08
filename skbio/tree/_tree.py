@@ -1731,6 +1731,79 @@ class TreeNode(object):
     lca = lowest_common_ancestor  # for convenience
 
     @classmethod
+    def from_taxonomy(cls, lineage_map):
+        """Construct a tree from a taxonomy
+
+        Parameters
+        ----------
+        lineage_map : iterable of tuple
+            A id to lineage mapping where the first index is an ID and the
+            second index is an iterable of the lineage.
+
+        Returns
+        -------
+        TreeNode
+            The constructed taxonomy
+
+        Examples
+        --------
+        >>> from skbio.tree import TreeNode
+        >>> lineages = {'1': ['Bacteria', 'Firmicutes', 'Clostridia'],
+        ...             '2': ['Bacteria', 'Firmicutes', 'Bacilli'],
+        ...             '3': ['Bacteria', 'Bacteroidetes', 'Sphingobacteria'],
+        ...             '4': ['Archaea', 'Euryarchaeota', 'Thermoplasmata'],
+        ...             '5': ['Archaea', 'Euryarchaeota', 'Thermoplasmata'],
+        ...             '6': ['Archaea', 'Euryarchaeota', 'Halobacteria'],
+        ...             '7': ['Archaea', 'Euryarchaeota', 'Halobacteria'],
+        ...             '8': ['Bacteria', 'Bacteroidetes', 'Sphingobacteria'],
+        ...             '9': ['Bacteria', 'Bacteroidetes', 'Cytophagia']}
+        >>> tree = TreeNode.from_taxonomy(lineages.items())
+        >>> print(tree.ascii_art())
+                                      /Clostridia-1
+                            /Firmicutes
+                           |          \Bacilli- /-2
+                  /Bacteria|
+                 |         |                    /-3
+                 |         |          /Sphingobacteria
+                 |          \Bacteroidetes      \-8
+                 |                   |
+        ---------|                    \Cytophagia-9
+                 |
+                 |                              /-5
+                 |                    /Thermoplasmata
+                 |                   |          \-4
+                  \Archaea- /Euryarchaeota
+                                     |          /-7
+                                      \Halobacteria
+                                                \-6
+
+        """
+        root = cls(name=None)
+        root._lookup = {}
+
+        for id_, lineage in lineage_map:
+            cur_node = root
+
+            # for each name, see if we've seen it, if not, add that puppy on
+            for name in lineage:
+                if name in cur_node._lookup:
+                    cur_node = cur_node._lookup[name]
+                else:
+                    new_node = TreeNode(name=name)
+                    new_node._lookup = {}
+                    cur_node._lookup[name] = new_node
+                    cur_node.append(new_node)
+                    cur_node = new_node
+
+            cur_node.append(TreeNode(name=id_))
+
+        # scrub the lookups
+        for node in root.non_tips(include_self=True):
+            del node._lookup
+
+        return root
+
+    @classmethod
     def from_file(cls, tree_f):
         """Load a tree from a file or file-like object"""
         with open_file(tree_f) as data:
@@ -1985,6 +2058,88 @@ class TreeNode(object):
         if curr_node is None:  # no data -- return empty node
             return cls()
         return curr_node  # this should be the root of the tree
+
+    def to_taxonomy(self, allow_empty=False, filter_f=None):
+        """Returns a taxonomy representation of self
+
+        Parameters
+        ----------
+        allow_empty : bool, optional
+            Allow gaps the taxonomy (e.g., internal nodes without names).
+        filter_f : function, optional
+            Specify a filtering function that returns True if the lineage is
+            to be returned. This function must accept a ``TreeNode`` as its
+            first parameter, and a ``list`` that represents the lineage as the
+            second parameter.
+
+        Returns
+        -------
+        generator
+            (tip, [lineage]) where tip corresponds to a tip in the tree and
+            the [lineage] is the expanded names from root to tip. Nones and
+            empty strings are omitted from the lineage
+
+        Notes
+        -----
+        If ``allow_empty`` is ``True`` and the root node does not have a name,
+        then that name will not be included. This is because it is common to
+        have multiple domains represented in the taxonomy, which would result
+        in a root node that does not have a name and does not make sense to
+        represent in the output.
+
+        Examples
+        --------
+        >>> from skbio.tree import TreeNode
+        >>> lineages = {'1': ['Bacteria', 'Firmicutes', 'Clostridia'],
+        ...             '2': ['Bacteria', 'Firmicutes', 'Bacilli'],
+        ...             '3': ['Bacteria', 'Bacteroidetes', 'Sphingobacteria'],
+        ...             '4': ['Archaea', 'Euryarchaeota', 'Thermoplasmata'],
+        ...             '5': ['Archaea', 'Euryarchaeota', 'Thermoplasmata'],
+        ...             '6': ['Archaea', 'Euryarchaeota', 'Halobacteria'],
+        ...             '7': ['Archaea', 'Euryarchaeota', 'Halobacteria'],
+        ...             '8': ['Bacteria', 'Bacteroidetes', 'Sphingobacteria'],
+        ...             '9': ['Bacteria', 'Bacteroidetes', 'Cytophagia']}
+        >>> tree = TreeNode.from_taxonomy(lineages.items())
+        >>> lineages = sorted([(n.name, l) for n, l in tree.to_taxonomy()])
+        >>> for name, lineage in lineages:
+        ...     print(name, '; '.join(lineage))
+        1 Bacteria; Firmicutes; Clostridia
+        2 Bacteria; Firmicutes; Bacilli
+        3 Bacteria; Bacteroidetes; Sphingobacteria
+        4 Archaea; Euryarchaeota; Thermoplasmata
+        5 Archaea; Euryarchaeota; Thermoplasmata
+        6 Archaea; Euryarchaeota; Halobacteria
+        7 Archaea; Euryarchaeota; Halobacteria
+        8 Bacteria; Bacteroidetes; Sphingobacteria
+        9 Bacteria; Bacteroidetes; Cytophagia
+
+        """
+        if filter_f is None:
+            filter_f = lambda a, b: True
+
+        self.assign_ids()
+        seen = set()
+        lineage = []
+
+        # visit internal nodes while traversing out to the tips, and on the
+        # way back up
+        for node in self.traverse(self_before=True, self_after=True):
+            if node.is_tip():
+                if filter_f(node, lineage):
+                    yield (node, lineage[:])
+            else:
+                if allow_empty:
+                    if node.is_root() and not node.name:
+                        continue
+                else:
+                    if not node.name:
+                        continue
+
+                if node.id in seen:
+                    lineage.pop(-1)
+                else:
+                    lineage.append(node.name)
+                    seen.add(node.id)
 
     def to_array(self, attrs=None):
         """Return an array representation of self
