@@ -716,12 +716,12 @@ class TestOrdinationResults(unittest.TestCase):
 
     def test_plot_no_metadata(self):
         fig = self.min_ord_results.plot()
-        self.check_basic_figure_sanity(
-            fig, 1, '', False, 'PC 1', 'PC 2', 'PC 3')
+        self.check_basic_figure_sanity(fig, 1, '', False, '0', '1', '2')
 
     def test_plot_with_numeric_metadata_and_plot_options(self):
         fig = self.min_ord_results.plot(
-            self.df, 'numeric', axes=(1, 0, 2), title='a title', cmap='Reds')
+            self.df, 'numeric', axes=(1, 0, 2),
+            axis_labels=['PC 2', 'PC 1', 'PC 3'], title='a title', cmap='Reds')
         self.check_basic_figure_sanity(
             fig, 2, 'a title', False, 'PC 2', 'PC 1', 'PC 3')
 
@@ -729,8 +729,12 @@ class TestOrdinationResults(unittest.TestCase):
         fig = self.min_ord_results.plot(
             self.df, 'categorical', axes=[2, 0, 1], title='a title',
             cmap='Accent')
-        self.check_basic_figure_sanity(
-            fig, 1, 'a title', True, 'PC 3', 'PC 1', 'PC 2')
+        self.check_basic_figure_sanity(fig, 1, 'a title', True, '2', '0', '1')
+
+    def test_plot_with_invalid_axis_labels(self):
+        with assert_raises_regexp(ValueError, 'axis_labels.*4'):
+            self.min_ord_results.plot(axes=[2, 0, 1],
+                                      axis_labels=('a', 'b', 'c', 'd'))
 
     def test_validate_plot_axes_valid_input(self):
         # shouldn't raise an error on valid input. nothing is returned, so

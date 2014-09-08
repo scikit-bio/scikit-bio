@@ -124,8 +124,9 @@ Create a table containing 7 OTUs and 6 samples:
    Now let's plot our PCoA results, coloring each sample by the subject it
    was taken from:
 
-   >>> fig = bc_pc.plot(sample_md, 'subject', 'Samples colored by subject',
-   ...                  cmap='jet', s=50)
+   >>> fig = bc_pc.plot(sample_md, 'subject',
+   ...                  axis_labels=('PC 1', 'PC 2', 'PC 3'),
+   ...                  title='Samples colored by subject', cmap='jet', s=50)
 
 .. plot::
    :context:
@@ -136,8 +137,9 @@ Create a table containing 7 OTUs and 6 samples:
 
    >>> import matplotlib.pyplot as plt
    >>> plt.close('all') # not necessary for normal use
-   >>> fig = bc_pc.plot(sample_md, 'body_site', 'Samples colored by body site',
-   ...                  cmap='jet', s=50)
+   >>> fig = bc_pc.plot(sample_md, 'body_site',
+   ...                  axis_labels=('PC 1', 'PC 2', 'PC 3'),
+   ...                  title='Samples colored by body site', cmap='jet', s=50)
 
 Ordination techniques, such as PCoA, are useful for exploratory analysis. The
 next step is to quantify the strength of the grouping/clustering that we see in

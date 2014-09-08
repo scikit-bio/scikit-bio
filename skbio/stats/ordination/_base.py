@@ -246,8 +246,8 @@ class OrdinationResults(object):
             "OrdinationResults.write.", UserWarning)
         self.write(out_f, format='ordres')
 
-    def plot(self, df=None, column=None, title='', axes=(0, 1, 2), cmap=None,
-             s=20):
+    def plot(self, df=None, column=None, axes=(0, 1, 2), axis_labels=None,
+             title='', cmap=None, s=20):
         """Create a 3-D scatterplot of ordination results colored by metadata.
 
         Creates a 3-D scatterplot of the ordination results, where each point
@@ -271,13 +271,16 @@ class OrdinationResults(object):
             chosen for each category using evenly-spaced points along `cmap`. A
             legend will be included. If ``None``, sites (i.e., points) will not
             be colored by metadata.
-        title : str, optional
-            Plot title.
         axes : iterable of int, optional
             Indices of site coordinates to plot on the x-, y-, and z-axes. For
             example, if plotting PCoA results, ``axes=(0, 1, 2)`` will plot
             PC 1 on the x-axis, PC 2 on the y-axis, and PC 3 on the z-axis.
             Must contain exactly three elements.
+        axis_labels : iterable of str, optional
+            Labels for the x-, y-, and z-axes. If ``None``, labels will be the
+            values of `axes` cast as strings.
+        title : str, optional
+            Plot title.
         cmap : str or matplotlib.colors.Colormap, optional
             Name or instance of matplotlib colormap to use for mapping `column`
             values to colors. If ``None``, defaults to the colormap specified
@@ -303,6 +306,7 @@ class OrdinationResults(object):
             - there are not at least three dimensions to plot
             - there are not exactly three values in `axes`, they are not
               unique, or are out of range
+            - there are not exactly three values in `axis_labels`
             - either `df` or `column` is provided without the other
             - `column` is not in the ``DataFrame``
             - site IDs in the ordination results are not in `df` or have
@@ -387,10 +391,15 @@ class OrdinationResults(object):
         else:
             plot = scatter_fn(c=point_colors, cmap=cmap)
 
-        # TODO don't harcode axis labels (specific to PCoA)
-        ax.set_xlabel('PC %d' % (axes[0] + 1))
-        ax.set_ylabel('PC %d' % (axes[1] + 1))
-        ax.set_zlabel('PC %d' % (axes[2] + 1))
+        if axis_labels is None:
+            axis_labels = map(str, axes)
+        elif len(axis_labels) != 3:
+            raise ValueError("axis_labels must contain exactly three elements "
+                             "(found %d elements)." % len(axis_labels))
+
+        ax.set_xlabel(axis_labels[0])
+        ax.set_ylabel(axis_labels[1])
+        ax.set_zlabel(axis_labels[2])
         ax.set_xticklabels([])
         ax.set_yticklabels([])
         ax.set_zticklabels([])
