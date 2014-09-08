@@ -37,10 +37,10 @@ def uneven_subsample(iter_, maximum, minimum=1, random_buf_size=100000,
     minimum : unsigned int, optional
         The minimum number of items per bin. The default is 1.
     random_buf_size : unsigned int, optional
-        The size of the random value buffer.
+        The size of the random value buffer. THe default is 100000.
     bin_f : function, optional
-        Method to determine what bin an item is associated with. If None, then
-        all items are considered to be part of the same bin.
+        Method to determine what bin an item is associated with. If None (the
+        default), then all items are considered to be part of the same bin.
 
     Notes
     -----
