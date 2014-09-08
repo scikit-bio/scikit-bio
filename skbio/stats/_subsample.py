@@ -35,7 +35,7 @@ def uneven_subsample(iter_, maximum, minimum=1, random_buf_size=100000,
     maximum : unsigned int
         The maximum number of items per bin.
     minimum : unsigned int, optional
-        The minimum number of items per bin.
+        The minimum number of items per bin. The default is 1.
     random_buf_size : unsigned int, optional
         The size of the random value buffer.
     bin_f : function, optional
