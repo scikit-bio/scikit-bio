@@ -246,8 +246,8 @@ class OrdinationResults(object):
             "OrdinationResults.write.", UserWarning)
         self.write(out_f, format='ordres')
 
-    def plot(self, df=None, column=None, title='', axis1=0, axis2=1, axis3=2,
-             cmap=None, s=20):
+    def plot(self, df=None, column=None, title='', axes=(0, 1, 2), cmap=None,
+             s=20):
         """Create a 3-D scatterplot of ordination results colored by metadata.
 
         Creates a 3-D scatterplot of the ordination results, where each point
@@ -273,10 +273,11 @@ class OrdinationResults(object):
             be colored by metadata.
         title : str, optional
             Plot title.
-        axis1, axis2, axis3 : int, optional
+        axes : iterable of int, optional
             Indices of site coordinates to plot on the x-, y-, and z-axes. For
-            example, if plotting PCoA results, ``axis1=0`` will plot PC 1 on
-            the x-axis.
+            example, if plotting PCoA results, ``axes=(0, 1, 2)`` will plot
+            PC 1 on the x-axis, PC 2 on the y-axis, and PC 3 on the z-axis.
+            Must contain exactly three elements.
         cmap : str or matplotlib.colors.Colormap, optional
             Name or instance of matplotlib colormap to use for mapping `column`
             values to colors. If ``None``, defaults to the colormap specified
@@ -300,7 +301,8 @@ class OrdinationResults(object):
             Raised on invalid input, including the following situations:
 
             - there are not at least three dimensions to plot
-            - `axis1`, `axis2`, or `axis3` are not unique or are out of range
+            - there are not exactly three values in `axes`, they are not
+              unique, or are out of range
             - either `df` or `column` is provided without the other
             - `column` is not in the ``DataFrame``
             - site IDs in the ordination results are not in `df` or have
@@ -365,16 +367,16 @@ class OrdinationResults(object):
         # Only bug fixes and minor updates should be made to this method.
 
         coord_matrix = self.site.T
-        self._validate_plot_axes(coord_matrix, axis1, axis2, axis3)
+        self._validate_plot_axes(coord_matrix, axes)
 
         # derived from
         # http://matplotlib.org/examples/mplot3d/scatter3d_demo.html
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
 
-        xs = coord_matrix[axis1]
-        ys = coord_matrix[axis2]
-        zs = coord_matrix[axis3]
+        xs = coord_matrix[axes[0]]
+        ys = coord_matrix[axes[1]]
+        zs = coord_matrix[axes[2]]
 
         point_colors, category_to_color = self._get_plot_point_colors(
             df, column, self.site_ids, cmap)
@@ -386,9 +388,9 @@ class OrdinationResults(object):
             plot = scatter_fn(c=point_colors, cmap=cmap)
 
         # TODO don't harcode axis labels (specific to PCoA)
-        ax.set_xlabel('PC %d' % (axis1 + 1))
-        ax.set_ylabel('PC %d' % (axis2 + 1))
-        ax.set_zlabel('PC %d' % (axis3 + 1))
+        ax.set_xlabel('PC %d' % (axes[0] + 1))
+        ax.set_ylabel('PC %d' % (axes[1] + 1))
+        ax.set_zlabel('PC %d' % (axes[2] + 1))
         ax.set_xticklabels([])
         ax.set_yticklabels([])
         ax.set_zticklabels([])
@@ -403,22 +405,23 @@ class OrdinationResults(object):
 
         return fig
 
-    def _validate_plot_axes(self, coord_matrix, axis1, axis2, axis3):
-        """Validate `axis1`, `axis2`, and `axis3` against coordinates."""
+    def _validate_plot_axes(self, coord_matrix, axes):
+        """Validate `axes` against coordinates matrix."""
         num_dims = coord_matrix.shape[0]
         if num_dims < 3:
             raise ValueError("At least three dimensions are required to plot "
                              "ordination results. There are only %d "
                              "dimension(s)." % num_dims)
-
-        axes = [axis1, axis2, axis3]
+        if len(axes) != 3:
+            raise ValueError("axes must contain exactly three elements (found "
+                             "%d elements)." % len(axes))
         if len(set(axes)) != 3:
-            raise ValueError("The values provided for axis1, axis2, and axis3 "
-                             "must be unique.")
+            raise ValueError("The values provided for axes must be unique.")
+
         for idx, axis in enumerate(axes):
             if axis < 0 or axis >= num_dims:
-                raise ValueError("axis%d must be >= 0 and < %d." %
-                                 (idx + 1, num_dims))
+                raise ValueError("axes[%d] must be >= 0 and < %d." %
+                                 (idx, num_dims))
 
     def _get_plot_point_colors(self, df, column, ids, cmap):
         """Return a list of colors for each plot point given a metadata column.

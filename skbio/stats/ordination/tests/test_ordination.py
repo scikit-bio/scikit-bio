@@ -721,14 +721,13 @@ class TestOrdinationResults(unittest.TestCase):
 
     def test_plot_with_numeric_metadata_and_plot_options(self):
         fig = self.min_ord_results.plot(
-            self.df, 'numeric', axis1=1, axis2=0, axis3=2, title='a title',
-            cmap='Reds')
+            self.df, 'numeric', axes=(1, 0, 2), title='a title', cmap='Reds')
         self.check_basic_figure_sanity(
             fig, 2, 'a title', False, 'PC 2', 'PC 1', 'PC 3')
 
     def test_plot_with_categorical_metadata_and_plot_options(self):
         fig = self.min_ord_results.plot(
-            self.df, 'categorical', axis1=2, axis2=0, axis3=1, title='a title',
+            self.df, 'categorical', axes=[2, 0, 1], title='a title',
             cmap='Accent')
         self.check_basic_figure_sanity(
             fig, 1, 'a title', True, 'PC 3', 'PC 1', 'PC 2')
@@ -736,26 +735,33 @@ class TestOrdinationResults(unittest.TestCase):
     def test_validate_plot_axes_valid_input(self):
         # shouldn't raise an error on valid input. nothing is returned, so
         # nothing to check here
-        self.min_ord_results._validate_plot_axes(
-            self.min_ord_results.site.T, 1, 2, 0)
+        self.min_ord_results._validate_plot_axes(self.min_ord_results.site.T,
+                                                 (1, 2, 0))
 
     def test_validate_plot_axes_invalid_input(self):
         # not enough dimensions
         with assert_raises_regexp(ValueError, '2 dimension\(s\)'):
             self.min_ord_results._validate_plot_axes(
-                np.asarray([[0.1, 0.2, 0.3], [0.2, 0.3, 0.4]]), 0, 1, 2)
+                np.asarray([[0.1, 0.2, 0.3], [0.2, 0.3, 0.4]]), (0, 1, 2))
 
         coord_matrix = self.min_ord_results.site.T
 
+        # wrong number of axes
+        with assert_raises_regexp(ValueError, 'exactly three.*found 0'):
+            self.min_ord_results._validate_plot_axes(coord_matrix, [])
+        with assert_raises_regexp(ValueError, 'exactly three.*found 4'):
+            self.min_ord_results._validate_plot_axes(coord_matrix,
+                                                     (0, 1, 2, 3))
+
         # duplicate axes
         with assert_raises_regexp(ValueError, 'must be unique'):
-            self.min_ord_results._validate_plot_axes(coord_matrix, 0, 1, 0)
+            self.min_ord_results._validate_plot_axes(coord_matrix, (0, 1, 0))
 
         # out of range axes
-        with assert_raises_regexp(ValueError, 'axis2.*3'):
-            self.min_ord_results._validate_plot_axes(coord_matrix, 0, -1, 2)
-        with assert_raises_regexp(ValueError, 'axis3.*3'):
-            self.min_ord_results._validate_plot_axes(coord_matrix, 0, 2, 3)
+        with assert_raises_regexp(ValueError, 'axes\[1\].*3'):
+            self.min_ord_results._validate_plot_axes(coord_matrix, (0, -1, 2))
+        with assert_raises_regexp(ValueError, 'axes\[2\].*3'):
+            self.min_ord_results._validate_plot_axes(coord_matrix, (0, 2, 3))
 
     def test_get_plot_point_colors_invalid_input(self):
         # column provided without df
