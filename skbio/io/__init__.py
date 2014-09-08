@@ -17,6 +17,7 @@ Supported File Formats
 
    dm
    ordres
+   phylip
 
 User Functions
 --------------
@@ -127,6 +128,7 @@ __all__ = ['write', 'read', 'sniff', 'get_writer', 'get_reader',
 # unused import errors.
 import_module('skbio.io.dm')
 import_module('skbio.io.ordres')
+import_module('skbio.io.phylip')
 
 from numpy.testing import Tester
 test = Tester().test
