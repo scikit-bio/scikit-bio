@@ -392,7 +392,7 @@ class OrdinationResults(object):
             plot = scatter_fn(c=point_colors, cmap=cmap)
 
         if axis_labels is None:
-            axis_labels = map(str, axes)
+            axis_labels = ['%d' % axis for axis in axes]
         elif len(axis_labels) != 3:
             raise ValueError("axis_labels must contain exactly three elements "
                              "(found %d elements)." % len(axis_labels))
