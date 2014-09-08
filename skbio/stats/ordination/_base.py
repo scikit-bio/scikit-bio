@@ -280,7 +280,10 @@ class OrdinationResults(object):
         cmap : str or matplotlib.colors.Colormap, optional
             Name or instance of matplotlib colormap to use for mapping `column`
             values to colors. If ``None``, defaults to the colormap specified
-            in the matplotlib rc file.
+            in the matplotlib rc file. Qualitative colormaps (e.g., ``Set1``)
+            are recommended for categorical data, while sequential colormaps
+            (e.g., ``Greys``) are recommended for numeric data. See [1]_ for
+            these colormap classifications.
         s : scalar or iterable of scalars, optional
             Size of points. See matplotlib's ``Axes3D.scatter`` documentation
             for more details.
@@ -312,11 +315,12 @@ class OrdinationResults(object):
         This method creates basic plots of ordination results, and is intended
         to provide a quick look at the results in the context of metadata
         (e.g., from within the IPython Notebook). For more customization and to
-        generate publication-quality figures, we recommend EMPeror [1]_.
+        generate publication-quality figures, we recommend EMPeror [2]_.
 
         References
         ----------
-        .. [1] EMPeror: a tool for visualizing high-throughput microbial
+        .. [1] http://matplotlib.org/examples/color/colormaps_reference.html
+        .. [2] EMPeror: a tool for visualizing high-throughput microbial
            community data. Vazquez-Baeza Y, Pirrung M, Gonzalez A, Knight R.
            Gigascience. 2013 Nov 26;2(1):16. http://biocore.github.io/emperor/
 
