@@ -1,21 +1,3 @@
-r"""
-Subsampling (:mod:`skbio.math.subsample`)
-=========================================
-
-.. currentmodule:: skbio.math.subsample
-
-This module provides functionality for subsampling from vectors of counts.
-
-Functions
----------
-
-.. autosummary::
-   :toctree: generated/
-
-   subsample
-
-"""
-
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -37,7 +19,7 @@ from copy import copy
 
 from skbio.util import EfficiencyWarning
 try:
-    from ._subsample import _subsample_without_replacement
+    from .__subsample import _subsample_without_replacement
 except ImportError:
     pass
 
