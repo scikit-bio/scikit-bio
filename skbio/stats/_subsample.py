@@ -30,8 +30,8 @@ def uneven_subsample(iter_, maximum, minimum=1, random_buf_size=100000,
 
     Parameters
     ----------
-    iter_ : skbio.parse.sequences.SequenceIterator
-        The sequences to walk over
+    iter_ : Iterable
+        The iterable to walk over.
     maximum : unsigned int
         The maximum number of items per bin.
     minimum : unsigned int, optional
