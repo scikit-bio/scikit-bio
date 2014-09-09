@@ -9,6 +9,7 @@ from __future__ import absolute_import, division, print_function
 # ----------------------------------------------------------------------------
 
 import numpy as np
+from future.utils.six import StringIO
 
 from skbio.stats.distance import DistanceMatrix
 from skbio.tree import TreeNode
@@ -30,7 +31,7 @@ def nj(dm, disallow_negative_branch_length=True, result_constructor=None):
         Function to apply to construct the result object. This must take a
         newick-formatted string as input. The result of applying this function
         to a newick-formatted string will be returned from this function. This
-        defaults to ``TreeNode.from_newick``.
+        defaults to ``lambda x: TreeNode.read(StringIO(x))``.
 
     Returns
     -------
@@ -108,7 +109,7 @@ def nj(dm, disallow_negative_branch_length=True, result_constructor=None):
             "generate a neighbor joining tree.")
 
     if result_constructor is None:
-        result_constructor = TreeNode.from_newick
+        result_constructor = lambda x: TreeNode.read(StringIO(x))
 
     # initialize variables
     node_definition = None

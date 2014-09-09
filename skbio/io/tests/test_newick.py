@@ -11,8 +11,8 @@ from future.utils.six import StringIO
 
 import unittest
 
+from skbio import TreeNode
 from skbio.io import NewickFormatError
-from skbio.tree import TreeNode
 from skbio.io.newick import (_newick_to_tree_node, _tree_node_to_newick,
                              _newick_sniffer)
 
@@ -151,13 +151,13 @@ class TestNewick(unittest.TestCase):
             {'name': 'a', 'length': 0.1},
             {'name': 'b_a\'', 'length': 0.2},
             {'name': 'c', 'length': 0.3},
-            {'name': 'de d', 'length': 0.4},
+            {'name': 'de  d', 'length': 0.4},
             {'length': 0.5},
             {}
         ]), [
-            "(a:0.1,'b_a''':0.2,(c:0.3,de_d:0.4):0.5);",
-            "('b_a''':0.2\n[comment ahoy]\n,(c:0.3,'de d':0.4):0.5,a:0.1);",
-            "('b_a''':0.2,a:0.1,(de_d:0.4,c:0.3):0.5);"
+            "(a:0.1,'b_a''':0.2,(c:0.3,de__d:0.4):0.5);",
+            "('b_a''':0.2\n[comment ahoy]\n,(c:0.3,'de  d':0.4):0.5,a:0.1);",
+            "('b_a''':0.2,a:0.1,(de__d:0.4,c:0.3):0.5);"
         ])
 
         tree_all = (self._setup_tree([
@@ -338,6 +338,15 @@ class TestNewick(unittest.TestCase):
 
             fh.close()
             fh2.close()
+
+    def test_newick_to_tree_node_convert_underscores(self):
+        fh = StringIO('(_:0.1, _a, _b)__;')
+        tree = _newick_to_tree_node(fh, convert_underscores=False)
+        fh2 = StringIO()
+        _tree_node_to_newick(tree, fh2)
+        self.assertEquals(fh2.getvalue(), "('_':0.1,'_a','_b')'__';")
+        fh2.close()
+        fh.close()
 
     def test_newick_sniffer_valid_files(self):
         for _, newicks in self.trees_newick_lists:

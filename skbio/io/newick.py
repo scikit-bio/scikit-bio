@@ -4,7 +4,9 @@ Newick format (:mod:`skbio.io.newick`)
 
 .. currentmodule:: skbio.io.newick
 
-Newick format (``newick``), an informal standard agreed to on June 26, 1986
+Newick format (``newick``) stores spanning-trees with weighted edges and node
+names in a minimal file format. [1]_ This format is an informal standard agreed
+to on June 26, 1986. [2]_
 
 Format Specification
 --------------------
@@ -75,8 +77,8 @@ ad. infinitum: ``(( , ), ( , ));``.
 
 Adding Node Information
 ~~~~~~~~~~~~~~~~~~~~~~~
-To improve the clarity and meaning of a tree, information about a node can be
-added. Newick always places the node information at the right-most edge of a
+Information about a node can be added to improve the clarity and meaning of a
+tree. Newick always places the node information at the right-most edge of a
 node's position.
 
 Starting with labels, ``(( , ), ( , ));`` would become
@@ -89,8 +91,8 @@ Suppose ``D`` is rather estranged from ``B``, and ``E`` is very close. That can
 be written as: ``((D:10, E:0.5)B, (F, G)C)A;``. Notice that the colon (``:``)
 separates the label from the length. Any node can have a label and/or a length,
 but it is not required. If the length is provided but the label is omitted, a
-colon must still precede the length. Otherwise the length would be interpreted
-as a label which happens to be a number.
+colon must still precede the length (``(:0.25,:0.5):0.0;``). Without this, the
+length would be interpreted as a label (which happens to be a number).
 
 Advanced Label and Length Rules
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -112,7 +114,7 @@ A label can be escaped (meaning that its contents are understood as regular
 text) using single-quotes (``'``). When a label is surrounded by single-quotes,
 any character is permissible. If a single-quote is needed inside of an escaped
 label or anywhere else, it can be escaped with another single-quote.
-For example, the label ``A'1`` would be written as ``A''1``.
+For example, ``A_1`` is written ``'A_1'`` and ``'A'_1`` would be ``'''A''_1'``.
 
 Inline Comments
 ~~~~~~~~~~~~~~~
@@ -140,6 +142,15 @@ order in its object representations.
 Newick has no representation of an unrooted tree. Some biological packages make
 the assumption that when a trifurcated root exists in an otherwise bifurcated
 tree that the tree must be unrooted.
+
+Format Parameters
+-----------------
+The only supported format parameter is `convert_underscores`. This is `True` by
+default. When `False`, underscores found in unescaped labels will not be
+converted to spaces. This is useful when reading the output of an external
+program in which the underscores were not escaped. This parameter only affects
+`read` operations. It does not exist for `write` operations; they will always
+properly escape underscores.
 
 Examples
 --------
@@ -176,10 +187,6 @@ This is a complex Newick string.
 
 Notice that the node originally labeled ``d_d`` became ``d d``. Additionally
 ``'b_b'''`` became ``b_b'``. Note that the underscore was preserved in `b_b'`.
-
-Format Parameters
------------------
-There are no format parameters.
 
 References
 ----------
@@ -238,14 +245,14 @@ def _newick_sniffer(fh):
 
 
 @register_reader('newick', TreeNode)
-def _newick_to_tree_node(fh):
+def _newick_to_tree_node(fh, convert_underscores=True):
     tree_stack = []
     current_depth = 0
     last_token = ''
     next_is_distance = False
     root = TreeNode()
     tree_stack.append((root, current_depth))
-    for token in _tokenize_newick(fh):
+    for token in _tokenize_newick(fh, convert_underscores=convert_underscores):
         # Check for a label
         if last_token not in '(,):':
             if not next_is_distance:
@@ -336,7 +343,8 @@ def _tree_node_to_newick(obj, fh):
     fh.write(';')
 
 
-def _tokenize_newick(fh):
+def _tokenize_newick(fh, convert_underscores=True):
+    structure_tokens = set('(),;:')
     not_escaped = True
     label_start = False
     last_non_ws_char = ''
@@ -350,7 +358,7 @@ def _tokenize_newick(fh):
     # Nested comments are allowed.
     #
     # The following characters indicate structure:
-    #      ( ) , ; : '
+    #      ( ) , ; :
     #
     # Whitespace is never allowed in a newick label, so we will ignore all
     # instances of whitespace unless properly escaped by ''.
@@ -384,11 +392,7 @@ def _tokenize_newick(fh):
             # If we are inside of an escaped string literal, then ( ) , ; are
             # meaningless to the structure.
             # Otherwise, we are ready to submit our metadata token.
-            if not_escaped and (character == "(" or
-                                character == ")" or
-                                character == ":" or
-                                character == "," or
-                                character == ";"):
+            if not_escaped and character in structure_tokens:
                 label_start = False
                 metadata = ''.join(metadata_buffer)
                 # If the following condition is True, then we must have just
@@ -396,16 +400,13 @@ def _tokenize_newick(fh):
                 # either None or the last non-whitespace character.
                 # last_non_ws_char is None when we have just escaped an escape
                 # and at the first iteration.
-                if last_non_ws_char == "'":
+                if last_non_ws_char == "'" or not convert_underscores:
                     # Make no modifications.
                     yield metadata
                 elif metadata:
                     # Underscores are considered to be spaces when not in an
-                    # escaped literal string.
-                    # At first glance it may appear that this could clobber
-                    # escaped literals, however a label must be entirely quoted
-                    # if it is a literal. This means concatenation of literal
-                    # and standard label buffers is illegal.
+                    # escaped literal string. The only exception is if it looks
+                    # like a taxon.
                     yield metadata.replace('_', ' ')
                 # Clear our buffer for the next metadata token and yield our
                 # current structure token.
@@ -449,10 +450,10 @@ def _tokenize_newick(fh):
                 last_char = character
                 continue
 
+            last_char = character
             # This line is skipped in the following cases:
             #    * comment_depth > 0, i.e. we are in a comment.
             #    * We have just processed the sequence '' and we don't want
             #      the sequence ''' to result in ''.
             #    * We have encountered whitespace that is not properly escaped.
-            last_char = character
             last_non_ws_char = character
