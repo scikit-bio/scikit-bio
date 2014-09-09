@@ -48,7 +48,6 @@ def _alignment_to_phylip(obj, fh):
                                       "be generated if there is at least "
                                       "one position in the Alignment.")
 
-    ids = obj.ids()
     sequence_count = obj.sequence_count()
     fh.write("%d %d\n" % (sequence_count, sequence_length))
 

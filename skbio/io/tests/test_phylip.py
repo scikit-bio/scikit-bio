@@ -27,6 +27,16 @@ class AlignmentWriterTests(TestCase):
         self.objs = [dna_3_seqs]
         self.fps = map(get_data_path, ['phylip_dna_3_seqs'])
 
+        # alignments that cannot be written in phylip format
+        self.invalid_objs = [
+            (Alignment([DNASequence('A-CT', id="d1"),
+                        DNASequence('TTA', id="d2"),
+                        DNASequence('.-AC', id="d3")]), 'equal length'),
+            (Alignment([]), 'one sequence'),
+            (Alignment([DNASequence('', id="d1"),
+                        DNASequence('', id="d2")]), 'one position')
+        ]
+
     def test_write(self):
         for fp, obj in zip(self.fps, self.objs):
             fh = StringIO()
@@ -39,42 +49,18 @@ class AlignmentWriterTests(TestCase):
 
             self.assertEqual(obs, exp)
 
-    def test_write_unequal_sequence_lengths(self):
-        d1 = DNASequence('A-CT', id="d1")
-        d2 = DNASequence('TTA', id="d2")
-        d3 = DNASequence('.-AC', id="d3")
-        obj = Alignment([d1, d2, d3])
-
-        with self.assertRaisesRegexp(SequenceCollectionError, 'equal length'):
+    def test_write_invalid_alignment(self):
+        for invalid_obj, error_msg_regexp in self.invalid_objs:
             fh = StringIO()
-            _alignment_to_phylip(obj, fh)
+            with self.assertRaisesRegexp(SequenceCollectionError,
+                                         error_msg_regexp):
+                _alignment_to_phylip(invalid_obj, fh)
 
-        # ensure nothing was written to the file before erroring
-        obs = fh.getvalue()
-        fh.close()
-        self.assertEqual(obs, '')
-
-    def test_write_no_sequences(self):
-        with self.assertRaisesRegexp(SequenceCollectionError, 'one sequence'):
-            fh = StringIO()
-            _alignment_to_phylip(Alignment([]), fh)
-
-        obs = fh.getvalue()
-        fh.close()
-        self.assertEqual(obs, '')
-
-    def test_write_no_positions(self):
-        d1 = DNASequence('', id="d1")
-        d2 = DNASequence('', id="d2")
-        obj = Alignment([d1, d2])
-
-        with self.assertRaisesRegexp(SequenceCollectionError, 'one position'):
-            fh = StringIO()
-            _alignment_to_phylip(obj, fh)
-
-        obs = fh.getvalue()
-        fh.close()
-        self.assertEqual(obs, '')
+            # ensure nothing was written to the file before the error was
+            # thrown
+            obs = fh.getvalue()
+            fh.close()
+            self.assertEqual(obs, '')
 
 
 if __name__ == '__main__':
