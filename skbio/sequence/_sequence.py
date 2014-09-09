@@ -577,6 +577,106 @@ class BiologicalSequence(Sequence):
         """
         return self.quality is not None
 
+    def update(self, attrs):
+        """Return new biological sequence with one or more updated attributes.
+
+        Returns a new biological sequence based on the current biological
+        sequence, optionally with updated attributes.
+
+        Since biological sequences are immutable, this is the preferred way to
+        update attributes on an existing biological sequence. Note that the
+        changes are *not* made in place, since a new biological sequence is
+        returned.
+
+        Parameters
+        ----------
+        attrs : dict
+            Dictionary mapping biological sequence attributes to new values.
+            If an attribute is missing, the new sequence will keep the same
+            attribute as the current sequence. Valid attribute names are
+            `'sequence'`, `'id'`, `'description'`, and `'quality'`.
+
+        Returns
+        -------
+        BiologicalSequence
+            New biological sequence with updated attributes based on `attrs`.
+            Will be the same type as the current biological sequence (`self`).
+
+        Raises
+        ------
+        AttributeError
+            If `attrs` contains an unrecognized attribute name as a key.
+
+        Notes
+        -----
+        If `attrs` is an empty dictionary, no attributes are updated, so the
+        new biological sequence that is returned is equivalent to a shallow
+        copy of the current biological sequence.
+
+        Examples
+        --------
+        Create a biological sequence:
+
+        >>> from skbio import BiologicalSequence
+        >>> seq = BiologicalSequence('AACCGGTT', id='id1',
+        ...                          description='biological sequence',
+        ...                          quality=[4, 2, 22, 23, 1, 1, 1, 9])
+
+        Create a new biological sequence from ``seq``, keeping the same
+        underlying sequence of characters and quality scores, while updating ID
+        and description:
+
+        >>> new_seq = seq.update({'id': 'new-id',
+        ...                       'description': 'new description'})
+
+        Note that the new biological sequence's underlying sequence and quality
+        scores are the same as the original biological sequence:
+
+        >>> new_seq.sequence
+        'AACCGGTT'
+        >>> new_seq.quality
+        array([ 4,  2, 22, 23,  1,  1,  1,  9])
+
+        The ID and description have been updated:
+
+        >>> new_seq.id
+        'new-id'
+        >>> new_seq.description
+        'new description'
+
+        The original biological sequence's ID and description have not been
+        changed:
+
+        >>> seq.id
+        'id1'
+        >>> seq.description
+        'biological sequence'
+
+        """
+        sequence = self.sequence
+        id_ = self.id
+        description = self.description
+        quality = self.quality
+
+        for attr in attrs:
+            new_value = attrs[attr]
+
+            if attr == 'sequence':
+                sequence = new_value
+            elif attr == 'id':
+                id_ = new_value
+            elif attr == 'description':
+                description = new_value
+            elif attr == 'quality':
+                quality = new_value
+            else:
+                raise AttributeError(
+                    "Attempted to update unrecognized BiologicalSequence "
+                    "attribute '%s'." % attr)
+
+        return self.__class__(sequence, id=id_, description=description,
+                              quality=quality)
+
     def equals(self, other, ignore=None):
         """Compare two biological sequences for equality.
 
