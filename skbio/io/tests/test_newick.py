@@ -30,7 +30,9 @@ class TestNewick(unittest.TestCase):
         return True
 
     def _is_equal(self, n1, n2):
-        name = lambda x: (str(x.name), float(x.length), len(x.children))
+        name = lambda x: (str(x.name),
+                         float(x.length) if x.length is not None else 0,
+                         len(x.children))
         if self._is_node_equal(n1, n2):
             for c1, c2 in zip(sorted(n1.children, key=name),
                               sorted(n2.children, key=name)):
