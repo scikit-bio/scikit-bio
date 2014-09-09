@@ -32,8 +32,10 @@ class TestNewick(unittest.TestCase):
     def _is_equal(self, n1, n2):
         name = lambda x: (x.name, x.length, len(x.children))
         if self._is_node_equal(n1, n2):
-            for c1, c2 in zip(sorted(n1.children, key=name),
-                              sorted(n2.children, key=name)):
+            for c1, c2 in zip(sorted(n1.children if n1.children else [],
+                                     key=name),
+                              sorted(n2.children if n1.children else [],
+                                     key=name)):
                 self.assertTrue(c1.parent is n1)
                 self.assertTrue(c2.parent is n2)
                 if not self._is_equal(c1, c2):
