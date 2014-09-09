@@ -12,7 +12,7 @@ from future.utils.six import StringIO
 from unittest import TestCase, main
 
 from skbio.io.phylip import _alignment_to_phylip
-from skbio import Alignment, DNASequence
+from skbio import Alignment, DNASequence, RNASequence
 from skbio.alignment import SequenceCollectionError
 from skbio.util import get_data_path
 
@@ -44,7 +44,12 @@ class AlignmentWriterTests(TestCase):
 
             # no positions
             (Alignment([DNASequence('', id="d1"),
-                        DNASequence('', id="d2")]), 'one position')
+                        DNASequence('', id="d2")]), 'one position'),
+
+            # ids too long
+            (Alignment([RNASequence('ACGU', id="foo"),
+                        RNASequence('UGCA', id="alongsequenceid")]),
+             '10.*alongsequenceid')
         ]
 
     def test_write(self):

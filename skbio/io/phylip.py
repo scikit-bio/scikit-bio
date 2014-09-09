@@ -49,6 +49,14 @@ def _alignment_to_phylip(obj, fh):
             "Alignment can only be written in PHYLIP format if there is at "
             "least one position in the alignment.")
 
+    max_id_len = 10
+    for id_ in obj.ids():
+        if len(id_) > max_id_len:
+            raise SequenceCollectionError(
+                "Alignment can only be written in PHYLIP format if all "
+                "sequence IDs have %d or fewer characters. Found sequence "
+                "with ID '%s' that exceeds this limit." % (max_id_len, id_))
+
     sequence_count = obj.sequence_count()
     fh.write("%d %d\n" % (sequence_count, sequence_length))
 
