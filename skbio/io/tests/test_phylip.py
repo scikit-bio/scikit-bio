@@ -24,15 +24,25 @@ class AlignmentWriterTests(TestCase):
         d3 = DNASequence('.-ACC-GTTGC--', id="d3")
         dna_3_seqs = Alignment([d1, d2, d3])
 
+        # alignments that can be written in phylip format
         self.objs = [dna_3_seqs]
         self.fps = map(get_data_path, ['phylip_dna_3_seqs'])
 
         # alignments that cannot be written in phylip format
         self.invalid_objs = [
+            # unequal length
             (Alignment([DNASequence('A-CT', id="d1"),
                         DNASequence('TTA', id="d2"),
                         DNASequence('.-AC', id="d3")]), 'equal length'),
+
+            # invalid chars
+            (Alignment([DNASequence('ACG', id="d1"),
+                        DNASequence('FOO', id="d2")]), 'valid characters'),
+
+            # no seqs
             (Alignment([]), 'one sequence'),
+
+            # no positions
             (Alignment([DNASequence('', id="d1"),
                         DNASequence('', id="d2")]), 'one position')
         ]

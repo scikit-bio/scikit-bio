@@ -32,21 +32,22 @@ from skbio.io import register_writer
 
 @register_writer('phylip', Alignment)
 def _alignment_to_phylip(obj, fh):
-    if not obj._validate_lengths():
-        raise SequenceCollectionError("PHYLIP-formatted string can only "
-                                      "be generated if all sequences are "
-                                      "of equal length.")
+    if not obj.is_valid():
+        raise SequenceCollectionError(
+            "Alignment can only be written in PHYLIP format if all sequences "
+            "are of equal length and contain only valid characters within "
+            "their character sets.")
 
     if obj.is_empty():
-        raise SequenceCollectionError("PHYLIP-formatted string can only "
-                                      "be generated if there is at least "
-                                      "one sequence in the Alignment.")
+        raise SequenceCollectionError(
+            "Alignment can only be written in PHYLIP format if there is at "
+            "least one sequence in the alignment.")
 
     sequence_length = obj.sequence_length()
     if sequence_length == 0:
-        raise SequenceCollectionError("PHYLIP-formatted string can only "
-                                      "be generated if there is at least "
-                                      "one position in the Alignment.")
+        raise SequenceCollectionError(
+            "Alignment can only be written in PHYLIP format if there is at "
+            "least one position in the alignment.")
 
     sequence_count = obj.sequence_count()
     fh.write("%d %d\n" % (sequence_count, sequence_length))
