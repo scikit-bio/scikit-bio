@@ -13,7 +13,7 @@ from unittest import TestCase, main
 
 from skbio.io import PhylipFormatError
 from skbio.io.phylip import _alignment_to_phylip
-from skbio import Alignment, DNASequence, RNASequence
+from skbio import Alignment, DNA, RNA
 from skbio.util import get_data_path
 
 
@@ -21,46 +21,64 @@ class AlignmentWriterTests(TestCase):
     def setUp(self):
         # ids all same length, seqs longer than 10 chars
         dna_3_seqs = Alignment([
-            DNASequence('..ACC-GTTGG..', id="d1"),
-            DNASequence('TTACCGGT-GGCC', id="d2"),
-            DNASequence('.-ACC-GTTGC--', id="d3")])
+            DNA('..ACC-GTTGG..', id="d1"),
+            DNA('TTACCGGT-GGCC', id="d2"),
+            DNA('.-ACC-GTTGC--', id="d3")])
 
         # id lengths from 0 to 10, with mixes of numbers, characters, and
-        # spaces. sequence characters are a mix of cases and gap characters
+        # spaces. sequence characters are a mix of cases and gap characters.
+        # sequences are shorter than 10 chars
         variable_length_ids = Alignment([
-            RNASequence('.-ACGU'),
-            RNASequence('UGCA-.', id='a'),
-            RNASequence('.ACGU-', id='bb'),
-            RNASequence('ugca-.', id='1'),
-            RNASequence('AaAaAa', id='abcdefghij'),
-            RNASequence('GGGGGG', id='ab def42ij')])
+            RNA('.-ACGU'),
+            RNA('UGCA-.', id='a'),
+            RNA('.ACGU-', id='bb'),
+            RNA('ugca-.', id='1'),
+            RNA('AaAaAa', id='abcdefghij'),
+            RNA('GGGGGG', id='ab def42ij')])
+
+        # sequences with 20 chars = exactly two chunks of size 10
+        two_chunks = Alignment([
+            DNA('..ACC-GTTGG..AATGC.C', id='foo'),
+            DNA('TTACCGGT-GGCCTA-GCAT', id='bar')])
+
+        # single sequence with more than two chunks
+        single_seq_long = Alignment([
+            DNA('..ACC-GTTGG..AATGC.C----', id='foo')])
+
+        # single sequence with only a single character (minimal writeable
+        # alignment)
+        single_seq_short = Alignment([DNA('-')])
 
         # alignments that can be written in phylip format
-        self.objs = [dna_3_seqs, variable_length_ids]
+        self.objs = [dna_3_seqs, variable_length_ids, two_chunks,
+                     single_seq_long, single_seq_short]
         self.fps = map(get_data_path,
-                       ['phylip_dna_3_seqs', 'phylip_variable_length_ids'])
+                       ['phylip_dna_3_seqs', 'phylip_variable_length_ids',
+                        'phylip_two_chunks', 'phylip_single_seq_long',
+                        'phylip_single_seq_short'])
 
-        # alignments that cannot be written in phylip format
+        # alignments that cannot be written in phylip format, paired with their
+        # expected error message regexps
         self.invalid_objs = [
             # unequal length
-            (Alignment([DNASequence('A-CT', id="d1"),
-                        DNASequence('TTA', id="d2"),
-                        DNASequence('.-AC', id="d3")]), 'equal length'),
+            (Alignment([DNA('A-CT', id="d1"),
+                        DNA('TTA', id="d2"),
+                        DNA('.-AC', id="d3")]), 'equal length'),
 
             # invalid chars
-            (Alignment([DNASequence('ACG', id="d1"),
-                        DNASequence('FOO', id="d2")]), 'valid characters'),
+            (Alignment([DNA('ACG', id="d1"),
+                        DNA('FOO', id="d2")]), 'valid characters'),
 
             # no seqs
             (Alignment([]), 'one sequence'),
 
             # no positions
-            (Alignment([DNASequence('', id="d1"),
-                        DNASequence('', id="d2")]), 'one position'),
+            (Alignment([DNA('', id="d1"),
+                        DNA('', id="d2")]), 'one position'),
 
             # ids too long
-            (Alignment([RNASequence('ACGU', id="foo"),
-                        RNASequence('UGCA', id="alongsequenceid")]),
+            (Alignment([RNA('ACGU', id="foo"),
+                        RNA('UGCA', id="alongsequenceid")]),
              '10.*alongsequenceid')
         ]
 
