@@ -11,9 +11,9 @@ from future.utils.six import StringIO
 
 from unittest import TestCase, main
 
+from skbio.io import PhylipFormatError
 from skbio.io.phylip import _alignment_to_phylip
 from skbio import Alignment, DNASequence, RNASequence
-from skbio.alignment import SequenceCollectionError
 from skbio.util import get_data_path
 
 
@@ -67,8 +67,7 @@ class AlignmentWriterTests(TestCase):
     def test_write_invalid_alignment(self):
         for invalid_obj, error_msg_regexp in self.invalid_objs:
             fh = StringIO()
-            with self.assertRaisesRegexp(SequenceCollectionError,
-                                         error_msg_regexp):
+            with self.assertRaisesRegexp(PhylipFormatError, error_msg_regexp):
                 _alignment_to_phylip(invalid_obj, fh)
 
             # ensure nothing was written to the file before the error was

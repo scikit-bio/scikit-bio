@@ -39,6 +39,16 @@ class OrdResFormatError(FileFormatError):
     pass
 
 
+class PhylipFormatError(FileFormatError):
+    """Raised when a ``phylip`` formatted file cannot be parsed.
+
+    May also be raised when an object (e.g., ``Alignment``) cannot be written
+    in ``phylip`` format.
+
+    """
+    pass
+
+
 class InvalidRegistrationError(Exception):
     """Raised if function doesn't meet the expected API of its registration."""
     pass

@@ -26,33 +26,33 @@ http://www.bioperl.org/wiki/PHYLIP_multiple_alignment_format
 
 from __future__ import absolute_import, division, print_function
 
-from skbio.alignment import Alignment, SequenceCollectionError
-from skbio.io import register_writer
+from skbio.alignment import Alignment
+from skbio.io import register_writer, PhylipFormatError
 
 
 @register_writer('phylip', Alignment)
 def _alignment_to_phylip(obj, fh):
     if not obj.is_valid():
-        raise SequenceCollectionError(
+        raise PhylipFormatError(
             "Alignment can only be written in PHYLIP format if all sequences "
             "are of equal length and contain only valid characters within "
             "their character sets.")
 
     if obj.is_empty():
-        raise SequenceCollectionError(
+        raise PhylipFormatError(
             "Alignment can only be written in PHYLIP format if there is at "
             "least one sequence in the alignment.")
 
     sequence_length = obj.sequence_length()
     if sequence_length == 0:
-        raise SequenceCollectionError(
+        raise PhylipFormatError(
             "Alignment can only be written in PHYLIP format if there is at "
             "least one position in the alignment.")
 
     max_id_len = 10
     for id_ in obj.ids():
         if len(id_) > max_id_len:
-            raise SequenceCollectionError(
+            raise PhylipFormatError(
                 "Alignment can only be written in PHYLIP format if all "
                 "sequence IDs have %d or fewer characters. Found sequence "
                 "with ID '%s' that exceeds this limit." % (max_id_len, id_))
