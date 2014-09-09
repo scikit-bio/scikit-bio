@@ -14,6 +14,7 @@ TODO add references
 
 http://evolution.genetics.washington.edu/phylip/doc/sequence.html
 http://www.bioperl.org/wiki/PHYLIP_multiple_alignment_format
+http://www.phylo.org/tools/obsolete/phylip.html
 
 """
 # ----------------------------------------------------------------------------
@@ -58,7 +59,8 @@ def _alignment_to_phylip(obj, fh):
                 "with ID '%s' that exceeds this limit." % (max_id_len, id_))
 
     sequence_count = obj.sequence_count()
-    fh.write("%d %d\n" % (sequence_count, sequence_length))
+    fh.write('{0:d} {1:d}\n'.format(sequence_count, sequence_length))
 
+    fmt = '{0:%d}{1}\n' % max_id_len
     for seq in obj:
-        fh.write("%s %s\n" % (seq.id, str(seq)))
+        fh.write(fmt.format(seq.id, str(seq)))

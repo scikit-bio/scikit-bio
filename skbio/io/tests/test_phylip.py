@@ -19,14 +19,26 @@ from skbio.util import get_data_path
 
 class AlignmentWriterTests(TestCase):
     def setUp(self):
-        d1 = DNASequence('..ACC-GTTGG..', id="d1")
-        d2 = DNASequence('TTACCGGT-GGCC', id="d2")
-        d3 = DNASequence('.-ACC-GTTGC--', id="d3")
-        dna_3_seqs = Alignment([d1, d2, d3])
+        # ids all same length, seqs longer than 10 chars
+        dna_3_seqs = Alignment([
+            DNASequence('..ACC-GTTGG..', id="d1"),
+            DNASequence('TTACCGGT-GGCC', id="d2"),
+            DNASequence('.-ACC-GTTGC--', id="d3")])
+
+        # id lengths from 0 to 10, with mixes of numbers, characters, and
+        # spaces. sequence characters are a mix of cases and gap characters
+        variable_length_ids = Alignment([
+            RNASequence('.-ACGU'),
+            RNASequence('UGCA-.', id='a'),
+            RNASequence('.ACGU-', id='bb'),
+            RNASequence('ugca-.', id='1'),
+            RNASequence('AaAaAa', id='abcdefghij'),
+            RNASequence('GGGGGG', id='ab def42ij')])
 
         # alignments that can be written in phylip format
-        self.objs = [dna_3_seqs]
-        self.fps = map(get_data_path, ['phylip_dna_3_seqs'])
+        self.objs = [dna_3_seqs, variable_length_ids]
+        self.fps = map(get_data_path,
+                       ['phylip_dna_3_seqs', 'phylip_variable_length_ids'])
 
         # alignments that cannot be written in phylip format
         self.invalid_objs = [
