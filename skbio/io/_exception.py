@@ -39,6 +39,11 @@ class OrdResFormatError(FileFormatError):
     pass
 
 
+class NewickFormatError(FileFormatError):
+    """Raised when a ``newick`` formatted file cannot be parsed."""
+    pass
+
+
 class InvalidRegistrationError(Exception):
     """Raised if function doesn't meet the expected API of its registration."""
     pass
