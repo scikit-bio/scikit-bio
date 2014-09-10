@@ -1832,7 +1832,17 @@ class TreeNode(object):
 
     @classmethod
     def from_file(cls, tree_f):
-        """Load a tree from a file or file-like object"""
+        """Load a tree from a file or file-like object
+
+        .. note:: Deprecated in scikit-bio 0.2.0-dev
+           ``from_newick`` will be removed in scikit-bio 0.3.0. It is replaced
+           by ``read``, which is a more general method for deserializing
+           TreeNode instances. ``read`` supports multiple file formats,
+           automatic file format detection, etc. by taking advantage of
+           scikit-bio's I/O registry system. See :mod:`skbio.io` for more
+           details.
+
+        """
         warnings.warn(
             "TreeNode.from_file is deprecated and will be removed in "
             "scikit-bio 0.3.0. Please update your code to use TreeNode.read.",
@@ -1911,6 +1921,14 @@ class TreeNode(object):
     @classmethod
     def from_newick(cls, lines, unescape_name=True):
         r"""Returns tree from the Clustal .dnd file format and equivalent
+
+        .. note:: Deprecated in scikit-bio 0.2.0-dev
+           ``from_newick`` will be removed in scikit-bio 0.3.0. It is replaced
+           by ``read``, which is a more general method for deserializing
+           TreeNode instances. ``read`` supports multiple file formats,
+           automatic file format detection, etc. by taking advantage of
+           scikit-bio's I/O registry system. See :mod:`skbio.io` for more
+           details.
 
         The tree is made of `skbio.TreeNode` objects, with branch
         lengths if specified by the format.
@@ -2170,6 +2188,13 @@ class TreeNode(object):
     def to_newick(self, with_distances=False, semicolon=True,
                   escape_name=True):
         r"""Return the newick string representation of this tree.
+
+        .. note:: Deprecated in scikit-bio 0.2.0-dev
+           ``to_newick`` will be removed in scikit-bio 0.3.0. It is replaced by
+           ``write``, which is a more general method for serializing TreeNode
+           instances. ``write`` supports multiple file formats, automatic file
+           format detection, etc. by taking advantage of scikit-bio's I/O
+           registry system. See :mod:`skbio.io` for more details.
 
         Please see `TreeNode.from_newick` for a further description of the
         Newick format.

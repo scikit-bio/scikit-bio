@@ -18,26 +18,22 @@ from skbio.io.newick import (_newick_to_tree_node, _tree_node_to_newick,
 
 
 class TestNewick(unittest.TestCase):
-    def _is_node_equal(self, n1, n2):
+    def _assert_node_equal(self, n1, n2):
         self.assertEqual(n1.name, n2.name)
         self.assertEqual(n1.length, n2.length)
         self.assertEqual(len(n1.children), len(n2.children))
-        return True
 
-    def _is_equal(self, n1, n2):
+    def _assert_equal(self, n1, n2):
         def name(x):
             return (str(x.name),
                     float(x.length) if x.length is not None else 0,
                     len(x.children))
-        if self._is_node_equal(n1, n2):
-            for c1, c2 in zip(sorted(n1.children, key=name),
-                              sorted(n2.children, key=name)):
-                self.assertTrue(c1.parent is n1)
-                self.assertTrue(c2.parent is n2)
-                if not self._is_equal(c1, c2):
-                    return False
-            return True
-        return False
+        self._assert_node_equal(n1, n2)
+        for c1, c2 in zip(sorted(n1.children, key=name),
+                          sorted(n2.children, key=name)):
+            self.assertTrue(c1.parent is n1)
+            self.assertTrue(c2.parent is n2)
+            self._assert_equal(c1, c2)
 
     def _setup_tree(self, kwargs_list):
         trees = []
@@ -70,10 +66,14 @@ class TestNewick(unittest.TestCase):
         return trees[6]
 
     def setUp(self):
+        # Using the factory functions above, we will construct different tree
+        # instances. Each tree is expected to serialize to the first newick
+        # string in the list. Each string in the list is expected to
+        # deserialize into an equivilent rotation of the constructed instance.
         tree_blank = (self._setup_tree([
             {}, {}, {}, {}, {}, {}
         ]), [
-            "(,,(,));",
+            "(,,(,));\n",
             "(,(,),);",
             "((,),,);",
             "   ((,[ this is a comment ])      ,    ,   )    ;  ",
@@ -88,7 +88,7 @@ class TestNewick(unittest.TestCase):
             {},
             {}
         ]), [
-            "('a_',b,(c,d));",
+            "('a_',b,(c,d));\n",
             "(b,(c,d),'a_');",
             "(b\n,'a_'\n  ,(d \t,c) )  ;",
         ])
@@ -101,7 +101,7 @@ class TestNewick(unittest.TestCase):
             {'name': 'e'},
             {'name': 'f'}
         ]), [
-            "(a,b,(c,'[whaaat!'']')e)f;",
+            "(a,b,(c,'[whaaat!'']')e)f;\n",
             "(b,(c,'[whaaat!'']')e,a)f;",
             "(b,[comment] \na,('[whaaat!'']',c)e)f;",
         ])
@@ -114,7 +114,7 @@ class TestNewick(unittest.TestCase):
             {'length': 0.5},
             {}
         ]), [
-            "(:0.1,:0.2,(:0.3,:0.4):0.5);",
+            "(:0.1,:0.2,(:0.3,:0.4):0.5);\n",
             "(:0.2,(:0.3,:0.4):0.5,:0.1);",
             "(:0.2,:0.1,(:0.4,:0.3):0.5);",
         ])
@@ -127,7 +127,7 @@ class TestNewick(unittest.TestCase):
             {'length': 0.5},
             {'length': 0.0}
         ]), [
-            "(:0.1,:0.2,(:0.3,:0.4):0.5):0.0;",
+            "(:0.1,:0.2,(:0.3,:0.4):0.5):0.0;\n",
             "(:0.2,(:0.3,:0.4):0.5,:0.1):0.0;",
             "(:0.2,\n:0.1,(:0.4,\n:0.3):0.5)\n:0.0;",
         ])
@@ -140,7 +140,7 @@ class TestNewick(unittest.TestCase):
             {'length': 0.5},
             {'length': 0.0}
         ]), [
-            "(a:0.1,'b_a''':0.2,(c:0.3,de_d:0.4):0.5):0.0;",
+            "(a:0.1,'b_a''':0.2,(c:0.3,de_d:0.4):0.5):0.0;\n",
             "('b_a''':0.2,(c:0.3,'de d':0.4):0.5,a:0.1):0.0;",
             "('b_a''':0.2,a:0.1,('de d'[why not]:0.4,c:0.3):0.5):0.0;",
         ])
@@ -153,7 +153,7 @@ class TestNewick(unittest.TestCase):
             {'length': 0.5},
             {}
         ]), [
-            "(a:0.1,'b_a''':0.2,(c:0.3,de__d:0.4):0.5);",
+            "(a:0.1,'b_a''':0.2,(c:0.3,de__d:0.4):0.5);\n",
             "('b_a''':0.2\n[comment ahoy]\n,(c:0.3,'de  d':0.4):0.5,a:0.1);",
             "('b_a''':0.2,a:0.1,(de__d:0.4,c:0.3):0.5);"
         ])
@@ -166,7 +166,7 @@ class TestNewick(unittest.TestCase):
             {'name': 'e', 'length': 0.5},
             {'name': 'f', 'length': 0.0}
         ]), [
-            "(a:0.1,'b_a''':0.2,(c:0.3,de''_d:0.4)e:0.5)f:0.0;",
+            "(a:0.1,'b_a''':0.2,(c:0.3,de''_d:0.4)e:0.5)f:0.0;\n",
             "('b_a''':0.2,(c:0.3,de''_d:0.4)e:0.5,a:0.1)f:0.0;",
             "((de''_d:0.4, c:0.3)e:0.5, 'b_a''':0.2, a:0.1)f:0.0;"
         ])
@@ -174,7 +174,7 @@ class TestNewick(unittest.TestCase):
         balanced_blank = (self._setup_balanced_binary([
             {}, {}, {}, {}, {}, {}, {}
         ]), [
-            "((,),(,));"
+            "((,),(,));\n",
         ])
 
         balanced_named = (self._setup_balanced_binary([
@@ -186,7 +186,7 @@ class TestNewick(unittest.TestCase):
             {'name': 'f'},
             {'name': 'g'}
         ]), [
-            "((c,d)a,(e,f)b)g;"
+            "((c,d)a,(e,f)b)g;\n",
         ])
 
         balanced_distances = (self._setup_balanced_binary([
@@ -198,7 +198,7 @@ class TestNewick(unittest.TestCase):
             {'length': 6.0},
             {'length': 0.0}
         ]), [
-            "((:3.0,:4.0):1.0,(:5.0,:6.0):2.0):0.0;"
+            "((:3.0,:4.0):1.0,(:5.0,:6.0):2.0):0.0;\n",
         ])
 
         blanaced_all = (self._setup_balanced_binary([
@@ -210,13 +210,13 @@ class TestNewick(unittest.TestCase):
             {'name': 'f:f\'f', 'length': 6.0},
             {'name': 'g', 'length': 0.0}
         ]), [
-            "((c:3.0,d:4.0)a:1.0,(e:5.0,'f:f''f':6.0)b:2.0)g:0.0;"
+            "((c:3.0,d:4.0)a:1.0,(e:5.0,'f:f''f':6.0)b:2.0)g:0.0;\n",
         ])
 
         linked_list_blank = (self._setup_linked_list([
             {}, {}, {}, {}, {}
         ]), [
-            "(((())));",
+            "(((())));\n",
             "[(((())));](((())));",
             "[[(((())));](((())));](((())));\t\t\n"
         ])
@@ -228,7 +228,7 @@ class TestNewick(unittest.TestCase):
             {'name': 'de d'},
             {'name': 'e'},
         ]), [
-            "((((aaa)'b_a''')c)de_d)e;"
+            "((((aaa)'b_a''')c)de_d)e;\n"
         ])
 
         inked_list_distances = (self._setup_linked_list([
@@ -238,7 +238,7 @@ class TestNewick(unittest.TestCase):
             {'length': 0.1},
             {'length': 0.0},
         ]), [
-            "((((:0.4):0.3):0.2):0.1):0.0;",
+            "((((:0.4):0.3):0.2):0.1):0.0;\n",
             "((((:0.4)[not a label]:0.3):0.2):0.1):0.0;\t\t\n"
         ])
 
@@ -249,14 +249,14 @@ class TestNewick(unittest.TestCase):
             {'name': 'de d', 'length': 0.1},
             {'name': 'eee', 'length': 0.0},
         ]), [
-            "((((a:0.4)'b_a''':0.3)c:0.2)de_d:0.1)eee:0.0;"
+            "((((a:0.4)'b_a''':0.3)c:0.2)de_d:0.1)eee:0.0;\n"
         ])
 
-        single_empty = (TreeNode(), [";", "[comment about the root"
-                                     " and it's properties];"])
-        single_named = (TreeNode(name='athing'), ["athing;"])
-        single_distance = (TreeNode(length=200.0), [":200.0;"])
-        single_all = (TreeNode(name='[a]', length=200.0), ["'[a]':200.0;"])
+        single_empty = (TreeNode(), [";\n", "[comment about the root"
+                                     " and its properties];"])
+        single_named = (TreeNode(name='athing'), ["athing;\n"])
+        single_distance = (TreeNode(length=200.0), [":200.0;\n"])
+        single_all = (TreeNode(name='[a]', length=200.0), ["'[a]':200.0;\n"])
 
         self.trees_newick_lists = [
             tree_blank,
@@ -281,17 +281,20 @@ class TestNewick(unittest.TestCase):
             single_all
         ]
 
+        # Invalid newick strings and list of error fragments that should be
+        # a part of the error message when read.
         self.invalid_newicks = [
-            "",
-            "This is not a newick file.",
-            "((();",
-            "(,,,)(,);",
-            "(()());",
-            "(():,,)",
-            "[][[]('comment is the gotcha':0.2,,);",
-            "#SampleID\tHeaderA\tHeaderB\n0\t'yellow'\t0.45;",
-            "))();",
-            "((,,),((,,));"
+            ("", ['root']),
+            ("This is not a newick file.", ['whitespace', 'label']),
+            ("((();", ['Parenthesis', 'unbalanced']),
+            ("(,,,)(,);\n", ['unnested', 'children']),
+            ("(()());", ['unnested', 'children']),
+            ("(():,,)", ['length']),
+            ("[][[]('comment is the gotcha':0.2,,);", ['unbalanced', 'root']),
+            ("#SampleID\tHeaderA\tHeaderB\n0\t'yellow'\t0.45;", ['whitespace',
+                                                                 'label']),
+            ("))();", ['Parenthesis', 'unbalanced']),
+            ("((,,),((,,));", ['Parenthesis', 'unbalanced'])
         ]
 
     def test_newick_to_tree_node_valid_files(self):
@@ -300,15 +303,17 @@ class TestNewick(unittest.TestCase):
                 fh = StringIO(newick)
                 read_tree = _newick_to_tree_node(fh)
 
-                self.assertTrue(self._is_equal(tree, read_tree))
+                self._assert_equal(tree, read_tree)
 
                 fh.close()
 
     def test_newick_to_tree_node_invalid_files(self):
-        for invalid in self.invalid_newicks:
+        for invalid, error_fragments in self.invalid_newicks:
             fh = StringIO(invalid)
-            with self.assertRaises(NewickFormatError):
+            with self.assertRaises(NewickFormatError) as cm:
                 _newick_to_tree_node(fh)
+            for frag in error_fragments:
+                self.assertIn(frag, str(cm.exception))
             fh.close()
 
     def test_tree_node_to_newick(self):
@@ -332,7 +337,7 @@ class TestNewick(unittest.TestCase):
             tree2 = _newick_to_tree_node(fh2)
 
             self.assertEqual(newick, fh2.getvalue())
-            self.assertTrue(self._is_equal(tree, tree2))
+            self._assert_equal(tree, tree2)
 
             fh.close()
             fh2.close()
@@ -342,7 +347,7 @@ class TestNewick(unittest.TestCase):
         tree = _newick_to_tree_node(fh, convert_underscores=False)
         fh2 = StringIO()
         _tree_node_to_newick(tree, fh2)
-        self.assertEquals(fh2.getvalue(), "('_':0.1,'_a','_b')'__';")
+        self.assertEquals(fh2.getvalue(), "('_':0.1,'_a','_b')'__';\n")
         fh2.close()
         fh.close()
 
@@ -354,7 +359,7 @@ class TestNewick(unittest.TestCase):
                 fh.close()
 
     def test_newick_sniffer_invalid_files(self):
-        for invalid in self.invalid_newicks:
+        for invalid, _ in self.invalid_newicks:
             fh = StringIO(invalid)
             self.assertEqual(_newick_sniffer(fh), (False, {}))
             fh.close()

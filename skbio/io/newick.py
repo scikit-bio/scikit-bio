@@ -5,12 +5,12 @@ Newick format (:mod:`skbio.io.newick`)
 .. currentmodule:: skbio.io.newick
 
 Newick format (``newick``) stores spanning-trees with weighted edges and node
-names in a minimal file format. [1]_ This format is an informal standard agreed
-to on June 26, 1986. [2]_
+names in a minimal file format [1]_. Newick was created as an informal
+specificationon June 26, 1986 [2]_.
 
 Format Specification
 --------------------
-A Newick file produces a tree using the following grammar. See below for an
+A Newick file represents a tree using the following grammar. See below for an
 explanation of the format in plain English.
 
 Formal Grammar
@@ -31,12 +31,12 @@ Formal Grammar
           NUMBER ==> a decimal or integer
 
 .. note:: The ``_`` character inside of SAFE_CHARS will be converted to a
-   blank space in ``skbio.io.tree.TreeNode`` and vice versa.
+   blank space in ``skbio.tree.TreeNode`` and vice versa.
 
-.. note:: ``'`` is considered the escape character. To escape ``'`` use a
+   ``'`` is considered the escape character. To escape ``'`` use a
    preceding ``'``.
 
-.. note:: The implementation of newick in scikit-bio allows nested comments. To
+   The implementation of newick in scikit-bio allows nested comments. To
    escape ``[`` or ``]`` from within COMMENT_CHARS, use a preceding ``'``.
 
 Explanation
@@ -64,11 +64,12 @@ inner edge.
 
 Application of Rules
 ~~~~~~~~~~~~~~~~~~~~
-Adding a comma within the parenthesis will create two
-children: ``( , )``. Notice that only one comma is needed because the
-parenthesis have already created a child. Adding more commas will create more
-children who are siblings to each other. For example, writing ``( , , , )``
-will create 4 child nodes who are siblings.
+Adding a comma within the parenthesis will create two children: ``( , )``
+(also known as a bifurcating node). Notice that only one comma is needed
+because the parenthesis have already created a child. Adding more commas will
+create more children who are siblings to each other. For example, writing
+``( , , , )`` will create a multifurcating node with 4 child nodes who are
+siblings to each other.
 
 The notation for a root can be used to create a complete tree. The ``;`` will
 create a root node where parenthesis can be placed: ``( );``. Adding commas
@@ -78,21 +79,24 @@ ad. infinitum: ``(( , ), ( , ));``.
 Adding Node Information
 ~~~~~~~~~~~~~~~~~~~~~~~
 Information about a node can be added to improve the clarity and meaning of a
-tree. Newick always places the node information at the right-most edge of a
-node's position.
+tree. Each node may have a label and/or a length (to the parent). Newick always
+places the node information at the right-most edge of a node's position.
 
 Starting with labels, ``(( , ), ( , ));`` would become
 ``((D, E)B, (F, G)C)A;``. There is a named root ``A`` and the root's children
 (from left to right) are ``B`` and ``C``. ``B`` has the children ``D`` and
-``E``, and ``C`` has the children ``F`` and ``G``. Length is another piece of
-information about a node. Length represents the distance (or weight of the
-edge) that connects a node to it's parent. This must be a decimal or integer.
-Suppose ``D`` is rather estranged from ``B``, and ``E`` is very close. That can
-be written as: ``((D:10, E:0.5)B, (F, G)C)A;``. Notice that the colon (``:``)
-separates the label from the length. Any node can have a label and/or a length,
-but it is not required. If the length is provided but the label is omitted, a
+``E``, and ``C`` has the children ``F`` and ``G``.
+
+Length represents the distance (or weight of the edge) that connects a node to
+its parent. This must be a decimal or integer. As an example, suppose ``D`` is
+rather estranged from ``B``, and ``E`` is very close. That can be written as:
+``((D:10, E:0.5)B, (F, G)C)A;``. Notice that the colon (``:``) separates the
+label from the length. If the length is provided but the label is omitted, a
 colon must still precede the length (``(:0.25,:0.5):0.0;``). Without this, the
 length would be interpreted as a label (which happens to be a number).
+
+.. note:: Internally scikit-bio will cast a length to ``float`` which
+   technically means that even exponent strings (``1e-3``) are supported)
 
 Advanced Label and Length Rules
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -102,12 +106,13 @@ Newick format. The following characters are not allowed within a standard
 label: parenthesis, commas, square-brackets, colon, semi-colon, and whitespace.
 These characters are also disallowed from occurring within a length, which has
 a much stricter format: decimal or integer. Many of these characters are
-symbols which define the structure of a Newick tree and are then disallowed for
+symbols which define the structure of a Newick tree and are thus disallowed for
 obvious reasons. The symbols not yet mentioned are square-brackets (``[ ]``)
 and whitespace (space, tab, and newline).
 
 What if these characters are needed within a label? In the simple case of
-spaces, an underscore (``_``) will be translated as a space and vice versa.
+spaces, an underscore (``_``) will be translated as a space on read and vice
+versa on write.
 
 What if a literal underscore or any of the others mentioned are needed?
 A label can be escaped (meaning that its contents are understood as regular
@@ -134,14 +139,15 @@ is permitted anywhere else.
 
 Caveats
 ~~~~~~~
-Newick cannot provide a unique representation of any tree, in other words,
-``(A, B);`` is isomorphic to ``(B, A);``. This is the same tree written two
-different ways. The implementation in scikit-bio maintains the given sibling
-order in its object representations.
+Newick cannot always provide a unique representation of any tree, in other
+words, the same tree can be written multiple ways. For example: ``(A, B);`` is
+isomorphic to ``(B, A);``. The implementation in scikit-bio maintains the given
+sibling order in its object representations.
 
 Newick has no representation of an unrooted tree. Some biological packages make
 the assumption that when a trifurcated root exists in an otherwise bifurcated
-tree that the tree must be unrooted.
+tree that the tree must be unrooted. In scikit-bio, ``skbio.tree.TreeNode``
+will always be rooted at the ``newick`` root (``;``).
 
 Format Parameters
 -----------------
@@ -204,6 +210,8 @@ References
 
 from __future__ import absolute_import, division, print_function
 
+from future.builtins import zip, range
+
 from skbio.io import (register_reader, register_writer, register_sniffer,
                       NewickFormatError)
 from skbio.tree import TreeNode
@@ -211,12 +219,21 @@ from skbio.tree import TreeNode
 
 @register_sniffer("newick")
 def _newick_sniffer(fh):
+    # Strategy:
+    #   The following conditions preclude a file from being newick:
+    #       * It is an empty file.
+    #       * There is whitespace inside of a label (handled by tokenizer)
+    #       * : is followed by anything that is an operator
+    #       * ( is not preceded immediately by , or another (
+    #       * The parens are unablanced when ; is found.
+    #   If 100 tokens (or less if EOF occurs earlier) then it is probably
+    #   newick, or at least we can't prove it isn't.
     operators = set(",;:()")
     empty = True
     last_token = ','
     indent = 0
     try:
-        # 100 bytes ought to be enough for anybody.
+        # 100 tokens ought to be enough for anybody.
         for token, _ in zip(_tokenize_newick(fh), range(100)):
             if token not in operators:
                 pass
@@ -263,7 +280,8 @@ def _newick_to_tree_node(fh, convert_underscores=True):
             try:
                 tree_stack[-1][0].length = float(token)
             except ValueError:
-                raise NewickFormatError("Bad distance in label: %s." % token)
+                raise NewickFormatError("Could not read length as numeric type"
+                                        ": %s." % token)
 
         elif token == '(':
             current_depth += 1
@@ -297,8 +315,9 @@ def _newick_to_tree_node(fh, convert_underscores=True):
         last_token = token
 
     raise NewickFormatError("Could not parse file as newick."
-                            " `(Parenthesis)`, `'single-quotes'`, or"
-                            " `[comments]` may be unbalanced.")
+                            " `(Parenthesis)`, `'single-quotes'`,"
+                            " `[comments]` may be unbalanced, or tree may be"
+                            " missing its root.")
 
 
 @register_writer("newick", TreeNode)
@@ -312,8 +331,8 @@ def _tree_node_to_newick(obj, fh):
         if node.children and node_depth >= current_depth:
             fh.write('(')
             nodes_left.append(entry)
-            nodes_left += [(child, node_depth + 1) for child in
-                           reversed(node.children)]
+            nodes_left += ((child, node_depth + 1) for child in
+                           reversed(node.children))
             current_depth = node_depth + 1
         else:
             if node_depth < current_depth:
@@ -337,7 +356,7 @@ def _tree_node_to_newick(obj, fh):
             if nodes_left and nodes_left[-1][1] == current_depth:
                 fh.write(',')
 
-    fh.write(';')
+    fh.write(';\n')
 
 
 def _tokenize_newick(fh, convert_underscores=True):
@@ -357,8 +376,8 @@ def _tokenize_newick(fh, convert_underscores=True):
     # The following characters indicate structure:
     #      ( ) , ; :
     #
-    # Whitespace is never allowed in a newick label, so we will ignore all
-    # instances of whitespace unless properly escaped by ''.
+    # Whitespace is never allowed in a newick label, so an exception will be
+    # thrown.
     #
     # We use ' to indicate a literal string. It has the highest precedence of
     # any operator.
@@ -402,8 +421,7 @@ def _tokenize_newick(fh, convert_underscores=True):
                     yield metadata
                 elif metadata:
                     # Underscores are considered to be spaces when not in an
-                    # escaped literal string. The only exception is if it looks
-                    # like a taxon.
+                    # escaped literal string.
                     yield metadata.replace('_', ' ')
                 # Clear our buffer for the next metadata token and yield our
                 # current structure token.
