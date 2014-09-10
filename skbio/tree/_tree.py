@@ -152,7 +152,7 @@ class TreeNode(object):
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(StringIO("((a,b)c);"))
         >>> str(tree)
-        '((a,b)c);'
+        '((a,b)c);\n'
 
         .. shownumpydoc
         """
@@ -267,6 +267,7 @@ class TreeNode(object):
         >>> root.append(child2)
         >>> print(root)
         (child1,child2)root;
+        <BLANKLINE>
 
         """
         self.children.append(self._adopt(node))
@@ -294,6 +295,7 @@ class TreeNode(object):
         >>> root.extend([TreeNode(name="child1"), TreeNode(name="child2")])
         >>> print(root)
         (child1,child2)root;
+        <BLANKLINE>
 
         """
         self.children.extend([self._adopt(n) for n in nodes])
@@ -327,6 +329,7 @@ class TreeNode(object):
         >>> tree = TreeNode.read(StringIO("(a,b)c;"))
         >>> print(tree.pop(0))
         a;
+        <BLANKLINE>
 
         """
         return self._remove_node(index)
@@ -397,6 +400,7 @@ class TreeNode(object):
         >>> tree.remove_deleted(lambda x: x.name == 'b')
         >>> print(tree)
         (a)c;
+        <BLANKLINE>
         """
         for node in self.traverse(include_self=False):
             if func(node):
@@ -431,9 +435,11 @@ class TreeNode(object):
         >>> tree.remove_deleted(lambda x: x == to_delete)
         >>> print(tree)
         ((a)c,(d,e)f)root;
+        <BLANKLINE>
         >>> tree.prune()
         >>> print(tree)
         ((d,e)f,a)root;
+        <BLANKLINE>
 
         """
         # build up the list of nodes to remove so the topology is not altered
@@ -603,6 +609,7 @@ class TreeNode(object):
         >>> new_tree = tree.find('d').unrooted_deepcopy()
         >>> print(new_tree)
         (b,c,(a,((f,g)h)e)d)root;
+        <BLANKLINE>
 
         """
         root = self.root()
@@ -649,6 +656,7 @@ class TreeNode(object):
         >>> new_tree = tree.find('d').unrooted_copy()
         >>> print(new_tree)
         (b,c,(a,((f,g)h)e)d)root;
+        <BLANKLINE>
 
         """
         neighbors = self.neighbors(ignore=parent)
@@ -805,6 +813,7 @@ class TreeNode(object):
         >>> tree = TreeNode.read(StringIO("(((a,b)c,(d,e)f)g,h)i;"))
         >>> print(tree.root_at('c'))
         (a,b,((d,e)f,(h)g)c)root;
+        <BLANKLINE>
 
         """
         if isinstance(node, str):
@@ -848,6 +857,7 @@ class TreeNode(object):
         ...                               "a:1;"))
         >>> print(tree.root_at_midpoint())
         ((d:1.0,e:1.0,(g:1.0)f:1.0)c:0.5,((h:1.0)b:1.0):0.5)root;
+        <BLANKLINE>
 
         """
         tree = self.copy()
@@ -1469,9 +1479,11 @@ class TreeNode(object):
         c a b
         c f g
         >>> for node in tree.find_all('d'):
-        ...     print(node.name, node.to_newick())
+        ...     print(node.name, str(node))
         d (d,e)d;
+        <BLANKLINE>
         d d;
+        <BLANKLINE>
         """
         root = self.root()
 
@@ -1835,7 +1847,7 @@ class TreeNode(object):
         """Load a tree from a file or file-like object
 
         .. note:: Deprecated in scikit-bio 0.2.0-dev
-           ``from_newick`` will be removed in scikit-bio 0.3.0. It is replaced
+           ``from_file`` will be removed in scikit-bio 0.3.0. It is replaced
            by ``read``, which is a more general method for deserializing
            TreeNode instances. ``read`` supports multiple file formats,
            automatic file format detection, etc. by taking advantage of
@@ -2152,13 +2164,21 @@ class TreeNode(object):
         ...     print(k, v)
         ...
         0 a:1.0;
+        <BLANKLINE>
         1 b:2.0;
+        <BLANKLINE>
         2 c:3.0;
+        <BLANKLINE>
         3 d:5.0;
+        <BLANKLINE>
         4 (a:1.0,b:2.0,c:3.0)x:4.0;
+        <BLANKLINE>
         5 (d:5.0)y:6.0;
+        <BLANKLINE>
         6 ((a:1.0,b:2.0,c:3.0)x:4.0,(d:5.0)y:6.0)z:7.0;
+        <BLANKLINE>
         7 (((a:1.0,b:2.0,c:3.0)x:4.0,(d:5.0)y:6.0)z:7.0);
+        <BLANKLINE>
         >>> res['id']
         array([0, 1, 2, 3, 4, 5, 6, 7])
         >>> res['name']
@@ -2192,9 +2212,9 @@ class TreeNode(object):
         .. note:: Deprecated in scikit-bio 0.2.0-dev
            ``to_newick`` will be removed in scikit-bio 0.3.0. It is replaced by
            ``write``, which is a more general method for serializing TreeNode
-           instances. ``write`` supports multiple file formats, automatic file
-           format detection, etc. by taking advantage of scikit-bio's I/O
-           registry system. See :mod:`skbio.io` for more details.
+           instances. ``write`` supports multiple file formats by taking
+           advantage of scikit-bio's I/O registry system. See :mod:`skbio.io`
+           for more details.
 
         Please see `TreeNode.from_newick` for a further description of the
         Newick format.
@@ -3077,12 +3097,17 @@ class TreeNode(object):
         >>> rev = lambda items: items.reverse()
         >>> shuffler = tree.shuffle(names=['a', 'b'], shuffle_f=rev, n=5)
         >>> for shuffled_tree in shuffler:
-        ...     print(shuffled_tree.to_newick())
+        ...     print(shuffled_tree)
         ((b,a),(c,d));
+        <BLANKLINE>
         ((a,b),(c,d));
+        <BLANKLINE>
         ((b,a),(c,d));
+        <BLANKLINE>
         ((a,b),(c,d));
+        <BLANKLINE>
         ((b,a),(c,d));
+        <BLANKLINE>
 
         """
         if k is not None and k < 2:

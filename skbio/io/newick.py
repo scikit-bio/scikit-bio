@@ -5,8 +5,9 @@ Newick format (:mod:`skbio.io.newick`)
 .. currentmodule:: skbio.io.newick
 
 Newick format (``newick``) stores spanning-trees with weighted edges and node
-names in a minimal file format [1]_. Newick was created as an informal
-specificationon June 26, 1986 [2]_.
+names in a minimal file format [1]_. This is useful for representing
+phylogenetic trees and taxonomies. Newick was created as an informal
+specification on June 26, 1986 [2]_.
 
 Format Specification
 --------------------

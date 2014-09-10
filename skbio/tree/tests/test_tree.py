@@ -124,21 +124,21 @@ class TreeTests(TestCase):
     def test_gops(self):
         """Basic TreeNode operations should work as expected"""
         p = TreeNode()
-        self.assertEqual(str(p), ';')
+        self.assertEqual(str(p), ';\n')
         p.name = 'abc'
-        self.assertEqual(str(p), 'abc;')
+        self.assertEqual(str(p), 'abc;\n')
         p.length = 3
-        self.assertEqual(str(p), 'abc:3;')  # don't suppress branch from root
+        self.assertEqual(str(p), 'abc:3;\n')  # don't suppress branch from root
         q = TreeNode()
         p.append(q)
-        self.assertEqual(str(p), '()abc:3;')
+        self.assertEqual(str(p), '()abc:3;\n')
         r = TreeNode()
         q.append(r)
-        self.assertEqual(str(p), '(())abc:3;')
+        self.assertEqual(str(p), '(())abc:3;\n')
         r.name = 'xyz'
-        self.assertEqual(str(p), '((xyz))abc:3;')
+        self.assertEqual(str(p), '((xyz))abc:3;\n')
         q.length = 2
-        self.assertEqual(str(p), '((xyz):2)abc:3;')
+        self.assertEqual(str(p), '((xyz):2)abc:3;\n')
 
     def test_pop(self):
         """Pop off a node"""
@@ -171,7 +171,7 @@ class TreeTests(TestCase):
         """Remove nodes by function"""
         f = lambda node: node.name in ['b', 'd']
         self.simple_t.remove_deleted(f)
-        exp = "((a)i1,(c)i2)root;"
+        exp = "((a)i1,(c)i2)root;\n"
         obs = str(self.simple_t)
         self.assertEqual(obs, exp)
 
@@ -526,7 +526,7 @@ class TreeTests(TestCase):
         """Shear the nodes"""
         t = TreeNode.from_newick('((H:1,G:1):2,(R:0.5,M:0.7):3);')
         obs = str(t.shear(['G', 'M']))
-        exp = '(G:3.0,M:3.7);'
+        exp = '(G:3.0,M:3.7);\n'
         self.assertEqual(obs, exp)
 
     def test_compare_tip_distances(self):
@@ -694,7 +694,7 @@ class TreeTests(TestCase):
         with self.assertRaises(TreeError):
             t.root_at(t.find('h'))
 
-        exp = "(a,b,((d,e)f,(h)g)c)root;"
+        exp = "(a,b,((d,e)f,(h)g)c)root;\n"
         rooted = t.root_at('c')
         obs = str(rooted)
         self.assertEqual(obs, exp)
@@ -714,7 +714,7 @@ class TreeTests(TestCase):
 
     def test_root_at_midpoint_no_lengths(self):
         # should get same tree back (a copy)
-        nwk = '(a,b)c;'
+        nwk = '(a,b)c;\n'
         t = TreeNode.from_newick(nwk)
         obs = t.root_at_midpoint()
         self.assertEqual(str(obs), nwk)
@@ -810,7 +810,7 @@ class TreeTests(TestCase):
     def test_unrooted_deepcopy(self):
         """Do an unrooted_copy"""
         t = TreeNode.from_newick("((a,(b,c)d)e,(f,g)h)i;")
-        exp = "(b,c,(a,((f,g)h)e)d)root;"
+        exp = "(b,c,(a,((f,g)h)e)d)root;\n"
         obs = t.find('d').unrooted_deepcopy()
         self.assertEqual(str(obs), exp)
 
@@ -915,11 +915,12 @@ class TreeTests(TestCase):
         # be functioning. Roundtrip from memory -> disk -> memory and ensure
         # results match.
         fh = StringIO('(a_b,c_d)e_f;')
+        expected = fh.getvalue() + "\n"
         deserialized = TreeNode.read(fh)
         reserialized = StringIO()
         deserialized.write(reserialized)
         reserialized.seek(0)
-        self.assertEqual(reserialized.getvalue(), fh.getvalue())
+        self.assertEqual(reserialized.getvalue(), expected)
         self.assertTrue(type(deserialized) == TreeNode)
         fh.close()
         reserialized.close()
@@ -936,7 +937,7 @@ class TreeTests(TestCase):
 
         tree = TreeNode.from_linkage_matrix(linkage, id_list)
         self.assertEqual("(E:17.0,(C:14.5,((A:4.0,D:4.0):4.25,(G:6.25,(B:0.5,"
-                         "F:0.5):5.75):2.0):6.25):2.5);",
+                         "F:0.5):5.75):2.0):6.25):2.5);\n",
                          str(tree))
 
     def test_from_newick_empty(self):
@@ -989,30 +990,30 @@ class TreeTests(TestCase):
             next(shuffler)
 
     def test_shuffle_n_2(self):
-        exp = ["((a,b)i1,(d,c)i2)root;",
-               "((a,b)i1,(c,d)i2)root;",
-               "((a,b)i1,(d,c)i2)root;",
-               "((a,b)i1,(c,d)i2)root;",
-               "((a,b)i1,(d,c)i2)root;"]
+        exp = ["((a,b)i1,(d,c)i2)root;\n",
+               "((a,b)i1,(c,d)i2)root;\n",
+               "((a,b)i1,(d,c)i2)root;\n",
+               "((a,b)i1,(c,d)i2)root;\n",
+               "((a,b)i1,(d,c)i2)root;\n"]
 
         obs_g = self.simple_t.shuffle(k=2, shuffle_f=self.rev_f, n=np.inf)
         obs = [str(next(obs_g)) for i in range(5)]
         self.assertEqual(obs, exp)
 
     def test_shuffle_n_none(self):
-        exp = ["((d,c)i1,(b,a)i2)root;",
-               "((a,b)i1,(c,d)i2)root;",
-               "((d,c)i1,(b,a)i2)root;",
-               "((a,b)i1,(c,d)i2)root;"]
+        exp = ["((d,c)i1,(b,a)i2)root;\n",
+               "((a,b)i1,(c,d)i2)root;\n",
+               "((d,c)i1,(b,a)i2)root;\n",
+               "((a,b)i1,(c,d)i2)root;\n"]
         obs_g = self.simple_t.shuffle(shuffle_f=self.rev_f, n=4)
         obs = [str(next(obs_g)) for i in range(4)]
         self.assertEqual(obs, exp)
 
     def test_shuffle_complex(self):
-        exp = ["(((a,b)int1,(x,y,(w,z)int2,(f,e)int3)int4),(d,c)int5);",
-               "(((a,b)int1,(x,y,(w,z)int2,(c,d)int3)int4),(e,f)int5);",
-               "(((a,b)int1,(x,y,(w,z)int2,(f,e)int3)int4),(d,c)int5);",
-               "(((a,b)int1,(x,y,(w,z)int2,(c,d)int3)int4),(e,f)int5);"]
+        exp = ["(((a,b)int1,(x,y,(w,z)int2,(f,e)int3)int4),(d,c)int5);\n",
+               "(((a,b)int1,(x,y,(w,z)int2,(c,d)int3)int4),(e,f)int5);\n",
+               "(((a,b)int1,(x,y,(w,z)int2,(f,e)int3)int4),(d,c)int5);\n",
+               "(((a,b)int1,(x,y,(w,z)int2,(c,d)int3)int4),(e,f)int5);\n"]
 
         obs_g = self.complex_tree.shuffle(shuffle_f=self.rev_f,
                                           names=['c', 'd', 'e', 'f'], n=4)
@@ -1020,10 +1021,10 @@ class TreeTests(TestCase):
         self.assertEqual(obs, exp)
 
     def test_shuffle_names(self):
-        exp = ["((c,a)i1,(b,d)i2)root;",
-               "((b,c)i1,(a,d)i2)root;",
-               "((a,b)i1,(c,d)i2)root;",
-               "((c,a)i1,(b,d)i2)root;"]
+        exp = ["((c,a)i1,(b,d)i2)root;\n",
+               "((b,c)i1,(a,d)i2)root;\n",
+               "((a,b)i1,(c,d)i2)root;\n",
+               "((c,a)i1,(b,d)i2)root;\n"]
 
         obs_g = self.simple_t.shuffle(names=['a', 'b', 'c'],
                                       shuffle_f=self.rotate_f, n=np.inf)
@@ -1122,13 +1123,13 @@ class DndParserTests(TestCase):
         child = t[0]
         self.assertEqual(child.name, 'abc')
         self.assertEqual(child.length, 3)
-        self.assertEqual(str(t), '(abc:3.0);')
+        self.assertEqual(str(t), '(abc:3.0);\n')
 
     def test_gdouble(self):
         """DndParser should produce a double-child TreeNode from data"""
         t = TreeNode.from_newick(double)
         self.assertEqual(len(t), 2)
-        self.assertEqual(str(t), '(abc:3.0,def:4.0);')
+        self.assertEqual(str(t), '(abc:3.0,def:4.0);\n')
 
     def test_gonenest(self):
         """DndParser should work correctly with nested data"""
@@ -1136,7 +1137,7 @@ class DndParserTests(TestCase):
         self.assertEqual(len(t), 2)
         self.assertEqual(len(t[0]), 0)  # first child is terminal
         self.assertEqual(len(t[1]), 2)  # second child has two children
-        self.assertEqual(str(t), '(abc:3.0,(def:4.0,ghi:5.0):6.0);')
+        self.assertEqual(str(t), '(abc:3.0,(def:4.0,ghi:5.0):6.0);\n')
 
     def test_gnodedata(self):
         """DndParser should assign name to internal nodes correctly"""
@@ -1144,7 +1145,7 @@ class DndParserTests(TestCase):
         self.assertEqual(len(t), 2)
         self.assertEqual(len(t[0]), 0)  # first child is terminal
         self.assertEqual(len(t[1]), 2)  # second child has two children
-        self.assertEqual(str(t), '(abc:3.0,(def:4.0,ghi:5.0)jkl:6.0);')
+        self.assertEqual(str(t), '(abc:3.0,(def:4.0,ghi:5.0)jkl:6.0);\n')
         info_dict = {}
         for node in t.traverse():
             info_dict[node.name] = node.length
@@ -1158,12 +1159,12 @@ class DndParserTests(TestCase):
         t = TreeNode.from_newick(sample)
         self.assertEqual(
             str(t), '((xyz:0.28124,(def:0.24498,mno:0.03627):0.1771):0.0487,'
-                    'abc:0.05925,(ghi:0.06914,jkl:0.13776):0.09853);')
+                    'abc:0.05925,(ghi:0.06914,jkl:0.13776):0.09853);\n')
         tdata = TreeNode.from_newick(node_data_sample, unescape_name=True)
         self.assertEqual(
             str(tdata), "((xyz:0.28124,(def:0.24498,mno:0.03627)A:0.1771)"
                         "B:0.0487,abc:0.05925,(ghi:0.06914,jkl:0.13776)"
-                        "C:0.09853);")
+                        "C:0.09853);\n")
 
     def test_gbad(self):
         """DndParser should fail if parens unbalanced"""
