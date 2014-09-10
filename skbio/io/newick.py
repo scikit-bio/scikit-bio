@@ -211,37 +211,34 @@ from skbio.tree import TreeNode
 
 @register_sniffer("newick")
 def _newick_sniffer(fh):
-    selected_operators = set(":;,)")
+    operators = set(",;:()")
+    empty = True
+    last_token = ','
+    indent = 0
     try:
-        not_empty = False
-        last_token = ','
-        indent = 0
         # 100 bytes ought to be enough for anybody.
         for token, _ in zip(_tokenize_newick(fh), range(100)):
-            if token == "(":
-                if not (last_token == "(" or last_token == ','):
-                    return False, {}
-                indent += 1
-
-            elif token == ")":
+            if token not in operators:
+                pass
+            elif token == ',' and last_token != ':':
+                pass
+            elif token == ':' and last_token != ':':
+                pass
+            elif token == ';' and last_token != ':' and indent == 0:
+                pass
+            elif token == ')' and last_token != ':':
                 indent -= 1
-            # A distance must come after a `:`. This covers all situations
-            # except `:(` (covered above).
-            elif last_token == ":" and token in selected_operators:
-                return False, {}
-
-            # If we already made it to a semicolon, our parenthesis should at
-            # least be balanced.
-            elif token == ";" and indent != 0:
-                return False, {}
+            elif token == '(' and (last_token == '(' or last_token == ','):
+                indent += 1
+            else:
+                raise NewickFormatError()
 
             last_token = token
-            not_empty = True
-
-        return not_empty, {}
+            empty = False
 
     except NewickFormatError:
         return False, {}
+    return not empty, {}
 
 
 @register_reader('newick', TreeNode)

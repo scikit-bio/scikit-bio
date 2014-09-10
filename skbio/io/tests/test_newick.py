@@ -18,11 +18,6 @@ from skbio.io.newick import (_newick_to_tree_node, _tree_node_to_newick,
 
 
 class TestNewick(unittest.TestCase):
-    def _invert_tree(self, tree):
-        tree.children = [self._invert_tree(child) for child
-                         in reversed(tree.children)]
-        return tree
-
     def _is_node_equal(self, n1, n2):
         self.assertEqual(n1.name, n2.name)
         self.assertEqual(n1.length, n2.length)
