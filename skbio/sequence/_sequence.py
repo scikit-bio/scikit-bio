@@ -577,41 +577,40 @@ class BiologicalSequence(Sequence):
         """
         return self.quality is not None
 
-    def update(self, attrs):
-        """Return new biological sequence with one or more updated attributes.
+    def copy(self, **kwargs):
+        """Return a copy of the current biological sequence.
 
-        Returns a new biological sequence based on the current biological
-        sequence, optionally with updated attributes.
-
-        Since biological sequences are immutable, this is the preferred way to
-        update attributes on an existing biological sequence. Note that the
-        changes are *not* made in place, since a new biological sequence is
-        returned.
+        Returns a copy of the current biological sequence, optionally with
+        updated attributes specified as keyword arguments.
 
         Parameters
         ----------
-        attrs : dict
-            Dictionary mapping biological sequence attributes to new values.
-            If an attribute is missing, the new sequence will keep the same
-            attribute as the current sequence. Valid attribute names are
-            `'sequence'`, `'id'`, `'description'`, and `'quality'`.
+        kwargs : dict, optional
+            Keyword arguments passed to the ``BiologicalSequence`` (or
+            subclass) constructor. The returned copy will have its attributes
+            updated based on the values in `kwargs`. If an attribute is
+            missing, the copy will keep the same attribute as the current
+            biological sequence. Valid attribute names are `'sequence'`,
+            `'id'`, `'description'`, and `'quality'`. Default behavior is to
+            return a copy of the current biological sequence without changing
+            any attributes.
 
         Returns
         -------
         BiologicalSequence
-            New biological sequence with updated attributes based on `attrs`.
-            Will be the same type as the current biological sequence (`self`).
-
-        Raises
-        ------
-        AttributeError
-            If `attrs` contains an unrecognized attribute name as a key.
+            Copy of the current biological sequence, optionally with updated
+            attributes based on `kwargs`. Will be the same type as the current
+            biological sequence (`self`).
 
         Notes
         -----
-        If `attrs` is an empty dictionary, no attributes are updated, so the
-        new biological sequence that is returned is equivalent to a shallow
-        copy of the current biological sequence.
+        This is a shallow copy, but since biological sequences are immutable,
+        it is conceptually the same as a deep copy.
+
+        This method is the preferred way of creating new instances from an
+        existing biological sequence, instead of calling
+        ``self.__class__(...)``, as the latter can be error-prone (e.g.,
+        forgetting to propagate attributes to the new instance).
 
         Examples
         --------
@@ -622,15 +621,13 @@ class BiologicalSequence(Sequence):
         ...                          description='biological sequence',
         ...                          quality=[4, 2, 22, 23, 1, 1, 1, 9])
 
-        Create a new biological sequence from ``seq``, keeping the same
-        underlying sequence of characters and quality scores, while updating ID
-        and description:
+        Create a copy of ``seq``, keeping the same underlying sequence of
+        characters and quality scores, while updating ID and description:
 
-        >>> new_seq = seq.update({'id': 'new-id',
-        ...                       'description': 'new description'})
+        >>> new_seq = seq.copy(id='new-id', description='new description')
 
-        Note that the new biological sequence's underlying sequence and quality
-        scores are the same as the original biological sequence:
+        Note that the copied biological sequence's underlying sequence and
+        quality scores are the same as ``seq``:
 
         >>> new_seq.sequence
         'AACCGGTT'
@@ -653,29 +650,14 @@ class BiologicalSequence(Sequence):
         'biological sequence'
 
         """
-        sequence = self.sequence
-        id_ = self.id
-        description = self.description
-        quality = self.quality
-
-        for attr in attrs:
-            new_value = attrs[attr]
-
-            if attr == 'sequence':
-                sequence = new_value
-            elif attr == 'id':
-                id_ = new_value
-            elif attr == 'description':
-                description = new_value
-            elif attr == 'quality':
-                quality = new_value
-            else:
-                raise AttributeError(
-                    "Attempted to update unrecognized BiologicalSequence "
-                    "attribute '%s'." % attr)
-
-        return self.__class__(sequence, id=id_, description=description,
-                              quality=quality)
+        defaults = {
+            'sequence': self.sequence,
+            'id': self.id,
+            'description': self.description,
+            'quality': self.quality
+        }
+        defaults.update(kwargs)
+        return self.__class__(**defaults)
 
     def equals(self, other, ignore=None):
         """Compare two biological sequences for equality.
