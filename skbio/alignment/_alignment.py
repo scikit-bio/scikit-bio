@@ -665,7 +665,7 @@ class SequenceCollection(object):
         """
         return len(self._data)
 
-    def k_word_frequencies(self, k, overlapping=True, constructor=str):
+    def k_word_frequencies(self, k, overlapping=True):
         """Return frequencies of length k words for sequences in Alignment
 
         Parameters
@@ -675,14 +675,12 @@ class SequenceCollection(object):
         overlapping : bool, optional
             Defines whether the k-words should be overlapping or not
             overlapping. This is only relevant when k > 1.
-        constructor : type, optional
-            The constructor for the returned k-words.
 
         Returns
         -------
         list
             List of ``collections.defaultdict`` objects, one for each sequence
-            in the `Alignment`, representing the frequency of each character in
+            in the `Alignment`, representing the frequency of each k word in
             each sequence of the `Alignment`.
 
         See Also
@@ -710,9 +708,8 @@ class SequenceCollection(object):
 
         """
         result = []
-
         for s in self:
-            result.append(s.k_word_frequencies(k, overlapping, constructor))
+            result.append(s.k_word_frequencies(k, overlapping))
         return result
 
     def sequence_lengths(self):
@@ -964,7 +961,7 @@ class Alignment(SequenceCollection):
             `Alignment`. If this is not passed, the default will be to retain
             all sequences.
         positions_to_keep : list, optional
-            A list of position ids to be retained in the resulting
+            A list of position indices to be retained in the resulting
             `Alignment`. If this is not passed, the default will be to retain
             all positions.
         invert_seqs_to_keep : bool, optional
@@ -1066,16 +1063,14 @@ class Alignment(SequenceCollection):
             # determine if we're keeping the current sequence
             if keep_seq(sequence_index, seq.id):
                 # if so, iterate over the positions to determine which we're
-                # keeping, and store them in a new list
-                new_seq = [c for i, c in enumerate(seq) if keep_position(i)]
-                # and then pack the resulting sequence into a new
-                # BiologicalSequence object, of the same type as the current
-                # object.
-                # Note: This is bad, we are calling join too much. This
-                # should be addressed in issue #194.
-                result.append(seq.__class__(''.join(new_seq),
-                              id=seq.id,
-                              description=seq.description))
+                # keeping, and then slice the current sequence with these
+                # indices
+                #
+                # TODO this could be pulled out of the loop if we were
+                # guaranteed that an Alignment wasn't jagged. see #670 for
+                # details and update code when that is resolved
+                indices = [i for i in range(len(seq)) if keep_position(i)]
+                result.append(seq[indices])
             # if we're not keeping the current sequence, move on to the next
             else:
                 continue
@@ -1122,7 +1117,6 @@ class Alignment(SequenceCollection):
         False
 
         """
-
         return super(Alignment, self).is_valid() and self._validate_lengths()
 
     def iter_positions(self, constructor=None):
@@ -1133,17 +1127,16 @@ class Alignment(SequenceCollection):
         constructor : type, optional
             Constructor function for creating the positional values. By
             default, these will be the same type as corresponding
-            `skbio.sequence.BiologicalSequence` in the
-            `SequenceCollection` object, but you can pass a
-            `skbio.sequence.BiologicalSequence` class here to ensure
-            that they are all of consistent type, or ``str`` to have them
-            returned as strings.
+            `skbio.sequence.BiologicalSequence` in the `Alignment` object, but
+            you can pass a `skbio.sequence.BiologicalSequence` class here to
+            ensure that they are all of consistent type, or ``str`` to have
+            them returned as strings.
 
         Returns
         -------
         GeneratorType
-            Generator of lists of positional values in the
-            `SequenceCollection` (effectively the transpose of the alignment).
+            Generator of lists of positional values in the `Alignment`
+            (effectively the transpose of the alignment).
 
         See Also
         --------
@@ -1187,6 +1180,12 @@ class Alignment(SequenceCollection):
     def majority_consensus(self, constructor=None):
         """Return the majority consensus sequence for the `Alignment`
 
+        .. note:: `constructor` parameter deprecated in scikit-bio 0.2.0-dev
+           `constructor` parameter will be removed in scikit-bio 0.3.0 as its
+           most common use is to convert to ``str``, and this functionality is
+           already accessible by calling ``str`` on the returned
+           ``BiologicalSequence`` (e.g., ``str(seq)``).
+
         Parameters
         ----------
         constructor : function, optional
@@ -1199,7 +1198,9 @@ class Alignment(SequenceCollection):
         skbio.sequence.BiologicalSequence
             The consensus sequence of the `Alignment`. In other words, at each
             position the most common character is chosen, and those characters
-            are combined to create a new sequence.
+            are combined to create a new sequence. The sequence will not have
+            its ID, description, or quality set; only the consensus sequence
+            will be set.
 
         Notes
         -----
@@ -1217,8 +1218,6 @@ class Alignment(SequenceCollection):
         >>> a1 = Alignment(sequences)
         >>> a1.majority_consensus()
         <DNASequence: AT-C (length: 4)>
-        >>> a1.majority_consensus(constructor=str)
-        'AT-C'
 
         """
         # handle empty Alignment case
@@ -1227,12 +1226,22 @@ class Alignment(SequenceCollection):
 
         if constructor is None:
             constructor = self[0].__class__
+        else:
+            warn("constructor parameter in Alignment.majority_consensus is "
+                 "deprecated and will be removed in scikit-bio 0.3.0. Please "
+                 "update your code to construct the desired object from the "
+                 "BiologicalSequence (or subclass) that is returned by this "
+                 "method.", UserWarning)
+
         result = []
         for c in self.position_counters():
             # Counter.most_common returns an ordered list of the
             # n most common (sequence, count) items in Counter. Here
             # we set n=1, and take only the character, not the count.
             result.append(c.most_common(1)[0][0])
+
+        # TODO when constructor parameter is removed, this join call can be
+        # removed
         result = ''.join(result)
         return constructor(result)
 
@@ -1332,12 +1341,12 @@ class Alignment(SequenceCollection):
         return self.subalignment(seqs_to_keep=seqs_to_keep)
 
     def position_counters(self):
-        """Return collection.Counter object for positions in Alignment
+        """Return collections.Counter object for positions in Alignment
 
         Returns
         -------
         list
-            List of ``collection.Counter`` objects, one for each position in
+            List of ``collections.Counter`` objects, one for each position in
             the `Alignment`.
 
         See Also

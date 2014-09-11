@@ -147,9 +147,41 @@ class BiologicalSequenceTests(TestCase):
         self.assertTrue(b[2:].equals(
             BiologicalSequence('GT', id='foo', description='bar')))
 
+    def test_getitem_indices(self):
+        # no ordering, repeated items
+        self.assertTrue(self.b1[[3, 5, 4, 0, 5, 0]].equals(
+            BiologicalSequence('TCAGCG', quality=(3, 5, 4, 0, 5, 0))))
+
+        # empty list
+        self.assertTrue(self.b1[[]].equals(BiologicalSequence('', quality=())))
+
+        # single item
+        self.assertTrue(
+            self.b1[[2]].equals(BiologicalSequence('T', quality=(2,))))
+
+        # negatives
+        self.assertTrue(self.b1[[2, -2, 4]].equals(
+            BiologicalSequence('TCA', quality=(2, 5, 4))))
+
+    def test_getitem_wrong_type(self):
+        with self.assertRaises(TypeError):
+            self.b1[1, 2, 3]
+
+        with self.assertRaises(TypeError):
+            self.b1['1']
+
     def test_getitem_out_of_range(self):
+        # seq with quality
         with self.assertRaises(IndexError):
             self.b1[42]
+        with self.assertRaises(IndexError):
+            self.b1[[1, 0, 23, 3]]
+
+        # seq without quality
+        with self.assertRaises(IndexError):
+            self.b2[43]
+        with self.assertRaises(IndexError):
+            self.b2[[2, 3, 22, 1]]
 
     def test_hash(self):
         self.assertTrue(isinstance(hash(self.b1), int))

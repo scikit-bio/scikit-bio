@@ -11,6 +11,7 @@ from future.utils.six import string_types
 
 from collections import Sequence, Counter, defaultdict
 from itertools import product
+from numbers import Integral
 
 import numpy as np
 from scipy.spatial.distance import hamming
@@ -277,33 +278,61 @@ class BiologicalSequence(Sequence):
 
         Parameters
         ----------
-        i : int
-            The position to return from the `BiologicalSequence`.
+        i : int, slice, or list of ints
+            The position(s) to return from the `BiologicalSequence`. If `i` is
+            a list of ints, these are assumed to be indices in the sequence to
+            keep.
 
         Returns
         -------
         BiologicalSequence
-            New biological sequence containing the character at position `i` in
-            the current `BiologicalSequence`. If quality scores are present,
-            the quality score at position `i` will be included in the returned
-            sequence.
+            New biological sequence containing the character(s) at position(s)
+            `i` in the current `BiologicalSequence`. If quality scores are
+            present, the quality score at position(s) `i` will be included in
+            the returned sequence. ID and description are also included.
 
         Examples
         --------
         >>> from skbio.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUCGUGAAGGA')
+
+        Obtain a single character from the biological sequence:
+
         >>> s[1]
         <BiologicalSequence: G (length: 1)>
+
+        Obtain a slice:
+
+        >>> s[7:]
+        <BiologicalSequence: AAGGA (length: 5)>
+
+        Obtain characters at the following indices:
+
+        >>> s[[3, 4, 7, 0, 3]]
+        <BiologicalSequence: CGAGC (length: 5)>
 
         .. shownumpydoc
 
         """
+        # TODO update this method when #60 is resolved
+        if not (isinstance(i, Integral) or isinstance(i, slice) or
+                isinstance(i, list)):
+            raise TypeError("Unsupported type of item accessor. Only "
+                            "integers, slices, and lists of integers are "
+                            "currently supported.")
+
         try:
             qual = self.quality[i] if self.has_quality() else None
-            return self.copy(sequence=self.sequence[i], quality=qual)
+
+            try:
+                seq = self.sequence[i]
+            except TypeError:
+                seq = [self.sequence[idx] for idx in i]
         except IndexError:
             raise IndexError(
-                "Position %d is out of range for %r." % (i, self))
+                "Position %r is out of range for %r." % (i, self))
+
+        return self.copy(sequence=seq, quality=qual)
 
     def __hash__(self):
         """The hash operator.
@@ -808,18 +837,8 @@ class BiologicalSequence(Sequence):
 
         """
         gaps = self.gap_alphabet()
-        filtered_seq = []
-        indices = []
-        for i, e in enumerate(self._sequence):
-            if e not in gaps:
-                filtered_seq.append(e)
-                indices.append(i)
-
-        filtered_quality = None
-        if self.has_quality():
-            filtered_quality = self.quality[indices]
-
-        return self.copy(sequence=filtered_seq, quality=filtered_quality)
+        indices = [i for i, e in enumerate(self) if e not in gaps]
+        return self[indices]
 
     def distance(self, other, distance_fn=None):
         """Returns the distance to other

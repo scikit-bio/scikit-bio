@@ -566,13 +566,11 @@ class AlignmentTests(TestCase):
         self.assertEqual(actual, expected)
 
     def test_majority_consensus(self):
-        """majority_consensus functions as expected
-        """
         d1 = DNASequence('TTT', id="d1")
         d2 = DNASequence('TT-', id="d2")
         d3 = DNASequence('TC-', id="d3")
         a1 = Alignment([d1, d2, d3])
-        self.assertEqual(a1.majority_consensus(), DNASequence('TT-'))
+        self.assertTrue(a1.majority_consensus().equals(DNASequence('TT-')))
 
         d1 = DNASequence('T', id="d1")
         d2 = DNASequence('A', id="d2")
@@ -581,6 +579,16 @@ class AlignmentTests(TestCase):
                         [DNASequence('T'), DNASequence('A')])
 
         self.assertEqual(self.empty.majority_consensus(), '')
+
+    def test_majority_consensus_constructor(self):
+        d1 = DNASequence('TTT', id="d1")
+        d2 = DNASequence('TT-', id="d2")
+        d3 = DNASequence('TC-', id="d3")
+        a1 = Alignment([d1, d2, d3])
+
+        obs = npt.assert_warns(UserWarning, a1.majority_consensus,
+                               constructor=str)
+        self.assertEqual(obs, 'TT-')
 
     def test_omit_gap_positions(self):
         """omitting gap positions functions as expected
