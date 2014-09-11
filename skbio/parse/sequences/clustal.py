@@ -67,8 +67,56 @@ def _delete_trailing_number(line):
         return line
 
 
+def write_clustal(records, outfile):
+    """writes aligned sequences to a specified file
+    Parameters
+    ----------
+    record: iterator
+        A generator of aligned sequences
+    outfile: open file object
+        An open Clustal file.
+
+    Returns
+    -------
+    None
+
+
+    We can use the following code:
+    >>> import sys
+    >>> from skbio.parse.sequences import write_clustal
+    >>> clustal_f = [("abc","GCAUGCAUCUGCAUACGUACGUACGCAUGCA"
+    ...                     "GUCGAUACAUACGUACGUCGGUACGU-CGAC"),
+    ...              ("def","-------------------------------"
+    ...                     "---------------CGUGCAUGCAU-CGAU"),
+    ...              ("xyz","-------------------------------"
+    ...                     "-----------CAUUCGUACGUACGCAUGAC")]
+    >>>write_clustal(clustal_f,sys.stdout)
+    CLUSTAL
+
+    abc   GCAUGCAUCUGCAUACGUACGUACGCAUGCAUCA
+    def   ----------------------------------
+    xyz   ----------------------------------
+
+    abc   GUCGAUACAUACGUACGUCGUACGUACGU-CGAC
+    def   ---------------CGCGAUGCAUGCAU-CGAU
+    xyz   -----------CAUGCAUCGUACGUACGCAUGAC
+    """
+    clen = 60
+    records = list(records)
+    names, seqs = zip(*records)
+    nameLen = max(map(len, names))
+    seqLen = max(map(len, seqs))
+    outfile.write('CLUSTAL\n\n')
+    for i in range(0, seqLen, clen):
+        for label, seq in records:
+            name = ('{:<%d}' % (nameLen)).format(label)
+            outfile.write("%s\t%s\t\n" % (name,
+                                          seq[i:i+clen]))
+        outfile.write("\n")
+
+
 def parse_clustal(record, strict=True):
-    r"""yields labels and sequences
+    """yields labels and sequences
 
     Parameters
     ----------

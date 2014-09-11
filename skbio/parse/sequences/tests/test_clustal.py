@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function
 
 from unittest import TestCase, main
 
-from skbio.parse.sequences import parse_clustal
+from skbio.parse.sequences import parse_clustal, write_clustal
 from skbio.parse.sequences.clustal import (_is_clustal_seq_line, last_space,
                                            _delete_trailing_number)
 from skbio.io import RecordError
@@ -97,6 +97,33 @@ class ClustalParserTests(TestCase):
         result = parse_clustal(SPACE_LABELS)
         self.assertEqual(dict(result), {'abc': 'uca', 'def ggg': 'ccc'})
 
+    def test_write(self):
+        """Should write real Clustal output"""
+        import os
+        fname = "test.aln"
+        testfile = open(fname, 'w')
+        seqs = [('abc',
+                 'GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA'
+                 'GUCGAUACGUACGUCAGUCAGUACGUCAGCAUGCAUACGUACGUCGUACGUACGU-CGAC'
+                 'UGACUAGUCAGCUAGCAUCGAUCAGU'),
+                ('def',
+                 '------------------------------------------------------------'
+                 '-----------------------------------------CGCGAUGCAUGCAU-CGAU'
+                 'CGAUCAGUCAGUCGAU----------'),
+                ('xyz',
+                 '------------------------------------------------------------'
+                 '-------------------------------------CAUGCAUCGUACGUACGCAUGAC'
+                 'UGCUGCAUCA----------------')]
+        records = (x for x in seqs)
+        write_clustal(records, testfile)
+        testfile.close()
+        raw = open(fname, 'r').read()
+        data = parse_clustal(raw.split('\n'))
+        data = list(data)
+        self.assertEqual(len(data), len(seqs))
+        self.assertItemsEqual(list(data), seqs)
+        testfile.close()
+        os.remove(fname)
 
 MINIMAL = 'abc\tucag'
 TWO = 'abc\tuuu\ndef\tccc\n\n    ***\n\ndef ggg\nabc\taaa\n'.split('\n')
