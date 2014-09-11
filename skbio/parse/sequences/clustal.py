@@ -80,7 +80,6 @@ def write_clustal(records, outfile):
     -------
     None
 
-
     We can use the following code:
     >>> import sys
     >>> from skbio.parse.sequences import write_clustal
