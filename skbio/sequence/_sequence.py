@@ -300,8 +300,7 @@ class BiologicalSequence(Sequence):
         """
         try:
             qual = self.quality[i] if self.has_quality() else None
-            return self.__class__(self._sequence[i], self.id, self.description,
-                                  qual)
+            return self.copy(sequence=self.sequence[i], quality=qual)
         except IndexError:
             raise IndexError(
                 "Position %d is out of range for %r." % (i, self))
@@ -820,9 +819,7 @@ class BiologicalSequence(Sequence):
         if self.has_quality():
             filtered_quality = self.quality[indices]
 
-        return self.__class__(filtered_seq, id=self._id,
-                              description=self._description,
-                              quality=filtered_quality)
+        return self.copy(sequence=filtered_seq, quality=filtered_quality)
 
     def distance(self, other, distance_fn=None):
         """Returns the distance to other
@@ -1179,7 +1176,7 @@ class BiologicalSequence(Sequence):
         """
         return not self.has_unsupported_characters()
 
-    def k_words(self, k, overlapping=True, constructor=str):
+    def k_words(self, k, overlapping=True):
         """Get the list of words of length k
 
         Parameters
@@ -1189,12 +1186,10 @@ class BiologicalSequence(Sequence):
         overlapping : bool, optional
             Defines whether the k-words should be overlapping or not
             overlapping.
-        constructor : type, optional
-            The constructor for the returned k-words.
 
         Returns
         -------
-        iterator
+        iterator of BiologicalSequences
             Iterator of words of length `k` contained in the
             BiologicalSequence.
 
@@ -1207,9 +1202,9 @@ class BiologicalSequence(Sequence):
         --------
         >>> from skbio.sequence import BiologicalSequence
         >>> s = BiologicalSequence('ACACGACGTT')
-        >>> list(s.k_words(4, overlapping=False))
+        >>> [str(kw) for kw in s.k_words(4, overlapping=False)]
         ['ACAC', 'GACG']
-        >>> list(s.k_words(3, overlapping=True))
+        >>> [str(kw) for kw in s.k_words(3, overlapping=True)]
         ['ACA', 'CAC', 'ACG', 'CGA', 'GAC', 'ACG', 'CGT', 'GTT']
 
         """
@@ -1224,9 +1219,9 @@ class BiologicalSequence(Sequence):
             step = k
 
         for i in range(0, sequence_length - k + 1, step):
-            yield self._sequence[i:i+k]
+            yield self[i:i+k]
 
-    def k_word_counts(self, k, overlapping=True, constructor=str):
+    def k_word_counts(self, k, overlapping=True):
         """Get the counts of words of length k
 
         Parameters
@@ -1236,8 +1231,6 @@ class BiologicalSequence(Sequence):
         overlapping : bool, optional
             Defines whether the k-words should be overlapping or not
             overlapping.
-        constructor : type, optional
-            The constructor for the returned k-words.
 
         Returns
         -------
@@ -1253,10 +1246,10 @@ class BiologicalSequence(Sequence):
         Counter({'ACA': 2, 'CAC': 1, 'CAT': 1})
 
         """
-        k_words = self.k_words(k, overlapping, constructor)
-        return Counter(k_words)
+        k_words = self.k_words(k, overlapping)
+        return Counter((str(seq) for seq in k_words))
 
-    def k_word_frequencies(self, k, overlapping=True, constructor=str):
+    def k_word_frequencies(self, k, overlapping=True):
         """Get the frequencies of words of length k
 
         Parameters
@@ -1266,8 +1259,6 @@ class BiologicalSequence(Sequence):
         overlapping : bool, optional
             Defines whether the k-words should be overlapping or not
             overlapping.
-        constructor : type, optional
-            The constructor for the returned k-words.
 
         Returns
         -------
@@ -1293,8 +1284,8 @@ class BiologicalSequence(Sequence):
             return result
 
         count = 1. / num_words
-        for word in self.k_words(k, overlapping, constructor):
-            result[word] += count
+        for word in self.k_words(k, overlapping):
+            result[str(word)] += count
         return result
 
     def lower(self):
@@ -1307,8 +1298,7 @@ class BiologicalSequence(Sequence):
             lowercase.
 
         """
-        return self.__class__(self._sequence.lower(),
-                              self.id, self.description, self.quality)
+        return self.copy(sequence=self.sequence.lower())
 
     def nondegenerates(self):
         """Yield all nondegenerate versions of the sequence.
@@ -1363,16 +1353,7 @@ class BiologicalSequence(Sequence):
                         "Sequence contains an invalid character: %s" % char)
 
         result = product(*expansions)
-
-        # Cache lookups here as there may be a lot of sequences to generate.
-        # Could use functools.partial, but it ends up being a little slower
-        # than this method.
-        id_ = self.id
-        desc = self.description
-        qual = self.quality
-        cls = self.__class__
-
-        return (cls(nondegen_seq, id_, desc, qual) for nondegen_seq in result)
+        return (self.copy(sequence=nondegen_seq) for nondegen_seq in result)
 
     def to_fasta(self, field_delimiter=" ", terminal_character="\n"):
         """Return the sequence as a fasta-formatted string
@@ -1425,8 +1406,7 @@ class BiologicalSequence(Sequence):
             uppercase.
 
         """
-        return self.__class__(self._sequence.upper(),
-                              self.id, self.description, self.quality)
+        return self.copy(sequence=self.sequence.upper())
 
     def _set_quality(self, quality):
         if quality is not None:
@@ -1571,7 +1551,7 @@ class NucleotideSequence(BiologicalSequence):
         if self.has_quality() and reverse:
             quality = self.quality[::-1]
 
-        return self.__class__(result, self._id, self._description, quality)
+        return self.copy(sequence=result, quality=quality)
 
     def complement(self):
         """Return the complement of the `NucleotideSequence`

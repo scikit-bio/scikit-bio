@@ -11,6 +11,7 @@
 from __future__ import absolute_import, division, print_function
 
 from collections import Counter, defaultdict
+from itertools import izip_longest
 from unittest import TestCase, main
 
 import numpy as np
@@ -160,38 +161,109 @@ class BiologicalSequenceTests(TestCase):
 
         self.assertRaises(StopIteration, lambda: next(b1_iter))
 
-    def test_k_words(self):
-        # overlapping = True
-        self.assertEqual(list(self.b1.k_words(1, overlapping=True)),
-                         ['G', 'A', 'T', 'T', 'A', 'C', 'A'])
-        self.assertEqual(list(self.b1.k_words(2, overlapping=True)),
-                         ['GA', 'AT', 'TT', 'TA', 'AC', 'CA'])
-        self.assertEqual(list(self.b1.k_words(3, overlapping=True)),
-                         ['GAT', 'ATT', 'TTA', 'TAC', 'ACA'])
-        self.assertEqual(list(self.b1.k_words(7, overlapping=True)),
-                         ['GATTACA'])
-        self.assertEqual(list(self.b1.k_words(8, overlapping=True)),
-                         [])
+    def _compare_k_words_results(self, observed, expected):
+        for obs, exp in izip_longest(observed, expected, fillvalue=None):
+            # use equals to compare quality, id, description, sequence, and
+            # type
+            self.assertTrue(obs.equals(exp))
 
-        # overlapping = False
-        self.assertEqual(list(self.b1.k_words(1, overlapping=True)),
-                         ['G', 'A', 'T', 'T', 'A', 'C', 'A'])
-        self.assertEqual(list(self.b1.k_words(2, overlapping=False)),
-                         ['GA', 'TT', 'AC'])
-        self.assertEqual(list(self.b1.k_words(3, overlapping=False)),
-                         ['GAT', 'TAC'])
-        self.assertEqual(list(self.b1.k_words(7, overlapping=False)),
-                         ['GATTACA'])
-        self.assertEqual(list(self.b1.k_words(8, overlapping=False)),
-                         [])
+    def test_k_words_overlapping_true(self):
+        expected = [
+            BiologicalSequence('G', quality=[0]),
+            BiologicalSequence('A', quality=[1]),
+            BiologicalSequence('T', quality=[2]),
+            BiologicalSequence('T', quality=[3]),
+            BiologicalSequence('A', quality=[4]),
+            BiologicalSequence('C', quality=[5]),
+            BiologicalSequence('A', quality=[6])
+        ]
+        self._compare_k_words_results(
+            self.b1.k_words(1, overlapping=True), expected)
 
-        # error on invalid k
-        self.assertRaises(ValueError, list, self.b1.k_words(0))
-        self.assertRaises(ValueError, list, self.b1.k_words(-42))
+        expected = [
+            BiologicalSequence('GA', quality=[0, 1]),
+            BiologicalSequence('AT', quality=[1, 2]),
+            BiologicalSequence('TT', quality=[2, 3]),
+            BiologicalSequence('TA', quality=[3, 4]),
+            BiologicalSequence('AC', quality=[4, 5]),
+            BiologicalSequence('CA', quality=[5, 6])
+        ]
+        self._compare_k_words_results(
+            self.b1.k_words(2, overlapping=True), expected)
 
-        # tests with different sequences
-        self.assertEqual(list(self.b8.k_words(3, overlapping=False)),
-                         ['HE.', '.--', '..L'])
+        expected = [
+            BiologicalSequence('GAT', quality=[0, 1, 2]),
+            BiologicalSequence('ATT', quality=[1, 2, 3]),
+            BiologicalSequence('TTA', quality=[2, 3, 4]),
+            BiologicalSequence('TAC', quality=[3, 4, 5]),
+            BiologicalSequence('ACA', quality=[4, 5, 6])
+        ]
+        self._compare_k_words_results(
+            self.b1.k_words(3, overlapping=True), expected)
+
+        expected = [
+            BiologicalSequence('GATTACA', quality=[0, 1, 2, 3, 4, 5, 6])
+        ]
+        self._compare_k_words_results(
+            self.b1.k_words(7, overlapping=True), expected)
+
+        self.assertEqual(list(self.b1.k_words(8, overlapping=True)), [])
+
+    def test_k_words_overlapping_false(self):
+        expected = [
+            BiologicalSequence('G', quality=[0]),
+            BiologicalSequence('A', quality=[1]),
+            BiologicalSequence('T', quality=[2]),
+            BiologicalSequence('T', quality=[3]),
+            BiologicalSequence('A', quality=[4]),
+            BiologicalSequence('C', quality=[5]),
+            BiologicalSequence('A', quality=[6])
+        ]
+        self._compare_k_words_results(
+            self.b1.k_words(1, overlapping=False), expected)
+
+        expected = [
+            BiologicalSequence('GA', quality=[0, 1]),
+            BiologicalSequence('TT', quality=[2, 3]),
+            BiologicalSequence('AC', quality=[4, 5])
+        ]
+        self._compare_k_words_results(
+            self.b1.k_words(2, overlapping=False), expected)
+
+        expected = [
+            BiologicalSequence('GAT', quality=[0, 1, 2]),
+            BiologicalSequence('TAC', quality=[3, 4, 5])
+        ]
+        self._compare_k_words_results(
+            self.b1.k_words(3, overlapping=False), expected)
+
+        expected = [
+            BiologicalSequence('GATTACA', quality=[0, 1, 2, 3, 4, 5, 6])
+        ]
+        self._compare_k_words_results(
+            self.b1.k_words(7, overlapping=False), expected)
+
+        self.assertEqual(list(self.b1.k_words(8, overlapping=False)), [])
+
+    def test_k_words_invalid_k(self):
+        with self.assertRaises(ValueError):
+            list(self.b1.k_words(0))
+
+        with self.assertRaises(ValueError):
+            list(self.b1.k_words(-42))
+
+    def test_k_words_different_sequences(self):
+        expected = [
+            BiologicalSequence('HE.', quality=[0, 1, 2], id='hello',
+                               description='gapped hello'),
+            BiologicalSequence('.--', quality=[3, 4, 5], id='hello',
+                               description='gapped hello'),
+            BiologicalSequence('..L', quality=[6, 7, 8], id='hello',
+                               description='gapped hello')
+        ]
+        self._compare_k_words_results(
+            self.b8.k_words(3, overlapping=False), expected)
+
         b = BiologicalSequence('')
         self.assertEqual(list(b.k_words(3)), [])
 
