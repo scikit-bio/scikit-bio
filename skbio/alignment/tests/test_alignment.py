@@ -298,6 +298,29 @@ class SequenceCollectionTests(TestCase):
                          ['d1', 'd2', 'r1', 'r2', 'r3'])
         self.assertEqual(self.empty.ids(), [])
 
+    def test_update_ids_invalid_parameter_combos(self):
+        with self.assertRaisesRegexp(SequenceCollectionError, 'ids and fn'):
+            self.s1.update_ids(fn=lambda e: e, ids=['foo', 'bar'])
+
+        with self.assertRaisesRegexp(SequenceCollectionError, 'prefix'):
+            self.s1.update_ids(ids=['foo', 'bar'], prefix='abc')
+
+        with self.assertRaisesRegexp(SequenceCollectionError, 'prefix'):
+            self.s1.update_ids(fn=lambda e: e, prefix='abc')
+
+    def test_update_ids_invalid_ids(self):
+        # incorrect number of new ids
+        with self.assertRaisesRegexp(SequenceCollectionError, '3 != 2'):
+            self.s1.update_ids(ids=['foo', 'bar', 'baz'])
+        with self.assertRaisesRegexp(SequenceCollectionError, '4 != 2'):
+            self.s1.update_ids(fn=lambda e: ['foo', 'bar', 'baz', 'abc'])
+
+        # duplicates
+        with self.assertRaisesRegexp(SequenceCollectionError, 'foo'):
+            self.s2.update_ids(ids=['foo', 'bar', 'foo'])
+        with self.assertRaisesRegexp(SequenceCollectionError, 'bar'):
+            self.s2.update_ids(fn=lambda e: ['foo', 'bar', 'bar'])
+
     def test_int_map(self):
         """int_map functions as expected
         """

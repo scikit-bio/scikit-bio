@@ -133,7 +133,7 @@ class SequenceCollection(object):
             if id in self:
                 raise SequenceCollectionError(
                     "All sequence ids must be unique, but "
-                    "id %s is present multiple times." % id)
+                    "id '%s' is present multiple times." % id)
             else:
                 self._id_to_index[seq.id] = i
 
@@ -621,8 +621,8 @@ class SequenceCollection(object):
 
         if len(new_ids) != len(old_ids):
             raise SequenceCollectionError(
-                "Number of new IDs (%d) must be equal to the number of "
-                "existing IDs (%d)." % (len(new_ids), len(old_ids)))
+                "Number of new IDs must be equal to the number of existing "
+                "IDs (%d != %d)." % (len(new_ids), len(old_ids)))
 
         new_to_old_ids = dict(zip(new_ids, old_ids))
 
