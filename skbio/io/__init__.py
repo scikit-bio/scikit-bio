@@ -138,6 +138,7 @@ __all__ = ['write', 'read', 'sniff',
 import_module('skbio.io.dm')
 import_module('skbio.io.ordres')
 import_module('skbio.io.newick')
+import_module('skbio.io.clustal')
 
 from numpy.testing import Tester
 test = Tester().test

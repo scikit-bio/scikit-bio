@@ -92,15 +92,14 @@ def write_clustal(records, outfile):
     >>> write_clustal(clustal_f,sys.stdout) #doctest: +NORMALIZE_WHITESPACE
     CLUSTAL
     <BLANKLINE>
-    abc GCAUGCAUCUGCAUACGUACGUACGCAUGCAGUCGAUACAUACGUACGUCGGUACGU-CG
-    def ----------------------------------------------CGUGCAUGCAU-CG
-    xyz ------------------------------------------CAUUCGUACGUACGCAUG
+    abc    GCAUGCAUCUGCAUACGUACGUACGCAUGCAGUCGAUACAUACGUACGUCGGUACGU-CG
+    def    ----------------------------------------------CGUGCAUGCAU-CG
+    xyz    ------------------------------------------CAUUCGUACGUACGCAUG
     <BLANKLINE>
-    abc AC
-    def AU
-    xyz AC
+    abc    AC
+    def    AU
+    xyz    AC
     <BLANKLINE>
-    
     """
     clen = 60
     records = list(records)
@@ -172,7 +171,7 @@ def parse_clustal(record, strict=True):
 
     >>> from StringIO import StringIO
     >>> from skbio.parse.sequences import parse_clustal
-    >>> clustal_f = StringIO('abc   GCAUGCAUCUGCAUACGUACGUACGCAUGCA 60\n'
+    >>> clustal_f = StringIO("abc   GCAUGCAUCUGCAUACGUACGUACGCAUGCA 60\n"
     ...                      'def   -------------------------------\n'
     ...                      'xyz   -------------------------------\n'
     ...                      '\n'
