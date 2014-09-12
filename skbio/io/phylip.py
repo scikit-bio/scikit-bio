@@ -20,9 +20,10 @@ An example PHYLIP-formatted file taken from [3]_::
     Gorilla   AAACCCTTGC CGGTACGCTT AAACCATTGC CGGTACGCTT AA
 
 .. note:: Original copyright notice for the above PHYLIP file:
-   (c) Copyright 1986-2008 by The University of Washington. Written by Joseph
+
+   *(c) Copyright 1986-2008 by The University of Washington. Written by Joseph
    Felsenstein. Permission is granted to copy this document provided that no
-   fee is charged for it and that this copyright notice is not removed.
+   fee is charged for it and that this copyright notice is not removed.*
 
 Format Specification
 --------------------
