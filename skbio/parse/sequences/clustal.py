@@ -68,15 +68,6 @@ def _delete_trailing_number(line):
 
 
 def write_clustal(records, fh):
-    """writes aligned sequences to a specified file
-    Parameters
-    ----------
-    record: iterator
-        A generator of aligned sequences
-    fh: open file object
-        An open Clustal file.
-
-    """
     clen = 60
     records = list(records)
     names, seqs = zip(*records)

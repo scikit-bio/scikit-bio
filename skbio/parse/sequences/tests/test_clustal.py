@@ -121,7 +121,7 @@ class ClustalParserTests(TestCase):
         data = parse_clustal(raw.split('\n'))
         data = list(data)
         self.assertEqual(len(data), len(seqs))
-        self.assertItemsEqual(list(data), seqs)
+        self.assertEqual(set(data), set(seqs))
         testfile.close()
         os.remove(fname)
 

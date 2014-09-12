@@ -122,7 +122,7 @@ class ClustalIOTests(TestCase):
         data = _clustal_to_msa(StringIO(raw))
         data = list(data)
         self.assertEqual(len(data), len(seqs))
-        self.assertItemsEqual(list(data), seqs)
+        self.assertEqual(set(data), set(seqs))
         testfile.close()
         os.remove(fname)
 
