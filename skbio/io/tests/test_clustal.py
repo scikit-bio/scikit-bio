@@ -10,10 +10,11 @@ from __future__ import absolute_import, division, print_function
 
 from unittest import TestCase, main
 
-from skbio.io.clustal import parse_clustal, write_clustal
+from skbio.io.clustal import _clustal_to_msa, _msa_to_clustal
 from skbio.io.clustal import (_is_clustal_seq_line, last_space,
                               _delete_trailing_number)
 from skbio.io import RecordError
+from StringIO import StringIO
 
 
 class ClustalTests(TestCase):
@@ -49,26 +50,26 @@ class ClustalTests(TestCase):
 
 class ClustalParserTests(TestCase):
 
-    """Tests of the parse_clustal function"""
+    """Tests of the _clustal_to_msa function"""
 
     def test_null(self):
         """Should return empty dict and list on null input"""
-        result = parse_clustal([])
+        result = _clustal_to_msa(StringIO())
         self.assertEqual(dict(result), {})
 
     def test_minimal(self):
         """Should handle single-line input correctly"""
-        result = parse_clustal([MINIMAL])  # expects seq of lines
+        result = _clustal_to_msa([MINIMAL])  # expects seq of lines
         self.assertEqual(dict(result), {'abc': 'ucag'})
 
     def test_two(self):
         """Should handle two-sequence input correctly"""
-        result = parse_clustal(TWO)
+        result = _clustal_to_msa(TWO)
         self.assertEqual(dict(result), {'abc': 'uuuaaa', 'def': 'cccggg'})
 
     def test_real(self):
         """Should handle real Clustal output"""
-        data = parse_clustal(REAL)
+        data = _clustal_to_msa(REAL)
         self.assertEqual(dict(data), {
             'abc':
             'GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA'
@@ -86,15 +87,15 @@ class ClustalParserTests(TestCase):
 
     def test_bad(self):
         """Should reject bad data if strict"""
-        result = parse_clustal(BAD, strict=False)
+        result = _clustal_to_msa(BAD, strict=False)
         self.assertEqual(dict(result), {})
         # should fail unless we turned strict processing off
         with self.assertRaises(RecordError):
-            dict(parse_clustal(BAD))
+            dict(_clustal_to_msa(BAD))
 
     def test_space_labels(self):
         """Should tolerate spaces in labels"""
-        result = parse_clustal(SPACE_LABELS)
+        result = _clustal_to_msa(SPACE_LABELS)
         self.assertEqual(dict(result), {'abc': 'uca', 'def ggg': 'ccc'})
 
     def test_write(self):
@@ -115,20 +116,20 @@ class ClustalParserTests(TestCase):
                  '-------------------------------------CAUGCAUCGUACGUACGCAUGAC'
                  'UGCUGCAUCA----------------')]
         records = (x for x in seqs)
-        write_clustal(records, testfile)
+        _msa_to_clustal(records, testfile)
         testfile.close()
         raw = open(fname, 'r').read()
-        data = parse_clustal(raw.split('\n'))
+        data = _clustal_to_msa(StringIO(raw))
         data = list(data)
         self.assertEqual(len(data), len(seqs))
         self.assertItemsEqual(list(data), seqs)
         testfile.close()
         os.remove(fname)
 
-MINIMAL = 'abc\tucag'
-TWO = 'abc\tuuu\ndef\tccc\n\n    ***\n\ndef ggg\nabc\taaa\n'.split('\n')
+MINIMAL = StringIO('abc\tucag')
+TWO = StringIO('abc\tuuu\ndef\tccc\n\n    ***\n\ndef ggg\nabc\taaa\n')
 
-REAL = """CLUSTAL W (1.82) multiple sequence alignment
+REAL = StringIO("""CLUSTAL W (1.82) multiple sequence alignment
 
 
 abc             GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA 60
@@ -144,11 +145,11 @@ xyz             -------------------------------------CAUGCAUCGUACGUACGCAUGAC 23
 abc             UGACUAGUCAGCUAGCAUCGAUCAGU 145
 def             CGAUCAGUCAGUCGAU---------- 34
 xyz             UGCUGCAUCA---------------- 33
-                *     ***""".split('\n')
+                *     ***""")
 
-BAD = ['dshfjsdfhdfsj', 'hfsdjksdfhjsdf']
+BAD = StringIO('\n'.join(['dshfjsdfhdfsj', 'hfsdjksdfhjsdf']))
 
-SPACE_LABELS = ['abc uca', 'def ggg ccc']
+SPACE_LABELS = StringIO('\n'.join(['abc uca', 'def ggg ccc']))
 
 
 if __name__ == '__main__':
