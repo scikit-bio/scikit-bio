@@ -10,25 +10,39 @@ since been supported by several other bioinformatics tools (e.g., RAxML [2]_).
 See [3]_ for the original format description, and [4]_ and [5]_ for additional
 descriptions.
 
+An example PHYLIP-formatted file taken from [3]_::
+
+          5    42
+    Turkey    AAGCTNGGGC ATTTCAGGGT GAGCCCGGGC AATACAGGGT AT
+    Salmo gairAAGCCTTGGC AGTGCAGGGT GAGCCGTGGC CGGGCACGGT AT
+    H. SapiensACCGGTTGGC CGTTCAGGGT ACAGGTTGGC CGTTCAGGGT AA
+    Chimp     AAACCCTTGC CGTTACGCTT AAACCGAGGC CGGGACACTC AT
+    Gorilla   AAACCCTTGC CGGTACGCTT AAACCATTGC CGGTACGCTT AA
+
+.. note:: Original copyright notice for the above PHYLIP file:
+   (c) Copyright 1986-2008 by The University of Washington. Written by Joseph
+   Felsenstein. Permission is granted to copy this document provided that no
+   fee is charged for it and that this copyright notice is not removed.
+
 Format Specification
 --------------------
 PHYLIP format is a plain text format containing exactly two sections: a header
 describing the dimensions of the alignment, followed by the multiple sequence
 alignment itself.
 
-.. note:: The format described here is "strict" PHYLIP, as described in [4]_.
-   Strict PHYLIP requires that each sequence identifier is exactly 10
-   characters (padded with spaces as necessary). Other bioinformatics tools
-   (e.g., RAxML) may relax this rule to allow for longer sequence identifiers.
-   See *Alignment Section* below for details.
+The format described here is "strict" PHYLIP, as described in [4]_. Strict
+PHYLIP requires that each sequence identifier is exactly 10 characters long
+(padded with spaces as necessary). Other bioinformatics tools (e.g., RAxML) may
+relax this rule to allow for longer sequence identifiers. See the
+**Alignment Section** below for more details.
 
-   The format described here is sequential format. The original PHYLIP format
-   specification [3]_ describes both sequential and interleaved formats.
+The format described here is "sequential" format. The original PHYLIP format
+specification [3]_ describes both sequential and interleaved formats.
 
-   scikit-bio currently only supports writing strict, sequential
+.. note:: scikit-bio currently only supports writing strict, sequential
    PHYLIP-formatted files from an ``skbio.alignment.Alignment``. It does not
    yet support reading PHYLIP-formatted files, nor does it support relaxed or
-   interleaved PHYLIP format.
+   interleaved PHYLIP formats.
 
 Header Section
 ^^^^^^^^^^^^^^
@@ -65,9 +79,9 @@ underscores, and numbers.
    scikit-bio supports the empty string (``''``) as a valid sequence ID. An
    empty ID will be padded with 10 spaces.
 
-The sequence characters immediately follow the sequence ID. They *must* start
-at the 11th character in the line, as the first 10 characters are reserved for
-the sequence ID. While PHYLIP format does not explicitly restrict the set of
+Sequence characters immediately follow the sequence ID. They *must* start at
+the 11th character in the line, as the first 10 characters are reserved for the
+sequence ID. While PHYLIP format does not explicitly restrict the set of
 supported characters that may be used to represent a sequence, the original
 format description [3]_ specifies the IUPAC nucleic acid lexicon for DNA or RNA
 sequences, and the IUPAC protein lexicon for protein sequences. The original
