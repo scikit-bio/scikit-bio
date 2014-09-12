@@ -467,7 +467,7 @@ class SequenceCollection(object):
 
         Parameters
         ----------
-        id, str
+        id: str
             The id of the sequence to return.
 
         Returns
@@ -515,6 +515,122 @@ class SequenceCollection(object):
 
         """
         return [seq.id for seq in self]
+
+    def update_ids(self, ids=None, fn=None, prefix=""):
+        """Update sequence IDs on the sequence collection.
+
+        IDs can be updated by providing a sequence of new IDs (`ids`) or a
+        function that maps current IDs to new IDs (`fn`).
+
+        Default behavior (if `ids` and `fn` are not provided) is to create new
+        IDs that are monotonically-increasing integers (starting from 1) cast
+        as strings, optionally preceded by `prefix`.
+
+        Parameters
+        ----------
+        ids : sequence of str, optional
+            New IDs to update on the sequence collection.
+        fn : function, optional
+            Function accepting a sequence of current IDs and returning a
+            sequence of new IDs to update on the sequence collection.
+        prefix : str, optional
+            If `ids` and `fn` are both ``None``, `prefix` is prepended to each
+            new monotonically-increasing ID (see description of default
+            behavior above).
+
+        Returns
+        -------
+        SequenceCollection
+            New ``SequenceCollection`` (or subclass) containing sequences with
+            updated IDs.
+        dict
+            Mapping of new IDs to old IDs.
+
+        Raises
+        ------
+        SequenceCollectionError
+            If both `ids` and `fn` are provided, `prefix` is provided with
+            either `ids` or `fn`, or the number of new IDs does not match the
+            number of sequences in the sequence collection.
+
+        Notes
+        -----
+        The default behavior can be useful when writing sequences out for use
+        with programs that are picky about their sequence IDs
+        (e.g., RAxML [1]_).
+
+        References
+        ----------
+        .. [1] RAxML Version 8: A tool for Phylogenetic Analysis and
+           Post-Analysis of Large Phylogenies". In Bioinformatics, 2014
+
+        Examples
+        --------
+        Define a sequence collection containing two sequences with IDs "abc"
+        and "def":
+
+        >>> from skbio import DNA, SequenceCollection
+        >>> sequences = [DNA('A--CCGT.', id="abc"),
+        ...              DNA('.AACCG-GT.', id="def")]
+        >>> s1 = SequenceCollection(sequences)
+        >>> s1.ids()
+        ['abc', 'def']
+
+        Update the IDs in the sequence collection, obtaining a new sequence
+        collection with IDs that are monotonically-increasing integers starting
+        from 1:
+
+        >>> s2, new_to_old_ids = s1.update_ids()
+        >>> s2.ids()
+        ['1', '2']
+
+        Alternatively, we can specify a function to map the current IDs to new
+        IDs. Let's define a function that appends ``'-new'`` to each ID:
+
+        >>> def id_mapper(ids):
+        ...     return [id_ + '-new' for id_ in ids]
+        >>> s3, new_to_old_ids = s1.update_ids(fn=id_mapper)
+        >>> s3.ids()
+        ['abc-new', 'def-new']
+
+        We can also directly update the IDs with a new sequence of IDs:
+
+        >>> s4, new_to_old_ids = s1.update_ids(ids=['ghi', 'jkl'])
+        >>> s4.ids()
+        ['ghi', 'jkl']
+
+        """
+        if ids is not None and fn is not None:
+            raise SequenceCollectionError("ids and fn cannot both be "
+                                          "provided.")
+        if (ids is not None and prefix) or (fn is not None and prefix):
+            raise SequenceCollectionError("prefix cannot be provided if ids "
+                                          "or fn is provided.")
+
+        if ids is not None:
+            fn = lambda _: ids
+        elif fn is None:
+            def fn(_):
+                new_ids = []
+                for i in range(1, len(self) + 1):
+                    new_ids.append("%s%d" % (prefix, i))
+                return new_ids
+
+        old_ids = self.ids()
+        new_ids = fn(old_ids)
+
+        if len(new_ids) != len(old_ids):
+            raise SequenceCollectionError(
+                "Number of new IDs (%d) must be equal to the number of "
+                "existing IDs (%d)." % (len(new_ids), len(old_ids)))
+
+        new_to_old_ids = dict(zip(new_ids, old_ids))
+
+        new_seqs = []
+        for new_id, seq in zip(new_ids, self):
+            new_seqs.append(seq.copy(id=new_id))
+
+        return self.__class__(new_seqs), new_to_old_ids
 
     def int_map(self, prefix=""):
         """Create an integer-based mapping of sequence ids
