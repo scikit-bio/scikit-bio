@@ -17,6 +17,7 @@ Supported File Formats
 
    dm
    ordres
+   newick
    phylip
 
 User Functions
@@ -41,6 +42,7 @@ User Exceptions
    UnrecognizedFormatError
    DMFormatError
    OrdResFormatError
+   NewickFormatError
    PhylipFormatError
 
 User Warnings
@@ -112,25 +114,33 @@ from ._warning import FormatIdentificationWarning, ArgumentOverrideWarning
 from ._exception import (DuplicateRegistrationError, InvalidRegistrationError,
                          RecordError, FieldError, UnrecognizedFormatError,
                          FileFormatError, DMFormatError, OrdResFormatError,
-                         PhylipFormatError)
+                         NewickFormatError, PhylipFormatError)
 from ._registry import (write, read, sniff, get_writer, get_reader,
                         get_sniffer, list_write_formats, list_read_formats,
                         register_writer, register_reader, register_sniffer)
 
-__all__ = ['write', 'read', 'sniff', 'get_writer', 'get_reader',
-           'get_sniffer', 'list_write_formats', 'list_read_formats',
+__all__ = ['write', 'read', 'sniff',
+           'list_write_formats', 'list_read_formats',
+           'get_writer', 'get_reader', 'get_sniffer',
            'register_writer', 'register_reader', 'register_sniffer',
+
+           'FormatIdentificationWarning', 'ArgumentOverrideWarning',
+
            'DuplicateRegistrationError', 'InvalidRegistrationError',
            'RecordError', 'FieldError', 'UnrecognizedFormatError',
-           'FileFormatError', 'DMFormatError', 'OrdResFormatError',
-           'PhylipFormatError', 'FormatIdentificationWarning',
-           'ArgumentOverrideWarning']
+
+           'FileFormatError',
+           'DMFormatError',
+           'OrdResFormatError',
+           'NewickFormatError',
+           'PhylipFormatError']
 
 # Necessary to import each file format module to have them added to the I/O
 # registry. We use import_module instead of a typical import to avoid flake8
 # unused import errors.
 import_module('skbio.io.dm')
 import_module('skbio.io.ordres')
+import_module('skbio.io.newick')
 import_module('skbio.io.phylip')
 
 from numpy.testing import Tester

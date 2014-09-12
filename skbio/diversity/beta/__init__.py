@@ -103,57 +103,30 @@ Create a table containing 7 OTUs and 6 samples:
    ... except KeyError:
    ...     pass
    >>> sample_md = {
-   ...    'A': {'body_site': 'gut', 'subject': '1'},
-   ...    'B': {'body_site': 'skin', 'subject': '1'},
-   ...    'C': {'body_site': 'tongue', 'subject': '1'},
-   ...    'D': {'body_site': 'gut', 'subject': '2'},
-   ...    'E': {'body_site': 'tongue', 'subject': '2'},
-   ...    'F': {'body_site': 'skin', 'subject': '2'}}
+   ...    'A': {'body_site': 'gut', 'subject': 's1'},
+   ...    'B': {'body_site': 'skin', 'subject': 's1'},
+   ...    'C': {'body_site': 'tongue', 'subject': 's1'},
+   ...    'D': {'body_site': 'gut', 'subject': 's2'},
+   ...    'E': {'body_site': 'tongue', 'subject': 's2'},
+   ...    'F': {'body_site': 'skin', 'subject': 's2'}}
    >>> sample_md = pd.DataFrame.from_dict(sample_md, orient='index')
    >>> sample_md
      subject body_site
-   A       1       gut
-   B       1      skin
-   C       1    tongue
-   D       2       gut
-   E       2    tongue
-   F       2      skin
+   A      s1       gut
+   B      s1      skin
+   C      s1    tongue
+   D      s2       gut
+   E      s2    tongue
+   F      s2      skin
    <BLANKLINE>
    [6 rows x 2 columns]
-
-   We'll put a quick 3D plotting function together. This function is adapted
-   from the matplotlib gallery [1]_.
-
-   >>> import matplotlib.pyplot as plt
-   >>> from mpl_toolkits.mplot3d import Axes3D
-   >>> def scatter_3d(ord_results, df, column, color_map, title='', axis1=0,
-   ...                axis2=1, axis3=2):
-   ...    coord_matrix = ord_results.site.T
-   ...    ids = ord_results.site_ids
-   ...    colors = [color_map[df[column][id_]] for id_ in ord_results.site_ids]
-   ...
-   ...    fig = plt.figure()
-   ...    ax = fig.add_subplot(111, projection='3d')
-   ...
-   ...    xs = coord_matrix[axis1]
-   ...    ys = coord_matrix[axis2]
-   ...    zs = coord_matrix[axis3]
-   ...    plot = ax.scatter(xs, ys, zs, c=colors)
-   ...
-   ...    ax.set_xlabel('PC %d' % (axis1 + 1))
-   ...    ax.set_ylabel('PC %d' % (axis2 + 1))
-   ...    ax.set_zlabel('PC %d' % (axis3 + 1))
-   ...    ax.set_xticklabels([])
-   ...    ax.set_yticklabels([])
-   ...    ax.set_zticklabels([])
-   ...    ax.set_title(title)
-   ...    return fig
 
    Now let's plot our PCoA results, coloring each sample by the subject it
    was taken from:
 
-   >>> fig = scatter_3d(bc_pc, sample_md, 'subject', {'1': 'b', '2': 'r'},
-   ...                  'Samples colored by subject')
+   >>> fig = bc_pc.plot(sample_md, 'subject',
+   ...                  axis_labels=('PC 1', 'PC 2', 'PC 3'),
+   ...                  title='Samples colored by subject', cmap='jet', s=50)
 
 .. plot::
    :context:
@@ -162,10 +135,11 @@ Create a table containing 7 OTUs and 6 samples:
    the samples by the body site they were taken from, we see that the samples
    form three separate groups:
 
+   >>> import matplotlib.pyplot as plt
    >>> plt.close('all') # not necessary for normal use
-   >>> fig = scatter_3d(bc_pc, sample_md, 'body_site',
-   ...                  {'gut': 'b', 'skin': 'r', 'tongue': 'g'},
-   ...                  'Samples colored by body site')
+   >>> fig = bc_pc.plot(sample_md, 'body_site',
+   ...                  axis_labels=('PC 1', 'PC 2', 'PC 3'),
+   ...                  title='Samples colored by body site', cmap='jet', s=50)
 
 Ordination techniques, such as PCoA, are useful for exploratory analysis. The
 next step is to quantify the strength of the grouping/clustering that we see in

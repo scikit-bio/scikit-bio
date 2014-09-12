@@ -333,6 +333,13 @@ plot_rcparams = {
     'figure.subplot.top': 0.85,
     'figure.subplot.wspace': 0.4,
     'text.usetex': False,
+
+    # Some of our figures have legends outside the axes area. When they're
+    # rendered in an interactive context, nothing gets cut off, but when
+    # rendered in a static context (e.g., with savefig, which the plot
+    # directive uses), the legend can get cut off. Specifying 'tight' instead
+    # of 'standard' fixes the issue. See http://stackoverflow.com/a/10154763
+    'savefig.bbox': 'tight'
 }
 
 if not use_matplotlib_plot_directive:

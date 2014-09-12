@@ -39,6 +39,11 @@ class OrdResFormatError(FileFormatError):
     pass
 
 
+class NewickFormatError(FileFormatError):
+    """Raised when a ``newick`` formatted file cannot be parsed."""
+    pass
+
+
 class PhylipFormatError(FileFormatError):
     """Raised when a ``phylip`` formatted file cannot be parsed.
 
