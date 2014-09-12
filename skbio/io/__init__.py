@@ -97,16 +97,6 @@ Developer Exceptions
    DuplicateRegistrationError
    InvalidRegistrationError
 
-
-Formats
--------
-.. autosummary::
-   :toctree: generated/
-
-   newick
-   dm
-   ordres
-
 """
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
