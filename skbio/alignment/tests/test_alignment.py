@@ -433,15 +433,15 @@ class SequenceCollectionTests(TestCase):
             self.s2.update_ids(fn=lambda e: ['foo', 'bar', 'bar'])
 
     def test_int_map(self):
-        """int_map functions as expected
-        """
         expected1 = {"1": self.d1, "2": self.d2}
         expected2 = {"1": "d1", "2": "d2"}
-        self.assertEqual(self.s1.int_map(), (expected1, expected2))
+        obs = npt.assert_warns(UserWarning, self.s1.int_map)
+        self.assertEqual(obs, (expected1, expected2))
 
         expected1 = {"h-1": self.d1, "h-2": self.d2}
         expected2 = {"h-1": "d1", "h-2": "d2"}
-        self.assertEqual(self.s1.int_map(prefix='h-'), (expected1, expected2))
+        obs = npt.assert_warns(UserWarning, self.s1.int_map, prefix='h-')
+        self.assertEqual(obs, (expected1, expected2))
 
     def test_is_empty(self):
         """is_empty functions as expected

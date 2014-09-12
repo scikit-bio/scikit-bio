@@ -635,6 +635,14 @@ class SequenceCollection(object):
     def int_map(self, prefix=""):
         """Create an integer-based mapping of sequence ids
 
+        .. note:: Deprecated in scikit-bio 0.2.0-dev
+           ``SequenceCollection.int_map`` will be removed in scikit-bio 0.3.0
+           in favor of ``SequenceCollection.update_ids``, which provides a
+           generalized way of updating IDs on a ``SequenceCollection``. The
+           default behavior of ``SequenceCollection.update_ids`` matches the
+           behavior in ``int_map``, except that a new ``SequenceCollection`` is
+           returned instead of a ``dict``.
+
         Parameters
         ----------
         prefix : str
@@ -660,24 +668,11 @@ class SequenceCollection(object):
         RAxML Version 8: A tool for Phylogenetic Analysis and Post-Analysis of
         Large Phylogenies". In Bioinformatics, 2014
 
-        Examples
-        --------
-        >>> from skbio.alignment import SequenceCollection
-        >>> from skbio.sequence import DNA
-        >>> sequences = [DNA('ACCGT', id="seq1"),
-        ...              DNA('AACCGGT', id="seq2")]
-        >>> s1 = SequenceCollection(sequences)
-        >>> new_id_to_seqs, new_id_to_old_ids = s1.int_map()
-        >>> print(repr(new_id_to_seqs['1']))
-        <DNASequence: ACCGT (length: 5)>
-        >>> print(repr(new_id_to_seqs['2']))
-        <DNASequence: AACCGGT (length: 7)>
-        >>> print(new_id_to_old_ids['1'])
-        seq1
-        >>> print(new_id_to_old_ids['2'])
-        seq2
-
         """
+        warn("SequenceCollection.int_map is deprecated and will be removed in "
+             "scikit-bio 0.3.0. Please update your code to use "
+             "SequenceCollection.update_ids instead.", UserWarning)
+
         int_keys = []
         int_map = []
         for i, seq in enumerate(self):
@@ -1655,7 +1650,7 @@ class Alignment(SequenceCollection):
         sequence_count = self.sequence_count()
         result = ["%d %d" % (sequence_count, sequence_length)]
         if map_labels:
-            _, new_id_to_old_id = self.int_map(prefix=label_prefix)
+            _, new_id_to_old_id = self.update_ids(prefix=label_prefix)
             old_id_to_new_id = {v: k for k, v in new_id_to_old_id.items()}
         else:
             new_id_to_old_id = {seq_id: seq_id for seq_id in ids}
