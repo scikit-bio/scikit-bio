@@ -7,6 +7,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # -----------------------------------------------------------------------------
 from __future__ import absolute_import, division, print_function
+from future.utils.six import StringIO
 
 from unittest import TestCase, main
 
@@ -14,10 +15,9 @@ from skbio.io.clustal import _clustal_to_msa, _msa_to_clustal
 from skbio.io.clustal import (_is_clustal_seq_line, last_space,
                               _delete_trailing_number)
 from skbio.io import RecordError
-from StringIO import StringIO
 
 
-class ClustalTests(TestCase):
+class ClustalHelperTests(TestCase):
 
     """Tests of top-level functions."""
 
@@ -48,7 +48,7 @@ class ClustalTests(TestCase):
         self.assertEqual(dtn('a b c \t 345'), 'a b c')
 
 
-class ClustalParserTests(TestCase):
+class ClustalIOTests(TestCase):
 
     """Tests of the _clustal_to_msa function"""
 
