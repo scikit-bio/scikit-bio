@@ -9,6 +9,7 @@ from __future__ import absolute_import, division, print_function
 
 from skbio.io import RecordError
 from skbio.parse.record import DelimitedSplitter
+from skbio.io import (register_reader, register_writer)
 
 
 def _label_line_parser(record, splitter, strict=True):
@@ -66,7 +67,7 @@ def _delete_trailing_number(line):
     except ValueError:  # no trailing numbers
         return line
 
-
+@register_writer('clustal')
 def write_clustal(records, outfile):
     """writes aligned sequences to a specified file
     Parameters
@@ -114,7 +115,7 @@ def write_clustal(records, outfile):
                                           seq[i:i+clen]))
         outfile.write("\n")
 
-
+@register_reader('clustal')
 def parse_clustal(record, strict=True):
     r"""yields labels and sequences
 
