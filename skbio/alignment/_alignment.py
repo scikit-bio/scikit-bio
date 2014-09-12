@@ -16,6 +16,7 @@ from warnings import warn
 import numpy as np
 from scipy.stats import entropy
 
+import skbio.io
 from skbio.stats.distance import DistanceMatrix
 from skbio.io.util import open_file
 from ._exception import SequenceCollectionError, StockholmParseError
@@ -1620,6 +1621,10 @@ class Alignment(SequenceCollection):
             return 0
         else:
             return len(self._data[0])
+
+    def write(self, fp, format):
+        # TODO remove once #672 is merged
+        skbio.io.write(self, into=fp, format=format)
 
     def to_phylip(self, map_labels=False, label_prefix=""):
         """Return phylip-formatted string representing the `SequenceCollection`
