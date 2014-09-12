@@ -663,17 +663,6 @@ class TestOrdinationResults(unittest.TestCase):
         self.min_ord_results = OrdinationResults(eigvals=eigvals, site=site,
                                                  site_ids=['A', 'B', 'C', 'D'])
 
-    def test_io(self):
-        # Very basic check that read/write public API is present and appears to
-        # be functioning. Roundtrip from memory -> disk -> memory and ensure
-        # results match.
-        fh = StringIO()
-        self.ordination_results.write(fh)
-        fh.seek(0)
-        deserialized = OrdinationResults.read(fh)
-        assert_ordination_results_equal(deserialized, self.ordination_results)
-        self.assertTrue(type(deserialized) == OrdinationResults)
-
     def test_deprecated_io(self):
         fh = StringIO()
         npt.assert_warns(UserWarning, self.ordination_results.to_file, fh)

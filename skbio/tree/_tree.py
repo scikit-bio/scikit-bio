@@ -17,17 +17,21 @@ from copy import deepcopy
 from itertools import combinations
 from functools import reduce
 from collections import defaultdict
-from future.utils.six import StringIO
+from importlib import import_module
 
 import numpy as np
 from scipy.stats import pearsonr
 from future.builtins import zip
+from future.utils.six import StringIO
 
 import skbio.io
 from skbio.stats.distance import DistanceMatrix
 from skbio.io import RecordError
 from ._exception import (NoLengthError, DuplicateNodeError, NoParentError,
                          MissingNodeError, TreeError)
+
+# This will be the responsibility of the ABC in the future.
+import_module('skbio.io')
 
 
 def distance_from_r(m1, m2):
@@ -50,7 +54,6 @@ def distance_from_r(m1, m2):
 
 
 class TreeNode(object):
-
     r"""Representation of a node within a tree
 
     A `TreeNode` instance stores links to its parent and optional children
@@ -83,7 +86,7 @@ class TreeNode(object):
     id
 
     """
-
+    default_write_format = 'newick'
     _exclude_from_copy = set(['parent', 'children', '_tip_cache',
                               '_non_tip_cache'])
 

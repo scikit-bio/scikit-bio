@@ -785,3 +785,110 @@ def empty_file_sniffer(fh):
         if line.strip():
             return False, {}
     return True, {}
+
+
+def initialize_oop_interface():
+    classes = set()
+    for fmt in _formats:
+        for cls in _formats[fmt]:
+            classes.add(cls)
+
+    for cls in classes:
+        if cls is not None:
+            _apply_read(cls)
+            _apply_write(cls)
+
+
+def _apply_read(cls):
+    skbio_io_read = globals()['read']
+    read_formats = list_read_formats(cls)
+    if read_formats:
+        @classmethod
+        def read(cls, fp, format=None, **kwargs):
+            """Read %s from a file.
+
+            Supported file formats include:
+
+            %s
+
+            Parameters
+            ----------
+            fp : filepath, filehandle, or iterable of either
+                File(s) to read.
+            format : str or iterable of str, optional
+                File format to be read. If `format` is None, will attempt to
+                guess the format.
+            kwargs : dict, optional
+                Keyword arguments passed to :mod:`skbio.io.read` and the file
+                format reader.
+
+            See Also
+            --------
+            write
+            skbio.io.read
+            %s
+
+            """
+            return skbio_io_read(fp, into=cls, format=format, **kwargs)
+
+        read.__func__.__doc__ = read.__func__.__doc__ % (
+            cls.__name__,
+            _formats_for_docs(read_formats),
+            _import_paths(read_formats)
+        )
+        cls.read = read
+
+
+def _apply_write(cls):
+    skbio_io_write = globals()['write']
+    write_formats = list_write_formats(cls)
+    if write_formats:
+        if not hasattr(cls, 'default_write_format'):
+            raise NotImplementedError(
+                "Classes with registered writers must provide a "
+                "`default_write_format`. Please add `default_write_format` to"
+                " '%s'." % cls.__name__)
+
+        def write(self, fp, format=cls.default_write_format, **kwargs):
+            """Write %s as a file.
+
+            Supported file formats include:
+
+            %s
+
+            Parameters
+            ----------
+            fp : filepath or filehandle
+                File to write to.
+            format : str, optional
+                File format to write.
+                Default is `'%s'`.
+            kwargs : dict, optional
+                Keyword arguments passed to :mod:`skbio.io.write` and the
+                file format writer.
+
+            See Also
+            --------
+            read
+            skbio.io.write
+            %s
+
+            """
+            skbio_io_write(self, into=fp, format=format, **kwargs)
+
+        write.__doc__ = write.__doc__ % (
+            cls.__name__,
+            _formats_for_docs(write_formats),
+            cls.default_write_format,
+            _import_paths(write_formats)
+        )
+        cls.write = write
+
+
+def _import_paths(formats):
+    return '\n'.join('skbio.io.' + fmt for fmt in formats)
+
+
+def _formats_for_docs(formats):
+    return '\n'.join(
+        "- ``'%s'`` (:mod:`skbio.io.%s`)" % (fmt, fmt) for fmt in formats)

@@ -97,6 +97,16 @@ Developer Exceptions
    DuplicateRegistrationError
    InvalidRegistrationError
 
+
+Formats
+-------
+.. autosummary::
+   :toctree: generated/
+
+   newick
+   dm
+   ordres
+
 """
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -115,12 +125,14 @@ from ._exception import (DuplicateRegistrationError, InvalidRegistrationError,
                          NewickFormatError)
 from ._registry import (write, read, sniff, get_writer, get_reader,
                         get_sniffer, list_write_formats, list_read_formats,
-                        register_writer, register_reader, register_sniffer)
+                        register_writer, register_reader, register_sniffer,
+                        initialize_oop_interface)
 
 __all__ = ['write', 'read', 'sniff',
            'list_write_formats', 'list_read_formats',
            'get_writer', 'get_reader', 'get_sniffer',
            'register_writer', 'register_reader', 'register_sniffer',
+           'initialize_oop_interface',
 
            'FormatIdentificationWarning', 'ArgumentOverrideWarning',
 
@@ -138,6 +150,10 @@ __all__ = ['write', 'read', 'sniff',
 import_module('skbio.io.dm')
 import_module('skbio.io.ordres')
 import_module('skbio.io.newick')
+
+# Now that all of our I/O has loaded, we can add the object oriented methods
+# (read and write) to each class which has registered I/O operations.
+initialize_oop_interface()
 
 from numpy.testing import Tester
 test = Tester().test
