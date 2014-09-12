@@ -22,7 +22,7 @@ import numpy as np
 import numpy.testing as npt
 from scipy.spatial.distance import hamming
 
-from skbio import (NucleotideSequence, DNASequence, RNASequence, DNA,
+from skbio import (NucleotideSequence, DNASequence, RNASequence, DNA, RNA,
                    DistanceMatrix, Alignment, SequenceCollection)
 from skbio.alignment import (StockholmAlignment, SequenceCollectionError,
                              StockholmParseError)
@@ -297,6 +297,117 @@ class SequenceCollectionTests(TestCase):
         self.assertEqual(self.s3.ids(),
                          ['d1', 'd2', 'r1', 'r2', 'r3'])
         self.assertEqual(self.empty.ids(), [])
+
+    def _assert_sequence_collections_equal(self, observed, expected):
+        """Compare SequenceCollections strictly."""
+        # TODO remove this custom equality testing code when SequenceCollection
+        # has an equals method (part of #656). We need this method to include
+        # IDs in the comparison (not part of SequenceCollection.__eq__).
+        self.assertEqual(observed, expected)
+        for obs_seq, exp_seq in zip(observed, expected):
+            self.assertTrue(obs_seq.equals(exp_seq))
+
+    def test_update_ids_default_behavior(self):
+        # 3 seqs
+        exp_sc = SequenceCollection([
+            RNA('GAUUACA', id="1"),
+            RNA('UUG', id="2"),
+            RNA('U-----UGCC--', id="3")
+        ])
+        exp_id_map = {'1': 'r1', '2': 'r2', '3': 'r3'}
+        obs_sc, obs_id_map = self.s2.update_ids()
+        self._assert_sequence_collections_equal(obs_sc, exp_sc)
+        self.assertEqual(obs_id_map, exp_id_map)
+
+        # empty
+        obs_sc, obs_id_map = self.empty.update_ids()
+        self._assert_sequence_collections_equal(obs_sc, self.empty)
+        self.assertEqual(obs_id_map, {})
+
+    def test_update_ids_prefix(self):
+        # 3 seqs
+        exp_sc = SequenceCollection([
+            RNA('GAUUACA', id="abc1"),
+            RNA('UUG', id="abc2"),
+            RNA('U-----UGCC--', id="abc3")
+        ])
+        exp_id_map = {'abc1': 'r1', 'abc2': 'r2', 'abc3': 'r3'}
+        obs_sc, obs_id_map = self.s2.update_ids(prefix='abc')
+        self._assert_sequence_collections_equal(obs_sc, exp_sc)
+        self.assertEqual(obs_id_map, exp_id_map)
+
+        # empty
+        obs_sc, obs_id_map = self.empty.update_ids(prefix='abc')
+        self._assert_sequence_collections_equal(obs_sc, self.empty)
+        self.assertEqual(obs_id_map, {})
+
+    def test_update_ids_fn_parameter(self):
+        def append_42(ids):
+            return [id_ + '-42' for id_ in ids]
+
+        # 3 seqs
+        exp_sc = SequenceCollection([
+            RNA('GAUUACA', id="r1-42"),
+            RNA('UUG', id="r2-42"),
+            RNA('U-----UGCC--', id="r3-42")
+        ])
+        exp_id_map = {'r1-42': 'r1', 'r2-42': 'r2', 'r3-42': 'r3'}
+        obs_sc, obs_id_map = self.s2.update_ids(fn=append_42)
+        self._assert_sequence_collections_equal(obs_sc, exp_sc)
+        self.assertEqual(obs_id_map, exp_id_map)
+
+        # empty
+        obs_sc, obs_id_map = self.empty.update_ids(fn=append_42)
+        self._assert_sequence_collections_equal(obs_sc, self.empty)
+        self.assertEqual(obs_id_map, {})
+
+    def test_update_ids_ids_parameter(self):
+        # 3 seqs
+        exp_sc = SequenceCollection([
+            RNA('GAUUACA', id="abc"),
+            RNA('UUG', id="def"),
+            RNA('U-----UGCC--', id="ghi")
+        ])
+        exp_id_map = {'abc': 'r1', 'def': 'r2', 'ghi': 'r3'}
+        obs_sc, obs_id_map = self.s2.update_ids(ids=('abc', 'def', 'ghi'))
+        self._assert_sequence_collections_equal(obs_sc, exp_sc)
+        self.assertEqual(obs_id_map, exp_id_map)
+
+        # empty
+        obs_sc, obs_id_map = self.empty.update_ids(ids=[])
+        self._assert_sequence_collections_equal(obs_sc, self.empty)
+        self.assertEqual(obs_id_map, {})
+
+    def test_update_ids_sequence_attributes_propagated(self):
+        # 1 seq
+        exp_sc = Alignment([
+            DNA('ACGT', id="abc", description='desc', quality=range(4))
+        ])
+        exp_id_map = {'abc': 'seq1'}
+
+        obj = Alignment([
+            DNA('ACGT', id="seq1", description='desc', quality=range(4))
+        ])
+
+        obs_sc, obs_id_map = obj.update_ids(ids=('abc',))
+        self._assert_sequence_collections_equal(obs_sc, exp_sc)
+        self.assertEqual(obs_id_map, exp_id_map)
+
+        # 2 seqs
+        exp_sc = Alignment([
+            DNA('ACGT', id="abc", description='desc1', quality=range(4)),
+            DNA('TGCA', id="def", description='desc2', quality=range(4)[::-1])
+        ])
+        exp_id_map = {'abc': 'seq1', 'def': 'seq2'}
+
+        obj = Alignment([
+            DNA('ACGT', id="seq1", description='desc1', quality=(0, 1, 2, 3)),
+            DNA('TGCA', id="seq2", description='desc2', quality=(3, 2, 1, 0))
+        ])
+
+        obs_sc, obs_id_map = obj.update_ids(ids=('abc', 'def'))
+        self._assert_sequence_collections_equal(obs_sc, exp_sc)
+        self.assertEqual(obs_id_map, exp_id_map)
 
     def test_update_ids_invalid_parameter_combos(self):
         with self.assertRaisesRegexp(SequenceCollectionError, 'ids and fn'):
