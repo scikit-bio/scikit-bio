@@ -1624,12 +1624,27 @@ class Alignment(SequenceCollection):
     def to_phylip(self, map_labels=False, label_prefix=""):
         """Return phylip-formatted string representing the `SequenceCollection`
 
+        .. note:: Deprecated in scikit-bio 0.2.0-dev
+           ``Alignment.to_phylip`` will be removed in scikit-bio 0.3.0. It is
+           replaced by ``Alignment.write``, which is a more general method for
+           serializing alignments. ``Alignment.write`` supports multiple file
+           formats by taking advantage of scikit-bio's I/O registry system. See
+           :mod:`skbio.io` for more details.
+
         Returns
         -------
         str
-            A phylip-formatted string representing the `SequenceCollection`.
+            A phylip-formatted string representing the `Alignment`.
+
+        See Also
+        --------
+        write
 
         """
+        warn("Alignment.to_phylip is deprecated and will be removed in "
+             "scikit-bio 0.3.0. Please update your code to use "
+             "Alignment.write.", UserWarning)
+
         if not self._validate_lengths():
             raise SequenceCollectionError("PHYLIP-formatted string can only "
                                           "be generated if all sequences are "

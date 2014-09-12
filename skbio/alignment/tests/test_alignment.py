@@ -820,14 +820,13 @@ class AlignmentTests(TestCase):
         self.assertEqual(self.empty.sequence_length(), 0)
 
     def test_to_phylip(self):
-        """to_phylip functions as expected
-        """
         d1 = DNASequence('..ACC-GTTGG..', id="d1")
         d2 = DNASequence('TTACCGGT-GGCC', id="d2")
         d3 = DNASequence('.-ACC-GTTGC--', id="d3")
         a = Alignment([d1, d2, d3])
 
-        phylip_str, id_map = a.to_phylip(map_labels=False)
+        phylip_str, id_map = npt.assert_warns(UserWarning, a.to_phylip,
+                                              map_labels=False)
         self.assertEqual(id_map, {'d1': 'd1',
                                   'd3': 'd3',
                                   'd2': 'd2'})
@@ -838,14 +837,14 @@ class AlignmentTests(TestCase):
         self.assertEqual(phylip_str, expected)
 
     def test_to_phylip_map_labels(self):
-        """to_phylip functions as expected with label mapping
-        """
         d1 = DNASequence('..ACC-GTTGG..', id="d1")
         d2 = DNASequence('TTACCGGT-GGCC', id="d2")
         d3 = DNASequence('.-ACC-GTTGC--', id="d3")
         a = Alignment([d1, d2, d3])
 
-        phylip_str, id_map = a.to_phylip(map_labels=True, label_prefix="s")
+        phylip_str, id_map = npt.assert_warns(UserWarning, a.to_phylip,
+                                              map_labels=True,
+                                              label_prefix="s")
         self.assertEqual(id_map, {'s1': 'd1',
                                   's3': 'd3',
                                   's2': 'd2'})
@@ -862,11 +861,11 @@ class AlignmentTests(TestCase):
         a = Alignment([d1, d2, d3])
 
         with self.assertRaises(SequenceCollectionError):
-            a.to_phylip()
+            npt.assert_warns(UserWarning, a.to_phylip)
 
     def test_to_phylip_no_sequences(self):
         with self.assertRaises(SequenceCollectionError):
-            Alignment([]).to_phylip()
+            npt.assert_warns(UserWarning, Alignment([]).to_phylip)
 
     def test_to_phylip_no_positions(self):
         d1 = DNASequence('', id="d1")
@@ -874,11 +873,9 @@ class AlignmentTests(TestCase):
         a = Alignment([d1, d2])
 
         with self.assertRaises(SequenceCollectionError):
-            a.to_phylip()
+            npt.assert_warns(UserWarning, a.to_phylip)
 
     def test_validate_lengths(self):
-        """
-        """
         self.assertTrue(self.a1._validate_lengths())
         self.assertTrue(self.a2._validate_lengths())
         self.assertTrue(self.empty._validate_lengths())
