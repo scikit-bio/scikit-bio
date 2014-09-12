@@ -76,31 +76,6 @@ def write_clustal(records, fh):
     fh: open file object
         An open Clustal file.
 
-    Returns
-    -------
-    None
-
-    We can use the following code:
-    >>> import sys
-    >>> from skbio.parse.sequences import write_clustal
-    >>> clustal_f = [("abc","GCAUGCAUCUGCAUACGUACGUACGCAUGCA"
-    ...                     "GUCGAUACAUACGUACGUCGGUACGU-CGAC"),
-    ...              ("def","-------------------------------"
-    ...                     "---------------CGUGCAUGCAU-CGAU"),
-    ...              ("xyz","-------------------------------"
-    ...                     "-----------CAUUCGUACGUACGCAUGAC")]
-    >>> write_clustal(clustal_f,sys.stdout) #doctest: +NORMALIZE_WHITESPACE
-    CLUSTAL
-    <BLANKLINE>
-    abc GCAUGCAUCUGCAUACGUACGUACGCAUGCAGUCGAUACAUACGUACGUCGGUACGU-CG
-    def ----------------------------------------------CGUGCAUGCAU-CG
-    xyz ------------------------------------------CAUUCGUACGUACGCAUG
-    <BLANKLINE>
-    abc AC
-    def AU
-    xyz AC
-    <BLANKLINE>
-
     """
     clen = 60
     records = list(records)
