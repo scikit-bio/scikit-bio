@@ -805,7 +805,11 @@ def _apply_read(cls):
     if read_formats:
         @classmethod
         def read(cls, fp, format=None, **kwargs):
-            """Read %s from a file.
+            """Create a new ``%s`` instance from a file.
+
+            This is a convenience method for :mod:`skbio.io.read`. For more
+            information about the I/O system in scikit-bio, please see
+            :mod:`skbio.io`.
 
             Supported file formats include:
 
@@ -813,14 +817,26 @@ def _apply_read(cls):
 
             Parameters
             ----------
-            fp : filepath, filehandle, or iterable of either
-                File(s) to read.
+            fp: filepath, filehandle, or iterable of either
+                The location to read the given `format`. Filepaths are
+                automatically closed when read; filehandles are the
+                responsibility of the caller. If `format` is a compound format,
+                then `fp` **must** be an iterable of the same length as the
+                compound format.
             format : str or iterable of str, optional
-                File format to be read. If `format` is None, will attempt to
+                The format must be a format name with a reader for ``%s``.
+                In the case of compound formats, any order of the simple
+                formats will work as long as `fp` follows the same order.
+                If a `format` is not provided or is None, it will attempt to
                 guess the format.
             kwargs : dict, optional
                 Keyword arguments passed to :mod:`skbio.io.read` and the file
-                format reader.
+                format reader for ``%s``.
+
+            Returns
+            -------
+            %s
+                A new instance.
 
             See Also
             --------
@@ -834,6 +850,9 @@ def _apply_read(cls):
         read.__func__.__doc__ = read.__func__.__doc__ % (
             cls.__name__,
             _formats_for_docs(read_formats),
+            cls.__name__,
+            cls.__name__,
+            cls.__name__,
             _import_paths(read_formats)
         )
         cls.read = read
@@ -850,7 +869,11 @@ def _apply_write(cls):
                 " '%s'." % cls.__name__)
 
         def write(self, fp, format=cls.default_write_format, **kwargs):
-            """Write %s as a file.
+            """Write an instance of ``%s`` to a file.
+
+            This is a convenience method for :mod:`skbio.io.write`. For more
+            information about the I/O system in scikit-bio, please see
+            :mod:`skbio.io`.
 
             Supported file formats include:
 
@@ -859,9 +882,12 @@ def _apply_write(cls):
             Parameters
             ----------
             fp : filepath or filehandle
-                File to write to.
-            format : str, optional
-                File format to write.
+                The location to write the given `format` into. Filepaths are
+                automatically closed when written; filehandles are the
+                responsibility of the caller.
+            format : str
+                The format must be a registered format name with a writer for
+                ``%s``.
                 Default is `'%s'`.
             kwargs : dict, optional
                 Keyword arguments passed to :mod:`skbio.io.write` and the
@@ -879,6 +905,7 @@ def _apply_write(cls):
         write.__doc__ = write.__doc__ % (
             cls.__name__,
             _formats_for_docs(write_formats),
+            cls.__name__,
             cls.default_write_format,
             _import_paths(write_formats)
         )
@@ -886,9 +913,20 @@ def _apply_write(cls):
 
 
 def _import_paths(formats):
-    return '\n'.join('skbio.io.' + fmt for fmt in formats)
+    lines = []
+    for fmt in formats:
+        fmts = _factor_format(fmt)
+        lines += ("skbio.io." + fmt for fmt in fmts)
+    return '\n'.join(lines)
 
 
 def _formats_for_docs(formats):
-    return '\n'.join(
-        "- ``'%s'`` (:mod:`skbio.io.%s`)" % (fmt, fmt) for fmt in formats)
+    lines = []
+    for fmt in formats:
+        fmts = _factor_format(fmt)
+        if len(fmts) > 1:
+            lines.append("- ``%s`` (%s)" % (
+                fmts, ', '.join(":mod:`skbio.io.%s`" % s for s in fmts)))
+        else:
+            lines.append("- ``'%s'`` (:mod:`skbio.io.%s`)" % (fmt, fmt))
+    return '\n'.join(lines)

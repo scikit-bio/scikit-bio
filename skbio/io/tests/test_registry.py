@@ -1297,7 +1297,11 @@ class TestInitializeOOPInterface(RegistryTest):
 
         @self.module.register_reader('favfmt2', self.unassuming_class)
         def fvfmt2_to_unasumming_class(fh):
-            pass
+            return
+
+        @self.module.register_reader('c1, c2', self.unassuming_class)
+        def compound_reader(fh):
+            return
 
         self.module.initialize_oop_interface()
 
@@ -1308,18 +1312,23 @@ class TestInitializeOOPInterface(RegistryTest):
 
         self.assertIn('favfmt', self.unassuming_class.read.__doc__)
         self.assertIn('favfmt2', self.unassuming_class.read.__doc__)
+        self.assertIn("['c1', 'c2']", self.unassuming_class.read.__doc__)
 
     def test_writers_only(self):
         @self.module.register_writer('favfmt', self.class_with_default)
         def favfmt(fh):
-            return
+            pass
 
         @self.module.register_writer('favfmt')
         def gen_to_favfmt(fh):
-            yield
+            pass
 
         @self.module.register_writer('favfmt2', self.class_with_default)
         def favfmt2(fh):
+            pass
+
+        @self.module.register_writer('c1, c2', self.class_with_default)
+        def compound_writer(fh):
             pass
 
         self.module.initialize_oop_interface()
@@ -1331,15 +1340,16 @@ class TestInitializeOOPInterface(RegistryTest):
 
         self.assertIn('favfmt', self.class_with_default.write.__doc__)
         self.assertIn('favfmt2', self.class_with_default.write.__doc__)
+        self.assertIn("['c1', 'c2']", self.class_with_default.write.__doc__)
 
     def test_writers_no_default_format(self):
         @self.module.register_writer('favfmt', self.unassuming_class)
         def favfmt(fh):
-            return
+            pass
 
         @self.module.register_writer('favfmt')
         def gen_to_favfmt(fh):
-            yield
+            pass
 
         @self.module.register_writer('favfmt2', self.unassuming_class)
         def favfmt2(fh):
@@ -1364,19 +1374,19 @@ class TestInitializeOOPInterface(RegistryTest):
 
         @self.module.register_reader('favfmt2', self.unassuming_class)
         def fvfmt2_to_unasumming_class(fh):
-            pass
+            return
 
         @self.module.register_reader('favfmt2', self.class_with_default)
         def fvfmt2_to_class_w_default(fh):
-            pass
+            return
 
         @self.module.register_writer('favfmt', self.class_with_default)
         def favfmt(fh):
-            return
+            pass
 
         @self.module.register_writer('favfmt')
         def gen_to_favfmt(fh):
-            yield
+            pass
 
         @self.module.register_writer('favfmt2', self.class_with_default)
         def favfmt2(fh):
