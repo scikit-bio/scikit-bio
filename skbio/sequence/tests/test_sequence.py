@@ -9,9 +9,11 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
+from future import standard_library
+standard_library.install_hooks()
 
 from collections import Counter, defaultdict
-from itertools import izip_longest
+from itertools import zip_longest
 from unittest import TestCase, main
 
 import numpy as np
@@ -194,7 +196,7 @@ class BiologicalSequenceTests(TestCase):
         self.assertRaises(StopIteration, lambda: next(b1_iter))
 
     def _compare_k_words_results(self, observed, expected):
-        for obs, exp in izip_longest(observed, expected, fillvalue=None):
+        for obs, exp in zip_longest(observed, expected, fillvalue=None):
             # use equals to compare quality, id, description, sequence, and
             # type
             self.assertTrue(obs.equals(exp))
