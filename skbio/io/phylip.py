@@ -99,10 +99,13 @@ improve readability), and both upper and lower case characters are supported.
    ``skbio.alignment.Alignment``), both are supported when writing a
    PHYLIP-formatted file.
 
-   scikit-bio will split up each sequence into chunks that are 10 characters
-   long. Each chunk will be separated by a space. The sequence will always
-   appear on a single line (sequential format). It will *not* be wrapped
-   across multiple lines.
+   When writing a PHYLIP-formatted file, scikit-bio will split up each sequence
+   into chunks that are 10 characters long. Each chunk will be separated by a
+   single space. The sequence will always appear on a single line (sequential
+   format). It will *not* be wrapped across multiple lines. Sequences are
+   chunked in this manner for improved readability, and because most example
+   PHYLIP files are chunked in a similar way (e.g., see the example file
+   above). Note that this chunking is not required by the PHYLIP format.
 
 Examples
 --------
@@ -130,9 +133,6 @@ sequence-2A--GTCGAA- GTACCT
 <BLANKLINE>
 >>> fh.close()
 
-Note that we used ``StringIO`` to fake a filehandle for this example. Real
-filehandles and filepaths are also supported.
-
 Notice that the 16-character sequences were split into two chunks, and that
 each sequence appears on a single line (sequential format). Also note that each
 sequence ID is padded with spaces to 10 characters in order to produce a fixed
@@ -157,7 +157,7 @@ sequence IDs have 10 or fewer characters. Found sequence with ID \
 One way to work around this is to update the IDs to be shorter. The recommended
 way of accomplishing this is via ``Alignment.update_ids``, which provides a
 flexible way of creating a new ``Alignment`` with updated IDs. For example, to
-remap each of the IDs to monotonically-increasing integers starting from 1:
+remap each of the IDs to integer-based IDs:
 
 >>> short_id_aln, _ = long_id_aln.update_ids()
 >>> short_id_aln.ids()
@@ -203,6 +203,7 @@ from skbio.io import register_writer, PhylipFormatError
 @register_writer('phylip', Alignment)
 def _alignment_to_phylip(obj, fh):
     if not obj.is_valid():
+        # TODO update this error message when #670 is resolved
         raise PhylipFormatError(
             "Alignment can only be written in PHYLIP format if all sequences "
             "are of equal length and contain only valid characters within "
@@ -225,7 +226,9 @@ def _alignment_to_phylip(obj, fh):
             raise PhylipFormatError(
                 "Alignment can only be written in PHYLIP format if all "
                 "sequence IDs have %d or fewer characters. Found sequence "
-                "with ID '%s' that exceeds this limit." % (chunk_size, id_))
+                "with ID '%s' that exceeds this limit. Use "
+                "Alignment.update_ids to assign shorter IDs." %
+                (chunk_size, id_))
 
     sequence_count = obj.sequence_count()
     fh.write('{0:d} {1:d}\n'.format(sequence_count, sequence_length))

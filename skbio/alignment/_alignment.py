@@ -471,7 +471,7 @@ class SequenceCollection(object):
 
         Parameters
         ----------
-        id: str
+        id : str
             The id of the sequence to return.
 
         Returns
@@ -527,8 +527,8 @@ class SequenceCollection(object):
         function that maps current IDs to new IDs (`fn`).
 
         Default behavior (if `ids` and `fn` are not provided) is to create new
-        IDs that are monotonically-increasing integers (starting from 1) cast
-        as strings, optionally preceded by `prefix`.
+        IDs that are unique postive integers (starting at 1) cast as strings,
+        optionally preceded by `prefix`. For example, ``('1', '2', '3', ...)``.
 
         Parameters
         ----------
@@ -539,8 +539,7 @@ class SequenceCollection(object):
             sequence of new IDs to update on the sequence collection.
         prefix : str, optional
             If `ids` and `fn` are both ``None``, `prefix` is prepended to each
-            new monotonically-increasing ID (see description of default
-            behavior above).
+            new integer-based ID (see description of default behavior above).
 
         Returns
         -------
@@ -581,8 +580,7 @@ class SequenceCollection(object):
         ['abc', 'def']
 
         Update the IDs in the sequence collection, obtaining a new sequence
-        collection with IDs that are monotonically-increasing integers starting
-        from 1:
+        collection with IDs that are integer-based:
 
         >>> s2, new_to_old_ids = s1.update_ids()
         >>> s2.ids()

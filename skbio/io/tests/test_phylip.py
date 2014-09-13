@@ -101,7 +101,7 @@ class AlignmentWriterTests(TestCase):
                 _alignment_to_phylip(invalid_obj, fh)
 
             # ensure nothing was written to the file before the error was
-            # thrown
+            # thrown. TODO remove this check when #674 is resolved
             obs = fh.getvalue()
             fh.close()
             self.assertEqual(obs, '')
