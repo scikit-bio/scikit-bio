@@ -12,13 +12,16 @@ from future.utils.six import StringIO, string_types
 import csv
 import warnings
 from copy import deepcopy
+from importlib import import_module
 
 import numpy as np
 import pandas as pd
 from scipy.spatial.distance import squareform
 
-import skbio.io
 from skbio.stats import p_value_to_str
+
+# This will be the responsibility of the ABC in the future.
+import_module('skbio.io')
 
 
 class DissimilarityMatrixError(Exception):
@@ -92,68 +95,9 @@ class DissimilarityMatrix(object):
     .. [1] http://docs.scipy.org/doc/scipy/reference/spatial.distance.html
 
     """
-
+    default_write_format = 'dm'
     # Used in __str__
     _matrix_element_name = 'dissimilarity'
-
-    @classmethod
-    def read(cls, fp, **kwargs):
-        """Load dissimilarity matrix from file.
-
-        Creates a ``DissimilarityMatrix`` (or subclass) instance from a
-        supported file format.
-
-        Supported file formats include:
-
-        - ``dm`` (:mod:`skbio.io.dm`)
-
-        Parameters
-        ----------
-        fp : filepath or filehandle
-            File to read from.
-        kwargs : dict, optional
-            Keyword arguments passed to :mod:`skbio.io.read` and the file
-            format reader.
-
-        Returns
-        -------
-        DissimilarityMatrix
-            Instance of type `cls` containing the parsed contents of `fp`.
-
-        See Also
-        --------
-        write
-        skbio.io.dm
-        skbio.io.read
-
-        """
-        return skbio.io.read(fp, into=cls, **kwargs)
-
-    def write(self, fp, format='dm', **kwargs):
-        """Save dissimilarity matrix to file.
-
-        Supported file formats include:
-
-        - ``dm`` (:mod:`skbio.io.dm`)
-
-        Parameters
-        ----------
-        fp : filepath or filehandle
-            File to write to.
-        format : str, optional
-            File format to write.
-        kwargs : dict, optional
-            Keyword arguments passed to :mod:`skbio.io.write` and the file
-            format writer.
-
-        See Also
-        --------
-        read
-        skbio.io.dm
-        skbio.io.write
-
-        """
-        skbio.io.write(self, into=fp, format=format, **kwargs)
 
     @classmethod
     def from_file(cls, dm_f, delimiter='\t'):
