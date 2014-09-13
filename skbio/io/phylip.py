@@ -151,7 +151,8 @@ Traceback (most recent call last):
     ...
 PhylipFormatError: Alignment can only be written in PHYLIP format if all \
 sequence IDs have 10 or fewer characters. Found sequence with ID \
-'long-sequence-2' that exceeds this limit.
+'long-sequence-2' that exceeds this limit. Use Alignment.update_ids to assign \
+shorter IDs.
 >>> fh.close()
 
 One way to work around this is to update the IDs to be shorter. The recommended
