@@ -148,6 +148,8 @@ class BiologicalSequenceTests(TestCase):
         b = BiologicalSequence('ACGT', id='foo', description='bar')
         self.assertTrue(b[2:].equals(
             BiologicalSequence('GT', id='foo', description='bar')))
+        self.assertTrue(b[2].equals(
+            BiologicalSequence('G', id='foo', description='bar')))
 
     def test_getitem_indices(self):
         # no ordering, repeated items
@@ -157,6 +159,9 @@ class BiologicalSequenceTests(TestCase):
         # empty list
         self.assertTrue(self.b1[[]].equals(BiologicalSequence('', quality=())))
 
+        # empty tuple
+        self.assertTrue(self.b1[()].equals(BiologicalSequence('', quality=())))
+
         # single item
         self.assertTrue(
             self.b1[[2]].equals(BiologicalSequence('T', quality=(2,))))
@@ -165,10 +170,18 @@ class BiologicalSequenceTests(TestCase):
         self.assertTrue(self.b1[[2, -2, 4]].equals(
             BiologicalSequence('TCA', quality=(2, 5, 4))))
 
-    def test_getitem_wrong_type(self):
-        with self.assertRaises(TypeError):
-            self.b1[1, 2, 3]
+        # tuple
+        self.assertTrue(self.b1[1, 2, 3].equals(
+            BiologicalSequence('ATT', quality=(1, 2, 3))))
+        self.assertTrue(self.b1[(1, 2, 3)].equals(
+            BiologicalSequence('ATT', quality=(1, 2, 3))))
 
+        # test a sequence without quality scores
+        self.assertTrue(self.b2[5, 4, 1].equals(
+            BiologicalSequence('TGC', id='test-seq-2',
+                               description='A test sequence')))
+
+    def test_getitem_wrong_type(self):
         with self.assertRaises(TypeError):
             self.b1['1']
 

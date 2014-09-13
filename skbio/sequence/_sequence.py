@@ -11,7 +11,6 @@ from future.utils.six import string_types
 
 from collections import Sequence, Counter, defaultdict
 from itertools import product
-from numbers import Integral
 
 import numpy as np
 from scipy.spatial.distance import hamming
@@ -278,10 +277,10 @@ class BiologicalSequence(Sequence):
 
         Parameters
         ----------
-        i : int, slice, or list of ints
+        i : int, slice, or sequence of ints
             The position(s) to return from the `BiologicalSequence`. If `i` is
-            a list of ints, these are assumed to be indices in the sequence to
-            keep.
+            a sequence of ints, these are assumed to be indices in the sequence
+            to keep.
 
         Returns
         -------
@@ -314,20 +313,20 @@ class BiologicalSequence(Sequence):
         .. shownumpydoc
 
         """
-        # TODO update this method when #60 is resolved
-        if not (isinstance(i, Integral) or isinstance(i, slice) or
-                isinstance(i, list)):
-            raise TypeError("Unsupported type of item accessor (%r). Only "
-                            "integers, slices, and lists of integers are "
-                            "currently supported." % type(i))
-
+        # TODO update this method when #60 is resolved. we have to deal with
+        # discrepancies in indexing rules between str and ndarray... hence the
+        # ugly code
         try:
-            qual = self.quality[i] if self.has_quality() else None
-
             try:
                 seq = self.sequence[i]
+                qual = self.quality[i] if self.has_quality() else None
             except TypeError:
                 seq = [self.sequence[idx] for idx in i]
+
+                if self.has_quality():
+                    qual = [self.quality[idx] for idx in i]
+                else:
+                    qual = None
         except IndexError:
             raise IndexError(
                 "Position %r is out of range for %r." % (i, self))
