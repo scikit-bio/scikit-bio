@@ -805,49 +805,9 @@ def _apply_read(cls):
     if read_formats:
         @classmethod
         def read(cls, fp, format=None, **kwargs):
-            """Create a new ``%s`` instance from a file.
-
-            This is a convenience method for :mod:`skbio.io.read`. For more
-            information about the I/O system in scikit-bio, please see
-            :mod:`skbio.io`.
-
-            Supported file formats include:
-
-            %s
-
-            Parameters
-            ----------
-            fp: filepath, filehandle, or iterable of either
-                The location to read the given `format`. Filepaths are
-                automatically closed when read; filehandles are the
-                responsibility of the caller. If `format` is a compound format,
-                then `fp` **must** be an iterable of the same length as the
-                compound format.
-            format : str or iterable of str, optional
-                The format must be a format name with a reader for ``%s``.
-                In the case of compound formats, any order of the simple
-                formats will work as long as `fp` follows the same order.
-                If a `format` is not provided or is None, it will attempt to
-                guess the format.
-            kwargs : dict, optional
-                Keyword arguments passed to :mod:`skbio.io.read` and the file
-                format reader for ``%s``.
-
-            Returns
-            -------
-            %s
-                A new instance.
-
-            See Also
-            --------
-            write
-            skbio.io.read
-            %s
-
-            """
             return skbio_io_read(fp, into=cls, format=format, **kwargs)
 
-        read.__func__.__doc__ = read.__func__.__doc__ % (
+        read.__func__.__doc__ = _read_docstring % (
             cls.__name__,
             _formats_for_docs(read_formats),
             cls.__name__,
@@ -869,40 +829,9 @@ def _apply_write(cls):
                 " '%s'." % cls.__name__)
 
         def write(self, fp, format=cls.default_write_format, **kwargs):
-            """Write an instance of ``%s`` to a file.
-
-            This is a convenience method for :mod:`skbio.io.write`. For more
-            information about the I/O system in scikit-bio, please see
-            :mod:`skbio.io`.
-
-            Supported file formats include:
-
-            %s
-
-            Parameters
-            ----------
-            fp : filepath or filehandle
-                The location to write the given `format` into. Filepaths are
-                automatically closed when written; filehandles are the
-                responsibility of the caller.
-            format : str
-                The format must be a registered format name with a writer for
-                ``%s``.
-                Default is `'%s'`.
-            kwargs : dict, optional
-                Keyword arguments passed to :mod:`skbio.io.write` and the
-                file format writer.
-
-            See Also
-            --------
-            read
-            skbio.io.write
-            %s
-
-            """
             skbio_io_write(self, into=fp, format=format, **kwargs)
 
-        write.__doc__ = write.__doc__ % (
+        write.__doc__ = _write_docstring % (
             cls.__name__,
             _formats_for_docs(write_formats),
             cls.__name__,
@@ -930,3 +859,77 @@ def _formats_for_docs(formats):
         else:
             lines.append("- ``'%s'`` (:mod:`skbio.io.%s`)" % (fmt, fmt))
     return '\n'.join(lines)
+
+
+_read_docstring = """Create a new ``%s`` instance from a file.
+
+This is a convenience method for :mod:`skbio.io.read`. For more
+information about the I/O system in scikit-bio, please see
+:mod:`skbio.io`.
+
+Supported file formats include:
+
+%s
+
+Parameters
+----------
+fp: filepath, filehandle, or iterable of either
+    The location to read the given `format`. Filepaths are
+    automatically closed when read; filehandles are the
+    responsibility of the caller. If `format` is a compound format,
+    then `fp` **must** be an iterable of the same length as the
+    compound format.
+format : str or iterable of str, optional
+    The format must be a format name with a reader for ``%s``.
+    In the case of compound formats, any order of the simple
+    formats will work as long as `fp` follows the same order.
+    If a `format` is not provided or is None, it will attempt to
+    guess the format.
+kwargs : dict, optional
+    Keyword arguments passed to :mod:`skbio.io.read` and the file
+    format reader for ``%s``.
+
+Returns
+-------
+%s
+    A new instance.
+
+See Also
+--------
+write
+skbio.io.read
+%s
+
+"""
+
+_write_docstring = """Write an instance of ``%s`` to a file.
+
+This is a convenience method for :mod:`skbio.io.write`. For more
+information about the I/O system in scikit-bio, please see
+:mod:`skbio.io`.
+
+Supported file formats include:
+
+%s
+
+Parameters
+----------
+fp : filepath or filehandle
+    The location to write the given `format` into. Filepaths are
+    automatically closed when written; filehandles are the
+    responsibility of the caller.
+format : str
+    The format must be a registered format name with a writer for
+    ``%s``.
+    Default is `'%s'`.
+kwargs : dict, optional
+    Keyword arguments passed to :mod:`skbio.io.write` and the
+    file format writer.
+
+See Also
+--------
+read
+skbio.io.write
+%s
+
+"""
