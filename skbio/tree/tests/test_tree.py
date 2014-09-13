@@ -950,21 +950,6 @@ class TreeTests(TestCase):
             t = TreeNode.from_file(t_io)
             self.assertEqual(list('abcdefg'), [n.name for n in t.postorder()])
 
-    def test_io(self):
-        # Very basic check that read/write public API is present and appears to
-        # be functioning. Roundtrip from memory -> disk -> memory and ensure
-        # results match.
-        fh = StringIO('(a_b,c_d)e_f;')
-        expected = fh.getvalue() + "\n"
-        deserialized = TreeNode.read(fh)
-        reserialized = StringIO()
-        deserialized.write(reserialized)
-        reserialized.seek(0)
-        self.assertEqual(reserialized.getvalue(), expected)
-        self.assertTrue(type(deserialized) == TreeNode)
-        fh.close()
-        reserialized.close()
-
     def test_linkage_matrix(self):
         # Ensure matches: http://www.southampton.ac.uk/~re1u06/teaching/upgma/
         id_list = ['A', 'B', 'C', 'D', 'E', 'F', 'G']

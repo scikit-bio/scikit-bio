@@ -1266,6 +1266,186 @@ class TestWrite(RegistryTest):
             self.assertEqual("1\n2\n3\n4", fh.read())
 
 
+class TestInitializeOOPInterface(RegistryTest):
+    def setUp(self):
+        super(TestInitializeOOPInterface, self).setUp()
+
+        class UnassumingClass(object):
+            pass
+
+        class ClassWithDefault(object):
+            default_write_format = 'favfmt'
+
+        self.unassuming_class = UnassumingClass
+        self.class_with_default = ClassWithDefault
+
+    def test_no_readers_writers(self):
+        self.module.initialize_oop_interface()
+        self.assertFalse(hasattr(self.unassuming_class, 'read'))
+        self.assertFalse(hasattr(self.unassuming_class, 'write'))
+        self.assertFalse(hasattr(self.class_with_default, 'read'))
+        self.assertFalse(hasattr(self.class_with_default, 'write'))
+
+    def test_readers_only(self):
+        @self.module.register_reader('favfmt', self.unassuming_class)
+        def fvfmt_to_unasumming_class(fh):
+            return
+
+        @self.module.register_reader('favfmt')
+        def fvfmt_to_gen(fh):
+            yield
+
+        @self.module.register_reader('favfmt2', self.unassuming_class)
+        def fvfmt2_to_unasumming_class(fh):
+            return
+
+        @self.module.register_reader('c1, c2', self.unassuming_class)
+        def compound_reader(fh):
+            return
+
+        self.module.initialize_oop_interface()
+
+        self.assertTrue(hasattr(self.unassuming_class, 'read'))
+        self.assertFalse(hasattr(self.unassuming_class, 'write'))
+        self.assertFalse(hasattr(self.class_with_default, 'read'))
+        self.assertFalse(hasattr(self.class_with_default, 'write'))
+
+        self.assertIn('favfmt', self.unassuming_class.read.__doc__)
+        self.assertIn('favfmt2', self.unassuming_class.read.__doc__)
+        self.assertIn("['c1', 'c2']", self.unassuming_class.read.__doc__)
+
+    def test_writers_only(self):
+        @self.module.register_writer('favfmt', self.class_with_default)
+        def favfmt(fh):
+            pass
+
+        @self.module.register_writer('favfmt')
+        def gen_to_favfmt(fh):
+            pass
+
+        @self.module.register_writer('favfmt2', self.class_with_default)
+        def favfmt2(fh):
+            pass
+
+        @self.module.register_writer('c1, c2', self.class_with_default)
+        def compound_writer(fh):
+            pass
+
+        self.module.initialize_oop_interface()
+
+        self.assertFalse(hasattr(self.unassuming_class, 'read'))
+        self.assertFalse(hasattr(self.unassuming_class, 'write'))
+        self.assertFalse(hasattr(self.class_with_default, 'read'))
+        self.assertTrue(hasattr(self.class_with_default, 'write'))
+
+        self.assertIn('favfmt', self.class_with_default.write.__doc__)
+        self.assertIn('favfmt2', self.class_with_default.write.__doc__)
+        self.assertIn("['c1', 'c2']", self.class_with_default.write.__doc__)
+
+    def test_writers_no_default_format(self):
+        @self.module.register_writer('favfmt', self.unassuming_class)
+        def favfmt(fh):
+            pass
+
+        @self.module.register_writer('favfmt')
+        def gen_to_favfmt(fh):
+            pass
+
+        @self.module.register_writer('favfmt2', self.unassuming_class)
+        def favfmt2(fh):
+            pass
+        with self.assertRaises(NotImplementedError) as cm:
+            self.module.initialize_oop_interface()
+
+        self.assertIn('default_write_format', str(cm.exception))
+
+    def test_readers_writers(self):
+        @self.module.register_reader('favfmt', self.unassuming_class)
+        def fvfmt_to_unasumming_class(fh):
+            return
+
+        @self.module.register_reader('favfmt', self.class_with_default)
+        def fvfmt_to_class_w_default(fh):
+            return
+
+        @self.module.register_reader('favfmt')
+        def fvfmt_to_gen(fh):
+            yield
+
+        @self.module.register_reader('favfmt2', self.unassuming_class)
+        def fvfmt2_to_unasumming_class(fh):
+            return
+
+        @self.module.register_reader('favfmt2', self.class_with_default)
+        def fvfmt2_to_class_w_default(fh):
+            return
+
+        @self.module.register_writer('favfmt', self.class_with_default)
+        def favfmt(fh):
+            pass
+
+        @self.module.register_writer('favfmt')
+        def gen_to_favfmt(fh):
+            pass
+
+        @self.module.register_writer('favfmt2', self.class_with_default)
+        def favfmt2(fh):
+            pass
+
+        self.module.initialize_oop_interface()
+
+        self.assertTrue(hasattr(self.unassuming_class, 'read'))
+        self.assertFalse(hasattr(self.unassuming_class, 'write'))
+
+        self.assertTrue(hasattr(self.class_with_default, 'read'))
+        self.assertTrue(hasattr(self.class_with_default, 'write'))
+
+        self.assertIn('favfmt', self.unassuming_class.read.__doc__)
+        self.assertIn('favfmt2', self.unassuming_class.read.__doc__)
+
+        self.assertIn('favfmt', self.class_with_default.read.__doc__)
+        self.assertIn('favfmt2', self.class_with_default.read.__doc__)
+
+        self.assertIn('favfmt', self.class_with_default.write.__doc__)
+        self.assertIn('favfmt2', self.class_with_default.write.__doc__)
+
+    def test_read_kwargs_passed(self):
+        self.was_called = False
+
+        @self.module.register_sniffer('favfmt')
+        def fvfmt_sniffer(fh):
+            return True, {}
+
+        @self.module.register_reader('favfmt', self.class_with_default)
+        def fvfmt_to_class_w_default(fh, **kwargs):
+            self.assertEqual('a', kwargs['a'])
+            self.assertEqual(123, kwargs['b'])
+            self.was_called = True
+
+        self.module.initialize_oop_interface()
+        fh = StringIO()
+        self.class_with_default.read(fh, a='a', b=123)
+
+        self.assertTrue(self.was_called)
+        fh.close()
+
+    def test_write_kwargs_passed(self):
+        self.was_called = False
+
+        @self.module.register_writer('favfmt', self.class_with_default)
+        def favfmt(obj, fh, **kwargs):
+            self.assertEqual('a', kwargs['a'])
+            self.assertEqual(123, kwargs['b'])
+            self.was_called = True
+
+        self.module.initialize_oop_interface()
+        fh = StringIO()
+        self.class_with_default().write(fh, a='a', b=123)
+
+        self.assertTrue(self.was_called)
+        fh.close()
+
+
 class TestEmptyFileSniffer(unittest.TestCase):
     def test_blank_file(self):
         fh = StringIO()

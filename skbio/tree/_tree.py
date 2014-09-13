@@ -17,17 +17,20 @@ from copy import deepcopy
 from itertools import combinations
 from functools import reduce
 from collections import defaultdict
-from future.utils.six import StringIO
+from importlib import import_module
 
 import numpy as np
 from scipy.stats import pearsonr
 from future.builtins import zip
+from future.utils.six import StringIO
 
-import skbio.io
 from skbio.stats.distance import DistanceMatrix
 from skbio.io import RecordError
 from ._exception import (NoLengthError, DuplicateNodeError, NoParentError,
                          MissingNodeError, TreeError)
+
+# This will be the responsibility of the ABC in the future.
+import_module('skbio.io')
 
 
 def distance_from_r(m1, m2):
@@ -50,7 +53,6 @@ def distance_from_r(m1, m2):
 
 
 class TreeNode(object):
-
     r"""Representation of a node within a tree
 
     A `TreeNode` instance stores links to its parent and optional children
@@ -83,7 +85,7 @@ class TreeNode(object):
     id
 
     """
-
+    default_write_format = 'newick'
     _exclude_from_copy = set(['parent', 'children', '_tip_cache',
                               '_non_tip_cache'])
 
@@ -173,65 +175,6 @@ class TreeNode(object):
     def __getitem__(self, i):
         r"""Node delegates slicing to `children`."""
         return self.children[i]
-
-    @classmethod
-    def read(cls, fp, **kwargs):
-        """Load TreeNode from file.
-
-        Creates a ``TreeNode`` (or subclass) instance from a
-        supported file format.
-
-        Supported file formats include:
-
-        - ``newick`` (:mod:`skbio.io.newick`)
-
-        Parameters
-        ----------
-        fp : filepath or filehandle
-            File to read from.
-        kwargs : dict, optional
-            Keyword arguments passed to :mod:`skbio.io.read` and the file
-            format reader.
-
-        Returns
-        -------
-        TreeNode
-            Instance of type `cls` containing the parsed contents of `fp`.
-
-        See Also
-        --------
-        write
-        skbio.io.newick
-        skbio.io.read
-
-        """
-        return skbio.io.read(fp, into=cls, **kwargs)
-
-    def write(self, fp, format='newick', **kwargs):
-        """Save TreeNode to file.
-
-        Supported file formats include:
-
-        - ``newick`` (:mod:`skbio.io.newick`)
-
-        Parameters
-        ----------
-        fp : filepath or filehandle
-            File to write to.
-        format : str, optional
-            File format to write.
-        kwargs : dict, optional
-            Keyword arguments passed to :mod:`skbio.io.write` and the file
-            format writer.
-
-        See Also
-        --------
-        read
-        skbio.io.newick
-        skbio.io.write
-
-        """
-        skbio.io.write(self, into=fp, format=format, **kwargs)
 
     def _adopt(self, node):
         r"""Update `parent` references but does NOT update `children`."""

@@ -11,6 +11,7 @@ from future.builtins import zip
 
 import warnings
 from functools import partial
+from importlib import import_module
 
 import numpy as np
 import matplotlib as mpl
@@ -22,7 +23,8 @@ Axes3D
 from IPython.core.pylabtools import print_figure
 from IPython.display import Image, SVG
 
-import skbio.io
+# This will be the responsibility of the ABC in the future.
+import_module('skbio.io')
 
 
 class OrdinationResults(object):
@@ -55,6 +57,7 @@ class OrdinationResults(object):
     svg
 
     """
+    default_write_format = 'ordres'
 
     def __init__(self, eigvals, species=None, site=None, biplot=None,
                  site_constraints=None, proportion_explained=None,
@@ -67,112 +70,6 @@ class OrdinationResults(object):
         self.proportion_explained = proportion_explained
         self.species_ids = species_ids
         self.site_ids = site_ids
-
-    @classmethod
-    def read(cls, fp, **kwargs):
-        r"""Load ordination results from file.
-
-        Creates an ``OrdinationResults`` instance from a supported file format.
-
-        Supported file formats include:
-
-        - ``ordres`` (:mod:`skbio.io.ordres`)
-
-        Parameters
-        ----------
-        fp : filepath or filehandle
-            File to read from.
-        kwargs : dict, optional
-            Keyword arguments passed to :mod:`skbio.io.read` and the file
-            format reader.
-
-        Returns
-        -------
-        OrdinationResults
-            Instance of type `cls` containing the parsed contents of `fp`.
-
-        See Also
-        --------
-        write
-        skbio.io.ordres
-        skbio.io.read
-
-        Examples
-        --------
-        Assume we have the following tab-delimited text file storing the
-        ordination results in ``ordres`` format::
-
-            Eigvals\t2
-            0.0961330159181\t0.0409418140138
-
-            Proportion explained\t0
-
-            Species\t3\t2
-            Species1\t0.408869425742\t0.0695518116298
-            Species2\t-0.1153860437\t-0.299767683538
-            Species3\t-0.309967102571\t0.187391917117
-
-            Site\t3\t2
-            Site1\t-0.848956053187\t0.882764759014
-            Site2\t-0.220458650578\t-1.34482000302
-            Site3\t1.66697179591\t0.470324389808
-
-            Biplot\t0\t0
-
-            Site constraints\t0\t0
-
-        Load the ordination results from the file:
-
-        >>> from StringIO import StringIO
-        >>> from skbio.stats.ordination import OrdinationResults
-        >>> or_f = StringIO("Eigvals\t2\n"
-        ...                 "0.0961330159181\t0.0409418140138\n"
-        ...                 "\n"
-        ...                 "Proportion explained\t0\n"
-        ...                 "\n"
-        ...                 "Species\t3\t2\n"
-        ...                 "Species1\t0.408869425742\t0.0695518116298\n"
-        ...                 "Species2\t-0.1153860437\t-0.299767683538\n"
-        ...                 "Species3\t-0.309967102571\t0.187391917117\n"
-        ...                 "\n"
-        ...                 "Site\t3\t2\n"
-        ...                 "Site1\t-0.848956053187\t0.882764759014\n"
-        ...                 "Site2\t-0.220458650578\t-1.34482000302\n"
-        ...                 "Site3\t1.66697179591\t0.470324389808\n"
-        ...                 "\n"
-        ...                 "Biplot\t0\t0\n"
-        ...                 "\n"
-        ...                 "Site constraints\t0\t0\n")
-        >>> ord_res = OrdinationResults.read(or_f)
-
-        """
-        return skbio.io.read(fp, into=cls, **kwargs)
-
-    def write(self, fp, format='ordres', **kwargs):
-        """Save ordination results to file.
-
-        Supported file formats include:
-
-        - ``ordres`` (:mod:`skbio.io.ordres`)
-
-        Parameters
-        ----------
-        fp : filepath or filehandle
-            File to write to.
-        format : str, optional
-            File format to write.
-        kwargs : dict, optional
-            Keyword arguments passed to :mod:`skbio.io.write` and the file
-            format writer.
-
-        See Also
-        --------
-        read
-        skbio.io.ordres
-        skbio.io.write
-
-        """
-        skbio.io.write(self, into=fp, format=format, **kwargs)
 
     @classmethod
     def from_file(cls, ord_res_f):
