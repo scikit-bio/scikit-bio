@@ -873,7 +873,7 @@ Supported file formats include:
 
 Parameters
 ----------
-fp: filepath, filehandle, or iterable of either
+fp : filepath, filehandle, or iterable of either
     The location to read the given `format`. Filepaths are
     automatically closed when read; filehandles are the
     responsibility of the caller. If `format` is a compound format,
