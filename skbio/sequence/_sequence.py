@@ -317,9 +317,9 @@ class BiologicalSequence(Sequence):
         # TODO update this method when #60 is resolved
         if not (isinstance(i, Integral) or isinstance(i, slice) or
                 isinstance(i, list)):
-            raise TypeError("Unsupported type of item accessor. Only "
+            raise TypeError("Unsupported type of item accessor (%r). Only "
                             "integers, slices, and lists of integers are "
-                            "currently supported.")
+                            "currently supported." % type(i))
 
         try:
             qual = self.quality[i] if self.has_quality() else None
