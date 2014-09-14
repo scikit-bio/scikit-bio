@@ -171,7 +171,6 @@ Exceptions
 
 .. autosummary::
    :toctree: generated/
-
    FastqParseError
 
 """
