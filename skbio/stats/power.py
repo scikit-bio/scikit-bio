@@ -22,9 +22,10 @@ values (i.e. sample ids) and returns a p-value.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # -----------------------------------------------------------------------------
+from __future__ import division
 from future.utils import viewitems
 from numpy import (array, zeros, ones, round as nround, hstack, isnan, ndarray,
-                   nan, nanmean, nanstd, sqrt)
+                   nan, nanmean, nanstd, sqrt, arange)
 from numpy.random import choice
 from scipy.stats import t
 from statsmodels.stats.power import FTestAnovaPower
@@ -40,40 +41,6 @@ rcParams['font.sans-serif'] = ['Helvetica', 'Arial']
 rcParams['text.usetex'] = True
 
 
-def collate_effect_size(counts, powers, alpha):
-    """ """
-
-    if isinstance(powers, ndarray):
-        powers = [powers]
-    num_powers = len(powers)
-    # Prealocates the output arrays
-    effects = array(num_powers, counts.shape[0])
-
-    # Iterates through the powers and calculates the effect sizes
-    for id2, count in enumerate(counts):
-        for id1, pwr in enumerate(powers):
-            try:
-                effects[id1, id2] = ft.solve_power(effect_size=None,
-                                                   nobs=count,
-                                                   alpha=alpha,
-                                                   power=pwr[id2])
-            except:
-                effects[id1, id2] = nan
-
-    # Calculates the mean effect for each group
-    effect_means = zeros((num_powers))
-    effect_bounds = zeros((num_powers))
-    for id1 in xrange(num_powers):
-        if isnan(effects[id1, :]).all():
-            effect_means[id1] = nan
-            effect_bounds[id1] = nan
-        else:
-            effect_means[id1] = nanmean(effects[id1, :])
-            effect_bounds[id1] = _confidence_bound(effects[id1, :],
-                                                   alpha=alpha)
-    return effect_means, effect_bounds
-
-
 def _check_strs(x):
     r"""Determines if x is a string, number or nan"""
 
@@ -87,36 +54,49 @@ def _check_strs(x):
         raise TypeError('input must be a string, float or a nan')
 
 
-def _confidence_bound(vec, alpha=0.05, df=None):
+def _confidence_bound(vec, alpha=0.05, df=None, axis=None):
     r"""Calculates a confidence bound assuming a normal distribution
 
     Parameters
     ----------
-    vec : 1d array
+    vec : array
 
     alpha : {0.05, float}
         the critical value
 
-    df : {None, float}
+    df : {None, float}, optional
         the degrees of freedom associated with the distribution. If None is
-        given, df is assumed to be the number elements in the vector - 1.
+        given, df is assumed to be the number elements in specified axis.
+
+    axis : {None, unsigned int}, optional
+        Default is None. The axis over which to take the devation.
 
     Return
     ------
     bound : float
-        the confidence bound around the mean
+        the confidence bound around the mean. The confidence interval is
+        [mean - bound, mean + bound].
 
     """
 
     # Determines the number of non-nan counts
-    num_counts = len(vec) - isnan(vec).sum()
+    vec_shape = vec.shape
+    if axis is None or len(vec_shape) == 1:
+        num_counts = vec_shape[0] - isnan(vec).sum()
+        axis = None
+    elif axis is None:
+        num_counts = vec_shape[0] * vec_shape[1] - isnan(vec).sum()
+    else:
+        num_counts = vec_shape[axis] - isnan(vec).sum() / \
+            (vec_shape[0] * vec_shape[1])
 
     # Gets the df if not supplied
     if df is None:
         df = num_counts - 1
 
     # Calculates the bound
-    bound = nanstd(vec) / sqrt(num_counts - 1) * t.ppf((1 - alpha / 2), df)
+    bound = nanstd(vec, axis=axis) / sqrt(num_counts - 1) * \
+        t.ppf(1 - alpha / 2, df)
 
     return bound
 
@@ -713,3 +693,100 @@ def plot_effects(effect_means, effect_bounds, labels, sample_counts, **kwargs):
 
     # Returns the figure
     return fig
+
+
+def collate_effect_size(counts, powers, alpha):
+    """Calculates the effects for power values
+
+    Parameters
+    ----------
+    counts : array
+        the number of samples used to calculate the power
+
+    powers : {list, ndarray}
+        list of arrays of power values. If there are multiple power arrays,
+        each power array should have the same dimensions. If samples are
+        missing, these should be deonted by a nan.
+
+    alpha : float
+        the critical value used to calculate the power.
+
+    Returns
+    -------
+    effect_means : 1d array
+    effect_bounds : 1d array
+
+    Raises
+    ------
+    TypeError
+        if counts is not a one-dimensional array
+    ValueError
+        if the arrays in powers have different shapes
+    ValueError
+        if the length of the power arrays and the length of the count arrays
+        are different
+    """
+
+    # Gets power information
+    if isinstance(powers, ndarray):
+        powers = [powers]
+    if len(powers) == 1:
+        shapes = [powers[0].shape]
+        shape_check = array([True])
+    else:
+        shapes = [pwr.shape for pwr in powers]
+        shape_check = array([shapes[i - 1] == shapes[i] for i in
+                             arange(1, len(powers) - 1, 1)])
+
+    # Checks the shape of the power and dimensions
+    num_powers = len(powers)
+    num_counts = counts.shape[0]
+    if not len(counts.shape) == 1:
+        raise TypeError('counts must be a 1d array.')
+    if not shape_check.any():
+        raise ValueError('All power arrays must have the same shape.')
+    power_shape = shapes[0]
+    if not power_shape[0] == num_counts:
+        raise ValueError('Each power entry must have a corresponding count.')
+
+    # Prealocates the output arrays
+    effect_means = zeros((num_powers))
+    effect_bounds = zeros((num_powers))
+
+    # Iterates through the powers and calculates the effect sizes
+    for idp, pwr in enumerate(powers):
+        # Calculates the effect size for the power array
+        eff = zeros((power_shape))
+        for id2, count in enumerate(counts):
+            if len(power_shape) == 1:
+                if isnan(pwr[id2]):
+                    eff[id2] = nan
+                    continue
+                try:
+                    eff[id2] = ft.solve_power(effect_size=None,
+                                              nobs=count,
+                                              alpha=alpha,
+                                              power=pwr[id2])
+                except:
+                    eff[id2] = nan
+
+            for id1 in xrange(power_shape[1]):
+                if isnan(pwr[id1, id2]):
+                    eff[id1, id2] = nan
+                    continue
+                try:
+                    eff[id1, id2] = ft.solve_power(effect_size=None,
+                                                   nobs=count,
+                                                   alpha=alpha,
+                                                   power=pwr[id1, id2])
+                except:
+                    eff[id1, id2] = nan
+        # Caluclates the mean and bound
+        if isnan(eff).all():
+            effect_means[idp] = nan
+            effect_bounds[idp] = nan
+        else:
+            effect_means[idp] = nanmean(eff)
+            effect_bounds[idp] = _confidence_bound(eff, alpha)
+
+    return effect_means, effect_bounds

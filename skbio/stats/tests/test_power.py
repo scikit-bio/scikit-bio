@@ -3,7 +3,7 @@
 
 from __future__ import division
 from unittest import TestCase, main
-from numpy import ones, power, array, arange, nan
+from numpy import ones, power, array, arange, nan, isnan
 import numpy.random
 from numpy.testing import (assert_almost_equal,
                            assert_array_equal,
@@ -18,7 +18,8 @@ from skbio.stats.power import (_check_strs,
                                bootstrap_power_curve,
                                get_signifigant_subsample,
                                get_paired_subsamples,
-                               plot_effects)
+                               plot_effects,
+                               collate_effect_size)
 
 
 class PowerAnalysisTest(TestCase):
@@ -51,9 +52,26 @@ class PowerAnalysisTest(TestCase):
                 'BB': {'RANGE': 'C', 'SEX': 'M', 'AGE': '40s', 'ABX': 'Y'}}
 
         self.meta = DataFrame.from_dict(meta, orient='index')
-        self.effects = array([0.25, 0.35, 0.45, 0.55])
-        self.bounds = array([0.045] * 4)
-        self.labels = array(['Range', 'Sex', 'Age', 'Abx'])
+        self.counts = array([5, 15, 25, 35, 45])
+        self.powers = [array([[0.105, 0.137, 0.174, 0.208, 0.280],
+                              [0.115, 0.135, 0.196, 0.204, 0.281],
+                              [0.096, 0.170, 0.165, 0.232, 0.256],
+                              [0.122, 0.157, 0.202, 0.250, 0.279],
+                              [0.132, 0.135, 0.173, 0.203, 0.279]]),
+                       array([[0.157, 0.345, 0.522, 0.639, 0.739],
+                              [0.159, 0.374, 0.519, 0.646, 0.757],
+                              [0.161, 0.339, 0.532, 0.634, 0.745],
+                              [0.169, 0.372, 0.541, 0.646, 0.762],
+                              [0.163, 0.371, 0.522, 0.648, 0.746]]),
+                       array([[0.276, 0.626, 0.865, 0.927, 0.992],
+                              [0.267, 0.667, 0.848, 0.937, 0.978],
+                              [0.236, 0.642, 0.850, 0.935, 0.977],
+                              [0.249, 0.633, 0.828, 0.955, 0.986],
+                              [0.249, 0.663, 0.869, 0.951, 0.985]])]
+        self.power_alpha = 0.1
+        self.effects = array([0.15245, 0.34877, 0.55830])
+        self.bounds = array([0.03905, 0.00895, 0.02241])
+        self.labels = array(['Range', 'Sex', 'Abx'])
 
     # def test__check_strs_str(self):
     #     """Test check_strs returns sanely when passed a string"""
@@ -76,19 +94,47 @@ class PowerAnalysisTest(TestCase):
         # Sets the know confidence bound
         known = 2.1658506
         test = _confidence_bound(self.s1)
-        assert_almost_equal(test, known, 5)
+        assert_almost_equal(test, known, 3)
 
     def test__confidence_bound_df(self):
         """Checks a custom df for confidence_bound"""
         known = 2.0407076
         test = _confidence_bound(self.s1, df=15)
-        assert_almost_equal(known, test, 5)
+        assert_almost_equal(known, test, 3)
 
     def test__confidence_bound_alpha(self):
         """Checks a custom df for confidence_bound"""
         known = 3.111481
         test = _confidence_bound(self.s1, alpha=0.01)
-        assert_almost_equal(known, test, 5)
+        assert_almost_equal(known, test, 3)
+
+    def test__confidence_bound_nan(self):
+        """Tests _confidence_bound can handle nans"""
+        # Sets the value to test
+        samples = array([[4, 3.2, 3.05],
+                         [2, 2.8, 2.95],
+                         [5, 2.9, 3.07],
+                         [1, 3.1, 2.93],
+                         [3, nan, 3.00]])
+        # Sets the know value
+        known = array([1.9931, 0.2228, 0.07668])
+        # Tests the function
+        test = _confidence_bound(samples, axis=0)
+        assert_almost_equal(known, test, 3)
+
+    def test__confidence_bound_axis_none(self):
+        """Tests _confidence_bound can handle a None axis"""
+        # Sets the value to test
+        samples = array([[4, 3.2, 3.05],
+                         [2, 2.8, 2.95],
+                         [5, 2.9, 3.07],
+                         [1, 3.1, 2.93],
+                         [3, nan, 3.00]])
+        # Sest the known value
+        known = 1.5617
+        # Tests the output
+        test = _confidence_bound(samples, axis=None)
+        assert_almost_equal(known, test, 3)
 
     # def test__calculate_power(self):
     #     """Tests calculate_power is sane"""
@@ -249,6 +295,56 @@ class PowerAnalysisTest(TestCase):
     #     # Checks error is triggered when labels is a different shape
     #     self.assertRaises(ValueError, plot_effects, self.effects, self.bounds,
     #                       ones((2, 2)), arange(5, 50, 5))
+
+    def test_collate_effect_size_counts_shape_error(self):
+        """Checks collate_effect_size errors when counts is not a 1d array"""
+        self.assertRaises(TypeError, collate_effect_size, self.powers[0],
+                          self.powers, self.power_alpha)
+
+    def test_collate_effect_size_different_power_shapes(self):
+        """Checks collate_effect_size errors when power shapes are unequal"""
+        powers = [ones((5)), ones((5, 2))]
+        self.assertRaises(ValueError, collate_effect_size, self.counts,
+                          powers, self.power_alpha)
+
+    def test_collate_effect_size_power_and_counts_not_same_lenght(self):
+        """Checks error is thrown when there is not a power for each count"""
+        powers = [ones(4)]
+        self.assertRaises(ValueError, collate_effect_size, self.counts,
+                          powers, self.power_alpha)
+
+    def test_collate_effect_size_list(self):
+        """Checks collate_effect_size returns sanely for a list of powers"""
+        # Calulates the test value
+        test_m, test_b = collate_effect_size(self.counts,
+                                             self.powers,
+                                             self.power_alpha)
+        # Checks the test values
+        assert_almost_equal(self.effects, test_m, 4)
+        assert_almost_equal(self.bounds, test_b, 4)
+
+    def test_collate_effect_size_array(self):
+        """Checks collate_effect_size returns sanely for a power array."""
+        # Sets the know values
+        known_m = self.effects[2]
+        known_b = self.bounds[2]
+        # Calulates the test value
+        test_m, test_b = collate_effect_size(self.counts,
+                                             self.powers[2],
+                                             self.power_alpha)
+        # Checks the test values
+        assert_almost_equal(known_m, test_m, 4)
+        assert_almost_equal(known_b, test_b, 4)
+
+    def test_collate_effect_size_nans(self):
+        """Checks collate_effect_size responds correctly to nans"""
+        powers = [ones((5))*nan]
+        test_m, test_b = collate_effect_size(self.counts,
+                                             powers,
+                                             self.power_alpha)
+        self.assertTrue(isnan(test_m).all())
+        self.assertTrue(isnan(test_b).all())
+
 
 
 if __name__ == '__main__':
