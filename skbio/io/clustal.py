@@ -94,7 +94,7 @@ def _msa_to_clustal(records, fh):
 
 @register_reader('clustal')
 def _clustal_to_msa(fh, strict=True):
-    r"""yields labels and sequences
+    r"""yields labels and sequences from msa (multiple sequence alignment)
 
     Parameters
     ----------
@@ -148,7 +148,7 @@ def _clustal_to_msa(fh, strict=True):
     We can use the following code:
 
     >>> from StringIO import StringIO
-    >>> from skbio.parse.sequences import parse_clustal
+    >>> from skbio.io import _clustal_to_msa
     >>> clustal_f = StringIO('abc   GCAUGCAUCUGCAUACGUACGUACGCAUGCA 60\n'
     ...                      'def   -------------------------------\n'
     ...                      'xyz   -------------------------------\n'

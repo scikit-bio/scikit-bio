@@ -18,6 +18,7 @@ Supported File Formats
    dm
    ordres
    newick
+   phylip
 
 User Functions
 --------------
@@ -42,6 +43,7 @@ User Exceptions
    DMFormatError
    OrdResFormatError
    NewickFormatError
+   PhylipFormatError
 
 User Warnings
 -------------
@@ -112,7 +114,7 @@ from ._warning import FormatIdentificationWarning, ArgumentOverrideWarning
 from ._exception import (DuplicateRegistrationError, InvalidRegistrationError,
                          RecordError, FieldError, UnrecognizedFormatError,
                          FileFormatError, DMFormatError, OrdResFormatError,
-                         NewickFormatError)
+                         NewickFormatError, PhylipFormatError)
 from ._registry import (write, read, sniff, get_writer, get_reader,
                         get_sniffer, list_write_formats, list_read_formats,
                         register_writer, register_reader, register_sniffer,
@@ -132,7 +134,8 @@ __all__ = ['write', 'read', 'sniff',
            'FileFormatError',
            'DMFormatError',
            'OrdResFormatError',
-           'NewickFormatError']
+           'NewickFormatError',
+           'PhylipFormatError']
 
 # Necessary to import each file format module to have them added to the I/O
 # registry. We use import_module instead of a typical import to avoid flake8
@@ -141,6 +144,7 @@ import_module('skbio.io.dm')
 import_module('skbio.io.ordres')
 import_module('skbio.io.newick')
 import_module('skbio.io.clustal')
+import_module('skbio.io.phylip')
 
 # Now that all of our I/O has loaded, we can add the object oriented methods
 # (read and write) to each class which has registered I/O operations.
