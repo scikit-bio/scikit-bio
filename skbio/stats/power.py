@@ -22,14 +22,61 @@ values (i.e. sample ids) and returns a p-value.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # -----------------------------------------------------------------------------
-
-from numpy import ndarray, array, zeros, ones, round as nround, hstack, isnan
+from future.utils import viewitems
+from numpy import (array, zeros, ones, round as nround, hstack, isnan, ndarray,
+                   nan, nanmean, nanstd, sqrt)
 from numpy.random import choice
-from scipy.stats import sem, t
+from scipy.stats import t
+from statsmodels.stats.power import FTestAnovaPower
+from matplotlib import rcParams
+
+# Gets a power solving instance
+ft = FTestAnovaPower()
+
+# Sets up plotting parameters so that the default setting is use to Helvetica
+# in plots
+rcParams['font.family'] = 'sans-serif'
+rcParams['font.sans-serif'] = ['Helvetica', 'Arial']
+rcParams['text.usetex'] = True
+
+
+def collate_effect_size(counts, powers, alpha):
+    """ """
+
+    if isinstance(powers, ndarray):
+        powers = [powers]
+    num_powers = len(powers)
+    # Prealocates the output arrays
+    effects = array(num_powers, counts.shape[0])
+
+    # Iterates through the powers and calculates the effect sizes
+    for id2, count in enumerate(counts):
+        for id1, pwr in enumerate(powers):
+            try:
+                effects[id1, id2] = ft.solve_power(effect_size=None,
+                                                   nobs=count,
+                                                   alpha=alpha,
+                                                   power=pwr[id2])
+            except:
+                effects[id1, id2] = nan
+
+    # Calculates the mean effect for each group
+    effect_means = zeros((num_powers))
+    effect_bounds = zeros((num_powers))
+    for id1 in xrange(num_powers):
+        if isnan(effects[id1, :]).all():
+            effect_means[id1] = nan
+            effect_bounds[id1] = nan
+        else:
+            effect_means[id1] = nanmean(effects[id1, :])
+            effect_bounds[id1] = _confidence_bound(effects[id1, :],
+                                                   alpha=alpha)
+    return effect_means, effect_bounds
 
 
 def _check_strs(x):
     r"""Determines if x is a string, number or nan"""
+
     if isinstance(x, str):
         return True
     elif isnan(x):
@@ -45,7 +92,7 @@ def _confidence_bound(vec, alpha=0.05, df=None):
 
     Parameters
     ----------
-    vec : 1d array-like
+    vec : 1d array
 
     alpha : {0.05, float}
         the critical value
@@ -61,12 +108,15 @@ def _confidence_bound(vec, alpha=0.05, df=None):
 
     """
 
+    # Determines the number of non-nan counts
+    num_counts = len(vec) - isnan(vec).sum()
+
     # Gets the df if not supplied
     if df is None:
-        df = len(vec) - 1
+        df = num_counts - 1
 
     # Calculates the bound
-    bound = sem(vec)*t.ppf((1-alpha/2), df)
+    bound = nanstd(vec) / sqrt(num_counts - 1) * t.ppf((1 - alpha / 2), df)
 
     return bound
 
@@ -78,10 +128,13 @@ def _calculate_power(p_values, alpha=0.05):
     ----------
     p_values : 1d array-like
     alpha : float
+        the critical value for the power calculation
 
     Returns
     -------
     power : float
+        the emperical power, or the fraction of observed p values below the
+        critical value
 
     """
     if isinstance(p_values, list):
@@ -92,7 +145,7 @@ def _calculate_power(p_values, alpha=0.05):
     return w
 
 
-def compare_distributions(test, samples, num_samps=5, num_iter=1000):
+def compare_distributions(test, samples, counts=5, num_iter=1000):
     r"""Compares two distribution arrays iteratively
 
     Parameters
@@ -105,36 +158,41 @@ def compare_distributions(test, samples, num_samps=5, num_iter=1000):
         samples can be a list of lists or an array where each sublist or row in
         the array corresponds to a sampled group.
 
-    num_samps : {10, int, vector}
-        the number of samples to draw from each distribution. If this is a
-        vector, the length must correspond to the number of samples.
+    counts : {unsigned int, 1d array}, optional
+        Default is 5. The number of samples to draw from each distribution.
+        If this is a 1d array, the length must correspond to the number of
+        samples.
 
-    num_iter : {1000, int}
-        the number of p-values to generate for each point on the curve
+    num_iter : int, optional
+        Default 1000. The number of p-values to generate for each point on the
+        curve.
 
     Returns
     -------
     p_values : array
         the bootstrapped p-values
 
+    Raises
+    ------
+    ValueError
+        if counts is a 1d array and counts and samples are different lengths
 
     """
     # Determines the number of groups
     num_groups = len(samples)
 
     # Handles the number of samples for later instances
-    if isinstance(num_samps, int):
-        num_samps = array([num_samps]*num_groups)
-    elif isinstance(num_samps, int) and len(num_samps) == 1:
-        num_samps = array([num_samps*num_groups])
-    elif isinstance(num_samps, ndarray) and len(num_samps) == 1:
-        num_samps = num_samps*ones(num_groups)
+    if isinstance(counts, int):
+        counts = array([counts]*num_groups)
+    elif not len(counts) == num_groups:
+        raise ValueError('If counts is a 1d array, there must be a count to '
+                         'draw for each group.')
 
     # Prealocates the pvalue matrix
     p_values = zeros((num_iter))
 
     for idx in range(num_iter):
-        subs = [choice(array(pop), num_samps[i], replace=False)
+        subs = [choice(array(pop), counts[i], replace=False)
                 for i, pop in enumerate(samples)]
         p_values[idx] = test(subs)
 
@@ -142,8 +200,10 @@ def compare_distributions(test, samples, num_samps=5, num_iter=1000):
 
 
 def calculate_power_curve(test, samples, sample_counts, ratio=None,
-                          num_iter=1000, alpha=0.05):
-    """Generates an empirical power curve for the samples
+    num_iter=1000, alpha=0.05):
+    """Generates an empirical power curve for the samples.
+
+
 
     Parameters
     ----------
@@ -155,20 +215,27 @@ def calculate_power_curve(test, samples, sample_counts, ratio=None,
         samples can be a list of lists or an array where each sublist or row in
         the array corresponds to a sampled group.
 
-    sample_counts : {vector}
+    sample_counts : 1d array
         A vector of the number of samples which should be sampled in each curve
 
-    ratio : {None, vector}
+    ratio : {None, 1d array}
         The fraction of the sample counts which should be assigned to each
         group. This must be a none-type object, or the same length as samples.
 
-    num_iter : {1000, int}
-        the number of p-values to generate for each point on the curve
+    num_iter : int
+        The default is 1000. The number of p-values to generate for each point
+        on the curve.
 
     Returns
     -------
     p_values : array
         the bootstrapped p-values
+
+    Raises
+    ------
+    ValueError
+        if ratio is an array and ratio is not the same length as samples
+
     """
 
     # Determines the number of groups
@@ -203,9 +270,8 @@ def calculate_power_curve(test, samples, sample_counts, ratio=None,
 
 
 def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
-                          alpha=0.05, num_iter=500, num_runs=10):
-    """
-    Repeatedly calculates the power curve for a specified alpha level
+    alpha=0.05, num_iter=500, num_runs=10):
+    r"""Repeatedly calculates the power curve for a specified alpha level
 
     Parameters
     ----------
@@ -217,29 +283,30 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
         samples can be a list of lists or an array where each sublist or row in
         the array corresponds to a sampled group.
 
-    sample_counts : {vector}
+    sample_counts : 1d array
         A vector of the number of samples which should be sampled in each curve
 
-    ratio : {None, vector}
+    ratio : {None, 1d array}
         The fraction of the sample counts which should be assigned to each
         group. This must be a none-type object, or the same length as samples.
 
-    num_iter : {1000, int}
-        the number of p-values to generate for each point on the curve
+    num_iter : unsigned int
+        Default is 1000. The number of p-values to generate for each point
+        on the curve.
 
-    num_runs : {5, int}
-        the number of times to calculate each curve
+    num_runs : unsigned int
+        Default is 5. The number of times to calculate each curve.
 
     Returns
     -------
-    p_mean : vector
+    p_mean : 1d array
         the mean p-values from the iterations
 
     p_std : vector
         the variance in the p-values
 
-    Examples
-    --------
+    Example
+    -------
     Suppose we have 100 samples randomly drawn from two normal distribitions,
     the first with mean 0 and standard devation 1, and the second with mean 3
     and standard deviation 1.5
@@ -293,7 +360,7 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
 
 
 def get_signifigant_subsample(tests, samples, sub_size=None, p_crit=0.05,
-                              num_rounds=500, p_scaling=5):
+    num_rounds=500, p_scaling=5):
     """
     Subsamples data to an even sample number for all groups
 
@@ -379,7 +446,7 @@ def get_signifigant_subsample(tests, samples, sub_size=None, p_crit=0.05,
 
 
 def get_paired_subsamples(meta, cat, control_cats, order=None, strict=True):
-    """Gets a set samples to serve as controls
+    r"""Gets a set samples to serve as controls
 
     Parameters
     ----------
@@ -390,25 +457,48 @@ def get_paired_subsamples(meta, cat, control_cats, order=None, strict=True):
 
     control_cats : list
         the metadata categories to be used as controls. For example, if you
-        wanted to control age ('cat' = "AGE"), you might want to control for
-        gender and health status (i.e. 'control_cats' = ["SEX", "HEALTHY"])
+        wanted to control age (`cat` = "AGE"), you might want to control for
+        gender and health status (i.e. `control_cats` = ["SEX", "HEALTHY"])
 
     order : {None, list}
-        the order of groups in the category. This can be used to limit the
-        groups selected. For example, if there's a category with groups 'A',
-        'B' and 'C', and you only want to look at A vs B, 'order' would be set
-        to ['A', 'B']
+        Default is None. The order of groups in the category. This can be used
+        to limit the groups selected. For example, if there's a category with
+        groups 'A', 'B' and 'C', and you only want to look at A vs B, `order`
+        would be set to ['A', 'B'].
 
-    strict: {True, False}
-        if a missing value (nan) is encountered, the group will be skipped when
-        'strict' is True.
+    strict: bool
+        Default is True. If a missing value (nan) is encountered, the group
+        will be skipped when 'strict' is True.
 
     Returns
     -------
     ids : array
         a set of arrays which satisfy the criteria. These are not grouped by
-        cat.
+        cat. An empty array indicates there are no sample ids which satisfy
+        the requirements.
 
+    Example
+    -------
+    If we have a mapping file for a set of random samples looking at housing,
+    sex, age and antibiotic use.
+
+    >>> import pandas as pd
+    >>> meta = {'NR': {'HOUSING': '2', 'SEX': 'F', 'AGE': nan, 'ABX': 'Y'},
+    ...         'MH': {'HOUSING': '3', 'SEX': 'F', 'AGE': '30s', 'ABX': 'Y'},
+    ...         'PP': {'HOUSING': '2', 'SEX': 'F', 'AGE': '30s', 'ABX': 'N'},
+    ...         'CD': {'HOUSING': '3', 'SEX': 'F', 'AGE': '30s', 'ABX': 'Y'},
+    ...         'MM': {'HOUSING': '1', 'SEX': 'F', 'AGE': '30s', 'ABX': 'Y'},
+    ...         'SW': {'HOUSING': '2', 'SEX': 'M', 'AGE': nan, 'ABX': 'N'},
+    ...         'TS': {'HOUSING': '2', 'SEX': 'M', 'AGE': '40s', 'ABX': 'Y'},
+    ...         'CB': {'HOUSING': '3', 'SEX': 'M', 'AGE': '40s', 'ABX': 'Y'},
+    ...         'BB': {'HOUSING': '1', 'SEX': 'M', 'AGE': '40s', 'ABX': 'Y'}}
+    >>>  meta = pd.DataFrame.from_dict(meta)
+
+    Let's say we want to vary housing, controlling for sex, age, antibiotics
+    and sex.
+    >>> ids = get_paired_subsamples(meta, 'HOUSING', ['SEX', 'AGE', 'ABX'])
+    >>> print ids
+        [['BB'], ['CB'], ['TS']]
 
     """
     # Groups meta by category
@@ -432,7 +522,7 @@ def get_paired_subsamples(meta, cat, control_cats, order=None, strict=True):
 
     ids = [array([])]*num_groups
     # Loops through samples in the experimental group to match for controls
-    for check_group, ctrl_ids in ctrl_group.iteritems():
+    for check_group, ctrl_ids in viewitems(ctrl_group):
         # Checks the categories have been defined
         undefed_check = array([_check_strs(p) for p in check_group])
         if not undefed_check.all() and strict:
@@ -456,3 +546,170 @@ def get_paired_subsamples(meta, cat, control_cats, order=None, strict=True):
                 ids[idx] = hstack((ids[idx], exp_ids[idx]))
 
     return ids
+
+
+def plot_effects(effect_means, effect_bounds, labels, sample_counts, **kwargs):
+    """Makes a power curve plot
+
+    Parameters
+    ----------
+    effect_means: 1d array
+        the mean effect sizes to plots.
+
+    effect_bounds : {None, 1d array}
+        the range used for the confidence interval. If there is no effect to
+        show, this should be None.
+
+    labels : 1d array
+        a list of formatted strings describing the effects, to be used in the
+        legend.
+
+    sample_counts : 1d array
+        the counts where power should be calculated.
+
+    alpha : int, optional
+        Default is 0.05. The critical value for the power curves.
+
+    colormap : {None, array}, optional
+        Default is None. A colormap to use for the lines. Each color
+        designation must appear in a new row. If no colormap is supplied, the
+        defualt colormap will be used.
+
+    grid : bool, optional
+        Default is True. Show grid.
+
+    show_bound : bool
+        Default is True. Shows the confidence bounds on the effect size. If
+        `effect_bounds` is None, no bounds will be shown.
+
+    Returns
+    -------
+    fig : figure
+        a figure with the power curves plotted.
+
+    Other parameters
+    ----------------
+    leg_offset : tuple
+        Changes the legend position.
+
+    tick_size : usigned int
+        sets the font size for tick labels
+
+    label_size : unsigned int
+        sets the font size for the axis labels
+
+    title_size : unsigned int
+        sets the font size for the title
+
+    legend_size : unsigned int
+        sets the font size for enteries in the legend
+
+    """
+    # Sets the keyword properties
+    kwds = {'alpha': 0.05,
+            'colormap': None,
+            'grid': True,
+            'title': '',
+            'show_bound': True,
+            'leg_offset': None,
+            'tick_size': 12,
+            'label_size': 15,
+            'title_size': 18,
+            'legend_size': 11}
+    for key, value in viewitems(kwargs):
+        if key in kwds:
+            kwds[key] = value
+        else:
+            raise ValueError('%s is not a property of plot_effects.' % key)
+
+    # Checks the effect, bound, and mean argument is sane
+    mean_shape = effect_means.shape
+    if effect_bounds is None:
+        kwds['show_bound'] = False
+        effect_bounds = zeros(mean_shape)
+    bound_shape = effect_bounds.shape
+    label_shape = labels.shape
+
+    if not len(mean_shape) == 1:
+        raise ValueError('Effect Mean must be a 1d numpy array')
+    elif mean_shape != bound_shape or mean_shape != label_shape:
+        raise ValueError('There must be a label and bound for each effect.')
+
+    # Plots the the lower bound data
+    fig = ft.plot_power('nobs', sample_counts, effect_means - effect_bounds,
+                        alpha=kwds['alpha'])
+    # Gets the axis of the first plot and its position
+    lax = fig.axes[0]
+    # Makes the lower bound lines dashed and thin, and changes the color if
+    # desired
+    for idx, l in enumerate(lax.get_lines()):
+        l.set_linestyle(':')
+        l.set_linewidth(1.5)
+        if kwds['colormap'] is not None:
+            l.set_color(kwds['colormap'][idx, :])
+    # Hides the x ticks and labels
+    lax.set_title('')
+    lax.set_xticklabels('')
+    lax.set_yticklabels('')
+    lax.set_xlabel('')
+    # Hides the legend
+    lax.get_legend().set_visible(False)
+
+    # Plots the upper bound data
+    uax = fig.add_axes(lax.get_position())
+    fig = ft.plot_power('nobs', sample_counts, effect_means + effect_bounds,
+                        alpha=kwds['alpha'], ax=uax)
+    # Makes the lower bound axes visable, if desired
+    if kwds['show_bound']:
+        uax.set_axis_bgcolor('none')
+    # Makes the lower bound lines dashed and thin, and changes the color if
+    # desired
+    for idx, l in enumerate(uax.get_lines()):
+        l.set_linestyle(':')
+        l.set_linewidth(1.5)
+        if kwds['colormap'] is not None:
+            l.set_color(kwds['colormap'][idx, :])
+    # Hides the x ticks and labels
+    uax.set_title('')
+    uax.set_xticklabels('')
+    uax.set_yticklabels('')
+    uax.set_xlabel('')
+    # Hides the legend
+    uax.get_legend().set_visible(False)
+
+    # Plots the mean data
+    axm = fig.add_axes(lax.get_position())
+    fig = ft.plot_power('nobs', sample_counts, effect_means, ax=axm,
+                        alpha=kwds['alpha'])
+
+    # Shows the confidence bounds, if desired
+    if kwds['show_bound']:
+        axm.set_axis_bgcolor('none')
+
+    # Recolors the lines, if desired
+    if kwds['colormap'] is not None:
+        for idx, l in enumerate(axm.get_lines()):
+            l.set_color(kwds['colormap'][idx, :])
+
+    # Sets up the labels
+    axm.set_xticklabels(map(int, axm.get_xticks()), size=kwds['tick_size'])
+    axm.set_yticklabels(axm.get_yticks(), size=kwds['tick_size'])
+    axm.set_xlabel('Number of Observations', size=kwds['label_size'])
+    axm.set_ylabel('Power of the Test', size=kwds['label_size'])
+    axm.set_title(kwds['title'], size=kwds['title_size'])
+
+    # Adds the grid, if desired
+    if kwds['grid']:
+        axm.grid()
+
+    leg = axm.get_legend()
+    # Sets the legend position
+    if kwds['leg_offset'] is not None:
+        leg.set_bbox_to_anchor(kwds['leg_offset'])
+    # Sets up the legend text
+    for idx, txt in enumerate(leg.get_texts()):
+        txt.set_text(labels[idx])
+        txt.set_size(kwds['legend_size'])
+
+    # Returns the figure
+    return fig
