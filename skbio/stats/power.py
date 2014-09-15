@@ -24,9 +24,9 @@ values (i.e. sample ids) and returns a p-value.
 # -----------------------------------------------------------------------------
 from __future__ import division
 from future.utils import viewitems
-# from copy import deepcopy
+from copy import deepcopy
 from numpy import (array, zeros, ones, round as nround, hstack, isnan, ndarray,
-                   nan, nanmean, nanstd, sqrt, arange)
+                   nan, nanmean, nanstd, sqrt, arange, delete, where)
 from numpy.random import choice
 from scipy.stats import t
 from statsmodels.stats.power import FTestAnovaPower
@@ -40,6 +40,130 @@ ft = FTestAnovaPower()
 rcParams['font.family'] = 'sans-serif'
 rcParams['font.sans-serif'] = ['Helvetica', 'Arial']
 rcParams['text.usetex'] = True
+
+
+def make_power_curves(mode, tests, cats, samples=None, meta=None, **kwargs):
+    """ """
+    # Handles keyword arguments
+    eff_kwds = {'control_cats': None,
+                'order': None,
+                'sub_size': None,
+                'alpha_pwr': 0.05,
+                'min_counts': 20,
+                'max_counts': 50,
+                'count_int': 10,
+                'num_iter': 500,
+                'num_runs': 10,
+                'strict': True,
+                'scaling': 5,
+                'labels': None,
+                'sort_plot': True,
+                'counts': hstack(((2, 5), arange(10, 255, 10)))}
+
+    plot_kwds = {'alpha': 0.05,
+                 'colormap': None,
+                 'grid': True,
+                 'title': '',
+                 'show_bound': True,
+                 'leg_offset': None,
+                 'tick_size': 12,
+                 'label_size': 15,
+                 'title_size': 18,
+                 'legend_size': 11}
+
+    # Loops through keyword arguments
+    for key, value in viewitems(kwargs):
+        if key in eff_kwds:
+            eff_kwds[key] = value
+        elif key in plot_kwds:
+            plot_kwds[key] = value
+        else:
+            raise ValueError('%s is not a supported keyword argument.' % key)
+
+    # Checks the mode argument is sane
+    if mode.upper() not in {'PAIRED', 'SIGNIFICANT', 'ALL'}:
+        raise ValueError('%s is not a supported mode.' % mode)
+    elif mode == 'PAIRED' and (meta is None or
+                               eff_kwds['control_cats'] is None):
+        raise ValueError('Metadata and control_cats must be supplied for '
+                         'PAIRED data.')
+    elif mode in {'SIGNIFICANT', 'ALL'} and samples is None:
+        raise ValueError('samples must be supplied for SIGNIFICANT or ALL '
+                         'mode.')
+
+    # Prealocates a holding objects
+    counts = []
+    powers = []
+
+    num_cats = len(cats)
+
+    # Gets the power matrix
+    for idx, test in enumerate(tests):
+        # Handles paired data
+        if mode == 'PAIRED':
+            # Makes sure the category is not in the control cats
+            cat = cats[idx]
+            ctrl_cats = deepcopy(eff_kwds['control_cats'])
+            if cat in ctrl_cats:
+                control_cats = delete(ctrl_cats, where(ctrl_cats == cat))
+            # Calcualtes the power
+            try:
+                pwr, cnt = get_paired_effect(test, meta, cat, control_cats,
+                                             eff_kwds['order'],
+                                             eff_kwds['alpha_pwr'],
+                                             eff_kwds['min_counts'],
+                                             eff_kwds['max_counts'],
+                                             eff_kwds['count_int'],
+                                             eff_kwds['num_iter'],
+                                             eff_kwds['num_runs'],
+                                             eff_kwds['strict'])
+            except:
+                pwr = array([nan])
+                cnt = array([nan])
+        # Handles unpaired data
+        else:
+            pwr, cnt = get_unpaired_effect(mode, test, samples,
+                                           eff_kwds['sub_size'],
+                                           eff_kwds['alpha_pwr'],
+                                           eff_kwds['min_counts'],
+                                           eff_kwds['max_counts'],
+                                           eff_kwds['count_int'],
+                                           eff_kwds['num_iter'],
+                                           eff_kwds['num_runs'],
+                                           eff_kwds['scaling'])
+
+        # Adds the power and count data to the holding object
+        powers.append(pwr)
+        counts.append(cnt)
+
+    # Gets the effect sizes
+    eff_means, eff_bounds = collate_effect_size(counts, powers,
+                                                eff_kwds['alpha_pwr'])
+
+    # Checks the label
+    if eff_kwds['labels'] is not None:
+        if not len(eff_kwds['labels']) == num_cats:
+            raise ValueError('Each category must have a label.')
+        labels = array(eff_kwds['labels'])
+    else:
+        labels = array([cat_.replace('_', ' ').title() for cat_ in cats])
+
+    # Sorts the data
+    removes = isnan(eff_means)
+    if eff_kwds['sort_plot']:
+        eff_means = eff_means[not removes]
+        eff_order = eff_means.argsort()[::-1]
+        eff_means = eff_means[eff_order]
+        eff_bounds = eff_bounds[eff_order]
+        labels = labels[eff_order]
+        if plot_kwds['colormap'] is not None:
+            plot_kwds['colormap'] = plot_kwds['colormap'][eff_order, :]
+
+    # Plots the effect sizes
+    eff_fig = plot_effects(eff_means, eff_bounds, labels, eff_kwds['counts'],
+                           **plot_kwds)
+
+    return eff_fig, eff_means, eff_bounds, labels
 
 
 def get_paired_effect(test, meta, cat, control_cats, order=None,
@@ -143,7 +267,72 @@ def get_paired_effect(test, meta, cat, control_cats, order=None,
 def get_unpaired_effect(mode, test, samples, sub_size=None, alpha_pwr=0.05,
     min_counts=20, max_counts=50, counts_interval=10,
     num_iter=500, num_runs=10, scaling=5):
-    """ """
+    """Calculates the effect size for unpaired random sampling methods
+
+    Parameters
+    ----------
+    mode : {"SIGNIFICANT", "ALL"}
+        how random observations should be drawn. "SIGNIFICANT" indicates that
+        observations should be drawn from two subsets of samples which are
+        significantly different at the level indictated by `alpha_pwr` /
+        `scaling`, while "ALL" indicates the observations should be drawn from
+        the sample, and not subsamples.
+
+    test : function
+        the statistical test which accepts an array-like of sample ids
+        (list of lists) and returns a p-value.
+
+    samples : array-like
+        samples can be a list of lists or an array where each sublist or row in
+        the array corresponds to a sampled group.
+
+    sub_size : {None, int}, optional
+        the maximum number of samples to select from a group. If no value is
+        provided, this will be the same as the size of the smallest group.
+        Otherwise, this will be compared to the size of the smallest group, and
+        which ever is lower will be used.
+
+    alpha_pwr : float, optional
+        default is 0.05. The critical value for the power calculation.
+
+    min_counts : unsigned int, optional
+        Default is 20. The minimum number of paired samples which must exist
+        for a category and set of control categories to be able to subsample
+        and make power calculations.
+
+    max_counts : unsigned int, optional
+        Default is 50. The maximum number of samples per group to draw for
+        effect size calculation.
+
+    counts_interval : unsigned int, optional
+        Default is 10.
+
+    num_iter : unsigned int, optional
+        Default is 1000. The number of p-values to generate for each point
+        on the curve.
+
+    num_runs : unsigned int, optional
+        Default is 10. The number of times to calculate each curve.
+
+    scaling : int, optional
+        a penalty scale on `alpha_pwr`, so the probability that two
+        distributions are different in "SIGNIFICANT" mode is less than
+        `alpha_pwr` / `scaling`.
+
+    Returns
+    -------
+    power : array
+        power calculated for each subsample at each count
+
+    sample_counts : array
+        the number of samples drawn at each power calculation
+
+    Raises
+    ------
+    RuntimeError
+        if the paired samples contains less than the minimum numebr of samples.
+
+    """
     # Gets a population of sample ids to check the number of subsamples
     # generated
     if mode == 'SIGNIFICANT':
@@ -183,6 +372,277 @@ def get_unpaired_effect(mode, test, samples, sub_size=None, alpha_pwr=0.05,
                                               alpha=alpha_pwr)
 
     return power, sample_counts
+
+
+def plot_effects(effect_means, effect_bounds, labels, sample_counts, **kwargs):
+    """Makes a power curve plot
+
+    Parameters
+    ----------
+    effect_means: 1d array
+        the mean effect sizes to plots.
+
+    effect_bounds : {None, 1d array}
+        the range used for the confidence interval. If there is no effect to
+        show, this should be None.
+
+    labels : 1d array
+        a list of formatted strings describing the effects, to be used in the
+        legend.
+
+    sample_counts : 1d array
+        the counts where power should be calculated.
+
+    alpha : int, optional
+        Default is 0.05. The critical value for the power curves.
+
+    colormap : {None, array}, optional
+        Default is None. A colormap to use for the lines. Each color
+        designation must appear in a new row. If no colormap is supplied, the
+        defualt colormap will be used.
+
+    grid : bool, optional
+        Default is True. Show grid.
+
+    show_bound : bool
+        Default is True. Shows the confidence bounds on the effect size. If
+        `effect_bounds` is None, no bounds will be shown.
+
+    Returns
+    -------
+    fig : figure
+        a figure with the power curves plotted.
+
+    Other parameters
+    ----------------
+    leg_offset : tuple
+        Changes the legend position.
+
+    tick_size : usigned int
+        sets the font size for tick labels
+
+    label_size : unsigned int
+        sets the font size for the axis labels
+
+    title_size : unsigned int
+        sets the font size for the title
+
+    legend_size : unsigned int
+        sets the font size for enteries in the legend
+
+    """
+    # Sets the keyword properties
+    kwds = {'alpha': 0.05,
+            'colormap': None,
+            'grid': True,
+            'title': '',
+            'show_bound': True,
+            'leg_offset': None,
+            'tick_size': 12,
+            'label_size': 15,
+            'title_size': 18,
+            'legend_size': 11}
+    for key, value in viewitems(kwargs):
+        if key in kwds:
+            kwds[key] = value
+        else:
+            raise ValueError('%s is not a property of plot_effects.' % key)
+
+    # Checks the effect, bound, and mean argument is sane
+    mean_shape = effect_means.shape
+    if effect_bounds is None:
+        kwds['show_bound'] = False
+        effect_bounds = zeros(mean_shape)
+    bound_shape = effect_bounds.shape
+    label_shape = labels.shape
+
+    if not len(mean_shape) == 1:
+        raise ValueError('Effect Mean must be a 1d numpy array')
+    elif mean_shape != bound_shape or mean_shape != label_shape:
+        raise ValueError('There must be a label and bound for each effect.')
+
+    # Plots the the lower bound data
+    fig = ft.plot_power('nobs', sample_counts, effect_means - effect_bounds,
+                        alpha=kwds['alpha'])
+    # Gets the axis of the first plot and its position
+    lax = fig.axes[0]
+    # Makes the lower bound lines dashed and thin, and changes the color if
+    # desired
+    for idx, l in enumerate(lax.get_lines()):
+        l.set_linestyle(':')
+        l.set_linewidth(1.5)
+        if kwds['colormap'] is not None:
+            l.set_color(kwds['colormap'][idx, :])
+    # Hides the x ticks and labels
+    lax.set_title('')
+    lax.set_xticklabels('')
+    lax.set_yticklabels('')
+    lax.set_xlabel('')
+    # Hides the legend
+    lax.get_legend().set_visible(False)
+
+    # Plots the upper bound data
+    uax = fig.add_axes(lax.get_position())
+    fig = ft.plot_power('nobs', sample_counts, effect_means + effect_bounds,
+                        alpha=kwds['alpha'], ax=uax)
+    # Makes the lower bound axes visable, if desired
+    if kwds['show_bound']:
+        uax.set_axis_bgcolor('none')
+    # Makes the lower bound lines dashed and thin, and changes the color if
+    # desired
+    for idx, l in enumerate(uax.get_lines()):
+        l.set_linestyle(':')
+        l.set_linewidth(1.5)
+        if kwds['colormap'] is not None:
+            l.set_color(kwds['colormap'][idx, :])
+    # Hides the x ticks and labels
+    uax.set_title('')
+    uax.set_xticklabels('')
+    uax.set_yticklabels('')
+    uax.set_xlabel('')
+    # Hides the legend
+    uax.get_legend().set_visible(False)
+
+    # Plots the mean data
+    axm = fig.add_axes(lax.get_position())
+    fig = ft.plot_power('nobs', sample_counts, effect_means, ax=axm,
+                        alpha=kwds['alpha'])
+
+    # Shows the confidence bounds, if desired
+    if kwds['show_bound']:
+        axm.set_axis_bgcolor('none')
+
+    # Recolors the lines, if desired
+    if kwds['colormap'] is not None:
+        for idx, l in enumerate(axm.get_lines()):
+            l.set_color(kwds['colormap'][idx, :])
+
+    # Sets up the labels
+    axm.set_xticklabels(map(int, axm.get_xticks()), size=kwds['tick_size'])
+    axm.set_yticklabels(axm.get_yticks(), size=kwds['tick_size'])
+    axm.set_xlabel('Number of Observations', size=kwds['label_size'])
+    axm.set_ylabel('Power of the Test', size=kwds['label_size'])
+    axm.set_title(kwds['title'], size=kwds['title_size'])
+
+    # Adds the grid, if desired
+    if kwds['grid']:
+        axm.grid()
+
+    leg = axm.get_legend()
+    # Sets the legend position
+    if kwds['leg_offset'] is not None:
+        leg.set_bbox_to_anchor(kwds['leg_offset'])
+    # Sets up the legend text
+    for idx, txt in enumerate(leg.get_texts()):
+        txt.set_text(labels[idx])
+        txt.set_size(kwds['legend_size'])
+
+    # Returns the figure
+    return fig
+
+
+def collate_effect_size(counts, powers, alpha):
+    """Calculates the effects for power values
+
+    Parameters
+    ----------
+    counts : array
+        the number of samples used to calculate the power
+
+    powers : {list, ndarray}
+        list of arrays of power values. If there are multiple power arrays,
+        each power array should have the same dimensions. If samples are
+        missing, these should be deonted by a nan.
+
+    alpha : float
+        the critical value used to calculate the power.
+
+    Returns
+    -------
+    effect_means : 1d array
+    effect_bounds : 1d array
+
+    Raises
+    ------
+    TypeError
+        if counts is not a one-dimensional array
+    ValueError
+        if the arrays in powers have different shapes
+    ValueError
+        if the length of the power arrays and the length of the count arrays
+        are different
+    """
+
+    # Checks the power and counts iteratibility
+    if isinstance(powers, ndarray):
+        powers = [powers]
+
+    num_powers = len(powers)
+    if isinstance(counts, ndarray):
+        counts = [counts]*num_powers
+
+    # Checks there is a count for each power
+    if not len(counts) == len(powers):
+        raise ValueError('There must be a counts array for each power array.')
+
+    # Checks the shape array
+    for idx in xrange(num_powers):
+        count_shape = counts[idx].shape
+        power_shape = powers[idx].shape
+        # Checks the count array is 1d
+        if not len(count_shape) == 1:
+            raise TypeError('Each count array must be a 1d array.')
+
+        if len(power_shape) == 1:
+            if not count_shape[0] == power_shape[0]:
+                raise ValueError('There must be a sample count for each '
+                                 'power.')
+        elif not count_shape[0] == power_shape[1]:
+            raise ValueError('There must be a sample count for each power.')
+
+    # Prealocates the output arrays
+    effect_means = zeros((num_powers))
+    effect_bounds = zeros((num_powers))
+
+    # Iterates through the powers and calculates the effect sizes
+    for idp, pwr in enumerate(powers):
+        count = counts[idp]
+        pwr_shape = pwr.shape
+        # Calculates the effect size for the power array
+        eff = zeros(pwr_shape)
+        for id2, cnt in enumerate(count):
+            if len(pwr_shape) == 1:
+                if isnan(pwr[id2]):
+                    eff[id2] = nan
+                    continue
+                try:
+                    eff[id2] = ft.solve_power(effect_size=None,
+                                              nobs=cnt,
+                                              alpha=alpha,
+                                              power=pwr[id2])
+                except:
+                    eff[id2] = nan
+            else:
+                for id1 in xrange(pwr_shape[0]):
+                    if isnan(pwr[id1, id2]):
+                        eff[id1, id2] = nan
+                        continue
+                    try:
+                        eff[id1, id2] = ft.solve_power(effect_size=None,
+                                                       nobs=cnt,
+                                                       alpha=alpha,
+                                                       power=pwr[id1, id2])
+                    except:
+                        eff[id1, id2] = nan
+        # Caluclates the mean and bound
+        if isnan(eff).all():
+            effect_means[idp] = nan
+            effect_bounds[idp] = nan
+        else:
+            effect_means[idp] = nanmean(eff)
+            effect_bounds[idp] = _confidence_bound(eff, alpha)
+
+    return effect_means, effect_bounds
 
 
 def _check_strs(x):
@@ -326,7 +786,7 @@ def calculate_power_curve(test, samples, sample_counts, ratio=None,
     num_iter=1000, alpha=0.05):
     """Generates an empirical power curve for the samples.
 
-
+    ... ....
 
     Parameters
     ----------
@@ -642,13 +1102,12 @@ def get_paired_subsamples(meta, cat, control_cats, order=None, strict=True):
 
     # Determines the number of samples, and the experimental and control group
     group_size = array([len(cat_groups[o]) for o in order])
-    ctrl_group = order[group_size == group_size.min()][0]
-    order = order[order != ctrl_group]
+    ctrl_name = order[group_size == group_size.min()][0]
+    order = order[order != ctrl_name]
 
     # Gets a control group table
-    ctrl_group = meta.loc[cat_groups[ctrl_group]].groupby(control_cats).groups
-    exp_groups = [meta.loc[cat_groups[o]].groupby(control_cats).groups
-                  for o in order]
+    ctrl_group = meta.loc[cat_groups[ctrl_name]].groupby(list(control_cats)).groups
+    exp_groups = [meta.loc[cat_groups[o]].groupby(list(control_cats)).groups for o in order]
 
     ids = [array([])]*num_groups
     # Loops through samples in the experimental group to match for controls
@@ -676,267 +1135,3 @@ def get_paired_subsamples(meta, cat, control_cats, order=None, strict=True):
                 ids[idx] = hstack((ids[idx], exp_ids[idx]))
 
     return ids
-
-
-def plot_effects(effect_means, effect_bounds, labels, sample_counts, **kwargs):
-    """Makes a power curve plot
-
-    Parameters
-    ----------
-    effect_means: 1d array
-        the mean effect sizes to plots.
-
-    effect_bounds : {None, 1d array}
-        the range used for the confidence interval. If there is no effect to
-        show, this should be None.
-
-    labels : 1d array
-        a list of formatted strings describing the effects, to be used in the
-        legend.
-
-    sample_counts : 1d array
-        the counts where power should be calculated.
-
-    alpha : int, optional
-        Default is 0.05. The critical value for the power curves.
-
-    colormap : {None, array}, optional
-        Default is None. A colormap to use for the lines. Each color
-        designation must appear in a new row. If no colormap is supplied, the
-        defualt colormap will be used.
-
-    grid : bool, optional
-        Default is True. Show grid.
-
-    show_bound : bool
-        Default is True. Shows the confidence bounds on the effect size. If
-        `effect_bounds` is None, no bounds will be shown.
-
-    Returns
-    -------
-    fig : figure
-        a figure with the power curves plotted.
-
-    Other parameters
-    ----------------
-    leg_offset : tuple
-        Changes the legend position.
-
-    tick_size : usigned int
-        sets the font size for tick labels
-
-    label_size : unsigned int
-        sets the font size for the axis labels
-
-    title_size : unsigned int
-        sets the font size for the title
-
-    legend_size : unsigned int
-        sets the font size for enteries in the legend
-
-    """
-    # Sets the keyword properties
-    kwds = {'alpha': 0.05,
-            'colormap': None,
-            'grid': True,
-            'title': '',
-            'show_bound': True,
-            'leg_offset': None,
-            'tick_size': 12,
-            'label_size': 15,
-            'title_size': 18,
-            'legend_size': 11}
-    for key, value in viewitems(kwargs):
-        if key in kwds:
-            kwds[key] = value
-        else:
-            raise ValueError('%s is not a property of plot_effects.' % key)
-
-    # Checks the effect, bound, and mean argument is sane
-    mean_shape = effect_means.shape
-    if effect_bounds is None:
-        kwds['show_bound'] = False
-        effect_bounds = zeros(mean_shape)
-    bound_shape = effect_bounds.shape
-    label_shape = labels.shape
-
-    if not len(mean_shape) == 1:
-        raise ValueError('Effect Mean must be a 1d numpy array')
-    elif mean_shape != bound_shape or mean_shape != label_shape:
-        raise ValueError('There must be a label and bound for each effect.')
-
-    # Plots the the lower bound data
-    fig = ft.plot_power('nobs', sample_counts, effect_means - effect_bounds,
-                        alpha=kwds['alpha'])
-    # Gets the axis of the first plot and its position
-    lax = fig.axes[0]
-    # Makes the lower bound lines dashed and thin, and changes the color if
-    # desired
-    for idx, l in enumerate(lax.get_lines()):
-        l.set_linestyle(':')
-        l.set_linewidth(1.5)
-        if kwds['colormap'] is not None:
-            l.set_color(kwds['colormap'][idx, :])
-    # Hides the x ticks and labels
-    lax.set_title('')
-    lax.set_xticklabels('')
-    lax.set_yticklabels('')
-    lax.set_xlabel('')
-    # Hides the legend
-    lax.get_legend().set_visible(False)
-
-    # Plots the upper bound data
-    uax = fig.add_axes(lax.get_position())
-    fig = ft.plot_power('nobs', sample_counts, effect_means + effect_bounds,
-                        alpha=kwds['alpha'], ax=uax)
-    # Makes the lower bound axes visable, if desired
-    if kwds['show_bound']:
-        uax.set_axis_bgcolor('none')
-    # Makes the lower bound lines dashed and thin, and changes the color if
-    # desired
-    for idx, l in enumerate(uax.get_lines()):
-        l.set_linestyle(':')
-        l.set_linewidth(1.5)
-        if kwds['colormap'] is not None:
-            l.set_color(kwds['colormap'][idx, :])
-    # Hides the x ticks and labels
-    uax.set_title('')
-    uax.set_xticklabels('')
-    uax.set_yticklabels('')
-    uax.set_xlabel('')
-    # Hides the legend
-    uax.get_legend().set_visible(False)
-
-    # Plots the mean data
-    axm = fig.add_axes(lax.get_position())
-    fig = ft.plot_power('nobs', sample_counts, effect_means, ax=axm,
-                        alpha=kwds['alpha'])
-
-    # Shows the confidence bounds, if desired
-    if kwds['show_bound']:
-        axm.set_axis_bgcolor('none')
-
-    # Recolors the lines, if desired
-    if kwds['colormap'] is not None:
-        for idx, l in enumerate(axm.get_lines()):
-            l.set_color(kwds['colormap'][idx, :])
-
-    # Sets up the labels
-    axm.set_xticklabels(map(int, axm.get_xticks()), size=kwds['tick_size'])
-    axm.set_yticklabels(axm.get_yticks(), size=kwds['tick_size'])
-    axm.set_xlabel('Number of Observations', size=kwds['label_size'])
-    axm.set_ylabel('Power of the Test', size=kwds['label_size'])
-    axm.set_title(kwds['title'], size=kwds['title_size'])
-
-    # Adds the grid, if desired
-    if kwds['grid']:
-        axm.grid()
-
-    leg = axm.get_legend()
-    # Sets the legend position
-    if kwds['leg_offset'] is not None:
-        leg.set_bbox_to_anchor(kwds['leg_offset'])
-    # Sets up the legend text
-    for idx, txt in enumerate(leg.get_texts()):
-        txt.set_text(labels[idx])
-        txt.set_size(kwds['legend_size'])
-
-    # Returns the figure
-    return fig
-
-
-def collate_effect_size(counts, powers, alpha):
-    """Calculates the effects for power values
-
-    Parameters
-    ----------
-    counts : array
-        the number of samples used to calculate the power
-
-    powers : {list, ndarray}
-        list of arrays of power values. If there are multiple power arrays,
-        each power array should have the same dimensions. If samples are
-        missing, these should be deonted by a nan.
-
-    alpha : float
-        the critical value used to calculate the power.
-
-    Returns
-    -------
-    effect_means : 1d array
-    effect_bounds : 1d array
-
-    Raises
-    ------
-    TypeError
-        if counts is not a one-dimensional array
-    ValueError
-        if the arrays in powers have different shapes
-    ValueError
-        if the length of the power arrays and the length of the count arrays
-        are different
-    """
-
-    # Gets power information
-    if isinstance(powers, ndarray):
-        powers = [powers]
-    if len(powers) == 1:
-        shapes = [powers[0].shape]
-        shape_check = array([True])
-    else:
-        shapes = [pwr.shape for pwr in powers]
-        shape_check = array([shapes[i - 1] == shapes[i] for i in
-                             arange(1, len(powers) - 1, 1)])
-
-    # Checks the shape of the power and dimensions
-    num_powers = len(powers)
-    num_counts = counts.shape[0]
-    if not len(counts.shape) == 1:
-        raise TypeError('counts must be a 1d array.')
-    if not shape_check.any():
-        raise ValueError('All power arrays must have the same shape.')
-    power_shape = shapes[0]
-    if not power_shape[0] == num_counts:
-        raise ValueError('Each power entry must have a corresponding count.')
-
-    # Prealocates the output arrays
-    effect_means = zeros((num_powers))
-    effect_bounds = zeros((num_powers))
-
-    # Iterates through the powers and calculates the effect sizes
-    for idp, pwr in enumerate(powers):
-        # Calculates the effect size for the power array
-        eff = zeros((power_shape))
-        for id2, count in enumerate(counts):
-            if len(power_shape) == 1:
-                if isnan(pwr[id2]):
-                    eff[id2] = nan
-                    continue
-                try:
-                    eff[id2] = ft.solve_power(effect_size=None,
-                                              nobs=count,
-                                              alpha=alpha,
-                                              power=pwr[id2])
-                except:
-                    eff[id2] = nan
-            else:
-                for id1 in xrange(power_shape[1]):
-                    if isnan(pwr[id1, id2]):
-                        eff[id1, id2] = nan
-                        continue
-                    try:
-                        eff[id1, id2] = ft.solve_power(effect_size=None,
-                                                       nobs=count,
-                                                       alpha=alpha,
-                                                       power=pwr[id1, id2])
-                    except:
-                        eff[id1, id2] = nan
-        # Caluclates the mean and bound
-        if isnan(eff).all():
-            effect_means[idp] = nan
-            effect_bounds[idp] = nan
-        else:
-            effect_means[idp] = nanmean(eff)
-            effect_bounds[idp] = _confidence_bound(eff, alpha)
-
-    return effect_means, effect_bounds
