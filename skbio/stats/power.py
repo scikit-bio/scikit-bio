@@ -24,6 +24,7 @@ values (i.e. sample ids) and returns a p-value.
 # -----------------------------------------------------------------------------
 from __future__ import division
 from future.utils import viewitems
+# from copy import deepcopy
 from numpy import (array, zeros, ones, round as nround, hstack, isnan, ndarray,
                    nan, nanmean, nanstd, sqrt, arange)
 from numpy.random import choice
@@ -39,6 +40,149 @@ ft = FTestAnovaPower()
 rcParams['font.family'] = 'sans-serif'
 rcParams['font.sans-serif'] = ['Helvetica', 'Arial']
 rcParams['text.usetex'] = True
+
+
+def get_paired_effect(test, meta, cat, control_cats, order=None,
+    alpha_pwr=0.05, min_counts=20, max_counts=50, counts_interval=10,
+    num_iter=500, num_runs=10, strict=True):
+    """Calculates the effect size using paired subsampling
+
+    Parameters
+    ----------
+    test : function
+        the statistical test which accepts an array-like of sample ids
+        (list of lists) and returns a p-value.
+
+    meta : dataframe
+        the metadata associated with the samples
+
+    cat : str
+        the metadata categories for comparison
+
+    control_cats : list
+        the metadata categories to be used as controls. For example, if you
+        wanted to control age (`cat` = "AGE"), you might want to control for
+        gender and health status (i.e. `control_cats` = ["SEX", "HEALTHY"])
+
+    order : {None, list}, optional
+        Default is None. The order of groups in the category. This can be used
+        to limit the groups selected. For example, if there's a category with
+        groups 'A', 'B' and 'C', and you only want to look at A vs B, `order`
+        would be set to ['A', 'B'].
+
+    alpha_pwr : float, optional
+        Default is 0.05. The alpha value used to calculate the power.
+
+    min_counts : unsigned int, optional
+        Default is 20. The minimum number of paired samples which must exist
+        for a category and set of control categories to be able to subsample
+        and make power calculations.
+
+    max_counts : unsigned int, optional
+        Default is 50. The maximum number of samples per group to draw for
+        effect size calculation.
+
+    counts_interval : unsigned int, optional
+        Default is 10.
+
+    num_iter : unsigned int
+        Default is 1000. The number of p-values to generate for each point
+        on the curve.
+
+    num_runs : unsigned int
+        Default is 10. The number of times to calculate each curve.
+
+    strict: bool, optional
+        Default is True. If a missing value (nan) is encountered, the group
+        will be skipped when 'strict' is True.
+
+    Returns
+    -------
+    power : array
+        power calculated for each subsample at each count
+
+    sample_counts : array
+        the number of samples drawn at each power calculation
+
+    Raises
+    ------
+    RuntimeError
+        if the paired samples contains less than the minimum numebr of samples.
+
+    """
+
+    # Gets a paired sample population to check the number of pairs generated
+    paired_ids = get_paired_subsamples(meta, cat, control_cats, order, strict)
+    num_paired = paired_ids[0].shape[0]
+
+    # Checks there are enough paired ids to subsample
+    if num_paired <= min_counts:
+        raise RuntimeError('There are not enough samples for subsampling.')
+
+    # Gets the sampling array
+    sample_counts = arange(counts_interval,
+                           min(max_counts, num_paired),
+                           counts_interval)
+
+    # Prealocates a power array
+    power = zeros((num_runs, len(sample_counts)))
+
+    # Calculates power or hte first curve
+    power[0, :] = calculate_power_curve(test, paired_ids, sample_counts,
+                                        num_iter=num_iter, alpha=alpha_pwr)
+    # Gets iteraitons and subsequent power
+    for id1 in arange(1, num_runs):
+        paired_ids = get_paired_subsamples(meta, cat, control_cats, order,
+                                           strict)
+        power[id1, :] = calculate_power_curve(test, paired_ids, sample_counts,
+                                              num_iter=num_iter,
+                                              alpha=alpha_pwr)
+    return power, sample_counts
+
+
+def get_unpaired_effect(mode, test, samples, sub_size=None, alpha_pwr=0.05,
+    min_counts=20, max_counts=50, counts_interval=10,
+    num_iter=500, num_runs=10, scaling=5):
+    """ """
+    # Gets a population of sample ids to check the number of subsamples
+    # generated
+    if mode == 'SIGNIFICANT':
+            sub_ids = get_signifigant_subsample([test], samples, sub_size,
+                                                alpha_pwr, num_iter, scaling)
+    else:
+        sub_ids = samples
+    num_ids = len(sub_ids[0])
+
+    # Checks there are enough samples to subsample
+    if num_ids <= min_counts:
+        raise RuntimeError('There are not enough samples for subsampling.')
+
+    # Calculates the effect size vector
+    sample_counts = arange(counts_interval,
+                           min(max_counts, num_ids),
+                           counts_interval)
+
+    # Prealocates the power array
+    power = zeros((num_runs, len(sample_counts)))
+
+    # Calculates the first power curve instance
+    power[0, :] = calculate_power_curve(test, sub_ids, sample_counts,
+                                        num_iter=num_iter, alpha=alpha_pwr)
+
+    # Calculates the power instances
+    for id1 in arange(1, num_runs):
+        # Gets the subsample
+        if mode == 'SIGNIFICANT':
+            sub_ids = get_signifigant_subsample([test], samples, sub_size,
+                                                alpha_pwr, num_iter, scaling)
+        else:
+            sub_ids = samples
+        # Calculates the power curve
+        power[id1, :] = calculate_power_curve(test, sub_ids, sample_counts,
+                                              num_iter=num_iter,
+                                              alpha=alpha_pwr)
+
+    return power, sample_counts
 
 
 def _check_strs(x):
@@ -81,7 +225,7 @@ def _confidence_bound(vec, alpha=0.05, df=None, axis=None):
 
     # Determines the number of non-nan counts
     vec_shape = vec.shape
-    if axis is None or len(vec_shape) == 1:
+    if axis is None and len(vec_shape) == 1:
         num_counts = vec_shape[0] - isnan(vec).sum()
         axis = None
     elif axis is None:
@@ -106,7 +250,8 @@ def _calculate_power(p_values, alpha=0.05):
 
     Parameters
     ----------
-    p_values : 1d array-like
+    p_values : 1d array
+
     alpha : float
         the critical value for the power calculation
 
@@ -117,10 +262,8 @@ def _calculate_power(p_values, alpha=0.05):
         critical value
 
     """
-    if isinstance(p_values, list):
-        p_values = array(p_values)
 
-    w = (p_values < float(alpha)).sum()/float(len(p_values))
+    w = (p_values < float(alpha)).sum()/float(p_values.shape[0])
 
     return w
 
@@ -333,7 +476,7 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
 
     # Calculates two summary statitics
     power_mean = power.mean(0)
-    power_bound = _confidence_bound(power, alpha=alpha[0])
+    power_bound = _confidence_bound(power, alpha=alpha[0], axis=0)
 
     # Calculates summary statitics
     return power_mean, power_bound
@@ -379,6 +522,16 @@ def get_signifigant_subsample(tests, samples, sub_size=None, p_crit=0.05,
     sub_size : float
         the number of samples selected from each group
 
+    Raises
+    ------
+    RuntimeError
+        if all the tests are None, or no signfiiant difference can be found
+        between samples
+
+    RuntimeError
+        if not iteration can be found that satisfies the signfigiant difference
+        between groups
+
     """
 
     # Determines the size of the groups
@@ -386,22 +539,19 @@ def get_signifigant_subsample(tests, samples, sub_size=None, p_crit=0.05,
     if sub_size is None:
         sub_size = check_size.min()
     else:
-        sub_size = min([sub_size, check_size])
+        sub_size = min([sub_size, check_size.min()])
 
     # Checks the critical value is the same length as the tests
-    if isinstance(p_crit, float) and isinstance(tests, list):
+    if isinstance(p_crit, float):
         p_crit = p_crit*ones((len(tests)))
-    elif isinstance(p_crit, list):
-        p_crit = array(p_crit)
 
     # Verifies testing is reasonable for the
     for idx, f in enumerate(tests):
         if f is not None and p_crit[idx]/p_scaling < f(samples):
             tests[idx] = None
-            print f(samples)
     # Checks the functions are defined
     if (tests == array([None]*len(tests))).all():
-        raise ValueError('There is no test defined')
+        raise RuntimeError('There is no test defined')
 
     # Loops through to get a signfigant difference
     for i in xrange(num_rounds+1):
@@ -418,11 +568,11 @@ def get_signifigant_subsample(tests, samples, sub_size=None, p_crit=0.05,
         # Checks the critical values have been satisifed
         if (test_res < p_crit).all():
             return sub_samps
-            break
+
         # If no iteration has been found, this is supplied
         elif i == num_rounds:
-            raise ValueError('There is no iteration which satisfies your '
-                             'requirements.')
+            raise RuntimeError('There is no iteration which satisfies your '
+                               'requirements.')
 
 
 def get_paired_subsamples(meta, cat, control_cats, order=None, strict=True):
@@ -769,18 +919,18 @@ def collate_effect_size(counts, powers, alpha):
                                               power=pwr[id2])
                 except:
                     eff[id2] = nan
-
-            for id1 in xrange(power_shape[1]):
-                if isnan(pwr[id1, id2]):
-                    eff[id1, id2] = nan
-                    continue
-                try:
-                    eff[id1, id2] = ft.solve_power(effect_size=None,
-                                                   nobs=count,
-                                                   alpha=alpha,
-                                                   power=pwr[id1, id2])
-                except:
-                    eff[id1, id2] = nan
+            else:
+                for id1 in xrange(power_shape[1]):
+                    if isnan(pwr[id1, id2]):
+                        eff[id1, id2] = nan
+                        continue
+                    try:
+                        eff[id1, id2] = ft.solve_power(effect_size=None,
+                                                       nobs=count,
+                                                       alpha=alpha,
+                                                       power=pwr[id1, id2])
+                    except:
+                        eff[id1, id2] = nan
         # Caluclates the mean and bound
         if isnan(eff).all():
             effect_means[idp] = nan
