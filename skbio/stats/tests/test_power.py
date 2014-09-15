@@ -50,18 +50,30 @@ class PowerAnalysisTest(TestCase):
         # Sets up the test function, a rank-sum test
         self.f = lambda x: kruskal(*x)[1]
         # Sets up a mapping file
-        meta = {'NR': {'RANGE': 'M', 'SEX': 'F', 'AGE': nan,   'ABX': 'Y', 'DAMAGE': 150},
-                'MH': {'RANGE': 'L', 'SEX': 'F', 'AGE': '30s', 'ABX': 'Y', 'DAMAGE': 100},
-                'PP': {'RANGE': 'M', 'SEX': 'F', 'AGE': '30s', 'ABX': 'N', 'DAMAGE': 250},
-                'CD': {'RANGE': 'L', 'SEX': 'F', 'AGE': '30s', 'ABX': 'Y', 'DAMAGE': 100},
-                'MM': {'RANGE': 'C', 'SEX': 'F', 'AGE': '30s', 'ABX': 'Y', 'DAMAGE': 500},
-                'SW': {'RANGE': 'M', 'SEX': 'M', 'AGE': '30s', 'ABX': 'N', 'DAMAGE': 050},
-                'TS': {'RANGE': 'M', 'SEX': 'M', 'AGE': '40s', 'ABX': 'Y', 'DAMAGE': 750},
-                'CB': {'RANGE': 'L', 'SEX': 'M', 'AGE': '40s', 'ABX': 'Y', 'DAMAGE': 250},
-                'BB': {'RANGE': 'C', 'SEX': 'M', 'AGE': '40s', 'ABX': 'Y', 'DAMAGE': 900},
-                'WS': {'RANGE': 'M', 'SEX': 'M', 'AGE': nan,   'ABX': 'N', 'DAMAGE': 200},
-                'SR': {'RANGE': 'C', 'SEX': 'M', 'AGE': nan,   'ABX': 'N', 'DAMAGE': 300},
-                'NF': {'RANGE': 'L', 'SEX': 'M', 'AGE': '60s', 'ABX': 'N', 'DAMAGE': 400}}
+        meta = {'NR': {'RANGE': 'M', 'SEX': 'F', 'AGE': nan,   'ABX': 'N',
+                       'DAMAGE': 150},
+                'MH': {'RANGE': 'L', 'SEX': 'F', 'AGE': '30s', 'ABX': 'N',
+                       'DAMAGE': 100},
+                'PP': {'RANGE': 'M', 'SEX': 'F', 'AGE': '40s', 'ABX': 'Y',
+                       'DAMAGE': 250},
+                'CD': {'RANGE': 'M', 'SEX': 'F', 'AGE': '40s', 'ABX': 'Y',
+                       'DAMAGE': 100},
+                'MM': {'RANGE': 'C', 'SEX': 'F', 'AGE': '30s', 'ABX': 'N',
+                       'DAMAGE': 500},
+                'SW': {'RANGE': 'M', 'SEX': 'M', 'AGE': '30s', 'ABX': 'N',
+                       'DAMAGE': 050},
+                'TS': {'RANGE': 'M', 'SEX': 'M', 'AGE': '40s', 'ABX': 'N',
+                       'DAMAGE': 750},
+                'CB': {'RANGE': 'L', 'SEX': 'M', 'AGE': '40s', 'ABX': 'N',
+                       'DAMAGE': 250},
+                'BB': {'RANGE': 'C', 'SEX': 'M', 'AGE': '40s', 'ABX': 'Y',
+                       'DAMAGE': 900},
+                'WS': {'RANGE': 'M', 'SEX': 'M', 'AGE': nan,   'ABX': 'N',
+                       'DAMAGE': 200},
+                'SR': {'RANGE': 'C', 'SEX': 'M', 'AGE': nan,   'ABX': 'N',
+                       'DAMAGE': 300},
+                'NF': {'RANGE': 'L', 'SEX': 'M', 'AGE': '60s', 'ABX': 'N',
+                       'DAMAGE': 400}}
         self.meta = DataFrame.from_dict(meta, orient='index')
         self.meta_f = lambda x: test_meta(x, self.meta, 'RANGE', 'DAMAGE')
         self.counts = array([5, 15, 25, 35, 45])
@@ -335,27 +347,27 @@ class PowerAnalysisTest(TestCase):
         known_array = [array(['BB']), array(['CB']), array(['TS'])]
         # Gets the test value
         cat = 'RANGE'
-        control_cats = ['SEX', 'AGE', 'ABX']
+        control_cats = ['SEX', 'AGE']
         test_array = get_paired_subsamples(self.meta, cat, control_cats)
         assert_array_equal(known_array, test_array)
 
     def test_get_paired_subsamples_skips(self):
         """Checks controlled susbets can skip sanely"""
         # Sets known array set
-        known_array = [array(['PP']), array(['SW'])]
+        known_array = [array([]), array([])]
         # Gets the test value
         cat = 'SEX'
-        control_cats = ['AGE', 'RANGE']
+        control_cats = ['ABX', 'AGE']
         test_array = get_paired_subsamples(self.meta, cat, control_cats)
         assert_array_equal(known_array, test_array)
 
     def test_get_paired_subsamples_not_strict(self):
         """Checks controlled subsets can be generated with missing values"""
-        known_array = [array(['WS']), array(['NR'])]
+        known_array = [array(['NR']), array(['WS'])]
         # Gets the test values
-        cat = 'ABX'
+        cat = 'SEX'
         control_cats = ['AGE', 'RANGE']
-        order = ['N', 'Y']
+        order = ['M', 'F']
         test_array = get_paired_subsamples(self.meta, cat, control_cats,
                                            order, strict=False)
         assert_array_equal(known_array, test_array)
