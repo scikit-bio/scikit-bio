@@ -151,17 +151,23 @@ def make_power_curves(mode, tests, cats, samples=None, meta=None, **kwargs):
     # Sorts the data
     removes = isnan(eff_means)
     if eff_kwds['sort_plot']:
-        eff_means = eff_means[not removes]
+        eff_means = eff_means[removes == False]
         eff_order = eff_means.argsort()[::-1]
         eff_means = eff_means[eff_order]
         eff_bounds = eff_bounds[eff_order]
         labels = labels[eff_order]
         if plot_kwds['colormap'] is not None:
-            plot_kwds['colormap'] = plot_kwds['colormap'][eff_order, :]
+            if len(plot_kwds['colormap'].shape) == 1:
+                plot_kwds['colormap'] = plot_kwds['colormap'][eff_order]
+            else:
+                plot_kwds['colormap'] = plot_kwds['colormap'][eff_order, :]
 
     # Plots the effect sizes
-    eff_fig = plot_effects(eff_means, eff_bounds, labels, eff_kwds['counts'],
-                           **plot_kwds)
+    if not isnan(eff_means).all():
+        eff_fig = plot_effects(eff_means, eff_bounds, labels,
+                               eff_kwds['counts'], **plot_kwds)
+    else:
+        eff_fig = None
 
     return eff_fig, eff_means, eff_bounds, labels
 
@@ -462,7 +468,9 @@ def plot_effects(effect_means, effect_bounds, labels, sample_counts, **kwargs):
         raise ValueError('There must be a label and bound for each effect.')
 
     # Plots the the lower bound data
-    fig = ft.plot_power('nobs', sample_counts, effect_means - effect_bounds,
+    fig = ft.plot_power(dep_var='nobs',
+                        nobs=sample_counts,
+                        effect_size=effect_means - effect_bounds,
                         alpha=kwds['alpha'])
     # Gets the axis of the first plot and its position
     lax = fig.axes[0]
@@ -471,7 +479,9 @@ def plot_effects(effect_means, effect_bounds, labels, sample_counts, **kwargs):
     for idx, l in enumerate(lax.get_lines()):
         l.set_linestyle(':')
         l.set_linewidth(1.5)
-        if kwds['colormap'] is not None:
+        if kwds['colormap'] is not None and len(kwds['colormap'].shape) == 1:
+            l.set_color(kwds['colormap'][idx])
+        elif kwds['colormap'] is not None:
             l.set_color(kwds['colormap'][idx, :])
     # Hides the x ticks and labels
     lax.set_title('')
@@ -493,7 +503,9 @@ def plot_effects(effect_means, effect_bounds, labels, sample_counts, **kwargs):
     for idx, l in enumerate(uax.get_lines()):
         l.set_linestyle(':')
         l.set_linewidth(1.5)
-        if kwds['colormap'] is not None:
+        if kwds['colormap'] is not None and len(kwds['colormap'].shape) == 1:
+            l.set_color(kwds['colormap'][idx])
+        elif kwds['colormap'] is not None:
             l.set_color(kwds['colormap'][idx, :])
     # Hides the x ticks and labels
     uax.set_title('')
@@ -513,7 +525,10 @@ def plot_effects(effect_means, effect_bounds, labels, sample_counts, **kwargs):
         axm.set_axis_bgcolor('none')
 
     # Recolors the lines, if desired
-    if kwds['colormap'] is not None:
+    if kwds['colormap'] is not None and len(kwds['colormap'].shape) == 1:
+        for idx, l in enumerate(axm.get_lines()):
+            l.set_color(kwds['colormap'][idx])
+    elif kwds['colormap'] is not None:
         for idx, l in enumerate(axm.get_lines()):
             l.set_color(kwds['colormap'][idx, :])
 

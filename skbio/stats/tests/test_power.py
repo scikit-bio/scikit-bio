@@ -169,7 +169,7 @@ class PowerAnalysisTest(TestCase):
 
     def test_make_power_curves_paired(self):
         """Tests make_power_curves handles "PAIRED" data sanely"""
-        known_shape_out = (3,)
+        known_shape_out = (0,)
         labels = array(['Antibiotics', 'Range', 'Gender'])
         tests = [lambda x: test_meta(x, self.meta, cat, 'DAMAGE') for
                  cat in self.cats]
@@ -177,14 +177,14 @@ class PowerAnalysisTest(TestCase):
         test_fig, test_m, test_b, test_l = \
             make_power_curves("PAIRED", tests, self.cats, meta=self.meta,
                               control_cats=self.cats, labels=labels,
-                              sort_plot=False, grid=False, num_iter=10,
-                              num_runs=2)
+                              sort_plot=True, grid=False, num_iter=10,
+                              num_runs=2, colormap=array(['r', 'b', 'g']))
         # Test the output is a figure
-        self.assertTrue(isinstance(test_fig, Figure))
+        self.assertEqual(test_fig, None)
         # Checks the size of the effect and bound array
         self.assertEqual(test_m.shape, known_shape_out)
         self.assertEqual(test_b.shape, known_shape_out)
-        assert_array_equal(test_l, labels)
+        assert_array_equal(test_l, array([]).astype('S11'))
 
     def test_get_paired_effect_runtime_error(self):
         """Checks get_paired_effect generates a runtime error correctly"""
@@ -259,6 +259,14 @@ class PowerAnalysisTest(TestCase):
         """Checks error is thrown when power and count size are different"""
         with self.assertRaises(ValueError):
             collate_effect_size([ones((5)), ones((6))],
+                                [ones((3, 5)), ones((6, 3))],
+                                self.power_alpha)
+
+    def test_collate_effect_size_differnt_counts_and_power(self):
+        """Checks error is thrown when powers and counts are different lengths
+        """
+        with self.assertRaises(ValueError):
+            collate_effect_size([ones((5))],
                                 [ones((3, 5)), ones((6, 3))],
                                 self.power_alpha)
 
@@ -408,7 +416,8 @@ class PowerAnalysisTest(TestCase):
     def test_compare_distributions_count_error(self):
         """Checks error is raised when there is not a count for each group"""
         with self.assertRaises(ValueError):
-            compare_distributions(self.f, self.samps, counts=[1, 2, 3])
+            compare_distributions(self.f, self.samps, counts=[1, 2, 3],
+                                  num_iter=100)
 
     def test_compare_distributions(self):
         """Checks compare_distributions is sane"""
@@ -425,7 +434,8 @@ class PowerAnalysisTest(TestCase):
         """
         self.assertRaises(ValueError, calculate_power_curve, self.f,
                           self.pop, self.num_samps,
-                          ratio=array([0.1, 0.2, 0.3]))
+                          ratio=array([0.1, 0.2, 0.3]),
+                          num_iter=100)
 
     def test_calculate_power_curve_default(self):
         """Checks the power array is within a sane range for default values"""
