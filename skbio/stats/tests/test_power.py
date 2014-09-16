@@ -25,6 +25,7 @@ from skbio.stats.power import (make_power_curves,
                                get_signifigant_subsample,
                                get_paired_subsamples)
 
+
 class PowerAnalysisTest(TestCase):
 
     def setUp(self):
@@ -135,7 +136,7 @@ class PowerAnalysisTest(TestCase):
                               control_cats=self.cats, labels=["RED"],
                               sort_plot=True, grid=False, num_iter=10,
                               num_runs=2, colormap=array(['r', 'b', 'g']),
-                              alpha_pwr=0.2)
+                              alpha_pwr=0.2, show_bounds=False)
 
     def test_make_power_curves_all(self):
         """Tests make_power_curves handles ALL mode sanely"""

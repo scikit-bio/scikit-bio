@@ -128,8 +128,8 @@ def make_power_curves(mode, tests, cats, samples=None, meta=None, **kwargs):
         the mean effect size for each category
     eff_bounds : array
         the bound for each category, where the confidence interval around the
-        effect size is defined as [`eff_means` - `eff_bounds`,
-        `eff_means` + `eff_bounds`]
+        effect size is defined as [`eff_means` - `eff_bounds`, `eff_means`
+        + `eff_bounds`]
     labels : array
         the cleaned up category names
 
@@ -257,7 +257,7 @@ def make_power_curves(mode, tests, cats, samples=None, meta=None, **kwargs):
     # Sorts the data
     removes = isnan(eff_means)
     if eff_kwds['sort_plot']:
-        eff_means = eff_means[removes == False]
+        eff_means = eff_means[True - removes]
         eff_order = eff_means.argsort()[::-1]
         eff_means = eff_means[eff_order]
         eff_bounds = eff_bounds[eff_order]
@@ -279,8 +279,9 @@ def make_power_curves(mode, tests, cats, samples=None, meta=None, **kwargs):
 
 
 def get_paired_effect(test, meta, cat, control_cats, order=None,
-    alpha_pwr=0.05, min_counts=20, max_counts=50, counts_interval=10,
-    num_iter=500, num_runs=10, strict=True):
+                      alpha_pwr=0.05, min_counts=20, max_counts=50,
+                      counts_interval=10, num_iter=500, num_runs=10,
+                      strict=True):
     """Calculates the effect size using paired subsampling
 
     Parameters
@@ -377,8 +378,8 @@ def get_paired_effect(test, meta, cat, control_cats, order=None,
 
 
 def get_unpaired_effect(mode, test, samples, sub_size=None, alpha_pwr=0.05,
-    min_counts=20, max_counts=50, counts_interval=10,
-    num_iter=500, num_runs=10, scaling=5):
+                        min_counts=20, max_counts=50, counts_interval=10,
+                        num_iter=500, num_runs=10, scaling=5):
     """Calculates the effect size for unpaired random sampling methods
 
     Parameters
@@ -911,7 +912,7 @@ def compare_distributions(test, samples, counts=5, num_iter=1000):
 
 
 def calculate_power_curve(test, samples, sample_counts, ratio=None,
-    num_iter=1000, alpha=0.05):
+                          num_iter=1000, alpha=0.05):
     """Generates an empirical power curve for the samples.
 
     ... ....
@@ -981,7 +982,7 @@ def calculate_power_curve(test, samples, sample_counts, ratio=None,
 
 
 def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
-    alpha=0.05, num_iter=500, num_runs=10):
+                          alpha=0.05, num_iter=500, num_runs=10):
     r"""Repeatedly calculates the power curve for a specified alpha level
 
     Parameters
@@ -1071,7 +1072,7 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
 
 
 def get_signifigant_subsample(tests, samples, sub_size=None, p_crit=0.05,
-    num_rounds=500, p_scaling=5):
+                              num_rounds=500, p_scaling=5):
     """
     Subsamples data to an even sample number for all groups
 
@@ -1234,8 +1235,10 @@ def get_paired_subsamples(meta, cat, control_cats, order=None, strict=True):
     order = order[order != ctrl_name]
 
     # Gets a control group table
-    ctrl_group = meta.loc[cat_groups[ctrl_name]].groupby(list(control_cats)).groups
-    exp_groups = [meta.loc[cat_groups[o]].groupby(list(control_cats)).groups for o in order]
+    ctrl_group = meta.loc[cat_groups[ctrl_name]
+                          ].groupby(list(control_cats)).groups
+    exp_groups = [meta.loc[cat_groups[o]
+                           ].groupby(list(control_cats)).groups for o in order]
 
     ids = [array([])]*num_groups
     # Loops through samples in the experimental group to match for controls
