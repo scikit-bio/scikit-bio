@@ -69,7 +69,7 @@ def _delete_trailing_number(line):
 
 
 @register_writer('clustal')
-def _msa_to_clustal(records, fh):
+def _generator_to_clustal(records, fh):
     r"""writes aligned sequences to a specified file
     Parameters
     ----------
@@ -79,21 +79,20 @@ def _msa_to_clustal(records, fh):
         An open file handle object containing Clustal sequences.
 
     """
-    clen = 60
-    records = list(records)
+    clen = 60  # Max length of clustal lines
     names, seqs = zip(*records)
     nameLen = max(map(len, names))
     seqLen = max(map(len, seqs))
     fh.write('CLUSTAL\n\n')
     for i in range(0, seqLen, clen):
-        for label, seq in records:
+        for label, seq in zip(names, seqs):
             name = ('{:<%d}' % (nameLen)).format(label)
             fh.write("%s\t%s\t\n" % (name, seq[i:i+clen]))
         fh.write("\n")
 
 
 @register_reader('clustal')
-def _clustal_to_msa(fh, strict=True):
+def _clustal_to_generator(fh, strict=True):
     r"""yields labels and sequences from msa (multiple sequence alignment)
 
     Parameters

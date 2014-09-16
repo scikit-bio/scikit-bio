@@ -11,7 +11,7 @@ from future.utils.six import StringIO
 
 from unittest import TestCase, main
 
-from skbio.io.clustal import _clustal_to_msa, _msa_to_clustal
+from skbio.io.clustal import _clustal_to_generator, _generator_to_clustal
 from skbio.io.clustal import (_is_clustal_seq_line, last_space,
                               _delete_trailing_number)
 from skbio.io import RecordError
@@ -49,87 +49,44 @@ class ClustalHelperTests(TestCase):
 
 
 class ClustalIOTests(TestCase):
+    """Tests of the _clustal_to_generator function
+    and _generator_to_clustal function"""
 
-    """Tests of the _clustal_to_msa function"""
+    def setUp(self):
+        self.valid_clustal_out = [
+            StringIO('abc\tucag'),
+            StringIO('abc\tuuu\ndef\tccc\n\n    ***\n\ndef ggg\nabc\taaa\n'),
+            StringIO('\n'.join(['abc uca', 'def ggg ccc'])),
+            StringIO("""CLUSTAL W (1.82) multiple sequence alignment
 
-    def test_null(self):
+
+abc             GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA
+def             ------------------------------------------------------------
+xyz             ------------------------------------------------------------
+
+
+abc             GUCGAUACGUACGUCAGUCAGUACGUCAGCAUGCAUACGUACGUCGUACGUACGU-CGAC
+def             -----------------------------------------CGCGAUGCAUGCAU-CGAU
+xyz             -------------------------------------CAUGCAUCGUACGUACGCAUGAC
+
+
+abc             UGACUAGUCAGCUAGCAUCGAUCAGU
+def             CGAUCAGUCAGUCGAU----------
+xyz             UGCUGCAUCA----------------""")
+
+            ]
+        self.invalid = [StringIO('\n'.join(['dshfjsdfhdfsj',
+                                            'hfsdjksdfhjsdf']))]
+
+    def test_generator_to_clustal_with_empty_input(self):
         """Should return empty dict and list on null input"""
-        result = _clustal_to_msa(StringIO())
+        result = _clustal_to_generator(StringIO())
         self.assertEqual(dict(result), {})
-
-    def test_minimal(self):
-        """Should handle single-line input correctly"""
-        result = _clustal_to_msa([MINIMAL])  # expects seq of lines
-        self.assertEqual(dict(result), {'abc': 'ucag'})
-
-    def test_two(self):
-        """Should handle two-sequence input correctly"""
-        result = _clustal_to_msa(TWO)
-        self.assertEqual(dict(result), {'abc': 'uuuaaa', 'def': 'cccggg'})
 
     def test_real(self):
         """Should handle real Clustal output"""
-        data = _clustal_to_msa(REAL)
-        self.assertEqual(dict(data), {
-            'abc':
-            'GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA'
-            'GUCGAUACGUACGUCAGUCAGUACGUCAGCAUGCAUACGUACGUCGUACGUACGU-CGAC'
-            'UGACUAGUCAGCUAGCAUCGAUCAGU',
-            'def':
-            '------------------------------------------------------------'
-            '-----------------------------------------CGCGAUGCAUGCAU-CGAU'
-            'CGAUCAGUCAGUCGAU----------',
-            'xyz':
-            '------------------------------------------------------------'
-            '-------------------------------------CAUGCAUCGUACGUACGCAUGAC'
-            'UGCUGCAUCA----------------'
-        })
 
-    def test_bad(self):
-        """Should reject bad data if strict"""
-        result = _clustal_to_msa(BAD, strict=False)
-        self.assertEqual(dict(result), {})
-        # should fail unless we turned strict processing off
-        with self.assertRaises(RecordError):
-            dict(_clustal_to_msa(BAD))
-
-    def test_space_labels(self):
-        """Should tolerate spaces in labels"""
-        result = _clustal_to_msa(SPACE_LABELS)
-        self.assertEqual(dict(result), {'abc': 'uca', 'def ggg': 'ccc'})
-
-    def test_write(self):
-        """Should write real Clustal output"""
-        import os
-        fname = "test.aln"
-        testfile = open(fname, 'w')
-        seqs = [('abc',
-                 'GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA'
-                 'GUCGAUACGUACGUCAGUCAGUACGUCAGCAUGCAUACGUACGUCGUACGUACGU-CGAC'
-                 'UGACUAGUCAGCUAGCAUCGAUCAGU'),
-                ('def',
-                 '------------------------------------------------------------'
-                 '-----------------------------------------CGCGAUGCAUGCAU-CGAU'
-                 'CGAUCAGUCAGUCGAU----------'),
-                ('xyz',
-                 '------------------------------------------------------------'
-                 '-------------------------------------CAUGCAUCGUACGUACGCAUGAC'
-                 'UGCUGCAUCA----------------')]
-        records = (x for x in seqs)
-        _msa_to_clustal(records, testfile)
-        testfile.close()
-        raw = open(fname, 'r').read()
-        data = _clustal_to_msa(StringIO(raw))
-        data = list(data)
-        self.assertEqual(len(data), len(seqs))
-        self.assertEqual(set(data), set(seqs))
-        testfile.close()
-        os.remove(fname)
-
-MINIMAL = StringIO('abc\tucag')
-TWO = StringIO('abc\tuuu\ndef\tccc\n\n    ***\n\ndef ggg\nabc\taaa\n')
-
-REAL = StringIO("""CLUSTAL W (1.82) multiple sequence alignment
+        REAL = StringIO("""CLUSTAL W (1.82) multiple sequence alignment
 
 
 abc             GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA 60
@@ -147,10 +104,35 @@ def             CGAUCAGUCAGUCGAU---------- 34
 xyz             UGCUGCAUCA---------------- 33
                 *     ***""")
 
-BAD = StringIO('\n'.join(['dshfjsdfhdfsj', 'hfsdjksdfhjsdf']))
+        data = _clustal_to_generator(REAL)
+        self.assertEqual(dict(data), {
+            'abc':
+            'GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA'
+            'GUCGAUACGUACGUCAGUCAGUACGUCAGCAUGCAUACGUACGUCGUACGUACGU-CGAC'
+            'UGACUAGUCAGCUAGCAUCGAUCAGU',
+            'def':
+            '------------------------------------------------------------'
+            '-----------------------------------------CGCGAUGCAUGCAU-CGAU'
+            'CGAUCAGUCAGUCGAU----------',
+            'xyz':
+            '------------------------------------------------------------'
+            '-------------------------------------CAUGCAUCGUACGUACGCAUGAC'
+            'UGCUGCAUCA----------------'
+        })
 
-SPACE_LABELS = StringIO('\n'.join(['abc uca', 'def ggg ccc']))
-
+    def test_valid(self):
+        import os
+        for valid_out in self.valid_clustal_out:
+            fname = "test.aln"
+            testfile = open(fname, 'w')
+            result_before = _clustal_to_generator(valid_out)
+            records = list(result_before)
+            _generator_to_clustal(records, testfile)
+            testfile.close()
+            testfile = open(fname, 'r')
+            result_after = _clustal_to_generator(testfile)
+            self.assertEquals(set(records), set(result_after))
+        os.remove(fname)
 
 if __name__ == '__main__':
     main()
