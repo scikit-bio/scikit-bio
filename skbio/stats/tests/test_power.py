@@ -51,32 +51,32 @@ class PowerAnalysisTest(TestCase):
         # Sets up the test function, a rank-sum test
         self.f = lambda x: kruskal(*x)[1]
         # Sets up a mapping file
-        meta = {'NR': {'RANGE': 'M', 'SEX': 'F', 'AGE': nan,   'ABX': 'N',
-                       'DAMAGE': 150},
-                'MH': {'RANGE': 'L', 'SEX': 'F', 'AGE': '30s', 'ABX': 'N',
-                       'DAMAGE': 100},
-                'PP': {'RANGE': 'M', 'SEX': 'F', 'AGE': '40s', 'ABX': 'Y',
-                       'DAMAGE': 250},
-                'CD': {'RANGE': 'M', 'SEX': 'F', 'AGE': '40s', 'ABX': 'Y',
-                       'DAMAGE': 100},
-                'MM': {'RANGE': 'C', 'SEX': 'F', 'AGE': '30s', 'ABX': 'N',
-                       'DAMAGE': 500},
-                'SW': {'RANGE': 'M', 'SEX': 'M', 'AGE': '30s', 'ABX': 'N',
-                       'DAMAGE': 050},
-                'TS': {'RANGE': 'M', 'SEX': 'M', 'AGE': '40s', 'ABX': 'N',
-                       'DAMAGE': 750},
-                'CB': {'RANGE': 'L', 'SEX': 'M', 'AGE': '40s', 'ABX': 'N',
-                       'DAMAGE': 250},
-                'BB': {'RANGE': 'C', 'SEX': 'M', 'AGE': '40s', 'ABX': 'Y',
-                       'DAMAGE': 900},
-                'WS': {'RANGE': 'M', 'SEX': 'M', 'AGE': nan,   'ABX': 'N',
-                       'DAMAGE': 200},
-                'SR': {'RANGE': 'C', 'SEX': 'M', 'AGE': nan,   'ABX': 'N',
-                       'DAMAGE': 300},
-                'NF': {'RANGE': 'L', 'SEX': 'M', 'AGE': '60s', 'ABX': 'N',
-                       'DAMAGE': 400}}
+        meta = {'GW': {'INT': 'N', 'ABX': nan, 'DIV': 19.5, 'AGE': '30s',
+                       'SEX': 'M'},
+                'CB': {'INT': 'Y', 'ABX': nan, 'DIV': 42.7, 'AGE': '30s',
+                       'SEX': 'M'},
+                'WM': {'INT': 'N', 'ABX': 'N', 'DIV': 27.5, 'AGE': '20s',
+                       'SEX': 'F'},
+                'MH': {'INT': 'Y', 'ABX': 'N', 'DIV': 62.3, 'AGE': '30s',
+                       'SEX': 'F'},
+                'CD': {'INT': 'Y', 'ABX': 'Y', 'DIV': 36.4, 'AGE': '40s',
+                       'SEX': 'F'},
+                'LF': {'INT': 'Y', 'ABX': 'N', 'DIV': 50.2, 'AGE': '20s',
+                       'SEX': 'M'},
+                'PP': {'INT': 'N', 'ABX': 'Y', 'DIV': 10.8, 'AGE': '30s',
+                       'SEX': 'F'},
+                'MM': {'INT': 'N', 'ABX': 'N', 'DIV': 55.6, 'AGE': '40s',
+                       'SEX': 'F'},
+                'SR': {'INT': 'N', 'ABX': 'Y', 'DIV': 2.2, 'AGE': '20s',
+                       'SEX': 'M'},
+                'TS': {'INT': 'N', 'ABX': 'Y', 'DIV': 16.1, 'AGE': '40s',
+                       'SEX': 'M'},
+                'PC': {'INT': 'Y', 'ABX': 'N', 'DIV': 82.6, 'AGE': '40s',
+                       'SEX': 'M'},
+                'NR': {'INT': 'Y', 'ABX': 'Y', 'DIV': 15.7, 'AGE': '20s',
+                       'SEX': 'F'}}
         self.meta = DataFrame.from_dict(meta, orient='index')
-        self.meta_f = lambda x: test_meta(x, self.meta, 'RANGE', 'DAMAGE')
+        self.meta_f = lambda x: test_meta(x, self.meta, 'INT', 'DIV')
         self.counts = array([5, 15, 25, 35, 45])
         self.powers = [array([[0.105, 0.137, 0.174, 0.208, 0.280],
                               [0.115, 0.135, 0.196, 0.204, 0.281],
@@ -95,9 +95,9 @@ class PowerAnalysisTest(TestCase):
                               [0.249, 0.663, 0.869, 0.951, 0.985]])]
         self.power_alpha = 0.1
         self.effects = array([0.15245, 0.34877, 0.55830])
-        self.bounds = array([0.01027, 0.00293, 0.00734])
-        self.labels = array(['Range', 'Sex', 'Abx'])
-        self.cats = array(['ABX', 'RANGE', 'SEX'])
+        self.bounds = array([0.01049, 0.00299, 0.007492])
+        self.labels = array(['Age', 'Intervention', 'Antibiotics'])
+        self.cats = array(['AGE', 'INT', 'ABX'])
 
     def test_make_power_curves_keyword_error(self):
         """Tests make_power_curves errors when passed a wrong keyword"""
@@ -170,15 +170,15 @@ class PowerAnalysisTest(TestCase):
     def test_make_power_curves_paired(self):
         """Tests make_power_curves handles "PAIRED" data sanely"""
         known_shape_out = (0,)
-        labels = array(['Antibiotics', 'Range', 'Gender'])
-        tests = [lambda x: test_meta(x, self.meta, cat, 'DAMAGE') for
+        tests = [lambda x: test_meta(x, self.meta, cat, 'DIV') for
                  cat in self.cats]
         # Sets up a test for all modes
         test_fig, test_m, test_b, test_l = \
             make_power_curves("PAIRED", tests, self.cats, meta=self.meta,
-                              control_cats=self.cats, labels=labels,
+                              control_cats=self.cats, labels=self.labels,
                               sort_plot=True, grid=False, num_iter=10,
-                              num_runs=2, colormap=array(['r', 'b', 'g']))
+                              num_runs=2, colormap=array(['r', 'b', 'g']),
+                              alpha_pwr=0.2)
         # Test the output is a figure
         self.assertEqual(test_fig, None)
         # Checks the size of the effect and bound array
@@ -189,7 +189,7 @@ class PowerAnalysisTest(TestCase):
     def test_get_paired_effect_runtime_error(self):
         """Checks get_paired_effect generates a runtime error correctly"""
         # Sets up values for handling the data
-        cat = 'RANGE'
+        cat = 'INT'
         control_cats = ['SEX', 'AGE', 'ABX']
         # Checks the error is raised
         with self.assertRaises(RuntimeError):
@@ -197,8 +197,11 @@ class PowerAnalysisTest(TestCase):
 
     def test_get_paired_effects(self):
         """Checks get_paired_effect generates a reasonably sized subsample"""
+        known_p = array([[0.0, 0.0, 0.1, 0.0, 0.1],
+                         [0.0, 0.0, 0.2, 0.3, 0.5]])
+        known_c = array([1, 2, 3, 4, 5])
         # Sets up the handling values
-        cat = 'RANGE'
+        cat = 'INT'
         control_cats = ['SEX']
         # Tests for the control cats
         test_p, test_c = get_paired_effect(self.meta_f, self.meta, cat,
@@ -206,8 +209,8 @@ class PowerAnalysisTest(TestCase):
                                            counts_interval=1, num_iter=10,
                                            num_runs=2)
         # Test the output shapes are sane
-        self.assertEqual(test_p.shape, (2, 2))
-        assert_array_equal(test_c, array([1, 2]))
+        assert_array_equal(known_p, test_p)
+        assert_array_equal(known_c, test_c)
 
     def test_get_unpaired_effect_runtime_error(self):
         """Checks get_unpaired_effect generates a runtime error correctly"""
@@ -247,6 +250,11 @@ class PowerAnalysisTest(TestCase):
                            arange(5, 50, 5), grid=False)
         # Test the output is a figure
         self.assertTrue(isinstance(fig, Figure))
+
+    def test_plot_effects_kwargs_error(self):
+        """Tests that plot_effects errors when a bad keyword is passed"""
+        self.assertRaises(ValueError, plot_effects, self.effects, self.bounds,
+                          self.labels, arange(5, 50, 5), doctor=10)
 
     def test_collate_effect_size_counts_shape_error(self):
         """Checks collate_effect_size errors when counts is not a 1d array"""
@@ -308,7 +316,7 @@ class PowerAnalysisTest(TestCase):
         self.powers[0][0, 1] = 0.01
         powers = [power[0, :] for power in self.powers]
         known_m = array([0.1320, 0.3419, 0.5691])
-        known_b = array([0.0308, 0.0076, 0.0334])
+        known_b = array([0.0355, 0.0085, 0.0374])
 
         test_m, test_b = collate_effect_size(self.counts,
                                              powers,
@@ -330,7 +338,7 @@ class PowerAnalysisTest(TestCase):
         """Tests collate_effect_size can handle power vectors"""
         powers = [power[0, :] for power in self.powers]
         known_m = array([0.1320, 0.3419, 0.5691])
-        known_b = array([0.0217, 0.0076, 0.0334])
+        known_b = array([0.0243, 0.0085, 0.03746])
         test_m, test_b = collate_effect_size(self.counts,
                                              powers,
                                              self.power_alpha)
@@ -344,7 +352,7 @@ class PowerAnalysisTest(TestCase):
 
     def test__check_strs_num(self):
         """Tests check_strs returns sanely when passed a number"""
-        self.assertTrue(_check_strs(4))
+        self.assertTrue(_check_strs(4.2))
 
     def test__check_str_nan(self):
         """Tests check_strs retruns sanely when passed a nan"""
@@ -358,19 +366,19 @@ class PowerAnalysisTest(TestCase):
     def test__confidence_bound_default(self):
         """Checks confidence_bound correctly determines an interval"""
         # Sets the know confidence bound
-        known = 2.1658506
+        known = 2.2830070
         test = _confidence_bound(self.s1)
         assert_almost_equal(test, known, 3)
 
     def test__confidence_bound_df(self):
         """Checks a custom df for confidence_bound"""
-        known = 2.0407076
+        known = 2.15109
         test = _confidence_bound(self.s1, df=15)
         assert_almost_equal(known, test, 3)
 
     def test__confidence_bound_alpha(self):
         """Checks a custom df for confidence_bound"""
-        known = 3.111481
+        known = 3.2797886
         test = _confidence_bound(self.s1, alpha=0.01)
         assert_almost_equal(known, test, 3)
 
@@ -383,7 +391,7 @@ class PowerAnalysisTest(TestCase):
                          [1, 3.1, 2.93],
                          [3, nan, 3.00]])
         # Sets the know value
-        known = array([1.9931, 0.2228, 0.07668])
+        known = array([2.2284, 0.2573, 0.08573])
         # Tests the function
         test = _confidence_bound(samples, axis=0)
         assert_almost_equal(known, test, 3)
@@ -397,7 +405,7 @@ class PowerAnalysisTest(TestCase):
                          [1, 3.1, 2.93],
                          [3, nan, 3.00]])
         # Sest the known value
-        known = 0.50930
+        known = 0.52852
         # Tests the output
         test = _confidence_bound(samples, axis=None)
         assert_almost_equal(known, test, 3)
@@ -503,7 +511,7 @@ class PowerAnalysisTest(TestCase):
         """Checks get_signifigant_subsample errors when inputs are too similar
         """
         with self.assertRaises(RuntimeError):
-            get_signifigant_subsample([None], self.samps)
+            get_signifigant_subsample([None], self.samps, num_rounds=100)
 
     def test_get_signifigant_subsample_no_results(self):
         """Checks get_signifigant_subsample errors when inputs are too similar
@@ -547,38 +555,50 @@ class PowerAnalysisTest(TestCase):
     def test_get_paired_subsamples_default(self):
         """Checks controlled subsets can be generated sanely"""
         # Sets the known array set
-        known_array = [array(['BB']), array(['CB']), array(['TS'])]
+        known_array = [array(['MM', 'SR', 'TS', 'GW', 'PP', 'WM']),
+                       array(['CD', 'LF', 'PC', 'CB', 'MH', 'NR'])]
+
         # Gets the test value
-        cat = 'RANGE'
+        cat = 'INT'
         control_cats = ['SEX', 'AGE']
         test_array = get_paired_subsamples(self.meta, cat, control_cats)
         assert_array_equal(known_array, test_array)
 
-    def test_get_paired_subsamples_skips(self):
-        """Checks controlled susbets can skip sanely"""
+    def test_get_paired_subsamples_break(self):
+        """Checks controlled susbets can skip sanely when there are no matches
+        """
         # Sets known array set
         known_array = [array([]), array([])]
         # Gets the test value
-        cat = 'SEX'
-        control_cats = ['ABX', 'AGE']
+        cat = 'ABX'
+        control_cats = ['SEX', 'AGE', 'INT']
         test_array = get_paired_subsamples(self.meta, cat, control_cats)
+        assert_array_equal(known_array, test_array)
+
+    def test_get_paired_subsample_fewer(self):
+        """Checks controlled subsets can handle fewer samples sanely"""
+        # Set known value
+        known_array = [array(['PP', 'MH']),
+                       array(['CD', 'PC'])]
+        # Sets up test values
+        cat = 'AGE'
+        order = ['30s', '40s']
+        control_cats = ['ABX']
+        test_array = get_paired_subsamples(self.meta, cat, control_cats,
+                                           order=order)
         assert_array_equal(known_array, test_array)
 
     def test_get_paired_subsamples_not_strict(self):
         """Checks controlled subsets can be generated with missing values"""
-        known_array = [array(['NR']), array(['WS'])]
-        # Gets the test values
-        cat = 'SEX'
-        control_cats = ['AGE', 'RANGE']
-        order = ['M', 'F']
-        test_array = get_paired_subsamples(self.meta, cat, control_cats,
-                                           order, strict=False)
-        assert_array_equal(known_array, test_array)
+        known_array = [array(['WM', 'MM', 'GW', 'SR', 'TS']),
+                       array(['LF', 'PC', 'CB', 'NR', 'CD'])]
 
-    def test_plot_effects_kwargs_error(self):
-        """Tests that plot_effects errors when a bad keyword is passed"""
-        self.assertRaises(ValueError, plot_effects, self.effects, self.bounds,
-                          self.labels, arange(5, 50, 5), doctor=10)
+        # Gets the test values
+        cat = 'INT'
+        control_cats = ['ABX', 'AGE']
+        test_array = get_paired_subsamples(self.meta, cat, control_cats,
+                                           strict=False)
+        assert_array_equal(known_array, test_array)
 
 if __name__ == '__main__':
     main()

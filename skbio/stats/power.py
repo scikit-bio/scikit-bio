@@ -7,11 +7,39 @@ The purpose of this module is to provide empirical, post-hoc power estimation
 of microbiome data. It also provides support to subsample data to faciliate
 this analysis.
 
-The power estimates here can use be used in conjunction with the statsmodel
-power module to estimate effect size.
+The underlying principle is based on subsampling and monte carlo simulation.
+Assume that there is some set of populations, $K_{1}, K_{2}, ... K_{n}$ which
+have some property, $\mu$ such that $\mu_{1} \neq \mu_{2} \neq ... \neq
+\mu_{n}$. For each of the populations, a sample, $S$ can be drawn, with a
+parameter, $x$ where $x \aeq \mu$ and for the samples, we can use a test, f,
+to show that $x_{1} \neq x_{2} \neq ... \neq x_{n}$.
 
-The general format is to define a test for the data which takes a list of
-values (i.e. sample ids) and returns a p-value.
+Since we known that $\mu_{1} \neq \mu_{2} \neq ... \neq \mu_{n}$, we know we
+should reject the null hypothesis. If we fail to reject the null hypothesis,
+we have comitted a Type II error and our result is a False negative. We can
+estimate the frequency of Type II errors at various sampling depths by
+repeatedly subsampling the populations and observing how often we see a False
+negative. If we repeat this several times for each subsampling depth, and vary
+the depths we use, we can start to approximate a relationship between the
+number of samples we use and the rate of false negatives, also called the
+statistical power of the test.
+
+We can then use the rate of false negatives and use the `statsmodels.power`
+package to solve for an effect size. This can be used to extrapolate a power
+curve for the data.
+
+The general format for functions in this module is to define a statistical
+test function which will take a list of ids, and return a p value. The test is
+then evaluated over a series of subsample sizes.
+
+With microbiome data, there are three ways we can approach selecting our
+sample. We may choose to simply draw $n$ observations at random from 
+
+Examples
+--------
+
+
+
 
 """
 
@@ -26,9 +54,9 @@ from __future__ import division
 from future.utils import viewitems
 from copy import deepcopy
 from numpy import (array, zeros, ones, round as nround, hstack, isnan, ndarray,
-                   nan, nanmean, nanstd, sqrt, arange, delete, where)
+                   nan, sqrt, arange, delete, where)
 from numpy.random import choice
-from scipy.stats import t
+from scipy.stats import t, nanmean, nanstd
 from statsmodels.stats.power import FTestAnovaPower
 from matplotlib import rcParams
 
@@ -43,7 +71,134 @@ rcParams['text.usetex'] = True
 
 
 def make_power_curves(mode, tests, cats, samples=None, meta=None, **kwargs):
-    """ """
+    r"""Plots a power curve for a specified set of data and categories
+
+
+
+    Parameters
+    ----------
+    mode : {"SIGNIFICANT", "ALL", "PAIRED"}
+        how random observations should be drawn.
+        "SIGNIFICANT" indicates that observations should be drawn from two
+        subsets of samples which are significantly different at the level
+        indictated by `alpha_pwr` / `scaling`.
+        "ALL" indicates the observations should be drawn from the sample, and
+        not subsamples.
+        "PAIRED" indicates samples should be drawn using metadata to control
+        for variable categories. The samples drawn are limited by the `cats`
+        being varied and the `control_cats` for the samples given in `order`.
+        Samples will differ in the `cat`, and matched in `control_cats` so that
+        for a set of observations, all the values in the `control_cats` will
+        be the same, and there will be an observation representing each
+        sample specified in `order`.
+    test : function
+        the statistical test which accepts an array-like of sample ids
+        (list of lists) and returns a p-value.
+    cats : array
+        a list of the category names used for calculating the effect sizes.
+    samples : {None, array}, optional
+        Default is None. `samples` can be a list of lists or an array where
+        each sublist or row in the array corresponds to a sampled group.
+        `samples` must be defined if `mode` is "ALL" or "SIGNIFICANT".
+    meta : {None, dataframe}, optional
+        Default is None.the metadata associated with the samples. `meta` must
+        be defined if `mode` is "PAIRED".
+    control_cats : {array-like, None}, optional
+        Default is None. `control_cats` cannot be None if `mode` is "PAIRED".
+        The metadata categories to be used as controls. For example, if you
+        wanted to control age (`cat` = "AGE"), you might want to control for
+        gender and health status (i.e. `control_cats` = ["SEX", "HEALTHY"]).
+        `control_cats` can intersect with `cats`. If this is the case, the
+        experimental cat will be removed from the control_categories during
+        that analysis.
+    order : {None, list}, optional
+        Default is None. The order of groups in the category. This can be used
+        to limit the groups selected. For example, if there's a category with
+        groups 'A', 'B' and 'C', and you only want to look at A vs B, `order`
+        would be set to ['A', 'B'].
+    sub_size : {None, int}, optional
+        the maximum number of samples to select from a group. If no value is
+        provided, this will be the same as the size of the smallest group.
+        Otherwise, this will be compared to the size of the smallest group, and
+        which ever is lower will be used.
+    counts : array, optional
+        the sample counts to be plotted in the power curve.
+
+    Returns
+    -------
+    eff_fig : figure
+        figure showing the effect_size curves
+    eff_means : array
+        the mean effect size for each category
+    eff_bounds : array
+        the bound for each category, where the confidence interval around the
+        effect size is defined as [`eff_means` - `eff_bounds`,
+        `eff_means` + `eff_bounds`]
+    labels : array
+        the cleaned up category names
+
+    Raises
+    ------
+    ValueError
+        if mode is not "PAIRED", "SIGNIFICANT", or "ALL"
+    ValueError
+        if mode is "PAIRED" and meta or control_cats are not defined
+    ValueError
+        if mode is "ALL" or "SIGNIFICANT" and samples is not defined
+
+    Also See
+    --------
+    get_paired_effect
+    get_unpaired_effect
+    plot_effects
+
+    Examples
+    --------
+    There are multiple ways to approach defining the subsample we will use to
+    test our effect size. We can select a random subset of n observations from
+    the two samples, we can select n observations from two subsets which we
+    known to be signfigiatnly different, perhaps becuase there are a lot more
+    observations in one sample than the other, and we'd like to make the
+    observations we use for the power analysis approximately equal weight, or
+    we can subsample while controlling for other factors which we think may
+    effect the out come.
+
+    Let's set up a mapping file for an experiment where subjects were left
+    untreated (INTV = 0), treated with a low level of a drug (INTV = 1) or
+    a high level (INTV = 2). Additionally, antibiotic use (`ABX`), age in
+    decades (`AGE`) and sex (`SEX`) were defined.
+
+    >>> import pandas as pd
+    >>> import numpy as np
+    >>> meta = {'BB': {'DIV': 33.0, 'INTV': 0, 'ABX': '6 mo', 'AGE': '40s},
+    ...         'CB': {'DIV': 44.0, 'INTV': 2, 'ABX': '6 mo', 'AGE': '40s'},
+    ...         'MH': {'DIV': 47.4, 'INTV': 2, 'ABX': 'year', 'AGE': '30s',
+    ...         'WS': {'DIV': 35.0, 'INTV': 1, 'ABX': '3 mo', 'AGE': np.nan},
+    ...         'CD': {'DIV': 44.4, 'INTV': 1, 'ABX': 'year', 'AGE': '40s'},
+    ...         'PP': {'DIV': 37.0, 'INTV': 1, 'ABX': '3 mo', 'AGE': '40s'},
+    ...         'MM': {'DIV': 29.5, 'INTV': 0, 'ABX': '3 mo', 'AGE': '30s'},
+    ...         'SR': {'DIV': 33.0, 'INTV': 0, 'ABX': '6 mo', 'AGE': np.nan},
+    ...         'SW': {'DIV': 32.5, 'INTV': 1, 'ABX': '3 mo', 'AGE': '30s'},
+    ...         'TS': {'DIV': 38.5, 'INTV': 1, 'ABX': '6 mo', 'AGE': '40s'},
+    ...         'NF': {'DIV': 48.0, 'INTV': 2, 'ABX': 'year', 'AGE': np.nan},
+    ...         'NR': {'DIV': 40.7, 'INTV': 1, 'ABX': '6 mo', 'AGE': np.nan}}
+    >>> meta = pd.DataFrame.from_dict(meta, orient='index')
+
+    Let's look at the effect size of different interventions on the diversity.
+    We'll compare the diveristy, using a kruskal wallis test.
+
+    >>> from scipy.stats import kruskal
+    >>> test = lambda x: kruskal(*x)[1]
+
+    Let's start by testing random subsampling on the diversity.
+    >>> np.random.seed(20)
+    >>> from skbio.stats.power import make_power_curves
+    >>> 
+
+
+
+
+    """
     # Handles keyword arguments
     eff_kwds = {'control_cats': None,
                 'order': None,
@@ -81,7 +236,7 @@ def make_power_curves(mode, tests, cats, samples=None, meta=None, **kwargs):
             raise ValueError('%s is not a supported keyword argument.' % key)
 
     # Checks the mode argument is sane
-    if mode.upper() not in {'PAIRED', 'SIGNIFICANT', 'ALL'}:
+    if mode not in {'PAIRED', 'SIGNIFICANT', 'ALL'}:
         raise ValueError('%s is not a supported mode.' % mode)
     elif mode == 'PAIRED' and (meta is None or
                                eff_kwds['control_cats'] is None):
@@ -324,6 +479,13 @@ def get_unpaired_effect(mode, test, samples, sub_size=None, alpha_pwr=0.05,
         a penalty scale on `alpha_pwr`, so the probability that two
         distributions are different in "SIGNIFICANT" mode is less than
         `alpha_pwr` / `scaling`.
+
+    labels : 1d array
+        a list of formatted strings describing the effects, to be used in the
+        legend.
+
+    counts : 1d array
+        the counts where power should be calculated.
 
     Returns
     -------
@@ -654,8 +816,8 @@ def collate_effect_size(counts, powers, alpha):
             effect_means[idp] = nan
             effect_bounds[idp] = nan
         else:
-            effect_means[idp] = nanmean(eff)
-            effect_bounds[idp] = _confidence_bound(eff, alpha)
+            effect_means[idp] = nanmean(eff, None)
+            effect_bounds[idp] = _confidence_bound(eff, alpha, None)
 
     return effect_means, effect_bounds
 
@@ -1132,7 +1294,7 @@ def get_paired_subsamples(meta, cat, control_cats, order=None, strict=True):
         if not undefed_check.all() and strict:
             continue
         num_samps = len(ctrl_ids)
-        exp_ids = [array(ctrl_ids)]
+        exp_ids = []
         # Loops through the other groups
         for exp_group in exp_groups:
             # Checks group to be considered is included in the grouping
@@ -1141,9 +1303,9 @@ def get_paired_subsamples(meta, cat, control_cats, order=None, strict=True):
             # Gets the id associated with the group
             pos_ids = exp_group[check_group]
             # Randomly subsamples the possible ids
-            if len(pos_ids) < num_samps:
-                continue
-            exp_ids.append(choice(pos_ids, num_samps, replace=False))
+            num_draw = min([len(pos_ids), num_samps])
+            exp_ids.append(choice(ctrl_ids, num_draw, replace=False))
+            exp_ids.append(choice(pos_ids, num_draw, replace=False))
 
         if len(exp_ids) == num_groups:
             for idx in xrange(num_groups):
