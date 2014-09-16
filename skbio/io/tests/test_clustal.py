@@ -83,7 +83,7 @@ xyz             UGCUGCAUCA----------------""")
         result = _clustal_to_generator(StringIO())
         self.assertEqual(dict(result), {})
 
-    def test_bad(self):
+    def test_generator_to_clustal_with_bad_input(self):
         """Should reject bad data if strict"""
         BAD = StringIO('\n'.join(['dshfjsdfhdfsj', 'hfsdjksdfhjsdf']))
         result = _clustal_to_generator(BAD, strict=False)
@@ -92,7 +92,7 @@ xyz             UGCUGCAUCA----------------""")
         with self.assertRaises(RecordError):
             dict(_clustal_to_generator(BAD))
 
-    def test_real(self):
+    def test_generator_to_clustal_with_real_input(self):
         """Should handle real Clustal output"""
 
         REAL = StringIO("""CLUSTAL W (1.82) multiple sequence alignment
@@ -129,7 +129,7 @@ xyz             UGCUGCAUCA---------------- 33
             'UGCUGCAUCA----------------'
         })
 
-    def test_valid(self):
+    def test_generator_to_clustal_and_clustal_to_generator(self):
         import os
         for valid_out in self.valid_clustal_out:
             fname = "test.aln"
