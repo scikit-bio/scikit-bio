@@ -33,13 +33,10 @@ test function which will take a list of ids, and return a p value. The test is
 then evaluated over a series of subsample sizes.
 
 With microbiome data, there are three ways we can approach selecting our
-sample. We may choose to simply draw $n$ observations at random from 
-
-Examples
---------
-
-
-
+sample. We may choose to simply draw $n$ observations at random from the two
+underlying samples. Alternatively, we can draw subsamples which are
+signifigantly different. Finally, we can try to match samples based on a set
+of control categories.
 
 """
 
@@ -50,6 +47,7 @@ Examples
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # -----------------------------------------------------------------------------
+
 from __future__ import division
 from future.utils import viewitems
 from copy import deepcopy
@@ -72,8 +70,6 @@ rcParams['text.usetex'] = True
 
 def make_power_curves(mode, tests, cats, samples=None, meta=None, **kwargs):
     r"""Plots a power curve for a specified set of data and categories
-
-
 
     Parameters
     ----------
@@ -152,53 +148,8 @@ def make_power_curves(mode, tests, cats, samples=None, meta=None, **kwargs):
     get_unpaired_effect
     plot_effects
 
-    Examples
-    --------
-    There are multiple ways to approach defining the subsample we will use to
-    test our effect size. We can select a random subset of n observations from
-    the two samples, we can select n observations from two subsets which we
-    known to be signfigiatnly different, perhaps becuase there are a lot more
-    observations in one sample than the other, and we'd like to make the
-    observations we use for the power analysis approximately equal weight, or
-    we can subsample while controlling for other factors which we think may
-    effect the out come.
-
-    Let's set up a mapping file for an experiment where subjects were left
-    untreated (INTV = 0), treated with a low level of a drug (INTV = 1) or
-    a high level (INTV = 2). Additionally, antibiotic use (`ABX`), age in
-    decades (`AGE`) and sex (`SEX`) were defined.
-
-    >>> import pandas as pd
-    >>> import numpy as np
-    >>> meta = {'BB': {'DIV': 33.0, 'INTV': 0, 'ABX': '6 mo', 'AGE': '40s},
-    ...         'CB': {'DIV': 44.0, 'INTV': 2, 'ABX': '6 mo', 'AGE': '40s'},
-    ...         'MH': {'DIV': 47.4, 'INTV': 2, 'ABX': 'year', 'AGE': '30s',
-    ...         'WS': {'DIV': 35.0, 'INTV': 1, 'ABX': '3 mo', 'AGE': np.nan},
-    ...         'CD': {'DIV': 44.4, 'INTV': 1, 'ABX': 'year', 'AGE': '40s'},
-    ...         'PP': {'DIV': 37.0, 'INTV': 1, 'ABX': '3 mo', 'AGE': '40s'},
-    ...         'MM': {'DIV': 29.5, 'INTV': 0, 'ABX': '3 mo', 'AGE': '30s'},
-    ...         'SR': {'DIV': 33.0, 'INTV': 0, 'ABX': '6 mo', 'AGE': np.nan},
-    ...         'SW': {'DIV': 32.5, 'INTV': 1, 'ABX': '3 mo', 'AGE': '30s'},
-    ...         'TS': {'DIV': 38.5, 'INTV': 1, 'ABX': '6 mo', 'AGE': '40s'},
-    ...         'NF': {'DIV': 48.0, 'INTV': 2, 'ABX': 'year', 'AGE': np.nan},
-    ...         'NR': {'DIV': 40.7, 'INTV': 1, 'ABX': '6 mo', 'AGE': np.nan}}
-    >>> meta = pd.DataFrame.from_dict(meta, orient='index')
-
-    Let's look at the effect size of different interventions on the diversity.
-    We'll compare the diveristy, using a kruskal wallis test.
-
-    >>> from scipy.stats import kruskal
-    >>> test = lambda x: kruskal(*x)[1]
-
-    Let's start by testing random subsampling on the diversity.
-    >>> np.random.seed(20)
-    >>> from skbio.stats.power import make_power_curves
-    >>> 
-
-
-
-
     """
+
     # Handles keyword arguments
     eff_kwds = {'control_cats': None,
                 'order': None,

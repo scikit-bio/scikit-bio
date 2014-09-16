@@ -25,17 +25,16 @@ from skbio.stats.power import (make_power_curves,
                                get_signifigant_subsample,
                                get_paired_subsamples)
 
-
-def test_meta(ids, meta, cat, div):
-    """Checks thhe div metric with a kruskal wallis"""
-    out = [meta.loc[id_, div] for id_ in ids]
-    return kruskal(*out)[1]
-
-
 class PowerAnalysisTest(TestCase):
 
     def setUp(self):
         """Initializes data for each test instance"""
+        # Defines a testing function
+        def test_meta(ids, meta, cat, div):
+            """Checks thhe div metric with a kruskal wallis"""
+            out = [meta.loc[id_, div] for id_ in ids]
+            return kruskal(*out)[1]
+        self.test_meta = test_meta
         # Sets the random seed
         numpy.random.seed(5)
         # Sets up the distributions of data for use
@@ -127,6 +126,17 @@ class PowerAnalysisTest(TestCase):
         with self.assertRaises(ValueError):
             make_power_curves("SIGNIFICANT", self.f, self.cats)
 
+    def test_make_power_curve_labels_off(self):
+        """Checks the number of labels is handled sanely"""
+        tests = [lambda x: self.test_meta(x, self.meta, cat, 'DIV') for
+                 cat in self.cats]
+        with self.assertRaises(ValueError):
+            make_power_curves("PAIRED", tests, self.cats, meta=self.meta,
+                              control_cats=self.cats, labels=["RED"],
+                              sort_plot=True, grid=False, num_iter=10,
+                              num_runs=2, colormap=array(['r', 'b', 'g']),
+                              alpha_pwr=0.2)
+
     def test_make_power_curves_all(self):
         """Tests make_power_curves handles ALL mode sanely"""
         known_shape_out = (1, )
@@ -170,7 +180,7 @@ class PowerAnalysisTest(TestCase):
     def test_make_power_curves_paired(self):
         """Tests make_power_curves handles "PAIRED" data sanely"""
         known_shape_out = (0,)
-        tests = [lambda x: test_meta(x, self.meta, cat, 'DIV') for
+        tests = [lambda x: self.test_meta(x, self.meta, cat, 'DIV') for
                  cat in self.cats]
         # Sets up a test for all modes
         test_fig, test_m, test_b, test_l = \
