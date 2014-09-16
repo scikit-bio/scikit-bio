@@ -83,6 +83,15 @@ xyz             UGCUGCAUCA----------------""")
         result = _clustal_to_generator(StringIO())
         self.assertEqual(dict(result), {})
 
+    def test_bad(self):
+        """Should reject bad data if strict"""
+        BAD = StringIO('\n'.join(['dshfjsdfhdfsj', 'hfsdjksdfhjsdf']))
+        result = _clustal_to_generator(BAD, strict=False)
+        self.assertEqual(dict(result), {})
+        # should fail unless we turned strict processing off
+        with self.assertRaises(RecordError):
+            dict(_clustal_to_generator(BAD))
+
     def test_real(self):
         """Should handle real Clustal output"""
 
