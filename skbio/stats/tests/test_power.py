@@ -22,7 +22,7 @@ from skbio.stats.power import (make_power_curves,
                                compare_distributions,
                                calculate_power_curve,
                                bootstrap_power_curve,
-                               get_signifigant_subsample,
+                               get_significant_subsample,
                                get_paired_subsamples)
 
 
@@ -234,7 +234,7 @@ class PowerAnalysisTest(TestCase):
         self.assertEqual(test_p.shape, (10, 4))
         assert_array_equal(arange(10, 50, 10), test_c)
 
-    def test_get_unpaired_effects_signifigant_samples(self):
+    def test_get_unpaired_effects_significant_samples(self):
         """Checks get_unpaired_effect handles all samples correctly"""
         test_p, test_c = get_unpaired_effect('SIGNIFICANT', self.f, self.pop)
         self.assertEqual(test_p.shape, (10, 4))
@@ -518,14 +518,14 @@ class PowerAnalysisTest(TestCase):
         assert_allclose(test_mean, known_mean, rtol=0.05, atol=0.05)
         assert_allclose(test_bound, known_bound, rtol=0.1, atol=0.01)
 
-    def test_get_signifigant_subsample_no_tests(self):
-        """Checks get_signifigant_subsample errors when inputs are too similar
+    def test_get_significant_subsample_no_tests(self):
+        """Checks get_significant_subsample errors when inputs are too similar
         """
         with self.assertRaises(RuntimeError):
-            get_signifigant_subsample([None], self.samps, num_rounds=100)
+            get_significant_subsample([None], self.samps, num_rounds=100)
 
-    def test_get_signifigant_subsample_no_results(self):
-        """Checks get_signifigant_subsample errors when inputs are too similar
+    def test_get_significant_subsample_no_results(self):
+        """Checks get_significant_subsample errors when inputs are too similar
         """
         # Sets up a function which will fail testing
         def test_f(x):
@@ -535,11 +535,11 @@ class PowerAnalysisTest(TestCase):
                 return 0.5
         # Tests a value error is raised
         with self.assertRaises(RuntimeError):
-            get_signifigant_subsample([test_f], self.samps, sub_size=10,
+            get_significant_subsample([test_f], self.samps, sub_size=10,
                                       num_rounds=5)
 
     def test_get_signfigiant_subsample_no_iteration(self):
-        """Checks get_signifigant_subsample errors when iteration is not found
+        """Checks get_significant_subsample errors when iteration is not found
         """
         # Sets up a function which will fail testing
         def test_f(x):
@@ -549,16 +549,16 @@ class PowerAnalysisTest(TestCase):
                 return 0.5
         # Tests if a RuntimeError is raised
         with self.assertRaises(RuntimeError):
-            get_signifigant_subsample([test_f], self.samps, sub_size=5,
+            get_significant_subsample([test_f], self.samps, sub_size=5,
                                       num_rounds=5)
 
-    def test_get_signifigant_subsample_default(self):
-        """Checks get_signifigant_subsample functions sanely under defaults"""
+    def test_get_significant_subsample_default(self):
+        """Checks get_significant_subsample functions sanely under defaults"""
         pop = [arange(0, 10, 1), arange(0, 20, 0.2)]
         # Checks the overall data meets the parameters
         self.assertNotEqual(len(pop[0]), len(pop[1]))
         # Generates subsamples
-        test_ids = get_signifigant_subsample([self.f], pop)
+        test_ids = get_significant_subsample([self.f], pop)
         # Checks the results
         self.assertEqual(len(test_ids[0]), len(test_ids[1]))
         self.assertTrue(self.f(test_ids) < 0.05)

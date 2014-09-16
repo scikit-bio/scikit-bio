@@ -35,7 +35,7 @@ then evaluated over a series of subsample sizes.
 With microbiome data, there are three ways we can approach selecting our
 sample. We may choose to simply draw $n$ observations at random from the two
 underlying samples. Alternatively, we can draw subsamples which are
-signifigantly different. Finally, we can try to match samples based on a set
+significantly different. Finally, we can try to match samples based on a set
 of control categories.
 
 """
@@ -456,7 +456,7 @@ def get_unpaired_effect(mode, test, samples, sub_size=None, alpha_pwr=0.05,
     # Gets a population of sample ids to check the number of subsamples
     # generated
     if mode == 'SIGNIFICANT':
-            sub_ids = get_signifigant_subsample([test], samples, sub_size,
+            sub_ids = get_significant_subsample([test], samples, sub_size,
                                                 alpha_pwr, num_iter, scaling)
     else:
         sub_ids = samples
@@ -482,7 +482,7 @@ def get_unpaired_effect(mode, test, samples, sub_size=None, alpha_pwr=0.05,
     for id1 in arange(1, num_runs):
         # Gets the subsample
         if mode == 'SIGNIFICANT':
-            sub_ids = get_signifigant_subsample([test], samples, sub_size,
+            sub_ids = get_significant_subsample([test], samples, sub_size,
                                                 alpha_pwr, num_iter, scaling)
         else:
             sub_ids = samples
@@ -1071,7 +1071,7 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
     return power_mean, power_bound
 
 
-def get_signifigant_subsample(tests, samples, sub_size=None, p_crit=0.05,
+def get_significant_subsample(tests, samples, sub_size=None, p_crit=0.05,
                               num_rounds=500, p_scaling=5):
     """
     Subsamples data to an even sample number for all groups
