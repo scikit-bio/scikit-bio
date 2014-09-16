@@ -7,12 +7,15 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
+from future.utils.six import string_types
 
 from collections import Sequence, Counter, defaultdict
 from itertools import product
-from skbio.sequence import BiologicalSequenceError
 
+import numpy as np
 from scipy.spatial.distance import hamming
+
+from skbio.sequence import BiologicalSequenceError
 
 
 class BiologicalSequence(Sequence):
@@ -27,19 +30,30 @@ class BiologicalSequence(Sequence):
     description : str, optional
         A description or comment about the sequence (e.g., "green
         fluorescent protein").
+    quality : 1-D array_like, int, optional
+        Integer quality scores, one per sequence character. If provided, must
+        be the same length as the biological sequence. Can be a 1-D
+        ``numpy.ndarray`` of integers, or a structure that can be converted to
+        this representation using ``numpy.asarray``. A copy will *not* be made
+        if `quality` is already a 1-D ``numpy.ndarray`` with an ``int``
+        ``dtype``. The array will be made read-only (i.e., its ``WRITEABLE``
+        flag will be set to ``False``).
     validate : bool, optional
         If True, runs the `is_valid` method after construction and raises
         BiologicalSequenceError if ``is_valid == False``.
 
     Attributes
     ----------
-    description
+    sequence
     id
+    description
+    quality
 
     Raises
     ------
     skbio.sequence.BiologicalSequenceError
-      If ``validate == True`` and ``is_valid == False``.
+        If ``validate == True`` and ``is_valid == False``, or if `quality` is
+        not the correct shape.
 
     See Also
     --------
@@ -160,11 +174,15 @@ class BiologicalSequence(Sequence):
         """
         return {}
 
-    def __init__(self, sequence, id="", description="",
+    def __init__(self, sequence, id="", description="", quality=None,
                  validate=False):
-        self._sequence = ''.join(sequence)
+        if not isinstance(sequence, string_types):
+            sequence = ''.join(sequence)
+        self._sequence = sequence
+
         self._id = id
         self._description = description
+        self._set_quality(quality)
 
         if validate and not self.is_valid():
             unsupported_chars = self.unsupported_characters()
@@ -202,6 +220,10 @@ class BiologicalSequence(Sequence):
     def __eq__(self, other):
         """The equality operator.
 
+        Biological sequences are equal if their sequence is the same and they
+        are the same type. Identifier, description, and quality scores
+        **are ignored**.
+
         Parameters
         ----------
         other : `BiologicalSequence`
@@ -212,10 +234,18 @@ class BiologicalSequence(Sequence):
         bool
             Indicates whether `self` and `other` are equal.
 
+        See Also
+        --------
+        __ne__
+        equals
+
         Notes
         -----
-        `BiologicalSequences` are equal if their sequence is the same and
-        they are the same type.
+        See ``BiologicalSequence.equals`` for more fine-grained control of
+        equality testing.
+
+        This method is equivalent to
+        ``self.equals(other, ignore=['id', 'description', 'quality'])``.
 
         Examples
         --------
@@ -228,45 +258,80 @@ class BiologicalSequence(Sequence):
         >>> u == t
         False
 
+        Note that even though the quality scores do not match between ``u`` and
+        ``v``, they are considered equal:
+
+        >>> v = BiologicalSequence('GGUCGUGACCGA',
+        ...                        quality=[1, 5, 3, 3, 2, 42, 100, 9, 10, 55,
+        ...                                 42, 42])
+        >>> u == v
+        True
+
         .. shownumpydoc
 
         """
-        if self.__class__ != other.__class__:
-            return False
-        elif self._sequence != other._sequence:
-            return False
-        else:
-            return True
+        return self.equals(other, ignore=['id', 'description', 'quality'])
 
     def __getitem__(self, i):
         """The indexing operator.
 
         Parameters
         ----------
-        i : int
-            The position to return from the `BiologicalSequence`.
+        i : int, slice, or sequence of ints
+            The position(s) to return from the `BiologicalSequence`. If `i` is
+            a sequence of ints, these are assumed to be indices in the sequence
+            to keep.
 
         Returns
         -------
-        str
-            The character at position `i` in the `BiologicalSequence`.
+        BiologicalSequence
+            New biological sequence containing the character(s) at position(s)
+            `i` in the current `BiologicalSequence`. If quality scores are
+            present, the quality score at position(s) `i` will be included in
+            the returned sequence. ID and description are also included.
 
         Examples
         --------
         >>> from skbio.sequence import BiologicalSequence
         >>> s = BiologicalSequence('GGUCGUGAAGGA')
+
+        Obtain a single character from the biological sequence:
+
         >>> s[1]
         <BiologicalSequence: G (length: 1)>
+
+        Obtain a slice:
+
+        >>> s[7:]
+        <BiologicalSequence: AAGGA (length: 5)>
+
+        Obtain characters at the following indices:
+
+        >>> s[[3, 4, 7, 0, 3]]
+        <BiologicalSequence: CGAGC (length: 5)>
 
         .. shownumpydoc
 
         """
+        # TODO update this method when #60 is resolved. we have to deal with
+        # discrepancies in indexing rules between str and ndarray... hence the
+        # ugly code
         try:
-            return self.__class__(self._sequence[i],
-                                  self.id, self.description)
+            try:
+                seq = self.sequence[i]
+                qual = self.quality[i] if self.has_quality() else None
+            except TypeError:
+                seq = [self.sequence[idx] for idx in i]
+
+                if self.has_quality():
+                    qual = [self.quality[idx] for idx in i]
+                else:
+                    qual = None
         except IndexError:
             raise IndexError(
-                "Position %d is out of range for %r." % (i, self))
+                "Position %r is out of range for %r." % (i, self))
+
+        return self.copy(sequence=seq, quality=qual)
 
     def __hash__(self):
         """The hash operator.
@@ -334,6 +399,10 @@ class BiologicalSequence(Sequence):
     def __ne__(self, other):
         """The inequality operator.
 
+        Biological sequences are not equal if their sequence is different or
+        they are not the same type. Identifier, description, and quality scores
+        **are ignored**.
+
         Parameters
         ----------
         other : `BiologicalSequence`
@@ -344,10 +413,15 @@ class BiologicalSequence(Sequence):
         bool
             Indicates whether `self` and `other` are not equal.
 
+        See Also
+        --------
+        __eq__
+        equals
+
         Notes
         -----
-        `BiologicalSequences` are not equal if their sequence is different or
-        they are not the same type.
+        See ``BiologicalSequence.equals`` for more fine-grained control of
+        equality testing.
 
         Examples
         --------
@@ -363,7 +437,7 @@ class BiologicalSequence(Sequence):
         .. shownumpydoc
 
         """
-        return not self.__eq__(other)
+        return not (self == other)
 
     def __repr__(self):
         """The repr method.
@@ -375,9 +449,9 @@ class BiologicalSequence(Sequence):
 
         Notes
         -----
-        String representation contains the class name, the first ten
-        characters of the sequence followed by elipses (or the full sequence
-        and no elipses, if the sequence is less than 11 characters long),
+        String representation contains the class name, the first ten characters
+        of the sequence followed by ellipses (or the full sequence
+        and no ellipses, if the sequence is less than 11 characters long),
         followed by the sequence length.
 
         Examples
@@ -395,14 +469,14 @@ class BiologicalSequence(Sequence):
         .. shownumpydoc
 
         """
-        first_ten = str(self)[:10]
+        first_ten = self.sequence[:10]
         cn = self.__class__.__name__
         length = len(self)
         if length > 10:
-            elipses = "..."
+            ellipses = "..."
         else:
-            elipses = ""
-        return '<%s: %s%s (length: %d)>' % (cn, first_ten, elipses, length)
+            ellipses = ""
+        return '<%s: %s%s (length: %d)>' % (cn, first_ten, ellipses, length)
 
     def __reversed__(self):
         """The reversed operator.
@@ -434,8 +508,8 @@ class BiologicalSequence(Sequence):
         -------
         str
             String representation of the `BiologicalSequence`. This will be the
-            full sequence, but will not contain information about the type, or
-            `self.id` or `self.description`.
+            full sequence, but will not contain information about the type,
+            identifier, description, or quality scores.
 
         See Also
         --------
@@ -456,31 +530,258 @@ class BiologicalSequence(Sequence):
         .. shownumpydoc
 
         """
-        return ''.join(self._sequence)
+        return self.sequence
+
+    @property
+    def sequence(self):
+        """String containing underlying biological sequence characters.
+
+        A string representing the characters of the biological sequence.
+
+        Notes
+        -----
+        This property is not writeable.
+
+        """
+        return self._sequence
+
+    @property
+    def id(self):
+        """ID of the biological sequence.
+
+        A string representing the identifier (ID) of the biological sequence.
+
+        Notes
+        -----
+        This property is not writeable.
+
+        """
+        return self._id
 
     @property
     def description(self):
-        """Return the description of the `BiologicalSequence`
+        """Description of the biological sequence.
 
-        Returns
-        -------
-        str
-            The description attribute of the `BiologicalSequence`
+        A string representing the description of the biological sequence.
+
+        Notes
+        -----
+        This property is not writeable.
 
         """
         return self._description
 
     @property
-    def id(self):
-        """Return the id of the `BiologicalSequence`
+    def quality(self):
+        """Quality scores of the characters in the biological sequence.
+
+        A 1-D ``numpy.ndarray`` of integers representing quality scores for
+        each character in the biological sequence, or ``None`` if quality
+        scores are not present.
+
+        Notes
+        -----
+        This property is not writeable. A copy of the array is *not* returned.
+        The array is read-only (i.e., its ``WRITEABLE`` flag is set to
+        ``False``).
+
+        """
+        return self._quality
+
+    def has_quality(self):
+        """Return bool indicating presence of quality scores in the sequence.
 
         Returns
         -------
-        str
-            The id attribute of the `BiologicalSequence`
+        bool
+            ``True`` if the biological sequence has quality scores, ``False``
+            otherwise.
+
+        See Also
+        --------
+        quality
 
         """
-        return self._id
+        return self.quality is not None
+
+    def copy(self, **kwargs):
+        """Return a copy of the current biological sequence.
+
+        Returns a copy of the current biological sequence, optionally with
+        updated attributes specified as keyword arguments.
+
+        Parameters
+        ----------
+        kwargs : dict, optional
+            Keyword arguments passed to the ``BiologicalSequence`` (or
+            subclass) constructor. The returned copy will have its attributes
+            updated based on the values in `kwargs`. If an attribute is
+            missing, the copy will keep the same attribute as the current
+            biological sequence. Valid attribute names are `'sequence'`,
+            `'id'`, `'description'`, and `'quality'`. Default behavior is to
+            return a copy of the current biological sequence without changing
+            any attributes.
+
+        Returns
+        -------
+        BiologicalSequence
+            Copy of the current biological sequence, optionally with updated
+            attributes based on `kwargs`. Will be the same type as the current
+            biological sequence (`self`).
+
+        Notes
+        -----
+        This is a shallow copy, but since biological sequences are immutable,
+        it is conceptually the same as a deep copy.
+
+        This method is the preferred way of creating new instances from an
+        existing biological sequence, instead of calling
+        ``self.__class__(...)``, as the latter can be error-prone (e.g.,
+        forgetting to propagate attributes to the new instance).
+
+        Examples
+        --------
+        Create a biological sequence:
+
+        >>> from skbio import BiologicalSequence
+        >>> seq = BiologicalSequence('AACCGGTT', id='id1',
+        ...                          description='biological sequence',
+        ...                          quality=[4, 2, 22, 23, 1, 1, 1, 9])
+
+        Create a copy of ``seq``, keeping the same underlying sequence of
+        characters and quality scores, while updating ID and description:
+
+        >>> new_seq = seq.copy(id='new-id', description='new description')
+
+        Note that the copied biological sequence's underlying sequence and
+        quality scores are the same as ``seq``:
+
+        >>> new_seq.sequence
+        'AACCGGTT'
+        >>> new_seq.quality
+        array([ 4,  2, 22, 23,  1,  1,  1,  9])
+
+        The ID and description have been updated:
+
+        >>> new_seq.id
+        'new-id'
+        >>> new_seq.description
+        'new description'
+
+        The original biological sequence's ID and description have not been
+        changed:
+
+        >>> seq.id
+        'id1'
+        >>> seq.description
+        'biological sequence'
+
+        """
+        defaults = {
+            'sequence': self.sequence,
+            'id': self.id,
+            'description': self.description,
+            'quality': self.quality
+        }
+        defaults.update(kwargs)
+        return self.__class__(**defaults)
+
+    def equals(self, other, ignore=None):
+        """Compare two biological sequences for equality.
+
+        By default, biological sequences are equal if their sequence,
+        identifier, description, and quality scores are the same and they are
+        the same type.
+
+        Parameters
+        ----------
+        other : BiologicalSequence
+            The sequence to test for equality against.
+        ignore : iterable of str, optional
+            List of features to ignore in the equality test. By default, all
+            features must be the same for two biological sequences to be
+            considered equal. Features that can be ignored are ``'type'``,
+            ``'id'``, ``'description'``, ``'quality'``, and ``'sequence'``.
+
+        Returns
+        -------
+        bool
+            Indicates whether `self` and `other` are equal.
+
+        See Also
+        --------
+        __eq__
+        __ne__
+
+        Examples
+        --------
+        Define two biological sequences that have the same underlying sequence
+        of characters:
+
+        >>> from skbio import BiologicalSequence
+        >>> s = BiologicalSequence('GGUCGUGAAGGA')
+        >>> t = BiologicalSequence('GGUCGUGAAGGA')
+
+        The two sequences are considered equal because they are the same type,
+        their underlying sequence of characters are the same, and their
+        optional attributes (id, description, and quality scores) were not
+        provided:
+
+        >>> s.equals(t)
+        True
+        >>> t.equals(s)
+        True
+
+        Define another biological sequence with a different sequence of
+        characters than the previous two biological sequences:
+
+        >>> u = BiologicalSequence('GGUCGUGACCGA')
+        >>> u.equals(t)
+        False
+
+        Define a biological sequence with the same sequence of characters as
+        ``u``, but with different identifier and quality scores:
+        >>> v = BiologicalSequence('GGUCGUGACCGA', id='abc',
+        ...                        quality=[1, 5, 3, 3, 2, 42, 100, 9, 10, 55,
+        ...                                 42, 42])
+
+        By default, the two sequences are *not* considered equal because their
+        identifiers and quality scores do not match:
+
+        >>> u.equals(v)
+        False
+
+        By specifying that the quality scores and identifier should be ignored,
+        they now compare equal:
+
+        >>> u.equals(v, ignore=['quality', 'id'])
+        True
+
+        """
+        if ignore is None:
+            ignore = {}
+
+        # Checks are ordered from least to most expensive.
+        if 'type' not in ignore and self.__class__ != other.__class__:
+            return False
+
+        if 'id' not in ignore and self.id != other.id:
+            return False
+
+        if 'description' not in ignore and \
+                self.description != other.description:
+            return False
+
+        # Use array_equal instead of (a == b).all() because of this issue:
+        #     http://stackoverflow.com/a/10582030
+        if 'quality' not in ignore and not np.array_equal(self.quality,
+                                                          other.quality):
+            return False
+
+        if 'sequence' not in ignore and self.sequence != other.sequence:
+            return False
+
+        return True
 
     def count(self, subsequence):
         """Returns the number of occurences of subsequence.
@@ -506,7 +807,7 @@ class BiologicalSequence(Sequence):
         return self._sequence.count(subsequence)
 
     def degap(self):
-        """Returns a new `BiologicalSequence` with gaps characters removed.
+        """Returns a new `BiologicalSequence` with gap characters removed.
 
         Returns
         -------
@@ -517,23 +818,26 @@ class BiologicalSequence(Sequence):
         Notes
         -----
         The type, id, and description of the result will be the
-        same as `self`.
+        same as `self`. If quality scores are present, they will be filtered in
+        the same manner as the sequence and included in the resulting
+        degapped biological sequence.
 
         Examples
         --------
         >>> from skbio.sequence import BiologicalSequence
-        >>> s = BiologicalSequence('GGUC-C--ACGTT-C.')
+        >>> s = BiologicalSequence('GGUC-C--ACGTT-C.', quality=range(16))
         >>> t = s.degap()
         >>> t
         <BiologicalSequence: GGUCCACGTT... (length: 11)>
         >>> print(t)
         GGUCCACGTTC
+        >>> t.quality
+        array([ 0,  1,  2,  3,  5,  8,  9, 10, 11, 12, 14])
 
         """
         gaps = self.gap_alphabet()
-        result = [e for e in self._sequence if e not in gaps]
-        return self.__class__(result, id=self._id,
-                              description=self._description)
+        indices = [i for i, e in enumerate(self) if e not in gaps]
+        return self[indices]
 
     def distance(self, other, distance_fn=None):
         """Returns the distance to other
@@ -890,7 +1194,7 @@ class BiologicalSequence(Sequence):
         """
         return not self.has_unsupported_characters()
 
-    def k_words(self, k, overlapping=True, constructor=str):
+    def k_words(self, k, overlapping=True):
         """Get the list of words of length k
 
         Parameters
@@ -900,12 +1204,10 @@ class BiologicalSequence(Sequence):
         overlapping : bool, optional
             Defines whether the k-words should be overlapping or not
             overlapping.
-        constructor : type, optional
-            The constructor for the returned k-words.
 
         Returns
         -------
-        iterator
+        iterator of BiologicalSequences
             Iterator of words of length `k` contained in the
             BiologicalSequence.
 
@@ -918,9 +1220,9 @@ class BiologicalSequence(Sequence):
         --------
         >>> from skbio.sequence import BiologicalSequence
         >>> s = BiologicalSequence('ACACGACGTT')
-        >>> list(s.k_words(4, overlapping=False))
+        >>> [str(kw) for kw in s.k_words(4, overlapping=False)]
         ['ACAC', 'GACG']
-        >>> list(s.k_words(3, overlapping=True))
+        >>> [str(kw) for kw in s.k_words(3, overlapping=True)]
         ['ACA', 'CAC', 'ACG', 'CGA', 'GAC', 'ACG', 'CGT', 'GTT']
 
         """
@@ -935,9 +1237,9 @@ class BiologicalSequence(Sequence):
             step = k
 
         for i in range(0, sequence_length - k + 1, step):
-            yield self._sequence[i:i+k]
+            yield self[i:i+k]
 
-    def k_word_counts(self, k, overlapping=True, constructor=str):
+    def k_word_counts(self, k, overlapping=True):
         """Get the counts of words of length k
 
         Parameters
@@ -947,8 +1249,6 @@ class BiologicalSequence(Sequence):
         overlapping : bool, optional
             Defines whether the k-words should be overlapping or not
             overlapping.
-        constructor : type, optional
-            The constructor for the returned k-words.
 
         Returns
         -------
@@ -964,10 +1264,10 @@ class BiologicalSequence(Sequence):
         Counter({'ACA': 2, 'CAC': 1, 'CAT': 1})
 
         """
-        k_words = self.k_words(k, overlapping, constructor)
-        return Counter(k_words)
+        k_words = self.k_words(k, overlapping)
+        return Counter((str(seq) for seq in k_words))
 
-    def k_word_frequencies(self, k, overlapping=True, constructor=str):
+    def k_word_frequencies(self, k, overlapping=True):
         """Get the frequencies of words of length k
 
         Parameters
@@ -977,8 +1277,6 @@ class BiologicalSequence(Sequence):
         overlapping : bool, optional
             Defines whether the k-words should be overlapping or not
             overlapping.
-        constructor : type, optional
-            The constructor for the returned k-words.
 
         Returns
         -------
@@ -1004,8 +1302,8 @@ class BiologicalSequence(Sequence):
             return result
 
         count = 1. / num_words
-        for word in self.k_words(k, overlapping, constructor):
-            result[word] += count
+        for word in self.k_words(k, overlapping):
+            result[str(word)] += count
         return result
 
     def lower(self):
@@ -1018,8 +1316,7 @@ class BiologicalSequence(Sequence):
             lowercase.
 
         """
-        return self.__class__(self._sequence.lower(),
-                              self.id, self.description)
+        return self.copy(sequence=self.sequence.lower())
 
     def nondegenerates(self):
         """Yield all nondegenerate versions of the sequence.
@@ -1028,8 +1325,8 @@ class BiologicalSequence(Sequence):
         -------
         generator
             Generator yielding all possible nondegenerate versions of the
-            sequence. Each sequence will have the same type, id, and
-            description as `self`.
+            sequence. Each sequence will have the same type, id, description,
+            and quality scores as `self`.
 
         Raises
         ------
@@ -1074,15 +1371,7 @@ class BiologicalSequence(Sequence):
                         "Sequence contains an invalid character: %s" % char)
 
         result = product(*expansions)
-
-        # Cache lookups here as there may be a lot of sequences to generate.
-        # Could use functools.partial, but it ends up being a little slower
-        # than this method.
-        id_ = self.id
-        desc = self.description
-        cls = self.__class__
-
-        return (cls(nondegen_seq, id_, desc) for nondegen_seq in result)
+        return (self.copy(sequence=nondegen_seq) for nondegen_seq in result)
 
     def to_fasta(self, field_delimiter=" ", terminal_character="\n"):
         """Return the sequence as a fasta-formatted string
@@ -1102,10 +1391,6 @@ class BiologicalSequence(Sequence):
         -------
         str
             The `BiologicalSequence` as a fasta-formatted string.
-
-        See Also
-        --------
-        __str__
 
         Examples
         --------
@@ -1127,7 +1412,7 @@ class BiologicalSequence(Sequence):
             header_line = self._id
 
         return '>%s\n%s%s' % (
-            header_line, str(self), terminal_character)
+            header_line, self.sequence, terminal_character)
 
     def upper(self):
         """Convert the BiologicalSequence to uppercase
@@ -1139,8 +1424,35 @@ class BiologicalSequence(Sequence):
             uppercase.
 
         """
-        return self.__class__(self._sequence.upper(),
-                              self.id, self.description)
+        return self.copy(sequence=self.sequence.upper())
+
+    def _set_quality(self, quality):
+        if quality is not None:
+            quality = np.asarray(quality)
+
+            if quality.ndim == 0:
+                # We have something scalar-like, so create a single-element
+                # vector to store it.
+                quality = np.reshape(quality, 1)
+
+            if quality.shape == (0,):
+                # cannot safe cast an empty vector from float to int
+                cast_type = 'unsafe'
+            else:
+                cast_type = 'safe'
+
+            quality = quality.astype(int, casting=cast_type, copy=False)
+            quality.flags.writeable = False
+
+            if quality.ndim != 1:
+                raise BiologicalSequenceError("Quality scores must be 1-D.")
+            elif len(quality) != len(self):
+                raise BiologicalSequenceError(
+                    "Number of quality scores (%d) must match the number of "
+                    "characters in the biological sequence (%d)." %
+                    (len(quality), len(self._sequence)))
+
+        self._quality = quality
 
 
 class NucleotideSequence(BiologicalSequence):
@@ -1216,19 +1528,19 @@ class NucleotideSequence(BiologicalSequence):
 
         return degen_map
 
-    def _complement(self, seq_iterator):
-        """Returns `NucleotideSequence` that is complement of `seq_iterator`
+    def _complement(self, reverse=False):
+        """Returns `NucleotideSequence` that is (reverse) complement of `self`.
 
         Parameters
         ----------
-        seq_iterator : iterator
-            The `BiologicalSequence` to be complemented.
+        reverse : bool, optional
+            If ``True``, reverse `self` before complementing.
 
         Returns
         -------
         NucelotideSequence
-            The complement of the sequence represented by `seq_iterator`.
-            Specific type will be the same as ``type(self)``.
+            The (reverse) complement of `self`. Specific type will be the same
+            as ``type(self)``.
 
         Raises
         ------
@@ -1239,12 +1551,12 @@ class NucleotideSequence(BiologicalSequence):
         Notes
         -----
         This private method centralizes the logic for `complement` and
-        `reverse_complement` by taking the sequence as an iterator (so it can
-        be passed the result of either `iter` or `reversed`).
+        `reverse_complement`.
 
         """
         result = []
         complement_map = self.complement_map()
+        seq_iterator = reversed(self) if reverse else self
         for base in seq_iterator:
             try:
                 result.append(complement_map[base])
@@ -1252,7 +1564,12 @@ class NucleotideSequence(BiologicalSequence):
                 raise BiologicalSequenceError(
                     "Don't know how to complement base %s. Is it in "
                     "%s.complement_map?" % (base, self.__class__.__name__))
-        return self.__class__(result, self._id, self._description)
+
+        quality = self.quality
+        if self.has_quality() and reverse:
+            quality = self.quality[::-1]
+
+        return self.copy(sequence=result, quality=quality)
 
     def complement(self):
         """Return the complement of the `NucleotideSequence`
@@ -1274,8 +1591,13 @@ class NucleotideSequence(BiologicalSequence):
         reverse_complement
         complement_map
 
+        Notes
+        -----
+        The type, id, description, and quality scores of the result will be the
+        same as `self`.
+
         """
-        return self._complement(self)
+        return self._complement()
 
     def is_reverse_complement(self, other):
         """Return True if `other` is the reverse complement of `self`
@@ -1320,8 +1642,14 @@ class NucleotideSequence(BiologicalSequence):
         complement_map
         is_reverse_complement
 
+        Notes
+        -----
+        The type, id, and description of the result will be the same as `self`.
+        If quality scores are present, they will be reversed and included in
+        the resulting biological sequence.
+
         """
-        return self._complement(reversed(self))
+        return self._complement(reverse=True)
     rc = reverse_complement
 
 

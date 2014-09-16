@@ -22,7 +22,7 @@ import numpy as np
 import numpy.testing as npt
 from scipy.spatial.distance import hamming
 
-from skbio import (NucleotideSequence, DNASequence, RNASequence, DNA,
+from skbio import (NucleotideSequence, DNASequence, RNASequence, DNA, RNA,
                    DistanceMatrix, Alignment, SequenceCollection)
 from skbio.alignment import (StockholmAlignment, SequenceCollectionError,
                              StockholmParseError)
@@ -298,16 +298,150 @@ class SequenceCollectionTests(TestCase):
                          ['d1', 'd2', 'r1', 'r2', 'r3'])
         self.assertEqual(self.empty.ids(), [])
 
+    def _assert_sequence_collections_equal(self, observed, expected):
+        """Compare SequenceCollections strictly."""
+        # TODO remove this custom equality testing code when SequenceCollection
+        # has an equals method (part of #656). We need this method to include
+        # IDs in the comparison (not part of SequenceCollection.__eq__).
+        self.assertEqual(observed, expected)
+        for obs_seq, exp_seq in zip(observed, expected):
+            self.assertTrue(obs_seq.equals(exp_seq))
+
+    def test_update_ids_default_behavior(self):
+        # 3 seqs
+        exp_sc = SequenceCollection([
+            RNA('GAUUACA', id="1"),
+            RNA('UUG', id="2"),
+            RNA('U-----UGCC--', id="3")
+        ])
+        exp_id_map = {'1': 'r1', '2': 'r2', '3': 'r3'}
+        obs_sc, obs_id_map = self.s2.update_ids()
+        self._assert_sequence_collections_equal(obs_sc, exp_sc)
+        self.assertEqual(obs_id_map, exp_id_map)
+
+        # empty
+        obs_sc, obs_id_map = self.empty.update_ids()
+        self._assert_sequence_collections_equal(obs_sc, self.empty)
+        self.assertEqual(obs_id_map, {})
+
+    def test_update_ids_prefix(self):
+        # 3 seqs
+        exp_sc = SequenceCollection([
+            RNA('GAUUACA', id="abc1"),
+            RNA('UUG', id="abc2"),
+            RNA('U-----UGCC--', id="abc3")
+        ])
+        exp_id_map = {'abc1': 'r1', 'abc2': 'r2', 'abc3': 'r3'}
+        obs_sc, obs_id_map = self.s2.update_ids(prefix='abc')
+        self._assert_sequence_collections_equal(obs_sc, exp_sc)
+        self.assertEqual(obs_id_map, exp_id_map)
+
+        # empty
+        obs_sc, obs_id_map = self.empty.update_ids(prefix='abc')
+        self._assert_sequence_collections_equal(obs_sc, self.empty)
+        self.assertEqual(obs_id_map, {})
+
+    def test_update_ids_fn_parameter(self):
+        def append_42(ids):
+            return [id_ + '-42' for id_ in ids]
+
+        # 3 seqs
+        exp_sc = SequenceCollection([
+            RNA('GAUUACA', id="r1-42"),
+            RNA('UUG', id="r2-42"),
+            RNA('U-----UGCC--', id="r3-42")
+        ])
+        exp_id_map = {'r1-42': 'r1', 'r2-42': 'r2', 'r3-42': 'r3'}
+        obs_sc, obs_id_map = self.s2.update_ids(fn=append_42)
+        self._assert_sequence_collections_equal(obs_sc, exp_sc)
+        self.assertEqual(obs_id_map, exp_id_map)
+
+        # empty
+        obs_sc, obs_id_map = self.empty.update_ids(fn=append_42)
+        self._assert_sequence_collections_equal(obs_sc, self.empty)
+        self.assertEqual(obs_id_map, {})
+
+    def test_update_ids_ids_parameter(self):
+        # 3 seqs
+        exp_sc = SequenceCollection([
+            RNA('GAUUACA', id="abc"),
+            RNA('UUG', id="def"),
+            RNA('U-----UGCC--', id="ghi")
+        ])
+        exp_id_map = {'abc': 'r1', 'def': 'r2', 'ghi': 'r3'}
+        obs_sc, obs_id_map = self.s2.update_ids(ids=('abc', 'def', 'ghi'))
+        self._assert_sequence_collections_equal(obs_sc, exp_sc)
+        self.assertEqual(obs_id_map, exp_id_map)
+
+        # empty
+        obs_sc, obs_id_map = self.empty.update_ids(ids=[])
+        self._assert_sequence_collections_equal(obs_sc, self.empty)
+        self.assertEqual(obs_id_map, {})
+
+    def test_update_ids_sequence_attributes_propagated(self):
+        # 1 seq
+        exp_sc = Alignment([
+            DNA('ACGT', id="abc", description='desc', quality=range(4))
+        ])
+        exp_id_map = {'abc': 'seq1'}
+
+        obj = Alignment([
+            DNA('ACGT', id="seq1", description='desc', quality=range(4))
+        ])
+
+        obs_sc, obs_id_map = obj.update_ids(ids=('abc',))
+        self._assert_sequence_collections_equal(obs_sc, exp_sc)
+        self.assertEqual(obs_id_map, exp_id_map)
+
+        # 2 seqs
+        exp_sc = Alignment([
+            DNA('ACGT', id="abc", description='desc1', quality=range(4)),
+            DNA('TGCA', id="def", description='desc2', quality=range(4)[::-1])
+        ])
+        exp_id_map = {'abc': 'seq1', 'def': 'seq2'}
+
+        obj = Alignment([
+            DNA('ACGT', id="seq1", description='desc1', quality=(0, 1, 2, 3)),
+            DNA('TGCA', id="seq2", description='desc2', quality=(3, 2, 1, 0))
+        ])
+
+        obs_sc, obs_id_map = obj.update_ids(ids=('abc', 'def'))
+        self._assert_sequence_collections_equal(obs_sc, exp_sc)
+        self.assertEqual(obs_id_map, exp_id_map)
+
+    def test_update_ids_invalid_parameter_combos(self):
+        with self.assertRaisesRegexp(SequenceCollectionError, 'ids and fn'):
+            self.s1.update_ids(fn=lambda e: e, ids=['foo', 'bar'])
+
+        with self.assertRaisesRegexp(SequenceCollectionError, 'prefix'):
+            self.s1.update_ids(ids=['foo', 'bar'], prefix='abc')
+
+        with self.assertRaisesRegexp(SequenceCollectionError, 'prefix'):
+            self.s1.update_ids(fn=lambda e: e, prefix='abc')
+
+    def test_update_ids_invalid_ids(self):
+        # incorrect number of new ids
+        with self.assertRaisesRegexp(SequenceCollectionError, '3 != 2'):
+            self.s1.update_ids(ids=['foo', 'bar', 'baz'])
+        with self.assertRaisesRegexp(SequenceCollectionError, '4 != 2'):
+            self.s1.update_ids(fn=lambda e: ['foo', 'bar', 'baz', 'abc'])
+
+        # duplicates
+        with self.assertRaisesRegexp(SequenceCollectionError, 'foo'):
+            self.s2.update_ids(ids=['foo', 'bar', 'foo'])
+        with self.assertRaisesRegexp(SequenceCollectionError, 'bar'):
+            self.s2.update_ids(fn=lambda e: ['foo', 'bar', 'bar'])
+
     def test_int_map(self):
-        """int_map functions as expected
-        """
         expected1 = {"1": self.d1, "2": self.d2}
         expected2 = {"1": "d1", "2": "d2"}
-        self.assertEqual(self.s1.int_map(), (expected1, expected2))
+        obs = npt.assert_warns(UserWarning, self.s1.int_map)
+        self.assertEqual(obs, (expected1, expected2))
 
         expected1 = {"h-1": self.d1, "h-2": self.d2}
         expected2 = {"h-1": "d1", "h-2": "d2"}
-        self.assertEqual(self.s1.int_map(prefix='h-'), (expected1, expected2))
+        obs = npt.assert_warns(UserWarning, self.s1.int_map, prefix='h-')
+        self.assertEqual(obs, (expected1, expected2))
 
     def test_is_empty(self):
         """is_empty functions as expected
@@ -566,13 +700,11 @@ class AlignmentTests(TestCase):
         self.assertEqual(actual, expected)
 
     def test_majority_consensus(self):
-        """majority_consensus functions as expected
-        """
         d1 = DNASequence('TTT', id="d1")
         d2 = DNASequence('TT-', id="d2")
         d3 = DNASequence('TC-', id="d3")
         a1 = Alignment([d1, d2, d3])
-        self.assertEqual(a1.majority_consensus(), DNASequence('TT-'))
+        self.assertTrue(a1.majority_consensus().equals(DNASequence('TT-')))
 
         d1 = DNASequence('T', id="d1")
         d2 = DNASequence('A', id="d2")
@@ -581,6 +713,16 @@ class AlignmentTests(TestCase):
                         [DNASequence('T'), DNASequence('A')])
 
         self.assertEqual(self.empty.majority_consensus(), '')
+
+    def test_majority_consensus_constructor(self):
+        d1 = DNASequence('TTT', id="d1")
+        d2 = DNASequence('TT-', id="d2")
+        d3 = DNASequence('TC-', id="d3")
+        a1 = Alignment([d1, d2, d3])
+
+        obs = npt.assert_warns(UserWarning, a1.majority_consensus,
+                               constructor=str)
+        self.assertEqual(obs, 'TT-')
 
     def test_omit_gap_positions(self):
         """omitting gap positions functions as expected
@@ -678,14 +820,13 @@ class AlignmentTests(TestCase):
         self.assertEqual(self.empty.sequence_length(), 0)
 
     def test_to_phylip(self):
-        """to_phylip functions as expected
-        """
         d1 = DNASequence('..ACC-GTTGG..', id="d1")
         d2 = DNASequence('TTACCGGT-GGCC', id="d2")
         d3 = DNASequence('.-ACC-GTTGC--', id="d3")
         a = Alignment([d1, d2, d3])
 
-        phylip_str, id_map = a.to_phylip(map_labels=False)
+        phylip_str, id_map = npt.assert_warns(UserWarning, a.to_phylip,
+                                              map_labels=False)
         self.assertEqual(id_map, {'d1': 'd1',
                                   'd3': 'd3',
                                   'd2': 'd2'})
@@ -696,14 +837,14 @@ class AlignmentTests(TestCase):
         self.assertEqual(phylip_str, expected)
 
     def test_to_phylip_map_labels(self):
-        """to_phylip functions as expected with label mapping
-        """
         d1 = DNASequence('..ACC-GTTGG..', id="d1")
         d2 = DNASequence('TTACCGGT-GGCC', id="d2")
         d3 = DNASequence('.-ACC-GTTGC--', id="d3")
         a = Alignment([d1, d2, d3])
 
-        phylip_str, id_map = a.to_phylip(map_labels=True, label_prefix="s")
+        phylip_str, id_map = npt.assert_warns(UserWarning, a.to_phylip,
+                                              map_labels=True,
+                                              label_prefix="s")
         self.assertEqual(id_map, {'s1': 'd1',
                                   's3': 'd3',
                                   's2': 'd2'})
@@ -720,11 +861,11 @@ class AlignmentTests(TestCase):
         a = Alignment([d1, d2, d3])
 
         with self.assertRaises(SequenceCollectionError):
-            a.to_phylip()
+            npt.assert_warns(UserWarning, a.to_phylip)
 
     def test_to_phylip_no_sequences(self):
         with self.assertRaises(SequenceCollectionError):
-            Alignment([]).to_phylip()
+            npt.assert_warns(UserWarning, Alignment([]).to_phylip)
 
     def test_to_phylip_no_positions(self):
         d1 = DNASequence('', id="d1")
@@ -732,11 +873,9 @@ class AlignmentTests(TestCase):
         a = Alignment([d1, d2])
 
         with self.assertRaises(SequenceCollectionError):
-            a.to_phylip()
+            npt.assert_warns(UserWarning, a.to_phylip)
 
     def test_validate_lengths(self):
-        """
-        """
         self.assertTrue(self.a1._validate_lengths())
         self.assertTrue(self.a2._validate_lengths())
         self.assertTrue(self.empty._validate_lengths())
