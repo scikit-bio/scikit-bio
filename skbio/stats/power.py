@@ -38,10 +38,6 @@ underlying samples. Alternatively, we can draw subsamples which are
 significantly different. Finally, we can try to match samples based on a set
 of control categories.
 
-Example
--------
-
-
 
 """
 
