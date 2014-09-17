@@ -10,12 +10,11 @@ from numpy.testing import (assert_almost_equal,
                            assert_allclose)
 from pandas import DataFrame
 from scipy.stats import kruskal
-from skbio.stats.power import (get_paired_effect,
-                               get_unpaired_effect,
+from skbio.stats.power import (get_subsampled_power,
                                _check_strs,
                                confidence_bound,
                                _calculate_power,
-                               compare_distributions,
+                               _compare_distributions,
                                calculate_power_curve,
                                bootstrap_power_curve,
                                get_significant_subsample,
@@ -95,17 +94,19 @@ class PowerAnalysisTest(TestCase):
         self.labels = array(['Age', 'Intervention', 'Antibiotics'])
         self.cats = array(['AGE', 'INT', 'ABX'])
 
-    def test_get_paired_effect_runtime_error(self):
-        """Checks get_paired_effect generates a runtime error correctly"""
+    def test_get_paired_power_runtime_error(self):
+        """Checks get_paired_power generates a runtime error correctly"""
         # Sets up values for handling the data
         cat = 'INT'
         control_cats = ['SEX', 'AGE', 'ABX']
         # Checks the error is raised
         with self.assertRaises(RuntimeError):
-            get_paired_effect(self.f, self.meta, cat, control_cats)
+            get_paired_power(self.f, self.meta, cat, control_cats)
 
-    def test_get_paired_effects(self):
-        """Checks get_paired_effect generates a reasonably sized subsample"""
+    def test_get_paired_power_
+
+    def test_get_paired_power(self):
+        """Checks get_paired_power generates a reasonably sized subsample"""
         known_p = array([[0.0, 0.0, 0.1, 0.0, 0.1],
                          [0.0, 0.0, 0.2, 0.3, 0.5]])
         known_c = array([1, 2, 3, 4, 5])
@@ -113,28 +114,32 @@ class PowerAnalysisTest(TestCase):
         cat = 'INT'
         control_cats = ['SEX']
         # Tests for the control cats
-        test_p, test_c = get_paired_effect(self.meta_f, self.meta, cat,
-                                           control_cats, min_counts=1,
-                                           counts_interval=1, num_iter=10,
-                                           num_runs=2)
+        test_p, test_c = get_paired_power(self.meta_f, self.meta, cat,
+                                          control_cats, min_counts=1,
+                                          counts_interval=1, num_iter=10,
+                                          num_runs=2)
         # Test the output shapes are sane
         assert_array_equal(known_p, test_p)
         assert_array_equal(known_c, test_c)
 
-    def test_get_unpaired_effect_runtime_error(self):
-        """Checks get_unpaired_effect generates a runtime error correctly"""
+    def test_get_unpaired_power_runtime_error(self):
+        """Checks get_unpaired_power generates a runtime error correctly"""
         with self.assertRaises(RuntimeError):
-            get_unpaired_effect('ALL', self.f, [ones((2)), ones((5))])
+            get_unpaired_power('ALL', self.f, [ones((2)), ones((5))])
 
-    def test_get_unpaired_effects_all_samples(self):
-        """Checks get_unpaired_effect handles all samples correctly"""
-        test_p, test_c = get_unpaired_effect('ALL', self.f, self.pop)
+    def test_get_unpaired_power_userwarning_error(self):
+        with self.assertRaises(UserWarning):
+            get_unpaired_power('ALL', self.f, self.pop, counts_interval=100)
+
+    def test_get_unpaired_powers_all_samples(self):
+        """Checks get_unpaired_power handles all samples correctly"""
+        test_p, test_c = get_unpaired_power('ALL', self.f, self.pop)
         self.assertEqual(test_p.shape, (10, 4))
         assert_array_equal(arange(10, 50, 10), test_c)
 
-    def test_get_unpaired_effects_significant_samples(self):
-        """Checks get_unpaired_effect handles all samples correctly"""
-        test_p, test_c = get_unpaired_effect('SIGNIFICANT', self.f, self.pop)
+    def test_get_unpaired_powers_significant_samples(self):
+        """Checks get_unpaired_power handles all samples correctly"""
+        test_p, test_c = get_unpaired_power('SIGNIFICANT', self.f, self.pop)
         self.assertEqual(test_p.shape, (10, 4))
         assert_array_equal(arange(10, 50, 10), test_c)
 
@@ -213,16 +218,16 @@ class PowerAnalysisTest(TestCase):
         # Checks the test value
         assert_almost_equal(known, test)
 
-    def test_compare_distributions_count_error(self):
+    def test__compare_distributions_count_error(self):
         """Checks error is raised when there is not a count for each group"""
         with self.assertRaises(ValueError):
-            compare_distributions(self.f, self.samps, counts=[1, 2, 3],
+            _compare_distributions(self.f, self.samps, counts=[1, 2, 3],
                                   num_iter=100)
 
-    def test_compare_distributions(self):
-        """Checks compare_distributions is sane"""
+    def test__compare_distributions(self):
+        """Checks _compare_distributions is sane"""
         known = ones((100))*0.0026998
-        test = compare_distributions(self.f, self.samps, num_iter=100)
+        test = _compare_distributions(self.f, self.samps, num_iter=100)
         assert_allclose(known, test, 5)
 
     def test_calculate_power_curve_ratio_error(self):

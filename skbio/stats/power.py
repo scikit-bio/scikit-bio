@@ -64,10 +64,10 @@ rcParams['font.sans-serif'] = ['Helvetica', 'Arial']
 rcParams['text.usetex'] = True
 
 
-def get_paired_effect(test, meta, cat, control_cats, order=None,
-                      alpha_pwr=0.05, min_counts=20, max_counts=50,
-                      counts_interval=10, num_iter=500, num_runs=10,
-                      strict=True):
+def get_paired_power(test, meta, cat, control_cats, order=None,
+                     alpha_pwr=0.05, min_counts=20, max_counts=50,
+                     counts_interval=10, counts_start=None, num_iter=500,
+                     num_runs=10, strict=True):
     """Calculates the effect size using paired subsampling
 
     Parameters
@@ -75,46 +75,35 @@ def get_paired_effect(test, meta, cat, control_cats, order=None,
     test : function
         the statistical test which accepts an array-like of sample ids
         (list of lists) and returns a p-value.
-
     meta : dataframe
         the metadata associated with the samples
-
     cat : str
         the metadata categories for comparison
-
     control_cats : list
         the metadata categories to be used as controls. For example, if you
         wanted to control age (`cat` = "AGE"), you might want to control for
         gender and health status (i.e. `control_cats` = ["SEX", "HEALTHY"])
-
     order : {None, list}, optional
         Default is None. The order of groups in the category. This can be used
         to limit the groups selected. For example, if there's a category with
         groups 'A', 'B' and 'C', and you only want to look at A vs B, `order`
         would be set to ['A', 'B'].
-
     alpha_pwr : float, optional
         Default is 0.05. The alpha value used to calculate the power.
-
     min_counts : unsigned int, optional
         Default is 20. The minimum number of paired samples which must exist
         for a category and set of control categories to be able to subsample
         and make power calculations.
-
     max_counts : unsigned int, optional
         Default is 50. The maximum number of samples per group to draw for
         effect size calculation.
-
     counts_interval : unsigned int, optional
         Default is 10.
-
     num_iter : unsigned int
         Default is 1000. The number of p-values to generate for each point
         on the curve.
-
     num_runs : unsigned int
         Default is 10. The number of times to calculate each curve.
-
     strict: bool, optional
         Default is True. If a missing value (nan) is encountered, the group
         will be skipped when 'strict' is True.
@@ -123,7 +112,6 @@ def get_paired_effect(test, meta, cat, control_cats, order=None,
     -------
     power : array
         power calculated for each subsample at each count
-
     sample_counts : array
         the number of samples drawn at each power calculation
 
@@ -131,6 +119,9 @@ def get_paired_effect(test, meta, cat, control_cats, order=None,
     ------
     RuntimeError
         if the paired samples contains less than the minimum number of samples.
+
+    Example
+    -------
 
     """
 
@@ -142,8 +133,11 @@ def get_paired_effect(test, meta, cat, control_cats, order=None,
     if num_paired <= min_counts:
         raise RuntimeError('There are not enough samples for subsampling.')
 
+    if counts_start is None:
+        counts_start = counts_interval
+
     # Gets the sampling array
-    sample_counts = arange(counts_interval,
+    sample_counts = arange(counts_start,
                            min(max_counts, num_paired),
                            counts_interval)
 
@@ -163,10 +157,11 @@ def get_paired_effect(test, meta, cat, control_cats, order=None,
     return power, sample_counts
 
 
-def get_unpaired_effect(mode, test, samples, sub_size=None, alpha_pwr=0.05,
-                        min_counts=20, max_counts=50, counts_interval=10,
-                        num_iter=500, num_runs=10, scaling=5):
-    """Calculates the effect size for unpaired random sampling methods
+def get_unpaired_power(mode, test, samples, sub_size=None, alpha_pwr=0.05,
+                       min_counts=20, max_counts=50, counts_interval=10,
+                       counts_start=None, num_iter=500, num_runs=10, 
+                       scaling=5):
+    r"""Calculates the effect size for unpaired random sampling methods
 
     Parameters
     ----------
@@ -198,6 +193,10 @@ def get_unpaired_effect(mode, test, samples, sub_size=None, alpha_pwr=0.05,
         effect size calculation.
     counts_interval : unsigned int, optional
         Default is 10.
+    counts_start : {None, unsigned int}, optional
+        Defualt is None. How many samples should be drawn for the smallest
+        subsample. If this is None, the `counts_interval` will be used.
+        Default is 10.
     num_iter : unsigned int, optional
         Default is 1000. The number of p-values to generate for each point
         on the curve.
@@ -227,25 +226,46 @@ def get_unpaired_effect(mode, test, samples, sub_size=None, alpha_pwr=0.05,
 
     Examples
     --------
-    Suppose we have 100 samples randomly drawn from two normal distribitions,
-    the first with mean 0 and standard devation 1, and the second with mean of
-    1 and standard deviation 1.5
+    Suppose we wanted to look for the probability that two variables are
+    correlated.
 
     >>> import numpy as np
-    >>> samples_1 = np.random.randn(100)
-    >>> samples_2 = 1.5*np.random.randn(100) + 1
+    >>> ind = np.random.randint(0, 20, 15)
+    >>> dep1 = 3 * ind + 5 + randn(15)*3
+    >>> dep2 = 3 * ind + 5 + randint(15)
+    >>> print ind
+        [ 4 15 12 18  8  4  5  1  7  3  3 13  3  1 16]
+    >>> print dep
+        [ 20.60681692  46.85017525  44.16983032  57.74096699  35.88452703
+        9.21653787  28.4682692   10.04266677  21.26691966   8.07123922
+        15.60001947  43.12739086  12.45944099  13.94787823  53.67800315]
 
-    We want to test the statistical power of a kruskal-wallis test comparing
-    the two populations. We can define a test function, f, to perform the
-    comparison. The test function will take a list of value vectors and
-    return a p value.
+
+    Let's define a test that will draw a list of sample pairs and determine
+    if they're correlated. We'll use the `pearsonr` function from scipy, which
+    returns the pearson correlation coeffectient and the probability value
+    that the data is not correlated. The function takes two vectors as its
+    input.
+
+    >>> from scipy.stats import pearsonr
+    >>> f = lambda x: pearsonr(ind[x[0]], dep[x[0]])[1]
+
+    Now, let's use random sampling to estimate the power of our test on
+    the first distribution. Since our test picks pairs, the "samples" vector
+    will just be a list of positions in each array.
+
+    >>> samples = [np.arange(0, 15, 1)]
+    >>> print f(samples)
+
+    >>> from skbio.stats.power import get_unpaired_power
+
 
     """
     # Gets a population of sample ids to check the number of subsamples
     # generated
     if mode == 'SIGNIFICANT':
-            sub_ids = get_significant_subsample([test], samples, sub_size,
-                                                alpha_pwr, num_iter, scaling)
+        sub_ids = get_significant_subsample([test], samples, sub_size,
+                                            alpha_pwr, num_iter, scaling)
     else:
         sub_ids = samples
     num_ids = len(sub_ids[0])
@@ -254,10 +274,17 @@ def get_unpaired_effect(mode, test, samples, sub_size=None, alpha_pwr=0.05,
     if num_ids <= min_counts:
         raise RuntimeError('There are not enough samples for subsampling.')
 
+    if counts_start is None:
+        counts_start = counts_interval
+
     # Calculates the effect size vector
-    sample_counts = arange(counts_interval,
+    sample_counts = arange(counts_start,
                            min(max_counts, num_ids),
                            counts_interval)
+
+    if len(sample_counts) < 1:
+        raise UserWarning('No subsamples are being generated. Check your'
+                          'max_counts and counts_interval.')
 
     # Prealocates the power array
     power = zeros((num_runs, len(sample_counts)))
@@ -294,54 +321,6 @@ def _check_strs(x):
     else:
         raise TypeError('input must be a string, float or a nan')
 
-
-def confidence_bound(vec, alpha=0.05, df=None, axis=None):
-    r"""Calculates a confidence bound assuming a normal distribution
-
-    Parameters
-    ----------
-    vec : array
-
-    alpha : {0.05, float}
-        the critical value
-
-    df : {None, float}, optional
-        the degrees of freedom associated with the distribution. If None is
-        given, df is assumed to be the number elements in specified axis.
-
-    axis : {None, unsigned int}, optional
-        Default is None. The axis over which to take the devation.
-
-    Return
-    ------
-    bound : float
-        the confidence bound around the mean. The confidence interval is
-        [mean - bound, mean + bound].
-
-    """
-
-    # Determines the number of non-nan counts
-    vec_shape = vec.shape
-    if axis is None and len(vec_shape) == 1:
-        num_counts = vec_shape[0] - isnan(vec).sum()
-        axis = None
-    elif axis is None:
-        num_counts = vec_shape[0] * vec_shape[1] - isnan(vec).sum()
-    else:
-        num_counts = vec_shape[axis] - isnan(vec).sum() / \
-            (vec_shape[0] * vec_shape[1])
-
-    # Gets the df if not supplied
-    if df is None:
-        df = num_counts - 1
-
-    # Calculates the bound
-    bound = nanstd(vec, axis=axis) / sqrt(num_counts - 1) * \
-        t.ppf(1 - alpha / 2, df)
-
-    return bound
-
-
 def _calculate_power(p_values, alpha=0.05):
     r"""Calculates statical power empirically
 
@@ -365,7 +344,7 @@ def _calculate_power(p_values, alpha=0.05):
     return w
 
 
-def compare_distributions(test, samples, counts=5, num_iter=1000):
+def _compare_distributions(test, samples, counts=5, num_iter=1000):
     r"""Compares two distribution arrays iteratively
 
     Parameters
@@ -417,6 +396,53 @@ def compare_distributions(test, samples, counts=5, num_iter=1000):
         p_values[idx] = test(subs)
 
     return p_values
+
+
+def confidence_bound(vec, alpha=0.05, df=None, axis=None):
+    r"""Calculates a confidence bound assuming a normal distribution
+
+    Parameters
+    ----------
+    vec : array
+
+    alpha : {0.05, float}
+        the critical value
+
+    df : {None, float}, optional
+        the degrees of freedom associated with the distribution. If None is
+        given, df is assumed to be the number elements in specified axis.
+
+    axis : {None, unsigned int}, optional
+        Default is None. The axis over which to take the devation.
+
+    Return
+    ------
+    bound : float
+        the confidence bound around the mean. The confidence interval is
+        [mean - bound, mean + bound].
+
+    """
+
+    # Determines the number of non-nan counts
+    vec_shape = vec.shape
+    if axis is None and len(vec_shape) == 1:
+        num_counts = vec_shape[0] - isnan(vec).sum()
+        axis = None
+    elif axis is None:
+        num_counts = vec_shape[0] * vec_shape[1] - isnan(vec).sum()
+    else:
+        num_counts = vec_shape[axis] - isnan(vec).sum() / \
+            (vec_shape[0] * vec_shape[1])
+
+    # Gets the df if not supplied
+    if df is None:
+        df = num_counts - 1
+
+    # Calculates the bound
+    bound = nanstd(vec, axis=axis) / sqrt(num_counts - 1) * \
+        t.ppf(1 - alpha / 2, df)
+
+    return bound
 
 
 def calculate_power_curve(test, samples, sample_counts, ratio=None,
@@ -480,7 +506,7 @@ def calculate_power_curve(test, samples, sample_counts, ratio=None,
     for id2, s in enumerate(sample_counts):
         count = nround(s*ratio, 0).astype(int)
         for id1, a in enumerate(alpha):
-            ps = compare_distributions(test, samples, count, num_iter)
+            ps = _compare_distributions(test, samples, count, num_iter)
             if vec:
                 pwr[id2] = _calculate_power(ps, a)
             else:
@@ -547,16 +573,18 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
     have a false positive given that we do not have a false negative by varying
     a number of subsamples.
 
+    >>> from skbio.stats.power import bootstrap_power_curve
     >>> sample_counts = np.arange(5, 80, 5)
     >>> power_mean, power_bound = bootstrap_power_curve(f,
     ...                                                 [samples_1, samples_2],
     ...                                                 sample_counts)
     >>> print power_mean
-        [ 0.2772  0.569   0.7744  0.9052  0.969   0.9898  0.9984  0.9998  1.
-          1.      1.      1.      1.      1.      1.    ]
+        [ 0.1464  0.2654  0.3966  0.5118  0.6284  0.7298  0.8126  0.882
+          0.9342  0.9622  0.984   0.994   0.998   0.9998  1.    ]
     >>> print power_bound
-        [ 0.0178  0.0124  0.0145  0.0097  0.0053  0.0027  0.0013  0.0004  0.
-          0.      0.      0.      0.      0.      0.    ]
+        [ 0.01344762  0.02087332  0.01625911  0.01545266  0.02447078
+          0.01116065  0.01387766  0.01027776  0.00952351  0.00743761
+          0.00559785  0.00246272  0.00158968  0.0004769   0.        ]
 
     """
 
@@ -628,6 +656,9 @@ def get_significant_subsample(tests, samples, sub_size=None, p_crit=0.05,
     RuntimeError
         if not iteration can be found that satisfies the signfigiant difference
         between groups
+
+    Example
+    -------
 
     """
 
