@@ -3,26 +3,22 @@
 
 from __future__ import division
 from unittest import TestCase, main
-from numpy import ones, power, array, arange, nan, isnan
+from numpy import ones, power, array, arange, nan
 import numpy.random
 from numpy.testing import (assert_almost_equal,
                            assert_array_equal,
                            assert_allclose)
 from pandas import DataFrame
 from scipy.stats import kruskal
-from matplotlib.figure import Figure
-from skbio.stats.power import (make_power_curves,
-                               get_paired_effect,
+from skbio.stats.power import (get_paired_effect,
                                get_unpaired_effect,
-                               plot_effects,
-                               collate_effect_size,
                                _check_strs,
-                               _confidence_bound,
+                               confidence_bound,
                                _calculate_power,
                                compare_distributions,
                                calculate_power_curve,
                                bootstrap_power_curve,
-                               get_signifigant_subsample,
+                               get_significant_subsample,
                                get_paired_subsamples)
 
 
@@ -99,104 +95,6 @@ class PowerAnalysisTest(TestCase):
         self.labels = array(['Age', 'Intervention', 'Antibiotics'])
         self.cats = array(['AGE', 'INT', 'ABX'])
 
-    def test_make_power_curves_keyword_error(self):
-        """Tests make_power_curves errors when passed a wrong keyword"""
-        with self.assertRaises(ValueError):
-            make_power_curves("ALL", self.f, self.cats, samples=self.pop,
-                              author='Lee')
-
-    def test_make_power_curves_unsupported_mode_error(self):
-        """Tests make_power_curves errors when mode is not sane"""
-        with self.assertRaises(ValueError):
-            make_power_curves("CATS", self.f, self.cats, samples=self.pop)
-
-    def test_make_power_curves_no_meta_error(self):
-        """Tests make_power_curve errors when meta is not passed for PAIRED"""
-        with self.assertRaises(ValueError):
-            make_power_curves("PAIRED", self.meta_f, self.cats)
-
-    def test_make_power_curves_no_control_cats(self):
-        """Tests error when mode is PAIRED and there are no control cats"""
-        with self.assertRaises(ValueError):
-            make_power_curves("PAIRED", self.meta_f, self.cats, meta=self.meta)
-
-    def test_make_power_curves_random_no_samples(self):
-        """Tests error when mode is random and samples is None"""
-        with self.assertRaises(ValueError):
-            make_power_curves("ALL", self.f, self.cats)
-        with self.assertRaises(ValueError):
-            make_power_curves("SIGNIFICANT", self.f, self.cats)
-
-    def test_make_power_curve_labels_off(self):
-        """Checks the number of labels is handled sanely"""
-        tests = [lambda x: self.test_meta(x, self.meta, cat, 'DIV') for
-                 cat in self.cats]
-        with self.assertRaises(ValueError):
-            make_power_curves("PAIRED", tests, self.cats, meta=self.meta,
-                              control_cats=self.cats, labels=["RED"],
-                              sort_plot=True, grid=False, num_iter=10,
-                              num_runs=2, colormap=array(['r', 'b', 'g']),
-                              alpha_pwr=0.2, show_bounds=False)
-
-    def test_make_power_curves_all(self):
-        """Tests make_power_curves handles ALL mode sanely"""
-        known_shape_out = (1, )
-        known_labels = ['Test Cat']
-        # Sets up a test for all modes
-        test_fig, test_m, test_b, test_l = make_power_curves("ALL",
-                                                             [self.f],
-                                                             ["Test_cat"],
-                                                             self.pop,
-                                                             sort_plot=False,
-                                                             grid=False,
-                                                             num_iter=10,
-                                                             num_runs=2)
-        # Test the output is a figure
-        self.assertTrue(isinstance(test_fig, Figure))
-        # Checks the size of the effect and bound array
-        self.assertEqual(test_m.shape, known_shape_out)
-        self.assertEqual(test_b.shape, known_shape_out)
-        self.assertEqual(test_l, known_labels)
-
-    def test_make_power_curves_significant(self):
-        """Tests make_power_curves handles SIGNIFICANT mode sanely"""
-        known_shape_out = (1, )
-        known_labels = ['Test Cat']
-        # Sets up a test for all modes
-        test_fig, test_m, test_b, test_l = make_power_curves("SIGNIFICANT",
-                                                             [self.f],
-                                                             ["Test_cat"],
-                                                             self.pop,
-                                                             sort_plot=False,
-                                                             grid=False,
-                                                             num_iter=10,
-                                                             num_runs=2)
-        # Test the output is a figure
-        self.assertTrue(isinstance(test_fig, Figure))
-        # Checks the size of the effect and bound array
-        self.assertEqual(test_m.shape, known_shape_out)
-        self.assertEqual(test_b.shape, known_shape_out)
-        self.assertEqual(test_l, known_labels)
-
-    def test_make_power_curves_paired(self):
-        """Tests make_power_curves handles "PAIRED" data sanely"""
-        known_shape_out = (0,)
-        tests = [lambda x: self.test_meta(x, self.meta, cat, 'DIV') for
-                 cat in self.cats]
-        # Sets up a test for all modes
-        test_fig, test_m, test_b, test_l = \
-            make_power_curves("PAIRED", tests, self.cats, meta=self.meta,
-                              control_cats=self.cats, labels=self.labels,
-                              sort_plot=True, grid=False, num_iter=10,
-                              num_runs=2, colormap=array(['r', 'b', 'g']),
-                              alpha_pwr=0.2)
-        # Test the output is a figure
-        self.assertEqual(test_fig, None)
-        # Checks the size of the effect and bound array
-        self.assertEqual(test_m.shape, known_shape_out)
-        self.assertEqual(test_b.shape, known_shape_out)
-        assert_array_equal(test_l, array([]).astype('S11'))
-
     def test_get_paired_effect_runtime_error(self):
         """Checks get_paired_effect generates a runtime error correctly"""
         # Sets up values for handling the data
@@ -234,128 +132,11 @@ class PowerAnalysisTest(TestCase):
         self.assertEqual(test_p.shape, (10, 4))
         assert_array_equal(arange(10, 50, 10), test_c)
 
-    def test_get_unpaired_effects_signifigant_samples(self):
+    def test_get_unpaired_effects_significant_samples(self):
         """Checks get_unpaired_effect handles all samples correctly"""
         test_p, test_c = get_unpaired_effect('SIGNIFICANT', self.f, self.pop)
         self.assertEqual(test_p.shape, (10, 4))
         assert_array_equal(arange(10, 50, 10), test_c)
-
-    def test_plot_effects_2d_effects_error(self):
-        """Tests plot_effects errors when effects_mean is a 2d array"""
-        self.assertRaises(ValueError, plot_effects, ones((2, 2)), self.bounds,
-                          self.labels, arange(5, 50, 5))
-
-    def test_plot_effects_effects_and_bounds_or_labels_different_error(self):
-        """Tests plot_effects erros when each mean doesnt have a bound"""
-        # Checks the error is triggered when bounds is a different shape
-        self.assertRaises(ValueError, plot_effects, self.effects, ones((2, 2)),
-                          self.labels, arange(5, 50, 5))
-        # Checks error is triggered when labels is a different shape
-        self.assertRaises(ValueError, plot_effects, self.effects, self.bounds,
-                          ones((2, 2)), arange(5, 50, 5))
-
-    def test_plot_effects_size_returns(self):
-        """Tests plot_effect_size returns a figure"""
-        # Generates an effect figure
-        fig = plot_effects(self.effects, self.bounds, self.labels,
-                           arange(5, 50, 5), grid=False)
-        # Test the output is a figure
-        self.assertTrue(isinstance(fig, Figure))
-
-    def test_plot_effects_kwargs_error(self):
-        """Tests that plot_effects errors when a bad keyword is passed"""
-        self.assertRaises(ValueError, plot_effects, self.effects, self.bounds,
-                          self.labels, arange(5, 50, 5), doctor=10)
-
-    def test_collate_effect_size_counts_shape_error(self):
-        """Checks collate_effect_size errors when counts is not a 1d array"""
-        with self.assertRaises(TypeError):
-            collate_effect_size([ones((5, 3)), ones((6))],
-                                [ones((5, 3)), ones((6))],
-                                self.power_alpha)
-
-    def test_collate_effect_size_unmatched_size_error(self):
-        """Checks error is thrown when power and count size are different"""
-        with self.assertRaises(ValueError):
-            collate_effect_size([ones((5)), ones((6))],
-                                [ones((3, 5)), ones((6, 3))],
-                                self.power_alpha)
-
-    def test_collate_effect_size_differnt_counts_and_power(self):
-        """Checks error is thrown when powers and counts are different lengths
-        """
-        with self.assertRaises(ValueError):
-            collate_effect_size([ones((5))],
-                                [ones((3, 5)), ones((6, 3))],
-                                self.power_alpha)
-
-    def test_collate_effect_size_list(self):
-        """Checks collate_effect_size returns sanely for a list of powers"""
-        # Calulates the test value
-        test_m, test_b = collate_effect_size(self.counts,
-                                             self.powers,
-                                             self.power_alpha)
-        # Checks the test values
-        assert_almost_equal(self.effects, test_m, 4)
-        assert_almost_equal(self.bounds, test_b, 4)
-
-    def test_collate_effect_size_array(self):
-        """Checks collate_effect_size returns sanely for a power array."""
-        # Sets the know values
-        known_m = self.effects[0]
-        known_b = self.bounds[0]
-        # Calulates the test value
-        test_m, test_b = collate_effect_size(self.counts,
-                                             self.powers[0],
-                                             self.power_alpha)
-        # Checks the test values
-        assert_almost_equal(known_m, test_m, 4)
-        assert_almost_equal(known_b, test_b, 4)
-
-    def test_collate_effect_size_array_nans_2d(self):
-        """Checks colate_effect_size handles an array with nans sanely"""
-        self.powers[0][2, 1] = nan
-        test_m, test_b = collate_effect_size(self.counts,
-                                             self.powers,
-                                             self.power_alpha)
-        # Checks the test values
-        assert_almost_equal(self.effects, test_m, 3)
-        assert_almost_equal(self.bounds, test_b, 3)
-
-    def test_collate_effect_size_under_power_1d(self):
-        """Checks collate_effect_size handles undefined power sanely"""
-        self.powers[0][0, 1] = 0.01
-        powers = [power[0, :] for power in self.powers]
-        known_m = array([0.1320, 0.3419, 0.5691])
-        known_b = array([0.0355, 0.0085, 0.0374])
-
-        test_m, test_b = collate_effect_size(self.counts,
-                                             powers,
-                                             self.power_alpha)
-        # Checks the test values
-        assert_almost_equal(known_m, test_m, 3)
-        assert_almost_equal(known_b, test_b, 3)
-
-    def test_collate_effect_size_nans_1d(self):
-        """Checks collate_effect_size responds correctly to nans"""
-        powers = [ones((5))*nan]
-        test_m, test_b = collate_effect_size(self.counts,
-                                             powers,
-                                             self.power_alpha)
-        self.assertTrue(isnan(test_m).all())
-        self.assertTrue(isnan(test_b).all())
-
-    def test_collate_effect_size_1d_power(self):
-        """Tests collate_effect_size can handle power vectors"""
-        powers = [power[0, :] for power in self.powers]
-        known_m = array([0.1320, 0.3419, 0.5691])
-        known_b = array([0.0243, 0.0085, 0.03746])
-        test_m, test_b = collate_effect_size(self.counts,
-                                             powers,
-                                             self.power_alpha)
-        # Checks the test values
-        assert_almost_equal(known_m, test_m, 3)
-        assert_almost_equal(known_b, test_b, 3)
 
     def test__check_strs_str(self):
         """Test check_strs returns sanely when passed a string"""
@@ -374,27 +155,27 @@ class PowerAnalysisTest(TestCase):
         with self.assertRaises(TypeError):
             _check_strs(self.f)
 
-    def test__confidence_bound_default(self):
+    def test_confidence_bound_default(self):
         """Checks confidence_bound correctly determines an interval"""
         # Sets the know confidence bound
         known = 2.2830070
-        test = _confidence_bound(self.s1)
+        test = confidence_bound(self.s1)
         assert_almost_equal(test, known, 3)
 
-    def test__confidence_bound_df(self):
+    def test_confidence_bound_df(self):
         """Checks a custom df for confidence_bound"""
         known = 2.15109
-        test = _confidence_bound(self.s1, df=15)
+        test = confidence_bound(self.s1, df=15)
         assert_almost_equal(known, test, 3)
 
-    def test__confidence_bound_alpha(self):
+    def test_confidence_bound_alpha(self):
         """Checks a custom df for confidence_bound"""
         known = 3.2797886
-        test = _confidence_bound(self.s1, alpha=0.01)
+        test = confidence_bound(self.s1, alpha=0.01)
         assert_almost_equal(known, test, 3)
 
-    def test__confidence_bound_nan(self):
-        """Tests _confidence_bound can handle nans"""
+    def test_confidence_bound_nan(self):
+        """Tests confidence_bound can handle nans"""
         # Sets the value to test
         samples = array([[4, 3.2, 3.05],
                          [2, 2.8, 2.95],
@@ -404,11 +185,11 @@ class PowerAnalysisTest(TestCase):
         # Sets the know value
         known = array([2.2284, 0.2573, 0.08573])
         # Tests the function
-        test = _confidence_bound(samples, axis=0)
+        test = confidence_bound(samples, axis=0)
         assert_almost_equal(known, test, 3)
 
-    def test__confidence_bound_axis_none(self):
-        """Tests _confidence_bound can handle a None axis"""
+    def test_confidence_bound_axis_none(self):
+        """Tests confidence_bound can handle a None axis"""
         # Sets the value to test
         samples = array([[4, 3.2, 3.05],
                          [2, 2.8, 2.95],
@@ -418,7 +199,7 @@ class PowerAnalysisTest(TestCase):
         # Sest the known value
         known = 0.52852
         # Tests the output
-        test = _confidence_bound(samples, axis=None)
+        test = confidence_bound(samples, axis=None)
         assert_almost_equal(known, test, 3)
 
     def test__calculate_power(self):
@@ -518,14 +299,14 @@ class PowerAnalysisTest(TestCase):
         assert_allclose(test_mean, known_mean, rtol=0.05, atol=0.05)
         assert_allclose(test_bound, known_bound, rtol=0.1, atol=0.01)
 
-    def test_get_signifigant_subsample_no_tests(self):
-        """Checks get_signifigant_subsample errors when inputs are too similar
+    def test_get_significant_subsample_no_tests(self):
+        """Checks get_significant_subsample errors when inputs are too similar
         """
         with self.assertRaises(RuntimeError):
-            get_signifigant_subsample([None], self.samps, num_rounds=100)
+            get_significant_subsample([None], self.samps, num_rounds=100)
 
-    def test_get_signifigant_subsample_no_results(self):
-        """Checks get_signifigant_subsample errors when inputs are too similar
+    def test_get_significant_subsample_no_results(self):
+        """Checks get_significant_subsample errors when inputs are too similar
         """
         # Sets up a function which will fail testing
         def test_f(x):
@@ -535,11 +316,11 @@ class PowerAnalysisTest(TestCase):
                 return 0.5
         # Tests a value error is raised
         with self.assertRaises(RuntimeError):
-            get_signifigant_subsample([test_f], self.samps, sub_size=10,
+            get_significant_subsample([test_f], self.samps, sub_size=10,
                                       num_rounds=5)
 
     def test_get_signfigiant_subsample_no_iteration(self):
-        """Checks get_signifigant_subsample errors when iteration is not found
+        """Checks get_significant_subsample errors when iteration is not found
         """
         # Sets up a function which will fail testing
         def test_f(x):
@@ -549,16 +330,16 @@ class PowerAnalysisTest(TestCase):
                 return 0.5
         # Tests if a RuntimeError is raised
         with self.assertRaises(RuntimeError):
-            get_signifigant_subsample([test_f], self.samps, sub_size=5,
+            get_significant_subsample([test_f], self.samps, sub_size=5,
                                       num_rounds=5)
 
-    def test_get_signifigant_subsample_default(self):
-        """Checks get_signifigant_subsample functions sanely under defaults"""
+    def test_get_significant_subsample_default(self):
+        """Checks get_significant_subsample functions sanely under defaults"""
         pop = [arange(0, 10, 1), arange(0, 20, 0.2)]
         # Checks the overall data meets the parameters
         self.assertNotEqual(len(pop[0]), len(pop[1]))
         # Generates subsamples
-        test_ids = get_signifigant_subsample([self.f], pop)
+        test_ids = get_significant_subsample([self.f], pop)
         # Checks the results
         self.assertEqual(len(test_ids[0]), len(test_ids[1]))
         self.assertTrue(self.f(test_ids) < 0.05)
