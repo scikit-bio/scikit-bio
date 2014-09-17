@@ -64,126 +64,46 @@ rcParams['font.sans-serif'] = ['Helvetica', 'Arial']
 rcParams['text.usetex'] = True
 
 
-def get_paired_power(test, meta, cat, control_cats, order=None,
-                     alpha_pwr=0.05, min_counts=20, max_counts=50,
-                     counts_interval=10, counts_start=None, num_iter=500,
-                     num_runs=10, strict=True):
-    """Calculates the effect size using paired subsampling
+def get_subsampled_power(mode, test, meta=None, cat=None, control_cats=None,
+                         order=None, strict=True, samples=None, sub_size=None,
+                         scaling=5, alpha_pwr=0.05, min_counts=20,
+                         max_counts=50, counts_interval=10, counts_start=None,
+                         num_iter=500, num_runs=10):
+    r"""Subsamples data to iterative calculate power
 
-    Parameters
+      Parameters
     ----------
     test : function
         the statistical test which accepts an array-like of sample ids
         (list of lists) and returns a p-value.
-    meta : dataframe
-        the metadata associated with the samples
-    cat : str
-        the metadata categories for comparison
-    control_cats : list
+    meta : {None, dataframe}
+        the metadata associated with the samples. Required for "PAIRED" mode.
+    cat : {None, str}
+        the metadata categories for comparison. Required for "PAIRED" mode.
+    control_cats : {None, list}
         the metadata categories to be used as controls. For example, if you
         wanted to control age (`cat` = "AGE"), you might want to control for
-        gender and health status (i.e. `control_cats` = ["SEX", "HEALTHY"])
+        gender and health status (i.e. `control_cats` = ["SEX", "HEALTHY"]).
+        Required for "PAIRED" mode.
     order : {None, list}, optional
         Default is None. The order of groups in the category. This can be used
         to limit the groups selected. For example, if there's a category with
         groups 'A', 'B' and 'C', and you only want to look at A vs B, `order`
         would be set to ['A', 'B'].
-    alpha_pwr : float, optional
-        Default is 0.05. The alpha value used to calculate the power.
-    min_counts : unsigned int, optional
-        Default is 20. The minimum number of paired samples which must exist
-        for a category and set of control categories to be able to subsample
-        and make power calculations.
-    max_counts : unsigned int, optional
-        Default is 50. The maximum number of samples per group to draw for
-        effect size calculation.
-    counts_interval : unsigned int, optional
-        Default is 10.
-    num_iter : unsigned int
-        Default is 1000. The number of p-values to generate for each point
-        on the curve.
-    num_runs : unsigned int
-        Default is 10. The number of times to calculate each curve.
     strict: bool, optional
         Default is True. If a missing value (nan) is encountered, the group
         will be skipped when 'strict' is True.
-
-    Returns
-    -------
-    power : array
-        power calculated for each subsample at each count
-    sample_counts : array
-        the number of samples drawn at each power calculation
-
-    Raises
-    ------
-    RuntimeError
-        if the paired samples contains less than the minimum number of samples.
-
-    Example
-    -------
-
-    """
-
-    # Gets a paired sample population to check the number of pairs generated
-    paired_ids = get_paired_subsamples(meta, cat, control_cats, order, strict)
-    num_paired = paired_ids[0].shape[0]
-
-    # Checks there are enough paired ids to subsample
-    if num_paired <= min_counts:
-        raise RuntimeError('There are not enough samples for subsampling.')
-
-    if counts_start is None:
-        counts_start = counts_interval
-
-    # Gets the sampling array
-    sample_counts = arange(counts_start,
-                           min(max_counts, num_paired),
-                           counts_interval)
-
-    # Prealocates a power array
-    power = zeros((num_runs, len(sample_counts)))
-
-    # Calculates power or hte first curve
-    power[0, :] = calculate_power_curve(test, paired_ids, sample_counts,
-                                        num_iter=num_iter, alpha=alpha_pwr)
-    # Gets iteraitons and subsequent power
-    for id1 in arange(1, num_runs):
-        paired_ids = get_paired_subsamples(meta, cat, control_cats, order,
-                                           strict)
-        power[id1, :] = calculate_power_curve(test, paired_ids, sample_counts,
-                                              num_iter=num_iter,
-                                              alpha=alpha_pwr)
-    return power, sample_counts
-
-
-def get_unpaired_power(mode, test, samples, sub_size=None, alpha_pwr=0.05,
-                       min_counts=20, max_counts=50, counts_interval=10,
-                       counts_start=None, num_iter=500, num_runs=10, 
-                       scaling=5):
-    r"""Calculates the effect size for unpaired random sampling methods
-
-    Parameters
-    ----------
-    mode : {"SIGNIFICANT", "ALL"}
-        how random observations should be drawn. "SIGNIFICANT" indicates that
-        observations should be drawn from two subsets of samples which are
-        significantly different at the level indictated by `alpha_pwr` /
-        `scaling`, while "ALL" indicates the observations should be drawn from
-        the sample, and not subsamples.
-    test : function
-        the statistical test which accepts an array-like of sample ids
-        (list of lists) and returns a p-value.
-    samples : array-like
+    samples : {None, array-like}
         samples can be a list of lists or an array where each sublist or row in
-        the array corresponds to a sampled group.
+        the array corresponds to a sampled group. Required for "ALL" and "SIG"
+        mode.
     sub_size : {None, int}, optional
         the maximum number of samples to select from a group. If no value is
         provided, this will be the same as the size of the smallest group.
         Otherwise, this will be compared to the size of the smallest group, and
         which ever is lower will be used.
     alpha_pwr : float, optional
-        default is 0.05. The critical value for the power calculation.
+        Default is 0.05. The alpha value used to calculate the power.
     min_counts : unsigned int, optional
         Default is 20. The minimum number of paired samples which must exist
         for a category and set of control categories to be able to subsample
@@ -196,21 +116,11 @@ def get_unpaired_power(mode, test, samples, sub_size=None, alpha_pwr=0.05,
     counts_start : {None, unsigned int}, optional
         Defualt is None. How many samples should be drawn for the smallest
         subsample. If this is None, the `counts_interval` will be used.
-        Default is 10.
-    num_iter : unsigned int, optional
+    num_iter : unsigned int
         Default is 1000. The number of p-values to generate for each point
         on the curve.
-    num_runs : unsigned int, optional
+    num_runs : unsigned int
         Default is 10. The number of times to calculate each curve.
-    scaling : int, optional
-        a penalty scale on `alpha_pwr`, so the probability that two
-        distributions are different in "SIGNIFICANT" mode is less than
-        `alpha_pwr` / `scaling`.
-    labels : 1d array
-        a list of formatted strings describing the effects, to be used in the
-        legend.
-    counts : 1d array
-        the counts where power should be calculated.
 
     Returns
     -------
@@ -221,25 +131,31 @@ def get_unpaired_power(mode, test, samples, sub_size=None, alpha_pwr=0.05,
 
     Raises
     ------
+    ValueError
+        if mode is PAIRED and meta, cat or control_cats is None
+    ValueError
+        if mode is ALL or SIG and samples is None
     RuntimeError
-        if the paired samples contains less than the minimum numebr of samples.
+        if there are fewer samples than the minimum count
+    RuntimeError
+        if the `counts_interval` is greater than the difference between the
+        sample start and the max value.
 
     Examples
     --------
-    Suppose we wanted to look for the probability that two variables are
-    correlated.
+    Suppose we wanted to look at the power curve for two varaibles, `ind` and
+    `dep`, using completely random subsampling. To control for the pseudo
+    random number generation, we will use a seed.
 
     >>> import numpy as np
+    >>> np.random.seed(20)
     >>> ind = np.random.randint(0, 20, 15)
-    >>> dep1 = 3 * ind + 5 + randn(15)*3
-    >>> dep2 = 3 * ind + 5 + randint(15)
     >>> print ind
-        [ 4 15 12 18  8  4  5  1  7  3  3 13  3  1 16]
+        [ 3 15  9 11  7  2  0  8 19 16  6  6 16  9  5]
+    >>> dep = (3 * ind + 5 + np.random.randn(15)*5).round(3)
     >>> print dep
-        [ 20.60681692  46.85017525  44.16983032  57.74096699  35.88452703
-        9.21653787  28.4682692   10.04266677  21.26691966   8.07123922
-        15.60001947  43.12739086  12.45944099  13.94787823  53.67800315]
-
+        [ 15.617  47.533  28.04   33.788  19.602  12.229   4.779  36.838
+          67.256  55.032  22.157   7.051  58.601  38.664  18.783]
 
     Let's define a test that will draw a list of sample pairs and determine
     if they're correlated. We'll use the `pearsonr` function from scipy, which
@@ -256,35 +172,82 @@ def get_unpaired_power(mode, test, samples, sub_size=None, alpha_pwr=0.05,
 
     >>> samples = [np.arange(0, 15, 1)]
     >>> print f(samples)
+        3.64594525966e-08
 
-    >>> from skbio.stats.power import get_unpaired_power
+    Since we know the two samples are correlated overall, let's try using
+    completely random subsampling. This is recommended when sample populations
+    are of simillar size, giving each sampled contained in the population a
+    simillar probability of being drawn. If one sample is much larger than the
+    other, signifigant subsampling can help decrease some of the noise.
 
+    >>> from skbio.stats.power import get_subsampled_power
+    >>> pwr_ests, counts = get_subsampled_power(mode="ALL",
+    ...                                         test=f,
+    ...                                         samples=samples,
+    ...                                         min_counts=3,
+    ...                                         max_counts=10,
+    ...                                         counts_start=3,
+    ...                                         counts_interval=1)
+    >>> print counts
+        [3 4 5 6 7 8 9]
+
+    >>> print pwr_ests
+        [[ 0.22   0.652  0.89   0.958  0.992  1.     1.   ]
+         [ 0.234  0.642  0.876  0.96   0.99   1.     1.   ]
+         [ 0.242  0.654  0.848  0.946  0.998  1.     1.   ]
+         [ 0.244  0.664  0.884  0.946  0.988  1.     1.   ]
+         [ 0.248  0.666  0.866  0.948  0.986  1.     1.   ]
+         [ 0.242  0.658  0.9    0.94   0.99   1.     1.   ]
+         [ 0.242  0.638  0.874  0.952  0.992  1.     1.   ]
+         [ 0.24   0.66   0.904  0.95   0.988  1.     1.   ]
+         [ 0.232  0.64   0.912  0.972  0.988  1.     1.   ]
+         [ 0.256  0.646  0.854  0.952  0.992  1.     1.   ]]
+
+    The power_est can then be used to fit an effect_size using the power module
+    if the statsmodel library, or can be average and plotted.
 
     """
-    # Gets a population of sample ids to check the number of subsamples
-    # generated
-    if mode == 'SIGNIFICANT':
-        sub_ids = get_significant_subsample([test], samples, sub_size,
-                                            alpha_pwr, num_iter, scaling)
+
+    # Checks the mode arguments
+    if mode == "PAIRED":
+        if meta is None or cat is None or control_cats is None:
+            raise ValueError("PAIRED mode requires a meta dataframe, a "
+                             "cat to vary and a set of control_cats.")
+        else:
+            sub_ids = get_paired_subsamples(meta, cat, control_cats, order,
+                                            strict)
+    elif mode == 'SIG':
+        if samples is None:
+            raise ValueError("SIG mode requires samples be defined.")
+        else:
+            sub_ids = get_significant_subsample([test], samples, sub_size,
+                                                alpha_pwr, num_iter, scaling)
+    elif mode == "ALL":
+        if samples is None:
+            raise ValueError("ALL mode requires samples be defined.")
+        else:
+            sub_ids = samples
     else:
-        sub_ids = samples
-    num_ids = len(sub_ids[0])
+        raise ValueError('%s is not a supported mode. Modes are "ALL", "SIG", '
+                         'and "PAIRED".' % mode)
+
+    # Determines the minium number of ids in a category
+    num_ids = array([len(id_) for id_ in sub_ids]).min()
 
     # Checks there are enough samples to subsample
     if num_ids <= min_counts:
         raise RuntimeError('There are not enough samples for subsampling.')
 
+    # Calculates the effect size vector
     if counts_start is None:
         counts_start = counts_interval
 
-    # Calculates the effect size vector
+    if (max_counts - counts_start) < counts_interval:
+        raise RuntimeError("No subsamples of the specified size can be drawn.")
+
     sample_counts = arange(counts_start,
                            min(max_counts, num_ids),
                            counts_interval)
-
-    if len(sample_counts) < 1:
-        raise UserWarning('No subsamples are being generated. Check your'
-                          'max_counts and counts_interval.')
 
     # Prealocates the power array
     power = zeros((num_runs, len(sample_counts)))
@@ -296,7 +259,10 @@ def get_unpaired_power(mode, test, samples, sub_size=None, alpha_pwr=0.05,
     # Calculates the power instances
     for id1 in arange(1, num_runs):
         # Gets the subsample
-        if mode == 'SIGNIFICANT':
+        if mode == "PAIRED":
+            sub_ids = get_paired_subsamples(meta, cat, control_cats, order,
+                                            strict)
+        elif mode == 'SIGNIFICANT':
             sub_ids = get_significant_subsample([test], samples, sub_size,
                                                 alpha_pwr, num_iter, scaling)
         else:
