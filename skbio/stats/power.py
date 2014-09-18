@@ -8,21 +8,20 @@ of microbiome data. It also provides support to subsample data to faciliate
 this analysis.
 
 The underlying principle is based on subsampling and monte carlo simulation.
-Assume that there is some set of populations, $K_{1}, K_{2}, ... K_{n}$ which
-have some property, $\mu$ such that $\mu_{1} \neq \mu_{2} \neq ... \neq
-\mu_{n}$. For each of the populations, a sample, $S$ can be drawn, with a
-parameter, $x$ where $x \aeq \mu$ and for the samples, we can use a test, f,
-to show that $x_{1} \neq x_{2} \neq ... \neq x_{n}$.
+Assume that there is some set of populations, K1, K2, ... Kn which
+have some property, u such that u1 =\= u2 =\= ... =\= un. For each of the
+populations, a sample, S can be drawn, with a parameter, x where x ~ u and
+for the samples, we can use a test, f, to show that x1 =\= x2 =\= ... =\= xn.
 
-Since we known that $\mu_{1} \neq \mu_{2} \neq ... \neq \mu_{n}$, we know we
-should reject the null hypothesis. If we fail to reject the null hypothesis,
-we have comitted a Type II error and our result is a False negative. We can
-estimate the frequency of Type II errors at various sampling depths by
-repeatedly subsampling the populations and observing how often we see a False
-negative. If we repeat this several times for each subsampling depth, and vary
-the depths we use, we can start to approximate a relationship between the
-number of samples we use and the rate of false negatives, also called the
-statistical power of the test.
+Since we known that u1 =\= u2 =\= ... =\= un, we know we should reject the null
+hypothesis. If we fail to reject the null hypothesis, we have comitted a Type
+II error and our result is a False negative. We can estimate the frequency of
+Type II errors at various sampling depths by repeatedly subsampling the
+populations and observing how often we see a False negative. If we repeat
+this several times for each subsampling depth, and vary the depths we use,
+we can start to approximate a relationship between the number of samples we
+use and the rate of false negatives, also called the statistical power
+of the test.
 
 We can then use the rate of false negatives and use the `statsmodels.power`
 package to solve for an effect size. This can be used to extrapolate a power
@@ -33,12 +32,22 @@ test function which will take a list of ids, and return a p value. The test is
 then evaluated over a series of subsample sizes.
 
 With microbiome data, there are three ways we can approach selecting our
-sample. We may choose to simply draw $n$ observations at random from the two
+sample. We may choose to simply draw n observations at random from the two
 underlying samples. Alternatively, we can draw subsamples which are
 significantly different. Finally, we can try to match samples based on a set
 of control categories.
 
+Functions
+---------
 
+.. autosummary::
+    :toctree: generated/
+
+    get_subsampled_power
+    confidence_bound
+    bootstrap_power_curve
+    get_significant_subsample
+    get_paired_subsamples
 """
 
 # -----------------------------------------------------------------------------
@@ -254,7 +263,7 @@ def get_subsampled_power(mode, test, meta=None, cat=None, control_cats=None,
 
     # Calculates the first power curve instance
     power[0, :] = _calculate_power_curve(test, sub_ids, sample_counts,
-                                        num_iter=num_iter, alpha=alpha_pwr)
+                                         num_iter=num_iter, alpha=alpha_pwr)
 
     # Calculates the power instances
     for id1 in arange(1, num_runs):
@@ -269,14 +278,14 @@ def get_subsampled_power(mode, test, meta=None, cat=None, control_cats=None,
             sub_ids = samples
         # Calculates the power curve
         power[id1, :] = _calculate_power_curve(test, sub_ids, sample_counts,
-                                              num_iter=num_iter,
-                                              alpha=alpha_pwr)
+                                               num_iter=num_iter,
+                                               alpha=alpha_pwr)
 
     return power, sample_counts
 
 
 def _check_strs(x):
-    r"""Determines if x is a string, number or nan"""
+    r"""Returns False if x is a nan and True is x is a string or number"""
 
     if isinstance(x, str):
         return True
@@ -413,7 +422,7 @@ def confidence_bound(vec, alpha=0.05, df=None, axis=None):
 
 
 def _calculate_power_curve(test, samples, sample_counts, ratio=None,
-                          num_iter=1000, alpha=0.05):
+    num_iter=1000, alpha=0.05):
     """Generates an empirical power curve for the samples.
 
     Parameters
@@ -481,7 +490,7 @@ def _calculate_power_curve(test, samples, sample_counts, ratio=None,
 
 
 def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
-                          alpha=0.05, num_iter=500, num_runs=10):
+    alpha=0.05, num_iter=500, num_runs=10):
     r"""Repeatedly calculates the power curve for a specified alpha level
 
     Parameters
@@ -573,9 +582,19 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
 
 
 def get_significant_subsample(tests, samples, sub_size=None, p_crit=0.05,
-                              num_rounds=500, p_scaling=5):
-    """Subsamples data to an even sample number for all groups
+    num_rounds=500, p_scaling=5):
+    """Subsamples data to an even sample number with a signficiant difference
 
+    This function is recommended for use when sample sizes are severely
+    skewed. For example, comparing a sample with 10 observations to a sample
+    with 100 observations, it's likely the observed range, and the observed
+    varaince of the larger sample will be greater. To control for a
+    difference in sample size and limit uneven weighting due to this disparity,
+    `get_significant_subsample` allows the user to select a group of subsamples
+    which are signfigantly different at some critical value (a required
+    assumption for this iterative post-hoc power analysis). The function will
+    terminate if a signifigantly different subsample cannot be identified in
+    a specified number of iterations, typically 500.
 
     Parameters
     ----------
@@ -624,7 +643,51 @@ def get_significant_subsample(tests, samples, sub_size=None, p_crit=0.05,
 
     Example
     -------
+    Let's assume we have two samples drawn from two populations. The first
+    sample has 25 observations, and the second has 200.
 
+    >>> import numpy as np
+    >>> np.random.seed(25)
+    >>> yy1 =  0.15*np.random.randint(20, 30, 25) + \
+    ...     np.random.randint(20, 30, 25) + 5*np.random.randn(25) + 5
+    >>> print y1.mean()
+    32.049
+    >>> print [y1.min(), y1.max()]
+    [17.954, 48.704]
+    >>> y2 = 0.15*np.random.randint(50, 60, 200) + \
+    ...     np.random.randint(20, 35, 200) + 5*np.random.randn(200)
+    >>> print y2.mean()
+    37.799
+    >>> print [y2.min(), y2.max()]
+    [17.698, 58.537]
+
+    We can compare the two sample populations using a kruskal-wallis test.
+
+    >>> from scipy.stats import kruskal
+    >>> f = lambda x: kruskal(*x)[1]
+    >>> print f([y1, y2])
+    0.003
+
+    However, looking at the overlap in the sample range, it's possible that
+    if we draw a random sample to compare the two distributions, we could get
+    samples which intersect and do not reflect the true distibution and
+    difference in the samples. So, insteaad, we use get_significant_subsample
+    to get a subsample of y2 the same size as y1. Let's compare the
+    signifigantly subsampled population to a random subsample.
+
+    >>> from skbio.stats.power import (get_significant_subsample,
+    ...                                bootstrap_power_curve)
+    >>> vals = get_significant_subsample([f], [y1, y2])
+    >>> all_mean, all_std = bootstrap_power_curve(f,
+    ...                                           [y1, y2],
+    ...                                           np.arange(5, 25, 5))
+    >>> sub_mean, sub_std = bootstrap_power_curve(f,
+    ...                                           vals,
+    ...                                           np.arange(5, 25, 5))
+    >>> print all_power_mean
+    [ 0.172  0.28   0.397  0.527]
+    >>> print sub_power_mean
+    [ 0.208  0.431  0.645  0.922]
 
     """
 
