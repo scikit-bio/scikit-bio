@@ -66,6 +66,7 @@ from numpy import (array, zeros, ones, round as nround, hstack, isnan,
 from numpy.random import choice
 from scipy.stats import t, nanstd
 
+
 def get_subsampled_power(mode, test, meta=None, cat=None, control_cats=None,
                          order=None, strict=True, samples=None, sub_size=None,
                          scaling=5, alpha_pwr=0.05, min_counts=20,
