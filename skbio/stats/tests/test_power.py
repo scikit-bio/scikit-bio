@@ -15,7 +15,7 @@ from skbio.stats.power import (get_subsampled_power,
                                confidence_bound,
                                _calculate_power,
                                _compare_distributions,
-                               calculate_power_curve,
+                               _calculate_power_curve,
                                bootstrap_power_curve,
                                get_significant_subsample,
                                get_paired_subsamples)
@@ -177,259 +177,259 @@ class PowerAnalysisTest(TestCase):
         self.assertEqual(test_p.shape, (2, 4))
         assert_array_equal(arange(10, 50, 10), test_c)
 
-    # def test__check_strs_str(self):
-    #     """Test check_strs returns sanely when passed a string"""
-    #     self.assertTrue(_check_strs('string'))
+    def test__check_strs_str(self):
+        """Test check_strs returns sanely when passed a string"""
+        self.assertTrue(_check_strs('string'))
 
-    # def test__check_strs_num(self):
-    #     """Tests check_strs returns sanely when passed a number"""
-    #     self.assertTrue(_check_strs(4.2))
+    def test__check_strs_num(self):
+        """Tests check_strs returns sanely when passed a number"""
+        self.assertTrue(_check_strs(4.2))
 
-    # def test__check_str_nan(self):
-    #     """Tests check_strs retruns sanely when passed a nan"""
-    #     self.assertFalse(_check_strs(nan))
+    def test__check_str_nan(self):
+        """Tests check_strs retruns sanely when passed a nan"""
+        self.assertFalse(_check_strs(nan))
 
-    # def test__check_str_error(self):
-    #     """Tests check_strs errors when not passed a string or number"""
-    #     with self.assertRaises(TypeError):
-    #         _check_strs(self.f)
+    def test__check_str_error(self):
+        """Tests check_strs errors when not passed a string or number"""
+        with self.assertRaises(TypeError):
+            _check_strs(self.f)
 
-    # def test_confidence_bound_default(self):
-    #     """Checks confidence_bound correctly determines an interval"""
-    #     # Sets the know confidence bound
-    #     known = 2.2830070
-    #     test = confidence_bound(self.s1)
-    #     assert_almost_equal(test, known, 3)
+    def test_confidence_bound_default(self):
+        """Checks confidence_bound correctly determines an interval"""
+        # Sets the know confidence bound
+        known = 2.2830070
+        test = confidence_bound(self.s1)
+        assert_almost_equal(test, known, 3)
 
-    # def test_confidence_bound_df(self):
-    #     """Checks a custom df for confidence_bound"""
-    #     known = 2.15109
-    #     test = confidence_bound(self.s1, df=15)
-    #     assert_almost_equal(known, test, 3)
+    def test_confidence_bound_df(self):
+        """Checks a custom df for confidence_bound"""
+        known = 2.15109
+        test = confidence_bound(self.s1, df=15)
+        assert_almost_equal(known, test, 3)
 
-    # def test_confidence_bound_alpha(self):
-    #     """Checks a custom df for confidence_bound"""
-    #     known = 3.2797886
-    #     test = confidence_bound(self.s1, alpha=0.01)
-    #     assert_almost_equal(known, test, 3)
+    def test_confidence_bound_alpha(self):
+        """Checks a custom df for confidence_bound"""
+        known = 3.2797886
+        test = confidence_bound(self.s1, alpha=0.01)
+        assert_almost_equal(known, test, 3)
 
-    # def test_confidence_bound_nan(self):
-    #     """Tests confidence_bound can handle nans"""
-    #     # Sets the value to test
-    #     samples = array([[4, 3.2, 3.05],
-    #                      [2, 2.8, 2.95],
-    #                      [5, 2.9, 3.07],
-    #                      [1, 3.1, 2.93],
-    #                      [3, nan, 3.00]])
-    #     # Sets the know value
-    #     known = array([2.2284, 0.2573, 0.08573])
-    #     # Tests the function
-    #     test = confidence_bound(samples, axis=0)
-    #     assert_almost_equal(known, test, 3)
+    def test_confidence_bound_nan(self):
+        """Tests confidence_bound can handle nans"""
+        # Sets the value to test
+        samples = array([[4, 3.2, 3.05],
+                         [2, 2.8, 2.95],
+                         [5, 2.9, 3.07],
+                         [1, 3.1, 2.93],
+                         [3, nan, 3.00]])
+        # Sets the know value
+        known = array([2.2284, 0.2573, 0.08573])
+        # Tests the function
+        test = confidence_bound(samples, axis=0)
+        assert_almost_equal(known, test, 3)
 
-    # def test_confidence_bound_axis_none(self):
-    #     """Tests confidence_bound can handle a None axis"""
-    #     # Sets the value to test
-    #     samples = array([[4, 3.2, 3.05],
-    #                      [2, 2.8, 2.95],
-    #                      [5, 2.9, 3.07],
-    #                      [1, 3.1, 2.93],
-    #                      [3, nan, 3.00]])
-    #     # Sest the known value
-    #     known = 0.52852
-    #     # Tests the output
-    #     test = confidence_bound(samples, axis=None)
-    #     assert_almost_equal(known, test, 3)
+    def test_confidence_bound_axis_none(self):
+        """Tests confidence_bound can handle a None axis"""
+        # Sets the value to test
+        samples = array([[4, 3.2, 3.05],
+                         [2, 2.8, 2.95],
+                         [5, 2.9, 3.07],
+                         [1, 3.1, 2.93],
+                         [3, nan, 3.00]])
+        # Sest the known value
+        known = 0.52852
+        # Tests the output
+        test = confidence_bound(samples, axis=None)
+        assert_almost_equal(known, test, 3)
 
-    # def test__calculate_power(self):
-    #     """Tests calculate_power is sane"""
-    #     # Sets up the values to test
-    #     crit = 0.025
-    #     # Sets the known value
-    #     known = 0.5
-    #     # Calculates the test value
-    #     test = _calculate_power(self.alpha, crit)
-    #     # Checks the test value
-    #     assert_almost_equal(known, test)
+    def test__calculate_power(self):
+        """Tests calculate_power is sane"""
+        # Sets up the values to test
+        crit = 0.025
+        # Sets the known value
+        known = 0.5
+        # Calculates the test value
+        test = _calculate_power(self.alpha, crit)
+        # Checks the test value
+        assert_almost_equal(known, test)
 
-    # def test__compare_distributions_count_error(self):
-    #     """Checks error is raised when there is not a count for each group"""
-    #     with self.assertRaises(ValueError):
-    #         _compare_distributions(self.f, self.samps, counts=[1, 2, 3],
-    #                               num_iter=100)
+    def test__compare_distributions_count_error(self):
+        """Checks error is raised when there is not a count for each group"""
+        with self.assertRaises(ValueError):
+            _compare_distributions(self.f, self.samps, counts=[1, 2, 3],
+                                  num_iter=100)
 
-    # def test__compare_distributions(self):
-    #     """Checks _compare_distributions is sane"""
-    #     known = ones((100))*0.0026998
-    #     test = _compare_distributions(self.f, self.samps, num_iter=100)
-    #     assert_allclose(known, test, 5)
+    def test__compare_distributions(self):
+        """Checks _compare_distributions is sane"""
+        known = ones((100))*0.0026998
+        test = _compare_distributions(self.f, self.samps, num_iter=100)
+        assert_allclose(known, test, 5)
 
-    # def test_calculate_power_curve_ratio_error(self):
-    #     """Checks the function errors correctly for a non-sane ratio argument
+    def test__calculate_power_curve_ratio_error(self):
+        """Checks the function errors correctly for a non-sane ratio argument
 
-    #     the ratio argument must be a none-type (flat distribution), or an array
-    #     with the same shape as population.
+        the ratio argument must be a none-type (flat distribution), or an array
+        with the same shape as population.
 
-    #     """
-    #     self.assertRaises(ValueError, calculate_power_curve, self.f,
-    #                       self.pop, self.num_samps,
-    #                       ratio=array([0.1, 0.2, 0.3]),
-    #                       num_iter=100)
+        """
+        self.assertRaises(ValueError, _calculate_power_curve, self.f,
+                          self.pop, self.num_samps,
+                          ratio=array([0.1, 0.2, 0.3]),
+                          num_iter=100)
 
-    # def test_calculate_power_curve_default(self):
-    #     """Checks the power array is within a sane range for default values"""
-    #     # Sets the know output
-    #     known = array([0.509, 0.822, 0.962, 0.997, 1.000, 1.000, 1.000,
-    #                    1.000,  1.000])
+    def test__calculate_power_curve_default(self):
+        """Checks the power array is within a sane range for default values"""
+        # Sets the know output
+        known = array([0.509, 0.822, 0.962, 0.997, 1.000, 1.000, 1.000,
+                       1.000,  1.000])
 
-    #     # Generates the test values.
-    #     test = calculate_power_curve(self.f,
-    #                                  self.pop,
-    #                                  self.num_samps,
-    #                                  num_iter=100)
-    #     # Checks the samples returned sanely
-    #     assert_allclose(test, known, rtol=0.1, atol=0.1)
+        # Generates the test values.
+        test = _calculate_power_curve(self.f,
+                                     self.pop,
+                                     self.num_samps,
+                                     num_iter=100)
+        # Checks the samples returned sanely
+        assert_allclose(test, known, rtol=0.1, atol=0.1)
 
-    # def test_calculate_power_curve_alpha(self):
-    #     """Checks the power array is in a sane range when alpha is varied"""
-    #     # Sets the know output
-    #     known = array([0.31, 0.568, 0.842, 0.954, 0.995, 1.000, 1.000, 1.000,
-    #                    1.000])
+    def test__calculate_power_curve_alpha(self):
+        """Checks the power array is in a sane range when alpha is varied"""
+        # Sets the know output
+        known = array([0.31, 0.568, 0.842, 0.954, 0.995, 1.000, 1.000, 1.000,
+                       1.000])
 
-    #     # Generates the test values
-    #     test = calculate_power_curve(self.f,
-    #                                  self.pop,
-    #                                  self.num_samps,
-    #                                  alpha=0.01,
-    #                                  num_iter=100)
+        # Generates the test values
+        test = _calculate_power_curve(self.f,
+                                     self.pop,
+                                     self.num_samps,
+                                     alpha=0.01,
+                                     num_iter=100)
 
-    #     # Checks the samples returned sanely
-    #     assert_allclose(test, known, rtol=0.1, atol=0.1)
+        # Checks the samples returned sanely
+        assert_allclose(test, known, rtol=0.1, atol=0.1)
 
-    # def test_calculate_power_curve_ratio(self):
-    #     """Checks the power array is in a sane range when ratio is varied"""
-    #     # Sets the know output
-    #     known = array([0.096, 0.333, 0.493, 0.743, 0.824, 0.937, 0.969,
-    #                    0.996, 0.998])
+    def test__calculate_power_curve_ratio(self):
+        """Checks the power array is in a sane range when ratio is varied"""
+        # Sets the know output
+        known = array([0.096, 0.333, 0.493, 0.743, 0.824, 0.937, 0.969,
+                       0.996, 0.998])
 
-    #     # Generates the test values
-    #     test = calculate_power_curve(self.f,
-    #                                  self.pop,
-    #                                  self.num_samps,
-    #                                  ratio=array([0.25, 0.75]),
-    #                                  num_iter=100)
+        # Generates the test values
+        test = _calculate_power_curve(self.f,
+                                     self.pop,
+                                     self.num_samps,
+                                     ratio=array([0.25, 0.75]),
+                                     num_iter=100)
 
-    #     # Checks the samples returned sanely
-    #     assert_allclose(test, known, rtol=0.1, atol=0.1)
+        # Checks the samples returned sanely
+        assert_allclose(test, known, rtol=0.1, atol=0.1)
 
-    # def test_bootstrap_power_curve(self):
-    #     """Checks the power estimate is handled in a sane way"""
-    #     # Sets the known values
-    #     known_mean = array([0.500, 0.82, 0.965, 0.995, 1.000, 1.000,
-    #                         1.000, 1.000,  1.000])
-    #     known_bound = array([0.03, 0.02, 0.01, 0.01, 0.00, 0.00, 0.00, 0.00,
-    #                          0.00])
-    #     # Generates the test values
-    #     test_mean, test_bound = bootstrap_power_curve(self.f,
-    #                                                   self.pop,
-    #                                                   self.num_samps,
-    #                                                   num_iter=100)
-    #     # Checks the function returned sanely
-    #     assert_allclose(test_mean, known_mean, rtol=0.05, atol=0.05)
-    #     assert_allclose(test_bound, known_bound, rtol=0.1, atol=0.01)
+    def test_bootstrap_power_curve(self):
+        """Checks the power estimate is handled in a sane way"""
+        # Sets the known values
+        known_mean = array([0.500, 0.82, 0.965, 0.995, 1.000, 1.000,
+                            1.000, 1.000,  1.000])
+        known_bound = array([0.03, 0.02, 0.01, 0.01, 0.00, 0.00, 0.00, 0.00,
+                             0.00])
+        # Generates the test values
+        test_mean, test_bound = bootstrap_power_curve(self.f,
+                                                      self.pop,
+                                                      self.num_samps,
+                                                      num_iter=100)
+        # Checks the function returned sanely
+        assert_allclose(test_mean, known_mean, rtol=0.05, atol=0.05)
+        assert_allclose(test_bound, known_bound, rtol=0.1, atol=0.01)
 
-    # def test_get_significant_subsample_no_tests(self):
-    #     """Checks get_significant_subsample errors when inputs are too similar
-    #     """
-    #     with self.assertRaises(RuntimeError):
-    #         get_significant_subsample([None], self.samps, num_rounds=100)
+    def test_get_significant_subsample_no_tests(self):
+        """Checks get_significant_subsample errors when inputs are too similar
+        """
+        with self.assertRaises(RuntimeError):
+            get_significant_subsample([None], self.samps, num_rounds=100)
 
-    # def test_get_significant_subsample_no_results(self):
-    #     """Checks get_significant_subsample errors when inputs are too similar
-    #     """
-    #     # Sets up a function which will fail testing
-    #     def test_f(x):
-    #         if len(x[0]) == 100:
-    #             return 0.001
-    #         else:
-    #             return 0.5
-    #     # Tests a value error is raised
-    #     with self.assertRaises(RuntimeError):
-    #         get_significant_subsample([test_f], self.samps, sub_size=10,
-    #                                   num_rounds=5)
+    def test_get_significant_subsample_no_results(self):
+        """Checks get_significant_subsample errors when inputs are too similar
+        """
+        # Sets up a function which will fail testing
+        def test_f(x):
+            if len(x[0]) == 100:
+                return 0.001
+            else:
+                return 0.5
+        # Tests a value error is raised
+        with self.assertRaises(RuntimeError):
+            get_significant_subsample([test_f], self.samps, sub_size=10,
+                                      num_rounds=5)
 
-    # def test_get_signfigiant_subsample_no_iteration(self):
-    #     """Checks get_significant_subsample errors when iteration is not found
-    #     """
-    #     # Sets up a function which will fail testing
-    #     def test_f(x):
-    #         if len(x[0]) > 5:
-    #             return 0.001
-    #         else:
-    #             return 0.5
-    #     # Tests if a RuntimeError is raised
-    #     with self.assertRaises(RuntimeError):
-    #         get_significant_subsample([test_f], self.samps, sub_size=5,
-    #                                   num_rounds=5)
+    def test_get_signfigiant_subsample_no_iteration(self):
+        """Checks get_significant_subsample errors when iteration is not found
+        """
+        # Sets up a function which will fail testing
+        def test_f(x):
+            if len(x[0]) > 5:
+                return 0.001
+            else:
+                return 0.5
+        # Tests if a RuntimeError is raised
+        with self.assertRaises(RuntimeError):
+            get_significant_subsample([test_f], self.samps, sub_size=5,
+                                      num_rounds=5)
 
-    # def test_get_significant_subsample_default(self):
-    #     """Checks get_significant_subsample functions sanely under defaults"""
-    #     pop = [arange(0, 10, 1), arange(0, 20, 0.2)]
-    #     # Checks the overall data meets the parameters
-    #     self.assertNotEqual(len(pop[0]), len(pop[1]))
-    #     # Generates subsamples
-    #     test_ids = get_significant_subsample([self.f], pop)
-    #     # Checks the results
-    #     self.assertEqual(len(test_ids[0]), len(test_ids[1]))
-    #     self.assertTrue(self.f(test_ids) < 0.05)
+    def test_get_significant_subsample_default(self):
+        """Checks get_significant_subsample functions sanely under defaults"""
+        pop = [arange(0, 10, 1), arange(0, 20, 0.2)]
+        # Checks the overall data meets the parameters
+        self.assertNotEqual(len(pop[0]), len(pop[1]))
+        # Generates subsamples
+        test_ids = get_significant_subsample([self.f], pop)
+        # Checks the results
+        self.assertEqual(len(test_ids[0]), len(test_ids[1]))
+        self.assertTrue(self.f(test_ids) < 0.05)
 
-    # def test_get_paired_subsamples_default(self):
-    #     """Checks controlled subsets can be generated sanely"""
-    #     # Sets the known array set
-    #     known_array = [array(['MM', 'SR', 'TS', 'GW', 'PP', 'WM']),
-    #                    array(['CD', 'LF', 'PC', 'CB', 'MH', 'NR'])]
+    def test_get_paired_subsamples_default(self):
+        """Checks controlled subsets can be generated sanely"""
+        # Sets the known array set
+        known_array = [array(['MM', 'SR', 'TS', 'GW', 'PP', 'WM']),
+                       array(['CD', 'LF', 'PC', 'CB', 'MH', 'NR'])]
 
-    #     # Gets the test value
-    #     cat = 'INT'
-    #     control_cats = ['SEX', 'AGE']
-    #     test_array = get_paired_subsamples(self.meta, cat, control_cats)
-    #     assert_array_equal(known_array, test_array)
+        # Gets the test value
+        cat = 'INT'
+        control_cats = ['SEX', 'AGE']
+        test_array = get_paired_subsamples(self.meta, cat, control_cats)
+        assert_array_equal(known_array, test_array)
 
-    # def test_get_paired_subsamples_break(self):
-    #     """Checks controlled susbets can skip sanely when there are no matches
-    #     """
-    #     # Sets known array set
-    #     known_array = [array([]), array([])]
-    #     # Gets the test value
-    #     cat = 'ABX'
-    #     control_cats = ['SEX', 'AGE', 'INT']
-    #     test_array = get_paired_subsamples(self.meta, cat, control_cats)
-    #     assert_array_equal(known_array, test_array)
+    def test_get_paired_subsamples_break(self):
+        """Checks controlled susbets can skip sanely when there are no matches
+        """
+        # Sets known array set
+        known_array = [array([]), array([])]
+        # Gets the test value
+        cat = 'ABX'
+        control_cats = ['SEX', 'AGE', 'INT']
+        test_array = get_paired_subsamples(self.meta, cat, control_cats)
+        assert_array_equal(known_array, test_array)
 
-    # def test_get_paired_subsample_fewer(self):
-    #     """Checks controlled subsets can handle fewer samples sanely"""
-    #     # Set known value
-    #     known_array = [array(['PP', 'MH']),
-    #                    array(['CD', 'PC'])]
-    #     # Sets up test values
-    #     cat = 'AGE'
-    #     order = ['30s', '40s']
-    #     control_cats = ['ABX']
-    #     test_array = get_paired_subsamples(self.meta, cat, control_cats,
-    #                                        order=order)
-    #     assert_array_equal(known_array, test_array)
+    def test_get_paired_subsample_fewer(self):
+        """Checks controlled subsets can handle fewer samples sanely"""
+        # Set known value
+        known_array = [array(['PP', 'MH']),
+                       array(['CD', 'PC'])]
+        # Sets up test values
+        cat = 'AGE'
+        order = ['30s', '40s']
+        control_cats = ['ABX']
+        test_array = get_paired_subsamples(self.meta, cat, control_cats,
+                                           order=order)
+        assert_array_equal(known_array, test_array)
 
-    # def test_get_paired_subsamples_not_strict(self):
-    #     """Checks controlled subsets can be generated with missing values"""
-    #     known_array = [array(['WM', 'MM', 'GW', 'SR', 'TS']),
-    #                    array(['LF', 'PC', 'CB', 'NR', 'CD'])]
+    def test_get_paired_subsamples_not_strict(self):
+        """Checks controlled subsets can be generated with missing values"""
+        known_array = [array(['WM', 'MM', 'GW', 'SR', 'TS']),
+                       array(['LF', 'PC', 'CB', 'NR', 'CD'])]
 
-    #     # Gets the test values
-    #     cat = 'INT'
-    #     control_cats = ['ABX', 'AGE']
-    #     test_array = get_paired_subsamples(self.meta, cat, control_cats,
-    #                                        strict=False)
-    #     assert_array_equal(known_array, test_array)
+        # Gets the test values
+        cat = 'INT'
+        control_cats = ['ABX', 'AGE']
+        test_array = get_paired_subsamples(self.meta, cat, control_cats,
+                                           strict=False)
+        assert_array_equal(known_array, test_array)
 
 if __name__ == '__main__':
     main()

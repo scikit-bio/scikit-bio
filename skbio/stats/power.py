@@ -65,10 +65,10 @@ rcParams['text.usetex'] = True
 
 
 def get_subsampled_power(mode, test, meta=None, cat=None, control_cats=None,
-                         order=None, strict=True, samples=None, sub_size=None,
-                         scaling=5, alpha_pwr=0.05, min_counts=20,
-                         max_counts=50, counts_interval=10, counts_start=None,
-                         num_iter=500, num_runs=10):
+    order=None, strict=True, samples=None, sub_size=None,
+    scaling=5, alpha_pwr=0.05, min_counts=20,
+    max_counts=50, counts_interval=10, counts_start=None,
+    num_iter=500, num_runs=10):
     r"""Subsamples data to iterative calculate power
 
       Parameters
@@ -253,7 +253,7 @@ def get_subsampled_power(mode, test, meta=None, cat=None, control_cats=None,
     power = zeros((num_runs, len(sample_counts)))
 
     # Calculates the first power curve instance
-    power[0, :] = calculate_power_curve(test, sub_ids, sample_counts,
+    power[0, :] = _calculate_power_curve(test, sub_ids, sample_counts,
                                         num_iter=num_iter, alpha=alpha_pwr)
 
     # Calculates the power instances
@@ -268,7 +268,7 @@ def get_subsampled_power(mode, test, meta=None, cat=None, control_cats=None,
         else:
             sub_ids = samples
         # Calculates the power curve
-        power[id1, :] = calculate_power_curve(test, sub_ids, sample_counts,
+        power[id1, :] = _calculate_power_curve(test, sub_ids, sample_counts,
                                               num_iter=num_iter,
                                               alpha=alpha_pwr)
 
@@ -286,6 +286,7 @@ def _check_strs(x):
         return True
     else:
         raise TypeError('input must be a string, float or a nan')
+
 
 def _calculate_power(p_values, alpha=0.05):
     r"""Calculates statical power empirically
@@ -411,11 +412,9 @@ def confidence_bound(vec, alpha=0.05, df=None, axis=None):
     return bound
 
 
-def calculate_power_curve(test, samples, sample_counts, ratio=None,
+def _calculate_power_curve(test, samples, sample_counts, ratio=None,
                           num_iter=1000, alpha=0.05):
     """Generates an empirical power curve for the samples.
-
-    ... ....
 
     Parameters
     ----------
@@ -558,12 +557,12 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
     alpha = ones((num_runs))*alpha
 
     # Boot straps the power curve
-    power = calculate_power_curve(test,
-                                  samples,
-                                  sample_counts,
-                                  ratio,
-                                  num_iter,
-                                  alpha)
+    power = _calculate_power_curve(test,
+                                   samples,
+                                   sample_counts,
+                                   ratio,
+                                   num_iter,
+                                   alpha)
 
     # Calculates two summary statitics
     power_mean = power.mean(0)
@@ -575,8 +574,8 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
 
 def get_significant_subsample(tests, samples, sub_size=None, p_crit=0.05,
                               num_rounds=500, p_scaling=5):
-    """
-    Subsamples data to an even sample number for all groups
+    """Subsamples data to an even sample number for all groups
+
 
     Parameters
     ----------
@@ -626,6 +625,7 @@ def get_significant_subsample(tests, samples, sub_size=None, p_crit=0.05,
     Example
     -------
 
+
     """
 
     # Determines the size of the groups
@@ -672,6 +672,11 @@ def get_significant_subsample(tests, samples, sub_size=None, p_crit=0.05,
 def get_paired_subsamples(meta, cat, control_cats, order=None, strict=True):
     r"""Gets a set samples to serve as controls
 
+    This function is designed to provide controlled samples, based on a
+    metadata category. For example, one could control for age, sex, education
+    level, and diet type while measuring exercise frequency. No outcome
+    value is considered in this subsampling process.
+
     Parameters
     ----------
     meta : dataframe
@@ -716,7 +721,7 @@ def get_paired_subsamples(meta, cat, control_cats, order=None, strict=True):
     ...         'TS': {'HOUSING': '2', 'SEX': 'M', 'AGE': '40s', 'ABX': 'Y'},
     ...         'CB': {'HOUSING': '3', 'SEX': 'M', 'AGE': '40s', 'ABX': 'Y'},
     ...         'BB': {'HOUSING': '1', 'SEX': 'M', 'AGE': '40s', 'ABX': 'Y'}}
-    >>>  meta = pd.DataFrame.from_dict(meta)
+    >>>  meta = pd.DataFrame.from_dict(meta, orient="index")
 
     Let's say we want to vary housing, controlling for sex, age, antibiotics
     and sex.
