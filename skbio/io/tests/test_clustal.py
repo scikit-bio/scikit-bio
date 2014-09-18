@@ -56,7 +56,7 @@ class ClustalIOTests(TestCase):
             StringIO('abc\tuuu\ndef\tccc\n\n    ***\n\ndef ggg\nabc\taaa\n'),
             StringIO('\n'.join(['abc uca', 'def ggg ccc'])),
             StringIO('\n'.join(['abc uca ggg', 'def ggg ccc'])),
-            StringIO('\n'.join(['abc\tuca ggg', 'def\tggg ccc','xyz gggccc'])),
+            StringIO('\n'.join(['abc\tuca ggg', 'def\tggg ccc', 'xyz gggcc'])),
             StringIO('\n'.join(['abc uca ggg', 'def gggccc'])),
             StringIO("""CLUSTAL
 
@@ -113,21 +113,20 @@ def             CGAUCAGUCAGUCGAU---------- 34
 xyz             UGCUGCAUCA---------------- 33
                 *     ***""")
             ]
-        self.invalid_clustal_out = [
-                        StringIO('\n'.join(['dshfjsdfhdfsj',
-                                            'hfsdjksdfhjsdf'])),
-                        StringIO('\n'.join(['hfsdjksdfhjsdf'])),
-                        StringIO('\n'.join(['dshfjsdfhdfsj',
-                                            'dshfjsdfhdfsj',
-                                            'hfsdjksdfhjsdf'])),
-                        StringIO('\n'.join(['dshfjsdfhdfsj',
-                                            '\t',
-                                            'hfsdjksdfhjsdf'])),
-                        StringIO('\n'.join(['dshfj\tdfhdfsj',
-                                            'hfsdjksdfhjsdf'])),
-                        StringIO('\n'.join(['dshfjsdfhdfsj',
-                                            'hfsdjk\tdfhjsdf'])),
-                        ]
+        self.invalid_clustal_out = [StringIO('\n'.join(['dshfjsdfhdfsj',
+                                                        'hfsdjksdfhjsdf'])),
+                                    StringIO('\n'.join(['hfsdjksdfhjsdf'])),
+                                    StringIO('\n'.join(['dshfjsdfhdfsj',
+                                                        'dshfjsdfhdfsj',
+                                                        'hfsdjksdfhjsdf'])),
+                                    StringIO('\n'.join(['dshfjsdfhdfsj',
+                                                        '\t',
+                                                        'hfsdjksdfhjsdf'])),
+                                    StringIO('\n'.join(['dshfj\tdfhdfsj',
+                                                        'hfsdjksdfhjsdf'])),
+                                    StringIO('\n'.join(['dshfjsdfhdfsj',
+                                                        'hfsdjk\tdfhjsdf'])),
+                                    ]
 
     def test_generator_to_clustal_with_empty_input(self):
 
@@ -192,14 +191,12 @@ xyz             UGCUGCAUCA---------------- 33
             result_after = _clustal_to_generator(testfile)
             self.assertEquals(set(records), set(result_after))
         os.remove(fname)
-    
+
     def test_invalid_generator_to_clustal_and_clustal_to_generator(self):
-        import os
         for invalid_out in self.invalid_clustal_out:
-            fname = "test.aln"
             with self.assertRaises(RecordError):
                 dict(_clustal_to_generator(invalid_out))
-        
+
 
 if __name__ == '__main__':
     main()
