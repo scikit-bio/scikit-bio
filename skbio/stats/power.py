@@ -65,14 +65,6 @@ from numpy import (array, zeros, ones, round as nround, hstack, isnan,
                    sqrt, arange)
 from numpy.random import choice
 from scipy.stats import t, nanstd
-from matplotlib import rcParams
-
-# Sets up plotting parameters so that the default setting is use to Helvetica
-# in plots
-rcParams['font.family'] = 'sans-serif'
-rcParams['font.sans-serif'] = ['Helvetica', 'Arial']
-rcParams['text.usetex'] = True
-
 
 def get_subsampled_power(mode, test, meta=None, cat=None, control_cats=None,
                          order=None, strict=True, samples=None, sub_size=None,
