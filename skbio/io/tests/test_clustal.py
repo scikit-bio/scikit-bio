@@ -56,6 +56,17 @@ class ClustalIOTests(TestCase):
             StringIO('abc\tuuu\ndef\tccc\n\n    ***\n\ndef ggg\nabc\taaa\n'),
             StringIO('\n'.join(['abc uca', 'def ggg ccc'])),
             StringIO('\n'.join(['abc uca ggg', 'def ggg ccc'])),
+            StringIO('\n'.join(['abc\tuca ggg', 'def\tggg ccc','xyz gggccc'])),
+            StringIO('\n'.join(['abc uca ggg', 'def gggccc'])),
+            StringIO("""CLUSTAL
+
+
+abc             GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA
+def             ------------------------------------------------------------
+xyz             ------------------------------------------------------------
+
+
+"""),
             StringIO("""CLUSTAL
 
 
@@ -83,10 +94,27 @@ xyz             -------------------------------------CAUGCAUCGUACGUACGCAUGAC
 
 abc             UGACUAGUCAGCUAGCAUCGAUCAGU
 def             CGAUCAGUCAGUCGAU----------
-xyz             UGCUGCAUCA----------------""")
+xyz             UGCUGCAUCA----------------"""),
+            StringIO("""CLUSTAL W (1.74) multiple sequence alignment
 
+
+abc             GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA 60
+def             ------------------------------------------------------------
+xyz             ------------------------------------------------------------
+
+
+abc             GUCGAUACGUACGUCAGUCAGUACGUCAGCAUGCAUACGUACGUCGUACGUACGU-CGAC 11
+def             -----------------------------------------CGCGAUGCAUGCAU-CGAU 18
+xyz             -------------------------------------CAUGCAUCGUACGUACGCAUGAC 23
+                                                         :    * * * *    **
+
+abc             UGACUAGUCAGCUAGCAUCGAUCAGU 145
+def             CGAUCAGUCAGUCGAU---------- 34
+xyz             UGCUGCAUCA---------------- 33
+                *     ***""")
             ]
-        self.invalid = [StringIO('\n'.join(['dshfjsdfhdfsj',
+        self.invalid_clustal_out = [
+                        StringIO('\n'.join(['dshfjsdfhdfsj',
                                             'hfsdjksdfhjsdf'])),
                         StringIO('\n'.join(['hfsdjksdfhjsdf'])),
                         StringIO('\n'.join(['dshfjsdfhdfsj',
@@ -151,7 +179,7 @@ xyz             UGCUGCAUCA---------------- 33
             'UGCUGCAUCA----------------'
         })
 
-    def test_generator_to_clustal_and_clustal_to_generator(self):
+    def test_valid_generator_to_clustal_and_clustal_to_generator(self):
         import os
         for valid_out in self.valid_clustal_out:
             fname = "test.aln"
@@ -164,6 +192,14 @@ xyz             UGCUGCAUCA---------------- 33
             result_after = _clustal_to_generator(testfile)
             self.assertEquals(set(records), set(result_after))
         os.remove(fname)
+    
+    def test_invalid_generator_to_clustal_and_clustal_to_generator(self):
+        import os
+        for invalid_out in self.invalid_clustal_out:
+            fname = "test.aln"
+            with self.assertRaises(RecordError):
+                dict(_clustal_to_generator(invalid_out))
+        
 
 if __name__ == '__main__':
     main()
