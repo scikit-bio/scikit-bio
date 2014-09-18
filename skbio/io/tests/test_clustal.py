@@ -22,7 +22,7 @@ class ClustalHelperTests(TestCase):
     """Tests of top-level functions."""
 
     def test_is_clustal_seq_line(self):
-        """_is_clustal_seq_line should reject blanks and 'CLUSTAL'"""
+
         ic = _is_clustal_seq_line
         assert ic('abc')
         assert ic('abc  def')
@@ -33,13 +33,13 @@ class ClustalHelperTests(TestCase):
         assert not ic('MUSCLE (3.41) multiple sequence alignment')
 
     def test_last_space(self):
-        """last_space should split on last whitespace"""
+
         self.assertEqual(last_space('a\t\t\t  b    c'), ['a b', 'c'])
         self.assertEqual(last_space('xyz'), ['xyz'])
         self.assertEqual(last_space('  a b'), ['a', 'b'])
 
     def test_delete_trailing_number(self):
-        """Should delete the trailing number if present"""
+
         dtn = _delete_trailing_number
         self.assertEqual(dtn('abc'), 'abc')
         self.assertEqual(dtn('a b c'), 'a b c')
@@ -49,14 +49,25 @@ class ClustalHelperTests(TestCase):
 
 
 class ClustalIOTests(TestCase):
-    """Tests of the _clustal_to_generator function
-    and _generator_to_clustal function"""
 
     def setUp(self):
         self.valid_clustal_out = [
             StringIO('abc\tucag'),
             StringIO('abc\tuuu\ndef\tccc\n\n    ***\n\ndef ggg\nabc\taaa\n'),
             StringIO('\n'.join(['abc uca', 'def ggg ccc'])),
+            StringIO('\n'.join(['abc uca ggg', 'def ggg ccc'])),
+            StringIO("""CLUSTAL
+
+
+abc             GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA
+def             ------------------------------------------------------------
+xyz             ------------------------------------------------------------
+
+
+abc             GUCGAUACGUACGUCAGUCAGUACGUCAGCAUGCAUACGUACGUCGUACGUACGU-CGAC
+def             -----------------------------------------CGCGAUGCAUGCAU-CGAU
+xyz             -------------------------------------CAUGCAUCGUACGUACGCAUGAC
+"""),
             StringIO("""CLUSTAL W (1.82) multiple sequence alignment
 
 
@@ -76,15 +87,27 @@ xyz             UGCUGCAUCA----------------""")
 
             ]
         self.invalid = [StringIO('\n'.join(['dshfjsdfhdfsj',
-                                            'hfsdjksdfhjsdf']))]
+                                            'hfsdjksdfhjsdf'])),
+                        StringIO('\n'.join(['hfsdjksdfhjsdf'])),
+                        StringIO('\n'.join(['dshfjsdfhdfsj',
+                                            'dshfjsdfhdfsj',
+                                            'hfsdjksdfhjsdf'])),
+                        StringIO('\n'.join(['dshfjsdfhdfsj',
+                                            '\t',
+                                            'hfsdjksdfhjsdf'])),
+                        StringIO('\n'.join(['dshfj\tdfhdfsj',
+                                            'hfsdjksdfhjsdf'])),
+                        StringIO('\n'.join(['dshfjsdfhdfsj',
+                                            'hfsdjk\tdfhjsdf'])),
+                        ]
 
     def test_generator_to_clustal_with_empty_input(self):
-        """Should return empty dict and list on null input"""
+
         result = _clustal_to_generator(StringIO())
         self.assertEqual(dict(result), {})
 
     def test_generator_to_clustal_with_bad_input(self):
-        """Should reject bad data if strict"""
+
         BAD = StringIO('\n'.join(['dshfjsdfhdfsj', 'hfsdjksdfhjsdf']))
         result = _clustal_to_generator(BAD, strict=False)
         self.assertEqual(dict(result), {})
@@ -93,7 +116,6 @@ xyz             UGCUGCAUCA----------------""")
             dict(_clustal_to_generator(BAD))
 
     def test_generator_to_clustal_with_real_input(self):
-        """Should handle real Clustal output"""
 
         REAL = StringIO("""CLUSTAL W (1.82) multiple sequence alignment
 
