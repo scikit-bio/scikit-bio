@@ -49,6 +49,7 @@ Functions
     bootstrap_power_curve
     get_significant_subsample
     get_paired_subsamples
+
 """
 
 # -----------------------------------------------------------------------------
@@ -781,7 +782,10 @@ def get_paired_subsamples(meta, cat, control_cats, order=None, strict=True):
     >>> from skbio.stats.power import get_paired_subsamples
     >>> ids = get_paired_subsamples(meta, 'HOUSING', ['SEX', 'AGE', 'ABX'])
     >>> print ids
-        [['BB'], ['CB'], ['TS']]
+    [array(['BB'],
+      dtype='|S2'), array(['TS'],
+      dtype='|S2'), array(['CB'],
+      dtype='|S2')]
 
     """
     # Groups meta by category
