@@ -256,7 +256,7 @@ class PowerAnalysisTest(TestCase):
         """Checks error is raised when there is not a count for each group"""
         with self.assertRaises(ValueError):
             _compare_distributions(self.f, self.samps, counts=[1, 2, 3],
-                                  num_iter=100)
+                                   num_iter=100)
 
     def test__compare_distributions(self):
         """Checks _compare_distributions is sane"""
@@ -284,9 +284,9 @@ class PowerAnalysisTest(TestCase):
 
         # Generates the test values.
         test = _calculate_power_curve(self.f,
-                                     self.pop,
-                                     self.num_samps,
-                                     num_iter=100)
+                                      self.pop,
+                                      self.num_samps,
+                                      num_iter=100)
         # Checks the samples returned sanely
         assert_allclose(test, known, rtol=0.1, atol=0.1)
 
@@ -298,10 +298,10 @@ class PowerAnalysisTest(TestCase):
 
         # Generates the test values
         test = _calculate_power_curve(self.f,
-                                     self.pop,
-                                     self.num_samps,
-                                     alpha=0.01,
-                                     num_iter=100)
+                                      self.pop,
+                                      self.num_samps,
+                                      alpha=0.01,
+                                      num_iter=100)
 
         # Checks the samples returned sanely
         assert_allclose(test, known, rtol=0.1, atol=0.1)
@@ -314,10 +314,10 @@ class PowerAnalysisTest(TestCase):
 
         # Generates the test values
         test = _calculate_power_curve(self.f,
-                                     self.pop,
-                                     self.num_samps,
-                                     ratio=array([0.25, 0.75]),
-                                     num_iter=100)
+                                      self.pop,
+                                      self.num_samps,
+                                      ratio=array([0.25, 0.75]),
+                                      num_iter=100)
 
         # Checks the samples returned sanely
         assert_allclose(test, known, rtol=0.1, atol=0.1)

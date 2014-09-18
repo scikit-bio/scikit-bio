@@ -8,20 +8,21 @@ of microbiome data. It also provides support to subsample data to faciliate
 this analysis.
 
 The underlying principle is based on subsampling and monte carlo simulation.
-Assume that there is some set of populations, K1, K2, ... Kn which
-have some property, u such that u1 =\= u2 =\= ... =\= un. For each of the
-populations, a sample, S can be drawn, with a parameter, x where x ~ u and
-for the samples, we can use a test, f, to show that x1 =\= x2 =\= ... =\= xn.
+Assume that there is some set of populations, :math: `K_{1}, K_{2}, ... K_{n}`
+which have some property, u such that :math: `\mu_{1} \neq \mu_{2} \neq ...
+\neq \mu_{n}`. For each of the populations, a sample, S can be drawn, with a
+parameter, x where :math: `x \approx \mu` and for the samples, we can use a
+test, f, to show that :math: `x_{1} \neq x_{2} \neq ... \neq x_{n}`.
 
-Since we known that u1 =\= u2 =\= ... =\= un, we know we should reject the null
-hypothesis. If we fail to reject the null hypothesis, we have comitted a Type
-II error and our result is a False negative. We can estimate the frequency of
-Type II errors at various sampling depths by repeatedly subsampling the
-populations and observing how often we see a False negative. If we repeat
-this several times for each subsampling depth, and vary the depths we use,
-we can start to approximate a relationship between the number of samples we
-use and the rate of false negatives, also called the statistical power
-of the test.
+Since we known that :math: `\mu_{1} \neq \mu_{2} \neq ... \neq \mu_{n}`,
+we know we should reject the null hypothesis. If we fail to reject the null
+hypothesis, we have comitted a Type II error and our result is a False
+negative. We can estimate the frequency of Type II errors at various sampling
+depths by repeatedly subsampling the populations and observing how often we
+see a False negative. If we repeat this several times for each subsampling
+depth, and vary the depths we use, we can start to approximate a relationship
+between the number of samples we use and the rate of false negatives, also
+called the statistical power of the test.
 
 We can then use the rate of false negatives and use the `statsmodels.power`
 package to solve for an effect size. This can be used to extrapolate a power
@@ -61,7 +62,7 @@ Functions
 from __future__ import division
 from future.utils import viewitems
 from numpy import (array, zeros, ones, round as nround, hstack, isnan,
-                   nan, sqrt, arange, delete, where)
+                   sqrt, arange)
 from numpy.random import choice
 from scipy.stats import t, nanstd
 from matplotlib import rcParams
@@ -74,10 +75,10 @@ rcParams['text.usetex'] = True
 
 
 def get_subsampled_power(mode, test, meta=None, cat=None, control_cats=None,
-    order=None, strict=True, samples=None, sub_size=None,
-    scaling=5, alpha_pwr=0.05, min_counts=20,
-    max_counts=50, counts_interval=10, counts_start=None,
-    num_iter=500, num_runs=10):
+                         order=None, strict=True, samples=None, sub_size=None,
+                         scaling=5, alpha_pwr=0.05, min_counts=20,
+                         max_counts=50, counts_interval=10, counts_start=None,
+                         num_iter=500, num_runs=10):
     r"""Subsamples data to iterative calculate power
 
       Parameters
@@ -422,7 +423,7 @@ def confidence_bound(vec, alpha=0.05, df=None, axis=None):
 
 
 def _calculate_power_curve(test, samples, sample_counts, ratio=None,
-    num_iter=1000, alpha=0.05):
+                           num_iter=1000, alpha=0.05):
     """Generates an empirical power curve for the samples.
 
     Parameters
@@ -490,7 +491,7 @@ def _calculate_power_curve(test, samples, sample_counts, ratio=None,
 
 
 def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
-    alpha=0.05, num_iter=500, num_runs=10):
+                          alpha=0.05, num_iter=500, num_runs=10):
     r"""Repeatedly calculates the power curve for a specified alpha level
 
     Parameters
@@ -582,7 +583,7 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
 
 
 def get_significant_subsample(tests, samples, sub_size=None, p_crit=0.05,
-    num_rounds=500, p_scaling=5):
+                              num_rounds=500, p_scaling=5):
     """Subsamples data to an even sample number with a signficiant difference
 
     This function is recommended for use when sample sizes are severely
@@ -711,7 +712,7 @@ def get_significant_subsample(tests, samples, sub_size=None, p_crit=0.05,
         raise RuntimeError('There is no test defined')
 
     # Loops through to get a signfigant difference
-    for i in xrange(num_rounds+1):
+    for i in range(num_rounds+1):
         # Subsamples the larger dataset
         sub_samps = []
         for ids in samples:
@@ -835,7 +836,7 @@ def get_paired_subsamples(meta, cat, control_cats, order=None, strict=True):
             exp_ids.append(choice(pos_ids, num_draw, replace=False))
 
         if len(exp_ids) == num_groups:
-            for idx in xrange(num_groups):
+            for idx in range(num_groups):
                 ids[idx] = hstack((ids[idx], exp_ids[idx]))
 
     return ids
