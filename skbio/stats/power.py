@@ -526,6 +526,7 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
     and standard deviation 1.5
 
     >>> import numpy as np
+    >>> np.random.seed(20)
     >>> samples_1 = np.random.randn(100)
     >>> samples_2 = 1.5*np.random.randn(100) + 1
 
@@ -547,12 +548,12 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
     ...                                                 [samples_1, samples_2],
     ...                                                 sample_counts)
     >>> print power_mean
-        [ 0.1464  0.2654  0.3966  0.5118  0.6284  0.7298  0.8126  0.882
-          0.9342  0.9622  0.984   0.994   0.998   0.9998  1.    ]
+        [ 0.2546  0.4736  0.6732  0.821   0.9084  0.9602  0.9846  0.9956
+          0.9996  1.      1.      1.      1.      1.      1.    ]
     >>> print power_bound
-        [ 0.01344762  0.02087332  0.01625911  0.01545266  0.02447078
-          0.01116065  0.01387766  0.01027776  0.00952351  0.00743761
-          0.00559785  0.00246272  0.00158968  0.0004769   0.        ]
+        [ 0.01142029  0.01187057  0.01434594  0.01538382  0.01022352
+          0.00750525  0.00449911  0.00222555  0.00063587  0.
+          0.          0.          0.          0.          0.        ]
 
     """
 
@@ -639,28 +640,26 @@ def get_significant_subsample(tests, samples, sub_size=None, p_crit=0.05,
     -------
     Let's assume we have two samples drawn from two populations. The first
     sample has 25 observations, and the second has 200.
-
     >>> import numpy as np
     >>> np.random.seed(25)
-    >>> yy1 =  0.15*np.random.randint(20, 30, 25) + \
-    ...     np.random.randint(20, 30, 25) + 5*np.random.randn(25) + 5
+    >>> y1 =  0.15*np.random.randint(20, 30, 25) + \
+    ... np.random.randint(20, 30, 25) + 5*np.random.randn(25) + 5
     >>> print y1.mean()
-    32.049
+    33.6503065523
     >>> print [y1.min(), y1.max()]
-    [17.954, 48.704]
-    >>> y2 = 0.15*np.random.randint(50, 60, 200) + \
-    ...     np.random.randint(20, 35, 200) + 5*np.random.randn(200)
+    [17.953600460164154, 48.703718956149771]
+    >>> y2 = 0.15*np.random.randint(50, 60, 200) + 30 + 7*np.random.randn(200)
     >>> print y2.mean()
-    37.799
+    38.1950499716
     >>> print [y2.min(), y2.max()]
-    [17.698, 58.537]
+    [17.422687234820245, 55.955546151590568]
 
     We can compare the two sample populations using a kruskal-wallis test.
 
     >>> from scipy.stats import kruskal
     >>> f = lambda x: kruskal(*x)[1]
     >>> print f([y1, y2])
-    0.003
+    0.00145354717926
 
     However, looking at the overlap in the sample range, it's possible that
     if we draw a random sample to compare the two distributions, we could get
@@ -670,7 +669,7 @@ def get_significant_subsample(tests, samples, sub_size=None, p_crit=0.05,
     signifigantly subsampled population to a random subsample.
 
     >>> from skbio.stats.power import (get_significant_subsample,
-    ...                                bootstrap_power_curve)
+    ... bootstrap_power_curve)
     >>> vals = get_significant_subsample([f], [y1, y2])
     >>> all_mean, all_std = bootstrap_power_curve(f,
     ...                                           [y1, y2],
@@ -678,10 +677,10 @@ def get_significant_subsample(tests, samples, sub_size=None, p_crit=0.05,
     >>> sub_mean, sub_std = bootstrap_power_curve(f,
     ...                                           vals,
     ...                                           np.arange(5, 25, 5))
-    >>> print all_power_mean
-    [ 0.172  0.28   0.397  0.527]
-    >>> print sub_power_mean
-    [ 0.208  0.431  0.645  0.922]
+    >>> print all_mean
+    [ 0.1704  0.314   0.4498  0.5824]
+    >>> print sub_mean
+    [ 0.1506  0.2488  0.3994  0.6018]
 
     """
 
@@ -769,19 +768,17 @@ def get_paired_subsamples(meta, cat, control_cats, order=None, strict=True):
     sex, age and antibiotic use.
 
     >>> import pandas as pd
-    >>> meta = {'NR': {'HOUSING': '2', 'SEX': 'F', 'AGE': nan, 'ABX': 'Y'},
-    ...         'MH': {'HOUSING': '3', 'SEX': 'F', 'AGE': '30s', 'ABX': 'Y'},
-    ...         'PP': {'HOUSING': '2', 'SEX': 'F', 'AGE': '30s', 'ABX': 'N'},
-    ...         'CD': {'HOUSING': '3', 'SEX': 'F', 'AGE': '30s', 'ABX': 'Y'},
-    ...         'MM': {'HOUSING': '1', 'SEX': 'F', 'AGE': '30s', 'ABX': 'Y'},
-    ...         'SW': {'HOUSING': '2', 'SEX': 'M', 'AGE': nan, 'ABX': 'N'},
+    >>> import numpy as np
+    >>> meta = {'SW': {'HOUSING': '2', 'SEX': 'M', 'AGE': np.nan, 'ABX': 'N'},
     ...         'TS': {'HOUSING': '2', 'SEX': 'M', 'AGE': '40s', 'ABX': 'Y'},
     ...         'CB': {'HOUSING': '3', 'SEX': 'M', 'AGE': '40s', 'ABX': 'Y'},
     ...         'BB': {'HOUSING': '1', 'SEX': 'M', 'AGE': '40s', 'ABX': 'Y'}}
-    >>>  meta = pd.DataFrame.from_dict(meta, orient="index")
+    >>> meta = pd.DataFrame.from_dict(meta, orient="index")
+
 
     Let's say we want to vary housing, controlling for sex, age, antibiotics
     and sex.
+    >>> from skbio.stats.power import get_paired_subsamples
     >>> ids = get_paired_subsamples(meta, 'HOUSING', ['SEX', 'AGE', 'ABX'])
     >>> print ids
         [['BB'], ['CB'], ['TS']]
@@ -802,10 +799,9 @@ def get_paired_subsamples(meta, cat, control_cats, order=None, strict=True):
     order = order[order != ctrl_name]
 
     # Gets a control group table
+    ctrl_match_groups = meta.groupby(control_cats).groups
     ctrl_group = meta.loc[cat_groups[ctrl_name]
                           ].groupby(list(control_cats)).groups
-    exp_groups = [meta.loc[cat_groups[o]
-                           ].groupby(list(control_cats)).groups for o in order]
 
     ids = [array([])]*num_groups
     # Loops through samples in the experimental group to match for controls
@@ -814,19 +810,28 @@ def get_paired_subsamples(meta, cat, control_cats, order=None, strict=True):
         undefed_check = array([_check_strs(p) for p in check_group])
         if not undefed_check.all() and strict:
             continue
-        num_samps = len(ctrl_ids)
-        exp_ids = []
-        # Loops through the other groups
-        for exp_group in exp_groups:
+        # Removes the matched ids from order
+        matched_ids = ctrl_match_groups[check_group]
+        for id_ in ctrl_ids:
+            matched_ids.remove(id_)
+        pos_ids = []
+        num_ids = [len(ctrl_ids)]
+        # Gets the matrix of the matched ids and groups them
+        exp_group = meta.loc[matched_ids].groupby(cat).groups
+        for grp in order:
             # Checks group to be considered is included in the grouping
-            if check_group not in exp_group:
+            if grp not in exp_group:
                 break
+                print "break"
             # Gets the id associated with the group
-            pos_ids = exp_group[check_group]
-            # Randomly subsamples the possible ids
-            num_draw = min([len(pos_ids), num_samps])
-            exp_ids.append(choice(ctrl_ids, num_draw, replace=False))
-            exp_ids.append(choice(pos_ids, num_draw, replace=False))
+            pos_ids.append(exp_group[grp])
+            num_ids.append(len(exp_group[grp]))
+        # Determines the minimum number of samples
+        num_draw = array(num_ids).min()
+        # Draws samples from possible ids
+        exp_ids = [choice(ctrl_ids, num_draw, replace=False)]
+        exp_ids.extend([choice(id_, num_draw, replace=False) for id_ in
+                        pos_ids])
 
         if len(exp_ids) == num_groups:
             for idx in range(num_groups):
