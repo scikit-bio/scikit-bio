@@ -353,7 +353,7 @@ class PowerAnalysisTest(TestCase):
         # Tests a value error is raised
         with self.assertRaises(RuntimeError):
             get_significant_subsample([test_f], self.samps, sub_size=10,
-                                       num_rounds=5)
+                                      num_rounds=5)
 
     def test_get_signfigianpt_subsample_no_iteration(self):
         """Checks get_significant_subsample errors when iteration is not found
@@ -367,7 +367,7 @@ class PowerAnalysisTest(TestCase):
         # Tests if a RuntimeError is raised
         with self.assertRaises(RuntimeError):
             get_significant_subsample([test_f], self.samps, sub_size=5,
-                                       num_rounds=5)
+                                      num_rounds=5)
 
     def test_get_significant_subsample_default(self):
         """Checks get_significant_subsample functions sanely under defaults"""
@@ -408,7 +408,7 @@ class PowerAnalysisTest(TestCase):
     def test_get_paired_subsample_fewer(self):
         """Checks controlled subsets can handle fewer samples sanely"""
         # Set known value
-        known_array1 = np.array(['PP', 'MH'])
+        known_array1 = {'PP', 'MH'}
         known_array2 = {'CD', 'PC', 'TS', 'MM'}
         # Sets up test values
         cat = 'AGE'
@@ -416,7 +416,8 @@ class PowerAnalysisTest(TestCase):
         control_cats = ['ABX']
         test_array = get_paired_subsamples(self.meta, cat, control_cats,
                                            order=order)
-        npt.assert_array_equal(known_array1, test_array[0])
+        for v in test_array[1]:
+            self.assertTrue(v in known_array1)
         for v in test_array[1]:
             self.assertTrue(v in known_array2)
 
