@@ -284,10 +284,8 @@ def _check_strs(x):
 
     if isinstance(x, str):
         return True
-    elif isnan(x):
-        return False
     elif isinstance(x, (float, int)):
-        return True
+        return not isnan(x)
     else:
         raise TypeError('input must be a string, float or a nan')
 
@@ -782,10 +780,10 @@ def get_paired_subsamples(meta, cat, control_cats, order=None, strict=True):
 
     >>> from skbio.stats.power import get_paired_subsamples
     >>> ids = get_paired_subsamples(meta, 'HOUSING', ['SEX', 'AGE', 'ABX'])
-    >>> ids
-    [array(['BB'], 
-          dtype='|S2'), array(['TS'], 
-          dtype='|S2'), array(['CB'], 
+    >>> ids # doctest: +NORMALIZE_WHITESPACE
+    [array(['BB'],
+          dtype='|S2'), array(['TS'],
+          dtype='|S2'), array(['CB'],
           dtype='|S2')]
 
     """

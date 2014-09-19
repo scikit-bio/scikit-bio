@@ -142,9 +142,7 @@ class PowerAnalysisTest(TestCase):
                                  counts_start=5, max_counts=7)
 
     def test_get_subsampled_power_paired(self):
-        """Checks get_paired_power generates a reasonably sized subsample"""
-        known_p = array([[0.0, 0.0, 0.1, 0.0, 0.1],
-                         [0.0, 0.0, 0.2, 0.3, 0.5]])
+        """Checks get_subsampled_power generates a reasonable subsample"""
         known_c = array([1, 2, 3, 4, 5])
         # Sets up the handling values
         cat = 'INT'
@@ -159,7 +157,7 @@ class PowerAnalysisTest(TestCase):
                                               num_iter=10,
                                               num_runs=2)
         # Test the output shapes are sane
-        assert_array_equal(known_p, test_p)
+        assert_array_equal(test_p.shape, (2, 5))
         assert_array_equal(known_c, test_c)
 
     def test_get_subsampled_power_all_samples(self):
@@ -411,15 +409,17 @@ class PowerAnalysisTest(TestCase):
     def test_get_paired_subsample_fewer(self):
         """Checks controlled subsets can handle fewer samples sanely"""
         # Set known value
-        known_array = [array(['PP', 'MH']),
-                       array(['CD', 'PC'])]
+        known_array1 = array(['PP', 'MH'])
+        known_array2 = {'CD', 'PC', 'TS', 'MM'}
         # Sets up test values
         cat = 'AGE'
         order = ['30s', '40s']
         control_cats = ['ABX']
         test_array = get_paired_subsamples(self.meta, cat, control_cats,
                                            order=order)
-        assert_array_equal(known_array, test_array)
+        assert_array_equal(known_array1, test_array[0])
+        for v in test_array[1]:
+            self.assertTrue(v in known_array2)
 
     def test_get_paired_subsamples_not_strict(self):
         """Checks controlled subsets can be generated with missing values"""
