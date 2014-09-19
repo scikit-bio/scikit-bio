@@ -137,7 +137,8 @@ class PowerAnalysisTest(TestCase):
         """
         with self.assertRaises(RuntimeError):
             get_subsampled_power('ALL', self.f, samples=[np.ones((2)),
-                                 np.ones((5))], counts_start=5, max_counts=7)
+                                 np.ones((5))], min_counts=2,
+                                 counts_start=5, max_counts=7)
 
     def test_get_subsampled_power_paired(self):
         """Checks get_subsampled_power generates a reasonable subsample"""
