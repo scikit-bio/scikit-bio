@@ -408,8 +408,7 @@ class PowerAnalysisTest(TestCase):
     def test_get_paired_subsample_fewer(self):
         """Checks controlled subsets can handle fewer samples sanely"""
         # Set known value
-        known_array1 = {'PP', 'MH'}
-        known_array2 = {'CD', 'PC', 'TS', 'MM'}
+        known_array = {'PP', 'MH', 'CD', 'PC', 'TS', 'MM'}
         # Sets up test values
         cat = 'AGE'
         order = ['30s', '40s']
@@ -417,9 +416,9 @@ class PowerAnalysisTest(TestCase):
         test_array = get_paired_subsamples(self.meta, cat, control_cats,
                                            order=order)
         for v in test_array[1]:
-            self.assertTrue(v in known_array1)
+            self.assertTrue(v in known_array)
         for v in test_array[1]:
-            self.assertTrue(v in known_array2)
+            self.assertTrue(v in known_array)
 
     def test_get_paired_subsamples_not_strict(self):
         """Checks controlled subsets can be generated with missing values"""
