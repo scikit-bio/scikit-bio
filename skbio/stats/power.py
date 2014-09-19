@@ -25,7 +25,7 @@ depth, and vary the depths we use, we can start to approximate a relationship
 between the number of samples we use and the rate of false negatives, also
 called the statistical power of the test.
 
-We can then use the rate of false negatives and use the statsmodels.power
+We can then use the rate of false negatives and use the `statsmodels.power`
 package to solve for an effect size. This can be used to extrapolate a power
 curve for the data.
 
@@ -267,7 +267,7 @@ def get_subsampled_power(mode, test, meta=None, cat=None, control_cats=None,
         if mode == "PAIRED":
             sub_ids = get_paired_subsamples(meta, cat, control_cats, order,
                                             strict)
-        elif mode == 'SIGNIFICANT':
+        elif mode == 'SIG':
             sub_ids = get_significant_subsample([test], samples, sub_size,
                                                 alpha_pwr, num_iter, scaling)
         else:
