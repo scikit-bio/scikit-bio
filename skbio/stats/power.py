@@ -147,7 +147,7 @@ def get_subsampled_power(mode, test, meta=None, cat=None, control_cats=None,
 
     Examples
     --------
-    Suppose we wanted to look at the power curve for two varaibles, `ind` and
+    Suppose we wanted to look at the power curve for two variables, `ind` and
     `dep`, using completely random subsampling. To control for the pseudo
     random number generation, we will use a seed.
 
@@ -164,7 +164,7 @@ def get_subsampled_power(mode, test, meta=None, cat=None, control_cats=None,
 
     Let's define a test that will draw a list of sample pairs and determine
     if they're correlated. We'll use the `pearsonr` function from scipy, which
-    returns the pearson correlation coeffectient and the probability value
+    returns the pearson correlation coefficient and the probability value
     that the data is not correlated. The function takes two vectors as its
     input.
 
