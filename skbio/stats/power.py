@@ -1,5 +1,6 @@
-r"""Empirical Power Estimation (:mod: `skbio.stats.power`)
-=========================================================
+r"""
+Empirical Power Estimation (:mod:`skbio.stats.power`)
+=====================================================
 
 .. currentmodule:: skbio.stats.power
 
@@ -8,13 +9,13 @@ of microbiome data. It also provides support to subsample data to faciliate
 this analysis.
 
 The underlying principle is based on subsampling and monte carlo simulation.
-Assume that there is some set of populations, :math: `K_{1}, K_{2}, ... K_{n}`
-which have some property, u such that :math: `\mu_{1} \neq \mu_{2} \neq ...
+Assume that there is some set of populations, :math:`K_{1}, K_{2}, ... K_{n}`
+which have some property, u such that :math:`\mu_{1} \neq \mu_{2} \neq ...
 \neq \mu_{n}`. For each of the populations, a sample, S can be drawn, with a
-parameter, x where :math: `x \approx \mu` and for the samples, we can use a
-test, f, to show that :math: `x_{1} \neq x_{2} \neq ... \neq x_{n}`.
+parameter, x where :math:`x \approx \mu` and for the samples, we can use a
+test, f, to show that :math:`x_{1} \neq x_{2} \neq ... \neq x_{n}`.
 
-Since we known that :math: `\mu_{1} \neq \mu_{2} \neq ... \neq \mu_{n}`,
+Since we known that :math:`\mu_{1} \neq \mu_{2} \neq ... \neq \mu_{n}`,
 we know we should reject the null hypothesis. If we fail to reject the null
 hypothesis, we have comitted a Type II error and our result is a False
 negative. We can estimate the frequency of Type II errors at various sampling
@@ -24,7 +25,7 @@ depth, and vary the depths we use, we can start to approximate a relationship
 between the number of samples we use and the rate of false negatives, also
 called the statistical power of the test.
 
-We can then use the rate of false negatives and use the `statsmodels.power`
+We can then use the rate of false negatives and use the statsmodels.power
 package to solve for an effect size. This can be used to extrapolate a power
 curve for the data.
 
