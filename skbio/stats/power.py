@@ -885,7 +885,6 @@ def get_paired_subsamples(meta, cat, control_cats, order=None, strict=True):
             # Checks group to be considered is included in the grouping
             if grp not in exp_group:
                 break
-                print "break"
             # Gets the id associated with the group
             pos_ids.append(exp_group[grp])
             num_ids.append(len(exp_group[grp]))
