@@ -50,6 +50,64 @@ Functions
     get_significant_subsample
     get_paired_subsamples
 
+Example
+-------
+We can generate a power curve for a set of random data. Let's simulate some
+two continous varibles which we'll test.
+
+>>> import numpy as np
+>>> np.random.seed(25)
+>>> y1 =  0.15 * np.random.randint(20, 30, 100)
+>>> y1 = y1 + np.random.randint(25, 35, 100) + 5 * np.random.randn(100)
+>>> y2 = 0.15 * np.random.randint(50, 60, 100) + 30 + 7 * np.random.randn(100)
+>>> samples = [y1, y2]
+
+We'll compare the two distributions using a kruskal-wallis test, since the
+data likely does not follow a normal distribution. The scipy function,
+`kruskal` returns the test statistic and a p-value.
+
+>>> from scipy.stats import kruskal, nanmean
+>>> f = lambda x: kruskal(*x)[1]
+>>> print f(samples)
+8.98522592663e-08
+
+Now, let's calculate an array of power values for our test.
+
+>>> from skbio.stats.power import get_subsampled_power
+>>> pwr, counts = get_subsampled_power("ALL", f, samples=samples,
+...                                    max_counts=95)
+
+
+Let's use statsmodels to calculate the effect size and plot the power curve.
+If we can't solve for the power, we'll instead substitute a nan value.
+
+>>> import matplotlib.pyplot as plt
+>>> from statsmodels.stats.power import FTestAnovaPower
+>>> ft = FTestAnovaPower()
+>>> effects = np.zeros(pwr.shape)
+>>> for id2, count in enumerate(counts):
+...     for id1 in range(pwr.shape[0]):
+...         try:
+...             effects[id1, id2] = ft.solve_power(effect_size=None,
+...                                                nobs=count,
+...                                                alpha=0.05,
+...                                                power=pwr[id1, id2])
+...         except:
+...             effects[id1, id2] = np.nan
+...
+>>> mean_eff = nanmean(effects, None)
+>>> print mean_eff
+0.625200892916
+
+Now, let's plot the power curve, and add the sample points over the top.
+
+>>> pwr_fig = ft.plot_power(dep_var='nobs', nobs=np.arange(5, 150, 5),
+...                         effect_size=[mean_eff], alpha=0.05)
+>>> ax = pwr_fig.axes[0]
+>>> lines = ax.plot(counts, nanmean(pwr), 'kx')
+
+You can see the power curve and the emperical power follow a simillar curve.
+
 """
 
 # -----------------------------------------------------------------------------
@@ -155,11 +213,12 @@ def get_subsampled_power(mode, test, meta=None, cat=None, control_cats=None,
     >>> np.random.seed(20)
     >>> ind = np.random.randint(0, 20, 15)
     >>> print ind
-        [ 3 15  9 11  7  2  0  8 19 16  6  6 16  9  5]
+    [ 3 15  9 11  7  2  0  8 19 16  6  6 16  9  5]
     >>> dep = (3 * ind + 5 + np.random.randn(15)*5).round(3)
     >>> print dep
-        [ 15.617  47.533  28.04   33.788  19.602  12.229   4.779  36.838
-          67.256  55.032  22.157   7.051  58.601  38.664  18.783]
+    [ 15.617  47.533  28.04   33.788  19.602  12.229   4.779  36.838  67.256
+      55.032  22.157   7.051  58.601  38.664  18.783]
+
 
     Let's define a test that will draw a list of sample pairs and determine
     if they're correlated. We'll use the `pearsonr` function from scipy, which
@@ -176,7 +235,7 @@ def get_subsampled_power(mode, test, meta=None, cat=None, control_cats=None,
 
     >>> samples = [np.arange(0, 15, 1)]
     >>> print f(samples)
-        3.64594525966e-08
+    3.64594525966e-08
 
     Since we know the two samples are correlated overall, let's try using
     completely random subsampling. This is recommended when sample populations
@@ -193,19 +252,18 @@ def get_subsampled_power(mode, test, meta=None, cat=None, control_cats=None,
     ...                                         counts_start=3,
     ...                                         counts_interval=1)
     >>> print counts
-        [3 4 5 6 7 8 9]
-
+    [3 4 5 6 7 8 9]
     >>> print pwr_ests
-        [[ 0.22   0.652  0.89   0.958  0.992  1.     1.   ]
-         [ 0.234  0.642  0.876  0.96   0.99   1.     1.   ]
-         [ 0.242  0.654  0.848  0.946  0.998  1.     1.   ]
-         [ 0.244  0.664  0.884  0.946  0.988  1.     1.   ]
-         [ 0.248  0.666  0.866  0.948  0.986  1.     1.   ]
-         [ 0.242  0.658  0.9    0.94   0.99   1.     1.   ]
-         [ 0.242  0.638  0.874  0.952  0.992  1.     1.   ]
-         [ 0.24   0.66   0.904  0.95   0.988  1.     1.   ]
-         [ 0.232  0.64   0.912  0.972  0.988  1.     1.   ]
-         [ 0.256  0.646  0.854  0.952  0.992  1.     1.   ]]
+    [[ 0.22   0.652  0.89   0.958  0.992  1.     1.   ]
+     [ 0.234  0.642  0.876  0.96   0.99   1.     1.   ]
+     [ 0.242  0.654  0.848  0.946  0.998  1.     1.   ]
+     [ 0.244  0.664  0.884  0.946  0.988  1.     1.   ]
+     [ 0.248  0.666  0.866  0.948  0.986  1.     1.   ]
+     [ 0.242  0.658  0.9    0.94   0.99   1.     1.   ]
+     [ 0.242  0.638  0.874  0.952  0.992  1.     1.   ]
+     [ 0.24   0.66   0.904  0.95   0.988  1.     1.   ]
+     [ 0.232  0.64   0.912  0.972  0.988  1.     1.   ]
+     [ 0.256  0.646  0.854  0.952  0.992  1.     1.   ]]
 
     The power_est can then be used to fit an effect_size using the power module
     if the statsmodel library, or can be average and plotted.
@@ -418,7 +476,7 @@ def confidence_bound(vec, alpha=0.05, df=None, axis=None):
 
 def _calculate_power_curve(test, samples, sample_counts, ratio=None,
                            num_iter=1000, alpha=0.05):
-    """Generates an empirical power curve for the samples.
+    r"""Generates an empirical power curve for the samples.
 
     Parameters
     ----------
@@ -549,12 +607,11 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
     ...                                                 [samples_1, samples_2],
     ...                                                 sample_counts)
     >>> print power_mean
-        [ 0.2546  0.4736  0.6732  0.821   0.9084  0.9602  0.9846  0.9956
-          0.9996  1.      1.      1.      1.      1.      1.    ]
-    >>> print power_bound
-        [ 0.01142029  0.01187057  0.01434594  0.01538382  0.01022352
-          0.00750525  0.00449911  0.00222555  0.00063587  0.
-          0.          0.          0.          0.          0.        ]
+    [ 0.2546  0.4736  0.6732  0.821   0.9084  0.9602  0.9846  0.9956  0.9996
+      1.      1.      1.      1.      1.      1.    ]
+    >>> print power_bound.round(3)
+    [ 0.011  0.012  0.014  0.015  0.01   0.008  0.004  0.002  0.001  0.     0.
+      0.     0.     0.     0.   ]
 
     """
 
@@ -579,7 +636,7 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
 
 def get_significant_subsample(tests, samples, sub_size=None, p_crit=0.05,
                               num_rounds=500, p_scaling=5):
-    """Subsamples data to an even sample number with a signficiant difference
+    r"""Subsamples data to an even sample number with a signficiant difference
 
     This function is recommended for use when sample sizes are severely
     skewed. For example, comparing a sample with 10 observations to a sample
@@ -641,26 +698,27 @@ def get_significant_subsample(tests, samples, sub_size=None, p_crit=0.05,
     -------
     Let's assume we have two samples drawn from two populations. The first
     sample has 25 observations, and the second has 200.
+
     >>> import numpy as np
     >>> np.random.seed(25)
-    >>> y1 =  0.15*np.random.randint(20, 30, 25) + \
-    ... np.random.randint(20, 30, 25) + 5*np.random.randn(25) + 5
-    >>> print y1.mean()
-    33.6503065523
-    >>> print [y1.min(), y1.max()]
-    [17.953600460164154, 48.703718956149771]
+    >>> y1 =  0.15*np.random.randint(20, 30, 25)
+    >>> y1 = y1 + np.random.randint(25, 35, 25) + 5*np.random.randn(25)
+    >>> print y1.mean().round(3)
+    33.65
+    >>> print np.array([y1.min(), y1.max()]).round(3)
+    [ 17.954  48.704]
     >>> y2 = 0.15*np.random.randint(50, 60, 200) + 30 + 7*np.random.randn(200)
-    >>> print y2.mean()
-    38.1950499716
-    >>> print [y2.min(), y2.max()]
-    [17.422687234820245, 55.955546151590568]
+    >>> print y2.mean().round(3)
+    37.841
+    >>> print np.array([y2.min(), y2.max()]).round(3)
+    [ 20.229  56.001]
 
     We can compare the two sample populations using a kruskal-wallis test.
 
     >>> from scipy.stats import kruskal
     >>> f = lambda x: kruskal(*x)[1]
-    >>> print f([y1, y2])
-    0.00145354717926
+    >>> print f([y1, y2]).round(3)
+    0.001
 
     However, looking at the overlap in the sample range, it's possible that
     if we draw a random sample to compare the two distributions, we could get
@@ -670,7 +728,7 @@ def get_significant_subsample(tests, samples, sub_size=None, p_crit=0.05,
     signifigantly subsampled population to a random subsample.
 
     >>> from skbio.stats.power import (get_significant_subsample,
-    ... bootstrap_power_curve)
+    ...                                bootstrap_power_curve)
     >>> vals = get_significant_subsample([f], [y1, y2])
     >>> all_mean, all_std = bootstrap_power_curve(f,
     ...                                           [y1, y2],
@@ -679,9 +737,9 @@ def get_significant_subsample(tests, samples, sub_size=None, p_crit=0.05,
     ...                                           vals,
     ...                                           np.arange(5, 25, 5))
     >>> print all_mean
-    [ 0.1704  0.314   0.4498  0.5824]
+    [ 0.1894  0.32    0.4562  0.6056]
     >>> print sub_mean
-    [ 0.1506  0.2488  0.3994  0.6018]
+    [ 0.2212  0.4658  0.7008  0.965 ]
 
     """
 
@@ -779,13 +837,14 @@ def get_paired_subsamples(meta, cat, control_cats, order=None, strict=True):
 
     Let's say we want to vary housing, controlling for sex, age, antibiotics
     and sex.
+
     >>> from skbio.stats.power import get_paired_subsamples
     >>> ids = get_paired_subsamples(meta, 'HOUSING', ['SEX', 'AGE', 'ABX'])
-    >>> print ids
-    [array(['BB'],
-      dtype='|S2'), array(['TS'],
-      dtype='|S2'), array(['CB'],
-      dtype='|S2')]
+    >>> ids
+    [array(['BB'], 
+          dtype='|S2'), array(['TS'], 
+          dtype='|S2'), array(['CB'], 
+          dtype='|S2')]
 
     """
     # Groups meta by category
