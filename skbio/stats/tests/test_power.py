@@ -386,13 +386,15 @@ class PowerAnalysisTest(TestCase):
     def test_get_paired_subsamples_default(self):
         """Checks controlled subsets can be generated sanely"""
         # Sets the known array set
-        known_array = [array(['MM', 'SR', 'TS', 'GW', 'PP', 'WM']),
-                       array(['CD', 'LF', 'PC', 'CB', 'MH', 'NR'])]
+        known_array = [sorted(['MM', 'SR', 'TS', 'GW', 'PP', 'WM']),
+                       sorted(['CD', 'LF', 'PC', 'CB', 'MH', 'NR'])]
 
         # Gets the test value
         cat = 'INT'
         control_cats = ['SEX', 'AGE']
         test_array = get_paired_subsamples(self.meta, cat, control_cats)
+        test_array[0] = sorted(test_array[0])
+        test_array[1] = sorted(test_array[1])
         assert_array_equal(known_array, test_array)
 
     def test_get_paired_subsamples_break(self):
@@ -421,14 +423,16 @@ class PowerAnalysisTest(TestCase):
 
     def test_get_paired_subsamples_not_strict(self):
         """Checks controlled subsets can be generated with missing values"""
-        known_array = [array(['WM', 'MM', 'GW', 'SR', 'TS']),
-                       array(['LF', 'PC', 'CB', 'NR', 'CD'])]
+        known_array = [sorted(['WM', 'MM', 'GW', 'SR', 'TS']),
+                       sorted(['LF', 'PC', 'CB', 'NR', 'CD'])]
 
         # Gets the test values
         cat = 'INT'
         control_cats = ['ABX', 'AGE']
         test_array = get_paired_subsamples(self.meta, cat, control_cats,
                                            strict=False)
+        test_array[0] = sorted(test_array[0])
+        test_array[1] = sorted(test_array[1])
         assert_array_equal(known_array, test_array)
 
 if __name__ == '__main__':

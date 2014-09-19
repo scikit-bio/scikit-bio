@@ -50,64 +50,6 @@ Functions
     get_significant_subsample
     get_paired_subsamples
 
-Example
--------
-We can generate a power curve for a set of random data. Let's simulate some
-two continous varibles which we'll test.
-
->>> import numpy as np
->>> np.random.seed(25)
->>> y1 =  0.15 * np.random.randint(20, 30, 100)
->>> y1 = y1 + np.random.randint(25, 35, 100) + 5 * np.random.randn(100)
->>> y2 = 0.15 * np.random.randint(50, 60, 100) + 30 + 7 * np.random.randn(100)
->>> samples = [y1, y2]
-
-We'll compare the two distributions using a kruskal-wallis test, since the
-data likely does not follow a normal distribution. The scipy function,
-`kruskal` returns the test statistic and a p-value.
-
->>> from scipy.stats import kruskal, nanmean
->>> f = lambda x: kruskal(*x)[1]
->>> print f(samples)
-8.98522592663e-08
-
-Now, let's calculate an array of power values for our test.
-
->>> from skbio.stats.power import get_subsampled_power
->>> pwr, counts = get_subsampled_power("ALL", f, samples=samples,
-...                                    max_counts=95)
-
-
-Let's use statsmodels to calculate the effect size and plot the power curve.
-If we can't solve for the power, we'll instead substitute a nan value.
-
->>> import matplotlib.pyplot as plt
->>> from statsmodels.stats.power import FTestAnovaPower
->>> ft = FTestAnovaPower()
->>> effects = np.zeros(pwr.shape)
->>> for id2, count in enumerate(counts):
-...     for id1 in range(pwr.shape[0]):
-...         try:
-...             effects[id1, id2] = ft.solve_power(effect_size=None,
-...                                                nobs=count,
-...                                                alpha=0.05,
-...                                                power=pwr[id1, id2])
-...         except:
-...             effects[id1, id2] = np.nan
-...
->>> mean_eff = nanmean(effects, None)
->>> print mean_eff
-0.625200892916
-
-Now, let's plot the power curve, and add the sample points over the top.
-
->>> pwr_fig = ft.plot_power(dep_var='nobs', nobs=np.arange(5, 150, 5),
-...                         effect_size=[mean_eff], alpha=0.05)
->>> ax = pwr_fig.axes[0]
->>> lines = ax.plot(counts, nanmean(pwr), 'kx')
-
-You can see the power curve and the emperical power follow a simillar curve.
-
 """
 
 # -----------------------------------------------------------------------------
