@@ -43,6 +43,16 @@ class FASTATests(TestCase):
             (multi_seq_gen(), 'fasta_multi_seq'),
         ])
 
+        def blank_seq_gen():
+            for seq in bseq1, blank_seq:
+                yield seq
+
+        # generators that cannot be written in fasta format, paired with their
+        # expected error message regexps
+        self.invalid_objs = [
+            (blank_seq_gen(), 'number 2.*empty'),
+        ]
+
     def test_generator_to_fasta(self):
         for obj, fp in self.objs_fps:
             fh = StringIO()
@@ -55,17 +65,12 @@ class FASTATests(TestCase):
 
             self.assertEqual(obs, exp)
 
-    #def test_write_invalid_alignment(self):
-    #    for invalid_obj, error_msg_regexp in self.invalid_objs:
-    #        fh = StringIO()
-    #        with self.assertRaisesRegexp(PhylipFormatError, error_msg_regexp):
-    #            _alignment_to_phylip(invalid_obj, fh)
-#
-#            # ensure nothing was written to the file before the error was
-#            # thrown. TODO remove this check when #674 is resolved
-#            obs = fh.getvalue()
-#            fh.close()
-#            self.assertEqual(obs, '')
+    def test_generator_to_fasta_invalid_data(self):
+        for invalid_obj, error_msg_regexp in self.invalid_objs:
+            fh = StringIO()
+            with self.assertRaisesRegexp(FASTAFormatError, error_msg_regexp):
+                _generator_to_fasta(invalid_obj, fh)
+            fh.close()
 
 
 if __name__ == '__main__':

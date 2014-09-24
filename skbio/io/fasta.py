@@ -52,8 +52,13 @@ def _fasta_to_generator(obj, fh):
 
 @register_writer('fasta')
 def _generator_to_fasta(obj, fh):
-    for seq in obj:
-        #if len(seq) < 1:
+    for idx, seq in enumerate(obj):
+        if len(seq) < 1:
+            raise FASTAFormatError(
+                "Cannot write biological sequence number %d in FASTA format "
+                "because it does not contain any characters (i.e., it is an "
+                "empty/blank sequence). Empty sequences are not supported in "
+                "the FASTA file format." % (idx + 1))
 
         if seq.description:
             header = '%s %s' % (seq.id, seq.description)
