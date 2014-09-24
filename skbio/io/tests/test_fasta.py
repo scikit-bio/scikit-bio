@@ -63,7 +63,7 @@ class FASTATests(TestCase):
         # format, paired with kwargs (if any), error type, and expected error
         # message regexp
         self.invalid_objs = [
-            (blank_seq_gen(), {}, FASTAFormatError, 'number 2.*empty'),
+            (blank_seq_gen(), {}, FASTAFormatError, '2nd.*empty'),
             (single_seq_gen(),
              {'max_width': 0}, ValueError, 'n=0'),
         ]

@@ -195,7 +195,6 @@ References
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.builtins import range
 
 from skbio.alignment import Alignment
 from skbio.io import register_writer, PhylipFormatError
