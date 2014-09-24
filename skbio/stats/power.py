@@ -5,29 +5,30 @@ Empirical Power Estimation (:mod:`skbio.stats.power`)
 .. currentmodule:: skbio.stats.power
 
 The purpose of this module is to provide empirical, post-hoc power estimation
-of parametric and non-parametric samples. It also provides support to subsample
-data to faciliate this analysis.
+of normally and non-normally distributed data. It also provides support to
+subsample data to faciliate this analysis.
 
 The underlying principle is based on subsampling and monte carlo simulation.
 Assume that there is some set of populations, :math:`K_{1}, K_{2}, ... K_{n}`
-which have some property, u such that :math:`\mu_{1} \neq \mu_{2} \neq ...
-\neq \mu_{n}`. For each of the populations, a sample, S can be drawn, with a
-parameter, x where :math:`x \approx \mu` and for the samples, we can use a
-test, f, to show that :math:`x_{1} \neq x_{2} \neq ... \neq x_{n}`.
+which have some property, :math:`\mu` such that :math:`\mu_{1} \neq \mu_{2}
+\neq ... \neq \mu_{n}`. For each of the populations, a sample, S can be drawn,
+with a parameter, :math:`x` where :math:`x \approx \mu` and for the samples,
+we can use a test, f, to show that :math:`x_{1} \neq x_{2} \neq ...
+\neq x_{n}`.
 
 Since we known that :math:`\mu_{1} \neq \mu_{2} \neq ... \neq \mu_{n}`,
 we know we should reject the null hypothesis. If we fail to reject the null
-hypothesis, we have comitted a Type II error and our result is a False
+hypothesis, we have comitted a Type II error and our result is a false
 negative. We can estimate the frequency of Type II errors at various sampling
 depths by repeatedly subsampling the populations and observing how often we
-see a False negative. If we repeat this several times for each subsampling
+see a false negative. If we repeat this several times for each subsampling
 depth, and vary the depths we use, we can start to approximate a relationship
 between the number of samples we use and the rate of false negatives, also
 called the statistical power of the test.
 
-We can then use the rate of false negatives and use the `statsmodels.power`
-package to solve for an effect size. This can be used to extrapolate a power
-curve for the data.
+To generate complete power curves from data which appears underpowered, the
+`statsmodels.power` package can be used to solve for an effect size. The effect
+size can be used to extrapolate a power curve for the data.
 
 The general format for functions in this module is to define a statistical
 test function which will take a list of ids, and return a p value. The test is
@@ -50,6 +51,70 @@ Functions
     bootstrap_power_curve
     get_significant_subsample
     get_paired_subsamples
+
+Examples
+--------
+Suppose we wanted to look at the power curve for two variables, `ind` and
+`dep`, using completely random subsampling. To control for the pseudo
+random number generation, we will use a seed.
+
+>>> import numpy as np
+>>> np.random.seed(20)
+>>> ind = np.random.randint(0, 20, 15)
+>>> print ind
+[ 3 15  9 11  7  2  0  8 19 16  6  6 16  9  5]
+>>> dep = (3 * ind + 5 + np.random.randn(15)*5).round(3)
+>>> print dep
+[ 15.617  47.533  28.04   33.788  19.602  12.229   4.779  36.838  67.256
+  55.032  22.157   7.051  58.601  38.664  18.783]
+
+Let's define a test that will draw a list of sample pairs and determine
+if they're correlated. We'll use the `pearsonr` function from scipy, which
+returns the pearson correlation coefficient and the probability value
+that the data is not correlated. The function takes two vectors as its
+input.
+
+>>> from scipy.stats import pearsonr
+>>> f = lambda x: pearsonr(ind[x[0]], dep[x[0]])[1]
+
+Now, let's use random sampling to estimate the power of our test on
+the first distribution. Since our test picks pairs, the "samples" vector
+will just be a list of positions in each array.
+
+>>> samples = [np.arange(0, 15, 1)]
+>>> print f(samples)
+3.64594525966e-08
+
+Since we know the two samples are correlated overall, let's try using
+completely random subsampling. This is recommended when sample populations
+are of simillar size, giving each sampled contained in the population a
+simillar probability of being drawn. If one sample is much larger than the
+other, signifigant subsampling can help decrease some of the noise.
+
+>>> from skbio.stats.power import get_subsampled_power
+>>> pwr_ests, counts = get_subsampled_power(mode="ALL",
+...                                         test=f,
+...                                         samples=samples,
+...                                         min_counts=3,
+...                                         max_counts=10,
+...                                         counts_start=3,
+...                                         counts_interval=1)
+>>> print counts
+[3 4 5 6 7 8 9]
+>>> print pwr_ests
+[[ 0.22   0.652  0.89   0.958  0.992  1.     1.   ]
+ [ 0.234  0.642  0.876  0.96   0.99   1.     1.   ]
+ [ 0.242  0.654  0.848  0.946  0.998  1.     1.   ]
+ [ 0.244  0.664  0.884  0.946  0.988  1.     1.   ]
+ [ 0.248  0.666  0.866  0.948  0.986  1.     1.   ]
+ [ 0.242  0.658  0.9    0.94   0.99   1.     1.   ]
+ [ 0.242  0.638  0.874  0.952  0.992  1.     1.   ]
+ [ 0.24   0.66   0.904  0.95   0.988  1.     1.   ]
+ [ 0.232  0.64   0.912  0.972  0.988  1.     1.   ]
+ [ 0.256  0.646  0.854  0.952  0.992  1.     1.   ]]
+
+The `pwr_est` can then be used to fit an effect size using
+`statsmodel.stats.power` module or the results can be average and plotted.
 
 """
 
@@ -111,7 +176,7 @@ def get_subsampled_power(mode, test, meta=None, cat=None, control_cats=None,
         would be set to ['A', 'B'].
     strict: bool, optional
         Default is True. If a missing value (nan) is encountered, the group
-        will be skipped when 'strict' is True.
+        will be skipped when `strict` is True.
     samples : {None, array-like}
         samples can be a list of lists or an array where each sublist or row in
         the array corresponds to a sampled group. Required for "ALL" and "SIG"
@@ -160,8 +225,8 @@ def get_subsampled_power(mode, test, meta=None, cat=None, control_cats=None,
         if the `counts_interval` is greater than the difference between the
         sample start and the max value.
 
-    Examples
-    --------
+    Example
+    -------
     Suppose we wanted to look at the power curve for two variables, `ind` and
     `dep`, using completely random subsampling. To control for the pseudo
     random number generation, we will use a seed.
@@ -221,8 +286,8 @@ def get_subsampled_power(mode, test, meta=None, cat=None, control_cats=None,
      [ 0.232  0.64   0.912  0.972  0.988  1.     1.   ]
      [ 0.256  0.646  0.854  0.952  0.992  1.     1.   ]]
 
-    The power_est can then be used to fit an effect_size using the power module
-    of the statsmodel library, or can be average and plotted.
+    The `pwr_est1 can then be used to fit an effect size using
+    `statsmodel.stats.power` module or the results can be average and plotted.
 
     """
 
@@ -519,8 +584,8 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
     p_std : vector
         the variance in the p-values
 
-    Example
-    -------
+    Examples
+    --------
     Suppose we have 100 samples randomly drawn from two normal distribitions,
     the first with mean 0 and standard devation 1, and the second with mean 3
     and standard deviation 1.5
@@ -628,8 +693,8 @@ def get_significant_subsample(tests, samples, sub_size=None, p_crit=0.05,
         if not iteration can be found that satisfies the signfigiant difference
         between groups
 
-    Example
-    -------
+    Examples
+    --------
     Let's assume we have two samples drawn from two populations. The first
     sample has 25 observations, and the second has 200.
 
@@ -742,17 +807,17 @@ def get_paired_subsamples(meta, cat, control_cats, order=None, strict=True):
         would be set to ['A', 'B'].
     strict: bool
         Default is True. If a missing value (nan) is encountered, the group
-        will be skipped when 'strict' is True.
+        will be skipped when `strict` is True.
 
     Returns
     -------
     ids : array
         a set of arrays which satisfy the criteria. These are not grouped by
-        cat. An empty array indicates there are no sample ids which satisfy
+        `cat`. An empty array indicates there are no sample ids which satisfy
         the requirements.
 
-    Example
-    -------
+    Examples
+    --------
     If we have a mapping file for a set of random samples looking at housing,
     sex, age and antibiotic use.
 
