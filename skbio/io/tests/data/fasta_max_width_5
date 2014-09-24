@@ -1,12 +1,17 @@
 >seq1 desc1
-ACGT-acgt.
+ACGT-
+acgt.
 >seq2
 A
 > desc3
-AACGGuA
+AACGG
+uA
 >
-ACGTTGCAccGG
+ACGTT
+GCAcc
+GG
 >
 ACGUU
 >proteinseq a very detailed description
-pQqqqPPQQQ
+pQqqq
+PPQQQ

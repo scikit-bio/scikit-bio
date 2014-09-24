@@ -38,6 +38,7 @@ from __future__ import absolute_import, division, print_function
 
 from skbio.io import (register_reader, register_writer, register_sniffer,
                       FASTAFormatError)
+from skbio.io._base import _chunk_str
 
 
 @register_sniffer('fasta')
@@ -51,7 +52,7 @@ def _fasta_to_generator(obj, fh):
 
 
 @register_writer('fasta')
-def _generator_to_fasta(obj, fh):
+def _generator_to_fasta(obj, fh, max_width=None):
     for idx, seq in enumerate(obj):
         if len(seq) < 1:
             raise FASTAFormatError(
@@ -65,4 +66,10 @@ def _generator_to_fasta(obj, fh):
         else:
             header = seq.id
 
-        fh.write('>%s\n%s\n' % (header, str(seq)))
+        seq_str = str(seq)
+
+        if max_width is not None:
+            # TODO add error checking of max_width
+            seq_str = _chunk_str(seq_str, max_width, '\n')
+
+        fh.write('>%s\n%s\n' % (header, seq_str))
