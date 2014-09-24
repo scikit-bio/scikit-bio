@@ -35,6 +35,10 @@ standard library. The goal of a `sniffer` is twofold: to identify if a file
 is a specific format, and if it is, to provide `**kwargs` which can be used
 to better parse the file.
 
+Neither `sniffers` nor `readers` will mutate the position of an already opened
+filehandle. This is true even if an exception is raised from within the
+`reader` or `sniffer`.
+
 Writing Files from scikit-bio
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -51,6 +55,10 @@ OOP Interface:
 
 In both interfaces, `format` is required. Without it, scikit-bio does not know
 how you want to serialize an object.
+
+`Writers` will always mutate an already opened filehandle. This allows for the
+ability to chain writes of similar object without overwritting the opened file
+each time.
 
 Supported File Formats
 ^^^^^^^^^^^^^^^^^^^^^^
