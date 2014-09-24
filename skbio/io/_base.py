@@ -12,4 +12,7 @@ from __future__ import absolute_import, division, print_function
 def _chunk_str(s, n, char):
     """Insert `char` character every `n` characters in string `s`."""
     # Modified from http://stackoverflow.com/a/312464/3776794
+    if n < 1:
+        raise ValueError(
+            "Cannot split string into chunks with n=%d. n must be >= 1." % n)
     return char.join((s[i:i+n] for i in range(0, len(s), n)))
