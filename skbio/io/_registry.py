@@ -22,6 +22,7 @@ from skbio.util import flatten
 _formats = {}
 _sniffers = {}
 _aliases = {}
+_empty_file_format = '<emptyfile>'
 
 
 def _compound_format(fmts):
@@ -644,8 +645,8 @@ def sniff(fp, cls=None, mode='U'):
     for f in fp:
         possibles = []
         for fmt in _sniffers:
-            if cls is not None and (fmt not in _formats or
-                                    cls not in _formats[fmt]):
+            if cls is not None and fmt != _empty_file_format and (
+                fmt not in _formats or cls not in _formats[fmt]):
                 continue
             format_sniffer = _sniffers[fmt]
             is_format, fmt_kwargs = format_sniffer(f, mode=mode)
@@ -801,8 +802,9 @@ def write(obj, format, into, mode='w', **kwargs):
 
     writer(obj, into, mode=mode, **kwargs)
 
-
-@register_sniffer('<emptyfile>')
+# This is meant to be a handy indicator to the user that they have done
+# something very wrong.
+@register_sniffer(_empty_file_format)
 def empty_file_sniffer(fh):
     for line in fh:
         if line.strip():

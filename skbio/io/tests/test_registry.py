@@ -781,6 +781,23 @@ class TestRead(RegistryTest):
 
         fh.close()
 
+    def test_reader_empty_file(self):
+        fh = StringIO()
+
+        @self.module.register_sniffer('format')
+        def sniffer(fh):
+            return False, {}
+
+        @self.module.register_reader('format', TestClass)
+        def reader(fh):
+            return
+
+        with self.assertRaises(UnrecognizedFormatError) as cm:
+            self.module.read(fh, into=TestClass)
+        self.assertIn('<emptyfile>', str(cm.exception))
+
+        fh.close()
+
     def test_reader_exists_with_verify_true(self):
         fh = StringIO(u'1\n2\n3\n4')
 
@@ -1075,17 +1092,17 @@ class TestRead(RegistryTest):
             self.assertEqual(kwargs['arg3'], [1])
             return
 
-        self.module.read(StringIO(), into=TestClass, arg3=[1])
+        self.module.read(StringIO(u'notempty'), into=TestClass, arg3=[1])
 
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("error")
             # Should raise no warning and thus no error.
-            self.module.read(StringIO(), into=TestClass, arg3=[1],
+            self.module.read(StringIO(u'notempty'), into=TestClass, arg3=[1],
                              override=30)
             # Should raise a warning and thus an error.
             with self.assertRaises(ArgumentOverrideWarning):
-                self.module.read(StringIO(), into=TestClass, arg3=[1],
-                                 override=100)
+                self.module.read(StringIO(u'notempty'), into=TestClass,
+                                 arg3=[1], override=100)
 
     def test_read_kwargs_passed_w_compound_format(self):
         @self.module.register_sniffer('format1')
@@ -1426,7 +1443,7 @@ class TestInitializeOOPInterface(RegistryTest):
             self.was_called = True
 
         self.module.initialize_oop_interface()
-        fh = StringIO()
+        fh = StringIO(u'notempty')
         self.class_with_default.read(fh, a='a', b=123)
 
         self.assertTrue(self.was_called)
