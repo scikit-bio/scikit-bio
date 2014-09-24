@@ -59,10 +59,13 @@ class FASTATests(TestCase):
             for seq in bio_seq1, blank_seq:
                 yield seq
 
-        # generators that cannot be written in fasta format, paired with their
-        # expected error message regexps
+        # generators or parameter combos that cannot be written in fasta
+        # format, paired with kwargs (if any), error type, and expected error
+        # message regexp
         self.invalid_objs = [
-            (blank_seq_gen(), 'number 2.*empty'),
+            (blank_seq_gen(), {}, FASTAFormatError, 'number 2.*empty'),
+            (single_seq_gen(),
+             {'max_width': 0}, ValueError, 'n=0'),
         ]
 
     def test_generator_to_fasta(self):
@@ -77,11 +80,11 @@ class FASTATests(TestCase):
 
             self.assertEqual(obs, exp)
 
-    def test_generator_to_fasta_invalid_data(self):
-        for invalid_obj, error_msg_regexp in self.invalid_objs:
+    def test_generator_to_fasta_invalid_input(self):
+        for obj, kwargs, error_type, error_msg_regexp in self.invalid_objs:
             fh = StringIO()
-            with self.assertRaisesRegexp(FASTAFormatError, error_msg_regexp):
-                _generator_to_fasta(invalid_obj, fh)
+            with self.assertRaisesRegexp(error_type, error_msg_regexp):
+                _generator_to_fasta(obj, fh, **kwargs)
             fh.close()
 
 

@@ -69,7 +69,6 @@ def _generator_to_fasta(obj, fh, max_width=None):
         seq_str = str(seq)
 
         if max_width is not None:
-            # TODO add error checking of max_width
             seq_str = _chunk_str(seq_str, max_width, '\n')
 
         fh.write('>%s\n%s\n' % (header, seq_str))
