@@ -119,6 +119,13 @@ Once you are satisfied with the functionality, you will need to ensure that
 decorators are executed on importing the user functions above. Use the function
 ``import_module('skbio.io.my_new_format')``
 
+The following keyword args may not be used when defining new `readers` or
+`writers` as they already have special meaning to the registry system:
+* `format`
+* `into`
+* `mode`
+* `verify`
+
 Developer Functions
 ^^^^^^^^^^^^^^^^^^^
 
