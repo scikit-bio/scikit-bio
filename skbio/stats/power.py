@@ -5,8 +5,8 @@ Empirical Power Estimation (:mod:`skbio.stats.power`)
 .. currentmodule:: skbio.stats.power
 
 The purpose of this module is to provide empirical, post-hoc power estimation
-of microbiome data. It also provides support to subsample data to faciliate
-this analysis.
+of parametric and non-parametric samples. It also provides support to subsample
+data to faciliate this analysis.
 
 The underlying principle is based on subsampling and monte carlo simulation.
 Assume that there is some set of populations, :math:`K_{1}, K_{2}, ... K_{n}`
@@ -33,7 +33,7 @@ The general format for functions in this module is to define a statistical
 test function which will take a list of ids, and return a p value. The test is
 then evaluated over a series of subsample sizes.
 
-With microbiome data, there are three ways we can approach selecting our
+If metadata is avaliable, there are three ways we can approach selecting our
 sample. We may choose to simply draw n observations at random from the two
 underlying samples. Alternatively, we can draw subsamples which are
 significantly different. Finally, we can try to match samples based on a set
@@ -76,11 +76,25 @@ def get_subsampled_power(mode, test, meta=None, cat=None, control_cats=None,
                          num_iter=500, num_runs=10):
     r"""Subsamples data to iterative calculate power
 
-      Parameters
+    Parameters
     ----------
+    mode : {"ALL", "SIG", "PAIRED"}
+        designates the way subsamples will be selected.
+        "ALL" mode randomly subsamples values provided in `samples` with no
+        restrictions on the sampling.
+        "SIG" mode generates random subsample from `sample` where the groups
+        in the subsample return a signifigantly different result. The
+        difference between the groups must be at least as large as `alpha_pwr`,
+        and the overall difference between the groups must be as large as
+        `alpha_pwr`/`scaling`. The signifigantly different sample is then
+        subsampled to generate a curve. The process is repeated over multiple
+        subsamples. This method is recommended for datasets where there is a
+        large size difference between heterogenous groups.
+        "PAIRED" mode uses the metadata in `meta` to vary `cat` while keeping
+        the metadata fields in `control_cats` constant between paired samples.
     test : function
-        the statistical test which accepts an array-like of sample ids
-        (list of lists) and returns a p-value.
+        the statistical test which accepts a list of arrays of values
+        (sample ids or numeric values) and returns a p value.
     meta : {None, dataframe}
         the metadata associated with the samples. Required for "PAIRED" mode.
     cat : {None, str}
@@ -162,7 +176,6 @@ def get_subsampled_power(mode, test, meta=None, cat=None, control_cats=None,
     [ 15.617  47.533  28.04   33.788  19.602  12.229   4.779  36.838  67.256
       55.032  22.157   7.051  58.601  38.664  18.783]
 
-
     Let's define a test that will draw a list of sample pairs and determine
     if they're correlated. We'll use the `pearsonr` function from scipy, which
     returns the pearson correlation coefficient and the probability value
@@ -209,7 +222,7 @@ def get_subsampled_power(mode, test, meta=None, cat=None, control_cats=None,
      [ 0.256  0.646  0.854  0.952  0.992  1.     1.   ]]
 
     The power_est can then be used to fit an effect_size using the power module
-    if the statsmodel library, or can be average and plotted.
+    of the statsmodel library, or can be average and plotted.
 
     """
 
@@ -374,14 +387,11 @@ def confidence_bound(vec, alpha=0.05, df=None, axis=None):
     Parameters
     ----------
     vec : array
-
     alpha : {0.05, float}
         the critical value
-
     df : {None, float}, optional
         the degrees of freedom associated with the distribution. If None is
         given, df is assumed to be the number elements in specified axis.
-
     axis : {None, unsigned int}, optional
         Default is None. The axis over which to take the devation.
 
@@ -424,18 +434,14 @@ def _calculate_power_curve(test, samples, sample_counts, ratio=None,
     test : function
         the statistical test which accepts an array-like of sample ids
         (list of lists) and returns a p-value.
-
     samples : array-like
         samples can be a list of lists or an array where each sublist or row in
         the array corresponds to a sampled group.
-
     sample_counts : 1d array
         A vector of the number of samples which should be sampled in each curve
-
     ratio : {None, 1d array}
         The fraction of the sample counts which should be assigned to each
         group. This must be a none-type object, or the same length as samples.
-
     num_iter : int
         The default is 1000. The number of p-values to generate for each point
         on the curve.
@@ -492,22 +498,17 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
     test : function
         the statistical test which accepts an array-like of sample ids
         (list of lists) and returns a p-value.
-
     samples : array-like
         samples can be a list of lists or an array where each sublist or row in
         the array corresponds to a sampled group.
-
     sample_counts : 1d array
         A vector of the number of samples which should be sampled in each curve
-
     ratio : {None, 1d array}
         The fraction of the sample counts which should be assigned to each
         group. This must be a none-type object, or the same length as samples.
-
     num_iter : unsigned int
         Default is 1000. The number of p-values to generate for each point
         on the curve.
-
     num_runs : unsigned int
         Default is 5. The number of times to calculate each curve.
 
@@ -515,7 +516,6 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
     -------
     p_mean : 1d array
         the mean p-values from the iterations
-
     p_std : vector
         the variance in the p-values
 
@@ -530,17 +530,17 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
     >>> samples_1 = np.random.randn(100)
     >>> samples_2 = 1.5*np.random.randn(100) + 1
 
-    We want to test the statistical power of a kruskal-wallis test comparing
-    the two populations. We can define a test function, f, to perform the
-    comparison. The test function will take a list of value vectors and
+    We want to test the statistical power of a independent two sample t-test
+    comparing the two populations. We can define a test function, f, to perform
+    the comparison. The test function will take a list of value vectors and
     return a p value.
 
     >>> from scipy.stats import ttest_ind
     >>> f = lambda x: ttest_ind(x[0], x[1])[1]
 
     Now, we can determine the statitical power, or the probability that do not
-    have a false positive given that we do not have a false negative by varying
-    a number of subsamples.
+    have a false negative given that we do not have a false positive, by
+    varying a number of subsamples.
 
     >>> from skbio.stats.power import bootstrap_power_curve
     >>> sample_counts = np.arange(5, 80, 5)
@@ -595,24 +595,19 @@ def get_significant_subsample(tests, samples, sub_size=None, p_crit=0.05,
     tests : list
         the statistical tests to performed on the data. These tests should
         take a list of integers or sample ids, and return a p-value.
-
     samples : array-like
         samples can be a list of lists or an array where each sublist or row in
         the array corresponds to a sampled group.
-
     sub_size : {None, int}
         the maximum number of samples to select from a group. If no value is
         provided, this will be the same as the size of the smallest group.
         Otherwise, this will be compared to the size of the smallest group, and
         which ever is lower will be used.
-
     p_crit : {float, list}
         The critical p value or p values for the function.
-
     num_rounds : {500, int}
         the number of times the code should attempt to subsample the data
         before determining it has tried too many times and should quit.
-
     p_scaling : {5, int}
         a penalty scale on p_crit, so that the total distribution must be less
         than p_crit/p_scaling.
@@ -621,7 +616,6 @@ def get_significant_subsample(tests, samples, sub_size=None, p_crit=0.05,
     -------
     ids : array
         All sample ids in the subset
-
     sub_size : float
         the number of samples selected from each group
 
@@ -630,7 +624,6 @@ def get_significant_subsample(tests, samples, sub_size=None, p_crit=0.05,
     RuntimeError
         if all the tests are None, or no signfiiant difference can be found
         between samples
-
     RuntimeError
         if not iteration can be found that satisfies the signfigiant difference
         between groups
@@ -736,21 +729,17 @@ def get_paired_subsamples(meta, cat, control_cats, order=None, strict=True):
     Parameters
     ----------
     meta : dataframe
-
     cat : str
         the metadata categories for comparison
-
     control_cats : list
         the metadata categories to be used as controls. For example, if you
         wanted to control age (`cat` = "AGE"), you might want to control for
         gender and health status (i.e. `control_cats` = ["SEX", "HEALTHY"])
-
     order : {None, list}
         Default is None. The order of groups in the category. This can be used
         to limit the groups selected. For example, if there's a category with
         groups 'A', 'B' and 'C', and you only want to look at A vs B, `order`
         would be set to ['A', 'B'].
-
     strict: bool
         Default is True. If a missing value (nan) is encountered, the group
         will be skipped when 'strict' is True.
@@ -774,7 +763,14 @@ def get_paired_subsamples(meta, cat, control_cats, order=None, strict=True):
     ...         'CB': {'HOUSING': '3', 'SEX': 'M', 'AGE': '40s', 'ABX': 'Y'},
     ...         'BB': {'HOUSING': '1', 'SEX': 'M', 'AGE': '40s', 'ABX': 'Y'}}
     >>> meta = pd.DataFrame.from_dict(meta, orient="index")
+    >>> meta
+       ABX HOUSING  AGE SEX
+    BB   Y       1  40s   M
+    CB   Y       3  40s   M
+    SW   N       2  NaN   M
+    TS   Y       2  40s   M
 
+    [4 rows x 4 columns]
 
     Let's say we want to vary housing, controlling for sex, age, antibiotics
     and sex.
