@@ -9,6 +9,16 @@ ordination method in a human-readable, text-based format. The format supports
 storing the results of various ordination methods available in scikit-bio,
 including (but not necessarily limited to) PCoA, CA, RDA, and CCA.
 
+Format Support
+--------------
+**Has Sniffer: Yes**
+
++----------+----------+------------------------------------------------------+
+|**Reader**|**Writer**|                   **Object Class**                   |
++----------+----------+------------------------------------------------------+
+|Yes       |Yes       |:mod:`skbio.stats.ordination.OrdinationResults`       |
++----------+----------+------------------------------------------------------+
+
 Format Specification
 --------------------
 The format is text-based, consisting of six attributes that describe the

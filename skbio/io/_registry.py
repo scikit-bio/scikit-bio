@@ -584,7 +584,7 @@ def _rw_getter(name, fmt, cls):
 
 
 def sniff(fp, cls=None, mode='U'):
-    """Attempt to guess the format of a file and return format str.
+    """Attempt to guess the format of a file and return format str and kwargs.
 
     Parameters
     ----------

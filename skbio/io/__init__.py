@@ -6,11 +6,56 @@ File I/O (:mod:`skbio.io`)
 
 This package provides I/O functionality for skbio.
 
-For information about extending the I/O functionality of skbio, see the
-associated Developer Documentation.
+Introduction to I/O
+-------------------
+
+Reading Files Into scikit-bio
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+There are two ways to read files. The first way is to use the
+imperative interface:
+
+``my_obj = skbio.io.read(<filehandle or filepath>, format='<format here>',
+into=<class to construct>)``
+
+The second is to use the object-oriented interface which is dynamically
+generated:
+
+``my_obj = <class to construct>.read(<filehandle or filepath>,
+format='<format here>')``
+
+In the case of ``skbio.io.read`` if `into` is not provided, then a generator
+will be returned. When `into` is provided, format may be ommitted and the
+registry will use its knowledge of the available formats for the requested
+class to infer the correct format. This format inferrence is also available in
+the OOP interface, meaning that `format` may be ommitted there as well.
+
+We call format inferrence: `sniffing`, much like the `csv` module of python's
+standard library. The goal of a `sniffer` is twofold: to identify if a file
+is a specific format, and if it is, to provide `**kwargs` which can be used
+to better parse the file.
+
+Writing Files from scikit-bio
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Just as when reading files, there are two ways to write files.
+
+Imperative Interface:
+
+``skbio.io.write(my_obj, format='<format here>',
+into=<filehandle or filepath>)``
+
+OOP Interface:
+
+``my_obj.write(<filehandle or filepath>, format='<format here>')``
+
+In both interfaces, `format` is required. Without it, scikit-bio does not know
+how you want to serialize an object.
 
 Supported File Formats
-----------------------
+^^^^^^^^^^^^^^^^^^^^^^
+For details on what objects are supported by each format,
+see the associated documentation.
 
 .. autosummary::
    :toctree: generated/
@@ -21,7 +66,7 @@ Supported File Formats
    phylip
 
 User Functions
---------------
+^^^^^^^^^^^^^^
 
 .. autosummary::
    :toctree: generated/
@@ -31,7 +76,7 @@ User Functions
    sniff
 
 User Exceptions
----------------
+^^^^^^^^^^^^^^^
 
 .. autosummary::
    :toctree: generated/
@@ -46,7 +91,7 @@ User Exceptions
    PhylipFormatError
 
 User Warnings
--------------
+^^^^^^^^^^^^^
 
 .. autosummary::
    :toctree: generated/
@@ -71,12 +116,11 @@ functions.
 
 Once you are satisfied with the functionality, you will need to ensure that
 `skbio/io/__init__.py` contains an import of your new submodule, that way the
-decorators are executed on importing the user functions above. We recommend
-importing functions that return a generator as they are generally useful and
-make sense in the context of `skbio.io`.
+decorators are executed on importing the user functions above. Use the function
+``import_module('skbio.io.my_new_format')``
 
 Developer Functions
--------------------
+^^^^^^^^^^^^^^^^^^^
 
 .. autosummary::
     :toctree: generated/
@@ -91,7 +135,7 @@ Developer Functions
     get_sniffer
 
 Developer Exceptions
---------------------
+^^^^^^^^^^^^^^^^^^^^
 
 .. autosummary::
    :toctree: generated/

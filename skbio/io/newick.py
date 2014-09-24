@@ -9,6 +9,16 @@ names in a minimal file format [1]_. This is useful for representing
 phylogenetic trees and taxonomies. Newick was created as an informal
 specification on June 26, 1986 [2]_.
 
+Format Support
+--------------
+**Has Sniffer: Yes**
+
++----------+----------+------------------------------------------------------+
+|**Reader**|**Writer**|                   **Object Class**                   |
++----------+----------+------------------------------------------------------+
+|Yes       |Yes       |:mod:`skbio.tree.TreeNode`                            |
++----------+----------+------------------------------------------------------+
+
 Format Specification
 --------------------
 A Newick file represents a tree using the following grammar. See below for an
