@@ -65,6 +65,19 @@ see the associated documentation.
    newick
    phylip
 
+Formats are considered to be names which represent some way of encoding a file.
+In some cases, objects are composed of more than one format, such a ``'fasta'``
+and ``'qual'``. In these cases, we use what is called a *compound* format. It
+can be written like this: ``format=['fasta', 'qual']``. We also support the
+shorthand: ``format='fasta, qual'``. In these cases, where you would put
+a filehandle or a filepath string, you will replace it with a list of
+filehandles and/or filepaths which correspond to the order of your compound
+format (``[<filehandle or filepath of fasta>,
+<filehandle or filepath of qual>]``). In fact, the order does not matter for
+the compound format, as long as the files are provided in that same order,
+so we could have used ``['qual', 'fasta']`` instead as long as the quality file
+came first.
+
 User Functions
 ^^^^^^^^^^^^^^
 
@@ -125,6 +138,10 @@ The following keyword args may not be used when defining new `readers` or
 * `into`
 * `mode`
 * `verify`
+
+Keyword arguments are not permitted in `sniffers`. `Sniffers` may not raise exceptions,
+if an exception is thrown by a `sniffer`, the user will be asked to report it
+on our issue tracker.
 
 Developer Functions
 ^^^^^^^^^^^^^^^^^^^
