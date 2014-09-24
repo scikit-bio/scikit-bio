@@ -834,6 +834,8 @@ def get_paired_subsamples(meta, cat, control_cats, order=None, strict=True):
     CB   Y       3  40s   M
     SW   N       2  NaN   M
     TS   Y       2  40s   M
+    <BLANKLINE>
+    [4 rows x 4 columns]
 
     Let's say we want to vary housing, controlling for sex, age, antibiotics
     and sex.
