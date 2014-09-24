@@ -49,6 +49,9 @@ class TestClassB(TestClass):
 
 class RegistryTest(unittest.TestCase):
     def setUp(self):
+        # A fresh module needs to be imported for each test because the
+        # registry stores its state in the module which is by default
+        # only loaded once.
         self.module = import_fresh_module('skbio.io._registry')
         self.fd1, self.fp1 = mkstemp()
         self.fd2, self.fp2 = mkstemp()
@@ -441,14 +444,14 @@ class TestListReadFormats(RegistryTest):
 
 
 class TestListWriteFormats(RegistryTest):
-    def test_no_read_formats(self):
+    def test_no_write_formats(self):
         @self.module.register_writer('format1', TestClassA)
         def this_isnt_on_clsB(fh):
             return
 
         self.assertEqual([], self.module.list_write_formats(TestClassB))
 
-    def test_one_read_format(self):
+    def test_one_write_format(self):
         @self.module.register_writer('format1', TestClass)
         def format1_cls(fh):
             return
@@ -456,7 +459,7 @@ class TestListWriteFormats(RegistryTest):
         self.assertEqual(['format1'],
                          self.module.list_write_formats(TestClass))
 
-    def test_many_read_formats(self):
+    def test_many_write_formats(self):
         @self.module.register_writer('format1', TestClassA)
         def format1_clsA(fh):
             return

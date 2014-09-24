@@ -223,7 +223,14 @@ def register_reader(format, cls=None):
         if 'reader' in format_class:
             raise DuplicateRegistrationError('reader', fmt, cls)
 
+        # We wrap the reader so that basic file handling can be managed
+        # externally from the business logic.
         if cls is None:
+            # In the case of generators, we need to make sure that the
+            # filehandle is not mutates by calling `next` on the generator.
+            # This allows for the odd edge case of creating several generators
+            # from the same filehandle without having them inadvertently
+            # interact via the filehandles position.
             def wrapped_reader(fp, mode='U', mutate_fh=False, **kwargs):
                 if not _is_iter_list(fp):
                     fp = [fp]
@@ -246,12 +253,19 @@ def register_reader(format, cls=None):
                                                            "generator." %
                                                            reader.__name__)
 
+                    # If we the user has permitted us to mutate the file, or if
+                    # we know that the registry 'owns' the filehandle then we
+                    # don't need to worry about mutations. The caveat is if it
+                    # is a compound format, in which case we are no longer
+                    # certain who owns which file.
                     if mutate_fh or (not is_compound and
                                      _is_string_or_bytes(fp[0])):
                         while True:
                             yield next(generator)
 
                     else:
+                        # Preserve the original filehandle positions at each
+                        # call for `next`.
                         orig_positions = [fh.tell() for fh in fhs]
                         read_positions = orig_positions
                         try:
@@ -272,6 +286,8 @@ def register_reader(format, cls=None):
                                 fh.seek(pos)
 
         else:
+            # When an object is instantiated we don't need to worry about the
+            # original position at every step, only at the end.
             def wrapped_reader(fp, mode='U', mutate_fh=False, **kwargs):
                 if not _is_iter_list(fp):
                     fp = [fp]
@@ -355,7 +371,8 @@ def register_writer(format, cls=None):
 
         if 'writer' in format_class:
             raise DuplicateRegistrationError('writer', fmt, cls)
-
+        # We wrap the writer so that basic file handling can be managed
+        # externally from the business logic.
         def wrapped_writer(obj, fp, mode='w', **kwargs):
             if not _is_iter_list(fp):
                 fp = [fp]
@@ -453,6 +470,8 @@ def get_sniffer(format):
             return _sniffers[fmt]
         return None
     else:
+        # In the event of a compound format, we can generate a compound sniffer
+        # by simply composing the results of each sub-sniffer.
         sniffers = []
         for f in _factor_format(format):
             sniffer = get_sniffer(f)
@@ -521,6 +540,8 @@ def get_reader(format, cls=None):
         return reader(mapped_fp, **kwargs)
 
     generated_reader.__name__ = 'flip_of_' + reader.__name__
+    # Generated readers do not get a copy of the docstring because
+    # their argument order is not the same.
 
     return generated_reader
 
@@ -570,6 +591,8 @@ def get_writer(format, cls=None):
         return writer(obj, mapped_fp, **kwargs)
 
     generated_writer.__name__ = 'flip_of_' + writer.__name__
+    # Generated writers do not get a copy of the docstring because
+    # their argument order is not the same.
 
     return generated_writer
 
@@ -789,10 +812,11 @@ def empty_file_sniffer(fh):
 
 def initialize_oop_interface():
     classes = set()
+    # Find each potential class
     for fmt in _formats:
         for cls in _formats[fmt]:
             classes.add(cls)
-
+    # Add readers and writers for each class
     for cls in classes:
         if cls is not None:
             _apply_read(cls)
@@ -800,6 +824,7 @@ def initialize_oop_interface():
 
 
 def _apply_read(cls):
+    """Add read method if any formats have a registered reader for `cls`."""
     skbio_io_read = globals()['read']
     read_formats = list_read_formats(cls)
     if read_formats:
@@ -819,6 +844,7 @@ def _apply_read(cls):
 
 
 def _apply_write(cls):
+    """Add write method if any formats have a registered reader for `cls`."""
     skbio_io_write = globals()['write']
     write_formats = list_write_formats(cls)
     if write_formats:
