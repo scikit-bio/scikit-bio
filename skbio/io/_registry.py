@@ -228,10 +228,10 @@ def register_reader(format, cls=None):
         # externally from the business logic.
         if cls is None:
             # In the case of generators, we need to make sure that the
-            # filehandle is not mutates by calling `next` on the generator.
+            # filehandle is not mutated by calling `next` on the generator.
             # This allows for the odd edge case of creating several generators
             # from the same filehandle without having them inadvertently
-            # interact via the filehandles position.
+            # interact via the filehandle's position.
             def wrapped_reader(fp, mode='U', mutate_fh=False, **kwargs):
                 if not _is_iter_list(fp):
                     fp = [fp]
@@ -254,7 +254,7 @@ def register_reader(format, cls=None):
                                                            "generator." %
                                                            reader.__name__)
 
-                    # If we the user has permitted us to mutate the file, or if
+                    # If the user has permitted us to mutate the file, or if
                     # we know that the registry 'owns' the filehandle then we
                     # don't need to worry about mutations. The caveat is if it
                     # is a compound format, in which case we are no longer
@@ -848,7 +848,7 @@ def _apply_read(cls):
 
 
 def _apply_write(cls):
-    """Add write method if any formats have a registered reader for `cls`."""
+    """Add write method if any formats have a registered writer for `cls`."""
     skbio_io_write = globals()['write']
     write_formats = list_write_formats(cls)
     if write_formats:

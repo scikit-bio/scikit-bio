@@ -20,50 +20,71 @@ procedural interface:
 ``my_obj = skbio.io.read(<filehandle or filepath>, format='<format here>',
 into=<class to construct>)``
 
-The second is to use the object-oriented (00) interface which is automatically
+The second is to use the object-oriented (OO) interface which is automatically
 constructed from the procedural interface:
 
 ``my_obj = <class to construct>.read(<filehandle or filepath>,
 format='<format here>')``
 
+For example, to read a `newick` file using both interfaces you would type:
+>>> from skbio.io import read
+>>> from skbio.tree import TreeNode
+>>> from io import StringIO
+>>> open_filehandle = StringIO(u'(a, b);')
+>>> tree = read(open_filehandle, format='newick', into=TreeNode)
+>>> tree
+<TreeNode, name: unnamed, internal node count: 0, tips count: 2>
+
+For the OO interface:
+>>> tree2 = TreeNode.read(open_filehandle, format='newick')
+>>> tree2
+<TreeNode, name: unnamed, internal node count: 0, tips count: 2>
+
 In the case of ``skbio.io.read`` if `into` is not provided, then a generator
-will be returned. When `into` is provided, format may be ommitted and the
+will be returned. When `into` is provided, format may be omitted and the
 registry will use its knowledge of the available formats for the requested
-class to infer the correct format. This format inferrence is also available in
+class to infer the correct format. This format inference is also available in
 the OO interface, meaning that `format` may be ommitted there as well.
 
-We call format inferrence: `sniffing`, much like the `csv` module of python's
-standard library. The goal of a `sniffer` is twofold: to identify if a file
-is a specific format, and if it is, to provide `**kwargs` which can be used
-to better parse the file.
+As an example:
+>>> tree3 = TreeNode.read(open_filehandle)
+>>> tree3
+<TreeNode, name: unnamed, internal node count: 0, tips count: 2>
 
+We call format inference `sniffing`, much like the
+`csv <https://docs.python.org/2/library/csv.html#csv.Sniffer>`_ module of
+Python's standard library. The goal of a `sniffer` is twofold: to identify if a
+file is a specific format, and if it is, to provide `**kwargs` which can be
+used to better parse the file.
+
+Notice how we never needed to reset the filehandle's position with `seek`.
 Neither `sniffers` nor `readers` will mutate the position of an already opened
 filehandle. This is true even if an exception is raised from within the
 `reader` or `sniffer`.
 
-.. note:: There is a built-in `sniffer` that detects empty files and will
-   result in a useful error message if an object is being created from an empty
-   file.
+.. note:: There is a built-in `sniffer` which results in a useful error message
+   if an empty file is provided as input and the format was omitted.
 
 Writing Files from scikit-bio
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Just as when reading files, there are two ways to write files.
 
-Imperative Interface:
+Procedural Interface:
 
 ``skbio.io.write(my_obj, format='<format here>',
 into=<filehandle or filepath>)``
 
-OOP Interface:
+OO Interface:
 
 ``my_obj.write(<filehandle or filepath>, format='<format here>')``
 
-In both interfaces, `format` is required. Without it, scikit-bio does not know
-how you want to serialize an object.
+In the procedural interface, `format` is required. Without it, scikit-bio does
+not know how you want to serialize an object. OO interfaces define a default
+`format`, so it may not be necessary to include it.
 
-`Writers` will always mutate an already opened filehandle. This allows for the
-ability to chain writes of similar object without overwritting the opened file
-each time.
+`Writers` will always mutate an already opened filehandle (e.g., change the
+filehandle's position). This allows for a file to be written to more than once
+without overwriting the contents of a previous write.
 
 Supported File Formats
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -79,17 +100,19 @@ see the associated documentation.
    phylip
 
 Formats are considered to be names which represent a way of encoding a file.
-In some cases, objects are composed of more than one format, such a ``'fasta'``
-and ``'qual'``. In these cases, we use what is called a *compound* format. It
-can be written like this: ``format=['fasta', 'qual']``. We also support the
-shorthand: ``format='fasta, qual'``. In these cases, where you would put
-a filehandle or a filepath string, you will replace it with a list of
-filehandles and/or filepaths which correspond to the order of your compound
-format (``[<filehandle or filepath of fasta>,
-<filehandle or filepath of qual>]``). The order does not matter for
-the compound format, as long as the files are provided in that same order,
-so we could have used ``['qual', 'fasta']`` instead as long as the quality file
-came first.
+A simple format is just a single name as a string, such as ``'newick'``.
+In some cases, objects can be constructed from more than one format, such as
+``'fasta'`` and ``'qual'`` for reading/writing FASTA/qual files into an
+:mod:`skbio.alignment.SequenceCollection`. In these cases, we use what is
+called a *compound* format. It can be written like this:
+``format=['fasta', 'qual']``. We also support the shorthand:
+``format='fasta, qual'``. In these cases, where you would put a filehandle or a
+filepath string, you will replace it with a list of filehandles and/or
+filepaths which correspond to the order of your compound format
+(``[<filehandle or filepath of fasta>, <filehandle or filepath of qual>]``).
+The order does not matter for the compound format, as long as the files are
+provided in that same order, so we could have used ``['qual', 'fasta']``
+instead as long as the quality file came first.
 
 User Functions
 ^^^^^^^^^^^^^^
@@ -152,9 +175,31 @@ The following keyword args may not be used when defining new `readers` or
 * `verify`
 
 .. note:: Keyword arguments are not permitted in `sniffers`. `Sniffers` may not
-   raise exceptions, if an exception is thrown by a `sniffer`, the user will be
+   raise exceptions; if an exception is thrown by a `sniffer`, the user will be
    asked to report it on our `issue tracker
    <https://github.com/biocore/scikit-bio/issues/>`_.
+
+When raising errors, the error should be a subclass of ``FileFormatError``
+specific to your new format.
+
+Writing Unit Tests
+^^^^^^^^^^^^^^^^^^
+Because scikit-bio handles all of the I/O boilerplate, you only need to test
+the actual business logic of your `readers`, `writers`, and `sniffers`. The
+easiest way to accomplish this is to create a list of files and their expected
+results when deserialized. Then you can iterate through the list ensuring the
+expected results occur and that the expected results can be reserialized into
+an equivalent file. This process is called 'roundtripping'.
+
+It is also important to test some invalid inputs and ensure that the correct
+error is raised by your `readers`. Consider using `assertRaises` as a context
+manager like so:
+
+.. code-block:: python
+
+   with self.assertRaises(SomeFileFormatErrorSubclass) as cm:
+       do_something_wrong()
+   self.assertIn('action verb or subject of an error', str(cm.exception))
 
 Developer Functions
 ^^^^^^^^^^^^^^^^^^^
