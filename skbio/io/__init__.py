@@ -45,6 +45,7 @@ constructed from the procedural interface:
 format='<format here>')``
 
 For example, to read a `newick` file using both interfaces you would type:
+
 >>> from skbio.io import read
 >>> from skbio import TreeNode
 >>> from io import StringIO
@@ -54,6 +55,7 @@ For example, to read a `newick` file using both interfaces you would type:
 <TreeNode, name: unnamed, internal node count: 0, tips count: 2>
 
 For the OO interface:
+
 >>> tree2 = TreeNode.read(open_filehandle, format='newick')
 >>> tree2
 <TreeNode, name: unnamed, internal node count: 0, tips count: 2>
@@ -65,9 +67,10 @@ read.
 When `into` is provided, format may be omitted and the registry will use its
 knowledge of the available formats for the requested class to infer the correct
 format. This format inference is also available in the OO interface, meaning
-that `format` may be ommitted there as well.
+that `format` may be omitted there as well.
 
 As an example:
+
 >>> tree3 = TreeNode.read(open_filehandle)
 >>> tree3
 <TreeNode, name: unnamed, internal node count: 0, tips count: 2>
