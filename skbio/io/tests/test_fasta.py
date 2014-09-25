@@ -13,8 +13,7 @@ from unittest import TestCase, main
 
 from skbio import BiologicalSequence, DNA, RNA, Protein
 from skbio.io import FASTAFormatError
-from skbio.io.fasta import (_fasta_sniffer, _fasta_to_generator,
-                            _generator_to_fasta)
+from skbio.io.fasta import _generator_to_fasta
 from skbio.util import get_data_path
 
 

@@ -49,12 +49,12 @@ def cardinal_to_ordinal(n):
     '3rd'
 
     """
-    # Taken from http://stackoverflow.com/a/20007730/3776794
+    # Taken and modified from http://stackoverflow.com/a/20007730/3776794
     # Originally from http://codegolf.stackexchange.com/a/4712 by Gareth
     if n < 0:
         raise ValueError("Cannot convert negative integer %d to ordinal "
                          "string." % n)
-    return "%d%s" % (n,"tsnrhtdd"[(n//10%10!=1)*(n%10<4)*n%10::4])
+    return "%d%s" % (n, "tsnrhtdd"[(n//10 % 10 != 1)*(n % 10 < 4)*n % 10::4])
 
 
 def is_casava_v180_or_later(header_line):
