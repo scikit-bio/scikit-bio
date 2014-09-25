@@ -11,6 +11,18 @@ identifiers are stored in delimited text format (e.g., TSV or CSV). This format
 supports storing a variety of data types including dissimilarity/distance
 matrices and substitution matrices.
 
+Format Support
+--------------
+**Has Sniffer: Yes**
+
++----------+----------+------------------------------------------------------+
+|**Reader**|**Writer**|                   **Object Class**                   |
++----------+----------+------------------------------------------------------+
+|Yes       |Yes       |:mod:`skbio.stats.distance.DissimilarityMatrix`       |
++----------+----------+------------------------------------------------------+
+|Yes       |Yes       |:mod:`skbio.stats.distance.DistanceMatrix`            |
++----------+----------+------------------------------------------------------+
+
 Format Specification
 --------------------
 The square matrix and object identifiers are stored as delimited text. The
