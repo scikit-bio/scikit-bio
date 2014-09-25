@@ -38,7 +38,8 @@ from __future__ import absolute_import, division, print_function
 
 from skbio.io import (register_reader, register_writer, register_sniffer,
                       FASTAFormatError)
-from skbio.io._base import _chunk_str, _int_to_ordinal_str
+from skbio.io._base import _chunk_str
+from skbio.util import cardinal_to_ordinal
 
 
 @register_sniffer('fasta')
@@ -59,7 +60,7 @@ def _generator_to_fasta(obj, fh, max_width=None):
                 "Cannot write %s biological sequence in FASTA format because "
                 "it does not contain any characters (i.e., it is an "
                 "empty/blank sequence). Empty sequences are not supported in "
-                "the FASTA file format." % _int_to_ordinal_str(idx + 1))
+                "the FASTA file format." % cardinal_to_ordinal(idx + 1))
 
         if seq.description:
             header = '%s %s' % (seq.id, seq.description)

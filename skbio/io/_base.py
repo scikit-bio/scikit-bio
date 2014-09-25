@@ -21,22 +21,3 @@ def _chunk_str(s, n, char):
         raise ValueError(
             "Cannot split string into chunks with n=%d. n must be >= 1." % n)
     return char.join((s[i:i+n] for i in range(0, len(s), n)))
-
-
-def _int_to_ordinal_str(n):
-    """Return ordinal string version of int `n`.
-
-    For example:
-
-    1 -> '1st'
-    2 -> '2nd'
-    3 -> '3rd'
-    ...
-
-    """
-    # Taken from http://stackoverflow.com/a/20007730/3776794
-    # Originally from http://codegolf.stackexchange.com/a/4712 by Gareth
-    if n < 0:
-        raise ValueError("Cannot convert negative integer %d to ordinal "
-                         "string." % n)
-    return "%d%s" % (n,"tsnrhtdd"[(n//10%10!=1)*(n%10<4)*n%10::4])
