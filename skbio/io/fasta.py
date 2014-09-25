@@ -39,6 +39,8 @@ from __future__ import absolute_import, division, print_function
 from skbio.io import (register_reader, register_writer, register_sniffer,
                       FASTAFormatError)
 from skbio.io._base import _chunk_str
+from skbio.sequence import (BiologicalSequence, NucleotideSequence,
+                            DNASequence, RNASequence, ProteinSequence)
 from skbio.util import cardinal_to_ordinal
 
 
@@ -73,3 +75,35 @@ def _generator_to_fasta(obj, fh, max_width=None):
             seq_str = _chunk_str(seq_str, max_width, '\n')
 
         fh.write('>%s\n%s\n' % (header, seq_str))
+
+
+@register_writer('fasta', BiologicalSequence)
+def _biological_sequence_to_fasta(obj, fh, max_width=None):
+    _sequence_to_fasta(obj, fh, max_width)
+
+
+@register_writer('fasta', NucleotideSequence)
+def _nucleotide_sequence_to_fasta(obj, fh, max_width=None):
+    _sequence_to_fasta(obj, fh, max_width)
+
+
+@register_writer('fasta', DNASequence)
+def _dna_sequence_to_fasta(obj, fh, max_width=None):
+    _sequence_to_fasta(obj, fh, max_width)
+
+
+@register_writer('fasta', RNASequence)
+def _rna_sequence_to_fasta(obj, fh, max_width=None):
+    _sequence_to_fasta(obj, fh, max_width)
+
+
+@register_writer('fasta', ProteinSequence)
+def _protein_sequence_to_fasta(obj, fh, max_width=None):
+    _sequence_to_fasta(obj, fh, max_width)
+
+
+def _sequence_to_fasta(obj, fh, max_width):
+    def seq_gen():
+        yield obj
+
+    _generator_to_fasta(seq_gen(), fh, max_width=max_width)
