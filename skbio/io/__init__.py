@@ -8,18 +8,20 @@ This package provides I/O functionality for skbio.
 
 Introduction to I/O
 -------------------
+In order to handle the many-to-many relationship of file formats to objects,
+we use a single I/O registry to map these relationships. Below is a description
+of how to use the registry, and how to extend it.
 
 Reading Files Into scikit-bio
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
 There are two ways to read files. The first way is to use the
-imperative interface:
+procedural interface:
 
 ``my_obj = skbio.io.read(<filehandle or filepath>, format='<format here>',
 into=<class to construct>)``
 
-The second is to use the object-oriented interface which is dynamically
-generated:
+The second is to use the object-oriented (00) interface which is automatically
+constructed from the procedural interface:
 
 ``my_obj = <class to construct>.read(<filehandle or filepath>,
 format='<format here>')``
@@ -28,7 +30,7 @@ In the case of ``skbio.io.read`` if `into` is not provided, then a generator
 will be returned. When `into` is provided, format may be ommitted and the
 registry will use its knowledge of the available formats for the requested
 class to infer the correct format. This format inferrence is also available in
-the OOP interface, meaning that `format` may be ommitted there as well.
+the OO interface, meaning that `format` may be ommitted there as well.
 
 We call format inferrence: `sniffing`, much like the `csv` module of python's
 standard library. The goal of a `sniffer` is twofold: to identify if a file
@@ -45,7 +47,6 @@ filehandle. This is true even if an exception is raised from within the
 
 Writing Files from scikit-bio
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
 Just as when reading files, there are two ways to write files.
 
 Imperative Interface:
@@ -77,7 +78,7 @@ see the associated documentation.
    newick
    phylip
 
-Formats are considered to be names which represent some way of encoding a file.
+Formats are considered to be names which represent a way of encoding a file.
 In some cases, objects are composed of more than one format, such a ``'fasta'``
 and ``'qual'``. In these cases, we use what is called a *compound* format. It
 can be written like this: ``format=['fasta', 'qual']``. We also support the
@@ -85,7 +86,7 @@ shorthand: ``format='fasta, qual'``. In these cases, where you would put
 a filehandle or a filepath string, you will replace it with a list of
 filehandles and/or filepaths which correspond to the order of your compound
 format (``[<filehandle or filepath of fasta>,
-<filehandle or filepath of qual>]``). In fact, the order does not matter for
+<filehandle or filepath of qual>]``). The order does not matter for
 the compound format, as long as the files are provided in that same order,
 so we could have used ``['qual', 'fasta']`` instead as long as the quality file
 came first.
@@ -134,10 +135,9 @@ would create a submodule `skbio/io/fasta.py`.
 In this submodule you would use the following decorators:
 ``register_writer``, ``register_reader``, and ``register_sniffer``.
 These associate your functionality to a format string and potentially an skbio
-class.
-
-Please see the relevant documenation for more information about these
-functions.
+class. Please see the relevant documenation for more information about these
+functions and for the contract that is expected of `readers`, `writers`, and
+`sniffers`.
 
 Once you are satisfied with the functionality, you will need to ensure that
 `skbio/io/__init__.py` contains an import of your new submodule, that way the
@@ -151,10 +151,10 @@ The following keyword args may not be used when defining new `readers` or
 * `mode`
 * `verify`
 
-Keyword arguments are not permitted in `sniffers`. `Sniffers` may not raise
-exceptions, if an exception is thrown by a `sniffer`, the user will be asked to
-report it on our `issue tracker
-<https://github.com/biocore/scikit-bio/issues/>`_.
+.. note:: Keyword arguments are not permitted in `sniffers`. `Sniffers` may not
+   raise exceptions, if an exception is thrown by a `sniffer`, the user will be
+   asked to report it on our `issue tracker
+   <https://github.com/biocore/scikit-bio/issues/>`_.
 
 Developer Functions
 ^^^^^^^^^^^^^^^^^^^
