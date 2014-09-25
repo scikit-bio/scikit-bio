@@ -39,6 +39,10 @@ Neither `sniffers` nor `readers` will mutate the position of an already opened
 filehandle. This is true even if an exception is raised from within the
 `reader` or `sniffer`.
 
+.. note:: There is a built-in `sniffer` that detects empty files and will
+   result in a useful error message if an object is being created from an empty
+   file.
+
 Writing Files from scikit-bio
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -147,9 +151,10 @@ The following keyword args may not be used when defining new `readers` or
 * `mode`
 * `verify`
 
-Keyword arguments are not permitted in `sniffers`. `Sniffers` may not raise exceptions,
-if an exception is thrown by a `sniffer`, the user will be asked to report it
-on our issue tracker.
+Keyword arguments are not permitted in `sniffers`. `Sniffers` may not raise
+exceptions, if an exception is thrown by a `sniffer`, the user will be asked to
+report it on our `issue tracker
+<https://github.com/biocore/scikit-bio/issues/>`_.
 
 Developer Functions
 ^^^^^^^^^^^^^^^^^^^

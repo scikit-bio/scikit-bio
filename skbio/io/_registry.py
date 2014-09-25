@@ -372,6 +372,7 @@ def register_writer(format, cls=None):
 
         if 'writer' in format_class:
             raise DuplicateRegistrationError('writer', fmt, cls)
+
         # We wrap the writer so that basic file handling can be managed
         # externally from the business logic.
         def wrapped_writer(obj, fp, mode='w', **kwargs):
@@ -646,7 +647,7 @@ def sniff(fp, cls=None, mode='U'):
         possibles = []
         for fmt in _sniffers:
             if cls is not None and fmt != _empty_file_format and (
-                fmt not in _formats or cls not in _formats[fmt]):
+                    fmt not in _formats or cls not in _formats[fmt]):
                 continue
             format_sniffer = _sniffers[fmt]
             is_format, fmt_kwargs = format_sniffer(f, mode=mode)
@@ -802,8 +803,9 @@ def write(obj, format, into, mode='w', **kwargs):
 
     writer(obj, into, mode=mode, **kwargs)
 
+
 # This is meant to be a handy indicator to the user that they have done
-# something very wrong.
+# something wrong.
 @register_sniffer(_empty_file_format)
 def empty_file_sniffer(fh):
     for line in fh:
