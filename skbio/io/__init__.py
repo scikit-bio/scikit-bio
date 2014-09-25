@@ -12,12 +12,12 @@ Reading and writing files (I/O) can be a complicated task:
 
 * A file format can sometimes be read into more than one in-memory
   representation (i.e., object). For example, a FASTQ file can be read into an
-  :mod:`skbio.alignment.SequenceCollection` or :mod:`skbio.alignemnt.Alignment`
+  :mod:`skbio.alignment.SequenceCollection` or :mod:`skbio.alignment.Alignment`
   depending on the file's contents and what operations you'd like to perform on
   your data.
 * A single object might be writeable to more than one file format. For example,
-  an :mod:`skbio.Alignment` object could be written to FASTA, FASTQ, QSEQ,
-  PHYLIP, or Stockholm formats, just to name a few.
+  an :mod:`skbio.alignment.Alignment` object could be written to FASTA, FASTQ,
+  QSEQ,PHYLIP, or Stockholm formats, just to name a few.
 * You might not know the exact file format of your file, but you want to read
   it into an appropriate object.
 * You want to read multiple files into a single object, or write an object to
@@ -46,7 +46,7 @@ format='<format here>')``
 
 For example, to read a `newick` file using both interfaces you would type:
 >>> from skbio.io import read
->>> from skbio.tree import TreeNode
+>>> from skbio import TreeNode
 >>> from io import StringIO
 >>> open_filehandle = StringIO(u'(a, b);')
 >>> tree = read(open_filehandle, format='newick', into=TreeNode)
