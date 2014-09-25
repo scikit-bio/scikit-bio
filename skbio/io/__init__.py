@@ -8,9 +8,27 @@ This package provides I/O functionality for skbio.
 
 Introduction to I/O
 -------------------
-In order to handle the many-to-many relationship of file formats to objects,
-we use a single I/O registry to map these relationships. Below is a description
-of how to use the registry, and how to extend it.
+Reading and writing files (I/O) can be a complicated task:
+
+* A file format can sometimes be read into more than one in-memory
+  representation (i.e., object). For example, a FASTQ file can be read into an
+  :mod:`skbio.alignment.SequenceCollection` or :mod:`skbio.alignemnt.Alignment`
+  depending on the file's contents and what operations you'd like to perform on
+  your data.
+* A single object might be writeable to more than one file format. For example,
+  an :mod:`skbio.Alignment` object could be written to FASTA, FASTQ, QSEQ,
+  PHYLIP, or Stockholm formats, just to name a few.
+* You might not know the exact file format of your file, but you want to read
+  it into an appropriate object.
+* You want to read multiple files into a single object, or write an object to
+  multiple files.
+* Instead of reading a file into an object, you might want to stream the file
+  using a generator (e.g., if the file cannot be fully loaded into memory).
+
+To address these issues (and others), scikit-bio provides a simple, powerful
+interface for dealing with I/O. We accomplish this by using a single I/O
+registry. Below is a description of how to use the registry and how to extend
+it.
 
 Reading Files Into scikit-bio
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -41,10 +59,13 @@ For the OO interface:
 <TreeNode, name: unnamed, internal node count: 0, tips count: 2>
 
 In the case of ``skbio.io.read`` if `into` is not provided, then a generator
-will be returned. When `into` is provided, format may be omitted and the
-registry will use its knowledge of the available formats for the requested
-class to infer the correct format. This format inference is also available in
-the OO interface, meaning that `format` may be ommitted there as well.
+will be returned. What the generator yields will depend on what format is being
+read.
+
+When `into` is provided, format may be omitted and the registry will use its
+knowledge of the available formats for the requested class to infer the correct
+format. This format inference is also available in the OO interface, meaning
+that `format` may be ommitted there as well.
 
 As an example:
 >>> tree3 = TreeNode.read(open_filehandle)
