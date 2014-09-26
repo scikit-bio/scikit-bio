@@ -46,6 +46,10 @@ class FASTATests(TestCase):
         def single_seq_gen():
             yield self.bio_seq1
 
+        def newline_description_gen():
+            yield self.prot_seq
+            yield DNA('AGGAGAATA', id='foo', description='\n\n\n\n')
+
         # multiple sequences of mixed types, lengths, and metadata. lengths are
         # chosen to exercise various splitting cases when testing max_width
         def multi_seq_gen():
@@ -62,6 +66,12 @@ class FASTATests(TestCase):
             (single_seq_gen(), {'max_width': 1}, 'fasta_max_width_1'),
             (multi_seq_gen(), {}, 'fasta_multi_seq'),
             (multi_seq_gen(), {'max_width': 5}, 'fasta_max_width_5'),
+            (newline_description_gen(),
+             {'description_newline_replacement': ':-)'},
+             'fasta_description_newline_replacement_multi_char'),
+            (newline_description_gen(),
+             {'description_newline_replacement': ''},
+             'fasta_description_newline_replacement_empty_str'),
         ])
 
         self.blank_seq = BiologicalSequence('')
