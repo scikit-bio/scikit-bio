@@ -35,8 +35,9 @@ class FASTATests(TestCase):
         self.nuc_seq = NucleotideSequence('AcGtUTu')
         self.dna_seq = DNA('ACGTTGCAccGG')
         self.rna_seq = RNA('ACGUU', quality=[42] * 5)
-        self.prot_seq = Protein('pQqqqPPQQQ', id='proteinseq',
-                                description='a very detailed description')
+        self.prot_seq = Protein(
+            'pQqqqPPQQQ', id='proteinseq',
+            description='\ndetailed\ndescription \t\twith  new\n\nlines\n\n\n')
 
         seqs = [self.rna_seq, self.bio_seq1, self.prot_seq]
         self.seq_coll = SequenceCollection(seqs)
