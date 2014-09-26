@@ -11,10 +11,11 @@ from future.utils.six import StringIO
 
 from unittest import TestCase, main
 
-from skbio.io.clustal import _clustal_to_generator, _generator_to_clustal
+from skbio.io.clustal import (_clustal_to_generator, _generator_to_clustal,
+                              _clustal_sniffer)
 from skbio.io.clustal import (_is_clustal_seq_line, last_space,
                               _delete_trailing_number)
-from skbio.io import RecordError
+from skbio.io import ClustalFormatError
 
 
 class ClustalHelperTests(TestCase):
@@ -56,8 +57,6 @@ class ClustalIOTests(TestCase):
             StringIO('abc\tuuu\ndef\tccc\n\n    ***\n\ndef ggg\nabc\taaa\n'),
             StringIO('\n'.join(['abc uca', 'def ggg ccc'])),
             StringIO('\n'.join(['abc uca ggg', 'def ggg ccc'])),
-            StringIO('\n'.join(['abc\tuca ggg', 'def\tggg ccc', 'xyz gggcc'])),
-            StringIO('\n'.join(['abc uca ggg', 'def gggccc'])),
             StringIO("""CLUSTAL
 
 
@@ -126,7 +125,38 @@ xyz             UGCUGCAUCA---------------- 33
                                                         'hfsdjksdfhjsdf'])),
                                     StringIO('\n'.join(['dshfjsdfhdfsj',
                                                         'hfsdjk\tdfhjsdf'])),
-                                    ]
+                                    StringIO("""CLUSTAL W (1.74) multiple sequence alignment
+
+
+adj GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA
+------------------------------------------------------------
+adk -----GGGGGGG------------------------------------------------
+"""),
+                                    StringIO("""CLUSTAL W (1.74) multiple sequence alignment
+
+
+adj GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA
+------------------------------------------------------------
+adk -----GGGGGGG------------------------------------------------
+"""),
+
+                                    StringIO("""CLUSTAL W (1.74) multiple sequence alignment
+
+
+GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA
+------------------------------------------------------------
+------------------------------------------------------------
+
+
+GUCGAUACGUACGUCAGUCAGUACGUCAGCAUGCAUACGUACGUCGUACGUACGU-CGAC
+-----------------------------------------CGCGAUGCAUGCAU-CGAU
+------------------------------------------------------------
+                                         :    * * * *    **
+
+UGACUAGUCAGCUAGCAUCGAUCAGU 145
+CGAUCAGUCAGUCGAU---------- 34
+UGCUGCAUCA---------------- 33
+*     ***""")]
 
     def test_generator_to_clustal_with_empty_input(self):
 
@@ -139,7 +169,7 @@ xyz             UGCUGCAUCA---------------- 33
         result = _clustal_to_generator(BAD, strict=False)
         self.assertEqual(dict(result), {})
         # should fail unless we turned strict processing off
-        with self.assertRaises(RecordError):
+        with self.assertRaises(ClustalFormatError):
             dict(_clustal_to_generator(BAD))
 
     def test_generator_to_clustal_with_real_input(self):
@@ -194,9 +224,16 @@ xyz             UGCUGCAUCA---------------- 33
 
     def test_invalid_generator_to_clustal_and_clustal_to_generator(self):
         for invalid_out in self.invalid_clustal_out:
-            with self.assertRaises(RecordError):
+            with self.assertRaises(ClustalFormatError):
                 dict(_clustal_to_generator(invalid_out))
 
+    def test_clustal_sniffer_valid_files(self):
+        for valid_out in self.valid_clustal_out:
+            self.assertEqual(_clustal_sniffer(valid_out), (True, {}))
+
+    def test_clustal_sniffer_invalid_files(self):
+        for invalid_out in self.invalid_clustal_out:
+            self.assertEqual(_clustal_sniffer(invalid_out), (False, {}))
 
 if __name__ == '__main__':
     main()

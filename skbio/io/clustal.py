@@ -9,7 +9,8 @@ from __future__ import absolute_import, division, print_function
 
 from skbio.io import RecordError
 from skbio.parse.record import DelimitedSplitter
-from skbio.io import (register_reader, register_writer)
+from skbio.io import (register_reader, register_writer, register_sniffer,
+                      ClustalFormatError)
 
 
 def _label_line_parser(record, splitter, strict=True):
@@ -28,7 +29,7 @@ def _label_line_parser(record, splitter, strict=True):
             key, val = splitter(line.rstrip())
         except:
             if strict:
-                raise RecordError(
+                raise ClustalFormatError(
                     "Failed to extract key and value from line %s" %
                     line)
             else:
@@ -66,6 +67,42 @@ def _delete_trailing_number(line):
         return ' '.join(pieces[:-1])
     except ValueError:  # no trailing numbers
         return line
+
+
+@register_sniffer("clustal")
+def _clustal_sniffer(fh):
+    # Strategy
+    #   The following conditions preclude a file from being clustal
+    #       * It is an empty file
+    #       * The whole sequences have differing lengths
+    #       * The sub-sequences have differing lengths
+    #       * One of the sequence ids is not immediately
+    #         followed by a subsequence
+    empty = True
+    try:
+        records = map(_delete_trailing_number,
+                      filter(_is_clustal_seq_line, fh))
+        data, labels = _label_line_parser(records, last_space, strict=True)
+        empty = False
+        num_subseqs = len(data[labels[0]])
+        if num_subseqs > 50:  # only check the first 50 subsequences
+            num_subseqs = 50
+        subseq_length = len(data[labels[0]][0])
+        end_lengths = set()  # subsequence lengths at end of file
+        for i in range(num_subseqs):
+            for label in labels:
+                seq = data[label][i]
+                if len(seq) > subseq_length:
+                    raise ClustalFormatError
+                elif len(seq) < subseq_length:
+                    end_lengths.add(len(seq))
+
+        # All trailing subsequences must be the same
+        if len(end_lengths) > 1:
+            raise ClustalFormatError
+    except ClustalFormatError:
+        return False, {}
+    return not empty, {}
 
 
 @register_writer('clustal')
