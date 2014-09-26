@@ -172,42 +172,6 @@ UGCUGCAUCA---------------- 33
         with self.assertRaises(ClustalFormatError):
             dict(_clustal_to_generator(BAD))
 
-    def test_generator_to_clustal_with_real_input(self):
-
-        REAL = StringIO("""CLUSTAL W (1.82) multiple sequence alignment
-
-
-abc             GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA 60
-def             ------------------------------------------------------------
-xyz             ------------------------------------------------------------
-
-
-abc             GUCGAUACGUACGUCAGUCAGUACGUCAGCAUGCAUACGUACGUCGUACGUACGU-CGAC 11
-def             -----------------------------------------CGCGAUGCAUGCAU-CGAU 18
-xyz             -------------------------------------CAUGCAUCGUACGUACGCAUGAC 23
-                                                         *    * * * *    **
-
-abc             UGACUAGUCAGCUAGCAUCGAUCAGU 145
-def             CGAUCAGUCAGUCGAU---------- 34
-xyz             UGCUGCAUCA---------------- 33
-                *     ***""")
-
-        data = _clustal_to_generator(REAL)
-        self.assertEqual(dict(data), {
-            'abc':
-            'GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA'
-            'GUCGAUACGUACGUCAGUCAGUACGUCAGCAUGCAUACGUACGUCGUACGUACGU-CGAC'
-            'UGACUAGUCAGCUAGCAUCGAUCAGU',
-            'def':
-            '------------------------------------------------------------'
-            '-----------------------------------------CGCGAUGCAUGCAU-CGAU'
-            'CGAUCAGUCAGUCGAU----------',
-            'xyz':
-            '------------------------------------------------------------'
-            '-------------------------------------CAUGCAUCGUACGUACGCAUGAC'
-            'UGCUGCAUCA----------------'
-        })
-
     def test_valid_generator_to_clustal_and_clustal_to_generator(self):
         import os
         for valid_out in self.valid_clustal_out:
