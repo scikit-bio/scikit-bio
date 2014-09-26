@@ -14,14 +14,15 @@ blockquote {
     font-size: 14px !important;
 }
 
-cite {
-    padding: 2px 4px;
-    font-size: 90%;
-    color: #C7254E;
-    background-color: #F9F2F4;
-    white-space: nowrap;
-    border-radius: 4px;
-    font-family: Menlo,Monaco,Consolas,"Courier New",monospace;
+cite, code {
+    padding: 1px 4px !important;
+    font-size: 90% !important;
+    color: #000 !important;
+    background-color: #F5F5F5 !important;
+    white-space: nowrap !important;
+    border-radius: 4px !important;
+    border: 1px solid #CCC !important;
+    font-family: Menlo,Monaco,Consolas,"Courier New",monospace !important;
 }
 
 .label {

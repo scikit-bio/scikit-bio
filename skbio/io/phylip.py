@@ -25,6 +25,16 @@ An example PHYLIP-formatted file taken from [3]_::
    Felsenstein. Permission is granted to copy this document provided that no
    fee is charged for it and that this copyright notice is not removed.*
 
+Format Support
+--------------
+**Has Sniffer: Yes**
+
++----------+----------+------------------------------------------------------+
+|**Reader**|**Writer**|                   **Object Class**                   |
++----------+----------+------------------------------------------------------+
+|No        |Yes       |:mod:`skbio.alignment.Alignment`                      |
++----------+----------+------------------------------------------------------+
+
 Format Specification
 --------------------
 PHYLIP format is a plain text format containing exactly two sections: a header
