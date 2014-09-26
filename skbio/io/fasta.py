@@ -56,7 +56,8 @@ def _fasta_to_generator(obj, fh):
 
 
 @register_writer('fasta')
-def _generator_to_fasta(obj, fh, max_width=None):
+def _generator_to_fasta(obj, fh, id_whitespace_replacement='_',
+                        description_newline_replacement=' ', max_width=None):
     for idx, seq in enumerate(obj):
         if len(seq) < 1:
             raise FASTAFormatError(
@@ -79,50 +80,78 @@ def _generator_to_fasta(obj, fh, max_width=None):
 
 
 @register_writer('fasta', BiologicalSequence)
-def _biological_sequence_to_fasta(obj, fh, max_width=None):
-    _sequence_to_fasta(obj, fh, max_width)
+def _biological_sequence_to_fasta(obj, fh, id_whitespace_replacement='_',
+                                  description_newline_replacement=' ',
+                                  max_width=None):
+    _sequence_to_fasta(obj, fh, id_whitespace_replacement,
+                       description_newline_replacement, max_width)
 
 
 @register_writer('fasta', NucleotideSequence)
-def _nucleotide_sequence_to_fasta(obj, fh, max_width=None):
-    _sequence_to_fasta(obj, fh, max_width)
+def _nucleotide_sequence_to_fasta(obj, fh, id_whitespace_replacement='_',
+                                  description_newline_replacement=' ',
+                                  max_width=None):
+    _sequence_to_fasta(obj, fh, id_whitespace_replacement,
+                       description_newline_replacement, max_width)
 
 
 @register_writer('fasta', DNASequence)
-def _dna_sequence_to_fasta(obj, fh, max_width=None):
-    _sequence_to_fasta(obj, fh, max_width)
+def _dna_sequence_to_fasta(obj, fh, id_whitespace_replacement='_',
+                           description_newline_replacement=' ',
+                           max_width=None):
+    _sequence_to_fasta(obj, fh, id_whitespace_replacement,
+                       description_newline_replacement, max_width)
 
 
 @register_writer('fasta', RNASequence)
-def _rna_sequence_to_fasta(obj, fh, max_width=None):
-    _sequence_to_fasta(obj, fh, max_width)
+def _rna_sequence_to_fasta(obj, fh, id_whitespace_replacement='_',
+                           description_newline_replacement=' ',
+                           max_width=None):
+    _sequence_to_fasta(obj, fh, id_whitespace_replacement,
+                       description_newline_replacement, max_width)
 
 
 @register_writer('fasta', ProteinSequence)
-def _protein_sequence_to_fasta(obj, fh, max_width=None):
-    _sequence_to_fasta(obj, fh, max_width)
+def _protein_sequence_to_fasta(obj, fh, id_whitespace_replacement='_',
+                               description_newline_replacement=' ',
+                               max_width=None):
+    _sequence_to_fasta(obj, fh, id_whitespace_replacement,
+                       description_newline_replacement, max_width)
 
 
 @register_writer('fasta', SequenceCollection)
-def _sequence_collection_to_fasta(obj, fh, max_width=None):
-    _sequences_to_fasta(obj, fh, max_width)
+def _sequence_collection_to_fasta(obj, fh, id_whitespace_replacement='_',
+                                  description_newline_replacement=' ',
+                                  max_width=None):
+    _sequences_to_fasta(obj, fh, id_whitespace_replacement,
+                        description_newline_replacement, max_width)
 
 
 @register_writer('fasta', Alignment)
-def _alignment_to_fasta(obj, fh, max_width=None):
-    _sequences_to_fasta(obj, fh, max_width)
+def _alignment_to_fasta(obj, fh, id_whitespace_replacement='_',
+                        description_newline_replacement=' ', max_width=None):
+    _sequences_to_fasta(obj, fh, id_whitespace_replacement,
+                        description_newline_replacement, max_width)
 
 
-def _sequence_to_fasta(obj, fh, max_width):
+def _sequence_to_fasta(obj, fh, id_whitespace_replacement,
+                       description_newline_replacement, max_width):
     def seq_gen():
         yield obj
 
-    _generator_to_fasta(seq_gen(), fh, max_width=max_width)
+    _generator_to_fasta(
+        seq_gen(), fh, id_whitespace_replacement=id_whitespace_replacement,
+        description_newline_replacement=description_newline_replacement,
+        max_width=max_width)
 
 
-def _sequences_to_fasta(obj, fh, max_width):
+def _sequences_to_fasta(obj, fh, id_whitespace_replacement,
+                        description_newline_replacement, max_width):
     def seq_gen():
         for seq in obj:
             yield seq
 
-    _generator_to_fasta(seq_gen(), fh, max_width=max_width)
+    _generator_to_fasta(
+        seq_gen(), fh, id_whitespace_replacement=id_whitespace_replacement,
+        description_newline_replacement=description_newline_replacement,
+        max_width=max_width)
