@@ -12,11 +12,13 @@ from future.utils.six import StringIO
 from unittest import TestCase, main
 
 from skbio import BiologicalSequence, NucleotideSequence, DNA, RNA, Protein
+from skbio import SequenceCollection, Alignment
 from skbio.io import FASTAFormatError
 from skbio.io.fasta import (_generator_to_fasta, _biological_sequence_to_fasta,
                             _nucleotide_sequence_to_fasta,
                             _dna_sequence_to_fasta, _rna_sequence_to_fasta,
-                            _protein_sequence_to_fasta)
+                            _protein_sequence_to_fasta,
+                            _sequence_collection_to_fasta, _alignment_to_fasta)
 from skbio.util import get_data_path
 
 
@@ -35,6 +37,10 @@ class FASTATests(TestCase):
         self.rna_seq = RNA('ACGUU', quality=[42] * 5)
         self.prot_seq = Protein('pQqqqPPQQQ', id='proteinseq',
                                 description='a very detailed description')
+
+        seqs = [self.rna_seq, self.bio_seq1, self.prot_seq]
+        self.seq_coll = SequenceCollection(seqs)
+        self.align = Alignment(seqs)
 
         def single_seq_gen():
             yield self.bio_seq1
@@ -120,6 +126,21 @@ class FASTATests(TestCase):
 
         for fn, obj, kwargs, fps in test_data:
             for kw, fp in zip(kwargs, fps):
+                fh = StringIO()
+                fn(obj, fh, **kw)
+                obs = fh.getvalue()
+                fh.close()
+
+                with open(get_data_path(fp), 'U') as fh:
+                    exp = fh.read()
+
+                self.assertEqual(obs, exp)
+
+    def test_any_sequences_to_fasta(self):
+        for fn, obj in ((_sequence_collection_to_fasta, self.seq_coll),
+                        (_alignment_to_fasta, self.align)):
+            for kw, fp in (({}, 'fasta_3_seqs'),
+                           ({'max_width': 3}, 'fasta_3_seqs_max_width_3')):
                 fh = StringIO()
                 fn(obj, fh, **kw)
                 obs = fh.getvalue()

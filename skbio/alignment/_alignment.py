@@ -63,6 +63,7 @@ class SequenceCollection(object):
     <SequenceCollection: n=2; mean +/- std length=6.00 +/- 1.00>
 
     """
+    default_write_format = 'fasta'
 
     @classmethod
     def from_fasta_records(cls, fasta_records, seq_constructor,
@@ -959,8 +960,6 @@ class Alignment(SequenceCollection):
     <Alignment: n=2; mean +/- std length=7.00 +/- 0.00>
 
     """
-    # TODO change once we support more formats (#629)
-    default_write_format = 'phylip'
 
     def __init__(self, seqs, validate=False, score=None,
                  start_end_positions=None):

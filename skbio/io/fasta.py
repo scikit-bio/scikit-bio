@@ -39,6 +39,7 @@ from __future__ import absolute_import, division, print_function
 from skbio.io import (register_reader, register_writer, register_sniffer,
                       FASTAFormatError)
 from skbio.io._base import _chunk_str
+from skbio.alignment import SequenceCollection, Alignment
 from skbio.sequence import (BiologicalSequence, NucleotideSequence,
                             DNASequence, RNASequence, ProteinSequence)
 from skbio.util import cardinal_to_ordinal
@@ -102,8 +103,26 @@ def _protein_sequence_to_fasta(obj, fh, max_width=None):
     _sequence_to_fasta(obj, fh, max_width)
 
 
+@register_writer('fasta', SequenceCollection)
+def _sequence_collection_to_fasta(obj, fh, max_width=None):
+    _sequences_to_fasta(obj, fh, max_width)
+
+
+@register_writer('fasta', Alignment)
+def _alignment_to_fasta(obj, fh, max_width=None):
+    _sequences_to_fasta(obj, fh, max_width)
+
+
 def _sequence_to_fasta(obj, fh, max_width):
     def seq_gen():
         yield obj
+
+    _generator_to_fasta(seq_gen(), fh, max_width=max_width)
+
+
+def _sequences_to_fasta(obj, fh, max_width):
+    def seq_gen():
+        for seq in obj:
+            yield seq
 
     _generator_to_fasta(seq_gen(), fh, max_width=max_width)
