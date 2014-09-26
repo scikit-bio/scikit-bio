@@ -104,28 +104,22 @@ class FASTATests(TestCase):
     # performed above
 
     def test_any_sequence_to_fasta(self):
-        # Store writer function, sequence object to write, a list of different
-        # keyword arguments to test, and expected filepaths for each of the
-        # keyword arguments.
+        # Store writer function, sequence object to write, and expected
+        # filepaths for each of the invoked keyword arguments (see below).
         test_data = (
             (_biological_sequence_to_fasta, self.bio_seq1,
-             ({}, {'max_width': 1}),
              ('fasta_single_seq', 'fasta_max_width_1')),
             (_nucleotide_sequence_to_fasta, self.nuc_seq,
-             ({}, {'max_width': 1}),
              ('fasta_single_nuc_seq', 'fasta_single_nuc_seq_max_width_1')),
             (_dna_sequence_to_fasta, self.dna_seq,
-             ({}, {'max_width': 1}),
              ('fasta_single_dna_seq', 'fasta_single_dna_seq_max_width_1')),
             (_rna_sequence_to_fasta, self.rna_seq,
-             ({}, {'max_width': 1}),
              ('fasta_single_rna_seq', 'fasta_single_rna_seq_max_width_1')),
             (_protein_sequence_to_fasta, self.prot_seq,
-             ({}, {'max_width': 1}),
              ('fasta_single_prot_seq', 'fasta_single_prot_seq_max_width_1')))
 
-        for fn, obj, kwargs, fps in test_data:
-            for kw, fp in zip(kwargs, fps):
+        for fn, obj, fps in test_data:
+            for kw, fp in zip(({}, {'max_width': 1}), fps):
                 fh = StringIO()
                 fn(obj, fh, **kw)
                 obs = fh.getvalue()
