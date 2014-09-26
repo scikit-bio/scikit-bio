@@ -49,6 +49,9 @@ class TestClassB(TestClass):
 
 class RegistryTest(unittest.TestCase):
     def setUp(self):
+        # A fresh module needs to be imported for each test because the
+        # registry stores its state in the module which is by default
+        # only loaded once.
         self.module = import_fresh_module('skbio.io._registry')
         self.fd1, self.fp1 = mkstemp()
         self.fd2, self.fp2 = mkstemp()
@@ -441,14 +444,14 @@ class TestListReadFormats(RegistryTest):
 
 
 class TestListWriteFormats(RegistryTest):
-    def test_no_read_formats(self):
+    def test_no_write_formats(self):
         @self.module.register_writer('format1', TestClassA)
         def this_isnt_on_clsB(fh):
             return
 
         self.assertEqual([], self.module.list_write_formats(TestClassB))
 
-    def test_one_read_format(self):
+    def test_one_write_format(self):
         @self.module.register_writer('format1', TestClass)
         def format1_cls(fh):
             return
@@ -456,7 +459,7 @@ class TestListWriteFormats(RegistryTest):
         self.assertEqual(['format1'],
                          self.module.list_write_formats(TestClass))
 
-    def test_many_read_formats(self):
+    def test_many_write_formats(self):
         @self.module.register_writer('format1', TestClassA)
         def format1_clsA(fh):
             return
@@ -778,6 +781,23 @@ class TestRead(RegistryTest):
 
         fh.close()
 
+    def test_reader_empty_file(self):
+        fh = StringIO()
+
+        @self.module.register_sniffer('format')
+        def sniffer(fh):
+            return False, {}
+
+        @self.module.register_reader('format', TestClass)
+        def reader(fh):
+            return
+
+        with self.assertRaises(UnrecognizedFormatError) as cm:
+            self.module.read(fh, into=TestClass)
+        self.assertIn('<emptyfile>', str(cm.exception))
+
+        fh.close()
+
     def test_reader_exists_with_verify_true(self):
         fh = StringIO(u'1\n2\n3\n4')
 
@@ -1072,17 +1092,17 @@ class TestRead(RegistryTest):
             self.assertEqual(kwargs['arg3'], [1])
             return
 
-        self.module.read(StringIO(), into=TestClass, arg3=[1])
+        self.module.read(StringIO(u'notempty'), into=TestClass, arg3=[1])
 
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("error")
             # Should raise no warning and thus no error.
-            self.module.read(StringIO(), into=TestClass, arg3=[1],
+            self.module.read(StringIO(u'notempty'), into=TestClass, arg3=[1],
                              override=30)
             # Should raise a warning and thus an error.
             with self.assertRaises(ArgumentOverrideWarning):
-                self.module.read(StringIO(), into=TestClass, arg3=[1],
-                                 override=100)
+                self.module.read(StringIO(u'notempty'), into=TestClass,
+                                 arg3=[1], override=100)
 
     def test_read_kwargs_passed_w_compound_format(self):
         @self.module.register_sniffer('format1')
@@ -1423,7 +1443,7 @@ class TestInitializeOOPInterface(RegistryTest):
             self.was_called = True
 
         self.module.initialize_oop_interface()
-        fh = StringIO()
+        fh = StringIO(u'notempty')
         self.class_with_default.read(fh, a='a', b=123)
 
         self.assertTrue(self.was_called)
