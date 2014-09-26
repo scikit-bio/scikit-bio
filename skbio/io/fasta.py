@@ -64,9 +64,9 @@ def _generator_to_fasta(obj, fh, id_whitespace_replacement='_',
         '\n' in description_newline_replacement):
         raise FASTAFormatError(
             "Newline character (\\n) cannot be used to replace whitespace in "
-            "biological sequence ID(s), nor to replace newlines in biological "
-            "sequence description(s). Otherwise, the FASTA-formatted file "
-            "will be invalid.")
+            "biological sequence IDs, nor to replace newlines in biological "
+            "sequence descriptions. Otherwise, the FASTA-formatted file will "
+            "be invalid.")
     ws_pattern = re.compile(r'\s')
     nl_pattern = re.compile(r'\n')
 
@@ -78,11 +78,9 @@ def _generator_to_fasta(obj, fh, id_whitespace_replacement='_',
                 "empty/blank sequence). Empty sequences are not supported in "
                 "the FASTA file format." % cardinal_to_ordinal(idx + 1))
 
-        id_ = seq.id
-        id_ = re.sub(ws_pattern, id_whitespace_replacement, id_)
-
-        desc = seq.description
-        desc = re.sub(nl_pattern, description_newline_replacement, desc)
+        id_ = re.sub(ws_pattern, id_whitespace_replacement, seq.id)
+        desc = re.sub(nl_pattern, description_newline_replacement,
+                      seq.description)
 
         if desc:
             header = '%s %s' % (id_, desc)

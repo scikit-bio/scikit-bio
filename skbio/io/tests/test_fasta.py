@@ -49,7 +49,8 @@ class FASTATests(TestCase):
         # chosen to exercise various splitting cases when testing max_width
         def multi_seq_gen():
             for seq in (self.bio_seq1, self.bio_seq2, self.bio_seq3,
-                        self.dna_seq, self.rna_seq, self.prot_seq):
+                        self.nuc_seq, self.dna_seq, self.rna_seq,
+                        self.prot_seq):
                 yield seq
 
         # store sequence generator to serialize, writer kwargs (if any), and
@@ -75,6 +76,10 @@ class FASTATests(TestCase):
             (blank_seq_gen(), {}, FASTAFormatError, '2nd.*empty'),
             (single_seq_gen(),
              {'max_width': 0}, ValueError, 'n=0'),
+            (multi_seq_gen(), {'id_whitespace_replacement': '-\n_'},
+             FASTAFormatError, 'Newline character'),
+            (multi_seq_gen(), {'description_newline_replacement': '-.-\n'},
+             FASTAFormatError, 'Newline character'),
         ]
 
     # extensive tests for generator -> fasta writer since it is used by all
