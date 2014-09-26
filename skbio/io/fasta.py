@@ -36,6 +36,8 @@ http://blast.ncbi.nlm.nih.gov/blastcgihelp.shtml
 
 from __future__ import absolute_import, division, print_function
 
+import re
+
 from skbio.io import (register_reader, register_writer, register_sniffer,
                       FASTAFormatError)
 from skbio.io._base import _chunk_str
@@ -58,6 +60,16 @@ def _fasta_to_generator(obj, fh):
 @register_writer('fasta')
 def _generator_to_fasta(obj, fh, id_whitespace_replacement='_',
                         description_newline_replacement=' ', max_width=None):
+    if ('\n' in id_whitespace_replacement or
+        '\n' in description_newline_replacement):
+        raise FASTAFormatError(
+            "Newline character (\\n) cannot be used to replace whitespace in "
+            "biological sequence ID(s), nor to replace newlines in biological "
+            "sequence description(s). Otherwise, the FASTA-formatted file "
+            "will be invalid.")
+    ws_pattern = re.compile(r'\s')
+    nl_pattern = re.compile(r'\n')
+
     for idx, seq in enumerate(obj):
         if len(seq) < 1:
             raise FASTAFormatError(
@@ -66,10 +78,16 @@ def _generator_to_fasta(obj, fh, id_whitespace_replacement='_',
                 "empty/blank sequence). Empty sequences are not supported in "
                 "the FASTA file format." % cardinal_to_ordinal(idx + 1))
 
-        if seq.description:
-            header = '%s %s' % (seq.id, seq.description)
+        id_ = seq.id
+        id_ = re.sub(ws_pattern, id_whitespace_replacement, id_)
+
+        desc = seq.description
+        desc = re.sub(nl_pattern, description_newline_replacement, desc)
+
+        if desc:
+            header = '%s %s' % (id_, desc)
         else:
-            header = seq.id
+            header = id_
 
         seq_str = str(seq)
 
