@@ -28,6 +28,7 @@ def _label_line_parser(record, splitter, strict=True):
         try:
             key, val = splitter(line.rstrip())
         except:
+
             if strict:
                 raise ClustalFormatError(
                     "Failed to extract key and value from line %s" %
@@ -69,6 +70,44 @@ def _delete_trailing_number(line):
         return line
 
 
+def _check_length(data, labels, num_seqs_check=None):
+    """
+    Checks the lengths of the clustal sequences to make
+    sure that they are lining up right
+
+    num_seqs_check: The number of sequences to check
+
+    Return True if all of the subsequence lengths are equal
+                or if data is empty
+    Return False if one of the subsequence lengths differs
+    """
+    if len(labels) == 0:
+        return True
+    num_subseqs = len(data[labels[0]])
+    if num_seqs_check is None:
+        num_seqs_check = num_subseqs
+    else:
+        if num_seqs_check > num_subseqs:
+            num_seqs_check = num_subseqs
+
+    subseq_length = len(data[labels[0]][0])
+
+    end_lengths = set()  # subsequence lengths at end of file
+    for i in range(num_seqs_check):
+        for label in labels:
+            seq = data[label][i]
+            if len(seq) > subseq_length:
+                return False
+            elif i+1 == num_subseqs:  # Last subsequence
+                end_lengths.add(len(seq))
+            elif len(seq) < subseq_length:
+                return False
+    # All trailing subsequences must be the same
+    if len(end_lengths) > 1:
+        return False
+    return True
+
+
 @register_sniffer("clustal")
 def _clustal_sniffer(fh):
     # Strategy
@@ -84,22 +123,10 @@ def _clustal_sniffer(fh):
                       filter(_is_clustal_seq_line, fh))
         data, labels = _label_line_parser(records, last_space, strict=True)
         empty = False
-        num_subseqs = len(data[labels[0]])
-        if num_subseqs > 50:  # only check the first 50 subsequences
-            num_subseqs = 50
-        subseq_length = len(data[labels[0]][0])
-        end_lengths = set()  # subsequence lengths at end of file
-        for i in range(num_subseqs):
-            for label in labels:
-                seq = data[label][i]
-                if len(seq) > subseq_length:
-                    raise ClustalFormatError
-                elif len(seq) < subseq_length:
-                    end_lengths.add(len(seq))
-
-        # All trailing subsequences must be the same
-        if len(end_lengths) > 1:
-            raise ClustalFormatError
+        # Only check first 50 sequences
+        aligned_correctly = _check_length(data, labels, 50)
+        if not aligned_correctly:
+            raise ClustalFormatError("Sequences not aligned properly")
     except ClustalFormatError:
         return False, {}
     return not empty, {}
@@ -213,9 +240,13 @@ def _clustal_to_generator(fh, strict=True):
         Thompson", Nucleic Acids Res. 1994 Nov 11;22(22):4673-80.
 
     """
+
     records = map(_delete_trailing_number,
                   filter(_is_clustal_seq_line, fh))
     data, labels = _label_line_parser(records, last_space, strict)
 
+    aligned_correctly = _check_length(data, labels)
+    if not aligned_correctly:
+        raise ClustalFormatError("Sequences not aligned properly")
     for key in labels:
         yield BiologicalSequence(id=key, sequence=''.join(data[key]))

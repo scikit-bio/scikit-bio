@@ -14,13 +14,25 @@ from unittest import TestCase, main
 from skbio.io.clustal import (_clustal_to_generator, _generator_to_clustal,
                               _clustal_sniffer)
 from skbio.io.clustal import (_is_clustal_seq_line, last_space,
-                              _delete_trailing_number)
+                              _delete_trailing_number, _check_length,
+                              _label_line_parser)
+
 from skbio.io import ClustalFormatError
+from skbio.parse.record import DelimitedSplitter
 
 
 class ClustalHelperTests(TestCase):
 
     """Tests of top-level functions."""
+
+    def test_label_line_parser(self):
+        last_space = DelimitedSplitter(None, -1)
+        self.assertEquals(_label_line_parser(StringIO('abc\tucag'),
+                                             last_space),
+                          ({"abc": ["ucag"]}, ['abc']))
+
+        with self.assertRaises(ClustalFormatError):
+            _label_line_parser(StringIO('abctucag'), last_space)
 
     def test_is_clustal_seq_line(self):
 
@@ -47,6 +59,34 @@ class ClustalHelperTests(TestCase):
         self.assertEqual(dtn('a \t  b  \t  c'), 'a \t  b  \t  c')
         self.assertEqual(dtn('a b 3'), 'a b')
         self.assertEqual(dtn('a b c \t 345'), 'a b c')
+
+    def test_check_lengh(self):
+        self.assertEqual(False,
+                         _check_length({'abc': ['adjfkadfjaksdlfadskfda'],
+                                        'xyz': ['adjfkadfjaksdlfadsk']},
+                                       ['abc', 'xyz'])),
+        self.assertEqual(True,
+                         _check_length({'abc': ['adjfkadfjaksdlfadskfda'],
+                                        'xyz': ['adjfkadfjaksdlfadsksdf']},
+                                       ['abc', 'xyz']))
+        self.assertEqual(True,
+                         _check_length({'abc': ['adjfkadfjaksdlfadskfda',
+                                                'adjfkadfjaksdlfadskfda'],
+                                        'xyz': ['adjfkadfjaksdlfadsksdf',
+                                                'adjfkadfjaksdlfadsksdf']},
+                                       ['abc', 'xyz']))
+        self.assertEqual(False,
+                         _check_length({'abc': ['adjfkadfjaksdlfadskfd',
+                                                'adjfkadfjaksdlfadskfda'],
+                                        'xyz': ['adjfkadfjaksdlfadsksdf',
+                                                'adjfkadfjaksdlfadsksdf']},
+                                       ['abc', 'xyz']))
+        self.assertEqual(False,
+                         _check_length({'abc': ['adjfkadfjaksdlfadskfda',
+                                                'adjfkadfjaksdlfadskfda'],
+                                        'xyz': ['adjfkadfjaksdlfadsksdf',
+                                                'adjfkadfjaksdlfadsksd']},
+                                       ['abc', 'xyz']))
 
 
 class ClustalIOTests(TestCase):
@@ -136,6 +176,27 @@ adk -----GGGGGGG------------------------------------------------
 
 
 adj GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA
+adk -----GGGGGGG------------------------------------------------
+
+
+adj GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA
+adk -----GGGGGGG---------------------------------------------
+"""),
+                                    StringIO("""CLUSTAL W (1.74) multiple sequence alignment
+
+
+adj GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA
+adk -----GGGGGGG---------------------------------------------
+
+
+adj GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCA
+adk -----GGGGGGG---------------------------------------------
+"""),
+
+                                    StringIO("""CLUSTAL W (1.74) multiple sequence alignment
+
+
+adj GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA
 ------------------------------------------------------------
 adk -----GGGGGGG------------------------------------------------
 """),
@@ -189,7 +250,7 @@ UGCUGCAUCA---------------- 33
     def test_invalid_generator_to_clustal_and_clustal_to_generator(self):
         for invalid_out in self.invalid_clustal_out:
             with self.assertRaises(ClustalFormatError):
-                dict(_clustal_to_generator(invalid_out))
+                dict(_clustal_to_generator(invalid_out, strict=True))
 
     def test_clustal_sniffer_valid_files(self):
         for valid_out in self.valid_clustal_out:
