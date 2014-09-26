@@ -12,6 +12,7 @@ from skbio.io import (register_reader, register_writer, register_sniffer,
                       ClustalFormatError)
 from skbio.sequence import BiologicalSequence
 
+
 def _label_line_parser(record, splitter, strict=True):
     """Returns dict mapping list of data to labels, plus list with field order.
 
@@ -116,7 +117,7 @@ def _generator_to_clustal(records, fh):
 
     """
     clen = 60  # Max length of clustal lines
-    names, seqs = zip(*[(s.id,s.sequence) for s in records])
+    names, seqs = zip(*[(s.id, s.sequence) for s in records])
     nameLen = max(map(len, names))
     seqLen = max(map(len, seqs))
     fh.write('CLUSTAL\n\n')
@@ -137,7 +138,8 @@ def _clustal_to_generator(fh, strict=True):
     data : open file object
         An open Clustal file.
     strict : boolean
-        Whether or not to raise a ``ClustalFormatError`` when no labels are found.
+        Whether or not to raise a ``ClustalFormatError``
+        when no labels are found.
 
     Returns
     -------
