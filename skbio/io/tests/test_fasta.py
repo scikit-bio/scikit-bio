@@ -24,10 +24,6 @@ from skbio.util import get_data_path
 
 class FASTATests(TestCase):
     def setUp(self):
-        def empty_gen():
-            raise StopIteration()
-            yield
-
         self.bio_seq1 = BiologicalSequence(
             'ACGT-acgt.', id='seq1', description='desc1', quality=range(10))
         self.bio_seq2 = BiologicalSequence('A', id=' \n  \nseq \t2 ')
@@ -43,12 +39,24 @@ class FASTATests(TestCase):
         self.seq_coll = SequenceCollection(seqs)
         self.align = Alignment(seqs)
 
+        def empty_gen():
+            raise StopIteration()
+            yield
+
         def single_seq_gen():
             yield self.bio_seq1
 
+        # generate sequences with descriptions containing newlines (to test
+        # description_newline_replacement)
         def newline_description_gen():
             yield self.prot_seq
             yield DNA('AGGAGAATA', id='foo', description='\n\n\n\n')
+
+        # generate sequences with ids containing whitespace (to test
+        # id_whitespace_replacement)
+        def whitespace_id_gen():
+            yield self.bio_seq2
+            yield RNA('UA', id='\n\t \r', description='a\nb')
 
         # multiple sequences of mixed types, lengths, and metadata. lengths are
         # chosen to exercise various splitting cases when testing max_width
@@ -72,6 +80,12 @@ class FASTATests(TestCase):
             (newline_description_gen(),
              {'description_newline_replacement': ''},
              'fasta_description_newline_replacement_empty_str'),
+            (whitespace_id_gen(),
+             {'id_whitespace_replacement': '>:o'},
+             'fasta_id_whitespace_replacement_multi_char'),
+            (whitespace_id_gen(),
+             {'id_whitespace_replacement': ''},
+             'fasta_id_whitespace_replacement_empty_str')
         ])
 
         self.blank_seq = BiologicalSequence('')
@@ -90,7 +104,7 @@ class FASTATests(TestCase):
             (multi_seq_gen(), {'id_whitespace_replacement': '-\n_'},
              FASTAFormatError, 'Newline character'),
             (multi_seq_gen(), {'description_newline_replacement': '-.-\n'},
-             FASTAFormatError, 'Newline character'),
+             FASTAFormatError, 'Newline character')
         ]
 
     # extensive tests for generator -> fasta writer since it is used by all
