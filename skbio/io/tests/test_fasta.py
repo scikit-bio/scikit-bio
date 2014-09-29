@@ -30,7 +30,7 @@ class FASTATests(TestCase):
 
         self.bio_seq1 = BiologicalSequence(
             'ACGT-acgt.', id='seq1', description='desc1', quality=range(10))
-        self.bio_seq2 = BiologicalSequence('A', id='seq2')
+        self.bio_seq2 = BiologicalSequence('A', id=' \n  \nseq \t2 ')
         self.bio_seq3 = BiologicalSequence('AACGGuA', description='desc3')
         self.nuc_seq = NucleotideSequence('AcGtUTu')
         self.dna_seq = DNA('ACGTTGCAccGG')
