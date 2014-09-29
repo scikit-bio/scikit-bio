@@ -35,7 +35,12 @@ class FASTATests(TestCase):
             'pQqqqPPQQQ', id='proteinseq',
             description='\ndetailed\ndescription \t\twith  new\n\nlines\n\n\n')
 
-        seqs = [self.rna_seq, self.bio_seq1, self.prot_seq]
+        seqs = [
+            RNA('UUUU', id='s\te\tq\t1', description='desc\n1'),
+            BiologicalSequence(
+                'CATC', id='s\te\tq\t2', description='desc\n2'),
+            Protein('sits', id='s\te\tq\t3', description='desc\n3')
+        ]
         self.seq_coll = SequenceCollection(seqs)
         self.align = Alignment(seqs)
 
@@ -179,10 +184,16 @@ class FASTATests(TestCase):
                 self.assertEqual(obs, exp)
 
     def test_any_sequences_to_fasta(self):
+        kwargs_non_defaults = {
+            'id_whitespace_replacement': '*',
+            'description_newline_replacement': '+',
+            'max_width': 3
+        }
+
         for fn, obj in ((_sequence_collection_to_fasta, self.seq_coll),
                         (_alignment_to_fasta, self.align)):
-            for kw, fp in (({}, 'fasta_3_seqs'),
-                           ({'max_width': 3}, 'fasta_3_seqs_max_width_3')):
+            for kw, fp in (({}, 'fasta_3_seqs_defaults'),
+                           (kwargs_non_defaults, 'fasta_3_seqs_non_defaults')):
                 fh = StringIO()
                 fn(obj, fh, **kw)
                 obs = fh.getvalue()
