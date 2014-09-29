@@ -60,8 +60,8 @@ def _fasta_to_generator(obj, fh):
 @register_writer('fasta')
 def _generator_to_fasta(obj, fh, id_whitespace_replacement='_',
                         description_newline_replacement=' ', max_width=None):
-    if ('\n' in id_whitespace_replacement or
-        '\n' in description_newline_replacement):
+    if '\n' in id_whitespace_replacement or \
+            '\n' in description_newline_replacement:
         raise FASTAFormatError(
             "Newline character (\\n) cannot be used to replace whitespace in "
             "biological sequence IDs, nor to replace newlines in biological "

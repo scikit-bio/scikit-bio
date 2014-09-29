@@ -142,7 +142,7 @@ class FASTATests(TestCase):
         # Store writer function, sequence object to write, and expected
         # filepaths for each of the invoked keyword arguments (see below).
         id_ = 'f o o'
-        desc= 'b\na\nr'
+        desc = 'b\na\nr'
         test_data = (
             (_biological_sequence_to_fasta,
              BiologicalSequence('ACGT', id=id_, description=desc),
