@@ -136,20 +136,38 @@ class FASTATests(TestCase):
     def test_any_sequence_to_fasta(self):
         # Store writer function, sequence object to write, and expected
         # filepaths for each of the invoked keyword arguments (see below).
+        id_ = 'f o o'
+        desc= 'b\na\nr'
         test_data = (
-            (_biological_sequence_to_fasta, self.bio_seq1,
-             ('fasta_single_seq', 'fasta_max_width_1')),
-            (_nucleotide_sequence_to_fasta, self.nuc_seq,
-             ('fasta_single_nuc_seq', 'fasta_single_nuc_seq_max_width_1')),
-            (_dna_sequence_to_fasta, self.dna_seq,
-             ('fasta_single_dna_seq', 'fasta_single_dna_seq_max_width_1')),
-            (_rna_sequence_to_fasta, self.rna_seq,
-             ('fasta_single_rna_seq', 'fasta_single_rna_seq_max_width_1')),
-            (_protein_sequence_to_fasta, self.prot_seq,
-             ('fasta_single_prot_seq', 'fasta_single_prot_seq_max_width_1')))
+            (_biological_sequence_to_fasta,
+             BiologicalSequence('ACGT', id=id_, description=desc),
+             ('fasta_single_bio_seq_defaults',
+              'fasta_single_bio_seq_non_defaults')),
+            (_nucleotide_sequence_to_fasta,
+             NucleotideSequence('ACGTU', id=id_, description=desc),
+             ('fasta_single_nuc_seq_defaults',
+              'fasta_single_nuc_seq_non_defaults')),
+            (_dna_sequence_to_fasta,
+             DNA('TACG', id=id_, description=desc),
+             ('fasta_single_dna_seq_defaults',
+              'fasta_single_dna_seq_non_defaults')),
+            (_rna_sequence_to_fasta,
+             RNA('UACG', id=id_, description=desc),
+             ('fasta_single_rna_seq_defaults',
+              'fasta_single_rna_seq_non_defaults')),
+            (_protein_sequence_to_fasta,
+             Protein('PQQ', id=id_, description=desc),
+             ('fasta_single_prot_seq_defaults',
+              'fasta_single_prot_seq_non_defaults')))
+
+        kwargs_non_defaults = {
+            'id_whitespace_replacement': '-',
+            'description_newline_replacement': '_',
+            'max_width': 1
+        }
 
         for fn, obj, fps in test_data:
-            for kw, fp in zip(({}, {'max_width': 1}), fps):
+            for kw, fp in zip(({}, kwargs_non_defaults), fps):
                 fh = StringIO()
                 fn(obj, fh, **kw)
                 obs = fh.getvalue()
