@@ -27,8 +27,8 @@ between the number of samples we use and the rate of false negatives, also
 called the statistical power of the test.
 
 To generate complete power curves from data which appears underpowered, the
-`statsmodels.power` package can be used to solve for an effect size. The effect
-size can be used to extrapolate a power curve for the data.
+`statsmodels.stats.power` package can be used to solve for an effect size. The
+effect size can be used to extrapolate a power curve for the data.
 
 The general format for functions in this module is to define a statistical
 test function which will take a list of ids, and return a p value. The test is
@@ -135,10 +135,10 @@ from scipy.stats import t, nanstd
 
 
 def get_subsampled_power(mode, test, meta=None, cat=None, control_cats=None,
-    order=None, strict=True, samples=None, sub_size=None, draw_mode='ind',
-    scaling=5, alpha_pwr=0.05, min_counts=20,
-    max_counts=50, counts_interval=10, counts_start=None,
-    num_iter=500, num_runs=10):
+                         order=None, strict=True, samples=None, sub_size=None,
+                         draw_mode='ind', scaling=5, alpha_pwr=0.05,
+                         min_counts=20, max_counts=50, counts_interval=10,
+                         counts_start=None, num_iter=500, num_runs=10):
     r"""Subsamples data to iterative calculate power
 
     Parameters
@@ -166,32 +166,36 @@ def get_subsampled_power(mode, test, meta=None, cat=None, control_cats=None,
     test : function
         The statistical test which accepts a list of arrays of values
         (sample ids or numeric values) and returns a p value.
-    meta : {None, dataframe}
-        The metadata associated with the samples. Required for "paired" mode.
-    cat : {None, str}
-        The metadata categories for comparison. Required for "paired" mode.
-    control_cats : {None, list}
-        the metadata categories to be used as controls. For example, if you
-        wanted to control age (`cat` = "AGE"), you might want to control for
-        gender and health status (i.e. `control_cats` = ["SEX", "HEALTHY"]).
+    meta : pandas.dataframe
+        Default is None. The metadata associated with the samples.
         Required for "paired" mode.
-    order : {None, list}, optional
+    cat : str
+        Default is None. The metadata categories for comparison.
+        Required for "paired" mode.
+    control_cats : list
+        Default is None. The metadata categories to be used as controls. For
+        example, if you wanted to control age (`cat` = "AGE"), you might want
+        to control for gender and health status (i.e. `control_cats` = ["SEX",
+        "HEALTHY"]).
+        Required for "paired" mode.
+    order : list, optional
         Default is None. The order of groups in the category. This can be used
         to limit the groups selected. For example, if there's a category with
         groups 'A', 'B' and 'C', and you only want to look at A vs B, `order`
-        would be set to ['A', 'B'].
+        would be set to ['A', 'B']. `order` is only used in "paired" mode.
     strict: bool, optional
         Default is True. If a missing value (nan) is encountered, the group
         will be skipped when `strict` is True.
-    samples : {None, array-like}
-        `samples` can be a list of lists or an array where each sublist or row
-        in the array corresponds to a sampled group. Required for "all" and 
-        "sig" mode.
+    samples : array-like
+        Default is None. `samples` can be a list of lists or a list of arrays
+        where each sublist or row in the array corresponds to a sampled group.
+        Required for "all" and "sig" mode.
     sub_size : {None, int}, optional
-        the maximum number of samples to select from a group. If no value is
+        The maximum number of samples to select from a group. If no value is
         provided, this will be the same as the size of the smallest group.
         Otherwise, this will be compared to the size of the smallest group, and
-        which ever is lower will be used.
+        which ever is lower will be used. This is only used in "all" and "sig"
+        modes.
     draw_mode : {"ind", "matched"}, optional
         This value is can only be modified in "all" mode.
         Default is "ind". "matched" samples should be used when observations in
@@ -213,8 +217,8 @@ def get_subsampled_power(mode, test, meta=None, cat=None, control_cats=None,
         Default is 50. The maximum number of samples per group to draw for
         effect size calculation.
     counts_interval : unsigned int, optional
-        Default is 10.
-    counts_start : {None, unsigned int}, optional
+        Default is 10. The difference between each subsampling count.
+    counts_start : unsigned int, optional
         Defualt is None. How many samples should be drawn for the smallest
         subsample. If this is None, the `counts_interval` will be used.
     num_iter : unsigned int
@@ -226,26 +230,28 @@ def get_subsampled_power(mode, test, meta=None, cat=None, control_cats=None,
     Returns
     -------
     power : array
-        power calculated for each subsample at each count
+        The power calculated for each subsample at each count.
     sample_counts : array
-        the number of samples drawn at each power calculation
+        The number of samples drawn at each power calculation.
 
     Raises
     ------
     ValueError
-        if mode is "paired" and meta, cat or control_cats is None
+        If mode is "paired" and meta, cat or control_cats is None, a
+        ValueError is raised.
     ValueError
-        if mode is "all" or "sig" and samples is None
+        If mode is "all" or "sig" and samples is None, a ValueError is raised.
     RuntimeError
-        if there are fewer samples than the minimum count
+        There is a runtime error if there are fewer samples than the minimum
+        count.
     RuntimeError
-        if the `counts_interval` is greater than the difference between the
-        sample start and the max value.
+        If the `counts_interval` is greater than the difference between the
+        sample start and the max value, the function raises a RuntimeError.
 
     Examples
     --------
     Let's say we wanted to look at the presence of a spectific genus,
-    :math: `\textit{Gardnerella}`, is pre and post menopasual women.
+    :math:`\textit{Gardnerella}`, is pre and post menopasual women.
     We've collected samples from 100 women: 50 in each group. Let's start by
     simulating the probability that women in each group have the vaginosis.
     We'll set a random seed in numpy to maintain consistent results.
@@ -291,7 +297,7 @@ def get_subsampled_power(mode, test, meta=None, cat=None, control_cats=None,
     [ 0.176   0.3376  0.6582  0.884   0.9796  0.9986  1.      1.      1.    ]
 
     So, we can estimate the difference between the two populations is powered
-    at 80% with about 20 samples.
+    at 80% with between 15 and 20 samples.
     """
 
     # Checks the mode arguments
@@ -388,15 +394,16 @@ def _calculate_power(p_values, alpha=0.05):
     Parameters
     ----------
     p_values : 1d array
+        A 1d numpy array with the test results.
 
     alpha : float
-        the critical value for the power calculation
+        The critical value for the power calculation.
 
     Returns
     -------
     power : float
-        the emperical power, or the fraction of observed p values below the
-        critical value
+        The emperical power, or the fraction of observed p values below the
+        critical value.
 
     """
 
@@ -411,7 +418,7 @@ def _compare_distributions(test, samples, counts=5, mode="ind", num_iter=1000):
     Parameters
     ----------
     test : function
-        the statistical test which accepts an array-like of sample ids
+        The statistical test which accepts an array-like of sample ids
         (list of lists) and returns a p-value.
     samples : list of arrays
         A list where each 1-d array represents a sample. If `mode` is
@@ -436,7 +443,7 @@ def _compare_distributions(test, samples, counts=5, mode="ind", num_iter=1000):
     Returns
     -------
     p_values : array
-        the bootstrapped p-values
+        The p-values for `n_iter` subsampled tests.
 
     Raises
     ------
@@ -497,20 +504,19 @@ def confidence_bound(vec, alpha=0.05, df=None, axis=None):
     Parameters
     ----------
     vec : array
-        A 1d numpy array of the values to use in the bound calculation
+        A 1d numpy array of the values to use in the bound calculation.
     alpha : {0.05, float}
-        the critical value
+        The critical value, used for the confidence bound calculation.
     df : {None, float}, optional
         The degrees of freedom associated with the distribution. If None is
         given, df is assumed to be the number elements in specified axis.
     axis : {None, unsigned int}, optional
         Default is None. The axis over which to take the devation.
-    mode : 
 
     Return
     ------
     bound : float
-        the confidence bound around the mean. The confidence interval is
+        The confidence bound around the mean. The confidence interval is
         [mean - bound, mean + bound].
 
     """
@@ -538,19 +544,20 @@ def confidence_bound(vec, alpha=0.05, df=None, axis=None):
 
 
 def _calculate_power_curve(test, samples, sample_counts, ratio=None,
-   mode='ind', num_iter=1000, alpha=0.05):
+                           mode='ind', num_iter=1000, alpha=0.05):
     r"""Generates an empirical power curve for the samples.
 
     Parameters
     ----------
     test : function
-        the statistical test which accepts an array-like of sample ids
-        (list of lists) and returns a p-value.
+        The statistical test which accepts an list of arrays of values and
+        returns a p value.
     samples : array-like
-        samples can be a list of lists or an array where each sublist or row in
-        the array corresponds to a sampled group.
+        `samples` can be a list of lists or an array where each sublist or row
+        in the array corresponds to a sampled group.
     sample_counts : 1d array
-        A vector of the number of samples which should be sampled in each curve
+        A vector of the number of samples which should be sampled in each
+        curve.
     mode : {"ind", "matched"}, optional
         Default is "ind". "matched" samples should be used when observations in
         samples have corresponding observations in other groups. For instance,
@@ -569,12 +576,12 @@ def _calculate_power_curve(test, samples, sample_counts, ratio=None,
     Returns
     -------
     p_values : array
-        the bootstrapped p-values
+        The p-values associated with the input sample counts.
 
     Raises
     ------
     ValueError
-        if ratio is an array and ratio is not the same length as samples
+        If ratio is an array and ratio is not the same length as samples
 
     """
 
@@ -614,14 +621,14 @@ def _calculate_power_curve(test, samples, sample_counts, ratio=None,
 
 
 def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
-    alpha=0.05, mode='ind', num_iter=500, num_runs=10):
+                          alpha=0.05, mode='ind', num_iter=500, num_runs=10):
     r"""Repeatedly calculates the power curve for a specified alpha level
 
     Parameters
     ----------
     test : function
-        the statistical test which accepts an array-like of sample ids
-        (list of lists) and returns a p-value.
+        The statistical test which accepts an array-like of sample ids
+        (list of lists or list ) and returns a p-value.
     samples : array-like
         samples can be a list of lists or an array where each sublist or row in
         the array corresponds to a sampled group.
@@ -647,9 +654,9 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
     Returns
     -------
     p_mean : 1d array
-        the mean p-values from the iterations
+        The mean p-values from the iterations.
     p_std : vector
-        the variance in the p-values
+        The variance in the p-values.
 
     Examples
     --------
@@ -709,7 +716,7 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
 
 
 def get_significant_subsample(tests, samples, sub_size=None, p_crit=0.05,
-    num_rounds=500, p_scaling=5):
+                              num_rounds=500, p_scaling=5):
     r"""Subsamples data to an even sample number with a signficiant difference
 
     This function is recommended for use when sample sizes are severely
@@ -725,24 +732,24 @@ def get_significant_subsample(tests, samples, sub_size=None, p_crit=0.05,
 
     Parameters
     ----------
-    tests : list
-        the statistical tests to performed on the data. These tests should
-        take a list of integers or sample ids, and return a p-value.
+    test : function
+        The statistical test which accepts a list of arrays of values
+        (sample ids or numeric values) and returns a p value.
     samples : array-like
-        samples can be a list of lists or an array where each sublist or row in
-        the array corresponds to a sampled group.
-    sub_size : {None, int}
-        the maximum number of samples to select from a group. If no value is
-        provided, this will be the same as the size of the smallest group.
-        Otherwise, this will be compared to the size of the smallest group, and
-        which ever is lower will be used.
+        Default is None. `samples` can be a list of lists or a list of arrays
+        where each sublist or row in the array corresponds to a sampled group.
+    sub_size : int
+        Default is None. The maximum number of samples to select from a group.
+        If no value is provided, this will be the same as the size of the
+        smallest group. Otherwise, this will be compared to the size of the
+        smallest group, and which ever is lower will be used.
     p_crit : {float, list}
         The critical p value or p values for the function.
     num_rounds : {500, int}
-        the number of times the code should attempt to subsample the data
+        The number of times the code should attempt to subsample the data
         before determining it has tried too many times and should quit.
     p_scaling : {5, int}
-        a penalty scale on p_crit, so that the total distribution must be less
+        A penalty scale on p_crit, so that the total distribution must be less
         than p_crit/p_scaling.
 
     Returns
@@ -834,7 +841,8 @@ def get_significant_subsample(tests, samples, sub_size=None, p_crit=0.05,
         # Subsamples the larger dataset
         sub_samps = []
         for ids in samples:
-            sub_samps.append(np.random.choice(ids, size=sub_size, replace=False))
+            sub_samps.append(np.random.choice(ids, size=sub_size,
+                                              replace=False))
 
         # Tests the subsample
         test_res = np.ones((len(tests)))
@@ -861,14 +869,15 @@ def get_paired_subsamples(meta, cat, control_cats, order=None, strict=True):
 
     Parameters
     ----------
-    meta : dataframe
-    cat : str
-        the metadata categories for comparison
+    meta : pandas.dataframe
+        The metadata associated with the samples.
+    cat : str, list
+        The metadata category (or a list of categories) for comparison.
     control_cats : list
-        the metadata categories to be used as controls. For example, if you
+        The metadata categories to be used as controls. For example, if you
         wanted to control age (`cat` = "AGE"), you might want to control for
         gender and health status (i.e. `control_cats` = ["SEX", "HEALTHY"])
-    order : {None, list}
+    order : list, optional
         Default is None. The order of groups in the category. This can be used
         to limit the groups selected. For example, if there's a category with
         groups 'A', 'B' and 'C', and you only want to look at A vs B, `order`
