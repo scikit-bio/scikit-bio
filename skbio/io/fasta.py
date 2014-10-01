@@ -53,8 +53,58 @@ def _fasta_sniffer(obj, fh):
 
 
 @register_reader('fasta')
-def _fasta_to_generator(obj, fh):
-    pass
+def _fasta_to_generator(obj, fh, constructor=BiologicalSequence):
+    line = next(fh)
+    if _is_header(line):
+        id_, desc = _parse_header(line)
+    else:
+        raise FASTAFormatError("Found line without a FASTA header:\n%s" % line)
+
+    seq_chunks = []
+    for line in fh:
+        if _is_header(line):
+            # new header, so yield current sequence and reset state
+            yield _construct_sequence(constructor, seq_chunks, id_, desc)
+            seq_chunks = []
+            id_, desc = _parse_header(line)
+        else:
+            line = line.strip()
+            if line:
+                seq_chunks.append(line)
+            else:
+                raise FASTAFormatError("Found blank or whitespace-only line "
+                                       "in FASTA-formatted file.")
+
+    # yield last sequence in file
+    yield _construct_sequence(constructor, seq_chunks, id_, desc)
+
+
+def _is_header(line):
+    return line.startswith('>') or line.startswith(';')
+
+
+def _parse_header(line):
+    id_ = ''
+    desc = ''
+    header = line[1:].rstrip()
+    if header:
+        if header[0].isspace():
+            # no id
+            desc = header.lstrip()
+        else:
+            header_tokens = header.split(None, 1)
+            if len(header_tokens) == 1:
+                # no description
+                id_ = header_tokens[0]
+            else:
+                id_, desc = header_tokens
+    return id_, desc
+
+
+def _construct_sequence(constructor, seq_chunks, id_, description):
+    if not seq_chunks:
+        raise FASTAFormatError("Found FASTA header without sequence data.")
+    return constructor(''.join(seq_chunks), id=id_, description=description)
 
 
 @register_writer('fasta')

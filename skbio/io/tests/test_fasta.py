@@ -22,7 +22,7 @@ from skbio.io.fasta import (_generator_to_fasta, _biological_sequence_to_fasta,
 from skbio.util import get_data_path
 
 
-class FASTATests(TestCase):
+class FASTAWriterTests(TestCase):
     def setUp(self):
         self.bio_seq1 = BiologicalSequence(
             'ACGT-acgt.', id='seq1', description='desc1', quality=range(10))
@@ -203,6 +203,14 @@ class FASTATests(TestCase):
                     exp = fh.read()
 
                 self.assertEqual(obs, exp)
+
+
+class FASTAReaderTests(TestCase):
+    def setUp(self):
+        pass
+
+    def test_fasta_to_generator_valid_files(self):
+        pass
 
 
 if __name__ == '__main__':
