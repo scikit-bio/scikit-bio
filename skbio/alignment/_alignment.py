@@ -1205,8 +1205,7 @@ class Alignment(SequenceCollection):
         Notes
         -----
         Validity is defined as having no sequences containing characters
-        outside of their valid character sets, and all sequences being of equal
-        length.
+        outside of their valid character sets.
 
         See Also
         --------
@@ -1221,11 +1220,6 @@ class Alignment(SequenceCollection):
         >>> a1 = Alignment(sequences)
         >>> a1.is_valid()
         True
-        >>> sequences = [DNA('ACCGT', id="seq1"),
-        ...              DNA('AACCGGT', id="seq2")]
-        >>> a1 = Alignment(sequences)
-        >>> print(a1.is_valid())
-        False
         >>> sequences = [RNA('ACCGT--', id="seq1"),
         ...              RNA('AACCGGT', id="seq2")]
         >>> a1 = Alignment(sequences)
