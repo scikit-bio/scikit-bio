@@ -30,6 +30,9 @@ class HelperBiomTable(object):
         self.observation_ids = observation_ids
         self.sample_ids = sample_ids
 
+    def ids(self, axis):
+        return self.sample_ids
+
     def data(self, sample_id):
         i = self.sample_ids.index(sample_id)
         return self._data[i]
