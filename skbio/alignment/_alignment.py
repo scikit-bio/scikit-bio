@@ -931,6 +931,7 @@ class Alignment(SequenceCollection):
     ------
     skbio.alignment.SequenceCollectionError
         If ``validate == True`` and ``is_valid == False``.
+        If not all the sequences have the same length.
 
     Notes
     -----
@@ -965,6 +966,10 @@ class Alignment(SequenceCollection):
     def __init__(self, seqs, validate=False, score=None,
                  start_end_positions=None):
         super(Alignment, self).__init__(seqs, validate)
+
+        if not self._validate_lengths():
+            raise SequenceCollectionError("All sequences need to be "
+                                          "of equal length.")
 
         if score is not None:
             self._score = float(score)
@@ -1173,18 +1178,14 @@ class Alignment(SequenceCollection):
 
         # prep the result object
         result = []
+        # indices to keep
+        indices = [
+            i for i in range(self.sequence_length()) if keep_position(i)]
         # iterate over sequences
         for sequence_index, seq in enumerate(self):
             # determine if we're keeping the current sequence
             if keep_seq(sequence_index, seq.id):
-                # if so, iterate over the positions to determine which we're
-                # keeping, and then slice the current sequence with these
-                # indices
-                #
-                # TODO this could be pulled out of the loop if we were
-                # guaranteed that an Alignment wasn't jagged. see #670 for
-                # details and update code when that is resolved
-                indices = [i for i in range(len(seq)) if keep_position(i)]
+                # slice the current sequence with the indices
                 result.append(seq[indices])
             # if we're not keeping the current sequence, move on to the next
             else:
@@ -1232,7 +1233,7 @@ class Alignment(SequenceCollection):
         False
 
         """
-        return super(Alignment, self).is_valid() and self._validate_lengths()
+        return super(Alignment, self).is_valid()
 
     def iter_positions(self, constructor=None):
         """Generator of Alignment positions (i.e., columns)
@@ -1648,11 +1649,6 @@ class Alignment(SequenceCollection):
         warn("Alignment.to_phylip is deprecated and will be removed in "
              "scikit-bio 0.3.0. Please update your code to use "
              "Alignment.write.", UserWarning)
-
-        if not self._validate_lengths():
-            raise SequenceCollectionError("PHYLIP-formatted string can only "
-                                          "be generated if all sequences are "
-                                          "of equal length.")
 
         if self.is_empty():
             raise SequenceCollectionError("PHYLIP-formatted string can only "

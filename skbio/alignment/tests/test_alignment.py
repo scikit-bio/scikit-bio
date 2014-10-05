@@ -37,8 +37,10 @@ class SequenceCollectionTests(TestCase):
         """
         self.d1 = DNASequence('GATTACA', id="d1")
         self.d2 = DNASequence('TTG', id="d2")
+        self.d3 = DNASequence('GTATACA', id="d3")
         self.d1_lower = DNASequence('gattaca', id="d1")
         self.d2_lower = DNASequence('ttg', id="d2")
+        self.d3_lower = DNASequence('gtataca', id="d3")
         self.r1 = RNASequence('GAUUACA', id="r1")
         self.r2 = RNASequence('UUG', id="r2")
         self.r3 = RNASequence('U-----UGCC--', id="r3")
@@ -117,7 +119,7 @@ class SequenceCollectionTests(TestCase):
             pass
         # SequenceCollections of different types are not equal
         self.assertFalse(self.s1 == FakeSequenceCollection([self.d1, self.d2]))
-        self.assertFalse(self.s1 == Alignment([self.d1, self.d2]))
+        self.assertFalse(self.s1 == Alignment([self.d1, self.d3]))
 
         # SequenceCollections with different sequences are not equal
         self.assertFalse(self.s1 == SequenceCollection([self.d1, self.r1]))
@@ -165,7 +167,7 @@ class SequenceCollectionTests(TestCase):
             pass
         # SequenceCollections of different types are not equal
         self.assertTrue(self.s1 != FakeSequenceCollection([self.d1, self.d2]))
-        self.assertTrue(self.s1 != Alignment([self.d1, self.d2]))
+        self.assertTrue(self.s1 != Alignment([self.d1, self.d3]))
 
         # SequenceCollections with different sequences are not equal
         self.assertTrue(self.s1 !=
@@ -647,6 +649,16 @@ class AlignmentTests(TestCase):
                                    invert_positions_to_keep=True)
         self.assertEqual(obs, exp)
 
+    def test_init_not_equal_lengths(self):
+        invalid_seqs = [self.d1, self.d2, self.d3,
+                        DNASequence('.-ACC-GTGC--', id="i2")]
+        self.assertRaises(SequenceCollectionError, Alignment,
+                          invalid_seqs)
+
+    def test_init_equal_lengths(self):
+        seqs = [self.d1, self.d2, self.d3]
+        alignment = Alignment(seqs)
+
     def test_init_validate(self):
         """initialization with validation functions as expected
         """
@@ -658,23 +670,12 @@ class AlignmentTests(TestCase):
         self.assertRaises(SequenceCollectionError, Alignment,
                           invalid_seqs1, validate=True)
 
-        # invalid lengths (they're not all equal)
-        invalid_seqs2 = [self.d1, self.d2, self.d3,
-                         DNASequence('.-ACC-GTGC--', id="i2")]
-        self.assertRaises(SequenceCollectionError, Alignment,
-                          invalid_seqs2, validate=True)
-
     def test_is_valid(self):
         """is_valid functions as expected
         """
         self.assertTrue(self.a1.is_valid())
         self.assertTrue(self.a2.is_valid())
         self.assertTrue(self.empty.is_valid())
-
-        # invalid because of length mismatch
-        d1 = DNASequence('..ACC-GTTGG..', id="d1")
-        d2 = DNASequence('TTACCGGT-GGC', id="d2")
-        self.assertFalse(Alignment([d1, d2]).is_valid())
 
         # invalid because of invalid charaters
         d1 = DNASequence('..ACC-GTXGG..', id="d1")
@@ -854,15 +855,6 @@ class AlignmentTests(TestCase):
                               "s3 .-ACC-GTTGC--"])
         self.assertEqual(phylip_str, expected)
 
-    def test_to_phylip_unequal_sequence_lengths(self):
-        d1 = DNASequence('A-CT', id="d1")
-        d2 = DNASequence('TTA', id="d2")
-        d3 = DNASequence('.-AC', id="d3")
-        a = Alignment([d1, d2, d3])
-
-        with self.assertRaises(SequenceCollectionError):
-            npt.assert_warns(UserWarning, a.to_phylip)
-
     def test_to_phylip_no_sequences(self):
         with self.assertRaises(SequenceCollectionError):
             npt.assert_warns(UserWarning, Alignment([]).to_phylip)
@@ -882,9 +874,6 @@ class AlignmentTests(TestCase):
 
         self.assertTrue(Alignment([
             DNASequence('TTT', id="d1")])._validate_lengths())
-        self.assertFalse(Alignment([
-            DNASequence('TTT', id="d1"),
-            DNASequence('TT', id="d2")])._validate_lengths())
 
 
 class StockholmAlignmentTests(TestCase):
