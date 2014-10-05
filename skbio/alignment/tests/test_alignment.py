@@ -657,7 +657,7 @@ class AlignmentTests(TestCase):
 
     def test_init_equal_lengths(self):
         seqs = [self.d1, self.d2, self.d3]
-        alignment = Alignment(seqs)
+        Alignment(seqs)
 
     def test_init_validate(self):
         """initialization with validation functions as expected
