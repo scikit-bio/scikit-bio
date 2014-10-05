@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.utils.six import string_types
+from six import string_types
 
 from collections import Sequence, Counter, defaultdict
 from itertools import product

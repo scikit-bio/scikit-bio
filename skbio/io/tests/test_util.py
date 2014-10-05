@@ -6,7 +6,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from future.utils.six import StringIO, BytesIO
+from six import StringIO, BytesIO
 
 import unittest
 import tempfile
