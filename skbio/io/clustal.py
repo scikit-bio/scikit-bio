@@ -1,3 +1,4 @@
+
 r"""
 Clustal format (:mod:`skbio.io.clustal`)
 ========================================
@@ -96,7 +97,8 @@ sequence-2  A--GTCGAA-GTACCT
 <BLANKLINE>
 <BLANKLINE>
 
-
+References
+----------
 .. [1] http://www.sciencedirect.com/science/article/pii/0378111988903307
 .. [2] http://web.mit.edu/meme_v4.9.0/doc/clustalw-format.html
 """
