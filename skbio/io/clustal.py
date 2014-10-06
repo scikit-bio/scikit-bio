@@ -31,8 +31,8 @@ Each sequence in the alignment is divided into subsequences each at most
 Optionally, a line containing conservation information about each position
 in the multiple alignment.
 
-.. note:: scikit-bio does not support writing conservation information for
-          multiple alignments
+.. note:: scikit-bio does not support writing conservation information
+
    :: scikit-bio will only write a Clustal-formatted file if the alignment's
    sequence characters are valid IUPAC characters, as defined in
    :mod:`skbio.sequence`. The specific lexicon that is validated against
