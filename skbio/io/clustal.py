@@ -97,8 +97,8 @@ sequence-2  A--GTCGAA-GTACCT
 <BLANKLINE>
 
 
-.. [1]_ http://www.ncbi.nlm.nih.gov/pubmed/3243435
-.. [2]_ http://web.mit.edu/meme_v4.9.0/doc/clustalw-format.html
+.. [1] http://www.sciencedirect.com/science/article/pii/0378111988903307
+.. [2] http://web.mit.edu/meme_v4.9.0/doc/clustalw-format.html
 """
 
 
