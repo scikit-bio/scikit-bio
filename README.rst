@@ -51,6 +51,7 @@ than using pip), you can find those here:
 -  `matplotlib <http://www.matplotlib.org/>`__ >= 1.1.0
 -  `pandas <http://pandas.pydata.org/>`__
 -  `future <https://pypi.python.org/pypi/future>`__
+-  `six <https://pypi.python.org/pypi/six`__
 -  `natsort <https://pypi.python.org/pypi/natsort>`__
 -  `IPython <http://ipython.org>`__ 
 

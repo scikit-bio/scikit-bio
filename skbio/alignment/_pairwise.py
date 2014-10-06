@@ -12,7 +12,7 @@ from itertools import product
 
 import numpy as np
 from future.builtins import range, zip
-from future.utils.six import string_types
+from six import string_types
 
 from skbio.alignment import Alignment
 from skbio.sequence import BiologicalSequence
