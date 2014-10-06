@@ -7,7 +7,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # -----------------------------------------------------------------------------
 from __future__ import absolute_import, division, print_function
-from future.utils.six import StringIO
+from six import StringIO
 
 from unittest import TestCase, main
 
