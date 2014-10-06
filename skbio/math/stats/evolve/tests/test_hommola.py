@@ -17,7 +17,6 @@ from skbio.math.stats.evolve.hommola import _get_dist, _gen_lists
 
 
 def test_hommola_cospeciation_sig():
-
     np.random.seed(1)
 
     hdist = np.array([[0, 3, 8, 8, 9], [3, 0, 7, 7, 8], [
@@ -41,7 +40,6 @@ def test_hommola_cospeciation_sig():
 
 
 def test_hommola_cospeciation_no_sig():
-
     np.random.seed(1)
 
     hdist = np.array([[0, 3, 8, 8, 9], [3, 0, 7, 7, 8], [
