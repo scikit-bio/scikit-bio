@@ -29,13 +29,7 @@ Alignment Section
 Each sequence in the alignment is divided into subsequences each at most
 60 characters long. The sequence ID of the alignment precedes each subsequence.
 Optionally, a line containing conservation information about each position
-in the multiple alignment.  This information is specified as follows
-
-         *  -- all residues or nucleotides in that column are identical
-         :  -- conserved substitutions have been observed
-         .  -- semi-conserved substitutions have been observed
-            -- no match.
-
+in the multiple alignment. 
 
 .. note:: scikit-bio does not support writing conservation information for
           multiple alignments
