@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division, print_function
-
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -8,6 +5,8 @@ from __future__ import absolute_import, division, print_function
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
+
+from __future__ import absolute_import, division, print_function
 
 from unittest import TestCase, main
 
@@ -242,7 +241,14 @@ class DistributionsTests(TestCase):
         self.assertEqual(len(result['boxes']), 1)
         self.assertEqual(len(result['medians']), 1)
         self.assertEqual(len(result['whiskers']), 2)
-        self.assertEqual(len(result['fliers']), 2)
+
+        # mpl < 1.4.0 creates two Line2D instances, mpl 1.4.0 creates one,
+        # though the resulting plot looks identical between the two versions.
+        # see:
+        #   https://github.com/pydata/pandas/issues/8382#issuecomment-56840974
+        self.assertTrue(len(result['fliers']) == 1 or
+                        len(result['fliers']) == 2)
+
         self.assertEqual(len(result['caps']), 2)
 
     def test_plot_box_data_empty(self):
