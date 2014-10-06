@@ -335,6 +335,15 @@ def _validate_distributions(distributions):
             raise ValueError("Each value in each distribution must be "
                              "convertible to a number.")
 
+        # Empty distributions are plottable in mpl < 1.4.0. In 1.4.0, a
+        # ValueError is raised. This has been fixed in mpl 1.4.0-dev (see
+        # https://github.com/matplotlib/matplotlib/pull/3571). In order to
+        # support empty distributions across mpl versions, we replace them with
+        # [np.nan]. See https://github.com/pydata/pandas/issues/8382,
+        # https://github.com/matplotlib/matplotlib/pull/3571, and
+        # https://github.com/pydata/pandas/pull/8240 for details.
+        # If we decide to only support mpl > 1.4.0 in the future, this code can
+        # likely be removed in favor of letting mpl handle empty distributions.
         if distribution.size > 0:
             dists.append(distribution)
         else:

@@ -207,6 +207,7 @@ class DistributionsTests(TestCase):
         # though the resulting plot looks identical between the two versions.
         # see:
         #   https://github.com/pydata/pandas/issues/8382#issuecomment-56840974
+        #   https://github.com/matplotlib/matplotlib/issues/3544
         self.assertTrue(len(result['fliers']) == 1 or
                         len(result['fliers']) == 2)
 
@@ -416,6 +417,15 @@ class DistributionsTests(TestCase):
         self.assertEqual(len(ax.get_xticklabels()), 3)
         self.assertTrue(np.array_equal(ax.get_xticks(), [1, 4, 10]))
 
+        # second distribution (empty) should have nans since it is hidden.
+        # boxplots in mpl < 1.4.0 have 8 lines per boxplot, while mpl 1.4.0 has
+        # 7. in either case, the line at index 8 should have a nan for its y
+        # value
+        lines = ax.get_lines()
+        self.assertTrue(np.isnan(lines[8].get_xydata()[0][1]))
+        # line in first distribution should *not* have nan for its y value
+        self.assertFalse(np.isnan(lines[0].get_xydata()[0][1]))
+
         # All distributions are empty.
         fig = boxplots([[], [], []], [1, 4, 10],
                        ["Data 1", "Data 2", "Data 3"], "Test", "x-axis label",
@@ -427,21 +437,45 @@ class DistributionsTests(TestCase):
         self.assertEqual(len(ax.get_xticklabels()), 3)
         self.assertTrue(np.array_equal(ax.get_xticks(), [1, 4, 10]))
 
+        lines = ax.get_lines()
+        self.assertTrue(np.isnan(lines[0].get_xydata()[0][1]))
+        self.assertTrue(np.isnan(lines[8].get_xydata()[0][1]))
+        self.assertTrue(np.isnan(lines[16].get_xydata()[0][1]))
+
     def test_boxplots_box_colors(self):
         # Coloring works with all empty distributions.
         fig = boxplots([[], [], []], box_colors=['blue', 'red', 'yellow'])
         ax = fig.get_axes()[0]
         self.assertEqual(len(ax.get_xticklabels()), 3)
+        # patch colors should match what we specified
+        self.assertEqual(ax.patches[0].get_facecolor(), (0.0, 0.0, 1.0, 1.0))
+        self.assertEqual(ax.patches[1].get_facecolor(), (1.0, 0.0, 0.0, 1.0))
+        self.assertEqual(ax.patches[2].get_facecolor(), (1.0, 1.0, 0.0, 1.0))
+        # patch location should include at least one nan since the distribution
+        # is empty, and thus hidden
+        for patch in ax.patches:
+            self.assertTrue(np.isnan(patch.xy[0][1]))
 
         fig = boxplots([[], [], []], box_colors='pink')
         ax = fig.get_axes()[0]
         self.assertEqual(len(ax.get_xticklabels()), 3)
+        for patch in ax.patches:
+            npt.assert_almost_equal(
+                patch.get_facecolor(),
+                (1.0, 0.7529411764705882, 0.796078431372549, 1.0))
+            self.assertTrue(np.isnan(patch.xy[0][1]))
 
         # Coloring works with some empty distributions.
         fig = boxplots([[], [1, 2, 3.5], []],
                        box_colors=['blue', 'red', 'yellow'])
         ax = fig.get_axes()[0]
         self.assertEqual(len(ax.get_xticklabels()), 3)
+        self.assertEqual(ax.patches[0].get_facecolor(), (0.0, 0.0, 1.0, 1.0))
+        self.assertEqual(ax.patches[1].get_facecolor(), (1.0, 0.0, 0.0, 1.0))
+        self.assertEqual(ax.patches[2].get_facecolor(), (1.0, 1.0, 0.0, 1.0))
+        self.assertTrue(np.isnan(ax.patches[0].xy[0][1]))
+        self.assertFalse(np.isnan(ax.patches[1].xy[0][1]))
+        self.assertTrue(np.isnan(ax.patches[2].xy[0][1]))
 
     def test_boxplots_invalid_input(self):
         # Non-numeric entries in distribution.
