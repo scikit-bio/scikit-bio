@@ -10,7 +10,7 @@
 
 from unittest import TestCase, main
 
-from future.utils.six import StringIO
+from six import StringIO
 from numpy import arange, array
 
 from skbio import SequenceIterator, FastaIterator, FastqIterator, QseqIterator

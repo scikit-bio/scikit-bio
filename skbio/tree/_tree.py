@@ -22,7 +22,7 @@ from importlib import import_module
 import numpy as np
 from scipy.stats import pearsonr
 from future.builtins import zip
-from future.utils.six import StringIO
+from six import StringIO
 
 from skbio.stats.distance import DistanceMatrix
 from skbio.io import RecordError
@@ -118,7 +118,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(StringIO("((a,b)c, d)root;"))
         >>> repr(tree)
@@ -150,7 +150,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(StringIO("((a,b)c);"))
         >>> str(tree)
@@ -267,7 +267,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(StringIO("(a,b)c;"))
         >>> print(tree.pop(0))
@@ -306,7 +306,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(StringIO("(a,b)c;"))
         >>> tree.remove(tree.children[0])
@@ -337,7 +337,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(StringIO("(a,b)c;"))
         >>> tree.remove_deleted(lambda x: x.name == 'b')
@@ -371,7 +371,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(StringIO("((a,b)c,(d,e)f)root;"))
         >>> to_delete = tree.find('b')
@@ -431,7 +431,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> t = TreeNode.read(StringIO('((H:1,G:1):2,(R:0.5,M:0.7):3);'))
         >>> sheared = t.shear(['G', 'M'])
@@ -474,7 +474,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(StringIO("((a,b)c,(d,e)f)root;"))
         >>> tree_copy = tree.copy()
@@ -546,7 +546,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(StringIO("((a,(b,c)d)e,(f,g)h)i;"))
         >>> new_tree = tree.find('d').unrooted_deepcopy()
@@ -593,7 +593,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(StringIO("((a,(b,c)d)e,(f,g)h)i;"))
         >>> new_tree = tree.find('d').unrooted_copy()
@@ -642,7 +642,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(StringIO("((a,(b,c)d)e,(f,g)h)i;"))
         >>> print(tree.count())
@@ -677,7 +677,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(StringIO("((a,(b,c)d)e,(f,g)h)i;"))
         >>> sorted(tree.subset())
@@ -703,7 +703,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(StringIO("(((a,b)c,(d,e)f)h)root;"))
         >>> for s in sorted(tree.subsets()):
@@ -751,7 +751,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(StringIO("(((a,b)c,(d,e)f)g,h)i;"))
         >>> print(tree.root_at('c'))
@@ -794,7 +794,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(StringIO("(((d:1,e:1,(g:1)f:1)c:1)b:1,h:1)"
         ...                               "a:1;"))
@@ -862,7 +862,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(StringIO("((a,b)c);"))
         >>> print(tree.is_tip())
@@ -888,7 +888,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(StringIO("((a,b)c);"))
         >>> print(tree.is_root())
@@ -914,7 +914,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(StringIO("((a,b)c);"))
         >>> print(tree.has_children())
@@ -963,7 +963,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(StringIO("((a,b)c);"))
         >>> for node in tree.traverse():
@@ -1009,7 +1009,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(StringIO("((a,b)c);"))
         >>> for node in tree.preorder():
@@ -1056,7 +1056,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(StringIO("((a,b)c);"))
         >>> for node in tree.postorder():
@@ -1124,7 +1124,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(StringIO("((a,b)c);"))
         >>> for node in tree.pre_and_postorder():
@@ -1199,7 +1199,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(StringIO("((a,b)c,(d,e)f);"))
         >>> for node in tree.levelorder():
@@ -1248,7 +1248,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(StringIO("((a,b)c,(d,e)f);"))
         >>> for node in tree.tips():
@@ -1292,7 +1292,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(StringIO("((a,b)c,(d,e)f);"))
         >>> for node in tree.non_tips():
@@ -1414,7 +1414,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(StringIO("((a,b)c,(d,e)d,(f,g)c);"))
         >>> for node in tree.find_all('c'):
@@ -1483,7 +1483,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(StringIO("((a,b)c,(d,e)f);"))
         >>> print(tree.find('c').name)
@@ -1539,7 +1539,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(StringIO("((a,b)c,(d,e)f);"))
         >>> print(tree.find_by_id(2).name)
@@ -1586,7 +1586,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(StringIO("((a,b)c,(d,e)f);"))
         >>> func = lambda x: x.parent == tree.find('c')
@@ -1610,7 +1610,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(StringIO("((a,b)c,(d,e)f)root;"))
         >>> [node.name for node in tree.find('a').ancestors()]
@@ -1635,7 +1635,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(StringIO("((a,b)c,(d,e)f)root;"))
         >>> tip_a = tree.find('a')
@@ -1665,7 +1665,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(StringIO("((a,b)c,(d,e,f)g)root;"))
         >>> tip_e = tree.find('e')
@@ -1698,7 +1698,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(StringIO("((a,b)c,(d,e)f)root;"))
         >>> node_c = tree.find('c')
@@ -1732,7 +1732,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(StringIO("((a,b)c,(d,e)f)root;"))
         >>> nodes = [tree.find('a'), tree.find('b')]
@@ -2025,7 +2025,7 @@ class TreeNode(object):
         >>> from skbio import TreeNode
         >>> TreeNode.from_newick("((a,b)c,(d,e)f)root;")
         <TreeNode, name: root, internal node count: 2, tips count: 4>
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> s = StringIO("((a,b),c);")
         >>> TreeNode.from_newick(s)
         <TreeNode, name: unnamed, internal node count: 1, tips count: 3>
@@ -2250,7 +2250,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> t = TreeNode.read(StringIO('(((a:1,b:2,c:3)x:4,(d:5)y:6)z:7);'))
         >>> res = t.to_array()
@@ -2453,7 +2453,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(StringIO("((a,b)c,(d,e)f)root;"))
         >>> print(tree.ascii_art())
@@ -2497,7 +2497,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(StringIO("((a:1,b:2)c:3,(d:4,e:5)f:6)root;"))
         >>> root = tree
@@ -2550,7 +2550,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(StringIO("((a:1,b:2)c:3,(d:4,e:5)f:6)root;"))
         >>> tip_a = tree.find('a')
@@ -2625,7 +2625,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(StringIO("((a:1,b:2)c:3,(d:4,e:5)f:6)root;"))
         >>> dist, tips = tree.get_max_distance()
@@ -2684,7 +2684,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(StringIO("((a:1,b:2)c:3,(d:4,e:5)f:6)root;"))
         >>> mat = tree.tip_tip_distances()
@@ -2795,7 +2795,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tree1 = TreeNode.read(StringIO("((a,b),(c,d));"))
         >>> tree2 = TreeNode.read(StringIO("(((a,b),c),d);"))
@@ -2856,7 +2856,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tree1 = TreeNode.read(StringIO("((a,b),(c,d));"))
         >>> tree2 = TreeNode.read(StringIO("(((a,b),c),d);"))
@@ -2929,7 +2929,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> # note, only three common taxa between the trees
         >>> tree1 = TreeNode.read(StringIO("((a:1,b:1):2,(c:0.5,X:0.7):3);"))
@@ -3051,7 +3051,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tr = TreeNode.read(StringIO("(((A:.1,B:1.2)C:.6,(D:.9,E:.6)F:.9)G"
         ...                             ":2.4,(H:.4,I:.5)J:1.3)K;"))
@@ -3113,7 +3113,7 @@ class TreeNode(object):
         --------
         Cache the tip names of the tree on its internal nodes
 
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(StringIO("((a,b,(c,d)e)f,(g,h)i)root;"))
         >>> f = lambda n: [n.name] if n.is_tip() else []
@@ -3189,7 +3189,7 @@ class TreeNode(object):
         Alternate the names on two of the tips, 'a', and 'b', and do this 5
         times.
 
-        >>> from future.utils.six import StringIO
+        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(StringIO("((a,b),(c,d));"))
         >>> rev = lambda items: items.reverse()
