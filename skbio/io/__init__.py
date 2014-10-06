@@ -122,6 +122,7 @@ see the associated documentation.
    ordres
    newick
    phylip
+   clustal
 
 Formats are considered to be names which represent a way of encoding a file.
 A simple format is just a single name as a string, such as ``'newick'``.
@@ -162,6 +163,7 @@ User Exceptions
    OrdResFormatError
    NewickFormatError
    PhylipFormatError
+   ClustalFormatError
 
 User Warnings
 ^^^^^^^^^^^^^
