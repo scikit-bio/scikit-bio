@@ -36,6 +36,7 @@ in the multiple alignment.  This information is specified as follows
          .  -- semi-conserved substitutions have been observed
             -- no match.
 
+
 .. note:: scikit-bio does not support writing conservation information for
           multiple alignments
    :: scikit-bio will only write a Clustal-formatted file if the alignment's
