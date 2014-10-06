@@ -162,10 +162,10 @@ Functions
 .. autosummary::
    :toctree: generated/
 
-    parse_fasta
-    parse_fastq
-    parse_qual
-    parse_qseq
+   parse_fasta
+   parse_fastq
+   parse_qual
+   parse_qseq
 
 Exceptions
 ----------
@@ -173,7 +173,7 @@ Exceptions
 .. autosummary::
    :toctree: generated/
 
-    FastqParseError
+   FastqParseError
 
 """
 

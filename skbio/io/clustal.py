@@ -1,11 +1,12 @@
-"""
+r"""
 Clustal format (:mod:`skbio.io.clustal`)
 ======================================
 
 .. currentmodule:: skbio.io.clustal
 
-Clustal format (``clustal``) stores multiple alignment sequences. This format was originally
-introduced in Desmond Higgens in the Clustal package [1]_.
+Clustal format (``clustal``) stores multiple alignment sequences.
+This format was originally introduced in Desmond Higgens in the
+Clustal package [1]_.
 
 Format Support
 --------------
@@ -19,23 +20,24 @@ Format Support
 
 Format Specification
 --------------------
-A Clustal file is a plain text format.  It can optionally have a header, which states
-the Clustal version number. This is followed by the multiple sequence alignment,
-and optionally conserved sequence information [2]_
+A Clustal file is a plain text format.  It can optionally have a header,
+which states the Clustal version number. This is followed by the
+multiple sequence alignment, and optionally conserved sequence information [2]_
 
 Alignment Section
 ^^^^^^^^^^^^^^^^^
-Each sequence in the alignment is divided into subsequences each at most 60 characters 
-long. The sequence ID of the alignment precedes each subsequence.
-Optionally, a line containing conservation information about each position in the 
-multiple alignment.  This information is specified as follows
+Each sequence in the alignment is divided into subsequences each at most
+60 characters long. The sequence ID of the alignment precedes each subsequence.
+Optionally, a line containing conservation information about each position
+in the multiple alignment.  This information is specified as follows
 
          *  -- all residues or nucleotides in that column are identical
          :  -- conserved substitutions have been observed
          .  -- semi-conserved substitutions have been observed
             -- no match.
 
-.. note:: scikit-bio does not support writing conservation information for multiple alignments
+.. note:: scikit-bio does not support writing conservation information for
+          multiple alignments
    :: scikit-bio will only write a Clustal-formatted file if the alignment's
    sequence characters are valid IUPAC characters, as defined in
    :mod:`skbio.sequence`. The specific lexicon that is validated against
@@ -60,16 +62,16 @@ Assume we have a clustal formatted file with the following contents::
 We can use the following code to read a clustal file:
 
 >>> from StringIO import StringIO
->>> from skbio.parse.sequences import parse_clustal
->>> clustal_f = StringIO("abc   GCAUGCAUCUGCAUACGUACGUACGCAUGCA 60\n"
+>>> from skbio.io import read
+>>> clustal_f = StringIO('abc   GCAUGCAUCUGCAUACGUACGUACGCAUGCA 60\n'
 ...                      'def   -------------------------------\n'
 ...                      'xyz   -------------------------------\n'
 ...                      '\n'
 ...                      'abc   GUCGAUACAUACGUACGUCGGUACGU-CGAC 11\n'
 ...                      'def   ---------------CGUGCAUGCAU-CGAU 18\n'
 ...                      'xyz   -----------CAUUCGUACGUACGCAUGAC 23\n')
->>> for dna in read(clustal_f,format="clustal"):
-...     print(dna.id
+>>> for dna in read(clustal_f,format="clustal", into=Alignment):
+...     print(dna.id)
 ...     print(dna.sequence)
 abc
 GCAUGCAUCUGCAUACGUACGUACGCAUGCAGUCGAUACAUACGUACGUCGGUACGU-CGAC
@@ -80,24 +82,31 @@ xyz
 
 We can use the following code to write to a file
 
->>> from skbio import DNA
+>>> from skbio import Alignment, DNA
+>>> from skbio.io import write
 >>> seqs = [DNA('ACCGTTGTA-GTAGCT', id='seq1'),
 ...         DNA('A--GTCGAA-GTACCT', id='sequence-2'),
 ...         DNA('AGAGTTGAAGGTATCT', id='3')]
+>>> aln = Alignment(seqs)
 >>> from StringIO import StringIO
 >>> fh = StringIO()
->>> write(seqs,fh, format='clustal')
->>> print(fh.getvalue())
+>>> aln.write(fh, format='clustal')
+>>> print(fh.getvalue()) # doctest: +NORMALIZE_WHITESPACE
 CLUSTAL
 <BLANKLINE>
 <BLANKLINE>
-seq1     	ACCGTTGTA-GTAGCT
-sequence-2	A--GTGTAA-GTAGCT
-3         	AGAGTTGAAGGTATCT
+seq1        ACCGTTGTA-GTAGCT
+sequence-2  A--GTCGAA-GTACCT
+3           AGAGTTGAAGGTATCT
 <BLANKLINE>
+<BLANKLINE>
+
+
+
 [1]_ http://www.ncbi.nlm.nih.gov/pubmed/3243435
 [2]_ http://web.mit.edu/meme_v4.9.0/doc/clustalw-format.html
 """
+
 
 # -----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -112,6 +121,7 @@ from skbio.parse.record import DelimitedSplitter
 from skbio.io import (register_reader, register_writer, register_sniffer,
                       ClustalFormatError)
 from skbio.sequence import BiologicalSequence
+from skbio.alignment import Alignment
 
 
 def _label_line_parser(record, splitter, strict=True):
@@ -233,31 +243,31 @@ def _clustal_sniffer(fh):
     return not empty, {}
 
 
-@register_writer('clustal')
-def _generator_to_clustal(records, fh):
+@register_writer('clustal', Alignment)
+def _alignment_to_clustal(obj, fh):
     r"""writes aligned sequences to a specified file
     Parameters
     ----------
-    record: iterator of skbio.sequence.BiologicalSequence objects
-        A generator of aligned sequences
+    obj: Alignment object
+        An alignment object containing a set of BiologicalSequence objects
     fh: open file handle object
         An open file handle object containing Clustal sequences.
 
     """
     clen = 60  # Max length of clustal lines
-    names, seqs = zip(*[(s.id, s.sequence) for s in records])
+    names, seqs = zip(*[(s.id, s.sequence) for s in obj])
     nameLen = max(map(len, names))
     seqLen = max(map(len, seqs))
-    fh.write('CLUSTAL\n\n')
+    fh.write('CLUSTAL\n\n\n')
     for i in range(0, seqLen, clen):
         for label, seq in zip(names, seqs):
             name = ('{:<%d}' % (nameLen)).format(label)
-            fh.write("%s\t%s\t\n" % (name, seq[i:i+clen]))
+            fh.write("%s\t%s\n" % (name, seq[i:i+clen]))
         fh.write("\n")
 
 
-@register_reader('clustal')
-def _clustal_to_generator(fh, strict=True):
+@register_reader('clustal', Alignment)
+def _clustal_to_alignment(fh, strict=True):
     r"""yields labels and sequences from msa (multiple sequence alignment)
 
     Parameters
@@ -271,31 +281,31 @@ def _clustal_to_generator(fh, strict=True):
 
     Returns
     -------
-    skbio.BiologicalSequence
-        aligned biogical sequence
+    skbio.Alignment
+        Alignment object containing aligned biogical sequences
 
     Raises
     ------
         skbio.util.exception.ClustalFormatError
-    	    If the sequences in `fh` don't have the same sequence length
-	    or if the sequence ids don't properly match with the subsequences 
+            If the sequences in `fh` don't have the same sequence length
+            or if the sequence ids don't properly match with the subsequences
     Notes
     -----
 
     Skips any line that starts with a blank.
 
-    ``_clustal_to_generator`` preserves the order of the sequences from the original
-    file.  However, it does use a dict as an intermediate, so two sequences
-    can't have the same label. This is probably OK since Clustal will refuse to
-    run on a FASTA file in which two sequences have the same label, but could
-    potentially cause trouble with manually edited files (all the segments of
-    the conflicting sequences would be interleaved, possibly in an
-    unpredictable way).
+    ``_clustal_to_generator`` preserves the order of the sequences from the
+    original file.  However, it does use a dict as an intermediate, so
+    two sequences can't have the same label. This is probably OK since
+    Clustal will refuse to run on a FASTA file in which two sequences have
+    the same label, but could potentially cause trouble with manually
+    edited files (all the segments of the conflicting sequences would
+    be interleaved, possibly in an unpredictable way).
 
     If the lines have trailing numbers (i.e. Clustal was run with
     `-LINENOS=ON`), silently deletes them. Does not check that the numbers
     actually correspond to the number of chars in the sequence printed so far.
- 
+
     References
     ----------
     .. [1] Thompson JD, Higgins DG, Gibson TJ,  "CLUSTAL W: improving the
@@ -312,5 +322,7 @@ def _clustal_to_generator(fh, strict=True):
     aligned_correctly = _check_length(data, labels)
     if not aligned_correctly:
         raise ClustalFormatError("Sequences not aligned properly")
+    alns = []
     for key in labels:
-        yield BiologicalSequence(id=key, sequence=''.join(data[key]))
+        alns.append(BiologicalSequence(id=key, sequence=''.join(data[key])))
+    return Alignment(alns)

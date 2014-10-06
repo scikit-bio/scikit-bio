@@ -41,7 +41,7 @@ class BiologicalSequence(Sequence):
     validate : bool, optional
         If True, runs the `is_valid` method after construction and raises
         BiologicalSequenceError if ``is_valid == False``.
-
+    
     Attributes
     ----------
     sequence

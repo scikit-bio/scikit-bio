@@ -11,7 +11,7 @@ from future.utils.six import StringIO
 
 from unittest import TestCase, main
 
-from skbio.io.clustal import (_clustal_to_generator, _generator_to_clustal,
+from skbio.io.clustal import (_clustal_to_alignment, _alignment_to_clustal,
                               _clustal_sniffer)
 from skbio.io.clustal import (_is_clustal_seq_line, last_space,
                               _delete_trailing_number, _check_length,
@@ -219,38 +219,37 @@ CGAUCAGUCAGUCGAU---------- 34
 UGCUGCAUCA---------------- 33
 *     ***""")]
 
-    def test_generator_to_clustal_with_empty_input(self):
+    def test_alignment_to_clustal_with_empty_input(self):
 
-        result = _clustal_to_generator(StringIO())
+        result = _clustal_to_alignment(StringIO())
         self.assertEqual(dict(result), {})
 
-    def test_generator_to_clustal_with_bad_input(self):
+    def test_alignment_to_clustal_with_bad_input(self):
 
         BAD = StringIO('\n'.join(['dshfjsdfhdfsj', 'hfsdjksdfhjsdf']))
-        result = _clustal_to_generator(BAD, strict=False)
+        result = _clustal_to_alignment(BAD, strict=False)
         self.assertEqual(dict(result), {})
         # should fail unless we turned strict processing off
         with self.assertRaises(ClustalFormatError):
-            dict(_clustal_to_generator(BAD))
+            dict(_clustal_to_alignment(BAD))
 
-    def test_valid_generator_to_clustal_and_clustal_to_generator(self):
+    def test_valid_alignment_to_clustal_and_clustal_to_alignment(self):
         import os
         for valid_out in self.valid_clustal_out:
             fname = "test.aln"
             testfile = open(fname, 'w')
-            result_before = _clustal_to_generator(valid_out)
-            records = list(result_before)
-            _generator_to_clustal(records, testfile)
+            result_before = _clustal_to_alignment(valid_out)
+            _alignment_to_clustal(result_before, testfile)
             testfile.close()
             testfile = open(fname, 'r')
-            result_after = _clustal_to_generator(testfile)
-            self.assertEquals(set(records), set(result_after))
+            result_after = _clustal_to_alignment(testfile)
+            self.assertEquals(result_before, result_after)
         os.remove(fname)
 
-    def test_invalid_generator_to_clustal_and_clustal_to_generator(self):
+    def test_invalid_alignment_to_clustal_and_clustal_to_alignment(self):
         for invalid_out in self.invalid_clustal_out:
             with self.assertRaises(ClustalFormatError):
-                dict(_clustal_to_generator(invalid_out, strict=True))
+                dict(_clustal_to_alignment(invalid_out, strict=True))
 
     def test_clustal_sniffer_valid_files(self):
         for valid_out in self.valid_clustal_out:
