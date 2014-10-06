@@ -9,7 +9,7 @@ from __future__ import absolute_import, division, print_function
 # ----------------------------------------------------------------------------
 
 import numpy as np
-from future.utils.six import StringIO
+from six import StringIO
 
 from skbio.stats.distance import DistanceMatrix
 from skbio.tree import TreeNode

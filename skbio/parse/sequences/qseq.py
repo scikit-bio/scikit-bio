@@ -45,7 +45,7 @@ def parse_qseq(infile, phred_offset=33):
         CRESSIA       242     1       2204    1490    1921    0       2
             ..GTAAAACCCATATATTGAAAACTACAAA  BWUTWcXVXXcccc_cccccccccc_cccc  1
 
-    >>> from future.utils.six import StringIO
+    >>> from six import StringIO
     >>> qseq_f = StringIO('CRESSIA\t242\t1\t2204\t1453\t1918\t0\t1\t'
     ...   '.TTAATAAGAATGTCTGTTGTGGCTTAAAA\tB[[[W][Y[Zccccccccc\cccac_____\t1\n'
     ...                   'CRESSIA\t242\t1\t2204\t1490\t1921\t0\t2\t'
