@@ -36,7 +36,7 @@
 
 * Added git timestamp checking to checklist.py, ensuring that when changes are made to Cython (.pyx) files, their corresponding generated C files are also updated.
 * Fixed performance bug when instantiating ``BiologicalSequence`` objects. The previous runtime scaled linearly with sequence length; it is now constant time when the sequence is already a string. See [#623](https://github.com/biocore/scikit-bio/issues/623) for details.
-* IPython is now a required dependency.
+* IPython and six are now required dependencies.
 
 ## Version 0.2.0 (2014-08-07)
 
