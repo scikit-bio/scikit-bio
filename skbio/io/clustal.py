@@ -15,7 +15,7 @@ Format Support
 +----------+----------+------------------------------------------------------+
 |**Reader**|**Writer**|                   **Object Class**                   |
 +----------+----------+------------------------------------------------------+
-|Yes       |Yes       |:mod:`skbio.sequence.BiologicalSequence`              |
+|Yes       |Yes       |:mod:`skbio.alignment.Alignment`                      |
 +----------+----------+------------------------------------------------------+
 
 Format Specification
