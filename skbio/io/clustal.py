@@ -29,7 +29,7 @@ Alignment Section
 Each sequence in the alignment is divided into subsequences each at most
 60 characters long. The sequence ID of the alignment precedes each subsequence.
 Optionally, a line containing conservation information about each position
-in the multiple alignment. 
+in the multiple alignment.
 
 .. note:: scikit-bio does not support writing conservation information for
           multiple alignments
