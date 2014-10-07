@@ -1,6 +1,6 @@
 """
 Evolutionary statistics (:mod:`skbio.stats.evolve`)
-========================================================
+===================================================
 
 .. currentmodule:: skbio.stats.evolve
 
