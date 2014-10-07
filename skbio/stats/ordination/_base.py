@@ -21,7 +21,7 @@ from mpl_toolkits.mplot3d import Axes3D
 # avoid flake8 unused import error
 Axes3D
 from IPython.core.pylabtools import print_figure
-from IPython.display import Image, SVG
+from IPython.core.display import Image, SVG
 
 # This will be the responsibility of the ABC in the future.
 import_module('skbio.io')
