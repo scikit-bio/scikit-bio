@@ -1,11 +1,10 @@
 """
-Statistics (:mod:`skbio.stats`)
-===============================
+Evolutionary statistics (:mod:`skbio.stats.evolve`)
+========================================================
 
-.. currentmodule:: skbio.stats
+.. currentmodule:: skbio.stats.evolve
 
-This package contains various statistical methods, including ordination
-techniques and distance matrix-based statistics.
+This package contains statistics pertaining to phylogenies and evolution.
 
 Subpackages
 -----------
@@ -13,20 +12,7 @@ Subpackages
 .. autosummary::
    :toctree: generated/
 
-   distance
-   evolve
-   ordination
-   spatial
-   gradient
-
-Functions
----------
-
-.. autosummary::
-   :toctree: generated/
-
-   p_value_to_str
-   subsample
+   hommola_cospeciation
 
 """
 
@@ -38,10 +24,9 @@ Functions
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from ._misc import p_value_to_str
-from ._subsample import subsample
+from .hommola import hommola_cospeciation
 
-__all__ = ['p_value_to_str', 'subsample']
+__all__ = ['hommola_cospeciation']
 
 from numpy.testing import Tester
 test = Tester().test
