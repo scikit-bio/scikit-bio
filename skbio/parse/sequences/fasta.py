@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
-from skbio.core.exception import RecordError
+from skbio.io import RecordError
 from skbio.parse.record_finder import LabeledRecordFinder
 
 

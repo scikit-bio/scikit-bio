@@ -9,8 +9,8 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from skbio.core.alignment import Alignment
-from skbio.core.sequence import BiologicalSequence
+from skbio.alignment import Alignment
+from skbio.sequence import BiologicalSequence
 
 
 def fasta_from_sequences(seqs, make_seqlabel=None, line_wrap=None):
@@ -46,7 +46,7 @@ def fasta_from_sequences(seqs, make_seqlabel=None, line_wrap=None):
     Formatting a list of sequence objects
 
     >>> from skbio.format.sequences import fasta_from_sequences
-    >>> from skbio.core.sequence import DNASequence
+    >>> from skbio.sequence import DNASequence
     >>> seqs = [DNASequence('ACTCGAGATC', 'seq1'),
     ...         DNASequence('GGCCT', 'seq2')]
     >>> print fasta_from_sequences(seqs)
@@ -115,14 +115,14 @@ def fasta_from_alignment(aln, make_seqlabel=None, line_wrap=None, sort=True):
     See Also
     --------
     skbio.parse.sequences.parse_fasta
-    skbio.core.alignment.Alignment
+    skbio.alignment.Alignment
 
     Examples
     --------
     Formatting a sequence alignment object into a FASTA file.
 
-    >>> from skbio.core.alignment import Alignment
-    >>> from skbio.core.sequence import DNA
+    >>> from skbio.alignment import Alignment
+    >>> from skbio.sequence import DNA
     >>> from skbio.format.sequences import fasta_from_alignment
     >>> seqs = [DNA("ACC--G-GGTA..", id="seq1"),
     ...         DNA("TCC--G-GGCA..", id="seqs2")]

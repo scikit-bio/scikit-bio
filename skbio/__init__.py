@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function
 # ----------------------------------------------------------------------------
 
 __credits__ = "https://github.com/biocore/scikit-bio/graphs/contributors"
-__version__ = "0.1.4-dev"
+__version__ = "0.2.0-dev"
 
 mottos = [
     # 03/15/2014
@@ -57,25 +57,29 @@ if __doc__ is None:
 else:
     __doc__ = title + art + __doc__
 
+# Add skbio.io to sys.modules to prevent cycles in our imports
+import skbio.io
+skbio.io  # Stop flake8 error
+
 # imports included for convenience
-from skbio.core.sequence import (
+from skbio.sequence import (
     BiologicalSequence, NucleotideSequence, DNA, DNASequence, RNA, RNASequence,
     Protein, ProteinSequence)
-from skbio.core.distance import DistanceMatrix
-from skbio.core.alignment import (
+from skbio.stats.distance import DistanceMatrix
+from skbio.alignment import (
     local_pairwise_align_ssw, SequenceCollection, Alignment)
-from skbio.core.tree import (
+from skbio.tree import (
     TreeNode, nj)
 from skbio.parse.sequences import (
-    parse_fasta, parse_fastq, parse_qual, FastaIterator, FastqIterator,
-    SequenceIterator)
+    parse_fasta, parse_fastq, parse_qual, parse_qseq, FastaIterator,
+    FastqIterator, QseqIterator, SequenceIterator)
 
 __all__ = ['BiologicalSequence', 'NucleotideSequence', 'DNA', 'DNASequence',
            'RNA', 'RNASequence', 'Protein', 'ProteinSequence',
            'DistanceMatrix', 'local_pairwise_align_ssw',
            'SequenceCollection', 'Alignment', 'TreeNode', 'nj', 'parse_fasta',
-           'parse_fastq', 'parse_qual', 'FastaIterator', 'FastqIterator',
-           'SequenceIterator']
+           'parse_fastq', 'parse_qual', 'parse_qseq', 'FastaIterator',
+           'FastqIterator', 'QseqIterator', 'SequenceIterator']
 
 from numpy.testing import Tester
 test = Tester().test

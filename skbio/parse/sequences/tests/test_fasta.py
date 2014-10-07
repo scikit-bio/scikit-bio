@@ -15,7 +15,7 @@ from unittest import TestCase, main
 import numpy.testing as npt
 
 from skbio import parse_fasta, parse_qual
-from skbio.core.exception import RecordError
+from skbio.io import RecordError
 
 
 FASTA_PARSERS_DATA = {

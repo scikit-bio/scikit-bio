@@ -14,7 +14,7 @@ import tempfile
 from numpy import array
 
 from skbio import parse_fastq
-from skbio.core.exception import FastqParseError
+from skbio.parse.sequences import FastqParseError
 
 
 class IterableData(object):

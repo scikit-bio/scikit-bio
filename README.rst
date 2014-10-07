@@ -29,7 +29,7 @@
 
 scikit-bio is an open-source, BSD-licensed python package providing data structures, algorithms and educational resources for bioinformatics.
 
-scikit-bio is currently in pre-alpha release stage. We are very actively developing it, and **backwards-incompatible interface changes can and will arise**. Once the API has started to solidify, we will strive to maintain backwards compatibility. We will provide deprecation warnings, etc. wherever possible.
+scikit-bio is currently in alpha. We are very actively developing it, and **backwards-incompatible interface changes can and will arise**. Once the API has started to solidify, we will strive to maintain backwards compatibility. We will provide deprecation warnings, etc. wherever possible.
 
 To view scikit-bio's documentation, visit `scikit-bio.org
 <http://scikit-bio.org>`__.
@@ -42,22 +42,9 @@ To install the latest release version of scikit-bio you should run::
     pip install numpy
     pip install scikit-bio
 
-If you'd like to install the dependencies manually (or some other way
-than using pip), you can find those here:
+If you have trouble getting scikit-bio's dependencies installed (scipy, in particular, can be tricky), you should try installing `Canopy Express <https://www.enthought.com/canopy-express/>`_, which includes all of these dependencies.
 
--  `Python <http://www.python.org/>`__ 2.7 or >= 3.3
--  `numpy <http://www.numpy.org/>`__ >= 1.7
--  `scipy <http://www.scipy.org/>`__ >= 0.13.0
--  `matplotlib <http://www.matplotlib.org/>`__ >= 1.1.0
--  `pandas <http://pandas.pydata.org/>`__
--  `future <https://pypi.python.org/pypi/future>`__
--  `natsort <https://pypi.python.org/pypi/natsort>`__
-
-If you have trouble getting these dependencies installed (scipy, in particular, can be tricky), you should try installing `Canopy Express <https://www.enthought.com/canopy-express/>`_, which includes all of these dependencies. You should then be able to easily install scikit-bio by running::
-
-    pip install scikit-bio
-
-After installation with ``pip``, you can run the scikit-bio unittest suite as follows::
+You can verify your installation by running the scikit-bio unit tests as follows::
 
     nosetests --with-doctest skbio
 
@@ -71,7 +58,7 @@ If you're interested in working with the latest development release of scikit-bi
     cd scikit-bio
     pip install .
 
-After this completes, you can run the scikit-bio unittest suite as follows. You must first ``cd`` out of the ``scikit-bio`` directory for the tests to pass (here we ``cd`` to the home directory).
+After this completes, you can run the scikit-bio unit tests as follows. You must first ``cd`` out of the ``scikit-bio`` directory for the tests to pass (here we ``cd`` to the home directory).
 ::
 
     cd
@@ -81,13 +68,13 @@ For developers of scikit-bio, if you don't want to be forced to re-install after
 
     pip install -e .
 
-This will build scikit-bio's cython extensions, and will create a link in the ``site-packages`` directory to the scikit-bio source directory. When you then make changes to code in the source directory, those will be used (e.g., by the unittests) without re-installing.
+This will build scikit-bio's Cython extensions, and will create a link in the ``site-packages`` directory to the scikit-bio source directory. When you then make changes to code in the source directory, those will be used (e.g., by the unit tests) without re-installing.
 
 Finally, if you don't want to use ``pip`` to install scikit-bio, and prefer to just put ``scikit-bio`` in your ``$PYTHONPATH``, at the minimum you should run::
 
     python setup.py build_ext --inplace
 
-This will build scikit-bio's cython extensions, but not create a link to the scikit-bio source directory in ``site-packages``. If this isn't done, using certain components of scikit-bio will be inefficient and will produce an ``EfficiencyWarning``.
+This will build scikit-bio's Cython extensions, but not create a link to the scikit-bio source directory in ``site-packages``. If this isn't done, using certain components of scikit-bio will be inefficient and will produce an ``EfficiencyWarning``.
 
 Getting help
 ------------
@@ -111,6 +98,7 @@ Some of the projects that we know of that are using scikit-bio are:
 -  `Emperor <http://biocore.github.io/emperor/>`__
 -  `An Introduction to Applied
    Bioinformatics <http://caporasolab.us/An-Introduction-To-Applied-Bioinformatics/>`__
+-  `tax2tree <https://github.com/biocore/tax2tree>`__
 
 If you're using scikit-bio in your own projects, you can issue a
 pull request to add them to this list.

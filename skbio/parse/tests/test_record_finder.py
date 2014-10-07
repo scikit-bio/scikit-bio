@@ -8,7 +8,7 @@
 
 from unittest import TestCase, main
 
-from skbio.core.exception import RecordError
+from skbio.io import RecordError
 from skbio.parse.record_finder import (DelimitedRecordFinder,
                                        LabeledRecordFinder, LineGrouper,
                                        TailedRecordFinder)

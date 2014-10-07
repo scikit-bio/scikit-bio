@@ -13,7 +13,7 @@ from unittest import TestCase, main
 from skbio.parse.sequences import parse_clustal
 from skbio.parse.sequences.clustal import (_is_clustal_seq_line, last_space,
                                            _delete_trailing_number)
-from skbio.core.exception import RecordError
+from skbio.io import RecordError
 
 
 class ClustalTests(TestCase):
