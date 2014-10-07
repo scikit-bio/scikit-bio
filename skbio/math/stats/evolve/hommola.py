@@ -12,7 +12,7 @@ import sys
 import numpy as np
 from scipy.stats import pearsonr
 
-from skbio.core.distance import DistanceMatrix
+from skbio import DistanceMatrix
 
 if sys.hexversion > 0x03000000:
     xrange = range
