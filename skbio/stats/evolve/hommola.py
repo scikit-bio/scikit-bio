@@ -48,7 +48,7 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations):
     Examples
     --------
     >>> import numpy as np
-    >>> from skbio.math.stats.evolve import hommola_cospeciation
+    >>> from skbio.stats.evolve import hommola_cospeciation
 
     Import arrays for host distances, parasite distances, and the interactions
 
