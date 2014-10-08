@@ -9,7 +9,7 @@
 from __future__ import absolute_import, division, print_function
 from future.utils.six import string_types
 
-from re import compile as re_compile
+import re
 from collections import Sequence, Counter, defaultdict
 from itertools import product
 
@@ -1434,7 +1434,7 @@ class BiologicalSequence(Sequence):
             if feature_type == 'pyrimidine_run':
                 pat_str = '([CTUctu%s]{%d,})' % (acceptable, min_length)
 
-        pat = re_compile(pat_str)
+        pat = re.compile(pat_str)
 
         for hits in self.regex_iter(pat):
             if allow_gaps:
