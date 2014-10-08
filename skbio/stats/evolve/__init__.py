@@ -24,7 +24,7 @@ Subpackages
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from .hommola import hommola_cospeciation
+from ._hommola import hommola_cospeciation
 
 __all__ = ['hommola_cospeciation']
 

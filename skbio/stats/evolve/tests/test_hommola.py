@@ -13,7 +13,7 @@ from numpy.testing import assert_allclose
 from nose.tools import assert_almost_equal
 
 from skbio.stats.evolve import hommola_cospeciation
-from skbio.stats.evolve.hommola import _get_dist, _gen_lists
+from skbio.stats.evolve._hommola import _get_dist, _gen_lists
 
 
 def test_hommola_cospeciation_sig():
@@ -26,13 +26,37 @@ def test_hommola_cospeciation_sig():
     matrix = np.array([[1, 0, 0, 0, 0], [0, 1, 0, 0, 0], [
         0, 0, 1, 0, 0], [0, 0, 0, 1, 0], [0, 0, 0, 1, 1]])
 
-    obs_p, obs_r, obs_perm_stats = hommola_cospeciation(
+    obs_r, obs_p, obs_perm_stats = hommola_cospeciation(
         hdist, pdist, matrix, 9)
     exp_p = .1
     exp_r = 0.83170965463247915
     exp_perm_stats = np.array([-0.14928122, 0.26299538, -0.21125858,
                                0.24143838, 0.61557855, -0.24258293,
                                0.09885203, 0.02858, 0.42742399])
+    assert_almost_equal(obs_p, exp_p)
+    assert_almost_equal(obs_r, exp_r)
+
+    assert_allclose(obs_perm_stats, exp_perm_stats)
+
+
+def test_hommola_cospeciation_assymmetric():
+    np.random.seed(1)
+
+    hdist = np.array([[0, 3, 8, 8], [3, 0, 7, 7], [8, 7, 0, 6], [8, 7, 6, 0]])
+    pdist = np.array([[0, 5, 8, 8, 8], [5, 0, 7, 7, 7], [8, 7, 0, 4, 4],
+                      [8, 7, 4, 0, 2], [8, 7, 4, 2, 0]])
+    matrix = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0],
+                       [0, 0, 0, 1], [0, 0, 0, 1]])
+
+    obs_r, obs_p, obs_perm_stats = hommola_cospeciation(
+        hdist, pdist, matrix, 9)
+    exp_p = 0.2
+    exp_r = 0.85732140997411233
+    exp_perm_stats = np.array([-0.315244162496, -0.039405520312,
+                               0.093429386594, -0.387835875941,
+                               0.183711730709,  0.056057631956,
+                               0.945732487487,  0.056057631956,
+                               -0.020412414523])
     assert_almost_equal(obs_p, exp_p)
     assert_almost_equal(obs_r, exp_r)
 
@@ -53,7 +77,7 @@ def test_hommola_cospeciation_no_sig():
         [[0, 0, 0, 1, 0], [0, 0, 0, 0, 1], [1, 0, 0, 0, 0], [1, 0, 0, 0, 0],
          [0, 0, 0, 0, 1]])
 
-    obs_p, obs_r, obs_perm_stats = hommola_cospeciation(
+    obs_r, obs_p, obs_perm_stats = hommola_cospeciation(
         hdist, pdist, randomized_matrix, 9)
     exp_p = .6
     exp_r = -0.013679391379114569
