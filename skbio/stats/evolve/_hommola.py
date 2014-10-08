@@ -72,6 +72,8 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations=999):
         order of parasites (rows)
     permutations : int, optional
         Number of permutations to run. Must be greater than or equal to zero.
+        If zero, statistical significance calculations will be skipped and the
+        p-value will be ``np.nan``
 
     Returns
     -------
@@ -125,7 +127,7 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations=999):
     >>> r_val
     0.83170965463247903
 
-    In this case, the host distances explain about 80%% of the variation in
+    In this case, the host distances explain about 80% of the variation in
     symbiont distances. However, this may also reflect structure inherent in
     the phylogeny, and is not itself indicative of significance.
 
@@ -140,14 +142,16 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations=999):
     par_dist = DistanceMatrix(par_dist)
     interaction = np.asarray(interaction, dtype=bool)
 
+    num_hosts = host_dist.shape[0]
+    num_pars = par_dist.shape[0]
+
     # Sanity check inputs
-    if host_dist.shape[1] < 3 or par_dist.shape[1] < 3:
-        raise ValueError("Distance matrices must have at least 3 matching IDs "
-                         "between them (i.e., minimum 3x3 in size).")
-    if host_dist.shape[1] != interaction.shape[1]:
+    if num_hosts < 3 or num_pars < 3:
+        raise ValueError("Distance matrices must be minimum of 3x3 in size).")
+    if num_hosts != interaction.shape[1]:
         raise ValueError("Number of interaction matrix columns must match "
                          "number of hosts in host_dist")
-    if par_dist.shape[1] != interaction.shape[0]:
+    if num_pars != interaction.shape[0]:
         raise ValueError("Number of interaction matrix rows must match "
                          "number of parasites in par_dist")
     if permutations < 0:
@@ -164,40 +168,42 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations=999):
 
     # get a vector of pairwise distances for each interaction edge
     x = _get_dist(hosts_k_labels, hosts_t_labels, host_dist.data,
-                  np.arange(interaction.shape[1]))
+                  np.arange(num_hosts))
     y = _get_dist(pars_k_labels, pars_t_labels, par_dist.data,
-                  np.arange(interaction.shape[0]))
+                  np.arange(num_pars))
 
     # calculate the observed correlation coefficient for this host/symbionts
     r = pearsonr(x, y)[0]
 
     # now do permutatitons. Initialize index lists of the appropriate size.
-    mp = np.arange(par_dist.data.shape[1])
-    mh = np.arange(host_dist.data.shape[1])
-    below = 0
+    mp = np.arange(num_pars)
+    mh = np.arange(num_hosts)
 
     # initialize list of shuffled correlation vals
     perm_stats = np.empty(permutations)
 
-    for i in range(permutations):
-        # Generate a shuffled list of indexes for each permutation. This
-        # effectively randomizes which host is associated with which symbiont,
-        # but maintains the distribution of genetic distances.
-        np.random.shuffle(mp)
-        np.random.shuffle(mh)
+    if permutations == 0 or np.isnan(r):
+        p_val = np.nan
+    else:
+        for i in range(permutations):
+            # Generate a shuffled list of indexes for each permutation. This
+            # effectively randomizes which host is associated with which
+            # symbiont, but maintains the distribution of genetic distances.
+            np.random.shuffle(mp)
+            #np.random.shuffle(mh)
 
-        # Get pairwise distances in shuffled order
-        y_p = _get_dist(pars_k_labels, pars_t_labels, par_dist.data, mp)
-        x_p = _get_dist(hosts_k_labels, hosts_t_labels, host_dist.data, mh)
+            # Get pairwise distances in shuffled order
+            y_p = _get_dist(pars_k_labels, pars_t_labels, par_dist.data, mp)
+            x_p = _get_dist(hosts_k_labels, hosts_t_labels, host_dist.data, mh)
 
-        # calculate shuffled correlation.
-        # If greater than observed value, iterate counter below.
-        r_p = pearsonr(x_p, y_p)[0]
-        perm_stats[i] = r_p
+            # calculate shuffled correlation.
+            # If greater than observed value, iterate counter below.
+            r_p = pearsonr(x_p, y_p)[0]
+            perm_stats[i] = r_p
 
-    below = (perm_stats >= r).sum()
+        below = (perm_stats >= r).sum()
 
-    p_val = (below + 1) / (permutations + 1)
+        p_val = (below + 1) / (permutations + 1)
 
     return r, p_val, perm_stats
 
