@@ -120,7 +120,7 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations=999):
     Run the permutation test. Note that the correlation coefficient for the
     observed values counts against the final reported p value.
 
-    >>> p_val, r_val, perm_stats = hommola_cospeciation(hdist, pdist,
+    >>> r_val, p_val, perm_stats = hommola_cospeciation(hdist, pdist,
     ...                                                 interaction, 99)
     >>> r_val
     0.83170965463247903
