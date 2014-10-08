@@ -53,7 +53,7 @@ def _fasta_sniffer(obj, fh):
 
 
 @register_reader('fasta')
-def _fasta_to_generator(obj, fh, constructor=BiologicalSequence):
+def _fasta_to_generator(fh, constructor=BiologicalSequence):
     line = next(fh)
     if _is_header(line):
         id_, desc = _parse_header(line)

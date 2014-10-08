@@ -14,12 +14,43 @@ from unittest import TestCase, main
 from skbio import BiologicalSequence, NucleotideSequence, DNA, RNA, Protein
 from skbio import SequenceCollection, Alignment
 from skbio.io import FASTAFormatError
-from skbio.io.fasta import (_generator_to_fasta, _biological_sequence_to_fasta,
-                            _nucleotide_sequence_to_fasta,
-                            _dna_sequence_to_fasta, _rna_sequence_to_fasta,
-                            _protein_sequence_to_fasta,
-                            _sequence_collection_to_fasta, _alignment_to_fasta)
+from skbio.io.fasta import (
+    _fasta_to_generator, _generator_to_fasta, _biological_sequence_to_fasta,
+    _nucleotide_sequence_to_fasta, _dna_sequence_to_fasta,
+    _rna_sequence_to_fasta, _protein_sequence_to_fasta,
+    _sequence_collection_to_fasta, _alignment_to_fasta)
 from skbio.util import get_data_path
+
+
+class FASTAReaderTests(TestCase):
+    def setUp(self):
+        # store sequence generator (expanded into a list) that we expect to
+        # obtain from reading, matched with the filepaths that should
+        # deserialize into the expected generator results
+        self.objs_fps = map(lambda e: (e[0], map(get_data_path, e[1])), [
+            ([], ['empty']),
+            ([BiologicalSequence('ACGT-acgt.', id='seq1', description='desc1')],
+             ['fasta_single_seq', 'fasta_max_width_1']),
+            ([BiologicalSequence('ACGT-acgt.', id='seq1', description='desc1'),
+              BiologicalSequence('A', id='_____seq__2_'),
+              BiologicalSequence('AACGGuA', description='desc3'),
+              BiologicalSequence('AcGtUTu'),
+              BiologicalSequence('ACGTTGCAccGG'),
+              BiologicalSequence('ACGUU'),
+              BiologicalSequence(
+                  'pQqqqPPQQQ', id='proteinseq',
+                  description='detailed description \t\twith  new  lines')],
+             ['fasta_multi_seq', 'fasta_max_width_5']),
+        ])
+
+    def test_fasta_to_generator_valid_files(self):
+        for exp, fps in self.objs_fps:
+            for fp in fps:
+                obs = list(_fasta_to_generator(fp))
+
+                self.assertEqual(len(obs), len(exp))
+                for o, e in zip(obs, exp):
+                    self.assertTrue(o.equals(e))
 
 
 class FASTAWriterTests(TestCase):
@@ -203,14 +234,6 @@ class FASTAWriterTests(TestCase):
                     exp = fh.read()
 
                 self.assertEqual(obs, exp)
-
-
-class FASTAReaderTests(TestCase):
-    def setUp(self):
-        pass
-
-    def test_fasta_to_generator_valid_files(self):
-        pass
 
 
 if __name__ == '__main__':
