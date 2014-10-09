@@ -16,10 +16,11 @@ from skbio import (BiologicalSequence, NucleotideSequence, DNA, RNA, Protein,
 from skbio import SequenceCollection, Alignment
 from skbio.io import FASTAFormatError
 from skbio.io.fasta import (
-    _fasta_to_generator, _generator_to_fasta, _biological_sequence_to_fasta,
-    _nucleotide_sequence_to_fasta, _dna_sequence_to_fasta,
-    _rna_sequence_to_fasta, _protein_sequence_to_fasta,
-    _sequence_collection_to_fasta, _alignment_to_fasta)
+    _fasta_to_generator, _fasta_to_sequence_collection, _generator_to_fasta,
+    _biological_sequence_to_fasta, _nucleotide_sequence_to_fasta,
+    _dna_sequence_to_fasta, _rna_sequence_to_fasta,
+    _protein_sequence_to_fasta, _sequence_collection_to_fasta,
+    _alignment_to_fasta)
 from skbio.util import get_data_path
 
 
@@ -28,33 +29,48 @@ class FASTAReaderTests(TestCase):
         # store sequence generator (expanded into a list) that we expect to
         # obtain from reading, matched with the kwargs and filepaths that
         # should deserialize into the expected generator results
-        self.objs_fps = map(lambda e: (e[0], e[1], map(get_data_path, e[2])), [
-            ([], {}, ['empty']),
+        self.empty = ([], {}, map(get_data_path, ['empty']))
 
-            ([BiologicalSequence('ACGT-acgt.', id='seq1', description='desc1')],
-             {},
-             ['fasta_single_seq', 'fasta_max_width_1']),
+        self.single = (
+            [BiologicalSequence('ACGT-acgt.', id='seq1', description='desc1')],
+            {},
+            map(get_data_path, ['fasta_single_seq', 'fasta_max_width_1'])
+        )
 
-            ([BiologicalSequence('ACGT-acgt.', id='seq1', description='desc1'),
-              BiologicalSequence('A', id='_____seq__2_'),
-              BiologicalSequence('AACGGuA', description='desc3'),
-              BiologicalSequence('AcGtUTu'),
-              BiologicalSequence('ACGTTGCAccGG'),
-              BiologicalSequence('ACGUU'),
-              BiologicalSequence(
-                  'pQqqqPPQQQ', id='proteinseq',
-                  description='detailed description \t\twith  new  lines')],
-             {},
-             ['fasta_multi_seq', 'fasta_max_width_5']),
+        self.multi = (
+            [BiologicalSequence('ACGT-acgt.', id='seq1', description='desc1'),
+             BiologicalSequence('A', id='_____seq__2_'),
+             BiologicalSequence('AACGGuA', description='desc3'),
+             BiologicalSequence('AcGtUTu'),
+             BiologicalSequence('ACGTTGCAccGG'),
+             BiologicalSequence('ACGUU'),
+             BiologicalSequence(
+                 'pQqqqPPQQQ', id='proteinseq',
+                 description='detailed description \t\twith  new  lines')],
+            {},
+            map(get_data_path, ['fasta_multi_seq', 'fasta_max_width_5'])
+        )
 
-            # test constructor parameter, as well as odd labels (label only
-            # containing whitespace, label description preceded by multiple
-            # spaces, no id) and leading/trailing whitespace on sequence data
-            ([Protein('DEFQfp'),
-              Protein('SKBI', description='skbio')],
+        # test constructor parameter, as well as odd labels (label only
+        # containing whitespace, label description preceded by multiple spaces,
+        # no id) and leading/trailing whitespace on sequence data
+        self.odd_labels_different_type = (
+            [Protein('DEFQfp'),
+             Protein('SKBI', description='skbio')],
             {'constructor': ProteinSequence},
-            ['fasta_prot_seqs_odd_labels'])
-        ])
+            map(get_data_path, ['fasta_prot_seqs_odd_labels'])
+        )
+
+        # sequences that can be loaded into a SequenceCollection or Alignment.
+        # they are also a different type than BiologicalSequence in order to
+        # exercise the constructor parameter
+        self.sequence_collection_different_type = (
+            [RNA('AUG'),
+             RNA('AUC', id='rnaseq-1', description='rnaseq desc 1'),
+             RNA('AUG', id='rnaseq-2', description='rnaseq desc 2')],
+            {'constructor': RNA},
+            map(get_data_path, ['fasta_sequence_collectino_different_type'])
+        )
 
         self.invalid_fps = map(lambda e: (get_data_path(e[0]), e[1]), [
             ('whitespace_only', 'without a FASTA header'),
@@ -67,7 +83,9 @@ class FASTAReaderTests(TestCase):
         ])
 
     def test_fasta_to_generator_valid_files(self):
-        for exp, kwargs, fps in self.objs_fps:
+        for exp, kwargs, fps in (self.empty, self.single, self.multi,
+                                 self.odd_labels_different_type,
+                                 self.sequence_collection_different_type):
             for fp in fps:
                 obs = list(_fasta_to_generator(fp, **kwargs))
 
@@ -79,6 +97,22 @@ class FASTAReaderTests(TestCase):
         for fp, error_msg_regex in self.invalid_fps:
             with self.assertRaisesRegexp(FASTAFormatError, error_msg_regex):
                 list(_fasta_to_generator(fp))
+
+    def test_fasta_to_sequence_collection(self):
+        for exp_list, kwargs, fps in (self.empty, self.single,
+                                      self.sequence_collection_different_type):
+            exp = SequenceCollection(exp_list)
+
+            for fp in fps:
+                obs = _fasta_to_sequence_collection(fp, **kwargs)
+
+                # TODO remove this custom equality testing code when
+                # SequenceCollection has an equals method (part of #656). We
+                # need this method to include IDs and description in the
+                # comparison (not part of SequenceCollection.__eq__).
+                self.assertEqual(obs, exp)
+                for o, e in zip(obs, exp):
+                    self.assertTrue(o.equals(e))
 
 
 class FASTAWriterTests(TestCase):

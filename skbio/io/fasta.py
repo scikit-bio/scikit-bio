@@ -79,6 +79,12 @@ def _fasta_to_generator(fh, constructor=BiologicalSequence):
     yield _construct_sequence(constructor, seq_chunks, id_, desc)
 
 
+@register_reader('fasta', SequenceCollection)
+def _fasta_to_sequence_collection(fh, constructor=BiologicalSequence):
+    return SequenceCollection(
+        list(_fasta_to_generator(fh, constructor=constructor)))
+
+
 @register_writer('fasta')
 def _generator_to_fasta(obj, fh, id_whitespace_replacement='_',
                         description_newline_replacement=' ', max_width=None):
