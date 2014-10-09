@@ -6,13 +6,21 @@ Evolutionary statistics (:mod:`skbio.stats.evolve`)
 
 This package contains statistics pertaining to phylogenies and evolution.
 
-Subpackages
------------
+Cophylogenetic methods
+----------------------
+
+These functions test for correlation between phylogenies or representations of
+evolutionary distance (for example, genetic distance matrices). 
+
+Functions
+^^^^^^^^^
 
 .. autosummary::
    :toctree: generated/
 
    hommola_cospeciation
+
+
 
 """
 
