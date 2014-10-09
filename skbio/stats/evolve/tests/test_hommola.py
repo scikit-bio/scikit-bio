@@ -13,6 +13,7 @@ from numpy.testing import assert_allclose, assert_equal
 from nose.tools import assert_almost_equal
 from unittest import TestCase
 
+from skbio.stats.distance import mantel
 from skbio.stats.evolve import hommola_cospeciation
 from skbio.stats.evolve._hommola import _get_dist, _gen_lists
 
@@ -99,6 +100,24 @@ class HommolaCospeciationTests(TestCase):
         assert_almost_equal(obs_p, exp_p)
         assert_almost_equal(obs_r, exp_r)
         assert_allclose(obs_perm_stats, exp_perm_stats)
+
+    def test_hommola_vs_mantel(self):
+        z = 1
+
+        obs_r_mantel = np.zeros(z)
+        obs_r_hommola = np.zeros(z)
+        obs_p_mantel = np.zeros(z)
+        obs_p_hommola = np.zeros(z)
+
+        for i in range(z):
+            np.random.seed(i)
+            obs_r_mantel[i], obs_p_mantel[i], n = mantel(self.hdist, self.pdist, method='pearson', permutations=999, alternative='greater')
+            np.random.seed(i)
+            obs_r_hommola[i], obs_p_hommola[i], obs_perm_stats = hommola_cospeciation(self.hdist, self.pdist, self.interact_1to1, permutations=999, perm_host=True, perm_par=True)
+
+        assert_allclose(obs_r_mantel, obs_r_hommola)
+
+        assert_almost_equal(obs_p_mantel.mean(), obs_p_hommola.mean(), places=2)
 
     def test_zero_permutations(self):
         obs_r, obs_p, obs_perm_stats = hommola_cospeciation(

@@ -15,7 +15,8 @@ from scipy.stats import pearsonr
 from skbio import DistanceMatrix
 
 
-def hommola_cospeciation(host_dist, par_dist, interaction, permutations=999):
+def hommola_cospeciation(host_dist, par_dist, interaction, permutations=999,
+                         perm_host=True, perm_par=True):
     """Performs a cospeciation test
 
     This test for host/parasite cospeciation is as described in [1]_. This test
@@ -66,14 +67,18 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations=999):
         Symmetric matrix of m x m pairwise distances between hosts
     par_dist : array_like or DistanceMatrix
         Symmetric matrix of n x n pairwise distances between parasites
-    interaction : array_like
+    interaction : 2-D array_like, bool
         n x m binary matrix of parasite x host interactions. Order of hosts
         (columns) should be identical to order of hosts in host_dist, as should
         order of parasites (rows)
     permutations : int, optional
-        Number of permutations to run. Must be greater than or equal to zero.
-        If zero, statistical significance calculations will be skipped and the
-        p-value will be ``np.nan``
+        Number of permutations to run. Default 999. Must be greater than or
+        equal to zero. If zero, statistical significance calculations will be
+        skipped and the p-value will be ``np.nan``
+    perm_host : bool
+        permute host matrix. Default True.
+    perm_par : bool
+        permute parasite matrix. Default True.
 
     Returns
     -------
@@ -127,9 +132,9 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations=999):
     >>> r_val
     0.83170965463247903
 
-    In this case, the host distances explain about 80% of the variation in
-    symbiont distances. However, this may also reflect structure inherent in
-    the phylogeny, and is not itself indicative of significance.
+    In this case, the host distances have a fairly strong positive correlation
+    with the symbiont distances. However, this may also reflect structure
+    inherent in the phylogeny, and is not itself indicative of significance.
 
     >>> p_val <= 0.05
     True
@@ -172,8 +177,10 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations=999):
     y = _get_dist(pars_k_labels, pars_t_labels, par_dist.data,
                   np.arange(num_pars))
 
+    # calculate sorting index to ensure consistency from pearsonr
+    sort = (x + y).argsort()
     # calculate the observed correlation coefficient for this host/symbionts
-    r = pearsonr(x, y)[0]
+    r = pearsonr(x[sort], y[sort])[0]
 
     # now do permutatitons. Initialize index lists of the appropriate size.
     mp = np.arange(num_pars)
@@ -189,16 +196,20 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations=999):
             # Generate a shuffled list of indexes for each permutation. This
             # effectively randomizes which host is associated with which
             # symbiont, but maintains the distribution of genetic distances.
-            np.random.shuffle(mp)
-            #np.random.shuffle(mh)
+            if perm_host:
+                np.random.shuffle(mp)
+            if perm_par:
+                np.random.shuffle(mh)
 
             # Get pairwise distances in shuffled order
             y_p = _get_dist(pars_k_labels, pars_t_labels, par_dist.data, mp)
             x_p = _get_dist(hosts_k_labels, hosts_t_labels, host_dist.data, mh)
 
+            sort = (x_p + y_p).argsort()
+
             # calculate shuffled correlation.
             # If greater than observed value, iterate counter below.
-            r_p = pearsonr(x_p, y_p)[0]
+            r_p = pearsonr(x_p[sort], y_p[sort])[0]
             perm_stats[i] = r_p
 
         below = (perm_stats >= r).sum()
