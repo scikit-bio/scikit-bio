@@ -111,13 +111,19 @@ class HommolaCospeciationTests(TestCase):
 
         for i in range(z):
             np.random.seed(i)
-            obs_r_mantel[i], obs_p_mantel[i], n = mantel(self.hdist, self.pdist, method='pearson', permutations=999, alternative='greater')
+            obs_r_mantel[i], obs_p_mantel[i], n = mantel(
+                self.hdist, self.pdist, method='pearson', permutations=999,
+                alternative='greater'
+            )
             np.random.seed(i)
-            obs_r_hommola[i], obs_p_hommola[i], obs_perm_stats = hommola_cospeciation(self.hdist, self.pdist, self.interact_1to1, permutations=999, perm_host=True, perm_par=True)
+            obs_r_hommola[i], obs_p_hommola[i], s = hommola_cospeciation(
+                self.hdist, self.pdist, self.interact_1to1, permutations=999
+            )
 
         assert_allclose(obs_r_mantel, obs_r_hommola)
 
-        assert_almost_equal(obs_p_mantel.mean(), obs_p_hommola.mean(), places=2)
+        assert_almost_equal(obs_p_mantel.mean(), obs_p_hommola.mean(),
+                            places=2)
 
     def test_zero_permutations(self):
         obs_r, obs_p, obs_perm_stats = hommola_cospeciation(

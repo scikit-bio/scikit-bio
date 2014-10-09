@@ -202,7 +202,7 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations=999):
             # Get pairwise distances in shuffled order
             y_p = _get_dist(pars_k_labels, pars_t_labels, par_dist.data, mp)
             x_p = _get_dist(hosts_k_labels, hosts_t_labels, host_dist.data, mh)
-           
+
             # calculate sorting index to ensure consistency from pearsonr
             sort = (x_p + y_p).argsort()
 
