@@ -30,9 +30,11 @@ class FASTAReaderTests(TestCase):
         # should deserialize into the expected generator results
         self.objs_fps = map(lambda e: (e[0], e[1], map(get_data_path, e[2])), [
             ([], {}, ['empty']),
+
             ([BiologicalSequence('ACGT-acgt.', id='seq1', description='desc1')],
              {},
              ['fasta_single_seq', 'fasta_max_width_1']),
+
             ([BiologicalSequence('ACGT-acgt.', id='seq1', description='desc1'),
               BiologicalSequence('A', id='_____seq__2_'),
               BiologicalSequence('AACGGuA', description='desc3'),
@@ -44,13 +46,24 @@ class FASTAReaderTests(TestCase):
                   description='detailed description \t\twith  new  lines')],
              {},
              ['fasta_multi_seq', 'fasta_max_width_5']),
+
             # test constructor parameter, as well as odd labels (label only
             # containing whitespace, label description preceded by multiple
-            # spaces, no id)
+            # spaces, no id) and leading/trailing whitespace on sequence data
             ([Protein('DEFQfp'),
               Protein('SKBI', description='skbio')],
             {'constructor': ProteinSequence},
-            ['fasta_prot_seqs_odd_labels']),
+            ['fasta_prot_seqs_odd_labels'])
+        ])
+
+        self.invalid_fps = map(lambda e: (get_data_path(e[0]), e[1]), [
+            ('whitespace_only', 'without a FASTA header'),
+            ('fasta_invalid_missing_header', 'without a FASTA header'),
+            ('fasta_invalid_blank_line', 'blank or whitespace-only'),
+            ('fasta_invalid_whitespace_only_line', 'blank or whitespace-only'),
+            ('fasta_invalid_missing_seq_data_first', 'without sequence data'),
+            ('fasta_invalid_missing_seq_data_middle', 'without sequence data'),
+            ('fasta_invalid_missing_seq_data_last', 'without sequence data'),
         ])
 
     def test_fasta_to_generator_valid_files(self):
@@ -61,6 +74,11 @@ class FASTAReaderTests(TestCase):
                 self.assertEqual(len(obs), len(exp))
                 for o, e in zip(obs, exp):
                     self.assertTrue(o.equals(e))
+
+    def test_fasta_to_generator_invalid_files(self):
+        for fp, error_msg_regex in self.invalid_fps:
+            with self.assertRaisesRegexp(FASTAFormatError, error_msg_regex):
+                list(_fasta_to_generator(fp))
 
 
 class FASTAWriterTests(TestCase):
