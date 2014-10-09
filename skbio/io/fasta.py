@@ -79,34 +79,6 @@ def _fasta_to_generator(fh, constructor=BiologicalSequence):
     yield _construct_sequence(constructor, seq_chunks, id_, desc)
 
 
-def _is_header(line):
-    return line.startswith('>') or line.startswith(';')
-
-
-def _parse_header(line):
-    id_ = ''
-    desc = ''
-    header = line[1:].rstrip()
-    if header:
-        if header[0].isspace():
-            # no id
-            desc = header.lstrip()
-        else:
-            header_tokens = header.split(None, 1)
-            if len(header_tokens) == 1:
-                # no description
-                id_ = header_tokens[0]
-            else:
-                id_, desc = header_tokens
-    return id_, desc
-
-
-def _construct_sequence(constructor, seq_chunks, id_, description):
-    if not seq_chunks:
-        raise FASTAFormatError("Found FASTA header without sequence data.")
-    return constructor(''.join(seq_chunks), id=id_, description=description)
-
-
 @register_writer('fasta')
 def _generator_to_fasta(obj, fh, id_whitespace_replacement='_',
                         description_newline_replacement=' ', max_width=None):
@@ -198,6 +170,34 @@ def _alignment_to_fasta(obj, fh, id_whitespace_replacement='_',
                         description_newline_replacement=' ', max_width=None):
     _sequences_to_fasta(obj, fh, id_whitespace_replacement,
                         description_newline_replacement, max_width)
+
+
+def _is_header(line):
+    return line.startswith('>') or line.startswith(';')
+
+
+def _parse_header(line):
+    id_ = ''
+    desc = ''
+    header = line[1:].rstrip()
+    if header:
+        if header[0].isspace():
+            # no id
+            desc = header.lstrip()
+        else:
+            header_tokens = header.split(None, 1)
+            if len(header_tokens) == 1:
+                # no description
+                id_ = header_tokens[0]
+            else:
+                id_, desc = header_tokens
+    return id_, desc
+
+
+def _construct_sequence(constructor, seq_chunks, id_, description):
+    if not seq_chunks:
+        raise FASTAFormatError("Found FASTA header without sequence data.")
+    return constructor(''.join(seq_chunks), id=id_, description=description)
 
 
 def _sequence_to_fasta(obj, fh, id_whitespace_replacement,
