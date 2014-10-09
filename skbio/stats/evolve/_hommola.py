@@ -15,8 +15,7 @@ from scipy.stats import pearsonr
 from skbio import DistanceMatrix
 
 
-def hommola_cospeciation(host_dist, par_dist, interaction, permutations=999,
-                         perm_host=True, perm_par=True):
+def hommola_cospeciation(host_dist, par_dist, interaction, permutations=999):
     """Performs a cospeciation test
 
     This test for host/parasite cospeciation is as described in [1]_. This test
@@ -179,6 +178,7 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations=999,
 
     # calculate sorting index to ensure consistency from pearsonr
     sort = (x + y).argsort()
+
     # calculate the observed correlation coefficient for this host/symbionts
     r = pearsonr(x[sort], y[sort])[0]
 
@@ -196,15 +196,14 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations=999,
             # Generate a shuffled list of indexes for each permutation. This
             # effectively randomizes which host is associated with which
             # symbiont, but maintains the distribution of genetic distances.
-            if perm_host:
-                np.random.shuffle(mp)
-            if perm_par:
-                np.random.shuffle(mh)
+            np.random.shuffle(mp)
+            np.random.shuffle(mh)
 
             # Get pairwise distances in shuffled order
             y_p = _get_dist(pars_k_labels, pars_t_labels, par_dist.data, mp)
             x_p = _get_dist(hosts_k_labels, hosts_t_labels, host_dist.data, mh)
-
+           
+            # calculate sorting index to ensure consistency from pearsonr
             sort = (x_p + y_p).argsort()
 
             # calculate shuffled correlation.
