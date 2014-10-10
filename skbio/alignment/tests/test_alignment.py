@@ -25,7 +25,7 @@ from scipy.spatial.distance import hamming
 from skbio import (NucleotideSequence, DNASequence, RNASequence, DNA, RNA,
                    DistanceMatrix, Alignment, SequenceCollection)
 from skbio.alignment import (StockholmAlignment, SequenceCollectionError,
-                             StockholmParseError)
+                             StockholmParseError, AlignmentError)
 
 
 class SequenceCollectionTests(TestCase):
@@ -51,6 +51,7 @@ class SequenceCollectionTests(TestCase):
         self.seqs1_lower = [self.d1_lower, self.d2_lower]
         self.seqs2 = [self.r1, self.r2, self.r3]
         self.seqs3 = self.seqs1 + self.seqs2
+        self.seqs4 = [self.d1, self.d3]
 
         self.seqs1_t = [('d1', 'GATTACA'), ('d2', 'TTG')]
         self.seqs2_t = [('r1', 'GAUUACA'), ('r2', 'UUG'),
@@ -61,6 +62,7 @@ class SequenceCollectionTests(TestCase):
         self.s1_lower = SequenceCollection(self.seqs1_lower)
         self.s2 = SequenceCollection(self.seqs2)
         self.s3 = SequenceCollection(self.seqs3)
+        self.s4 = SequenceCollection(self.seqs4)
         self.empty = SequenceCollection([])
 
         self.invalid_s1 = SequenceCollection([self.i1])
@@ -118,8 +120,8 @@ class SequenceCollectionTests(TestCase):
         class FakeSequenceCollection(SequenceCollection):
             pass
         # SequenceCollections of different types are not equal
-        self.assertFalse(self.s1 == FakeSequenceCollection([self.d1, self.d2]))
-        self.assertFalse(self.s1 == Alignment([self.d1, self.d3]))
+        self.assertFalse(self.s4 == FakeSequenceCollection([self.d1, self.d3]))
+        self.assertFalse(self.s4 == Alignment([self.d1, self.d3]))
 
         # SequenceCollections with different sequences are not equal
         self.assertFalse(self.s1 == SequenceCollection([self.d1, self.r1]))
@@ -166,8 +168,8 @@ class SequenceCollectionTests(TestCase):
         class FakeSequenceCollection(SequenceCollection):
             pass
         # SequenceCollections of different types are not equal
-        self.assertTrue(self.s1 != FakeSequenceCollection([self.d1, self.d2]))
-        self.assertTrue(self.s1 != Alignment([self.d1, self.d3]))
+        self.assertTrue(self.s4 != FakeSequenceCollection([self.d1, self.d3]))
+        self.assertTrue(self.s4 != Alignment([self.d1, self.d3]))
 
         # SequenceCollections with different sequences are not equal
         self.assertTrue(self.s1 !=
@@ -652,7 +654,7 @@ class AlignmentTests(TestCase):
     def test_init_not_equal_lengths(self):
         invalid_seqs = [self.d1, self.d2, self.d3,
                         DNASequence('.-ACC-GTGC--', id="i2")]
-        self.assertRaises(SequenceCollectionError, Alignment,
+        self.assertRaises(AlignmentError, Alignment,
                           invalid_seqs)
 
     def test_init_equal_lengths(self):
@@ -669,18 +671,6 @@ class AlignmentTests(TestCase):
                          DNASequence('.-ACC-GTXGC--', id="i1")]
         self.assertRaises(SequenceCollectionError, Alignment,
                           invalid_seqs1, validate=True)
-
-    def test_is_valid(self):
-        """is_valid functions as expected
-        """
-        self.assertTrue(self.a1.is_valid())
-        self.assertTrue(self.a2.is_valid())
-        self.assertTrue(self.empty.is_valid())
-
-        # invalid because of invalid charaters
-        d1 = DNASequence('..ACC-GTXGG..', id="d1")
-        d2 = DNASequence('TTACCGGT-GGCC', id="d2")
-        self.assertFalse(Alignment([d1, d2]).is_valid())
 
     def test_iter_positions(self):
         """iter_positions functions as expected

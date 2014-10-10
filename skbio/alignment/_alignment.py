@@ -19,7 +19,8 @@ from scipy.stats import entropy
 
 from skbio.stats.distance import DistanceMatrix
 from skbio.io.util import open_file
-from ._exception import SequenceCollectionError, StockholmParseError
+from ._exception import (SequenceCollectionError, StockholmParseError,
+                         AlignmentError)
 
 # This will be the responsibility of the ABC in the future.
 import_module('skbio.io')
@@ -931,6 +932,7 @@ class Alignment(SequenceCollection):
     ------
     skbio.alignment.SequenceCollectionError
         If ``validate == True`` and ``is_valid == False``.
+    skbio.alignment.AlignmentError
         If not all the sequences have the same length.
 
     Notes
@@ -968,8 +970,7 @@ class Alignment(SequenceCollection):
         super(Alignment, self).__init__(seqs, validate)
 
         if not self._validate_lengths():
-            raise SequenceCollectionError("All sequences need to be "
-                                          "of equal length.")
+            raise AlignmentError("All sequences need to be of equal length.")
 
         if score is not None:
             self._score = float(score)
@@ -1193,41 +1194,6 @@ class Alignment(SequenceCollection):
         # pack the result up in the same type of object as the current object
         # and return it
         return self.__class__(result)
-
-    def is_valid(self):
-        """Return True if the Alignment is valid
-
-        Returns
-        -------
-        bool
-            ``True`` if `self` is valid, and ``False`` otherwise.
-
-        Notes
-        -----
-        Validity is defined as having no sequences containing characters
-        outside of their valid character sets.
-
-        See Also
-        --------
-        skbio.alignment.BiologicalSequence.is_valid
-
-        Examples
-        --------
-        >>> from skbio.alignment import Alignment
-        >>> from skbio.sequence import DNA, RNA
-        >>> sequences = [DNA('ACCGT--', id="seq1"),
-        ...              DNA('AACCGGT', id="seq2")]
-        >>> a1 = Alignment(sequences)
-        >>> a1.is_valid()
-        True
-        >>> sequences = [RNA('ACCGT--', id="seq1"),
-        ...              RNA('AACCGGT', id="seq2")]
-        >>> a1 = Alignment(sequences)
-        >>> print(a1.is_valid())
-        False
-
-        """
-        return super(Alignment, self).is_valid()
 
     def iter_positions(self, constructor=None):
         """Generator of Alignment positions (i.e., columns)
