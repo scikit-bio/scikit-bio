@@ -10,7 +10,7 @@ Cophylogenetic methods
 ----------------------
 
 These functions test for correlation between phylogenies or representations of
-evolutionary distance (for example, genetic distance matrices). 
+evolutionary distance (for example, genetic distance matrices).
 
 Functions
 ^^^^^^^^^
