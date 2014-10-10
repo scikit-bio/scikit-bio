@@ -290,7 +290,7 @@ def _clustal_to_alignment(fh, strict=True):
 
     Skips any line that starts with a blank.
 
-    ``_clustal_to_generator`` preserves the order of the sequences from the
+    ``_clustal_to_alignment`` preserves the order of the sequences from the
     original file.  However, it does use a dict as an intermediate, so
     two sequences can't have the same label. This is probably OK since
     Clustal will refuse to run on a FASTA file in which two sequences have
