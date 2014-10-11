@@ -25,6 +25,7 @@
 ### Bug fixes
 
 * Removed ``constructor`` parameter from ``Alignment.k_word_frequencies``, ``BiologicalSequence.k_words``, ``BiologicalSequence.k_word_counts``, and ``BiologicalSequence.k_word_frequencies`` as it had no effect (it was never hooked up in the underlying code). ``BiologicalSequence.k_words`` now returns a generator of ``BiologicalSequence`` objects instead of strings.
+* Modified the ``Alignment`` constructor to verify that all sequences have the same length, if not, raise an ``AlignmentError`` exception.  Updated the method ``Alignment.subalignment`` to calculate the indices only once now that identical sequence length is guaranteed.
 
 ### Backward-incompatible changes
 
