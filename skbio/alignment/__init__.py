@@ -59,6 +59,7 @@ Exceptions
    :toctree: generated/
 
    SequenceCollectionError
+   AlignmentError
    StockholmParseError
 
 Data Structure Examples
@@ -233,12 +234,13 @@ from ._pairwise import (
 )
 from skbio.alignment._ssw_wrapper import (
     StripedSmithWaterman, local_pairwise_align_ssw, AlignmentStructure)
-from ._exception import SequenceCollectionError, StockholmParseError
+from ._exception import (SequenceCollectionError, StockholmParseError,
+                         AlignmentError)
 
 __all__ = ['Alignment', 'SequenceCollection', 'StockholmAlignment',
            'StripedSmithWaterman', 'AlignmentStructure',
            'local_pairwise_align_ssw', 'SequenceCollectionError',
-           'StockholmParseError', 'global_pairwise_align',
+           'StockholmParseError', 'AlignmentError', 'global_pairwise_align',
            'global_pairwise_align_nucleotide', 'global_pairwise_align_protein',
            'local_pairwise_align', 'local_pairwise_align_nucleotide',
            'local_pairwise_align_protein', 'make_identity_substitution_matrix']
