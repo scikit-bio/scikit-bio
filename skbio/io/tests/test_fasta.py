@@ -69,7 +69,7 @@ class FASTAReaderTests(TestCase):
              RNA('AUC', id='rnaseq-1', description='rnaseq desc 1'),
              RNA('AUG', id='rnaseq-2', description='rnaseq desc 2')],
             {'constructor': RNA},
-            map(get_data_path, ['fasta_sequence_collectino_different_type'])
+            map(get_data_path, ['fasta_sequence_collection_different_type'])
         )
 
         self.invalid_fps = map(lambda e: (get_data_path(e[0]), e[1]), [
