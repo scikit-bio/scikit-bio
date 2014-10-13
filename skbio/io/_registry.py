@@ -143,8 +143,8 @@ def register_sniffer(format):
 
         def wrapped_sniffer(fp, mode='U', **kwargs):
             with open_file(fp, mode) as fh:
-                orig_pos = fh.tell()
-                fh.seek(0)
+                #orig_pos = fh.tell()
+                #fh.seek(0)
                 try:
                     return sniffer(fh, **kwargs)
                 except Exception:
@@ -155,7 +155,8 @@ def register_sniffer(format):
                          FormatIdentificationWarning)
                     return False, {}
                 finally:
-                    fh.seek(orig_pos)
+                    #fh.seek(orig_pos)
+                    pass
 
         wrapped_sniffer.__doc__ = sniffer.__doc__
         wrapped_sniffer.__name__ = sniffer.__name__
@@ -267,24 +268,25 @@ def register_reader(format, cls=None):
                     else:
                         # Preserve the original filehandle positions at each
                         # call for `next`.
-                        orig_positions = [fh.tell() for fh in fhs]
-                        read_positions = orig_positions
+                        #orig_positions = [fh.tell() for fh in fhs]
+                        #read_positions = orig_positions
                         try:
                             while True:
-                                orig_positions = [fh.tell() for fh in fhs]
+                                #orig_positions = [fh.tell() for fh in fhs]
 
-                                for fh, pos in zip(fhs, read_positions):
-                                    fh.seek(pos)
+                                #for fh, pos in zip(fhs, read_positions):
+                                    #fh.seek(pos)
                                 next_result = next(generator)
-                                read_positions = [fh.tell() for fh in fhs]
+                                #read_positions = [fh.tell() for fh in fhs]
 
-                                for fh, pos in zip(fhs, orig_positions):
-                                    fh.seek(pos)
+                                #for fh, pos in zip(fhs, orig_positions):
+                                    #fh.seek(pos)
 
                                 yield next_result
                         finally:
-                            for fh, pos in zip(fhs, orig_positions):
-                                fh.seek(pos)
+                            pass
+                            #for fh, pos in zip(fhs, orig_positions):
+                                #fh.seek(pos)
 
         else:
             # When an object is instantiated we don't need to worry about the
@@ -295,12 +297,13 @@ def register_reader(format, cls=None):
 
                 with open_files(fp, mode) as fhs:
                     try:
-                        orig_positions = [fh.tell() for fh in fhs]
+                        #orig_positions = [fh.tell() for fh in fhs]
                         return reader(*fhs, **kwargs)
                     finally:
                         if not mutate_fh:
-                            for fh, pos in zip(fhs, orig_positions):
-                                fh.seek(pos)
+                            pass
+                            #for fh, pos in zip(fhs, orig_positions):
+                                #fh.seek(pos)
 
         wrapped_reader.__doc__ = reader.__doc__
         wrapped_reader.__name__ = reader.__name__
