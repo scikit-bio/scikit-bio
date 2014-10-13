@@ -92,6 +92,29 @@ def _fasta_to_generator(fh, constructor=BiologicalSequence):
     yield _construct_sequence(constructor, seq_chunks, id_, desc)
 
 
+@register_reader('fasta', BiologicalSequence)
+def _fasta_to_biological_sequence(fh, seq_num=1):
+    if seq_num < 1:
+        raise FASTAFormatError(
+            "Invalid sequence number (seq_num=%d). seq_num must be between 1 "
+            "and the number of sequences in the FASTA-formatted file "
+            "(inclusive)." % seq_num)
+
+    seq_idx = seq_num - 1
+    seq = None
+    for idx, curr_seq in enumerate(
+        _fasta_to_generator(fh, constructor=BiologicalSequence)):
+        if idx == seq_idx:
+            seq = curr_seq
+            break
+
+    if seq is None:
+        raise FASTAFormatError(
+            "Reached end of FASTA-formatted file before finding %s biological "
+            "sequence." % cardinal_to_ordinal(seq_num))
+    return seq
+
+
 @register_reader('fasta', SequenceCollection)
 def _fasta_to_sequence_collection(fh, constructor=BiologicalSequence):
     return SequenceCollection(

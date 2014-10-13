@@ -16,7 +16,7 @@ from skbio import (BiologicalSequence, NucleotideSequence, DNA, RNA, Protein,
 from skbio import SequenceCollection, Alignment
 from skbio.io import FASTAFormatError
 from skbio.io.fasta import (
-    _fasta_to_generator, _fasta_to_sequence_collection, _fasta_to_alignment,
+    _fasta_to_generator, _fasta_to_biological_sequence, _fasta_to_sequence_collection, _fasta_to_alignment,
     _generator_to_fasta, _biological_sequence_to_fasta,
     _nucleotide_sequence_to_fasta, _dna_sequence_to_fasta,
     _rna_sequence_to_fasta, _protein_sequence_to_fasta,
@@ -82,6 +82,9 @@ class FASTAReaderTests(TestCase):
             ('fasta_invalid_missing_seq_data_last', 'without sequence data'),
         ])
 
+    # extensive tests for fasta -> generator reader since it is used by all
+    # other fasta -> object readers
+
     def test_fasta_to_generator_valid_files(self):
         for exp, kwargs, fps in (self.empty, self.single, self.multi,
                                  self.odd_labels_different_type,
@@ -97,6 +100,16 @@ class FASTAReaderTests(TestCase):
         for fp, error_msg_regex in self.invalid_fps:
             with self.assertRaisesRegexp(FASTAFormatError, error_msg_regex):
                 list(_fasta_to_generator(fp))
+
+    # light testing of fasta -> object readers to ensure interface is present
+    # and kwargs are passed through. extensive testing of underlying reader is
+    # performed above
+
+    def test_fasta_to_biological_sequence(self):
+        exp = BiologicalSequence('ACGT-acgt.', id='seq1', description='desc1')
+        obs = _fasta_to_biological_sequence(
+            get_data_path('fasta_single_seq'))
+        self.assertTrue(obs.equals(exp))
 
     def test_fasta_to_sequence_collection_and_alignment(self):
         for constructor, reader_fn in ((SequenceCollection,
