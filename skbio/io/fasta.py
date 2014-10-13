@@ -102,11 +102,13 @@ def _fasta_to_biological_sequence(fh, seq_num=1):
 
     seq_idx = seq_num - 1
     seq = None
-    for idx, curr_seq in enumerate(
-        _fasta_to_generator(fh, constructor=BiologicalSequence)):
+    gen = _fasta_to_generator(fh, constructor=BiologicalSequence)
+    for idx, curr_seq in enumerate(gen):
         if idx == seq_idx:
             seq = curr_seq
             break
+    # TODO is this necessary? what if an error is raised within the generator?
+    gen.close()
 
     if seq is None:
         raise FASTAFormatError(

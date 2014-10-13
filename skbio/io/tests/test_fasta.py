@@ -107,9 +107,45 @@ class FASTAReaderTests(TestCase):
 
     def test_fasta_to_biological_sequence(self):
         exp = BiologicalSequence('ACGT-acgt.', id='seq1', description='desc1')
+
+        # file with only 1 seq, get first
         obs = _fasta_to_biological_sequence(
             get_data_path('fasta_single_seq'))
         self.assertTrue(obs.equals(exp))
+
+        # file with multiple seqs, get first
+        obs = _fasta_to_biological_sequence(
+            get_data_path('fasta_multi_seq'))
+        self.assertTrue(obs.equals(exp))
+
+        # file with multiple seqs, get middle
+        exp = BiologicalSequence('AcGtUTu')
+        obs = _fasta_to_biological_sequence(
+            get_data_path('fasta_multi_seq'), seq_num=4)
+        self.assertTrue(obs.equals(exp))
+
+        # file with multiple seqs, get last
+        exp = BiologicalSequence(
+            'pQqqqPPQQQ', id='proteinseq',
+            description='detailed description \t\twith  new  lines')
+        obs = _fasta_to_biological_sequence(
+            get_data_path('fasta_multi_seq'), seq_num=7)
+        self.assertTrue(obs.equals(exp))
+
+    def test_fasta_to_biological_sequence_invalid_input(self):
+        # empty file
+        with self.assertRaisesRegexp(FASTAFormatError, '1st biological'):
+            _fasta_to_biological_sequence(get_data_path('empty'))
+
+        # seq_num too large
+        with self.assertRaisesRegexp(FASTAFormatError, '8th biological'):
+            _fasta_to_biological_sequence(
+                get_data_path('fasta_multi_seq'), seq_num=8)
+
+        # seq_num too small
+        with self.assertRaisesRegexp(FASTAFormatError, 'seq_num=0'):
+            _fasta_to_biological_sequence(
+                get_data_path('fasta_multi_seq'), seq_num=0)
 
     def test_fasta_to_sequence_collection_and_alignment(self):
         for constructor, reader_fn in ((SequenceCollection,
