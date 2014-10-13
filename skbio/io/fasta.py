@@ -97,6 +97,26 @@ def _fasta_to_biological_sequence(fh, seq_num=1):
     return _fasta_to_sequence(fh, seq_num, BiologicalSequence)
 
 
+@register_reader('fasta', NucleotideSequence)
+def _fasta_to_nucleotide_sequence(fh, seq_num=1):
+    return _fasta_to_sequence(fh, seq_num, NucleotideSequence)
+
+
+@register_reader('fasta', DNASequence)
+def _fasta_to_dna_sequence(fh, seq_num=1):
+    return _fasta_to_sequence(fh, seq_num, DNASequence)
+
+
+@register_reader('fasta', RNASequence)
+def _fasta_to_rna_sequence(fh, seq_num=1):
+    return _fasta_to_sequence(fh, seq_num, RNASequence)
+
+
+@register_reader('fasta', ProteinSequence)
+def _fasta_to_protein_sequence(fh, seq_num=1):
+    return _fasta_to_sequence(fh, seq_num, ProteinSequence)
+
+
 @register_reader('fasta', SequenceCollection)
 def _fasta_to_sequence_collection(fh, constructor=BiologicalSequence):
     return SequenceCollection(

@@ -16,10 +16,12 @@ from skbio import (BiologicalSequence, NucleotideSequence, DNA, RNA, Protein,
 from skbio import SequenceCollection, Alignment
 from skbio.io import FASTAFormatError
 from skbio.io.fasta import (
-    _fasta_to_generator, _fasta_to_biological_sequence, _fasta_to_sequence_collection, _fasta_to_alignment,
-    _generator_to_fasta, _biological_sequence_to_fasta,
-    _nucleotide_sequence_to_fasta, _dna_sequence_to_fasta,
-    _rna_sequence_to_fasta, _protein_sequence_to_fasta,
+    _fasta_to_generator, _fasta_to_biological_sequence,
+    _fasta_to_nucleotide_sequence, _fasta_to_dna_sequence,
+    _fasta_to_rna_sequence, _fasta_to_protein_sequence,
+    _fasta_to_sequence_collection, _fasta_to_alignment, _generator_to_fasta,
+    _biological_sequence_to_fasta, _nucleotide_sequence_to_fasta,
+    _dna_sequence_to_fasta, _rna_sequence_to_fasta, _protein_sequence_to_fasta,
     _sequence_collection_to_fasta, _alignment_to_fasta)
 from skbio.util import get_data_path
 
