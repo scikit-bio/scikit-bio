@@ -98,21 +98,21 @@ class FASTAReaderTests(TestCase):
             with self.assertRaisesRegexp(FASTAFormatError, error_msg_regex):
                 list(_fasta_to_generator(fp))
 
-#    def test_fasta_to_sequence_collection(self):
-#        for exp_list, kwargs, fps in (self.empty, self.single,
-#                                      self.sequence_collection_different_type):
-#            exp = SequenceCollection(exp_list)
-#
-#            for fp in fps:
-#                obs = _fasta_to_sequence_collection(fp, **kwargs)
-#
-#                # TODO remove this custom equality testing code when
-#                # SequenceCollection has an equals method (part of #656). We
-#                # need this method to include IDs and description in the
-#                # comparison (not part of SequenceCollection.__eq__).
-#                self.assertEqual(obs, exp)
-#                for o, e in zip(obs, exp):
-#                    self.assertTrue(o.equals(e))
+    def test_fasta_to_sequence_collection(self):
+        for exp_list, kwargs, fps in (self.empty, self.single,
+                                      self.sequence_collection_different_type):
+            exp = SequenceCollection(exp_list)
+
+            for fp in fps:
+                obs = _fasta_to_sequence_collection(fp, **kwargs)
+
+                # TODO remove this custom equality testing code when
+                # SequenceCollection has an equals method (part of #656). We
+                # need this method to include IDs and description in the
+                # comparison (not part of SequenceCollection.__eq__).
+                self.assertEqual(obs, exp)
+                for o, e in zip(obs, exp):
+                    self.assertTrue(o.equals(e))
 
 
 class FASTAWriterTests(TestCase):

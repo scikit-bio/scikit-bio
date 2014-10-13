@@ -48,8 +48,21 @@ from skbio.util import cardinal_to_ordinal
 
 
 @register_sniffer('fasta')
-def _fasta_sniffer(obj, fh):
-    pass
+def _fasta_sniffer(fh):
+    num_seqs = 0
+    for _ in range(10):
+        try:
+            next(_fasta_to_generator(fh, constructor=BiologicalSequence))
+        except StopIteration:
+            break
+        except FASTAFormatError:
+            return False, {}
+        num_seqs += 1
+
+    if num_seqs < 1:
+        return False, {}
+    else:
+        return True, {}
 
 
 @register_reader('fasta')
