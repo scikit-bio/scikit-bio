@@ -94,27 +94,7 @@ def _fasta_to_generator(fh, constructor=BiologicalSequence):
 
 @register_reader('fasta', BiologicalSequence)
 def _fasta_to_biological_sequence(fh, seq_num=1):
-    if seq_num < 1:
-        raise FASTAFormatError(
-            "Invalid sequence number (seq_num=%d). seq_num must be between 1 "
-            "and the number of sequences in the FASTA-formatted file "
-            "(inclusive)." % seq_num)
-
-    seq_idx = seq_num - 1
-    seq = None
-    gen = _fasta_to_generator(fh, constructor=BiologicalSequence)
-    for idx, curr_seq in enumerate(gen):
-        if idx == seq_idx:
-            seq = curr_seq
-            break
-    # TODO is this necessary? what if an error is raised within the generator?
-    gen.close()
-
-    if seq is None:
-        raise FASTAFormatError(
-            "Reached end of FASTA-formatted file before finding %s biological "
-            "sequence." % cardinal_to_ordinal(seq_num))
-    return seq
+    return _fasta_to_sequence(fh, seq_num, BiologicalSequence)
 
 
 @register_reader('fasta', SequenceCollection)
@@ -248,6 +228,30 @@ def _construct_sequence(constructor, seq_chunks, id_, description):
     if not seq_chunks:
         raise FASTAFormatError("Found FASTA header without sequence data.")
     return constructor(''.join(seq_chunks), id=id_, description=description)
+
+
+def _fasta_to_sequence(fh, seq_num, constructor):
+    if seq_num < 1:
+        raise FASTAFormatError(
+            "Invalid sequence number (seq_num=%d). seq_num must be between 1 "
+            "and the number of sequences in the FASTA-formatted file "
+            "(inclusive)." % seq_num)
+
+    seq_idx = seq_num - 1
+    seq = None
+    gen = _fasta_to_generator(fh, constructor=constructor)
+    for idx, curr_seq in enumerate(gen):
+        if idx == seq_idx:
+            seq = curr_seq
+            break
+    # TODO is this necessary? what if an error is raised within the generator?
+    gen.close()
+
+    if seq is None:
+        raise FASTAFormatError(
+            "Reached end of FASTA-formatted file before finding %s biological "
+            "sequence." % cardinal_to_ordinal(seq_num))
+    return seq
 
 
 def _sequence_to_fasta(obj, fh, id_whitespace_replacement,
