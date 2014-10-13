@@ -16,11 +16,11 @@ from skbio import (BiologicalSequence, NucleotideSequence, DNA, RNA, Protein,
 from skbio import SequenceCollection, Alignment
 from skbio.io import FASTAFormatError
 from skbio.io.fasta import (
-    _fasta_to_generator, _fasta_to_sequence_collection, _generator_to_fasta,
-    _biological_sequence_to_fasta, _nucleotide_sequence_to_fasta,
-    _dna_sequence_to_fasta, _rna_sequence_to_fasta,
-    _protein_sequence_to_fasta, _sequence_collection_to_fasta,
-    _alignment_to_fasta)
+    _fasta_to_generator, _fasta_to_sequence_collection, _fasta_to_alignment,
+    _generator_to_fasta, _biological_sequence_to_fasta,
+    _nucleotide_sequence_to_fasta, _dna_sequence_to_fasta,
+    _rna_sequence_to_fasta, _protein_sequence_to_fasta,
+    _sequence_collection_to_fasta, _alignment_to_fasta)
 from skbio.util import get_data_path
 
 
@@ -98,21 +98,25 @@ class FASTAReaderTests(TestCase):
             with self.assertRaisesRegexp(FASTAFormatError, error_msg_regex):
                 list(_fasta_to_generator(fp))
 
-    def test_fasta_to_sequence_collection(self):
-        for exp_list, kwargs, fps in (self.empty, self.single,
-                                      self.sequence_collection_different_type):
-            exp = SequenceCollection(exp_list)
+    def test_fasta_to_sequence_collection_and_alignment(self):
+        for constructor, reader_fn in ((SequenceCollection,
+                                        _fasta_to_sequence_collection),
+                                       (Alignment, _fasta_to_alignment)):
+            for exp_list, kwargs, fps in \
+                    self.empty, self.single, \
+                    self.sequence_collection_different_type:
+                exp = constructor(exp_list)
 
-            for fp in fps:
-                obs = _fasta_to_sequence_collection(fp, **kwargs)
+                for fp in fps:
+                    obs = reader_fn(fp, **kwargs)
 
-                # TODO remove this custom equality testing code when
-                # SequenceCollection has an equals method (part of #656). We
-                # need this method to include IDs and description in the
-                # comparison (not part of SequenceCollection.__eq__).
-                self.assertEqual(obs, exp)
-                for o, e in zip(obs, exp):
-                    self.assertTrue(o.equals(e))
+                    # TODO remove this custom equality testing code when
+                    # SequenceCollection has an equals method (part of #656).
+                    # We need this method to include IDs and description in the
+                    # comparison (not part of SequenceCollection.__eq__).
+                    self.assertEqual(obs, exp)
+                    for o, e in zip(obs, exp):
+                        self.assertTrue(o.equals(e))
 
 
 class FASTAWriterTests(TestCase):

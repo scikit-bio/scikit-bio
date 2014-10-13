@@ -98,6 +98,12 @@ def _fasta_to_sequence_collection(fh, constructor=BiologicalSequence):
         list(_fasta_to_generator(fh, constructor=constructor)))
 
 
+@register_reader('fasta', Alignment)
+def _fasta_to_alignment(fh, constructor=BiologicalSequence):
+    return Alignment(
+        list(_fasta_to_generator(fh, constructor=constructor)))
+
+
 @register_writer('fasta')
 def _generator_to_fasta(obj, fh, id_whitespace_replacement='_',
                         description_newline_replacement=' ', max_width=None):
