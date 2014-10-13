@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division, print_function
-
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -8,6 +5,8 @@ from __future__ import absolute_import, division, print_function
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
+
+from __future__ import absolute_import, division, print_function
 
 from unittest import TestCase, main
 
@@ -26,7 +25,6 @@ from skbio.draw._distributions import (
 
 
 class DistributionsTests(TestCase):
-
     def setUp(self):
         # Test null data list.
         self.Null = None
@@ -67,25 +65,18 @@ class DistributionsTests(TestCase):
         plt.close('all')
 
     def test_validate_input_null(self):
-        """_validate_input() should raise a ValueError if null data is passed
-        to it."""
         with npt.assert_raises(ValueError):
             _validate_input(self.Null, None, None, None)
 
     def test_validate_input_empty(self):
-        """_validate_input() should raise a ValueError if empty data is passed
-        to it."""
         with npt.assert_raises(ValueError):
             _validate_input(self.Empty, None, None, None)
 
     def test_validate_input_empty_nested(self):
-        """_validate_input() should raise a ValueError if empty nested data is
-        passed to it."""
         with npt.assert_raises(ValueError):
             _validate_input(self.EmptyNested, None, None, None)
 
     def test_validate_input_empty_deeply_nested(self):
-        """_validate_input() should pass for deeply nested empty data."""
         num_points, num_samples = _validate_input(self.EmptyDeeplyNested,
                                                   None, None, None)
         self.assertEqual(num_points, 1)
@@ -96,72 +87,51 @@ class DistributionsTests(TestCase):
             _validate_input([[[1, 2, 3], [4, 5]], []], None, None, None)
 
     def test_validate_input_invalid_num_samples(self):
-        """_validate_input() should raise a ValueError if an inconsistent
-        number of samples in included in the data."""
         with npt.assert_raises(ValueError):
             _validate_input(self.InvalidNumSamples, None, None, None)
 
     def test_validate_input_invalid_data_point_names(self):
-        """_validate_input() should raise a ValueError on data_point_names that
-        are an invalid length."""
         with npt.assert_raises(ValueError):
             _validate_input(self.ValidSingleSampleData, None, ["T0", "T1"],
                             None)
 
     def test_validate_input_invalid_sample_names(self):
-        """_validate_input() should raise a ValueError on sample_names that are
-        an invalid length."""
         with npt.assert_raises(ValueError):
             _validate_input(self.ValidSingleSampleData, None, None,
                             ["Men", "Women"])
 
     def test_validate_input_all_valid_input(self):
-        """_validate_input() should return valid information about the data
-        without throwing an exception."""
         self.assertEqual(_validate_input(self.ValidTypicalData, [1, 3, 4, 8],
                                          ["T0", "T1", "T2", "T3"],
                                          ["Infants", "Children", "Teens"]),
                          (4, 3))
 
     def test_validate_x_values_invalid_x_values(self):
-        """_validate_x_values() should raise a ValueError on an invalid number
-        of x_values."""
         with npt.assert_raises(ValueError):
             _validate_x_values([1, 2, 3, 4], ["T0", "T1", "T2"],
                                len(self.ValidSingleSampleData))
 
     def test_validate_x_values_invalid_x_tick_labels(self):
-        """_validate_x_values() should raise a ValueError on an invalid number
-        of x_tick_labels."""
         with npt.assert_raises(ValueError):
             _validate_x_values(None, ["T0"], len(self.ValidSingleSampleData))
 
     def test_validate_x_values_nonnumber_x_values(self):
-        """_validate_x_values() should raise a ValueError on x_values that
-        aren't numbers."""
         with npt.assert_raises(ValueError):
             _validate_x_values(["foo", 2, 3], None,
                                len(self.ValidSingleSampleData))
 
     def test_validate_x_values_valid_x_values(self):
-        """_validate_x_values() should not throw an exception."""
         _validate_x_values([1, 2.0, 3], None, 3)
 
     def test_get_distribution_markers_null_marker_list(self):
-        """_get_distribution_markers() should return a list of predefined
-        matplotlib markers."""
         self.assertEqual(_get_distribution_markers('colors', None, 5),
                          ['b', 'g', 'r', 'c', 'm'])
 
     def test_get_distribution_markers_empty_marker_list(self):
-        """_get_distribution_markers() should return a list of predefined
-        matplotlib markers."""
         self.assertEqual(_get_distribution_markers('colors', None, 4),
                          ['b', 'g', 'r', 'c'])
 
     def test_get_distribution_markers_insufficient_markers(self):
-        """_get_distribution_markers() should return a wrapped list of
-        predefined markers."""
         self.assertEqual(npt.assert_warns(RuntimeWarning,
                                           _get_distribution_markers,
                                           'colors', None, 10),
@@ -172,12 +142,10 @@ class DistributionsTests(TestCase):
                          ['^', '>', '<', '^', '>'])
 
     def test_get_distribution_markers_bad_marker_type(self):
-        """_get_distribution_markers() should raise a ValueError."""
         with npt.assert_raises(ValueError):
             _get_distribution_markers('shapes', [], 3)
 
     def test_get_distribution_markers_zero_markers(self):
-        """_get_distribution_markers() should return an empty list."""
         self.assertEqual(_get_distribution_markers('symbols', None, 0), [])
         self.assertEqual(_get_distribution_markers('symbols', ['^'], 0), [])
 
@@ -186,7 +154,6 @@ class DistributionsTests(TestCase):
             _get_distribution_markers('symbols', [], -1)
 
     def test_plot_bar_data(self):
-        """_plot_bar_data() should return a list of Rectangle objects."""
         fig, ax = plt.subplots()
         result = _plot_bar_data(ax, [1, 2, 3], 'red', 0.5, 3.75, 1.5, 'stdv')
         self.assertEqual(result[0].__class__.__name__, "Rectangle")
@@ -204,14 +171,11 @@ class DistributionsTests(TestCase):
         self.assertAlmostEqual(result[0].get_height(), 2.0)
 
     def test_plot_bar_data_bad_error_bar_type(self):
-        """_plot_bar_data() should raise an exception on bad error bar type."""
         fig, ax = plt.subplots()
         with npt.assert_raises(ValueError):
             _plot_bar_data(ax, [1, 2, 3], 'red', 0.5, 3.75, 1.5, 'var')
 
     def test_plot_bar_data_empty(self):
-        """_plot_bar_data() should not error when given empty list of data,
-        but should not plot anything."""
         fig, ax = plt.subplots()
         result = _plot_bar_data(ax, [], 'red', 0.5, 3.75, 1.5, 'stdv')
         self.assertTrue(result is None)
@@ -221,20 +185,16 @@ class DistributionsTests(TestCase):
         self.assertTrue(result is None)
 
     def test_plot_scatter_data(self):
-        """_plot_scatter_data() should return a Collection instance."""
         fig, ax = plt.subplots()
         result = _plot_scatter_data(ax, [1, 2, 3], '^', 0.77, 1, 1.5, 'stdv')
         self.assertEqual(result.get_sizes(), 20)
 
     def test_plot_scatter_data_empty(self):
-        """_plot_scatter_data() should not error when given empty list of data,
-        but should not plot anything."""
         fig, ax = plt.subplots()
         result = _plot_scatter_data(ax, [], '^', 0.77, 1, 1.5, 'stdv')
         self.assertTrue(result is None)
 
     def test_plot_box_data(self):
-        """_plot_box_data() should return a dictionary for Line2D's."""
         fig, ax = plt.subplots()
         result = _plot_box_data(ax, [0, 0, 7, 8, -3, 44], 'blue', 0.33, 55,
                                 1.5, 'stdv')
@@ -242,27 +202,31 @@ class DistributionsTests(TestCase):
         self.assertEqual(len(result['boxes']), 1)
         self.assertEqual(len(result['medians']), 1)
         self.assertEqual(len(result['whiskers']), 2)
-        self.assertEqual(len(result['fliers']), 2)
+
+        # mpl < 1.4.0 creates two Line2D instances, mpl 1.4.0 creates one,
+        # though the resulting plot looks identical between the two versions.
+        # see:
+        #   https://github.com/pydata/pandas/issues/8382#issuecomment-56840974
+        #   https://github.com/matplotlib/matplotlib/issues/3544
+        self.assertTrue(len(result['fliers']) == 1 or
+                        len(result['fliers']) == 2)
+
         self.assertEqual(len(result['caps']), 2)
 
     def test_plot_box_data_empty(self):
-        """Should ignore empty distribution."""
         fig, ax = plt.subplots()
         result = _plot_box_data(ax, [], 'blue', 0.33, 55, 1.5, 'stdv')
         self.assertTrue(result is None)
 
     def test_calc_data_point_locations_invalid_x_values(self):
-        """Should raise error when invalid x_values are encountered."""
         with npt.assert_raises(ValueError):
             _calc_data_point_locations(3, [1, 10.5])
 
     def test_calc_data_point_locations_default_spacing(self):
-        """Should return evenly-spaced x-axis locations."""
         locs = _calc_data_point_locations(4)
         np.testing.assert_allclose(locs, [1, 2, 3, 4])
 
     def test_calc_data_point_locations_custom_spacing(self):
-        """Should return non-evenly-spaced x-axis locations."""
         # Scaling down from 3..12 to 1..4.
         locs = _calc_data_point_locations(4, [3, 4, 10, 12])
         np.testing.assert_allclose(locs,
@@ -279,8 +243,6 @@ class DistributionsTests(TestCase):
                                    np.array([1, 1.58296893, 3]))
 
     def test_calc_data_point_ticks(self):
-        """_calc_data_point_ticks() should return an array containing the
-        x-axis locations for each data point tick."""
         ticks = _calc_data_point_ticks(np.array([1, 5, 9, 11]), 1, 0.5, False)
         np.testing.assert_allclose(ticks, [1.25, 5.25, 9.25, 11.25])
 
@@ -288,8 +250,6 @@ class DistributionsTests(TestCase):
         np.testing.assert_allclose(ticks, [0.75])
 
     def test_set_axes_options(self):
-        """_set_axes_options() should set the labels on the axes and not raise
-        any exceptions."""
         fig, ax = plt.subplots()
         _set_axes_options(ax, "Plot Title", "x-axis label", "y-axis label",
                           x_tick_labels=["T0", "T1"])
@@ -299,7 +259,6 @@ class DistributionsTests(TestCase):
         self.assertEqual(ax.get_xticklabels()[1].get_text(), "T1")
 
     def test_set_axes_options_ylim(self):
-        """_set_axes_options() should set the y-axis limits."""
         fig, ax = plt.subplots()
         _set_axes_options(ax, "Plot Title", "x-axis label", "y-axis label",
                           x_tick_labels=["T0", "T1", "T2"], y_min=0, y_max=1)
@@ -321,8 +280,6 @@ class DistributionsTests(TestCase):
         self.assertEqual(ax.get_xticklabels()[2].get_text(), '800')
 
     def test_set_axes_options_bad_ylim(self):
-        """_set_axes_options() should raise an exception when given non-numeric
-        y limits."""
         fig, ax = plt.subplots()
         with npt.assert_raises(ValueError):
             _set_axes_options(ax, "Plot Title", "x-axis label", "y-axis label",
@@ -337,7 +294,6 @@ class DistributionsTests(TestCase):
                               x_tick_labels_orientation='brofist')
 
     def test_create_legend(self):
-        """_create_box_plot_legend() should create a legend on valid input."""
         fig, ax = plt.subplots()
         _create_legend(ax, ['b', 'r'], ['dist1', 'dist2'], 'colors')
         self.assertEqual(len(ax.get_legend().get_texts()), 2)
@@ -348,7 +304,6 @@ class DistributionsTests(TestCase):
         self.assertEqual(len(ax.get_legend().get_texts()), 3)
 
     def test_create_legend_invalid_input(self):
-        """Test raises error on bad input."""
         fig, ax = plt.subplots()
         with npt.assert_raises(ValueError):
             _create_legend(ax, ['^', '<', '>'], ['dist1', 'dist2'], 'symbols')
@@ -357,7 +312,6 @@ class DistributionsTests(TestCase):
                            'foo')
 
     def test_grouped_distributions_bar(self):
-        """Should return a valid barchart Figure object."""
         fig = grouped_distributions('bar', self.ValidTypicalData,
                                     [1, 4, 10, 11], ["T0", "T1", "T2", "T3"],
                                     ["Infants", "Children", "Teens"],
@@ -372,8 +326,6 @@ class DistributionsTests(TestCase):
                                    [1.1125, 2.0125, 3.8125, 4.1125])
 
     def test_grouped_distributions_insufficient_colors(self):
-        """grouped_distributions() should work even when there aren't
-        enough colors. We should capture a warning."""
         args = ('bar', self.ValidTypicalData, [1, 4, 10, 11],
                 ["T0", "T1", "T2", "T3"], ["Infants", "Children", "Teens"],
                 ['b', 'r'], "x-axis label", "y-axis label", "Test")
@@ -383,7 +335,6 @@ class DistributionsTests(TestCase):
                          *args)
 
     def test_grouped_distributions_scatter(self):
-        """Should return a valid scatterplot Figure object."""
         fig = grouped_distributions('scatter', self.ValidTypicalData,
                                     [1, 4, 10, 11], ["T0", "T1", "T2", "T3"],
                                     ["Infants", "Children", "Teens"],
@@ -398,8 +349,6 @@ class DistributionsTests(TestCase):
                                    [1.075, 1.975, 3.775, 4.075])
 
     def test_grouped_distributions_insufficient_symbols(self):
-        """grouped_distributions() should work even when there aren't
-        enough symbols. We should capture a warning."""
         args = ('scatter', self.ValidTypicalData, [1, 4, 10, 11],
                 ["T0", "T1", "T2", "T3"], ["Infants", "Children", "Teens"],
                 ['^'], "x-axis label", "y-axis label", "Test")
@@ -407,15 +356,12 @@ class DistributionsTests(TestCase):
         npt.assert_warns(RuntimeWarning, grouped_distributions, *args)
 
     def test_grouped_distributions_empty_marker_list(self):
-        """grouped_distributions() should use the predefined list of
-        markers if an empty list is provided by the user."""
         grouped_distributions('scatter', self.ValidTypicalData,
                               [1, 4, 10, 11], ["T0", "T1", "T2", "T3"],
                               ["Infants", "Children", "Teens"], [],
                               "x-axis label", "y-axis label", "Test")
 
     def test_grouped_distributions_box(self):
-        """Should return a valid boxplot Figure object."""
         fig = grouped_distributions('box', self.ValidTypicalData,
                                     [1, 4, 10, 11], ["T0", "T1", "T2", "T3"],
                                     ["Infants", "Children", "Teens"],
@@ -430,8 +376,6 @@ class DistributionsTests(TestCase):
                                    [1.075, 1.975, 3.775, 4.075])
 
     def test_grouped_distributions_error(self):
-        """grouped_distributions() should raise a ValueError for an
-        invalid plot type."""
         with npt.assert_raises(ValueError):
             grouped_distributions('pie', self.ValidTypicalData,
                                   [1, 4, 10, 11], ["T0", "T1", "T2", "T3"],
@@ -451,7 +395,6 @@ class DistributionsTests(TestCase):
             grouped_distributions(*args, distribution_width=-42)
 
     def test_boxplots(self):
-        """boxplots() should return a valid Figure object."""
         fig = boxplots(self.ValidTypicalBoxData, [1, 4, 10],
                        ["Data 1", "Data 2", "Data 3"], "Test", "x-axis label",
                        "y-axis label",
@@ -464,7 +407,6 @@ class DistributionsTests(TestCase):
         self.assertTrue(np.array_equal(ax.get_xticks(), [1, 4, 10]))
 
     def test_boxplots_empty_distributions(self):
-        """Test functions correctly with empty distributions."""
         fig = boxplots([[1, 2, 3], [], [4, 5, 6]], [1, 4, 10],
                        ["Data 1", "Data 2", "Data 3"], "Test", "x-axis label",
                        "y-axis label")
@@ -474,6 +416,15 @@ class DistributionsTests(TestCase):
         self.assertEqual(ax.get_ylabel(), "y-axis label")
         self.assertEqual(len(ax.get_xticklabels()), 3)
         self.assertTrue(np.array_equal(ax.get_xticks(), [1, 4, 10]))
+
+        # second distribution (empty) should have nans since it is hidden.
+        # boxplots in mpl < 1.4.0 have 8 lines per boxplot, while mpl 1.4.0 has
+        # 7. in either case, the line at index 8 should have a nan for its y
+        # value
+        lines = ax.get_lines()
+        self.assertTrue(np.isnan(lines[8].get_xydata()[0][1]))
+        # line in first distribution should *not* have nan for its y value
+        self.assertFalse(np.isnan(lines[0].get_xydata()[0][1]))
 
         # All distributions are empty.
         fig = boxplots([[], [], []], [1, 4, 10],
@@ -486,25 +437,47 @@ class DistributionsTests(TestCase):
         self.assertEqual(len(ax.get_xticklabels()), 3)
         self.assertTrue(np.array_equal(ax.get_xticks(), [1, 4, 10]))
 
+        lines = ax.get_lines()
+        self.assertTrue(np.isnan(lines[0].get_xydata()[0][1]))
+        self.assertTrue(np.isnan(lines[8].get_xydata()[0][1]))
+        self.assertTrue(np.isnan(lines[16].get_xydata()[0][1]))
+
     def test_boxplots_box_colors(self):
-        """Test correctly handles coloring of box plots."""
         # Coloring works with all empty distributions.
         fig = boxplots([[], [], []], box_colors=['blue', 'red', 'yellow'])
         ax = fig.get_axes()[0]
         self.assertEqual(len(ax.get_xticklabels()), 3)
+        # patch colors should match what we specified
+        self.assertEqual(ax.patches[0].get_facecolor(), (0.0, 0.0, 1.0, 1.0))
+        self.assertEqual(ax.patches[1].get_facecolor(), (1.0, 0.0, 0.0, 1.0))
+        self.assertEqual(ax.patches[2].get_facecolor(), (1.0, 1.0, 0.0, 1.0))
+        # patch location should include at least one nan since the distribution
+        # is empty, and thus hidden
+        for patch in ax.patches:
+            self.assertTrue(np.isnan(patch.xy[0][1]))
 
         fig = boxplots([[], [], []], box_colors='pink')
         ax = fig.get_axes()[0]
         self.assertEqual(len(ax.get_xticklabels()), 3)
+        for patch in ax.patches:
+            npt.assert_almost_equal(
+                patch.get_facecolor(),
+                (1.0, 0.7529411764705882, 0.796078431372549, 1.0))
+            self.assertTrue(np.isnan(patch.xy[0][1]))
 
         # Coloring works with some empty distributions.
         fig = boxplots([[], [1, 2, 3.5], []],
                        box_colors=['blue', 'red', 'yellow'])
         ax = fig.get_axes()[0]
         self.assertEqual(len(ax.get_xticklabels()), 3)
+        self.assertEqual(ax.patches[0].get_facecolor(), (0.0, 0.0, 1.0, 1.0))
+        self.assertEqual(ax.patches[1].get_facecolor(), (1.0, 0.0, 0.0, 1.0))
+        self.assertEqual(ax.patches[2].get_facecolor(), (1.0, 1.0, 0.0, 1.0))
+        self.assertTrue(np.isnan(ax.patches[0].xy[0][1]))
+        self.assertFalse(np.isnan(ax.patches[1].xy[0][1]))
+        self.assertTrue(np.isnan(ax.patches[2].xy[0][1]))
 
     def test_boxplots_invalid_input(self):
-        """Test correctly throws error on invalid input."""
         # Non-numeric entries in distribution.
         with npt.assert_raises(ValueError):
             boxplots([[1, 'foo', 3]])
@@ -518,7 +491,6 @@ class DistributionsTests(TestCase):
             boxplots([[1, 2, 3]], legend=('foo', 'bar', 'baz'))
 
     def test_color_box_plot(self):
-        """Should not throw an exception when passed the proper input."""
         fig, ax = plt.subplots()
         box_plot = plt.boxplot(self.ValidTypicalBoxData)
         _color_box_plot(ax, box_plot, ['blue', 'w', (1, 1, 0.9)])
@@ -534,7 +506,6 @@ class DistributionsTests(TestCase):
         _color_box_plot(ax, box_plot, [None, None, None])
 
     def test_color_box_plot_invalid_input(self):
-        """Should throw an exception on invalid input."""
         # Invalid color.
         fig, ax = plt.subplots()
         box_plot = plt.boxplot(self.ValidTypicalBoxData)
@@ -548,7 +519,6 @@ class DistributionsTests(TestCase):
             _color_box_plot(ax, box_plot, ['blue', (1, 1, 0.9)])
 
     def test_is_single_matplotlib_color(self):
-        """Test correct identification of single versus multiple mpl colors."""
         self.assertTrue(_is_single_matplotlib_color('w'))
         self.assertTrue(_is_single_matplotlib_color('white'))
         self.assertTrue(_is_single_matplotlib_color([1, 1, 1]))
@@ -567,7 +537,6 @@ class DistributionsTests(TestCase):
                                                       (0.9, 0.9))))
 
     def test_set_figure_size(self):
-        """Test setting a valid figure size."""
         fig, ax = plt.subplots()
         _set_axes_options(ax, 'foo', 'x_foo', 'y_foo',
                           x_tick_labels=['foofoofoo', 'barbarbar'],
@@ -576,7 +545,6 @@ class DistributionsTests(TestCase):
         self.assertTrue(np.array_equal(fig.get_size_inches(), (3, 4)))
 
     def test_set_figure_size_defaults(self):
-        """Test setting a figure size using matplotlib defaults."""
         fig, ax = plt.subplots()
         _set_axes_options(ax, 'foo', 'x_foo', 'y_foo',
                           x_tick_labels=['foofoofoo', 'barbarbar'],
@@ -586,7 +554,6 @@ class DistributionsTests(TestCase):
         self.assertTrue(np.array_equal(fig.get_size_inches(), orig_fig_size))
 
     def test_set_figure_size_invalid(self):
-        """Test setting a figure size using invalid dimensions."""
         fig, ax = plt.subplots()
         _set_axes_options(ax, 'foo', 'x_foo', 'y_foo',
                           x_tick_labels=['foofoofoo', 'barbarbar'],
@@ -596,7 +563,6 @@ class DistributionsTests(TestCase):
         self.assertTrue(np.array_equal(fig.get_size_inches(), orig_fig_size))
 
     def test_set_figure_size_long_labels(self):
-        """Test setting a figure size that has really long labels."""
         fig, ax = plt.subplots()
         _set_axes_options(ax, 'foo', 'x_foo', 'y_foo',
                           x_tick_labels=['foofoofooooooooooooooooooooooooo'

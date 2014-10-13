@@ -8,7 +8,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from future.utils.six import BytesIO
+from six import BytesIO
 from tempfile import NamedTemporaryFile
 from os.path import exists, join
 from unittest import TestCase, main

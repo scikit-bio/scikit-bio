@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.utils.six import StringIO
+from six import StringIO
 
 import unittest
 

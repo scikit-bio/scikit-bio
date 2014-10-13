@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.utils.six import binary_type, text_type, StringIO
+from six import binary_type, text_type, StringIO
 
 import warnings
 import unittest
@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
-from IPython.display import Image, SVG
+from IPython.core.display import Image, SVG
 from nose.tools import assert_is_instance, assert_raises_regexp, assert_true
 from scipy.spatial.distance import pdist
 

@@ -8,7 +8,7 @@ from __future__ import absolute_import, division, print_function
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from future.utils.six import StringIO
+from six import StringIO
 from unittest import TestCase, main
 
 from skbio import DistanceMatrix, TreeNode, nj

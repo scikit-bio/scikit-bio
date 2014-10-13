@@ -16,7 +16,7 @@ from unittest import TestCase, main
 import numpy as np
 import numpy.testing as nptest
 from scipy.stats import pearsonr
-from future.utils.six import StringIO
+from six import StringIO
 
 from skbio import DistanceMatrix, TreeNode
 from skbio.tree._tree import _dnd_tokenizer

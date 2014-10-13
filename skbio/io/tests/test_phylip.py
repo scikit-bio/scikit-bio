@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.utils.six import StringIO
+from six import StringIO
 
 from unittest import TestCase, main
 
@@ -60,11 +60,6 @@ class AlignmentWriterTests(TestCase):
         # alignments that cannot be written in phylip format, paired with their
         # expected error message regexps
         self.invalid_objs = [
-            # unequal length
-            (Alignment([DNA('A-CT', id="d1"),
-                        DNA('TTA', id="d2"),
-                        DNA('.-AC', id="d3")]), 'equal length'),
-
             # invalid chars
             (Alignment([DNA('ACG', id="d1"),
                         DNA('FOO', id="d2")]), 'valid characters'),

@@ -7,8 +7,9 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.utils.six import string_types
+from six import string_types
 
+import re
 from collections import Sequence, Counter, defaultdict
 from importlib import import_module
 from itertools import product
@@ -88,6 +89,8 @@ class BiologicalSequence(Sequence):
 
     """
     default_write_format = 'fasta'
+
+    feature_types = set([])
 
     @classmethod
     def alphabet(cls):
@@ -1459,6 +1462,72 @@ class BiologicalSequence(Sequence):
 
         self._quality = quality
 
+    def regex_iter(self, regex, retrieve_group_0=False):
+        """Find patterns specified by regular expression
+
+        Parameters
+        ----------
+        regex : SRE_Pattern
+            A compiled regular expression (e.g., from re.compile) with
+            finditer method
+        retrieve_group_0 : bool, optional
+            Defaults to ``False``. If ``True``, group(0) will be included in
+            each list of tuples, which represents the shortest possible
+            substring of the full sequence that contains all the other groups
+
+        Returns
+        -------
+        generator
+            yields lists of 3-tuples. Each 3-tuple represents a group from the
+            matched regular expression, and contains the start of the hit, the
+            end of the hit, and the substring that was hit
+        """
+        start = 0 if retrieve_group_0 else 1
+
+        for match in regex.finditer(self._sequence):
+            for g in range(start, len(match.groups())+1):
+                yield (match.start(g), match.end(g), match.group(g))
+
+    def find_features(self, feature_type, min_length=1, allow_gaps=False):
+        """Search the sequence for features
+
+        Parameters
+        ----------
+        feature_type : str
+            The type of feature to find
+        min_length : int, optional
+            Defaults to 1. Only features at least as long as this will be
+            returned
+        allow_gaps : bool, optional
+            Defaults to ``False``. If ``True``, then gaps will not be
+            considered to disrupt a feature
+
+        Returns
+        -------
+        generator
+            Yields tuples of the start of the feature, the end of the feature,
+            and the subsequence that composes the feature
+        """
+        if feature_type not in self.feature_types:
+            raise ValueError("Unknown feature type: %s" % feature_type)
+
+        acceptable = '-' if allow_gaps else ''
+
+        if isinstance(self, NucleotideSequence):
+            if feature_type == 'purine_run':
+                pat_str = '([AGag%s]{%d,})' % (acceptable, min_length)
+            if feature_type == 'pyrimidine_run':
+                pat_str = '([CTUctu%s]{%d,})' % (acceptable, min_length)
+
+        pat = re.compile(pat_str)
+
+        for hits in self.regex_iter(pat):
+            if allow_gaps:
+                if len(hits[2].replace('-', '')) >= min_length:
+                    yield hits
+            else:
+                yield hits
+
 
 class NucleotideSequence(BiologicalSequence):
     """Base class for nucleotide sequences.
@@ -1476,6 +1545,8 @@ class NucleotideSequence(BiologicalSequence):
     All uppercase and lowercase IUPAC DNA/RNA characters are supported.
 
     """
+
+    feature_types = set(['purine_run', 'pyrimidine_run'])
 
     @classmethod
     def complement_map(cls):
@@ -1733,6 +1804,7 @@ class DNASequence(NucleotideSequence):
                 ''.join(nondegen_chars).lower())
 
         return degen_map
+
 
 # class is accessible with alternative name for convenience
 DNA = DNASequence
