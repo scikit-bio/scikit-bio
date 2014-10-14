@@ -49,20 +49,28 @@ from skbio.util import cardinal_to_ordinal
 
 @register_sniffer('fasta')
 def _fasta_sniffer(fh):
-    num_seqs = 0
-    for _ in range(10):
-        try:
-            next(_fasta_to_generator(fh, constructor=BiologicalSequence))
-        except StopIteration:
-            break
-        except FASTAFormatError:
-            return False, {}
-        num_seqs += 1
+    # Strategy:
+    #   Read up to 10 sequences (records). If at least one sequence is read
+    #   (i.e. the file isn't empty) and no errors are thrown during reading,
+    #   assume the file is in FASTA format.
+    try:
+        gen = _fasta_to_generator(fh)
+        num_seqs = 0
+        for _ in range(10):
+            try:
+                next(gen)
+            except FASTAFormatError:
+                return False, {}
+            except StopIteration:
+                break
+            num_seqs += 1
 
-    if num_seqs < 1:
-        return False, {}
-    else:
-        return True, {}
+        if num_seqs < 1:
+            return False, {}
+        else:
+            return True, {}
+    finally:
+        gen.close()
 
 
 @register_reader('fasta')
