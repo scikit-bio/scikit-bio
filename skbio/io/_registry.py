@@ -9,6 +9,7 @@ from __future__ import absolute_import, division, print_function
 
 from warnings import warn
 import types
+import copy
 import traceback
 
 from future.builtins import zip
@@ -143,10 +144,19 @@ def register_sniffer(format):
 
         def wrapped_sniffer(fp, mode='U', **kwargs):
             with open_file(fp, mode) as fh:
-                orig_pos = fh.tell()
-                fh.seek(0)
+                # The reason we do a copy is because we need the sniffer to not
+                # mutate the orginal file while guessing the format. The
+                # naive solution would be to seek to 0 at the end, but that
+                # would break an explicit offset provided by the user. Instead
+                # we create a shallow copy which works out of the box for
+                # file-like object, but results in an uninitialized file-handle
+                # for real files.
+                cfh = copy.copy(fh)
+                if cfh.closed:
+                    cfh.__init__(fh.name, mode=fh.mode)
+                cfh.seek(0)
                 try:
-                    return sniffer(fh, **kwargs)
+                    return sniffer(cfh, **kwargs)
                 except Exception:
                     warn("'%s' has encountered a problem.\n"
                          "Please send the following to our issue tracker at\n"
@@ -155,7 +165,7 @@ def register_sniffer(format):
                          FormatIdentificationWarning)
                     return False, {}
                 finally:
-                    fh.seek(orig_pos)
+                    cfh.close()
 
         wrapped_sniffer.__doc__ = sniffer.__doc__
         wrapped_sniffer.__name__ = sniffer.__name__
@@ -254,37 +264,8 @@ def register_reader(format, cls=None):
                                                            "generator." %
                                                            reader.__name__)
 
-                    # If the user has permitted us to mutate the file, or if
-                    # we know that the registry 'owns' the filehandle then we
-                    # don't need to worry about mutations. The caveat is if it
-                    # is a compound format, in which case we are no longer
-                    # certain who owns which file.
-                    if mutate_fh or (not is_compound and
-                                     _is_string_or_bytes(fp[0])):
-                        while True:
-                            yield next(generator)
-
-                    else:
-                        # Preserve the original filehandle positions at each
-                        # call for `next`.
-                        orig_positions = [fh.tell() for fh in fhs]
-                        read_positions = orig_positions
-                        try:
-                            while True:
-                                orig_positions = [fh.tell() for fh in fhs]
-
-                                for fh, pos in zip(fhs, read_positions):
-                                    fh.seek(pos)
-                                next_result = next(generator)
-                                read_positions = [fh.tell() for fh in fhs]
-
-                                for fh, pos in zip(fhs, orig_positions):
-                                    fh.seek(pos)
-
-                                yield next_result
-                        finally:
-                            for fh, pos in zip(fhs, orig_positions):
-                                fh.seek(pos)
+                    while True:
+                        yield next(generator)
 
         else:
             # When an object is instantiated we don't need to worry about the
@@ -294,13 +275,7 @@ def register_reader(format, cls=None):
                     fp = [fp]
 
                 with open_files(fp, mode) as fhs:
-                    try:
-                        orig_positions = [fh.tell() for fh in fhs]
-                        return reader(*fhs, **kwargs)
-                    finally:
-                        if not mutate_fh:
-                            for fh, pos in zip(fhs, orig_positions):
-                                fh.seek(pos)
+                    return reader(*fhs, **kwargs)
 
         wrapped_reader.__doc__ = reader.__doc__
         wrapped_reader.__name__ = reader.__name__
