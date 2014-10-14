@@ -6,9 +6,36 @@ FASTA format (:mod:`skbio.io.fasta`)
 
 TODO add description
 
+Format Support
+--------------
+**Has Sniffer: Yes**
+
++----------+----------+------------------------------------------------------+
+|**Reader**|**Writer**|                   **Object Class**                   |
++----------+----------+------------------------------------------------------+
+|Yes       |Yes       |generator of ``BiologicalSequence`` objects           |
++----------+----------+------------------------------------------------------+
+|Yes       |Yes       |:mod:`skbio.alignment.SequenceCollection`             |
++----------+----------+------------------------------------------------------+
+|Yes       |Yes       |:mod:`skbio.alignment.Alignment`                      |
++----------+----------+------------------------------------------------------+
+|Yes       |Yes       |:mod:`skbio.sequence.BiologicalSequence`              |
++----------+----------+------------------------------------------------------+
+|Yes       |Yes       |:mod:`skbio.sequence.NucleotideSequence`              |
++----------+----------+------------------------------------------------------+
+|Yes       |Yes       |:mod:`skbio.sequence.DNASequence`                     |
++----------+----------+------------------------------------------------------+
+|Yes       |Yes       |:mod:`skbio.sequence.RNASequence`                     |
++----------+----------+------------------------------------------------------+
+|Yes       |Yes       |:mod:`skbio.sequence.ProteinSequence`                 |
++----------+----------+------------------------------------------------------+
+
 Format Specification
 --------------------
 TODO add format specification
+
+Caveats
+^^^^^^^
 
 Format Parameters
 -----------------
@@ -20,10 +47,10 @@ TODO add examples
 
 References
 ----------
-TODO add references
-
-http://en.wikipedia.org/wiki/FASTA_format
-http://blast.ncbi.nlm.nih.gov/blastcgihelp.shtml
+.. [1] Lipman, DJ; Pearson, WR (1985). "Rapid and sensitive protein similarity
+   searches". Science 227 (4693): 1435–41.
+.. [2] http://en.wikipedia.org/wiki/FASTA_format
+.. [3] http://blast.ncbi.nlm.nih.gov/blastcgihelp.shtml
 
 """
 # ----------------------------------------------------------------------------

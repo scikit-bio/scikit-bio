@@ -27,7 +27,7 @@ An example PHYLIP-formatted file taken from [3]_::
 
 Format Support
 --------------
-**Has Sniffer: Yes**
+**Has Sniffer: No**
 
 +----------+----------+------------------------------------------------------+
 |**Reader**|**Writer**|                   **Object Class**                   |
