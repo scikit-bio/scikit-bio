@@ -220,17 +220,16 @@ UGCUGCAUCA---------------- 33
 *     ***""")]
 
     def test_alignment_to_clustal_with_empty_input(self):
-
         result = _clustal_to_alignment(StringIO())
         self.assertEqual(dict(result), {})
 
     def test_alignment_to_clustal_with_bad_input(self):
-
         BAD = StringIO('\n'.join(['dshfjsdfhdfsj', 'hfsdjksdfhjsdf']))
         result = _clustal_to_alignment(BAD, strict=False)
         self.assertEqual(dict(result), {})
         # should fail unless we turned strict processing off
         with self.assertRaises(ClustalFormatError):
+            BAD.seek(0)
             dict(_clustal_to_alignment(BAD))
 
     def test_valid_alignment_to_clustal_and_clustal_to_alignment(self):
