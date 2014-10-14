@@ -107,47 +107,63 @@ class FASTAReaderTests(TestCase):
     # and kwargs are passed through. extensive testing of underlying reader is
     # performed above
 
-    def test_fasta_to_biological_sequence(self):
-        exp = BiologicalSequence('ACGT-acgt.', id='seq1', description='desc1')
+    def test_fasta_to_any_sequence(self):
+        for constructor, reader_fn in (
+            (BiologicalSequence, _fasta_to_biological_sequence),
+            (NucleotideSequence, _fasta_to_nucleotide_sequence),
+            (DNA, _fasta_to_dna_sequence),
+            (RNA, _fasta_to_rna_sequence),
+            (Protein, _fasta_to_protein_sequence)):
 
-        # file with only 1 seq, get first
-        obs = _fasta_to_biological_sequence(
-            get_data_path('fasta_single_seq'))
-        self.assertTrue(obs.equals(exp))
+            # empty file
+            with self.assertRaisesRegexp(FASTAFormatError, '1st biological'):
+                reader_fn(get_data_path('empty'))
 
-        # file with multiple seqs, get first
-        obs = _fasta_to_biological_sequence(
-            get_data_path('fasta_multi_seq'))
-        self.assertTrue(obs.equals(exp))
+            # the sequences in the following files don't necessarily make sense
+            # for each of the sequence object types that they're read into
+            # (e.g., reading a protein sequence into a dna sequence object).
+            # however, for the purposes of testing the various
+            # fasta -> sequence readers, this works out okay as it is valid to
+            # construct a sequence object with invalid characters. we're
+            # interested in testing the reading logic here, and don't care so
+            # much about constructing semantically-meaningful/valid sequence
+            # objects
 
-        # file with multiple seqs, get middle
-        exp = BiologicalSequence('AcGtUTu')
-        obs = _fasta_to_biological_sequence(
-            get_data_path('fasta_multi_seq'), seq_num=4)
-        self.assertTrue(obs.equals(exp))
+            # file with only 1 seq, get first
+            for fp in map(get_data_path,
+                          ['fasta_single_seq', 'fasta_max_width_1']):
+                exp = constructor('ACGT-acgt.', id='seq1', description='desc1')
+                obs = reader_fn(fp)
+                self.assertTrue(obs.equals(exp))
 
-        # file with multiple seqs, get last
-        exp = BiologicalSequence(
-            'pQqqqPPQQQ', id='proteinseq',
-            description='detailed description \t\twith  new  lines')
-        obs = _fasta_to_biological_sequence(
-            get_data_path('fasta_multi_seq'), seq_num=7)
-        self.assertTrue(obs.equals(exp))
+            # file with multiple seqs
+            for fp in map(get_data_path,
+                          ['fasta_multi_seq', 'fasta_max_width_5']):
+                # get first
+                exp = constructor('ACGT-acgt.', id='seq1', description='desc1')
+                obs = reader_fn(fp)
+                self.assertTrue(obs.equals(exp))
 
-    def test_fasta_to_biological_sequence_invalid_input(self):
-        # empty file
-        with self.assertRaisesRegexp(FASTAFormatError, '1st biological'):
-            _fasta_to_biological_sequence(get_data_path('empty'))
+                # get middle
+                exp = constructor('AcGtUTu')
+                obs = reader_fn(fp, seq_num=4)
+                self.assertTrue(obs.equals(exp))
 
-        # seq_num too large
-        with self.assertRaisesRegexp(FASTAFormatError, '8th biological'):
-            _fasta_to_biological_sequence(
-                get_data_path('fasta_multi_seq'), seq_num=8)
+                # get last
+                exp = constructor(
+                    'pQqqqPPQQQ', id='proteinseq',
+                    description='detailed description \t\twith  new  lines')
+                obs = reader_fn(fp, seq_num=7)
+                self.assertTrue(obs.equals(exp))
 
-        # seq_num too small
-        with self.assertRaisesRegexp(FASTAFormatError, 'seq_num=0'):
-            _fasta_to_biological_sequence(
-                get_data_path('fasta_multi_seq'), seq_num=0)
+                # seq_num too large
+                with self.assertRaisesRegexp(FASTAFormatError,
+                                             '8th biological'):
+                    reader_fn(fp, seq_num=8)
+
+                # seq_num too small
+                with self.assertRaisesRegexp(FASTAFormatError, 'seq_num=0'):
+                    reader_fn(fp, seq_num=0)
 
     def test_fasta_to_sequence_collection_and_alignment(self):
         for constructor, reader_fn in ((SequenceCollection,
