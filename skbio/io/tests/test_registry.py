@@ -23,7 +23,7 @@ from skbio.io import (DuplicateRegistrationError, FormatIdentificationWarning,
                       InvalidRegistrationError, UnrecognizedFormatError,
                       ArgumentOverrideWarning)
 from skbio.io._registry import empty_file_sniffer
-from skbio.util import TestingUtilError
+from skbio.util import TestingUtilError, get_data_path
 
 
 class TestClass(object):
@@ -650,6 +650,26 @@ class TestSniff(RegistryTest):
         self.expected_mode = 'r'
         self.module.sniff([fp1, fp2], mode='r')
 
+    def test_position_not_mutated_real_file(self):
+        @self.module.register_sniffer('format')
+        def sniffer(fh):
+            return True, {}
+
+        with open(get_data_path('real_file')) as fh:
+            fh.seek(2)
+            self.module.sniff(fh)
+            self.assertEqual('b\n', next(fh))
+
+    def test_position_not_mutated_fileish(self):
+        @self.module.register_sniffer('format')
+        def sniffer(fh):
+            return True, {}
+
+        fh = StringIO(u'a\nb\nc\nd\n')
+        fh.seek(2)
+        self.module.sniff(fh)
+        self.assertEqual('b\n', next(fh))
+
 
 class TestRead(RegistryTest):
     def test_format_and_into_are_none(self):
@@ -816,6 +836,9 @@ class TestRead(RegistryTest):
         self.assertEqual(TestClass([1, 2, 3, 4]), instance)
         self.assertTrue(self.was_verified)
 
+        # Remove if read-context management is support in the future.
+        fh.seek(0)
+
         self.was_verified = False
         instance = self.module.read(fh, format='format', into=TestClass)
         self.assertEqual(TestClass([1, 2, 3, 4]), instance)
@@ -862,6 +885,12 @@ class TestRead(RegistryTest):
         self.assertTrue(self.was_verified_e)
         self.assertTrue(self.was_verified_o)
         self.assertTrue(self.was_verified_n)
+
+        # These should be removed if we support read-context management in the
+        # future.
+        fh.seek(0)
+        fh2.seek(0)
+        fh3.seek(0)
 
         self.was_verified_e = False
         self.was_verified_o = False
@@ -945,88 +974,92 @@ class TestRead(RegistryTest):
         instance = self.module.read(fp, format='format', into=TestClass)
         self.assertEqual(TestClass([1, 2, 3, 4]), instance)
 
-    def test_reader_into_none_w_exception_and_test_compound(self):
-        fh1 = StringIO(u'1\n2\n3\n4')
-        fh2 = StringIO(u'2\n3\n4\n5')
+# These lines are commented out because we cannot support read-context
+# management at this time, but may wish to in the future.
+    # def test_reader_into_none_w_exception_and_test_compound(self):
+    #     fh1 = StringIO(u'1\n2\n3\n4')
+    #     fh2 = StringIO(u'2\n3\n4\n5')
+    #
+    #     @self.module.register_sniffer('format1')
+    #     def f1_sniffer(fh):
+    #         return '1' in fh.readline(), {}
+    #
+    #     @self.module.register_sniffer('format2')
+    #     def f2_sniffer(fh):
+    #         return '2' in fh.readline(), {}
+    #
+    #     @self.module.register_reader('format1')
+    #     def f1_reader(fh):
+    #         fh.read()
+    #         raise TestingUtilError("File position should be reset now.")
+    #         yield
+    #
+    #     @self.module.register_reader('format1, format2')
+    #     def f1_f2_reader(fh1, fh2):
+    #         fh1.read()
+    #         fh2.read()
+    #         raise TestingUtilError("File position should be reset now.")
+    #         yield
+    #
+    #     fh1.seek(0)
+    #     with self.assertRaises(TestingUtilError):
+    #         next(self.module.read(fh1, format='format1'))
+    #
+    #     self.assertEqual(0, fh1.tell())
+    #
+    #     fh1.seek(0)
+    #     fh2.seek(0)
+    #     with self.assertRaises(TestingUtilError):
+    #         next(self.module.read([fh1, fh2], format='format1, format2'))
+    #
+    #     self.assertEqual(0, fh1.tell())
+    #     self.assertEqual(0, fh2.tell())
+    #
+    #     fh1.close()
+    #     fh2.close()
 
-        @self.module.register_sniffer('format1')
-        def f1_sniffer(fh):
-            return '1' in fh.readline(), {}
-
-        @self.module.register_sniffer('format2')
-        def f2_sniffer(fh):
-            return '2' in fh.readline(), {}
-
-        @self.module.register_reader('format1')
-        def f1_reader(fh):
-            fh.read()
-            raise TestingUtilError("File position should be reset now.")
-            yield
-
-        @self.module.register_reader('format1, format2')
-        def f1_f2_reader(fh1, fh2):
-            fh1.read()
-            fh2.read()
-            raise TestingUtilError("File position should be reset now.")
-            yield
-
-        fh1.seek(0)
-        with self.assertRaises(TestingUtilError):
-            next(self.module.read(fh1, format='format1'))
-
-        self.assertEqual(0, fh1.tell())
-
-        fh1.seek(0)
-        fh2.seek(0)
-        with self.assertRaises(TestingUtilError):
-            next(self.module.read([fh1, fh2], format='format1, format2'))
-
-        self.assertEqual(0, fh1.tell())
-        self.assertEqual(0, fh2.tell())
-
-        fh1.close()
-        fh2.close()
-
-    def test_reader_w_exception_and_test_compound(self):
-        fh1 = StringIO(u'1\n2\n3\n4')
-        fh2 = StringIO(u'2\n3\n4\n5')
-
-        @self.module.register_sniffer('format1')
-        def f1_sniffer(fh):
-            return '1' in fh.readline(), {}
-
-        @self.module.register_sniffer('format2')
-        def f2_sniffer(fh):
-            return '2' in fh.readline(), {}
-
-        @self.module.register_reader('format1', TestClass)
-        def f1_reader(fh):
-            fh.read()
-            raise TestingUtilError("File position should be reset now.")
-
-        @self.module.register_reader('format1, format2', TestClass)
-        def f1_f2_reader(fh1, fh2):
-            fh1.read()
-            fh2.read()
-            raise TestingUtilError("File position should be reset now.")
-
-        fh1.seek(0)
-        with self.assertRaises(TestingUtilError):
-            self.module.read(fh1, format='format1', into=TestClass)
-
-        self.assertEqual(0, fh1.tell())
-
-        fh1.seek(0)
-        fh2.seek(0)
-        with self.assertRaises(TestingUtilError):
-            self.module.read([fh1, fh2], format='format1, format2',
-                             into=TestClass)
-
-        self.assertEqual(0, fh1.tell())
-        self.assertEqual(0, fh2.tell())
-
-        fh1.close()
-        fh2.close()
+# These lines are commented out because we cannot support read-context
+# management at this time, but may wish to in the future.
+    # def test_reader_w_exception_and_test_compound(self):
+    #     fh1 = StringIO(u'1\n2\n3\n4')
+    #     fh2 = StringIO(u'2\n3\n4\n5')
+    #
+    #     @self.module.register_sniffer('format1')
+    #     def f1_sniffer(fh):
+    #         return '1' in fh.readline(), {}
+    #
+    #     @self.module.register_sniffer('format2')
+    #     def f2_sniffer(fh):
+    #         return '2' in fh.readline(), {}
+    #
+    #     @self.module.register_reader('format1', TestClass)
+    #     def f1_reader(fh):
+    #         fh.read()
+    #         raise TestingUtilError("File position should be reset now.")
+    #
+    #     @self.module.register_reader('format1, format2', TestClass)
+    #     def f1_f2_reader(fh1, fh2):
+    #         fh1.read()
+    #         fh2.read()
+    #         raise TestingUtilError("File position should be reset now.")
+    #
+    #     fh1.seek(0)
+    #     with self.assertRaises(TestingUtilError):
+    #         self.module.read(fh1, format='format1', into=TestClass)
+    #
+    #     self.assertEqual(0, fh1.tell())
+    #
+    #     fh1.seek(0)
+    #     fh2.seek(0)
+    #     with self.assertRaises(TestingUtilError):
+    #         self.module.read([fh1, fh2], format='format1, format2',
+    #                          into=TestClass)
+    #
+    #     self.assertEqual(0, fh1.tell())
+    #     self.assertEqual(0, fh2.tell())
+    #
+    #     fh1.close()
+    #     fh2.close()
 
     def test_reader_into_none_w_mutate_fh(self):
         fh = StringIO(u'1\n2\n3\n4')

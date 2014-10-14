@@ -101,6 +101,7 @@ class DissimilarityAndDistanceMatrixReaderWriterTests(DMTestData):
                                    (_dm_to_distance_matrix, DistanceMatrix,
                                     self.dist_objs, self.dist_fhs)):
             for fh, obj in zip(fhs, objs):
+                fh.seek(0)
                 obs = fn(fh)
                 self.assertEqual(obs, obj)
                 self.assertIsInstance(obs, cls)
@@ -109,6 +110,7 @@ class DissimilarityAndDistanceMatrixReaderWriterTests(DMTestData):
         for fn, cls in ((_dm_to_dissimilarity_matrix, DissimilarityMatrix),
                         (_dm_to_distance_matrix, DistanceMatrix)):
             exp = cls(self.dm_3x3_data, ['a', 'b', 'c'])
+            self.dm_3x3_csv_fh.seek(0)
             obs = fn(self.dm_3x3_csv_fh, delimiter=',')
             self.assertEqual(obs, exp)
             self.assertIsInstance(obs, cls)
@@ -117,6 +119,7 @@ class DissimilarityAndDistanceMatrixReaderWriterTests(DMTestData):
         for fn in _dm_to_dissimilarity_matrix, _dm_to_distance_matrix:
             for invalid_fh, error_msg_regexp in self.invalid_fhs:
                 with self.assertRaisesRegexp(DMFormatError, error_msg_regexp):
+                    invalid_fh.seek(0)
                     fn(invalid_fh)
 
         # Asymmetric data only raises an error for DistanceMatrix.
@@ -154,6 +157,7 @@ class DissimilarityAndDistanceMatrixReaderWriterTests(DMTestData):
                                            self.dist_fhs)):
             for fh in fhs:
                 # Read.
+                fh.seek(0)
                 dm1 = reader_fn(fh)
 
                 # Write.
