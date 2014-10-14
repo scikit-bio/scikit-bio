@@ -10,6 +10,7 @@ from __future__ import absolute_import, division, print_function
 from six import string_types
 
 import re
+import warnings
 from collections import Sequence, Counter, defaultdict
 from importlib import import_module
 from itertools import product
@@ -1384,6 +1385,13 @@ class BiologicalSequence(Sequence):
     def to_fasta(self, field_delimiter=" ", terminal_character="\n"):
         """Return the sequence as a fasta-formatted string
 
+        .. note:: Deprecated in scikit-bio 0.2.0-dev
+           ``to_fasta`` will be removed in scikit-bio 0.3.0. It is replaced by
+           ``write``, which is a more general method for serializing
+           FASTA-formatted files. ``write`` supports multiple file formats by
+           taking advantage of scikit-bio's I/O registry system. See
+           :mod:`skbio.io` for more details.
+
         Parameters
         ----------
         field_delimiter : str, optional
@@ -1413,6 +1421,11 @@ class BiologicalSequence(Sequence):
         ACA
 
         """
+        warnings.warn(
+            "BiologicalSequence.to_fasta is deprecated and will be removed in "
+            "scikit-bio 0.3.0. Please update your code to use "
+            "BiologicalSequence.write.", UserWarning)
+
         if self._description:
             header_line = '%s%s%s' % (self._id, field_delimiter,
                                       self._description)
