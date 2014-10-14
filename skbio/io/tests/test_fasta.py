@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.utils.six import StringIO
+from six import StringIO
 
 from unittest import TestCase, main
 
@@ -417,6 +417,67 @@ class FASTAWriterTests(TestCase):
                     exp = fh.read()
 
                 self.assertEqual(obs, exp)
+
+
+class FASTARoundtripTests(TestCase):
+    def test_roundtrip_generators(self):
+        # test that a file can be streamed into memory and back out to disk
+        # using generator reader and writer
+        for fp in map(get_data_path, ['empty', 'fasta_multi_seq_roundtrip']):
+            with open(fp, 'U') as fh:
+                exp = fh.read()
+
+            fh = StringIO()
+            _generator_to_fasta(_fasta_to_generator(fp), fh)
+            obs = fh.getvalue()
+            fh.close()
+
+            self.assertEqual(obs, exp)
+
+    def test_roundtrip_sequence_collections_and_alignments(self):
+        for reader, writer in ((_fasta_to_sequence_collection, _sequence_collection_to_fasta),
+                               (_fasta_to_alignment, _alignment_to_fasta)):
+            for fp in map(get_data_path, ['empty', 'fasta_sequence_collection_different_type']):
+                # read
+                obj1 = reader(fp)
+
+                # write
+                fh = StringIO()
+                writer(obj1, fh)
+                fh.seek(0)
+
+                # read
+                obj2 = reader(fh)
+                fh.close()
+
+                # TODO remove this custom equality testing code when
+                # SequenceCollection has an equals method (part of #656).
+                # We need this method to include IDs and description in the
+                # comparison (not part of SequenceCollection.__eq__).
+                self.assertEqual(obj1, obj2)
+                for s1, s2 in zip(obj1, obj2):
+                    self.assertTrue(s1.equals(s2))
+
+    def test_roundtrip_biological_sequences(self):
+        for reader, writer in ((_fasta_to_biological_sequence, _biological_sequence_to_fasta),
+                               (_fasta_to_nucleotide_sequence, _nucleotide_sequence_to_fasta),
+                               (_fasta_to_dna_sequence, _dna_sequence_to_fasta),
+                               (_fasta_to_rna_sequence, _rna_sequence_to_fasta),
+                               (_fasta_to_protein_sequence, _protein_sequence_to_fasta)):
+            for fp in map(get_data_path, ['fasta_multi_seq_roundtrip', 'fasta_sequence_collection_different_type']):
+                # read
+                obj1 = reader(fp)
+
+                # write
+                fh = StringIO()
+                writer(obj1, fh)
+                fh.seek(0)
+
+                # read
+                obj2 = reader(fh)
+                fh.close()
+
+                self.assertTrue(obj1.equals(obj2))
 
 
 if __name__ == '__main__':
