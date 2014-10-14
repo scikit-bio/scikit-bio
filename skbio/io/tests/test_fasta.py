@@ -28,6 +28,33 @@ from skbio.util import get_data_path
 
 class FASTASnifferTests(TestCase):
     def setUp(self):
+        self.positive_fps = map(get_data_path, [
+            'fasta_3_seqs_defaults',
+            'fasta_max_width_1',
+            'fasta_single_bio_seq_non_defaults',
+            'fasta_single_prot_seq_non_defaults',
+            'fasta_3_seqs_non_defaults',
+            'fasta_max_width_5',
+            'fasta_single_dna_seq_defaults',
+            'fasta_single_rna_seq_defaults',
+            'fasta_description_newline_replacement_empty_str',
+            'fasta_multi_seq',
+            'fasta_single_dna_seq_non_defaults',
+            'fasta_single_rna_seq_non_defaults',
+            'fasta_description_newline_replacement_multi_char',
+            'fasta_prot_seqs_odd_labels',
+            'fasta_single_nuc_seq_defaults',
+            'fasta_single_seq',
+            'fasta_id_whitespace_replacement_empty_str',
+            'fasta_sequence_collection_different_type',
+            'fasta_single_nuc_seq_non_defaults',
+            'fasta_id_whitespace_replacement_multi_char',
+            'fasta_single_bio_seq_defaults',
+            'fasta_single_prot_seq_defaults',
+            'fasta_10_seqs',
+            'fasta_invalid_after_10_seqs'
+        ])
+
         self.negative_fps = map(get_data_path, [
             'empty',
             'whitespace_only',
@@ -38,6 +65,10 @@ class FASTASnifferTests(TestCase):
             'fasta_invalid_missing_seq_data_middle',
             'fasta_invalid_missing_seq_data_last'
         ])
+
+    def test_positives(self):
+        for fp in self.positive_fps:
+            self.assertEqual(_fasta_sniffer(fp), (True, {}))
 
     def test_negatives(self):
         for fp in self.negative_fps:
@@ -100,6 +131,7 @@ class FASTAReaderTests(TestCase):
             ('fasta_invalid_missing_seq_data_first', 'without sequence data'),
             ('fasta_invalid_missing_seq_data_middle', 'without sequence data'),
             ('fasta_invalid_missing_seq_data_last', 'without sequence data'),
+            ('fasta_invalid_after_10_seqs', 'without sequence data')
         ])
 
     # extensive tests for fasta -> generator reader since it is used by all
