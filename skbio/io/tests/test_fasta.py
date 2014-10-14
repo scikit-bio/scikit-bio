@@ -63,7 +63,8 @@ class FASTASnifferTests(TestCase):
             'fasta_invalid_whitespace_only_line',
             'fasta_invalid_missing_seq_data_first',
             'fasta_invalid_missing_seq_data_middle',
-            'fasta_invalid_missing_seq_data_last'
+            'fasta_invalid_missing_seq_data_last',
+            'fasta_invalid_legacy_format'
         ])
 
     def test_positives(self):
@@ -131,7 +132,8 @@ class FASTAReaderTests(TestCase):
             ('fasta_invalid_missing_seq_data_first', 'without sequence data'),
             ('fasta_invalid_missing_seq_data_middle', 'without sequence data'),
             ('fasta_invalid_missing_seq_data_last', 'without sequence data'),
-            ('fasta_invalid_after_10_seqs', 'without sequence data')
+            ('fasta_invalid_after_10_seqs', 'without sequence data'),
+            ('fasta_invalid_legacy_format', 'without a FASTA header')
         ])
 
     # extensive tests for fasta -> generator reader since it is used by all

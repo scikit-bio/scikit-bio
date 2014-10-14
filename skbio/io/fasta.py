@@ -231,7 +231,7 @@ def _alignment_to_fasta(obj, fh, id_whitespace_replacement='_',
 
 
 def _is_header(line):
-    return line.startswith('>') or line.startswith(';')
+    return line.startswith('>')
 
 
 def _parse_header(line):
