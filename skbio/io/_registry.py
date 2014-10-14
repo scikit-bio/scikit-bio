@@ -149,12 +149,16 @@ def register_sniffer(format):
                 # naive solution would be to seek to 0 at the end, but that
                 # would break an explicit offset provided by the user. Instead
                 # we create a shallow copy which works out of the box for
-                # file-like object, but results in an uninitialized file-handle
-                # for real files.
-                cfh = copy.copy(fh)
-                if cfh.closed:
-                    cfh.__init__(fh.name, mode=fh.mode)
-                cfh.seek(0)
+                # file-like object, but does not work for real files. Instead
+                # the name attribute is reused in open for a new filehandle.
+                # Using seek and tell is not viable because in real files tell
+                # reflects the position of the read-ahead buffer and not the
+                # true offset of the iterator.
+                if hasattr(fh, 'name'):
+                    cfh = open(fh.name, fh.mode)
+                else:
+                    cfh = copy.copy(fh)
+                    cfh.seek(0)
                 try:
                     return sniffer(cfh, **kwargs)
                 except Exception:
