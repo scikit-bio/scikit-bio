@@ -56,6 +56,7 @@ For example, to read a `newick` file using both interfaces you would type:
 
 For the OO interface:
 
+>>> _ = open_filehandle.seek(0)
 >>> tree2 = TreeNode.read(open_filehandle, format='newick')
 >>> tree2
 <TreeNode, name: unnamed, internal node count: 0, tips count: 2>
@@ -71,6 +72,7 @@ that `format` may be omitted there as well.
 
 As an example:
 
+>>> _ = open_filehandle.seek(0)
 >>> tree3 = TreeNode.read(open_filehandle)
 >>> tree3
 <TreeNode, name: unnamed, internal node count: 0, tips count: 2>
@@ -80,11 +82,6 @@ We call format inference `sniffing`, much like the
 Python's standard library. The goal of a `sniffer` is twofold: to identify if a
 file is a specific format, and if it is, to provide `**kwargs` which can be
 used to better parse the file.
-
-Notice how we never needed to reset the filehandle's position with `seek`.
-Neither `sniffers` nor `readers` will mutate the position of an already opened
-filehandle. This is true even if an exception is raised from within the
-`reader` or `sniffer`.
 
 .. note:: There is a built-in `sniffer` which results in a useful error message
    if an empty file is provided as input and the format was omitted.
@@ -105,10 +102,6 @@ OO Interface:
 In the procedural interface, `format` is required. Without it, scikit-bio does
 not know how you want to serialize an object. OO interfaces define a default
 `format`, so it may not be necessary to include it.
-
-`Writers` will always mutate an already opened filehandle (e.g., change the
-filehandle's position). This allows for a file to be written to more than once
-without overwriting the contents of a previous write.
 
 Supported File Formats
 ^^^^^^^^^^^^^^^^^^^^^^
