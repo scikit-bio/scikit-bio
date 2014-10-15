@@ -39,25 +39,67 @@ A FASTA file contains one or more biological sequences. The sequences are stored
 sequentially, with a *record* for each sequence (also referred to as a *FASTA
 record*). Each *record* consists of a single-line *header* (sometimes referred to as a
 *defline*, *description*, or *comment*) followed by the sequence data,
-optionally split over multiple lines.
+optionally split over multiple lines. Blank or whitespace-only lines are not
+allowed anywhere in the FASTA file.
 
-.. note:: scikit-bio's readers do not allow blank or whitespace-only lines
-   anywhere in the FASTA file.
+.. note:: scikit-bio does not currently support legacy FASTA format (i.e.,
+headers/comments denoted with a semicolon). The format supported by scikit-bio
+(described below in detail) most closely resembles the description in NCBI's
+BLAST documentation [3]_. See [2]_ for more details of legacy FASTA format. If
+you would like legacy FASTA format support added to scikit-bio, please consider
+submitting a feature request on the `scikit-bio issue tracker
+<https://github.com/biocore/scikit-bio/issues>`_ (or even better, a pull
+request!).
 
 FASTA Sequence Header
 ^^^^^^^^^^^^^^^^^^^^^
-Each sequence header consists of a single line that begins with the greater-than
-(``>``) symbol. The header contains a sequence identifier (ID) and description
-separated by whitespace. Both sequence ID and description are optional.
+Each sequence header consists of a single line beginning with a greater-than
+(``>``) symbol. Immediately following this is a sequence identifier (ID) and description
+separated by one or more whitespace characters. Both sequence ID and
+description are optional and are represented as the empty string (``''``) in
+memory if they are not present in the header.
+
+A sequence ID consists of a single word; all characters after the greater-than
+symbol and before a whitespace character (if any) are taken as the sequence ID.
+If a description is present, it is taken as the remaining characters that
+follow the whitespace separating ID and description.
+
+.. note:: scikit-bio's readers will remove all leading and trailing whitespace
+   from the description. If a header line begins with whitespace following ``>``,
+   the ID is assumed to be missing and the remainder of the line is taken as the
+   description.
+
+   Unique sequence IDs are not strictly enforced by the FASTA format itself.
+   scikit-bio will enforce uniqueness depending on the type of object that the
+   FASTA file is read into. For example, reading a FASTA file as a generator of
+   ``BiologicalSequence`` objects will not enforce unique IDs since it simply
+   yields each sequence it finds in the FASTA file. However, if the FASTA file
+   is read into a ``SequenceCollection`` object, ID uniqueness will be enforced
+   because that is a property of a ``SequenceCollection``.
 
 FASTA Sequence Data
 ^^^^^^^^^^^^^^^^^^^
 Biological sequence data follows the header, and can be split over multiple
 lines. The sequence data (i.e., nucleotides or amino acids) are stored using
-the standard IUPAC lexicon.
+the standard IUPAC lexicon (single-letter codes).
 
-Caveats
-^^^^^^^
+.. note:: scikit-bio supports both upper and lower case characters. Both ``-``
+   and ``.`` are supported as gap characters. See :mod:`skbio.sequence` for more
+   details on how scikit-bio interprets sequence data in its in-memory objects.
+
+   scikit-bio will remove leading and trailing whitespace from each
+   line of sequence data before joining the sequence chunks into a single
+   in-memory representation of the sequence. Whitespace characters are *not*
+   removed from the middle of the sequence chunks; these can create an invalid
+   in-memory sequence object (see warning below).
+
+.. warning:: In an effort to maintain reasonable performance while reading
+   FASTA files (which can be quite large!), validation of sequence data is **not**
+   performed during reading. It is the responsibility of the user to validate
+   their in-memory representation of the data if desired (e.g., by calling
+   ``is_valid`` on the returned object). Thus, it is possible that invalid characters are parsed and read into objects
+   (e.g. whitespace occurring in the middle of a sequence, or invalid IUPAC DNA
+   characters while reading DNA sequence data).
 
 Format Parameters
 -----------------
@@ -66,6 +108,7 @@ are read or written.
 
 Reader Parameters
 ^^^^^^^^^^^^^^^^^
+The available parameters differ depending on which reader is used.
 
 Generator, SequenceCollection, and Alignment Reader Parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -77,6 +120,14 @@ and defaults to ``BiologicalSequence``. ``constructor`` should be a subclass of
 reading contains protein sequences, you would pass
 ``constructor=ProteinSequence`` to the reader call.
 
+.. note:: The FASTA sniffer will not attempt to guess the ``constructor``
+   parameter, so it will always default to ``BiologicalSequence`` if another type
+   is not provided to the reader. The sniffer could attempt to infer the type of
+   sequences contained in the file, but this process could be error-prone since
+   the type of sequenes is not encoded in the FASTA file format itself. This could
+   produce strange or unintended behavior in certain cases, so we defer to the
+   user to provide more specific sequence type information if it is available.
+
 BiologicalSequence and Subclass Reader Parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The ``seq_num`` parameter can be used with the ``BiologicalSequence``,
@@ -86,16 +137,156 @@ from the FASTA file, and default to 1 (i.e., such that the first sequence is
 read). For example, to read the 50th sequence from a FASTA file, you would pass
 ``seq_num=50`` to the reader call.
 
+.. note:: The FASTA sniffer will not attempt to guess the ``seq_num``
+   parameter, so it will always default to reading the first sequence in the file
+   unless overridden by the user. The sniffer can never provide a reasonable guess
+   for this parameter as it is entirely up to the user to specify which sequence
+   to read.
+
+Writer Parameters
+^^^^^^^^^^^^^^^^^
+The following parameters are available to all FASTA format writers:
+
+- ``id_whitespace_replacement``: string to replace **each** whitespace
+  character in a sequence ID. This parameter is useful for cases where an
+  in-memory sequence ID contains whitespace, which would result in an on-disk
+  representation that would not be read back into memory as the same ID since
+  IDs in FASTA format cannot contain whitespace. Defaults to ``_``.
+
+- ``description_newline_replacement``: string to replace **each** newline
+  character in a sequence description. Since a FASTA header line must reside on
+  a single line, newlines are not allowed in sequence descriptions and must be
+  replaced in order to write a valid FASTA file. Defaults to a single space (`` ``).
+
+ - ``max_width``: integer specifying the maximum line width (i.e., number of
+   characters) for sequence data. If a sequence is longer than ``max_width``,
+   it will be split across multiple lines, each with a maximum width of
+   ``max_width``. Default is to not split across multiple lines (``None``).
+
 Examples
 --------
-TODO add examples
+Suppose we have the following FASTA file with five aligned sequences (example
+modified from [4]_)::
+
+    >seq1 Turkey
+    AAGCTNGGGCATTTCAGGGTGAGCCCGGGCAATACAGGGTAT
+    >seq2 Salmo gair
+    AAGCCTTGGCAGTGCAGGGTGAGCCGTGG
+    CCGGGCACGGTAT
+    >seq3 H. Sapiens
+    ACCGGTTGGCCGTTCAGGGTACAGGTTGGCCGTTCAGGGTAA
+    >seq4 Chimp
+    AAACCCTTGCCG
+    TTACGCTTAAAC
+    CGAGGCCGGGAC
+    ACTCAT
+    >seq5 Gorilla
+    AAACCCTTGCCGGTACGCTTAAACCATTGCCGGTACGCTTAA
+
+.. note:: Original copyright notice for the above example file:
+
+   *(c) Copyright 1986-2008 by The University of Washington. Written by Joseph
+   Felsenstein. Permission is granted to copy this document provided that no
+   fee is charged for it and that this copyright notice is not removed.*
+
+Note that the sequences are not required to be aligned in order for the file to
+be a valid FASTA file (this depends on the object that you're reading the file
+into). Also note that some of the sequences occur on a single line, while
+others are split across multiple lines.
+
+Let's define this file in-memory as a ``StringIO``, though this could be a real
+file path, file handle, etc. in practice (anything that's supported by
+scikit-bio's I/O registry):
+
+>>> from StringIO import StringIO
+>>> fh = StringIO(
+...     ">seq1 Turkey\\n"
+...     "AAGCTNGGGCATTTCAGGGTGAGCCCGGGCAATACAGGGTAT\\n"
+...     ">seq2 Salmo gair\\n"
+...     "AAGCCTTGGCAGTGCAGGGTGAGCCGTGG\\n"
+...     "CCGGGCACGGTAT\\n"
+...     ">seq3 H. Sapiens\\n"
+...     "ACCGGTTGGCCGTTCAGGGTACAGGTTGGCCGTTCAGGGTAA\\n"
+...     ">seq4 Chimp\\n"
+...     "AAACCCTTGCCG\\n"
+...     "TTACGCTTAAAC\\n"
+...     "CGAGGCCGGGAC\\n"
+...     "ACTCAT\\n"
+...     ">seq5 Gorilla\\n"
+...     "AAACCCTTGCCGGTACGCTTAAACCATTGCCGGTACGCTTAA\\n")
+
+Let's read the FASTA file into a ``SequenceCollection``:
+
+>>> from skbio import SequenceCollection
+>>> sc = SequenceCollection.read(fh)
+>>> sc.sequence_lengths()
+[42, 42, 42, 42, 42]
+>>> sc.ids()
+['seq1', 'seq2', 'seq3', 'seq4', 'seq5']
+
+We see that all 5 sequences have 42 characters, and that each of the IDs were
+successfully read into memory.
+
+Since these sequences are aligned, let's load the FASTA file into a more
+appropriate data structure:
+
+>>> from skbio import Alignment
+>>> fh.seek(0) # reset position to beginning of file so we can read again
+>>> aln = Alignment.read(fh)
+>>> aln.sequence_length()
+42
+
+Note that we were able to read the FASTA file into two different data
+structures (``SequenceCollection`` and ``Alignment``) using the exact same
+``read`` method call (and underlying reading/parsing logic). Also note that we
+didn't specify a file format in the ``read`` call. The FASTA sniffer detected
+the correct file format for us!
+
+Let's inspect the type of sequences stored in the ``Alignment``:
+
+>>> from skbio import BiologicalSequence
+>>> aln[0]
+<BiologicalSequence: AAGCTNGGGC... (length: 42)>
+
+By default, sequences are loaded as ``BiologicalSequence`` objects. We can
+change the type of sequence via the ``constructor`` parameter:
+
+>>> from skbio import DNASequence
+>>> fh.seek(0) # reset position to beginning of file so we can read again
+>>> aln = Alignment.read(fh, constructor=DNASequence)
+>>> aln[0]
+<DNASequence: AAGCTNGGGC... (length: 42)>
+
+We now have an ``Alignment`` of ``DNASequence`` objects instead of
+``BiologicalSequence`` objects.
+
+Both ``SequenceCollection`` and ``Alignment`` load all of the sequences from
+the FASTA file into memory at once. If the FASTA file is large (which is often
+the case), this may be infeasible if you don't have enough memory. To work
+around this issue, you can stream the sequences using scikit-bio's generator
+FASTA reader. The generator reader yields ``BiologicalSequence`` objects (or
+subclasses if ``constructor`` is supplied) one at a time, instead of loading
+all sequences into memory:
+
+>>> from skbio.io import read
+>>> fh.seek(0) # reset position to beginning of file so we can read again
+>>> for seq in read(fh, format='fasta'):
+...     seq
+<BiologicalSequence: AAGCTNGGGC... (length: 42)>
+<BiologicalSequence: AAGCCTTGGC... (length: 42)>
+<BiologicalSequence: ACCGGTTGGC... (length: 42)>
+<BiologicalSequence: AAACCCTTGC... (length: 42)>
+<BiologicalSequence: AAACCCTTGC... (length: 42)>
+
+TODO add writing example
 
 References
 ----------
 .. [1] Lipman, DJ; Pearson, WR (1985). "Rapid and sensitive protein similarity
-   searches". Science 227 (4693): 1435–41.
+   searches". Science 227 (4693): 1435-41.
 .. [2] http://en.wikipedia.org/wiki/FASTA_format
 .. [3] http://blast.ncbi.nlm.nih.gov/blastcgihelp.shtml
+.. [4] http://evolution.genetics.washington.edu/phylip/doc/sequence.html
 
 """
 # ----------------------------------------------------------------------------
@@ -339,13 +530,14 @@ def _fasta_to_sequence(fh, seq_num, constructor):
 
     seq_idx = seq_num - 1
     seq = None
-    gen = _fasta_to_generator(fh, constructor=constructor)
-    for idx, curr_seq in enumerate(gen):
-        if idx == seq_idx:
-            seq = curr_seq
-            break
-    # TODO is this necessary? what if an error is raised within the generator?
-    gen.close()
+    try:
+        gen = _fasta_to_generator(fh, constructor=constructor)
+        for idx, curr_seq in enumerate(gen):
+            if idx == seq_idx:
+                seq = curr_seq
+                break
+    finally:
+        gen.close()
 
     if seq is None:
         raise FASTAFormatError(
