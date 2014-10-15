@@ -224,8 +224,8 @@ Let's read the FASTA file into a ``SequenceCollection``:
 >>> sc.ids()
 ['seq1', 'seq2', 'seq3', 'seq4', 'seq5']
 
-We see that all 5 sequences have 42 characters, and that each of the IDs were
-successfully read into memory.
+We see that all 5 sequences have 42 characters, and that each of the sequence
+IDs were successfully read into memory.
 
 Since these sequences are aligned, let's load the FASTA file into a more
 appropriate data structure:
@@ -244,7 +244,6 @@ the correct file format for us!
 
 Let's inspect the type of sequences stored in the ``Alignment``:
 
->>> from skbio import BiologicalSequence
 >>> aln[0]
 <BiologicalSequence: AAGCTNGGGC... (length: 42)>
 
@@ -258,15 +257,32 @@ change the type of sequence via the ``constructor`` parameter:
 <DNASequence: AAGCTNGGGC... (length: 42)>
 
 We now have an ``Alignment`` of ``DNASequence`` objects instead of
-``BiologicalSequence`` objects.
+``BiologicalSequence`` objects. To write the alignment in FASTA format:
+
+>>> new_fh = StringIO()
+>>> aln.write(new_fh)
+>>> print(new_fh.getvalue())
+>seq1 Turkey
+AAGCTNGGGCATTTCAGGGTGAGCCCGGGCAATACAGGGTAT
+>seq2 Salmo gair
+AAGCCTTGGCAGTGCAGGGTGAGCCGTGGCCGGGCACGGTAT
+>seq3 H. Sapiens
+ACCGGTTGGCCGTTCAGGGTACAGGTTGGCCGTTCAGGGTAA
+>seq4 Chimp
+AAACCCTTGCCGTTACGCTTAAACCGAGGCCGGGACACTCAT
+>seq5 Gorilla
+AAACCCTTGCCGGTACGCTTAAACCATTGCCGGTACGCTTAA
+<BLANKLINE>
+>>> new_fh.close()
 
 Both ``SequenceCollection`` and ``Alignment`` load all of the sequences from
 the FASTA file into memory at once. If the FASTA file is large (which is often
 the case), this may be infeasible if you don't have enough memory. To work
 around this issue, you can stream the sequences using scikit-bio's generator
-FASTA reader. The generator reader yields ``BiologicalSequence`` objects (or
-subclasses if ``constructor`` is supplied) one at a time, instead of loading
-all sequences into memory:
+FASTA reader and writer. The generator reader yields ``BiologicalSequence``
+objects (or subclasses if ``constructor`` is supplied) one at a time, instead
+of loading all sequences into memory. For example, let's use the generator
+reader to process a single sequence at a time in a ``for`` loop:
 
 >>> from skbio.io import read
 >>> fh.seek(0) # reset position to beginning of file so we can read again
@@ -278,7 +294,36 @@ all sequences into memory:
 <BiologicalSequence: AAACCCTTGC... (length: 42)>
 <BiologicalSequence: AAACCCTTGC... (length: 42)>
 
-TODO add writing example
+A single sequence can also be read into a ``BiologicalSequence`` (or subclass):
+
+>>> from skbio import BiologicalSequence
+>>> fh.seek(0) # reset position to beginning of file so we can read again
+>>> BiologicalSequence.read(fh)
+<BiologicalSequence: AAGCTNGGGC... (length: 42)>
+
+By default, the first sequence in the FASTA file is read. This can be
+controlled with ``seq_num``. For example, to read the fifth sequence:
+
+>>> fh.seek(0) # reset position to beginning of file so we can read again
+>>> BiologicalSequence.read(fh, seq_num=5)
+<BiologicalSequence: AAACCCTTGC... (length: 42)>
+
+We can use the same API to read the fifth sequence into a ``DNASequence``:
+
+>>> fh.seek(0) # reset position to beginning of file so we can read again
+>>> dna_seq = DNASequence.read(fh, seq_num=5)
+>>> dna_seq
+<DNASequence: AAACCCTTGC... (length: 42)>
+
+Individual sequence objects can also be written in FASTA format:
+
+>>> new_fh = StringIO()
+>>> dna_seq.write(new_fh)
+>>> print(new_fh.getvalue())
+>seq5 Gorilla
+AAACCCTTGCCGGTACGCTTAAACCATTGCCGGTACGCTTAA
+<BLANKLINE>
+>>> new_fh.close()
 
 References
 ----------
