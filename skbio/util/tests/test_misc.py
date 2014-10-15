@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -8,12 +6,14 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from __future__ import absolute_import, division, print_function
+from future.builtins import range
 from six import BytesIO
-from tempfile import NamedTemporaryFile
+
+from tempfile import NamedTemporaryFile, mkdtemp
 from os.path import exists, join
 from unittest import TestCase, main
 from shutil import rmtree
-from tempfile import mkdtemp
 from uuid import uuid4
 
 from skbio.util import (cardinal_to_ordinal, safe_md5, remove_files,
@@ -114,8 +114,8 @@ class CardinalToOrdinalTests(TestCase):
                '17th', '18th', '19th', '20th', '21st', '22nd', '23rd', '24th',
                '25th', '26th', '27th', '28th', '29th', '30th', '31st', '32nd',
                '100th', '101st', '42042nd']
-        obs = [cardinal_to_ordinal(n)
-               for n in range(0, 33) + [100, 101, 42042]]
+        obs = [cardinal_to_ordinal(n) for n in
+               list(range(0, 33)) + [100, 101, 42042]]
         self.assertEqual(obs, exp)
 
     def test_invalid_n(self):
