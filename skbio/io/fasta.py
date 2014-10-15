@@ -4,10 +4,18 @@ FASTA format (:mod:`skbio.io.fasta`)
 
 .. currentmodule:: skbio.io.fasta
 
-The FASTA file format (``fasta``) stores biological (i.e., nucleotide or protein) sequences in a simple plain text format that is both
-human-readable and easy to parse. The file format was first introduced and used
-in the FASTA software package [1]_. Additional descriptions of the file format
-can be found in [2]_ and [3]_.
+The FASTA file format (``fasta``) stores biological (i.e., nucleotide or
+protein) sequences in a simple plain text format that is both human-readable
+and easy to parse. The file format was first introduced and used in the FASTA
+software package [1]_. Additional descriptions of the file format can be found
+in [2]_ and [3]_.
+
+An example of a FASTA-formatted file containing two sequences::
+
+    >seq1 db-accession-149855
+    CGATGTCGATCGATCGATCGATCAG
+    >seq2 db-accession-34989
+    CATCGATCGATCGATGCATGCATGCATG
 
 Format Support
 --------------
@@ -35,47 +43,62 @@ Format Support
 
 Format Specification
 --------------------
-A FASTA file contains one or more biological sequences. The sequences are stored
-sequentially, with a *record* for each sequence (also referred to as a *FASTA
-record*). Each *record* consists of a single-line *header* (sometimes referred to as a
-*defline*, *description*, or *comment*) followed by the sequence data,
-optionally split over multiple lines. Blank or whitespace-only lines are not
-allowed anywhere in the FASTA file.
+A FASTA file contains one or more biological sequences. The sequences are
+stored sequentially, with a *record* for each sequence (also referred to as a
+*FASTA record*). Each *record* consists of a single-line *header* (sometimes
+referred to as a *defline*, *label*, *description*, or *comment*) followed by
+the sequence data, optionally split over multiple lines. Blank or
+whitespace-only lines are not allowed anywhere in the FASTA file.
 
 .. note:: scikit-bio does not currently support legacy FASTA format (i.e.,
-headers/comments denoted with a semicolon). The format supported by scikit-bio
-(described below in detail) most closely resembles the description in NCBI's
-BLAST documentation [3]_. See [2]_ for more details of legacy FASTA format. If
-you would like legacy FASTA format support added to scikit-bio, please consider
-submitting a feature request on the `scikit-bio issue tracker
-<https://github.com/biocore/scikit-bio/issues>`_ (or even better, a pull
-request!).
+   headers/comments denoted with a semicolon). The format supported by
+   scikit-bio (described below in detail) most closely resembles the
+   description given in NCBI's BLAST documentation [3]_. See [2]_ for more
+   details on legacy FASTA format. If you would like legacy FASTA format
+   support added to scikit-bio, please consider submitting a feature request on
+   the
+   `scikit-bio issue tracker <https://github.com/biocore/scikit-bio/issues>`_
+   (pull requests are also welcome!).
 
 FASTA Sequence Header
 ^^^^^^^^^^^^^^^^^^^^^
 Each sequence header consists of a single line beginning with a greater-than
-(``>``) symbol. Immediately following this is a sequence identifier (ID) and description
-separated by one or more whitespace characters. Both sequence ID and
-description are optional and are represented as the empty string (``''``) in
-memory if they are not present in the header.
+(``>``) symbol. Immediately following this is a sequence identifier (ID) and
+description separated by one or more whitespace characters. Both sequence ID
+and description are optional and are represented as the empty string (``''``)
+in scikit-bio's objects if they are not present in the header.
 
 A sequence ID consists of a single word; all characters after the greater-than
-symbol and before a whitespace character (if any) are taken as the sequence ID.
+symbol and before the first whitespace character (if any) are taken as the
+sequence ID. Unique sequence IDs are not strictly enforced by the FASTA format
+itself. A single standardized ID format is similarly not enforced by FASTA
+format, though it is often common to use a unique library accession number for
+a sequence ID (e.g., NCBI's FASTA defline format [4]_).
+
+.. note:: scikit-bio will enforce sequence ID uniqueness depending on the type
+   of object that the FASTA file is read into. For example, reading a FASTA
+   file as a generator of ``BiologicalSequence`` objects will not enforce
+   unique IDs since it simply yields each sequence it finds in the FASTA file.
+   However, if the FASTA file is read into a ``SequenceCollection`` object, ID
+   uniqueness will be enforced because that is a property of a
+   ``SequenceCollection``.
+
 If a description is present, it is taken as the remaining characters that
-follow the whitespace separating ID and description.
+follow the sequence ID and initial whitespace. The description is considered
+additional information (e.g., comments about the source of the sequence or the
+molecule that it encodes).
+
+For example, consider the following header::
+
+    >seq1 db-accession-149855
+
+``seq1`` is the sequence ID and ``db-accession-149855`` is the sequence
+description.
 
 .. note:: scikit-bio's readers will remove all leading and trailing whitespace
-   from the description. If a header line begins with whitespace following ``>``,
-   the ID is assumed to be missing and the remainder of the line is taken as the
-   description.
-
-   Unique sequence IDs are not strictly enforced by the FASTA format itself.
-   scikit-bio will enforce uniqueness depending on the type of object that the
-   FASTA file is read into. For example, reading a FASTA file as a generator of
-   ``BiologicalSequence`` objects will not enforce unique IDs since it simply
-   yields each sequence it finds in the FASTA file. However, if the FASTA file
-   is read into a ``SequenceCollection`` object, ID uniqueness will be enforced
-   because that is a property of a ``SequenceCollection``.
+   from the description. If a header line begins with whitespace following
+   ``>``, the ID is assumed to be missing and the remainder of the line is
+   taken as the description.
 
 FASTA Sequence Data
 ^^^^^^^^^^^^^^^^^^^
@@ -84,27 +107,29 @@ lines. The sequence data (i.e., nucleotides or amino acids) are stored using
 the standard IUPAC lexicon (single-letter codes).
 
 .. note:: scikit-bio supports both upper and lower case characters. Both ``-``
-   and ``.`` are supported as gap characters. See :mod:`skbio.sequence` for more
-   details on how scikit-bio interprets sequence data in its in-memory objects.
+   and ``.`` are supported as gap characters. See :mod:`skbio.sequence` for
+   more details on how scikit-bio interprets sequence data in its in-memory
+   objects.
 
-   scikit-bio will remove leading and trailing whitespace from each
-   line of sequence data before joining the sequence chunks into a single
-   in-memory representation of the sequence. Whitespace characters are *not*
-   removed from the middle of the sequence chunks; these can create an invalid
+   scikit-bio will remove leading and trailing whitespace from each line of
+   sequence data before joining the sequence chunks into a single sequence.
+   Whitespace characters are **not** removed from the middle of the sequence
+   chunks. Likewise, other invalid IUPAC characters are **not** removed from
+   the sequence data as it is read. Thus, it is possible to create an invalid
    in-memory sequence object (see warning below).
 
 .. warning:: In an effort to maintain reasonable performance while reading
-   FASTA files (which can be quite large!), validation of sequence data is **not**
-   performed during reading. It is the responsibility of the user to validate
-   their in-memory representation of the data if desired (e.g., by calling
-   ``is_valid`` on the returned object). Thus, it is possible that invalid characters are parsed and read into objects
-   (e.g. whitespace occurring in the middle of a sequence, or invalid IUPAC DNA
-   characters while reading DNA sequence data).
+   FASTA files (which can be quite large), validation of sequence data is
+   **not** performed during reading. It is the responsibility of the user to
+   validate their in-memory representation of the data if desired (e.g., by
+   calling ``is_valid`` on the returned object). Thus, it is possible to read
+   invalid characters into objects (e.g. whitespace occurring in the middle of
+   a sequence, or invalid IUPAC DNA characters in a DNA sequence).
 
 Format Parameters
 -----------------
-The following parameters are available in scikit-bio to change how FASTA files
-are read or written.
+The following parameters are available to change how FASTA files are read or
+written in scikit-bio.
 
 Reader Parameters
 ^^^^^^^^^^^^^^^^^
@@ -121,27 +146,28 @@ reading contains protein sequences, you would pass
 ``constructor=ProteinSequence`` to the reader call.
 
 .. note:: The FASTA sniffer will not attempt to guess the ``constructor``
-   parameter, so it will always default to ``BiologicalSequence`` if another type
-   is not provided to the reader. The sniffer could attempt to infer the type of
-   sequences contained in the file, but this process could be error-prone since
-   the type of sequenes is not encoded in the FASTA file format itself. This could
-   produce strange or unintended behavior in certain cases, so we defer to the
-   user to provide more specific sequence type information if it is available.
+   parameter, so it will always default to ``BiologicalSequence`` if another
+   type is not provided to the reader. The sniffer could attempt to infer the
+   type of sequences contained in the file, but this process could be
+   error-prone since sequence type is not encoded in the FASTA file format
+   itself (and can be ambiguous). This could produce strange or unintended
+   behavior in certain cases, so we defer to the user to provide more specific
+   sequence type information if it is available.
 
 BiologicalSequence and Subclass Reader Parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The ``seq_num`` parameter can be used with the ``BiologicalSequence``,
 ``NucleotideSequence``, ``DNASequence``, ``RNASequence``, and
 ``ProteinSequence`` FASTA readers. ``seq_num`` specifies which sequence to read
-from the FASTA file, and default to 1 (i.e., such that the first sequence is
+from the FASTA file, and defaults to 1 (i.e., such that the first sequence is
 read). For example, to read the 50th sequence from a FASTA file, you would pass
 ``seq_num=50`` to the reader call.
 
 .. note:: The FASTA sniffer will not attempt to guess the ``seq_num``
-   parameter, so it will always default to reading the first sequence in the file
-   unless overridden by the user. The sniffer can never provide a reasonable guess
-   for this parameter as it is entirely up to the user to specify which sequence
-   to read.
+   parameter, so it will always default to reading the first sequence in the
+   file unless overridden by the user. The sniffer cannot provide a reasonable
+   guess for this parameter as it is entirely up to the user to specify which
+   sequence to read.
 
 Writer Parameters
 ^^^^^^^^^^^^^^^^^
@@ -150,23 +176,23 @@ The following parameters are available to all FASTA format writers:
 - ``id_whitespace_replacement``: string to replace **each** whitespace
   character in a sequence ID. This parameter is useful for cases where an
   in-memory sequence ID contains whitespace, which would result in an on-disk
-  representation that would not be read back into memory as the same ID since
-  IDs in FASTA format cannot contain whitespace. Defaults to ``_``.
+  representation that would not be read back into memory as the same ID (since
+  IDs in FASTA format cannot contain whitespace). Defaults to ``_``.
 
 - ``description_newline_replacement``: string to replace **each** newline
-  character in a sequence description. Since a FASTA header line must reside on
-  a single line, newlines are not allowed in sequence descriptions and must be
-  replaced in order to write a valid FASTA file. Defaults to a single space (`` ``).
+  character in a sequence description. Since a FASTA header must be a single
+  line, newlines are not allowed in sequence descriptions and must be replaced
+  in order to write a valid FASTA file. Defaults to a single space (`` ``).
 
- - ``max_width``: integer specifying the maximum line width (i.e., number of
-   characters) for sequence data. If a sequence is longer than ``max_width``,
-   it will be split across multiple lines, each with a maximum width of
-   ``max_width``. Default is to not split across multiple lines (``None``).
+- ``max_width``: integer specifying the maximum line width (i.e., number of
+  characters) for sequence data. If a sequence is longer than ``max_width``, it
+  will be split across multiple lines, each with a maximum width of
+  ``max_width``. Default is to not split across multiple lines.
 
 Examples
 --------
 Suppose we have the following FASTA file with five aligned sequences (example
-modified from [4]_)::
+modified from [5]_)::
 
     >seq1 Turkey
     AAGCTNGGGCATTTCAGGGTGAGCCCGGGCAATACAGGGTAT
@@ -257,7 +283,14 @@ change the type of sequence via the ``constructor`` parameter:
 <DNASequence: AAGCTNGGGC... (length: 42)>
 
 We now have an ``Alignment`` of ``DNASequence`` objects instead of
-``BiologicalSequence`` objects. To write the alignment in FASTA format:
+``BiologicalSequence`` objects. Validation of sequence character data is not
+performed during reading (see warning above for details). To verify that each
+of the sequences are valid DNA sequences:
+
+>>> aln.is_valid()
+True
+
+To write the alignment in FASTA format:
 
 >>> new_fh = StringIO()
 >>> aln.write(new_fh)
@@ -331,7 +364,12 @@ References
    searches". Science 227 (4693): 1435-41.
 .. [2] http://en.wikipedia.org/wiki/FASTA_format
 .. [3] http://blast.ncbi.nlm.nih.gov/blastcgihelp.shtml
-.. [4] http://evolution.genetics.washington.edu/phylip/doc/sequence.html
+.. [4] Madden T. The BLAST Sequence Analysis Tool. 2002 Oct 9
+   [Updated 2003 Aug 13]. In: McEntyre J, Ostell J, editors. The NCBI Handbook
+   [Internet]. Bethesda (MD): National Center for Biotechnology Information
+   (US); 2002-. Chapter 16. Available from:
+   http://www.ncbi.nlm.nih.gov/books/NBK21097/
+.. [5] http://evolution.genetics.washington.edu/phylip/doc/sequence.html
 
 """
 # ----------------------------------------------------------------------------
