@@ -4,7 +4,10 @@ FASTA format (:mod:`skbio.io.fasta`)
 
 .. currentmodule:: skbio.io.fasta
 
-TODO add description
+The FASTA file format (``fasta``) stores biological (i.e., nucleotide or protein) sequences in a simple plain text format that is both
+human-readable and easy to parse. The file format was first introduced and used
+in the FASTA software package [1]_. Additional descriptions of the file format
+can be found in [2]_ and [3]_.
 
 Format Support
 --------------
@@ -32,14 +35,56 @@ Format Support
 
 Format Specification
 --------------------
-TODO add format specification
+A FASTA file contains one or more biological sequences. The sequences are stored
+sequentially, with a *record* for each sequence (also referred to as a *FASTA
+record*). Each *record* consists of a single-line *header* (sometimes referred to as a
+*defline*, *description*, or *comment*) followed by the sequence data,
+optionally split over multiple lines.
+
+.. note:: scikit-bio's readers do not allow blank or whitespace-only lines
+   anywhere in the FASTA file.
+
+FASTA Sequence Header
+^^^^^^^^^^^^^^^^^^^^^
+Each sequence header consists of a single line that begins with the greater-than
+(``>``) symbol. The header contains a sequence identifier (ID) and description
+separated by whitespace. Both sequence ID and description are optional.
+
+FASTA Sequence Data
+^^^^^^^^^^^^^^^^^^^
+Biological sequence data follows the header, and can be split over multiple
+lines. The sequence data (i.e., nucleotides or amino acids) are stored using
+the standard IUPAC lexicon.
 
 Caveats
 ^^^^^^^
 
 Format Parameters
 -----------------
-TODO add format parameters
+The following parameters are available in scikit-bio to change how FASTA files
+are read or written.
+
+Reader Parameters
+^^^^^^^^^^^^^^^^^
+
+Generator, SequenceCollection, and Alignment Reader Parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The ``constructor`` parameter can be used with the ``BiologicalSequence``
+generator, ``SequenceCollection``, and ``Alignment`` FASTA readers.
+``constructor`` specifies the in-memory type of each sequence that is parsed,
+and defaults to ``BiologicalSequence``. ``constructor`` should be a subclass of
+``BiologicalSequence``. For example, if you know that the FASTA file you're
+reading contains protein sequences, you would pass
+``constructor=ProteinSequence`` to the reader call.
+
+BiologicalSequence and Subclass Reader Parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The ``seq_num`` parameter can be used with the ``BiologicalSequence``,
+``NucleotideSequence``, ``DNASequence``, ``RNASequence``, and
+``ProteinSequence`` FASTA readers. ``seq_num`` specifies which sequence to read
+from the FASTA file, and default to 1 (i.e., such that the first sequence is
+read). For example, to read the 50th sequence from a FASTA file, you would pass
+``seq_num=50`` to the reader call.
 
 Examples
 --------
