@@ -10,7 +10,7 @@ and easy to parse. The file format was first introduced and used in the FASTA
 software package [1]_. Additional descriptions of the file format can be found
 in [2]_ and [3]_.
 
-An example of a FASTA-formatted file containing two sequences::
+An example of a FASTA-formatted file containing two DNA sequences::
 
     >seq1 db-accession-149855
     CGATGTCGATCGATCGATCGATCAG
@@ -61,8 +61,8 @@ whitespace-only lines are not allowed anywhere in the FASTA file.
    `scikit-bio issue tracker <https://github.com/biocore/scikit-bio/issues>`_
    (pull requests are also welcome!).
 
-FASTA Sequence Header
-^^^^^^^^^^^^^^^^^^^^^
+Sequence Header
+^^^^^^^^^^^^^^^
 Each sequence header consists of a single line beginning with a greater-than
 (``>``) symbol. Immediately following this is a sequence identifier (ID) and
 description separated by one or more whitespace characters. Both sequence ID
@@ -86,8 +86,8 @@ a sequence ID (e.g., NCBI's FASTA defline format [4]_).
 
 If a description is present, it is taken as the remaining characters that
 follow the sequence ID and initial whitespace. The description is considered
-additional information (e.g., comments about the source of the sequence or the
-molecule that it encodes).
+additional information about the sequence (e.g., comments about the source of
+the sequence or the molecule that it encodes).
 
 For example, consider the following header::
 
@@ -101,8 +101,8 @@ description.
    ``>``, the ID is assumed to be missing and the remainder of the line is
    taken as the description.
 
-FASTA Sequence Data
-^^^^^^^^^^^^^^^^^^^
+Sequence Data
+^^^^^^^^^^^^^
 Biological sequence data follows the header, and can be split over multiple
 lines. The sequence data (i.e., nucleotides or amino acids) are stored using
 the standard IUPAC lexicon (single-letter codes).
