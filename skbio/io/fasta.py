@@ -24,7 +24,8 @@ Format Support
 +----------+----------+------------------------------------------------------+
 |**Reader**|**Writer**|                   **Object Class**                   |
 +----------+----------+------------------------------------------------------+
-|Yes       |Yes       |generator of ``BiologicalSequence`` objects           |
+|Yes       |Yes       |generator of :mod:`skbio.sequence.BiologicalSequence` |
+|          |          |objects                                               |
 +----------+----------+------------------------------------------------------+
 |Yes       |Yes       |:mod:`skbio.alignment.SequenceCollection`             |
 +----------+----------+------------------------------------------------------+
@@ -178,12 +179,10 @@ The following parameters are available to all FASTA format writers:
   in-memory sequence ID contains whitespace, which would result in an on-disk
   representation that would not be read back into memory as the same ID (since
   IDs in FASTA format cannot contain whitespace). Defaults to ``_``.
-
 - ``description_newline_replacement``: string to replace **each** newline
   character in a sequence description. Since a FASTA header must be a single
   line, newlines are not allowed in sequence descriptions and must be replaced
-  in order to write a valid FASTA file. Defaults to a single space (`` ``).
-
+  in order to write a valid FASTA file. Defaults to a single space.
 - ``max_width``: integer specifying the maximum line width (i.e., number of
   characters) for sequence data. If a sequence is longer than ``max_width``, it
   will be split across multiple lines, each with a maximum width of
