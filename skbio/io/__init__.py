@@ -290,12 +290,12 @@ __all__ = ['write', 'read', 'sniff',
 # Necessary to import each file format module to have them added to the I/O
 # registry. We use import_module instead of a typical import to avoid flake8
 # unused import errors.
-import_module('skbio.io.dm')
-import_module('skbio.io.ordres')
-import_module('skbio.io.newick')
 import_module('skbio.io.clustal')
-import_module('skbio.io.phylip')
+import_module('skbio.io.dm')
 import_module('skbio.io.fasta')
+import_module('skbio.io.newick')
+import_module('skbio.io.ordres')
+import_module('skbio.io.phylip')
 
 # Now that all of our I/O has loaded, we can add the object oriented methods
 # (read and write) to each class which has registered I/O operations.

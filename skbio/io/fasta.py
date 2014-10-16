@@ -329,11 +329,12 @@ AAACCCTTGCCGGTACGCTTAAACCATTGCCGGTACGCTTAA
 Both ``SequenceCollection`` and ``Alignment`` load all of the sequences from
 the FASTA file into memory at once. If the FASTA file is large (which is often
 the case), this may be infeasible if you don't have enough memory. To work
-around this issue, you can stream the sequences using scikit-bio's generator
-FASTA reader and writer. The generator reader yields ``BiologicalSequence``
-objects (or subclasses if ``constructor`` is supplied) one at a time, instead
-of loading all sequences into memory. For example, let's use the generator
-reader to process a single sequence at a time in a ``for`` loop:
+around this issue, you can stream the sequences using scikit-bio's
+generator-based FASTA reader and writer. The generator-based reader yields
+``BiologicalSequence`` objects (or subclasses if ``constructor`` is supplied)
+one at a time, instead of loading all sequences into memory. For example, let's
+use the generator-based reader to process a single sequence at a time in a
+``for`` loop:
 
 >>> from skbio.io import read
 >>> fh.seek(0) # reset position to beginning of file so we can read again
@@ -399,7 +400,7 @@ References
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.builtins import range
+from future.builtins import range, zip
 
 import re
 
@@ -419,21 +420,13 @@ def _fasta_sniffer(fh):
     #   (i.e. the file isn't empty) and no errors are thrown during reading,
     #   assume the file is in FASTA format.
     try:
+        not_empty = False
         gen = _fasta_to_generator(fh)
-        num_seqs = 0
-        for _ in range(10):
-            try:
-                next(gen)
-            except FASTAFormatError:
-                return False, {}
-            except StopIteration:
-                break
-            num_seqs += 1
-
-        if num_seqs < 1:
-            return False, {}
-        else:
-            return True, {}
+        for _ in zip(range(10), gen):
+            not_empty = True
+        return not_empty, {}
+    except FASTAFormatError:
+        return False, {}
     finally:
         gen.close()
 
