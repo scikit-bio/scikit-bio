@@ -3,7 +3,7 @@
 ## Version 0.2.0-dev (changes since 0.2.0 release go here)
 
 ### Features
-* Added additional``read`` and ``write`` methods to ``Alignment`` for handling multiple sequence alignments in Clustal format.  See ``skbio.io.clustal`` for more details.  Deprecated ``write_clustal`` and ``parse_clustal`` in skbio.parse.sequences.
+* Added additional ``read`` and ``write`` methods to ``Alignment`` for handling multiple sequence alignments in Clustal format.  See ``skbio.io.clustal`` for more details.  Deprecated ``write_clustal`` and ``parse_clustal`` in skbio.parse.sequences.
 * Added QSEQ parsing function ``parse_qseq`` and iterator ``QseqIterator`` to ``skbio.parse.sequences``.
 * Added ``strict`` and ``lookup`` optional parameters to ``skbio.stats.distance.mantel`` for handling reordering and matching of IDs when provided ``DistanceMatrix`` instances as input (these parameters were previously only available in ``skbio.stats.distance.pwmantel``).
 * ``skbio.stats.distance.pwmantel`` now accepts an iterable of ``array_like`` objects. Previously, only ``DistanceMatrix`` instances were allowed.
@@ -21,11 +21,26 @@
 * Added ``write`` method to ``Alignment``, currently supporting the [PHYLIP file format](http://evolution.genetics.washington.edu/phylip/doc/sequence.html). This method can support multiple file formats, etc. by taking advantage of scikit-bio's I/O registry system. See ``skbio.io`` and ``skbio.io.phylip`` for more details. Deprecated ``to_phylip`` methods in favor of ``write``. This method will be removed in scikit-bio 0.3.0.
 * ``BiologicalSequence.__getitem__`` now supports specifying a sequence of indices to take from the biological sequence.
 * Added ``BiologicalSequence.copy`` for creating a copy of a biological sequence, optionally with one or more attributes updated.
+* Added ``skbio.util.cardinal_to_ordinal`` for converting a cardinal number to ordinal string (e.g., useful for error messages).
+* Added FASTA format support to scikit-bio's I/O registry system. See ``skbio.io`` and ``skbio.io.fasta`` for more details. This includes the following additions:
+    - Automatic file format detection via a FASTA sniffer
+    - FASTA files can be read into and written from ``SequenceCollection``, ``Alignment``, ``BiologicalSequence``, ``NucleotideSequence``, ``DNASequence``, ``RNASequence``, and ``ProteinSequence`` objects via ``read`` and ``write`` methods
+    - FASTA files can be streamed into and out of memory via ```skbio.io.read`` and ``skbio.io.write``. These generators yield ``BiologicalSequence`` objects (or subclasses)
 
 ### Bug fixes
 
 * Removed ``constructor`` parameter from ``Alignment.k_word_frequencies``, ``BiologicalSequence.k_words``, ``BiologicalSequence.k_word_counts``, and ``BiologicalSequence.k_word_frequencies`` as it had no effect (it was never hooked up in the underlying code). ``BiologicalSequence.k_words`` now returns a generator of ``BiologicalSequence`` objects instead of strings.
 * Modified the ``Alignment`` constructor to verify that all sequences have the same length, if not, raise an ``AlignmentError`` exception.  Updated the method ``Alignment.subalignment`` to calculate the indices only once now that identical sequence length is guaranteed.
+
+### Deprecated functionality
+
+* Deprecated the following FASTA readers/writers in favor of FASTA format support in scikit-bio's I/O registry system. See ``skbio.io`` and ``skbio.io.fasta`` for more details. This functionality will be removed in scikit-bio 0.3.0 (old -> new):
+    - ``SequenceCollection.from_fasta_records`` -> ``SequenceCollection.read``
+    - ``SequenceCollection.to_fasta`` -> ``SequenceCollection.write``
+    - ``skbio.format.sequences.fasta.fasta_from_sequences`` -> ``skbio.io.write``
+    - ``skbio.format.sequences.fasta.fasta_from_alignment`` -> ``skbio.io.write``/``Alignment.write``
+    - ``skbio.parse.sequences.fasta.parse_fasta`` -> ``skbio.io.read``
+    - ``BiologicalSequence.to_fasta`` -> ``BiologicalSequence.write``
 
 ### Backward-incompatible changes
 

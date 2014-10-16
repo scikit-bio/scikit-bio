@@ -49,6 +49,11 @@ class NewickFormatError(FileFormatError):
     pass
 
 
+class FASTAFormatError(FileFormatError):
+    """Raised when a ``fasta`` formatted file cannot be parsed."""
+    pass
+
+
 class PhylipFormatError(FileFormatError):
     """Raised when a ``phylip`` formatted file cannot be parsed.
 

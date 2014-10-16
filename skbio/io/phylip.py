@@ -27,7 +27,7 @@ An example PHYLIP-formatted file taken from [3]_::
 
 Format Support
 --------------
-**Has Sniffer: Yes**
+**Has Sniffer: No**
 
 +----------+----------+------------------------------------------------------+
 |**Reader**|**Writer**|                   **Object Class**                   |
@@ -205,10 +205,10 @@ References
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.builtins import range
 
 from skbio.alignment import Alignment
 from skbio.io import register_writer, PhylipFormatError
+from skbio.io._base import _chunk_str
 
 
 @register_writer('phylip', Alignment)
@@ -244,11 +244,5 @@ def _alignment_to_phylip(obj, fh):
 
     fmt = '{0:%d}{1}\n' % chunk_size
     for seq in obj:
-        chunked_seq = _chunk_str(str(seq), chunk_size)
+        chunked_seq = _chunk_str(str(seq), chunk_size, ' ')
         fh.write(fmt.format(seq.id, chunked_seq))
-
-
-def _chunk_str(s, n):
-    """Insert a space every `n` characters in `s`."""
-    # Modified from http://stackoverflow.com/a/312464/3776794
-    return ' '.join((s[i:i+n] for i in range(0, len(s), n)))

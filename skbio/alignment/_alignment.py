@@ -9,10 +9,11 @@
 from __future__ import absolute_import, division, print_function
 from future.builtins import zip, range
 from future.utils import viewkeys, viewitems
+from six import StringIO
 
+import warnings
 from collections import Counter, defaultdict, OrderedDict
 from importlib import import_module
-from warnings import warn
 
 import numpy as np
 from scipy.stats import entropy
@@ -64,11 +65,20 @@ class SequenceCollection(object):
     <SequenceCollection: n=2; mean +/- std length=6.00 +/- 1.00>
 
     """
+    default_write_format = 'fasta'
 
     @classmethod
     def from_fasta_records(cls, fasta_records, seq_constructor,
                            validate=False):
         r"""Initialize a `SequenceCollection` object
+
+        .. note:: Deprecated in scikit-bio 0.2.0-dev
+           ``from_fasta_records`` will be removed in scikit-bio 0.3.0. It is
+           replaced by ``read``, which is a more general method for
+           deserializing FASTA-formatted files. ``read`` supports multiple file
+           formats, automatic file format detection, etc. by taking advantage
+           of scikit-bio's I/O registry system. See :mod:`skbio.io` for more
+           details.
 
         Parameters
         ----------
@@ -118,6 +128,11 @@ class SequenceCollection(object):
         <SequenceCollection: n=2; mean +/- std length=6.00 +/- 1.00>
 
         """
+        warnings.warn(
+            "SequenceCollection.from_fasta_records is deprecated and will be "
+            "removed in scikit-bio 0.3.0. Please update your code to use "
+            "SequenceCollection.read.", UserWarning)
+
         data = []
         for seq_id, seq in fasta_records:
             try:
@@ -343,7 +358,11 @@ class SequenceCollection(object):
         .. shownumpydoc
 
         """
-        return self.to_fasta()
+        fh = StringIO()
+        self.write(fh, format='fasta')
+        fasta_str = fh.getvalue()
+        fh.close()
+        return fasta_str
 
     def distances(self, distance_fn):
         """Compute distances between all pairs of sequences
@@ -672,9 +691,10 @@ class SequenceCollection(object):
         Large Phylogenies". In Bioinformatics, 2014
 
         """
-        warn("SequenceCollection.int_map is deprecated and will be removed in "
-             "scikit-bio 0.3.0. Please update your code to use "
-             "SequenceCollection.update_ids instead.", UserWarning)
+        warnings.warn(
+            "SequenceCollection.int_map is deprecated and will be removed in "
+            "scikit-bio 0.3.0. Please update your code to use "
+            "SequenceCollection.update_ids instead.", UserWarning)
 
         int_keys = []
         int_map = []
@@ -844,6 +864,13 @@ class SequenceCollection(object):
     def to_fasta(self):
         """Return fasta-formatted string representing the `SequenceCollection`
 
+        .. note:: Deprecated in scikit-bio 0.2.0-dev
+           ``to_fasta`` will be removed in scikit-bio 0.3.0. It is replaced by
+           ``write``, which is a more general method for serializing
+           FASTA-formatted files. ``write`` supports multiple file formats by
+           taking advantage of scikit-bio's I/O registry system. See
+           :mod:`skbio.io` for more details.
+
         Returns
         -------
         str
@@ -853,6 +880,11 @@ class SequenceCollection(object):
         --------
         skbio.parse.sequences.parse_fasta
         """
+        warnings.warn(
+            "SequenceCollection.to_fasta is deprecated and will be removed in "
+            "scikit-bio 0.3.0. Please update your code to use "
+            "SequenceCollection.write.", UserWarning)
+
         return ''.join([seq.to_fasta() for seq in self._data])
 
     def toFasta(self):
@@ -873,8 +905,9 @@ class SequenceCollection(object):
             A fasta-formatted string representing the `SequenceCollection`.
 
         """
-        warn("SequenceCollection.toFasta() is deprecated. You should use "
-             "SequenceCollection.to_fasta().")
+        warnings.warn(
+            "SequenceCollection.toFasta() is deprecated. You should use "
+            "SequenceCollection.to_fasta().")
         return self.to_fasta()
 
     def upper(self):
@@ -962,8 +995,6 @@ class Alignment(SequenceCollection):
     <Alignment: n=2; mean +/- std length=7.00 +/- 0.00>
 
     """
-    # TODO change once we support more formats (#629)
-    default_write_format = 'phylip'
 
     def __init__(self, seqs, validate=False, score=None,
                  start_end_positions=None):
@@ -1303,11 +1334,12 @@ class Alignment(SequenceCollection):
         if constructor is None:
             constructor = self[0].__class__
         else:
-            warn("constructor parameter in Alignment.majority_consensus is "
-                 "deprecated and will be removed in scikit-bio 0.3.0. Please "
-                 "update your code to construct the desired object from the "
-                 "BiologicalSequence (or subclass) that is returned by this "
-                 "method.", UserWarning)
+            warnings.warn(
+                "constructor parameter in Alignment.majority_consensus is "
+                "deprecated and will be removed in scikit-bio 0.3.0. Please "
+                "update your code to construct the desired object from the "
+                "BiologicalSequence (or subclass) that is returned by this "
+                "method.", UserWarning)
 
         result = []
         for c in self.position_counters():
@@ -1606,9 +1638,10 @@ class Alignment(SequenceCollection):
         write
 
         """
-        warn("Alignment.to_phylip is deprecated and will be removed in "
-             "scikit-bio 0.3.0. Please update your code to use "
-             "Alignment.write.", UserWarning)
+        warnings.warn(
+            "Alignment.to_phylip is deprecated and will be removed in "
+            "scikit-bio 0.3.0. Please update your code to use "
+            "Alignment.write.", UserWarning)
 
         if self.is_empty():
             raise SequenceCollectionError("PHYLIP-formatted string can only "

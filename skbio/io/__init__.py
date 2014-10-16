@@ -111,11 +111,12 @@ see the associated documentation.
 .. autosummary::
    :toctree: generated/
 
-   dm
-   ordres
-   newick
-   phylip
    clustal
+   dm
+   fasta
+   newick
+   ordres
+   phylip
 
 Formats are considered to be names which represent a way of encoding a file.
 A simple format is just a single name as a string, such as ``'newick'``.
@@ -152,11 +153,12 @@ User Exceptions
    RecordError
    FieldError
    UnrecognizedFormatError
-   DMFormatError
-   OrdResFormatError
-   NewickFormatError
-   PhylipFormatError
    ClustalFormatError
+   DMFormatError
+   FASTAFormatError
+   NewickFormatError
+   OrdResFormatError
+   PhylipFormatError
 
 User Warnings
 ^^^^^^^^^^^^^
@@ -258,9 +260,9 @@ from importlib import import_module
 from ._warning import FormatIdentificationWarning, ArgumentOverrideWarning
 from ._exception import (DuplicateRegistrationError, InvalidRegistrationError,
                          RecordError, FieldError, UnrecognizedFormatError,
-                         FileFormatError, DMFormatError, OrdResFormatError,
-                         NewickFormatError, PhylipFormatError,
-                         ClustalFormatError)
+                         FileFormatError, ClustalFormatError, DMFormatError,
+                         FASTAFormatError, NewickFormatError,
+                         OrdResFormatError, PhylipFormatError)
 from ._registry import (write, read, sniff, get_writer, get_reader,
                         get_sniffer, list_write_formats, list_read_formats,
                         register_writer, register_reader, register_sniffer,
@@ -278,19 +280,21 @@ __all__ = ['write', 'read', 'sniff',
            'RecordError', 'FieldError', 'UnrecognizedFormatError',
 
            'FileFormatError',
+           'ClustalFormatError',
            'DMFormatError',
-           'OrdResFormatError',
+           'FASTAFormatError',
            'NewickFormatError',
-           'PhylipFormatError',
-           'ClustalFormatError']
+           'OrdResFormatError',
+           'PhylipFormatError']
 
 # Necessary to import each file format module to have them added to the I/O
 # registry. We use import_module instead of a typical import to avoid flake8
 # unused import errors.
-import_module('skbio.io.dm')
-import_module('skbio.io.ordres')
-import_module('skbio.io.newick')
 import_module('skbio.io.clustal')
+import_module('skbio.io.dm')
+import_module('skbio.io.fasta')
+import_module('skbio.io.newick')
+import_module('skbio.io.ordres')
 import_module('skbio.io.phylip')
 
 # Now that all of our I/O has loaded, we can add the object oriented methods
