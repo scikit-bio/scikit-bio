@@ -178,15 +178,34 @@ The following parameters are available to all FASTA format writers:
   character in a sequence ID. This parameter is useful for cases where an
   in-memory sequence ID contains whitespace, which would result in an on-disk
   representation that would not be read back into memory as the same ID (since
-  IDs in FASTA format cannot contain whitespace). Defaults to ``_``.
+  IDs in FASTA format cannot contain whitespace). Defaults to ``_``. If
+  ``None``, no whitespace replacement is performed and IDs are written as they
+  are stored in memory (this has the potential to create an invalid
+  FASTA-formatted file; see note below).
 - ``description_newline_replacement``: string to replace **each** newline
   character in a sequence description. Since a FASTA header must be a single
   line, newlines are not allowed in sequence descriptions and must be replaced
-  in order to write a valid FASTA file. Defaults to a single space.
+  in order to write a valid FASTA file. Defaults to a single space. If
+  ``None``, no newline replacement is performed and descriptions are written as
+  they are stored in memory (this has the potential to create an invalid
+  FASTA-formatted file; see note below).
+
 - ``max_width``: integer specifying the maximum line width (i.e., number of
   characters) for sequence data. If a sequence is longer than ``max_width``, it
   will be split across multiple lines, each with a maximum width of
   ``max_width``. Default is to not split across multiple lines.
+
+.. note:: The FASTA format writers will have noticeably better runtime
+   performance if ``id_whitespace_replacement`` and/or
+   ``description_newline_replacement`` are set to ``None`` so that whitespace
+   replacement is not performed during writing. However, this can potentially
+   create invalid FASTA files, especially if there are newline characters in
+   the IDs or descriptions. For IDs with whitespace, this can also affect how
+   the IDs are read into memory in a subsequent read operation. For example, if
+   an in-memory sequence ID is ``'seq 1'`` and
+   ``id_whitespace_replacement=None``, reading the FASTA file back into memory
+   would result in an ID of ``'seq'``, and ``'1'`` would be part of the
+   sequence description.
 
 Examples
 --------
@@ -486,8 +505,10 @@ def _fasta_to_alignment(fh, constructor=BiologicalSequence):
 @register_writer('fasta')
 def _generator_to_fasta(obj, fh, id_whitespace_replacement='_',
                         description_newline_replacement=' ', max_width=None):
-    if '\n' in id_whitespace_replacement or \
-            '\n' in description_newline_replacement:
+    if ((id_whitespace_replacement is not None and
+         '\n' in id_whitespace_replacement) or
+        (description_newline_replacement is not None and
+         '\n' in description_newline_replacement)):
         raise FASTAFormatError(
             "Newline character (\\n) cannot be used to replace whitespace in "
             "biological sequence IDs, nor to replace newlines in biological "
@@ -504,9 +525,13 @@ def _generator_to_fasta(obj, fh, id_whitespace_replacement='_',
                 "empty/blank sequence). Empty sequences are not supported in "
                 "the FASTA file format." % cardinal_to_ordinal(idx + 1))
 
-        id_ = re.sub(ws_pattern, id_whitespace_replacement, seq.id)
-        desc = re.sub(nl_pattern, description_newline_replacement,
-                      seq.description)
+        id_ = seq.id
+        if id_whitespace_replacement is not None:
+            id_ = re.sub(ws_pattern, id_whitespace_replacement, id_)
+
+        desc = seq.description
+        if description_newline_replacement is not None:
+            desc = re.sub(nl_pattern, description_newline_replacement, desc)
 
         if desc:
             header = '%s %s' % (id_, desc)
@@ -514,7 +539,6 @@ def _generator_to_fasta(obj, fh, id_whitespace_replacement='_',
             header = id_
 
         seq_str = str(seq)
-
         if max_width is not None:
             seq_str = _chunk_str(seq_str, max_width, '\n')
 

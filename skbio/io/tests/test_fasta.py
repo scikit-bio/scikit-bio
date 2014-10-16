@@ -64,7 +64,9 @@ class FASTASnifferTests(TestCase):
             'fasta_invalid_missing_seq_data_first',
             'fasta_invalid_missing_seq_data_middle',
             'fasta_invalid_missing_seq_data_last',
-            'fasta_invalid_legacy_format'
+            'fasta_invalid_legacy_format',
+            'fasta_id_whitespace_replacement_none',
+            'fasta_description_newline_replacement_none'
         ])
 
     def test_positives(self):
@@ -127,13 +129,15 @@ class FASTAReaderTests(TestCase):
         self.invalid_fps = map(lambda e: (get_data_path(e[0]), e[1]), [
             ('whitespace_only', 'without a FASTA header'),
             ('fasta_invalid_missing_header', 'without a FASTA header'),
-            ('fasta_invalid_blank_line', 'blank or whitespace-only'),
-            ('fasta_invalid_whitespace_only_line', 'blank or whitespace-only'),
+            ('fasta_invalid_blank_line', 'whitespace-only'),
+            ('fasta_invalid_whitespace_only_line', 'whitespace-only'),
             ('fasta_invalid_missing_seq_data_first', 'without sequence data'),
             ('fasta_invalid_missing_seq_data_middle', 'without sequence data'),
             ('fasta_invalid_missing_seq_data_last', 'without sequence data'),
             ('fasta_invalid_after_10_seqs', 'without sequence data'),
-            ('fasta_invalid_legacy_format', 'without a FASTA header')
+            ('fasta_invalid_legacy_format', 'without a FASTA header'),
+            ('fasta_id_whitespace_replacement_none', 'whitespace-only'),
+            ('fasta_description_newline_replacement_none', 'whitespace-only')
         ])
 
     # extensive tests for fasta -> generator reader since it is used by all
@@ -282,7 +286,7 @@ class FASTAWriterTests(TestCase):
         # id_whitespace_replacement)
         def whitespace_id_gen():
             yield self.bio_seq2
-            yield RNA('UA', id='\n\t \r', description='a\nb')
+            yield RNA('UA', id='\n\t \t', description='a\nb')
 
         # multiple sequences of mixed types, lengths, and metadata. lengths are
         # chosen to exercise various splitting cases when testing max_width
@@ -306,12 +310,18 @@ class FASTAWriterTests(TestCase):
             (newline_description_gen(),
              {'description_newline_replacement': ''},
              'fasta_description_newline_replacement_empty_str'),
+            (newline_description_gen(),
+             {'description_newline_replacement': None},
+             'fasta_description_newline_replacement_none'),
             (whitespace_id_gen(),
              {'id_whitespace_replacement': '>:o'},
              'fasta_id_whitespace_replacement_multi_char'),
             (whitespace_id_gen(),
              {'id_whitespace_replacement': ''},
-             'fasta_id_whitespace_replacement_empty_str')
+             'fasta_id_whitespace_replacement_empty_str'),
+            (whitespace_id_gen(),
+             {'id_whitespace_replacement': None},
+             'fasta_id_whitespace_replacement_none')
         ])
 
         self.blank_seq = BiologicalSequence('')
