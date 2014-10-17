@@ -401,8 +401,13 @@ References
 
 from __future__ import absolute_import, division, print_function
 from future.builtins import range, zip
+from future.standard_library import hooks
+with hooks():
+    from itertools import zip_longest
 
 import re
+
+import numpy as np
 
 from skbio.io import (register_reader, register_writer, register_sniffer,
                       FASTAFormatError)
@@ -430,6 +435,66 @@ def _fasta_sniffer(fh):
     finally:
         gen.close()
 
+
+@register_reader(['fasta', 'qual'])
+def _fasta_qual_to_generator(fasta_fh, qual_fh):
+    try:
+        fasta_gen = _fasta_to_generator(fasta_fh, constructor=None)
+        qual_gen = _qual_to_generator(qual_fh)
+
+        for fasta_rec, qual_rec in zip_longest(fasta_gen, qual_gen,
+                                               fillvalue=None):
+            if fasta_rec is None:
+                raise FASTAFormatError(
+                    "QUAL file has more records than FASTA file.")
+            if qual_rec is None:
+                raise FASTAFormatError(
+                    "FASTA file has more records than QUAL file.")
+
+            fasta_seq, fasta_id, fasta_desc = fasta_rec
+            qual_scores, qual_id, qual_desc = qual_rec
+
+            if fasta_id != qual_id:
+                raise FASTAFormatError(
+                    "IDs do not match between FASTA and QUAL records: %r != %r"
+                    % (fasta_id, qual_id))
+            if fasta_desc != qual_desc:
+                raise FASTAFormatError(
+                    "Descriptions do not match between FASTA and QUAL "
+                    "records: %r != %r" % (fasta_desc, qual_desc))
+
+            yield BiologicalSequence(fasta_seq, id=fasta_id,
+                                     description=fasta_desc,
+                                     quality=qual_scores)
+    finally:
+        fasta_gen.close()
+        qual_gen.close()
+
+
+def _qual_to_generator(fh):
+    line = next(fh)
+    if _is_header(line):
+        id_, desc = _parse_header(line)
+    else:
+        raise FASTAFormatError("Found line without a FASTA header:\n%s" % line)
+
+    seq_chunks = []
+    for line in fh:
+        if _is_header(line):
+            # new header, so yield current sequence and reset state
+            yield _construct_qual(seq_chunks, id_, desc)
+            seq_chunks = []
+            id_, desc = _parse_header(line)
+        else:
+            line = line.strip()
+            if line:
+                seq_chunks.append(line)
+            else:
+                raise FASTAFormatError("Found blank or whitespace-only line "
+                                       "in FASTA-formatted file.")
+
+    # yield last sequence in file
+    yield _construct_qual(seq_chunks, id_, desc)
 
 @register_reader('fasta')
 def _fasta_to_generator(fh, constructor=BiologicalSequence):
@@ -618,7 +683,26 @@ def _parse_header(line):
 def _construct_sequence(constructor, seq_chunks, id_, description):
     if not seq_chunks:
         raise FASTAFormatError("Found FASTA header without sequence data.")
-    return constructor(''.join(seq_chunks), id=id_, description=description)
+
+    seq = ''.join(seq_chunks)
+    if constructor is None:
+        return seq, id_, description
+    else:
+        return constructor(seq, id=id_, description=description)
+
+
+def _construct_qual(seq_chunks, id_, description):
+    if not seq_chunks:
+        raise FASTAFormatError("Found FASTA header without sequence data.")
+
+    seq = ' '.join(seq_chunks)
+    try:
+        seq = np.asarray(seq.split(), dtype=int)
+    except ValueError:
+        raise FASTAFormatError(
+            "Invalid qual file. Check the format of the qual file: each "
+            "quality score must be convertible to an integer.")
+    return seq, id_, description
 
 
 def _fasta_to_sequence(fh, seq_num, constructor):
