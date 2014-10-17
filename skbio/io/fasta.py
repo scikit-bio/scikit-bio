@@ -410,7 +410,7 @@ import re
 import numpy as np
 
 from skbio.io import (register_reader, register_writer, register_sniffer,
-                      FASTAFormatError)
+                      FASTAFormatError, FASTAQUALFormatError, QUALFormatError)
 from skbio.io._base import _chunk_str
 from skbio.alignment import SequenceCollection, Alignment
 from skbio.sequence import (BiologicalSequence, NucleotideSequence,
@@ -445,21 +445,21 @@ def _fasta_qual_to_generator(fasta_fh, qual_fh):
         for fasta_rec, qual_rec in zip_longest(fasta_gen, qual_gen,
                                                fillvalue=None):
             if fasta_rec is None:
-                raise FASTAFormatError(
+                raise FASTAQUALFormatError(
                     "QUAL file has more records than FASTA file.")
             if qual_rec is None:
-                raise FASTAFormatError(
+                raise FASTAQUALFormatError(
                     "FASTA file has more records than QUAL file.")
 
             fasta_seq, fasta_id, fasta_desc = fasta_rec
             qual_scores, qual_id, qual_desc = qual_rec
 
             if fasta_id != qual_id:
-                raise FASTAFormatError(
+                raise FASTAQUALFormatError(
                     "IDs do not match between FASTA and QUAL records: %r != %r"
                     % (fasta_id, qual_id))
             if fasta_desc != qual_desc:
-                raise FASTAFormatError(
+                raise FASTAQUALFormatError(
                     "Descriptions do not match between FASTA and QUAL "
                     "records: %r != %r" % (fasta_desc, qual_desc))
 
@@ -476,7 +476,7 @@ def _qual_to_generator(fh):
     if _is_header(line):
         id_, desc = _parse_header(line)
     else:
-        raise FASTAFormatError("Found line without a FASTA header:\n%s" % line)
+        raise QUALFormatError("Found line without a FASTA header:\n%s" % line)
 
     seq_chunks = []
     for line in fh:
@@ -490,8 +490,8 @@ def _qual_to_generator(fh):
             if line:
                 seq_chunks.append(line)
             else:
-                raise FASTAFormatError("Found blank or whitespace-only line "
-                                       "in FASTA-formatted file.")
+                raise QUALFormatError("Found blank or whitespace-only line in "
+                                      "FASTA-formatted file.")
 
     # yield last sequence in file
     yield _construct_qual(seq_chunks, id_, desc)
@@ -693,13 +693,13 @@ def _construct_sequence(constructor, seq_chunks, id_, description):
 
 def _construct_qual(seq_chunks, id_, description):
     if not seq_chunks:
-        raise FASTAFormatError("Found FASTA header without sequence data.")
+        raise QUALFormatError("Found FASTA header without sequence data.")
 
     seq = ' '.join(seq_chunks)
     try:
         seq = np.asarray(seq.split(), dtype=int)
     except ValueError:
-        raise FASTAFormatError(
+        raise QUALFormatError(
             "Invalid qual file. Check the format of the qual file: each "
             "quality score must be convertible to an integer.")
     return seq, id_, description

@@ -29,18 +29,23 @@ class UnrecognizedFormatError(FileFormatError):
     pass
 
 
+class ClustalFormatError(FileFormatError):
+    """Raised when a ``clustal`` formatted file cannot be parsed."""
+    pass
+
+
 class DMFormatError(FileFormatError):
     """Raised when a ``dm`` formatted file cannot be parsed."""
     pass
 
 
-class OrdResFormatError(FileFormatError):
-    """Raised when an ``ordres`` formatted file cannot be parsed."""
+class FASTAFormatError(FileFormatError):
+    """Raised when a ``fasta`` formatted file cannot be parsed."""
     pass
 
 
-class ClustalFormatError(FileFormatError):
-    """Raised when a ``clustal`` formatted file cannot be parsed."""
+class FASTAQUALFormatError(FileFormatError):
+    """Raised when FASTA/QUAL formatted files cannot be parsed."""
     pass
 
 
@@ -49,8 +54,8 @@ class NewickFormatError(FileFormatError):
     pass
 
 
-class FASTAFormatError(FileFormatError):
-    """Raised when a ``fasta`` formatted file cannot be parsed."""
+class OrdResFormatError(FileFormatError):
+    """Raised when an ``ordres`` formatted file cannot be parsed."""
     pass
 
 
@@ -61,6 +66,11 @@ class PhylipFormatError(FileFormatError):
     in ``phylip`` format.
 
     """
+    pass
+
+
+class QUALFormatError(FileFormatError):
+    """Raised when a ``qual`` formatted file cannot be parsed."""
     pass
 
 
