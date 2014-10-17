@@ -438,9 +438,10 @@ def _fasta_sniffer(fh):
 
 @register_reader(['fasta', 'qual'])
 def _fasta_qual_to_generator(fasta_fh, qual_fh):
+    # TODO is this try/finally necessary anymore?
     try:
-        fasta_gen = _fasta_to_generator(fasta_fh, constructor=None)
-        qual_gen = _qual_to_generator(qual_fh)
+        fasta_gen = _fasta_or_qual_to_generator(fasta_fh, format='fasta')
+        qual_gen = _fasta_or_qual_to_generator(qual_fh, format='qual')
 
         for fasta_rec, qual_rec in zip_longest(fasta_gen, qual_gen,
                                                fillvalue=None):
@@ -471,56 +472,46 @@ def _fasta_qual_to_generator(fasta_fh, qual_fh):
         qual_gen.close()
 
 
-def _qual_to_generator(fh):
+def _fasta_or_qual_to_generator(fh, format):
+    if format == 'fasta':
+        data_parser = _parse_sequence_data
+        error_type = FASTAFormatError
+        format_label = 'FASTA'
+    else:
+        data_parser = _parse_quality_scores
+        error_type = QUALFormatError
+        format_label = 'QUAL'
+
     line = next(fh)
-    if _is_header(line):
+    # header check inlined here and below for performance
+    if line.startswith('>'):
         id_, desc = _parse_header(line)
     else:
-        raise QUALFormatError("Found line without a FASTA header:\n%s" % line)
+        raise error_type(
+            "Found line without a %s header:\n%s" % (format_label, line))
 
-    seq_chunks = []
+    data_chunks = []
     for line in fh:
-        if _is_header(line):
-            # new header, so yield current sequence and reset state
-            yield _construct_qual(seq_chunks, id_, desc)
-            seq_chunks = []
+        if line.startswith('>'):
+            # new header, so yield current record and reset state
+            yield data_parser(data_chunks), id_, desc
+            data_chunks = []
             id_, desc = _parse_header(line)
         else:
             line = line.strip()
             if line:
-                seq_chunks.append(line)
+                data_chunks.append(line)
             else:
-                raise QUALFormatError("Found blank or whitespace-only line in "
-                                      "FASTA-formatted file.")
+                raise error_type("Found blank or whitespace-only line in "
+                                 "%s-formatted file." % format_label)
+    # yield last record in file
+    yield data_parser(data_chunks), id_, desc
 
-    # yield last sequence in file
-    yield _construct_qual(seq_chunks, id_, desc)
 
 @register_reader('fasta')
 def _fasta_to_generator(fh, constructor=BiologicalSequence):
-    line = next(fh)
-    if _is_header(line):
-        id_, desc = _parse_header(line)
-    else:
-        raise FASTAFormatError("Found line without a FASTA header:\n%s" % line)
-
-    seq_chunks = []
-    for line in fh:
-        if _is_header(line):
-            # new header, so yield current sequence and reset state
-            yield _construct_sequence(constructor, seq_chunks, id_, desc)
-            seq_chunks = []
-            id_, desc = _parse_header(line)
-        else:
-            line = line.strip()
-            if line:
-                seq_chunks.append(line)
-            else:
-                raise FASTAFormatError("Found blank or whitespace-only line "
-                                       "in FASTA-formatted file.")
-
-    # yield last sequence in file
-    yield _construct_sequence(constructor, seq_chunks, id_, desc)
+    for seq, id_, desc in _fasta_or_qual_to_generator(fh, format='fasta'):
+        yield constructor(seq, id=id_, description=desc)
 
 
 @register_reader('fasta', BiologicalSequence)
@@ -658,10 +649,6 @@ def _alignment_to_fasta(obj, fh, id_whitespace_replacement='_',
                         description_newline_replacement, max_width)
 
 
-def _is_header(line):
-    return line.startswith('>')
-
-
 def _parse_header(line):
     id_ = ''
     desc = ''
@@ -680,29 +667,22 @@ def _parse_header(line):
     return id_, desc
 
 
-def _construct_sequence(constructor, seq_chunks, id_, description):
-    if not seq_chunks:
+def _parse_sequence_data(chunks):
+    if not chunks:
         raise FASTAFormatError("Found FASTA header without sequence data.")
-
-    seq = ''.join(seq_chunks)
-    if constructor is None:
-        return seq, id_, description
-    else:
-        return constructor(seq, id=id_, description=description)
+    return ''.join(chunks)
 
 
-def _construct_qual(seq_chunks, id_, description):
-    if not seq_chunks:
-        raise QUALFormatError("Found FASTA header without sequence data.")
+def _parse_quality_scores(chunks):
+    if not chunks:
+        raise QUALFormatError("Found QUAL header without quality scores.")
 
-    seq = ' '.join(seq_chunks)
+    qual_str = ' '.join(chunks)
     try:
-        seq = np.asarray(seq.split(), dtype=int)
+        return np.asarray(qual_str.split(), dtype=int)
     except ValueError:
         raise QUALFormatError(
-            "Invalid qual file. Check the format of the qual file: each "
-            "quality score must be convertible to an integer.")
-    return seq, id_, description
+            "Could not convert quality scores to integers:\n%s" % qual_str)
 
 
 def _fasta_to_sequence(fh, seq_num, constructor):

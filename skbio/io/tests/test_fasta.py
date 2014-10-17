@@ -129,15 +129,16 @@ class FASTAReaderTests(TestCase):
         self.invalid_fps = map(lambda e: (get_data_path(e[0]), e[1]), [
             ('whitespace_only', 'without a FASTA header'),
             ('fasta_invalid_missing_header', 'without a FASTA header'),
-            ('fasta_invalid_blank_line', 'whitespace-only'),
-            ('fasta_invalid_whitespace_only_line', 'whitespace-only'),
+            ('fasta_invalid_blank_line', 'whitespace-only.*FASTA'),
+            ('fasta_invalid_whitespace_only_line', 'whitespace-only.*FASTA'),
             ('fasta_invalid_missing_seq_data_first', 'without sequence data'),
             ('fasta_invalid_missing_seq_data_middle', 'without sequence data'),
             ('fasta_invalid_missing_seq_data_last', 'without sequence data'),
             ('fasta_invalid_after_10_seqs', 'without sequence data'),
             ('fasta_invalid_legacy_format', 'without a FASTA header'),
-            ('fasta_id_whitespace_replacement_none', 'whitespace-only'),
-            ('fasta_description_newline_replacement_none', 'whitespace-only')
+            ('fasta_id_whitespace_replacement_none', 'whitespace-only.*FASTA'),
+            ('fasta_description_newline_replacement_none',
+             'whitespace-only.*FASTA')
         ])
 
     # extensive tests for fasta -> generator reader since it is used by all
