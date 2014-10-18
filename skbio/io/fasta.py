@@ -464,6 +464,17 @@ def _fasta_qual_to_generator(fasta_fh, qual_fh):
         qual_gen.close()
 
 
+@register_reader(['fasta', 'qual'], SequenceCollection)
+def _fasta_qual_to_sequence_collection(fasta_fh, qual_fh):
+    return SequenceCollection(
+        list(_fasta_qual_to_generator(fasta_fh, qual_fh,)))
+
+
+@register_reader(['fasta', 'qual'], Alignment)
+def _fasta_qual_to_alignment(fasta_fh, qual_fh):
+    return Alignment(list(_fasta_qual_to_generator(fasta_fh, qual_fh)))
+
+
 @register_reader('fasta')
 def _fasta_to_generator(fh, constructor=BiologicalSequence):
     for seq, id_, desc in _fasta_or_qual_to_generator(fh, format='fasta'):
