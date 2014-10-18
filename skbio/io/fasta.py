@@ -420,28 +420,20 @@ from skbio.util import cardinal_to_ordinal
 
 @register_sniffer('fasta')
 def _fasta_sniffer(fh):
-    # Strategy:
-    #   Read up to 10 sequences (records). If at least one sequence is read
-    #   (i.e. the file isn't empty) and no errors are thrown during reading,
-    #   assume the file is in FASTA format.
-    try:
-        not_empty = False
-        gen = _fasta_to_generator(fh)
-        for _ in zip(range(10), gen):
-            not_empty = True
-        return not_empty, {}
-    except FASTAFormatError:
-        return False, {}
-    finally:
-        gen.close()
+    return _fasta_or_qual_sniffer(fh, 'fasta')
+
+
+@register_sniffer('qual')
+def _qual_sniffer(fh):
+    return _fasta_or_qual_sniffer(fh, 'qual')
 
 
 @register_reader(['fasta', 'qual'])
 def _fasta_qual_to_generator(fasta_fh, qual_fh):
     # TODO is this try/finally necessary anymore?
     try:
-        fasta_gen = _fasta_or_qual_to_generator(fasta_fh, format='fasta')
-        qual_gen = _fasta_or_qual_to_generator(qual_fh, format='qual')
+        fasta_gen = _fasta_or_qual_to_generator(fasta_fh, 'fasta')
+        qual_gen = _fasta_or_qual_to_generator(qual_fh, 'qual')
 
         for fasta_rec, qual_rec in zip_longest(fasta_gen, qual_gen,
                                                fillvalue=None):
@@ -470,42 +462,6 @@ def _fasta_qual_to_generator(fasta_fh, qual_fh):
     finally:
         fasta_gen.close()
         qual_gen.close()
-
-
-def _fasta_or_qual_to_generator(fh, format):
-    if format == 'fasta':
-        data_parser = _parse_sequence_data
-        error_type = FASTAFormatError
-        format_label = 'FASTA'
-    else:
-        data_parser = _parse_quality_scores
-        error_type = QUALFormatError
-        format_label = 'QUAL'
-
-    line = next(fh)
-    # header check inlined here and below for performance
-    if line.startswith('>'):
-        id_, desc = _parse_header(line)
-    else:
-        raise error_type(
-            "Found line without a %s header:\n%s" % (format_label, line))
-
-    data_chunks = []
-    for line in fh:
-        if line.startswith('>'):
-            # new header, so yield current record and reset state
-            yield data_parser(data_chunks), id_, desc
-            data_chunks = []
-            id_, desc = _parse_header(line)
-        else:
-            line = line.strip()
-            if line:
-                data_chunks.append(line)
-            else:
-                raise error_type("Found blank or whitespace-only line in "
-                                 "%s-formatted file." % format_label)
-    # yield last record in file
-    yield data_parser(data_chunks), id_, desc
 
 
 @register_reader('fasta')
@@ -647,6 +603,61 @@ def _alignment_to_fasta(obj, fh, id_whitespace_replacement='_',
                         description_newline_replacement=' ', max_width=None):
     _sequences_to_fasta(obj, fh, id_whitespace_replacement,
                         description_newline_replacement, max_width)
+
+
+def _fasta_or_qual_sniffer(fh, format):
+    # Strategy:
+    #   Read up to 10 records. If at least one record is read (i.e. the file
+    #   isn't empty) and no errors are thrown during reading, assume the file
+    #   is in FASTA or QUAL format.
+
+    # TODO is the finally block still necessary?
+    try:
+        not_empty = False
+        gen = _fasta_or_qual_to_generator(fh, format=format)
+        for _ in zip(range(10), gen):
+            not_empty = True
+        return not_empty, {}
+    except (FASTAFormatError, QUALFormatError):
+        return False, {}
+    finally:
+        gen.close()
+
+
+def _fasta_or_qual_to_generator(fh, format):
+    if format == 'fasta':
+        data_parser = _parse_sequence_data
+        error_type = FASTAFormatError
+        format_label = 'FASTA'
+    else:
+        data_parser = _parse_quality_scores
+        error_type = QUALFormatError
+        format_label = 'QUAL'
+
+    line = next(fh)
+    # header check inlined here and below for performance
+    if line.startswith('>'):
+        id_, desc = _parse_header(line)
+    else:
+        raise error_type(
+            "Found line without a %s header:\n%s" % (format_label, line))
+
+    data_chunks = []
+    for line in fh:
+        if line.startswith('>'):
+            # new header, so yield current record and reset state
+            yield data_parser(data_chunks), id_, desc
+            data_chunks = []
+            id_, desc = _parse_header(line)
+        else:
+            line = line.strip()
+            if line:
+                data_chunks.append(line)
+            else:
+                raise error_type("Found blank or whitespace-only line in "
+                                 "%s-formatted file." % format_label)
+    # yield last record in file
+    yield data_parser(data_chunks), id_, desc
 
 
 def _parse_header(line):
