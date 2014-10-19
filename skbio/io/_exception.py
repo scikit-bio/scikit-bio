@@ -54,6 +54,11 @@ class FASTAFormatError(FileFormatError):
     pass
 
 
+class FASTQFormatError(FileFormatError):
+    """Raised when a ``fastq`` formatted file cannot be parsed."""
+    pass
+
+
 class PhylipFormatError(FileFormatError):
     """Raised when a ``phylip`` formatted file cannot be parsed.
 

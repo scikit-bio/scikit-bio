@@ -114,6 +114,7 @@ see the associated documentation.
    clustal
    dm
    fasta
+   fastq
    newick
    ordres
    phylip
@@ -156,6 +157,7 @@ User Exceptions
    ClustalFormatError
    DMFormatError
    FASTAFormatError
+   FASTQFormatError
    NewickFormatError
    OrdResFormatError
    PhylipFormatError
@@ -261,7 +263,7 @@ from ._warning import FormatIdentificationWarning, ArgumentOverrideWarning
 from ._exception import (DuplicateRegistrationError, InvalidRegistrationError,
                          RecordError, FieldError, UnrecognizedFormatError,
                          FileFormatError, ClustalFormatError, DMFormatError,
-                         FASTAFormatError, NewickFormatError,
+                         FASTAFormatError, NewickFormatError, FASTQFormatError,
                          OrdResFormatError, PhylipFormatError)
 from ._registry import (write, read, sniff, get_writer, get_reader,
                         get_sniffer, list_write_formats, list_read_formats,
@@ -283,6 +285,7 @@ __all__ = ['write', 'read', 'sniff',
            'ClustalFormatError',
            'DMFormatError',
            'FASTAFormatError',
+           'FASTQFormatError',
            'NewickFormatError',
            'OrdResFormatError',
            'PhylipFormatError']
@@ -293,6 +296,7 @@ __all__ = ['write', 'read', 'sniff',
 import_module('skbio.io.clustal')
 import_module('skbio.io.dm')
 import_module('skbio.io.fasta')
+import_module('skbio.io.fastq')
 import_module('skbio.io.newick')
 import_module('skbio.io.ordres')
 import_module('skbio.io.phylip')
