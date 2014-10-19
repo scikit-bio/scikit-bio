@@ -520,6 +520,16 @@ def _fasta_qual_to_protein_sequence(fasta_fh, qual_fh, seq_num=(1, 1)):
         (ProteinSequence, ProteinSequence), 'fasta, qual')
 
 
+@register_writer(['fasta', 'qual'])
+def _generator_to_fasta_qual(obj, fasta_fh, qual_fh,
+                             id_whitespace_replacement=('_', '_'),
+                             description_newline_replacement=(' ', ' '),
+                             max_width=(None, None)):
+    _generator_to_fasta_or_fasta_qual(
+        obj, fasta_fh, qual_fh, id_whitespace_replacement[0],
+        description_newline_replacement[0], max_width[0])
+
+
 @register_reader('fasta')
 def _fasta_to_generator(fh, constructor=BiologicalSequence):
     for seq, id_, desc in _fasta_or_qual_to_generator(fh, format='fasta'):
@@ -571,44 +581,9 @@ def _fasta_to_alignment(fh, constructor=BiologicalSequence):
 @register_writer('fasta')
 def _generator_to_fasta(obj, fh, id_whitespace_replacement='_',
                         description_newline_replacement=' ', max_width=None):
-    if ((id_whitespace_replacement is not None and
-         '\n' in id_whitespace_replacement) or
-        (description_newline_replacement is not None and
-         '\n' in description_newline_replacement)):
-        raise FASTAFormatError(
-            "Newline character (\\n) cannot be used to replace whitespace in "
-            "biological sequence IDs, nor to replace newlines in biological "
-            "sequence descriptions. Otherwise, the FASTA-formatted file will "
-            "be invalid.")
-    ws_pattern = re.compile(r'\s')
-    nl_pattern = re.compile(r'\n')
-
-    for idx, seq in enumerate(obj):
-        if len(seq) < 1:
-            raise FASTAFormatError(
-                "Cannot write %s biological sequence in FASTA format because "
-                "it does not contain any characters (i.e., it is an "
-                "empty/blank sequence). Empty sequences are not supported in "
-                "the FASTA file format." % cardinal_to_ordinal(idx + 1))
-
-        id_ = seq.id
-        if id_whitespace_replacement is not None:
-            id_ = re.sub(ws_pattern, id_whitespace_replacement, id_)
-
-        desc = seq.description
-        if description_newline_replacement is not None:
-            desc = re.sub(nl_pattern, description_newline_replacement, desc)
-
-        if desc:
-            header = '%s %s' % (id_, desc)
-        else:
-            header = id_
-
-        seq_str = str(seq)
-        if max_width is not None:
-            seq_str = _chunk_str(seq_str, max_width, '\n')
-
-        fh.write('>%s\n%s\n' % (header, seq_str))
+    _generator_to_fasta_or_fasta_qual(
+        obj, fh, None, id_whitespace_replacement,
+        description_newline_replacement, max_width)
 
 
 @register_writer('fasta', BiologicalSequence)
@@ -789,6 +764,72 @@ def _fasta_or_fasta_qual_to_sequence(fh, seq_num, constructor, format):
             "Reached end of %s-formatted file before finding %s biological "
             "sequence." % (format_label, cardinal_to_ordinal(seq_num)))
     return seq
+
+
+def _generator_to_fasta_or_fasta_qual(obj, fasta_fh, qual_fh,
+                                      id_whitespace_replacement,
+                                      description_newline_replacement,
+                                      max_width):
+    if qual_fh is None:
+        error_type = FASTAFormatError
+        format_label = 'FASTA'
+    else:
+        error_type = FASTAQUALFormatError
+        format_label = 'FASTA/QUAL'
+
+    if ((id_whitespace_replacement is not None and
+         '\n' in id_whitespace_replacement) or
+        (description_newline_replacement is not None and
+         '\n' in description_newline_replacement)):
+        raise error_type(
+            "Newline character (\\n) cannot be used to replace whitespace in "
+            "biological sequence IDs, nor to replace newlines in biological "
+            "sequence descriptions. Otherwise, the %s-formatted file will be "
+            "invalid." % format_label)
+    ws_pattern = re.compile(r'\s')
+    nl_pattern = re.compile(r'\n')
+
+    for idx, seq in enumerate(obj):
+        if len(seq) < 1:
+            raise error_type(
+                "Cannot write %s biological sequence in %s format because it "
+                "does not contain any characters (i.e., it is an empty/blank "
+                "sequence). Empty sequences are not supported in the %s file "
+                "format." % (cardinal_to_ordinal(idx + 1), format_label,
+                             format_label))
+
+        id_ = seq.id
+        if id_whitespace_replacement is not None:
+            id_ = re.sub(ws_pattern, id_whitespace_replacement, id_)
+
+        desc = seq.description
+        if description_newline_replacement is not None:
+            desc = re.sub(nl_pattern, description_newline_replacement, desc)
+
+        if desc:
+            header = '%s %s' % (id_, desc)
+        else:
+            header = id_
+
+        seq_str = str(seq)
+        if max_width is not None:
+            seq_str = _chunk_str(seq_str, max_width, '\n')
+
+        fasta_fh.write('>%s\n%s\n' % (header, seq_str))
+
+        if qual_fh is not None:
+            if not seq.has_quality():
+                raise error_type(
+                    "Cannot write %s biological sequence in %s format because "
+                    "it does not have quality scores associated with it." %
+                    (cardinal_to_ordinal(idx + 1), format_label))
+
+            qual_str = ' '.join(np.asarray(seq.quality, dtype=np.str))
+            if max_width is not None:
+                # TODO this can split numbers across lines, which we don't want
+                qual_str = _chunk_str(qual_str, max_width, '\n')
+
+            qual_fh.write('>%s\n%s\n' % (header, qual_str))
 
 
 def _sequence_to_fasta(obj, fh, id_whitespace_replacement,
