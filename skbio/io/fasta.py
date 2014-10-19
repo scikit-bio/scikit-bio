@@ -582,6 +582,27 @@ def _protein_sequence_to_fasta_qual(obj, fasta_fh, qual_fh,
         description_newline_replacement, max_width)
 
 
+@register_writer(['fasta', 'qual'], SequenceCollection)
+def _sequence_collection_to_fasta_qual(obj, fasta_fh, qual_fh,
+                                       id_whitespace_replacement=('_', '_'),
+                                       description_newline_replacement=(' ',
+                                                                        ' '),
+                                       max_width=(None, None)):
+    _sequences_to_fasta_qual(
+        obj, fasta_fh, qual_fh, id_whitespace_replacement,
+        description_newline_replacement, max_width)
+
+
+@register_writer(['fasta', 'qual'], Alignment)
+def _alignment_to_fasta_qual(obj, fasta_fh, qual_fh,
+                             id_whitespace_replacement=('_', '_'),
+                             description_newline_replacement=(' ', ' '),
+                             max_width=(None, None)):
+    _sequences_to_fasta_qual(
+        obj, fasta_fh, qual_fh, id_whitespace_replacement,
+        description_newline_replacement, max_width)
+
+
 @register_reader('fasta')
 def _fasta_to_generator(fh, constructor=BiologicalSequence):
     for seq, id_, desc in _fasta_or_qual_to_generator(fh, format='fasta'):
@@ -888,6 +909,19 @@ def _sequence_to_fasta_qual(obj, fasta_fh, qual_fh, id_whitespace_replacement,
                             description_newline_replacement, max_width):
     def seq_gen():
         yield obj
+
+    _generator_to_fasta_qual(
+        seq_gen(), fasta_fh, qual_fh,
+        id_whitespace_replacement=id_whitespace_replacement,
+        description_newline_replacement=description_newline_replacement,
+        max_width=max_width)
+
+
+def _sequences_to_fasta_qual(obj, fasta_fh, qual_fh, id_whitespace_replacement,
+                             description_newline_replacement, max_width):
+    def seq_gen():
+        for seq in obj:
+            yield seq
 
     _generator_to_fasta_qual(
         seq_gen(), fasta_fh, qual_fh,
