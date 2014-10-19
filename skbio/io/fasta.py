@@ -428,8 +428,12 @@ def _qual_sniffer(fh):
     return _fasta_or_qual_sniffer(fh, 'qual')
 
 
+# TODO is this is correct way to handle the constructor kwarg in a compound
+# format?
 @register_reader(['fasta', 'qual'])
-def _fasta_qual_to_generator(fasta_fh, qual_fh):
+def _fasta_qual_to_generator(fasta_fh, qual_fh,
+                             constructor=(BiologicalSequence,
+                                          BiologicalSequence)):
     # TODO is this try/finally necessary anymore?
     try:
         fasta_gen = _fasta_or_qual_to_generator(fasta_fh, 'fasta')
@@ -456,23 +460,29 @@ def _fasta_qual_to_generator(fasta_fh, qual_fh):
                     "Descriptions do not match between FASTA and QUAL "
                     "records: %r != %r" % (fasta_desc, qual_desc))
 
-            yield BiologicalSequence(fasta_seq, id=fasta_id,
-                                     description=fasta_desc,
-                                     quality=qual_scores)
+            yield constructor[0](fasta_seq, id=fasta_id,
+                                 description=fasta_desc, quality=qual_scores)
     finally:
         fasta_gen.close()
         qual_gen.close()
 
 
 @register_reader(['fasta', 'qual'], SequenceCollection)
-def _fasta_qual_to_sequence_collection(fasta_fh, qual_fh):
+def _fasta_qual_to_sequence_collection(fasta_fh, qual_fh,
+                                       constructor=(BiologicalSequence,
+                                                    BiologicalSequence)):
     return SequenceCollection(
-        list(_fasta_qual_to_generator(fasta_fh, qual_fh,)))
+        list(_fasta_qual_to_generator(fasta_fh, qual_fh,
+                                      constructor=constructor)))
 
 
 @register_reader(['fasta', 'qual'], Alignment)
-def _fasta_qual_to_alignment(fasta_fh, qual_fh):
-    return Alignment(list(_fasta_qual_to_generator(fasta_fh, qual_fh)))
+def _fasta_qual_to_alignment(fasta_fh, qual_fh,
+                             constructor=(BiologicalSequence,
+                                          BiologicalSequence)):
+    return Alignment(
+        list(_fasta_qual_to_generator(fasta_fh, qual_fh,
+                                      constructor=constructor)))
 
 
 @register_reader('fasta')
