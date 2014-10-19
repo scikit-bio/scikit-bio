@@ -467,24 +467,6 @@ def _fasta_qual_to_generator(fasta_fh, qual_fh,
         qual_gen.close()
 
 
-@register_reader(['fasta', 'qual'], SequenceCollection)
-def _fasta_qual_to_sequence_collection(fasta_fh, qual_fh,
-                                       constructor=(BiologicalSequence,
-                                                    BiologicalSequence)):
-    return SequenceCollection(
-        list(_fasta_qual_to_generator(fasta_fh, qual_fh,
-                                      constructor=constructor)))
-
-
-@register_reader(['fasta', 'qual'], Alignment)
-def _fasta_qual_to_alignment(fasta_fh, qual_fh,
-                             constructor=(BiologicalSequence,
-                                          BiologicalSequence)):
-    return Alignment(
-        list(_fasta_qual_to_generator(fasta_fh, qual_fh,
-                                      constructor=constructor)))
-
-
 @register_reader(['fasta', 'qual'], BiologicalSequence)
 def _fasta_qual_to_biological_sequence(fasta_fh, qual_fh, seq_num=(1, 1)):
     return _fasta_or_fasta_qual_to_sequence(
@@ -520,6 +502,24 @@ def _fasta_qual_to_protein_sequence(fasta_fh, qual_fh, seq_num=(1, 1)):
         (ProteinSequence, ProteinSequence), 'fasta, qual')
 
 
+@register_reader(['fasta', 'qual'], SequenceCollection)
+def _fasta_qual_to_sequence_collection(fasta_fh, qual_fh,
+                                       constructor=(BiologicalSequence,
+                                                    BiologicalSequence)):
+    return SequenceCollection(
+        list(_fasta_qual_to_generator(fasta_fh, qual_fh,
+                                      constructor=constructor)))
+
+
+@register_reader(['fasta', 'qual'], Alignment)
+def _fasta_qual_to_alignment(fasta_fh, qual_fh,
+                             constructor=(BiologicalSequence,
+                                          BiologicalSequence)):
+    return Alignment(
+        list(_fasta_qual_to_generator(fasta_fh, qual_fh,
+                                      constructor=constructor)))
+
+
 @register_writer(['fasta', 'qual'])
 def _generator_to_fasta_qual(obj, fasta_fh, qual_fh,
                              id_whitespace_replacement=('_', '_'),
@@ -528,6 +528,58 @@ def _generator_to_fasta_qual(obj, fasta_fh, qual_fh,
     _generator_to_fasta_or_fasta_qual(
         obj, fasta_fh, qual_fh, id_whitespace_replacement[0],
         description_newline_replacement[0], max_width[0])
+
+
+@register_writer(['fasta', 'qual'], BiologicalSequence)
+def _biological_sequence_to_fasta_qual(obj, fasta_fh, qual_fh,
+                                       id_whitespace_replacement=('_', '_'),
+                                       description_newline_replacement=(' ',
+                                                                        ' '),
+                                       max_width=(None, None)):
+    _sequence_to_fasta_qual(
+        obj, fasta_fh, qual_fh, id_whitespace_replacement,
+        description_newline_replacement, max_width)
+
+
+@register_writer(['fasta', 'qual'], NucleotideSequence)
+def _nucleotide_sequence_to_fasta_qual(obj, fasta_fh, qual_fh,
+                                       id_whitespace_replacement=('_', '_'),
+                                       description_newline_replacement=(' ',
+                                                                        ' '),
+                                       max_width=(None, None)):
+    _sequence_to_fasta_qual(
+        obj, fasta_fh, qual_fh, id_whitespace_replacement,
+        description_newline_replacement, max_width)
+
+
+@register_writer(['fasta', 'qual'], DNASequence)
+def _dna_sequence_to_fasta_qual(obj, fasta_fh, qual_fh,
+                                id_whitespace_replacement=('_', '_'),
+                                description_newline_replacement=(' ', ' '),
+                                max_width=(None, None)):
+    _sequence_to_fasta_qual(
+        obj, fasta_fh, qual_fh, id_whitespace_replacement,
+        description_newline_replacement, max_width)
+
+
+@register_writer(['fasta', 'qual'], RNASequence)
+def _rna_sequence_to_fasta_qual(obj, fasta_fh, qual_fh,
+                                id_whitespace_replacement=('_', '_'),
+                                description_newline_replacement=(' ', ' '),
+                                max_width=(None, None)):
+    _sequence_to_fasta_qual(
+        obj, fasta_fh, qual_fh, id_whitespace_replacement,
+        description_newline_replacement, max_width)
+
+
+@register_writer(['fasta', 'qual'], ProteinSequence)
+def _protein_sequence_to_fasta_qual(obj, fasta_fh, qual_fh,
+                                    id_whitespace_replacement=('_', '_'),
+                                    description_newline_replacement=(' ', ' '),
+                                    max_width=(None, None)):
+    _sequence_to_fasta_qual(
+        obj, fasta_fh, qual_fh, id_whitespace_replacement,
+        description_newline_replacement, max_width)
 
 
 @register_reader('fasta')
@@ -830,6 +882,18 @@ def _generator_to_fasta_or_fasta_qual(obj, fasta_fh, qual_fh,
                 qual_str = _chunk_str(qual_str, max_width, '\n')
 
             qual_fh.write('>%s\n%s\n' % (header, qual_str))
+
+
+def _sequence_to_fasta_qual(obj, fasta_fh, qual_fh, id_whitespace_replacement,
+                            description_newline_replacement, max_width):
+    def seq_gen():
+        yield obj
+
+    _generator_to_fasta_qual(
+        seq_gen(), fasta_fh, qual_fh,
+        id_whitespace_replacement=id_whitespace_replacement,
+        description_newline_replacement=description_newline_replacement,
+        max_width=max_width)
 
 
 def _sequence_to_fasta(obj, fh, id_whitespace_replacement,
