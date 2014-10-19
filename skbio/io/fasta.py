@@ -429,7 +429,7 @@ def _qual_sniffer(fh):
 
 
 # TODO is this is correct way to handle the constructor kwarg in a compound
-# format?
+# format? should there be a check that the two values are exactly the same?
 @register_reader(['fasta', 'qual'])
 def _fasta_qual_to_generator(fasta_fh, qual_fh,
                              constructor=(BiologicalSequence,
@@ -485,6 +485,41 @@ def _fasta_qual_to_alignment(fasta_fh, qual_fh,
                                       constructor=constructor)))
 
 
+@register_reader(['fasta', 'qual'], BiologicalSequence)
+def _fasta_qual_to_biological_sequence(fasta_fh, qual_fh, seq_num=(1, 1)):
+    return _fasta_or_fasta_qual_to_sequence(
+        (fasta_fh, qual_fh), seq_num[0],
+        (BiologicalSequence, BiologicalSequence), 'fasta, qual')
+
+
+@register_reader(['fasta', 'qual'], NucleotideSequence)
+def _fasta_qual_to_nucleotide_sequence(fasta_fh, qual_fh, seq_num=(1, 1)):
+    return _fasta_or_fasta_qual_to_sequence(
+        (fasta_fh, qual_fh), seq_num[0],
+        (NucleotideSequence, NucleotideSequence), 'fasta, qual')
+
+
+@register_reader(['fasta', 'qual'], DNASequence)
+def _fasta_qual_to_dna_sequence(fasta_fh, qual_fh, seq_num=(1, 1)):
+    return _fasta_or_fasta_qual_to_sequence(
+        (fasta_fh, qual_fh), seq_num[0],
+        (DNASequence, DNASequence), 'fasta, qual')
+
+
+@register_reader(['fasta', 'qual'], RNASequence)
+def _fasta_qual_to_rna_sequence(fasta_fh, qual_fh, seq_num=(1, 1)):
+    return _fasta_or_fasta_qual_to_sequence(
+        (fasta_fh, qual_fh), seq_num[0],
+        (RNASequence, RNASequence), 'fasta, qual')
+
+
+@register_reader(['fasta', 'qual'], ProteinSequence)
+def _fasta_qual_to_protein_sequence(fasta_fh, qual_fh, seq_num=(1, 1)):
+    return _fasta_or_fasta_qual_to_sequence(
+        (fasta_fh, qual_fh), seq_num[0],
+        (ProteinSequence, ProteinSequence), 'fasta, qual')
+
+
 @register_reader('fasta')
 def _fasta_to_generator(fh, constructor=BiologicalSequence):
     for seq, id_, desc in _fasta_or_qual_to_generator(fh, format='fasta'):
@@ -493,27 +528,32 @@ def _fasta_to_generator(fh, constructor=BiologicalSequence):
 
 @register_reader('fasta', BiologicalSequence)
 def _fasta_to_biological_sequence(fh, seq_num=1):
-    return _fasta_to_sequence(fh, seq_num, BiologicalSequence)
+    return _fasta_or_fasta_qual_to_sequence((fh,), seq_num, BiologicalSequence,
+                                            format='fasta')
 
 
 @register_reader('fasta', NucleotideSequence)
 def _fasta_to_nucleotide_sequence(fh, seq_num=1):
-    return _fasta_to_sequence(fh, seq_num, NucleotideSequence)
+    return _fasta_or_fasta_qual_to_sequence((fh,), seq_num, NucleotideSequence,
+                                            format='fasta')
 
 
 @register_reader('fasta', DNASequence)
 def _fasta_to_dna_sequence(fh, seq_num=1):
-    return _fasta_to_sequence(fh, seq_num, DNASequence)
+    return _fasta_or_fasta_qual_to_sequence((fh,), seq_num, DNASequence,
+                                            format='fasta')
 
 
 @register_reader('fasta', RNASequence)
 def _fasta_to_rna_sequence(fh, seq_num=1):
-    return _fasta_to_sequence(fh, seq_num, RNASequence)
+    return _fasta_or_fasta_qual_to_sequence((fh,), seq_num, RNASequence,
+                                            format='fasta')
 
 
 @register_reader('fasta', ProteinSequence)
 def _fasta_to_protein_sequence(fh, seq_num=1):
-    return _fasta_to_sequence(fh, seq_num, ProteinSequence)
+    return _fasta_or_fasta_qual_to_sequence((fh,), seq_num, ProteinSequence,
+                                            format='fasta')
 
 
 @register_reader('fasta', SequenceCollection)
@@ -717,17 +757,26 @@ def _parse_quality_scores(chunks):
             "Could not convert quality scores to integers:\n%s" % qual_str)
 
 
-def _fasta_to_sequence(fh, seq_num, constructor):
+def _fasta_or_fasta_qual_to_sequence(fh, seq_num, constructor, format):
+    if format == 'fasta':
+        seq_generator = _fasta_to_generator
+        error_type = FASTAFormatError
+        format_label = 'FASTA'
+    else:
+        seq_generator = _fasta_qual_to_generator
+        error_type = FASTAQUALFormatError
+        format_label = 'FASTA/QUAL'
+
     if seq_num < 1:
-        raise FASTAFormatError(
+        raise error_type(
             "Invalid sequence number (seq_num=%d). seq_num must be between 1 "
-            "and the number of sequences in the FASTA-formatted file "
-            "(inclusive)." % seq_num)
+            "and the number of sequences in the %s-formatted file (inclusive)."
+            % (seq_num, format_label))
 
     seq_idx = seq_num - 1
     seq = None
     try:
-        gen = _fasta_to_generator(fh, constructor=constructor)
+        gen = seq_generator(*fh, constructor=constructor)
         for idx, curr_seq in enumerate(gen):
             if idx == seq_idx:
                 seq = curr_seq
@@ -736,9 +785,9 @@ def _fasta_to_sequence(fh, seq_num, constructor):
         gen.close()
 
     if seq is None:
-        raise FASTAFormatError(
-            "Reached end of FASTA-formatted file before finding %s biological "
-            "sequence." % cardinal_to_ordinal(seq_num))
+        raise error_type(
+            "Reached end of %s-formatted file before finding %s biological "
+            "sequence." % (format_label, cardinal_to_ordinal(seq_num)))
     return seq
 
 
