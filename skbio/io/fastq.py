@@ -63,17 +63,7 @@ For example, consider the following header::
 
 Examples
 --------
-Suppose we have the following FASTQ file with two sequences
-
-
-    @GAPC_0017:6:1:1259:10413#0/1
-    AACACCAAACTTCTCCACCACGTGAGCTACAAAAG
-    +GAPC_0015:6:1:1259:10413#0/1
-    ````Y^T]`]c^cabcacc`^Lb^ccYT\T\Y\WF
-    @GAPC_0015:6:1:1283:11957#0/1
-    TATGTATATATAACATATACATATATACATACATA
-    +GAPC_0015:6:1:1283:11957#0/1
-    ]KZ[PY]_[YY^```ac^\\`bT``c`\aT``bbb
+Suppose we have a FASTQ file with two sequences
 
 >>> from StringIO import StringIO
 >>> fh = StringIO(
