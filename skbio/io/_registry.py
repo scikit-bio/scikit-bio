@@ -11,13 +11,14 @@ from warnings import warn
 import types
 import copy
 import traceback
+import inspect
 
 from future.builtins import zip
 
 from . import (UnrecognizedFormatError, InvalidRegistrationError,
                DuplicateRegistrationError, ArgumentOverrideWarning,
                FormatIdentificationWarning)
-from .util import open_file, _is_string_or_bytes
+from .util import open_file, open_files, _is_string_or_bytes
 from skbio.util import flatten
 
 _formats = {}
@@ -25,6 +26,7 @@ _sniffers = {}
 _aliases = {}
 _empty_file_format = '<emptyfile>'
 
+FileSentinel = object()
 
 def _override_kwargs(kw, fmt_kw, warn_user):
     for key in kw:
@@ -177,13 +179,35 @@ def register_reader(format, cls=None):
         if 'reader' in format_class:
             raise DuplicateRegistrationError('reader', format, cls)
 
+        file_args = []
+        reader_spec = inspect.getargspec(reader)
+        if reader_spec.defaults is not None:
+            for key, default in zip(
+                    reader_spec.args[-len(reader_spec.defaults):],
+                    reader_spec.defaults):
+                if default is FileSentinel:
+                    file_args.append(key)
+
         # We wrap the reader so that basic file handling can be managed
         # externally from the business logic.
         if cls is None:
             def wrapped_reader(fp, mode='U', mutate_fh=False, **kwargs):
-                with open_file(fp, mode) as fh:
+                file_keys = []
+                files = [fp]
+                for file_arg in file_args:
+                    if file_arg in kwargs:
+                        if kwargs[file_arg] is FileSentinel:
+                            raise Exception()
+                        elif kwargs[file_arg] is not None:
+                            file_keys.append(file_arg)
+                            files.append(kwargs[file_arg])
+
+                with open_files(files, mode) as fhs:
                     try:
-                        generator = reader(fh, **kwargs)
+                        for key, fh in zip(file_keys, fhs[1:]):
+                            kwargs[key] = fh
+
+                        generator = reader(fhs[0], **kwargs)
                         if not isinstance(generator, types.GeneratorType):
                             # Raise an exception to be handled next line,
                             # because although reader executed without error,
