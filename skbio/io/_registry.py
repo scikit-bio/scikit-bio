@@ -17,7 +17,7 @@ from future.builtins import zip
 from . import (UnrecognizedFormatError, InvalidRegistrationError,
                DuplicateRegistrationError, ArgumentOverrideWarning,
                FormatIdentificationWarning)
-from .util import open_file, open_files, _is_string_or_bytes
+from .util import open_file, _is_string_or_bytes
 from skbio.util import flatten
 
 _formats = {}
@@ -26,62 +26,13 @@ _aliases = {}
 _empty_file_format = '<emptyfile>'
 
 
-def _compound_format(fmts):
-    return ', '.join(fmts)
-
-
-def _factor_format(fmt):
-    if _is_string_or_bytes(fmt):
-        return [f.strip() for f in fmt.split(',')]
-    return fmt
-
-
-def _format_len(fmt):
-    return len(_factor_format(fmt))
-
-
-def _normalize_format(fmt):
-    """Return normalized format string, is_compound format."""
-    if _is_string_or_bytes(fmt):
-        return _compound_format(sorted(
-                                _factor_format(fmt.lower()))), ',' in fmt
-    else:
-        return _compound_format(sorted([_normalize_format(f)[0] for f in
-                                fmt])), True
-
-
-def _is_iter_list(x):
-    return (hasattr(x, '__iter__') and not hasattr(x, 'read') and
-            not _is_string_or_bytes(x))
-
-
-def _setup_kwargs(kws):
-    if len(kws) == 1:
-        return kws[0]
-    kwargs = {}
-    for key in flatten([k.keys() for k in kws]):
-        kwarg = []
-        for kw in kws:
-            kwarg.append(kw.get(key, None))
-        kwargs[key] = kwarg
-    return kwargs
-
-
-def _override_kwarg(kw, key, value, warn_user):
-    if key in kw and warn_user and kw[key] != value:
-        warn('Best guess was: %s=%s, continuing with user supplied: %s' % (
-            key, str(kw[key]), str(value)
-        ), ArgumentOverrideWarning)
-    kw[key] = value
-
-
-def _override_kwargs(kw, fmt_kw, fmt_len, warn_user):
+def _override_kwargs(kw, fmt_kw, warn_user):
     for key in kw:
-        if fmt_len > 1 and (not _is_iter_list(kw[key]) or
-                            len(kw[key]) != fmt_len):
-            _override_kwarg(fmt_kw, key, [kw[key]] * fmt_len, warn_user)
-        else:
-            _override_kwarg(fmt_kw, key, kw[key], warn_user)
+        if key in fmt_kw and fmt_kw[key] != kw[key] and warn_user:
+            warn('Best guess was: %s=%s, continuing with user supplied: %s' % (
+                key, str(fmt_kw[key]), str(kw[key])
+            ), ArgumentOverrideWarning)
+        fmt_kw[key] = kw[key]
     return fmt_kw
 
 
@@ -132,15 +83,10 @@ def register_sniffer(format):
     skbio.io.sniff
 
     """
-    fmt, is_compound = _normalize_format(format)
-    if is_compound:
-        raise ValueError("'register_sniffer' cannot be applied to compound "
-                         "formats.")
-
     def decorator(sniffer):
-        if fmt in _sniffers:
+        if format in _sniffers:
             raise DuplicateRegistrationError(msg="'%s' already has a sniffer."
-                                             % fmt)
+                                             % format)
 
         def wrapped_sniffer(fp, mode='U', **kwargs):
             with open_file(fp, mode) as fh:
@@ -174,7 +120,7 @@ def register_sniffer(format):
         wrapped_sniffer.__doc__ = sniffer.__doc__
         wrapped_sniffer.__name__ = sniffer.__name__
 
-        _sniffers[fmt] = wrapped_sniffer
+        _sniffers[format] = wrapped_sniffer
         return wrapped_sniffer
     return decorator
 
@@ -196,11 +142,6 @@ def register_reader(format, cls=None):
 
     Any additional `**kwargs` will be passed to the reader and may
     be used if necessary.
-
-    In the event of a compound format (`['format1', 'format2']`) filehandles
-    will be unrolled in the same order as the format and ALL kwarg arguments
-    will be passed as tuples in the same order as the format. i.e.
-    ``def format1_format2_to_generator(fmt1_fh, fmt2_fh, some_arg=(1, 2)):``
 
     The reader **must** return an instance of `cls` if `cls` is not None.
     Otherwise the reader must return a generator. The generator need not deal
@@ -230,29 +171,19 @@ def register_reader(format, cls=None):
     skbio.io.read
 
     """
-    fmt, is_compound = _normalize_format(format)
-
     def decorator(reader):
-        format_class = _formats.setdefault(fmt, {}).setdefault(cls, {})
+        format_class = _formats.setdefault(format, {}).setdefault(cls, {})
 
         if 'reader' in format_class:
-            raise DuplicateRegistrationError('reader', fmt, cls)
+            raise DuplicateRegistrationError('reader', format, cls)
 
         # We wrap the reader so that basic file handling can be managed
         # externally from the business logic.
         if cls is None:
-            # In the case of generators, we need to make sure that the
-            # filehandle is not mutated by calling `next` on the generator.
-            # This allows for the odd edge case of creating several generators
-            # from the same filehandle without having them inadvertently
-            # interact via the filehandle's position.
             def wrapped_reader(fp, mode='U', mutate_fh=False, **kwargs):
-                if not _is_iter_list(fp):
-                    fp = [fp]
-
-                with open_files(fp, mode) as fhs:
+                with open_file(fp, mode) as fh:
                     try:
-                        generator = reader(*fhs, **kwargs)
+                        generator = reader(fh, **kwargs)
                         if not isinstance(generator, types.GeneratorType):
                             # Raise an exception to be handled next line,
                             # because although reader executed without error,
@@ -275,17 +206,13 @@ def register_reader(format, cls=None):
             # When an object is instantiated we don't need to worry about the
             # original position at every step, only at the end.
             def wrapped_reader(fp, mode='U', mutate_fh=False, **kwargs):
-                if not _is_iter_list(fp):
-                    fp = [fp]
-
-                with open_files(fp, mode) as fhs:
-                    return reader(*fhs, **kwargs)
+                with open_file(fp, mode) as fh:
+                    return reader(fh, **kwargs)
 
         wrapped_reader.__doc__ = reader.__doc__
         wrapped_reader.__name__ = reader.__name__
 
         format_class['reader'] = wrapped_reader
-        format_class['reader_args'] = _factor_format(format)
         return wrapped_reader
     return decorator
 
@@ -309,11 +236,6 @@ def register_writer(format, cls=None):
 
     The writer must not return a value. Instead it should only mutate the `fh`
     in a way consistent with it's purpose.
-
-    In the event of a compound format (`['format1', 'format2']`) filehandles
-    will be unrolled in the same order as the format and ALL kwarg arguments
-    will be passed as tuples in the same order as the format. i.e.
-    ``def gen_to_format1_format2(gen, fmt1_fh, fmt2_fh, some_arg=(1, 2)):``
 
     If the writer accepts a generator, it should exhaust the generator to
     ensure that the potentially open filehandle backing said generator is
@@ -344,28 +266,22 @@ def register_writer(format, cls=None):
     skbio.io.get_writer
 
     """
-    fmt, is_compound = _normalize_format(format)
-
     def decorator(writer):
-        format_class = _formats.setdefault(fmt, {}).setdefault(cls, {})
+        format_class = _formats.setdefault(format, {}).setdefault(cls, {})
 
         if 'writer' in format_class:
-            raise DuplicateRegistrationError('writer', fmt, cls)
+            raise DuplicateRegistrationError('writer', format, cls)
 
         # We wrap the writer so that basic file handling can be managed
         # externally from the business logic.
         def wrapped_writer(obj, fp, mode='w', **kwargs):
-            if not _is_iter_list(fp):
-                fp = [fp]
-
-            with open_files(fp, mode) as fhs:
-                writer(obj, *fhs, **kwargs)
+            with open_file(fp, mode) as fh:
+                writer(obj, fh, **kwargs)
 
         wrapped_writer.__doc__ = writer.__doc__
         wrapped_writer.__name__ = writer.__name__
 
         format_class['writer'] = wrapped_writer
-        format_class['writer_args'] = _factor_format(format)
         return wrapped_writer
     return decorator
 
@@ -419,10 +335,8 @@ def list_write_formats(cls):
 def _rw_list_formats(name, cls):
     formats = []
     for fmt in _formats:
-        if cls in _formats[fmt]:
-            if name in _formats[fmt][cls]:
-                f = _formats[fmt][cls][name+'_args']
-                formats.append(_compound_format(f))
+        if cls in _formats[fmt] and name in _formats[fmt][cls]:
+            formats.append(fmt)
     return formats
 
 
@@ -445,36 +359,7 @@ def get_sniffer(format):
     skbio.io.register_sniffer
 
     """
-    fmt, is_compound = _normalize_format(format)
-    if not is_compound:
-        if fmt in _sniffers:
-            return _sniffers[fmt]
-        return None
-    else:
-        # In the event of a compound format, we can generate a compound sniffer
-        # by simply composing the results of each sub-sniffer.
-        sniffers = []
-        for f in _factor_format(format):
-            sniffer = get_sniffer(f)
-            if sniffer is None:
-                return None
-            sniffers.append(sniffer)
-
-        def sniffer(fp, mode='U'):
-            kwargs = []
-            if not _is_iter_list(fp):
-                raise ValueError('Must supply a list of files.')
-            if len(fp) != len(sniffers):
-                raise ValueError('List length (%d) must be %d.'
-                                 % (len(fp), len(sniffers)))
-            for f, sniffer in zip(fp, sniffers):
-                is_format, fmt_kwargs = sniffer(f, mode=mode)
-                if not is_format:
-                    return False, {}
-                kwargs.append(fmt_kwargs)
-            return True, _setup_kwargs(kwargs)
-
-        return sniffer
+    return _sniffers.get(format, None)
 
 
 def get_reader(format, cls=None):
@@ -482,8 +367,8 @@ def get_reader(format, cls=None):
 
     Parameters
     ----------
-    format : str or iterable of str
-        A registered format string or compound format.
+    format : str
+        A registered format string.
     cls : type, optional
         The class which the reader will return an instance of. If `cls` is
         None, the reader will return a generator.
@@ -500,31 +385,7 @@ def get_reader(format, cls=None):
     skbio.io.register_reader
 
     """
-    fmt, is_compound = _normalize_format(format)
-    composition = _factor_format(format)
-
-    reader, original_format_order = _rw_getter('reader', fmt, cls)
-    if reader is None:
-        return None
-
-    if not is_compound or original_format_order == composition:
-        return reader
-
-    # Time to generate a flip on the fly! :rimshot:
-    def generated_reader(fp, **kwargs):
-        if len(fp) != len(original_format_order):
-            raise ValueError('List length (%d) must be %d.'
-                             % (len(fp), len(original_format_order)))
-        mapped_fp = [None for f in fp]
-        for i, f in enumerate(original_format_order):
-            mapped_fp[i] = fp[composition.index(f)]
-        return reader(mapped_fp, **kwargs)
-
-    generated_reader.__name__ = 'flip_of_' + reader.__name__
-    # Generated readers do not get a copy of the docstring because
-    # their argument order is not the same.
-
-    return generated_reader
+    return _rw_getter('reader', format, cls)
 
 
 def get_writer(format, cls=None):
@@ -532,8 +393,8 @@ def get_writer(format, cls=None):
 
     Parameters
     ----------
-    format : str or iterable of str
-        A registered format string or compound format.
+    format : str
+        A registered format string.
     cls : type, optional
         The class which the writer will expect an instance of. If `cls` is
         None, the writer will expect a generator that is identical to what
@@ -552,39 +413,14 @@ def get_writer(format, cls=None):
     skbio.io.get_reader
 
     """
-    fmt, is_compound = _normalize_format(format)
-    composition = _factor_format(format)
-
-    writer, original_format_order = _rw_getter('writer', fmt, cls)
-    if writer is None:
-        return None
-
-    if not is_compound or original_format_order == composition:
-        return writer
-
-    def generated_writer(obj, fp, **kwargs):
-        if len(fp) != len(original_format_order):
-            raise ValueError('List length (%d) must be %d.'
-                             % (len(fp), len(original_format_order)))
-        mapped_fp = [None for f in fp]
-        for i, f in enumerate(original_format_order):
-            mapped_fp[i] = fp[composition.index(f)]
-        return writer(obj, mapped_fp, **kwargs)
-
-    generated_writer.__name__ = 'flip_of_' + writer.__name__
-    # Generated writers do not get a copy of the docstring because
-    # their argument order is not the same.
-
-    return generated_writer
+    return _rw_getter('writer', format, cls)
 
 
 def _rw_getter(name, fmt, cls):
     if fmt in _formats:
-        if cls in _formats[fmt]:
-            if name in _formats[fmt][cls]:
-                return (_formats[fmt][cls][name],
-                        _formats[fmt][cls][name+"_args"])
-    return None, None
+        if cls in _formats[fmt] and name in _formats[fmt][cls]:
+                return _formats[fmt][cls][name]
+    return None
 
 
 def sniff(fp, cls=None, mode='U'):
@@ -618,31 +454,24 @@ def sniff(fp, cls=None, mode='U'):
     skbio.io.register_sniffer
 
     """
-    if not _is_iter_list(fp):
-        fp = [fp]
-    factored_format = []
-    kwargs = []
-    for f in fp:
-        possibles = []
-        for fmt in _sniffers:
-            if cls is not None and fmt != _empty_file_format and (
-                    fmt not in _formats or cls not in _formats[fmt]):
-                continue
-            format_sniffer = _sniffers[fmt]
-            is_format, fmt_kwargs = format_sniffer(f, mode=mode)
-            if is_format:
-                possibles.append(fmt)
-                kwargs.append(fmt_kwargs)
+    possibles = []
+    for fmt in _sniffers:
+        if cls is not None and fmt != _empty_file_format and (
+                fmt not in _formats or cls not in _formats[fmt]):
+            continue
+        format_sniffer = _sniffers[fmt]
+        is_format, fmt_kwargs = format_sniffer(fp, mode=mode)
+        if is_format:
+            possibles.append(fmt)
+            kwargs = fmt_kwargs
 
-        if not possibles:
-            raise UnrecognizedFormatError("Cannot guess the format for %s."
-                                          % str(f))
-        if len(possibles) > 1:
-            raise UnrecognizedFormatError("File format is ambiguous, may be"
-                                          " one of %s." % str(possibles))
-
-        factored_format.append(possibles[0])
-    return _compound_format(factored_format), _setup_kwargs(kwargs)
+    if not possibles:
+        raise UnrecognizedFormatError("Cannot guess the format for %s."
+                                      % str(fp))
+    if len(possibles) > 1:
+        raise UnrecognizedFormatError("File format is ambiguous, may be"
+                                      " one of %s." % str(possibles))
+    return possibles[0], kwargs
 
 
 def read(fp, format=None, into=None, verify=True, mode='U', **kwargs):
@@ -653,17 +482,15 @@ def read(fp, format=None, into=None, verify=True, mode='U', **kwargs):
 
     Parameters
     ----------
-    fp : filepath, filehandle, or iterable of either
+    fp : filepath or filehandle
         The location to read the given `format` `into`. Filepaths are
         automatically closed when read; filehandles are the responsibility
         of the caller. In the case of a generator, a filepath will be closed
         when ``StopIteration`` is raised; filehandles are still the
-        responsibility of the caller. If `format` is a compound format, then
-        `fp` **must** be an iterable of the same length as the compound format.
-    format : str or iterable of str, optional
+        responsibility of the caller.
+    format : str, optional
         The format must be a format name with a reader for the given
-        `into` class. In the case of compound formats, any order of the simple
-        formats will work. If a `format` is not provided or is None, all
+        `into` class. If a `format` is not provided or is None, all
         registered sniffers for the provied `into` class will be evaluated to
         attempt to guess the format.
         Default is None.
@@ -711,8 +538,7 @@ def read(fp, format=None, into=None, verify=True, mode='U', **kwargs):
 
     if format is None:
         format, fmt_kwargs = sniff(fp, cls=into, mode=mode)
-        kwargs = _override_kwargs(kwargs, fmt_kwargs, _format_len(format),
-                                  verify)
+        kwargs = _override_kwargs(kwargs, fmt_kwargs, verify)
     elif verify:
         sniffer = get_sniffer(format)
         if sniffer is not None:
@@ -722,8 +548,7 @@ def read(fp, format=None, into=None, verify=True, mode='U', **kwargs):
                      (str(fp), format),
                      FormatIdentificationWarning)
             else:
-                kwargs = _override_kwargs(kwargs, fmt_kwargs,
-                                          _format_len(format), True)
+                kwargs = _override_kwargs(kwargs, fmt_kwargs, True)
 
     reader = get_reader(format, into)
     if reader is None:
@@ -744,15 +569,13 @@ def write(obj, format, into, mode='w', **kwargs):
     ----------
     obj : object
         The object must have a registered writer for a provided `format`.
-    format : str or iterable of str
+    format : str
         The format must be a registered format name with a writer for the given
-        `obj`. In the case of compound formats, any order of the simple
-        formats will work.
-    into : filepath, filehandle or iterable of either
+        `obj`.
+    into : filepath or filehandle
         The location to write the given `format` from `obj` into. Filepaths are
         automatically closed when written; filehandles are the responsibility
-        of the caller. If `format` is a compound format, then `into` **must**
-        be an iterable of the same length as the compound format.
+        of the caller.
     mode : str, optional
         The write mode. This is passed to `open(fp, mode)` internally.
         Default is 'w'.
@@ -853,20 +676,14 @@ def _apply_write(cls):
 def _import_paths(formats):
     lines = []
     for fmt in formats:
-        fmts = _factor_format(fmt)
-        lines += ("skbio.io." + fmt for fmt in fmts)
+        lines.append("skbio.io." + fmt)
     return '\n'.join(lines)
 
 
 def _formats_for_docs(formats):
     lines = []
     for fmt in formats:
-        fmts = _factor_format(fmt)
-        if len(fmts) > 1:
-            lines.append("- ``%s`` (%s)" % (
-                fmts, ', '.join(":mod:`skbio.io.%s`" % s for s in fmts)))
-        else:
-            lines.append("- ``'%s'`` (:mod:`skbio.io.%s`)" % (fmt, fmt))
+        lines.append("- ``'%s'`` (:mod:`skbio.io.%s`)" % (fmt, fmt))
     return '\n'.join(lines)
 
 
@@ -882,16 +699,12 @@ Supported file formats include:
 
 Parameters
 ----------
-fp : filepath, filehandle, or iterable of either
+fp : filepath or filehandle
     The location to read the given `format`. Filepaths are
     automatically closed when read; filehandles are the
-    responsibility of the caller. If `format` is a compound format,
-    then `fp` **must** be an iterable of the same length as the
-    compound format.
-format : str or iterable of str, optional
+    responsibility of the caller.
+format : str, optional
     The format must be a format name with a reader for ``%s``.
-    In the case of compound formats, any order of the simple
-    formats will work as long as `fp` follows the same order.
     If a `format` is not provided or is None, it will attempt to
     guess the format.
 kwargs : dict, optional
