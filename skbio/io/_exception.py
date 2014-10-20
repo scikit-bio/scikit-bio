@@ -44,11 +44,6 @@ class FASTAFormatError(FileFormatError):
     pass
 
 
-class FASTAQUALFormatError(FileFormatError):
-    """Raised when FASTA/QUAL formatted files cannot be parsed."""
-    pass
-
-
 class NewickFormatError(FileFormatError):
     """Raised when a ``newick`` formatted file cannot be parsed."""
     pass
@@ -66,11 +61,6 @@ class PhylipFormatError(FileFormatError):
     in ``phylip`` format.
 
     """
-    pass
-
-
-class QUALFormatError(FileFormatError):
-    """Raised when a ``qual`` formatted file cannot be parsed."""
     pass
 
 

@@ -411,7 +411,7 @@ import textwrap
 import numpy as np
 
 from skbio.io import (register_reader, register_writer, register_sniffer,
-                      FASTAFormatError, FASTAQUALFormatError, QUALFormatError)
+                      FASTAFormatError, FASTAFormatError, FASTAFormatError)
 from skbio.io._base import _chunk_str
 from skbio.alignment import SequenceCollection, Alignment
 from skbio.sequence import (BiologicalSequence, NucleotideSequence,
@@ -450,21 +450,21 @@ def _fasta_qual_to_generator(fasta_fh, qual_fh,
         for fasta_rec, qual_rec in zip_longest(fasta_gen, qual_gen,
                                                fillvalue=None):
             if fasta_rec is None:
-                raise FASTAQUALFormatError(
+                raise FASTAFormatError(
                     "QUAL file has more records than FASTA file.")
             if qual_rec is None:
-                raise FASTAQUALFormatError(
+                raise FASTAFormatError(
                     "FASTA file has more records than QUAL file.")
 
             fasta_seq, fasta_id, fasta_desc = fasta_rec
             qual_scores, qual_id, qual_desc = qual_rec
 
             if fasta_id != qual_id:
-                raise FASTAQUALFormatError(
+                raise FASTAFormatError(
                     "IDs do not match between FASTA and QUAL records: %r != %r"
                     % (fasta_id, qual_id))
             if fasta_desc != qual_desc:
-                raise FASTAQUALFormatError(
+                raise FASTAFormatError(
                     "Descriptions do not match between FASTA and QUAL "
                     "records: %r != %r" % (fasta_desc, qual_desc))
 
@@ -735,7 +735,7 @@ def _fasta_or_qual_sniffer(fh, format):
         for _ in zip(range(10), gen):
             not_empty = True
         return not_empty, {}
-    except (FASTAFormatError, QUALFormatError):
+    except (FASTAFormatError, FASTAFormatError):
         return False, {}
     finally:
         gen.close()
@@ -748,7 +748,7 @@ def _fasta_or_qual_to_generator(fh, format):
         format_label = 'FASTA'
     else:
         data_parser = _parse_quality_scores
-        error_type = QUALFormatError
+        error_type = FASTAFormatError
         format_label = 'QUAL'
 
     line = next(fh)
@@ -803,13 +803,13 @@ def _parse_sequence_data(chunks):
 
 def _parse_quality_scores(chunks):
     if not chunks:
-        raise QUALFormatError("Found QUAL header without quality scores.")
+        raise FASTAFormatError("Found QUAL header without quality scores.")
 
     qual_str = ' '.join(chunks)
     try:
         return np.asarray(qual_str.split(), dtype=int)
     except ValueError:
-        raise QUALFormatError(
+        raise FASTAFormatError(
             "Could not convert quality scores to integers:\n%s" % qual_str)
 
 
@@ -820,7 +820,7 @@ def _fasta_or_fasta_qual_to_sequence(fh, seq_num, constructor, format):
         format_label = 'FASTA'
     else:
         seq_generator = _fasta_qual_to_generator
-        error_type = FASTAQUALFormatError
+        error_type = FASTAFormatError
         format_label = 'FASTA/QUAL'
 
     if seq_num < 1:
@@ -855,7 +855,7 @@ def _generator_to_fasta_or_fasta_qual(obj, fasta_fh, qual_fh,
         error_type = FASTAFormatError
         format_label = 'FASTA'
     else:
-        error_type = FASTAQUALFormatError
+        error_type = FASTAFormatError
         format_label = 'FASTA/QUAL'
         if max_width is not None:
             # define text wrapper for quality scores here for efficiency.

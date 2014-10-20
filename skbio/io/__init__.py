@@ -261,9 +261,8 @@ from ._warning import FormatIdentificationWarning, ArgumentOverrideWarning
 from ._exception import (DuplicateRegistrationError, InvalidRegistrationError,
                          RecordError, FieldError, UnrecognizedFormatError,
                          FileFormatError, ClustalFormatError, DMFormatError,
-                         FASTAFormatError, FASTAQUALFormatError,
-                         NewickFormatError, OrdResFormatError,
-                         PhylipFormatError, QUALFormatError)
+                         FASTAFormatError, NewickFormatError,
+                         OrdResFormatError, PhylipFormatError)
 from ._registry import (write, read, sniff, get_writer, get_reader,
                         get_sniffer, list_write_formats, list_read_formats,
                         register_writer, register_reader, register_sniffer,
@@ -284,11 +283,9 @@ __all__ = ['write', 'read', 'sniff',
            'ClustalFormatError',
            'DMFormatError',
            'FASTAFormatError',
-           'FASTAQUALFormatError',
            'NewickFormatError',
            'OrdResFormatError',
-           'PhylipFormatError',
-           'QUALFormatError']
+           'PhylipFormatError']
 
 # Necessary to import each file format module to have them added to the I/O
 # registry. We use import_module instead of a typical import to avoid flake8
