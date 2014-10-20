@@ -406,6 +406,7 @@ with hooks():
     from itertools import zip_longest
 
 import re
+import textwrap
 
 import numpy as np
 
@@ -849,6 +850,14 @@ def _generator_to_fasta_or_fasta_qual(obj, fasta_fh, qual_fh,
     else:
         error_type = FASTAQUALFormatError
         format_label = 'FASTA/QUAL'
+        if max_width is not None:
+            # define text wrapper for quality scores here for efficiency.
+            # textwrap docs recommend reusing a TextWrapper instance when it is
+            # used many times. configure text wrapper to never break words
+            # (i.e., integer quality scores)
+            qual_wrapper = textwrap.TextWrapper(width=max_width,
+                                                break_long_words=False,
+                                                break_on_hyphens=False)
 
     if ((id_whitespace_replacement is not None and
          '\n' in id_whitespace_replacement) or
@@ -899,8 +908,7 @@ def _generator_to_fasta_or_fasta_qual(obj, fasta_fh, qual_fh,
 
             qual_str = ' '.join(np.asarray(seq.quality, dtype=np.str))
             if max_width is not None:
-                # TODO this can split numbers across lines, which we don't want
-                qual_str = _chunk_str(qual_str, max_width, '\n')
+                qual_str = qual_wrapper.fill(qual_str)
 
             qual_fh.write('>%s\n%s\n' % (header, qual_str))
 
