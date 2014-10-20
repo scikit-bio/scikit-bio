@@ -16,7 +16,7 @@ from skbio import (BiologicalSequence, NucleotideSequence, DNA, RNA, Protein,
 from skbio import SequenceCollection, Alignment
 from skbio.io import FASTAFormatError
 from skbio.io.fasta import (
-    _fasta_sniffer, _fasta_to_generator, _fasta_to_biological_sequence,
+    _fasta_sniffer, _qual_sniffer, _fasta_to_generator, _fasta_to_biological_sequence,
     _fasta_to_nucleotide_sequence, _fasta_to_dna_sequence,
     _fasta_to_rna_sequence, _fasta_to_protein_sequence,
     _fasta_to_sequence_collection, _fasta_to_alignment, _generator_to_fasta,
@@ -26,9 +26,9 @@ from skbio.io.fasta import (
 from skbio.util import get_data_path
 
 
-class FASTASnifferTests(TestCase):
+class SnifferTests(TestCase):
     def setUp(self):
-        self.positive_fps = map(get_data_path, [
+        self.fasta_positive_fps = map(get_data_path, [
             'fasta_3_seqs_defaults',
             'fasta_max_width_1',
             'fasta_single_bio_seq_non_defaults',
@@ -55,7 +55,7 @@ class FASTASnifferTests(TestCase):
             'fasta_invalid_after_10_seqs'
         ])
 
-        self.negative_fps = map(get_data_path, [
+        self.fasta_negative_fps = map(get_data_path, [
             'empty',
             'whitespace_only',
             'fasta_invalid_missing_header',
@@ -69,13 +69,27 @@ class FASTASnifferTests(TestCase):
             'fasta_description_newline_replacement_none'
         ])
 
-    def test_positives(self):
-        for fp in self.positive_fps:
+        self.qual_positive_fps = map(get_data_path, [
+            'qual_3_seqs_defaults',
+        ])
+
+    def test_fasta_positives(self):
+        for fp in self.fasta_positive_fps:
             self.assertEqual(_fasta_sniffer(fp), (True, {}))
 
-    def test_negatives(self):
-        for fp in self.negative_fps:
+    def test_fasta_negatives(self):
+        for fp in self.fasta_negative_fps + self.qual_positive_fps:
             self.assertEqual(_fasta_sniffer(fp), (False, {}))
+
+    def test_qual_positives(self):
+        for fp in self.qual_positive_fps:
+            self.assertEqual(_qual_sniffer(fp), (True, {}))
+
+    def test_qual_negatives(self):
+        # none of the positive or negative fasta files should be identified as
+        # qual
+        for fp in self.fasta_positive_fps + self.fasta_negative_fps:
+            self.assertEqual(_qual_sniffer(fp), (False, {}))
 
 
 class FASTAReaderTests(TestCase):

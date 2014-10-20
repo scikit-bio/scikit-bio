@@ -421,7 +421,14 @@ from skbio.util import cardinal_to_ordinal
 
 @register_sniffer('fasta')
 def _fasta_sniffer(fh):
-    return _fasta_or_qual_sniffer(fh, 'fasta')
+    # Strategy:
+    #   If the file appears to be valid FASTA, check if it's also valid QUAL.
+    #   If it is, do not identify as FASTA since the QUAL sniffer is more
+    #   specific (i.e., it attempts to parse the quality scores as integers).
+    valid_fasta = _fasta_or_qual_sniffer(fh, 'fasta')[0]
+    if valid_fasta:
+        valid_fasta = not _qual_sniffer(fh)[0]
+    return valid_fasta, {}
 
 
 @register_sniffer('qual')
