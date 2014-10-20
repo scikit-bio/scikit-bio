@@ -91,6 +91,12 @@ class SnifferTests(TestCase):
         for fp in self.fasta_positive_fps + self.fasta_negative_fps:
             self.assertEqual(_qual_sniffer(fp), (False, {}))
 
+# TODO add note about some duplication of test code between FASTA and FASTAQUAL
+
+class FASTAQUALReaderTests(TestCase):
+    def setUp(self):
+        pass
+
 
 class FASTAReaderTests(TestCase):
     def setUp(self):
