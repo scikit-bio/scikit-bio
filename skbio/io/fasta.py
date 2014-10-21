@@ -450,7 +450,8 @@ following FASTA file::
 Also suppose we have the following QUAL file::
 
     >seq1 db-accession-149855
-    40 39 39 4 50 1 100
+    40 39 39 4
+    50 1 100
     >seq2 db-accession-34989
     3 3 10 42 80
 
@@ -461,7 +462,8 @@ Also suppose we have the following QUAL file::
 ...     "CATCG\\n")
 >>> qual_fh = StringIO(
 ...     ">seq1 db-accession-149855\\n"
-...     "40 39 39 4 50 1 100\\n"
+...     "40 39 39 4\\n"
+...     "50 1 100\\n"
 ...     ">seq2 db-accession-34989\\n"
 ...     "3 3 10 42 80\\n")
 
@@ -471,6 +473,10 @@ generator-based reader as we did above, providing both FASTA and QUAL files:
 >>> for seq in read(fasta_fh, qual=qual_fh, format='fasta'):
 ...     seq
 ...     seq.quality
+<BiologicalSequence: CGATGTC (length: 7)>
+array([ 40,  39,  39,   4,  50,   1, 100])
+<BiologicalSequence: CATCG (length: 5)>
+array([ 3,  3, 10, 42, 80])
 
 Note that the sequence objects have quality scores since we provided a QUAL
 file. The other FASTA readers operate in a similar manner.
@@ -480,8 +486,9 @@ Now let's load the sequences and their quality scores into a
 
 >>> fasta_fh.seek(0) # reset position to beginning of file so we can read again
 >>> qual_fh.seek(0) # reset position to beginning of file so we can read again
->>> sc = SequenceCollection.read(fh)
+>>> sc = SequenceCollection.read(fasta_fh, qual=qual_fh)
 >>> sc
+<SequenceCollection: n=2; mean +/- std length=6.00 +/- 1.00>
 
 To write the sequence data and quality scores in the ``SequenceCollection`` to
 FASTA and QUAL files, respectively, we run:
@@ -490,7 +497,17 @@ FASTA and QUAL files, respectively, we run:
 >>> new_qual_fh = StringIO()
 >>> sc.write(new_fasta_fh, qual=new_qual_fh)
 >>> print(new_fasta_fh.getvalue())
+>seq1 db-accession-149855
+CGATGTC
+>seq2 db-accession-34989
+CATCG
+<BLANKLINE>
 >>> print(new_qual_fh.getvalue())
+>seq1 db-accession-149855
+40 39 39 4 50 1 100
+>seq2 db-accession-34989
+3 3 10 42 80
+<BLANKLINE>
 >>> new_fasta_fh.close()
 >>> new_qual_fh.close()
 
