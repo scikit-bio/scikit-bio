@@ -696,7 +696,7 @@ def _generator_to_fasta(obj, fh, qual=FileSentinel,
         if max_width is not None:
             seq_str = _chunk_str(seq_str, max_width, '\n')
 
-        fasta_fh.write('>%s\n%s\n' % (header, seq_str))
+        fh.write('>%s\n%s\n' % (header, seq_str))
 
         if qual is not None:
             if not seq.has_quality():

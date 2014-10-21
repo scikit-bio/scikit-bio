@@ -12,8 +12,8 @@ from six import StringIO
 from unittest import TestCase, main
 
 from skbio import (BiologicalSequence, NucleotideSequence, DNA, RNA, Protein,
-                   ProteinSequence)
-from skbio import SequenceCollection, Alignment
+                   ProteinSequence, SequenceCollection, Alignment)
+from skbio.sequence import BiologicalSequenceError
 from skbio.io import FASTAFormatError
 from skbio.io.fasta import (
     _fasta_sniffer, _fasta_to_generator, _fasta_to_biological_sequence,
@@ -134,98 +134,109 @@ class ReaderTests(TestCase):
             map(get_data_path, ['fasta_sequence_collection_different_type'])
         )
 
-        # store fasta filepath, kwargs, and expected error message for invalid
-        # input
+        # store fasta filepath, kwargs, error type, and expected error message
+        # for invalid input
         # TODO add note about why fasta and qual have semi-duplicate tests
-        self.invalid_fps = map(lambda e: (get_data_path(e[0]), e[1]), [
+        self.invalid_fps = map(lambda e: (get_data_path(e[0]),
+                                          e[1], e[2], e[3]), [
             # whitespace-only fasta and qual
-            ('whitespace_only', {}, 'without a FASTA header'),
+            ('whitespace_only', {}, FASTAFormatError,
+             'without a header.*FASTA'),
             ('fasta_3_seqs_defaults',
-             {'qual': get_data_path('whitespace_only'),
-             'foo'),
+             {'qual': get_data_path('whitespace_only')}, FASTAFormatError,
+             'without a header.*QUAL'),
 
             # fasta and qual missing header
-            ('fasta_invalid_missing_header', {} 'without a FASTA header'),
+            ('fasta_invalid_missing_header', {}, FASTAFormatError,
+             'without a header.*FASTA'),
             ('fasta_3_seqs_defaults',
-             {'qual': get_data_path('qual_invalid_missing_header'),
-             'foo'),
+             {'qual': get_data_path('qual_invalid_missing_header')},
+             FASTAFormatError, 'without a header.*QUAL'),
 
             # fasta and qual with blank line
-            ('fasta_invalid_blank_line', {}, 'whitespace-only.*FASTA'),
-            ('fasta_3_seqs_defaults',
-             {'qual': get_data_path('qual_invalid_blank_line'),
-             'foo'),
-
-            # fasta and qual with whitespace-only line
-            ('fasta_invalid_whitespace_only_line', {},
+            ('fasta_invalid_blank_line', {}, FASTAFormatError,
              'whitespace-only.*FASTA'),
             ('fasta_3_seqs_defaults',
-             {'qual': get_data_path('qual_invalid_whitespace_only_line'),
-             'foo'),
+             {'qual': get_data_path('qual_invalid_blank_line')},
+             FASTAFormatError, 'whitespace-only.*QUAL'),
+
+            # fasta and qual with whitespace-only line
+            ('fasta_invalid_whitespace_only_line', {}, FASTAFormatError,
+             'whitespace-only.*FASTA'),
+            ('fasta_3_seqs_defaults',
+             {'qual': get_data_path('qual_invalid_whitespace_only_line')},
+             FASTAFormatError, 'whitespace-only.*QUAL'),
 
             # fasta and qual missing record data (first record)
-            ('fasta_invalid_missing_seq_data_first', {},
+            ('fasta_invalid_missing_seq_data_first', {}, FASTAFormatError,
              'without sequence data'),
             ('fasta_3_seqs_defaults',
-             {'qual': get_data_path('qual_invalid_missing_qual_scores_first'),
-             'foo'),
+             {'qual': get_data_path('qual_invalid_missing_qual_scores_first')},
+             FASTAFormatError, 'without quality scores'),
 
             # fasta and qual missing record data (middle record)
-            ('fasta_invalid_missing_seq_data_middle', {},
+            ('fasta_invalid_missing_seq_data_middle', {}, FASTAFormatError,
              'without sequence data'),
             ('fasta_3_seqs_defaults',
-             {'qual': get_data_path('qual_invalid_missing_qual_scores_middle'),
-             'foo'),
+             {'qual':
+              get_data_path('qual_invalid_missing_qual_scores_middle')},
+             FASTAFormatError, 'without quality scores'),
 
             # fasta and qual missing record data (last record)
-            ('fasta_invalid_missing_seq_data_last', {},
+            ('fasta_invalid_missing_seq_data_last', {}, FASTAFormatError,
              'without sequence data'),
             ('fasta_3_seqs_defaults',
-             {'qual': get_data_path('qual_invalid_missing_qual_scores_last'),
-             'foo'),
+             {'qual': get_data_path('qual_invalid_missing_qual_scores_last')},
+             FASTAFormatError, 'without quality scores'),
 
             # fasta and qual in legacy format (;)
-            ('fasta_invalid_legacy_format', {}, 'without a FASTA header'),
+            ('fasta_invalid_legacy_format', {}, FASTAFormatError,
+             'without a header.*FASTA'),
             ('fasta_3_seqs_defaults',
-             {'qual': get_data_path('qual_invalid_legacy_format'),
-             'foo'),
+             {'qual': get_data_path('qual_invalid_legacy_format')},
+             FASTAFormatError, 'without a header.*QUAL'),
 
             # qual file with an extra record
             ('fasta_3_seqs_defaults',
-             {'qual': get_data_path('qual_3_seqs_defaults_extra'),
-             'foo'),
+             {'qual': get_data_path('qual_3_seqs_defaults_extra')},
+             FASTAFormatError, 'QUAL file has more'),
 
             # fasta file with an extra record
             ('fasta_3_seqs_defaults',
-             {'qual': get_data_path('qual_2_seqs_defaults'),
-             'foo'),
+             {'qual': get_data_path('qual_2_seqs_defaults')},
+             FASTAFormatError, 'FASTA file has more'),
 
             # id mismatch between fasta and qual
             ('fasta_3_seqs_defaults',
-             {'qual': get_data_path('qual_3_seqs_defaults_id_mismatch'),
-             'foo'),
+             {'qual': get_data_path('qual_3_seqs_defaults_id_mismatch')},
+             FASTAFormatError,
+             'IDs do not match.*\'s_e_q_2\' != \'s_e_q_42\''),
 
             # description mismatch between fasta and qual
             ('fasta_3_seqs_defaults',
-             {'qual': get_data_path('qual_3_seqs_defaults_desc_mismatch'),
-             'foo'),
+             {'qual': get_data_path('qual_3_seqs_defaults_desc_mismatch')},
+             FASTAFormatError,
+             'Descriptions do not match.*\'desc 2\' != \'desc 42\''),
 
             # sequence and quality score length mismatch between fasta and qual
             ('fasta_3_seqs_defaults',
-             {'qual': get_data_path('qual_3_seqs_defaults_length_mismatch'),
-             'foo'),
+             {'qual': get_data_path('qual_3_seqs_defaults_length_mismatch')},
+             BiologicalSequenceError,
+             'Number of quality scores \(3\).*\(4\)'),
 
             # invalid qual scores (can't be converted to integer)
             ('fasta_3_seqs_defaults',
-             {'qual': get_data_path('qual_invalid_qual_scores'),
-             'foo'),
+             {'qual': get_data_path('qual_invalid_qual_scores')},
+             FASTAFormatError,
+             'quality scores to integers:\n100 0 1a -42'),
 
             # misc. invalid files used elsewhere in the tests
-            ('fasta_invalid_after_10_seqs', {}, 'without sequence data'),
-            ('fasta_id_whitespace_replacement_none', {},
+            ('fasta_invalid_after_10_seqs', {}, FASTAFormatError,
+             'without sequence data'),
+            ('fasta_id_whitespace_replacement_none', {}, FASTAFormatError,
              'whitespace-only.*FASTA'),
             ('fasta_description_newline_replacement_none', {},
-             'whitespace-only.*FASTA')
+             FASTAFormatError, 'whitespace-only.*FASTA')
         ])
 
     # extensive tests for fasta -> generator reader since it is used by all
@@ -243,8 +254,8 @@ class ReaderTests(TestCase):
                     self.assertTrue(o.equals(e))
 
     def test_fasta_to_generator_invalid_files(self):
-        for fp, kwargs, error_msg_regex in self.invalid_fps:
-            with self.assertRaisesRegexp(FASTAFormatError, error_msg_regex):
+        for fp, kwargs, error_type, error_msg_regex in self.invalid_fps:
+            with self.assertRaisesRegexp(error_type, error_msg_regex):
                 list(_fasta_to_generator(fp, **kwargs))
 
     # light testing of fasta -> object readers to ensure interface is present
