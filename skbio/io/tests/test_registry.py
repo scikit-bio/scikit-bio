@@ -793,6 +793,150 @@ class TestRead(RegistryTest):
                                     mode='r')
         self.assertEqual(TestClass([1, 2, 3, 4]), instance)
 
+    def test_file_sentinel(self):
+        extra = get_data_path('real_file')
+        fh = StringIO(u'1\n2\n3\n4')
+
+
+        @self.module.register_sniffer('format')
+        def sniffer(fh):
+            return '1' in fh.readline(), {}
+
+        @self.module.register_reader('format', TestClass)
+        def reader(fh, extra=self.module.FileSentinel):
+            self.assertEqual('a\nb\nc\nd\ne\n', extra.read())
+            return TestClass([int(x) for x in fh.read().split('\n')])
+
+
+        instance = self.module.read(fh, format='format', into=TestClass,
+                                    extra=extra)
+        self.assertEqual(TestClass([1, 2, 3, 4]), instance)
+
+        fh.close()
+
+    def test_file_sentinel_many(self):
+        extra = get_data_path('real_file')
+        extra_2 = get_data_path('real_file_2')
+        fh = StringIO(u'1\n2\n3\n4')
+
+
+        @self.module.register_sniffer('format')
+        def sniffer(fh):
+            return '1' in fh.readline(), {}
+
+        @self.module.register_reader('format', TestClass)
+        def reader(fh, extra=self.module.FileSentinel, other=2,
+                   extra_2=self.module.FileSentinel):
+            self.assertEqual('a\nb\nc\nd\ne\n', extra.read())
+            self.assertEqual('!\n@\n#\n$\n%\nThe realest.\n', extra_2.read())
+            return TestClass([int(x) for x in fh.read().split('\n')])
+
+
+        instance = self.module.read(fh, format='format', into=TestClass,
+                                    extra=extra, extra_2=extra_2)
+        self.assertEqual(TestClass([1, 2, 3, 4]), instance)
+
+        fh.close()
+
+    def test_file_sentinel_converted_to_none(self):
+        fh = StringIO(u'1\n2\n3\n4')
+
+        @self.module.register_sniffer('format')
+        def sniffer(fh):
+            return '1' in fh.readline(), {}
+
+        @self.module.register_reader('format', TestClass)
+        def reader(fh, extra=self.module.FileSentinel, other=2,
+                   extra_2=self.module.FileSentinel):
+            self.assertIsNone(extra)
+            self.assertIsNone(extra_2)
+            return TestClass([int(x) for x in fh.read().split('\n')])
+
+        instance = self.module.read(fh, format='format', into=TestClass)
+        self.assertEqual(TestClass([1, 2, 3, 4]), instance)
+
+        fh.close()
+
+    def test_file_sentinel_pass_none(self):
+        fh = StringIO(u'1\n2\n3\n4')
+
+        @self.module.register_sniffer('format')
+        def sniffer(fh):
+            return '1' in fh.readline(), {}
+
+        @self.module.register_reader('format', TestClass)
+        def reader(fh, extra=self.module.FileSentinel, other=2,
+                   extra_2=self.module.FileSentinel):
+            self.assertIsNone(extra)
+            self.assertIsNone(extra_2)
+            return TestClass([int(x) for x in fh.read().split('\n')])
+
+        instance = self.module.read(fh, format='format', into=TestClass,
+                                    extra=None)
+        self.assertEqual(TestClass([1, 2, 3, 4]), instance)
+
+        fh.close()
+
+    def test_file_sentinel_generator_many(self):
+        extra = get_data_path('real_file')
+        extra_2 = get_data_path('real_file_2')
+        fh = StringIO(u'1\n2\n3\n4')
+
+        @self.module.register_sniffer('format')
+        def sniffer(fh):
+            return '1' in fh.readline(), {}
+
+        @self.module.register_reader('format')
+        def reader(fh, extra=self.module.FileSentinel, other=2,
+                   extra_2=self.module.FileSentinel):
+            self.assertEqual('a\nb\nc\nd\ne\n', extra.read())
+            self.assertEqual('!\n@\n#\n$\n%\nThe realest.\n', extra_2.read())
+            yield TestClass([int(x) for x in fh.read().split('\n')])
+
+        gen = self.module.read(fh, format='format', extra=extra,
+                               extra_2=extra_2)
+        self.assertEqual(TestClass([1, 2, 3, 4]), next(gen))
+
+        fh.close()
+
+    def test_file_sentinel_converted_to_none_generator(self):
+        fh = StringIO(u'1\n2\n3\n4')
+
+        @self.module.register_sniffer('format')
+        def sniffer(fh):
+            return '1' in fh.readline(), {}
+
+        @self.module.register_reader('format')
+        def reader(fh, extra=self.module.FileSentinel, other=2,
+                   extra_2=self.module.FileSentinel):
+            self.assertIsNone(extra)
+            self.assertIsNone(extra_2)
+            yield TestClass([int(x) for x in fh.read().split('\n')])
+
+        gen = self.module.read(fh, format='format')
+        self.assertEqual(TestClass([1, 2, 3, 4]), next(gen))
+
+        fh.close()
+
+    def test_file_sentinel_pass_none_generator(self):
+        fh = StringIO(u'1\n2\n3\n4')
+
+        @self.module.register_sniffer('format')
+        def sniffer(fh):
+            return '1' in fh.readline(), {}
+
+        @self.module.register_reader('format')
+        def reader(fh, extra=self.module.FileSentinel, other=2,
+                   extra_2=self.module.FileSentinel):
+            self.assertIsNone(extra)
+            self.assertIsNone(extra_2)
+            yield TestClass([int(x) for x in fh.read().split('\n')])
+
+        gen = self.module.read(fh, format='format', extra=None)
+        self.assertEqual(TestClass([1, 2, 3, 4]), next(gen))
+
+        fh.close()
+
 
 class TestWrite(RegistryTest):
     def test_writer_does_not_exist(self):

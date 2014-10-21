@@ -266,7 +266,7 @@ from ._exception import (DuplicateRegistrationError, InvalidRegistrationError,
 from ._registry import (write, read, sniff, get_writer, get_reader,
                         get_sniffer, list_write_formats, list_read_formats,
                         register_writer, register_reader, register_sniffer,
-                        initialize_oop_interface)
+                        initialize_oop_interface, FileSentinel)
 
 __all__ = ['write', 'read', 'sniff',
            'list_write_formats', 'list_read_formats',

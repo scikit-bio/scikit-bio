@@ -26,7 +26,7 @@ _sniffers = {}
 _aliases = {}
 _empty_file_format = '<emptyfile>'
 
-FileSentinel = object()
+FileSentinel = type('FileSentinel',(object,), {})()
 
 def _override_kwargs(kw, fmt_kw, warn_user):
     for key in kw:
@@ -196,11 +196,11 @@ def register_reader(format, cls=None):
                 files = [fp]
                 for file_arg in file_args:
                     if file_arg in kwargs:
-                        if kwargs[file_arg] is FileSentinel:
-                            raise Exception()
-                        elif kwargs[file_arg] is not None:
+                        if kwargs[file_arg] is not None:
                             file_keys.append(file_arg)
                             files.append(kwargs[file_arg])
+                    else:
+                        kwargs[file_arg] = None
 
                 with open_files(files, mode) as fhs:
                     try:
@@ -230,8 +230,20 @@ def register_reader(format, cls=None):
             # When an object is instantiated we don't need to worry about the
             # original position at every step, only at the end.
             def wrapped_reader(fp, mode='U', mutate_fh=False, **kwargs):
-                with open_file(fp, mode) as fh:
-                    return reader(fh, **kwargs)
+                file_keys = []
+                files = [fp]
+                for file_arg in file_args:
+                    if file_arg in kwargs:
+                        if kwargs[file_arg] is not None:
+                            file_keys.append(file_arg)
+                            files.append(kwargs[file_arg])
+                    else:
+                        kwargs[file_arg] = None
+
+                with open_files(files, mode) as fhs:
+                    for key, fh in zip(file_keys, fhs[1:]):
+                        kwargs[key] = fh
+                    return reader(fhs[0], **kwargs)
 
         wrapped_reader.__doc__ = reader.__doc__
         wrapped_reader.__name__ = reader.__name__
