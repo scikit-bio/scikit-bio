@@ -604,6 +604,7 @@ def _fasta_to_generator(fh, qual=FileSentinel, constructor=BiologicalSequence):
                     "Descriptions do not match between FASTA and QUAL "
                     "records: %r != %r" % (fasta_desc, qual_desc))
 
+            # sequence and quality scores lengths are checked in constructor
             yield constructor(fasta_seq, id=fasta_id, description=fasta_desc,
                               quality=qual_scores)
 
