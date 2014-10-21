@@ -1,6 +1,6 @@
 """
 Labeled square matrix format (:mod:`skbio.io.lsmat`)
-=====================================================
+====================================================
 
 .. currentmodule:: skbio.io.lsmat
 
