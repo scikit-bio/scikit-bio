@@ -119,19 +119,6 @@ see the associated documentation.
    phylip
 
 Formats are considered to be names which represent a way of encoding a file.
-A simple format is just a single name as a string, such as ``'newick'``.
-In some cases, objects can be constructed from more than one format, such as
-``'fasta'`` and ``'qual'`` for reading/writing FASTA/qual files into an
-:mod:`skbio.alignment.SequenceCollection`. In these cases, we use what is
-called a *compound* format. It can be written like this:
-``format=['fasta', 'qual']``. We also support the shorthand:
-``format='fasta, qual'``. In these cases, where you would put a filehandle or a
-filepath string, you will replace it with a list of filehandles and/or
-filepaths which correspond to the order of your compound format
-(``[<filehandle or filepath of fasta>, <filehandle or filepath of qual>]``).
-The order does not matter for the compound format, as long as the files are
-provided in that same order, so we could have used ``['qual', 'fasta']``
-instead as long as the quality file came first.
 
 User Functions
 ^^^^^^^^^^^^^^
@@ -190,10 +177,28 @@ decorators are executed on importing the user functions above. Use the function
 
 The following keyword args may not be used when defining new `readers` or
 `writers` as they already have special meaning to the registry system:
-* `format`
-* `into`
-* `mode`
-* `verify`
+
+- `format`
+- `into`
+- `mode`
+- `verify`
+
+If a keyword argument is a file, such as in the case of `fasta` with `qual`,
+then you can set the default to a specific marker, or sentinel, to indicate to
+the registry that the kwarg should have special handling. For example:
+
+.. code-block:: python
+
+   from skbio.io import FileSentinel
+
+   @register_reader(fasta, object)
+   def fasta_to_object(fh, qual=FileSentinel):
+       ...
+
+After the registry reads your function, it will replace `FileSentinel` with
+`None` allowing you to perform normal checks for kwargs
+(e.g. `if my_kwarg is not None:`). If a user provides input for the kwarg, the
+registry will convert it to an open filehandle.
 
 .. note:: Keyword arguments are not permitted in `sniffers`. `Sniffers` may not
    raise exceptions; if an exception is thrown by a `sniffer`, the user will be
@@ -266,13 +271,13 @@ from ._exception import (DuplicateRegistrationError, InvalidRegistrationError,
 from ._registry import (write, read, sniff, get_writer, get_reader,
                         get_sniffer, list_write_formats, list_read_formats,
                         register_writer, register_reader, register_sniffer,
-                        initialize_oop_interface)
+                        initialize_oop_interface, FileSentinel)
 
 __all__ = ['write', 'read', 'sniff',
            'list_write_formats', 'list_read_formats',
            'get_writer', 'get_reader', 'get_sniffer',
            'register_writer', 'register_reader', 'register_sniffer',
-           'initialize_oop_interface',
+           'initialize_oop_interface', 'FileSentinel',
 
            'FormatIdentificationWarning', 'ArgumentOverrideWarning',
 
