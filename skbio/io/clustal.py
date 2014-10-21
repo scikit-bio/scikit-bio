@@ -34,7 +34,7 @@ position in the alignment follows all of the subsequences.
 
 .. note:: scikit-bio does not support writing conservation information
 
-   :: scikit-bio will only write a clustal-formatted file if the alignment's
+.. note:: scikit-bio will only write a clustal-formatted file if the alignment's
    sequence characters are valid IUPAC characters, as defined in
    :mod:`skbio.sequence`. The specific lexicon that is validated against
    depends on the type of sequences stored in the alignment.
