@@ -115,7 +115,7 @@ see the associated documentation.
    lsmat
    fasta
    newick
-   ordres
+   ordination
    phylip
 
 Formats are considered to be names which represent a way of encoding a file.
@@ -157,7 +157,7 @@ User exceptions
    LSMatFormatError
    FASTAFormatError
    NewickFormatError
-   OrdResFormatError
+   OrdinationFormatError
    PhylipFormatError
 
 User warnings
@@ -222,7 +222,7 @@ manager like so:
    self.assertIn('action verb or subject of an error', str(cm.exception))
 
 A good example to review when preparing to write your first I/O unit tests is
-the ordres test code (see in ``skbio/io/tests/test_ordres.py``).
+the ordination test code (see in ``skbio/io/tests/test_ordination.py``).
 
 Developer functions
 ^^^^^^^^^^^^^^^^^^^
@@ -264,7 +264,7 @@ from ._exception import (DuplicateRegistrationError, InvalidRegistrationError,
                          RecordError, FieldError, UnrecognizedFormatError,
                          FileFormatError, ClustalFormatError, LSMatFormatError,
                          FASTAFormatError, NewickFormatError,
-                         OrdResFormatError, PhylipFormatError)
+                         OrdinationFormatError, PhylipFormatError)
 from ._registry import (write, read, sniff, get_writer, get_reader,
                         get_sniffer, list_write_formats, list_read_formats,
                         register_writer, register_reader, register_sniffer,
@@ -286,7 +286,7 @@ __all__ = ['write', 'read', 'sniff',
            'LSMatFormatError',
            'FASTAFormatError',
            'NewickFormatError',
-           'OrdResFormatError',
+           'OrdinationFormatError',
            'PhylipFormatError']
 
 # Necessary to import each file format module to have them added to the I/O
@@ -296,7 +296,7 @@ import_module('skbio.io.clustal')
 import_module('skbio.io.lsmat')
 import_module('skbio.io.fasta')
 import_module('skbio.io.newick')
-import_module('skbio.io.ordres')
+import_module('skbio.io.ordination')
 import_module('skbio.io.phylip')
 
 # Now that all of our I/O has loaded, we can add the object oriented methods

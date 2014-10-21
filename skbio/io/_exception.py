@@ -34,8 +34,8 @@ class LSMatFormatError(FileFormatError):
     pass
 
 
-class OrdResFormatError(FileFormatError):
-    """Raised when an ``ordres`` formatted file cannot be parsed."""
+class OrdinationFormatError(FileFormatError):
+    """Raised when an ``ordination`` formatted file cannot be parsed."""
     pass
 
 
