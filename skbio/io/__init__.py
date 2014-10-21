@@ -20,8 +20,8 @@ Reading and writing files (I/O) can be a complicated task:
   QSEQ, PHYLIP, or Stockholm formats, just to name a few.
 * You might not know the exact file format of your file, but you want to read
   it into an appropriate object.
-* You might want to read multiple files into a single object, or write an object to
-  multiple files.
+* You might want to read multiple files into a single object, or write an
+  object to multiple files.
 * Instead of reading a file into an object, you might want to stream the file
   using a generator (e.g., if the file cannot be fully loaded into memory).
 
@@ -112,7 +112,7 @@ see the associated documentation.
    :toctree: generated/
 
    clustal
-   dm
+   lsmat
    fasta
    newick
    ordres
@@ -154,7 +154,7 @@ User exceptions
    FieldError
    UnrecognizedFormatError
    ClustalFormatError
-   DMFormatError
+   LSMatFormatError
    FASTAFormatError
    NewickFormatError
    OrdResFormatError
@@ -262,7 +262,7 @@ from importlib import import_module
 from ._warning import FormatIdentificationWarning, ArgumentOverrideWarning
 from ._exception import (DuplicateRegistrationError, InvalidRegistrationError,
                          RecordError, FieldError, UnrecognizedFormatError,
-                         FileFormatError, ClustalFormatError, DMFormatError,
+                         FileFormatError, ClustalFormatError, LSMatFormatError,
                          FASTAFormatError, NewickFormatError,
                          OrdResFormatError, PhylipFormatError)
 from ._registry import (write, read, sniff, get_writer, get_reader,
@@ -283,7 +283,7 @@ __all__ = ['write', 'read', 'sniff',
 
            'FileFormatError',
            'ClustalFormatError',
-           'DMFormatError',
+           'LSMatFormatError',
            'FASTAFormatError',
            'NewickFormatError',
            'OrdResFormatError',
@@ -293,7 +293,7 @@ __all__ = ['write', 'read', 'sniff',
 # registry. We use import_module instead of a typical import to avoid flake8
 # unused import errors.
 import_module('skbio.io.clustal')
-import_module('skbio.io.dm')
+import_module('skbio.io.lsmat')
 import_module('skbio.io.fasta')
 import_module('skbio.io.newick')
 import_module('skbio.io.ordres')

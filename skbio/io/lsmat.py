@@ -1,11 +1,11 @@
 """
-Delimited square matrix format (:mod:`skbio.io.dm`)
+Delimited square matrix format (:mod:`skbio.io.lsmat`)
 ===================================================
 
-.. currentmodule:: skbio.io.dm
+.. currentmodule:: skbio.io.lsmat
 
-The delimited square matrix file format (``dm``) stores numeric square matrix
-data relating a set of objects along each axis. The format also stores
+The delimited square matrix file format (``lsmat``) stores numeric square
+matrix data relating a set of objects along each axis. The format also stores
 identifiers (i.e., unique labels) for the objects. The matrix data and
 identifiers are stored in delimited text format (e.g., TSV or CSV). This format
 supports storing a variety of data types including dissimilarity/distance
@@ -77,11 +77,11 @@ import numpy as np
 
 from skbio.stats.distance import DissimilarityMatrix, DistanceMatrix
 from skbio.io import (register_reader, register_writer, register_sniffer,
-                      DMFormatError)
+                      LSMatFormatError)
 
 
-@register_sniffer('dm')
-def _dm_sniffer(fh):
+@register_sniffer('lsmat')
+def _lsmat_sniffer(fh):
     header = _find_header(fh)
 
     if header is not None:
@@ -94,33 +94,33 @@ def _dm_sniffer(fh):
 
             if first_id is not None and first_id == ids[0]:
                 return True, {'delimiter': delimiter}
-        except (csv.Error, DMFormatError):
+        except (csv.Error, LSMatFormatError):
             pass
 
     return False, {}
 
 
-@register_reader('dm', DissimilarityMatrix)
-def _dm_to_dissimilarity_matrix(fh, delimiter='\t'):
-    return _dm_to_matrix(DissimilarityMatrix, fh, delimiter)
+@register_reader('lsmat', DissimilarityMatrix)
+def _lsmat_to_dissimilarity_matrix(fh, delimiter='\t'):
+    return _lsmat_to_matrix(DissimilarityMatrix, fh, delimiter)
 
 
-@register_reader('dm', DistanceMatrix)
-def _dm_to_distance_matrix(fh, delimiter='\t'):
-    return _dm_to_matrix(DistanceMatrix, fh, delimiter)
+@register_reader('lsmat', DistanceMatrix)
+def _lsmat_to_distance_matrix(fh, delimiter='\t'):
+    return _lsmat_to_matrix(DistanceMatrix, fh, delimiter)
 
 
-@register_writer('dm', DissimilarityMatrix)
-def _dissimilarity_matrix_to_dm(obj, fh, delimiter='\t'):
-    _matrix_to_dm(obj, fh, delimiter)
+@register_writer('lsmat', DissimilarityMatrix)
+def _dissimilarity_matrix_to_lsmat(obj, fh, delimiter='\t'):
+    _matrix_to_lsmat(obj, fh, delimiter)
 
 
-@register_writer('dm', DistanceMatrix)
-def _distance_matrix_to_dm(obj, fh, delimiter='\t'):
-    _matrix_to_dm(obj, fh, delimiter)
+@register_writer('lsmat', DistanceMatrix)
+def _distance_matrix_to_lsmat(obj, fh, delimiter='\t'):
+    _matrix_to_lsmat(obj, fh, delimiter)
 
 
-def _dm_to_matrix(cls, fh, delimiter):
+def _lsmat_to_matrix(cls, fh, delimiter):
     # We aren't using np.loadtxt because it uses *way* too much memory
     # (e.g, a 2GB matrix eats up 10GB, which then isn't freed after parsing
     # has finished). See:
@@ -134,7 +134,7 @@ def _dm_to_matrix(cls, fh, delimiter):
 
     header = _find_header(fh)
     if header is None:
-        raise DMFormatError(
+        raise LSMatFormatError(
             "Could not find a header line containing IDs in the "
             "dissimilarity matrix file. Please verify that the file is "
             "not empty.")
@@ -148,13 +148,13 @@ def _dm_to_matrix(cls, fh, delimiter):
         if row_idx >= num_ids:
             # We've hit a nonempty line after we already filled the data
             # matrix. Raise an error because we shouldn't ignore extra data.
-            raise DMFormatError(
+            raise LSMatFormatError(
                 "Encountered extra row(s) without corresponding IDs in "
                 "the header.")
 
         num_vals = len(row_data)
         if num_vals != num_ids:
-            raise DMFormatError(
+            raise LSMatFormatError(
                 "There are %d value(s) in row %d, which is not equal to the "
                 "number of ID(s) in the header (%d)." %
                 (num_vals, row_idx + 1, num_ids))
@@ -163,7 +163,7 @@ def _dm_to_matrix(cls, fh, delimiter):
         if row_id == expected_id:
             data[row_idx, :] = np.asarray(row_data, dtype=float)
         else:
-            raise DMFormatError(
+            raise LSMatFormatError(
                 "Encountered mismatched IDs while parsing the "
                 "dissimilarity matrix file. Found '%s' but expected "
                 "'%s'. Please ensure that the IDs match between the "
@@ -171,8 +171,8 @@ def _dm_to_matrix(cls, fh, delimiter):
                 "labels (first column)." % (row_id, expected_id))
 
     if row_idx != num_ids - 1:
-        raise DMFormatError("Expected %d row(s) of data, but found %d." %
-                            (num_ids, row_idx + 1))
+        raise LSMatFormatError("Expected %d row(s) of data, but found %d." %
+                               (num_ids, row_idx + 1))
 
     return cls(data, ids)
 
@@ -196,7 +196,7 @@ def _parse_header(header, delimiter):
     tokens = header.rstrip().split(delimiter)
 
     if tokens[0]:
-        raise DMFormatError(
+        raise LSMatFormatError(
             "Header must start with delimiter %r." % delimiter)
 
     return [e.strip() for e in tokens[1:]]
@@ -215,7 +215,7 @@ def _parse_data(fh, delimiter):
         yield id_, tokens[1:]
 
 
-def _matrix_to_dm(obj, fh, delimiter):
+def _matrix_to_lsmat(obj, fh, delimiter):
     ids = obj.ids
     fh.write(_format_ids(ids, delimiter))
     fh.write('\n')

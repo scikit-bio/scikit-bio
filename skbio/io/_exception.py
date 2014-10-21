@@ -29,8 +29,8 @@ class UnrecognizedFormatError(FileFormatError):
     pass
 
 
-class DMFormatError(FileFormatError):
-    """Raised when a ``dm`` formatted file cannot be parsed."""
+class LSMatFormatError(FileFormatError):
+    """Raised when a ``lsmat`` formatted file cannot be parsed."""
     pass
 
 
