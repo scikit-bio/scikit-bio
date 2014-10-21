@@ -5,9 +5,8 @@ Clustal format (:mod:`skbio.io.clustal`)
 
 .. currentmodule:: skbio.io.clustal
 
-Clustal format (``clustal``) stores multiple alignment sequences.
-This format was originally introduced in Desmond Higgens in the
-Clustal package [1]_.
+Clustal format (``clustal``) stores multiple alignment sequences. This format
+was originally introduced by Desmond Higgens in the Clustal package [1]_.
 
 Format Support
 --------------
@@ -21,20 +20,21 @@ Format Support
 
 Format Specification
 --------------------
-A Clustal file is a plain text format.  It can optionally have a header,
-which states the Clustal version number. This is followed by the
-multiple sequence alignment, and optionally conserved sequence information [2]_
+A clustal-formatted file is a plain text format. It can optionally have a
+header, which states the clustal version number. This is followed by the
+multiple sequence alignment, and optional information about the degree of
+conservation at each position in the alignment [2]_.
 
 Alignment Section
 ^^^^^^^^^^^^^^^^^
 Each sequence in the alignment is divided into subsequences each at most
-60 characters long. The sequence ID of the alignment precedes each subsequence.
-Optionally, a line containing conservation information about each position
-in the multiple alignment.
+60 characters long. The sequence identifier for each sequence precedes each
+subsequence. Optionally, a line containing conservation information about each
+position in the alignment follows all of the subsequences.
 
 .. note:: scikit-bio does not support writing conservation information
 
-   :: scikit-bio will only write a Clustal-formatted file if the alignment's
+   :: scikit-bio will only write a clustal-formatted file if the alignment's
    sequence characters are valid IUPAC characters, as defined in
    :mod:`skbio.sequence`. The specific lexicon that is validated against
    depends on the type of sequences stored in the alignment.
@@ -43,30 +43,31 @@ in the multiple alignment.
 Examples
 --------
 
-Assume we have a clustal formatted file with the following contents::
+Assume we have a clustal-formatted file with the following contents::
 
     CLUSTAL W (1.82) multiple sequence alignment
 
-    abc   GCAUGCAUCUGCAUACGUACGUACGCAUGCAUCA 60
+    abc   GCAUGCAUCUGCAUACGUACGUACGCAUGCAUCA
     def   ----------------------------------
     xyz   ----------------------------------
 
-    abc   GUCGAUACAUACGUACGUCGUACGUACGU-CGAC 11
-    def   ---------------CGCGAUGCAUGCAU-CGAU 18
-    xyz   -----------CAUGCAUCGUACGUACGCAUGAC 23
+    abc   GUCGAUACAUACGUACGUCGUACGUACGU-CGAC
+    def   ---------------CGCGAUGCAUGCAU-CGAU
+    xyz   -----------CAUGCAUCGUACGUACGCAUGAC
 
 We can use the following code to read a clustal file:
 
 >>> from StringIO import StringIO
 >>> from skbio.io import read
->>> clustal_f = StringIO('abc   GCAUGCAUCUGCAUACGUACGUACGCAUGCA 60\n'
+>>> from skbio import Alignment
+>>> clustal_f = StringIO('abc   GCAUGCAUCUGCAUACGUACGUACGCAUGCA\n'
 ...                      'def   -------------------------------\n'
 ...                      'xyz   -------------------------------\n'
 ...                      '\n'
-...                      'abc   GUCGAUACAUACGUACGUCGGUACGU-CGAC 11\n'
-...                      'def   ---------------CGUGCAUGCAU-CGAU 18\n'
-...                      'xyz   -----------CAUUCGUACGUACGCAUGAC 23\n')
->>> for dna in read(clustal_f,format="clustal", into=Alignment):
+...                      'abc   GUCGAUACAUACGUACGUCGGUACGU-CGAC\n'
+...                      'def   ---------------CGUGCAUGCAU-CGAU\n'
+...                      'xyz   -----------CAUUCGUACGUACGCAUGAC\n')
+>>> for dna in read(clustal_f, format="clustal", into=Alignment):
 ...     print(dna.id)
 ...     print(dna.sequence)
 abc
@@ -76,7 +77,7 @@ def
 xyz
 ------------------------------------------CAUUCGUACGUACGCAUGAC
 
-We can use the following code to write to a file
+We can use the following code to write to a clustal-formatted file:
 
 >>> from skbio import Alignment, DNA
 >>> from skbio.io import write
