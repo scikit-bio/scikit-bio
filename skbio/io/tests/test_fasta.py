@@ -16,7 +16,7 @@ from skbio import (BiologicalSequence, NucleotideSequence, DNA, RNA, Protein,
 from skbio import SequenceCollection, Alignment
 from skbio.io import FASTAFormatError
 from skbio.io.fasta import (
-    _fasta_sniffer, _qual_sniffer, _fasta_to_generator, _fasta_to_biological_sequence,
+    _fasta_sniffer, _fasta_to_generator, _fasta_to_biological_sequence,
     _fasta_to_nucleotide_sequence, _fasta_to_dna_sequence,
     _fasta_to_rna_sequence, _fasta_to_protein_sequence,
     _fasta_to_sequence_collection, _fasta_to_alignment, _generator_to_fasta,
@@ -69,36 +69,16 @@ class SnifferTests(TestCase):
             'fasta_description_newline_replacement_none'
         ])
 
-        self.qual_positive_fps = map(get_data_path, [
-            'qual_3_seqs_defaults',
-        ])
-
-    def test_fasta_positives(self):
+    def test_positives(self):
         for fp in self.fasta_positive_fps:
             self.assertEqual(_fasta_sniffer(fp), (True, {}))
 
-    def test_fasta_negatives(self):
-        for fp in self.fasta_negative_fps + self.qual_positive_fps:
+    def test_negatives(self):
+        for fp in self.fasta_negative_fps:
             self.assertEqual(_fasta_sniffer(fp), (False, {}))
 
-    def test_qual_positives(self):
-        for fp in self.qual_positive_fps:
-            self.assertEqual(_qual_sniffer(fp), (True, {}))
 
-    def test_qual_negatives(self):
-        # none of the positive or negative fasta files should be identified as
-        # qual
-        for fp in self.fasta_positive_fps + self.fasta_negative_fps:
-            self.assertEqual(_qual_sniffer(fp), (False, {}))
-
-# TODO add note about some duplication of test code between FASTA and FASTAQUAL
-
-class FASTAQUALReaderTests(TestCase):
-    def setUp(self):
-        pass
-
-
-class FASTAReaderTests(TestCase):
+class ReaderTests(TestCase):
     def setUp(self):
         # store sequence generator (expanded into a list) that we expect to
         # obtain from reading, matched with the kwargs and filepaths that
@@ -268,7 +248,7 @@ class FASTAReaderTests(TestCase):
                         self.assertTrue(o.equals(e))
 
 
-class FASTAWriterTests(TestCase):
+class WriterTests(TestCase):
     def setUp(self):
         self.bio_seq1 = BiologicalSequence(
             'ACGT-acgt.', id='seq1', description='desc1', quality=range(10))
@@ -457,7 +437,7 @@ class FASTAWriterTests(TestCase):
                 self.assertEqual(obs, exp)
 
 
-class FASTARoundtripTests(TestCase):
+class RoundtripTests(TestCase):
     def test_roundtrip_generators(self):
         # test that a file can be streamed into memory and back out to disk
         # using generator reader and writer
