@@ -258,10 +258,6 @@ class TestRegisterAndGetSniffer(RegistryTest):
         self.assertEqual(None, self.module.get_sniffer('not_a_format'))
 
     def test_register_sniffer_on_many(self):
-        fh1 = StringIO(u'1')
-        fh2 = StringIO(u'2')
-        fh3 = StringIO(u'3')
-
         @self.module.register_sniffer('format1')
         def format1_sniffer(fh):
             return '1' in fh.readline(), {}
@@ -444,7 +440,6 @@ class TestSniff(RegistryTest):
 
     def test_no_matches(self):
         fh = StringIO(u"no matches here")
-        fh2 = StringIO(u"no matches here")
         with self.assertRaises(UnrecognizedFormatError) as cm:
             self.module.sniff(fh)
         self.assertTrue(str(fh) in str(cm.exception))
@@ -793,32 +788,10 @@ class TestRead(RegistryTest):
                                     mode='r')
         self.assertEqual(TestClass([1, 2, 3, 4]), instance)
 
-    def test_file_sentinel(self):
-        extra = get_data_path('real_file')
-        fh = StringIO(u'1\n2\n3\n4')
-
-
-        @self.module.register_sniffer('format')
-        def sniffer(fh):
-            return '1' in fh.readline(), {}
-
-        @self.module.register_reader('format', TestClass)
-        def reader(fh, extra=self.module.FileSentinel):
-            self.assertEqual('a\nb\nc\nd\ne\n', extra.read())
-            return TestClass([int(x) for x in fh.read().split('\n')])
-
-
-        instance = self.module.read(fh, format='format', into=TestClass,
-                                    extra=extra)
-        self.assertEqual(TestClass([1, 2, 3, 4]), instance)
-
-        fh.close()
-
     def test_file_sentinel_many(self):
         extra = get_data_path('real_file')
         extra_2 = get_data_path('real_file_2')
         fh = StringIO(u'1\n2\n3\n4')
-
 
         @self.module.register_sniffer('format')
         def sniffer(fh):
@@ -830,7 +803,6 @@ class TestRead(RegistryTest):
             self.assertEqual('a\nb\nc\nd\ne\n', extra.read())
             self.assertEqual('!\n@\n#\n$\n%\nThe realest.\n', extra_2.read())
             return TestClass([int(x) for x in fh.read().split('\n')])
-
 
         instance = self.module.read(fh, format='format', into=TestClass,
                                     extra=extra, extra_2=extra_2)
@@ -1008,6 +980,51 @@ class TestWrite(RegistryTest):
 
         with open(fp, 'U') as fh:
             self.assertEqual("1\n2\n3\n4", fh.read())
+
+    def test_file_sentinel_many(self):
+        fh = StringIO()
+
+        @self.module.register_writer('format', TestClass)
+        def writer(obj, fh, extra=self.module.FileSentinel, other=2,
+                   extra_2=self.module.FileSentinel):
+            extra.write('oh yeah...')
+            extra_2.write('oh no...')
+
+        self.module.write(TestClass([]), format='format', into=fh,
+                          extra=self.fp1, extra_2=self.fp2)
+        with open(self.fp1) as f1:
+            self.assertEqual('oh yeah...', f1.read())
+
+        with open(self.fp2) as f2:
+            self.assertEqual('oh no...', f2.read())
+
+        fh.close()
+
+    def test_file_sentinel_converted_to_none(self):
+        fh = StringIO()
+
+        @self.module.register_writer('format', TestClass)
+        def writer(obj, fh, extra=self.module.FileSentinel, other=2,
+                   extra_2=self.module.FileSentinel):
+            self.assertIsNone(extra)
+            self.assertIsNone(extra_2)
+
+        self.module.write(TestClass([]), format='format', into=fh)
+
+        fh.close()
+
+    def test_file_sentinel_pass_none(self):
+        fh = StringIO()
+
+        @self.module.register_writer('format', TestClass)
+        def writer(obj, fh, extra=self.module.FileSentinel, other=2,
+                   extra_2=self.module.FileSentinel):
+            self.assertIsNone(extra)
+            self.assertIsNone(extra_2)
+
+        self.module.write(TestClass([]), format='format', into=fh, extra=None)
+
+        fh.close()
 
 
 class TestInitializeOOPInterface(RegistryTest):
