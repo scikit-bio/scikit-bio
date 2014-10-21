@@ -22,10 +22,10 @@
 * ``BiologicalSequence.__getitem__`` now supports specifying a sequence of indices to take from the biological sequence.
 * Added ``BiologicalSequence.copy`` for creating a copy of a biological sequence, optionally with one or more attributes updated.
 * Added ``skbio.util.cardinal_to_ordinal`` for converting a cardinal number to ordinal string (e.g., useful for error messages).
-* Added FASTA format support to scikit-bio's I/O registry system. See ``skbio.io`` and ``skbio.io.fasta`` for more details. This includes the following additions:
+* Added FASTA/QUAL format support to scikit-bio's I/O registry system. See ``skbio.io`` and ``skbio.io.fasta`` for more details. This includes the following additions:
     - Automatic file format detection via a FASTA sniffer
-    - FASTA files can be read into and written from ``SequenceCollection``, ``Alignment``, ``BiologicalSequence``, ``NucleotideSequence``, ``DNASequence``, ``RNASequence``, and ``ProteinSequence`` objects via ``read`` and ``write`` methods
-    - FASTA files can be streamed into and out of memory via ```skbio.io.read`` and ``skbio.io.write``. These generators yield ``BiologicalSequence`` objects (or subclasses)
+    - FASTA (and optionally QUAL) files can be read into and written from ``SequenceCollection``, ``Alignment``, ``BiologicalSequence``, ``NucleotideSequence``, ``DNASequence``, ``RNASequence``, and ``ProteinSequence`` objects via ``read`` and ``write`` methods
+    - FASTA (and optionally QUAL) files can be streamed into and out of memory via ```skbio.io.read`` and ``skbio.io.write``. These generators yield ``BiologicalSequence`` objects (or subclasses)
 
 ### Bug fixes
 
@@ -34,12 +34,13 @@
 
 ### Deprecated functionality
 
-* Deprecated the following FASTA readers/writers in favor of FASTA format support in scikit-bio's I/O registry system. See ``skbio.io`` and ``skbio.io.fasta`` for more details. This functionality will be removed in scikit-bio 0.3.0 (old -> new):
+* Deprecated the following FASTA/QUAL readers/writers in favor of FASTA format support in scikit-bio's I/O registry system. See ``skbio.io`` and ``skbio.io.fasta`` for more details. This functionality will be removed in scikit-bio 0.3.0 (old -> new):
     - ``SequenceCollection.from_fasta_records`` -> ``SequenceCollection.read``
     - ``SequenceCollection.to_fasta`` -> ``SequenceCollection.write``
     - ``skbio.format.sequences.fasta.fasta_from_sequences`` -> ``skbio.io.write``
     - ``skbio.format.sequences.fasta.fasta_from_alignment`` -> ``skbio.io.write``/``Alignment.write``
     - ``skbio.parse.sequences.fasta.parse_fasta`` -> ``skbio.io.read``
+    - ``skbio.parse.sequences.fasta.parse_qual`` -> ``skbio.io.read``
     - ``BiologicalSequence.to_fasta`` -> ``BiologicalSequence.write``
 
 ### Backward-incompatible changes
