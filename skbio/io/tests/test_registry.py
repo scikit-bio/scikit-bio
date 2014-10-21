@@ -68,20 +68,9 @@ class TestRegisterAndGetReader(RegistryTest):
         self.assertEqual(None, self.module.get_reader('not_a_format',
                                                       TestClass))
 
-        self.assertEqual(None, self.module.get_reader(['not_a_format',
-                                                       'still_not'],
-                                                      TestClass))
-
-        self.assertEqual(None, self.module.get_reader('Nope, Sorry',
-                                                      TestClass))
-
     def test_register_reader_on_generator(self):
         @self.module.register_reader('format1')
         def format1_reader_generator(fh):
-            yield
-
-        @self.module.register_reader(['compound', 'format'])
-        def compound_format_reader(fh1, fh2):
             yield
 
         self.assertEqual(format1_reader_generator,
@@ -89,12 +78,6 @@ class TestRegisterAndGetReader(RegistryTest):
 
         self.assertEqual(format1_reader_generator,
                          self.module.get_reader('format1', None))
-
-        self.assertEqual(compound_format_reader,
-                         self.module.get_reader(['compound', 'format']))
-
-        self.assertEqual(compound_format_reader,
-                         self.module.get_reader('compound, format'))
 
         @self.module.register_reader('format2', None)
         def format2_reader_generator(fh):
@@ -178,13 +161,6 @@ class TestRegisterAndGetWriter(RegistryTest):
         self.assertEqual(None, self.module.get_writer('not_a_format',
                                                       TestClass))
 
-        self.assertEqual(None, self.module.get_writer(['not_a_format',
-                                                       'still_not'],
-                                                      TestClass))
-
-        self.assertEqual(None, self.module.get_writer('Nope, Sorry',
-                                                      TestClass))
-
     def test_get_writer_when_only_reader_exists(self):
         @self.module.register_reader('format', TestClass)
         def format_reader(fh):
@@ -197,21 +173,11 @@ class TestRegisterAndGetWriter(RegistryTest):
         def format1_writer_generator(obj, fh):
             yield
 
-        @self.module.register_writer(['compound', 'format'])
-        def compound_format_writer(fh1, fh2):
-            yield
-
         self.assertEqual(format1_writer_generator,
                          self.module.get_writer('format1'))
 
         self.assertEqual(format1_writer_generator,
                          self.module.get_writer('format1', None))
-
-        self.assertEqual(compound_format_writer,
-                         self.module.get_writer(['compound', 'format']))
-
-        self.assertEqual(compound_format_writer,
-                         self.module.get_writer('compound, format'))
 
         @self.module.register_writer('format2', None)
         def format2_writer_generator(obj, fh):
@@ -291,22 +257,7 @@ class TestRegisterAndGetSniffer(RegistryTest):
     def test_get_sniffer_no_match(self):
         self.assertEqual(None, self.module.get_sniffer('not_a_format'))
 
-    def test_register_compound_sniffer(self):
-        with self.assertRaises(ValueError):
-            @self.module.register_sniffer(['f1', 'f2'])
-            def this_wont_work(fh1, fh2):
-                return False, {}
-
-        with self.assertRaises(ValueError):
-            @self.module.register_sniffer('f1, f2')
-            def this_still_wont_work(fh1, fh2):
-                return False, {}
-
     def test_register_sniffer_on_many(self):
-        fh1 = StringIO(u'1')
-        fh2 = StringIO(u'2')
-        fh3 = StringIO(u'3')
-
         @self.module.register_sniffer('format1')
         def format1_sniffer(fh):
             return '1' in fh.readline(), {}
@@ -327,25 +278,6 @@ class TestRegisterAndGetSniffer(RegistryTest):
 
         self.assertEqual(format3_sniffer,
                          self.module.get_sniffer('format3'))
-
-        compound_sniffer = self.module.get_sniffer(['format3',
-                                                    'format2'])
-
-        compound_sniffer2 = self.module.get_sniffer('format3, format2')
-
-        dont_do_this_ever = self.module.get_sniffer([['format2', 'format1'],
-                                                     'format3'])
-
-        self.assertTrue(compound_sniffer([fh3, fh2])[0])
-        self.assertTrue(compound_sniffer2([fh3, fh2])[0])
-        self.assertTrue(not compound_sniffer2([fh2, fh3])[0])
-        self.assertTrue(dont_do_this_ever([[fh2, fh1], fh3])[0])
-
-        with self.assertRaises(ValueError):
-            dont_do_this_ever(fh1)
-
-        with self.assertRaises(ValueError):
-            dont_do_this_ever([fh1, fh2, fh3])
 
     def test_register_sniffer_over_existing(self):
         with self.assertRaises(DuplicateRegistrationError) as cm:
@@ -420,27 +352,12 @@ class TestListReadFormats(RegistryTest):
         def format5_clsA(fh):
             return
 
-        @self.module.register_reader('formatB, formatA', TestClassA)
-        def formatAB_clsA(fh):
-            return
-
-        @self.module.register_reader(['formatX', 'formatY'], TestClassA)
-        def formatXY_clsA(fh):
-            return
-
-        @self.module.register_reader(['formatM', 'formatN'], TestClassB)
-        def formatMN_clsB(fh):
-            return
-
         formats = self.module.list_read_formats(TestClassA)
         self.assertTrue('format1' in formats)
         self.assertTrue('format2' in formats)
         self.assertTrue('format3' in formats)
         self.assertTrue('format4' not in formats)
         self.assertTrue('format5' not in formats)
-        self.assertTrue('formatB, formatA' in formats)
-        self.assertTrue('formatX, formatY' in formats)
-        self.assertTrue('formatM, formatN' not in formats)
 
 
 class TestListWriteFormats(RegistryTest):
@@ -484,18 +401,6 @@ class TestListWriteFormats(RegistryTest):
         def format5_clsA(fh):
             return
 
-        @self.module.register_writer('formatB, formatA', TestClassA)
-        def formatAB_clsA(fh):
-            return
-
-        @self.module.register_writer(['formatX', 'formatY'], TestClassA)
-        def formatXY_clsA(fh):
-            return
-
-        @self.module.register_writer(['formatM', 'formatN'], TestClassB)
-        def formatMN_clsB(fh):
-            return
-
         formats = self.module.list_write_formats(TestClassA)
 
         self.assertTrue('format1' in formats)
@@ -503,9 +408,6 @@ class TestListWriteFormats(RegistryTest):
         self.assertTrue('format3' in formats)
         self.assertTrue('format4' not in formats)
         self.assertTrue('format5' not in formats)
-        self.assertTrue('formatB, formatA' in formats)
-        self.assertTrue('formatX, formatY' in formats)
-        self.assertTrue('formatM, formatN' not in formats)
 
 
 class TestSniff(RegistryTest):
@@ -538,7 +440,6 @@ class TestSniff(RegistryTest):
 
     def test_no_matches(self):
         fh = StringIO(u"no matches here")
-        fh2 = StringIO(u"no matches here")
         with self.assertRaises(UnrecognizedFormatError) as cm:
             self.module.sniff(fh)
         self.assertTrue(str(fh) in str(cm.exception))
@@ -548,9 +449,6 @@ class TestSniff(RegistryTest):
 
         with self.assertRaises(UnrecognizedFormatError) as cm:
             self.module.sniff(fh, cls=TestClassB)
-
-        with self.assertRaises(UnrecognizedFormatError) as cm:
-            self.module.sniff([fh, fh2], cls=TestClassB)
 
         fh.close()
 
@@ -567,14 +465,6 @@ class TestSniff(RegistryTest):
         self.assertTrue("format3" in str(cm.exception))
         self.assertTrue("format4" in str(cm.exception))
         fh.close()
-
-    def test_compound_matches(self):
-        fh = StringIO(u'1')
-        fh2 = StringIO(u'2')
-
-        self.assertEqual('format1, format2', self.module.sniff([fh, fh2])[0])
-
-        self.assertEqual('format2, format1', self.module.sniff([fh2, fh])[0])
 
     def test_no_matches_w_cls(self):
         fh = StringIO(u"no matches here")
@@ -599,16 +489,6 @@ class TestSniff(RegistryTest):
         self.assertTrue("format4" in str(cm.exception))
         fh.close()
 
-    def test_compound_matches_w_cls(self):
-        fh = StringIO(u'3')
-        fh2 = StringIO(u'4')
-
-        self.assertEqual('format3, format4',
-                         self.module.sniff([fh, fh2], cls=TestClass)[0])
-
-        self.assertEqual('format4, format3',
-                         self.module.sniff([fh2, fh], cls=TestClass)[0])
-
     def test_that_mode_is_used(self):
         fp = self.fp1
         with open(fp, 'w') as fh:
@@ -624,31 +504,6 @@ class TestSniff(RegistryTest):
 
         self.expected_mode = 'r'
         self.module.sniff(fp, mode='r')
-
-    def test_that_mode_is_used_compound(self):
-        fp1 = self.fp1
-        with open(fp1, 'w') as fh:
-            fh.write('@\n#\n')
-
-        fp2 = self.fp2
-        with open(fp2, 'w') as fh:
-            fh.write('!\n#\n')
-
-        @self.module.register_sniffer('c1')
-        def c1_sniffer(fh):
-            self.assertEqual(self.expected_mode, fh.mode)
-            return '@' in fh.readline(), {}
-
-        @self.module.register_sniffer('c2')
-        def c2_sniffer(fh):
-            self.assertEqual(self.expected_mode, fh.mode)
-            return '!' in fh.readline(), {}
-
-        self.expected_mode = 'U'
-        self.module.sniff([fp1, fp2])
-
-        self.expected_mode = 'r'
-        self.module.sniff([fp1, fp2], mode='r')
 
     def test_position_not_mutated_real_file(self):
         @self.module.register_sniffer('format')
@@ -711,47 +566,6 @@ class TestRead(RegistryTest):
             self.assertEqual(a, b)
             self.assertEqual(3, fh.tell())
         fh.close()
-
-    def test_into_is_none_compound_format(self):
-        fh = StringIO(u'1\n3')
-        fh2 = StringIO(u'2\n4')
-
-        @self.module.register_reader(['odd', 'even'])
-        def reader(odd, even):
-            for o, e in zip(odd, even):
-                yield int(o.rstrip('\n'))
-                yield int(e.rstrip('\n'))
-
-        generator = self.module.read([fh, fh2], format='odd, even')
-        first_run = True
-        for a, b in zip(generator, [1, 2, 3, 4]):
-            if first_run:
-                fh.seek(3)
-                fh2.seek(2)
-                first_run = False
-            self.assertEqual(a, b)
-            self.assertEqual(3, fh.tell())
-            self.assertEqual(2, fh2.tell())
-
-        fh2.seek(0)
-        fh.seek(0)
-
-        generator = self.module.read([fh2, fh], format='even, odd')
-        first_run = True
-        for a, b in zip(generator, [1, 2, 3, 4]):
-            if first_run:
-                fh.seek(5)
-                fh2.seek(1)
-                first_run = False
-            self.assertEqual(a, b)
-            self.assertEqual(5, fh.tell())
-            self.assertEqual(1, fh2.tell())
-
-        with self.assertRaises(ValueError):
-            self.module.read([fh], format='even, odd')
-
-        fh.close()
-        fh2.close()
 
     def test_into_is_none_real_file(self):
         fp = self.fp1
@@ -846,67 +660,6 @@ class TestRead(RegistryTest):
 
         fh.close()
 
-    def test_reader_compound_format_w_verify(self):
-        fh = StringIO(u'1\n3')
-        fh2 = StringIO(u'2\n4')
-        fh3 = StringIO(u'9\n9')
-
-        @self.module.register_reader('odd, even, nines', TestClass)
-        def reader(odd, even, nines):
-            state = []
-            for o, e, n in zip(odd, even, nines):
-                state.append(int(o.rstrip('\n')))
-                state.append(int(e.rstrip('\n')))
-                state.append(int(n.rstrip('\n')))
-            return TestClass(state)
-
-        @self.module.register_sniffer('nines')
-        def nines_sniffer(fh):
-            self.was_verified_n = True
-            return '9' in fh.readline(), {}
-
-        @self.module.register_sniffer('odd')
-        def odd_sniffer(fh):
-            self.was_verified_o = True
-            return '1' in fh.readline(), {}
-
-        @self.module.register_sniffer('even')
-        def even_sniffer(fh):
-            self.was_verified_e = True
-            return '2' in fh.readline(), {}
-
-        self.was_verified_e = False
-        self.was_verified_o = False
-        self.was_verified_n = False
-        instance = self.module.read([fh2, fh3, fh], format=['even', 'nines',
-                                                            'odd'],
-                                    into=TestClass, verify=True)
-        self.assertEqual(TestClass([1, 2, 9, 3, 4, 9]), instance)
-        self.assertTrue(self.was_verified_e)
-        self.assertTrue(self.was_verified_o)
-        self.assertTrue(self.was_verified_n)
-
-        # These should be removed if we support read-context management in the
-        # future.
-        fh.seek(0)
-        fh2.seek(0)
-        fh3.seek(0)
-
-        self.was_verified_e = False
-        self.was_verified_o = False
-        self.was_verified_n = False
-        instance = self.module.read([fh, fh2, fh3], format=['odd',
-                                                            'even', 'nines'],
-                                    into=TestClass)
-        self.assertEqual(TestClass([1, 2, 9, 3, 4, 9]), instance)
-        self.assertTrue(self.was_verified_e)
-        self.assertTrue(self.was_verified_o)
-        self.assertTrue(self.was_verified_n)
-
-        fh.close()
-        fh2.close()
-        fh3.close()
-
     def test_warning_raised(self):
         fh = StringIO(u'1\n2\n3\n4')
 
@@ -974,131 +727,6 @@ class TestRead(RegistryTest):
         instance = self.module.read(fp, format='format', into=TestClass)
         self.assertEqual(TestClass([1, 2, 3, 4]), instance)
 
-# These lines are commented out because we cannot support read-context
-# management at this time, but may wish to in the future.
-    # def test_reader_into_none_w_exception_and_test_compound(self):
-    #     fh1 = StringIO(u'1\n2\n3\n4')
-    #     fh2 = StringIO(u'2\n3\n4\n5')
-    #
-    #     @self.module.register_sniffer('format1')
-    #     def f1_sniffer(fh):
-    #         return '1' in fh.readline(), {}
-    #
-    #     @self.module.register_sniffer('format2')
-    #     def f2_sniffer(fh):
-    #         return '2' in fh.readline(), {}
-    #
-    #     @self.module.register_reader('format1')
-    #     def f1_reader(fh):
-    #         fh.read()
-    #         raise TestingUtilError("File position should be reset now.")
-    #         yield
-    #
-    #     @self.module.register_reader('format1, format2')
-    #     def f1_f2_reader(fh1, fh2):
-    #         fh1.read()
-    #         fh2.read()
-    #         raise TestingUtilError("File position should be reset now.")
-    #         yield
-    #
-    #     fh1.seek(0)
-    #     with self.assertRaises(TestingUtilError):
-    #         next(self.module.read(fh1, format='format1'))
-    #
-    #     self.assertEqual(0, fh1.tell())
-    #
-    #     fh1.seek(0)
-    #     fh2.seek(0)
-    #     with self.assertRaises(TestingUtilError):
-    #         next(self.module.read([fh1, fh2], format='format1, format2'))
-    #
-    #     self.assertEqual(0, fh1.tell())
-    #     self.assertEqual(0, fh2.tell())
-    #
-    #     fh1.close()
-    #     fh2.close()
-
-# These lines are commented out because we cannot support read-context
-# management at this time, but may wish to in the future.
-    # def test_reader_w_exception_and_test_compound(self):
-    #     fh1 = StringIO(u'1\n2\n3\n4')
-    #     fh2 = StringIO(u'2\n3\n4\n5')
-    #
-    #     @self.module.register_sniffer('format1')
-    #     def f1_sniffer(fh):
-    #         return '1' in fh.readline(), {}
-    #
-    #     @self.module.register_sniffer('format2')
-    #     def f2_sniffer(fh):
-    #         return '2' in fh.readline(), {}
-    #
-    #     @self.module.register_reader('format1', TestClass)
-    #     def f1_reader(fh):
-    #         fh.read()
-    #         raise TestingUtilError("File position should be reset now.")
-    #
-    #     @self.module.register_reader('format1, format2', TestClass)
-    #     def f1_f2_reader(fh1, fh2):
-    #         fh1.read()
-    #         fh2.read()
-    #         raise TestingUtilError("File position should be reset now.")
-    #
-    #     fh1.seek(0)
-    #     with self.assertRaises(TestingUtilError):
-    #         self.module.read(fh1, format='format1', into=TestClass)
-    #
-    #     self.assertEqual(0, fh1.tell())
-    #
-    #     fh1.seek(0)
-    #     fh2.seek(0)
-    #     with self.assertRaises(TestingUtilError):
-    #         self.module.read([fh1, fh2], format='format1, format2',
-    #                          into=TestClass)
-    #
-    #     self.assertEqual(0, fh1.tell())
-    #     self.assertEqual(0, fh2.tell())
-    #
-    #     fh1.close()
-    #     fh2.close()
-
-    def test_reader_into_none_w_mutate_fh(self):
-        fh = StringIO(u'1\n2\n3\n4')
-
-        @self.module.register_sniffer('format')
-        def sniffer(fh):
-            return '1' in fh.readline(), {}
-
-        @self.module.register_reader('format')
-        def reader(fh):
-            for x in fh.read().split('\n'):
-                yield int(x)
-
-        fh.seek(0)
-        generator = self.module.read(fh, format='format', mutate_fh=True)
-        for a, b in zip(generator, [1, 2, 3, 4]):
-            self.assertEqual(a, b)
-        self.assertNotEqual(0, fh.tell())
-        fh.close()
-
-    def test_reader_w_mutate_fh(self):
-        fh = StringIO(u'1\n2\n3\n4')
-
-        @self.module.register_sniffer('format')
-        def sniffer(fh):
-            return '1' in fh.readline(), {}
-
-        @self.module.register_reader('format', TestClass)
-        def reader(fh):
-            return TestClass([int(x) for x in fh.read().split('\n')])
-
-        fh.seek(0)
-        instance = self.module.read(fh, format='format', into=TestClass,
-                                    mutate_fh=True)
-        self.assertNotEqual(0, fh.tell())
-
-        self.assertEqual(TestClass([1, 2, 3, 4]), instance)
-        fh.close()
-
     def test_read_kwargs_passed_generator(self):
         @self.module.register_sniffer('format')
         def sniffer(fh):
@@ -1137,41 +765,6 @@ class TestRead(RegistryTest):
                 self.module.read(StringIO(u'notempty'), into=TestClass,
                                  arg3=[1], override=100)
 
-    def test_read_kwargs_passed_w_compound_format(self):
-        @self.module.register_sniffer('format1')
-        def format1_sniffer(fh):
-            return True, {'partial': 1, 'overlap': 1, 'list': 0}
-
-        @self.module.register_sniffer('format2')
-        def format2_sniffer(fh):
-            return True, {'arg1': 'a', 'overlap': 2, 'list': [1, 2]}
-
-        @self.module.register_sniffer('format3')
-        def format3_sniffer(fh):
-            return True, {'partial': 3, 'overlap': 3, 'list': [3, 4]}
-
-        @self.module.register_reader(['format1', 'format2', 'format3'])
-        def reader(f1, f2, f3, **kwargs):
-            self.assertEqual(kwargs['partial'], [1, None, 3])
-            self.assertEqual(kwargs['overlap'], [1, 2, 3])
-            self.assertEqual(kwargs['arg1'], [None, 'a', None])
-            self.assertEqual(kwargs['provided'], [True, True, True])
-            self.assertEqual(kwargs['list'], [0, [1, 2], [3, 4]])
-            return
-
-        fh1 = StringIO()
-        fh2 = StringIO()
-        fh3 = StringIO()
-        self.module.read([fh1, fh2, fh3],
-                         format='format1, format2, format3',
-                         provided=True)
-        self.module.read([fh3, fh1, fh2],
-                         format='format3, format1, format2',
-                         provided=True)
-        fh1.close()
-        fh2.close()
-        fh3.close()
-
     def test_that_mode_is_used(self):
         fp = self.fp1
         with open(fp, 'w') as fh:
@@ -1194,6 +787,127 @@ class TestRead(RegistryTest):
         instance = self.module.read(fp, format='format', into=TestClass,
                                     mode='r')
         self.assertEqual(TestClass([1, 2, 3, 4]), instance)
+
+    def test_file_sentinel_many(self):
+        extra = get_data_path('real_file')
+        extra_2 = get_data_path('real_file_2')
+        fh = StringIO(u'1\n2\n3\n4')
+
+        @self.module.register_sniffer('format')
+        def sniffer(fh):
+            return '1' in fh.readline(), {}
+
+        @self.module.register_reader('format', TestClass)
+        def reader(fh, extra=self.module.FileSentinel, other=2,
+                   extra_2=self.module.FileSentinel):
+            self.assertEqual('a\nb\nc\nd\ne\n', extra.read())
+            self.assertEqual('!\n@\n#\n$\n%\nThe realest.\n', extra_2.read())
+            return TestClass([int(x) for x in fh.read().split('\n')])
+
+        instance = self.module.read(fh, format='format', into=TestClass,
+                                    extra=extra, extra_2=extra_2)
+        self.assertEqual(TestClass([1, 2, 3, 4]), instance)
+
+        fh.close()
+
+    def test_file_sentinel_converted_to_none(self):
+        fh = StringIO(u'1\n2\n3\n4')
+
+        @self.module.register_sniffer('format')
+        def sniffer(fh):
+            return '1' in fh.readline(), {}
+
+        @self.module.register_reader('format', TestClass)
+        def reader(fh, extra=self.module.FileSentinel, other=2,
+                   extra_2=self.module.FileSentinel):
+            self.assertIsNone(extra)
+            self.assertIsNone(extra_2)
+            return TestClass([int(x) for x in fh.read().split('\n')])
+
+        instance = self.module.read(fh, format='format', into=TestClass)
+        self.assertEqual(TestClass([1, 2, 3, 4]), instance)
+
+        fh.close()
+
+    def test_file_sentinel_pass_none(self):
+        fh = StringIO(u'1\n2\n3\n4')
+
+        @self.module.register_sniffer('format')
+        def sniffer(fh):
+            return '1' in fh.readline(), {}
+
+        @self.module.register_reader('format', TestClass)
+        def reader(fh, extra=self.module.FileSentinel, other=2,
+                   extra_2=self.module.FileSentinel):
+            self.assertIsNone(extra)
+            self.assertIsNone(extra_2)
+            return TestClass([int(x) for x in fh.read().split('\n')])
+
+        instance = self.module.read(fh, format='format', into=TestClass,
+                                    extra=None)
+        self.assertEqual(TestClass([1, 2, 3, 4]), instance)
+
+        fh.close()
+
+    def test_file_sentinel_generator_many(self):
+        extra = get_data_path('real_file')
+        extra_2 = get_data_path('real_file_2')
+        fh = StringIO(u'1\n2\n3\n4')
+
+        @self.module.register_sniffer('format')
+        def sniffer(fh):
+            return '1' in fh.readline(), {}
+
+        @self.module.register_reader('format')
+        def reader(fh, extra=self.module.FileSentinel, other=2,
+                   extra_2=self.module.FileSentinel):
+            self.assertEqual('a\nb\nc\nd\ne\n', extra.read())
+            self.assertEqual('!\n@\n#\n$\n%\nThe realest.\n', extra_2.read())
+            yield TestClass([int(x) for x in fh.read().split('\n')])
+
+        gen = self.module.read(fh, format='format', extra=extra,
+                               extra_2=extra_2)
+        self.assertEqual(TestClass([1, 2, 3, 4]), next(gen))
+
+        fh.close()
+
+    def test_file_sentinel_converted_to_none_generator(self):
+        fh = StringIO(u'1\n2\n3\n4')
+
+        @self.module.register_sniffer('format')
+        def sniffer(fh):
+            return '1' in fh.readline(), {}
+
+        @self.module.register_reader('format')
+        def reader(fh, extra=self.module.FileSentinel, other=2,
+                   extra_2=self.module.FileSentinel):
+            self.assertIsNone(extra)
+            self.assertIsNone(extra_2)
+            yield TestClass([int(x) for x in fh.read().split('\n')])
+
+        gen = self.module.read(fh, format='format')
+        self.assertEqual(TestClass([1, 2, 3, 4]), next(gen))
+
+        fh.close()
+
+    def test_file_sentinel_pass_none_generator(self):
+        fh = StringIO(u'1\n2\n3\n4')
+
+        @self.module.register_sniffer('format')
+        def sniffer(fh):
+            return '1' in fh.readline(), {}
+
+        @self.module.register_reader('format')
+        def reader(fh, extra=self.module.FileSentinel, other=2,
+                   extra_2=self.module.FileSentinel):
+            self.assertIsNone(extra)
+            self.assertIsNone(extra_2)
+            yield TestClass([int(x) for x in fh.read().split('\n')])
+
+        gen = self.module.read(fh, format='format', extra=None)
+        self.assertEqual(TestClass([1, 2, 3, 4]), next(gen))
+
+        fh.close()
 
 
 class TestWrite(RegistryTest):
@@ -1218,57 +932,6 @@ class TestWrite(RegistryTest):
         fh.seek(0)
         self.assertEqual("1\n2\n3\n4", fh.read())
         fh.close()
-
-    def test_writer_compound_format(self):
-        fh = StringIO()
-        fh2 = StringIO()
-        fh3 = StringIO()
-        fhb = StringIO()
-        fh2b = StringIO()
-        fh3b = StringIO()
-
-        @self.module.register_writer('odd, even, nines', TestClass)
-        def writer(obj, odd, even, nines):
-            i = 0
-            while i+2 < len(obj.list):
-                odd.write(str(obj.list[i]) + u"\n")
-                even.write(str(obj.list[i+1]) + u"\n")
-                nines.write(str(obj.list[i+2]) + u"\n")
-                i = i+3
-
-        self.module.write(TestClass([1, 2, 9, 3, 4, 9]), into=[fh2, fh3, fh],
-                          format=['even', 'nines', 'odd'])
-
-        self.module.write(TestClass([1, 2, 9, 3, 4, 9]), into=[fhb, fh2b,
-                                                               fh3b],
-                          format='odd, even, nines')
-
-        fh.seek(0)
-        fh2.seek(0)
-        fh3.seek(0)
-        fhb.seek(0)
-        fh2b.seek(0)
-        fh3b.seek(0)
-
-        self.assertEqual(u'1\n3\n', fh.read())
-        self.assertEqual(u'1\n3\n', fhb.read())
-
-        self.assertEqual(u'2\n4\n', fh2.read())
-        self.assertEqual(u'2\n4\n', fh2b.read())
-
-        self.assertEqual(u'9\n9\n', fh3.read())
-        self.assertEqual(u'9\n9\n', fh3b.read())
-
-        fh.close()
-        fh2.close()
-        fh3.close()
-        fhb.close()
-        fh2b.close()
-        fh3b.close()
-
-        with self.assertRaises(ValueError):
-            self.module.write(TestClass([1, 2, 9]), into=[fh],
-                              format='even, odd, nines')
 
     def test_writer_exists_real_file(self):
         obj = TestClass(['1', '2', '3', '4'])
@@ -1318,6 +981,51 @@ class TestWrite(RegistryTest):
         with open(fp, 'U') as fh:
             self.assertEqual("1\n2\n3\n4", fh.read())
 
+    def test_file_sentinel_many(self):
+        fh = StringIO()
+
+        @self.module.register_writer('format', TestClass)
+        def writer(obj, fh, extra=self.module.FileSentinel, other=2,
+                   extra_2=self.module.FileSentinel):
+            extra.write('oh yeah...')
+            extra_2.write('oh no...')
+
+        self.module.write(TestClass([]), format='format', into=fh,
+                          extra=self.fp1, extra_2=self.fp2)
+        with open(self.fp1) as f1:
+            self.assertEqual('oh yeah...', f1.read())
+
+        with open(self.fp2) as f2:
+            self.assertEqual('oh no...', f2.read())
+
+        fh.close()
+
+    def test_file_sentinel_converted_to_none(self):
+        fh = StringIO()
+
+        @self.module.register_writer('format', TestClass)
+        def writer(obj, fh, extra=self.module.FileSentinel, other=2,
+                   extra_2=self.module.FileSentinel):
+            self.assertIsNone(extra)
+            self.assertIsNone(extra_2)
+
+        self.module.write(TestClass([]), format='format', into=fh)
+
+        fh.close()
+
+    def test_file_sentinel_pass_none(self):
+        fh = StringIO()
+
+        @self.module.register_writer('format', TestClass)
+        def writer(obj, fh, extra=self.module.FileSentinel, other=2,
+                   extra_2=self.module.FileSentinel):
+            self.assertIsNone(extra)
+            self.assertIsNone(extra_2)
+
+        self.module.write(TestClass([]), format='format', into=fh, extra=None)
+
+        fh.close()
+
 
 class TestInitializeOOPInterface(RegistryTest):
     def setUp(self):
@@ -1352,10 +1060,6 @@ class TestInitializeOOPInterface(RegistryTest):
         def fvfmt2_to_unasumming_class(fh):
             return
 
-        @self.module.register_reader('c1, c2', self.unassuming_class)
-        def compound_reader(fh):
-            return
-
         self.module.initialize_oop_interface()
 
         self.assertTrue(hasattr(self.unassuming_class, 'read'))
@@ -1365,7 +1069,6 @@ class TestInitializeOOPInterface(RegistryTest):
 
         self.assertIn('favfmt', self.unassuming_class.read.__doc__)
         self.assertIn('favfmt2', self.unassuming_class.read.__doc__)
-        self.assertIn("['c1', 'c2']", self.unassuming_class.read.__doc__)
 
     def test_writers_only(self):
         @self.module.register_writer('favfmt', self.class_with_default)
@@ -1380,10 +1083,6 @@ class TestInitializeOOPInterface(RegistryTest):
         def favfmt2(fh):
             pass
 
-        @self.module.register_writer('c1, c2', self.class_with_default)
-        def compound_writer(fh):
-            pass
-
         self.module.initialize_oop_interface()
 
         self.assertFalse(hasattr(self.unassuming_class, 'read'))
@@ -1393,7 +1092,6 @@ class TestInitializeOOPInterface(RegistryTest):
 
         self.assertIn('favfmt', self.class_with_default.write.__doc__)
         self.assertIn('favfmt2', self.class_with_default.write.__doc__)
-        self.assertIn("['c1', 'c2']", self.class_with_default.write.__doc__)
 
     def test_writers_no_default_format(self):
         @self.module.register_writer('favfmt', self.unassuming_class)
