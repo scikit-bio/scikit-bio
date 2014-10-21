@@ -66,7 +66,8 @@ class SnifferTests(TestCase):
             'fasta_invalid_missing_seq_data_last',
             'fasta_invalid_legacy_format',
             'fasta_id_whitespace_replacement_none',
-            'fasta_description_newline_replacement_none'
+            'fasta_description_newline_replacement_none',
+            'qual_3_seqs_defaults'
         ])
 
     def test_positives(self):

@@ -422,17 +422,33 @@ from skbio.util import cardinal_to_ordinal
 @register_sniffer('fasta')
 def _fasta_sniffer(fh):
     # Strategy:
-    #   Read up to 10 records. If at least one record is read (i.e. the file
-    #   isn't empty) and no errors are thrown during reading, assume the file
-    #   is in FASTA format.
-
-    # TODO should we be more specific and disallow QUAL-like inputs?
+    #   Read up to 10 FASTA records. If at least one record is read (i.e. the
+    #   file isn't empty) and no errors are thrown during reading, assume the file
+    #   is in FASTA format. Next, try to parse the file as QUAL, which has
+    #   stricter requirements. If this succeeds, do *not* identify the file as
+    #   FASTA since we don't want to sniff QUAL files as FASTA (technically
+    #   they can be read as FASTA since the sequences aren't validated but it
+    #   probably isn't what the user wanted). Also, if we add QUAL as its own
+    #   file format in the future, we wouldn't want the FASTA and QUAL sniffers
+    #   to both identify a QUAL file.
+    num_records = 10
     try:
         not_empty = False
         gen = _fasta_to_generator(fh)
-        for _ in zip(range(10), gen):
+        for _ in zip(range(num_records), gen):
             not_empty = True
-        return not_empty, {}
+
+        if not_empty:
+            fh.seek(0)
+            try:
+                list(zip(range(num_records),
+                         _parse_fasta_raw(fh, _parse_quality_scores, 'QUAL')))
+            except FASTAFormatError:
+                return True, {}
+            else:
+                return False, {}
+        else:
+            return False, {}
     except FASTAFormatError:
         return False, {}
     finally:
