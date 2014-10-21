@@ -25,6 +25,8 @@ _sniffers = {}
 _aliases = {}
 _empty_file_format = '<emptyfile>'
 
+# We create a class and instantiate it dynamically so that exceptions are more
+# obvious and so that only one object exists without copying this line.
 FileSentinel = type('FileSentinel', (object, ), {})()
 
 
@@ -182,6 +184,7 @@ def register_reader(format, cls=None):
         file_args = []
         reader_spec = inspect.getargspec(reader)
         if reader_spec.defaults is not None:
+            # Concept from http://stackoverflow.com/a/12627202/579416
             for key, default in zip(
                     reader_spec.args[-len(reader_spec.defaults):],
                     reader_spec.defaults):
@@ -311,6 +314,7 @@ def register_writer(format, cls=None):
         file_args = []
         writer_spec = inspect.getargspec(writer)
         if writer_spec.defaults is not None:
+            # Concept from http://stackoverflow.com/a/12627202/579416
             for key, default in zip(
                     writer_spec.args[-len(writer_spec.defaults):],
                     writer_spec.defaults):

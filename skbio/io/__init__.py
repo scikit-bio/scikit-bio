@@ -196,8 +196,9 @@ the registry that the kwarg should have special handling. For example:
        ...
 
 After the registry reads your function, it will replace `FileSentinel` with
-`None` allowing you to preform normal checks for kwargs. If a user provides
-input for the kwarg, the registry will convert it to an open filehandle.
+`None` allowing you to perform normal checks for kwargs
+(e.g. `if my_kwarg is not None:`). If a user provides input for the kwarg, the
+registry will convert it to an open filehandle.
 
 .. note:: Keyword arguments are not permitted in `sniffers`. `Sniffers` may not
    raise exceptions; if an exception is thrown by a `sniffer`, the user will be
