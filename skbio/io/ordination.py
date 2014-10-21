@@ -1,6 +1,6 @@
 r"""
 Ordination results format (:mod:`skbio.io.ordination`)
-==================================================
+=======================================================
 
 .. currentmodule:: skbio.io.ordination
 

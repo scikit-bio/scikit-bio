@@ -1,10 +1,10 @@
 """
-Delimited square matrix format (:mod:`skbio.io.lsmat`)
-===================================================
+Labeled square matrix format (:mod:`skbio.io.lsmat`)
+=====================================================
 
 .. currentmodule:: skbio.io.lsmat
 
-The delimited square matrix file format (``lsmat``) stores numeric square
+The labeled square matrix file format (``lsmat``) stores numeric square
 matrix data relating a set of objects along each axis. The format also stores
 identifiers (i.e., unique labels) for the objects. The matrix data and
 identifiers are stored in delimited text format (e.g., TSV or CSV). This format
@@ -25,8 +25,8 @@ Format Support
 
 Format Specification
 --------------------
-The square matrix and object identifiers are stored as delimited text. The
-first line of the file is the header, which must start with the delimiter,
+The labeled square matrix and object identifiers are stored as delimited text.
+The first line of the file is the header, which must start with the delimiter,
 followed by the IDs for all objects in the matrix. Each of the following lines
 must contain an object's ID, followed by a numeric (float or integer) vector
 relating the object to all other objects in the matrix. The order of objects is
