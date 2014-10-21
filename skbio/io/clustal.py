@@ -32,8 +32,8 @@ Each sequence in the alignment is divided into subsequences each at most
 subsequence. Each subsequence can optionally be followed by the cumulative
 number of non-gap characters up to that point in the full sequence (not
 included in the examples below). A line containing conservation information
-about each position in the alignment follows all of the subsequences (not
-included in the examples below).
+about each position in the alignment can optionally follow all of the
+subsequences (not included in the examples below).
 
 .. note:: scikit-bio does not support writing conservation information
 
