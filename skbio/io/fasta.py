@@ -1,6 +1,6 @@
 """
-FASTA format (:mod:`skbio.io.fasta`)
-====================================
+FASTA/QUAL format (:mod:`skbio.io.fasta`)
+=========================================
 
 .. currentmodule:: skbio.io.fasta
 
@@ -16,6 +16,12 @@ An example of a FASTA-formatted file containing two DNA sequences::
     CGATGTCGATCGATCGATCGATCAG
     >seq2 db-accession-34989
     CATCGATCGATCGATGCATGCATGCATG
+
+The QUAL file format is an additional format related to FASTA. A FASTA file is
+often accompanied by a QUAL file. QUAL files store a quality score (integer)
+for each base in a sequence stored in FASTA format (see [4]_ for more details).
+scikit-bio supports reading and writing FASTA (and optionally QUAL) file
+formats.
 
 Format Support
 --------------
@@ -42,8 +48,16 @@ Format Support
 |Yes       |Yes       |:mod:`skbio.sequence.ProteinSequence`                 |
 +----------+----------+------------------------------------------------------+
 
+.. note:: All readers and writers support an optional QUAL file via the
+   ``qual`` parameter. If one is provided, quality scores will be read/written
+   in addition to FASTA sequence data.
+
 Format Specification
 --------------------
+The following sections define the FASTA and QUAL file formats in detail.
+
+FASTA Format
+^^^^^^^^^^^^
 A FASTA file contains one or more biological sequences. The sequences are
 stored sequentially, with a *record* for each sequence (also referred to as a
 *FASTA record*). Each *record* consists of a single-line *header* (sometimes
@@ -62,7 +76,7 @@ whitespace-only lines are not allowed anywhere in the FASTA file.
    (pull requests are also welcome!).
 
 Sequence Header
-^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~
 Each sequence header consists of a single line beginning with a greater-than
 (``>``) symbol. Immediately following this is a sequence identifier (ID) and
 description separated by one or more whitespace characters. Both sequence ID
@@ -74,7 +88,7 @@ symbol and before the first whitespace character (if any) are taken as the
 sequence ID. Unique sequence IDs are not strictly enforced by the FASTA format
 itself. A single standardized ID format is similarly not enforced by FASTA
 format, though it is often common to use a unique library accession number for
-a sequence ID (e.g., NCBI's FASTA defline format [4]_).
+a sequence ID (e.g., NCBI's FASTA defline format [5]_).
 
 .. note:: scikit-bio will enforce sequence ID uniqueness depending on the type
    of object that the FASTA file is read into. For example, reading a FASTA
@@ -102,7 +116,7 @@ description.
    taken as the description.
 
 Sequence Data
-^^^^^^^^^^^^^
+~~~~~~~~~~~~~
 Biological sequence data follows the header, and can be split over multiple
 lines. The sequence data (i.e., nucleotides or amino acids) are stored using
 the standard IUPAC lexicon (single-letter codes).
@@ -127,14 +141,50 @@ the standard IUPAC lexicon (single-letter codes).
    invalid characters into objects (e.g. whitespace occurring in the middle of
    a sequence, or invalid IUPAC DNA characters in a DNA sequence).
 
+QUAL Format
+^^^^^^^^^^^
+A QUAL file contains quality scores for one or more biological sequences stored
+in a corresponding FASTA file. QUAL format is very similar to FASTA format: it
+stores records sequentially, with each record beginning with a header line
+containing a sequence ID and description. The same rules apply to QUAL headers
+as FASTA headers (see the above sections for details). scikit-bio processes
+FASTA and QUAL headers in exactly the same way.
+
+Instead of storing biological sequence data in each record, a QUAL file stores
+a quality score for each base in the corresponding sequence. Quality scores are
+represented as integers separated by whitespace (typically a single space or
+newline), and can span multiple lines.
+
+.. note:: When reading FASTA and QUAL files, scikit-bio requires records to be
+   in the same order in both files (i.e., each FASTA and QUAL record must have
+   the same ID and description after being parsed). In addition to having the
+   same order, the number of FASTA records must match the number of QUAL
+   records (i.e., missing or additonal records are not allowed). scikit-bio
+   also requires that the number of quality scores match the number of bases in
+   the corresponding sequence.
+
+   When writing FASTA and QUAL files, scikit-bio will maintain the same
+   ordering of records in both files (i.e., using the same ID and description
+   in both records) to support future reading.
+
 Format Parameters
 -----------------
-The following parameters are available to change how FASTA files are read or
-written in scikit-bio.
+The following parameters are available to change how FASTA/QUAL files are read
+or written in scikit-bio.
 
-Reader Parameters
-^^^^^^^^^^^^^^^^^
-The available parameters differ depending on which reader is used.
+QUAL File Parameter (Readers and Writers)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The ``qual`` parameter is available to all FASTA format readers and writers. It
+can be any file-like type supported by scikit-bio's I/O registry (e.g., file
+handle, file path, etc.). If ``qual`` is provided when reading, quality scores
+will be included in each in-memory ``BiologicalSequence`` object, in addition
+to sequence data stored in the FASTA file. When writing, quality scores will be
+written in QUAL format in addition to the sequence data being written in FASTA
+format.
+
+Reader-specific Parameters
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+The available reader parameters differ depending on which reader is used.
 
 Generator, SequenceCollection, and Alignment Reader Parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -160,9 +210,9 @@ BiologicalSequence and Subclass Reader Parameters
 The ``seq_num`` parameter can be used with the ``BiologicalSequence``,
 ``NucleotideSequence``, ``DNASequence``, ``RNASequence``, and
 ``ProteinSequence`` FASTA readers. ``seq_num`` specifies which sequence to read
-from the FASTA file, and defaults to 1 (i.e., such that the first sequence is
-read). For example, to read the 50th sequence from a FASTA file, you would pass
-``seq_num=50`` to the reader call.
+from the FASTA file (and optional QUAL file), and defaults to 1 (i.e., such
+that the first sequence is read). For example, to read the 50th sequence from a
+FASTA file, you would pass ``seq_num=50`` to the reader call.
 
 .. note:: The FASTA sniffer will not attempt to guess the ``seq_num``
    parameter, so it will always default to reading the first sequence in the
@@ -170,8 +220,8 @@ read). For example, to read the 50th sequence from a FASTA file, you would pass
    guess for this parameter as it is entirely up to the user to specify which
    sequence to read.
 
-Writer Parameters
-^^^^^^^^^^^^^^^^^
+Writer-specific Parameters
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 The following parameters are available to all FASTA format writers:
 
 - ``id_whitespace_replacement``: string to replace **each** whitespace
@@ -181,19 +231,25 @@ The following parameters are available to all FASTA format writers:
   IDs in FASTA format cannot contain whitespace). Defaults to ``_``. If
   ``None``, no whitespace replacement is performed and IDs are written as they
   are stored in memory (this has the potential to create an invalid
-  FASTA-formatted file; see note below).
+  FASTA-formatted file; see note below). This parameter also applies to a QUAL
+  file if one is provided.
+
 - ``description_newline_replacement``: string to replace **each** newline
   character in a sequence description. Since a FASTA header must be a single
   line, newlines are not allowed in sequence descriptions and must be replaced
   in order to write a valid FASTA file. Defaults to a single space. If
   ``None``, no newline replacement is performed and descriptions are written as
   they are stored in memory (this has the potential to create an invalid
-  FASTA-formatted file; see note below).
+  FASTA-formatted file; see note below). This parameter also applies to a QUAL
+  file if one is provided.
 
 - ``max_width``: integer specifying the maximum line width (i.e., number of
-  characters) for sequence data. If a sequence is longer than ``max_width``, it
-  will be split across multiple lines, each with a maximum width of
-  ``max_width``. Default is to not split across multiple lines.
+  characters) for sequence data and/or quality scores. If a sequence or its
+  quality scores are longer than ``max_width``, it will be split across
+  multiple lines, each with a maximum width of ``max_width``. Individual
+  quality scores will not be split apart, otherwise they will become two
+  different integers when read again. Thus, splitting will only occur *between*
+  quality scores. Default is to not split across multiple lines.
 
 .. note:: The FASTA format writers will have noticeably better runtime
    performance if ``id_whitespace_replacement`` and/or
@@ -209,8 +265,11 @@ The following parameters are available to all FASTA format writers:
 
 Examples
 --------
+
+Reading and Writing FASTA Files
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Suppose we have the following FASTA file with five aligned sequences (example
-modified from [5]_)::
+modified from [6]_)::
 
     >seq1 Turkey
     AAGCTNGGGCATTTCAGGGTGAGCCCGGGCAATACAGGGTAT
@@ -377,18 +436,77 @@ AAACCCTTGCCGGTACGCTTAAACCATTGCCGGTACGCTTAA
 <BLANKLINE>
 >>> new_fh.close()
 
+Reading and Writing FASTA/QUAL Files
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+In addition to reading and writing standalone FASTA files, scikit-bio also
+supports reading and writing FASTA and QUAL files together. Suppose we have the
+following FASTA file::
+
+    >seq1 db-accession-149855
+    CGATGTC
+    >seq2 db-accession-34989
+    CATCG
+
+Also suppose we have the following QUAL file::
+
+    >seq1 db-accession-149855
+    40 39 39 4 50 1 100
+    >seq2 db-accession-34989
+    3 3 10 42 80
+
+>>> fasta_fh = StringIO(
+...     ">seq1 db-accession-149855\\n"
+...     "CGATGTC\\n"
+...     ">seq2 db-accession-34989\\n"
+...     "CATCG\\n")
+>>> qual_fh = StringIO(
+...     ">seq1 db-accession-149855\\n"
+...     "40 39 39 4 50 1 100\\n"
+...     ">seq2 db-accession-34989\\n"
+...     "3 3 10 42 80\\n")
+
+To read in a single ``BiologicalSequence`` at a time, we can use the
+generator-based reader as we did above, providing both FASTA and QUAL files:
+
+>>> for seq in read(fasta_fh, qual=qual_fh, format='fasta'):
+...     seq
+...     seq.quality
+
+Note that the sequence objects have quality scores since we provided a QUAL
+file. The other FASTA readers operate in a similar manner.
+
+Now let's load the sequences and their quality scores into a
+``SequenceCollection``:
+
+>>> fasta_fh.seek(0) # reset position to beginning of file so we can read again
+>>> qual_fh.seek(0) # reset position to beginning of file so we can read again
+>>> sc = SequenceCollection.read(fh)
+>>> sc
+
+To write the sequence data and quality scores in the ``SequenceCollection`` to
+FASTA and QUAL files, respectively, we run:
+
+>>> new_fasta_fh = StringIO()
+>>> new_qual_fh = StringIO()
+>>> sc.write(new_fasta_fh, qual=new_qual_fh)
+>>> print(new_fasta_fh.getvalue())
+>>> print(new_qual_fh.getvalue())
+>>> new_fasta_fh.close()
+>>> new_qual_fh.close()
+
 References
 ----------
 .. [1] Lipman, DJ; Pearson, WR (1985). "Rapid and sensitive protein similarity
    searches". Science 227 (4693): 1435-41.
 .. [2] http://en.wikipedia.org/wiki/FASTA_format
 .. [3] http://blast.ncbi.nlm.nih.gov/blastcgihelp.shtml
-.. [4] Madden T. The BLAST Sequence Analysis Tool. 2002 Oct 9
+.. [4] https://www.broadinstitute.org/crd/wiki/index.php/Qual
+.. [5] Madden T. The BLAST Sequence Analysis Tool. 2002 Oct 9
    [Updated 2003 Aug 13]. In: McEntyre J, Ostell J, editors. The NCBI Handbook
    [Internet]. Bethesda (MD): National Center for Biotechnology Information
    (US); 2002-. Chapter 16. Available from:
    http://www.ncbi.nlm.nih.gov/books/NBK21097/
-.. [5] http://evolution.genetics.washington.edu/phylip/doc/sequence.html
+.. [6] http://evolution.genetics.washington.edu/phylip/doc/sequence.html
 
 """
 # ----------------------------------------------------------------------------
