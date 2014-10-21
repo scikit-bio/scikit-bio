@@ -18,15 +18,15 @@ from future.builtins import zip
 from . import (UnrecognizedFormatError, InvalidRegistrationError,
                DuplicateRegistrationError, ArgumentOverrideWarning,
                FormatIdentificationWarning)
-from .util import open_file, open_files, _is_string_or_bytes
-from skbio.util import flatten
+from .util import open_file, open_files
 
 _formats = {}
 _sniffers = {}
 _aliases = {}
 _empty_file_format = '<emptyfile>'
 
-FileSentinel = type('FileSentinel',(object,), {})()
+FileSentinel = type('FileSentinel', (object, ), {})()
+
 
 def _override_kwargs(kw, fmt_kw, warn_user):
     for key in kw:
@@ -308,11 +308,32 @@ def register_writer(format, cls=None):
         if 'writer' in format_class:
             raise DuplicateRegistrationError('writer', format, cls)
 
+        file_args = []
+        writer_spec = inspect.getargspec(writer)
+        if writer_spec.defaults is not None:
+            for key, default in zip(
+                    writer_spec.args[-len(writer_spec.defaults):],
+                    writer_spec.defaults):
+                if default is FileSentinel:
+                    file_args.append(key)
+
         # We wrap the writer so that basic file handling can be managed
         # externally from the business logic.
         def wrapped_writer(obj, fp, mode='w', **kwargs):
-            with open_file(fp, mode) as fh:
-                writer(obj, fh, **kwargs)
+            file_keys = []
+            files = [fp]
+            for file_arg in file_args:
+                if file_arg in kwargs:
+                    if kwargs[file_arg] is not None:
+                        file_keys.append(file_arg)
+                        files.append(kwargs[file_arg])
+                else:
+                    kwargs[file_arg] = None
+
+            with open_files(files, mode) as fhs:
+                for key, fh in zip(file_keys, fhs[1:]):
+                    kwargs[key] = fh
+                writer(obj, fhs[0], **kwargs)
 
         wrapped_writer.__doc__ = writer.__doc__
         wrapped_writer.__name__ = writer.__name__
