@@ -134,7 +134,7 @@ provided in that same order, so we could have used ``['qual', 'fasta']``
 instead as long as the quality file came first.
 
 User functions
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^
 
 .. autosummary::
    :toctree: generated/
@@ -144,7 +144,7 @@ User functions
    sniff
 
 User exceptions
-^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^
 
 .. autosummary::
    :toctree: generated/
@@ -154,14 +154,14 @@ User exceptions
    FieldError
    UnrecognizedFormatError
    ClustalFormatError
-   LSMatFormatError
    FASTAFormatError
+   LSMatFormatError
    NewickFormatError
    OrdinationFormatError
    PhylipFormatError
 
 User warnings
-^^^^^^^^^^^^^^
+^^^^^^^^^^^^^
 
 .. autosummary::
    :toctree: generated/
@@ -170,7 +170,7 @@ User warnings
    ArgumentOverrideWarning
 
 Developer Documentation
--------------------------
+-----------------------
 To extend I/O in skbio, developers should create a submodule in `skbio/io/`
 named after the file format it implements.
 
@@ -262,8 +262,8 @@ from importlib import import_module
 from ._warning import FormatIdentificationWarning, ArgumentOverrideWarning
 from ._exception import (DuplicateRegistrationError, InvalidRegistrationError,
                          RecordError, FieldError, UnrecognizedFormatError,
-                         FileFormatError, ClustalFormatError, LSMatFormatError,
-                         FASTAFormatError, NewickFormatError,
+                         FileFormatError, ClustalFormatError, FASTAFormatError,
+                         LSMatFormatError, NewickFormatError,
                          OrdinationFormatError, PhylipFormatError)
 from ._registry import (write, read, sniff, get_writer, get_reader,
                         get_sniffer, list_write_formats, list_read_formats,
@@ -283,8 +283,8 @@ __all__ = ['write', 'read', 'sniff',
 
            'FileFormatError',
            'ClustalFormatError',
-           'LSMatFormatError',
            'FASTAFormatError',
+           'LSMatFormatError',
            'NewickFormatError',
            'OrdinationFormatError',
            'PhylipFormatError']
@@ -293,8 +293,8 @@ __all__ = ['write', 'read', 'sniff',
 # registry. We use import_module instead of a typical import to avoid flake8
 # unused import errors.
 import_module('skbio.io.clustal')
-import_module('skbio.io.lsmat')
 import_module('skbio.io.fasta')
+import_module('skbio.io.lsmat')
 import_module('skbio.io.newick')
 import_module('skbio.io.ordination')
 import_module('skbio.io.phylip')
