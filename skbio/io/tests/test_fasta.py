@@ -82,61 +82,86 @@ class SnifferTests(TestCase):
 class ReaderTests(TestCase):
     def setUp(self):
         # each structure stores the sequence generator results (expanded into a
-        # list) that we expect to obtain from reading, matched with the kwargs
-        # and filepaths that should deserialize into the expected generator
-        # results
+        # list) that we expect to obtain from reading, matched with kwargs to
+        # pass to the reader, and fasta and qual filepaths that should
+        # deserialize into the expected generator results
 
         # empty file shouldn't yield sequences
-        self.empty = ([], {}, map(get_data_path, ['empty']))
-        self.empty_w_qual = ([], {'qual': get_data_path('empty')},
-                             map(get_data_path, ['empty']))
+        self.empty = ([], {}, map(get_data_path, ['empty']),
+                      map(get_data_path, ['empty']))
 
         # single sequence
         self.single = (
-            [BiologicalSequence('ACGT-acgt.', id='seq1', description='desc1')],
+            [BiologicalSequence(
+                'ACGT-acgt.', id='seq1', description='desc1',
+                quality=[10, 20, 30, 10, 0, 0, 0, 88888, -1, -3456])],
             {},
-            map(get_data_path, ['fasta_single_seq', 'fasta_max_width_1'])
+            map(get_data_path, ['fasta_single_seq', 'fasta_max_width_1']),
+            map(get_data_path, ['qual_single_seq', 'qual_max_width_1'])
         )
 
         # multiple sequences
         self.multi = (
-            [BiologicalSequence('ACGT-acgt.', id='seq1', description='desc1'),
-             BiologicalSequence('A', id='_____seq__2_'),
-             BiologicalSequence('AACGGuA', description='desc3'),
-             BiologicalSequence('AcGtUTu'),
-             BiologicalSequence('ACGTTGCAccGG'),
-             BiologicalSequence('ACGUU'),
+            [BiologicalSequence(
+                'ACGT-acgt.', id='seq1', description='desc1',
+                quality=[10, 20, 30, 10, 0, 0, 0, 88888, -1, -3456]),
+             BiologicalSequence('A', id='_____seq__2_', quality=[-42]),
+             BiologicalSequence(
+                'AACGGuA', description='desc3', quality=[0, 0, 0, 0, 0, 0, 0]),
+             BiologicalSequence('AcGtUTu', quality=[1, 2, 3, 4, 5, 6, 777]),
+             BiologicalSequence(
+                'ACGTTGCAccGG',
+                quality=[55, 10, 0, 999, 1, 1, -8, 775, 40, 10, 10, 0]),
+             BiologicalSequence('ACGUU', quality=[10, 9, 8, 7, 6]),
              BiologicalSequence(
                  'pQqqqPPQQQ', id='proteinseq',
-                 description='detailed description \t\twith  new  lines')],
+                 description='detailed description \t\twith  new  lines',
+                 quality=[42, 42, 442, 442, 42, 42, 42, 42, 42, 43])],
             {},
-            map(get_data_path, ['fasta_multi_seq', 'fasta_max_width_5'])
+            map(get_data_path, ['fasta_multi_seq', 'fasta_max_width_5']),
+            map(get_data_path, ['qual_multi_seq', 'qual_max_width_5'])
         )
 
         # test constructor parameter, as well as odd labels (label only
         # containing whitespace, label description preceded by multiple spaces,
-        # no id) and leading/trailing whitespace on sequence data
+        # no id) and leading/trailing whitespace on sequence data. for qual
+        # files, in addition to the odd labels, test leading/trailing
+        # whitespace on qual scores, as well as strange number formatting.
+        # also test that fasta and qual headers do not need to match
+        # exactly, only that they need to match exactly after parsing (e.g.,
+        # after stripping leading/trailing whitespace from descriptions)
         self.odd_labels_different_type = (
-            [Protein('DEFQfp'),
-             Protein('SKBI', description='skbio')],
+            [Protein('DEFQfp', quality=[0, 0, 1, 5, 44, 0]),
+             Protein(
+                 'SKBI', description='skbio', quality=[1, 2, 33, 123456789])],
             {'constructor': ProteinSequence},
-            map(get_data_path, ['fasta_prot_seqs_odd_labels'])
+            map(get_data_path, ['fasta_prot_seqs_odd_labels']),
+            map(get_data_path, ['qual_prot_seqs_odd_labels'])
         )
 
         # sequences that can be loaded into a SequenceCollection or Alignment.
         # they are also a different type than BiologicalSequence in order to
         # exercise the constructor parameter
         self.sequence_collection_different_type = (
-            [RNA('AUG'),
-             RNA('AUC', id='rnaseq-1', description='rnaseq desc 1'),
-             RNA('AUG', id='rnaseq-2', description='rnaseq desc 2')],
+            [RNA('AUG', quality=[20, 20, 21]),
+             RNA('AUC', id='rnaseq-1', description='rnaseq desc 1',
+                 quality=[10, 9, 10]),
+             RNA('AUG', id='rnaseq-2', description='rnaseq desc 2',
+                 quality=[9, 99, 999])],
             {'constructor': RNA},
-            map(get_data_path, ['fasta_sequence_collection_different_type'])
+            map(get_data_path, ['fasta_sequence_collection_different_type']),
+            map(get_data_path, ['qual_sequence_collection_different_type'])
         )
 
         # store fasta filepath, kwargs, error type, and expected error message
-        # for invalid input
-        # TODO add note about why fasta and qual have semi-duplicate tests
+        # for invalid input.
+        #
+        # note: there is some duplication in testing that fasta and qual
+        # parsers raise expected errors. even though the parsers share the same
+        # underlying logic, these tests are here as a safeguard in case the
+        # code is refactored in the future such that fasta and qual have
+        # different implementations (e.g., if qual is written in cython while
+        # fasta remains in python)
         self.invalid_fps = map(lambda e: (get_data_path(e[0]),
                                           e[1], e[2], e[3]), [
             # whitespace-only fasta and qual
@@ -224,11 +249,17 @@ class ReaderTests(TestCase):
              BiologicalSequenceError,
              'Number of quality scores \(3\).*\(4\)'),
 
-            # invalid qual scores (can't be converted to integer)
+            # invalid qual scores (string value can't be converted to integer)
             ('fasta_3_seqs_defaults',
-             {'qual': get_data_path('qual_invalid_qual_scores')},
+             {'qual': get_data_path('qual_invalid_qual_scores_string')},
              FASTAFormatError,
              'quality scores to integers:\n100 0 1a -42'),
+
+            # invalid qual scores (float value can't be converted to integer)
+            ('fasta_3_seqs_defaults',
+             {'qual': get_data_path('qual_invalid_qual_scores_float')},
+             FASTAFormatError,
+             'quality scores to integers:\n42    41.0 39 40'),
 
             # misc. invalid files used elsewhere in the tests
             ('fasta_invalid_after_10_seqs', {}, FASTAFormatError,
@@ -243,15 +274,33 @@ class ReaderTests(TestCase):
     # other fasta -> object readers
 
     def test_fasta_to_generator_valid_files(self):
-        for exp, kwargs, fps in (self.empty, self.empty_w_qual, self.single,
-                                 self.multi, self.odd_labels_different_type,
-                                 self.sequence_collection_different_type):
-            for fp in fps:
-                obs = list(_fasta_to_generator(fp, **kwargs))
+        test_cases = (self.empty, self.single, self.multi,
+                      self.odd_labels_different_type,
+                      self.sequence_collection_different_type)
+
+        # Strategy:
+        #   for each fasta file, read it without its corresponding qual file,
+        #   and ensure observed vs. expected match, ignoring quality scores in
+        #   expected. next, parse the current fasta file with each
+        #   corresponding quality file and ensure that observed vs. expected
+        #   match, this time taking quality scores into account. this
+        #   sufficiently exercises parsing a standalone fasta file and paired
+        #   fasta/qual files
+        for exp, kwargs, fasta_fps, qual_fps in test_cases:
+            for fasta_fp in fasta_fps:
+                obs = list(_fasta_to_generator(fasta_fp, **kwargs))
 
                 self.assertEqual(len(obs), len(exp))
                 for o, e in zip(obs, exp):
-                    self.assertTrue(o.equals(e))
+                    self.assertTrue(o.equals(e, ignore=['quality']))
+
+                for qual_fp in qual_fps:
+                    obs = list(_fasta_to_generator(fasta_fp, qual=qual_fp,
+                                                   **kwargs))
+
+                    self.assertEqual(len(obs), len(exp))
+                    for o, e in zip(obs, exp):
+                        self.assertTrue(o.equals(e))
 
     def test_fasta_to_generator_invalid_files(self):
         for fp, kwargs, error_type, error_msg_regex in self.invalid_fps:
@@ -275,8 +324,11 @@ class ReaderTests(TestCase):
                                         _fasta_to_protein_sequence)):
 
             # empty file
+            empty_fp = get_data_path('empty')
             with self.assertRaisesRegexp(FASTAFormatError, '1st biological'):
-                reader_fn(get_data_path('empty'))
+                reader_fn(empty_fp)
+            with self.assertRaisesRegexp(FASTAFormatError, '1st biological'):
+                reader_fn(empty_fp, qual=empty_fp)
 
             # the sequences in the following files don't necessarily make sense
             # for each of the sequence object types that they're read into
@@ -289,53 +341,92 @@ class ReaderTests(TestCase):
             # objects
 
             # file with only 1 seq, get first
-            for fp in map(get_data_path,
-                          ['fasta_single_seq', 'fasta_max_width_1']):
-                exp = constructor('ACGT-acgt.', id='seq1', description='desc1')
-                obs = reader_fn(fp)
-                self.assertTrue(obs.equals(exp))
+            for fasta_fp in map(get_data_path,
+                                ['fasta_single_seq', 'fasta_max_width_1']):
+                exp = constructor(
+                    'ACGT-acgt.', id='seq1', description='desc1',
+                    quality=[10, 20, 30, 10, 0, 0, 0, 88888, -1, -3456])
+
+                obs = reader_fn(fasta_fp)
+                self.assertTrue(obs.equals(exp, ignore=['quality']))
+
+                for qual_fp in map(get_data_path,
+                                   ['qual_single_seq', 'qual_max_width_1']):
+                    obs = reader_fn(fasta_fp, qual=qual_fp)
+                    self.assertTrue(obs.equals(exp))
 
             # file with multiple seqs
-            for fp in map(get_data_path,
-                          ['fasta_multi_seq', 'fasta_max_width_5']):
+            qual_fps = map(get_data_path,
+                           ['qual_multi_seq', 'qual_max_width_5'])
+            for fasta_fp in map(get_data_path,
+                                ['fasta_multi_seq', 'fasta_max_width_5']):
                 # get first
-                exp = constructor('ACGT-acgt.', id='seq1', description='desc1')
-                obs = reader_fn(fp)
-                self.assertTrue(obs.equals(exp))
+                exp = constructor(
+                    'ACGT-acgt.', id='seq1', description='desc1',
+                    quality=[10, 20, 30, 10, 0, 0, 0, 88888, -1, -3456])
+
+                obs = reader_fn(fasta_fp)
+                self.assertTrue(obs.equals(exp, ignore=['quality']))
+
+                for qual_fp in qual_fps:
+                    obs = reader_fn(fasta_fp, qual=qual_fp)
+                    self.assertTrue(obs.equals(exp))
 
                 # get middle
-                exp = constructor('AcGtUTu')
-                obs = reader_fn(fp, seq_num=4)
-                self.assertTrue(obs.equals(exp))
+                exp = constructor('AcGtUTu', quality=[1, 2, 3, 4, 5, 6, 777])
+
+                obs = reader_fn(fasta_fp, seq_num=4)
+                self.assertTrue(obs.equals(exp, ignore=['quality']))
+
+                for qual_fp in qual_fps:
+                    obs = reader_fn(fasta_fp, seq_num=4, qual=qual_fp)
+                    self.assertTrue(obs.equals(exp))
 
                 # get last
                 exp = constructor(
                     'pQqqqPPQQQ', id='proteinseq',
-                    description='detailed description \t\twith  new  lines')
-                obs = reader_fn(fp, seq_num=7)
-                self.assertTrue(obs.equals(exp))
+                    description='detailed description \t\twith  new  lines',
+                    quality=[42, 42, 442, 442, 42, 42, 42, 42, 42, 43])
+
+                obs = reader_fn(fasta_fp, seq_num=7)
+                self.assertTrue(obs.equals(exp, ignore=['quality']))
+
+                for qual_fp in qual_fps:
+                    obs = reader_fn(fasta_fp, seq_num=7, qual=qual_fp)
+                    self.assertTrue(obs.equals(exp))
 
                 # seq_num too large
                 with self.assertRaisesRegexp(FASTAFormatError,
                                              '8th biological'):
-                    reader_fn(fp, seq_num=8)
+                    reader_fn(fasta_fp, seq_num=8)
+                for qual_fp in qual_fps:
+                    with self.assertRaisesRegexp(FASTAFormatError,
+                                                 '8th biological'):
+                        reader_fn(fasta_fp, seq_num=8, qual=qual_fp)
 
                 # seq_num too small
                 with self.assertRaisesRegexp(FASTAFormatError, 'seq_num=0'):
-                    reader_fn(fp, seq_num=0)
+                    reader_fn(fasta_fp, seq_num=0)
+                for qual_fp in qual_fps:
+                    with self.assertRaisesRegexp(FASTAFormatError,
+                                                 'seq_num=0'):
+                        reader_fn(fasta_fp, seq_num=0, qual=qual_fp)
 
     def test_fasta_to_sequence_collection_and_alignment(self):
+        test_cases = (self.empty, self.single,
+                      self.sequence_collection_different_type)
+
         for constructor, reader_fn in ((SequenceCollection,
                                         _fasta_to_sequence_collection),
                                        (Alignment,
                                         _fasta_to_alignment)):
-            for exp_list, kwargs, fps in \
-                    (self.empty, self.single,
-                     self.sequence_collection_different_type):
+            # see comment in test_fasta_to_generator_valid_files (above) for
+            # testing strategy
+            for exp_list, kwargs, fasta_fps, qual_fps in test_cases:
                 exp = constructor(exp_list)
 
-                for fp in fps:
-                    obs = reader_fn(fp, **kwargs)
+                for fasta_fp in fasta_fps:
+                    obs = reader_fn(fasta_fp, **kwargs)
 
                     # TODO remove this custom equality testing code when
                     # SequenceCollection has an equals method (part of #656).
@@ -343,7 +434,19 @@ class ReaderTests(TestCase):
                     # comparison (not part of SequenceCollection.__eq__).
                     self.assertEqual(obs, exp)
                     for o, e in zip(obs, exp):
-                        self.assertTrue(o.equals(e))
+                        self.assertTrue(o.equals(e, ignore=['quality']))
+
+                    for qual_fp in qual_fps:
+                        obs = reader_fn(fasta_fp, qual=qual_fp, **kwargs)
+
+                        # TODO remove this custom equality testing code when
+                        # SequenceCollection has an equals method (part of
+                        # #656). We need this method to include IDs and
+                        # description in the comparison (not part of
+                        # SequenceCollection.__eq__).
+                        self.assertEqual(obs, exp)
+                        for o, e in zip(obs, exp):
+                            self.assertTrue(o.equals(e))
 
 
 class WriterTests(TestCase):

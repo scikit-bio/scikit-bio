@@ -558,8 +558,8 @@ from skbio.util import cardinal_to_ordinal
 def _fasta_sniffer(fh):
     # Strategy:
     #   Read up to 10 FASTA records. If at least one record is read (i.e. the
-    #   file isn't empty) and no errors are thrown during reading, assume the file
-    #   is in FASTA format. Next, try to parse the file as QUAL, which has
+    #   file isn't empty) and no errors are thrown during reading, assume the
+    #   file is in FASTA format. Next, try to parse the file as QUAL, which has
     #   stricter requirements. If this succeeds, do *not* identify the file as
     #   FASTA since we don't want to sniff QUAL files as FASTA (technically
     #   they can be read as FASTA since the sequences aren't validated but it
