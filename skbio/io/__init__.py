@@ -11,17 +11,17 @@ Introduction to I/O
 Reading and writing files (I/O) can be a complicated task:
 
 * A file format can sometimes be read into more than one in-memory
-  representation (i.e., object). For example, a FASTQ file can be read into an
+  representation (i.e., object). For example, a FASTA file can be read into an
   :mod:`skbio.alignment.SequenceCollection` or :mod:`skbio.alignment.Alignment`
   depending on the file's contents and what operations you'd like to perform on
   your data.
 * A single object might be writeable to more than one file format. For example,
   an :mod:`skbio.alignment.Alignment` object could be written to FASTA, FASTQ,
-  QSEQ,PHYLIP, or Stockholm formats, just to name a few.
+  QSEQ, PHYLIP, or Stockholm formats, just to name a few.
 * You might not know the exact file format of your file, but you want to read
   it into an appropriate object.
-* You want to read multiple files into a single object, or write an object to
-  multiple files.
+* You might want to read multiple files into a single object, or write an
+  object to multiple files.
 * Instead of reading a file into an object, you might want to stream the file
   using a generator (e.g., if the file cannot be fully loaded into memory).
 
@@ -30,7 +30,7 @@ interface for dealing with I/O. We accomplish this by using a single I/O
 registry. Below is a description of how to use the registry and how to extend
 it.
 
-Reading Files Into scikit-bio
+Reading files into scikit-bio
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 There are two ways to read files. The first way is to use the
 procedural interface:
@@ -56,9 +56,9 @@ For example, to read a `newick` file using both interfaces you would type:
 
 For the OO interface:
 
->>> _ = open_filehandle.seek(0)
->>> tree2 = TreeNode.read(open_filehandle, format='newick')
->>> tree2
+>>> open_filehandle = StringIO(u'(a, b);')
+>>> tree = TreeNode.read(open_filehandle, format='newick')
+>>> tree
 <TreeNode, name: unnamed, internal node count: 0, tips count: 2>
 
 In the case of ``skbio.io.read`` if `into` is not provided, then a generator
@@ -72,9 +72,9 @@ that `format` may be omitted there as well.
 
 As an example:
 
->>> _ = open_filehandle.seek(0)
->>> tree3 = TreeNode.read(open_filehandle)
->>> tree3
+>>> open_filehandle = StringIO(u'(a, b);')
+>>> tree = TreeNode.read(open_filehandle)
+>>> tree
 <TreeNode, name: unnamed, internal node count: 0, tips count: 2>
 
 We call format inference `sniffing`, much like the
@@ -86,7 +86,7 @@ used to better parse the file.
 .. note:: There is a built-in `sniffer` which results in a useful error message
    if an empty file is provided as input and the format was omitted.
 
-Writing Files from scikit-bio
+Writing files from scikit-bio
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Just as when reading files, there are two ways to write files.
 
@@ -103,7 +103,7 @@ In the procedural interface, `format` is required. Without it, scikit-bio does
 not know how you want to serialize an object. OO interfaces define a default
 `format`, so it may not be necessary to include it.
 
-Supported File Formats
+Supported file formats
 ^^^^^^^^^^^^^^^^^^^^^^
 For details on what objects are supported by each format,
 see the associated documentation.
@@ -112,15 +112,15 @@ see the associated documentation.
    :toctree: generated/
 
    clustal
-   dm
    fasta
+   lsmat
    newick
-   ordres
+   ordination
    phylip
 
 Formats are considered to be names which represent a way of encoding a file.
 
-User Functions
+User functions
 ^^^^^^^^^^^^^^
 
 .. autosummary::
@@ -130,7 +130,7 @@ User Functions
    read
    sniff
 
-User Exceptions
+User exceptions
 ^^^^^^^^^^^^^^^
 
 .. autosummary::
@@ -141,13 +141,13 @@ User Exceptions
    FieldError
    UnrecognizedFormatError
    ClustalFormatError
-   DMFormatError
    FASTAFormatError
+   LSMatFormatError
    NewickFormatError
-   OrdResFormatError
+   OrdinationFormatError
    PhylipFormatError
 
-User Warnings
+User warnings
 ^^^^^^^^^^^^^
 
 .. autosummary::
@@ -167,13 +167,12 @@ In this submodule you would use the following decorators:
 ``register_writer``, ``register_reader``, and ``register_sniffer``.
 These associate your functionality to a format string and potentially an skbio
 class. Please see the relevant documenation for more information about these
-functions and for the contract that is expected of `readers`, `writers`, and
-`sniffers`.
+functions and the specifications for `readers`, `writers`, and `sniffers`.
 
 Once you are satisfied with the functionality, you will need to ensure that
-`skbio/io/__init__.py` contains an import of your new submodule, that way the
+`skbio/io/__init__.py` contains an import of your new submodule so the
 decorators are executed on importing the user functions above. Use the function
-``import_module('skbio.io.my_new_format')``
+``import_module('skbio.io.my_new_format')``.
 
 The following keyword args may not be used when defining new `readers` or
 `writers` as they already have special meaning to the registry system:
@@ -205,10 +204,10 @@ registry will convert it to an open filehandle.
    asked to report it on our `issue tracker
    <https://github.com/biocore/scikit-bio/issues/>`_.
 
-When raising errors, the error should be a subclass of ``FileFormatError``
-specific to your new format.
+When raising errors in readers and writers, the error should be a subclass of
+``FileFormatError`` specific to your new format.
 
-Writing Unit Tests
+Writing unit tests
 ^^^^^^^^^^^^^^^^^^
 Because scikit-bio handles all of the I/O boilerplate, you only need to test
 the actual business logic of your `readers`, `writers`, and `sniffers`. The
@@ -227,7 +226,10 @@ manager like so:
        do_something_wrong()
    self.assertIn('action verb or subject of an error', str(cm.exception))
 
-Developer Functions
+A good example to review when preparing to write your first I/O unit tests is
+the ordination test code (see in ``skbio/io/tests/test_ordination.py``).
+
+Developer functions
 ^^^^^^^^^^^^^^^^^^^
 
 .. autosummary::
@@ -242,7 +244,7 @@ Developer Functions
     get_reader
     get_sniffer
 
-Developer Exceptions
+Developer exceptions
 ^^^^^^^^^^^^^^^^^^^^
 
 .. autosummary::
@@ -265,9 +267,9 @@ from importlib import import_module
 from ._warning import FormatIdentificationWarning, ArgumentOverrideWarning
 from ._exception import (DuplicateRegistrationError, InvalidRegistrationError,
                          RecordError, FieldError, UnrecognizedFormatError,
-                         FileFormatError, ClustalFormatError, DMFormatError,
-                         FASTAFormatError, NewickFormatError,
-                         OrdResFormatError, PhylipFormatError)
+                         FileFormatError, ClustalFormatError, FASTAFormatError,
+                         LSMatFormatError, NewickFormatError,
+                         OrdinationFormatError, PhylipFormatError)
 from ._registry import (write, read, sniff, get_writer, get_reader,
                         get_sniffer, list_write_formats, list_read_formats,
                         register_writer, register_reader, register_sniffer,
@@ -286,20 +288,20 @@ __all__ = ['write', 'read', 'sniff',
 
            'FileFormatError',
            'ClustalFormatError',
-           'DMFormatError',
            'FASTAFormatError',
+           'LSMatFormatError',
            'NewickFormatError',
-           'OrdResFormatError',
+           'OrdinationFormatError',
            'PhylipFormatError']
 
 # Necessary to import each file format module to have them added to the I/O
 # registry. We use import_module instead of a typical import to avoid flake8
 # unused import errors.
 import_module('skbio.io.clustal')
-import_module('skbio.io.dm')
 import_module('skbio.io.fasta')
+import_module('skbio.io.lsmat')
 import_module('skbio.io.newick')
-import_module('skbio.io.ordres')
+import_module('skbio.io.ordination')
 import_module('skbio.io.phylip')
 
 # Now that all of our I/O has loaded, we can add the object oriented methods
