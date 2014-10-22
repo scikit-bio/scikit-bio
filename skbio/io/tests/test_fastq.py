@@ -19,12 +19,16 @@ from skbio.util import get_data_path
 
 class FASTQSnifferTests(TestCase):
     def setUp(self):
-        self.positive_fps = map(get_data_path, [
+        self.positive_fps_33 = map(get_data_path, [
+            'fastq_multi_seq33',
+        ])
+
+        self.positive_fps_64 = map(get_data_path, [
             'fastq_single_seq',
             'fastq_multi_seq',
-            'fastq_multi_seq33',
             'fastq_multi_seq64'
         ])
+
         self.negative_fps = map(get_data_path, [
             'empty',
             'fastq_invalid_missing_header',
@@ -32,8 +36,10 @@ class FASTQSnifferTests(TestCase):
         ])
 
     def test_positives(self):
-        for fp in self.positive_fps:
-            self.assertEqual(_fastq_sniffer(fp), (True, {}))
+        for fp in self.positive_fps_33:
+            self.assertEqual(_fastq_sniffer(fp), (True, {'phred_offset':33}))
+        for fp in self.positive_fps_64:
+            self.assertEqual(_fastq_sniffer(fp), (True, {'phred_offset':64}))
 
     def test_negatives(self):
         for fp in self.negative_fps:

@@ -269,10 +269,10 @@ from importlib import import_module
 from ._warning import FormatIdentificationWarning, ArgumentOverrideWarning
 from ._exception import (DuplicateRegistrationError, InvalidRegistrationError,
                          RecordError, FieldError, UnrecognizedFormatError,
-                         FileFormatError, ClustalFormatError, DMFormatError,
+                         FileFormatError, ClustalFormatError,
                          FASTAFormatError, NewickFormatError, FASTQFormatError,
                          LSMatFormatError, OrdinationFormatError,
-                         OrdResFormatError, PhylipFormatError)
+                         PhylipFormatError)
 from ._registry import (write, read, sniff, get_writer, get_reader,
                         get_sniffer, list_write_formats, list_read_formats,
                         register_writer, register_reader, register_sniffer,

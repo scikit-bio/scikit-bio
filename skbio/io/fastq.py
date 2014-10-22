@@ -25,7 +25,7 @@ Format Support
 +----------+----------+------------------------------------------------------+
 |**Reader**|**Writer**|                   **Object Class**                   |
 +----------+----------+------------------------------------------------------+
-|Yes       |No        |generator of :mod:`skbio.sequence.BiologicalSequence` |
+|Yes       |Yes       |generator of :mod:`skbio.sequence.BiologicalSequence` |
 |          |          |objects                                               |
 +----------+----------+------------------------------------------------------+
 
@@ -107,7 +107,8 @@ with standard_library.hooks():
 
 import re
 import numpy as np
-from skbio.io import (register_reader, register_sniffer,
+from skbio.io import (register_reader, register_writer,
+                      register_sniffer,
                       FASTQFormatError)
 from skbio.sequence import (BiologicalSequence)
 from skbio.io.util import open_file
@@ -174,7 +175,10 @@ def _fastq_sniffer(fh):
         gen = _fastq_to_generator(fh)
         for _ in zip(range(10), gen):
             not_empty = True
-        return not_empty, {'phred_offset':33}
+        if not_empty:
+            return not_empty, {'phred_offset':33}
+        else:
+            return not_empty, {}
     except FASTQFormatError:
         try:
             fh.seek(0)
