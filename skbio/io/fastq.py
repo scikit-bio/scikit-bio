@@ -111,7 +111,7 @@ from skbio.io import (register_reader, register_writer,
                       register_sniffer,
                       FASTQFormatError)
 from skbio.sequence import (BiologicalSequence)
-from skbio.io.util import open_file
+
 from skbio.util import cardinal_to_ordinal
 
 
@@ -176,7 +176,7 @@ def _fastq_sniffer(fh):
         for _ in zip(range(10), gen):
             not_empty = True
         if not_empty:
-            return not_empty, {'phred_offset':33}
+            return not_empty, {'phred_offset': 33}
         else:
             return not_empty, {}
     except FASTQFormatError:
@@ -186,7 +186,7 @@ def _fastq_sniffer(fh):
             gen = _fastq_to_generator(fh, phred_offset=64)
             for _ in zip(range(10), gen):
                 not_empty = True
-            return not_empty, {'phred_offset':64}
+            return not_empty, {'phred_offset': 64}
         except FASTQFormatError:
             return False, {}
 
@@ -309,7 +309,9 @@ def _fastq_to_generator(fh, strict=False, enforce_qual_range=True,
 
 @register_writer('fastq')
 def _generator_to_fastq(obj, fh, id_whitespace_replacement='_',
-                        description_newline_replacement=' '):
+                        description_newline_replacement=' ',
+                        enforce_qual_range=True,
+                        phred_offset=33):
     if ((id_whitespace_replacement is not None and
          '\n' in id_whitespace_replacement) or
         (description_newline_replacement is not None and
@@ -344,7 +346,17 @@ def _generator_to_fastq(obj, fh, id_whitespace_replacement='_',
             header = id_
 
         seq_str = seq.sequence
-        qual_str = ''.join(map(chr,seq.quality))
-        
-        qual_str
+        if phred_offset not in [33, 64]:
+            raise ValueError("Unknown PHRED offset of %s" % phred_offset)
+
+        if enforce_qual_range and ((seq.quality < 0).any() or
+                                   (seq.quality > 62).any()):
+            raise FASTQFormatError("Failed qual conversion for seq id: %s."
+                                   "This may be because you passed an "
+                                   "incorrect value for phred_offset" %
+                                   seq.id)
+
+        qual = seq.quality+phred_offset
+        qual_str = ''.join(map(chr, qual))
+
         fh.write('@%s\n%s\n+%s\n%s\n' % (header, seq_str, header, qual_str))
