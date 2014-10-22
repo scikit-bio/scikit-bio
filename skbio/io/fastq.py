@@ -1,22 +1,30 @@
 r"""
-FASTQ format :mod:`skbio.io.fastq`
-==================================
+FASTQ format (:mod:`skbio.io.fastq`)
+====================================
 
 .. currentmodule:: skbio.io.fastq
 
-The FASTQ file stores biological sequences,in a plain text format.
-Each entry in a FASTQ file contains a biological sequence, typically
-DNA or RNA, and a quality score for each nucleotide. This format was
-first specified in [1]_.  More information about this format can be
-found at [2]_.
+The FASTQ file format (``fastq``) stores biological (i.e., nucleotide or
+protein) sequences and their quality scores in a simple plain text format that
+is both human-readable and easy to parse. The file format was invented by
+Jim Mullikin at the Wellcome Trust Sanger Institute but wasn't given a formal
+definition, though it has informally become a standard file format for storing
+high-throughput sequence data. More information about this format and its
+variants can be found in [1]_ and [2]_ (much of the information here is drawn
+from these resources).
 
-An example of a FASTQ-formatted file containing one DNA sequence and
-their quality scores is shown below.
+Conceptually, a FASTQ file is similar to paired FASTA and QUAL files in that
+both biological sequences and their quality scores are included. FASTQ differs
+from FASTA/QUAL as the quality scores are stored in the same file as the
+biological sequence data.
 
-@GAPC_0015:6:1:1314:13295#0/1
-AATATTGCTTTGTCTGAACGATAGTGCTCTTTGAT
-+GAPC_0015:6:1:1314:13295#0/1
-cLcc\\dddddaaYd`T```bLYT\`a```bZccc
+An example of a FASTQ-formatted file containing one DNA sequence and its
+quality scores::
+
+    @GAPC_0015:6:1:1314:13295#0/1
+    AATATTGCTTTGTCTGAACGATAGTGCTCTTTGAT
+    +GAPC_0015:6:1:1314:13295#0/1
+    cLcc\\dddddaaYd`T```bLYT\`a```bZccc
 
 Format Support
 --------------
@@ -30,18 +38,43 @@ Format Support
 +----------+----------+------------------------------------------------------+
 |Yes       |Yes       |:mod:`skbio.alignment.SequenceCollection`             |
 +----------+----------+------------------------------------------------------+
+|Yes       |Yes       |:mod:`skbio.alignment.Alignment`                      |
++----------+----------+------------------------------------------------------+
+|Yes       |Yes       |:mod:`skbio.sequence.BiologicalSequence`              |
++----------+----------+------------------------------------------------------+
+|Yes       |Yes       |:mod:`skbio.sequence.NucleotideSequence`              |
++----------+----------+------------------------------------------------------+
+|Yes       |Yes       |:mod:`skbio.sequence.DNASequence`                     |
++----------+----------+------------------------------------------------------+
+|Yes       |Yes       |:mod:`skbio.sequence.RNASequence`                     |
++----------+----------+------------------------------------------------------+
+|Yes       |Yes       |:mod:`skbio.sequence.ProteinSequence`                 |
++----------+----------+------------------------------------------------------+
 
 Format Specification
 --------------------
-A FASTQ file contains one or more biological sequences with their corresponding
-quality score. Each entry in the FASTQ file contains a sequence of nucleotides
-a set of quality scores and optionally a description and a id.
+A FASTQ file contains one or more biological sequences and their corresponding
+quality scores stored sequentially as *records*. Each *record* consists of four
+sections:
 
-Sequence Header
-^^^^^^^^^^^^^^^
-Each sequence header consists of a single line beginning with a (``@``) symbol.
-Immediately after this symbol is a sequence identifier (ID) and an description
-separated by one or more whitespace characters.
+1. Header line consisting of a sequence identifier (ID) and optional
+   description
+2. Biological sequence data (typically stored using the standard IUPAC lexicon)
+3. Line separating sequence data from quality scores (optionally including the
+   ID and description from the header line)
+4. Quality scores as printable ASCII characters
+
+Each section is described in more detail below.
+
+Header Line
+^^^^^^^^^^^
+Each record begins with a header line. The header line starts with an ``@``
+character. Immediately following this character is a sequence identifier (ID)
+and description separated by one or more whitespace characters. Both sequence
+ID and description are optional and are represented as the empty string
+(``''``) in scikit-bio's objects if they are not present in the header.
+
+TODO finish after fasta docs are reviewed and merged
 
 For example, consider the following header::
 
@@ -89,7 +122,11 @@ Now read in the FASTQ file
 
 References
 ----------
-.. [1] http://nar.oxfordjournals.org/content/38/6/1767
+.. [1] Peter J. A. Cock, Christopher J. Fields, Naohisa Goto, Michael L. Heuer,
+   and Peter M. Rice. The Sanger FASTQ file format for sequences with quality
+   scores, and the Solexa/Illumina FASTQ variants. Nucl. Acids Res. (2010) 38
+   (6): 1767-1771. first published online December 16, 2009.
+   doi:10.1093/nar/gkp1137
 .. [2] http://en.wikipedia.org/wiki/FASTQ_format
 
 """

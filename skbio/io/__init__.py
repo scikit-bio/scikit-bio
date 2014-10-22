@@ -270,7 +270,7 @@ from ._warning import FormatIdentificationWarning, ArgumentOverrideWarning
 from ._exception import (DuplicateRegistrationError, InvalidRegistrationError,
                          RecordError, FieldError, UnrecognizedFormatError,
                          FileFormatError, ClustalFormatError,
-                         FASTAFormatError, NewickFormatError, FASTQFormatError,
+                         FASTAFormatError, FASTQFormatError, NewickFormatError,
                          LSMatFormatError, OrdinationFormatError,
                          PhylipFormatError)
 from ._registry import (write, read, sniff, get_writer, get_reader,
