@@ -28,6 +28,8 @@ Format Support
 |Yes       |Yes       |generator of :mod:`skbio.sequence.BiologicalSequence` |
 |          |          |objects                                               |
 +----------+----------+------------------------------------------------------+
+|Yes       |Yes       |:mod:`skbio.alignment.SequenceCollection`             |
++----------+----------+------------------------------------------------------+
 
 Format Specification
 --------------------
@@ -110,7 +112,9 @@ import numpy as np
 from skbio.io import (register_reader, register_writer,
                       register_sniffer,
                       FASTQFormatError)
-from skbio.sequence import (BiologicalSequence)
+from skbio.alignment import SequenceCollection, Alignment
+from skbio.sequence import (BiologicalSequence, NucleotideSequence,
+                            DNASequence, RNASequence, ProteinSequence)
 
 from skbio.util import cardinal_to_ordinal
 
@@ -193,7 +197,7 @@ def _fastq_sniffer(fh):
 
 @register_reader('fastq')
 def _fastq_to_generator(fh, strict=False, enforce_qual_range=True,
-                        phred_offset=33):
+                        phred_offset=33, constructor=BiologicalSequence):
     r"""yields label, seq, and qual from a fastq file.
 
     Parameters
@@ -303,8 +307,55 @@ def _fastq_to_generator(fh, strict=False, enforce_qual_range=True,
                                    "incorrect value for phred_offset" %
                                    seqid)
 
-        yield BiologicalSequence(seq, id=seqid, quality=qual,
-                                 description=description)
+        yield constructor(seq, id=seqid, quality=qual,
+                          description=description)
+
+
+@register_reader('fastq', BiologicalSequence)
+def _fastq_to_biological_sequence(fh, seq_num=1, phred_offset=33):
+    return _fastq_to_sequence(fh, seq_num, BiologicalSequence,
+                              phred_offset=phred_offset)
+
+
+@register_reader('fastq', NucleotideSequence)
+def _fastq_to_nucleotide_sequence(fh, seq_num=1, phred_offset=33):
+    return _fastq_to_sequence(fh, seq_num, NucleotideSequence,
+                              phred_offset=phred_offset)
+
+
+@register_reader('fastq', DNASequence)
+def _fastq_to_dna_sequence(fh, seq_num=1, phred_offset=33):
+    return _fastq_to_sequence(fh, seq_num, DNASequence,
+                              phred_offset=phred_offset)
+
+
+@register_reader('fastq', RNASequence)
+def _fastq_to_rna_sequence(fh, seq_num=1, phred_offset=33):
+    return _fastq_to_sequence(fh, seq_num, RNASequence,
+                              phred_offset=phred_offset)
+
+
+@register_reader('fastq', ProteinSequence)
+def _fastq_to_protein_sequence(fh, seq_num=1,
+                               phred_offset=33):
+    return _fastq_to_sequence(fh, seq_num, ProteinSequence,
+                              phred_offset=phred_offset)
+
+
+@register_reader('fastq', SequenceCollection)
+def _fastq_to_sequence_collection(fh, constructor=BiologicalSequence,
+                                  phred_offset=33):
+    return SequenceCollection(
+        list(_fastq_to_generator(fh, constructor=constructor,
+                                 phred_offset=phred_offset)))
+
+
+@register_reader('fastq', Alignment)
+def _fastq_to_alignment(fh, constructor=BiologicalSequence,
+                        phred_offset=33):
+    return Alignment(
+        list(_fastq_to_generator(fh, constructor=constructor,
+                                 phred_offset=phred_offset)))
 
 
 @register_writer('fastq')
@@ -360,3 +411,117 @@ def _generator_to_fastq(obj, fh, id_whitespace_replacement='_',
         qual_str = ''.join(map(chr, qual))
 
         fh.write('@%s\n%s\n+%s\n%s\n' % (header, seq_str, header, qual_str))
+
+
+@register_writer('fastq', BiologicalSequence)
+def _biological_sequence_to_fastq(obj, fh, id_whitespace_replacement='_',
+                                  description_newline_replacement=' ',
+                                  phred_offset=33):
+    _sequence_to_fastq(obj, fh, id_whitespace_replacement,
+                       description_newline_replacement,
+                       phred_offset=phred_offset)
+
+
+@register_writer('fastq', NucleotideSequence)
+def _nucleotide_sequence_to_fastq(obj, fh, id_whitespace_replacement='_',
+                                  description_newline_replacement=' ',
+                                  phred_offset=33):
+    _sequence_to_fastq(obj, fh, id_whitespace_replacement,
+                       description_newline_replacement,
+                       phred_offset=phred_offset)
+
+
+@register_writer('fastq', DNASequence)
+def _dna_sequence_to_fastq(obj, fh, id_whitespace_replacement='_',
+                           description_newline_replacement=' ',
+                           phred_offset=33):
+    _sequence_to_fastq(obj, fh, id_whitespace_replacement,
+                       description_newline_replacement,
+                       phred_offset=phred_offset)
+
+
+@register_writer('fastq', RNASequence)
+def _rna_sequence_to_fastq(obj, fh, id_whitespace_replacement='_',
+                           description_newline_replacement=' ',
+                           phred_offset=33):
+    _sequence_to_fastq(obj, fh, id_whitespace_replacement,
+                       description_newline_replacement,
+                       phred_offset=phred_offset)
+
+
+@register_writer('fastq', ProteinSequence)
+def _protein_sequence_to_fastq(obj, fh, id_whitespace_replacement='_',
+                               description_newline_replacement=' ',
+                               phred_offset=33):
+    _sequence_to_fastq(obj, fh, id_whitespace_replacement,
+                       description_newline_replacement,
+                       phred_offset=phred_offset)
+
+
+@register_writer('fastq', SequenceCollection)
+def _sequence_collection_to_fastq(obj, fh, id_whitespace_replacement='_',
+                                  description_newline_replacement=' ',
+                                  phred_offset=33):
+    _sequences_to_fastq(obj, fh, id_whitespace_replacement,
+                        description_newline_replacement,
+                        phred_offset=phred_offset)
+
+
+@register_writer('fastq', Alignment)
+def _alignment_to_fastq(obj, fh, id_whitespace_replacement='_',
+                        description_newline_replacement=' ',
+                        phred_offset=33):
+    _sequences_to_fastq(obj, fh, id_whitespace_replacement,
+                        description_newline_replacement,
+                        phred_offset=phred_offset)
+
+
+def _fastq_to_sequence(fh, seq_num, constructor, phred_offset=33):
+    if seq_num < 1:
+        raise FASTQFormatError(
+            "Invalid sequence number (seq_num=%d). seq_num must be between 1 "
+            "and the number of sequences in the FASTQ-formatted file "
+            "(inclusive)." % seq_num)
+
+    seq_idx = seq_num - 1
+    seq = None
+    try:
+        gen = _fastq_to_generator(fh, constructor=constructor,
+                                  phred_offset=phred_offset)
+        for idx, curr_seq in enumerate(gen):
+            if idx == seq_idx:
+                seq = curr_seq
+                break
+    finally:
+        gen.close()
+
+    if seq is None:
+        raise FASTQFormatError(
+            "Reached end of FASTQ-formatted file before finding %s biological "
+            "sequence." % cardinal_to_ordinal(seq_num))
+    return seq
+
+
+def _sequence_to_fastq(obj, fh, id_whitespace_replacement,
+                       description_newline_replacement,
+                       phred_offset=33):
+    def seq_gen():
+        yield obj
+
+    _generator_to_fastq(
+        seq_gen(), fh, id_whitespace_replacement=id_whitespace_replacement,
+        description_newline_replacement=description_newline_replacement,
+        phred_offset=phred_offset)
+
+
+def _sequences_to_fastq(obj, fh, id_whitespace_replacement,
+                        description_newline_replacement,
+                        phred_offset=33):
+    def seq_gen():
+        for seq in obj:
+            yield seq
+
+    _generator_to_fastq(
+        seq_gen(), fh, id_whitespace_replacement=id_whitespace_replacement,
+        description_newline_replacement=description_newline_replacement,
+        phred_offset=phred_offset)
