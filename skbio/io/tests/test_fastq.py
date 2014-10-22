@@ -299,7 +299,7 @@ class FASTQWriterTests(TestCase):
                                     r'b`bbbU_[YYcadcda_LbaaabWbaacYcc`a^c')),
              BiologicalSequence('TAATGCCAAAGAAATATTTCCAAACTACATGCTTA',
                                 id=r'GAPC_0015:6:1:1297:10729#0/1',
-                                 quality=ascii_to_phred64(
+                                quality=ascii_to_phred64(
                                     r'T\ccLbb``bacc]_cacccccLccc\ccTccYL^'))],
             {'phred_offset': 64},
             map(get_data_path, ['fastq_multi_seq64']))
@@ -404,7 +404,6 @@ class FASTQWriterTests(TestCase):
                 exp = fh.read()
 
             self.assertEqual(obs, exp)
-
 
     def test_fastq_to_generator_invalid_files(self):
         for fp, error_msg_regex in self.invalid_fps:
