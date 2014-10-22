@@ -637,49 +637,71 @@ class WriterTests(TestCase):
     # performed above
 
     def test_any_sequence_to_fasta(self):
-        # Store writer function, sequence object to write, and expected
-        # filepaths for each of the invoked keyword arguments (see below).
+        # store writer function, sequence object to write, expected
+        # fasta filepath for default parameters, expected fasta filepath for
+        # non-defaults, and expected qual filepath for non-defaults
         id_ = 'f o o'
         desc = 'b\na\nr'
         test_data = (
             (_biological_sequence_to_fasta,
-             BiologicalSequence('ACGT', id=id_, description=desc),
+             BiologicalSequence('ACGT', id=id_, description=desc,
+                                quality=range(1, 5)),
              ('fasta_single_bio_seq_defaults',
-              'fasta_single_bio_seq_non_defaults')),
+              'fasta_single_bio_seq_non_defaults',
+              'qual_single_bio_seq_non_defaults')),
             (_nucleotide_sequence_to_fasta,
-             NucleotideSequence('ACGTU', id=id_, description=desc),
+             NucleotideSequence('ACGTU', id=id_, description=desc,
+                                quality=range(5)),
              ('fasta_single_nuc_seq_defaults',
-              'fasta_single_nuc_seq_non_defaults')),
+              'fasta_single_nuc_seq_non_defaults',
+              'qual_single_nuc_seq_non_defaults')),
             (_dna_sequence_to_fasta,
-             DNA('TACG', id=id_, description=desc),
+             DNA('TACG', id=id_, description=desc, quality=range(4)),
              ('fasta_single_dna_seq_defaults',
-              'fasta_single_dna_seq_non_defaults')),
+              'fasta_single_dna_seq_non_defaults',
+              'qual_single_dna_seq_non_defaults')),
             (_rna_sequence_to_fasta,
-             RNA('UACG', id=id_, description=desc),
+             RNA('UACG', id=id_, description=desc, quality=range(2, 6)),
              ('fasta_single_rna_seq_defaults',
-              'fasta_single_rna_seq_non_defaults')),
+              'fasta_single_rna_seq_non_defaults',
+              'qual_single_rna_seq_non_defaults')),
             (_protein_sequence_to_fasta,
-             Protein('PQQ', id=id_, description=desc),
+             Protein('PQQ', id=id_, description=desc, quality=[42, 41, 40]),
              ('fasta_single_prot_seq_defaults',
-              'fasta_single_prot_seq_non_defaults')))
-
-        kwargs_non_defaults = {
-            'id_whitespace_replacement': '-',
-            'description_newline_replacement': '_',
-            'max_width': 1
-        }
+              'fasta_single_prot_seq_non_defaults',
+              'qual_single_prot_seq_non_defaults')))
 
         for fn, obj, fps in test_data:
-            for kw, fp in zip(({}, kwargs_non_defaults), fps):
-                fh = StringIO()
-                fn(obj, fh, **kw)
-                obs = fh.getvalue()
-                fh.close()
+            defaults_fp, non_defaults_fasta_fp, non_defaults_qual_fp = fps
 
-                with open(get_data_path(fp), 'U') as fh:
-                    exp = fh.read()
+            # test writing with default parameters
+            fh = StringIO()
+            fn(obj, fh)
+            obs = fh.getvalue()
+            fh.close()
 
-                self.assertEqual(obs, exp)
+            with open(get_data_path(defaults_fp), 'U') as fh:
+                exp = fh.read()
+
+            self.assertEqual(obs, exp)
+
+            # test writing with non-defaults
+            fasta_fh = StringIO()
+            qual_fh = StringIO()
+            fn(obj, fasta_fh, id_whitespace_replacement='-',
+               description_newline_replacement='_', max_width=1, qual=qual_fh)
+            obs_fasta = fasta_fh.getvalue()
+            obs_qual = qual_fh.getvalue()
+            fasta_fh.close()
+            qual_fh.close()
+
+            with open(get_data_path(non_defaults_fasta_fp), 'U') as fh:
+                exp_fasta = fh.read()
+            with open(get_data_path(non_defaults_qual_fp), 'U') as fh:
+                exp_qual = fh.read()
+
+            self.assertEqual(obs_fasta, exp_fasta)
+            self.assertEqual(obs_qual, exp_qual)
 
     def test_any_sequences_to_fasta(self):
         for fn, obj in ((_sequence_collection_to_fasta, self.seq_coll),
