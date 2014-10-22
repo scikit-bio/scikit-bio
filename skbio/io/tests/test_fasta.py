@@ -28,7 +28,7 @@ from skbio.util import get_data_path
 
 class SnifferTests(TestCase):
     def setUp(self):
-        self.fasta_positive_fps = map(get_data_path, [
+        self.positive_fps = map(get_data_path, [
             'fasta_3_seqs_defaults',
             'fasta_max_width_1',
             'fasta_single_bio_seq_non_defaults',
@@ -58,7 +58,7 @@ class SnifferTests(TestCase):
             'qual_invalid_qual_scores_string'
         ])
 
-        self.fasta_negative_fps = map(get_data_path, [
+        self.negative_fps = map(get_data_path, [
             'empty',
             'whitespace_only',
             'fasta_invalid_missing_header',
@@ -105,11 +105,11 @@ class SnifferTests(TestCase):
         ])
 
     def test_positives(self):
-        for fp in self.fasta_positive_fps:
+        for fp in self.positive_fps:
             self.assertEqual(_fasta_sniffer(fp), (True, {}))
 
     def test_negatives(self):
-        for fp in self.fasta_negative_fps:
+        for fp in self.negative_fps:
             self.assertEqual(_fasta_sniffer(fp), (False, {}))
 
 
