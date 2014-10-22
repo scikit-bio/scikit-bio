@@ -5,8 +5,8 @@ Clustal format (:mod:`skbio.io.clustal`)
 
 .. currentmodule:: skbio.io.clustal
 
-Clustal format (``clustal``) stores multiple alignment sequences. This format
-was originally introduced by Desmond Higgens in the Clustal package [1]_.
+Clustal format (``clustal``) stores multiple sequence alignments. This format
+was originally introduced in the Clustal package [1]_.
 
 Format Support
 --------------

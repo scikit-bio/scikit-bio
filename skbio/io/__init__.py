@@ -112,8 +112,8 @@ see the associated documentation.
    :toctree: generated/
 
    clustal
-   lsmat
    fasta
+   lsmat
    newick
    ordination
    phylip

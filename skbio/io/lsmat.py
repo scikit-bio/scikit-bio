@@ -9,7 +9,7 @@ matrix data relating a set of objects along each axis. The format also stores
 identifiers (i.e., unique labels) for the objects. The matrix data and
 identifiers are stored in delimited text format (e.g., TSV or CSV). This format
 supports storing a variety of data types including dissimilarity/distance
-matrices and substitution matrices.
+matrices, similarity matrices and amino acid substitution matrices.
 
 Format Support
 --------------
