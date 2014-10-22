@@ -470,10 +470,13 @@ class WriterTests(TestCase):
             quality=[42, 42, 442, 442, 42, 42, 42, 42, 42, 43])
 
         seqs = [
-            RNA('UUUU', id='s\te\tq\t1', description='desc\n1'),
+            RNA('UUUU', id='s\te\tq\t1', description='desc\n1',
+                quality=[1234, 0, 0, 2]),
             BiologicalSequence(
-                'CATC', id='s\te\tq\t2', description='desc\n2'),
-            Protein('sits', id='s\te\tq\t3', description='desc\n3')
+                'CATC', id='s\te\tq\t2', description='desc\n2',
+                quality=[1, 11, 111, 11112]),
+            Protein('sits', id='s\te\tq\t3', description='desc\n3',
+                    quality=[12345, 678909, 999999, 4242424242])
         ]
         self.seq_coll = SequenceCollection(seqs)
         self.align = Alignment(seqs)
@@ -679,25 +682,36 @@ class WriterTests(TestCase):
                 self.assertEqual(obs, exp)
 
     def test_any_sequences_to_fasta(self):
-        kwargs_non_defaults = {
-            'id_whitespace_replacement': '*',
-            'description_newline_replacement': '+',
-            'max_width': 3
-        }
-
         for fn, obj in ((_sequence_collection_to_fasta, self.seq_coll),
                         (_alignment_to_fasta, self.align)):
-            for kw, fp in (({}, 'fasta_3_seqs_defaults'),
-                           (kwargs_non_defaults, 'fasta_3_seqs_non_defaults')):
-                fh = StringIO()
-                fn(obj, fh, **kw)
-                obs = fh.getvalue()
-                fh.close()
+            # test writing with default parameters
+            fh = StringIO()
+            fn(obj, fh)
+            obs = fh.getvalue()
+            fh.close()
 
-                with open(get_data_path(fp), 'U') as fh:
-                    exp = fh.read()
+            with open(get_data_path('fasta_3_seqs_defaults'), 'U') as fh:
+                exp = fh.read()
 
-                self.assertEqual(obs, exp)
+            self.assertEqual(obs, exp)
+
+            # test writing with non-defaults
+            fasta_fh = StringIO()
+            qual_fh = StringIO()
+            fn(obj, fasta_fh, id_whitespace_replacement='*',
+               description_newline_replacement='+', max_width=3, qual=qual_fh)
+            obs_fasta = fasta_fh.getvalue()
+            obs_qual = qual_fh.getvalue()
+            fasta_fh.close()
+            qual_fh.close()
+
+            with open(get_data_path('fasta_3_seqs_non_defaults'), 'U') as fh:
+                exp_fasta = fh.read()
+            with open(get_data_path('qual_3_seqs_non_defaults'), 'U') as fh:
+                exp_qual = fh.read()
+
+            self.assertEqual(obs_fasta, exp_fasta)
+            self.assertEqual(obs_qual, exp_qual)
 
 
 class RoundtripTests(TestCase):
