@@ -19,6 +19,8 @@ from skbio.io.fastq import (
     _fastq_to_nucleotide_sequence, _fastq_to_dna_sequence,
     _fastq_to_rna_sequence, _fastq_to_protein_sequence,
     _fastq_to_sequence_collection, _fastq_to_alignment, _generator_to_fastq,
+    _biological_sequence_to_fastq, _nucleotide_sequence_to_fastq,
+    _dna_sequence_to_fastq, _rna_sequence_to_fastq, _protein_sequence_to_fastq,
     ascii_to_phred33, ascii_to_phred64)
 
 from skbio.util import get_data_path
@@ -194,7 +196,7 @@ class FASTQReaderTests(TestCase):
             # for each of the sequence object types that they're read into
             # (e.g., reading a protein sequence into a dna sequence object).
             # however, for the purposes of testing the various
-            # fasta -> sequence readers, this works out okay as it is valid to
+            # fastq -> sequence readers, this works out okay as it is valid to
             # construct a sequence object with invalid characters. we're
             # interested in testing the reading logic here, and don't care so
             # much about constructing semantically-meaningful/valid sequence
@@ -319,6 +321,61 @@ class FASTQWriterTests(TestCase):
                     exp = fh.read()
 
             self.assertEqual(obs, exp)
+
+    # light testing of object -> fastq writers to ensure interface is present
+    # and kwargs are passed through. extensive testing of underlying writer is
+    # performed above
+
+    def test_any_sequence_to_fastq(self):
+        # Store writer function, sequence object to write, and expected
+        # filepaths for each of the invoked keyword arguments (see below).
+        id_ = 'f o o'
+        desc = 'b\na\nr'
+        test_data = (
+            (_biological_sequence_to_fastq,
+             BiologicalSequence('ACGT', id=id_, description=desc,
+                                quality=ascii_to_phred33('9999')),
+             ('fastq_single_bio_seq33',
+              'fastq_single_bio_seq33_non_defaults')),
+            (_nucleotide_sequence_to_fastq,
+             NucleotideSequence('ACGTU', id=id_, description=desc,
+                                quality=ascii_to_phred33('99999')),
+             ('fastq_single_nuc33',
+              'fastq_single_nuc33_non_defaults')),
+            (_dna_sequence_to_fastq,
+             DNA('TACG', id=id_, description=desc,
+                 quality=ascii_to_phred33('9999')),
+             ('fastq_single_dna33',
+              'fastq_single_dna33_non_defaults')),
+            (_rna_sequence_to_fastq,
+             RNA('UACG', id=id_, description=desc,
+                 quality=ascii_to_phred33('9999')),
+             ('fastq_single_rna33',
+              'fastq_single_rna33_non_defaults')),
+            (_protein_sequence_to_fastq,
+             Protein('SKBI', id=id_, description=desc,
+                     quality=ascii_to_phred33('9999')),
+             ('fastq_single_prot33',
+              'fastq_single_prot33_non_defaults')))
+
+        kwargs_non_defaults = {
+            'id_whitespace_replacement': '-',
+            'description_newline_replacement': '_',
+        }
+
+        for fn, obj, fps in test_data:
+            for kw, fp in zip(({}, kwargs_non_defaults), fps):
+                print(fp)
+                fh = StringIO()
+                print(kw)
+                fn(obj, fh, **kw)
+                obs = fh.getvalue()
+                fh.close()
+
+                with open(get_data_path(fp), 'U') as fh:
+                    exp = fh.read()
+
+                self.assertEqual(obs, exp)
 
     def test_fastq_to_generator_invalid_files(self):
         for fp, error_msg_regex in self.invalid_fps:

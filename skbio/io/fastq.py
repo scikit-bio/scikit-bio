@@ -417,6 +417,7 @@ def _generator_to_fastq(obj, fh, id_whitespace_replacement='_',
 def _biological_sequence_to_fastq(obj, fh, id_whitespace_replacement='_',
                                   description_newline_replacement=' ',
                                   phred_offset=33):
+
     _sequence_to_fastq(obj, fh, id_whitespace_replacement,
                        description_newline_replacement,
                        phred_offset=phred_offset)
