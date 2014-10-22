@@ -1,10 +1,10 @@
 r"""
-Ordination results format (:mod:`skbio.io.ordres`)
-==================================================
+Ordination results format (:mod:`skbio.io.ordination`)
+======================================================
 
-.. currentmodule:: skbio.io.ordres
+.. currentmodule:: skbio.io.ordination
 
-The ordination results file format (``ordres``) stores the results of an
+The ordination results file format (``ordination``) stores the results of an
 ordination method in a human-readable, text-based format. The format supports
 storing the results of various ordination methods available in scikit-bio,
 including (but not necessarily limited to) PCoA, CA, RDA, and CCA.
@@ -82,7 +82,7 @@ All attributes are optional except for ``Eigvals``.
 Examples
 --------
 Assume we have the following tab-delimited text file storing the
-ordination results in ``ordres`` format::
+ordination results in ``ordination`` format::
 
     Eigvals\t2
     0.0961330159181\t0.0409418140138
@@ -143,13 +143,13 @@ import numpy as np
 
 from skbio.stats.ordination import OrdinationResults
 from skbio.io import (register_reader, register_writer, register_sniffer,
-                      OrdResFormatError)
+                      OrdinationFormatError)
 
 
-@register_sniffer('ordres')
-def _ordres_sniffer(fh):
-    # Smells an ordres file if *all* of the following lines are present *from
-    # the beginning* of the file:
+@register_sniffer('ordination')
+def _ordination_sniffer(fh):
+    # Smells an ordination file if *all* of the following lines are present
+    # *from the beginning* of the file:
     #   - eigvals header (minimally parsed)
     #   - another line (contents ignored)
     #   - a whitespace-only line
@@ -162,17 +162,17 @@ def _ordres_sniffer(fh):
             _check_empty_line(fh)
             _parse_header(fh, 'Proportion explained', 1)
             return True, {}
-    except OrdResFormatError:
+    except OrdinationFormatError:
         pass
 
     return False, {}
 
 
-@register_reader('ordres', OrdinationResults)
-def _ordres_to_ordination_results(fh):
+@register_reader('ordination', OrdinationResults)
+def _ordination_to_ordination_results(fh):
     eigvals = _parse_vector_section(fh, 'Eigvals')
     if eigvals is None:
-        raise OrdResFormatError("At least one eigval must be present.")
+        raise OrdinationFormatError("At least one eigval must be present.")
     _check_empty_line(fh)
 
     prop_expl = _parse_vector_section(fh, 'Proportion explained')
@@ -198,7 +198,7 @@ def _ordres_to_ordination_results(fh):
 
     if cons_ids is not None and site_ids is not None:
         if cons_ids != site_ids:
-            raise OrdResFormatError(
+            raise OrdinationFormatError(
                 "Site constraints ids and site ids must be equal: %s != %s" %
                 (cons_ids, site_ids))
 
@@ -211,13 +211,13 @@ def _ordres_to_ordination_results(fh):
 def _parse_header(fh, header_id, num_dimensions):
     line = next(fh, None)
     if line is None:
-        raise OrdResFormatError("Reached end of file while looking for %s "
-                                "header." % header_id)
+        raise OrdinationFormatError(
+            "Reached end of file while looking for %s header." % header_id)
 
     header = line.strip().split('\t')
     # +1 for the header ID
     if len(header) != num_dimensions + 1 or header[0] != header_id:
-        raise OrdResFormatError("%s header not found." % header_id)
+        raise OrdinationFormatError("%s header not found." % header_id)
     return header
 
 
@@ -225,11 +225,12 @@ def _check_empty_line(fh):
     """Check that the next line in `fh` is empty or whitespace-only."""
     line = next(fh, None)
     if line is None:
-        raise OrdResFormatError("Reached end of file while looking for blank "
-                                "line separating sections.")
+        raise OrdinationFormatError(
+            "Reached end of file while looking for blank line separating "
+            "sections.")
 
     if line.strip():
-        raise OrdResFormatError("Expected an empty line.")
+        raise OrdinationFormatError("Expected an empty line.")
 
 
 def _check_length_against_eigvals(data, eigvals, label):
@@ -238,7 +239,7 @@ def _check_length_against_eigvals(data, eigvals, label):
         num_eigvals = eigvals.shape[-1]
 
         if num_vals != num_eigvals:
-            raise OrdResFormatError(
+            raise OrdinationFormatError(
                 "There should be as many %s as eigvals: %d != %d" %
                 (label, num_vals, num_eigvals))
 
@@ -255,12 +256,12 @@ def _parse_vector_section(fh, header_id):
         # Parse the line with the vector values
         line = next(fh, None)
         if line is None:
-            raise OrdResFormatError("Reached end of file while looking for "
-                                    "line containing values for %s section."
-                                    % header_id)
+            raise OrdinationFormatError(
+                "Reached end of file while looking for line containing values "
+                "for %s section." % header_id)
         vals = np.asarray(line.strip().split('\t'), dtype=np.float64)
         if len(vals) != num_vals:
-            raise OrdResFormatError(
+            raise OrdinationFormatError(
                 "Expected %d values in %s section, but found %d." %
                 (num_vals, header_id, len(vals)))
     return vals
@@ -282,8 +283,8 @@ def _parse_array_section(fh, header_id, has_ids=True):
         data = None
     elif rows == 0 or cols == 0:
         # Both dimensions should be 0 or none of them are zero
-        raise OrdResFormatError("One dimension of %s is 0: %d x %d" %
-                                (header_id, rows, cols))
+        raise OrdinationFormatError("One dimension of %s is 0: %d x %d" %
+                                    (header_id, rows, cols))
     else:
         # Parse the data
         data = np.empty((rows, cols), dtype=np.float64)
@@ -295,7 +296,7 @@ def _parse_array_section(fh, header_id, has_ids=True):
             # Parse the next row of data
             line = next(fh, None)
             if line is None:
-                raise OrdResFormatError(
+                raise OrdinationFormatError(
                     "Reached end of file while looking for row %d in %s "
                     "section." % (i + 1, header_id))
             vals = line.strip().split('\t')
@@ -305,15 +306,15 @@ def _parse_array_section(fh, header_id, has_ids=True):
                 vals = vals[1:]
 
             if len(vals) != cols:
-                raise OrdResFormatError(
+                raise OrdinationFormatError(
                     "Expected %d values, but found %d in row %d." %
                     (cols, len(vals), i + 1))
             data[i, :] = np.asarray(vals, dtype=np.float64)
     return data, ids
 
 
-@register_writer('ordres', OrdinationResults)
-def _ordination_results_to_ordres(obj, fh):
+@register_writer('ordination', OrdinationResults)
+def _ordination_results_to_ordination(obj, fh):
     _write_vector_section(fh, 'Eigvals', obj.eigvals)
     _write_vector_section(fh, 'Proportion explained', obj.proportion_explained)
     _write_array_section(fh, 'Species', obj.species, obj.species_ids)

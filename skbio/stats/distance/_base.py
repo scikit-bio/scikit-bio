@@ -95,12 +95,12 @@ class DissimilarityMatrix(object):
     .. [1] http://docs.scipy.org/doc/scipy/reference/spatial.distance.html
 
     """
-    default_write_format = 'dm'
+    default_write_format = 'lsmat'
     # Used in __str__
     _matrix_element_name = 'dissimilarity'
 
     @classmethod
-    def from_file(cls, dm_f, delimiter='\t'):
+    def from_file(cls, lsmat_f, delimiter='\t'):
         """Load dissimilarity matrix from delimited text file.
 
         .. note:: Deprecated in scikit-bio 0.2.0-dev
@@ -111,20 +111,21 @@ class DissimilarityMatrix(object):
            of scikit-bio's I/O registry system. See :mod:`skbio.io` for more
            details.
 
-        Creates a ``DissimilarityMatrix`` (or subclass) instance from a ``dm``
-        formatted file. See :mod:`skbio.io.dm` for the format specification.
+        Creates a ``DissimilarityMatrix`` (or subclass) instance from a
+        ``lsmat`` formatted file. See :mod:`skbio.io.lsmat` for the format
+        specification.
 
         Parameters
         ----------
-        dm_f: filepath or filehandle
+        lsmat_f: filepath or filehandle
             File to read from.
         delimiter : str, optional
-            String delimiting elements in `dm_f`.
+            String delimiting elements in `lsmat_f`.
 
         Returns
         -------
         DissimilarityMatrix
-            Instance of type `cls` containing the parsed contents of `dm_f`.
+            Instance of type `cls` containing the parsed contents of `lsmat_f`.
 
         See Also
         --------
@@ -136,7 +137,7 @@ class DissimilarityMatrix(object):
             "deprecated and will be removed in scikit-bio 0.3.0. Please "
             "update your code to use DissimilarityMatrix.read and "
             "DistanceMatrix.read.", UserWarning)
-        return cls.read(dm_f, format='dm', delimiter=delimiter)
+        return cls.read(lsmat_f, format='lsmat', delimiter=delimiter)
 
     def to_file(self, out_f, delimiter='\t'):
         """Save dissimilarity matrix to file as delimited text.
@@ -148,8 +149,8 @@ class DissimilarityMatrix(object):
            formats by taking advantage of scikit-bio's I/O registry system.
            See :mod:`skbio.io` for more details.
 
-        Serializes dissimilarity matrix as a ``dm`` formatted file. See
-        :mod:`skbio.io.dm` for the format specification.
+        Serializes dissimilarity matrix as a ``lsmat`` formatted file. See
+        :mod:`skbio.io.lsmat` for the format specification.
 
         Parameters
         ----------
@@ -168,7 +169,7 @@ class DissimilarityMatrix(object):
             "deprecated and will be removed in scikit-bio 0.3.0. Please "
             "update your code to use DissimilarityMatrix.write and "
             "DistanceMatrix.write.", UserWarning)
-        self.write(out_f, format='dm', delimiter=delimiter)
+        self.write(out_f, format='lsmat', delimiter=delimiter)
 
     def __init__(self, data, ids=None):
         if isinstance(data, DissimilarityMatrix):
