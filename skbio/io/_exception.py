@@ -29,13 +29,13 @@ class UnrecognizedFormatError(FileFormatError):
     pass
 
 
-class DMFormatError(FileFormatError):
-    """Raised when a ``dm`` formatted file cannot be parsed."""
+class LSMatFormatError(FileFormatError):
+    """Raised when a ``lsmat`` formatted file cannot be parsed."""
     pass
 
 
-class OrdResFormatError(FileFormatError):
-    """Raised when an ``ordres`` formatted file cannot be parsed."""
+class OrdinationFormatError(FileFormatError):
+    """Raised when an ``ordination`` formatted file cannot be parsed."""
     pass
 
 

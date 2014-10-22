@@ -111,6 +111,7 @@ from skbio.io import (register_reader, register_sniffer,
                       FASTQFormatError)
 from skbio.sequence import (BiologicalSequence)
 from skbio.io.util import open_file
+from skbio.util import cardinal_to_ordinal
 
 
 def _ascii_to_phred(s, offset):
@@ -173,7 +174,7 @@ def _fastq_sniffer(fh):
         gen = _fastq_to_generator(fh)
         for _ in zip(range(10), gen):
             not_empty = True
-        return not_empty, {}
+        return not_empty, {'phred_offset':33}
     except FASTQFormatError:
         try:
             fh.seek(0)
@@ -181,19 +182,19 @@ def _fastq_sniffer(fh):
             gen = _fastq_to_generator(fh, phred_offset=64)
             for _ in zip(range(10), gen):
                 not_empty = True
-            return not_empty, {}
+            return not_empty, {'phred_offset':64}
         except FASTQFormatError:
             return False, {}
 
 
 @register_reader('fastq')
-def _fastq_to_generator(data, strict=False, enforce_qual_range=True,
+def _fastq_to_generator(fh, strict=False, enforce_qual_range=True,
                         phred_offset=33):
     r"""yields label, seq, and qual from a fastq file.
 
     Parameters
     ----------
-    data : open file object or str
+    fh : open file object or str
         An open fastq file (opened in binary mode) or a path to it.
     strict : bool, optional
         Defaults to ``False``. If strict is true a FastqParse error will be
@@ -255,49 +256,91 @@ def _fastq_to_generator(data, strict=False, enforce_qual_range=True,
     else:
         raise ValueError("Unknown PHRED offset of %s" % phred_offset)
 
-    with open_file(data, 'rb') as data:
-        iters = [iter(data)] * 4
-        for seqid, seq, qualid, qual in zip_longest(*iters):
-            header = seqid.strip()
-            # If the file simply ended in a blankline, do not error
-            if header is '':
-                continue
+    iters = [iter(fh)] * 4
+    for seqid, seq, qualid, qual in zip_longest(*iters):
+        header = seqid.strip()
+        # If the file simply ended in a blankline, do not error
+        if header is '':
+            continue
 
-            # Error if an incomplete record is found
-            # Note: seqid cannot be None, because if all 4 values were None,
-            # then the loop condition would be false, and we could not have
-            # gotten to this point
-            if seq is None or qualid is None or qual is None:
-                raise FASTQFormatError("Incomplete FASTQ record found at end "
-                                       "of file")
+        # Error if an incomplete record is found
+        # Note: seqid cannot be None, because if all 4 values were None,
+        # then the loop condition would be false, and we could not have
+        # gotten to this point
+        if seq is None or qualid is None or qual is None:
+            raise FASTQFormatError("Incomplete FASTQ record found at end "
+                                   "of file")
 
-            seq = seq.strip()
-            qualid = qualid.strip()
-            qual = qual.strip()
+        seq = seq.strip()
+        qualid = qualid.strip()
+        qual = qual.strip()
 
-            header = _drop_id_marker(header)
-            seqid, description = _split_id(header)
-            try:
-                seq = str(seq.decode("utf-8"))
-            except AttributeError:
-                pass
+        header = _drop_id_marker(header)
+        seqid, description = _split_id(header)
+        try:
+            seq = str(seq.decode("utf-8"))
+        except AttributeError:
+            pass
 
-            qualid = _drop_id_marker(qualid)
-            qualid, _ = _split_id(qualid)
-            if strict:
-                if seqid != qualid:
-                    raise FASTQFormatError('ID mismatch: {} != {}'.format(
-                        seqid, qualid))
+        qualid = _drop_id_marker(qualid)
+        qualid, _ = _split_id(qualid)
+        if strict:
+            if seqid != qualid:
+                raise FASTQFormatError('ID mismatch: {} != {}'.format(
+                    seqid, qualid))
 
-            # bounds based on illumina limits, see:
-            # http://nar.oxfordjournals.org/content/38/6/1767/T1.expansion.html
-            qual = phred_f(qual)
+        # bounds based on illumina limits, see:
+        # http://nar.oxfordjournals.org/content/38/6/1767/T1.expansion.html
+        qual = phred_f(qual)
 
-            if enforce_qual_range and ((qual < 0).any() or (qual > 62).any()):
-                raise FASTQFormatError("Failed qual conversion for seq id: %s."
-                                       "This may be because you passed an "
-                                       "incorrect value for phred_offset" %
-                                       seqid)
+        if enforce_qual_range and ((qual < 0).any() or (qual > 62).any()):
+            raise FASTQFormatError("Failed qual conversion for seq id: %s."
+                                   "This may be because you passed an "
+                                   "incorrect value for phred_offset" %
+                                   seqid)
 
-            yield BiologicalSequence(seq, id=seqid, quality=qual,
-                                     description=description)
+        yield BiologicalSequence(seq, id=seqid, quality=qual,
+                                 description=description)
+
+
+@register_writer('fastq')
+def _generator_to_fastq(obj, fh, id_whitespace_replacement='_',
+                        description_newline_replacement=' '):
+    if ((id_whitespace_replacement is not None and
+         '\n' in id_whitespace_replacement) or
+        (description_newline_replacement is not None and
+         '\n' in description_newline_replacement)):
+        raise FASTQFormatError(
+            "Newline character (\\n) cannot be used to replace whitespace in "
+            "biological sequence IDs, nor to replace newlines in biological "
+            "sequence descriptions. Otherwise, the FASTQ-formatted file will "
+            "be invalid.")
+    ws_pattern = re.compile(r'\s')
+    nl_pattern = re.compile(r'\n')
+
+    for idx, seq in enumerate(obj):
+        if len(seq) < 1:
+            raise FASTQFormatError(
+                "Cannot write %s biological sequence in FASTQ format because "
+                "it does not contain any characters (i.e., it is an "
+                "empty/blank sequence). Empty sequences are not supported in "
+                "the FASTQ file format." % cardinal_to_ordinal(idx + 1))
+
+        id_ = seq.id
+        if id_whitespace_replacement is not None:
+            id_ = re.sub(ws_pattern, id_whitespace_replacement, id_)
+
+        desc = seq.description
+        if description_newline_replacement is not None:
+            desc = re.sub(nl_pattern, description_newline_replacement, desc)
+
+        if desc:
+            header = '%s %s' % (id_, desc)
+        else:
+            header = id_
+
+        seq_str = seq.sequence
+        qual_str = ''.join(map(chr,seq.quality))
+        
+        qual_str
+        fh.write('@%s\n%s\n+%s\n%s\n' % (header, seq_str, header, qual_str))
