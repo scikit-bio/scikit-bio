@@ -452,15 +452,22 @@ class ReaderTests(TestCase):
 class WriterTests(TestCase):
     def setUp(self):
         self.bio_seq1 = BiologicalSequence(
-            'ACGT-acgt.', id='seq1', description='desc1', quality=range(10))
-        self.bio_seq2 = BiologicalSequence('A', id=' \n  \nseq \t2 ')
-        self.bio_seq3 = BiologicalSequence('AACGGuA', description='desc3')
-        self.nuc_seq = NucleotideSequence('AcGtUTu')
-        self.dna_seq = DNA('ACGTTGCAccGG')
-        self.rna_seq = RNA('ACGUU', quality=[42] * 5)
+            'ACGT-acgt.', id='seq1', description='desc1',
+            quality=[10, 20, 30, 10, 0, 0, 0, 88888, -1, -3456])
+        self.bio_seq2 = BiologicalSequence(
+            'A', id=' \n  \nseq \t2 ', quality=[-42])
+        self.bio_seq3 = BiologicalSequence(
+            'AACGGuA', description='desc3', quality=[0, 0, 0, 0, 0, 0, 0])
+        self.nuc_seq = NucleotideSequence(
+            'AcGtUTu', quality=[1, 2, 3, 4, 5, 6, 777])
+        self.dna_seq = DNA(
+            'ACGTTGCAccGG',
+            quality=[55, 10, 0, 999, 1, 1, -8, 775, 40, 10, 10, 0])
+        self.rna_seq = RNA('ACGUU', quality=[10, 9, 8, 7, 6])
         self.prot_seq = Protein(
             'pQqqqPPQQQ', id='proteinseq',
-            description='\ndetailed\ndescription \t\twith  new\n\nlines\n\n\n')
+            description='\ndetailed\ndescription \t\twith  new\n\nlines\n\n\n',
+            quality=[42, 42, 442, 442, 42, 42, 42, 42, 42, 43])
 
         seqs = [
             RNA('UUUU', id='s\te\tq\t1', description='desc\n1'),
@@ -482,13 +489,15 @@ class WriterTests(TestCase):
         # description_newline_replacement)
         def newline_description_gen():
             yield self.prot_seq
-            yield DNA('AGGAGAATA', id='foo', description='\n\n\n\n')
+            yield DNA('AGGAGAATA', id='foo', description='\n\n\n\n',
+                      quality=range(9))
 
         # generate sequences with ids containing whitespace (to test
         # id_whitespace_replacement)
         def whitespace_id_gen():
             yield self.bio_seq2
-            yield RNA('UA', id='\n\t \t', description='a\nb')
+            yield RNA('UA', id='\n\t \t', description='a\nb',
+                      quality=[1000, 1])
 
         # multiple sequences of mixed types, lengths, and metadata. lengths are
         # chosen to exercise various splitting cases when testing max_width
@@ -498,38 +507,55 @@ class WriterTests(TestCase):
                         self.prot_seq):
                 yield seq
 
+        # can be serialized if no qual file is provided, else it should raise
+        # an error because one seq has qual scores and the other doesn't
+        def mixed_qual_score_gen():
+            missing_qual_seq = BiologicalSequence(
+                'AAAAT', id='da,dadadada', description='10 hours')
+            for seq in self.bio_seq1, missing_qual_seq:
+                yield seq
+
+        self.mixed_qual_score_gen = mixed_qual_score_gen()
+
         # store sequence generator to serialize, writer kwargs (if any), and
-        # filepath of expected results
-        self.objs_fps = map(lambda e: (e[0], e[1], get_data_path(e[2])), [
-            (empty_gen(), {}, 'empty'),
-            (single_seq_gen(), {}, 'fasta_single_seq'),
-            (single_seq_gen(), {'max_width': 1}, 'fasta_max_width_1'),
-            (multi_seq_gen(), {}, 'fasta_multi_seq'),
-            (multi_seq_gen(), {'max_width': 5}, 'fasta_max_width_5'),
+        # fasta and qual filepaths of expected results
+        self.objs_fps = map(lambda e: (e[0], e[1], get_data_path(e[2]),
+                                       get_data_path(e[3])), [
+            (empty_gen(), {}, 'empty', 'empty'),
+            (single_seq_gen(), {}, 'fasta_single_seq', 'qual_single_seq'),
+            (single_seq_gen(), {'max_width': 1}, 'fasta_max_width_1',
+             'qual_max_width_1'),
+            (multi_seq_gen(), {}, 'fasta_multi_seq', 'qual_multi_seq'),
+            (multi_seq_gen(), {'max_width': 5}, 'fasta_max_width_5',
+             'qual_max_width_5'),
             (newline_description_gen(),
              {'description_newline_replacement': ':-)'},
-             'fasta_description_newline_replacement_multi_char'),
+             'fasta_description_newline_replacement_multi_char',
+             'qual_description_newline_replacement_multi_char'),
             (newline_description_gen(),
              {'description_newline_replacement': ''},
-             'fasta_description_newline_replacement_empty_str'),
+             'fasta_description_newline_replacement_empty_str',
+             'qual_description_newline_replacement_empty_str',),
             (newline_description_gen(),
              {'description_newline_replacement': None},
-             'fasta_description_newline_replacement_none'),
+             'fasta_description_newline_replacement_none',
+             'qual_description_newline_replacement_none'),
             (whitespace_id_gen(),
              {'id_whitespace_replacement': '>:o'},
-             'fasta_id_whitespace_replacement_multi_char'),
+             'fasta_id_whitespace_replacement_multi_char',
+             'qual_id_whitespace_replacement_multi_char'),
             (whitespace_id_gen(),
              {'id_whitespace_replacement': ''},
-             'fasta_id_whitespace_replacement_empty_str'),
+             'fasta_id_whitespace_replacement_empty_str',
+             'qual_id_whitespace_replacement_empty_str'),
             (whitespace_id_gen(),
              {'id_whitespace_replacement': None},
-             'fasta_id_whitespace_replacement_none')
+             'fasta_id_whitespace_replacement_none',
+             'qual_id_whitespace_replacement_none'),
         ])
 
-        self.blank_seq = BiologicalSequence('')
-
         def blank_seq_gen():
-            for seq in self.bio_seq1, self.blank_seq:
+            for seq in self.bio_seq1, BiologicalSequence(''):
                 yield seq
 
         # generators or parameter combos that cannot be written in fasta
@@ -542,14 +568,17 @@ class WriterTests(TestCase):
             (multi_seq_gen(), {'id_whitespace_replacement': '-\n_'},
              FASTAFormatError, 'Newline character'),
             (multi_seq_gen(), {'description_newline_replacement': '-.-\n'},
-             FASTAFormatError, 'Newline character')
+             FASTAFormatError, 'Newline character'),
+            (mixed_qual_score_gen(), {'qual': StringIO()}, FASTAFormatError,
+             '2nd biological sequence in QUAL format')
         ]
 
     # extensive tests for generator -> fasta writer since it is used by all
     # other object -> fasta writers
 
-    def test_generator_to_fasta(self):
-        for obj, kwargs, fp in self.objs_fps:
+    def test_generator_to_fasta_no_qual(self):
+        # test writing standalone fasta (i.e., without a qual file)
+        for obj, kwargs, fp, _ in self.objs_fps:
             fh = StringIO()
             _generator_to_fasta(obj, fh, **kwargs)
             obs = fh.getvalue()
@@ -559,6 +588,39 @@ class WriterTests(TestCase):
                 exp = fh.read()
 
             self.assertEqual(obs, exp)
+
+    def test_generator_to_fasta_mixed_qual_scores(self):
+        # test writing some sequences with qual scores and some without is
+        # possible if no qual output file is specified
+        fh = StringIO()
+        _generator_to_fasta(self.mixed_qual_score_gen, fh)
+        obs = fh.getvalue()
+        fh.close()
+
+        with open(get_data_path('fasta_mixed_qual_scores'), 'U') as fh:
+            exp = fh.read()
+
+        self.assertEqual(obs, exp)
+
+    def test_generator_to_fasta_with_qual(self):
+        # test writing fasta and qual files
+        for obj, kwargs, fasta_fp, qual_fp in self.objs_fps:
+            if qual_fp is not None:
+                fasta_fh = StringIO()
+                qual_fh = StringIO()
+                _generator_to_fasta(obj, fasta_fh, qual=qual_fh, **kwargs)
+                obs_fasta = fasta_fh.getvalue()
+                obs_qual = qual_fh.getvalue()
+                fasta_fh.close()
+                qual_fh.close()
+
+                with open(fasta_fp, 'U') as fh:
+                    exp_fasta = fh.read()
+                with open(qual_fp, 'U') as fh:
+                    exp_qual = fh.read()
+
+                self.assertEqual(obs_fasta, exp_fasta)
+                self.assertEqual(obs_qual, exp_qual)
 
     def test_generator_to_fasta_invalid_input(self):
         for obj, kwargs, error_type, error_msg_regexp in self.invalid_objs:
