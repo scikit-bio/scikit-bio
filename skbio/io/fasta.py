@@ -246,10 +246,16 @@ The following parameters are available to all FASTA format writers:
 - ``max_width``: integer specifying the maximum line width (i.e., number of
   characters) for sequence data and/or quality scores. If a sequence or its
   quality scores are longer than ``max_width``, it will be split across
-  multiple lines, each with a maximum width of ``max_width``. Individual
-  quality scores will not be split apart, otherwise they will become two
-  different integers when read again. Thus, splitting will only occur *between*
-  quality scores. Default is to not split across multiple lines.
+  multiple lines, each with a maximum width of ``max_width``. Note that there
+  are some caveats when splitting quality scores. A single quality score will
+  *never* be split across multiple lines, otherwise it would become two
+  different quality scores when read again. Thus, splitting only occurs
+  *between* quality scores. This makes it possible to have a single long
+  quality score written on its own line that exceeds ``max_width``. For
+  example, the quality score ``12345`` would not be split across multiple lines
+  even if ``max_width=3``. Thus, a 5-character line would be written. Default
+  behavior is to not split sequence data or quality scores across multiple
+  lines.
 
 .. note:: The FASTA format writers will have noticeably better runtime
    performance if ``id_whitespace_replacement`` and/or
@@ -668,13 +674,19 @@ def _fasta_to_alignment(fh, qual=FileSentinel, constructor=BiologicalSequence):
 def _generator_to_fasta(obj, fh, qual=FileSentinel,
                         id_whitespace_replacement='_',
                         description_newline_replacement=' ', max_width=None):
-    if qual is not None and max_width is not None:
-        # define text wrapper for quality scores here for efficiency.
-        # textwrap docs recommend reusing a TextWrapper instance when it is
-        # used many times. configure text wrapper to never break words
-        # (i.e., integer quality scores)
-        qual_wrapper = textwrap.TextWrapper(
-            width=max_width, break_long_words=False, break_on_hyphens=False)
+    if max_width is not None:
+        if max_width < 1:
+            raise FASTAFormatError(
+                "Maximum line width must be greater than zero (max_width=%d)."
+                % max_width)
+        if qual is not None:
+            # define text wrapper for splitting quality scores here for
+            # efficiency. textwrap docs recommend reusing a TextWrapper
+            # instance when it is used many times. configure text wrapper to
+            # never break "words" (i.e., integer quality scores) across lines
+            qual_wrapper = textwrap.TextWrapper(
+                width=max_width, break_long_words=False,
+                break_on_hyphens=False)
 
     if ((id_whitespace_replacement is not None and
          '\n' in id_whitespace_replacement) or

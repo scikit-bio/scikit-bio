@@ -503,7 +503,9 @@ class WriterTests(TestCase):
                       quality=[1000, 1])
 
         # multiple sequences of mixed types, lengths, and metadata. lengths are
-        # chosen to exercise various splitting cases when testing max_width
+        # chosen to exercise various splitting cases when testing max_width,
+        # including exercising the different splitting algorithms used for
+        # sequence data vs. quality scores
         def multi_seq_gen():
             for seq in (self.bio_seq1, self.bio_seq2, self.bio_seq3,
                         self.nuc_seq, self.dna_seq, self.rna_seq,
@@ -526,8 +528,18 @@ class WriterTests(TestCase):
                                        get_data_path(e[3])), [
             (empty_gen(), {}, 'empty', 'empty'),
             (single_seq_gen(), {}, 'fasta_single_seq', 'qual_single_seq'),
+
+            # no splitting of sequence or qual data across lines b/c max_width
+            # is sufficiently large
+            (single_seq_gen(), {'max_width': 32}, 'fasta_single_seq',
+             'qual_single_seq'),
+
+            # splitting algorithm for sequence and qual scores is different;
+            # make sure individual qual scores aren't split across lines even
+            # if they exceed max_width
             (single_seq_gen(), {'max_width': 1}, 'fasta_max_width_1',
              'qual_max_width_1'),
+
             (multi_seq_gen(), {}, 'fasta_multi_seq', 'qual_multi_seq'),
             (multi_seq_gen(), {'max_width': 5}, 'fasta_max_width_5',
              'qual_max_width_5'),
@@ -567,7 +579,7 @@ class WriterTests(TestCase):
         self.invalid_objs = [
             (blank_seq_gen(), {}, FASTAFormatError, '2nd.*empty'),
             (single_seq_gen(),
-             {'max_width': 0}, ValueError, 'n=0'),
+             {'max_width': 0}, FASTAFormatError, 'max_width=0'),
             (multi_seq_gen(), {'id_whitespace_replacement': '-\n_'},
              FASTAFormatError, 'Newline character'),
             (multi_seq_gen(), {'description_newline_replacement': '-.-\n'},
