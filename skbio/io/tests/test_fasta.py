@@ -738,39 +738,55 @@ class WriterTests(TestCase):
 
 class RoundtripTests(TestCase):
     def test_roundtrip_generators(self):
-        # test that a file can be streamed into memory and back out to disk
-        # using generator reader and writer
-        for fp in map(get_data_path, ['empty', 'fasta_multi_seq_roundtrip']):
-            with open(fp, 'U') as fh:
-                exp = fh.read()
+        # test that fasta and qual files can be streamed into memory and back
+        # out to disk using generator reader and writer
+        fps = map(lambda e: map(get_data_path, e),
+                  [('empty', 'empty'),
+                   ('fasta_multi_seq_roundtrip', 'qual_multi_seq_roundtrip')])
 
-            fh = StringIO()
-            _generator_to_fasta(_fasta_to_generator(fp), fh)
-            obs = fh.getvalue()
-            fh.close()
+        for fasta_fp, qual_fp in fps:
+            with open(fasta_fp, 'U') as fh:
+                exp_fasta = fh.read()
+            with open(qual_fp, 'U') as fh:
+                exp_qual = fh.read()
 
-            self.assertEqual(obs, exp)
+            fasta_fh = StringIO()
+            qual_fh = StringIO()
+            _generator_to_fasta(_fasta_to_generator(fasta_fp, qual=qual_fp),
+                                fasta_fh, qual=qual_fh)
+            obs_fasta = fasta_fh.getvalue()
+            obs_qual = qual_fh.getvalue()
+            fasta_fh.close()
+            qual_fh.close()
+
+            self.assertEqual(obs_fasta, exp_fasta)
+            self.assertEqual(obs_qual, exp_qual)
 
     def test_roundtrip_sequence_collections_and_alignments(self):
-        fps = map(get_data_path,
-                  ['empty', 'fasta_sequence_collection_different_type'])
+        fps = map(lambda e: map(get_data_path, e),
+                  [('empty', 'empty'),
+                   ('fasta_sequence_collection_different_type',
+                    'qual_sequence_collection_different_type')])
 
         for reader, writer in ((_fasta_to_sequence_collection,
                                 _sequence_collection_to_fasta),
                                (_fasta_to_alignment,
                                 _alignment_to_fasta)):
-            for fp in fps:
+            for fasta_fp, qual_fp in fps:
                 # read
-                obj1 = reader(fp)
+                obj1 = reader(fasta_fp, qual=qual_fp)
 
                 # write
-                fh = StringIO()
-                writer(obj1, fh)
-                fh.seek(0)
+                fasta_fh = StringIO()
+                qual_fh = StringIO()
+                writer(obj1, fasta_fh, qual=qual_fh)
+                fasta_fh.seek(0)
+                qual_fh.seek(0)
 
                 # read
-                obj2 = reader(fh)
-                fh.close()
+                obj2 = reader(fasta_fh, qual=qual_fh)
+                fasta_fh.close()
+                qual_fh.close()
 
                 # TODO remove this custom equality testing code when
                 # SequenceCollection has an equals method (part of #656).
@@ -781,8 +797,10 @@ class RoundtripTests(TestCase):
                     self.assertTrue(s1.equals(s2))
 
     def test_roundtrip_biological_sequences(self):
-        fps = map(get_data_path, ['fasta_multi_seq_roundtrip',
-                                  'fasta_sequence_collection_different_type'])
+        fps = map(lambda e: map(get_data_path, e),
+                  [('fasta_multi_seq_roundtrip', 'qual_multi_seq_roundtrip'),
+                   ('fasta_sequence_collection_different_type',
+                    'qual_sequence_collection_different_type')])
 
         for reader, writer in ((_fasta_to_biological_sequence,
                                 _biological_sequence_to_fasta),
@@ -794,18 +812,21 @@ class RoundtripTests(TestCase):
                                 _rna_sequence_to_fasta),
                                (_fasta_to_protein_sequence,
                                 _protein_sequence_to_fasta)):
-            for fp in fps:
+            for fasta_fp, qual_fp in fps:
                 # read
-                obj1 = reader(fp)
+                obj1 = reader(fasta_fp, qual=qual_fp)
 
                 # write
-                fh = StringIO()
-                writer(obj1, fh)
-                fh.seek(0)
+                fasta_fh = StringIO()
+                qual_fh = StringIO()
+                writer(obj1, fasta_fh, qual=qual_fh)
+                fasta_fh.seek(0)
+                qual_fh.seek(0)
 
                 # read
-                obj2 = reader(fh)
-                fh.close()
+                obj2 = reader(fasta_fh, qual=qual_fh)
+                fasta_fh.close()
+                qual_fh.close()
 
                 self.assertTrue(obj1.equals(obj2))
 
