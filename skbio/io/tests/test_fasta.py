@@ -52,7 +52,10 @@ class SnifferTests(TestCase):
             'fasta_single_bio_seq_defaults',
             'fasta_single_prot_seq_defaults',
             'fasta_10_seqs',
-            'fasta_invalid_after_10_seqs'
+            'fasta_invalid_after_10_seqs',
+            'fasta_mixed_qual_scores',
+            'qual_invalid_qual_scores_float',
+            'qual_invalid_qual_scores_string'
         ])
 
         self.fasta_negative_fps = map(get_data_path, [
@@ -67,7 +70,38 @@ class SnifferTests(TestCase):
             'fasta_invalid_legacy_format',
             'fasta_id_whitespace_replacement_none',
             'fasta_description_newline_replacement_none',
-            'qual_3_seqs_defaults'
+            'qual_2_seqs_defaults',
+            'qual_3_seqs_defaults',
+            'qual_3_seqs_defaults_desc_mismatch',
+            'qual_3_seqs_defaults_extra',
+            'qual_3_seqs_defaults_id_mismatch',
+            'qual_3_seqs_defaults_length_mismatch',
+            'qual_3_seqs_non_defaults',
+            'qual_description_newline_replacement_empty_str',
+            'qual_description_newline_replacement_multi_char',
+            'qual_description_newline_replacement_none',
+            'qual_id_whitespace_replacement_empty_str',
+            'qual_id_whitespace_replacement_multi_char',
+            'qual_id_whitespace_replacement_none',
+            'qual_invalid_blank_line',
+            'qual_invalid_legacy_format',
+            'qual_invalid_missing_header',
+            'qual_invalid_missing_qual_scores_first',
+            'qual_invalid_missing_qual_scores_last',
+            'qual_invalid_missing_qual_scores_middle',
+            'qual_invalid_whitespace_only_line',
+            'qual_max_width_1',
+            'qual_max_width_5',
+            'qual_multi_seq',
+            'qual_multi_seq_roundtrip',
+            'qual_prot_seqs_odd_labels',
+            'qual_sequence_collection_different_type',
+            'qual_single_bio_seq_non_defaults',
+            'qual_single_dna_seq_non_defaults',
+            'qual_single_nuc_seq_non_defaults',
+            'qual_single_prot_seq_non_defaults',
+            'qual_single_rna_seq_non_defaults',
+            'qual_single_seq'
         ])
 
     def test_positives(self):
