@@ -21,6 +21,7 @@ from skbio.io.fastq import (
     _fastq_to_sequence_collection, _fastq_to_alignment, _generator_to_fastq,
     _biological_sequence_to_fastq, _nucleotide_sequence_to_fastq,
     _dna_sequence_to_fastq, _rna_sequence_to_fastq, _protein_sequence_to_fastq,
+    _sequence_collection_to_fastq, _alignment_to_fastq,
     ascii_to_phred33, ascii_to_phred64)
 
 from skbio.util import get_data_path
@@ -298,7 +299,7 @@ class FASTQWriterTests(TestCase):
                                     r'b`bbbU_[YYcadcda_LbaaabWbaacYcc`a^c')),
              BiologicalSequence('TAATGCCAAAGAAATATTTCCAAACTACATGCTTA',
                                 id=r'GAPC_0015:6:1:1297:10729#0/1',
-                                quality=ascii_to_phred64(
+                                 quality=ascii_to_phred64(
                                     r'T\ccLbb``bacc]_cacccccLccc\ccTccYL^'))],
             {'phred_offset': 64},
             map(get_data_path, ['fastq_multi_seq64']))
@@ -308,6 +309,18 @@ class FASTQWriterTests(TestCase):
             ('fastq_invalid_missing_header', 'Bad FASTQ format'),
             ('fastq_invalid_bad_qual', 'Failed qual conversion')
         ])
+
+        seqs = [
+            RNA('UUUU', id='s\te\tq\t1', description='desc\n1',
+                quality=ascii_to_phred33('9999')),
+            BiologicalSequence(
+                'CATC', id='s\te\tq\t2', description='desc\n2',
+                quality=ascii_to_phred33('9999')),
+            Protein('sits', id='s\te\tq\t3', description='desc\n3',
+                    quality=ascii_to_phred33('9999'))
+        ]
+        self.seq_coll = SequenceCollection(seqs)
+        self.align = Alignment(seqs)
 
     def test_generator_to_fastq(self):
         for obj, kwargs, fps in (self.empty, self.multi33, self.multi64):
@@ -376,6 +389,22 @@ class FASTQWriterTests(TestCase):
                     exp = fh.read()
 
                 self.assertEqual(obs, exp)
+
+    def test_any_sequences_to_fastq(self):
+
+        for fn, obj in ((_sequence_collection_to_fastq, self.seq_coll),
+                        (_alignment_to_fastq, self.align)):
+            kw, fp = {}, 'fastq_3_seqs'
+            fh = StringIO()
+            fn(obj, fh, **kw)
+            obs = fh.getvalue()
+            fh.close()
+
+            with open(get_data_path(fp), 'U') as fh:
+                exp = fh.read()
+
+            self.assertEqual(obs, exp)
+
 
     def test_fastq_to_generator_invalid_files(self):
         for fp, error_msg_regex in self.invalid_fps:
