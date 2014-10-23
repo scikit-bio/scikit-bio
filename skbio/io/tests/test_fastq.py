@@ -167,9 +167,6 @@ class FASTQReaderTests(TestCase):
 
                 self.assertEqual(len(obs), len(exp))
                 for o, e in zip(obs, exp):
-                    if not o.equals(e):
-                        print(o)
-                        print(e)
                     self.assertTrue(o.equals(e))
 
     def test_fastq_to_generator_invalid_files(self):
@@ -378,9 +375,7 @@ class FASTQWriterTests(TestCase):
 
         for fn, obj, fps in test_data:
             for kw, fp in zip(({}, kwargs_non_defaults), fps):
-                print(fp)
                 fh = StringIO()
-                print(kw)
                 fn(obj, fh, **kw)
                 obs = fh.getvalue()
                 fh.close()

@@ -233,7 +233,7 @@ def _fastq_sniffer(fh):
 
 
 @register_reader('fastq')
-def _fastq_to_generator(fh, strict=False, enforce_qual_range=True,
+def _fastq_to_generator(fh, enforce_qual_range=True,
                         phred_offset=33, constructor=BiologicalSequence):
     r"""yields label, seq, and qual from a fastq file.
 
@@ -241,9 +241,6 @@ def _fastq_to_generator(fh, strict=False, enforce_qual_range=True,
     ----------
     fh : open file object or str
         An open fastq file (opened in binary mode) or a path to it.
-    strict : bool, optional
-        Defaults to ``False``. If strict is true a FastqParse error will be
-        raised if the seq and qual labels dont' match.
     enforce_qual_range : bool, optional
         Defaults to ``True``. If ``True``, an exception will be raised if a
         quality score outside the range [0, 62] is detected
@@ -329,10 +326,10 @@ def _fastq_to_generator(fh, strict=False, enforce_qual_range=True,
 
         qualid = _drop_id_marker(qualid)
         qualid, _ = _split_id(qualid)
-        if strict:
-            if seqid != qualid:
-                raise FASTQFormatError('ID mismatch: {} != {}'.format(
-                    seqid, qualid))
+        # TODO finish
+        if qualid and seqid != qualid:
+            raise FASTQFormatError('ID mismatch: {} != {}'.format(
+                seqid, qualid))
 
         # bounds based on illumina limits, see:
         # http://nar.oxfordjournals.org/content/38/6/1767/T1.expansion.html
