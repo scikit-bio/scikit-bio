@@ -182,15 +182,10 @@ def ascii_to_phred64(s):
 
 
 def _drop_id_marker(s):
-    """Drop the first character and decode bytes to text"""
+    """Drop the first character"""
     if s[0] not in ["+", "@"]:
         raise FASTQFormatError("Bad FASTQ format for seq id: %s. " % s)
-
-    id_ = s[1:]
-    try:
-        return str(id_.decode('utf-8'))
-    except AttributeError:
-        return id_
+    return s[1:]
 
 
 def _split_id(s):
@@ -318,14 +313,9 @@ def _fastq_to_generator(fh, enforce_qual_range=True,
 
         header = _drop_id_marker(header)
         seqid, description = _split_id(header)
-        try:
-            seq = str(seq.decode("utf-8"))
-        except AttributeError:
-            pass
 
         qualid = _drop_id_marker(qualid)
         qualid, _ = _split_id(qualid)
-        # TODO finish
         if qualid and seqid != qualid:
             raise FASTQFormatError('ID mismatch: {} != {}'.format(
                 seqid, qualid))
