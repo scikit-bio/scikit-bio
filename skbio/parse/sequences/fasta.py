@@ -172,6 +172,12 @@ def parse_fasta(infile, strict=True, label_to_name=None, finder=FastaFinder,
 def parse_qual(infile, full_header=False):
     r"""yields label and qual from a qual file.
 
+    .. note:: Deprecated in scikit-bio 0.2.0-dev
+       ``parse_qual`` will be removed in scikit-bio 0.3.0. It is replaced by
+       ``read``, which is a more general method for deserializing
+       FASTA/QUAL-formatted files. ``read`` supports multiple file formats,
+       automatic file format detection, etc. by taking advantage of
+       scikit-bio's I/O registry system. See :mod:`skbio.io` for more details.
 
     Parameters
     ----------
@@ -212,6 +218,13 @@ def parse_qual(infile, full_header=False):
     [1 2 3 4]
 
     """
+    warnings.warn(
+        "`parse_qual` is deprecated and will be removed in scikit-bio 0.3.0. "
+        "Please update your code to use "
+        "`skbio.io.read(fasta_fh, qual=qual_fh, format='fasta')` to obtain a "
+        "generator of `BiologicalSequence` objects (or subclasses, see the "
+        "`constructor` parameter) with quality scores.", UserWarning)
+
     for rec in FastaFinder(infile):
         curr_id = rec[0][1:]
         curr_qual = ' '.join(rec[1:])
