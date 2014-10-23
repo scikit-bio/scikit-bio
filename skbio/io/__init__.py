@@ -113,6 +113,7 @@ see the associated documentation.
 
    clustal
    fasta
+   fastq
    lsmat
    newick
    ordination
@@ -142,6 +143,7 @@ User exceptions
    UnrecognizedFormatError
    ClustalFormatError
    FASTAFormatError
+   FASTQFormatError
    LSMatFormatError
    NewickFormatError
    OrdinationFormatError
@@ -267,9 +269,10 @@ from importlib import import_module
 from ._warning import FormatIdentificationWarning, ArgumentOverrideWarning
 from ._exception import (DuplicateRegistrationError, InvalidRegistrationError,
                          RecordError, FieldError, UnrecognizedFormatError,
-                         FileFormatError, ClustalFormatError, FASTAFormatError,
-                         LSMatFormatError, NewickFormatError,
-                         OrdinationFormatError, PhylipFormatError)
+                         FileFormatError, ClustalFormatError,
+                         FASTAFormatError, NewickFormatError, FASTQFormatError,
+                         LSMatFormatError, OrdinationFormatError,
+                         PhylipFormatError)
 from ._registry import (write, read, sniff, get_writer, get_reader,
                         get_sniffer, list_write_formats, list_read_formats,
                         register_writer, register_reader, register_sniffer,
@@ -289,6 +292,7 @@ __all__ = ['write', 'read', 'sniff',
            'FileFormatError',
            'ClustalFormatError',
            'FASTAFormatError',
+           'FASTQFormatError',
            'LSMatFormatError',
            'NewickFormatError',
            'OrdinationFormatError',
@@ -299,6 +303,7 @@ __all__ = ['write', 'read', 'sniff',
 # unused import errors.
 import_module('skbio.io.clustal')
 import_module('skbio.io.fasta')
+import_module('skbio.io.fastq')
 import_module('skbio.io.lsmat')
 import_module('skbio.io.newick')
 import_module('skbio.io.ordination')

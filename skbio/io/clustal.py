@@ -1,4 +1,3 @@
-
 r"""
 Clustal format (:mod:`skbio.io.clustal`)
 ========================================
