@@ -181,10 +181,12 @@ def ascii_to_phred64(s):
     return _ascii_to_phred(s, 64)
 
 
-def _drop_id_marker(s):
+def _drop_id_marker(s, marker):
     """Drop the first character"""
-    if s[0] not in ["+", "@"]:
-        raise FASTQFormatError("Bad FASTQ format for seq id: %s. " % s)
+    if s[0] != marker:
+        raise FASTQFormatError(
+            "Expected header line to start with %r character: %r" %
+            (marker, s))
     return s[1:]
 
 
@@ -294,31 +296,52 @@ def _fastq_to_generator(fh, enforce_qual_range=True,
 
     iters = [iter(fh)] * 4
     for seqid, seq, qualid, qual in zip_longest(*iters):
-        header = seqid.strip()
-        # If the file simply ended in a blankline, do not error
-        if header is '':
-            continue
-
         # Error if an incomplete record is found
         # Note: seqid cannot be None, because if all 4 values were None,
         # then the loop condition would be false, and we could not have
         # gotten to this point
         if seq is None or qualid is None or qual is None:
-            raise FASTQFormatError("Incomplete FASTQ record found at end "
-                                   "of file")
+            raise FASTQFormatError(
+                "Found incomplete/truncated FASTQ record at end of file.")
+
+        if not seqid.strip() or not seq.strip() or not qualid.strip() or \
+                not qual.strip():
+            raise FASTQFormatError(
+                "Found blank or whitespace-only line in FASTQ-formatted file.")
+
+        header = seqid.strip()
+        # If the file simply ended in a blankline, do not error
+        if header is '':
+            continue
 
         seq = seq.strip()
+        for c in seq:
+            if c.isspace():
+                raise FASTQFormatError(
+                    "Found whitespace in sequence data: %r" % seq)
+
         qualid = qualid.strip()
-        qual = qual.strip()
 
-        header = _drop_id_marker(header)
+        header = _drop_id_marker(header, '@')
+        qualid = _drop_id_marker(qualid, '+')
+
+        if qualid and header != qualid:
+            raise FASTQFormatError(
+                "Sequence (@) and quality (+) header lines do not match: "
+                "%r != %r" % (header, qualid))
+
         seqid, description = _split_id(header)
-
-        qualid = _drop_id_marker(qualid)
         qualid, _ = _split_id(qualid)
-        if qualid and seqid != qualid:
-            raise FASTQFormatError('ID mismatch: {} != {}'.format(
-                seqid, qualid))
+
+        qual = qual.strip()
+        for c in qual:
+            ascii_code = ord(c)
+            if ascii_code < 33 or ascii_code > 126:
+                raise FASTQFormatError(
+                    "Found quality score encoded as a non-printable ASCII "
+                    "character (ASCII code %d). Each quality score must be in "
+                    "the ASCII code range 33-126 (inclusive), regardless of "
+                    "FASTQ variant used." % ascii_code)
 
         # bounds based on illumina limits, see:
         # http://nar.oxfordjournals.org/content/38/6/1767/T1.expansion.html

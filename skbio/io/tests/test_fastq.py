@@ -7,12 +7,13 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
+from six import StringIO
 
 from unittest import TestCase, main
-from six import StringIO
-from skbio import (BiologicalSequence, NucleotideSequence, DNA, RNA, Protein)
-from skbio import SequenceCollection, Alignment
 
+from skbio import (BiologicalSequence, NucleotideSequence, DNA, RNA, Protein,
+                   SequenceCollection, Alignment)
+from skbio.sequence import BiologicalSequenceError
 from skbio.io import FASTQFormatError
 from skbio.io.fastq import (
     _fastq_sniffer, _fastq_to_generator, _fastq_to_biological_sequence,
@@ -26,8 +27,20 @@ from skbio.io.fastq import (
 
 from skbio.util import get_data_path
 
+# Note: the example FASTQ files with file extension .fastq are taken from the
+# following open-access publication's supplementary data:
+#
+# P.J.A. Cock, C.J. Fields, N. Goto, M.L. Heuer and P.M. Rice (2009). The
+# Sanger FASTQ file format for sequences with quality scores, and the
+# Solexa/Illumina FASTQ variants.
+#
+# See licenses/fastq-example-files-readme.txt for the original README that
+# accompanied these files, which includes the terms of use.
+#
+# The example files have not been modified from their original form.
 
-class FASTQSnifferTests(TestCase):
+
+class SnifferTests(TestCase):
     def setUp(self):
         self.positive_fps_33 = map(get_data_path, [
             'fastq_multi_seq33',
@@ -45,7 +58,6 @@ class FASTQSnifferTests(TestCase):
 
         self.negative_fps = map(get_data_path, [
             'empty',
-            'fastq_invalid_missing_header',
             'fastq_invalid_missing_qual_header',
         ])
 
@@ -60,7 +72,7 @@ class FASTQSnifferTests(TestCase):
             self.assertEqual(_fastq_sniffer(fp), (False, {}))
 
 
-class FASTQReaderTests(TestCase):
+class ReaderTests(TestCase):
     def setUp(self):
         self.empty = ([], {}, map(get_data_path, ['empty']))
         self.single = (
@@ -136,13 +148,71 @@ class FASTQReaderTests(TestCase):
             {'phred_offset': 64},
             map(get_data_path, ['fastq_multi_seq64']))
 
-        self.invalid_fps = map(lambda e: (get_data_path(e[0]), e[1]), [
-            ('fastq_invalid_bad_id', 'ID mismatch'),
-            ('fastq_invalid_missing_header', 'Bad FASTQ format'),
-            ('fastq_invalid_bad_qual', 'Failed qual conversion')
-        ])
+        self.invalid_fps = map(lambda e: (get_data_path(e[0]), e[1], e[2]), [
+            ('fastq_invalid_bad_qual', FASTQFormatError,
+             'Failed qual conversion'),
 
-        self.invalid = []
+            ('error_diff_ids.fastq', FASTQFormatError,
+             "header lines do not match: "
+             "'SLXA-B3_649_FC8437_R1_1_1_850_123' != "
+             "'SLXA-B3_649_FC8437_R1_1_1_850_124'"),
+
+            ('error_double_qual.fastq', FASTQFormatError,
+             "'@' character: '\+SLXA-B3_649_FC8437_R1_1_1_850_123'"),
+
+            ('error_double_seq.fastq', FASTQFormatError,
+             "'\+' character: '@SLXA-B3_649_FC8437_R1_1_1_362_549'"),
+
+            ('error_long_qual.fastq', BiologicalSequenceError,
+             'Number of quality scores \(26\).*\(25\)'),
+
+            ('error_no_qual.fastq', FASTQFormatError,
+             'whitespace-only.*FASTQ'),
+
+            ('error_qual_del.fastq', FASTQFormatError, 'ASCII code 127'),
+
+            ('error_qual_escape.fastq', FASTQFormatError, 'ASCII code 27'),
+
+            ('error_qual_null.fastq', FASTQFormatError, 'ASCII code 0'),
+
+            ('error_qual_space.fastq', FASTQFormatError, 'ASCII code 32'),
+
+            ('error_qual_tab.fastq', FASTQFormatError, 'ASCII code 9'),
+
+            ('error_qual_unit_sep.fastq', FASTQFormatError, 'ASCII code 31'),
+
+            ('error_qual_vtab.fastq', FASTQFormatError, 'ASCII code 11'),
+
+            ('error_short_qual.fastq', BiologicalSequenceError,
+             'Number of quality scores \(24\).*\(25\)'),
+
+            ('error_spaces.fastq', FASTQFormatError,
+             "whitespace.*sequence data: 'GATGTGCAA TACCTTTGTA GAGGAA'"),
+
+            ('error_tabs.fastq', FASTQFormatError,
+             r"whitespace.*sequence data: 'GATGTGCAA\\tTACCTTTGTA\\tGAGGAA'"),
+
+            ('error_trunc_at_seq.fastq', FASTQFormatError,
+             'incomplete/truncated FASTQ record'),
+
+            ('error_trunc_at_plus.fastq', FASTQFormatError,
+             'incomplete/truncated FASTQ record'),
+
+            ('error_trunc_at_qual.fastq', FASTQFormatError,
+             'incomplete/truncated FASTQ record'),
+
+            ('error_trunc_in_title.fastq', FASTQFormatError,
+             'incomplete/truncated FASTQ record'),
+
+            ('error_trunc_in_seq.fastq', FASTQFormatError,
+             'incomplete/truncated FASTQ record'),
+
+            ('error_trunc_in_plus.fastq', FASTQFormatError,
+             'incomplete/truncated FASTQ record'),
+
+            ('error_trunc_in_qual.fastq', BiologicalSequenceError,
+             'Number of quality scores \(24\).*\(25\)')
+        ])
 
         # sequences that can be loaded into a SequenceCollection or Alignment.
         # they are also a different type than BiologicalSequence in order to
@@ -170,8 +240,8 @@ class FASTQReaderTests(TestCase):
                     self.assertTrue(o.equals(e))
 
     def test_fastq_to_generator_invalid_files(self):
-        for fp, error_msg_regex in self.invalid_fps:
-            with self.assertRaisesRegexp(FASTQFormatError, error_msg_regex):
+        for fp, error_type, error_msg_regex in self.invalid_fps:
+            with self.assertRaisesRegexp(error_type, error_msg_regex):
                 list(_fastq_to_generator(fp))
 
     def test_fastq_to_any_sequence(self):
@@ -257,7 +327,7 @@ class FASTQReaderTests(TestCase):
                         self.assertTrue(o.equals(e))
 
 
-class FASTQWriterTests(TestCase):
+class WriterTests(TestCase):
     def setUp(self):
         self.empty = ([], {}, map(get_data_path, ['empty']))
         self.multi33 = (
@@ -300,12 +370,6 @@ class FASTQWriterTests(TestCase):
                                     r'T\ccLbb``bacc]_cacccccLccc\ccTccYL^'))],
             {'phred_offset': 64},
             map(get_data_path, ['fastq_multi_seq64']))
-
-        self.invalid_fps = map(lambda e: (get_data_path(e[0]), e[1]), [
-            ('fastq_invalid_bad_id', 'ID mismatch'),
-            ('fastq_invalid_missing_header', 'Bad FASTQ format'),
-            ('fastq_invalid_bad_qual', 'Failed qual conversion')
-        ])
 
         seqs = [
             RNA('UUUU', id='s\te\tq\t1', description='desc\n1',
@@ -400,10 +464,10 @@ class FASTQWriterTests(TestCase):
 
             self.assertEqual(obs, exp)
 
-    def test_fastq_to_generator_invalid_files(self):
-        for fp, error_msg_regex in self.invalid_fps:
-            with self.assertRaisesRegexp(FASTQFormatError, error_msg_regex):
-                list(_fastq_to_generator(fp))
+
+class RoundtripTests(TestCase):
+    pass
+
 
 if __name__ == '__main__':
     main()
