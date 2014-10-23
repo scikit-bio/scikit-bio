@@ -102,7 +102,7 @@ Suppose we have a FASTQ file with two sequences
 
 >>> from StringIO import StringIO
 >>> fh = StringIO(
-...        "@GAPC_0017:6:1:1259:10413#0/1\n"
+...        "@GAPC_0015:6:1:1259:10413#0/1\n"
 ...        "AACACCAAACTTCTCCACCACGTGAGCTACAAAAG\n"
 ...        "+GAPC_0015:6:1:1259:10413#0/1\n"
 ...        ";;;;;;;;;;;9;7;;.7;393333;;;;;;;;;;\n"
@@ -290,7 +290,6 @@ def _fastq_to_generator(fh, enforce_qual_range=True,
     [29 11 26 27 16 25 29 31 27 25 25 30 32 32 32 33 35 30 28 28 32 34 20 32 32
      35 32 28 33 20 32 32 34 34 34]
     """
-
     if phred_offset == 33:
         phred_f = ascii_to_phred33
     elif phred_offset == 64:

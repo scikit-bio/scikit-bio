@@ -172,7 +172,7 @@ class FASTQReaderTests(TestCase):
     def test_fastq_to_generator_invalid_files(self):
         for fp, error_msg_regex in self.invalid_fps:
             with self.assertRaisesRegexp(FASTQFormatError, error_msg_regex):
-                list(_fastq_to_generator(fp, strict=True))
+                list(_fastq_to_generator(fp))
 
     def test_fastq_to_any_sequence(self):
         for constructor, reader_fn in ((BiologicalSequence,
@@ -403,7 +403,7 @@ class FASTQWriterTests(TestCase):
     def test_fastq_to_generator_invalid_files(self):
         for fp, error_msg_regex in self.invalid_fps:
             with self.assertRaisesRegexp(FASTQFormatError, error_msg_regex):
-                list(_fastq_to_generator(fp, strict=True))
+                list(_fastq_to_generator(fp))
 
 if __name__ == '__main__':
     main()
