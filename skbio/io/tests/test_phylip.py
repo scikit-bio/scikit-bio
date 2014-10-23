@@ -60,10 +60,6 @@ class AlignmentWriterTests(TestCase):
         # alignments that cannot be written in phylip format, paired with their
         # expected error message regexps
         self.invalid_objs = [
-            # invalid chars
-            (Alignment([DNA('ACG', id="d1"),
-                        DNA('FOO', id="d2")]), 'valid characters'),
-
             # no seqs
             (Alignment([]), 'one sequence'),
 
