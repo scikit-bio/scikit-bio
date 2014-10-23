@@ -18,10 +18,11 @@ An example of a FASTA-formatted file containing two DNA sequences::
     CATCGATCGATCGATGCATGCATGCATG
 
 The QUAL file format is an additional format related to FASTA. A FASTA file is
-often accompanied by a QUAL file. QUAL files store a quality score (integer)
-for each base in a sequence stored in FASTA format (see [4]_ for more details).
-scikit-bio supports reading and writing FASTA (and optionally QUAL) file
-formats.
+sometimes accompanied by a QUAL file, particuarly when the fasta file contains
+sequences generated on a high-throughput sequencing instrument. QUAL files
+store a quality score (integer) for each base in a sequence stored in FASTA
+format (see [4]_ for more details). scikit-bio supports reading and writing
+FASTA (and optionally QUAL) file formats.
 
 Format Support
 --------------
@@ -83,8 +84,8 @@ description separated by one or more whitespace characters. Both sequence ID
 and description are optional and are represented as the empty string (``''``)
 in scikit-bio's objects if they are not present in the header.
 
-A sequence ID consists of a single word; all characters after the greater-than
-symbol and before the first whitespace character (if any) are taken as the
+A sequence ID consists of a single *word*: all characters after the greater-
+than symbol and before the first whitespace character (if any) are taken as the
 sequence ID. Unique sequence IDs are not strictly enforced by the FASTA format
 itself. A single standardized ID format is similarly not enforced by FASTA
 format, though it is often common to use a unique library accession number for
@@ -95,11 +96,11 @@ a sequence ID (e.g., NCBI's FASTA defline format [5]_).
    file as a generator of ``BiologicalSequence`` objects will not enforce
    unique IDs since it simply yields each sequence it finds in the FASTA file.
    However, if the FASTA file is read into a ``SequenceCollection`` object, ID
-   uniqueness will be enforced because that is a property of a
+   uniqueness will be enforced because that is a requirement of a
    ``SequenceCollection``.
 
 If a description is present, it is taken as the remaining characters that
-follow the sequence ID and initial whitespace. The description is considered
+follow the sequence ID and initial whitespace(s). The description is considered
 additional information about the sequence (e.g., comments about the source of
 the sequence or the molecule that it encodes).
 
@@ -111,7 +112,7 @@ For example, consider the following header::
 description.
 
 .. note:: scikit-bio's readers will remove all leading and trailing whitespace
-   from the description. If a header line begins with whitespace following
+   from the description. If a header line begins with whitespace following the
    ``>``, the ID is assumed to be missing and the remainder of the line is
    taken as the description.
 
@@ -274,8 +275,8 @@ Examples
 
 Reading and Writing FASTA Files
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Suppose we have the following FASTA file with five aligned sequences (example
-modified from [6]_)::
+Suppose we have the following FASTA file with five equal-length sequences
+(example modified from [6]_)::
 
     >seq1 Turkey
     AAGCTNGGGCATTTCAGGGTGAGCCCGGGCAATACAGGGTAT
@@ -298,17 +299,17 @@ modified from [6]_)::
    Felsenstein. Permission is granted to copy this document provided that no
    fee is charged for it and that this copyright notice is not removed.*
 
-Note that the sequences are not required to be aligned in order for the file to
-be a valid FASTA file (this depends on the object that you're reading the file
-into). Also note that some of the sequences occur on a single line, while
-others are split across multiple lines.
+Note that the sequences are not required to be of equal length in order for the
+file to be a valid FASTA file (this depends on the object that you're reading
+the file into). Also note that some of the sequences occur on a single line,
+while others are split across multiple lines.
 
 Let's define this file in-memory as a ``StringIO``, though this could be a real
-file path, file handle, etc. in practice (anything that's supported by
-scikit-bio's I/O registry):
+file path, file handle, or anything that's supported by scikit-bio's I/O
+registry in practice:
 
 >>> from StringIO import StringIO
->>> fh = StringIO(
+>>> fs = (
 ...     ">seq1 Turkey\\n"
 ...     "AAGCTNGGGCATTTCAGGGTGAGCCCGGGCAATACAGGGTAT\\n"
 ...     ">seq2 Salmo gair\\n"
@@ -323,6 +324,7 @@ scikit-bio's I/O registry):
 ...     "ACTCAT\\n"
 ...     ">seq5 Gorilla\\n"
 ...     "AAACCCTTGCCGGTACGCTTAAACCATTGCCGGTACGCTTAA\\n")
+>>> fh = StringIO(fs)
 
 Let's read the FASTA file into a ``SequenceCollection``:
 
@@ -336,11 +338,12 @@ Let's read the FASTA file into a ``SequenceCollection``:
 We see that all 5 sequences have 42 characters, and that each of the sequence
 IDs were successfully read into memory.
 
-Since these sequences are aligned, let's load the FASTA file into a more
-appropriate data structure:
+Since these sequences are of equal length (presumably because they've been
+aligned), let's load the FASTA file into an ``Alignment`` object, which is a
+more appropriate data structure:
 
 >>> from skbio import Alignment
->>> fh.seek(0) # reset position to beginning of file so we can read again
+>>> fh = StringIO(fs) # reload the StringIO to read from the beginning again
 >>> aln = Alignment.read(fh)
 >>> aln.sequence_length()
 42
@@ -360,7 +363,7 @@ By default, sequences are loaded as ``BiologicalSequence`` objects. We can
 change the type of sequence via the ``constructor`` parameter:
 
 >>> from skbio import DNASequence
->>> fh.seek(0) # reset position to beginning of file so we can read again
+>>> fh = StringIO(fs) # reload the StringIO to read from the beginning again
 >>> aln = Alignment.read(fh, constructor=DNASequence)
 >>> aln[0]
 <DNASequence: AAGCTNGGGC... (length: 42)>
@@ -402,7 +405,7 @@ use the generator-based reader to process a single sequence at a time in a
 ``for`` loop:
 
 >>> import skbio.io
->>> fh.seek(0) # reset position to beginning of file so we can read again
+>>> fh = StringIO(fs) # reload the StringIO to read from the beginning again
 >>> for seq in skbio.io.read(fh, format='fasta'):
 ...     seq
 <BiologicalSequence: AAGCTNGGGC... (length: 42)>
@@ -414,20 +417,20 @@ use the generator-based reader to process a single sequence at a time in a
 A single sequence can also be read into a ``BiologicalSequence`` (or subclass):
 
 >>> from skbio import BiologicalSequence
->>> fh.seek(0) # reset position to beginning of file so we can read again
+>>> fh = StringIO(fs) # reload the StringIO to read from the beginning again
 >>> BiologicalSequence.read(fh)
 <BiologicalSequence: AAGCTNGGGC... (length: 42)>
 
 By default, the first sequence in the FASTA file is read. This can be
 controlled with ``seq_num``. For example, to read the fifth sequence:
 
->>> fh.seek(0) # reset position to beginning of file so we can read again
+>>> fh = StringIO(fs) # reload the StringIO to read from the beginning again
 >>> BiologicalSequence.read(fh, seq_num=5)
 <BiologicalSequence: AAACCCTTGC... (length: 42)>
 
 We can use the same API to read the fifth sequence into a ``DNASequence``:
 
->>> fh.seek(0) # reset position to beginning of file so we can read again
+>>> fh = StringIO(fs) # reload the StringIO to read from the beginning again
 >>> dna_seq = DNASequence.read(fh, seq_num=5)
 >>> dna_seq
 <DNASequence: AAACCCTTGC... (length: 42)>
@@ -461,17 +464,19 @@ Also suppose we have the following QUAL file::
     >seq2 db-accession-34989
     3 3 10 42 80
 
->>> fasta_fh = StringIO(
+>>> fasta_fs = (
 ...     ">seq1 db-accession-149855\\n"
 ...     "CGATGTC\\n"
 ...     ">seq2 db-accession-34989\\n"
 ...     "CATCG\\n")
->>> qual_fh = StringIO(
+>>> fasta_fh = StringIO(fasta_fs)
+>>> qual_fs = (
 ...     ">seq1 db-accession-149855\\n"
 ...     "40 39 39 4\\n"
 ...     "50 1 100\\n"
 ...     ">seq2 db-accession-34989\\n"
 ...     "3 3 10 42 80\\n")
+>>> qual_fh = StringIO(qual_fs)
 
 To read in a single ``BiologicalSequence`` at a time, we can use the
 generator-based reader as we did above, providing both FASTA and QUAL files:
@@ -490,8 +495,8 @@ file. The other FASTA readers operate in a similar manner.
 Now let's load the sequences and their quality scores into a
 ``SequenceCollection``:
 
->>> fasta_fh.seek(0) # reset position to beginning of file so we can read again
->>> qual_fh.seek(0) # reset position to beginning of file so we can read again
+>>> fasta_fh = StringIO(fasta_fs) # reload to read from the beginning again
+>>> qual_fh = StringIO(qual_fs) # reload to read from the beginning again
 >>> sc = SequenceCollection.read(fasta_fh, qual=qual_fh)
 >>> sc
 <SequenceCollection: n=2; mean +/- std length=6.00 +/- 1.00>
