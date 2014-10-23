@@ -401,9 +401,9 @@ one at a time, instead of loading all sequences into memory. For example, let's
 use the generator-based reader to process a single sequence at a time in a
 ``for`` loop:
 
->>> from skbio.io import read
+>>> import skbio.io
 >>> fh.seek(0) # reset position to beginning of file so we can read again
->>> for seq in read(fh, format='fasta'):
+>>> for seq in skbio.io.read(fh, format='fasta'):
 ...     seq
 <BiologicalSequence: AAGCTNGGGC... (length: 42)>
 <BiologicalSequence: AAGCCTTGGC... (length: 42)>
@@ -476,7 +476,7 @@ Also suppose we have the following QUAL file::
 To read in a single ``BiologicalSequence`` at a time, we can use the
 generator-based reader as we did above, providing both FASTA and QUAL files:
 
->>> for seq in read(fasta_fh, qual=qual_fh, format='fasta'):
+>>> for seq in skbio.io.read(fasta_fh, qual=qual_fh, format='fasta'):
 ...     seq
 ...     seq.quality
 <BiologicalSequence: CGATGTC (length: 7)>
@@ -746,8 +746,8 @@ def _biological_sequence_to_fasta(obj, fh, qual=FileSentinel,
                                   id_whitespace_replacement='_',
                                   description_newline_replacement=' ',
                                   max_width=None):
-    _sequence_to_fasta(obj, fh, qual, id_whitespace_replacement,
-                       description_newline_replacement, max_width)
+    _sequences_to_fasta([obj], fh, qual, id_whitespace_replacement,
+                        description_newline_replacement, max_width)
 
 
 @register_writer('fasta', NucleotideSequence)
@@ -755,8 +755,8 @@ def _nucleotide_sequence_to_fasta(obj, fh, qual=FileSentinel,
                                   id_whitespace_replacement='_',
                                   description_newline_replacement=' ',
                                   max_width=None):
-    _sequence_to_fasta(obj, fh, qual, id_whitespace_replacement,
-                       description_newline_replacement, max_width)
+    _sequences_to_fasta([obj], fh, qual, id_whitespace_replacement,
+                        description_newline_replacement, max_width)
 
 
 @register_writer('fasta', DNASequence)
@@ -764,8 +764,8 @@ def _dna_sequence_to_fasta(obj, fh, qual=FileSentinel,
                            id_whitespace_replacement='_',
                            description_newline_replacement=' ',
                            max_width=None):
-    _sequence_to_fasta(obj, fh, qual, id_whitespace_replacement,
-                       description_newline_replacement, max_width)
+    _sequences_to_fasta([obj], fh, qual, id_whitespace_replacement,
+                        description_newline_replacement, max_width)
 
 
 @register_writer('fasta', RNASequence)
@@ -773,8 +773,8 @@ def _rna_sequence_to_fasta(obj, fh, qual=FileSentinel,
                            id_whitespace_replacement='_',
                            description_newline_replacement=' ',
                            max_width=None):
-    _sequence_to_fasta(obj, fh, qual, id_whitespace_replacement,
-                       description_newline_replacement, max_width)
+    _sequences_to_fasta([obj], fh, qual, id_whitespace_replacement,
+                        description_newline_replacement, max_width)
 
 
 @register_writer('fasta', ProteinSequence)
@@ -782,8 +782,8 @@ def _protein_sequence_to_fasta(obj, fh, qual=FileSentinel,
                                id_whitespace_replacement='_',
                                description_newline_replacement=' ',
                                max_width=None):
-    _sequence_to_fasta(obj, fh, qual, id_whitespace_replacement,
-                       description_newline_replacement, max_width)
+    _sequences_to_fasta([obj], fh, qual, id_whitespace_replacement,
+                        description_newline_replacement, max_width)
 
 
 @register_writer('fasta', SequenceCollection)
@@ -897,18 +897,6 @@ def _fasta_to_sequence(fh, qual, seq_num, constructor):
             "Reached end of FASTA-formatted file before finding the %s "
             "biological sequence." % cardinal_to_ordinal(seq_num))
     return seq
-
-
-def _sequence_to_fasta(obj, fh, qual, id_whitespace_replacement,
-                       description_newline_replacement, max_width):
-    def seq_gen():
-        yield obj
-
-    _generator_to_fasta(
-        seq_gen(), fh, qual=qual,
-        id_whitespace_replacement=id_whitespace_replacement,
-        description_newline_replacement=description_newline_replacement,
-        max_width=max_width)
 
 
 def _sequences_to_fasta(obj, fh, qual, id_whitespace_replacement,
