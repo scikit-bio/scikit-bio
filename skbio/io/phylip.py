@@ -100,10 +100,11 @@ PHYLIP specification uses ``-`` as a gap character, though older versions also
 supported ``.``. The sequence characters may contain optional spaces (e.g., to
 improve readability), and both upper and lower case characters are supported.
 
-.. note:: scikit-bio will only write a PHYLIP-formatted file if the alignment's
-   sequence characters are valid IUPAC characters, as defined in
-   :mod:`skbio.sequence`. The specific lexicon that is validated against
-   depends on the type of sequences stored in the alignment.
+.. note:: scikit-bio will write a PHYLIP-formatted file even if the alignment's
+   sequence characters are not valid IUPAC characters. This differs from the
+   PHYLIP specification, which states that a PHYLIP-formatted file can only
+   contain valid IUPAC characters. To check whether all characters are valid
+   before writing, the user can call ``Alignment.is_valid()``.
 
    Since scikit-bio supports both ``-`` and ``.`` as gap characters (e.g., in
    ``skbio.alignment.Alignment``), both are supported when writing a
@@ -213,10 +214,6 @@ from skbio.io._base import _chunk_str
 
 @register_writer('phylip', Alignment)
 def _alignment_to_phylip(obj, fh):
-    if not obj.is_valid():
-        raise PhylipFormatError(
-            "Alignment can only be written in PHYLIP format if all sequences "
-            "contain only valid characters within their character sets.")
 
     if obj.is_empty():
         raise PhylipFormatError(
