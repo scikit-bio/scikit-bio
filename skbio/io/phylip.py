@@ -213,10 +213,6 @@ from skbio.io._base import _chunk_str
 
 @register_writer('phylip', Alignment)
 def _alignment_to_phylip(obj, fh):
-    if not obj.is_valid():
-        raise PhylipFormatError(
-            "Alignment can only be written in PHYLIP format if all sequences "
-            "contain only valid characters within their character sets.")
 
     if obj.is_empty():
         raise PhylipFormatError(
