@@ -61,7 +61,7 @@ Assume we have a clustal-formatted file with the following contents::
 We can use the following code to read a clustal file:
 
 >>> from StringIO import StringIO
->>> from skbio.io import read
+>>> from skbio import read
 >>> from skbio import Alignment
 >>> clustal_f = StringIO('abc   GCAUGCAUCUGCAUACGUACGUACGCAUGCA\n'
 ...                      'def   -------------------------------\n'
