@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -9,12 +7,12 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future import standard_library
-standard_library.install_hooks()
+from future.standard_library import hooks
+with hooks():
+    from itertools import zip_longest
 
 from re import compile as re_compile
 from collections import Counter, defaultdict
-from itertools import zip_longest
 from unittest import TestCase, main
 
 import numpy as np

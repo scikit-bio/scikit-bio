@@ -29,6 +29,16 @@ class UnrecognizedFormatError(FileFormatError):
     pass
 
 
+class ClustalFormatError(FileFormatError):
+    """Raised when a ``clustal`` formatted file cannot be parsed."""
+    pass
+
+
+class FASTAFormatError(FileFormatError):
+    """Raised when a ``fasta`` formatted file cannot be parsed."""
+    pass
+
+
 class LSMatFormatError(FileFormatError):
     """Raised when a ``lsmat`` formatted file cannot be parsed."""
     pass
@@ -39,18 +49,8 @@ class OrdinationFormatError(FileFormatError):
     pass
 
 
-class ClustalFormatError(FileFormatError):
-    """Raised when a ``clustal`` formatted file cannot be parsed."""
-    pass
-
-
 class NewickFormatError(FileFormatError):
     """Raised when a ``newick`` formatted file cannot be parsed."""
-    pass
-
-
-class FASTAFormatError(FileFormatError):
-    """Raised when a ``fasta`` formatted file cannot be parsed."""
     pass
 
 

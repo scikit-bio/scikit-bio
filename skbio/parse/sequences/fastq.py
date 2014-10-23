@@ -6,8 +6,8 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # -----------------------------------------------------------------------------
 from __future__ import absolute_import, division, print_function
-from future import standard_library
-with standard_library.hooks():
+from future.standard_library import hooks
+with hooks():
     from itertools import zip_longest
 
 import numpy as np
