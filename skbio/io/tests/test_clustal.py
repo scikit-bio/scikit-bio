@@ -257,6 +257,9 @@ UGCUGCAUCA---------------- 33
     def test_clustal_sniffer_invalid_files(self):
         for invalid_out in self.invalid_clustal_out:
             self.assertEqual(_clustal_sniffer(invalid_out), (False, {}))
+        # sniffer should return False on empty file (which isn't contained
+        # in self.invalid_clustal_out since an empty file is a valid output)
+        self.assertEqual(_clustal_sniffer(StringIO()), (False, {}))
 
 if __name__ == '__main__':
     main()
