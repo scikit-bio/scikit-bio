@@ -35,7 +35,8 @@ from skbio.util import get_data_path
 # Solexa/Illumina FASTQ variants.
 #
 # See licenses/fastq-example-files-readme.txt for the original README that
-# accompanied these files, which includes the terms of use.
+# accompanied these files, which includes the terms of use and detailed
+# description of the files.
 #
 # The example files have not been modified from their original form.
 
@@ -135,10 +136,32 @@ class ReaderTests(TestCase):
                 with self.assertRaisesRegexp(error_type, error_msg_regex):
                     list(_fastq_to_generator(fp, phred_offset=offset))
 
+    def test_fastq_to_generator_invalid_files_illumina13(self):
+        # files that should be invalid for illumina1.3 variant
+        fps = [get_data_path(fp) for fp in
+               'sanger_full_range_original_sanger.fastq',
+               'solexa_full_range_original_solexa.fastq']
+
+        for fp in fps:
+            with self.assertRaisesRegexp(ValueError, 'out of range \[0, 62\]'):
+                list(_fastq_to_generator(fp, variant='illumina1.3'))
+
+    def test_fastq_to_generator_solexa(self):
+        # solexa support isn't implemented yet. should raise error even with
+        # valid solexa file
+        with self.assertRaises(NotImplementedError):
+            list(_fastq_to_generator(
+                get_data_path('solexa_full_range_original_solexa.fastq'),
+                variant='solexa'))
+
     def _assert_generator_results_equal(self, obs, exp):
         self.assertEqual(len(obs), len(exp))
         for o, e in zip(obs, exp):
             self.assertTrue(o.equals(e))
+
+
+class RoundtripTests(TestCase):
+    pass
 
 
 if __name__ == '__main__':
