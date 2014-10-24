@@ -96,9 +96,10 @@ def _get_phred_offset_and_range(variant, phred_offset, errors):
         else:
             raise ValueError("Unrecognized variant %r." % variant)
     else:
-        # Phred scores cannot be less than zero. There is no theoretical max to
-        # a Phred score, but more than a byte of information doesn't make
-        # sense.
-        phred_range = (0, 255)
+        if not (33 <= phred_offset <= 126):
+            raise ValueError(
+                "`phred_offset` %d is out of printable ASCII character range."
+                % phred_offset)
+        phred_range = (0, 126 - phred_offset)
 
     return phred_offset, phred_range
