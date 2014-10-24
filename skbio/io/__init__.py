@@ -46,7 +46,7 @@ format='<format here>')``
 
 For example, to read a `newick` file using both interfaces you would type:
 
->>> from skbio.io import read
+>>> from skbio import read
 >>> from skbio import TreeNode
 >>> from io import StringIO
 >>> open_filehandle = StringIO(u'(a, b);')

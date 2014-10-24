@@ -60,7 +60,7 @@ Assume we have a clustal-formatted file with the following contents::
 We can use the following code to read a clustal file:
 
 >>> from StringIO import StringIO
->>> from skbio.io import read
+>>> from skbio import read
 >>> from skbio import Alignment
 >>> clustal_f = StringIO('abc   GCAUGCAUCUGCAUACGUACGUACGCAUGCA\n'
 ...                      'def   -------------------------------\n'
@@ -232,7 +232,8 @@ def _clustal_sniffer(fh):
         records = map(_delete_trailing_number,
                       filter(_is_clustal_seq_line, fh))
         data, labels = _label_line_parser(records, last_space, strict=True)
-        empty = False
+        if len(data) > 0:
+            empty = False
         # Only check first 50 sequences
         aligned_correctly = _check_length(data, labels, 50)
         if not aligned_correctly:

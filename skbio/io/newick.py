@@ -174,7 +174,7 @@ Examples
 This is a simple Newick string.
 
 >>> from StringIO import StringIO
->>> from skbio.io import read
+>>> from skbio import read
 >>> from skbio.tree import TreeNode
 >>> f = StringIO(u"((D, E)B, (F, G)C)A;")
 >>> tree = read(f, format="newick", into=TreeNode)

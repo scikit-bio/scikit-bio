@@ -45,32 +45,53 @@ IDs, respectively, as the first column, followed by the 2-D data array.
 
 An example of this file format might look like::
 
-    Eigvals<tab>2
-    0.096<tab>0.040
+    Eigvals<tab>4
+    0.36<tab>0.18<tab>0.07<tab>0.08
 
-    Proportion explained<tab>2
-    0.512<tab>0.488
+    Proportion explained<tab>4
+    0.46<tab>0.23<tab>0.10<tab>0.10
 
-    Species<tab>3<tab>2
-    Species1<tab>0.408<tab>0.069
-    Species2<tab>-0.115<tab>-0.299
-    Species3<tab>-0.309<tab>0.187
+    Species<tab>9<tab>4
+    Species0<tab>0.11<tab>0.28<tab>-0.20<tab>-0.00
+    Species1<tab>0.14<tab>0.30<tab>0.39<tab>-0.14
+    Species2<tab>-1.01<tab>0.09<tab>-0.19<tab>-0.10
+    Species3<tab>-1.03<tab>0.10<tab>0.22<tab>0.22
+    Species4<tab>1.05<tab>0.53<tab>-0.43<tab>0.22
+    Species5<tab>0.99<tab>0.57<tab>0.67<tab>-0.38
+    Species6<tab>0.25<tab>-0.17<tab>-0.20<tab>0.43
+    Species7<tab>0.14<tab>-0.85<tab>-0.01<tab>0.05
+    Species8<tab>0.41<tab>-0.70<tab>0.21<tab>-0.69
 
-    Site<tab>3<tab>2
-    Site1<tab>-0.848<tab>0.882
-    Site2<tab>-0.220<tab>-1.344
-    Site3<tab>1.666<tab>0.470
+    Site<tab>10<tab>4
+    Site0<tab>0.71<tab>-3.08<tab>0.21<tab>-1.24
+    Site1<tab>0.58<tab>-3.00<tab>-0.94<tab>2.69
+    Site2<tab>0.76<tab>-3.15<tab>2.13<tab>-3.11
+    Site3<tab>1.11<tab>1.07<tab>-1.87<tab>0.66
+    Site4<tab>-0.97<tab>-0.06<tab>-0.69<tab>-0.61
+    Site5<tab>1.04<tab>0.45<tab>-0.63<tab>0.28
+    Site6<tab>-0.95<tab>-0.08<tab>0.13<tab>-0.42
+    Site7<tab>0.94<tab>-0.10<tab>0.52<tab>-0.00
+    Site8<tab>-1.14<tab>0.49<tab>0.47<tab>1.17
+    Site9<tab>1.03<tab>1.03<tab>2.74<tab>-1.28
 
-    Biplot<tab>4<tab>3
-    0.422<tab>-0.559<tab>-0.713
-    0.988<tab>0.150<tab>-0.011
-    -0.556<tab>0.817<tab>0.147
-    -0.404<tab>-0.905<tab>-0.127
 
-    Site constraints<tab>3<tab>2
-    Site1<tab>-0.848<tab>0.882
-    Site2<tab>-0.220<tab>-1.344
-    Site3<tab>1.666<tab>0.470
+    Biplot<tab>3<tab>3
+    -0.16<tab>0.63<tab>0.76
+    -0.99<tab>0.06<tab>-0.04
+    0.18<tab>-0.97<tab>0.03
+
+    Site constraints<tab>10<tab>9
+    Site0<tab>0.69<tab>-3.08<tab>-0.32<tab>-1.24
+    Site1<tab>0.66<tab>-3.06<tab>0.23<tab>2.69
+    Site2<tab>0.63<tab>-3.04<tab>0.78<tab>-3.11
+    Site3<tab>1.10<tab>0.50<tab>-1.55<tab>0.66
+    Site4<tab>-0.97<tab>0.06<tab>-1.12<tab>-0.61
+    Site5<tab>1.05<tab>0.53<tab>-0.43<tab>0.28
+    Site6<tab>-1.02<tab>0.10<tab>-0.00<tab>-0.42
+    Site7<tab>0.99<tab>0.57<tab>0.67<tab>-0.00
+    Site8<tab>-1.08<tab>0.13<tab>1.11<tab>1.17
+    Site9<tab>0.94<tab>0.61<tab>1.79<tab>-1.28
+
 
 If a given result attribute is not present (e.g. ``Biplot``), it should still
 be defined and declare its dimensions as 0. For example::
@@ -84,47 +105,76 @@ Examples
 Assume we have the following tab-delimited text file storing the
 ordination results in ``ordination`` format::
 
-    Eigvals\t2
-    0.0961330159181\t0.0409418140138
+    Eigvals<tab>4
+    0.36<tab>0.18<tab>0.07<tab>0.08
 
-    Proportion explained\t0
+    Proportion explained<tab>4
+    0.46<tab>0.23<tab>0.10<tab>0.10
 
-    Species\t3\t2
-    Species1\t0.408869425742\t0.0695518116298
-    Species2\t-0.1153860437\t-0.299767683538
-    Species3\t-0.309967102571\t0.187391917117
+    Species<tab>9<tab>4
+    Species0<tab>0.11<tab>0.28<tab>-0.20<tab>-0.00
+    Species1<tab>0.14<tab>0.30<tab>0.39<tab>-0.14
+    Species2<tab>-1.01<tab>0.09<tab>-0.19<tab>-0.10
+    Species3<tab>-1.03<tab>0.10<tab>0.22<tab>0.22
+    Species4<tab>1.05<tab>0.53<tab>-0.43<tab>0.22
+    Species5<tab>0.99<tab>0.57<tab>0.67<tab>-0.38
+    Species6<tab>0.25<tab>-0.17<tab>-0.20<tab>0.43
+    Species7<tab>0.14<tab>-0.85<tab>-0.01<tab>0.05
+    Species8<tab>0.41<tab>-0.70<tab>0.21<tab>-0.69
 
-    Site\t3\t2
-    Site1\t-0.848956053187\t0.882764759014
-    Site2\t-0.220458650578\t-1.34482000302
-    Site3\t1.66697179591\t0.470324389808
+    Site<tab>10<tab>4
+    Site0<tab>0.71<tab>-3.08<tab>0.21<tab>-1.24
+    Site1<tab>0.58<tab>-3.00<tab>-0.94<tab>2.69
+    Site2<tab>0.76<tab>-3.15<tab>2.13<tab>-3.11
+    Site3<tab>1.11<tab>1.07<tab>-1.87<tab>0.66
+    Site4<tab>-0.97<tab>-0.06<tab>-0.69<tab>-0.61
+    Site5<tab>1.04<tab>0.45<tab>-0.63<tab>0.28
+    Site6<tab>-0.95<tab>-0.08<tab>0.13<tab>-0.42
+    Site7<tab>0.94<tab>-0.10<tab>0.52<tab>-0.00
+    Site8<tab>-1.14<tab>0.49<tab>0.47<tab>1.17
+    Site9<tab>1.03<tab>1.03<tab>2.74<tab>-1.28
 
-    Biplot\t0\t0
+    Biplot<tab>0<tab>0
 
-    Site constraints\t0\t0
+    Site constraints<tab>0<tab>0
 
 Load the ordination results from the file:
 
 >>> from StringIO import StringIO
 >>> from skbio.stats.ordination import OrdinationResults
->>> or_f = StringIO("Eigvals\t2\n"
-...                 "0.0961330159181\t0.0409418140138\n"
-...                 "\n"
-...                 "Proportion explained\t0\n"
-...                 "\n"
-...                 "Species\t3\t2\n"
-...                 "Species1\t0.408869425742\t0.0695518116298\n"
-...                 "Species2\t-0.1153860437\t-0.299767683538\n"
-...                 "Species3\t-0.309967102571\t0.187391917117\n"
-...                 "\n"
-...                 "Site\t3\t2\n"
-...                 "Site1\t-0.848956053187\t0.882764759014\n"
-...                 "Site2\t-0.220458650578\t-1.34482000302\n"
-...                 "Site3\t1.66697179591\t0.470324389808\n"
-...                 "\n"
-...                 "Biplot\t0\t0\n"
-...                 "\n"
-...                 "Site constraints\t0\t0\n")
+>>> or_f = StringIO(
+...  "Eigvals\t4\n"
+...  "0.36\t0.18\t0.07\t0.08\n"
+...  "\n"
+...  "Proportion explained\t4\n"
+...  "0.46\t0.23\t0.10\t0.10\n"
+...  "\n"
+...  "Species\t9\t4\n"
+...  "Species0\t0.11\t0.28\t-0.20\t-0.00\n"
+...  "Species1\t0.14\t0.30\t0.39\t-0.14\n"
+...  "Species2\t-1.01\t0.09\t-0.19\t-0.10\n"
+...  "Species3\t-1.03\t0.10\t0.22\t0.22\n"
+...  "Species4\t1.05\t0.53\t-0.43\t0.22\n"
+...  "Species5\t0.99\t0.57\t0.67\t-0.38\n"
+...  "Species6\t0.25\t-0.17\t-0.20\t0.43\n"
+...  "Species7\t0.14\t-0.85\t-0.01\t0.05\n"
+...  "Species8\t0.41\t-0.70\t0.21\t-0.69\n"
+...  "\n"
+...  "Site\t10\t4\n"
+...  "Site0\t0.71\t-3.08\t0.21\t-1.24\n"
+...  "Site1\t0.58\t-3.00\t-0.94\t2.69\n"
+...  "Site2\t0.76\t-3.15\t2.13\t-3.11\n"
+...  "Site3\t1.11\t1.07\t-1.87\t0.66\n"
+...  "Site4\t-0.97\t-0.06\t-0.69\t-0.61\n"
+...  "Site5\t1.04\t0.45\t-0.63\t0.28\n"
+...  "Site6\t-0.95\t-0.08\t0.13\t-0.42\n"
+...  "Site7\t0.94\t-0.10\t0.52\t-0.00\n"
+...  "Site8\t-1.14\t0.49\t0.47\t1.17\n"
+...  "Site9\t1.03\t1.03\t2.74\t-1.28\n"
+...  "\n"
+...  "Biplot\t0\t0\n"
+...  "\n"
+...  "Site constraints\t0\t0\n")
 >>> ord_res = OrdinationResults.read(or_f)
 
 """
