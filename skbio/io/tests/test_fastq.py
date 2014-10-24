@@ -115,7 +115,7 @@ class ReaderTests(TestCase):
              'end of file.*different number.*24 != 25')
         ]]
 
-    def test_fasta_to_generator_valid_files(self):
+    def test_fastq_to_generator_valid_files(self):
         test_cases = (self.empty,)
 
         for exp, kwargs, fps in test_cases:

@@ -185,7 +185,7 @@ import numpy as np
 from skbio.io import (register_reader, register_writer,
                       register_sniffer,
                       FASTQFormatError)
-from skbio.io._base import _decode_qual_to_phred
+from skbio.io._base import _decode_qual_to_phred, _encode_phred_to_qual
 from skbio.alignment import SequenceCollection, Alignment
 from skbio.sequence import (BiologicalSequence, NucleotideSequence,
                             DNASequence, RNASequence, ProteinSequence)
@@ -330,57 +330,57 @@ def _parse_quality_scores(fh, seq_len, variant, phred_offset):
 
 
 @register_reader('fastq', BiologicalSequence)
-def _fastq_to_biological_sequence(fh, seq_num=1, phred_offset=33):
-    return _fastq_to_sequence(fh, seq_num, BiologicalSequence,
-                              phred_offset=phred_offset)
+def _fastq_to_biological_sequence(fh, variant=None, phred_offset=None,
+                                  seq_num=1):
+    return _fastq_to_sequence(fh, variant, phred_offset, seq_num,
+                              BiologicalSequence)
 
 
 @register_reader('fastq', NucleotideSequence)
-def _fastq_to_nucleotide_sequence(fh, seq_num=1, phred_offset=33):
-    return _fastq_to_sequence(fh, seq_num, NucleotideSequence,
-                              phred_offset=phred_offset)
+def _fastq_to_nucleotide_sequence(fh, variant=None, phred_offset=None,
+                                  seq_num=1):
+    return _fastq_to_sequence(fh, variant, phred_offset, seq_num,
+                              NucleotideSequence)
 
 
 @register_reader('fastq', DNASequence)
-def _fastq_to_dna_sequence(fh, seq_num=1, phred_offset=33):
-    return _fastq_to_sequence(fh, seq_num, DNASequence,
-                              phred_offset=phred_offset)
+def _fastq_to_dna_sequence(fh, variant=None, phred_offset=None, seq_num=1):
+    return _fastq_to_sequence(fh, variant, phred_offset, seq_num, DNASequence)
 
 
 @register_reader('fastq', RNASequence)
-def _fastq_to_rna_sequence(fh, seq_num=1, phred_offset=33):
-    return _fastq_to_sequence(fh, seq_num, RNASequence,
-                              phred_offset=phred_offset)
+def _fastq_to_rna_sequence(fh, variant=None, phred_offset=None, seq_num=1):
+    return _fastq_to_sequence(fh, variant, phred_offset, seq_num, RNASequence)
 
 
 @register_reader('fastq', ProteinSequence)
-def _fastq_to_protein_sequence(fh, seq_num=1,
-                               phred_offset=33):
-    return _fastq_to_sequence(fh, seq_num, ProteinSequence,
-                              phred_offset=phred_offset)
+def _fastq_to_protein_sequence(fh, variant=None, phred_offset=None, seq_num=1):
+    return _fastq_to_sequence(fh, variant, phred_offset, seq_num,
+                              ProteinSequence)
 
 
 @register_reader('fastq', SequenceCollection)
-def _fastq_to_sequence_collection(fh, constructor=BiologicalSequence,
-                                  phred_offset=33):
+def _fastq_to_sequence_collection(fh, variant=None, phred_offset=None,
+                                  constructor=BiologicalSequence):
     return SequenceCollection(
-        list(_fastq_to_generator(fh, constructor=constructor,
-                                 phred_offset=phred_offset)))
+        list(_fastq_to_generator(fh, variant=variant,
+                                 phred_offset=phred_offset,
+                                 constructor=constructor)))
 
 
 @register_reader('fastq', Alignment)
-def _fastq_to_alignment(fh, constructor=BiologicalSequence,
-                        phred_offset=33):
+def _fastq_to_alignment(fh, variant=None, phred_offset=None,
+                        constructor=BiologicalSequence):
     return Alignment(
-        list(_fastq_to_generator(fh, constructor=constructor,
-                                 phred_offset=phred_offset)))
+        list(_fastq_to_generator(fh, variant=variant,
+                                 phred_offset=phred_offset,
+                                 constructor=constructor)))
 
 
 @register_writer('fastq')
-def _generator_to_fastq(obj, fh, id_whitespace_replacement='_',
-                        description_newline_replacement=' ',
-                        enforce_qual_range=True,
-                        phred_offset=33):
+def _generator_to_fastq(obj, fh, variant=None, phred_offset=None,
+                        id_whitespace_replacement='_',
+                        description_newline_replacement=' '):
     if ((id_whitespace_replacement is not None and
          '\n' in id_whitespace_replacement) or
         (description_newline_replacement is not None and
@@ -414,88 +414,87 @@ def _generator_to_fastq(obj, fh, id_whitespace_replacement='_',
         else:
             header = id_
 
-        seq_str = seq.sequence
-        if phred_offset not in [33, 64]:
-            raise ValueError("Unknown PHRED offset of %s" % phred_offset)
+        if not seq.has_quality():
+            raise FASTQFormatError(
+                "Cannot write %s biological sequence in FASTQ format because "
+                "it does not have quality scores associated with it." %
+                cardinal_to_ordinal(idx + 1))
+        qual_str = _encode_phred_to_qual(seq.quality, variant=variant,
+                                         phred_offset=phred_offset)
 
-        if enforce_qual_range and ((seq.quality < 0).any() or
-                                   (seq.quality > 62).any()):
-            raise FASTQFormatError("Failed qual conversion for seq id: %s."
-                                   "This may be because you passed an "
-                                   "incorrect value for phred_offset" %
-                                   seq.id)
-
-        qual = seq.quality+phred_offset
-        qual_str = ''.join(map(chr, qual))
-
-        fh.write('@%s\n%s\n+%s\n%s\n' % (header, seq_str, header, qual_str))
+        fh.write('@')
+        fh.write(header)
+        fh.write('\n')
+        fh.write(str(seq))
+        fh.write('+\n')
+        fh.write(qual_str)
+        fh.write('\n')
 
 
 @register_writer('fastq', BiologicalSequence)
-def _biological_sequence_to_fastq(obj, fh, id_whitespace_replacement='_',
-                                  description_newline_replacement=' ',
-                                  phred_offset=33):
-
-    _sequence_to_fastq(obj, fh, id_whitespace_replacement,
-                       description_newline_replacement,
-                       phred_offset=phred_offset)
+def _biological_sequence_to_fastq(obj, fh, variant=None, phred_offset=None,
+                                  id_whitespace_replacement='_',
+                                  description_newline_replacement=' '):
+    _sequences_to_fastq([obj], fh, variant, phred_offset,
+                        id_whitespace_replacement,
+                        description_newline_replacement)
 
 
 @register_writer('fastq', NucleotideSequence)
-def _nucleotide_sequence_to_fastq(obj, fh, id_whitespace_replacement='_',
-                                  description_newline_replacement=' ',
-                                  phred_offset=33):
-    _sequence_to_fastq(obj, fh, id_whitespace_replacement,
-                       description_newline_replacement,
-                       phred_offset=phred_offset)
+def _nucleotide_sequence_to_fastq(obj, fh, variant=None, phred_offset=None,
+                                  id_whitespace_replacement='_',
+                                  description_newline_replacement=' '):
+    _sequences_to_fastq([obj], fh, variant, phred_offset,
+                        id_whitespace_replacement,
+                        description_newline_replacement)
 
 
 @register_writer('fastq', DNASequence)
-def _dna_sequence_to_fastq(obj, fh, id_whitespace_replacement='_',
-                           description_newline_replacement=' ',
-                           phred_offset=33):
-    _sequence_to_fastq(obj, fh, id_whitespace_replacement,
-                       description_newline_replacement,
-                       phred_offset=phred_offset)
+def _dna_sequence_to_fastq(obj, fh, variant=None, phred_offset=None,
+                           id_whitespace_replacement='_',
+                           description_newline_replacement=' '):
+    _sequences_to_fastq([obj], fh, variant, phred_offset,
+                        id_whitespace_replacement,
+                        description_newline_replacement)
 
 
 @register_writer('fastq', RNASequence)
-def _rna_sequence_to_fastq(obj, fh, id_whitespace_replacement='_',
-                           description_newline_replacement=' ',
-                           phred_offset=33):
-    _sequence_to_fastq(obj, fh, id_whitespace_replacement,
-                       description_newline_replacement,
-                       phred_offset=phred_offset)
+def _rna_sequence_to_fastq(obj, fh, variant=None, phred_offset=None,
+                           id_whitespace_replacement='_',
+                           description_newline_replacement=' '):
+    _sequences_to_fastq([obj], fh, variant, phred_offset,
+                        id_whitespace_replacement,
+                        description_newline_replacement)
 
 
 @register_writer('fastq', ProteinSequence)
-def _protein_sequence_to_fastq(obj, fh, id_whitespace_replacement='_',
-                               description_newline_replacement=' ',
-                               phred_offset=33):
-    _sequence_to_fastq(obj, fh, id_whitespace_replacement,
-                       description_newline_replacement,
-                       phred_offset=phred_offset)
+def _protein_sequence_to_fastq(obj, fh, variant=None, phred_offset=None,
+                               id_whitespace_replacement='_',
+                               description_newline_replacement=' '):
+    _sequences_to_fastq([obj], fh, variant, phred_offset,
+                        id_whitespace_replacement,
+                        description_newline_replacement)
 
 
 @register_writer('fastq', SequenceCollection)
-def _sequence_collection_to_fastq(obj, fh, id_whitespace_replacement='_',
-                                  description_newline_replacement=' ',
-                                  phred_offset=33):
-    _sequences_to_fastq(obj, fh, id_whitespace_replacement,
-                        description_newline_replacement,
-                        phred_offset=phred_offset)
+def _sequence_collection_to_fastq(obj, fh, variant=None, phred_offset=None,
+                                  id_whitespace_replacement='_',
+                                  description_newline_replacement=' '):
+    _sequences_to_fastq(obj, fh, variant, phred_offset,
+                        id_whitespace_replacement,
+                        description_newline_replacement)
 
 
 @register_writer('fastq', Alignment)
-def _alignment_to_fastq(obj, fh, id_whitespace_replacement='_',
-                        description_newline_replacement=' ',
-                        phred_offset=33):
-    _sequences_to_fastq(obj, fh, id_whitespace_replacement,
-                        description_newline_replacement,
-                        phred_offset=phred_offset)
+def _alignment_to_fastq(obj, fh, variant=None, phred_offset=None,
+                        id_whitespace_replacement='_',
+                        description_newline_replacement=' '):
+    _sequences_to_fastq(obj, fh, variant, phred_offset,
+                        id_whitespace_replacement,
+                        description_newline_replacement)
 
 
-def _fastq_to_sequence(fh, seq_num, constructor, phred_offset=33):
+def _fastq_to_sequence(fh, variant, phred_offset, seq_num, constructor):
     if seq_num < 1:
         raise FASTQFormatError(
             "Invalid sequence number (seq_num=%d). seq_num must be between 1 "
@@ -505,8 +504,9 @@ def _fastq_to_sequence(fh, seq_num, constructor, phred_offset=33):
     seq_idx = seq_num - 1
     seq = None
     try:
-        gen = _fastq_to_generator(fh, constructor=constructor,
-                                  phred_offset=phred_offset)
+        gen = _fastq_to_generator(fh, variant=variant,
+                                  phred_offset=phred_offset,
+                                  constructor=constructor)
         for idx, curr_seq in enumerate(gen):
             if idx == seq_idx:
                 seq = curr_seq
@@ -521,26 +521,14 @@ def _fastq_to_sequence(fh, seq_num, constructor, phred_offset=33):
     return seq
 
 
-def _sequence_to_fastq(obj, fh, id_whitespace_replacement,
-                       description_newline_replacement,
-                       phred_offset=33):
-    def seq_gen():
-        yield obj
-
-    _generator_to_fastq(
-        seq_gen(), fh, id_whitespace_replacement=id_whitespace_replacement,
-        description_newline_replacement=description_newline_replacement,
-        phred_offset=phred_offset)
-
-
-def _sequences_to_fastq(obj, fh, id_whitespace_replacement,
-                        description_newline_replacement,
-                        phred_offset=33):
+def _sequences_to_fastq(obj, fh, variant, phred_offset,
+                        id_whitespace_replacement,
+                        description_newline_replacement):
     def seq_gen():
         for seq in obj:
             yield seq
 
     _generator_to_fastq(
-        seq_gen(), fh, id_whitespace_replacement=id_whitespace_replacement,
-        description_newline_replacement=description_newline_replacement,
-        phred_offset=phred_offset)
+        seq_gen(), fh, variant=variant, phred_offset=phred_offset,
+        id_whitespace_replacement=id_whitespace_replacement,
+        description_newline_replacement=description_newline_replacement)
