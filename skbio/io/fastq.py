@@ -185,56 +185,12 @@ import numpy as np
 from skbio.io import (register_reader, register_writer,
                       register_sniffer,
                       FASTQFormatError)
+from skbio.io._base import _decode_qual_to_phred
 from skbio.alignment import SequenceCollection, Alignment
 from skbio.sequence import (BiologicalSequence, NucleotideSequence,
                             DNASequence, RNASequence, ProteinSequence)
 
 from skbio.util import cardinal_to_ordinal
-
-
-def _ascii_to_phred(s, offset):
-    """Convert ascii to Phred quality score with specified ASCII offset."""
-    return np.fromstring(s, dtype='|S1').view(np.int8) - offset
-
-
-def ascii_to_phred33(s):
-    """Convert ascii string to Phred quality score with ASCII offset of 33.
-
-    Standard "Sanger" ASCII offset of 33. This is used by Illumina in CASAVA
-    versions after 1.8.0, and most other places. Note that internal Illumina
-    files still use offset of 64
-    """
-    return _ascii_to_phred(s, 33)
-
-
-def ascii_to_phred64(s):
-    """Convert ascii string to Phred quality score with ASCII offset of 64.
-
-    Illumina-specific ASCII offset of 64. This is used by Illumina in CASAVA
-    versions prior to 1.8.0, and in Illumina internal formats (e.g.,
-    export.txt files).
-    """
-    return _ascii_to_phred(s, 64)
-
-
-def _drop_id_marker(s, marker):
-    """Drop the first character"""
-    if s[0] != marker:
-        raise FASTQFormatError(
-            "Expected header line to start with %r character: %r" %
-            (marker, s))
-    return s[1:]
-
-
-def _split_id(s):
-    """Split up line into id and description"""
-    toks = re.split("\s+", s)
-    seqid, description = '', ''
-    if len(toks) > 0:
-        seqid = toks[0]
-    if len(toks) > 1:
-        description = ' '.join(toks[1:])
-    return seqid, description
 
 
 @register_sniffer('fastq')
@@ -265,77 +221,115 @@ def _fastq_sniffer(fh):
             return False, {}
 
 
+def _parse_header(line):
+    id_ = ''
+    desc = ''
+    header = line[1:].rstrip()
+    if header:
+        if header[0].isspace():
+            # no id
+            desc = header.lstrip()
+        else:
+            header_tokens = header.split(None, 1)
+            if len(header_tokens) == 1:
+                # no description
+                id_ = header_tokens[0]
+            else:
+                id_, desc = header_tokens
+    return id_, desc
+
+
 @register_reader('fastq')
 def _fastq_to_generator(fh, variant=None, phred_offset=None,
                         constructor=BiologicalSequence):
-    if phred_offset == 33:
-        phred_f = ascii_to_phred33
-    elif phred_offset == 64:
-        phred_f = ascii_to_phred64
-    else:
-        raise ValueError("Unknown PHRED offset of %s" % phred_offset)
-
-    iters = [iter(fh)] * 4
-    for seqid, seq, qualid, qual in zip_longest(*iters):
-        # Error if an incomplete record is found
-        # Note: seqid cannot be None, because if all 4 values were None,
-        # then the loop condition would be false, and we could not have
-        # gotten to this point
-        if seq is None or qualid is None or qual is None:
+    seq_header_line = next(fh).rstrip('\n')
+    while seq_header_line is not None:
+        # header check inlined here and below for performance
+        if seq_header_line.startswith('@'):
+            id_, desc = _parse_header(seq_header_line)
+        else:
             raise FASTQFormatError(
-                "Found incomplete/truncated FASTQ record at end of file.")
+                "Expected sequence header line to start with '@' character: %r" %
+                seq_header_line)
 
-        if not seqid.strip() or not seq.strip() or not qualid.strip() or \
-                not qual.strip():
-            raise FASTQFormatError(
-                "Found blank or whitespace-only line in FASTQ-formatted file.")
+        seq, qual_header_line = _parse_sequence_data(fh)
 
-        header = seqid.strip()
-        # If the file simply ended in a blankline, do not error
-        if header is '':
-            continue
-
-        seq = seq.strip()
-        for c in seq:
-            if c.isspace():
-                raise FASTQFormatError(
-                    "Found whitespace in sequence data: %r" % seq)
-
-        qualid = qualid.strip()
-
-        header = _drop_id_marker(header, '@')
-        qualid = _drop_id_marker(qualid, '+')
-
-        if qualid and header != qualid:
+        if qual_header_line != '+' and qual_header_line[1:] != seq_header_line[1:]:
             raise FASTQFormatError(
                 "Sequence (@) and quality (+) header lines do not match: "
-                "%r != %r" % (header, qualid))
+                "%r != %r" % (seq_header_line[1:], qual_header_line[1:]))
 
-        seqid, description = _split_id(header)
-        qualid, _ = _split_id(qualid)
+        phred_scores, seq_header_line = _parse_quality_scores(fh, len(seq), variant, phred_offset)
+        yield constructor(seq, id=id_, description=desc, quality=phred_scores)
 
-        qual = qual.strip()
-        for c in qual:
-            ascii_code = ord(c)
-            if ascii_code < 33 or ascii_code > 126:
+
+def _parse_sequence_data(fh):
+    seq_chunks = []
+    for line in fh:
+        if line.startswith('+'):
+            if not seq_chunks:
+                raise FASTQFormatError("Found FASTQ record without sequence data.")
+            return ''.join(seq_chunks), line.rstrip('\n')
+        elif line.startswith('@'):
+            raise FASTQFormatError(
+                "Found FASTQ record that is missing a quality (+) header line "
+                "after sequence data.")
+        else:
+            line = line.strip()
+            if line:
+                for c in line:
+                    if c.isspace():
+                        raise FASTQFormatError(
+                            "Found whitespace in sequence data: %r" % line)
+                seq_chunks.append(line)
+            else:
                 raise FASTQFormatError(
-                    "Found quality score encoded as a non-printable ASCII "
-                    "character (ASCII code %d). Each quality score must be in "
-                    "the ASCII code range 33-126 (inclusive), regardless of "
-                    "FASTQ variant used." % ascii_code)
+                    "Found blank or whitespace-only line in FASTQ-formatted "
+                    "file.")
+    if not seq_chunks:
+        raise FASTQFormatError(
+            "Found incomplete/truncated FASTQ record at end of file that is "
+            "missing sequence data.")
+    else:
+        raise FASTQFormatError(
+            "Found incomplete/truncated FASTQ record at end of file that is "
+            "missing a quality (+) header line after sequence data.")
 
-        # bounds based on illumina limits, see:
-        # http://nar.oxfordjournals.org/content/38/6/1767/T1.expansion.html
-        qual = phred_f(qual)
 
-        if enforce_qual_range and ((qual < 0).any() or (qual > 62).any()):
-            raise FASTQFormatError("Failed qual conversion for seq id: %s."
-                                   "This may be because you passed an "
-                                   "incorrect value for phred_offset" %
-                                   seqid)
+def _parse_quality_scores(fh, seq_len, variant, phred_offset):
+    qual_chunks = []
+    qual_len = 0
+    for line in fh:
+        if line.startswith('@') and qual_len == seq_len:
+            phred_scores = _decode_qual_to_phred(''.join(qual_chunks), variant=variant, phred_offset=phred_offset)
+            return phred_scores, line.rstrip('\n')
+        else:
+            line = line.strip()
+            if line:
+                qual_len += len(line)
+                qual_chunks.append(line)
 
-        yield constructor(seq, id=seqid, quality=qual,
-                          description=description)
+                if qual_len > seq_len:
+                    raise FASTQFormatError(
+                        "Found more quality score characters than sequence "
+                        "characters. Extra quality score characters: %r" %
+                        ''.join(qual_chunks)[seq_len:])
+            else:
+                raise FASTQFormatError(
+                    "Found blank or whitespace-only line in FASTQ-formatted "
+                    "file.")
+
+    if not qual_chunks:
+        raise FASTQFormatError(
+            "Found incomplete/truncated FASTQ record at end of file that is "
+            "missing quality scores.")
+    if qual_len != seq_len:
+        raise FASTQFormatError(
+            "Found FASTQ record at end of file with different number of "
+            "quality score characters than sequence characters: %d != %d" %
+            (qual_len, seq_len))
+    phred_scores = _decode_qual_to_phred(''.join(qual_chunks), variant=variant, phred_offset=phred_offset)
+    return phred_scores, None
 
 
 @register_reader('fastq', BiologicalSequence)
