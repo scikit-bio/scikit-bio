@@ -62,20 +62,26 @@ class ReaderTests(TestCase):
             ('error_no_qual.fastq', FASTQFormatError,
              'blank line.*FASTQ'),
 
-            ('error_qual_del.fastq', ValueError, '94.*[0, 93]'),
+            ('error_qual_del.fastq', ValueError,
+             'Decoded Phred score.*out of range'),
 
-            ('error_qual_escape.fastq', ValueError, '-6.*[0, 93]'),
+            ('error_qual_escape.fastq', ValueError,
+             'Decoded Phred score.*out of range'),
 
-            ('error_qual_null.fastq', ValueError, '-33.*[0, 93]'),
+            ('error_qual_null.fastq', ValueError,
+             'Decoded Phred score.*out of range'),
 
-            ('error_qual_space.fastq', ValueError, '-1.*[0, 93]'),
+            ('error_qual_space.fastq', ValueError,
+             'Decoded Phred score.*out of range'),
 
             ('error_qual_tab.fastq', FASTQFormatError,
              'blank line.*FASTQ'),
 
-            ('error_qual_unit_sep.fastq', ValueError, '-2.*[0, 93]'),
+            ('error_qual_unit_sep.fastq', ValueError,
+             'Decoded Phred score.*out of range'),
 
-            ('error_qual_vtab.fastq', ValueError, '-22.*[0, 93]'),
+            ('error_qual_vtab.fastq', ValueError,
+             'Decoded Phred score.*out of range'),
 
             ('error_short_qual.fastq', FASTQFormatError,
              "Extra quality.*'SLXA-B3_649_FC8437_R1_1_1_362_549'"),
@@ -117,11 +123,17 @@ class ReaderTests(TestCase):
                 obs = list(_fastq_to_generator(fp, **kwargs))
                 self._assert_generator_results_equal(obs, exp)
 
-    def test_fastq_to_generator_invalid_files(self):
+    def test_fastq_to_generator_invalid_files_all_variants(self):
+        # files that should be invalid for all variants, as well as custom
+        # phred offsets
         for fp, error_type, error_msg_regex in self.invalid_fps:
-            with self.assertRaisesRegexp(error_type, error_msg_regex):
-                # TODO test that errors are raised for all variants
-                list(_fastq_to_generator(fp, variant='sanger'))
+            for variant in 'sanger', 'illumina1.3', 'illumina1.8':
+                with self.assertRaisesRegexp(error_type, error_msg_regex):
+                    list(_fastq_to_generator(fp, variant=variant))
+
+            for offset in 40, 77:
+                with self.assertRaisesRegexp(error_type, error_msg_regex):
+                    list(_fastq_to_generator(fp, phred_offset=offset))
 
     def _assert_generator_results_equal(self, obs, exp):
         self.assertEqual(len(obs), len(exp))
