@@ -60,7 +60,7 @@ class ReaderTests(TestCase):
             ('error_long_qual.fastq', FASTQFormatError, "Extra quality.*'Y'"),
 
             ('error_no_qual.fastq', FASTQFormatError,
-             'whitespace-only.*FASTQ'),
+             'blank line.*FASTQ'),
 
             ('error_qual_del.fastq', ValueError, '94.*[0, 93]'),
 
@@ -71,7 +71,7 @@ class ReaderTests(TestCase):
             ('error_qual_space.fastq', ValueError, '-1.*[0, 93]'),
 
             ('error_qual_tab.fastq', FASTQFormatError,
-             'whitespace-only.*FASTQ'),
+             'blank line.*FASTQ'),
 
             ('error_qual_unit_sep.fastq', ValueError, '-2.*[0, 93]'),
 
@@ -87,10 +87,10 @@ class ReaderTests(TestCase):
              r"whitespace.*sequence data: 'GATGTGCAA\\tTACCTTTGTA\\tGAGGAA'"),
 
             ('error_trunc_at_seq.fastq', FASTQFormatError,
-             'whitespace-only.*FASTQ'),
+             'blank line.*FASTQ'),
 
             ('error_trunc_at_plus.fastq', FASTQFormatError,
-             'whitespace-only.*FASTQ'),
+             'blank line.*FASTQ'),
 
             ('error_trunc_at_qual.fastq', FASTQFormatError,
              "incomplete/truncated.*end of file.*missing quality scores"),

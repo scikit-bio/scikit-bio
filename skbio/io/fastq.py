@@ -244,7 +244,7 @@ def _fastq_to_generator(fh, variant=None, phred_offset=None,
                         constructor=BiologicalSequence):
     seq_header_line = next(fh).rstrip('\n')
     while seq_header_line is not None:
-        # header check inlined here and below for performance
+        # header checks inlined throughout code for performance
         if seq_header_line.startswith('@'):
             id_, desc = _parse_header(seq_header_line)
         else:
@@ -266,26 +266,25 @@ def _fastq_to_generator(fh, variant=None, phred_offset=None,
 def _parse_sequence_data(fh):
     seq_chunks = []
     for line in fh:
+        line = line.rstrip('\n')
+
         if line.startswith('+'):
             if not seq_chunks:
                 raise FASTQFormatError("Found FASTQ record without sequence data.")
-            return ''.join(seq_chunks), line.rstrip('\n')
+            return ''.join(seq_chunks), line
         elif line.startswith('@'):
             raise FASTQFormatError(
                 "Found FASTQ record that is missing a quality (+) header line "
                 "after sequence data.")
+        elif line:
+            for c in line:
+                if c.isspace():
+                    raise FASTQFormatError(
+                        "Found whitespace in sequence data: %r" % line)
+            seq_chunks.append(line)
         else:
-            line = line.strip()
-            if line:
-                for c in line:
-                    if c.isspace():
-                        raise FASTQFormatError(
-                            "Found whitespace in sequence data: %r" % line)
-                seq_chunks.append(line)
-            else:
-                raise FASTQFormatError(
-                    "Found blank or whitespace-only line in FASTQ-formatted "
-                    "file.")
+            raise FASTQFormatError("Found blank line in FASTQ-formatted file.")
+
     if not seq_chunks:
         raise FASTQFormatError(
             "Found incomplete/truncated FASTQ record at end of file that is "
@@ -300,24 +299,22 @@ def _parse_quality_scores(fh, seq_len, variant, phred_offset):
     qual_chunks = []
     qual_len = 0
     for line in fh:
+        line = line.rstrip('\n')
+
         if line.startswith('@') and qual_len == seq_len:
             phred_scores = _decode_qual_to_phred(''.join(qual_chunks), variant=variant, phred_offset=phred_offset)
-            return phred_scores, line.rstrip('\n')
-        else:
-            line = line.strip()
-            if line:
-                qual_len += len(line)
-                qual_chunks.append(line)
+            return phred_scores, line
+        elif line:
+            qual_len += len(line)
+            qual_chunks.append(line)
 
-                if qual_len > seq_len:
-                    raise FASTQFormatError(
-                        "Found more quality score characters than sequence "
-                        "characters. Extra quality score characters: %r" %
-                        ''.join(qual_chunks)[seq_len:])
-            else:
+            if qual_len > seq_len:
                 raise FASTQFormatError(
-                    "Found blank or whitespace-only line in FASTQ-formatted "
-                    "file.")
+                    "Found more quality score characters than sequence "
+                    "characters. Extra quality score characters: %r" %
+                    ''.join(qual_chunks)[seq_len:])
+        else:
+            raise FASTQFormatError("Found blank line in FASTQ-formatted file.")
 
     if not qual_chunks:
         raise FASTQFormatError(
