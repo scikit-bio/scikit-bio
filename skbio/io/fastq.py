@@ -120,6 +120,42 @@ Now read in the FASTQ file
 <BiologicalSequence: AACACCAAAC... (length: 35)>
 <BiologicalSequence: TATGTATATA... (length: 35)>
 
+Assume we have a fastq formatted file with the following contents::
+
+    @seq1
+    AACACCAAACTTCTCCACCACGTGAGCTACAAAAG
+    +
+    ````Y^T]`]c^cabcacc`^Lb^ccYT\T\Y\WF
+    @seq2
+    TATGTATATATAACATATACATATATACATACATA
+    +
+    ]KZ[PY]_[YY^```ac^\\`bT``c`\aT``bbb
+
+We can use the following code:
+
+>>> from StringIO import StringIO
+>>> from skbio.parse.sequences import parse_fastq
+>>> fastq_f = StringIO('@seq1\n'
+...                     'AACACCAAACTTCTCCACCACGTGAGCTACAAAAG\n'
+...                     '+\n'
+...                     '````Y^T]`]c^cabcacc`^Lb^ccYT\T\Y\WF\n'
+...                     '@seq2\n'
+...                     'TATGTATATATAACATATACATATATACATACATA\n'
+...                     '+\n'
+...                     ']KZ[PY]_[YY^```ac^\\\`bT``c`\\aT``bbb\n')
+>>> for record in _fastq_to_generator(fastq_f, phred_offset=64):
+...     print(record.id)
+...     print(record.sequence)
+...     print(record.quality)
+seq1
+AACACCAAACTTCTCCACCACGTGAGCTACAAAAG
+[32 32 32 32 25 30 20 29 32 29 35 30 35 33 34 35 33 35 35 32 30 12 34 30 35
+ 35 25 20 28 20 28 25 28 23  6]
+seq2
+TATGTATATATAACATATACATATATACATACATA
+[29 11 26 27 16 25 29 31 27 25 25 30 32 32 32 33 35 30 28 28 32 34 20 32 32
+ 35 32 28 33 20 32 32 34 34 34]
+
 References
 ----------
 .. [1] Peter J. A. Cock, Christopher J. Fields, Naohisa Goto, Michael L. Heuer,
@@ -230,63 +266,8 @@ def _fastq_sniffer(fh):
 
 
 @register_reader('fastq')
-def _fastq_to_generator(fh, enforce_qual_range=True,
-                        phred_offset=33, constructor=BiologicalSequence):
-    r"""yields label, seq, and qual from a fastq file.
-
-    Parameters
-    ----------
-    fh : open file object or str
-        An open fastq file (opened in binary mode) or a path to it.
-    enforce_qual_range : bool, optional
-        Defaults to ``True``. If ``True``, an exception will be raised if a
-        quality score outside the range [0, 62] is detected
-    phred_offset : {33, 64}, optional
-        What Phred offset to use when converting qual score symbols to integers
-
-    Returns
-    -------
-    label, seq, qual : (str, bytes, np.array)
-        yields the label, sequence and quality for each entry
-
-    Examples
-    --------
-    Assume we have a fastq formatted file with the following contents::
-
-        @seq1
-        AACACCAAACTTCTCCACCACGTGAGCTACAAAAG
-        +
-        ````Y^T]`]c^cabcacc`^Lb^ccYT\T\Y\WF
-        @seq2
-        TATGTATATATAACATATACATATATACATACATA
-        +
-        ]KZ[PY]_[YY^```ac^\\`bT``c`\aT``bbb
-
-    We can use the following code:
-
-    >>> from StringIO import StringIO
-    >>> from skbio.parse.sequences import parse_fastq
-    >>> fastq_f = StringIO('@seq1\n'
-    ...                     'AACACCAAACTTCTCCACCACGTGAGCTACAAAAG\n'
-    ...                     '+\n'
-    ...                     '````Y^T]`]c^cabcacc`^Lb^ccYT\T\Y\WF\n'
-    ...                     '@seq2\n'
-    ...                     'TATGTATATATAACATATACATATATACATACATA\n'
-    ...                     '+\n'
-    ...                     ']KZ[PY]_[YY^```ac^\\\`bT``c`\\aT``bbb\n')
-    >>> for record in _fastq_to_generator(fastq_f, phred_offset=64):
-    ...     print(record.id)
-    ...     print(record.sequence)
-    ...     print(record.quality)
-    seq1
-    AACACCAAACTTCTCCACCACGTGAGCTACAAAAG
-    [32 32 32 32 25 30 20 29 32 29 35 30 35 33 34 35 33 35 35 32 30 12 34 30 35
-     35 25 20 28 20 28 25 28 23  6]
-    seq2
-    TATGTATATATAACATATACATATATACATACATA
-    [29 11 26 27 16 25 29 31 27 25 25 30 32 32 32 33 35 30 28 28 32 34 20 32 32
-     35 32 28 33 20 32 32 34 34 34]
-    """
+def _fastq_to_generator(fh, variant=None, phred_offset=None,
+                        constructor=BiologicalSequence):
     if phred_offset == 33:
         phred_f = ascii_to_phred33
     elif phred_offset == 64:
