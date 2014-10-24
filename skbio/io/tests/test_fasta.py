@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
+from future.builtins import map, range, zip
 from six import StringIO
 
 from unittest import TestCase, main
@@ -28,7 +29,7 @@ from skbio.util import get_data_path
 
 class SnifferTests(TestCase):
     def setUp(self):
-        self.positive_fps = map(get_data_path, [
+        self.positive_fps = list(map(get_data_path, [
             'fasta_3_seqs_defaults',
             'fasta_max_width_1',
             'fasta_single_bio_seq_non_defaults',
@@ -56,9 +57,9 @@ class SnifferTests(TestCase):
             'fasta_mixed_qual_scores',
             'qual_invalid_qual_scores_float',
             'qual_invalid_qual_scores_string'
-        ])
+        ]))
 
-        self.negative_fps = map(get_data_path, [
+        self.negative_fps = list(map(get_data_path, [
             'empty',
             'whitespace_only',
             'fasta_invalid_missing_header',
@@ -102,7 +103,7 @@ class SnifferTests(TestCase):
             'qual_single_prot_seq_non_defaults',
             'qual_single_rna_seq_non_defaults',
             'qual_single_seq'
-        ])
+        ]))
 
     def test_positives(self):
         for fp in self.positive_fps:
@@ -121,8 +122,8 @@ class ReaderTests(TestCase):
         # deserialize into the expected generator results
 
         # empty file shouldn't yield sequences
-        self.empty = ([], {}, map(get_data_path, ['empty']),
-                      map(get_data_path, ['empty']))
+        self.empty = ([], {}, list(map(get_data_path, ['empty'])),
+                      list(map(get_data_path, ['empty'])))
 
         # single sequence
         self.single = (
@@ -130,8 +131,9 @@ class ReaderTests(TestCase):
                 'ACGT-acgt.', id='seq1', description='desc1',
                 quality=[10, 20, 30, 10, 0, 0, 0, 88888, 1, 3456])],
             {},
-            map(get_data_path, ['fasta_single_seq', 'fasta_max_width_1']),
-            map(get_data_path, ['qual_single_seq', 'qual_max_width_1'])
+            list(map(get_data_path, ['fasta_single_seq',
+                                     'fasta_max_width_1'])),
+            list(map(get_data_path, ['qual_single_seq', 'qual_max_width_1']))
         )
 
         # multiple sequences
@@ -152,8 +154,8 @@ class ReaderTests(TestCase):
                  description='detailed description \t\twith  new  lines',
                  quality=[42, 42, 442, 442, 42, 42, 42, 42, 42, 43])],
             {},
-            map(get_data_path, ['fasta_multi_seq', 'fasta_max_width_5']),
-            map(get_data_path, ['qual_multi_seq', 'qual_max_width_5'])
+            list(map(get_data_path, ['fasta_multi_seq', 'fasta_max_width_5'])),
+            list(map(get_data_path, ['qual_multi_seq', 'qual_max_width_5']))
         )
 
         # test constructor parameter, as well as odd labels (label only
@@ -169,8 +171,8 @@ class ReaderTests(TestCase):
              Protein(
                  'SKBI', description='skbio', quality=[1, 2, 33, 123456789])],
             {'constructor': ProteinSequence},
-            map(get_data_path, ['fasta_prot_seqs_odd_labels']),
-            map(get_data_path, ['qual_prot_seqs_odd_labels'])
+            list(map(get_data_path, ['fasta_prot_seqs_odd_labels'])),
+            list(map(get_data_path, ['qual_prot_seqs_odd_labels']))
         )
 
         # sequences that can be loaded into a SequenceCollection or Alignment.
@@ -183,8 +185,10 @@ class ReaderTests(TestCase):
              RNA('AUG', id='rnaseq-2', description='rnaseq desc 2',
                  quality=[9, 99, 999])],
             {'constructor': RNA},
-            map(get_data_path, ['fasta_sequence_collection_different_type']),
-            map(get_data_path, ['qual_sequence_collection_different_type'])
+            list(map(get_data_path,
+                     ['fasta_sequence_collection_different_type'])),
+            list(map(get_data_path,
+                     ['qual_sequence_collection_different_type']))
         )
 
         # store fasta filepath, kwargs, error type, and expected error message
@@ -196,8 +200,8 @@ class ReaderTests(TestCase):
         # code is refactored in the future such that fasta and qual have
         # different implementations (e.g., if qual is written in cython while
         # fasta remains in python)
-        self.invalid_fps = map(lambda e: (get_data_path(e[0]),
-                                          e[1], e[2], e[3]), [
+        self.invalid_fps = list(map(lambda e: (get_data_path(e[0]),
+                                               e[1], e[2], e[3]), [
             # whitespace-only fasta and qual
             ('whitespace_only', {}, FASTAFormatError,
              'without a header.*FASTA'),
@@ -308,7 +312,7 @@ class ReaderTests(TestCase):
              'whitespace-only.*FASTA'),
             ('fasta_description_newline_replacement_none', {},
              FASTAFormatError, 'whitespace-only.*FASTA')
-        ])
+        ]))
 
     # extensive tests for fasta -> generator reader since it is used by all
     # other fasta -> object readers
@@ -381,8 +385,9 @@ class ReaderTests(TestCase):
             # objects
 
             # file with only 1 seq, get first
-            for fasta_fp in map(get_data_path,
-                                ['fasta_single_seq', 'fasta_max_width_1']):
+            fasta_fps = list(map(get_data_path,
+                                 ['fasta_single_seq', 'fasta_max_width_1']))
+            for fasta_fp in fasta_fps:
                 exp = constructor(
                     'ACGT-acgt.', id='seq1', description='desc1',
                     quality=[10, 20, 30, 10, 0, 0, 0, 88888, 1, 3456])
@@ -390,16 +395,18 @@ class ReaderTests(TestCase):
                 obs = reader_fn(fasta_fp)
                 self.assertTrue(obs.equals(exp, ignore=['quality']))
 
-                for qual_fp in map(get_data_path,
-                                   ['qual_single_seq', 'qual_max_width_1']):
+                qual_fps = list(map(get_data_path,
+                                    ['qual_single_seq', 'qual_max_width_1']))
+                for qual_fp in qual_fps:
                     obs = reader_fn(fasta_fp, qual=qual_fp)
                     self.assertTrue(obs.equals(exp))
 
             # file with multiple seqs
-            qual_fps = map(get_data_path,
-                           ['qual_multi_seq', 'qual_max_width_5'])
-            for fasta_fp in map(get_data_path,
-                                ['fasta_multi_seq', 'fasta_max_width_5']):
+            fasta_fps = list(map(get_data_path,
+                                 ['fasta_multi_seq', 'fasta_max_width_5']))
+            qual_fps = list(map(get_data_path,
+                                ['qual_multi_seq', 'qual_max_width_5']))
+            for fasta_fp in fasta_fps:
                 # get first
                 exp = constructor(
                     'ACGT-acgt.', id='seq1', description='desc1',
@@ -564,8 +571,8 @@ class WriterTests(TestCase):
 
         # store sequence generator to serialize, writer kwargs (if any), and
         # fasta and qual filepaths of expected results
-        self.objs_fps = map(lambda e: (e[0], e[1], get_data_path(e[2]),
-                                       get_data_path(e[3])), [
+        self.objs_fps = list(map(lambda e: (e[0], e[1], get_data_path(e[2]),
+                                            get_data_path(e[3])), [
             (empty_gen(), {}, 'empty', 'empty'),
             (single_seq_gen(), {}, 'fasta_single_seq', 'qual_single_seq'),
 
@@ -607,7 +614,7 @@ class WriterTests(TestCase):
              {'id_whitespace_replacement': None},
              'fasta_id_whitespace_replacement_none',
              'qual_id_whitespace_replacement_none'),
-        ])
+        ]))
 
         def blank_seq_gen():
             for seq in self.bio_seq1, BiologicalSequence(''):
@@ -792,9 +799,10 @@ class RoundtripTests(TestCase):
     def test_roundtrip_generators(self):
         # test that fasta and qual files can be streamed into memory and back
         # out to disk using generator reader and writer
-        fps = map(lambda e: map(get_data_path, e),
-                  [('empty', 'empty'),
-                   ('fasta_multi_seq_roundtrip', 'qual_multi_seq_roundtrip')])
+        fps = list(map(lambda e: list(map(get_data_path, e)),
+                       [('empty', 'empty'),
+                        ('fasta_multi_seq_roundtrip',
+                         'qual_multi_seq_roundtrip')]))
 
         for fasta_fp, qual_fp in fps:
             with open(fasta_fp, 'U') as fh:
@@ -815,10 +823,10 @@ class RoundtripTests(TestCase):
             self.assertEqual(obs_qual, exp_qual)
 
     def test_roundtrip_sequence_collections_and_alignments(self):
-        fps = map(lambda e: map(get_data_path, e),
-                  [('empty', 'empty'),
-                   ('fasta_sequence_collection_different_type',
-                    'qual_sequence_collection_different_type')])
+        fps = list(map(lambda e: list(map(get_data_path, e)),
+                       [('empty', 'empty'),
+                        ('fasta_sequence_collection_different_type',
+                         'qual_sequence_collection_different_type')]))
 
         for reader, writer in ((_fasta_to_sequence_collection,
                                 _sequence_collection_to_fasta),
@@ -849,10 +857,11 @@ class RoundtripTests(TestCase):
                     self.assertTrue(s1.equals(s2))
 
     def test_roundtrip_biological_sequences(self):
-        fps = map(lambda e: map(get_data_path, e),
-                  [('fasta_multi_seq_roundtrip', 'qual_multi_seq_roundtrip'),
-                   ('fasta_sequence_collection_different_type',
-                    'qual_sequence_collection_different_type')])
+        fps = list(map(lambda e: list(map(get_data_path, e)),
+                       [('fasta_multi_seq_roundtrip',
+                         'qual_multi_seq_roundtrip'),
+                        ('fasta_sequence_collection_different_type',
+                         'qual_sequence_collection_different_type')]))
 
         for reader, writer in ((_fasta_to_biological_sequence,
                                 _biological_sequence_to_fasta),
