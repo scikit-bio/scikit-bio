@@ -37,13 +37,13 @@ class BiologicalSequence(Sequence):
         A description or comment about the sequence (e.g., "green
         fluorescent protein").
     quality : 1-D array_like, int, optional
-        Integer quality scores, one per sequence character. If provided, must
-        be the same length as the biological sequence. Can be a 1-D
-        ``numpy.ndarray`` of integers, or a structure that can be converted to
-        this representation using ``numpy.asarray``. A copy will *not* be made
-        if `quality` is already a 1-D ``numpy.ndarray`` with an ``int``
-        ``dtype``. The array will be made read-only (i.e., its ``WRITEABLE``
-        flag will be set to ``False``).
+        Phred quality scores stored as nonnegative integers, one per sequence
+        character. If provided, must be the same length as the biological
+        sequence. Can be a 1-D ``numpy.ndarray`` of integers, or a structure
+        that can be converted to this representation using ``numpy.asarray``. A
+        copy will *not* be made if `quality` is already a 1-D ``numpy.ndarray``
+        with an ``int`` ``dtype``. The array will be made read-only (i.e., its
+        ``WRITEABLE`` flag will be set to ``False``).
     validate : bool, optional
         If True, runs the `is_valid` method after construction and raises
         BiologicalSequenceError if ``is_valid == False``.
@@ -584,9 +584,9 @@ class BiologicalSequence(Sequence):
     def quality(self):
         """Quality scores of the characters in the biological sequence.
 
-        A 1-D ``numpy.ndarray`` of integers representing quality scores for
-        each character in the biological sequence, or ``None`` if quality
-        scores are not present.
+        A 1-D ``numpy.ndarray`` of nonnegative integers representing Phred
+        quality scores for each character in the biological sequence, or
+        ``None`` if quality scores are not present.
 
         Notes
         -----
@@ -1466,12 +1466,17 @@ class BiologicalSequence(Sequence):
             quality.flags.writeable = False
 
             if quality.ndim != 1:
-                raise BiologicalSequenceError("Quality scores must be 1-D.")
-            elif len(quality) != len(self):
                 raise BiologicalSequenceError(
-                    "Number of quality scores (%d) must match the number of "
-                    "characters in the biological sequence (%d)." %
+                    "Phred quality scores must be 1-D.")
+            if len(quality) != len(self):
+                raise BiologicalSequenceError(
+                    "Number of Phred quality scores (%d) must match the "
+                    "number of characters in the biological sequence (%d)." %
                     (len(quality), len(self._sequence)))
+            if (quality < 0).any():
+                raise BiologicalSequenceError(
+                    "Phred quality scores must be greater than or equal to "
+                    "zero.")
 
         self._quality = quality
 

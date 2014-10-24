@@ -128,7 +128,7 @@ class ReaderTests(TestCase):
         self.single = (
             [BiologicalSequence(
                 'ACGT-acgt.', id='seq1', description='desc1',
-                quality=[10, 20, 30, 10, 0, 0, 0, 88888, -1, -3456])],
+                quality=[10, 20, 30, 10, 0, 0, 0, 88888, 1, 3456])],
             {},
             map(get_data_path, ['fasta_single_seq', 'fasta_max_width_1']),
             map(get_data_path, ['qual_single_seq', 'qual_max_width_1'])
@@ -138,14 +138,14 @@ class ReaderTests(TestCase):
         self.multi = (
             [BiologicalSequence(
                 'ACGT-acgt.', id='seq1', description='desc1',
-                quality=[10, 20, 30, 10, 0, 0, 0, 88888, -1, -3456]),
-             BiologicalSequence('A', id='_____seq__2_', quality=[-42]),
+                quality=[10, 20, 30, 10, 0, 0, 0, 88888, 1, 3456]),
+             BiologicalSequence('A', id='_____seq__2_', quality=[42]),
              BiologicalSequence(
                 'AACGGuA', description='desc3', quality=[0, 0, 0, 0, 0, 0, 0]),
              BiologicalSequence('AcGtUTu', quality=[1, 2, 3, 4, 5, 6, 777]),
              BiologicalSequence(
                 'ACGTTGCAccGG',
-                quality=[55, 10, 0, 999, 1, 1, -8, 775, 40, 10, 10, 0]),
+                quality=[55, 10, 0, 999, 1, 1, 8, 775, 40, 10, 10, 0]),
              BiologicalSequence('ACGUU', quality=[10, 9, 8, 7, 6]),
              BiologicalSequence(
                  'pQqqqPPQQQ', id='proteinseq',
@@ -281,7 +281,7 @@ class ReaderTests(TestCase):
             ('fasta_3_seqs_defaults',
              {'qual': get_data_path('qual_3_seqs_defaults_length_mismatch')},
              BiologicalSequenceError,
-             'Number of quality scores \(3\).*\(4\)'),
+             'Number of Phred quality scores \(3\).*\(4\)'),
 
             # invalid qual scores (string value can't be converted to integer)
             ('fasta_3_seqs_defaults',
@@ -294,6 +294,12 @@ class ReaderTests(TestCase):
              {'qual': get_data_path('qual_invalid_qual_scores_float')},
              FASTAFormatError,
              'quality scores to integers:\n42    41.0 39 40'),
+
+            # invalid qual scores (negative integer)
+            ('fasta_3_seqs_defaults',
+             {'qual': get_data_path('qual_invalid_qual_scores_negative')},
+             BiologicalSequenceError,
+             'Phred quality scores.*greater than or equal to zero'),
 
             # misc. invalid files used elsewhere in the tests
             ('fasta_invalid_after_10_seqs', {}, FASTAFormatError,
@@ -379,7 +385,7 @@ class ReaderTests(TestCase):
                                 ['fasta_single_seq', 'fasta_max_width_1']):
                 exp = constructor(
                     'ACGT-acgt.', id='seq1', description='desc1',
-                    quality=[10, 20, 30, 10, 0, 0, 0, 88888, -1, -3456])
+                    quality=[10, 20, 30, 10, 0, 0, 0, 88888, 1, 3456])
 
                 obs = reader_fn(fasta_fp)
                 self.assertTrue(obs.equals(exp, ignore=['quality']))
@@ -397,7 +403,7 @@ class ReaderTests(TestCase):
                 # get first
                 exp = constructor(
                     'ACGT-acgt.', id='seq1', description='desc1',
-                    quality=[10, 20, 30, 10, 0, 0, 0, 88888, -1, -3456])
+                    quality=[10, 20, 30, 10, 0, 0, 0, 88888, 1, 3456])
 
                 obs = reader_fn(fasta_fp)
                 self.assertTrue(obs.equals(exp, ignore=['quality']))
@@ -487,16 +493,16 @@ class WriterTests(TestCase):
     def setUp(self):
         self.bio_seq1 = BiologicalSequence(
             'ACGT-acgt.', id='seq1', description='desc1',
-            quality=[10, 20, 30, 10, 0, 0, 0, 88888, -1, -3456])
+            quality=[10, 20, 30, 10, 0, 0, 0, 88888, 1, 3456])
         self.bio_seq2 = BiologicalSequence(
-            'A', id=' \n  \nseq \t2 ', quality=[-42])
+            'A', id=' \n  \nseq \t2 ', quality=[42])
         self.bio_seq3 = BiologicalSequence(
             'AACGGuA', description='desc3', quality=[0, 0, 0, 0, 0, 0, 0])
         self.nuc_seq = NucleotideSequence(
             'AcGtUTu', quality=[1, 2, 3, 4, 5, 6, 777])
         self.dna_seq = DNA(
             'ACGTTGCAccGG',
-            quality=[55, 10, 0, 999, 1, 1, -8, 775, 40, 10, 10, 0])
+            quality=[55, 10, 0, 999, 1, 1, 8, 775, 40, 10, 10, 0])
         self.rna_seq = RNA('ACGUU', quality=[10, 9, 8, 7, 6])
         self.prot_seq = Protein(
             'pQqqqPPQQQ', id='proteinseq',
