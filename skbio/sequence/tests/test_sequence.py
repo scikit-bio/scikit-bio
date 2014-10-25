@@ -95,6 +95,11 @@ class BiologicalSequenceTests(TestCase):
         with self.assertRaisesRegexp(BiologicalSequenceError, '\(3\).*\(4\)'):
             BiologicalSequence('ACGT', quality=[2, 3, 4])
 
+        # negatives
+        with self.assertRaisesRegexp(BiologicalSequenceError,
+                                     'quality scores.*greater than.*zero'):
+            BiologicalSequence('ACGT', quality=[2, 3, -1, 4])
+
     def test_contains(self):
         self.assertTrue('G' in self.b1)
         self.assertFalse('g' in self.b1)

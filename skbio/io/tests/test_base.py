@@ -119,7 +119,19 @@ class PhredDecoderTests(unittest.TestCase):
         with self.assertRaises(ValueError) as cm:
             _decode_qual_to_phred(ascii_chars, phred_offset=43)
         self.assertIn('-1', str(cm.exception))
-        self.assertIn('[0, 255]', str(cm.exception))
+        self.assertIn('[0, 83]', str(cm.exception))
+
+        with self.assertRaises(ValueError) as cm:
+            _decode_qual_to_phred(ascii_chars, phred_offset=0)
+        self.assertIn('`phred_offset`', str(cm.exception))
+        self.assertIn('0', str(cm.exception))
+        self.assertIn('printable', str(cm.exception))
+
+        with self.assertRaises(ValueError) as cm:
+            _decode_qual_to_phred(ascii_chars, phred_offset=127)
+        self.assertIn('`phred_offset`', str(cm.exception))
+        self.assertIn('127', str(cm.exception))
+        self.assertIn('printable', str(cm.exception))
 
 
 class PhredEncoderTests(unittest.TestCase):
@@ -207,7 +219,12 @@ class PhredEncoderTests(unittest.TestCase):
         with self.assertRaises(ValueError) as cm:
             _encode_phred_to_qual([42, -1, 33], phred_offset=42)
         self.assertIn('-1', str(cm.exception))
-        self.assertIn('[0, 255]', str(cm.exception))
+        self.assertIn('[0, 84]', str(cm.exception))
+
+        obs = npt.assert_warns(UserWarning, _encode_phred_to_qual,
+                               [42, 255, 33], phred_offset=42)
+        self.assertEqual(obs, 'T~K')
+
 
 
 class TestGetNthSequence(unittest.TestCase):

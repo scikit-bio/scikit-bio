@@ -20,9 +20,9 @@ An example of a FASTA-formatted file containing two DNA sequences::
 The QUAL file format is an additional format related to FASTA. A FASTA file is
 sometimes accompanied by a QUAL file, particuarly when the fasta file contains
 sequences generated on a high-throughput sequencing instrument. QUAL files
-store a quality score (integer) for each base in a sequence stored in FASTA
-format (see [4]_ for more details). scikit-bio supports reading and writing
-FASTA (and optionally QUAL) file formats.
+store a Phred quality score (nonnegative integer) for each base in a sequence
+stored in FASTA format (see [4]_ for more details). scikit-bio supports reading
+and writing FASTA (and optionally QUAL) file formats.
 
 Format Support
 --------------
@@ -152,9 +152,9 @@ as FASTA headers (see the above sections for details). scikit-bio processes
 FASTA and QUAL headers in exactly the same way.
 
 Instead of storing biological sequence data in each record, a QUAL file stores
-a quality score for each base in the corresponding sequence. Quality scores are
-represented as integers separated by whitespace (typically a single space or
-newline), and can span multiple lines.
+a Phred quality score for each base in the corresponding sequence. Quality
+scores are represented as nonnegative integers separated by whitespace
+(typically a single space or newline), and can span multiple lines.
 
 .. note:: When reading FASTA and QUAL files, scikit-bio requires records to be
    in the same order in both files (i.e., each FASTA and QUAL record must have
