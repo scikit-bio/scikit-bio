@@ -36,8 +36,7 @@ Examples
 
 References
 ----------
-.. [1] http://evolution.genetics.washington.edu/phylip/newick_doc.html
-.. [2] http://evolution.genetics.washington.edu/phylip/newicktree.html
+
 
 """
 # ----------------------------------------------------------------------------

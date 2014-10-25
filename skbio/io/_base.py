@@ -9,9 +9,9 @@
 from __future__ import absolute_import, division, print_function
 from future.builtins import range
 
-from skbio.util import cardinal_to_ordinal
-
 import warnings
+
+from skbio.util import cardinal_to_ordinal
 
 
 def _chunk_str(s, n, char):
@@ -111,9 +111,9 @@ def _get_nth_sequence(generator, seq_num):
     # undefined variable when compared to seq_num.
     i = None
     if seq_num is None or seq_num < 1:
-        raise ValueError('Invalid sequence number (`seq_num`=%d). `seq_num`'
+        raise ValueError('Invalid sequence number (`seq_num`=%s). `seq_num`'
                          ' must be between 1 and the number of sequences in'
-                         ' the file.' % seq_num)
+                         ' the file.' % str(seq_num))
     try:
         for i, seq in zip(range(1, seq_num + 1), generator):
             pass
