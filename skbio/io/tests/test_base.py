@@ -221,12 +221,14 @@ class TestGetNthSequence(unittest.TestCase):
     def test_seq_num_too_small(self):
         with self.assertRaises(ValueError) as cm:
             _get_nth_sequence(self.gen, 0)
+
         self.assertIn('between 1 and', str(cm.exception))
         self.assertIn('0', str(cm.exception))
 
     def test_seq_num_too_big(self):
         with self.assertRaises(ValueError) as cm:
             _get_nth_sequence(self.gen, 6)
+
         self.assertIn('end of file', str(cm.exception))
         self.assertIn('6th', str(cm.exception))
 
