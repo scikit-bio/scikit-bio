@@ -226,7 +226,6 @@ class PhredEncoderTests(unittest.TestCase):
         self.assertEqual(obs, 'T~K')
 
 
-
 class TestGetNthSequence(unittest.TestCase):
     def setUp(self):
         def generator():
