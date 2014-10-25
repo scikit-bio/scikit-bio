@@ -185,7 +185,8 @@ import numpy as np
 from skbio.io import (register_reader, register_writer,
                       register_sniffer,
                       FASTQFormatError)
-from skbio.io._base import _decode_qual_to_phred, _encode_phred_to_qual
+from skbio.io._base import (_decode_qual_to_phred, _encode_phred_to_qual,
+                            _get_nth_sequence)
 from skbio.alignment import SequenceCollection, Alignment
 from skbio.sequence import (BiologicalSequence, NucleotideSequence,
                             DNASequence, RNASequence, ProteinSequence)
@@ -332,31 +333,43 @@ def _parse_quality_scores(fh, seq_len, variant, phred_offset):
 @register_reader('fastq', BiologicalSequence)
 def _fastq_to_biological_sequence(fh, variant=None, phred_offset=None,
                                   seq_num=1):
-    return _fastq_to_sequence(fh, variant, phred_offset, seq_num,
-                              BiologicalSequence)
+    return _get_nth_sequence(
+        _fastq_to_generator(fh, variant=variant, phred_offset=phred_offset,
+                            constructor=BiologicalSequence),
+        seq_num)
 
 
 @register_reader('fastq', NucleotideSequence)
 def _fastq_to_nucleotide_sequence(fh, variant=None, phred_offset=None,
                                   seq_num=1):
-    return _fastq_to_sequence(fh, variant, phred_offset, seq_num,
-                              NucleotideSequence)
+    return _get_nth_sequence(
+        _fastq_to_generator(fh, variant=variant, phred_offset=phred_offset,
+                            constructor=NucleotideSequence),
+        seq_num)
 
 
 @register_reader('fastq', DNASequence)
 def _fastq_to_dna_sequence(fh, variant=None, phred_offset=None, seq_num=1):
-    return _fastq_to_sequence(fh, variant, phred_offset, seq_num, DNASequence)
+    return _get_nth_sequence(
+        _fastq_to_generator(fh, variant=variant, phred_offset=phred_offset,
+                            constructor=DNASequence),
+        seq_num)
 
 
 @register_reader('fastq', RNASequence)
 def _fastq_to_rna_sequence(fh, variant=None, phred_offset=None, seq_num=1):
-    return _fastq_to_sequence(fh, variant, phred_offset, seq_num, RNASequence)
+    return _get_nth_sequence(
+        _fastq_to_generator(fh, variant=variant, phred_offset=phred_offset,
+                            constructor=RNASequence),
+        seq_num)
 
 
 @register_reader('fastq', ProteinSequence)
 def _fastq_to_protein_sequence(fh, variant=None, phred_offset=None, seq_num=1):
-    return _fastq_to_sequence(fh, variant, phred_offset, seq_num,
-                              ProteinSequence)
+    return _get_nth_sequence(
+        _fastq_to_generator(fh, variant=variant, phred_offset=phred_offset,
+                            constructor=ProteinSequence),
+        seq_num)
 
 
 @register_reader('fastq', SequenceCollection)
