@@ -9,6 +9,8 @@
 from __future__ import absolute_import, division, print_function
 from future.builtins import range
 
+from skbio.util import cardinal_to_ordinal
+
 import warnings
 
 
@@ -102,3 +104,23 @@ def _get_phred_offset_and_range(variant, phred_offset, errors):
         phred_range = (0, 255)
 
     return phred_offset, phred_range
+
+
+def _get_nth_sequence(generator, seq_num):
+    # i is set to None so that an empty generator will not result in an
+    # undefined variable when compared to seq_num.
+    i = None
+    if seq_num is None or seq_num < 1:
+        raise ValueError('Invalid sequence number (`seq_num`=%d). `seq_num`'
+                         ' must be between 1 and the number of sequences in'
+                         ' the file.' % seq_num)
+    try:
+        for i, seq in zip(range(1, seq_num + 1), generator):
+            pass
+    finally:
+        generator.close()
+
+    if i == seq_num:
+        return seq
+    raise ValueError('Reached end of file before finding the %s sequence.'
+                     % cardinal_to_ordinal(seq_num))

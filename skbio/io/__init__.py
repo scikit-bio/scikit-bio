@@ -136,16 +136,17 @@ User exceptions
 .. autosummary::
    :toctree: generated/
 
-   FileFormatError
    RecordError
    FieldError
    UnrecognizedFormatError
+   FileFormatError
    ClustalFormatError
    FASTAFormatError
    LSMatFormatError
    NewickFormatError
    OrdinationFormatError
    PhylipFormatError
+   QSeqFormatError
 
 User warnings
 ^^^^^^^^^^^^^
@@ -269,7 +270,8 @@ from ._exception import (DuplicateRegistrationError, InvalidRegistrationError,
                          RecordError, FieldError, UnrecognizedFormatError,
                          FileFormatError, ClustalFormatError, FASTAFormatError,
                          LSMatFormatError, NewickFormatError,
-                         OrdinationFormatError, PhylipFormatError)
+                         OrdinationFormatError, PhylipFormatError,
+                         QSeqFormatError)
 from ._registry import (write, read, sniff, get_writer, get_reader,
                         get_sniffer, list_write_formats, list_read_formats,
                         register_writer, register_reader, register_sniffer,
@@ -292,7 +294,8 @@ __all__ = ['write', 'read', 'sniff',
            'LSMatFormatError',
            'NewickFormatError',
            'OrdinationFormatError',
-           'PhylipFormatError']
+           'PhylipFormatError',
+           'QSeqFormatError']
 
 # Necessary to import each file format module to have them added to the I/O
 # registry. We use import_module instead of a typical import to avoid flake8
@@ -303,6 +306,7 @@ import_module('skbio.io.lsmat')
 import_module('skbio.io.newick')
 import_module('skbio.io.ordination')
 import_module('skbio.io.phylip')
+import_module('skbio.io.qseq')
 
 # Now that all of our I/O has loaded, we can add the object oriented methods
 # (read and write) to each class which has registered I/O operations.
