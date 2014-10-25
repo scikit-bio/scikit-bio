@@ -558,7 +558,7 @@ import numpy as np
 
 from skbio.io import (register_reader, register_writer, register_sniffer,
                       FASTAFormatError, FileSentinel)
-from skbio.io._base import _chunk_str
+from skbio.io._base import _chunk_str, _get_nth_sequence
 from skbio.alignment import SequenceCollection, Alignment
 from skbio.sequence import (BiologicalSequence, NucleotideSequence,
                             DNASequence, RNASequence, ProteinSequence)
@@ -639,27 +639,37 @@ def _fasta_to_generator(fh, qual=FileSentinel, constructor=BiologicalSequence):
 
 @register_reader('fasta', BiologicalSequence)
 def _fasta_to_biological_sequence(fh, qual=FileSentinel, seq_num=1):
-    return _fasta_to_sequence(fh, qual, seq_num, BiologicalSequence)
+    return _get_nth_sequence(
+        _fasta_to_generator(fh, qual=qual, constructor=BiologicalSequence),
+        seq_num)
 
 
 @register_reader('fasta', NucleotideSequence)
 def _fasta_to_nucleotide_sequence(fh, qual=FileSentinel, seq_num=1):
-    return _fasta_to_sequence(fh, qual, seq_num, NucleotideSequence)
+    return _get_nth_sequence(
+        _fasta_to_generator(fh, qual=qual, constructor=NucleotideSequence),
+        seq_num)
 
 
 @register_reader('fasta', DNASequence)
 def _fasta_to_dna_sequence(fh, qual=FileSentinel, seq_num=1):
-    return _fasta_to_sequence(fh, qual, seq_num, DNASequence)
+    return _get_nth_sequence(
+        _fasta_to_generator(fh, qual=qual, constructor=DNASequence),
+        seq_num)
 
 
 @register_reader('fasta', RNASequence)
 def _fasta_to_rna_sequence(fh, qual=FileSentinel, seq_num=1):
-    return _fasta_to_sequence(fh, qual, seq_num, RNASequence)
+    return _get_nth_sequence(
+        _fasta_to_generator(fh, qual=qual, constructor=RNASequence),
+        seq_num)
 
 
 @register_reader('fasta', ProteinSequence)
 def _fasta_to_protein_sequence(fh, qual=FileSentinel, seq_num=1):
-    return _fasta_to_sequence(fh, qual, seq_num, ProteinSequence)
+    return _get_nth_sequence(
+        _fasta_to_generator(fh, qual=qual, constructor=ProteinSequence),
+        seq_num)
 
 
 @register_reader('fasta', SequenceCollection)
@@ -877,31 +887,6 @@ def _parse_quality_scores(chunks):
     except ValueError:
         raise FASTAFormatError(
             "Could not convert quality scores to integers:\n%s" % qual_str)
-
-
-def _fasta_to_sequence(fh, qual, seq_num, constructor):
-    if seq_num < 1:
-        raise FASTAFormatError(
-            "Invalid sequence number (seq_num=%d). seq_num must be between 1 "
-            "and the number of sequences in the FASTA-formatted file "
-            "(inclusive)." % seq_num)
-
-    seq_idx = seq_num - 1
-    seq = None
-    try:
-        gen = _fasta_to_generator(fh, qual=qual, constructor=constructor)
-        for idx, curr_seq in enumerate(gen):
-            if idx == seq_idx:
-                seq = curr_seq
-                break
-    finally:
-        gen.close()
-
-    if seq is None:
-        raise FASTAFormatError(
-            "Reached end of FASTA-formatted file before finding the %s "
-            "biological sequence." % cardinal_to_ordinal(seq_num))
-    return seq
 
 
 def _sequences_to_fasta(obj, fh, qual, id_whitespace_replacement,

@@ -369,9 +369,9 @@ class ReaderTests(TestCase):
 
             # empty file
             empty_fp = get_data_path('empty')
-            with self.assertRaisesRegexp(FASTAFormatError, '1st biological'):
+            with self.assertRaisesRegexp(ValueError, '1st sequence'):
                 reader_fn(empty_fp)
-            with self.assertRaisesRegexp(FASTAFormatError, '1st biological'):
+            with self.assertRaisesRegexp(ValueError, '1st sequence'):
                 reader_fn(empty_fp, qual=empty_fp)
 
             # the sequences in the following files don't necessarily make sense
@@ -443,20 +443,17 @@ class ReaderTests(TestCase):
                     self.assertTrue(obs.equals(exp))
 
                 # seq_num too large
-                with self.assertRaisesRegexp(FASTAFormatError,
-                                             '8th biological'):
+                with self.assertRaisesRegexp(ValueError, '8th sequence'):
                     reader_fn(fasta_fp, seq_num=8)
                 for qual_fp in qual_fps:
-                    with self.assertRaisesRegexp(FASTAFormatError,
-                                                 '8th biological'):
+                    with self.assertRaisesRegexp(ValueError, '8th sequence'):
                         reader_fn(fasta_fp, seq_num=8, qual=qual_fp)
 
                 # seq_num too small
-                with self.assertRaisesRegexp(FASTAFormatError, 'seq_num=0'):
+                with self.assertRaisesRegexp(ValueError, '`seq_num`=0'):
                     reader_fn(fasta_fp, seq_num=0)
                 for qual_fp in qual_fps:
-                    with self.assertRaisesRegexp(FASTAFormatError,
-                                                 'seq_num=0'):
+                    with self.assertRaisesRegexp(ValueError, '`seq_num`=0'):
                         reader_fn(fasta_fp, seq_num=0, qual=qual_fp)
 
     def test_fasta_to_sequence_collection_and_alignment(self):
