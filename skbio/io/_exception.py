@@ -69,6 +69,11 @@ class PhylipFormatError(FileFormatError):
     pass
 
 
+class QSeqFormatError(FileFormatError):
+    """Raised when a ``qseq`` formatted file cannot be parsed."""
+    pass
+
+
 class InvalidRegistrationError(Exception):
     """Raised if function doesn't meet the expected API of its registration."""
     pass

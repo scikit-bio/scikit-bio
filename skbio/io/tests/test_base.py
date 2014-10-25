@@ -14,7 +14,7 @@ import unittest
 import numpy.testing as npt
 
 from skbio.io._base import (_chunk_str, _decode_qual_to_phred,
-                            _encode_phred_to_qual)
+                            _encode_phred_to_qual, _get_nth_sequence)
 
 
 class ChunkStrTests(unittest.TestCase):
@@ -224,6 +224,33 @@ class PhredEncoderTests(unittest.TestCase):
         obs = npt.assert_warns(UserWarning, _encode_phred_to_qual,
                                [42, 255, 33], phred_offset=42)
         self.assertEqual(obs, 'T~K')
+
+
+class TestGetNthSequence(unittest.TestCase):
+    def setUp(self):
+        def generator():
+            for i in range(1, 6):
+                yield 'goldilocks: ' + str(i)
+
+        self.gen = generator()
+
+    def test_seq_num_too_small(self):
+        with self.assertRaises(ValueError) as cm:
+            _get_nth_sequence(self.gen, 0)
+
+        self.assertIn('between 1 and', str(cm.exception))
+        self.assertIn('0', str(cm.exception))
+
+    def test_seq_num_too_big(self):
+        with self.assertRaises(ValueError) as cm:
+            _get_nth_sequence(self.gen, 6)
+
+        self.assertIn('end of file', str(cm.exception))
+        self.assertIn('6th', str(cm.exception))
+
+    def test_seq_num_just_right(self):
+        value = _get_nth_sequence(self.gen, 3)
+        self.assertEqual(value, 'goldilocks: 3')
 
 
 if __name__ == '__main__':
