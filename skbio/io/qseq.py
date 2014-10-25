@@ -152,11 +152,12 @@ def _record_parser(line):
     f_len = len(fields)
     if not (10 <= f_len <= 11):
         raise QSeqFormatError('Expected 10 or 11 fields, found %d.' % f_len)
+    # If the filter field was ommitted, assume that it passed filtering:
     if f_len == 10:
         fields.append('1')
 
     (machine, run, lane, tile, x, y, index, read, seq, raw_qaul,
-     filter) = tuple(fields)
+     filter) = fields
 
     _test_fields([('filter', filter)], lambda x: x in '01',
                  "0 or 1")

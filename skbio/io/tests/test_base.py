@@ -234,5 +234,6 @@ class TestGetNthSequence(unittest.TestCase):
         value = _get_nth_sequence(self.gen, 3)
         self.assertEqual(value, 'goldilocks: 3')
 
+
 if __name__ == '__main__':
     unittest.main()
