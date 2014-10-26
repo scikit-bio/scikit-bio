@@ -13,8 +13,8 @@ from six import StringIO
 import unittest
 import warnings
 
-from skbio import (BiologicalSequence, NucleotideSequence, DNA, RNA, Protein,
-                   SequenceCollection, Alignment)
+from skbio import (read, BiologicalSequence, NucleotideSequence, DNASequence,
+                   RNASequence, ProteinSequence, SequenceCollection, Alignment)
 from skbio.sequence import BiologicalSequenceError
 from skbio.io import FASTQFormatError
 from skbio.io.fastq import (
@@ -53,26 +53,27 @@ class TestReaders(unittest.TestCase):
             (get_data_path('empty'),
              [{},
               {'variant': 'illumina1.8'},
-              {'phred_offset': 33, 'constructor': DNA}],
+              {'phred_offset': 33, 'constructor': DNASequence}],
              []),
 
             (get_data_path('fastq_single_seq_illumina1.3'), [
                 {'variant': 'illumina1.3'},
                 {'phred_offset': 64},
-                {'variant': 'illumina1.3', 'constructor': Protein},
+                {'variant': 'illumina1.3', 'constructor': ProteinSequence},
             ], [
                 ('', 'bar\t baz', 'ACGT', [33, 34, 35, 36])
             ]),
 
             (get_data_path('fastq_multi_seq_sanger'), [
                 {'variant': 'sanger'},
-                {'phred_offset': 33},
-                {'variant': 'sanger', 'constructor': RNA},
+                {'phred_offset': 33, 'seq_num': 2},
+                {'variant': 'sanger', 'constructor': RNASequence,
+                 'seq_num': 3},
             ], [
-                ('foo', 'bar baz', 'AACCGGTT',
-                 [16, 17, 18, 19, 20, 21, 22, 23]),
-                ('bar', 'baz foo', 'TTGGCCA',
-                 [23, 22, 21, 20, 19, 18, 17]),
+                ('foo', 'bar baz', 'AACCGG',
+                 [16, 17, 18, 19, 20, 21]),
+                ('bar', 'baz foo', 'TTGGCC',
+                 [23, 22, 21, 20, 19, 18]),
                 ('baz', 'foo bar', 'GATTTC',
                  [20, 21, 22, 23, 24, 18])
             ]),
@@ -192,6 +193,57 @@ class TestReaders(unittest.TestCase):
             list(_fastq_to_generator(
                 get_data_path('solexa_full_range_original_solexa.fastq'),
                 variant='solexa'))
+
+    def test_fastq_to_sequence(self):
+        for constructor in [BiologicalSequence, NucleotideSequence,
+                            DNASequence, RNASequence, ProteinSequence]:
+            for valid, kwargs, components in self.valid_files:
+                # skip empty file case since we cannot read a specific sequence
+                # from an empty file
+                if len(components) == 0:
+                    continue
+
+                for kwarg in kwargs:
+                    _drop_kwargs(kwarg, 'constructor')
+
+                    seq_num = kwarg.get('seq_num', 1)
+                    c = components[seq_num - 1]
+                    expected = constructor(c[2], id=c[0], description=c[1],
+                                           quality=c[3])
+
+                    observed = read(valid, into=constructor, format='fastq',
+                                    verify=False, **kwarg)
+                    self.assertTrue(observed.equals(expected))
+
+    def test_fastq_to_sequence_collection(self):
+        for valid, kwargs, components in self.valid_files:
+            for kwarg in kwargs:
+                _drop_kwargs(kwarg, 'seq_num')
+                constructor = kwarg.get('constructor', BiologicalSequence)
+                expected = SequenceCollection(
+                    [constructor(c[2], id=c[0], description=c[1], quality=c[3])
+                     for c in components])
+
+                observed = _fastq_to_sequence_collection(valid, **kwarg)
+                # TODO remove when #656 is resolved
+                self.assertEqual(observed, expected)
+                for o, e in zip(observed, expected):
+                    self.assertTrue(o.equals(e))
+
+    def test_fastq_to_alignment(self):
+        for valid, kwargs, components in self.valid_files:
+            for kwarg in kwargs:
+                _drop_kwargs(kwarg, 'seq_num')
+                constructor = kwarg.get('constructor', BiologicalSequence)
+                expected = Alignment(
+                    [constructor(c[2], id=c[0], description=c[1], quality=c[3])
+                     for c in components])
+
+                observed = _fastq_to_alignment(valid, **kwarg)
+                # TODO remove when #656 is resolved
+                self.assertEqual(observed, expected)
+                for o, e in zip(observed, expected):
+                    self.assertTrue(o.equals(e))
 
 
 class TestConversions(unittest.TestCase):

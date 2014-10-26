@@ -1,11 +1,11 @@
 @foo bar baz
-AACCGGTT
+AACCGG
 +
-12345678
+123456
 @bar baz foo
-TTGGCCA
+TTGGCC
 +
-8765432
+876543
 @baz foo bar
 GATTTC
 +
