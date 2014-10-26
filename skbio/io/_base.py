@@ -9,9 +9,13 @@
 from __future__ import absolute_import, division, print_function
 from future.builtins import range
 
+import re
 import warnings
 
 from skbio.util import cardinal_to_ordinal
+
+_whitespace_regex = re.compile(r'\s')
+_newline_regex = re.compile(r'\n')
 
 
 def _chunk_str(s, n, char):
@@ -143,3 +147,41 @@ def _parse_fasta_like_header(line):
             else:
                 id_, desc = header_tokens
     return id_, desc
+
+
+def _format_fasta_like_records(generator, id_whitespace_replacement,
+                               description_newline_replacement, require_qual):
+    if ((id_whitespace_replacement is not None and
+         '\n' in id_whitespace_replacement) or
+        (description_newline_replacement is not None and
+         '\n' in description_newline_replacement)):
+        raise ValueError(
+            "Newline character (\\n) cannot be used to replace whitespace in "
+            "sequence IDs, nor to replace newlines in sequence descriptions.")
+
+    for idx, seq in enumerate(generator):
+        if len(seq) < 1:
+            raise ValueError(
+                "%s sequence does not contain any characters (i.e., it is an "
+                "empty/blank sequence). Writing empty sequences is not "
+                "supported." % cardinal_to_ordinal(idx + 1))
+
+        id_ = seq.id
+        if id_whitespace_replacement is not None:
+            id_ = _whitespace_regex.sub(id_whitespace_replacement, id_)
+
+        desc = seq.description
+        if description_newline_replacement is not None:
+            desc = _newline_regex.sub(description_newline_replacement, desc)
+
+        if desc:
+            header = '%s %s' % (id_, desc)
+        else:
+            header = id_
+
+        if require_qual and not seq.has_quality():
+            raise ValueError(
+                "Cannot write %s sequence because it does not have quality "
+                "scores associated with it." % cardinal_to_ordinal(idx + 1))
+
+        yield header, seq.sequence, seq.quality

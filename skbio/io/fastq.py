@@ -181,7 +181,8 @@ import re
 from skbio.io import (register_reader, register_writer, register_sniffer,
                       FASTQFormatError)
 from skbio.io._base import (_decode_qual_to_phred, _encode_phred_to_qual,
-                            _get_nth_sequence, _parse_fasta_like_header)
+                            _get_nth_sequence, _parse_fasta_like_header,
+                            _format_fasta_like_records)
 from skbio.alignment import SequenceCollection, Alignment
 from skbio.sequence import (BiologicalSequence, NucleotideSequence,
                             DNASequence, RNASequence, ProteinSequence)
@@ -361,51 +362,15 @@ def _fastq_to_alignment(fh, variant=None, phred_offset=None,
 def _generator_to_fastq(obj, fh, variant=None, phred_offset=None,
                         id_whitespace_replacement='_',
                         description_newline_replacement=' '):
-    if ((id_whitespace_replacement is not None and
-         '\n' in id_whitespace_replacement) or
-        (description_newline_replacement is not None and
-         '\n' in description_newline_replacement)):
-        raise FASTQFormatError(
-            "Newline character (\\n) cannot be used to replace whitespace in "
-            "biological sequence IDs, nor to replace newlines in biological "
-            "sequence descriptions. Otherwise, the FASTQ-formatted file will "
-            "be invalid.")
-    ws_pattern = re.compile(r'\s')
-    nl_pattern = re.compile(r'\n')
-
-    for idx, seq in enumerate(obj):
-        if len(seq) < 1:
-            raise FASTQFormatError(
-                "Cannot write %s biological sequence in FASTQ format because "
-                "it does not contain any characters (i.e., it is an "
-                "empty/blank sequence). Empty sequences are not supported in "
-                "the FASTQ file format." % cardinal_to_ordinal(idx + 1))
-
-        id_ = seq.id
-        if id_whitespace_replacement is not None:
-            id_ = re.sub(ws_pattern, id_whitespace_replacement, id_)
-
-        desc = seq.description
-        if description_newline_replacement is not None:
-            desc = re.sub(nl_pattern, description_newline_replacement, desc)
-
-        if desc:
-            header = '%s %s' % (id_, desc)
-        else:
-            header = id_
-
-        if not seq.has_quality():
-            raise FASTQFormatError(
-                "Cannot write %s biological sequence in FASTQ format because "
-                "it does not have quality scores associated with it." %
-                cardinal_to_ordinal(idx + 1))
-        qual_str = _encode_phred_to_qual(seq.quality, variant=variant,
+    record_formatter = _format_fasta_like_records(
+        obj, id_whitespace_replacement, description_newline_replacement, True)
+    for header, seq_str, qual_scores in record_formatter:
+        qual_str = _encode_phred_to_qual(qual_scores, variant=variant,
                                          phred_offset=phred_offset)
-
         fh.write('@')
         fh.write(header)
         fh.write('\n')
-        fh.write(str(seq))
+        fh.write(seq_str)
         fh.write('\n+\n')
         fh.write(qual_str)
         fh.write('\n')

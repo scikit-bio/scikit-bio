@@ -621,15 +621,15 @@ class WriterTests(TestCase):
         # format, paired with kwargs (if any), error type, and expected error
         # message regexp
         self.invalid_objs = [
-            (blank_seq_gen(), {}, FASTAFormatError, '2nd.*empty'),
+            (blank_seq_gen(), {}, ValueError, '2nd.*empty'),
             (single_seq_gen(),
-             {'max_width': 0}, FASTAFormatError, 'max_width=0'),
+             {'max_width': 0}, ValueError, 'max_width=0'),
             (multi_seq_gen(), {'id_whitespace_replacement': '-\n_'},
-             FASTAFormatError, 'Newline character'),
+             ValueError, 'Newline character'),
             (multi_seq_gen(), {'description_newline_replacement': '-.-\n'},
-             FASTAFormatError, 'Newline character'),
-            (mixed_qual_score_gen(), {'qual': StringIO()}, FASTAFormatError,
-             '2nd biological sequence in QUAL format')
+             ValueError, 'Newline character'),
+            (mixed_qual_score_gen(), {'qual': StringIO()}, ValueError,
+             '2nd sequence.*does not have quality scores')
         ]
 
     # extensive tests for generator -> fasta writer since it is used by all
