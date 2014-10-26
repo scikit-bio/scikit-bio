@@ -41,13 +41,44 @@ from skbio.util import get_data_path
 #
 # The example files have not been modified from their original form.
 
+def _drop_kwargs(kwargs, *args):
+    for arg in args:
+        if arg in kwargs:
+            kwargs.pop(arg)
 
-class TestReaderWriter(unittest.TestCase):
+
+class TestReaders(unittest.TestCase):
     def setUp(self):
-        # empty file shouldn't yield sequences
-        self.empty = ([], {'variant': 'sanger'}, [get_data_path('empty')])
+        self.valid_files = [
+            (get_data_path('empty'),
+             [{},
+              {'variant': 'illumina1.8'},
+              {'phred_offset': 33, 'constructor': DNA}],
+             []),
 
-        self.invalid_fps = [(get_data_path(e[0]), e[1], e[2]) for e in [
+            (get_data_path('fastq_single_seq_illumina1.3'), [
+                {'variant': 'illumina1.3'},
+                {'phred_offset': 64},
+                {'variant': 'illumina1.3', 'constructor': Protein},
+            ], [
+                ('', 'bar\t baz', 'ACGT', [33, 34, 35, 36])
+            ]),
+
+            (get_data_path('fastq_multi_seq_sanger'), [
+                {'variant': 'sanger'},
+                {'phred_offset': 33},
+                {'variant': 'sanger', 'constructor': RNA},
+            ], [
+                ('foo', 'bar baz', 'AACCGGTT',
+                 [16, 17, 18, 19, 20, 21, 22, 23]),
+                ('bar', 'baz foo', 'TTGGCCA',
+                 [23, 22, 21, 20, 19, 18, 17]),
+                ('baz', 'foo bar', 'GATTTC',
+                 [20, 21, 22, 23, 24, 18])
+            ]),
+        ]
+
+        self.invalid_files = [(get_data_path(e[0]), e[1], e[2]) for e in [
             ('error_diff_ids.fastq', FASTQFormatError,
              "header lines do not match: "
              "'SLXA-B3_649_FC8437_R1_1_1_850_123' != "
@@ -118,22 +149,27 @@ class TestReaderWriter(unittest.TestCase):
         ]]
 
     def test_fastq_to_generator_valid_files(self):
-        test_cases = (self.empty,)
+        for valid, kwargs, components in self.valid_files:
+            for kwarg in kwargs:
+                _drop_kwargs(kwarg, 'seq_num')
+                constructor = kwarg.get('constructor', BiologicalSequence)
+                expected = [constructor(c[2], id=c[0], description=c[1],
+                            quality=c[3]) for c in components]
 
-        for exp, kwargs, fps in test_cases:
-            for fp in fps:
-                obs = list(_fastq_to_generator(fp, **kwargs))
-                self._assert_generator_results_equal(obs, exp)
+                observed = list(_fastq_to_generator(valid, **kwarg))
+                self.assertEqual(len(expected), len(observed))
+                for o, e in zip(observed, expected):
+                    self.assertTrue(o.equals(e))
 
     def test_fastq_to_generator_invalid_files_all_variants(self):
         # files that should be invalid for all variants, as well as custom
         # phred offsets
-        for fp, error_type, error_msg_regex in self.invalid_fps:
+        for fp, error_type, error_msg_regex in self.invalid_files:
             for variant in 'sanger', 'illumina1.3', 'illumina1.8':
                 with self.assertRaisesRegexp(error_type, error_msg_regex):
                     list(_fastq_to_generator(fp, variant=variant))
 
-            for offset in 40, 77:
+            for offset in 33, 64, 40, 77:
                 with self.assertRaisesRegexp(error_type, error_msg_regex):
                     list(_fastq_to_generator(fp, phred_offset=offset))
 
@@ -157,15 +193,15 @@ class TestReaderWriter(unittest.TestCase):
                 get_data_path('solexa_full_range_original_solexa.fastq'),
                 variant='solexa'))
 
-    def _assert_generator_results_equal(self, obs, exp):
-        self.assertEqual(len(obs), len(exp))
-        for o, e in zip(obs, exp):
-            self.assertTrue(o.equals(e))
-
 
 class TestConversions(unittest.TestCase):
     def setUp(self):
         self.conversions = [
+            (get_data_path('empty'),
+             get_data_path('empty'), [
+                 ({'variant': 'sanger'}, {'phred_offset': 42}),
+             ]),
+
             (get_data_path('longreads_original_sanger.fastq'),
              get_data_path('longreads_as_sanger.fastq'), [
                  ({'variant': 'sanger'}, {'variant': 'sanger'}),
