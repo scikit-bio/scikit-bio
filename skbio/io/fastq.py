@@ -176,14 +176,9 @@ References
 
 from __future__ import absolute_import, division, print_function
 from future.builtins import range, zip
-from future import standard_library
-with standard_library.hooks():
-    from itertools import zip_longest
 
 import re
-import numpy as np
-from skbio.io import (register_reader, register_writer,
-                      register_sniffer,
+from skbio.io import (register_reader, register_writer, register_sniffer,
                       FASTQFormatError)
 from skbio.io._base import (_decode_qual_to_phred, _encode_phred_to_qual,
                             _get_nth_sequence, _parse_fasta_like_header)
@@ -192,6 +187,8 @@ from skbio.sequence import (BiologicalSequence, NucleotideSequence,
                             DNASequence, RNASequence, ProteinSequence)
 
 from skbio.util import cardinal_to_ordinal
+
+_whitespace_regex = re.compile(r'\s')
 
 
 @register_sniffer('fastq')
@@ -258,10 +255,9 @@ def _parse_sequence_data(fh):
                 "Found FASTQ record that is missing a quality (+) header line "
                 "after sequence data.")
         else:
-            for c in chunk:
-                if c.isspace():
-                    raise FASTQFormatError(
-                        "Found whitespace in sequence data: %r" % chunk)
+            if _whitespace_regex.search(chunk):
+                raise FASTQFormatError(
+                    "Found whitespace in sequence data: %r" % chunk)
             seq_chunks.append(chunk)
 
     raise FASTQFormatError(

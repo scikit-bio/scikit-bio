@@ -15,15 +15,12 @@ import warnings
 
 from skbio import (read, BiologicalSequence, NucleotideSequence, DNASequence,
                    RNASequence, ProteinSequence, SequenceCollection, Alignment)
-from skbio.sequence import BiologicalSequenceError
 from skbio.io import FASTQFormatError
 from skbio.io.fastq import (
-    _fastq_sniffer, _fastq_to_generator, _fastq_to_biological_sequence,
-    _fastq_to_nucleotide_sequence, _fastq_to_dna_sequence,
-    _fastq_to_rna_sequence, _fastq_to_protein_sequence,
-    _fastq_to_sequence_collection, _fastq_to_alignment, _generator_to_fastq,
-    _biological_sequence_to_fastq, _nucleotide_sequence_to_fastq,
-    _dna_sequence_to_fastq, _rna_sequence_to_fastq, _protein_sequence_to_fastq,
+    _fastq_sniffer, _fastq_to_generator, _fastq_to_sequence_collection,
+    _fastq_to_alignment, _generator_to_fastq, _biological_sequence_to_fastq,
+    _nucleotide_sequence_to_fastq, _dna_sequence_to_fastq,
+    _rna_sequence_to_fastq, _protein_sequence_to_fastq,
     _sequence_collection_to_fastq, _alignment_to_fastq)
 
 from skbio.util import get_data_path
@@ -40,6 +37,7 @@ from skbio.util import get_data_path
 # description of the files.
 #
 # The example files have not been modified from their original form.
+
 
 def _drop_kwargs(kwargs, *args):
     for arg in args:
@@ -254,98 +252,98 @@ class TestConversions(unittest.TestCase):
             (get_data_path('empty'),
              get_data_path('empty'), [
                  ({'variant': 'sanger'}, {'phred_offset': 42}),
-             ]),
+            ]),
 
             (get_data_path('longreads_original_sanger.fastq'),
              get_data_path('longreads_as_sanger.fastq'), [
                  ({'variant': 'sanger'}, {'variant': 'sanger'}),
                  ({'phred_offset': 33}, {'variant': 'sanger'}),
                  ({'variant': 'sanger'}, {'phred_offset': 33})
-             ]),
+            ]),
             (get_data_path('longreads_original_sanger.fastq'),
              get_data_path('longreads_as_illumina.fastq'), [
                  ({'variant': 'sanger'}, {'variant': 'illumina1.3'}),
                  ({'phred_offset': 33}, {'variant': 'illumina1.3'}),
                  ({'variant': 'sanger'}, {'phred_offset': 64})
-             ]),
+            ]),
 
             (get_data_path('wrapping_original_sanger.fastq'),
              get_data_path('wrapping_as_sanger.fastq'), [
                  ({'variant': 'sanger'}, {'variant': 'sanger'}),
                  ({'phred_offset': 33}, {'variant': 'sanger'}),
                  ({'variant': 'sanger'}, {'phred_offset': 33})
-             ]),
+            ]),
             (get_data_path('wrapping_original_sanger.fastq'),
              get_data_path('wrapping_as_illumina.fastq'), [
                  ({'variant': 'sanger'}, {'variant': 'illumina1.3'}),
                  ({'phred_offset': 33}, {'variant': 'illumina1.3'}),
                  ({'variant': 'sanger'}, {'phred_offset': 64})
-             ]),
+            ]),
 
             (get_data_path('sanger_full_range_original_sanger.fastq'),
              get_data_path('sanger_full_range_as_sanger.fastq'), [
                  ({'variant': 'sanger'}, {'variant': 'sanger'}),
                  ({'phred_offset': 33}, {'variant': 'sanger'}),
                  ({'variant': 'sanger'}, {'phred_offset': 33})
-             ]),
+            ]),
             (get_data_path('sanger_full_range_original_sanger.fastq'),
              get_data_path('sanger_full_range_as_illumina.fastq'), [
                  ({'variant': 'sanger'}, {'variant': 'illumina1.3'}),
                  ({'phred_offset': 33}, {'variant': 'illumina1.3'}),
                  ({'variant': 'sanger'}, {'phred_offset': 64})
-             ]),
+            ]),
 
             (get_data_path('illumina_full_range_original_illumina.fastq'),
              get_data_path('illumina_full_range_as_illumina.fastq'), [
                  ({'variant': 'illumina1.3'}, {'variant': 'illumina1.3'}),
                  ({'phred_offset': 64}, {'variant': 'illumina1.3'}),
                  ({'variant': 'illumina1.3'}, {'phred_offset': 64})
-             ]),
+            ]),
             (get_data_path('illumina_full_range_original_illumina.fastq'),
              get_data_path('illumina_full_range_as_sanger.fastq'), [
                  ({'variant': 'illumina1.3'}, {'variant': 'sanger'}),
                  ({'phred_offset': 64}, {'variant': 'sanger'}),
                  ({'variant': 'illumina1.3'}, {'phred_offset': 33})
-             ]),
+            ]),
 
             (get_data_path('misc_dna_original_sanger.fastq'),
              get_data_path('misc_dna_as_sanger.fastq'), [
                  ({'variant': 'sanger'}, {'variant': 'sanger'}),
                  ({'phred_offset': 33}, {'variant': 'sanger'}),
                  ({'variant': 'sanger'}, {'phred_offset': 33})
-             ]),
+            ]),
             (get_data_path('misc_dna_original_sanger.fastq'),
              get_data_path('misc_dna_as_illumina.fastq'), [
                  ({'variant': 'sanger'}, {'variant': 'illumina1.3'}),
                  ({'phred_offset': 33}, {'variant': 'illumina1.3'}),
                  ({'variant': 'sanger'}, {'phred_offset': 64})
-             ]),
+            ]),
 
             (get_data_path('misc_rna_original_sanger.fastq'),
              get_data_path('misc_rna_as_sanger.fastq'), [
                  ({'variant': 'sanger'}, {'variant': 'sanger'}),
                  ({'phred_offset': 33}, {'variant': 'sanger'}),
                  ({'variant': 'sanger'}, {'phred_offset': 33})
-             ]),
+            ]),
             (get_data_path('misc_rna_original_sanger.fastq'),
              get_data_path('misc_rna_as_illumina.fastq'), [
                  ({'variant': 'sanger'}, {'variant': 'illumina1.3'}),
                  ({'phred_offset': 33}, {'variant': 'illumina1.3'}),
                  ({'variant': 'sanger'}, {'phred_offset': 64})
-             ]),
+            ]),
 
             (get_data_path('fastq_wrapping_original_sanger_no_description'),
              get_data_path('fastq_wrapping_as_sanger_no_description'), [
                  ({'variant': 'sanger'}, {'variant': 'sanger'}),
                  ({'phred_offset': 33}, {'variant': 'sanger'}),
                  ({'variant': 'sanger'}, {'phred_offset': 33})
-             ]),
+            ]),
             (get_data_path('fastq_wrapping_original_sanger_no_description'),
              get_data_path('fastq_wrapping_as_illumina_no_description'), [
                  ({'variant': 'sanger'}, {'variant': 'illumina1.3'}),
                  ({'phred_offset': 33}, {'variant': 'illumina1.3'}),
                  ({'variant': 'sanger'}, {'phred_offset': 64})
-             ]),
+            ]),
         ]
 
     def test_conversion(self):
