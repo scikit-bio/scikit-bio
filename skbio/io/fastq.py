@@ -290,9 +290,9 @@ def _fastq_to_alignment(fh, variant=None, phred_offset=None,
 def _generator_to_fastq(obj, fh, variant=None, phred_offset=None,
                         id_whitespace_replacement='_',
                         description_newline_replacement=' '):
-    record_formatter = _format_fasta_like_records(
+    formatted_records = _format_fasta_like_records(
         obj, id_whitespace_replacement, description_newline_replacement, True)
-    for header, seq_str, qual_scores in record_formatter:
+    for header, seq_str, qual_scores in formatted_records:
         qual_str = _encode_phred_to_qual(qual_scores, variant=variant,
                                          phred_offset=phred_offset)
         fh.write('@')

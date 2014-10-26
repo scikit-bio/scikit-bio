@@ -700,10 +700,10 @@ def _generator_to_fasta(obj, fh, qual=FileSentinel,
                 width=max_width, break_long_words=False,
                 break_on_hyphens=False)
 
-    record_formatter = _format_fasta_like_records(
+    formatted_records = _format_fasta_like_records(
         obj, id_whitespace_replacement, description_newline_replacement,
         qual is not None)
-    for header, seq_str, qual_scores in record_formatter:
+    for header, seq_str, qual_scores in formatted_records:
         if max_width is not None:
             seq_str = _chunk_str(seq_str, max_width, '\n')
 
