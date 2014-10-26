@@ -582,8 +582,7 @@ def _fasta_sniffer(fh):
     num_records = 10
     try:
         not_empty = False
-        gen = _fasta_to_generator(fh)
-        for _ in zip(range(num_records), gen):
+        for _ in zip(range(num_records), _fasta_to_generator(fh)):
             not_empty = True
 
         if not_empty:
@@ -599,8 +598,6 @@ def _fasta_sniffer(fh):
             return False, {}
     except FASTAFormatError:
         return False, {}
-    finally:
-        gen.close()
 
 
 @register_reader('fasta')

@@ -195,30 +195,16 @@ _whitespace_regex = re.compile(r'\s')
 @register_sniffer('fastq')
 def _fastq_sniffer(fh):
     # Strategy:
-    #   Read up to 10 records and check if at least one of the supported FASTQ
-    #   variants works. If at least one record is read (i.e. the file isn't
-    #   empty) and no errors are thrown during reading, assume the file is in
-    #   FASTQ format.
-    for variant in 'sanger', 'illumina1.3', 'illumina1.8':
-        try:
-            not_empty = False
-            gen = _fastq_to_generator(fh)
-            for _ in zip(range(10), gen):
-                not_empty = True
-            if not_empty:
-                return not_empty, {'phred_offset': 33}
-            else:
-                return not_empty, {}
-        except FASTQFormatError:
-            try:
-                fh.seek(0)
-                not_empty = False
-                gen = _fastq_to_generator(fh, phred_offset=64)
-                for _ in zip(range(10), gen):
-                    not_empty = True
-                return not_empty, {'phred_offset': 64}
-            except FASTQFormatError:
-                return False, {}
+    #   Read up to 10 records. If at least one record is read (i.e. the file
+    #   isn't empty) and the quality scores are in printable ASCII range,
+    #   assume the file is FASTQ.
+    try:
+        not_empty = False
+        for _ in zip(range(10), _fastq_to_generator(fh, phred_offset=33)):
+            not_empty = True
+        return not_empty, {}
+    except (FASTQFormatError, ValueError):
+        return False, {}
 
 
 @register_reader('fastq')

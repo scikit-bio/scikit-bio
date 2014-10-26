@@ -46,6 +46,76 @@ def _drop_kwargs(kwargs, *args):
             kwargs.pop(arg)
 
 
+class TestSniffer(unittest.TestCase):
+    def setUp(self):
+        self.positives = [get_data_path(e) for e in [
+            'fastq_multi_seq_sanger',
+            'fastq_single_seq_illumina1.3',
+            'fastq_wrapping_as_illumina_no_description',
+            'fastq_wrapping_as_sanger_no_description',
+            'fastq_wrapping_original_sanger_no_description',
+            'fastq_writer_illumina1.3_defaults',
+            'fastq_writer_sanger_defaults',
+            'fastq_writer_sanger_non_defaults',
+            'illumina_full_range_as_illumina.fastq',
+            'illumina_full_range_as_sanger.fastq',
+            'illumina_full_range_original_illumina.fastq',
+            'longreads_as_illumina.fastq',
+            'longreads_as_sanger.fastq',
+            'longreads_original_sanger.fastq',
+            'misc_dna_as_illumina.fastq',
+            'misc_dna_as_sanger.fastq',
+            'misc_dna_original_sanger.fastq',
+            'misc_rna_as_illumina.fastq',
+            'misc_rna_as_sanger.fastq',
+            'misc_rna_original_sanger.fastq',
+            'sanger_full_range_as_illumina.fastq',
+            'sanger_full_range_as_sanger.fastq',
+            'sanger_full_range_original_sanger.fastq',
+            'solexa_full_range_original_solexa.fastq',
+            'wrapping_as_illumina.fastq',
+            'wrapping_as_sanger.fastq',
+            'wrapping_original_sanger.fastq'
+        ]]
+
+        self.negatives = [get_data_path(e) for e in [
+            'empty',
+            'whitespace_only',
+            'fastq_invalid_missing_header',
+            'fastq_invalid_missing_seq_data',
+            'error_diff_ids.fastq',
+            'error_double_qual.fastq',
+            'error_double_seq.fastq',
+            'error_long_qual.fastq',
+            'error_no_qual.fastq',
+            'error_qual_del.fastq',
+            'error_qual_escape.fastq',
+            'error_qual_null.fastq',
+            'error_qual_space.fastq',
+            'error_qual_tab.fastq',
+            'error_qual_unit_sep.fastq',
+            'error_qual_vtab.fastq',
+            'error_short_qual.fastq',
+            'error_spaces.fastq',
+            'error_tabs.fastq',
+            'error_trunc_at_seq.fastq',
+            'error_trunc_at_plus.fastq',
+            'error_trunc_at_qual.fastq',
+            'error_trunc_in_title.fastq',
+            'error_trunc_in_seq.fastq',
+            'error_trunc_in_plus.fastq',
+            'error_trunc_in_qual.fastq',
+        ]]
+
+    def test_positives(self):
+        for fp in self.positives:
+            self.assertEqual(_fastq_sniffer(fp), (True, {}))
+
+    def test_negatives(self):
+        for fp in self.negatives:
+            self.assertEqual(_fastq_sniffer(fp), (False, {}))
+
+
 class TestReaders(unittest.TestCase):
     def setUp(self):
         self.valid_files = [
@@ -348,6 +418,15 @@ class TestWriters(unittest.TestCase):
                     expected = f.read()
 
                 self.assertEqual(observed, expected)
+
+    def test_generator_to_fastq_no_qual(self):
+        def gen():
+            yield BiologicalSequence('ACGT', id='foo', description='bar',
+                                     quality=range(4))
+            yield BiologicalSequence('ACG', id='foo', description='bar')
+
+        with self.assertRaisesRegexp(ValueError, '2nd.*quality scores'):
+            _generator_to_fastq(gen(), StringIO(), variant='illumina1.8')
 
 
 class TestConversions(unittest.TestCase):
