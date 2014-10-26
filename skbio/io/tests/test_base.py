@@ -7,14 +7,17 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.builtins import range
+from future.builtins import range, zip
 
 import unittest
 
 import numpy.testing as npt
 
+from skbio import BiologicalSequence, DNASequence, RNASequence
 from skbio.io._base import (_chunk_str, _decode_qual_to_phred,
-                            _encode_phred_to_qual, _get_nth_sequence)
+                            _encode_phred_to_qual, _get_nth_sequence,
+                            _parse_fasta_like_header,
+                            _format_fasta_like_records)
 
 
 class ChunkStrTests(unittest.TestCase):
@@ -251,6 +254,105 @@ class TestGetNthSequence(unittest.TestCase):
     def test_seq_num_just_right(self):
         value = _get_nth_sequence(self.gen, 3)
         self.assertEqual(value, 'goldilocks: 3')
+
+
+class TestParseFASTALikeHeader(unittest.TestCase):
+    def test_no_id_or_description(self):
+        obs = _parse_fasta_like_header('> \t\t  \n')
+        self.assertEqual(obs, ('', ''))
+
+    def test_id_only(self):
+        obs = _parse_fasta_like_header('>suht! \t\t  \n')
+        self.assertEqual(obs, ('suht!', ''))
+
+    def test_description_only(self):
+        obs = _parse_fasta_like_header('> suht! \t\t  \n')
+        self.assertEqual(obs, ('', 'suht!'))
+
+    def test_id_and_description(self):
+        obs = _parse_fasta_like_header('>!thus  suht! \t\t  \n')
+        self.assertEqual(obs, ('!thus', 'suht!'))
+
+
+class TestFormatFASTALikeRecords(unittest.TestCase):
+    def setUp(self):
+        def generator():
+            yield BiologicalSequence('ACGT', id='', description='',
+                                     quality=range(4))
+            yield RNASequence('GAU', id='  foo \t\t bar ', description='')
+            yield DNASequence('TAG', id='', description='foo\n\n bar\n')
+            yield BiologicalSequence('A', id='foo', description='bar baz',
+                                     quality=[42])
+        self.gen = generator()
+
+    def test_no_replacement(self):
+        exp = [
+            ('', 'ACGT', range(4)),
+            ('  foo \t\t bar ', 'GAU', None),
+            (' foo\n\n bar\n', 'TAG', None),
+            ('foo bar baz', 'A', [42])
+        ]
+        obs = list(_format_fasta_like_records(self.gen, None, None, False))
+
+        self.assertEqual(len(obs), len(exp))
+        for o, e in zip(obs, exp):
+            npt.assert_equal(o, e)
+
+    def test_empty_str_replacement(self):
+        exp = [
+            ('', 'ACGT', range(4)),
+            ('foobar', 'GAU', None),
+            (' foo bar', 'TAG', None),
+            ('foo bar baz', 'A', [42])
+        ]
+        obs = list(_format_fasta_like_records(self.gen, '', '', False))
+
+        self.assertEqual(len(obs), len(exp))
+        for o, e in zip(obs, exp):
+            npt.assert_equal(o, e)
+
+    def test_multi_char_replacement(self):
+        exp = [
+            ('', 'ACGT', range(4)),
+            ('-.--.-foo-.--.--.--.-bar-.-', 'GAU', None),
+            (' foo_-__-_ bar_-_', 'TAG', None),
+            ('foo bar baz', 'A', [42])
+        ]
+        obs = list(_format_fasta_like_records(self.gen, '-.-', '_-_', False))
+
+        self.assertEqual(len(obs), len(exp))
+        for o, e in zip(obs, exp):
+            npt.assert_equal(o, e)
+
+    def test_newline_character_in_id_whitespace_replacement(self):
+        with self.assertRaisesRegexp(ValueError, 'Newline character'):
+            list(_format_fasta_like_records(self.gen, '-\n--', ' ', False))
+
+    def test_newline_character_in_description_newline_replacement(self):
+        with self.assertRaisesRegexp(ValueError, 'Newline character'):
+            list(_format_fasta_like_records(self.gen, None, 'a\nb', False))
+
+    def test_empty_sequence(self):
+        def blank_seq_gen():
+            for seq in (DNASequence('A'), BiologicalSequence(''),
+                        RNASequence('GG')):
+                yield seq
+
+        with self.assertRaisesRegexp(ValueError, '2nd.*empty'):
+            list(_format_fasta_like_records(blank_seq_gen(), None, None,
+                                            False))
+
+    def test_missing_quality_scores(self):
+        def missing_qual_gen():
+            for seq in (RNASequence('A', quality=[42]),
+                        BiologicalSequence('AG'),
+                        DNASequence('GG', quality=[41, 40])):
+                yield seq
+
+        with self.assertRaisesRegexp(ValueError,
+                                     '2nd sequence.*quality scores'):
+            list(_format_fasta_like_records(missing_qual_gen(), '-', '-',
+                                            True))
 
 
 if __name__ == '__main__':
