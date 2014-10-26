@@ -10,7 +10,8 @@ from __future__ import absolute_import, division, print_function
 from future.builtins import zip
 from six import StringIO
 
-from unittest import TestCase, main
+import unittest
+import warnings
 
 from skbio import (BiologicalSequence, NucleotideSequence, DNA, RNA, Protein,
                    SequenceCollection, Alignment)
@@ -41,7 +42,7 @@ from skbio.util import get_data_path
 # The example files have not been modified from their original form.
 
 
-class ReaderTests(TestCase):
+class TestReaderWriter(unittest.TestCase):
     def setUp(self):
         # empty file shouldn't yield sequences
         self.empty = ([], {'variant': 'sanger'}, [get_data_path('empty')])
@@ -136,8 +137,8 @@ class ReaderTests(TestCase):
                 with self.assertRaisesRegexp(error_type, error_msg_regex):
                     list(_fastq_to_generator(fp, phred_offset=offset))
 
-    def test_fastq_to_generator_invalid_files_illumina13(self):
-        # files that should be invalid for illumina1.3 variant
+    def test_fastq_to_generator_invalid_files_illumina(self):
+        # files that should be invalid for illumina1.3 and illumina1.8 variants
         fps = [get_data_path(fp) for fp in
                'sanger_full_range_original_sanger.fastq',
                'solexa_full_range_original_solexa.fastq']
@@ -145,6 +146,8 @@ class ReaderTests(TestCase):
         for fp in fps:
             with self.assertRaisesRegexp(ValueError, 'out of range \[0, 62\]'):
                 list(_fastq_to_generator(fp, variant='illumina1.3'))
+            with self.assertRaisesRegexp(ValueError, 'out of range \[0, 62\]'):
+                list(_fastq_to_generator(fp, variant='illumina1.8'))
 
     def test_fastq_to_generator_solexa(self):
         # solexa support isn't implemented yet. should raise error even with
@@ -160,9 +163,106 @@ class ReaderTests(TestCase):
             self.assertTrue(o.equals(e))
 
 
-class RoundtripTests(TestCase):
-    pass
+class TestConversions(unittest.TestCase):
+    def setUp(self):
+        self.conversions = [
+            (get_data_path('longreads_original_sanger.fastq'),
+             get_data_path('longreads_as_sanger.fastq'), [
+                 ({'variant': 'sanger'}, {'variant': 'sanger'}),
+                 ({'phred_offset': 33}, {'variant': 'sanger'}),
+                 ({'variant': 'sanger'}, {'phred_offset': 33})
+             ]),
+            (get_data_path('longreads_original_sanger.fastq'),
+             get_data_path('longreads_as_illumina.fastq'), [
+                 ({'variant': 'sanger'}, {'variant': 'illumina1.3'}),
+                 ({'phred_offset': 33}, {'variant': 'illumina1.3'}),
+                 ({'variant': 'sanger'}, {'phred_offset': 64})
+             ]),
+
+            (get_data_path('wrapping_original_sanger.fastq'),
+             get_data_path('wrapping_as_sanger.fastq'), [
+                 ({'variant': 'sanger'}, {'variant': 'sanger'}),
+                 ({'phred_offset': 33}, {'variant': 'sanger'}),
+                 ({'variant': 'sanger'}, {'phred_offset': 33})
+             ]),
+            (get_data_path('wrapping_original_sanger.fastq'),
+             get_data_path('wrapping_as_illumina.fastq'), [
+                 ({'variant': 'sanger'}, {'variant': 'illumina1.3'}),
+                 ({'phred_offset': 33}, {'variant': 'illumina1.3'}),
+                 ({'variant': 'sanger'}, {'phred_offset': 64})
+             ]),
+
+            (get_data_path('sanger_full_range_original_sanger.fastq'),
+             get_data_path('sanger_full_range_as_sanger.fastq'), [
+                 ({'variant': 'sanger'}, {'variant': 'sanger'}),
+                 ({'phred_offset': 33}, {'variant': 'sanger'}),
+                 ({'variant': 'sanger'}, {'phred_offset': 33})
+             ]),
+            (get_data_path('sanger_full_range_original_sanger.fastq'),
+             get_data_path('sanger_full_range_as_illumina.fastq'), [
+                 ({'variant': 'sanger'}, {'variant': 'illumina1.3'}),
+                 ({'phred_offset': 33}, {'variant': 'illumina1.3'}),
+                 ({'variant': 'sanger'}, {'phred_offset': 64})
+             ]),
+
+            (get_data_path('illumina_full_range_original_illumina.fastq'),
+             get_data_path('illumina_full_range_as_illumina.fastq'), [
+                 ({'variant': 'illumina1.3'}, {'variant': 'illumina1.3'}),
+                 ({'phred_offset': 64}, {'variant': 'illumina1.3'}),
+                 ({'variant': 'illumina1.3'}, {'phred_offset': 64})
+             ]),
+            (get_data_path('illumina_full_range_original_illumina.fastq'),
+             get_data_path('illumina_full_range_as_sanger.fastq'), [
+                 ({'variant': 'illumina1.3'}, {'variant': 'sanger'}),
+                 ({'phred_offset': 64}, {'variant': 'sanger'}),
+                 ({'variant': 'illumina1.3'}, {'phred_offset': 33})
+             ]),
+
+            (get_data_path('misc_dna_original_sanger.fastq'),
+             get_data_path('misc_dna_as_sanger.fastq'), [
+                 ({'variant': 'sanger'}, {'variant': 'sanger'}),
+                 ({'phred_offset': 33}, {'variant': 'sanger'}),
+                 ({'variant': 'sanger'}, {'phred_offset': 33})
+             ]),
+            (get_data_path('misc_dna_original_sanger.fastq'),
+             get_data_path('misc_dna_as_illumina.fastq'), [
+                 ({'variant': 'sanger'}, {'variant': 'illumina1.3'}),
+                 ({'phred_offset': 33}, {'variant': 'illumina1.3'}),
+                 ({'variant': 'sanger'}, {'phred_offset': 64})
+             ]),
+
+            (get_data_path('misc_rna_original_sanger.fastq'),
+             get_data_path('misc_rna_as_sanger.fastq'), [
+                 ({'variant': 'sanger'}, {'variant': 'sanger'}),
+                 ({'phred_offset': 33}, {'variant': 'sanger'}),
+                 ({'variant': 'sanger'}, {'phred_offset': 33})
+             ]),
+            (get_data_path('misc_rna_original_sanger.fastq'),
+             get_data_path('misc_rna_as_illumina.fastq'), [
+                 ({'variant': 'sanger'}, {'variant': 'illumina1.3'}),
+                 ({'phred_offset': 33}, {'variant': 'illumina1.3'}),
+                 ({'variant': 'sanger'}, {'phred_offset': 64})
+             ]),
+        ]
+
+    def test_conversion(self):
+        for from_fp, to_fp, kwargs in self.conversions:
+            for from_kwargs, to_kwargs in kwargs:
+                read_gen = _fastq_to_generator(from_fp, **from_kwargs)
+                fh = StringIO()
+
+                # will issue warning when truncating quality scores
+                with warnings.catch_warnings(record=True):
+                    warnings.simplefilter("ignore")
+                    _generator_to_fastq(read_gen, fh, **to_kwargs)
+
+                obs = fh.getvalue()
+                fh.close()
+
+                with open(to_fp, 'U') as fh:
+                    exp = fh.read()
+                self.assertEqual(obs, exp)
 
 
 if __name__ == '__main__':
-    main()
+    unittest.main()

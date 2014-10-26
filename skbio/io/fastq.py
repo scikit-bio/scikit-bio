@@ -439,7 +439,7 @@ def _generator_to_fastq(obj, fh, variant=None, phred_offset=None,
         fh.write(header)
         fh.write('\n')
         fh.write(str(seq))
-        fh.write('+\n')
+        fh.write('\n+\n')
         fh.write(qual_str)
         fh.write('\n')
 
@@ -505,33 +505,6 @@ def _alignment_to_fastq(obj, fh, variant=None, phred_offset=None,
     _sequences_to_fastq(obj, fh, variant, phred_offset,
                         id_whitespace_replacement,
                         description_newline_replacement)
-
-
-def _fastq_to_sequence(fh, variant, phred_offset, seq_num, constructor):
-    if seq_num < 1:
-        raise FASTQFormatError(
-            "Invalid sequence number (seq_num=%d). seq_num must be between 1 "
-            "and the number of sequences in the FASTQ-formatted file "
-            "(inclusive)." % seq_num)
-
-    seq_idx = seq_num - 1
-    seq = None
-    try:
-        gen = _fastq_to_generator(fh, variant=variant,
-                                  phred_offset=phred_offset,
-                                  constructor=constructor)
-        for idx, curr_seq in enumerate(gen):
-            if idx == seq_idx:
-                seq = curr_seq
-                break
-    finally:
-        gen.close()
-
-    if seq is None:
-        raise FASTQFormatError(
-            "Reached end of FASTQ-formatted file before finding %s biological "
-            "sequence." % cardinal_to_ordinal(seq_num))
-    return seq
 
 
 def _sequences_to_fastq(obj, fh, variant, phred_offset,
