@@ -264,44 +264,32 @@ def _parse_sequence_data(fh):
                         "Found whitespace in sequence data: %r" % chunk)
             seq_chunks.append(chunk)
 
-    if not seq_chunks:
-        raise FASTQFormatError(
-            "Found incomplete/truncated FASTQ record at end of file that is "
-            "missing sequence data.")
-    else:
-        raise FASTQFormatError(
-            "Found incomplete/truncated FASTQ record at end of file that is "
-            "missing a quality (+) header line after sequence data.")
+    raise FASTQFormatError(
+        "Found incomplete/truncated FASTQ record at end of file.")
 
 
 def _parse_quality_scores(fh, seq_len, variant, phred_offset):
-    qual_chunks = []
+    phred_scores = []
     qual_len = 0
     for chunk in _line_generator(fh):
         if chunk.startswith('@') and qual_len == seq_len:
-            phred_scores = _decode_qual_to_phred(''.join(qual_chunks), variant=variant, phred_offset=phred_offset)
             return phred_scores, chunk
         else:
-            qual_chunks.append(chunk)
             qual_len += len(chunk)
 
             if qual_len > seq_len:
                 raise FASTQFormatError(
                     "Found more quality score characters than sequence "
                     "characters. Extra quality score characters: %r" %
-                    ''.join(qual_chunks)[seq_len:])
+                    chunk[-(qual_len - seq_len):])
 
-    if not qual_chunks:
-        raise FASTQFormatError(
-            "Found incomplete/truncated FASTQ record at end of file that is "
-            "missing quality scores.")
+            phred_scores.extend(
+                _decode_qual_to_phred(chunk, variant=variant,
+                                      phred_offset=phred_offset))
+
     if qual_len != seq_len:
         raise FASTQFormatError(
-            "Found FASTQ record at end of file with different number of "
-            "quality score characters than sequence characters: %d != %d" %
-            (qual_len, seq_len))
-
-    phred_scores = _decode_qual_to_phred(''.join(qual_chunks), variant=variant, phred_offset=phred_offset)
+            "Found incomplete/truncated FASTQ record at end of file.")
     return phred_scores, None
 
 

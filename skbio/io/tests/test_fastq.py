@@ -80,6 +80,8 @@ class TestReaders(unittest.TestCase):
         ]
 
         self.invalid_files = [(get_data_path(e[0]), e[1], e[2]) for e in [
+            ('whitespace_only', FASTQFormatError, 'blank line.*FASTQ'),
+
             ('error_diff_ids.fastq', FASTQFormatError,
              "header lines do not match: "
              "'SLXA-B3_649_FC8437_R1_1_1_850_123' != "
@@ -89,7 +91,7 @@ class TestReaders(unittest.TestCase):
              "Extra quality.*'\+SLXA-B3_649_FC8437_R1_1_1_850_123'"),
 
             ('error_double_seq.fastq', FASTQFormatError,
-             "FASTQ record that is missing a quality \(\+\) header line"),
+             'FASTQ record that is missing a quality \(\+\) header line'),
 
             ('error_long_qual.fastq', FASTQFormatError, "Extra quality.*'Y'"),
 
@@ -108,8 +110,8 @@ class TestReaders(unittest.TestCase):
             ('error_qual_space.fastq', ValueError,
              'Decoded Phred score.*out of range'),
 
-            ('error_qual_tab.fastq', FASTQFormatError,
-             'blank line.*FASTQ'),
+            ('error_qual_tab.fastq', ValueError,
+             'Decoded Phred score.*out of range'),
 
             ('error_qual_unit_sep.fastq', ValueError,
              'Decoded Phred score.*out of range'),
@@ -133,20 +135,20 @@ class TestReaders(unittest.TestCase):
              'blank line.*FASTQ'),
 
             ('error_trunc_at_qual.fastq', FASTQFormatError,
-             "incomplete/truncated.*end of file.*missing quality scores"),
+             'incomplete/truncated.*end of file'),
 
             ('error_trunc_in_title.fastq', FASTQFormatError,
-             "incomplete/truncated.*end of file.*missing sequence data"),
+             'incomplete/truncated.*end of file'),
 
             ('error_trunc_in_seq.fastq', FASTQFormatError,
-             "incomplete/truncated.*end of file.*missing a quality.*header"),
+             'incomplete/truncated.*end of file'),
 
             ('error_trunc_in_plus.fastq', FASTQFormatError,
              "header lines do not match: "
              "'SLXA-B3_649_FC8437_R1_1_1_183_714' != 'SLXA-B3_649_FC'"),
 
             ('error_trunc_in_qual.fastq', FASTQFormatError,
-             'end of file.*different number.*24 != 25')
+             'incomplete/truncated.*end of file')
         ]]
 
     def test_fastq_to_generator_valid_files(self):
