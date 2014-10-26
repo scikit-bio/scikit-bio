@@ -243,6 +243,19 @@ class TestConversions(unittest.TestCase):
                  ({'phred_offset': 33}, {'variant': 'illumina1.3'}),
                  ({'variant': 'sanger'}, {'phred_offset': 64})
              ]),
+
+            (get_data_path('fastq_wrapping_original_sanger_no_description'),
+             get_data_path('fastq_wrapping_as_sanger_no_description'), [
+                 ({'variant': 'sanger'}, {'variant': 'sanger'}),
+                 ({'phred_offset': 33}, {'variant': 'sanger'}),
+                 ({'variant': 'sanger'}, {'phred_offset': 33})
+             ]),
+            (get_data_path('fastq_wrapping_original_sanger_no_description'),
+             get_data_path('fastq_wrapping_as_illumina_no_description'), [
+                 ({'variant': 'sanger'}, {'variant': 'illumina1.3'}),
+                 ({'phred_offset': 33}, {'variant': 'illumina1.3'}),
+                 ({'variant': 'sanger'}, {'phred_offset': 64})
+             ]),
         ]
 
     def test_conversion(self):
