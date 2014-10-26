@@ -33,4 +33,4 @@ script:
   - make html
   - popd
 after_success:
-  - coveralls
+  - coveralls debug
