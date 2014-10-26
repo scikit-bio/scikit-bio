@@ -19,10 +19,8 @@ from skbio import (read, write, BiologicalSequence, NucleotideSequence,
 from skbio.io import FASTQFormatError
 from skbio.io.fastq import (
     _fastq_sniffer, _fastq_to_generator, _fastq_to_sequence_collection,
-    _fastq_to_alignment, _generator_to_fastq, _biological_sequence_to_fastq,
-    _nucleotide_sequence_to_fastq, _dna_sequence_to_fastq,
-    _rna_sequence_to_fastq, _protein_sequence_to_fastq,
-    _sequence_collection_to_fastq, _alignment_to_fastq)
+    _fastq_to_alignment, _generator_to_fastq, _sequence_collection_to_fastq,
+    _alignment_to_fastq)
 
 from skbio.util import get_data_path
 
@@ -333,19 +331,19 @@ class TestWriters(unittest.TestCase):
                  [23, 22, 21, 20, 19, 18]),
                 ('ba\n\t\tz', 'foo bar', 'GATTTC',
                  [20, 21, 22, 23, 24, 18])
-             ], [
-                 ({'variant': 'sanger'},
-                  get_data_path('fastq_writer_sanger_defaults')),
-                 ({'phred_offset': 33},
-                  get_data_path('fastq_writer_sanger_defaults')),
-                 ({'variant': 'illumina1.8'},
-                  get_data_path('fastq_writer_sanger_defaults')),
-                 ({'variant': 'illumina1.3'},
-                  get_data_path('fastq_writer_illumina1.3_defaults')),
-                 ({'variant': 'sanger', 'id_whitespace_replacement': '%',
-                   'description_newline_replacement': '^'},
-                  get_data_path('fastq_writer_sanger_non_defaults'))
-             ]),
+            ], [
+                ({'variant': 'sanger'},
+                 get_data_path('fastq_writer_sanger_defaults')),
+                ({'phred_offset': 33},
+                 get_data_path('fastq_writer_sanger_defaults')),
+                ({'variant': 'illumina1.8'},
+                 get_data_path('fastq_writer_sanger_defaults')),
+                ({'variant': 'illumina1.3'},
+                 get_data_path('fastq_writer_illumina1.3_defaults')),
+                ({'variant': 'sanger', 'id_whitespace_replacement': '%',
+                  'description_newline_replacement': '^'},
+                 get_data_path('fastq_writer_sanger_non_defaults'))
+            ]),
         ]
 
     def test_generator_to_fastq_kwargs_passed(self):
@@ -353,8 +351,8 @@ class TestWriters(unittest.TestCase):
             for kwargs, expected_fp in kwargs_expected_fp:
                 def gen():
                     for c in components:
-                        yield BiologicalSequence(c[2], id=c[0],
-                                description=c[1], quality=c[3])
+                        yield BiologicalSequence(
+                            c[2], id=c[0], description=c[1], quality=c[3])
 
                 fh = StringIO()
                 _generator_to_fastq(gen(), fh, **kwargs)
