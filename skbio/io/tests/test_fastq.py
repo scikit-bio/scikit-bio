@@ -13,8 +13,9 @@ from six import StringIO
 import unittest
 import warnings
 
-from skbio import (read, BiologicalSequence, NucleotideSequence, DNASequence,
-                   RNASequence, ProteinSequence, SequenceCollection, Alignment)
+from skbio import (read, write, BiologicalSequence, NucleotideSequence,
+                   DNASequence, RNASequence, ProteinSequence,
+                   SequenceCollection, Alignment)
 from skbio.io import FASTQFormatError
 from skbio.io.fastq import (
     _fastq_sniffer, _fastq_to_generator, _fastq_to_sequence_collection,
@@ -250,6 +251,103 @@ class TestReaders(unittest.TestCase):
                 self.assertEqual(observed, expected)
                 for o, e in zip(observed, expected):
                     self.assertTrue(o.equals(e))
+
+
+class TestWriters(unittest.TestCase):
+    def setUp(self):
+        self.valid_files = [
+            ([
+                ('f o  o', 'bar\n\nbaz', 'AACCGG',
+                 [16, 17, 18, 19, 20, 21]),
+                ('bar', 'baz foo', 'TTGGCC',
+                 [23, 22, 21, 20, 19, 18]),
+                ('ba\n\t\tz', 'foo bar', 'GATTTC',
+                 [20, 21, 22, 23, 24, 18])
+             ], [
+                 ({'variant': 'sanger'},
+                  get_data_path('fastq_writer_sanger_defaults')),
+                 ({'phred_offset': 33},
+                  get_data_path('fastq_writer_sanger_defaults')),
+                 ({'variant': 'illumina1.8'},
+                  get_data_path('fastq_writer_sanger_defaults')),
+                 ({'variant': 'illumina1.3'},
+                  get_data_path('fastq_writer_illumina1.3_defaults')),
+                 ({'variant': 'sanger', 'id_whitespace_replacement': '%',
+                   'description_newline_replacement': '^'},
+                  get_data_path('fastq_writer_sanger_non_defaults'))
+             ]),
+        ]
+
+    def test_generator_to_fastq_kwargs_passed(self):
+        for components, kwargs_expected_fp in self.valid_files:
+            for kwargs, expected_fp in kwargs_expected_fp:
+                def gen():
+                    for c in components:
+                        yield BiologicalSequence(c[2], id=c[0],
+                                description=c[1], quality=c[3])
+
+                fh = StringIO()
+                _generator_to_fastq(gen(), fh, **kwargs)
+                observed = fh.getvalue()
+                fh.close()
+
+                with open(expected_fp, 'U') as f:
+                    expected = f.read()
+
+                self.assertEqual(observed, expected)
+
+    def test_sequence_to_fastq_kwargs_passed(self):
+        for constructor in [BiologicalSequence, NucleotideSequence,
+                            DNASequence, RNASequence, ProteinSequence]:
+            for components, kwargs_expected_fp in self.valid_files:
+                for kwargs, expected_fp in kwargs_expected_fp:
+                    fh = StringIO()
+                    for c in components:
+                        obj = constructor(c[2], id=c[0], description=c[1],
+                                          quality=c[3])
+                        write(obj, into=fh, format='fastq', **kwargs)
+
+                    observed = fh.getvalue()
+                    fh.close()
+
+                    with open(expected_fp, 'U') as f:
+                        expected = f.read()
+
+                    self.assertEqual(observed, expected)
+
+    def test_sequence_collection_to_fastq_kwargs_passed(self):
+        for components, kwargs_expected_fp in self.valid_files:
+            for kwargs, expected_fp in kwargs_expected_fp:
+                obj = SequenceCollection([
+                    NucleotideSequence(c[2], id=c[0], description=c[1],
+                                       quality=c[3]) for c in components])
+
+                fh = StringIO()
+                _sequence_collection_to_fastq(obj, fh, **kwargs)
+                observed = fh.getvalue()
+                fh.close()
+
+                with open(expected_fp, 'U') as f:
+                    expected = f.read()
+
+                self.assertEqual(observed, expected)
+
+    def test_alignment_to_fastq_kwargs_passed(self):
+        for components, kwargs_expected_fp in self.valid_files:
+            for kwargs, expected_fp in kwargs_expected_fp:
+                obj = Alignment([
+                    ProteinSequence(c[2], id=c[0], description=c[1],
+                                    quality=c[3]) for c in components])
+
+                fh = StringIO()
+                _alignment_to_fastq(obj, fh, **kwargs)
+                observed = fh.getvalue()
+                fh.close()
+
+                with open(expected_fp, 'U') as f:
+                    expected = f.read()
+
+                self.assertEqual(observed, expected)
 
 
 class TestConversions(unittest.TestCase):

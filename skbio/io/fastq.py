@@ -195,29 +195,30 @@ _whitespace_regex = re.compile(r'\s')
 @register_sniffer('fastq')
 def _fastq_sniffer(fh):
     # Strategy:
-    #   Read up to 10 sequences (records), and checks if one of the two
-    #   phred scoring scheme is used.  If at least one sequence is read
-    #   (i.e. the file isn't empty) and no errors are thrown during reading,
-    #   assume the file is in FASTQ format.
-    try:
-        not_empty = False
-        gen = _fastq_to_generator(fh)
-        for _ in zip(range(10), gen):
-            not_empty = True
-        if not_empty:
-            return not_empty, {'phred_offset': 33}
-        else:
-            return not_empty, {}
-    except FASTQFormatError:
+    #   Read up to 10 records and check if at least one of the supported FASTQ
+    #   variants works. If at least one record is read (i.e. the file isn't
+    #   empty) and no errors are thrown during reading, assume the file is in
+    #   FASTQ format.
+    for variant in 'sanger', 'illumina1.3', 'illumina1.8':
         try:
-            fh.seek(0)
             not_empty = False
-            gen = _fastq_to_generator(fh, phred_offset=64)
+            gen = _fastq_to_generator(fh)
             for _ in zip(range(10), gen):
                 not_empty = True
-            return not_empty, {'phred_offset': 64}
+            if not_empty:
+                return not_empty, {'phred_offset': 33}
+            else:
+                return not_empty, {}
         except FASTQFormatError:
-            return False, {}
+            try:
+                fh.seek(0)
+                not_empty = False
+                gen = _fastq_to_generator(fh, phred_offset=64)
+                for _ in zip(range(10), gen):
+                    not_empty = True
+                return not_empty, {'phred_offset': 64}
+            except FASTQFormatError:
+                return False, {}
 
 
 @register_reader('fastq')
