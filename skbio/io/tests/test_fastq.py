@@ -252,8 +252,8 @@ class TestReaders(unittest.TestCase):
     def test_fastq_to_generator_invalid_files_illumina(self):
         # files that should be invalid for illumina1.3 and illumina1.8 variants
         fps = [get_data_path(fp) for fp in
-               'sanger_full_range_original_sanger.fastq',
-               'solexa_full_range_original_solexa.fastq']
+               ['sanger_full_range_original_sanger.fastq',
+               'solexa_full_range_original_solexa.fastq']]
 
         for fp in fps:
             with self.assertRaisesRegexp(ValueError, 'out of range \[0, 62\]'):
