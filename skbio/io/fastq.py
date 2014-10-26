@@ -223,12 +223,12 @@ def _fastq_sniffer(fh):
 def _fastq_to_generator(fh, variant=None, phred_offset=None,
                         constructor=BiologicalSequence):
     seq_header = next(_line_generator(fh))
-    while seq_header is not None:
-        if not seq_header.startswith('@'):
-            raise FASTQFormatError(
-                "Expected sequence header line to start with '@' character: "
-                "%r" % seq_header)
+    if not seq_header.startswith('@'):
+        raise FASTQFormatError(
+            "Expected sequence (@) header line at start of file: %r"
+            % seq_header)
 
+    while seq_header is not None:
         id_, desc = _parse_fasta_like_header(seq_header)
         seq, qual_header = _parse_sequence_data(fh)
 

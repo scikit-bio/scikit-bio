@@ -80,6 +80,12 @@ class TestReaders(unittest.TestCase):
         self.invalid_files = [(get_data_path(e[0]), e[1], e[2]) for e in [
             ('whitespace_only', FASTQFormatError, 'blank line.*FASTQ'),
 
+            ('fastq_invalid_missing_header', FASTQFormatError,
+             "sequence.*header.*start of file: 'seq1 desc1'"),
+
+            ('fastq_invalid_missing_seq_data', FASTQFormatError,
+             'without sequence data'),
+
             ('error_diff_ids.fastq', FASTQFormatError,
              "header lines do not match: "
              "'SLXA-B3_649_FC8437_R1_1_1_850_123' != "
