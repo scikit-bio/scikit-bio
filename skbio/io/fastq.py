@@ -130,8 +130,6 @@ from skbio.alignment import SequenceCollection, Alignment
 from skbio.sequence import (BiologicalSequence, NucleotideSequence,
                             DNASequence, RNASequence, ProteinSequence)
 
-from skbio.util import cardinal_to_ordinal
-
 _whitespace_regex = re.compile(r'\s')
 
 

@@ -551,7 +551,6 @@ from future.standard_library import hooks
 with hooks():
     from itertools import zip_longest
 
-import re
 import textwrap
 
 import numpy as np
@@ -564,7 +563,6 @@ from skbio.io._base import (_chunk_str, _get_nth_sequence,
 from skbio.alignment import SequenceCollection, Alignment
 from skbio.sequence import (BiologicalSequence, NucleotideSequence,
                             DNASequence, RNASequence, ProteinSequence)
-from skbio.util import cardinal_to_ordinal
 
 
 @register_sniffer('fasta')
