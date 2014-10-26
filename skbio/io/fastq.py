@@ -186,7 +186,7 @@ from skbio.io import (register_reader, register_writer,
                       register_sniffer,
                       FASTQFormatError)
 from skbio.io._base import (_decode_qual_to_phred, _encode_phred_to_qual,
-                            _get_nth_sequence)
+                            _get_nth_sequence, _parse_fasta_like_header)
 from skbio.alignment import SequenceCollection, Alignment
 from skbio.sequence import (BiologicalSequence, NucleotideSequence,
                             DNASequence, RNASequence, ProteinSequence)
@@ -222,24 +222,6 @@ def _fastq_sniffer(fh):
             return False, {}
 
 
-def _parse_header(line):
-    id_ = ''
-    desc = ''
-    header = line[1:].rstrip()
-    if header:
-        if header[0].isspace():
-            # no id
-            desc = header.lstrip()
-        else:
-            header_tokens = header.split(None, 1)
-            if len(header_tokens) == 1:
-                # no description
-                id_ = header_tokens[0]
-            else:
-                id_, desc = header_tokens
-    return id_, desc
-
-
 @register_reader('fastq')
 def _fastq_to_generator(fh, variant=None, phred_offset=None,
                         constructor=BiologicalSequence):
@@ -247,7 +229,7 @@ def _fastq_to_generator(fh, variant=None, phred_offset=None,
     while seq_header_line is not None:
         # header checks inlined throughout code for performance
         if seq_header_line.startswith('@'):
-            id_, desc = _parse_header(seq_header_line)
+            id_, desc = _parse_fasta_like_header(seq_header_line)
         else:
             raise FASTQFormatError(
                 "Expected sequence header line to start with '@' character: %r" %

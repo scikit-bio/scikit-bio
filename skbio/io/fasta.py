@@ -558,7 +558,8 @@ import numpy as np
 
 from skbio.io import (register_reader, register_writer, register_sniffer,
                       FASTAFormatError, FileSentinel)
-from skbio.io._base import _chunk_str, _get_nth_sequence
+from skbio.io._base import (_chunk_str, _get_nth_sequence,
+                            _parse_fasta_like_header)
 from skbio.alignment import SequenceCollection, Alignment
 from skbio.sequence import (BiologicalSequence, NucleotideSequence,
                             DNASequence, RNASequence, ProteinSequence)
@@ -828,7 +829,7 @@ def _parse_fasta_raw(fh, data_parser, format_label):
     line = next(fh)
     # header check inlined here and below for performance
     if line.startswith('>'):
-        id_, desc = _parse_header(line)
+        id_, desc = _parse_fasta_like_header(line)
     else:
         raise FASTAFormatError(
             "Found line without a header in %s-formatted file:\n%s" %
@@ -840,7 +841,7 @@ def _parse_fasta_raw(fh, data_parser, format_label):
             # new header, so yield current record and reset state
             yield data_parser(data_chunks), id_, desc
             data_chunks = []
-            id_, desc = _parse_header(line)
+            id_, desc = _parse_fasta_like_header(line)
         else:
             line = line.strip()
             if line:
@@ -851,24 +852,6 @@ def _parse_fasta_raw(fh, data_parser, format_label):
                     "file." % format_label)
     # yield last record in file
     yield data_parser(data_chunks), id_, desc
-
-
-def _parse_header(line):
-    id_ = ''
-    desc = ''
-    header = line[1:].rstrip()
-    if header:
-        if header[0].isspace():
-            # no id
-            desc = header.lstrip()
-        else:
-            header_tokens = header.split(None, 1)
-            if len(header_tokens) == 1:
-                # no description
-                id_ = header_tokens[0]
-            else:
-                id_, desc = header_tokens
-    return id_, desc
 
 
 def _parse_sequence_data(chunks):

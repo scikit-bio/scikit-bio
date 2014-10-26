@@ -125,3 +125,21 @@ def _get_nth_sequence(generator, seq_num):
         return seq
     raise ValueError('Reached end of file before finding the %s sequence.'
                      % cardinal_to_ordinal(seq_num))
+
+
+def _parse_fasta_like_header(line):
+    id_ = ''
+    desc = ''
+    header = line[1:].rstrip()
+    if header:
+        if header[0].isspace():
+            # no id
+            desc = header.lstrip()
+        else:
+            header_tokens = header.split(None, 1)
+            if len(header_tokens) == 1:
+                # no description
+                id_ = header_tokens[0]
+            else:
+                id_, desc = header_tokens
+    return id_, desc

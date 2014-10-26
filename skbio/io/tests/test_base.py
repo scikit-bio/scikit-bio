@@ -14,7 +14,8 @@ import unittest
 import numpy.testing as npt
 
 from skbio.io._base import (_chunk_str, _decode_qual_to_phred,
-                            _encode_phred_to_qual, _get_nth_sequence)
+                            _encode_phred_to_qual, _get_nth_sequence,
+                            _parse_fasta_like_header)
 
 
 class ChunkStrTests(unittest.TestCase):
@@ -251,6 +252,24 @@ class TestGetNthSequence(unittest.TestCase):
     def test_seq_num_just_right(self):
         value = _get_nth_sequence(self.gen, 3)
         self.assertEqual(value, 'goldilocks: 3')
+
+
+class TestParseFASTALikeHeader(unittest.TestCase):
+    def test_no_id_or_description(self):
+        obs = _parse_fasta_like_header('> \t\t  \n')
+        self.assertEqual(obs, ('', ''))
+
+    def test_id_only(self):
+        obs = _parse_fasta_like_header('>suht! \t\t  \n')
+        self.assertEqual(obs, ('suht!', ''))
+
+    def test_description_only(self):
+        obs = _parse_fasta_like_header('> suht! \t\t  \n')
+        self.assertEqual(obs, ('', 'suht!'))
+
+    def test_id_and_description(self):
+        obs = _parse_fasta_like_header('>!thus  suht! \t\t  \n')
+        self.assertEqual(obs, ('!thus', 'suht!'))
 
 
 if __name__ == '__main__':
