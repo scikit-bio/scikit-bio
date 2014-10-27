@@ -171,61 +171,6 @@ def _fastq_to_generator(fh, variant=None, phred_offset=None,
         yield constructor(seq, id=id_, description=desc, quality=phred_scores)
 
 
-def _parse_sequence_data(fh):
-    seq_chunks = []
-    for chunk in _line_generator(fh):
-        if chunk.startswith('+'):
-            if not seq_chunks:
-                raise FASTQFormatError(
-                    "Found FASTQ record without sequence data.")
-            return ''.join(seq_chunks), chunk
-        elif chunk.startswith('@'):
-            raise FASTQFormatError(
-                "Found FASTQ record that is missing a quality (+) header line "
-                "after sequence data.")
-        else:
-            if _whitespace_regex.search(chunk):
-                raise FASTQFormatError(
-                    "Found whitespace in sequence data: %r" % chunk)
-            seq_chunks.append(chunk)
-
-    raise FASTQFormatError(
-        "Found incomplete/truncated FASTQ record at end of file.")
-
-
-def _parse_quality_scores(fh, seq_len, variant, phred_offset):
-    phred_scores = []
-    qual_len = 0
-    for chunk in _line_generator(fh):
-        if chunk.startswith('@') and qual_len == seq_len:
-            return phred_scores, chunk
-        else:
-            qual_len += len(chunk)
-
-            if qual_len > seq_len:
-                raise FASTQFormatError(
-                    "Found more quality score characters than sequence "
-                    "characters. Extra quality score characters: %r" %
-                    chunk[-(qual_len - seq_len):])
-
-            phred_scores.extend(
-                _decode_qual_to_phred(chunk, variant=variant,
-                                      phred_offset=phred_offset))
-
-    if qual_len != seq_len:
-        raise FASTQFormatError(
-            "Found incomplete/truncated FASTQ record at end of file.")
-    return phred_scores, None
-
-
-def _line_generator(fh):
-    for line in fh:
-        line = line.rstrip('\n')
-        if not line:
-            raise FASTQFormatError("Found blank line in FASTQ-formatted file.")
-        yield line
-
-
 @register_reader('fastq', BiologicalSequence)
 def _fastq_to_biological_sequence(fh, variant=None, phred_offset=None,
                                   seq_num=1):
@@ -365,6 +310,61 @@ def _alignment_to_fastq(obj, fh, variant=None, phred_offset=None,
     _sequences_to_fastq(obj, fh, variant, phred_offset,
                         id_whitespace_replacement,
                         description_newline_replacement)
+
+
+def _line_generator(fh):
+    for line in fh:
+        line = line.rstrip('\n')
+        if not line:
+            raise FASTQFormatError("Found blank line in FASTQ-formatted file.")
+        yield line
+
+
+def _parse_sequence_data(fh):
+    seq_chunks = []
+    for chunk in _line_generator(fh):
+        if chunk.startswith('+'):
+            if not seq_chunks:
+                raise FASTQFormatError(
+                    "Found FASTQ record without sequence data.")
+            return ''.join(seq_chunks), chunk
+        elif chunk.startswith('@'):
+            raise FASTQFormatError(
+                "Found FASTQ record that is missing a quality (+) header line "
+                "after sequence data.")
+        else:
+            if _whitespace_regex.search(chunk):
+                raise FASTQFormatError(
+                    "Found whitespace in sequence data: %r" % chunk)
+            seq_chunks.append(chunk)
+
+    raise FASTQFormatError(
+        "Found incomplete/truncated FASTQ record at end of file.")
+
+
+def _parse_quality_scores(fh, seq_len, variant, phred_offset):
+    phred_scores = []
+    qual_len = 0
+    for chunk in _line_generator(fh):
+        if chunk.startswith('@') and qual_len == seq_len:
+            return phred_scores, chunk
+        else:
+            qual_len += len(chunk)
+
+            if qual_len > seq_len:
+                raise FASTQFormatError(
+                    "Found more quality score characters than sequence "
+                    "characters. Extra quality score characters: %r" %
+                    chunk[-(qual_len - seq_len):])
+
+            phred_scores.extend(
+                _decode_qual_to_phred(chunk, variant=variant,
+                                      phred_offset=phred_offset))
+
+    if qual_len != seq_len:
+        raise FASTQFormatError(
+            "Found incomplete/truncated FASTQ record at end of file.")
+    return phred_scores, None
 
 
 def _sequences_to_fastq(obj, fh, variant, phred_offset,
