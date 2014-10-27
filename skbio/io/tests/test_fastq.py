@@ -35,7 +35,8 @@ from skbio.util import get_data_path
 # accompanied these files, which includes the terms of use and detailed
 # description of the files.
 #
-# The example files have not been modified from their original form.
+# The example files bearing the original filenames have not been modified from
+# their original form.
 
 
 def _drop_kwargs(kwargs, *args):
