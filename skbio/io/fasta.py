@@ -199,27 +199,16 @@ reading contains protein sequences, you would pass
 
 .. note:: The FASTA sniffer will not attempt to guess the ``constructor``
    parameter, so it will always default to ``BiologicalSequence`` if another
-   type is not provided to the reader. The sniffer could attempt to infer the
-   type of sequences contained in the file, but this process could be
-   error-prone since sequence type is not encoded in the FASTA file format
-   itself (and can be ambiguous). This could produce strange or unintended
-   behavior in certain cases, so we defer to the user to provide more specific
-   sequence type information if it is available.
+   type is not provided to the reader.
 
-BiologicalSequence and Subclass Reader Parameters
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+BiologicalSequence Reader Parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The ``seq_num`` parameter can be used with the ``BiologicalSequence``,
 ``NucleotideSequence``, ``DNASequence``, ``RNASequence``, and
 ``ProteinSequence`` FASTA readers. ``seq_num`` specifies which sequence to read
 from the FASTA file (and optional QUAL file), and defaults to 1 (i.e., such
 that the first sequence is read). For example, to read the 50th sequence from a
 FASTA file, you would pass ``seq_num=50`` to the reader call.
-
-.. note:: The FASTA sniffer will not attempt to guess the ``seq_num``
-   parameter, so it will always default to reading the first sequence in the
-   file unless overridden by the user. The sniffer cannot provide a reasonable
-   guess for this parameter as it is entirely up to the user to specify which
-   sequence to read.
 
 Writer-specific Parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
