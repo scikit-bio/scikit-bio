@@ -100,6 +100,9 @@ To load the sequences into a ``SequenceCollection``, we run:
 >>> sc
 <SequenceCollection: n=2; mean +/- std length=13.00 +/- 0.00>
 
+Note that only two sequences were loaded because the QSeq reader filters out
+sequences whose filter field is 0 (unless ``filter=False`` is supplied).
+
 References
 ----------
 .. [1] http://biowulf.nih.gov/apps/CASAVA_UG_15011196B.pdf
