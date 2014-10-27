@@ -4,8 +4,8 @@ QSeq format (:mod:`skbio.io.qseq`)
 
 .. currentmodule:: skbio.io.qseq
 
-The QSeq format (`qseq`) is a record-based, plain text, output format produced
-by next-gen sequencers for storing biological sequence data, quality scores,
+The QSeq format (`qseq`) is a record-based, plain text output format produced
+by some DNA sequencers for storing biological sequence data, quality scores,
 per-sequence filtering information, and run-specific metadata.
 
 Format Support
@@ -43,9 +43,9 @@ A QSeq file is composed of single-line records, delimited by tabs. There are
 - Y coordinate (integer)
 - Index
 - Read number (1-3)
-- Sequence data (standard IUPAC characters)
+- Sequence data (typically IUPAC characters)
 - Quality scores (quality scores encoded as printable ASCII)
-- Filter boolean (1 if sequence has passed the filter, 0 otherwise)
+- Filter boolean (1 if sequence has passed CASAVA's filter, 0 otherwise)
 
 For more details please refer to the CASAVA documentation [1]_.
 
