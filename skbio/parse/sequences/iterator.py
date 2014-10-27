@@ -13,7 +13,6 @@ from future.builtins import zip
 from skbio.workflow import Workflow, not_none, method, requires
 from .fasta import parse_fasta, parse_qual
 from .fastq import parse_fastq
-from .qseq import parse_qseq
 
 
 def _has_qual(item):

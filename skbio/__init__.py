@@ -71,16 +71,16 @@ from skbio.alignment import (
 from skbio.tree import (
     TreeNode, nj)
 from skbio.parse.sequences import (
-    parse_fasta, parse_fastq, parse_qual, parse_qseq, FastaIterator,
-    FastqIterator, QseqIterator, SequenceIterator)
+    parse_fasta, parse_fastq, parse_qual, FastaIterator, FastqIterator,
+    SequenceIterator)
 from skbio.io import read, write
 
 __all__ = ['BiologicalSequence', 'NucleotideSequence', 'DNA', 'DNASequence',
            'RNA', 'RNASequence', 'Protein', 'ProteinSequence',
            'DistanceMatrix', 'local_pairwise_align_ssw',
            'SequenceCollection', 'Alignment', 'TreeNode', 'nj', 'parse_fasta',
-           'parse_fastq', 'parse_qual', 'parse_qseq', 'FastaIterator',
-           'FastqIterator', 'QseqIterator', 'SequenceIterator', 'read',
+           'parse_fastq', 'parse_qual', 'FastaIterator',
+           'FastqIterator', 'SequenceIterator', 'read',
            'write']
 
 from numpy.testing import Tester
