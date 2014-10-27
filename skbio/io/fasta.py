@@ -199,27 +199,16 @@ reading contains protein sequences, you would pass
 
 .. note:: The FASTA sniffer will not attempt to guess the ``constructor``
    parameter, so it will always default to ``BiologicalSequence`` if another
-   type is not provided to the reader. The sniffer could attempt to infer the
-   type of sequences contained in the file, but this process could be
-   error-prone since sequence type is not encoded in the FASTA file format
-   itself (and can be ambiguous). This could produce strange or unintended
-   behavior in certain cases, so we defer to the user to provide more specific
-   sequence type information if it is available.
+   type is not provided to the reader.
 
-BiologicalSequence and Subclass Reader Parameters
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+BiologicalSequence Reader Parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The ``seq_num`` parameter can be used with the ``BiologicalSequence``,
 ``NucleotideSequence``, ``DNASequence``, ``RNASequence``, and
 ``ProteinSequence`` FASTA readers. ``seq_num`` specifies which sequence to read
 from the FASTA file (and optional QUAL file), and defaults to 1 (i.e., such
 that the first sequence is read). For example, to read the 50th sequence from a
 FASTA file, you would pass ``seq_num=50`` to the reader call.
-
-.. note:: The FASTA sniffer will not attempt to guess the ``seq_num``
-   parameter, so it will always default to reading the first sequence in the
-   file unless overridden by the user. The sniffer cannot provide a reasonable
-   guess for this parameter as it is entirely up to the user to specify which
-   sequence to read.
 
 Writer-specific Parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -551,18 +540,18 @@ from future.standard_library import hooks
 with hooks():
     from itertools import zip_longest
 
-import re
 import textwrap
 
 import numpy as np
 
 from skbio.io import (register_reader, register_writer, register_sniffer,
                       FASTAFormatError, FileSentinel)
-from skbio.io._base import _chunk_str
+from skbio.io._base import (_chunk_str, _get_nth_sequence,
+                            _parse_fasta_like_header,
+                            _format_fasta_like_records)
 from skbio.alignment import SequenceCollection, Alignment
 from skbio.sequence import (BiologicalSequence, NucleotideSequence,
                             DNASequence, RNASequence, ProteinSequence)
-from skbio.util import cardinal_to_ordinal
 
 
 @register_sniffer('fasta')
@@ -580,8 +569,7 @@ def _fasta_sniffer(fh):
     num_records = 10
     try:
         not_empty = False
-        gen = _fasta_to_generator(fh)
-        for _ in zip(range(num_records), gen):
+        for _ in zip(range(num_records), _fasta_to_generator(fh)):
             not_empty = True
 
         if not_empty:
@@ -597,8 +585,6 @@ def _fasta_sniffer(fh):
             return False, {}
     except FASTAFormatError:
         return False, {}
-    finally:
-        gen.close()
 
 
 @register_reader('fasta')
@@ -639,27 +625,37 @@ def _fasta_to_generator(fh, qual=FileSentinel, constructor=BiologicalSequence):
 
 @register_reader('fasta', BiologicalSequence)
 def _fasta_to_biological_sequence(fh, qual=FileSentinel, seq_num=1):
-    return _fasta_to_sequence(fh, qual, seq_num, BiologicalSequence)
+    return _get_nth_sequence(
+        _fasta_to_generator(fh, qual=qual, constructor=BiologicalSequence),
+        seq_num)
 
 
 @register_reader('fasta', NucleotideSequence)
 def _fasta_to_nucleotide_sequence(fh, qual=FileSentinel, seq_num=1):
-    return _fasta_to_sequence(fh, qual, seq_num, NucleotideSequence)
+    return _get_nth_sequence(
+        _fasta_to_generator(fh, qual=qual, constructor=NucleotideSequence),
+        seq_num)
 
 
 @register_reader('fasta', DNASequence)
 def _fasta_to_dna_sequence(fh, qual=FileSentinel, seq_num=1):
-    return _fasta_to_sequence(fh, qual, seq_num, DNASequence)
+    return _get_nth_sequence(
+        _fasta_to_generator(fh, qual=qual, constructor=DNASequence),
+        seq_num)
 
 
 @register_reader('fasta', RNASequence)
 def _fasta_to_rna_sequence(fh, qual=FileSentinel, seq_num=1):
-    return _fasta_to_sequence(fh, qual, seq_num, RNASequence)
+    return _get_nth_sequence(
+        _fasta_to_generator(fh, qual=qual, constructor=RNASequence),
+        seq_num)
 
 
 @register_reader('fasta', ProteinSequence)
 def _fasta_to_protein_sequence(fh, qual=FileSentinel, seq_num=1):
-    return _fasta_to_sequence(fh, qual, seq_num, ProteinSequence)
+    return _get_nth_sequence(
+        _fasta_to_generator(fh, qual=qual, constructor=ProteinSequence),
+        seq_num)
 
 
 @register_reader('fasta', SequenceCollection)
@@ -681,7 +677,7 @@ def _generator_to_fasta(obj, fh, qual=FileSentinel,
                         description_newline_replacement=' ', max_width=None):
     if max_width is not None:
         if max_width < 1:
-            raise FASTAFormatError(
+            raise ValueError(
                 "Maximum line width must be greater than zero (max_width=%d)."
                 % max_width)
         if qual is not None:
@@ -693,56 +689,19 @@ def _generator_to_fasta(obj, fh, qual=FileSentinel,
                 width=max_width, break_long_words=False,
                 break_on_hyphens=False)
 
-    if ((id_whitespace_replacement is not None and
-         '\n' in id_whitespace_replacement) or
-        (description_newline_replacement is not None and
-         '\n' in description_newline_replacement)):
-        raise FASTAFormatError(
-            "Newline character (\\n) cannot be used to replace whitespace in "
-            "biological sequence IDs, nor to replace newlines in biological "
-            "sequence descriptions. Otherwise, the FASTA-formatted file will "
-            "be invalid.")
-    ws_pattern = re.compile(r'\s')
-    nl_pattern = re.compile(r'\n')
-
-    for idx, seq in enumerate(obj):
-        if len(seq) < 1:
-            raise FASTAFormatError(
-                "Cannot write %s biological sequence in FASTA format because "
-                "it does not contain any characters (i.e., it is an "
-                "empty/blank sequence). Empty sequences are not supported in "
-                "the FASTA file format." % cardinal_to_ordinal(idx + 1))
-
-        id_ = seq.id
-        if id_whitespace_replacement is not None:
-            id_ = re.sub(ws_pattern, id_whitespace_replacement, id_)
-
-        desc = seq.description
-        if description_newline_replacement is not None:
-            desc = re.sub(nl_pattern, description_newline_replacement, desc)
-
-        if desc:
-            header = '%s %s' % (id_, desc)
-        else:
-            header = id_
-
-        seq_str = str(seq)
+    formatted_records = _format_fasta_like_records(
+        obj, id_whitespace_replacement, description_newline_replacement,
+        qual is not None)
+    for header, seq_str, qual_scores in formatted_records:
         if max_width is not None:
             seq_str = _chunk_str(seq_str, max_width, '\n')
 
         fh.write('>%s\n%s\n' % (header, seq_str))
 
         if qual is not None:
-            if not seq.has_quality():
-                raise FASTAFormatError(
-                    "Cannot write %s biological sequence in QUAL format "
-                    "because it does not have quality scores associated with "
-                    "it." % cardinal_to_ordinal(idx + 1))
-
-            qual_str = ' '.join(np.asarray(seq.quality, dtype=np.str))
+            qual_str = ' '.join(np.asarray(qual_scores, dtype=np.str))
             if max_width is not None:
                 qual_str = qual_wrapper.fill(qual_str)
-
             qual.write('>%s\n%s\n' % (header, qual_str))
 
 
@@ -818,7 +777,7 @@ def _parse_fasta_raw(fh, data_parser, format_label):
     line = next(fh)
     # header check inlined here and below for performance
     if line.startswith('>'):
-        id_, desc = _parse_header(line)
+        id_, desc = _parse_fasta_like_header(line)
     else:
         raise FASTAFormatError(
             "Found line without a header in %s-formatted file:\n%s" %
@@ -830,7 +789,7 @@ def _parse_fasta_raw(fh, data_parser, format_label):
             # new header, so yield current record and reset state
             yield data_parser(data_chunks), id_, desc
             data_chunks = []
-            id_, desc = _parse_header(line)
+            id_, desc = _parse_fasta_like_header(line)
         else:
             line = line.strip()
             if line:
@@ -841,24 +800,6 @@ def _parse_fasta_raw(fh, data_parser, format_label):
                     "file." % format_label)
     # yield last record in file
     yield data_parser(data_chunks), id_, desc
-
-
-def _parse_header(line):
-    id_ = ''
-    desc = ''
-    header = line[1:].rstrip()
-    if header:
-        if header[0].isspace():
-            # no id
-            desc = header.lstrip()
-        else:
-            header_tokens = header.split(None, 1)
-            if len(header_tokens) == 1:
-                # no description
-                id_ = header_tokens[0]
-            else:
-                id_, desc = header_tokens
-    return id_, desc
 
 
 def _parse_sequence_data(chunks):
@@ -877,31 +818,6 @@ def _parse_quality_scores(chunks):
     except ValueError:
         raise FASTAFormatError(
             "Could not convert quality scores to integers:\n%s" % qual_str)
-
-
-def _fasta_to_sequence(fh, qual, seq_num, constructor):
-    if seq_num < 1:
-        raise FASTAFormatError(
-            "Invalid sequence number (seq_num=%d). seq_num must be between 1 "
-            "and the number of sequences in the FASTA-formatted file "
-            "(inclusive)." % seq_num)
-
-    seq_idx = seq_num - 1
-    seq = None
-    try:
-        gen = _fasta_to_generator(fh, qual=qual, constructor=constructor)
-        for idx, curr_seq in enumerate(gen):
-            if idx == seq_idx:
-                seq = curr_seq
-                break
-    finally:
-        gen.close()
-
-    if seq is None:
-        raise FASTAFormatError(
-            "Reached end of FASTA-formatted file before finding the %s "
-            "biological sequence." % cardinal_to_ordinal(seq_num))
-    return seq
 
 
 def _sequences_to_fasta(obj, fh, qual, id_whitespace_replacement,

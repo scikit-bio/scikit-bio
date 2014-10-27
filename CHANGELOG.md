@@ -29,6 +29,10 @@
     - Automatic file format detection via a FASTA sniffer
     - FASTA (and optionally QUAL) files can be read into and written from ``SequenceCollection``, ``Alignment``, ``BiologicalSequence``, ``NucleotideSequence``, ``DNASequence``, ``RNASequence``, and ``ProteinSequence`` objects via ``read`` and ``write`` methods
     - FASTA (and optionally QUAL) files can be streamed into and out of memory via ```skbio.io.read`` and ``skbio.io.write``. These generators yield ``BiologicalSequence`` objects (or subclasses)
+* Added FASTQ format support to scikit-bio's I/O registry system. See ``skbio.io`` and ``skbio.io.fastq`` for more details. This includes the following additions:
+        - Automatic file format detection via a FASTQ sniffer
+        - FASTQ files can be read into and written from ``SequenceCollection``, ``Alignment``, ``BiologicalSequence``, ``NucleotideSequence``, ``DNASequence``, ``RNASequence``, and ``ProteinSequence`` objects via ``read`` and ``write`` methods
+        - FASTQ files can be streamed into and out of memory via ```skbio.io.read`` and ``skbio.io.write``. These generators yield ``BiologicalSequence`` objects (or subclasses)
 
 ### Bug fixes
 
@@ -40,11 +44,12 @@
 * Deprecated the following FASTA/QUAL readers/writers in favor of FASTA format support in scikit-bio's I/O registry system. See ``skbio.io`` and ``skbio.io.fasta`` for more details. This functionality will be removed in scikit-bio 0.3.0 (old -> new):
     - ``SequenceCollection.from_fasta_records`` -> ``SequenceCollection.read``
     - ``SequenceCollection.to_fasta`` -> ``SequenceCollection.write``
-    - ``skbio.format.sequences.fasta.fasta_from_sequences`` -> ``skbio.io.write``
-    - ``skbio.format.sequences.fasta.fasta_from_alignment`` -> ``skbio.io.write``/``Alignment.write``
-    - ``skbio.parse.sequences.fasta.parse_fasta`` -> ``skbio.io.read``
-    - ``skbio.parse.sequences.fasta.parse_qual`` -> ``skbio.io.read``
+    - ``skbio.format.sequences.fasta_from_sequences`` -> ``skbio.io.write``
+    - ``skbio.format.sequences.fasta_from_alignment`` -> ``skbio.io.write``/``Alignment.write``
+    - ``skbio.parse.sequences.parse_fasta`` -> ``skbio.io.read``
+    - ``skbio.parse.sequences.parse_qual`` -> ``skbio.io.read``
     - ``BiologicalSequence.to_fasta`` -> ``BiologicalSequence.write``
+* Deprecated ``skbio.parse.sequences.parse_fastq`` and ``skbio.format.sequences.format_fastq_record`` in favor of FASTQ format support in scikit-bio's I/O registry system. See ``skbio.io`` and ``skbio.io.fastq`` for more details. This functionality will be removed in scikit-bio 0.3.0.
 
 ### Backward-incompatible changes
 
