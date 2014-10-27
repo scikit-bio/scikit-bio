@@ -116,6 +116,13 @@ Foundation (OBF) [3]_ projects (e.g., Biopython, BioPerl, etc.).
 |solexa     |59 to 126|64  |-5 to 62|Not currently implemented.               |
 +-----------+---------+----+--------+-----------------------------------------+
 
+.. note:: When writing, Phred quality scores will be truncated to the maximum
+   value in the variant's range and a warning will be issued. This is
+   consistent with the OBF projects.
+
+   When reading, an error will be raised if a decoded quality score is outside
+   the variant's range.
+
 Format Parameters
 -----------------
 The following parameters are available to all FASTQ format readers and writers:
