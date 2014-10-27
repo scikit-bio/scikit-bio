@@ -4,7 +4,6 @@
 
 ### Features
 * Added additional ``read`` and ``write`` methods to ``Alignment`` for handling multiple sequence alignments in Clustal format.  See ``skbio.io.clustal`` for more details.  Deprecated ``write_clustal`` and ``parse_clustal`` in skbio.parse.sequences.
-* Added QSEQ parsing function ``parse_qseq`` and iterator ``QseqIterator`` to ``skbio.parse.sequences``.
 * Added ``strict`` and ``lookup`` optional parameters to ``skbio.stats.distance.mantel`` for handling reordering and matching of IDs when provided ``DistanceMatrix`` instances as input (these parameters were previously only available in ``skbio.stats.distance.pwmantel``).
 * ``skbio.stats.distance.pwmantel`` now accepts an iterable of ``array_like`` objects. Previously, only ``DistanceMatrix`` instances were allowed.
 * Added ``read`` and ``write`` methods to ``DissimilarityMatrix`` and ``DistanceMatrix``. These methods can support multiple file formats, automatic file format detection when reading, etc. by taking advantage of scikit-bio's I/O registry system. See ``skbio.io`` and ``skbio.io.lsmat`` for more details. Deprecated ``from_file`` and ``to_file`` methods in favor of ``read`` and ``write``. These methods will be removed in scikit-bio 0.3.0.
@@ -22,6 +21,10 @@
 * ``BiologicalSequence.__getitem__`` now supports specifying a sequence of indices to take from the biological sequence.
 * Added ``BiologicalSequence.copy`` for creating a copy of a biological sequence, optionally with one or more attributes updated.
 * Added ``skbio.util.cardinal_to_ordinal`` for converting a cardinal number to ordinal string (e.g., useful for error messages).
+* Added QSeq format support to scikit-bio's I/O registry system. See ``skbio.io`` and ``skbio.io.qseq`` for more details. This includes the following additions:
+    - Automatic file format detection via a QSeq sniffer
+    - QSeq files can be read into and written from ``SequenceCollection``, ``BiologicalSequence``, ``NucleotideSequence``, ``DNASequence``, ``RNASequence``, and ``ProteinSequence`` objects via ``read`` and ``write`` methods
+    - QSeq files can be streamed into and out of memory via ``skbio.io.read`` and ``skbio.io.write``. These generators yield ``BiologicalSequence`` objects (or subclasses)
 * Added FASTA/QUAL format support to scikit-bio's I/O registry system. See ``skbio.io`` and ``skbio.io.fasta`` for more details. This includes the following additions:
     - Automatic file format detection via a FASTA sniffer
     - FASTA (and optionally QUAL) files can be read into and written from ``SequenceCollection``, ``Alignment``, ``BiologicalSequence``, ``NucleotideSequence``, ``DNASequence``, ``RNASequence``, and ``ProteinSequence`` objects via ``read`` and ``write`` methods

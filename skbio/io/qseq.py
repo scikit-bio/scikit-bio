@@ -1,42 +1,108 @@
-"""
-Newick format (:mod:`skbio.io.qseq`)
-======================================
+r"""
+QSeq format (:mod:`skbio.io.qseq`)
+==================================
 
 .. currentmodule:: skbio.io.qseq
+
+The QSeq format (`qseq`) is a record-based, plain text, output format produced
+by next-gen sequencers for storing biological sequence data, quality scores,
+per-sequence filtering information, and run-specific metadata.
 
 Format Support
 --------------
 **Has Sniffer: Yes**
 
-+----------+----------+------------------------------------------------------+
-|**Reader**|**Writer**|                   **Object Class**                   |
-+----------+----------+------------------------------------------------------+
-|Yes       |No        |generator of :mod:`skbio.sequence.BiologicalSequence` |
-|          |          |objects                                               |
-+----------+----------+------------------------------------------------------+
-|Yes       |No        |:mod:`skbio.alignment.SequenceCollection`             |
-+----------+----------+------------------------------------------------------+
-|Yes       |No        |:mod:`skbio.sequence.BiologicalSequence`              |
-+----------+----------+------------------------------------------------------+
-|Yes       |No        |:mod:`skbio.sequence.NucleotideSequence`              |
-+----------+----------+------------------------------------------------------+
-|Yes       |No        |:mod:`skbio.sequence.DNASequence`                     |
-+----------+----------+------------------------------------------------------+
-|Yes       |No        |:mod:`skbio.sequence.RNASequence`                     |
-+----------+----------+------------------------------------------------------+
-|Yes       |No        |:mod:`skbio.sequence.ProteinSequence`                 |
-+----------+----------+------------------------------------------------------+
++------+------+---------------------------------------------------------------+
+|Reader|Writer|                          Object Class                         |
++======+======+===============================================================+
+|Yes   |No    |generator of :mod:`skbio.sequence.BiologicalSequence` objects  |
++------+------+---------------------------------------------------------------+
+|Yes   |No    |:mod:`skbio.alignment.SequenceCollection`                      |
++------+------+---------------------------------------------------------------+
+|Yes   |No    |:mod:`skbio.sequence.BiologicalSequence`                       |
++------+------+---------------------------------------------------------------+
+|Yes   |No    |:mod:`skbio.sequence.NucleotideSequence`                       |
++------+------+---------------------------------------------------------------+
+|Yes   |No    |:mod:`skbio.sequence.DNASequence`                              |
++------+------+---------------------------------------------------------------+
+|Yes   |No    |:mod:`skbio.sequence.RNASequence`                              |
++------+------+---------------------------------------------------------------+
+|Yes   |No    |:mod:`skbio.sequence.ProteinSequence`                          |
++------+------+---------------------------------------------------------------+
 
 Format Specification
 --------------------
+A QSeq file is composed of single-line records, delimited by tabs. There are
+11 fields in a record:
+
+- Machine name
+- Run number
+- Lane number (positive int)
+- Tile number (positive int)
+- X coordinate (integer)
+- Y coordinate (integer)
+- Index
+- Read number (1-3)
+- Sequence data (standard IUPAC characters)
+- Quality scores (quality scores encoded as printable ASCII)
+- Filter boolean (1 if sequence has passed the filter, 0 otherwise)
+
+For more details please refer to the CASAVA documentation [1]_.
+
+.. note:: scikit-bio allows for the filter field to be ommitted, but it is not
+   clear if this is part of the original format specification.
+
+Format Parameters
+-----------------
+The following parameters are the same as in FASTQ format
+(:mod:`skbio.io.fastq`):
+
+- ``variant``: see ``variant`` parameter in FASTQ format
+- ``phred_offset``: see ``phred_offset`` parameter in FASTQ format
+
+The following additional parameters are the same as in FASTA format
+(:mod:`skbio.io.fasta`):
+
+- ``constructor``: see ``constructor`` parameter in FASTA format
+- ``seq_num``: see ``seq_num`` parameter in FASTA format
+
+SequenceCollection and Generators Only
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- ``filter``: If `True`, excludes sequences that did not pass filtering
+  (i.e., filter field is 0). Default is `True`.
 
 Examples
 --------
+Suppose we have the following QSeq file::
 
+    illumina	1	3	34	-30	30	0	1	ACG....ACGTAC	ruBBBBrBCEFGH	1
+    illumina	1	3	34	30	-30	0	1	CGGGCATTGCA	CGGGCasdGCA	0
+    illumina	1	3	35	-30	30	0	2	ACGTA.AATAAAC	geTaAafhwqAAf	1
+    illumina	1	3	35	30	-30	0	3	CATTTAGGA.TGCA	tjflkAFnkKghvM	0
+
+Let's define this file in-memory as a ``StringIO``, though this could be a real
+file path, file handle, or anything that's supported by scikit-bio's I/O
+registry in practice:
+
+>>> from StringIO import StringIO
+>>> fs = '\n'.join([
+...     'illumina\t1\t3\t34\t-30\t30\t0\t1\tACG....ACGTAC\truBBBBrBCEFGH\t1',
+...     'illumina\t1\t3\t34\t30\t-30\t0\t1\tCGGGCATTGCA\tCGGGCasdGCA\t0',
+...     'illumina\t1\t3\t35\t-30\t30\t0\t2\tACGTA.AATAAAC\tgeTaAafhwqAAf\t1',
+...     'illumina\t1\t3\t35\t30\t-30\t0\t3\tCATTTAGGA.TGCA\ttjflkAFnkKghvM\t0'
+... ])
+>>> fh = StringIO(fs)
+
+To load the sequences into a ``SequenceCollection``, we run:
+
+>>> from skbio import SequenceCollection
+>>> sc = SequenceCollection.read(fh, variant='illumina1.3')
+>>> sc
+<SequenceCollection: n=2; mean +/- std length=13.00 +/- 0.00>
 
 References
 ----------
-
+.. [1] http://biowulf.nih.gov/apps/CASAVA_UG_15011196B.pdf
 
 """
 # ----------------------------------------------------------------------------

@@ -31,7 +31,6 @@ Classes
    SequenceIterator
    FastaIterator
    FastqIterator
-   QseqIterator
 
 Functions
 ^^^^^^^^^
@@ -165,7 +164,6 @@ Functions
    parse_fasta
    parse_fastq
    parse_qual
-   parse_qseq
    write_clustal
    parse_clustal
 
@@ -190,16 +188,13 @@ Exceptions
 from .fasta import parse_fasta, parse_qual
 from .fastq import parse_fastq
 from .clustal import parse_clustal, write_clustal
-from .qseq import parse_qseq
-from .iterator import (FastaIterator, FastqIterator, QseqIterator,
-                       SequenceIterator)
+from .iterator import FastaIterator, FastqIterator, SequenceIterator
 from .factory import load
-from ._exception import FastqParseError, QseqParseError
+from ._exception import FastqParseError
 
 __all__ = ['write_clustal', 'parse_clustal',
-           'parse_fasta', 'parse_fastq', 'parse_qual',
-           'parse_qseq', 'FastqIterator', 'FastaIterator', 'QseqIterator',
-           'SequenceIterator', 'load', 'FastqParseError', 'QseqParseError']
+           'parse_fasta', 'parse_fastq', 'parse_qual', 'FastqIterator',
+           'FastaIterator', 'SequenceIterator', 'load', 'FastqParseError']
 
 from numpy.testing import Tester
 test = Tester().test
