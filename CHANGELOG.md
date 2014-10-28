@@ -1,6 +1,6 @@
 # scikit-bio changelog
 
-## Version 0.2.0-dev (changes since 0.2.0 release go here)
+## Version 0.2.1 (2014-10-27)
 
 ### Features
 * Added additional ``read`` and ``write`` methods to ``Alignment`` for handling multiple sequence alignments in Clustal format.  See ``skbio.io.clustal`` for more details.  Deprecated ``write_clustal`` and ``parse_clustal`` in skbio.parse.sequences.
