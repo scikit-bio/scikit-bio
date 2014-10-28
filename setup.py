@@ -8,7 +8,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-__version__ = "0.2.1"
+__version__ = "0.2.1-dev"
 
 import os
 from setuptools import find_packages, setup
