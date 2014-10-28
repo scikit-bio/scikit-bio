@@ -14,6 +14,9 @@ import warnings
 from copy import deepcopy
 from importlib import import_module
 
+import matplotlib.pyplot as plt
+from IPython.core.pylabtools import print_figure
+from IPython.core.display import Image, SVG
 import numpy as np
 import pandas as pd
 from scipy.spatial.distance import squareform
@@ -379,6 +382,65 @@ class DissimilarityMatrix(object):
 
         filtered_data = self._data[idxs][:, idxs]
         return self.__class__(filtered_data, ids)
+
+    def plot(self, cmap=None, title=""):
+        '''Creates a heatmap of the dissimilarity matrix
+
+        Parameters
+        ----------
+        cmap: optional, string
+            Sets the color scheme of the heatmap
+            (Default is full color spectrum)
+
+        title: optional, string
+            Sets the title label of the heatmap
+            (Default is blank)
+
+        Returns
+        -------
+        fig
+            Visual representation of the dissimilarity matrix, does not show however.
+            Must use _repr_png_ or _repr_svg_ to show.
+        '''
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        ticks = list(np.arange(0.5,len(self.ids),1))
+        ax.set_xlabel(title)
+        ax.set_xticks(ticks, minor=False)
+        ax.set_yticks(ticks, minor=False)
+        ax.invert_yaxis()
+        ax.xaxis.tick_top()
+        #Makes the graph accurate
+        plt.xticks(rotation=90)
+        ax.set_xticklabels(self.ids, minor=False)
+        ax.set_yticklabels(self.ids, minor=False)
+        heatmap=ax.pcolor(self.data, cmap=cmap)
+        fig.colorbar(heatmap)
+        #Creates legend for heatmap
+        return fig
+
+    def _repr_png_(self):
+      return self._figure_data('png')
+
+    def _repr_svg_(self):
+      return self._figure_data('svg')
+
+    @property
+    def png(self):
+      return Image(self._repr_png_(), embed=True)
+
+    @property
+    def svg(self):
+      return SVG(self._repr_svg_())
+
+    def _figure_data(self, format):
+        fig = self.plot()
+        data = print_figure(fig, format)
+        # We MUST close the figure, otherwise IPython's display machinery
+        # will pick it up and send it as output, resulting in a double display
+        plt.close(fig)
+        return data
+
 
     def __str__(self):
         """Return a string representation of the dissimilarity matrix.
