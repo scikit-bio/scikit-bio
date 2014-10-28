@@ -1,6 +1,6 @@
 # scikit-bio changelog
 
-## Version 0.2.0-dev (changes since 0.2.0 release go here)
+## Version 0.2.1 (2014-10-27)
 
 This is an alpha release of scikit-bio. At this stage, major backwards-incompatible API changes can and will happen. Unified I/O with the scikit-bio I/O registry was the focus of this release.
 
