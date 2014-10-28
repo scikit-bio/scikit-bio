@@ -2,37 +2,54 @@
 
 ## Version 0.2.0-dev (changes since 0.2.0 release go here)
 
+This is an alpha release of scikit-bio. At this stage, major backwards-incompatible API changes can and will happen. Unified I/O with the scikit-bio I/O registry was the focus of this release.
+
 ### Features
-* Added additional ``read`` and ``write`` methods to ``Alignment`` for handling multiple sequence alignments in Clustal format.  See ``skbio.io.clustal`` for more details.  Deprecated ``write_clustal`` and ``parse_clustal`` in skbio.parse.sequences.
 * Added ``strict`` and ``lookup`` optional parameters to ``skbio.stats.distance.mantel`` for handling reordering and matching of IDs when provided ``DistanceMatrix`` instances as input (these parameters were previously only available in ``skbio.stats.distance.pwmantel``).
 * ``skbio.stats.distance.pwmantel`` now accepts an iterable of ``array_like`` objects. Previously, only ``DistanceMatrix`` instances were allowed.
-* Added ``read`` and ``write`` methods to ``DissimilarityMatrix`` and ``DistanceMatrix``. These methods can support multiple file formats, automatic file format detection when reading, etc. by taking advantage of scikit-bio's I/O registry system. See ``skbio.io`` and ``skbio.io.lsmat`` for more details. Deprecated ``from_file`` and ``to_file`` methods in favor of ``read`` and ``write``. These methods will be removed in scikit-bio 0.3.0.
-* Added ``read`` and ``write`` methods to ``OrdinationResults``. These methods can support multiple file formats, automatic file format detection when reading, etc. by taking advantage of scikit-bio's I/O registry system. See ``skbio.io`` and ``skbio.io.ordination`` for more details. Deprecated ``from_file`` and ``to_file`` methods in favor of ``read`` and ``write``. These methods will be removed in scikit-bio 0.3.0.
-* Added ``read`` and ``write`` methods to ``TreeNode``. These methods can support multiple file formats, automatic file format detection when reading, etc. by taking advantage of scikit-bio's I/O registry system. See ``skbio.io`` and ``skbio.io.newick`` for more details. Deprecated ``from_file``, ``from_newick``, and ``to_newick`` methods in favor of ``read`` and ``write``. These methods will be removed in scikit-bio 0.3.0.
+* Added ``plot`` method to ``skbio.stats.ordination.OrdinationResults`` for creating basic 3-D matplotlib scatterplots of ordination results, optionally colored by metadata in a ``pandas.DataFrame`` (see [#518](https://github.com/biocore/scikit-bio/issues/518)). Also added  ``_repr_png_`` and ``_repr_svg_`` methods for automatic display in the IPython Notebook, with ``png`` and ``svg`` properties for direct access.
 * Added ``skbio.stats.ordination.assert_ordination_results_equal`` for comparing ``OrdinationResults`` objects for equality in unit tests.
 * ``BiologicalSequence`` (and its subclasses) now optionally store Phred quality scores. A biological sequence's quality scores are stored as a 1-D ``numpy.ndarray`` of nonnegative integers that is the same length as the biological sequence. Quality scores can be provided upon object instantiation via the keyword argument ``quality``, and can be retrieved via the ``BiologicalSequence.quality`` property. ``BiologicalSequence.has_quality`` is also provided for determining whether a biological sequence has quality scores or not. See [#616](https://github.com/biocore/scikit-bio/issues/616) for more details.
 * Added ``BiologicalSequence.sequence`` property for retrieving the underlying string representing the sequence characters. This was previously (and still is) accessible via ``BiologicalSequence.__str__``. It is provided via a property for convenience and explicitness.
 * Added ``BiologicalSequence.equals`` for full control over equality testing of biological sequences. By default, biological sequences must have the same type, underlying sequence of characters, identifier, description, and quality scores to compare equal. These properties can be ignored via the keyword argument ``ignore``. The behavior of ``BiologicalSequence.__eq__``/``__ne__`` remains unchanged (only type and underlying sequence of characters are compared).
-* Methods to read and write taxonomies are now available under ``skbio.tree.TreeNode.from_taxonomy`` and ``skbio.tree.TreeNode.to_taxonomy`` respectively.
-* Added ``plot`` method to ``skbio.stats.ordination.OrdinationResults`` for creating basic 3-D matplotlib scatterplots of ordination results, optionally colored by metadata in a ``pandas.DataFrame`` (see [#518](https://github.com/biocore/scikit-bio/issues/518)). Also added  ``_repr_png_`` and ``_repr_svg_`` methods for automatic display in the IPython Notebook, with ``png`` and ``svg`` properties for direct access.
-* Added ``SequenceCollection.update_ids``, which provides a flexible way of updating sequence IDs on a ``SequenceCollection`` or ``Alignment`` (note that a new object is returned, since instances of these classes are immutable). Deprecated ``SequenceCollection.int_map`` in favor of this new method; it will be removed in scikit-bio 0.3.0.
-* Deprecated ``constructor`` parameter in ``Alignment.majority_consensus`` in favor of having users call ``str`` on the returned ``BiologicalSequence``. This parameter will be removed in scikit-bio 0.3.0.
-* Added ``write`` method to ``Alignment``, currently supporting the [PHYLIP file format](http://evolution.genetics.washington.edu/phylip/doc/sequence.html). This method can support multiple file formats, etc. by taking advantage of scikit-bio's I/O registry system. See ``skbio.io`` and ``skbio.io.phylip`` for more details. Deprecated ``to_phylip`` methods in favor of ``write``. This method will be removed in scikit-bio 0.3.0.
-* ``BiologicalSequence.__getitem__`` now supports specifying a sequence of indices to take from the biological sequence.
 * Added ``BiologicalSequence.copy`` for creating a copy of a biological sequence, optionally with one or more attributes updated.
+* ``BiologicalSequence.__getitem__`` now supports specifying a sequence of indices to take from the biological sequence.
+* Methods to read and write taxonomies are now available under ``skbio.tree.TreeNode.from_taxonomy`` and ``skbio.tree.TreeNode.to_taxonomy`` respectively.
+* Added ``SequenceCollection.update_ids``, which provides a flexible way of updating sequence IDs on a ``SequenceCollection`` or ``Alignment`` (note that a new object is returned, since instances of these classes are immutable). Deprecated ``SequenceCollection.int_map`` in favor of this new method; it will be removed in scikit-bio 0.3.0.
 * Added ``skbio.util.cardinal_to_ordinal`` for converting a cardinal number to ordinal string (e.g., useful for error messages).
-* Added QSeq format support to scikit-bio's I/O registry system. See ``skbio.io`` and ``skbio.io.qseq`` for more details. This includes the following additions:
-    - Automatic file format detection via a QSeq sniffer
-    - QSeq files can be read into and written from ``SequenceCollection``, ``BiologicalSequence``, ``NucleotideSequence``, ``DNASequence``, ``RNASequence``, and ``ProteinSequence`` objects via ``read`` and ``write`` methods
-    - QSeq files can be streamed into and out of memory via ``skbio.io.read`` and ``skbio.io.write``. These generators yield ``BiologicalSequence`` objects (or subclasses)
-* Added FASTA/QUAL format support to scikit-bio's I/O registry system. See ``skbio.io`` and ``skbio.io.fasta`` for more details. This includes the following additions:
-    - Automatic file format detection via a FASTA sniffer
-    - FASTA (and optionally QUAL) files can be read into and written from ``SequenceCollection``, ``Alignment``, ``BiologicalSequence``, ``NucleotideSequence``, ``DNASequence``, ``RNASequence``, and ``ProteinSequence`` objects via ``read`` and ``write`` methods
-    - FASTA (and optionally QUAL) files can be streamed into and out of memory via ```skbio.io.read`` and ``skbio.io.write``. These generators yield ``BiologicalSequence`` objects (or subclasses)
-* Added FASTQ format support to scikit-bio's I/O registry system. See ``skbio.io`` and ``skbio.io.fastq`` for more details. This includes the following additions:
-        - Automatic file format detection via a FASTQ sniffer
-        - FASTQ files can be read into and written from ``SequenceCollection``, ``Alignment``, ``BiologicalSequence``, ``NucleotideSequence``, ``DNASequence``, ``RNASequence``, and ``ProteinSequence`` objects via ``read`` and ``write`` methods
-        - FASTQ files can be streamed into and out of memory via ```skbio.io.read`` and ``skbio.io.write``. These generators yield ``BiologicalSequence`` objects (or subclasses)
+* New I/O Registry: supports multiple file formats, automatic file format detection when reading, unified procedural ``skbio.io.read`` and ``skbio.io.write`` in addition to OOP interfaces (``read/write`` methods) on the below objects. See ``skbio.io`` for more details.
+    - Added "clustal" format support:
+        * Has sniffer
+        * Readers: ``Alignment``
+        * Writers: ``Alignment``
+    - Added "lsmat" format support:
+        * Has sniffer
+        * Readers: ``DissimilarityMatrix``, ``DistanceMatrix``
+        * Writers: ``DissimilarityMatrix``, ``DistanceMatrix``
+    - Added "ordination" format support:
+        * Has sniffer
+        * Readers: ``OrdinationResults``
+        * Writers: ``OrdinationResults``
+    - Added "newick" format support:
+        * Has sniffer
+        * Readers: ``TreeNode``
+        * Writers: ``TreeNode``
+    - Added "phylip" format support:
+        * No sniffer
+        * Readers: None
+        * Writers: ``Alignment``
+    - Added "qseq" format support:
+        * Has sniffer
+        * Readers: generator of ``BiologicalSequence`` or its subclasses, ``SequenceCollection``, ``BiologicalSequence``, ``NucleotideSequence``, ``DNASequence``, ``RNASequence``, ``ProteinSequence``
+        * Writers: None
+    - Added "fasta"/QUAL format support:
+        * Has sniffer
+        * Readers: generator of ``BiologicalSequence`` or its subclasses, ``SequenceCollection``, ``Alignment``, ``BiologicalSequence``, ``NucleotideSequence``, ``DNASequence``, ``RNASequence``, ``ProteinSequence``
+        * Writers: same as readers
+    - Added "fastq" format support:
+        * Has sniffer
+        * Readers: generator of ``BiologicalSequence`` or its subclasses, ``SequenceCollection``, ``Alignment``, ``BiologicalSequence``, ``NucleotideSequence``, ``DNASequence``, ``RNASequence``, ``ProteinSequence``
+        * Writers: same as readers
 
 ### Bug fixes
 
@@ -40,16 +57,43 @@
 * Modified the ``Alignment`` constructor to verify that all sequences have the same length, if not, raise an ``AlignmentError`` exception.  Updated the method ``Alignment.subalignment`` to calculate the indices only once now that identical sequence length is guaranteed.
 
 ### Deprecated functionality
+* Deprecated ``constructor`` parameter in ``Alignment.majority_consensus`` in favor of having users call ``str`` on the returned ``BiologicalSequence``. This parameter will be removed in scikit-bio 0.3.0.
 
-* Deprecated the following FASTA/QUAL readers/writers in favor of FASTA format support in scikit-bio's I/O registry system. See ``skbio.io`` and ``skbio.io.fasta`` for more details. This functionality will be removed in scikit-bio 0.3.0 (old -> new):
-    - ``SequenceCollection.from_fasta_records`` -> ``SequenceCollection.read``
-    - ``SequenceCollection.to_fasta`` -> ``SequenceCollection.write``
-    - ``skbio.format.sequences.fasta_from_sequences`` -> ``skbio.io.write``
-    - ``skbio.format.sequences.fasta_from_alignment`` -> ``skbio.io.write``/``Alignment.write``
-    - ``skbio.parse.sequences.parse_fasta`` -> ``skbio.io.read``
-    - ``skbio.parse.sequences.parse_qual`` -> ``skbio.io.read``
-    - ``BiologicalSequence.to_fasta`` -> ``BiologicalSequence.write``
-* Deprecated ``skbio.parse.sequences.parse_fastq`` and ``skbio.format.sequences.format_fastq_record`` in favor of FASTQ format support in scikit-bio's I/O registry system. See ``skbio.io`` and ``skbio.io.fastq`` for more details. This functionality will be removed in scikit-bio 0.3.0.
+* Existing I/O functionality deprecated in favor of I/O registry, old functionality will be removed in scikit-bio 0.3.0. All functionality can be found at ``skbio.io.read``, ``skbio.io.write``, and the methods listed below:
+    * Deprecated the following "clustal" readers/writers:
+        - ``write_clustal`` -> ``Alignment.write``
+        - ``parse_clustal`` -> ``Alignment.read``
+
+    * Deprecated the following distance matrix format ("lsmat") readers/writers:
+        - ``DissimilarityMatrix.from_file`` -> ``DissimilarityMatrix.read``
+        - ``DissimilarityMatrix.to_file`` -> ``DissimilarityMatrix.write``
+        - ``DistanceMatrix.from_file`` -> ``DistanceMatrix.read``
+        - ``DistanceMatrix.to_file`` -> ``DistanceMatrix.write``
+
+    * Deprecated the following ordination format ("ordination") readers/writers:
+        - ``OrdinationResults.from_file`` -> ``OrdinationResults.read``
+        - ``OrdinationResults.to_file`` -> ``OrdinationResults.write``
+
+    * Deprecated the following "newick" readers/writers:
+        - ``TreeNode.from_file`` -> ``TreeNode.read``
+        - ``TreeNode.from_newick`` -> ``TreeNode.read``
+        - ``TreeNode.to_newick`` -> ``TreeNode.write``
+
+    * Deprecated the following "phylip" writers:
+        - ``Alignment.to_phylip`` -> ``Alignment.write``
+
+    * Deprecated the following "fasta"/QUAL readers/writers:
+        - ``SequenceCollection.from_fasta_records`` -> ``SequenceCollection.read``
+        - ``SequenceCollection.to_fasta`` -> ``SequenceCollection.write``
+        - ``fasta_from_sequences`` -> ``skbio.io.write(obj, into=<file>, format='fasta')``
+        - ``fasta_from_alignment`` -> ``Alignment.write``
+        - ``parse_fasta`` -> ``skbio.io.read(<fasta>, format='fasta')``
+        - ``parse_qual`` -> ``skbio.io.read(<fasta>, format='fasta', qual=<file>)``
+        - ``BiologicalSequence.to_fasta`` -> ``BiologicalSequence.write``
+
+    * Deprecated the following "fastq" readers/writers:
+        - ``parse_fastq`` -> ``skbio.io.read(<fastq>, format='fastq')``
+        - ``format_fastq_record`` -> ``skbio.io.write(<fastq>, format='fastq')``
 
 ### Backward-incompatible changes
 
