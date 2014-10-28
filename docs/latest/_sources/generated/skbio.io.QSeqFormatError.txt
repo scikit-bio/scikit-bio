@@ -1,0 +1,6 @@
+skbio.io.QSeqFormatError
+========================
+
+.. currentmodule:: skbio.io
+
+.. autoexception:: QSeqFormatError

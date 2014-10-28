@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.ProteinSequence.find_features
+============================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: ProteinSequence.find_features

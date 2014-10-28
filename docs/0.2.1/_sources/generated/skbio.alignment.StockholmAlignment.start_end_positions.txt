@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.StockholmAlignment.start_end_positions
+======================================================
+
+.. currentmodule:: skbio.alignment
+
+.. automethod:: StockholmAlignment.start_end_positions

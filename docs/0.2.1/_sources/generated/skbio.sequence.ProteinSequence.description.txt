@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.ProteinSequence.description
+==========================================
+
+.. currentmodule:: skbio.sequence
+
+.. autoattribute:: ProteinSequence.description

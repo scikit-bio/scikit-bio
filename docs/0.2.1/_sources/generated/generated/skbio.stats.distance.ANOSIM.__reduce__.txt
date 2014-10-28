@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.stats.distance.ANOSIM.__reduce__
+======================================
+
+.. currentmodule:: skbio.stats.distance
+
+.. automethod:: ANOSIM.__reduce__

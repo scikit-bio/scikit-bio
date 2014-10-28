@@ -1,0 +1,6 @@
+skbio.stats.distance.MissingIDError
+===================================
+
+.. currentmodule:: skbio.stats.distance
+
+.. autoexception:: MissingIDError

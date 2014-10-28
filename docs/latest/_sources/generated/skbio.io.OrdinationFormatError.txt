@@ -1,0 +1,6 @@
+skbio.io.OrdinationFormatError
+==============================
+
+.. currentmodule:: skbio.io
+
+.. autoexception:: OrdinationFormatError

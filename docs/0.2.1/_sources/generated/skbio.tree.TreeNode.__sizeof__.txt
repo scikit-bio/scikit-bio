@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.tree.TreeNode.__sizeof__
+==============================
+
+.. currentmodule:: skbio.tree
+
+.. automethod:: TreeNode.__sizeof__

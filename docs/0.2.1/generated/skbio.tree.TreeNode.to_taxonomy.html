@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>skbio.tree.TreeNode.to_taxonomy &mdash; scikit-bio 0.2.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/style.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.1.0/united/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.2.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/copybutton.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="top" title="scikit-bio 0.2.1 documentation" href="../index.html" />
+    <link rel="up" title="skbio.tree.TreeNode" href="skbio.tree.TreeNode.html" />
+    <link rel="next" title="skbio.tree.TreeNode.traverse" href="skbio.tree.TreeNode.traverse.html" />
+    <link rel="prev" title="skbio.tree.TreeNode.to_newick" href="skbio.tree.TreeNode.to_newick.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body>
+  
+  <a href="https://github.com/biocore/scikit-bio"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          scikit-bio docs</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.2.1</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            <li class="divider-vertical"></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../alignment.html">Sequence collections and alignments (<tt class="docutils literal"><span class="pre">skbio.alignment</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sequence.html">Biological sequences (<tt class="docutils literal"><span class="pre">skbio.sequence</span></tt>)</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../tree.html">Tree representations (<tt class="docutils literal"><span class="pre">skbio.tree</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../workflow.html">Constructing workflows (<tt class="docutils literal"><span class="pre">skbio.workflow</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../draw.html">Visualizations (<tt class="docutils literal"><span class="pre">skbio.draw</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../format.sequences.html">Format biological sequences (<tt class="docutils literal"><span class="pre">skbio.format.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../diversity.html">Diversity calculations (<tt class="docutils literal"><span class="pre">skbio.diversity</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stats.html">Statistics (<tt class="docutils literal"><span class="pre">skbio.stats</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../parse.sequences.html">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../io.html">File I/O (<tt class="docutils literal"><span class="pre">skbio.io</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.html">Utility functionality (<tt class="docutils literal"><span class="pre">skbio.util</span></tt>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/py3.html">Supporting Python 2 and Python 3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/coding_guidelines.html">Coding guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/new_module.html">Adding a new module to skbio</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">skbio.tree.TreeNode.to_taxonomy</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      
+  <div class="section" id="skbio-tree-treenode-to-taxonomy">
+<h1>skbio.tree.TreeNode.to_taxonomy<a class="headerlink" href="#skbio-tree-treenode-to-taxonomy" title="Permalink to this headline">¶</a></h1>
+<dl class="method">
+<dt id="skbio.tree.TreeNode.to_taxonomy">
+<tt class="descclassname">TreeNode.</tt><tt class="descname">to_taxonomy</tt><big>(</big><em>allow_empty=False</em>, <em>filter_f=None</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.2.1/skbio/tree/_tree.py#L2142"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.tree.TreeNode.to_taxonomy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a taxonomy representation of self</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>allow_empty</strong> : bool, optional</p>
+<blockquote>
+<div><p>Allow gaps the taxonomy (e.g., internal nodes without names).</p>
+</div></blockquote>
+<p><strong>filter_f</strong> : function, optional</p>
+<blockquote>
+<div><p>Specify a filtering function that returns True if the lineage is
+to be returned. This function must accept a <tt class="docutils literal"><span class="pre">TreeNode</span></tt> as its
+first parameter, and a <tt class="docutils literal"><span class="pre">list</span></tt> that represents the lineage as the
+second parameter.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">generator</p>
+<blockquote class="last">
+<div><p>(tip, [lineage]) where tip corresponds to a tip in the tree and
+the [lineage] is the expanded names from root to tip. Nones and
+empty strings are omitted from the lineage</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>If <tt class="docutils literal"><span class="pre">allow_empty</span></tt> is <tt class="docutils literal"><span class="pre">True</span></tt> and the root node does not have a name,
+then that name will not be included. This is because it is common to
+have multiple domains represented in the taxonomy, which would result
+in a root node that does not have a name and does not make sense to
+represent in the output.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.tree</span> <span class="kn">import</span> <span class="n">TreeNode</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lineages</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;1&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;Bacteria&#39;</span><span class="p">,</span> <span class="s">&#39;Firmicutes&#39;</span><span class="p">,</span> <span class="s">&#39;Clostridia&#39;</span><span class="p">],</span>
+<span class="gp">... </span>            <span class="s">&#39;2&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;Bacteria&#39;</span><span class="p">,</span> <span class="s">&#39;Firmicutes&#39;</span><span class="p">,</span> <span class="s">&#39;Bacilli&#39;</span><span class="p">],</span>
+<span class="gp">... </span>            <span class="s">&#39;3&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;Bacteria&#39;</span><span class="p">,</span> <span class="s">&#39;Bacteroidetes&#39;</span><span class="p">,</span> <span class="s">&#39;Sphingobacteria&#39;</span><span class="p">],</span>
+<span class="gp">... </span>            <span class="s">&#39;4&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;Archaea&#39;</span><span class="p">,</span> <span class="s">&#39;Euryarchaeota&#39;</span><span class="p">,</span> <span class="s">&#39;Thermoplasmata&#39;</span><span class="p">],</span>
+<span class="gp">... </span>            <span class="s">&#39;5&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;Archaea&#39;</span><span class="p">,</span> <span class="s">&#39;Euryarchaeota&#39;</span><span class="p">,</span> <span class="s">&#39;Thermoplasmata&#39;</span><span class="p">],</span>
+<span class="gp">... </span>            <span class="s">&#39;6&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;Archaea&#39;</span><span class="p">,</span> <span class="s">&#39;Euryarchaeota&#39;</span><span class="p">,</span> <span class="s">&#39;Halobacteria&#39;</span><span class="p">],</span>
+<span class="gp">... </span>            <span class="s">&#39;7&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;Archaea&#39;</span><span class="p">,</span> <span class="s">&#39;Euryarchaeota&#39;</span><span class="p">,</span> <span class="s">&#39;Halobacteria&#39;</span><span class="p">],</span>
+<span class="gp">... </span>            <span class="s">&#39;8&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;Bacteria&#39;</span><span class="p">,</span> <span class="s">&#39;Bacteroidetes&#39;</span><span class="p">,</span> <span class="s">&#39;Sphingobacteria&#39;</span><span class="p">],</span>
+<span class="gp">... </span>            <span class="s">&#39;9&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;Bacteria&#39;</span><span class="p">,</span> <span class="s">&#39;Bacteroidetes&#39;</span><span class="p">,</span> <span class="s">&#39;Cytophagia&#39;</span><span class="p">]}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tree</span> <span class="o">=</span> <span class="n">TreeNode</span><span class="o">.</span><span class="n">from_taxonomy</span><span class="p">(</span><span class="n">lineages</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lineages</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">([(</span><span class="n">n</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">l</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">tree</span><span class="o">.</span><span class="n">to_taxonomy</span><span class="p">()])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">lineage</span> <span class="ow">in</span> <span class="n">lineages</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s">&#39;; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lineage</span><span class="p">))</span>
+<span class="go">1 Bacteria; Firmicutes; Clostridia</span>
+<span class="go">2 Bacteria; Firmicutes; Bacilli</span>
+<span class="go">3 Bacteria; Bacteroidetes; Sphingobacteria</span>
+<span class="go">4 Archaea; Euryarchaeota; Thermoplasmata</span>
+<span class="go">5 Archaea; Euryarchaeota; Thermoplasmata</span>
+<span class="go">6 Archaea; Euryarchaeota; Halobacteria</span>
+<span class="go">7 Archaea; Euryarchaeota; Halobacteria</span>
+<span class="go">8 Bacteria; Bacteroidetes; Sphingobacteria</span>
+<span class="go">9 Bacteria; Bacteroidetes; Cytophagia</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+  
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014--, scikit-bio development team.<br/>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.2.2.<br/>
+    </p>
+  </div>
+</footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
+  </body>
+</html>

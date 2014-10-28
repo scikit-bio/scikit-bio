@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.stats.ordination.RDA.short_method_name
+============================================
+
+.. currentmodule:: skbio.stats.ordination
+
+.. autoattribute:: RDA.short_method_name

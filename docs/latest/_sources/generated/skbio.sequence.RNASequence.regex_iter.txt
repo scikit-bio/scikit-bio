@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.RNASequence.regex_iter
+=====================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: RNASequence.regex_iter

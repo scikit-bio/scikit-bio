@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.DNASequence.__contains__
+=======================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: DNASequence.__contains__

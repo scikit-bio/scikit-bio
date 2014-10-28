@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.AlignmentStructure.__new__
+==========================================
+
+.. currentmodule:: skbio.alignment
+
+.. automethod:: AlignmentStructure.__new__

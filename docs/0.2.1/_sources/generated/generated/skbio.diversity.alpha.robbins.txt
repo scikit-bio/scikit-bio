@@ -1,0 +1,6 @@
+skbio.diversity.alpha.robbins
+=============================
+
+.. currentmodule:: skbio.diversity.alpha
+
+.. autofunction:: robbins

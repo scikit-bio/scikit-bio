@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.stats.distance.PERMANOVA.__reduce_ex__
+============================================
+
+.. currentmodule:: skbio.stats.distance
+
+.. automethod:: PERMANOVA.__reduce_ex__

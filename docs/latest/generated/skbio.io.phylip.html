@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>PHYLIP multiple sequence alignment format (skbio.io.phylip) &mdash; scikit-bio 0.2.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/style.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.1.0/united/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.2.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/copybutton.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="top" title="scikit-bio 0.2.1 documentation" href="../index.html" />
+    <link rel="up" title="File I/O (skbio.io)" href="../io.html" />
+    <link rel="next" title="skbio.io.write" href="skbio.io.write.html" />
+    <link rel="prev" title="Ordination results format (skbio.io.ordination)" href="skbio.io.ordination.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body>
+  
+  <a href="https://github.com/biocore/scikit-bio"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          scikit-bio docs</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.2.1</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            <li class="divider-vertical"></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../alignment.html">Sequence collections and alignments (<tt class="docutils literal"><span class="pre">skbio.alignment</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sequence.html">Biological sequences (<tt class="docutils literal"><span class="pre">skbio.sequence</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tree.html">Tree representations (<tt class="docutils literal"><span class="pre">skbio.tree</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../workflow.html">Constructing workflows (<tt class="docutils literal"><span class="pre">skbio.workflow</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../draw.html">Visualizations (<tt class="docutils literal"><span class="pre">skbio.draw</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../format.sequences.html">Format biological sequences (<tt class="docutils literal"><span class="pre">skbio.format.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../diversity.html">Diversity calculations (<tt class="docutils literal"><span class="pre">skbio.diversity</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stats.html">Statistics (<tt class="docutils literal"><span class="pre">skbio.stats</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../parse.sequences.html">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../io.html">File I/O (<tt class="docutils literal"><span class="pre">skbio.io</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.html">Utility functionality (<tt class="docutils literal"><span class="pre">skbio.util</span></tt>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/py3.html">Supporting Python 2 and Python 3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/coding_guidelines.html">Coding guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/new_module.html">Adding a new module to skbio</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">PHYLIP multiple sequence alignment format (<tt class="docutils literal"><span class="pre">skbio.io.phylip</span></tt>)</a><ul>
+<li><a class="reference internal" href="#format-support">Format Support</a></li>
+<li><a class="reference internal" href="#format-specification">Format Specification</a><ul>
+<li><a class="reference internal" href="#header-section">Header Section</a></li>
+<li><a class="reference internal" href="#alignment-section">Alignment Section</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#examples">Examples</a></li>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      
+  <span class="target" id="module-skbio.io.phylip"></span><div class="section" id="phylip-multiple-sequence-alignment-format-skbio-io-phylip">
+<h1>PHYLIP multiple sequence alignment format (<a class="reference internal" href="#module-skbio.io.phylip" title="skbio.io.phylip"><tt class="xref py py-mod docutils literal"><span class="pre">skbio.io.phylip</span></tt></a>)<a class="headerlink" href="#phylip-multiple-sequence-alignment-format-skbio-io-phylip" title="Permalink to this headline">¶</a></h1>
+<p>The PHYLIP file format stores a multiple sequence alignment. The format was
+originally defined and used in Joe Felsenstein&#8217;s PHYLIP package <a class="reference internal" href="#r165" id="id1">[R165]</a>, and has
+since been supported by several other bioinformatics tools (e.g., RAxML <a class="reference internal" href="#r166" id="id2">[R166]</a>).
+See <a class="reference internal" href="#r167" id="id3">[R167]</a> for the original format description, and <a class="reference internal" href="#r168" id="id4">[R168]</a> and <a class="reference internal" href="#r169" id="id5">[R169]</a> for additional
+descriptions.</p>
+<p>An example PHYLIP-formatted file taken from <a class="reference internal" href="#r167" id="id6">[R167]</a>:</p>
+<div class="highlight-python"><div class="highlight"><pre>      5    42
+Turkey    AAGCTNGGGC ATTTCAGGGT GAGCCCGGGC AATACAGGGT AT
+Salmo gairAAGCCTTGGC AGTGCAGGGT GAGCCGTGGC CGGGCACGGT AT
+H. SapiensACCGGTTGGC CGTTCAGGGT ACAGGTTGGC CGTTCAGGGT AA
+Chimp     AAACCCTTGC CGTTACGCTT AAACCGAGGC CGGGACACTC AT
+Gorilla   AAACCCTTGC CGGTACGCTT AAACCATTGC CGGTACGCTT AA
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>Original copyright notice for the above PHYLIP file:</p>
+<p class="last"><em>(c) Copyright 1986-2008 by The University of Washington. Written by Joseph
+Felsenstein. Permission is granted to copy this document provided that no
+fee is charged for it and that this copyright notice is not removed.</em></p>
+</div>
+<div class="section" id="format-support">
+<h2>Format Support<a class="headerlink" href="#format-support" title="Permalink to this headline">¶</a></h2>
+<p><strong>Has Sniffer: No</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="8%" />
+<col width="8%" />
+<col width="84%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Reader</th>
+<th class="head">Writer</th>
+<th class="head">Object Class</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>No</td>
+<td>Yes</td>
+<td><a class="reference internal" href="skbio.alignment.Alignment.html#skbio.alignment.Alignment" title="skbio.alignment.Alignment"><tt class="xref py py-mod docutils literal"><span class="pre">skbio.alignment.Alignment</span></tt></a></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="format-specification">
+<h2>Format Specification<a class="headerlink" href="#format-specification" title="Permalink to this headline">¶</a></h2>
+<p>PHYLIP format is a plain text format containing exactly two sections: a header
+describing the dimensions of the alignment, followed by the multiple sequence
+alignment itself.</p>
+<p>The format described here is &#8220;strict&#8221; PHYLIP, as described in <a class="reference internal" href="#r168" id="id7">[R168]</a>. Strict
+PHYLIP requires that each sequence identifier is exactly 10 characters long
+(padded with spaces as necessary). Other bioinformatics tools (e.g., RAxML) may
+relax this rule to allow for longer sequence identifiers. See the
+<strong>Alignment Section</strong> below for more details.</p>
+<p>The format described here is &#8220;sequential&#8221; format. The original PHYLIP format
+specification <a class="reference internal" href="#r167" id="id8">[R167]</a> describes both sequential and interleaved formats.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">scikit-bio currently only supports writing strict, sequential
+PHYLIP-formatted files from an <tt class="docutils literal"><span class="pre">skbio.alignment.Alignment</span></tt>. It does not
+yet support reading PHYLIP-formatted files, nor does it support relaxed or
+interleaved PHYLIP formats.</p>
+</div>
+<div class="section" id="header-section">
+<h3>Header Section<a class="headerlink" href="#header-section" title="Permalink to this headline">¶</a></h3>
+<p>The header consists of a single line describing the dimensions of the
+alignment. It <strong>must</strong> be the first line in the file. The header consists of
+optional spaces, followed by two positive integers (<tt class="docutils literal"><span class="pre">n</span></tt> and <tt class="docutils literal"><span class="pre">m</span></tt>) separated
+by one or more spaces. The first integer (<tt class="docutils literal"><span class="pre">n</span></tt>) specifies the number of
+sequences (i.e., the number of rows) in the alignment. The second integer
+(<tt class="docutils literal"><span class="pre">m</span></tt>) specifies the length of the sequences (i.e., the number of columns) in
+the alignment. The smallest supported alignment dimensions are 1x1.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>scikit-bio will write the PHYLIP format header <em>without</em> preceding
+spaces, and with only a single space between <tt class="docutils literal"><span class="pre">n</span></tt> and <tt class="docutils literal"><span class="pre">m</span></tt>.</p>
+<p class="last">PHYLIP format <em>does not</em> support blank line(s) between the header and the
+alignment.</p>
+</div>
+</div>
+<div class="section" id="alignment-section">
+<h3>Alignment Section<a class="headerlink" href="#alignment-section" title="Permalink to this headline">¶</a></h3>
+<p>The alignment section immediately follows the header. It consists of <tt class="docutils literal"><span class="pre">n</span></tt>
+lines (rows), one for each sequence in the alignment. Each row consists of a
+sequence identifier (ID) and characters in the sequence, in fixed width format.</p>
+<p>The sequence ID can be up to 10 characters long. IDs less than 10 characters
+must have spaces appended to them to reach the 10 character fixed width. Within
+an ID, all characters except newlines are supported, including spaces,
+underscores, and numbers.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>While not explicitly stated in the original PHYLIP format
+description, scikit-bio only supports writing unique sequence identifiers
+(i.e., duplicates are not allowed). Uniqueness is required because an
+<tt class="docutils literal"><span class="pre">skbio.alignment.Alignment</span></tt> cannot be created with duplicate IDs.</p>
+<p class="last">scikit-bio supports the empty string (<tt class="docutils literal"><span class="pre">''</span></tt>) as a valid sequence ID. An
+empty ID will be padded with 10 spaces.</p>
+</div>
+<p>Sequence characters immediately follow the sequence ID. They <em>must</em> start at
+the 11th character in the line, as the first 10 characters are reserved for the
+sequence ID. While PHYLIP format does not explicitly restrict the set of
+supported characters that may be used to represent a sequence, the original
+format description <a class="reference internal" href="#r167" id="id9">[R167]</a> specifies the IUPAC nucleic acid lexicon for DNA or RNA
+sequences, and the IUPAC protein lexicon for protein sequences. The original
+PHYLIP specification uses <tt class="docutils literal"><span class="pre">-</span></tt> as a gap character, though older versions also
+supported <tt class="docutils literal"><span class="pre">.</span></tt>. The sequence characters may contain optional spaces (e.g., to
+improve readability), and both upper and lower case characters are supported.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>scikit-bio will write a PHYLIP-formatted file even if the alignment&#8217;s
+sequence characters are not valid IUPAC characters. This differs from the
+PHYLIP specification, which states that a PHYLIP-formatted file can only
+contain valid IUPAC characters. To check whether all characters are valid
+before writing, the user can call <tt class="docutils literal"><span class="pre">Alignment.is_valid()</span></tt>.</p>
+<p>Since scikit-bio supports both <tt class="docutils literal"><span class="pre">-</span></tt> and <tt class="docutils literal"><span class="pre">.</span></tt> as gap characters (e.g., in
+<tt class="docutils literal"><span class="pre">skbio.alignment.Alignment</span></tt>), both are supported when writing a
+PHYLIP-formatted file.</p>
+<p class="last">When writing a PHYLIP-formatted file, scikit-bio will split up each sequence
+into chunks that are 10 characters long. Each chunk will be separated by a
+single space. The sequence will always appear on a single line (sequential
+format). It will <em>not</em> be wrapped across multiple lines. Sequences are
+chunked in this manner for improved readability, and because most example
+PHYLIP files are chunked in a similar way (e.g., see the example file
+above). Note that this chunking is not required by the PHYLIP format.</p>
+</div>
+</div>
+</div>
+<div class="section" id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>Let&#8217;s create an alignment with three DNA sequences of equal length:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio</span> <span class="kn">import</span> <span class="n">Alignment</span><span class="p">,</span> <span class="n">DNA</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seqs</span> <span class="o">=</span> <span class="p">[</span><span class="n">DNA</span><span class="p">(</span><span class="s">&#39;ACCGTTGTA-GTAGCT&#39;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="s">&#39;seq1&#39;</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="n">DNA</span><span class="p">(</span><span class="s">&#39;A--GTCGAA-GTACCT&#39;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="s">&#39;sequence-2&#39;</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="n">DNA</span><span class="p">(</span><span class="s">&#39;AGAGTTGAAGGTATCT&#39;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="s">&#39;3&#39;</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">aln</span> <span class="o">=</span> <span class="n">Alignment</span><span class="p">(</span><span class="n">seqs</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">aln</span>
+<span class="go">&lt;Alignment: n=3; mean +/- std length=16.00 +/- 0.00&gt;</span>
+</pre></div>
+</div>
+<p>Now let&#8217;s write the alignment to file in PHYLIP format, and take a look at the
+output:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">StringIO</span> <span class="kn">import</span> <span class="n">StringIO</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fh</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">aln</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">fh</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s">&#39;phylip&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">fh</span><span class="o">.</span><span class="n">getvalue</span><span class="p">())</span>
+<span class="go">3 16</span>
+<span class="go">seq1      ACCGTTGTA- GTAGCT</span>
+<span class="go">sequence-2A--GTCGAA- GTACCT</span>
+<span class="go">3         AGAGTTGAAG GTATCT</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fh</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Notice that the 16-character sequences were split into two chunks, and that
+each sequence appears on a single line (sequential format). Also note that each
+sequence ID is padded with spaces to 10 characters in order to produce a fixed
+width column.</p>
+<p>If the sequence IDs in an alignment surpass the 10-character limit, an error
+will be raised when we try to write a PHYLIP file:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">long_id_seqs</span> <span class="o">=</span> <span class="p">[</span><span class="n">DNA</span><span class="p">(</span><span class="s">&#39;ACCGT&#39;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="s">&#39;seq1&#39;</span><span class="p">),</span>
+<span class="gp">... </span>                <span class="n">DNA</span><span class="p">(</span><span class="s">&#39;A--GT&#39;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="s">&#39;long-sequence-2&#39;</span><span class="p">),</span>
+<span class="gp">... </span>                <span class="n">DNA</span><span class="p">(</span><span class="s">&#39;AGAGT&#39;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="s">&#39;seq3&#39;</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">long_id_aln</span> <span class="o">=</span> <span class="n">Alignment</span><span class="p">(</span><span class="n">long_id_seqs</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fh</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">long_id_aln</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">fh</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s">&#39;phylip&#39;</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+    <span class="o">...</span>
+<span class="gr">PhylipFormatError</span>: <span class="n">Alignment can only be written in PHYLIP format if all sequence IDs have 10 or fewer characters. Found sequence with ID &#39;long-sequence-2&#39; that exceeds this limit. Use Alignment.update_ids to assign shorter IDs.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fh</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>One way to work around this is to update the IDs to be shorter. The recommended
+way of accomplishing this is via <tt class="docutils literal"><span class="pre">Alignment.update_ids</span></tt>, which provides a
+flexible way of creating a new <tt class="docutils literal"><span class="pre">Alignment</span></tt> with updated IDs. For example, to
+remap each of the IDs to integer-based IDs:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">short_id_aln</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">long_id_aln</span><span class="o">.</span><span class="n">update_ids</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">short_id_aln</span><span class="o">.</span><span class="n">ids</span><span class="p">()</span>
+<span class="go">[&#39;1&#39;, &#39;2&#39;, &#39;3&#39;]</span>
+</pre></div>
+</div>
+<p>We can now write the new alignment in PHYLIP format:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">fh</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">short_id_aln</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">fh</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s">&#39;phylip&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">fh</span><span class="o">.</span><span class="n">getvalue</span><span class="p">())</span>
+<span class="go">3 5</span>
+<span class="go">1         ACCGT</span>
+<span class="go">2         A--GT</span>
+<span class="go">3         AGAGT</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fh</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<table class="docutils citation" frame="void" id="r165" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[R165]</a></td><td><a class="reference external" href="http://evolution.genetics.washington.edu/phylip.html">http://evolution.genetics.washington.edu/phylip.html</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r166" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[R166]</a></td><td>RAxML Version 8: A tool for Phylogenetic Analysis and
+Post-Analysis of Large Phylogenies&#8221;. In Bioinformatics, 2014</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r167" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R167]</td><td><em>(<a class="fn-backref" href="#id3">1</a>, <a class="fn-backref" href="#id6">2</a>, <a class="fn-backref" href="#id8">3</a>, <a class="fn-backref" href="#id9">4</a>)</em> <a class="reference external" href="http://evolution.genetics.washington.edu/phylip/doc/sequence.html">http://evolution.genetics.washington.edu/phylip/doc/sequence.html</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r168" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R168]</td><td><em>(<a class="fn-backref" href="#id4">1</a>, <a class="fn-backref" href="#id7">2</a>)</em> <a class="reference external" href="http://www.phylo.org/tools/obsolete/phylip.html">http://www.phylo.org/tools/obsolete/phylip.html</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r169" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id5">[R169]</a></td><td><a class="reference external" href="http://www.bioperl.org/wiki/PHYLIP_multiple_alignment_format">http://www.bioperl.org/wiki/PHYLIP_multiple_alignment_format</a></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+  
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014--, scikit-bio development team.<br/>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.2.2.<br/>
+    </p>
+  </div>
+</footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
+  </body>
+</html>

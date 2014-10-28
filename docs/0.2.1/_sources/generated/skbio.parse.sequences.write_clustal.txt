@@ -1,0 +1,6 @@
+skbio.parse.sequences.write_clustal
+===================================
+
+.. currentmodule:: skbio.parse.sequences
+
+.. autofunction:: write_clustal

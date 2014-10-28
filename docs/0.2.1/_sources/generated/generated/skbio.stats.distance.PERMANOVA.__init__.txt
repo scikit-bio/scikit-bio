@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.stats.distance.PERMANOVA.__init__
+=======================================
+
+.. currentmodule:: skbio.stats.distance
+
+.. automethod:: PERMANOVA.__init__

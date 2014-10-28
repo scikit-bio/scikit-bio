@@ -1,0 +1,6 @@
+skbio.io.ClustalFormatError
+===========================
+
+.. currentmodule:: skbio.io
+
+.. autoexception:: ClustalFormatError

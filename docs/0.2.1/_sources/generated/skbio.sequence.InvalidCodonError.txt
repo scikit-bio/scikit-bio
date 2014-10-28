@@ -1,0 +1,6 @@
+skbio.sequence.InvalidCodonError
+================================
+
+.. currentmodule:: skbio.sequence
+
+.. autoexception:: InvalidCodonError

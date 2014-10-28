@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.SequenceCollection.degap
+========================================
+
+.. currentmodule:: skbio.alignment
+
+.. automethod:: SequenceCollection.degap

@@ -1,0 +1,6 @@
+skbio.diversity.alpha.michaelis_menten_fit
+==========================================
+
+.. currentmodule:: skbio.diversity.alpha
+
+.. autofunction:: michaelis_menten_fit

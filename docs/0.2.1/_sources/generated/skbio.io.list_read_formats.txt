@@ -1,0 +1,6 @@
+skbio.io.list_read_formats
+==========================
+
+.. currentmodule:: skbio.io
+
+.. autofunction:: list_read_formats
