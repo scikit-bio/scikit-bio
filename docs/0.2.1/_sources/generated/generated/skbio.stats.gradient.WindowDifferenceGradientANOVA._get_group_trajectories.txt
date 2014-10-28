@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.stats.gradient.WindowDifferenceGradientANOVA._get_group_trajectories
+==========================================================================
+
+.. currentmodule:: skbio.stats.gradient
+
+.. automethod:: WindowDifferenceGradientANOVA._get_group_trajectories

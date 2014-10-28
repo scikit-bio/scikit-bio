@@ -1,0 +1,6 @@
+skbio.io.RecordError
+====================
+
+.. currentmodule:: skbio.io
+
+.. autoexception:: RecordError

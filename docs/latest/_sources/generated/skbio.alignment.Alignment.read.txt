@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.Alignment.read
+==============================
+
+.. currentmodule:: skbio.alignment
+
+.. automethod:: Alignment.read

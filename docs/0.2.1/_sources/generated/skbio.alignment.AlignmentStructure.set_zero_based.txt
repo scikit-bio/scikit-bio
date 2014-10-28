@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.AlignmentStructure.set_zero_based
+=================================================
+
+.. currentmodule:: skbio.alignment
+
+.. automethod:: AlignmentStructure.set_zero_based

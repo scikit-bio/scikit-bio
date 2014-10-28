@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.NucleotideSequence.is_gapped
+===========================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: NucleotideSequence.is_gapped

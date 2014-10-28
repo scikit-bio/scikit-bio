@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.SequenceCollection.write
+========================================
+
+.. currentmodule:: skbio.alignment
+
+.. automethod:: SequenceCollection.write

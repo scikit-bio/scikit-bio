@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.BiologicalSequence.__hash__
+==========================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: BiologicalSequence.__hash__

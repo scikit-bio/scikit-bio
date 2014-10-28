@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.tree.TreeNode._ascii_art
+==============================
+
+.. currentmodule:: skbio.tree
+
+.. automethod:: TreeNode._ascii_art

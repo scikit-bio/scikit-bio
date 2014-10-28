@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.NucleotideSequence.is_valid
+==========================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: NucleotideSequence.is_valid

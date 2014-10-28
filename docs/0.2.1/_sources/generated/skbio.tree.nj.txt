@@ -1,0 +1,6 @@
+skbio.tree.nj
+=============
+
+.. currentmodule:: skbio.tree
+
+.. autofunction:: nj

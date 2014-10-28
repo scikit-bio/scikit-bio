@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.tree.CompressedTrie.prefix_map
+====================================
+
+.. currentmodule:: skbio.tree
+
+.. autoattribute:: CompressedTrie.prefix_map

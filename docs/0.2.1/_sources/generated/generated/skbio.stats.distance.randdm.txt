@@ -1,0 +1,6 @@
+skbio.stats.distance.randdm
+===========================
+
+.. currentmodule:: skbio.stats.distance
+
+.. autofunction:: randdm

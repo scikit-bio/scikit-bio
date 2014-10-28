@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.stats.gradient.FirstDifferenceGradientANOVA.__reduce_ex__
+===============================================================
+
+.. currentmodule:: skbio.stats.gradient
+
+.. automethod:: FirstDifferenceGradientANOVA.__reduce_ex__

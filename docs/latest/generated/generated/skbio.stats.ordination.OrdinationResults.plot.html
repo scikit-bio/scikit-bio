@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>skbio.stats.ordination.OrdinationResults.plot &mdash; scikit-bio 0.2.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/style.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/bootswatch-3.1.0/united/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.2.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/copybutton.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-sphinx.js"></script>
+    <link rel="top" title="scikit-bio 0.2.1 documentation" href="../../index.html" />
+    <link rel="up" title="skbio.stats.ordination.OrdinationResults" href="skbio.stats.ordination.OrdinationResults.html" />
+    <link rel="next" title="skbio.stats.ordination.OrdinationResults.read" href="skbio.stats.ordination.OrdinationResults.read.html" />
+    <link rel="prev" title="skbio.stats.ordination.OrdinationResults.from_file" href="skbio.stats.ordination.OrdinationResults.from_file.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body>
+  
+  <a href="https://github.com/biocore/scikit-bio"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../index.html">
+          scikit-bio docs</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.2.1</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            <li class="divider-vertical"></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../alignment.html">Sequence collections and alignments (<tt class="docutils literal"><span class="pre">skbio.alignment</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sequence.html">Biological sequences (<tt class="docutils literal"><span class="pre">skbio.sequence</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tree.html">Tree representations (<tt class="docutils literal"><span class="pre">skbio.tree</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../workflow.html">Constructing workflows (<tt class="docutils literal"><span class="pre">skbio.workflow</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../draw.html">Visualizations (<tt class="docutils literal"><span class="pre">skbio.draw</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../format.sequences.html">Format biological sequences (<tt class="docutils literal"><span class="pre">skbio.format.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../diversity.html">Diversity calculations (<tt class="docutils literal"><span class="pre">skbio.diversity</span></tt>)</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../stats.html">Statistics (<tt class="docutils literal"><span class="pre">skbio.stats</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../parse.sequences.html">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../io.html">File I/O (<tt class="docutils literal"><span class="pre">skbio.io</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../util.html">Utility functionality (<tt class="docutils literal"><span class="pre">skbio.util</span></tt>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../development/py3.html">Supporting Python 2 and Python 3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/coding_guidelines.html">Coding guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/new_module.html">Adding a new module to skbio</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">skbio.stats.ordination.OrdinationResults.plot</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      
+  <div class="section" id="skbio-stats-ordination-ordinationresults-plot">
+<h1>skbio.stats.ordination.OrdinationResults.plot<a class="headerlink" href="#skbio-stats-ordination-ordinationresults-plot" title="Permalink to this headline">¶</a></h1>
+<dl class="method">
+<dt id="skbio.stats.ordination.OrdinationResults.plot">
+<tt class="descclassname">OrdinationResults.</tt><tt class="descname">plot</tt><big>(</big><em>df=None</em>, <em>column=None</em>, <em>axes=(0</em>, <em>1</em>, <em>2)</em>, <em>axis_labels=None</em>, <em>title=''</em>, <em>cmap=None</em>, <em>s=20</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.2.1/skbio/stats/ordination/_base.py#L147"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.stats.ordination.OrdinationResults.plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a 3-D scatterplot of ordination results colored by metadata.</p>
+<p>Creates a 3-D scatterplot of the ordination results, where each point
+represents a site. Optionally, these points can be colored by metadata
+(see <cite>df</cite> and <cite>column</cite> below).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>df</strong> : pandas.DataFrame, optional</p>
+<blockquote>
+<div><p><tt class="docutils literal"><span class="pre">DataFrame</span></tt> containing site metadata. Must be indexed by site ID,
+and all site IDs in the ordination results must exist in the
+<tt class="docutils literal"><span class="pre">DataFrame</span></tt>. If <tt class="docutils literal"><span class="pre">None</span></tt>, sites (i.e., points) will not be
+colored by metadata.</p>
+</div></blockquote>
+<p><strong>column</strong> : str, optional</p>
+<blockquote>
+<div><p>Column name in <cite>df</cite> to color sites (i.e., points in the plot) by.
+Cannot have missing data (i.e., <tt class="docutils literal"><span class="pre">np.nan</span></tt>). <cite>column</cite> can be
+numeric or categorical. If numeric, all values in the column will
+be cast to <tt class="docutils literal"><span class="pre">float</span></tt> and mapped to colors using <cite>cmap</cite>. A colorbar
+will be included to serve as a legend. If categorical (i.e., not
+all values in <cite>column</cite> could be cast to <tt class="docutils literal"><span class="pre">float</span></tt>), colors will be
+chosen for each category using evenly-spaced points along <cite>cmap</cite>. A
+legend will be included. If <tt class="docutils literal"><span class="pre">None</span></tt>, sites (i.e., points) will not
+be colored by metadata.</p>
+</div></blockquote>
+<p><strong>axes</strong> : iterable of int, optional</p>
+<blockquote>
+<div><p>Indices of site coordinates to plot on the x-, y-, and z-axes. For
+example, if plotting PCoA results, <tt class="docutils literal"><span class="pre">axes=(0,</span> <span class="pre">1,</span> <span class="pre">2)</span></tt> will plot
+PC 1 on the x-axis, PC 2 on the y-axis, and PC 3 on the z-axis.
+Must contain exactly three elements.</p>
+</div></blockquote>
+<p><strong>axis_labels</strong> : iterable of str, optional</p>
+<blockquote>
+<div><p>Labels for the x-, y-, and z-axes. If <tt class="docutils literal"><span class="pre">None</span></tt>, labels will be the
+values of <cite>axes</cite> cast as strings.</p>
+</div></blockquote>
+<p><strong>title</strong> : str, optional</p>
+<blockquote>
+<div><p>Plot title.</p>
+</div></blockquote>
+<p><strong>cmap</strong> : str or matplotlib.colors.Colormap, optional</p>
+<blockquote>
+<div><p>Name or instance of matplotlib colormap to use for mapping <cite>column</cite>
+values to colors. If <tt class="docutils literal"><span class="pre">None</span></tt>, defaults to the colormap specified
+in the matplotlib rc file. Qualitative colormaps (e.g., <tt class="docutils literal"><span class="pre">Set1</span></tt>)
+are recommended for categorical data, while sequential colormaps
+(e.g., <tt class="docutils literal"><span class="pre">Greys</span></tt>) are recommended for numeric data. See <a class="reference internal" href="#r76" id="id1">[R76]</a> for
+these colormap classifications.</p>
+</div></blockquote>
+<p><strong>s</strong> : scalar or iterable of scalars, optional</p>
+<blockquote>
+<div><p>Size of points. See matplotlib&#8217;s <tt class="docutils literal"><span class="pre">Axes3D.scatter</span></tt> documentation
+for more details.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">matplotlib.figure.Figure</p>
+<blockquote>
+<div><p>Figure containing the scatterplot and legend/colorbar if metadata
+were provided.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><strong>ValueError</strong></p>
+<blockquote class="last">
+<div><p>Raised on invalid input, including the following situations:</p>
+<ul class="simple">
+<li>there are not at least three dimensions to plot</li>
+<li>there are not exactly three values in <cite>axes</cite>, they are not
+unique, or are out of range</li>
+<li>there are not exactly three values in <cite>axis_labels</cite></li>
+<li>either <cite>df</cite> or <cite>column</cite> is provided without the other</li>
+<li><cite>column</cite> is not in the <tt class="docutils literal"><span class="pre">DataFrame</span></tt></li>
+<li>site IDs in the ordination results are not in <cite>df</cite> or have
+missing data in <cite>column</cite></li>
+</ul>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference external" href="http://matplotlib.org/mpl_toolkits/mplot3d/tutorial.html#mpl_toolkits.mplot3d.Axes3D.scatter" title="(in Matplotlib v1.4.2)"><tt class="xref py py-obj docutils literal"><span class="pre">mpl_toolkits.mplot3d.Axes3D.scatter</span></tt></a></p>
+</div>
+<p class="rubric">Notes</p>
+<p>This method creates basic plots of ordination results, and is intended
+to provide a quick look at the results in the context of metadata
+(e.g., from within the IPython Notebook). For more customization and to
+generate publication-quality figures, we recommend EMPeror <a class="reference internal" href="#r77" id="id2">[R77]</a>.</p>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r76" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R76]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id3">2</a>)</em> <a class="reference external" href="http://matplotlib.org/examples/color/colormaps_reference.html">http://matplotlib.org/examples/color/colormaps_reference.html</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r77" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R77]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> EMPeror: a tool for visualizing high-throughput microbial
+community data. Vazquez-Baeza Y, Pirrung M, Gonzalez A, Knight R.
+Gigascience. 2013 Nov 26;2(1):16. <a class="reference external" href="http://biocore.github.io/emperor/">http://biocore.github.io/emperor/</a></td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Define a distance matrix with four sites labelled A-D:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio</span> <span class="kn">import</span> <span class="n">DistanceMatrix</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dm</span> <span class="o">=</span> <span class="n">DistanceMatrix</span><span class="p">([[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.21712454</span><span class="p">,</span> <span class="mf">0.5007512</span><span class="p">,</span> <span class="mf">0.91769271</span><span class="p">],</span>
+<span class="gp">... </span>                     <span class="p">[</span><span class="mf">0.21712454</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.45995501</span><span class="p">,</span> <span class="mf">0.80332382</span><span class="p">],</span>
+<span class="gp">... </span>                     <span class="p">[</span><span class="mf">0.5007512</span><span class="p">,</span> <span class="mf">0.45995501</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.65463348</span><span class="p">],</span>
+<span class="gp">... </span>                     <span class="p">[</span><span class="mf">0.91769271</span><span class="p">,</span> <span class="mf">0.80332382</span><span class="p">,</span> <span class="mf">0.65463348</span><span class="p">,</span> <span class="mf">0.</span><span class="p">]],</span>
+<span class="gp">... </span>                    <span class="p">[</span><span class="s">&#39;A&#39;</span><span class="p">,</span> <span class="s">&#39;B&#39;</span><span class="p">,</span> <span class="s">&#39;C&#39;</span><span class="p">,</span> <span class="s">&#39;D&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Define metadata for each site in a <tt class="docutils literal"><span class="pre">pandas.DataFrame</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metadata</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="s">&#39;A&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;body_site&#39;</span><span class="p">:</span> <span class="s">&#39;skin&#39;</span><span class="p">},</span>
+<span class="gp">... </span>    <span class="s">&#39;B&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;body_site&#39;</span><span class="p">:</span> <span class="s">&#39;gut&#39;</span><span class="p">},</span>
+<span class="gp">... </span>    <span class="s">&#39;C&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;body_site&#39;</span><span class="p">:</span> <span class="s">&#39;gut&#39;</span><span class="p">},</span>
+<span class="gp">... </span>    <span class="s">&#39;D&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;body_site&#39;</span><span class="p">:</span> <span class="s">&#39;skin&#39;</span><span class="p">}}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">metadata</span><span class="p">,</span> <span class="n">orient</span><span class="o">=</span><span class="s">&#39;index&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Run principal coordinate analysis (PCoA) on the distance matrix:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.stats.ordination</span> <span class="kn">import</span> <span class="n">PCoA</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pcoa_results</span> <span class="o">=</span> <span class="n">PCoA</span><span class="p">(</span><span class="n">dm</span><span class="p">)</span><span class="o">.</span><span class="n">scores</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Plot the ordination results, where each site is colored by body site
+(a categorical variable):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">fig</span> <span class="o">=</span> <span class="n">pcoa_results</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="s">&#39;body_site&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                        <span class="n">title</span><span class="o">=</span><span class="s">&#39;Sites colored by body site&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                        <span class="n">cmap</span><span class="o">=</span><span class="s">&#39;Set1&#39;</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>(<a class="reference external" href="../../generated/generated/skbio-stats-ordination-OrdinationResults-plot-1.py">Source code</a>, <a class="reference external" href="../../generated/generated/skbio-stats-ordination-OrdinationResults-plot-1.png">png</a>, <a class="reference external" href="../../generated/generated/skbio-stats-ordination-OrdinationResults-plot-1.hires.png">hires.png</a>, <a class="reference external" href="../../generated/generated/skbio-stats-ordination-OrdinationResults-plot-1.pdf">pdf</a>)</p>
+<div class="figure">
+<img alt="../../_images/skbio-stats-ordination-OrdinationResults-plot-1.png" src="../../_images/skbio-stats-ordination-OrdinationResults-plot-1.png" />
+</div>
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+  
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014--, scikit-bio development team.<br/>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.2.2.<br/>
+    </p>
+  </div>
+</footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
+  </body>
+</html>

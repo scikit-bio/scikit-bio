@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.StockholmAlignment.to_file
+==========================================
+
+.. currentmodule:: skbio.alignment
+
+.. automethod:: StockholmAlignment.to_file

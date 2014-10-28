@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.Alignment.write
+===============================
+
+.. currentmodule:: skbio.alignment
+
+.. automethod:: Alignment.write

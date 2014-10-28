@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.StockholmAlignment.toFasta
+==========================================
+
+.. currentmodule:: skbio.alignment
+
+.. automethod:: StockholmAlignment.toFasta

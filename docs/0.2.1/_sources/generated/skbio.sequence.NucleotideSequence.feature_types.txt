@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.NucleotideSequence.feature_types
+===============================================
+
+.. currentmodule:: skbio.sequence
+
+.. autoattribute:: NucleotideSequence.feature_types

@@ -1,0 +1,6 @@
+skbio.io.get_writer
+===================
+
+.. currentmodule:: skbio.io
+
+.. autofunction:: get_writer

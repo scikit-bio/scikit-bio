@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.stats.ordination.OrdinationResults._figure_data
+=====================================================
+
+.. currentmodule:: skbio.stats.ordination
+
+.. automethod:: OrdinationResults._figure_data

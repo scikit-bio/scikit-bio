@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.stats.distance.PERMANOVA.test_statistic_name
+==================================================
+
+.. currentmodule:: skbio.stats.distance
+
+.. autoattribute:: PERMANOVA.test_statistic_name
