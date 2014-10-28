@@ -28,26 +28,25 @@ Format Support
 --------------
 **Has Sniffer: Yes**
 
-+----------+----------+------------------------------------------------------+
-|**Reader**|**Writer**|                   **Object Class**                   |
-+----------+----------+------------------------------------------------------+
-|Yes       |Yes       |generator of :mod:`skbio.sequence.BiologicalSequence` |
-|          |          |objects                                               |
-+----------+----------+------------------------------------------------------+
-|Yes       |Yes       |:mod:`skbio.alignment.SequenceCollection`             |
-+----------+----------+------------------------------------------------------+
-|Yes       |Yes       |:mod:`skbio.alignment.Alignment`                      |
-+----------+----------+------------------------------------------------------+
-|Yes       |Yes       |:mod:`skbio.sequence.BiologicalSequence`              |
-+----------+----------+------------------------------------------------------+
-|Yes       |Yes       |:mod:`skbio.sequence.NucleotideSequence`              |
-+----------+----------+------------------------------------------------------+
-|Yes       |Yes       |:mod:`skbio.sequence.DNASequence`                     |
-+----------+----------+------------------------------------------------------+
-|Yes       |Yes       |:mod:`skbio.sequence.RNASequence`                     |
-+----------+----------+------------------------------------------------------+
-|Yes       |Yes       |:mod:`skbio.sequence.ProteinSequence`                 |
-+----------+----------+------------------------------------------------------+
++------+------+---------------------------------------------------------------+
+|Reader|Writer|                          Object Class                         |
++======+======+===============================================================+
+|Yes   |Yes   |generator of :mod:`skbio.sequence.BiologicalSequence` objects  |
++------+------+---------------------------------------------------------------+
+|Yes   |Yes   |:mod:`skbio.alignment.SequenceCollection`                      |
++------+------+---------------------------------------------------------------+
+|Yes   |Yes   |:mod:`skbio.alignment.Alignment`                               |
++------+------+---------------------------------------------------------------+
+|Yes   |Yes   |:mod:`skbio.sequence.BiologicalSequence`                       |
++------+------+---------------------------------------------------------------+
+|Yes   |Yes   |:mod:`skbio.sequence.NucleotideSequence`                       |
++------+------+---------------------------------------------------------------+
+|Yes   |Yes   |:mod:`skbio.sequence.DNASequence`                              |
++------+------+---------------------------------------------------------------+
+|Yes   |Yes   |:mod:`skbio.sequence.RNASequence`                              |
++------+------+---------------------------------------------------------------+
+|Yes   |Yes   |:mod:`skbio.sequence.ProteinSequence`                          |
++------+------+---------------------------------------------------------------+
 
 .. note:: All readers and writers support an optional QUAL file via the
    ``qual`` parameter. If one is provided, quality scores will be read/written

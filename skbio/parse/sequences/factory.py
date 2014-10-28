@@ -10,7 +10,7 @@ import os
 from gzip import open as gzip_open
 from itertools import chain
 
-from .iterator import FastaIterator, FastqIterator, QseqIterator
+from .iterator import FastaIterator, FastqIterator
 
 
 FILEEXT_MAP = {'fna': (FastaIterator, open),
@@ -22,9 +22,7 @@ FILEEXT_MAP = {'fna': (FastaIterator, open),
                'fastq': (FastqIterator, open),
                'fastq.gz': (FastqIterator, gzip_open),
                'fq': (FastqIterator, open),
-               'fq.gz': (FastqIterator, gzip_open),
-               'qseq': (QseqIterator, open),
-               'qseq.gz': (QseqIterator, gzip_open)}
+               'fq.gz': (FastqIterator, gzip_open)}
 
 
 def _determine_types_and_openers(files):
@@ -106,7 +104,6 @@ def load(seqs, qual=None, constructor=None, **kwargs):
     SequenceIterator
     FastaIterator
     FastqIterator
-    QseqIterator
 
     """
     if not seqs:
