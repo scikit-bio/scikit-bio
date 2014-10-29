@@ -49,25 +49,8 @@
 pip install numpy
 pip install scikit-bio
 </pre>
-<p>If you'd like to install the dependencies manually (or some other way
-than using pip), you can find those here:</p>
-<ul>
-<li>
-<a href="http://www.python.org/">Python</a> 2.7 or &gt;= 3.3</li>
-<li>
-<a href="http://www.numpy.org/">numpy</a> &gt;= 1.7</li>
-<li>
-<a href="http://www.scipy.org/">scipy</a> &gt;= 0.13.0</li>
-<li>
-<a href="http://www.matplotlib.org/">matplotlib</a> &gt;= 1.1.0</li>
-<li><a href="http://pandas.pydata.org/">pandas</a></li>
-<li><a href="https://pypi.python.org/pypi/future">future</a></li>
-<li><a href="https://pypi.python.org/pypi/natsort">natsort</a></li>
-</ul><p>If you have trouble getting these dependencies installed (scipy, in particular, can be tricky), you should try installing <a href="https://www.enthought.com/canopy-express/">Canopy Express</a>, which includes all of these dependencies. You should then be able to easily install scikit-bio by running:</p>
-<pre>
-pip install scikit-bio
-</pre>
-<p>After installation with <tt>pip</tt>, you can run the scikit-bio unittest suite as follows:</p>
+<p>If you have trouble getting scikit-bio's dependencies installed (scipy, in particular, can be tricky), you should try installing <a href="https://www.enthought.com/canopy-express/">Canopy Express</a>, which includes all of these dependencies.</p>
+<p>You can verify your installation by running the scikit-bio unit tests as follows:</p>
 <pre>
 nosetests --with-doctest skbio
 </pre>
@@ -79,7 +62,7 @@ git clone git@github.com:biocore/scikit-bio.git
 cd scikit-bio
 pip install .
 </pre>
-<p>After this completes, you can run the scikit-bio unittest suite as follows. You must first <tt>cd</tt> out of the <tt>scikit-bio</tt> directory for the tests to pass (here we <tt>cd</tt> to the home directory).</p>
+<p>After this completes, you can run the scikit-bio unit tests as follows. You must first <tt>cd</tt> out of the <tt>scikit-bio</tt> directory for the tests to pass (here we <tt>cd</tt> to the home directory).</p>
 <pre>
 cd
 nosetests --with-doctest skbio
@@ -88,12 +71,12 @@ nosetests --with-doctest skbio
 <pre>
 pip install -e .
 </pre>
-<p>This will build scikit-bio's cython extensions, and will create a link in the <tt>site-packages</tt> directory to the scikit-bio source directory. When you then make changes to code in the source directory, those will be used (e.g., by the unittests) without re-installing.</p>
+<p>This will build scikit-bio's Cython extensions, and will create a link in the <tt>site-packages</tt> directory to the scikit-bio source directory. When you then make changes to code in the source directory, those will be used (e.g., by the unit tests) without re-installing.</p>
 <p>Finally, if you don't want to use <tt>pip</tt> to install scikit-bio, and prefer to just put <tt>scikit-bio</tt> in your <tt>$PYTHONPATH</tt>, at the minimum you should run:</p>
 <pre>
 python setup.py build_ext --inplace
 </pre>
-<p>This will build scikit-bio's cython extensions, but not create a link to the scikit-bio source directory in <tt>site-packages</tt>. If this isn't done, using certain components of scikit-bio will be inefficient and will produce an <tt>EfficiencyWarning</tt>.</p>
+<p>This will build scikit-bio's Cython extensions, but not create a link to the scikit-bio source directory in <tt>site-packages</tt>. If this isn't done, using certain components of scikit-bio will be inefficient and will produce an <tt>EfficiencyWarning</tt>.</p>
 <h2>
 <a name="user-content-getting-help" class="anchor" href="#getting-help" aria-hidden="true"><span class="octicon octicon-link"></span></a>Getting help</h2>
 <p>To get help with scikit-bio, you should use the <a href="http://stackoverflow.com/questions/tagged/skbio">skbio</a> tag on StackOverflow (SO). Before posting a question, check out SO's guide on how to <a href="http://stackoverflow.com/questions/how-to-ask">ask a question</a>. The scikit-bio developers regularly monitor the skbio SO tag.</p>
@@ -112,7 +95,8 @@ python setup.py build_ext --inplace
 <li><a href="http://caporasolab.us/An-Introduction-To-Applied-Bioinformatics/">An Introduction to Applied
 Bioinformatics</a></li>
 <li><a href="https://github.com/biocore/tax2tree">tax2tree</a></li>
-</ul><p>If you're using scikit-bio in your own projects, you can issue a
+</ul>
+<p>If you're using scikit-bio in your own projects, you can issue a
 pull request to add them to this list.</p>
 <h2>
 <a name="user-content-scikit-bio-development" class="anchor" href="#scikit-bio-development" aria-hidden="true"><span class="octicon octicon-link"></span></a>scikit-bio development</h2>
