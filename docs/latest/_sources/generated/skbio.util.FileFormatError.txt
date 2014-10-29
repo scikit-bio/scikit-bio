@@ -1,6 +1,0 @@
-skbio.util.FileFormatError
-==========================
-
-.. currentmodule:: skbio.util
-
-.. autoexception:: FileFormatError

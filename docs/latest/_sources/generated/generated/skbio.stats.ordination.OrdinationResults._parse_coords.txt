@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.stats.ordination.OrdinationResults._parse_coords
-======================================================
-
-.. currentmodule:: skbio.stats.ordination
-
-.. automethod:: OrdinationResults._parse_coords

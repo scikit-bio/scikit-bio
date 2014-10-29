@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.stats.distance.DistanceMatrix._parse_ids
-==============================================
-
-.. currentmodule:: skbio.stats.distance
-
-.. automethod:: DistanceMatrix._parse_ids
