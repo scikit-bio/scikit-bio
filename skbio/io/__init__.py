@@ -118,6 +118,7 @@ see the associated documentation.
    newick
    ordination
    phylip
+   qseq
 
 Formats are considered to be names which represent a way of encoding a file.
 
