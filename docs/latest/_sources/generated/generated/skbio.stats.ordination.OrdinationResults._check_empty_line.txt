@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.stats.ordination.OrdinationResults._check_empty_line
-==========================================================
-
-.. currentmodule:: skbio.stats.ordination
-
-.. automethod:: OrdinationResults._check_empty_line

@@ -1,6 +1,0 @@
-skbio.util.RecordError
-======================
-
-.. currentmodule:: skbio.util
-
-.. autoexception:: RecordError
