@@ -294,7 +294,9 @@ class TestNewick(unittest.TestCase):
             ("#SampleID\tHeaderA\tHeaderB\n0\t'yellow'\t0.45;", ['whitespace',
                                                                  'label']),
             ("))();", ['Parenthesis', 'unbalanced']),
-            ("((,,),((,,));", ['Parenthesis', 'unbalanced'])
+            ("((,,),((,,));", ['Parenthesis', 'unbalanced']),
+            ("\n".join([",".join(str(i) for i in range(100))
+                       for _ in range(100)]), ['whitespace', 'label'])
         ]
 
     def test_newick_to_tree_node_valid_files(self):
