@@ -248,7 +248,7 @@ def _newick_sniffer(fh):
         for token, _ in zip(_tokenize_newick(fh), range(100)):
             if token not in operators:
                 pass
-            elif token == ',' and last_token != ':':
+            elif token == ',' and last_token != ':' and indent > 0:
                 pass
             elif token == ':' and last_token != ':':
                 pass
