@@ -405,11 +405,10 @@ class DissimilarityMatrix(object):
         fig = plt.figure()
         ax = fig.add_subplot(111)
         ticks = list(np.arange(0.5,len(self.ids),1))
-        ax.set_xlabel(title)
+        ax.set_title(title)
         ax.set_xticks(ticks, minor=False)
         ax.set_yticks(ticks, minor=False)
         ax.invert_yaxis()
-        ax.xaxis.tick_top()
         #Makes the graph accurate
         plt.xticks(rotation=90)
         ax.set_xticklabels(self.ids, minor=False)
