@@ -12,6 +12,9 @@ from future.utils.six import StringIO
 
 from unittest import TestCase, main
 
+import matplotlib as mpl
+mpl.use('Agg')
+
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
@@ -278,6 +281,62 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
     def test_filter_empty_ids(self):
         with self.assertRaises(DissimilarityMatrixError):
             self.dm_3x3.filter([])
+
+    def test_plot_default(self):
+        fig = self.dm_1x1.plot()
+        axes = fig.get_axes()
+        self.assertIsInstance(fig, mpl.figure.Figure)
+        self.assertEqual(len(axes), 2)
+        ax = axes[0]
+        self.assertEqual(ax.get_title(), '')
+
+    def test_plot_no_default(self):
+        ids = ['0','1','2','3','4']
+        data = ([0,1,2,3,4],[1,0,1,2,3],[2,1,0,1,2],[3,2,1,0,1],[4,3,2,1,0])
+        dm = DissimilarityMatrix(data, ids)
+        fig = dm.plot(cmap='Reds', title='Testplot')
+        axes = fig.get_axes()
+        self.assertIsInstance(fig, mpl.figure.Figure)
+        self.assertEqual(len(axes), 2)
+        ax = axes[0]
+        self.assertEqual(ax.get_title(), 'Testplot')
+        ticks = []
+        for tick in ax.get_xticklabels():
+            ticks.append(tick.get_text())
+        self.assertEqual(ticks,['0','1','2','3','4'])
+
+    def test_plot_xticks(self):
+        fig = self.dm_1x1.plot()
+        axes = fig.get_axes()
+        self.assertIsInstance(fig, mpl.figure.Figure)
+        self.assertEqual(len(axes), 2)
+        ax = axes[0]
+        self.assertEqual(ax.get_title(), '')
+        ticks = []
+        for tick in ax.get_xticklabels():
+            ticks.append(tick.get_text())
+        self.assertEqual(ticks,['a'])
+
+    def test_plot_yticks(self):
+        fig = self.dm_1x1.plot()
+        axes = fig.get_axes()
+        self.assertIsInstance(fig, mpl.figure.Figure)
+        self.assertEqual(len(axes), 2)
+        ax = axes[0]
+        self.assertEqual(ax.get_title(), '')
+        ticks = []
+        for tick in ax.get_yticklabels():
+            ticks.append(tick.get_text())
+        self.assertEqual(ticks,['a'])
+
+    def test_plot_title(self):
+        fig = self.dm_1x1.plot(title='heatmap')
+        axes = fig.get_axes()
+        self.assertIsInstance(fig, mpl.figure.Figure)
+        self.assertEqual(len(axes), 2)
+        ax = axes[0]
+        self.assertEqual(ax.get_title(), 'heatmap')
+
 
     def test_str(self):
         for dm in self.dms:
