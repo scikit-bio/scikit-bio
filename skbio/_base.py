@@ -12,8 +12,8 @@ from future.utils import with_metaclass
 from abc import ABCMeta, abstractmethod
 
 
-class ScikitBioABC(with_metaclass(ABCMeta, object)):
-    """Abstract base class for core API common to all scikit-bio objects.
+class skbio_object(with_metaclass(ABCMeta, object)):
+    """Abstract base class defining core API common to all scikit-bio objects.
 
     Public scikit-bio classes should subclass this class to ensure a common,
     core API is present. All abstract methods and properties defined here must

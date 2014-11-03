@@ -23,7 +23,7 @@ from scipy.stats import pearsonr
 from future.builtins import zip
 from six import StringIO
 
-from skbio._base import ScikitBioABC
+from skbio._base import skbio_object
 from skbio.stats.distance import DistanceMatrix
 from skbio.io import RecordError
 from ._exception import (NoLengthError, DuplicateNodeError, NoParentError,
@@ -49,7 +49,7 @@ def distance_from_r(m1, m2):
     return (1-pearsonr(m1.data.flat, m2.data.flat)[0])/2
 
 
-class TreeNode(ScikitBioABC):
+class TreeNode(skbio_object):
     r"""Representation of a node within a tree
 
     A `TreeNode` instance stores links to its parent and optional children
