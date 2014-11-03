@@ -11,7 +11,6 @@ from future.builtins import zip
 
 import warnings
 from functools import partial
-from importlib import import_module
 
 import numpy as np
 import matplotlib as mpl
@@ -22,9 +21,6 @@ from mpl_toolkits.mplot3d import Axes3D
 Axes3D
 from IPython.core.pylabtools import print_figure
 from IPython.core.display import Image, SVG
-
-# This will be the responsibility of the ABC in the future.
-import_module('skbio.io')
 
 
 class OrdinationResults(object):

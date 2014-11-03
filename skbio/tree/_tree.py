@@ -17,7 +17,6 @@ from copy import deepcopy
 from itertools import combinations
 from functools import reduce
 from collections import defaultdict
-from importlib import import_module
 
 import numpy as np
 from scipy.stats import pearsonr
@@ -28,9 +27,6 @@ from skbio.stats.distance import DistanceMatrix
 from skbio.io import RecordError
 from ._exception import (NoLengthError, DuplicateNodeError, NoParentError,
                          MissingNodeError, TreeError)
-
-# This will be the responsibility of the ABC in the future.
-import_module('skbio.io')
 
 
 def distance_from_r(m1, m2):

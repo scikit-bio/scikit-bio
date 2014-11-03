@@ -12,16 +12,12 @@ from six import string_types
 import re
 import warnings
 from collections import Sequence, Counter, defaultdict
-from importlib import import_module
 from itertools import product
 
 import numpy as np
 from scipy.spatial.distance import hamming
 
 from skbio.sequence import BiologicalSequenceError
-
-# This will be the responsibility of the ABC in the future.
-import_module('skbio.io')
 
 
 class BiologicalSequence(Sequence):
