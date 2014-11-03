@@ -17,10 +17,11 @@ from itertools import product
 import numpy as np
 from scipy.spatial.distance import hamming
 
+from skbio._base import ScikitBioABC
 from skbio.sequence import BiologicalSequenceError
 
 
-class BiologicalSequence(Sequence):
+class BiologicalSequence(Sequence, ScikitBioABC):
     """Base class for biological sequences.
 
     Parameters

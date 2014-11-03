@@ -17,6 +17,7 @@ import numpy as np
 import pandas as pd
 from scipy.spatial.distance import squareform
 
+from skbio._base import ScikitBioABC
 from skbio.stats import p_value_to_str
 
 
@@ -39,7 +40,7 @@ class MissingIDError(DissimilarityMatrixError):
                      missing_id,)
 
 
-class DissimilarityMatrix(object):
+class DissimilarityMatrix(ScikitBioABC):
     """Store dissimilarities between objects.
 
     A `DissimilarityMatrix` instance stores a square, hollow, two-dimensional
