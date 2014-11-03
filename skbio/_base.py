@@ -12,7 +12,7 @@ from future.utils import with_metaclass
 from abc import ABCMeta, abstractmethod
 
 
-class skbio_object(with_metaclass(ABCMeta, object)):
+class SkbioObject(with_metaclass(ABCMeta, object)):
     """Abstract base class defining core API common to all scikit-bio objects.
 
     Public scikit-bio classes should subclass this class to ensure a common,

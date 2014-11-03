@@ -10,12 +10,12 @@ from __future__ import absolute_import, division, print_function
 
 import unittest
 
-from skbio._base import skbio_object
+from skbio._base import SkbioObject
 
 
 class TestSkbioObject(unittest.TestCase):
     def test_no_instantiation(self):
-        class Foo(skbio_object):
+        class Foo(SkbioObject):
             pass
 
         with self.assertRaises(TypeError):

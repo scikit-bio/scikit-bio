@@ -17,14 +17,14 @@ from collections import Counter, defaultdict, OrderedDict
 import numpy as np
 from scipy.stats import entropy
 
-from skbio._base import skbio_object
+from skbio._base import SkbioObject
 from skbio.stats.distance import DistanceMatrix
 from skbio.io.util import open_file
 from ._exception import (SequenceCollectionError, StockholmParseError,
                          AlignmentError)
 
 
-class SequenceCollection(skbio_object):
+class SequenceCollection(SkbioObject):
     """Class for storing collections of biological sequences.
 
     Parameters
