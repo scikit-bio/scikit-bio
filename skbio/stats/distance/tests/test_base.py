@@ -291,7 +291,8 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
 
     def test_plot_no_default(self):
         ids = ['0', '1', '2', '3', '4']
-        data = ([0, 1, 2, 3, 4], [1, 0, 1, 2, 3], [2, 1, 0, 1, 2], [3, 2, 1, 0, 1], [4, 3, 2, 1, 0])
+        data = ([0, 1, 2, 3, 4], [1, 0, 1, 2, 3], [2, 1, 0, 1, 2],
+                [3, 2, 1, 0, 1], [4, 3, 2, 1, 0])
         dm = DissimilarityMatrix(data, ids)
         fig = dm.plot(cmap='Reds', title='Testplot')
         axes = fig.get_axes()
@@ -302,7 +303,7 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         ticks = []
         for tick in ax.get_xticklabels():
             ticks.append(tick.get_text())
-        self.assertEqual(ticks,['0', '1', '2', '3', '4'])
+        self.assertEqual(ticks, ['0', '1', '2', '3', '4'])
 
     def test_plot_xticks(self):
         fig = self.dm_1x1.plot()
@@ -314,7 +315,7 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         ticks = []
         for tick in ax.get_xticklabels():
             ticks.append(tick.get_text())
-        self.assertEqual(ticks,['a'])
+        self.assertEqual(ticks, ['a'])
 
     def test_plot_yticks(self):
         fig = self.dm_1x1.plot()
@@ -326,7 +327,7 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         ticks = []
         for tick in ax.get_yticklabels():
             ticks.append(tick.get_text())
-        self.assertEqual(ticks,['a'])
+        self.assertEqual(ticks, ['a'])
 
     def test_plot_title(self):
         fig = self.dm_1x1.plot(title='heatmap')

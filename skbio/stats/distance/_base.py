@@ -394,7 +394,8 @@ class DissimilarityMatrix(object):
         ----------
         cmap: str or matplotlib.colors.Colormap, optional
             Sets the color scheme of the heatmap
-            If ``None``, defaults to the colormap specified in the matplotlib rc file.
+            If ``None``, defaults to the colormap specified in the matplotlib
+            rc file.
 
         title: str, optional
             Sets the title label of the heatmap
@@ -403,7 +404,8 @@ class DissimilarityMatrix(object):
         Returns
         -------
         matplotlib.figure.Figure
-            Figure containing the heatmap and colorbar of the plotted dissimilarity matrix.
+            Figure containing the heatmap and colorbar of the plotted
+            dissimilarity matrix.
 
         Example
         -------
@@ -415,41 +417,47 @@ class DissimilarityMatrix(object):
         fig = dm.plot(cmap='Reds', title='Test')
 
         """
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        ticks = list(np.arange(0.5,len(self.ids),1))
-        ax.set_title(title)
+        # based on http://stackoverflow.com/q/14391959/3776794
+        fig, ax = plt.subplots()
+
+        # use pcolormesh instead of pcolor for performance
+        heatmap = ax.pcolormesh(self.data, cmap=cmap)
+        fig.colorbar(heatmap)
+
+        # center labels within each cell
+        ticks = np.arange(0.5, self.shape[0])
         ax.set_xticks(ticks, minor=False)
         ax.set_yticks(ticks, minor=False)
+
+        # display data as it is stored in the dissimilarity matrix
+        # (default is to have y-axis inverted)
         ax.invert_yaxis()
-        #Makes the graph accurate
-        plt.xticks(rotation=90)
-        ax.set_xticklabels(self.ids, minor=False)
+
+        ax.set_xticklabels(self.ids, rotation=90, minor=False)
         ax.set_yticklabels(self.ids, minor=False)
-        heatmap=ax.pcolor(self.data, cmap=cmap)
-        fig.colorbar(heatmap)
-        #Creates legend for heatmap
+        ax.set_title(title)
+
         return fig
 
     def _repr_png_(self):
-      return self._figure_data('png')
+        return self._figure_data('png')
 
     def _repr_svg_(self):
-      return self._figure_data('svg')
+        return self._figure_data('svg')
 
     @property
     def png(self):
-      """Display heatmap in IPython Notebook as PNG.
+        """Display heatmap in IPython Notebook as PNG.
 
-      """
-      return Image(self._repr_png_(), embed=True)
+        """
+        return Image(self._repr_png_(), embed=True)
 
     @property
     def svg(self):
-      """Display heatmap in IPython Notebook as SVG.
+        """Display heatmap in IPython Notebook as SVG.
 
-      """
-      return SVG(self._repr_svg_())
+        """
+        return SVG(self._repr_svg_())
 
     def _figure_data(self, format):
         fig = self.plot()
