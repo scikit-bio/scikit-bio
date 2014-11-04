@@ -17,20 +17,17 @@ from copy import deepcopy
 from itertools import combinations
 from functools import reduce
 from collections import defaultdict
-from importlib import import_module
 
 import numpy as np
 from scipy.stats import pearsonr
 from future.builtins import zip
 from six import StringIO
 
+from skbio._base import SkbioObject
 from skbio.stats.distance import DistanceMatrix
 from skbio.io import RecordError
 from ._exception import (NoLengthError, DuplicateNodeError, NoParentError,
                          MissingNodeError, TreeError)
-
-# This will be the responsibility of the ABC in the future.
-import_module('skbio.io')
 
 
 def distance_from_r(m1, m2):
@@ -52,7 +49,7 @@ def distance_from_r(m1, m2):
     return (1-pearsonr(m1.data.flat, m2.data.flat)[0])/2
 
 
-class TreeNode(object):
+class TreeNode(SkbioObject):
     r"""Representation of a node within a tree
 
     A `TreeNode` instance stores links to its parent and optional children

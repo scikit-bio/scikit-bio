@@ -12,16 +12,13 @@ from six import StringIO, string_types
 import csv
 import warnings
 from copy import deepcopy
-from importlib import import_module
 
 import numpy as np
 import pandas as pd
 from scipy.spatial.distance import squareform
 
+from skbio._base import SkbioObject
 from skbio.stats import p_value_to_str
-
-# This will be the responsibility of the ABC in the future.
-import_module('skbio.io')
 
 
 class DissimilarityMatrixError(Exception):
@@ -43,7 +40,7 @@ class MissingIDError(DissimilarityMatrixError):
                      missing_id,)
 
 
-class DissimilarityMatrix(object):
+class DissimilarityMatrix(SkbioObject):
     """Store dissimilarities between objects.
 
     A `DissimilarityMatrix` instance stores a square, hollow, two-dimensional

@@ -13,21 +13,18 @@ from six import StringIO
 
 import warnings
 from collections import Counter, defaultdict, OrderedDict
-from importlib import import_module
 
 import numpy as np
 from scipy.stats import entropy
 
+from skbio._base import SkbioObject
 from skbio.stats.distance import DistanceMatrix
 from skbio.io.util import open_file
 from ._exception import (SequenceCollectionError, StockholmParseError,
                          AlignmentError)
 
-# This will be the responsibility of the ABC in the future.
-import_module('skbio.io')
 
-
-class SequenceCollection(object):
+class SequenceCollection(SkbioObject):
     """Class for storing collections of biological sequences.
 
     Parameters
