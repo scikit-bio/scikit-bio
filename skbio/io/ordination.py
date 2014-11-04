@@ -74,13 +74,12 @@ An example of this file format might look like::
     Site8<tab>-1.14<tab>0.49<tab>0.47<tab>1.17
     Site9<tab>1.03<tab>1.03<tab>2.74<tab>-1.28
 
-
     Biplot<tab>3<tab>3
     -0.16<tab>0.63<tab>0.76
     -0.99<tab>0.06<tab>-0.04
     0.18<tab>-0.97<tab>0.03
 
-    Site constraints<tab>10<tab>9
+    Site constraints<tab>10<tab>4
     Site0<tab>0.69<tab>-3.08<tab>-0.32<tab>-1.24
     Site1<tab>0.66<tab>-3.06<tab>0.23<tab>2.69
     Site2<tab>0.63<tab>-3.04<tab>0.78<tab>-3.11
