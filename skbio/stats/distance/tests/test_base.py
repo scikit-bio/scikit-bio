@@ -14,7 +14,6 @@ from unittest import TestCase, main
 
 import matplotlib as mpl
 mpl.use('Agg')
-
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
@@ -291,8 +290,8 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         self.assertEqual(ax.get_title(), '')
 
     def test_plot_no_default(self):
-        ids = ['0','1','2','3','4']
-        data = ([0,1,2,3,4],[1,0,1,2,3],[2,1,0,1,2],[3,2,1,0,1],[4,3,2,1,0])
+        ids = ['0', '1', '2', '3', '4']
+        data = ([0, 1, 2, 3, 4], [1, 0, 1, 2, 3], [2, 1, 0, 1, 2], [3, 2, 1, 0, 1], [4, 3, 2, 1, 0])
         dm = DissimilarityMatrix(data, ids)
         fig = dm.plot(cmap='Reds', title='Testplot')
         axes = fig.get_axes()
@@ -303,7 +302,7 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         ticks = []
         for tick in ax.get_xticklabels():
             ticks.append(tick.get_text())
-        self.assertEqual(ticks,['0','1','2','3','4'])
+        self.assertEqual(ticks,['0', '1', '2', '3', '4'])
 
     def test_plot_xticks(self):
         fig = self.dm_1x1.plot()
@@ -336,7 +335,6 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         self.assertEqual(len(axes), 2)
         ax = axes[0]
         self.assertEqual(ax.get_title(), 'heatmap')
-
 
     def test_str(self):
         for dm in self.dms:
