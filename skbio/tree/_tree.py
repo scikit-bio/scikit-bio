@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-
-from __future__ import absolute_import, division, print_function
-
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -9,6 +5,8 @@ from __future__ import absolute_import, division, print_function
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
+
+from __future__ import absolute_import, division, print_function
 
 import re
 import warnings
@@ -2688,7 +2686,7 @@ class TreeNode(SkbioObject):
         >>> print(mat)
         4x4 distance matrix
         IDs:
-        a, b, d, e
+        'a', 'b', 'd', 'e'
         Data:
         [[  0.   3.  14.  15.]
          [  3.   0.  15.  16.]

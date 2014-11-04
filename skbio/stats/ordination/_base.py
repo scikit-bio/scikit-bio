@@ -22,8 +22,11 @@ Axes3D
 from IPython.core.pylabtools import print_figure
 from IPython.core.display import Image, SVG
 
+from skbio._base import SkbioObject
+from skbio.stats._misc import _pprint_strs
 
-class OrdinationResults(object):
+
+class OrdinationResults(SkbioObject):
     """Store ordination results, providing serialization and plotting support.
 
     Stores various components of ordination results. Provides methods for
@@ -139,6 +142,41 @@ class OrdinationResults(object):
             "scikit-bio 0.3.0. Please update your code to use "
             "OrdinationResults.write.", UserWarning)
         self.write(out_f, format='ordination')
+
+    def __str__(self):
+        """Return a string representation of the ordination results.
+
+        String representation lists ordination results attributes and indicates
+        whether or not they are present. If an attribute is present, its
+        dimensions are listed. A truncated list of species and site IDs are
+        included (if they are present).
+
+        Returns
+        -------
+        str
+            String representation of the ordination results.
+
+        .. shownumpydoc
+
+        """
+        lines = ['Ordination results:']
+
+        attrs = [(self.eigvals, 'Eigvals'),
+                 (self.proportion_explained, 'Proportion explained'),
+                 (self.species, 'Species'),
+                 (self.site, 'Site'),
+                 (self.biplot, 'Biplot'),
+                 (self.site_constraints, 'Site constraints')]
+        for attr, attr_label in attrs:
+            formatter = lambda e: 'x'.join(['%d' % s for s in e.shape])
+            lines.append(self._format_attribute(attr, attr_label, formatter))
+
+        lines.append(self._format_attribute(self.species_ids, 'Species IDs',
+                                            lambda e: _pprint_strs(e)))
+        lines.append(self._format_attribute(self.site_ids, 'Site IDs',
+                                            lambda e: _pprint_strs(e)))
+
+        return '\n'.join(lines)
 
     def plot(self, df=None, column=None, axes=(0, 1, 2), axis_labels=None,
              title='', cmap=None, s=20):
@@ -418,6 +456,13 @@ class OrdinationResults(object):
         # will pick it up and send it as output, resulting in a double display
         plt.close(fig)
         return data
+
+    def _format_attribute(self, attr, attr_label, formatter):
+        if attr is None:
+            formatted_attr = 'N/A'
+        else:
+            formatted_attr = formatter(attr)
+        return '\t%s: %s' % (attr_label, formatted_attr)
 
 
 class Ordination(object):
