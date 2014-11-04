@@ -14,6 +14,8 @@ import warnings
 from copy import deepcopy
 from importlib import import_module
 
+import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 from IPython.core.pylabtools import print_figure
 from IPython.core.display import Image, SVG
@@ -81,6 +83,8 @@ class DissimilarityMatrix(object):
     shape
     size
     T
+    png
+    svg
 
     See Also
     --------
@@ -384,24 +388,33 @@ class DissimilarityMatrix(object):
         return self.__class__(filtered_data, ids)
 
     def plot(self, cmap=None, title=""):
-        '''Creates a heatmap of the dissimilarity matrix
+        """Creates a heatmap of the dissimilarity matrix
 
         Parameters
         ----------
-        cmap: optional, string
+        cmap: str or matplotlib.colors.Colormap, optional
             Sets the color scheme of the heatmap
-            (Default is full color spectrum)
+            If ``None``, defaults to the colormap specified in the matplotlib rc file.
 
-        title: optional, string
+        title: str, optional
             Sets the title label of the heatmap
             (Default is blank)
 
         Returns
         -------
-        fig
-            Visual representation of the dissimilarity matrix, does not show however.
-            Must use _repr_png_ or _repr_svg_ to show.
-        '''
+        matplotlib.figure.Figure
+            Figure containing the heatmap and colorbar of the plotted dissimilarity matrix.
+
+        Example
+        -------
+        import numpy
+        from skbio.stats.distance import *
+        ids = ['foo', 'bar']
+        data = ([0, 1], [1, 0])
+        dm = DistanceMatrix(data, ids)
+        fig = dm.plot(cmap='Reds', title='Test')
+
+        """
         fig = plt.figure()
         ax = fig.add_subplot(111)
         ticks = list(np.arange(0.5,len(self.ids),1))
@@ -426,10 +439,16 @@ class DissimilarityMatrix(object):
 
     @property
     def png(self):
+      """Display heatmap in IPython Notebook as PNG.
+
+      """
       return Image(self._repr_png_(), embed=True)
 
     @property
     def svg(self):
+      """Display heatmap in IPython Notebook as SVG.
+
+      """
       return SVG(self._repr_svg_())
 
     def _figure_data(self, format):
@@ -439,7 +458,6 @@ class DissimilarityMatrix(object):
         # will pick it up and send it as output, resulting in a double display
         plt.close(fig)
         return data
-
 
     def __str__(self):
         """Return a string representation of the dissimilarity matrix.
