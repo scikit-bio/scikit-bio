@@ -6,17 +6,17 @@ Empirical Power Estimation (:mod:`skbio.stats.power`)
 
 The purpose of this module is to provide empirical, post-hoc power estimation
 of normally and non-normally distributed data. It also provides support to
-subsample data to faciliate this analysis.
+subsample data to facilitate this analysis.
 
-The underlying principle is based on subsampling and monte carlo simulation.
+The underlying principle is based on subsampling and Monte Carlo simulation[1].
 Assume that there is some set of populations, :math:`K_{1}, K_{2}, ... K_{n}`
 which have some property, :math:`\mu` such that :math:`\mu_{1} \neq \mu_{2}
-\neq ... \neq \mu_{n}`. For each of the populations, a sample, S can be drawn,
-with a parameter, :math:`x` where :math:`x \approx \mu` and for the samples,
-we can use a test, f, to show that :math:`x_{1} \neq x_{2} \neq ...
-\neq x_{n}`.
+\neq ... \neq \mu_{n}`. For each of the populations, a sample, :math:`S` can be
+drawn, with a parameter, :math:`x` where :math:`x \approx \mu` and for the
+samples, we can use a test, :math:`f`, to show that :math:`x_{1} \neq x_{2}
+\neq ... \neq x_{n}`.
 
-Since we known that :math:`\mu_{1} \neq \mu_{2} \neq ... \neq \mu_{n}`,
+Since we know that :math:`\mu_{1} \neq \mu_{2} \neq ... \neq \mu_{n}`,
 we know we should reject the null hypothesis. If we fail to reject the null
 hypothesis, we have comitted a Type II error and our result is a false
 negative. We can estimate the frequency of Type II errors at various sampling
@@ -30,13 +30,13 @@ To generate complete power curves from data which appears underpowered, the
 `statsmodels.stats.power` package can be used to solve for an effect size. The
 effect size can be used to extrapolate a power curve for the data.
 
-The general format for functions in this module is to define a statistical
-test function which will take a list of ids, and return a p value. The test is
-then evaluated over a series of subsample sizes.
+Most functions in this module accept a statistical test function which takes a
+list of samples and returns a p value. The test is then evaluated over a series
+of subsamples.
 
 If metadata is avaliable, there are three ways we can approach selecting our
-sample. We may choose to simply draw n observations at random from the two
-underlying samples. Alternatively, we can draw subsamples which are
+sample. We may choose to simply draw math:`n` observations at random from the
+two underlying samples. Alternatively, we can draw subsamples which are
 significantly different. Finally, we can try to match samples based on a set
 of control categories.
 
@@ -46,27 +46,29 @@ Functions
 .. autosummary::
     :toctree: generated/
 
-    get_subsampled_power
+    subsample_power
     confidence_bound
     bootstrap_power_curve
-    get_significant_subsample
-    get_paired_subsamples
+    significant_subsamples
+    paired_subsamples
 
 Examples
 --------
 Suppose we wanted to look at the power curve for two variables, `ind` and
 `dep`, using completely random subsampling. To control for the pseudo
-random number generation, we will use a seed.
+random number generation, we will use a seed. When using these functions with
+your own data, you don't need to include the step.
 
 >>> import numpy as np
 >>> np.random.seed(20)
 >>> ind = np.random.randint(0, 20, 15)
->>> print ind
-[ 3 15  9 11  7  2  0  8 19 16  6  6 16  9  5]
+>>> ind
+array([ 3, 15,  9, 11,  7,  2,  0,  8, 19, 16,  6,  6, 16,  9,  5])
 >>> dep = (3 * ind + 5 + np.random.randn(15)*5).round(3)
->>> print dep
-[ 15.617  47.533  28.04   33.788  19.602  12.229   4.779  36.838  67.256
-  55.032  22.157   7.051  58.601  38.664  18.783]
+>>> dep
+array([ 15.617,  47.533,  28.04 ,  33.788,  19.602,  12.229,   4.779,
+        36.838,  67.256,  55.032,  22.157,   7.051,  58.601,  38.664,
+        18.783])
 
 Let's define a test that will draw a list of sample pairs and determine
 if they're correlated. We'll use the `scipy.stats.pearsonr` function, which
@@ -81,39 +83,39 @@ Now, let's use random sampling to estimate the power of our test on
 the first distribution.
 
 >>> samples = [ind, dep]
->>> print f(samples)
-3.64594525966e-08
+>>> f(samples)
+3.6459452596563003e-08
 
 Because we have relatively equal sample sizes, we should try completely
 random sampling, or set `mode` to "all". This is recommended when sample
-population are of simillar size, giving each sampled contained in the
-population a simillar probability of being drawn. If one sample is much larger
-than the other, signifigant subsampling can help decrease some of the noise.
-In `get_subsampled_power`, we can maintain a paired relationship between
-samples by setting `draw_mode` to "matched".
+populations are of similar size, giving each sample contained in a
+population a similar probability of being drawn. If one sample is much larger
+than the other, signifigant subsampling (`mode` = 'sig') can help decrease
+some of the noise. In `subsample_power`, we can maintain a paired relationship
+between samples by setting `draw_mode` to "matched".
 
->>> from skbio.stats.power import get_subsampled_power
->>> pwr_ests, counts = get_subsampled_power(mode="all",
-...                                         test=f,
-...                                         samples=samples,
-...                                         min_counts=3,
-...                                         max_counts=10,
-...                                         counts_start=3,
-...                                         counts_interval=1,
-...                                         draw_mode="matched")
->>> print counts
-[3 4 5 6 7 8 9]
->>> print pwr_ests
-[[ 0.234  0.642  0.876  0.96   0.99   1.     1.   ]
- [ 0.242  0.654  0.848  0.946  0.998  1.     1.   ]
- [ 0.244  0.664  0.884  0.946  0.988  1.     1.   ]
- [ 0.248  0.666  0.866  0.948  0.986  1.     1.   ]
- [ 0.242  0.658  0.9    0.94   0.99   1.     1.   ]
- [ 0.242  0.638  0.874  0.952  0.992  1.     1.   ]
- [ 0.24   0.66   0.904  0.95   0.988  1.     1.   ]
- [ 0.232  0.64   0.912  0.972  0.988  1.     1.   ]
- [ 0.256  0.646  0.854  0.952  0.992  1.     1.   ]
- [ 0.216  0.646  0.882  0.962  0.998  1.     1.   ]]
+>>> from skbio.stats.power import subsample_power
+>>> pwr_ests, counts = subsample_power(mode="all",
+...                                    test=f,
+...                                    samples=samples,
+...                                    min_counts=3,
+...                                    max_counts=10,
+...                                    counts_start=3,
+...                                    counts_interval=1,
+...                                    draw_mode="matched")
+>>> counts
+array([3, 4, 5, 6, 7, 8, 9])
+>>> pwr_ests
+array([[ 0.234,  0.642,  0.876,  0.96 ,  0.99 ,  1.   ,  1.   ],
+       [ 0.242,  0.654,  0.848,  0.946,  0.998,  1.   ,  1.   ],
+       [ 0.244,  0.664,  0.884,  0.946,  0.988,  1.   ,  1.   ],
+       [ 0.248,  0.666,  0.866,  0.948,  0.986,  1.   ,  1.   ],
+       [ 0.242,  0.658,  0.9  ,  0.94 ,  0.99 ,  1.   ,  1.   ],
+       [ 0.242,  0.638,  0.874,  0.952,  0.992,  1.   ,  1.   ],
+       [ 0.24 ,  0.66 ,  0.904,  0.95 ,  0.988,  1.   ,  1.   ],
+       [ 0.232,  0.64 ,  0.912,  0.972,  0.988,  1.   ,  1.   ],
+       [ 0.256,  0.646,  0.854,  0.952,  0.992,  1.   ,  1.   ],
+       [ 0.216,  0.646,  0.882,  0.962,  0.998,  1.   ,  1.   ]])
 
 The `pwr_est` can then be used to fit an effect size using
 `statsmodel.stats.power` module or the results can be average and plotted.
@@ -128,17 +130,17 @@ The `pwr_est` can then be used to fit an effect size using
 # The full license is in the file COPYING.txt, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from __future__ import division
+from __future__ import absolute_import, division, print_function
 from future.utils import viewitems
 import numpy as np
 from scipy.stats import t, nanstd
 
 
-def get_subsampled_power(mode, test, meta=None, cat=None, control_cats=None,
-                         order=None, strict=True, samples=None, sub_size=None,
-                         draw_mode='ind', scaling=5, alpha_pwr=0.05,
-                         min_counts=20, max_counts=50, counts_interval=10,
-                         counts_start=None, num_iter=500, num_runs=10):
+def subsample_power(mode, test, meta=None, cat=None, control_cats=None,
+                    order=None, strict=True, samples=None, sub_size=None,
+                    draw_mode='ind', scaling=5, alpha_pwr=0.05,
+                    min_counts=20, max_counts=50, counts_interval=10,
+                    counts_start=None, num_iter=500, num_runs=10):
     r"""Subsamples data to iterative calculate power
 
     Parameters
@@ -186,7 +188,7 @@ def get_subsampled_power(mode, test, meta=None, cat=None, control_cats=None,
     strict: bool, optional
         Default is True. If a missing value (nan) is encountered, the group
         will be skipped when `strict` is True.
-    samples : array-like
+    samples : array_like
         Default is None. `samples` can be a list of lists or a list of arrays
         where each sublist or row in the array corresponds to a sampled group.
         Required for "all" and "sig" mode.
@@ -250,24 +252,29 @@ def get_subsampled_power(mode, test, meta=None, cat=None, control_cats=None,
 
     Examples
     --------
-    Let's say we wanted to look at the presence of a spectific genus,
-    :math:`\textit{Gardnerella}`, is pre and post menopasual women.
-    We've collected samples from 100 women: 50 in each group. Let's start by
-    simulating the probability that women in each group have the vaginosis.
+    Let's say we wanted to look at the relationship between the presence of a
+    spectific bacteria and the probability of a pre or post menopausal woman
+    experiencing a health outcome. Assume we found 100 samples (50 pre and 50
+    post) where the presence of the bacteria was detected by 16s sequencing
+    and confirmed with PCR. Let's start by simulating the probability that
+    women in each group will experience the outcome.
+
     We'll set a random seed in numpy to maintain consistent results.
 
     >>> import numpy as np
     >>> np.random.seed(25)
     >>> pre_rate = np.random.binomial(1, 0.75, size=(50,))
-    >>> print pre_rate
-    [0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 0 1 1 1 1 1 1 1 0 1 1 1 1 1
-     1 0 0 1 1 1 1 0 0 1 1 1 1]
+    >>> pre_rate
+    array([0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1,
+           0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0,
+           1, 1, 1, 1])
     >>> pos_rate = np.random.binomial(1, 0.25, size=(50,))
     >>> print pos_rate
-    [0 1 0 0 0 0 0 0 0 0 0 1 0 0 1 0 0 1 0 0 0 0 0 0 1 1 0 1 0 0 0 1 1 0 0 0 0
-     1 0 0 0 1 0 1 0 0 0 1 0 0]
+    array([0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0,
+           0, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0,
+           0, 1, 0, 0])
 
-    Let's set up a test function, now, so we can test the probability of
+    Let's set up a test function, so we can test the probability of
     finding a difference in frequency between the two groups. We'll use
     `scipy.stats.chisquare` to look for the difference in frequency between
     groups.
@@ -278,7 +285,7 @@ def get_subsampled_power(mode, test, meta=None, cat=None, control_cats=None,
 
     Let's make sure that our two distributions are different.
 
-    >>> print round(test([pre_rate, pos_rate]), 5)
+    >>> round(test([pre_rate, pos_rate]), 5)
     9e-05
 
     Since there are an even number of samples, and we don't have enough
@@ -286,18 +293,21 @@ def get_subsampled_power(mode, test, meta=None, cat=None, control_cats=None,
     "all" mode. We'll also use "ind" draw mode, since there is no linkage
     between the two groups of samples.
 
-    >>> from skbio.stats.power import get_subsampled_power
-    >>> pwr_est, counts = get_subsampled_power(mode="all",
-    ...                                        test=test,
-    ...                                        samples=[pre_rate, pos_rate],
-    ...                                        counts_interval=5)
-    >>> print counts
-    [ 5 10 15 20 25 30 35 40 45]
-    >>> print nanmean(pwr_est, 0)
-    [ 0.176   0.3376  0.6582  0.884   0.9796  0.9986  1.      1.      1.    ]
+    >>> from skbio.stats.power import subsample_power
+    >>> pwr_est, counts = subsample_power(mode="all",
+    ...                                   test=test,
+    ...                                   samples=[pre_rate, pos_rate],
+    ...                                   counts_interval=5)
+    >>> counts
+    array([ 5, 10, 15, 20, 25, 30, 35, 40, 45])
+    >>> nanmean(pwr_est, 0)
+    array([ 0.176 ,  0.3376,  0.6582,  0.884 ,  0.9796,  0.9986,  1.    ,
+            1.    ,  1.    ])
 
-    So, we can estimate the difference between the two populations is powered
-    at 80% with between 15 and 20 samples.
+    So, we can estimate the that we will see a signifigant difference between
+    the two groups (:math:`\alpha \leq 0.05`) at least 80% of the time if we
+    use 20 samples per group.
+
     """
 
     # Checks the mode arguments
@@ -306,15 +316,15 @@ def get_subsampled_power(mode, test, meta=None, cat=None, control_cats=None,
             raise ValueError("paired mode requires a meta dataframe, a "
                              "cat to vary and a set of control_cats.")
         else:
-            sub_ids = get_paired_subsamples(meta, cat, control_cats, order,
-                                            strict)
+            sub_ids = paired_subsamples(meta, cat, control_cats, order,
+                                        strict)
             draw_mode = 'matched'
     elif mode == 'sig':
         if samples is None:
             raise ValueError("sig mode requires samples be defined.")
         else:
-            sub_ids = get_significant_subsample([test], samples, sub_size,
-                                                alpha_pwr, num_iter, scaling)
+            sub_ids = significant_subsamples([test], samples, sub_size,
+                                             alpha_pwr, num_iter, scaling)
             draw_mode = 'ind'
     elif mode == "all":
         if samples is None:
@@ -357,13 +367,13 @@ def get_subsampled_power(mode, test, meta=None, cat=None, control_cats=None,
     for id1 in range(num_runs):
         # Gets the subsample
         if mode == "paired":
-            sub_ids = get_paired_subsamples(meta, cat, control_cats, order,
-                                            strict)
+            sub_ids = paired_subsamples(meta, cat, control_cats, order,
+                                        strict)
 
         elif mode == 'sig':
-            sub_ids = get_significant_subsample([test], samples, sub_size,
-                                                alpha_pwr, num_iter,
-                                                scaling)
+            sub_ids = significant_subsamples([test], samples, sub_size,
+                                             alpha_pwr, num_iter,
+                                             scaling)
         else:
             sub_ids = samples
             # Calculates the power curve
@@ -418,7 +428,7 @@ def _compare_distributions(test, samples, counts=5, mode="ind", num_iter=1000):
     Parameters
     ----------
     test : function
-        The statistical test which accepts an array-like of sample ids
+        The statistical test which accepts an array_like of sample ids
         (list of lists) and returns a p-value.
     samples : list of arrays
         A list where each 1-d array represents a sample. If `mode` is
@@ -552,7 +562,7 @@ def _calculate_power_curve(test, samples, sample_counts, ratio=None,
     test : function
         The statistical test which accepts an list of arrays of values and
         returns a p value.
-    samples : array-like
+    samples : array_like
         `samples` can be a list of lists or an array where each sublist or row
         in the array corresponds to a sampled group.
     sample_counts : 1d array
@@ -627,9 +637,9 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
     Parameters
     ----------
     test : function
-        The statistical test which accepts an array-like of sample ids
+        The statistical test which accepts an array_like of sample ids
         (list of lists or list ) and returns a p-value.
-    samples : array-like
+    samples : array_like
         samples can be a list of lists or an array where each sublist or row in
         the array corresponds to a sampled group.
     sample_counts : 1d array
@@ -686,12 +696,15 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
     >>> power_mean, power_bound = bootstrap_power_curve(f,
     ...                                                 [samples_1, samples_2],
     ...                                                 sample_counts)
-    >>> print power_mean
-    [ 0.2546  0.4736  0.6732  0.821   0.9084  0.9602  0.9846  0.9956  0.9996
-      1.      1.      1.      1.      1.      1.    ]
+    >>> print power_mean #doctest: +NORMALIZE_WHITESPACE
+    array([ 0.2546, 0.4736, 0.6732, 0.821 , 0.9084, 0.9602, 0.9846,
+            0.9956, 0.9996, 1.    , 1.    , 1.    , 1.    , 1.    , 1.    ])
+
     >>> print power_bound.round(3)
-    [ 0.011  0.012  0.014  0.015  0.01   0.008  0.004  0.002  0.001  0.     0.
-      0.     0.     0.     0.   ]
+    array([ 0.01142029,  0.01187057,  0.01434594,  0.01538382,  0.01022352,
+            0.00750525,  0.00449911,  0.00222555,  0.00063587,  0.        ,
+            0.        ,  0.        ,  0.        ,  0.        ,  0.        ])
+
 
     """
 
@@ -715,8 +728,8 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
     return power_mean, power_bound
 
 
-def get_significant_subsample(tests, samples, sub_size=None, p_crit=0.05,
-                              num_rounds=500, p_scaling=5):
+def significant_subsamples(tests, samples, sub_size=None, p_crit=0.05,
+                           num_rounds=500, p_scaling=5):
     r"""Subsamples data to an even sample number with a signficiant difference
 
     This function is recommended for use when sample sizes are severely
@@ -724,7 +737,7 @@ def get_significant_subsample(tests, samples, sub_size=None, p_crit=0.05,
     with 100 observations, it's likely the observed range, and the observed
     varaince of the larger sample will be greater. To control for a
     difference in sample size and limit uneven weighting due to this disparity,
-    `get_significant_subsample` allows the user to select a group of subsamples
+    `significant_subsamples` allows the user to select a group of subsamples
     which are signfigantly different at some critical value (a required
     assumption for this iterative post-hoc power analysis). The function will
     terminate if a signifigantly different subsample cannot be identified in
@@ -735,7 +748,7 @@ def get_significant_subsample(tests, samples, sub_size=None, p_crit=0.05,
     test : function
         The statistical test which accepts a list of arrays of values
         (sample ids or numeric values) and returns a p value.
-    samples : array-like
+    samples : array_like
         Default is None. `samples` can be a list of lists or a list of arrays
         where each sublist or row in the array corresponds to a sampled group.
     sub_size : int
@@ -777,43 +790,43 @@ def get_significant_subsample(tests, samples, sub_size=None, p_crit=0.05,
     >>> np.random.seed(25)
     >>> y1 =  0.15*np.random.randint(20, 30, 25)
     >>> y1 = y1 + np.random.randint(25, 35, 25) + 5*np.random.randn(25)
-    >>> print y1.mean().round(3)
+    >>> round(y1.mean(), 3)
     33.65
-    >>> print np.array([y1.min(), y1.max()]).round(3)
-    [ 17.954  48.704]
+    >>> np.array([y1.min(), y1.max()]).round(3)
+    array([ 17.954,  48.704])
     >>> y2 = 0.15*np.random.randint(50, 60, 200) + 30 + 7*np.random.randn(200)
-    >>> print y2.mean().round(3)
+    >>> round(y2.mean(), 3)
     37.841
-    >>> print np.array([y2.min(), y2.max()]).round(3)
-    [ 20.229  56.001]
+    >>> np.array([y2.min(), y2.max()]).round(3)
+    array([ 20.229,  56.001])
 
     We can compare the two sample populations using a kruskal-wallis test.
 
     >>> from scipy.stats import kruskal
     >>> f = lambda x: kruskal(*x)[1]
-    >>> print f([y1, y2]).round(3)
+    >>> f([y1, y2]).round(3)
     0.001
 
     However, looking at the overlap in the sample range, it's possible that
     if we draw a random sample to compare the two distributions, we could get
     samples which intersect and do not reflect the true distibution and
-    difference in the samples. So, insteaad, we use get_significant_subsample
+    difference in the samples. So, insteaad, we use significant_subsamples
     to get a subsample of y2 the same size as y1. Let's compare the
     signifigantly subsampled population to a random subsample.
 
-    >>> from skbio.stats.power import (get_significant_subsample,
+    >>> from skbio.stats.power import (significant_subsamples,
     ...                                bootstrap_power_curve)
-    >>> vals = get_significant_subsample([f], [y1, y2])
+    >>> vals = significant_subsamples([f], [y1, y2])
     >>> all_mean, all_std = bootstrap_power_curve(f,
     ...                                           [y1, y2],
     ...                                           np.arange(5, 25, 5))
     >>> sub_mean, sub_std = bootstrap_power_curve(f,
     ...                                           vals,
     ...                                           np.arange(5, 25, 5))
-    >>> print all_mean
-    [ 0.1894  0.32    0.4562  0.6056]
-    >>> print sub_mean
-    [ 0.2212  0.4658  0.7008  0.965 ]
+    >>> all_mean
+    array([ 0.1894,  0.32  ,  0.4562,  0.6056])
+    >>> sub_mean
+    array([ 0.2212,  0.4658,  0.7008,  0.965 ])
 
     """
 
@@ -859,7 +872,7 @@ def get_significant_subsample(tests, samples, sub_size=None, p_crit=0.05,
                                'requirements.')
 
 
-def get_paired_subsamples(meta, cat, control_cats, order=None, strict=True):
+def paired_subsamples(meta, cat, control_cats, order=None, strict=True):
     r"""Gets a set samples to serve as controls
 
     This function is designed to provide controlled samples, based on a
@@ -917,8 +930,8 @@ def get_paired_subsamples(meta, cat, control_cats, order=None, strict=True):
     Let's say we want to vary housing, controlling for sex, age, antibiotics
     and sex.
 
-    >>> from skbio.stats.power import get_paired_subsamples
-    >>> ids = get_paired_subsamples(meta, 'HOUSING', ['SEX', 'AGE', 'ABX'])
+    >>> from skbio.stats.power import paired_subsamples
+    >>> ids = paired_subsamples(meta, 'HOUSING', ['SEX', 'AGE', 'ABX'])
     >>> ids #doctest: +NORMALIZE_WHITESPACE
     [array(['BB'],
           dtype='|S2'), array(['TS'],
