@@ -7,13 +7,13 @@ import pandas as pd
 from scipy.stats import kruskal
 
 from skbio.stats.power import (subsample_power,
+                               subsample_paired_power,
                                _check_strs,
                                confidence_bound,
                                _calculate_power,
                                _compare_distributions,
                                _calculate_power_curve,
                                bootstrap_power_curve,
-                               significant_subsamples,
                                paired_subsamples)
 
 
@@ -86,78 +86,67 @@ class PowerAnalysisTest(TestCase):
         self.power_alpha = 0.1
         self.effects = np.array([0.15245, 0.34877, 0.55830])
         self.bounds = np.array([0.01049, 0.00299, 0.007492])
-        self.labels = np.array(['Age', 'INTervenption', 'Anptibiotics'])
+        self.labels = np.array(['Age', 'Intervenption', 'Antibiotics'])
         self.cats = np.array(['AGE', 'INT', 'ABX'])
         self.cat = "AGE"
-
-    def test_subsample_power_paired_error_meta_none(self):
-        with self.assertRaises(ValueError):
-            subsample_power("paired", self.test_meta, cat=self.cat,
-                            control_cats=self.cats)
-
-    def test_subsample_power_paired_error_cat_none(self):
-        with self.assertRaises(ValueError):
-            subsample_power("paired", self.test_meta, meta=self.meta,
-                            control_cats=self.cats)
-
-    def test_subsample_power_paired_error_ctrl_cats_none(self):
-        with self.assertRaises(ValueError):
-            subsample_power("paired", self.test_meta, meta=self.meta,
-                            cat=self.cat)
-
-    def test_subsample_power_sig_error_no_samples(self):
-        with self.assertRaises(ValueError):
-            subsample_power("sig", self.f)
-
-    def test_subsample_power_all_error_no_samples(self):
-        with self.assertRaises(ValueError):
-            subsample_power("all", self.f)
-
-    def test_subsample_power_bad_mode(self):
-        with self.assertRaises(ValueError):
-            subsample_power("foo", self.f)
+        self.control_cats = ['INT', 'ABX']
 
     def test_subsample_power_min_counts_error(self):
         with self.assertRaises(RuntimeError):
-            subsample_power('all', self.f, samples=[np.ones((2)),
-                            np.ones((5))])
+            subsample_power(self.f,
+                            samples=[np.ones((2)), np.ones((5))])
 
     def test_subsample_power_interval_error(self):
         with self.assertRaises(RuntimeError):
-            subsample_power('all', self.f, samples=[np.ones((2)),
-                            np.ones((5))], min_counts=2,
-                            counts_start=5, max_counts=7)
+            subsample_power(self.f,
+                            samples=[np.ones((2)), np.ones((5))],
+                            min_counts=2,
+                            counts_start=5,
+                            max_counts=7)
 
-    def test_subsample_power_paired(self):
+    def test_subsample_paired_power_min_counts_error(self):
+        with self.assertRaises(RuntimeError):
+            subsample_paired_power(self.f,
+                                   self.meta,
+                                   cat=self.cat,
+                                   control_cats=self.control_cats)
+
+    def test_subsample_paired_power_interval_error(self):
+        with self.assertRaises(RuntimeError):
+            subsample_paired_power(self.f,
+                                   self.meta,
+                                   cat=self.cat,
+                                   control_cats=self.control_cats,
+                                   min_counts=2,
+                                   counts_start=5,
+                                   max_counts=7)
+
+    def test_subsample_paired_power(self):
         known_c = np.array([1, 2, 3, 4, 5])
         # Sets up the handling values
         cat = 'INT'
         control_cats = ['SEX']
         # Tests for the control cats
-        test_p, test_c = subsample_power("paired", self.meta_f,
-                                         meta=self.meta,
-                                         cat=cat,
-                                         control_cats=control_cats,
-                                         min_counts=1,
-                                         counts_interval=1,
-                                         num_iter=10,
-                                         num_runs=2)
+        test_p, test_c = subsample_paired_power(self.meta_f,
+                                                meta=self.meta,
+                                                cat=cat,
+                                                control_cats=control_cats,
+                                                min_counts=1,
+                                                counts_interval=1,
+                                                num_iter=10,
+                                                num_runs=2)
         # Test the output shapes are sane
         npt.assert_array_equal(test_p.shape, (2, 5))
         npt.assert_array_equal(known_c, test_c)
 
     def test_subsample_power_all_samples(self):
-        test_p, test_c = subsample_power('all', self.f, samples=self.pop,
-                                         num_iter=10, num_runs=2,
+        test_p, test_c = subsample_power(self.f,
+                                         samples=self.pop,
+                                         num_iter=10,
+                                         num_runs=2,
                                          counts_start=5)
         self.assertEqual(test_p.shape, (2, 5))
         npt.assert_array_equal(np.arange(5, 50, 10), test_c)
-
-    def test_subsample_power_significant_samples(self):
-        test_p, test_c = subsample_power("sig", self.f, samples=self.pop,
-                                         num_iter=10, num_runs=2)
-        self.assertEqual(test_p.shape, (2, 4))
-        npt.assert_array_equal(np.arange(10, 50, 10), test_c)
 
     def test__check_strs_str(self):
         self.assertTrue(_check_strs('string'))
@@ -314,44 +303,6 @@ class PowerAnalysisTest(TestCase):
         # Checks the function returned sanely
         npt.assert_allclose(test_mean, known_mean, rtol=0.05, atol=0.05)
         npt.assert_allclose(test_bound, known_bound, rtol=0.1, atol=0.01)
-
-    def test_significant_subsamples_no_tests(self):
-        with self.assertRaises(RuntimeError):
-            significant_subsamples([None], self.samps, num_rounds=100)
-
-    def test_significant_subsamples_no_results(self):
-        # Sets up a function which will fail testing
-        def test_f(x):
-            if len(x[0]) == 100:
-                return 0.001
-            else:
-                return 0.5
-        # Tests a value error is raised
-        with self.assertRaises(RuntimeError):
-            significant_subsamples([test_f], self.samps, sub_size=10,
-                                   num_rounds=5)
-
-    def test_significant_subsamples_no_iteration(self):
-        # Sets up a function which will fail testing
-        def test_f(x):
-            if len(x[0]) > 5:
-                return 0.001
-            else:
-                return 0.5
-        # Tests if a RuntimeError is raised
-        with self.assertRaises(RuntimeError):
-            significant_subsamples([test_f], self.samps, sub_size=5,
-                                   num_rounds=5)
-
-    def test_significant_subsamples_default(self):
-        pop = [np.arange(0, 10, 1), np.arange(0, 20, 0.2)]
-        # Checks the overall data meets the parameters
-        self.assertNotEqual(len(pop[0]), len(pop[1]))
-        # Generates subsamples
-        test_ids = significant_subsamples([self.f], pop)
-        # Checks the results
-        self.assertEqual(len(test_ids[0]), len(test_ids[1]))
-        self.assertTrue(self.f(test_ids) < 0.05)
 
     def test_paired_subsamples_default(self):
         # Sets the known np.array set
