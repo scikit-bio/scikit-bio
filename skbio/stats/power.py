@@ -47,9 +47,9 @@ Functions
     :toctree: generated/
 
     subsample_power
+    subsample_paired_power
     confidence_bound
     bootstrap_power_curve
-    significant_subsamples
     paired_subsamples
 
 Examples
