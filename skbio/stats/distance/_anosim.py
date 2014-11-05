@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -10,6 +8,8 @@
 
 from __future__ import absolute_import, division, print_function
 
+import warnings
+
 import numpy as np
 from scipy.stats import rankdata
 
@@ -18,6 +18,11 @@ from ._base import CategoricalStats
 
 class ANOSIM(CategoricalStats):
     """ANOSIM statistical method executor.
+
+    .. note:: Deprecated in scikit-bio 0.2.1-dev
+       ``ANOSIM`` will be removed in scikit-bio 0.3.0. It is replaced by
+       ``anosim``, which provides a simpler procedural interface to running
+       this statistical method.
 
     Analysis of Similarities (ANOSIM) is a non-parametric method that tests
     whether two or more groups of objects are significantly different based on
@@ -46,6 +51,11 @@ class ANOSIM(CategoricalStats):
     test_statistic_name = 'R statistic'
 
     def __init__(self, distance_matrix, grouping, column=None):
+        warnings.warn(
+            "skbio.stats.distance.ANOSIM is deprecated and will be removed in "
+            "scikit-bio 0.3.0. Please update your code to use "
+            "skbio.stats.distance.anosim.", UserWarning)
+
         super(ANOSIM, self).__init__(distance_matrix, grouping, column=column)
 
         self._divisor = self._dm.shape[0] * ((self._dm.shape[0] - 1) / 4)

@@ -906,6 +906,13 @@ class CategoricalStats(object):
 class CategoricalStatsResults(object):
     """Statistical method results container.
 
+    .. note:: Deprecated in scikit-bio 0.2.1-dev
+       ``CategoricalStatsResults`` will be removed in scikit-bio 0.3.0. It is
+       replaced by ``pandas.Series`` for storing statistical method results.
+       Please update your code to use ``skbio.stats.distance.anosim`` or
+       ``skbio.stats.distance.permanova``, which will return a
+       ``pandas.Series``.
+
     Stores the results of running a `CategoricalStats` method a single time,
     and provides a way to format the results.
 
@@ -931,6 +938,13 @@ class CategoricalStatsResults(object):
     def __init__(self, short_method_name, long_method_name,
                  test_statistic_name, sample_size, groups, statistic, p_value,
                  permutations):
+        warnings.warn(
+            "skbio.stats.distance.CategoricalStatsResults is deprecated and "
+            "will be removed in scikit-bio 0.3.0. Please update your code to "
+            "use either skbio.stats.distance.anosim or "
+            "skbio.stats.distance.permanova, which will return a "
+            "pandas.Series object.", UserWarning)
+
         self.short_method_name = short_method_name
         self.long_method_name = long_method_name
         self.test_statistic_name = test_statistic_name

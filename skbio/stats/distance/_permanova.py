@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -10,6 +8,8 @@
 
 from __future__ import absolute_import, division, print_function
 
+import warnings
+
 import numpy as np
 
 from ._base import CategoricalStats
@@ -17,6 +17,11 @@ from ._base import CategoricalStats
 
 class PERMANOVA(CategoricalStats):
     """PERMANOVA statistical method executor.
+
+    .. note:: Deprecated in scikit-bio 0.2.1-dev
+       ``PERMANOVA`` will be removed in scikit-bio 0.3.0. It is replaced by
+       ``permanova``, which provides a simpler procedural interface to running
+       this statistical method.
 
     Permutational Multivariate Analysis of Variance (PERMANOVA) is a
     non-parametric method that tests whether two or more groups of objects are
@@ -44,6 +49,11 @@ class PERMANOVA(CategoricalStats):
     test_statistic_name = 'pseudo-F statistic'
 
     def __init__(self, distance_matrix, grouping, column=None):
+        warnings.warn(
+            "skbio.stats.distance.PERMANOVA is deprecated and will be removed "
+            "in scikit-bio 0.3.0. Please update your code to use "
+            "skbio.stats.distance.permanova.", UserWarning)
+
         super(PERMANOVA, self).__init__(distance_matrix, grouping,
                                         column=column)
 

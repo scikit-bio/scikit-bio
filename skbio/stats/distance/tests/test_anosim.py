@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -10,6 +8,7 @@
 
 from __future__ import absolute_import, division, print_function
 from six import StringIO
+
 from unittest import TestCase, main
 
 import numpy as np
