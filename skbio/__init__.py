@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function
 # ----------------------------------------------------------------------------
 
 __credits__ = "https://github.com/biocore/scikit-bio/graphs/contributors"
-__version__ = "0.2.0-dev"
+__version__ = "0.2.1-dev"
 
 mottos = [
     # 03/15/2014
@@ -71,15 +71,17 @@ from skbio.alignment import (
 from skbio.tree import (
     TreeNode, nj)
 from skbio.parse.sequences import (
-    parse_fasta, parse_fastq, parse_qual, parse_qseq, FastaIterator,
-    FastqIterator, QseqIterator, SequenceIterator)
+    parse_fasta, parse_fastq, parse_qual, FastaIterator, FastqIterator,
+    SequenceIterator)
+from skbio.io import read, write
 
 __all__ = ['BiologicalSequence', 'NucleotideSequence', 'DNA', 'DNASequence',
            'RNA', 'RNASequence', 'Protein', 'ProteinSequence',
            'DistanceMatrix', 'local_pairwise_align_ssw',
            'SequenceCollection', 'Alignment', 'TreeNode', 'nj', 'parse_fasta',
-           'parse_fastq', 'parse_qual', 'parse_qseq', 'FastaIterator',
-           'FastqIterator', 'QseqIterator', 'SequenceIterator']
+           'parse_fastq', 'parse_qual', 'FastaIterator',
+           'FastqIterator', 'SequenceIterator', 'read',
+           'write']
 
 from numpy.testing import Tester
 test = Tester().test

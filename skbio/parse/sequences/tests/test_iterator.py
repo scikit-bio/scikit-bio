@@ -10,10 +10,10 @@
 
 from unittest import TestCase, main
 
-from future.utils.six import StringIO
+from six import StringIO
 from numpy import arange, array
 
-from skbio import SequenceIterator, FastaIterator, FastqIterator, QseqIterator
+from skbio import SequenceIterator, FastaIterator, FastqIterator
 
 
 class SeqIterTests(TestCase):
@@ -275,81 +275,6 @@ class FastqTests(TestCase):
         self.assertEqual(obs3, exp3)
 
 
-class QseqTests(TestCase):
-    def setUp(self):
-        self.qseqs = [StringIO(qseq1), StringIO(qseq2)]
-
-    def test_qseq_gen_phred33(self):
-        wk = QseqIterator(seq=self.qseqs, phred_offset=33)
-        gen = wk()
-
-        exp1 = {'SequenceID': 'CRESSIA_242:1:2204:1453:1918#0/1',
-                'Sequence': 'TTAA',
-                'QualID': 'CRESSIA_242:1:2204:1453:1918#0/1',
-                'Qual': array([33, 58, 58, 58])}
-        exp2 = {'SequenceID': 'CRESSIA_242:1:2204:1491:1920#0/1',
-                'Sequence': 'AAAA',
-                'QualID': 'CRESSIA_242:1:2204:1491:1920#0/1',
-                'Qual': array([33, 33, 33, 33])}
-        exp3 = {'SequenceID': 'CRESSIA_242:1:2204:1454:1919#0/1',
-                'Sequence': 'TTAB',
-                'QualID': 'CRESSIA_242:1:2204:1454:1919#0/1',
-                'Qual': array([33, 58, 58, 32])}
-
-        obs1 = next(gen)
-        self.assertTrue((obs1['Qual'] == exp1['Qual']).all())
-        obs1.pop('Qual')
-        exp1.pop('Qual')
-        self.assertEqual(obs1, exp1)
-
-        obs2 = next(gen)
-        self.assertTrue((obs2['Qual'] == exp2['Qual']).all())
-        obs2.pop('Qual')
-        exp2.pop('Qual')
-        self.assertEqual(obs2, exp2)
-
-        obs3 = next(gen)
-        self.assertTrue((obs3['Qual'] == exp3['Qual']).all())
-        obs3.pop('Qual')
-        exp3.pop('Qual')
-        self.assertEqual(obs3, exp3)
-
-    def test_qseq_gen_phred64(self):
-        wk = QseqIterator(seq=self.qseqs, phred_offset=64)
-        gen = wk()
-
-        exp1 = {'SequenceID': 'CRESSIA_242:1:2204:1453:1918#0/1',
-                'Sequence': 'TTAA',
-                'QualID': 'CRESSIA_242:1:2204:1453:1918#0/1',
-                'Qual': array([2, 27, 27, 27])}
-        exp2 = {'SequenceID': 'CRESSIA_242:1:2204:1491:1920#0/1',
-                'Sequence': 'AAAA',
-                'QualID': 'CRESSIA_242:1:2204:1491:1920#0/1',
-                'Qual': array([2, 2, 2, 2])}
-        exp3 = {'SequenceID': 'CRESSIA_242:1:2204:1454:1919#0/1',
-                'Sequence': 'TTAB',
-                'QualID': 'CRESSIA_242:1:2204:1454:1919#0/1',
-                'Qual': array([2, 27, 27, 1])}
-
-        obs1 = next(gen)
-        self.assertTrue((obs1['Qual'] == exp1['Qual']).all())
-        obs1.pop('Qual')
-        exp1.pop('Qual')
-        self.assertEqual(obs1, exp1)
-
-        obs2 = next(gen)
-        self.assertTrue((obs2['Qual'] == exp2['Qual']).all())
-        obs2.pop('Qual')
-        exp2.pop('Qual')
-        self.assertEqual(obs2, exp2)
-
-        obs3 = next(gen)
-        self.assertTrue((obs3['Qual'] == exp3['Qual']).all())
-        obs3.pop('Qual')
-        exp3.pop('Qual')
-        self.assertEqual(obs3, exp3)
-
-
 fasta1 = """>1
 aattggcc
 >2
@@ -406,11 +331,6 @@ taa
 EFG
 """
 
-qseq1 = """CRESSIA\t242\t1\t2204\t1453\t1918\t0\t1\tTTAA\tB[[[\t1
-CRESSIA\t242\t1\t2204\t1491\t1920\t0\t1\tAAAA\tBBBB\t1
-"""
-
-qseq2 = 'CRESSIA\t242\t1\t2204\t1454\t1919\t0\t1\tTTAB\tB[[A\t1'
 
 if __name__ == '__main__':
     main()
