@@ -689,7 +689,7 @@ def paired_subsamples(meta, cat, control_cats, order=None, strict=True):
 
     >>> from skbio.stats.power import paired_subsamples
     >>> ids = paired_subsamples(meta, 'HOUSING', ['SEX', 'AGE', 'ABX'])
-    >>> ids #doctest: +ELLIPSIS + NORMALIZE-WHITESPACE
+    >>> ids #doctest: +ELLIPSIS +NORMALIZE-WHITESPACE
     [array(['BB'],
           dtype= ... ), array(['TS'],
           dtype= ... ), array(['CB'],
