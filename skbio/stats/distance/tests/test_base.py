@@ -20,7 +20,8 @@ from skbio import DistanceMatrix
 from skbio.stats.distance import (
     DissimilarityMatrixError, DistanceMatrixError, MissingIDError,
     DissimilarityMatrix, randdm, CategoricalStatsResults)
-from skbio.stats.distance._base import CategoricalStats
+from skbio.stats.distance._base import (_preprocess_input, _run_stat_method,
+                                        CategoricalStats)
 
 
 class DissimilarityMatrixTestData(TestCase):
@@ -544,6 +545,79 @@ class RandomDistanceMatrixTests(TestCase):
         # Invalid number of IDs.
         with self.assertRaises(DissimilarityMatrixError):
             randdm(2, ids=['foo'])
+
+
+class CategoricalStatsHelperFunctionTests(TestCase):
+    def setUp(self):
+        self.dm = DistanceMatrix([[0.0, 1.0, 2.0],
+                                  [1.0, 0.0, 3.0],
+                                  [2.0, 3.0, 0.0]], ['a', 'b', 'c'])
+        self.grouping = [1, 2, 1]
+        # Ordering of IDs shouldn't matter, nor should extra IDs.
+        self.df = pd.read_csv(
+            StringIO('ID,Group\nb,Group2\na,Group1\nc,Group1\nd,Group3'),
+            index_col=0)
+        self.df_missing_id = pd.read_csv(
+            StringIO('ID,Group\nb,Group2\nc,Group1'), index_col=0)
+
+    def test_preprocess_input_with_valid_input(self):
+        # Should obtain same result using grouping vector or data frame.
+        exp = (3, 2, np.array([0, 1, 0]),
+               (np.array([0, 0, 1]), np.array([1, 2, 2])),
+               np.array([1., 2., 3.]))
+
+        obs = _preprocess_input(self.dm, self.grouping, None)
+        npt.assert_equal(obs, exp)
+
+        obs = _preprocess_input(self.dm, self.df, 'Group')
+        npt.assert_equal(obs, exp)
+
+    def test_preprocess_input_raises_error(self):
+        # Requires a DistanceMatrix.
+        with self.assertRaises(TypeError):
+            _preprocess_input(
+                DissimilarityMatrix([[0, 2], [3, 0]], ['a', 'b']),
+                [1, 2], None)
+
+        # Requires column if DataFrame.
+        with self.assertRaises(ValueError):
+            _preprocess_input(self.dm, self.df, None)
+
+        # Cannot provide column if not data frame.
+        with self.assertRaises(ValueError):
+            _preprocess_input(self.dm, self.grouping, 'Group')
+
+        # Column must exist in data frame.
+        with self.assertRaises(ValueError):
+            _preprocess_input(self.dm, self.df, 'foo')
+
+        # All distance matrix IDs must be in data frame.
+        with self.assertRaises(ValueError):
+            _preprocess_input(self.dm, self.df_missing_id, 'Group')
+
+        # Grouping vector length must match number of objects in dm.
+        with self.assertRaises(ValueError):
+            _preprocess_input(self.dm, [1, 2], None)
+
+        # Grouping vector cannot have only unique values.
+        with self.assertRaises(ValueError):
+            _preprocess_input(self.dm, [1, 2, 3], None)
+
+        # Grouping vector cannot have only a single group.
+        with self.assertRaises(ValueError):
+            _preprocess_input(self.dm, [1, 1, 1], None)
+
+    def test_run_stat_method_with_permutations(self):
+        obs = _run_stat_method(lambda e: 42, self.grouping, 50)
+        npt.assert_equal(obs, (42, 1.0))
+
+    def test_run_stat_method_no_permutations(self):
+        obs = _run_stat_method(lambda e: 42, self.grouping, 0)
+        npt.assert_equal(obs, (42, np.nan))
+
+    def test_run_stat_method_invalid_permutations(self):
+        with self.assertRaises(ValueError):
+            _run_stat_method(lambda e: 42, self.grouping, -1)
 
 
 class CategoricalStatsTests(TestCase):
