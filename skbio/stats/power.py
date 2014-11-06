@@ -694,6 +694,7 @@ def paired_subsamples(meta, cat, control_cats, order=None, strict=True):
     `strict` was true, and there is missing AGE data for this sample.
 
     """
+    # Sets the index data
     # Groups meta by category
     cat_groups = meta.groupby(cat).groups
 
@@ -713,7 +714,7 @@ def paired_subsamples(meta, cat, control_cats, order=None, strict=True):
     ctrl_group = meta.loc[cat_groups[ctrl_name]
                           ].groupby(list(control_cats)).groups
 
-    ids = [np.array([])] * num_groups
+    ids = [np.array([], dtype=meta.index.values[0].__class__)] * num_groups
     # Loops through samples in the experimental group to match for controls
     for check_group, ctrl_ids in viewitems(ctrl_group):
         # Checks the categories have been defined

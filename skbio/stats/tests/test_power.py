@@ -325,7 +325,7 @@ class PowerAnalysisTest(TestCase):
 
     def test_paired_subsamples_break(self):
         # Sets known np.array set
-        known_array = [np.array([]), np.array([])]
+        known_array = [np.array([], dtype='|S2'), np.array([], dtype='|S2')]
         # Gets the test value
         cat = 'ABX'
         control_cats = ['SEX', 'AGE', 'INT']
