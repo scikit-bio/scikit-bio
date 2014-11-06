@@ -48,6 +48,10 @@ class TestANOSIM(TestCase):
         self.grouping_unequal = ['Control', 'Treatment1', 'Treatment2',
                                  'Treatment1', 'Control', 'Control']
 
+        # Equivalent grouping but with different labels -- groups should be
+        # assigned different integer labels but results should be the same.
+        self.grouping_unequal_relabeled = ['z', 42, 'abc', 42, 'z', 'z']
+
         self.dm_unequal = DistanceMatrix(
             [[0.0, 1.0, 0.1, 0.5678, 1.0, 1.0],
              [1.0, 0.0, 0.002, 0.42, 0.998, 0.0],
@@ -99,8 +103,13 @@ class TestANOSIM(TestCase):
     def test_unequal_group_sizes(self):
         exp = pd.Series(index=self.exp_index,
                         data=['ANOSIM', 6, 3, -0.363636, 0.878, 999])
+
         np.random.seed(0)
         obs = anosim(self.dm_unequal, self.grouping_unequal)
+        self.assert_series_equal(obs, exp)
+
+        np.random.seed(0)
+        obs = anosim(self.dm_unequal, self.grouping_unequal_relabeled)
         self.assert_series_equal(obs, exp)
 
 
