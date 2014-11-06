@@ -676,6 +676,12 @@ def paired_subsamples(meta, cat, control_cats, order=None, strict=True):
     ...         'CB': {'HOUSING': '3', 'SEX': 'M', 'AGE': '40s', 'ABX': 'Y'},
     ...         'BB': {'HOUSING': '1', 'SEX': 'M', 'AGE': '40s', 'ABX': 'Y'}}
     >>> meta = pd.DataFrame.from_dict(meta, orient="index")
+    >>> meta #doctest +SKIP
+       ABX HOUSING  AGE SEX
+    BB   Y       1  40s   M
+    CB   Y       3  40s   M
+    SW   Y       2  NaN   M
+    TS   Y       2  40s   M
 
     We may want to vary an individual's housing situation, while holding
     constant their age, sex and antibiotic use so we can estimate the effect
@@ -683,11 +689,11 @@ def paired_subsamples(meta, cat, control_cats, order=None, strict=True):
 
     >>> from skbio.stats.power import paired_subsamples
     >>> ids = paired_subsamples(meta, 'HOUSING', ['SEX', 'AGE', 'ABX'])
-    >>> ids #doctest: +NORMALIZE_WHITESPACE
+    >>> ids #doctest: +ELLIPSIS + NORMALIZE-WHITESPACE
     [array(['BB'],
-          dtype='|S2'), array(['TS'],
-          dtype='|S2'), array(['CB'],
-          dtype='|S2')]
+          dtype= ... ), array(['TS'],
+          dtype= ... ), array(['CB'],
+          dtype= ... )]
 
     So, for this set of data, we can match TS, CB, and BB based on their age,
     sex, and antibiotic use. SW cannot be matched in either group becuase
@@ -714,7 +720,7 @@ def paired_subsamples(meta, cat, control_cats, order=None, strict=True):
     ctrl_group = meta.loc[cat_groups[ctrl_name]
                           ].groupby(list(control_cats)).groups
 
-    ids = [np.array([], dtype=meta.index.values[0].__class__)] * num_groups
+    ids = [np.array([])] * num_groups
     # Loops through samples in the experimental group to match for controls
     for check_group, ctrl_ids in viewitems(ctrl_group):
         # Checks the categories have been defined
