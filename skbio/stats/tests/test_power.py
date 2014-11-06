@@ -91,6 +91,12 @@ class PowerAnalysisTest(TestCase):
         self.cat = "AGE"
         self.control_cats = ['INT', 'ABX']
 
+    def test_subsample_power_matched_relationship_error(self):
+        with self.assertRaises(RuntimeError):
+            subsample_power(self.f,
+                            samples=[np.ones((2)), np.ones((5))],
+                            draw_mode="matched")
+
     def test_subsample_power_min_counts_error(self):
         with self.assertRaises(RuntimeError):
             subsample_power(self.f,
@@ -110,6 +116,15 @@ class PowerAnalysisTest(TestCase):
                                    self.meta,
                                    cat=self.cat,
                                    control_cats=self.control_cats)
+
+    def test_subsample_power(self):
+        test_p, test_c = subsample_power(self.f,
+                                         samples=self.pop,
+                                         num_iter=10,
+                                         num_runs=2,
+                                         counts_start=5)
+        self.assertEqual(test_p.shape, (2, 5))
+        npt.assert_array_equal(np.arange(5, 50, 10), test_c)
 
     def test_subsample_paired_power_interval_error(self):
         with self.assertRaises(RuntimeError):
@@ -138,15 +153,6 @@ class PowerAnalysisTest(TestCase):
         # Test the output shapes are sane
         npt.assert_array_equal(test_p.shape, (2, 5))
         npt.assert_array_equal(known_c, test_c)
-
-    def test_subsample_power_all_samples(self):
-        test_p, test_c = subsample_power(self.f,
-                                         samples=self.pop,
-                                         num_iter=10,
-                                         num_runs=2,
-                                         counts_start=5)
-        self.assertEqual(test_p.shape, (2, 5))
-        npt.assert_array_equal(np.arange(5, 50, 10), test_c)
 
     def test__check_strs_str(self):
         self.assertTrue(_check_strs('string'))

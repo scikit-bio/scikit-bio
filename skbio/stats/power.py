@@ -34,11 +34,11 @@ Most functions in this module accept a statistical test function which takes a
 list of samples and returns a p value. The test is then evaluated over a series
 of subsamples.
 
-If metadata is avaliable, there are three ways we can approach selecting our
-sample. We may choose to simply draw math:`n` observations at random from the
-two underlying samples. Alternatively, we can draw subsamples which are
-significantly different. Finally, we can try to match samples based on a set
-of control categories.
+Sampling may be handled in two ways. For any set of samples, we may simply
+choose to draw :math:`n` observations at random for each sample. Alternatively,
+if metadata is avalaible, samples can be matched based on a set of control
+categories so that paired samples are drawn at random from the set of avaliable
+matches.
 
 Functions
 ---------
@@ -54,27 +54,29 @@ Functions
 
 Examples
 --------
-Suppose we wanted to look at the power curve for two variables, `ind` and
-`dep`, using completely random subsampling. To control for the pseudo
-random number generation, we will use a seed. When using these functions with
-your own data, you don't need to include the step.
+Suppose we wanted to test that there's a relationship between two random
+variables, `ind` and `dep`. Let's use random subsampling to estimate the
+statistical power of our test with an alpha of 0.1, 0.01, and 0.001.
+
+To control for the pseudo-random number generation, we will use a seed.
+When using these functions with your own data, you don't need to include the
+step.
 
 >>> import numpy as np
 >>> np.random.seed(20)
 >>> ind = np.random.randint(0, 20, 15)
 >>> ind
 array([ 3, 15,  9, 11,  7,  2,  0,  8, 19, 16,  6,  6, 16,  9,  5])
->>> dep = (3 * ind + 5 + np.random.randn(15)*5).round(3)
+>>> dep = (3 * ind + 5 + np.random.randn(15) * 5).round(3)
 >>> dep
 array([ 15.617,  47.533,  28.04 ,  33.788,  19.602,  12.229,   4.779,
         36.838,  67.256,  55.032,  22.157,   7.051,  58.601,  38.664,
         18.783])
 
 Let's define a test that will draw a list of sample pairs and determine
-if they're correlated. We'll use the `scipy.stats.pearsonr` function, which
-returns the pearson correlation coefficient and the probability value
-that the data is not correlated. The function takes two vectors as its
-input.
+if they're correlated. We'll use `scipy.stats.pearsonr` which takes two arrays
+and returns a correlation coeffecient and a p-value representing the
+probability the two distributions are correlated.
 
 >>> from scipy.stats import pearsonr
 >>> f = lambda x: pearsonr(x[0], x[1])[1]
@@ -86,33 +88,48 @@ the first distribution.
 >>> f(samples)
 3.6459452596563003e-08
 
-In `subsample_power`, we can maintain a paired relationship
-between samples by setting `draw_mode` to "matched".
+In `subsample_power`, we can maintain a paired relationship between samples
+by setting `draw_mode` to "matched". We can also set our critical value, so
+that we estimate power for a critical value of :math:`\alpha = 0.05`, an
+estimate for the critical value of 0.01, and a critical value of 0.001.
 
 >>> from skbio.stats.power import subsample_power
->>> pwr_ests, counts = subsample_power(test=f,
-...                                    samples=samples,
-...                                    min_counts=3,
-...                                    max_counts=10,
-...                                    counts_start=3,
-...                                    counts_interval=1,
-...                                    draw_mode="matched")
->>> counts
+>>> pwr_100, counts_100 = subsample_power(test=f,
+...                                       samples=samples,
+...                                       min_counts=3,
+...                                       max_counts=10,
+...                                       counts_start=3,
+...                                       counts_interval=1,
+...                                       draw_mode="matched",
+...                                       alpha_pwr=0.1)
+>>> pwr_010, counts_010 = subsample_power(test=f,
+...                                       samples=samples,
+...                                       min_counts=3,
+...                                       max_counts=10,
+...                                       counts_start=3,
+...                                       counts_interval=1,
+...                                       draw_mode="matched",
+...                                       alpha_pwr=0.01)
+>>> pwr_001, counts_001 = subsample_power(test=f,
+...                                       samples=samples,
+...                                       min_counts=3,
+...                                       max_counts=10,
+...                                       counts_start=3,
+...                                       counts_interval=1,
+...                                       draw_mode="matched",
+...                                       alpha_pwr=0.001)
+>>> counts_100
 array([3, 4, 5, 6, 7, 8, 9])
->>> pwr_ests
-array([[ 0.22 ,  0.652,  0.89 ,  0.958,  0.992,  1.   ,  1.   ],
-       [ 0.234,  0.642,  0.876,  0.96 ,  0.99 ,  1.   ,  1.   ],
-       [ 0.242,  0.654,  0.848,  0.946,  0.998,  1.   ,  1.   ],
-       [ 0.244,  0.664,  0.884,  0.946,  0.988,  1.   ,  1.   ],
-       [ 0.248,  0.666,  0.866,  0.948,  0.986,  1.   ,  1.   ],
-       [ 0.242,  0.658,  0.9  ,  0.94 ,  0.99 ,  1.   ,  1.   ],
-       [ 0.242,  0.638,  0.874,  0.952,  0.992,  1.   ,  1.   ],
-       [ 0.24 ,  0.66 ,  0.904,  0.95 ,  0.988,  1.   ,  1.   ],
-       [ 0.232,  0.64 ,  0.912,  0.972,  0.988,  1.   ,  1.   ],
-       [ 0.256,  0.646,  0.854,  0.952,  0.992,  1.   ,  1.   ]])
+>>> pwr_100.mean(0)
+array([ 0.466 ,  0.827 ,  0.936 ,  0.9852,  0.998 ,  1.    ,  1.    ])
+>>> pwr_010.mean(0)
+array([ 0.0468,  0.2394,  0.5298,  0.8184,  0.951 ,  0.981 ,  0.9982])
+>>> pwr_001.mean(0)
+array([ 0.003 ,  0.0176,  0.1212,  0.3428,  0.5892,  0.8256,  0.9566])
 
-The `pwr_est` can then be used to fit an effect size using
-`statsmodel.stats.power` module or the results can be average and plotted.
+Based on this power estimate, as we increase our confidence that we have not
+comitted a type I error and identified a false positive, the number of samples
+we need to be confident that we have not comitted a type II error increases.
 
 """
 
@@ -130,7 +147,7 @@ import numpy as np
 from scipy.stats import t, nanstd
 
 
-def subsample_power(test, samples=None, draw_mode='ind', scaling=5,
+def subsample_power(test, samples, draw_mode='ind', scaling=5,
                     alpha_pwr=0.05, min_counts=20, max_counts=50,
                     counts_interval=10, counts_start=None, num_iter=500,
                     num_runs=10):
@@ -142,22 +159,23 @@ def subsample_power(test, samples=None, draw_mode='ind', scaling=5,
         The statistical test which accepts a list of arrays of values
         (sample ids or numeric values) and returns a p value.
     samples : array_like
-        Default is None. `samples` can be a list of lists or a list of arrays
-        where each sublist or row in the array corresponds to a sampled group.
-        Required for "all" and "sig" mode.
+        `samples` can be a list of lists or a list of arrays where each
+        sublist or row in the array corresponds to a sampled group.
     draw_mode : {"ind", "matched"}, optional
-        This value is can only be modified in "all" mode.
         Default is "ind". "matched" samples should be used when observations in
         samples have corresponding observations in other groups. For instance,
         this may be useful when working with regression data where
-        :math:`x_{1}, x_{2}, ..., x_{n}` maps to :math:`y_{1}, y_{2}, ... ,
-        y_{n}`.
+        :math:`x_{1}, x_{2}, ..., x_{n}` maps to
+        :math:`y_{1}, y_{2}, ..., y_{n}`. Sample vectors must be the same
+        length in "matched" mode.
+        If there is no reciprical relationship between samples, then
+        "ind" mode should be used.
     alpha_pwr : float, optional
-        Default is 0.05. The alpha value used to calculate the power.
+        Default is 0.05. The critical value used to calculate the power.
     min_counts : unsigned int, optional
-        Default is 20. The minimum number of paired samples which must exist
-        for a category and set of control categories to be able to subsample
-        and make power calculations.
+        Default is 20. The minimum number of observations in any sample to
+        perform power analysis. Note that this is not the same as the minimum
+        number of samples drawn per group.
     max_counts : unsigned int, optional
         Default is 50. The maximum number of samples per group to draw for
         effect size calculation.
@@ -172,32 +190,20 @@ def subsample_power(test, samples=None, draw_mode='ind', scaling=5,
     num_runs : unsigned int
         Default is 10. The number of times to calculate each curve.
 
-    Returns
-    -------
-    power : array
-        The power calculated for each subsample at each count.
-    sample_counts : array
-        The number of samples drawn at each power calculation.
-
-    Raises
-    ------
-    RuntimeError
-        There is a runtime error if there are fewer samples than the minimum
-        count.
-    RuntimeError
-        If the `counts_interval` is greater than the difference between the
-        sample start and the max value, the function raises a RuntimeError.
-
     Examples
     --------
     Let's say we wanted to look at the relationship between the presence of a
-    spectific bacteria and the probability of a pre or post menopausal woman
-    experiencing a health outcome. Assume we found 100 samples (50 pre and 50
-    post) where the presence of the bacteria was detected by 16s sequencing
-    and confirmed with PCR. Let's start by simulating the probability that
-    women in each group will experience the outcome.
+    specific bacteria and the probability of a pre or post menopausal woman
+    experiencing a health outcome. Healthy women were enrolled in the study
+    either before or after menopause, and followed for five years. They
+    submitted fecal samples at regular intervals during that period, and were
+    assessed for a particular irreversible health outcome over that period.
 
-    We'll set a random seed in numpy to maintain consistent results.
+    16s sequencing and available literature suggest a set of candidate taxa
+    may be associated with the health outcome. Assume there are 100 samples
+    (50 premenopausal samples and 50 postmenopausal samples) where the taxa
+    of interest was identified by 16s sequencing and the taxonomic abundance
+    was confirmed in a certain fraction of samples at a minimum level.
 
     >>> import numpy as np
     >>> np.random.seed(25)
@@ -227,9 +233,13 @@ def subsample_power(test, samples=None, draw_mode='ind', scaling=5,
     9e-05
 
     Since there are an even number of samples, and we don't have enough
-    information to try controlling the data, let's subsample for power using
-    "all" mode. We'll also use "ind" draw mode, since there is no linkage
-    between the two groups of samples.
+    information to try controlling the data, we'll use
+    `scipy.stats.power.subsample_power` to compare the two groups. If we had
+    metadata about other risk factors, like a family history, BMI, tobacco use,
+    we might instead want to use `scipy.stats.power.subsample_paired_power`
+    instead.
+    We'll also use "ind" `draw_mode`, since there is no linkage between the
+    two groups of samples.
 
     >>> from skbio.stats.power import subsample_power
     >>> pwr_est, counts = subsample_power(test=test,
@@ -241,13 +251,26 @@ def subsample_power(test, samples=None, draw_mode='ind', scaling=5,
     array([ 0.1776,  0.3392,  0.658 ,  0.8856,  0.9804,  0.9982,  1.    ,
             1.    ,  1.    ])
 
-    So, we can estimate the that we will see a signifigant difference between
+    So, we can estimate the that we will see a significant difference between
     the two groups (:math:`\alpha \leq 0.05`) at least 80% of the time if we
-    use 20 samples per group.
+    use 20 observations per group.
+
+    If we wanted to test the relationship of a second candidate taxa which is
+    more rare in the population, but may have a similar effect, based on
+    available literature, we might also start by trying to identify 20
+    samples per group where the second candidate taxa is present.
 
     """
-    # Determines the minium number of ids in a category
+
+    # Determines the minimum number of ids in a category
     num_ids = np.array([len(id_) for id_ in samples]).min()
+
+    # Checks that "matched" mode is handled appropriately
+    if draw_mode == "matched":
+        for id_ in samples:
+            if not len(id_) == num_ids:
+                raise RuntimeError('Each vector in samples must be the same '
+                                   'length in "matched" draw_mode.')
 
     # Checks there are enough samples to subsample
     if num_ids <= min_counts:
@@ -280,24 +303,24 @@ def subsample_power(test, samples=None, draw_mode='ind', scaling=5,
 
 
 def subsample_paired_power(test, meta, cat, control_cats, order=None,
-                           strict=True, scaling=5, alpha_pwr=0.05,
-                           min_counts=20, max_counts=50, counts_interval=10,
+                           strict=True, alpha_pwr=0.05, min_counts=20,
+                           max_counts=50, counts_interval=10,
                            counts_start=None, num_iter=500, num_runs=10):
     r"""Estimates power iteratively using samples with matching metadata
 
     Parameters
     ----------
     test : function
-        The statistical test which accepts a list of arrays of values
-        (sample ids or numeric values) and returns a p value.
+        The statistical test which accepts a list of arrays sample ids and
+        returns a p value.
     meta : pandas.dataframe
-        Default is None. The metadata associated with the samples.
+        The metadata associated with the samples.
     cat : str
-        Default is None. The metadata categories for comparison.
+        The metadata category being varied between samples.
     control_cats : list
-        Default is None. The metadata categories to be used as controls. For
-        example, if you wanted to control age (`cat` = "AGE"), you might want
-        to control for gender and health status (i.e. `control_cats` = ["SEX",
+        The metadata categories to be used as controls. For example, if
+        you wanted to vary age (`cat` = "AGE"), you might want to control
+        for gender and health status (i.e. `control_cats` = ["SEX",
         "HEALTHY"]).
     order : list, optional
         Default is None. The order of groups in the category. This can be used
@@ -307,16 +330,16 @@ def subsample_paired_power(test, meta, cat, control_cats, order=None,
     strict: bool, optional
         Default is True. If a missing value (nan) is encountered, the group
         will be skipped when `strict` is True.
-        relationship between samples.
     alpha_pwr : float, optional
-        Default is 0.05. The alpha value used to calculate the power.
+        Default is 0.05. The critical value used to calculate the power.
     min_counts : unsigned int, optional
         Default is 20. The minimum number of paired samples which must exist
         for a category and set of control categories to be able to subsample
-        and make power calculations.
+        and make power calculations. This is not the same as the minimum
+        number of observations to draw during subsampling.
     max_counts : unsigned int, optional
-        Default is 50. The maximum number of samples per group to draw for
-        effect size calculation.
+        Default is 50. The maximum number of observations per sample to draw
+        for effect size calculation.
     counts_interval : unsigned int, optional
         Default is 10. The difference between each subsampling count.
     counts_start : unsigned int, optional
@@ -348,12 +371,12 @@ def subsample_paired_power(test, meta, cat, control_cats, order=None,
     --------
     Assume you are interested in the role of a specific cytokine of protein
     translocation in myloid-lineage cells. You are able to culture two
-    macrophage lineages (Bone marrow derived phagocytes and
+    macrophage lineages (bone marrow derived phagocytes and
     peritoneally-derived macrophages). Due to unfortunate circumstances, your
     growth media must be acquired from multiple sources (lab, company A,
     company B). Also unfortunate, you must use labor-intense low-through put
-    assays. You have some preliminary measurements, and but you'd like to
-    predict how many cells you need to analyze to for 80% power.
+    assays. You have some preliminary measurements, and you'd like to
+    predict how many (more) cells you need to analyze to for 80% power.
 
     You have information about 60 cells, which we'll simulate below. Note
     that we are setting a random seed value for consistency.
@@ -366,8 +389,8 @@ def subsample_paired_power(test, meta, cat, control_cats, order=None,
     ...     'SOURCE': np.random.binomial(2, 0.33, size=(60,)),
     ...     'TREATMENT': np.hstack((np.zeros((30)), np.ones((30)))),
     ...     'INCUBATOR': np.random.binomial(1, 0.2, size=(60,))})
-    >>> data['OUTCOME'] = (0.25 + data.TREATMENT*0.25) + np.random.randn(60) \
-    ...     * (0.1 + data.SOURCE/10 + data.CELL_LINE/5)
+    >>> data['OUTCOME'] = (0.25 + data.TREATMENT * 0.25) + \
+    ...     np.random.randn(60) * (0.1 + data.SOURCE/10 + data.CELL_LINE/5)
     >>> data.loc[data.OUTCOME < 0, 'OUTCOME'] = 0
     >>> data.loc[data.OUTCOME > 1, 'OUTCOME'] = 1
 
@@ -378,23 +401,25 @@ def subsample_paired_power(test, meta, cat, control_cats, order=None,
     >>> from scipy.stats import kruskal
     >>> f = lambda x: kruskal(*[data.loc[i, 'OUTCOME'] for i in x])[1]
 
-    Let's check that treatment has a signifigant effect across all the cells.
+    Let's check that cytokine treatment has a signifigant effect across all
+    the cells.
 
     >>> treatment_stat = [g for g in data.groupby('TREATMENT').groups.values()]
     >>> f(treatment_stat)
     0.0019386336266250209
 
     Now, let's pick the control categories. It seems reasonable to assume there
-    may be an effect of cell line on the treatment outcome, due to differences
-    in receptor abundance, for instance. It may also be possible that there are
-    differences due cytokine source. Incubators were maintained under the same
-    conditions throughout the experiment, without on a 1 degree temperature
-    difference at any given time, and the same level of CO2. So, at least
-    initially, let's ignore differences due to the incubator. It's recommended
-    that as a first pass analysis, control variables be selected based on
-    an idea of what may be biologically relevant to the system, although
-    further iteration might encourage the consideration of variable with effect
-    sizes simillar, or larger than the variable of interest.
+    may be an effect of cell line on the treatment outcome, which may be
+    attributed to differences in receptor expression. It may also be possible
+    that there are differences due cytokine source. Incubators were maintained
+    under the same conditions throughout the experiment, without on a 1 degree
+    temperature difference at any given time, and the same level of CO2.
+    So, at least initially, let's ignore differences due to the incubator.
+    It's recommended that as a first pass analysis, control variables be
+    selected based on an idea of what may be biologically relevant to the
+    system, although further iteration might encourage the consideration of
+    variable with effect sizes simillar, or larger than the variable of
+    interest.
 
     >>> control_cats = ['SOURCE', 'CELL_LINE']
     >>> from skbio.stats.power import subsample_paired_power
@@ -417,12 +442,6 @@ def subsample_paired_power(test, meta, cat, control_cats, order=None,
     provide addiquite power for this experiment, although the large variance
     in power might suggest extending the curves or increasing the number of
     samples per group.
-
-    Also See
-    --------
-    skbio.stats.power.paired_subsamples : generation of metadata-matched groups
-    skbio.stats.power.subsample_power : power estimation groups agnostic to
-        metadata
 
     """
 
@@ -469,6 +488,265 @@ def subsample_paired_power(test, meta, cat, control_cats, order=None,
 
     return power, sample_counts
 
+
+def confidence_bound(vec, alpha=0.05, df=None, axis=None):
+    r"""Calculates a confidence bound assuming a normal distribution
+
+    Parameters
+    ----------
+    vec : array
+        A 1d numpy array of the values to use in the bound calculation.
+    alpha : {0.05, float}
+        The critical value, used for the confidence bound calculation.
+    df : {None, float}, optional
+        The degrees of freedom associated with the distribution. If None is
+        given, df is assumed to be the number elements in specified axis.
+    axis : {None, unsigned int}, optional
+        Default is None. The axis over which to take the devation.
+
+    Return
+    ------
+    bound : float
+        The confidence bound around the mean. The confidence interval is
+        [mean - bound, mean + bound].
+
+    """
+
+    # Determines the number of non-nan counts
+    vec_shape = vec.shape
+    if axis is None and len(vec_shape) == 1:
+        num_counts = vec_shape[0] - np.isnan(vec).sum()
+        axis = None
+    elif axis is None:
+        num_counts = vec_shape[0] * vec_shape[1] - np.isnan(vec).sum()
+    else:
+        num_counts = vec_shape[axis] - np.isnan(vec).sum() / \
+            (vec_shape[0] * vec_shape[1])
+
+    # Gets the df if not supplied
+    if df is None:
+        df = num_counts - 1
+
+    # Calculates the bound
+    bound = nanstd(vec, axis=axis) / np.sqrt(num_counts - 1) * \
+        t.ppf(1 - alpha / 2, df)
+
+    return bound
+
+
+def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
+                          alpha=0.05, mode='ind', num_iter=500, num_runs=10):
+    r"""Repeatedly calculates the power curve for a specified alpha level
+
+    Parameters
+    ----------
+    test : function
+        The statistical test which accepts an array_like of sample ids
+        (list of lists or list ) and returns a p-value.
+    samples : array_like
+        samples can be a list of lists or an array where each sublist or row in
+        the array corresponds to a sampled group.
+    sample_counts : 1d array
+        A vector of the number of samples which should be sampled in each curve
+    ratio : {None, 1d array}
+        The fraction of the sample counts which should be assigned to each
+        group. This must be a none-type object, or the same length as samples.
+    alpha : float, optional
+        The default is 0.05. The critical value for calculating power.
+    mode : {"ind", "matched"}, optional
+        Default is "ind". "matched" samples should be used when observations in
+        samples have corresponding observations in other groups. For instance,
+        this may be useful when working with regression data where
+        :math:`x_{1}, x_{2}, ..., x_{n}` maps to :math:`y_{1}, y_{2}, ... ,
+        y_{n}`.
+    num_iter : unsigned int
+        Default is 1000. The number of p-values to generate for each point
+        on the curve.
+    num_runs : unsigned int
+        Default is 5. The number of times to calculate each curve.
+
+    Returns
+    -------
+    p_mean : 1d array
+        The mean p-values from the iterations.
+    p_std : vector
+        The variance in the p-values.
+
+    Examples
+    --------
+    Suppose we have 100 samples randomly drawn from two normal distribitions,
+    the first with mean 0 and standard devation 1, and the second with mean 3
+    and standard deviation 1.5
+
+    >>> import numpy as np
+    >>> np.random.seed(20)
+    >>> samples_1 = np.random.randn(100)
+    >>> samples_2 = 1.5 * np.random.randn(100) + 1
+
+    We want to test the statistical power of a independent two sample t-test
+    comparing the two populations. We can define an anonymous function, `f`,
+    to wrap the scipy function for independent t tests,
+    `scipy.stats.ttest_ind`. The test function will take a list of value
+    vectors and return a p value.
+
+    >>> from scipy.stats import ttest_ind
+    >>> f = lambda x: ttest_ind(x[0], x[1])[1]
+
+    Now, we can determine the statitical power, or the probability that do not
+    have a false negative given that we do not have a false positive, by
+    varying a number of subsamples.
+
+    >>> from skbio.stats.power import bootstrap_power_curve
+    >>> sample_counts = np.arange(5, 80, 5)
+    >>> power_mean, power_bound = bootstrap_power_curve(f,
+    ...                                                 [samples_1, samples_2],
+    ...                                                 sample_counts)
+    >>> sample_counts[power_mean - power_bound.round(3) > .80].min()
+    20
+
+    Based on this analysis, it looks like we need at least 20 observations
+    from each distribution to avoid comitting a type II error more than 20%
+    of the time.
+
+    """
+
+    # Corrects the alpha value into a matrix
+    alpha = np.ones((num_runs)) * alpha
+
+    # Boot straps the power curve
+    power = _calculate_power_curve(test=test,
+                                   samples=samples,
+                                   sample_counts=sample_counts,
+                                   ratio=ratio,
+                                   num_iter=num_iter,
+                                   alpha=alpha,
+                                   mode=mode)
+
+    # Calculates two summary statitics
+    power_mean = power.mean(0)
+    power_bound = confidence_bound(power, alpha=alpha[0], axis=0)
+
+    # Calculates summary statitics
+    return power_mean, power_bound
+
+
+def paired_subsamples(meta, cat, control_cats, order=None, strict=True):
+    r"""Gets a set samples to serve as controls
+
+    This function is designed to provide controlled samples, based on a
+    metadata category. For example, one could control for age, sex, education
+    level, and diet type while measuring exercise frequency. No outcome
+    value is considered in this subsampling process.
+
+    Parameters
+    ----------
+    meta : pandas.dataframe
+        The metadata associated with the samples.
+    cat : str, list
+        The metadata category (or a list of categories) for comparison.
+    control_cats : list
+        The metadata categories to be used as controls. For example, if you
+        wanted to vary age (`cat` = "AGE"), you might want to control for
+        gender and health status (i.e. `control_cats` = ["SEX", "HEALTHY"])
+    order : list, optional
+        Default is None. The order of groups in the category. This can be used
+        to limit the groups selected. For example, if there's a category with
+        groups 'A', 'B' and 'C', and you only want to look at A vs B, `order`
+        would be set to ['A', 'B'].
+    strict: bool
+        Default is True. If a missing value (nan) is encountered, the group
+        will be skipped when `strict` is True.
+
+    Returns
+    -------
+    ids : array
+        a set of arrays which satisfy the criteria. These are not grouped by
+        `cat`. An empty array indicates there are no sample ids which satisfy
+        the requirements.
+
+    Examples
+    --------
+    If we have a mapping file for a set of random individuals looking at
+    housing, sex, age and antibiotic use.
+
+    >>> import pandas as pd
+    >>> import numpy as np
+    >>> meta = {'SW': {'HOUSING': '2', 'SEX': 'M', 'AGE': np.nan, 'ABX': 'Y'},
+    ...         'TS': {'HOUSING': '2', 'SEX': 'M', 'AGE': '40s', 'ABX': 'Y'},
+    ...         'CB': {'HOUSING': '3', 'SEX': 'M', 'AGE': '40s', 'ABX': 'Y'},
+    ...         'BB': {'HOUSING': '1', 'SEX': 'M', 'AGE': '40s', 'ABX': 'Y'}}
+    >>> meta = pd.DataFrame.from_dict(meta, orient="index")
+
+    We may want to vary an individual's housing situation, while holding
+    constant their age, sex and antibiotic use so we can estimate the effect
+    size for housing, and later compare it to the effects of other variables.
+
+    >>> from skbio.stats.power import paired_subsamples
+    >>> ids = paired_subsamples(meta, 'HOUSING', ['SEX', 'AGE', 'ABX'])
+    >>> ids #doctest: +NORMALIZE_WHITESPACE
+    [array(['BB'],
+          dtype='|S2'), array(['TS'],
+          dtype='|S2'), array(['CB'],
+          dtype='|S2')]
+
+    So, for this set of data, we can match TS, CB, and BB based on their age,
+    sex, and antibiotic use. SW cannot be matched in either group becuase
+    `strict` was true, and there is missing AGE data for this sample.
+
+    """
+    # Groups meta by category
+    cat_groups = meta.groupby(cat).groups
+
+    # Handles the order argument
+    if order is None:
+        order = sorted(cat_groups.keys())
+    order = np.array(order)
+    num_groups = len(order)
+
+    # Determines the number of samples, and the experimental and control group
+    group_size = np.array([len(cat_groups[o]) for o in order])
+    ctrl_name = order[group_size == group_size.min()][0]
+    order = order[order != ctrl_name]
+
+    # Gets a control group table
+    ctrl_match_groups = meta.groupby(control_cats).groups
+    ctrl_group = meta.loc[cat_groups[ctrl_name]
+                          ].groupby(list(control_cats)).groups
+
+    ids = [np.array([])] * num_groups
+    # Loops through samples in the experimental group to match for controls
+    for check_group, ctrl_ids in viewitems(ctrl_group):
+        # Checks the categories have been defined
+        undefed_check = np.array([_check_strs(p) for p in check_group])
+        if not undefed_check.all() and strict:
+            continue
+        # Removes the matched ids from order
+        matched_ids = ctrl_match_groups[check_group]
+        for id_ in ctrl_ids:
+            matched_ids.remove(id_)
+        pos_ids = []
+        num_ids = [len(ctrl_ids)]
+        # Gets the matrix of the matched ids and groups them
+        exp_group = meta.loc[matched_ids].groupby(cat).groups
+        for grp in order:
+            # Checks group to be considered is included in the grouping
+            if grp not in exp_group:
+                break
+            # Gets the id associated with the group
+            pos_ids.append(exp_group[grp])
+            num_ids.append(len(exp_group[grp]))
+        # Determines the minimum number of samples
+        num_draw = np.array(num_ids).min()
+        # Draws samples from possible ids
+        exp_ids = [np.random.choice(ctrl_ids, num_draw, replace=False)]
+        exp_ids.extend([np.random.choice(id_, num_draw, replace=False)
+                        for id_ in pos_ids])
+
+        if len(exp_ids) == num_groups:
+            for idx in range(num_groups):
+                ids[idx] = np.hstack((ids[idx], exp_ids[idx]))
+
+    return ids
 
 
 def _check_strs(x):
@@ -559,8 +837,9 @@ def _compare_distributions(test, samples, counts=5, mode="ind", num_iter=1000):
 
     # Handles the number of samples for later instances
     if isinstance(counts, int):
-        counts = np.array([counts]*num_groups)
-    elif not len(counts) == num_groups:
+        counts = np.array([counts] * num_groups)
+
+    if not len(counts) == num_groups:
         raise RuntimeError('If counts is a 1d array, there must be a count to '
                            'draw for each group.')
 
@@ -590,51 +869,6 @@ def _compare_distributions(test, samples, counts=5, mode="ind", num_iter=1000):
         p_values[idx] = test(subs)
 
     return p_values
-
-
-def confidence_bound(vec, alpha=0.05, df=None, axis=None):
-    r"""Calculates a confidence bound assuming a normal distribution
-
-    Parameters
-    ----------
-    vec : array
-        A 1d numpy array of the values to use in the bound calculation.
-    alpha : {0.05, float}
-        The critical value, used for the confidence bound calculation.
-    df : {None, float}, optional
-        The degrees of freedom associated with the distribution. If None is
-        given, df is assumed to be the number elements in specified axis.
-    axis : {None, unsigned int}, optional
-        Default is None. The axis over which to take the devation.
-
-    Return
-    ------
-    bound : float
-        The confidence bound around the mean. The confidence interval is
-        [mean - bound, mean + bound].
-
-    """
-
-    # Determines the number of non-nan counts
-    vec_shape = vec.shape
-    if axis is None and len(vec_shape) == 1:
-        num_counts = vec_shape[0] - np.isnan(vec).sum()
-        axis = None
-    elif axis is None:
-        num_counts = vec_shape[0] * vec_shape[1] - np.isnan(vec).sum()
-    else:
-        num_counts = vec_shape[axis] - np.isnan(vec).sum() / \
-            (vec_shape[0] * vec_shape[1])
-
-    # Gets the df if not supplied
-    if df is None:
-        df = num_counts - 1
-
-    # Calculates the bound
-    bound = nanstd(vec, axis=axis) / np.sqrt(num_counts - 1) * \
-        t.ppf(1 - alpha / 2, df)
-
-    return bound
 
 
 def _calculate_power_curve(test, samples, sample_counts, ratio=None,
@@ -699,7 +933,7 @@ def _calculate_power_curve(test, samples, sample_counts, ratio=None,
 
     # Loops through the sample sizes
     for id2, s in enumerate(sample_counts):
-        count = np.round(s*ratio, 0).astype(int)
+        count = np.round(s * ratio, 0).astype(int)
         for id1, a in enumerate(alpha):
             ps = _compare_distributions(test=test,
                                         samples=samples,
@@ -712,220 +946,3 @@ def _calculate_power_curve(test, samples, sample_counts, ratio=None,
                 pwr[id1, id2] = _calculate_power(ps, a)
 
     return pwr
-
-
-def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
-                          alpha=0.05, mode='ind', num_iter=500, num_runs=10):
-    r"""Repeatedly calculates the power curve for a specified alpha level
-
-    Parameters
-    ----------
-    test : function
-        The statistical test which accepts an array_like of sample ids
-        (list of lists or list ) and returns a p-value.
-    samples : array_like
-        samples can be a list of lists or an array where each sublist or row in
-        the array corresponds to a sampled group.
-    sample_counts : 1d array
-        A vector of the number of samples which should be sampled in each curve
-    ratio : {None, 1d array}
-        The fraction of the sample counts which should be assigned to each
-        group. This must be a none-type object, or the same length as samples.
-    alpha : float, optional
-        The critical value for calculating power. The default is 0.05.
-    mode : {"ind", "matched"}, optional
-        Default is "ind". "matched" samples should be used when observations in
-        samples have corresponding observations in other groups. For instance,
-        this may be useful when working with regression data where
-        :math:`x_{1}, x_{2}, ..., x_{n}` maps to :math:`y_{1}, y_{2}, ... ,
-        y_{n}`.
-    num_iter : unsigned int
-        Default is 1000. The number of p-values to generate for each point
-        on the curve.
-    num_runs : unsigned int
-        Default is 5. The number of times to calculate each curve.
-
-    Returns
-    -------
-    p_mean : 1d array
-        The mean p-values from the iterations.
-    p_std : vector
-        The variance in the p-values.
-
-    Examples
-    --------
-    Suppose we have 100 samples randomly drawn from two normal distribitions,
-    the first with mean 0 and standard devation 1, and the second with mean 3
-    and standard deviation 1.5
-
-    >>> import numpy as np
-    >>> np.random.seed(20)
-    >>> samples_1 = np.random.randn(100)
-    >>> samples_2 = 1.5*np.random.randn(100) + 1
-
-    We want to test the statistical power of a independent two sample t-test
-    comparing the two populations. We can define a test function, f, to perform
-    the comparison. The test function will take a list of value vectors and
-    return a p value.
-
-    >>> from scipy.stats import ttest_ind
-    >>> f = lambda x: ttest_ind(x[0], x[1])[1]
-
-    Now, we can determine the statitical power, or the probability that do not
-    have a false negative given that we do not have a false positive, by
-    varying a number of subsamples.
-
-    >>> from skbio.stats.power import bootstrap_power_curve
-    >>> sample_counts = np.arange(5, 80, 5)
-    >>> power_mean, power_bound = bootstrap_power_curve(f,
-    ...                                                 [samples_1, samples_2],
-    ...                                                 sample_counts)
-    >>> power_mean #doctest: +NORMALIZE_WHITESPACE
-    array([ 0.2546, 0.4736, 0.6732, 0.821 , 0.9084, 0.9602, 0.9846,
-            0.9956, 0.9996, 1.    , 1.    , 1.    , 1.    , 1.    , 1.    ])
-
-    >>> power_bound.round(3)
-    array([ 0.011,  0.012,  0.014,  0.015,  0.01 ,  0.008,  0.004,  0.002,
-            0.001,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ])
-
-
-    """
-
-    # Corrects the alpha value into a matrix
-    alpha = np.ones((num_runs))*alpha
-
-    # Boot straps the power curve
-    power = _calculate_power_curve(test=test,
-                                   samples=samples,
-                                   sample_counts=sample_counts,
-                                   ratio=ratio,
-                                   num_iter=num_iter,
-                                   alpha=alpha,
-                                   mode=mode)
-
-    # Calculates two summary statitics
-    power_mean = power.mean(0)
-    power_bound = confidence_bound(power, alpha=alpha[0], axis=0)
-
-    # Calculates summary statitics
-    return power_mean, power_bound
-
-
-def paired_subsamples(meta, cat, control_cats, order=None, strict=True):
-    r"""Gets a set samples to serve as controls
-
-    This function is designed to provide controlled samples, based on a
-    metadata category. For example, one could control for age, sex, education
-    level, and diet type while measuring exercise frequency. No outcome
-    value is considered in this subsampling process.
-
-    Parameters
-    ----------
-    meta : pandas.dataframe
-        The metadata associated with the samples.
-    cat : str, list
-        The metadata category (or a list of categories) for comparison.
-    control_cats : list
-        The metadata categories to be used as controls. For example, if you
-        wanted to control age (`cat` = "AGE"), you might want to control for
-        gender and health status (i.e. `control_cats` = ["SEX", "HEALTHY"])
-    order : list, optional
-        Default is None. The order of groups in the category. This can be used
-        to limit the groups selected. For example, if there's a category with
-        groups 'A', 'B' and 'C', and you only want to look at A vs B, `order`
-        would be set to ['A', 'B'].
-    strict: bool
-        Default is True. If a missing value (nan) is encountered, the group
-        will be skipped when `strict` is True.
-
-    Returns
-    -------
-    ids : array
-        a set of arrays which satisfy the criteria. These are not grouped by
-        `cat`. An empty array indicates there are no sample ids which satisfy
-        the requirements.
-
-    Examples
-    --------
-    If we have a mapping file for a set of random samples looking at housing,
-    sex, age and antibiotic use.
-
-    >>> import pandas as pd
-    >>> import numpy as np
-    >>> meta = {'SW': {'HOUSING': '2', 'SEX': 'M', 'AGE': np.nan, 'ABX': 'N'},
-    ...         'TS': {'HOUSING': '2', 'SEX': 'M', 'AGE': '40s', 'ABX': 'Y'},
-    ...         'CB': {'HOUSING': '3', 'SEX': 'M', 'AGE': '40s', 'ABX': 'Y'},
-    ...         'BB': {'HOUSING': '1', 'SEX': 'M', 'AGE': '40s', 'ABX': 'Y'}}
-    >>> meta = pd.DataFrame.from_dict(meta, orient="index")
-    >>> meta
-       ABX HOUSING  AGE SEX
-    BB   Y       1  40s   M
-    CB   Y       3  40s   M
-    SW   N       2  NaN   M
-    TS   Y       2  40s   M
-
-    Let's say we want to vary housing, controlling for sex, age, antibiotics
-    and sex.
-
-    >>> from skbio.stats.power import paired_subsamples
-    >>> ids = paired_subsamples(meta, 'HOUSING', ['SEX', 'AGE', 'ABX'])
-    >>> ids #doctest: +NORMALIZE_WHITESPACE
-    [array(['BB'],
-          dtype='|S2'), array(['TS'],
-          dtype='|S2'), array(['CB'],
-          dtype='|S2')]
-
-    """
-    # Groups meta by category
-    cat_groups = meta.groupby(cat).groups
-
-    # Handles the order argument
-    if order is None:
-        order = sorted(cat_groups.keys())
-    order = np.array(order)
-    num_groups = len(order)
-
-    # Determines the number of samples, and the experimental and control group
-    group_size = np.array([len(cat_groups[o]) for o in order])
-    ctrl_name = order[group_size == group_size.min()][0]
-    order = order[order != ctrl_name]
-
-    # Gets a control group table
-    ctrl_match_groups = meta.groupby(control_cats).groups
-    ctrl_group = meta.loc[cat_groups[ctrl_name]
-                          ].groupby(list(control_cats)).groups
-
-    ids = [np.array([])]*num_groups
-    # Loops through samples in the experimental group to match for controls
-    for check_group, ctrl_ids in viewitems(ctrl_group):
-        # Checks the categories have been defined
-        undefed_check = np.array([_check_strs(p) for p in check_group])
-        if not undefed_check.all() and strict:
-            continue
-        # Removes the matched ids from order
-        matched_ids = ctrl_match_groups[check_group]
-        for id_ in ctrl_ids:
-            matched_ids.remove(id_)
-        pos_ids = []
-        num_ids = [len(ctrl_ids)]
-        # Gets the matrix of the matched ids and groups them
-        exp_group = meta.loc[matched_ids].groupby(cat).groups
-        for grp in order:
-            # Checks group to be considered is included in the grouping
-            if grp not in exp_group:
-                break
-            # Gets the id associated with the group
-            pos_ids.append(exp_group[grp])
-            num_ids.append(len(exp_group[grp]))
-        # Determines the minimum number of samples
-        num_draw = np.array(num_ids).min()
-        # Draws samples from possible ids
-        exp_ids = [np.random.choice(ctrl_ids, num_draw, replace=False)]
-        exp_ids.extend([np.random.choice(id_, num_draw, replace=False)
-                        for id_ in pos_ids])
-
-        if len(exp_ids) == num_groups:
-            for idx in range(num_groups):
-                ids[idx] = np.hstack((ids[idx], exp_ids[idx]))
-
-    return ids
