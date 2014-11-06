@@ -768,6 +768,16 @@ def randdm(num_objects, ids=None, constructor=None, random_fn=None):
 # helper functions for anosim and permanova
 
 def _preprocess_input(distance_matrix, grouping, column):
+    """Compute intermediate results not affected by permutations.
+
+    These intermediate results can be computed a single time for efficiency,
+    regardless of grouping vector permutations (i.e., when calculating the
+    p-value). These intermediate results are used by both ANOSIM and PERMANOVA.
+
+    Also validates and normalizes input (e.g., converting data frame column
+    into grouping vector).
+
+    """
     if not isinstance(distance_matrix, DistanceMatrix):
         raise TypeError("Input must be a DistanceMatrix.")
 
@@ -849,6 +859,7 @@ def _df_to_vector(distance_matrix, df, column):
 
 
 def _run_stat_method(test_stat_function, grouping, permutations):
+    """Execute an arbitrary statistical method and compute significance."""
     if permutations < 0:
         raise ValueError(
             "Number of permutations must be greater than or equal to zero.")
@@ -870,6 +881,7 @@ def _run_stat_method(test_stat_function, grouping, permutations):
 
 def _build_results(method_name, test_stat_name, sample_size, num_groups, stat,
                    p_value, permutations):
+    """Return ``pandas.Series`` containing results of statistical test."""
     return pd.Series(
         data=[method_name, sample_size, num_groups, stat, p_value,
               permutations],
