@@ -765,6 +765,119 @@ def randdm(num_objects, ids=None, constructor=None, random_fn=None):
     return constructor(data, ids)
 
 
+# helper functions for anosim and permanova
+
+def _preprocess_input(distance_matrix, grouping, column):
+    if not isinstance(distance_matrix, DistanceMatrix):
+        raise TypeError("Input must be a DistanceMatrix.")
+
+    if isinstance(grouping, pd.DataFrame):
+        if column is None:
+            raise ValueError(
+                "Must provide a column name if supplying a data frame.")
+        else:
+            grouping = _df_to_vector(distance_matrix, grouping, column)
+    elif column is not None:
+        raise ValueError(
+            "Must provide a data frame if supplying a column name.")
+
+    sample_size = distance_matrix.shape[0]
+    if len(grouping) != sample_size:
+        raise ValueError(
+            "Grouping vector size must match the number of IDs in the "
+            "distance matrix.")
+
+    # Find the group labels and convert grouping to an integer vector
+    # (factor).
+    groups, grouping = np.unique(grouping, return_inverse=True)
+    num_groups = len(groups)
+
+    if num_groups == len(grouping):
+        raise ValueError(
+            "All values in the grouping vector are unique. This method cannot "
+            "operate on a grouping vector with only unique values (e.g., "
+            "there are no 'within' distances because each group of objects "
+            "contains only a single object).")
+    if num_groups == 1:
+        raise ValueError(
+            "All values in the grouping vector are the same. This method "
+            "cannot operate on a grouping vector with only a single group of "
+            "objects (e.g., there are no 'between' distances because there is "
+            "only a single group).")
+
+    tri_idxs = np.triu_indices(sample_size, k=1)
+    distances = distance_matrix.condensed_form()
+
+    return sample_size, num_groups, grouping, tri_idxs, distances
+
+
+def _df_to_vector(distance_matrix, df, column):
+    """Return a grouping vector from a data frame column.
+
+    Parameters
+    ----------
+    distance_marix : DistanceMatrix
+        Distance matrix whose IDs will be mapped to group labels.
+    df : pandas.DataFrame
+        Data frame (indexed by distance matrix ID).
+    column : str
+        Column name in `df` containing group labels.
+
+    Returns
+    -------
+    list
+        Grouping vector (vector of labels) based on the IDs in
+        `distance_matrix`. Each ID's label is looked up in the data frame
+        under the column specified by `column`.
+
+    Raises
+    ------
+    ValueError
+        If `column` is not in the data frame, or a distance matrix ID is
+        not in the data frame.
+
+    """
+    if column not in df:
+        raise ValueError("Column '%s' not in data frame." % column)
+
+    grouping = df.loc[distance_matrix.ids, column]
+    if grouping.isnull().any():
+        raise ValueError(
+            "One or more IDs in the distance matrix are not in the data "
+            "frame.")
+    return grouping.tolist()
+
+
+def _run_stat_method(test_stat_function, grouping, permutations):
+    if permutations < 0:
+        raise ValueError(
+            "Number of permutations must be greater than or equal to zero.")
+
+    stat = test_stat_function(grouping)
+
+    p_value = np.nan
+    if permutations > 0:
+        perm_stats = np.empty(permutations, dtype=np.float64)
+
+        for i in range(permutations):
+            perm_grouping = np.random.permutation(grouping)
+            perm_stats[i] = test_stat_function(perm_grouping)
+
+        p_value = ((perm_stats >= stat).sum() + 1) / (permutations + 1)
+
+    return stat, p_value
+
+
+def _build_results(method_name, test_stat_name, sample_size, num_groups, stat,
+                   p_value, permutations):
+    return pd.Series(
+        data=[method_name, sample_size, num_groups, stat, p_value,
+              permutations],
+        index=['Method name', 'Sample size', 'Number of groups',
+               test_stat_name, 'p-value', 'Number of permutations'],
+        name='%s results' % method_name)
+
+
 class CategoricalStats(object):
     """Base class for categorical statistical methods.
 

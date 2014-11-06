@@ -9,11 +9,51 @@
 from __future__ import absolute_import, division, print_function
 
 import warnings
+from functools import partial
 
 import numpy as np
 from scipy.stats import rankdata
 
-from ._base import CategoricalStats
+from ._base import (_preprocess_input, _run_stat_method, _build_results,
+                    CategoricalStats)
+
+
+def anosim(distance_matrix, grouping, column=None, permutations=999):
+    sample_size, num_groups, grouping, tri_idxs, distances = _preprocess_input(
+        distance_matrix, grouping, column)
+
+    divisor = sample_size * ((sample_size - 1) / 4)
+    ranked_dists = rankdata(distances, method='average')
+
+    test_stat_function = partial(_compute_r_stat, tri_idxs, ranked_dists,
+                                 divisor)
+    stat, p_value = _run_stat_method(test_stat_function, grouping,
+                                     permutations)
+
+    return _build_results('ANOSIM', 'R statistic', sample_size, num_groups,
+                          stat, p_value, permutations)
+
+
+def _compute_r_stat(tri_idxs, ranked_dists, divisor, grouping):
+    """Compute ANOSIM R statistic (between -1 and +1)."""
+    # Create a matrix where True means that the two objects are in the same
+    # group. This ufunc requires that grouping is a numeric vector (e.g., it
+    # won't work with a grouping vector of strings).
+    grouping_matrix = np.equal.outer(grouping, grouping)
+
+    # Extract upper triangle from the grouping matrix. It is important to
+    # extract the values in the same order that the distances are extracted
+    # from the distance matrix (see ranked_dists). Extracting the upper
+    # triangle (excluding the diagonal) preserves this order.
+    grouping_tri = grouping_matrix[tri_idxs]
+
+    # within
+    r_W = np.mean(ranked_dists[grouping_tri])
+
+    # between
+    r_B = np.mean(ranked_dists[np.invert(grouping_tri)])
+
+    return (r_B - r_W) / divisor
 
 
 class ANOSIM(CategoricalStats):

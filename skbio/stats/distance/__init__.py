@@ -152,6 +152,8 @@ Categorical Variable Stats
 .. autosummary::
    :toctree: generated/
 
+   anosim
+   permanova
    ANOSIM
    PERMANOVA
    CategoricalStatsResults
@@ -293,14 +295,14 @@ from ._base import (DissimilarityMatrixError, DistanceMatrixError,
                     MissingIDError, DissimilarityMatrix, DistanceMatrix,
                     CategoricalStatsResults, randdm)
 from ._bioenv import bioenv
-from ._anosim import ANOSIM
-from ._permanova import PERMANOVA
+from ._anosim import anosim, ANOSIM
+from ._permanova import permanova, PERMANOVA
 from ._mantel import mantel, pwmantel
 
 __all__ = ['DissimilarityMatrixError', 'DistanceMatrixError', 'MissingIDError',
-           'DissimilarityMatrix', 'DistanceMatrix', 'randdm', 'ANOSIM',
-           'PERMANOVA', 'CategoricalStatsResults', 'bioenv', 'mantel',
-           'pwmantel']
+           'DissimilarityMatrix', 'DistanceMatrix', 'randdm', 'anosim',
+           'ANOSIM', 'permanova', 'PERMANOVA', 'CategoricalStatsResults',
+           'bioenv', 'mantel', 'pwmantel']
 
 from numpy.testing import Tester
 test = Tester().test
