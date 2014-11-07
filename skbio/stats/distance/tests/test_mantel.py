@@ -336,10 +336,6 @@ class PairwiseMantelTests(MantelTestData):
             get_data_path('pwmantel_exp_results_na_p_value.txt'),
             sep='\t', index_col=(0, 1))
 
-        self.exp_results_too_few_permutations = pd.read_csv(
-            get_data_path('pwmantel_exp_results_too_few_permutations.txt'),
-            sep='\t', index_col=(0, 1))
-
         self.exp_results_reordered_distance_matrices = pd.read_csv(
             get_data_path('pwmantel_exp_results_reordered_distance_matrices'
                           '.txt'),

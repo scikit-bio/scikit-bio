@@ -101,8 +101,8 @@ def anosim(distance_matrix, grouping, column=None, permutations=999):
     Run ANOSIM using 99 permutations to calculate the p-value:
 
     >>> import numpy as np
-    >>> np.random.seed(0) # Make output deterministic; \
-    ...                   # not necessary for normal use
+    >>> # make output deterministic; not necessary for normal use
+    >>> np.random.seed(0)
     >>> from skbio.stats.distance import anosim
     >>> anosim(dm, grouping, permutations=99)
     Method name               ANOSIM
@@ -133,8 +133,8 @@ def anosim(distance_matrix, grouping, column=None, permutations=999):
     column specifies the same grouping as the vector we used in the previous
     examples:
 
-    >>> np.random.seed(0) # Make output deterministic; \
-    ...                   # not necessary for normal use
+    >>> # make output deterministic; not necessary for normal use
+    >>> np.random.seed(0)
     >>> import pandas as pd
     >>> df = pd.DataFrame.from_dict(
     ...     {'Group': {'s2': 'Group1', 's3': 'Group2', 's4': 'Group2',

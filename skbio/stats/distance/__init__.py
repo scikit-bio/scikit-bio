@@ -154,8 +154,6 @@ Categorical Variable Stats
 
    anosim
    permanova
-   ANOSIM
-   PERMANOVA
    CategoricalStatsResults
 
 Continuous Variable Stats
