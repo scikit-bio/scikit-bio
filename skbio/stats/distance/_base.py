@@ -420,7 +420,7 @@ class DissimilarityMatrix(SkbioObject):
            Plot the dissimilarity matrix as a heatmap:
 
            >>> fig = dm.plot(cmap='Reds', title='Example heatmap')
-   
+
         """
         # based on http://stackoverflow.com/q/14391959/3776794
         fig, ax = plt.subplots()
