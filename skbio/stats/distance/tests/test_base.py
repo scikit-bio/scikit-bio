@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
+from future.utils.six import binary_type, text_type
 from future.builtins import zip
 from future.utils.six import StringIO
 
@@ -17,6 +18,7 @@ mpl.use('Agg')
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
+from IPython.display import Image, SVG
 
 from skbio import DistanceMatrix
 from skbio.stats.distance import (
@@ -290,12 +292,12 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         self.assertEqual(ax.get_title(), '')
         xticks = []
         for tick in ax.get_xticklabels():
-            ticks.append(tick.get_text())
-        self.assertEqual(ticks, ['0'])
+            xticks.append(tick.get_text())
+        self.assertEqual(xticks, ['a'])
         yticks = []
-        for tick in ax.get_yticklabels():
-            ticks.append(tick.get_text())
-        self.assertEqual(ticks, ['0'])
+        for tick in ax.get_xticklabels():
+            yticks.append(tick.get_text())
+        self.assertEqual(yticks, ['a'])
 
     def test_plot_no_default(self):
         ids = ['0', 'one', '2', 'three', '4.000']
@@ -310,12 +312,12 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         self.assertEqual(ax.get_title(), 'Testplot')
         xticks = []
         for tick in ax.get_xticklabels():
-            ticks.append(tick.get_text())
-        self.assertEqual(ticks, ['0', 'one', '2', 'three', '4.000'])
+            xticks.append(tick.get_text())
+        self.assertEqual(xticks, ['0', 'one', '2', 'three', '4.000'])
         yticks = []
         for tick in ax.get_yticklabels():
-            ticks.append(tick.get_text())
-        self.assertEqual(ticks, ['0', 'one', '2', 'three', '4.000'])
+            yticks.append(tick.get_text())
+        self.assertEqual(yticks, ['0', 'one', '2', 'three', '4.000'])
 
     def test_plot_title(self):
         fig = self.dm_1x1.plot(title='heatmap')
@@ -326,20 +328,24 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         self.assertEqual(ax.get_title(), 'heatmap')
 
     def test_repr_png(self):
-        obs = self.fig._repr_png_()
-        assert_is_instance(obs, binary_type)
-        assert_true(len(obs) > 0)
+        dm = self.dm_1x1
+        obs = dm._repr_png_()
+        self.assertIsInstance(obs, binary_type)
+        self.assertTrue(len(obs) > 0)
 
     def test_repr_svg(self):
-        obs = self.fig._repr_svg_()
-        assert_is_instance(obs, text_type)
-        assert_true(len(obs) > 0)
+        dm = self.dm_1x1
+        obs = dm._repr_svg_()
+        self.assertIsInstance(obs, text_type)
+        self.assertTrue(len(obs) > 0)
 
     def test_png(self):
-        assert_is_instance(self.fig.png, Image)
+        dm = self.dm_1x1
+        self.assertIsInstance(dm.png, Image)
 
     def test_svg(self):
-        assert_is_instance(self.fig.svg, SVG)
+        dm = self.dm_1x1
+        self.assertIsInstance(dm.svg, SVG)
 
     def test_str(self):
         for dm in self.dms:
