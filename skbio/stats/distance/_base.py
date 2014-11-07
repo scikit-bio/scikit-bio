@@ -405,8 +405,8 @@ class DissimilarityMatrix(SkbioObject):
             Figure containing the heatmap and colorbar of the plotted
             dissimilarity matrix.
 
-        Example
-        -------
+        Examples
+        --------
         .. plot::
 
            Define a dissimilarity matrix with five objects labeled A-E:

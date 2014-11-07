@@ -2,6 +2,9 @@
 
 ## Version 0.2.1-dev (changes since 0.2.1 release go here)
 
+###Features
+* Added ``plot`` method to ``skbio.stats.distance.DissimilarityMatrix`` for creating basic heatmaps of a dissimilarity/distance matrix (see [#684](https://github.com/biocore/scikit-bio/issues/684)). Also added  ``_repr_png_`` and ``_repr_svg_`` methods for automatic display in the IPython Notebook, with ``png`` and ``svg`` properties for direct access.
+
 ## Version 0.2.1 (2014-10-27)
 
 This is an alpha release of scikit-bio. At this stage, major backwards-incompatible API changes can and will happen. Unified I/O with the scikit-bio I/O registry was the focus of this release.
@@ -19,7 +22,6 @@ This is an alpha release of scikit-bio. At this stage, major backwards-incompati
 * Methods to read and write taxonomies are now available under ``skbio.tree.TreeNode.from_taxonomy`` and ``skbio.tree.TreeNode.to_taxonomy`` respectively.
 * Added ``SequenceCollection.update_ids``, which provides a flexible way of updating sequence IDs on a ``SequenceCollection`` or ``Alignment`` (note that a new object is returned, since instances of these classes are immutable). Deprecated ``SequenceCollection.int_map`` in favor of this new method; it will be removed in scikit-bio 0.3.0.
 * Added ``skbio.util.cardinal_to_ordinal`` for converting a cardinal number to ordinal string (e.g., useful for error messages).
-* Added ``plot`` method to ``skbio.stats.distance._base.py`` whick creates a heatmap of a dissimilarity matrix, optionally colored by cmap. Also added  ``_repr_png_`` and ``_repr_svg_`` methods for automatic display in the IPython Notebook, with ``png`` and ``svg`` properties for direct access. 
 * New I/O Registry: supports multiple file formats, automatic file format detection when reading, unified procedural ``skbio.io.read`` and ``skbio.io.write`` in addition to OOP interfaces (``read/write`` methods) on the below objects. See ``skbio.io`` for more details.
     - Added "clustal" format support:
         * Has sniffer

@@ -294,7 +294,7 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
             xticks.append(tick.get_text())
         self.assertEqual(xticks, ['a'])
         yticks = []
-        for tick in ax.get_xticklabels():
+        for tick in ax.get_yticklabels():
             yticks.append(tick.get_text())
         self.assertEqual(yticks, ['a'])
 
@@ -317,14 +317,6 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         for tick in ax.get_yticklabels():
             yticks.append(tick.get_text())
         self.assertEqual(yticks, ['0', 'one', '2', 'three', '4.000'])
-
-    def test_plot_title(self):
-        fig = self.dm_1x1.plot(title='heatmap')
-        self.assertIsInstance(fig, mpl.figure.Figure)
-        axes = fig.get_axes()
-        self.assertEqual(len(axes), 2)
-        ax = axes[0]
-        self.assertEqual(ax.get_title(), 'heatmap')
 
     def test_repr_png(self):
         dm = self.dm_1x1
