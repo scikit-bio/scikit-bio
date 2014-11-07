@@ -44,6 +44,7 @@ def p_value_to_str(p_value, permutations):
 
 
 def _pprint_strs(strs, max_chars=80, delimiter=', ', suffix='...',):
+    """Pretty-print an iterable of strings, truncating if necessary."""
     # Adapted from http://stackoverflow.com/a/250373
     joined_str = delimiter.join(repr(s) for s in strs)
 
