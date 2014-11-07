@@ -3,6 +3,7 @@
 ## Version 0.2.1-dev (changes since 0.2.1 release go here)
 
 ### Features
+* Added ``plot`` method to ``skbio.stats.distance.DissimilarityMatrix`` for creating basic heatmaps of a dissimilarity/distance matrix (see [#684](https://github.com/biocore/scikit-bio/issues/684)). Also added  ``_repr_png_`` and ``_repr_svg_`` methods for automatic display in the IPython Notebook, with ``png`` and ``svg`` properties for direct access.
 * Added `__str__` method to `skbio.stats.ordination.OrdinationResults`.
 
 ## Version 0.2.1 (2014-10-27)
