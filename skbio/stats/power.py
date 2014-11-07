@@ -676,7 +676,7 @@ def paired_subsamples(meta, cat, control_cats, order=None, strict=True):
     ...         'CB': {'HOUSING': '3', 'SEX': 'M', 'AGE': '40s', 'ABX': 'Y'},
     ...         'BB': {'HOUSING': '1', 'SEX': 'M', 'AGE': '40s', 'ABX': 'Y'}}
     >>> meta = pd.DataFrame.from_dict(meta, orient="index")
-    >>> meta #doctest +SKIP
+    >>> meta #doctest: +SKIP
        ABX HOUSING  AGE SEX
     BB   Y       1  40s   M
     CB   Y       3  40s   M
@@ -689,11 +689,8 @@ def paired_subsamples(meta, cat, control_cats, order=None, strict=True):
 
     >>> from skbio.stats.power import paired_subsamples
     >>> ids = paired_subsamples(meta, 'HOUSING', ['SEX', 'AGE', 'ABX'])
-    >>> ids #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-    [array(['BB'],
-          dtype= ... ), array(['TS'],
-          dtype= ... ), array(['CB'],
-          dtype= ... )]
+    >>> np.hstack(ids) # doctest: +ELLIPSIS
+    array(['BB', 'TS', 'CB']...
 
     So, for this set of data, we can match TS, CB, and BB based on their age,
     sex, and antibiotic use. SW cannot be matched in either group becuase
