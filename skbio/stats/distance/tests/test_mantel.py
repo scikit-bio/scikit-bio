@@ -320,38 +320,30 @@ class PairwiseMantelTests(MantelTestData):
 
         self.min_dms = (self.minx_dm, self.miny_dm, self.minz_dm)
 
-        # Load expected results. We have to load the p-value column (column
-        # index 3) as a string dtype in order to compare with the in-memory
-        # results since we're formatting the p-values as strings with the
-        # correct number of decimal places. Without this explicit converter,
-        # the p-value column will be loaded as a float dtype and the frames
-        # won't compare equal.
-        p_val_conv = {3: str}
-
         self.exp_results_minimal = pd.read_csv(
             get_data_path('pwmantel_exp_results_minimal.txt'), sep='\t',
-            index_col=(0, 1), converters=p_val_conv)
+            index_col=(0, 1))
 
         self.exp_results_minimal_with_labels = pd.read_csv(
             get_data_path('pwmantel_exp_results_minimal_with_labels.txt'),
-            sep='\t', index_col=(0, 1), converters=p_val_conv)
+            sep='\t', index_col=(0, 1))
 
         self.exp_results_duplicate_dms = pd.read_csv(
             get_data_path('pwmantel_exp_results_duplicate_dms.txt'),
-            sep='\t', index_col=(0, 1), converters=p_val_conv)
+            sep='\t', index_col=(0, 1))
 
         self.exp_results_na_p_value = pd.read_csv(
             get_data_path('pwmantel_exp_results_na_p_value.txt'),
-            sep='\t', index_col=(0, 1), converters=p_val_conv)
+            sep='\t', index_col=(0, 1))
 
         self.exp_results_too_few_permutations = pd.read_csv(
             get_data_path('pwmantel_exp_results_too_few_permutations.txt'),
-            sep='\t', index_col=(0, 1), converters=p_val_conv)
+            sep='\t', index_col=(0, 1))
 
         self.exp_results_reordered_distance_matrices = pd.read_csv(
             get_data_path('pwmantel_exp_results_reordered_distance_matrices'
                           '.txt'),
-            sep='\t', index_col=(0, 1), converters=p_val_conv)
+            sep='\t', index_col=(0, 1))
 
     def test_minimal_compatible_input(self):
         # Matrices are already in the correct order and have matching IDs.
@@ -384,11 +376,6 @@ class PairwiseMantelTests(MantelTestData):
         obs = pwmantel((self.miny_dm, self.minx_dm), method='spearman',
                        permutations=0)
         assert_frame_equal(obs, self.exp_results_na_p_value)
-
-    def test_too_few_permutations_for_p_value(self):
-        obs = pwmantel((self.miny_dm, self.minx_dm), method='spearman',
-                       permutations=9)
-        assert_frame_equal(obs, self.exp_results_too_few_permutations)
 
     def test_reordered_distance_matrices(self):
         # Matrices have matching IDs but they all have different ordering.

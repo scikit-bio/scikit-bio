@@ -150,24 +150,22 @@ Bray-Curtis distance matrix and sample metadata.
 
 First test the grouping of samples by subject:
 
->>> from skbio.stats.distance import ANOSIM
->>> anosim = ANOSIM(bc_dm, sample_md, column='subject')
->>> results = anosim(999)
->>> results.statistic
+>>> from skbio.stats.distance import anosim
+>>> results = anosim(bc_dm, sample_md, column='subject', permutations=999)
+>>> results['R statistic']
 -0.4074074074074075
->>> results.p_value < 0.05
+>>> results['p-value'] < 0.1
 False
 
 The negative value of ANOSIM's R statistic indicates anti-clustering and the
-p-value is insignificant at an alpha of 0.05.
+p-value is insignificant at an alpha of 0.1.
 
 Now let's test the grouping of samples by body site:
 
->>> anosim = ANOSIM(bc_dm, sample_md, column='body_site')
->>> results = anosim(999)
->>> results.statistic
+>>> results = anosim(bc_dm, sample_md, column='body_site', permutations=999)
+>>> results['R statistic']
 1.0
->>> results.p_value < 0.1
+>>> results['p-value'] < 0.1
 True
 
 The R statistic of 1.0 indicates strong separation of samples based on body
