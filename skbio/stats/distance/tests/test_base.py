@@ -442,17 +442,6 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         with self.assertRaises(DissimilarityMatrixError):
             self.dm_3x3._validate(np.array([[0, 42], [42, 0]]), ['a', 'b'])
 
-    def test_pprint_ids(self):
-        # No truncation.
-        exp = 'a, b, c'
-        obs = self.dm_3x3._pprint_ids()
-        self.assertEqual(obs, exp)
-
-        # Truncation.
-        exp = 'a, b, ...'
-        obs = self.dm_3x3._pprint_ids(max_chars=5)
-        self.assertEqual(obs, exp)
-
 
 class DistanceMatrixTests(DissimilarityMatrixTestData):
     def setUp(self):

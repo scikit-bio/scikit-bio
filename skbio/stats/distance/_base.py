@@ -24,6 +24,7 @@ from scipy.spatial.distance import squareform
 
 from skbio._base import SkbioObject
 from skbio.stats import p_value_to_str
+from skbio.stats._misc import _pprint_strs
 
 
 class DissimilarityMatrixError(Exception):
@@ -488,7 +489,7 @@ class DissimilarityMatrix(SkbioObject):
         """
         return '%dx%d %s matrix\nIDs:\n%s\nData:\n' % (
             self.shape[0], self.shape[1], self._matrix_element_name,
-            self._pprint_ids()) + str(self.data)
+            _pprint_strs(self.ids)) + str(self.data)
 
     def __eq__(self, other):
         """Compare this dissimilarity matrix to another for equality.
@@ -683,16 +684,6 @@ class DissimilarityMatrix(SkbioObject):
         return (isinstance(index, tuple) and
                 len(index) == 2 and
                 all(map(lambda e: isinstance(e, string_types), index)))
-
-    def _pprint_ids(self, max_chars=80, delimiter=', ', suffix='...',):
-        # Adapted from http://stackoverflow.com/a/250373
-        ids_str = delimiter.join(self.ids)
-
-        if len(ids_str) > max_chars:
-            truncated = ids_str[:max_chars + 1].split(delimiter)[0:-1]
-            ids_str = delimiter.join(truncated) + delimiter + suffix
-
-        return ids_str
 
 
 class DistanceMatrix(DissimilarityMatrix):
