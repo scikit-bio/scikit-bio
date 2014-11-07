@@ -8,13 +8,16 @@
 
 from __future__ import absolute_import, division, print_function
 from future.builtins import zip
-from six import StringIO
+from six import StringIO, binary_type, text_type
 
 from unittest import TestCase, main
 
+import matplotlib as mpl
+mpl.use('Agg')
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
+from IPython.display import Image, SVG
 
 from skbio import DistanceMatrix
 from skbio.stats.distance import (
@@ -280,6 +283,62 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         with self.assertRaises(DissimilarityMatrixError):
             self.dm_3x3.filter([])
 
+    def test_plot_default(self):
+        fig = self.dm_1x1.plot()
+        self.assertIsInstance(fig, mpl.figure.Figure)
+        axes = fig.get_axes()
+        self.assertEqual(len(axes), 2)
+        ax = axes[0]
+        self.assertEqual(ax.get_title(), '')
+        xticks = []
+        for tick in ax.get_xticklabels():
+            xticks.append(tick.get_text())
+        self.assertEqual(xticks, ['a'])
+        yticks = []
+        for tick in ax.get_yticklabels():
+            yticks.append(tick.get_text())
+        self.assertEqual(yticks, ['a'])
+
+    def test_plot_no_default(self):
+        ids = ['0', 'one', '2', 'three', '4.000']
+        data = ([0, 1, 2, 3, 4], [1, 0, 1, 2, 3], [2, 1, 0, 1, 2],
+                [3, 2, 1, 0, 1], [4, 3, 2, 1, 0])
+        dm = DissimilarityMatrix(data, ids)
+        fig = dm.plot(cmap='Reds', title='Testplot')
+        self.assertIsInstance(fig, mpl.figure.Figure)
+        axes = fig.get_axes()
+        self.assertEqual(len(axes), 2)
+        ax = axes[0]
+        self.assertEqual(ax.get_title(), 'Testplot')
+        xticks = []
+        for tick in ax.get_xticklabels():
+            xticks.append(tick.get_text())
+        self.assertEqual(xticks, ['0', 'one', '2', 'three', '4.000'])
+        yticks = []
+        for tick in ax.get_yticklabels():
+            yticks.append(tick.get_text())
+        self.assertEqual(yticks, ['0', 'one', '2', 'three', '4.000'])
+
+    def test_repr_png(self):
+        dm = self.dm_1x1
+        obs = dm._repr_png_()
+        self.assertIsInstance(obs, binary_type)
+        self.assertTrue(len(obs) > 0)
+
+    def test_repr_svg(self):
+        dm = self.dm_1x1
+        obs = dm._repr_svg_()
+        self.assertIsInstance(obs, text_type)
+        self.assertTrue(len(obs) > 0)
+
+    def test_png(self):
+        dm = self.dm_1x1
+        self.assertIsInstance(dm.png, Image)
+
+    def test_svg(self):
+        dm = self.dm_1x1
+        self.assertIsInstance(dm.svg, SVG)
+
     def test_str(self):
         for dm in self.dms:
             obs = str(dm)
@@ -383,17 +442,6 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
     def test_validate_invalid_dtype(self):
         with self.assertRaises(DissimilarityMatrixError):
             self.dm_3x3._validate(np.array([[0, 42], [42, 0]]), ['a', 'b'])
-
-    def test_pprint_ids(self):
-        # No truncation.
-        exp = 'a, b, c'
-        obs = self.dm_3x3._pprint_ids()
-        self.assertEqual(obs, exp)
-
-        # Truncation.
-        exp = 'a, b, ...'
-        obs = self.dm_3x3._pprint_ids(max_chars=5)
-        self.assertEqual(obs, exp)
 
 
 class DistanceMatrixTests(DissimilarityMatrixTestData):

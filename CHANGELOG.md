@@ -3,6 +3,8 @@
 ## Version 0.2.1-dev (changes since 0.2.1 release go here)
 
 ### Features
+* Added ``plot`` method to ``skbio.stats.distance.DissimilarityMatrix`` for creating basic heatmaps of a dissimilarity/distance matrix (see [#684](https://github.com/biocore/scikit-bio/issues/684)). Also added  ``_repr_png_`` and ``_repr_svg_`` methods for automatic display in the IPython Notebook, with ``png`` and ``svg`` properties for direct access.
+* Added `__str__` method to `skbio.stats.ordination.OrdinationResults`.
 * Added ``skbio.stats.distance.anosim`` and ``skbio.stats.distance.permanova`` functions, which replace the ``skbio.stats.distance.ANOSIM`` and ``skbio.stats.distance.PERMANOVA`` classes. These new functions provide simpler procedural interfaces to running these statistical methods. They also provide more convenient access to results by returning a ``pandas.Series`` instead of a ``CategoricalStatsResults`` object. These functions have more extensive documentation than their previous versions. If significance tests are suppressed, p-values are returned as ``np.nan`` instead of ``None`` for consistency with other statistical methods in scikit-bio. [#754](https://github.com/biocore/scikit-bio/issues/754)
 
 ### Deprecated functionality

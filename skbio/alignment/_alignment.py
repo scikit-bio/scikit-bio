@@ -400,7 +400,7 @@ class SequenceCollection(SkbioObject):
         >>> print(a1.distances(hamming))
         3x3 distance matrix
         IDs:
-        s1, s2, s3
+        's1', 's2', 's3'
         Data:
         [[ 0.     0.25   0.25 ]
          [ 0.25   0.     0.125]
@@ -1043,7 +1043,7 @@ class Alignment(SequenceCollection):
         >>> print(a1.distances())
         3x3 distance matrix
         IDs:
-        s1, s2, s3
+        's1', 's2', 's3'
         Data:
         [[ 0.          0.42857143  0.28571429]
          [ 0.42857143  0.          0.42857143]

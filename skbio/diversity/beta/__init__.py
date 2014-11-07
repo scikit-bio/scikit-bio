@@ -47,7 +47,7 @@ Create a table containing 7 OTUs and 6 samples:
    >>> print(bc_dm)
    6x6 distance matrix
    IDs:
-   A, B, C, D, E, F
+   'A', 'B', 'C', 'D', 'E', 'F'
    Data:
    [[ 0.          0.78787879  0.86666667  0.30927835  0.85714286  0.81521739]
     [ 0.78787879  0.          0.78142077  0.86813187  0.75        0.1627907 ]
@@ -63,7 +63,7 @@ Create a table containing 7 OTUs and 6 samples:
    >>> print(j_dm)
    6x6 distance matrix
    IDs:
-   A, B, C, D, E, F
+   'A', 'B', 'C', 'D', 'E', 'F'
    Data:
    [[ 0.          0.83333333  1.          1.          0.83333333  1.        ]
     [ 0.83333333  0.          1.          1.          0.83333333  1.        ]
