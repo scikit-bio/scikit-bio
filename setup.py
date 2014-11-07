@@ -55,7 +55,8 @@ extensions = [
               # http://bugs.python.org/issue21121 for details. This acts as a
               # workaround until the next Python 3 release -- thanks
               # Wolfgang Maier (wolma) for the workaround!
-              extra_compile_args=["-Wno-error=declaration-after-statement"])
+              extra_compile_args=["-Wno-error=declaration-after-statement",
+                                  "-msse3"])
 ]
 
 if USE_CYTHON:
