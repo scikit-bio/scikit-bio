@@ -11,7 +11,6 @@ from future.builtins import zip
 
 import warnings
 from functools import partial
-from importlib import import_module
 
 import numpy as np
 import matplotlib as mpl
@@ -21,10 +20,7 @@ from mpl_toolkits.mplot3d import Axes3D
 # avoid flake8 unused import error
 Axes3D
 from IPython.core.pylabtools import print_figure
-from IPython.display import Image, SVG
-
-# This will be the responsibility of the ABC in the future.
-import_module('skbio.io')
+from IPython.core.display import Image, SVG
 
 
 class OrdinationResults(object):
@@ -57,7 +53,7 @@ class OrdinationResults(object):
     svg
 
     """
-    default_write_format = 'ordres'
+    default_write_format = 'ordination'
 
     def __init__(self, eigvals, species=None, site=None, biplot=None,
                  site_constraints=None, proportion_explained=None,
@@ -83,8 +79,9 @@ class OrdinationResults(object):
            scikit-bio's I/O registry system. See :mod:`skbio.io` for more
            details.
 
-        Creates an ``OrdinationResults`` instance from a ``ordres`` formatted
-        file. See :mod:`skbio.io.ordres` for the format specification.
+        Creates an ``OrdinationResults`` instance from a ``ordination``
+        formatted file. See :mod:`skbio.io.ordination` for the format
+        specification.
 
         Parameters
         ----------
@@ -99,7 +96,7 @@ class OrdinationResults(object):
 
         Raises
         ------
-        OrdResFormatError
+        OrdinationFormatError
             If the format of the file is not valid, or if the shapes of the
             different sections of the file are not consistent.
 
@@ -112,7 +109,7 @@ class OrdinationResults(object):
             "OrdinationResults.from_file is deprecated and will be removed in "
             "scikit-bio 0.3.0. Please update your code to use "
             "OrdinationResults.read.", UserWarning)
-        return cls.read(ord_res_f, format='ordres')
+        return cls.read(ord_res_f, format='ordination')
 
     def to_file(self, out_f):
         """Save ordination results to file in text format.
@@ -124,8 +121,8 @@ class OrdinationResults(object):
            advantage of scikit-bio's I/O registry system. See :mod:`skbio.io`
            for more details.
 
-        Serializes ordination results as an ``ordres`` formatted file. See
-        :mod:`skbio.io.ordres` for the format specification.
+        Serializes ordination results as an ``ordination`` formatted file. See
+        :mod:`skbio.io.ordination` for the format specification.
 
         Parameters
         ----------
@@ -141,7 +138,7 @@ class OrdinationResults(object):
             "OrdinationResults.to_file is deprecated and will be removed in "
             "scikit-bio 0.3.0. Please update your code to use "
             "OrdinationResults.write.", UserWarning)
-        self.write(out_f, format='ordres')
+        self.write(out_f, format='ordination')
 
     def plot(self, df=None, column=None, axes=(0, 1, 2), axis_labels=None,
              title='', cmap=None, s=20):

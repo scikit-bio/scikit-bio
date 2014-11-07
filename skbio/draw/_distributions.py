@@ -7,7 +7,8 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.utils.six import string_types
+from future.builtins import map, range, zip
+from six import string_types
 
 from itertools import cycle
 import warnings
@@ -30,8 +31,8 @@ def boxplots(distributions, x_values=None, x_tick_labels=None, title=None,
 
     Parameters
     ----------
-    distributions: list of lists
-        List of distributions.
+    distributions: 2-D array_like
+        Distributions to plot. A boxplot will be created for each distribution.
     x_values : list of numbers, optional
         List indicating where each boxplot should be placed. Must be the same
         length as `distributions` if provided.
@@ -109,42 +110,23 @@ def boxplots(distributions, x_values=None, x_tick_labels=None, title=None,
        ...     box_colors=('green', 'blue', 'red'))
 
     """
-    # Make sure our input makes sense.
-    for distribution in distributions:
-        try:
-            list(map(float, distribution))
-        except:
-            raise ValueError("Each value in each distribution must be a "
-                             "number.")
-
-    _validate_x_values(x_values, x_tick_labels, len(distributions))
+    distributions = _validate_distributions(distributions)
+    num_dists = len(distributions)
+    _validate_x_values(x_values, x_tick_labels, num_dists)
 
     # Create a new figure to plot our data on, and then plot the distributions.
-    result, plot_axes = plt.subplots()
+    fig, ax = plt.subplots()
     box_plot = plt.boxplot(distributions, positions=x_values,
                            whis=whisker_length, widths=box_width)
 
     if box_colors is not None:
         if _is_single_matplotlib_color(box_colors):
-            box_colors = [box_colors] * len(box_plot['boxes'])
-        else:
-            # We check against the number of input distributions because mpl
-            # will only return non-empty boxplots from the boxplot() call
-            # above.
-            if len(box_colors) != len(distributions):
-                raise ValueError("Not enough colors were supplied to color "
-                                 "each boxplot.")
-
-            # Filter out colors corresponding to empty distributions.
-            box_colors = [color for distribution, color in zip(distributions,
-                                                               box_colors)
-                          if distribution]
-
-        _color_box_plot(plot_axes, box_plot, box_colors)
+            box_colors = [box_colors] * num_dists
+        _color_box_plot(ax, box_plot, box_colors)
 
     # Set up the various plotting options, such as x- and y-axis labels, plot
     # title, and x-axis values if they have been supplied.
-    _set_axes_options(plot_axes, title, x_label, y_label,
+    _set_axes_options(ax, title, x_label, y_label,
                       x_tick_labels=x_tick_labels,
                       x_tick_labels_orientation=x_tick_labels_orientation,
                       y_min=y_min, y_max=y_max)
@@ -155,10 +137,10 @@ def boxplots(distributions, x_values=None, x_tick_labels=None, title=None,
                              "a two-element tuple/list where the first "
                              "element is a list of colors and the second "
                              "element is a list of labels.")
-        _create_legend(plot_axes, legend[0], legend[1], 'colors')
+        _create_legend(ax, legend[0], legend[1], 'colors')
 
-    _set_figure_size(result, figure_width, figure_height)
-    return result
+    _set_figure_size(fig, figure_width, figure_height)
+    return fig
 
 
 def grouped_distributions(plot_type, data, x_values=None,
@@ -342,6 +324,31 @@ def grouped_distributions(plot_type, data, x_values=None,
                        plot_axes.get_xlim()[1] + distribution_width)
 
     return result
+
+
+def _validate_distributions(distributions):
+    dists = []
+    for distribution in distributions:
+        try:
+            distribution = np.asarray(distribution, dtype=float)
+        except ValueError:
+            raise ValueError("Each value in each distribution must be "
+                             "convertible to a number.")
+
+        # Empty distributions are plottable in mpl < 1.4.0. In 1.4.0, a
+        # ValueError is raised. This has been fixed in mpl 1.4.0-dev (see
+        # https://github.com/matplotlib/matplotlib/pull/3571). In order to
+        # support empty distributions across mpl versions, we replace them with
+        # [np.nan]. See https://github.com/pydata/pandas/issues/8382,
+        # https://github.com/matplotlib/matplotlib/pull/3571, and
+        # https://github.com/pydata/pandas/pull/8240 for details.
+        # If we decide to only support mpl > 1.4.0 in the future, this code can
+        # likely be removed in favor of letting mpl handle empty distributions.
+        if distribution.size > 0:
+            dists.append(distribution)
+        else:
+            dists.append(np.array([np.nan]))
+    return dists
 
 
 def _validate_input(data, x_values, data_point_labels, distribution_labels):
@@ -573,9 +580,11 @@ def _color_box_plot(plot_axes, box_plot, colors):
     # example:
     # http://matplotlib.sourceforge.net/examples/pylab_examples/
     #     boxplot_demo2.html
-    if len(colors) != len(box_plot['boxes']):
-        raise ValueError("Not enough colors were supplied to color each "
-                         "boxplot.")
+    num_colors = len(colors)
+    num_box_plots = len(box_plot['boxes'])
+    if num_colors != num_box_plots:
+        raise ValueError("The number of colors (%d) does not match the number "
+                         "of boxplots (%d)." % (num_colors, num_box_plots))
 
     for box, median, color in zip(box_plot['boxes'],
                                   box_plot['medians'],

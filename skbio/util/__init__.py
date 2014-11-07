@@ -26,11 +26,12 @@ Generally useful functions that don't fit in more specific locations.
 .. autosummary::
    :toctree: generated/
 
+   cardinal_to_ordinal
    create_dir
    flatten
+   is_casava_v180_or_later
    remove_files
    safe_md5
-   is_casava_v180_or_later
 
 Exceptions
 ----------
@@ -60,13 +61,14 @@ Warnings
 
 from ._warning import EfficiencyWarning
 from ._exception import TestingUtilError
-from ._misc import (create_dir, flatten, remove_files, safe_md5,
-                    is_casava_v180_or_later)
+from ._misc import (cardinal_to_ordinal, create_dir, flatten,
+                    is_casava_v180_or_later, remove_files, safe_md5)
 from ._testing import get_data_path
 
 __all__ = ['EfficiencyWarning', 'TestingUtilError',
-           'create_dir', 'flatten', 'remove_files', 'safe_md5',
-           'is_casava_v180_or_later', 'get_data_path']
+           'cardinal_to_ordinal', 'create_dir', 'flatten',
+           'is_casava_v180_or_later', 'remove_files', 'safe_md5',
+           'get_data_path']
 
 from numpy.testing import Tester
 test = Tester().test

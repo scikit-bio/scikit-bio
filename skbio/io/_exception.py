@@ -29,18 +29,33 @@ class UnrecognizedFormatError(FileFormatError):
     pass
 
 
-class DMFormatError(FileFormatError):
-    """Raised when a ``dm`` formatted file cannot be parsed."""
+class ClustalFormatError(FileFormatError):
+    """Raised when a ``clustal`` formatted file cannot be parsed."""
     pass
 
 
-class OrdResFormatError(FileFormatError):
-    """Raised when an ``ordres`` formatted file cannot be parsed."""
+class FASTAFormatError(FileFormatError):
+    """Raised when a ``fasta`` formatted file cannot be parsed."""
+    pass
+
+
+class LSMatFormatError(FileFormatError):
+    """Raised when a ``lsmat`` formatted file cannot be parsed."""
+    pass
+
+
+class OrdinationFormatError(FileFormatError):
+    """Raised when an ``ordination`` formatted file cannot be parsed."""
     pass
 
 
 class NewickFormatError(FileFormatError):
     """Raised when a ``newick`` formatted file cannot be parsed."""
+    pass
+
+
+class FASTQFormatError(FileFormatError):
+    """Raised when a ``fastq`` formatted file cannot be parsed."""
     pass
 
 
@@ -51,6 +66,11 @@ class PhylipFormatError(FileFormatError):
     in ``phylip`` format.
 
     """
+    pass
+
+
+class QSeqFormatError(FileFormatError):
+    """Raised when a ``qseq`` formatted file cannot be parsed."""
     pass
 
 

@@ -7,18 +7,21 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.utils.six import string_types
+from six import string_types
 
+import re
+import warnings
 from collections import Sequence, Counter, defaultdict
 from itertools import product
 
 import numpy as np
 from scipy.spatial.distance import hamming
 
+from skbio._base import SkbioObject
 from skbio.sequence import BiologicalSequenceError
 
 
-class BiologicalSequence(Sequence):
+class BiologicalSequence(Sequence, SkbioObject):
     """Base class for biological sequences.
 
     Parameters
@@ -31,13 +34,13 @@ class BiologicalSequence(Sequence):
         A description or comment about the sequence (e.g., "green
         fluorescent protein").
     quality : 1-D array_like, int, optional
-        Integer quality scores, one per sequence character. If provided, must
-        be the same length as the biological sequence. Can be a 1-D
-        ``numpy.ndarray`` of integers, or a structure that can be converted to
-        this representation using ``numpy.asarray``. A copy will *not* be made
-        if `quality` is already a 1-D ``numpy.ndarray`` with an ``int``
-        ``dtype``. The array will be made read-only (i.e., its ``WRITEABLE``
-        flag will be set to ``False``).
+        Phred quality scores stored as nonnegative integers, one per sequence
+        character. If provided, must be the same length as the biological
+        sequence. Can be a 1-D ``numpy.ndarray`` of integers, or a structure
+        that can be converted to this representation using ``numpy.asarray``. A
+        copy will *not* be made if `quality` is already a 1-D ``numpy.ndarray``
+        with an ``int`` ``dtype``. The array will be made read-only (i.e., its
+        ``WRITEABLE`` flag will be set to ``False``).
     validate : bool, optional
         If True, runs the `is_valid` method after construction and raises
         BiologicalSequenceError if ``is_valid == False``.
@@ -83,6 +86,9 @@ class BiologicalSequence(Sequence):
        A Cornish-Bowden
 
     """
+    default_write_format = 'fasta'
+
+    feature_types = set([])
 
     @classmethod
     def alphabet(cls):
@@ -575,9 +581,9 @@ class BiologicalSequence(Sequence):
     def quality(self):
         """Quality scores of the characters in the biological sequence.
 
-        A 1-D ``numpy.ndarray`` of integers representing quality scores for
-        each character in the biological sequence, or ``None`` if quality
-        scores are not present.
+        A 1-D ``numpy.ndarray`` of nonnegative integers representing Phred
+        quality scores for each character in the biological sequence, or
+        ``None`` if quality scores are not present.
 
         Notes
         -----
@@ -1376,6 +1382,13 @@ class BiologicalSequence(Sequence):
     def to_fasta(self, field_delimiter=" ", terminal_character="\n"):
         """Return the sequence as a fasta-formatted string
 
+        .. note:: Deprecated in scikit-bio 0.2.0-dev
+           ``to_fasta`` will be removed in scikit-bio 0.3.0. It is replaced by
+           ``write``, which is a more general method for serializing
+           FASTA-formatted files. ``write`` supports multiple file formats by
+           taking advantage of scikit-bio's I/O registry system. See
+           :mod:`skbio.io` for more details.
+
         Parameters
         ----------
         field_delimiter : str, optional
@@ -1405,6 +1418,11 @@ class BiologicalSequence(Sequence):
         ACA
 
         """
+        warnings.warn(
+            "BiologicalSequence.to_fasta is deprecated and will be removed in "
+            "scikit-bio 0.3.0. Please update your code to use "
+            "BiologicalSequence.write.", UserWarning)
+
         if self._description:
             header_line = '%s%s%s' % (self._id, field_delimiter,
                                       self._description)
@@ -1445,14 +1463,85 @@ class BiologicalSequence(Sequence):
             quality.flags.writeable = False
 
             if quality.ndim != 1:
-                raise BiologicalSequenceError("Quality scores must be 1-D.")
-            elif len(quality) != len(self):
                 raise BiologicalSequenceError(
-                    "Number of quality scores (%d) must match the number of "
-                    "characters in the biological sequence (%d)." %
+                    "Phred quality scores must be 1-D.")
+            if len(quality) != len(self):
+                raise BiologicalSequenceError(
+                    "Number of Phred quality scores (%d) must match the "
+                    "number of characters in the biological sequence (%d)." %
                     (len(quality), len(self._sequence)))
+            if (quality < 0).any():
+                raise BiologicalSequenceError(
+                    "Phred quality scores must be greater than or equal to "
+                    "zero.")
 
         self._quality = quality
+
+    def regex_iter(self, regex, retrieve_group_0=False):
+        """Find patterns specified by regular expression
+
+        Parameters
+        ----------
+        regex : SRE_Pattern
+            A compiled regular expression (e.g., from re.compile) with
+            finditer method
+        retrieve_group_0 : bool, optional
+            Defaults to ``False``. If ``True``, group(0) will be included in
+            each list of tuples, which represents the shortest possible
+            substring of the full sequence that contains all the other groups
+
+        Returns
+        -------
+        generator
+            yields lists of 3-tuples. Each 3-tuple represents a group from the
+            matched regular expression, and contains the start of the hit, the
+            end of the hit, and the substring that was hit
+        """
+        start = 0 if retrieve_group_0 else 1
+
+        for match in regex.finditer(self._sequence):
+            for g in range(start, len(match.groups())+1):
+                yield (match.start(g), match.end(g), match.group(g))
+
+    def find_features(self, feature_type, min_length=1, allow_gaps=False):
+        """Search the sequence for features
+
+        Parameters
+        ----------
+        feature_type : str
+            The type of feature to find
+        min_length : int, optional
+            Defaults to 1. Only features at least as long as this will be
+            returned
+        allow_gaps : bool, optional
+            Defaults to ``False``. If ``True``, then gaps will not be
+            considered to disrupt a feature
+
+        Returns
+        -------
+        generator
+            Yields tuples of the start of the feature, the end of the feature,
+            and the subsequence that composes the feature
+        """
+        if feature_type not in self.feature_types:
+            raise ValueError("Unknown feature type: %s" % feature_type)
+
+        acceptable = '-' if allow_gaps else ''
+
+        if isinstance(self, NucleotideSequence):
+            if feature_type == 'purine_run':
+                pat_str = '([AGag%s]{%d,})' % (acceptable, min_length)
+            if feature_type == 'pyrimidine_run':
+                pat_str = '([CTUctu%s]{%d,})' % (acceptable, min_length)
+
+        pat = re.compile(pat_str)
+
+        for hits in self.regex_iter(pat):
+            if allow_gaps:
+                if len(hits[2].replace('-', '')) >= min_length:
+                    yield hits
+            else:
+                yield hits
 
 
 class NucleotideSequence(BiologicalSequence):
@@ -1471,6 +1560,8 @@ class NucleotideSequence(BiologicalSequence):
     All uppercase and lowercase IUPAC DNA/RNA characters are supported.
 
     """
+
+    feature_types = set(['purine_run', 'pyrimidine_run'])
 
     @classmethod
     def complement_map(cls):
@@ -1728,6 +1819,7 @@ class DNASequence(NucleotideSequence):
                 ''.join(nondegen_chars).lower())
 
         return degen_map
+
 
 # class is accessible with alternative name for convenience
 DNA = DNASequence

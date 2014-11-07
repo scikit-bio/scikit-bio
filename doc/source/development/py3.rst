@@ -4,11 +4,13 @@ Supporting Python 2 and Python 3
 skbio simultaneously supports Python 2.7 and 3.3+ by writing code that
 works unchanged in both major versions.
 
-As a compatibility layer, we're using the future project
-http://python-future.org/ which "allows you to use a single, clean
-Python 3.x-compatible codebase to support both Python 2 and Python 3
-with minimal overhead". It includes functionality from "six, IPython,
-Jinja2, Django, and Pandas".
+As a compatibility layer, we're using the `future <http://python-future.org/>`_
+and `six <https://pypi.python.org/pypi/six>`_ projects. future "allows you to
+use a single, clean Python 3.x-compatible codebase to support both Python 2 and
+Python 3 with minimal overhead". It includes functionality from "six, IPython,
+Jinja2, Django, and Pandas". Recent versions of the future project stopped
+bundling the six library, so we also directly depend on six (e.g., for StringIO
+compatibility).
 
 So far, this notes are based on issues that have appeared when porting
 skbio, so it is not a complete guide. Refer to the `official porting
@@ -181,13 +183,13 @@ In Py2 there are three flavours of StringIO: a pure Python module
 io module. They all behave in a slightly different way, with differnt
 memory and performance characteristics. So far, we're using::
 
-    from future.utils.six import StringIO
+    from six import StringIO
 
 It refers to `io.StringIO` in Py3, and `StringIO.StringIO` in Py2.
 
 If you need a binary file-like object (see the Text vs bytes section),
-use `future.utils.six.BytesIO`, which refers to `io.BytesIO` in Py3,
-and `StringIO.StringIO` in Py2.
+use `six.BytesIO`, which refers to `io.BytesIO` in Py3, and `StringIO.StringIO`
+in Py2.
 
 Text vs bytes
 =============
@@ -286,8 +288,8 @@ Strings
 -------
 
 When testing if a variable is a string use
-`future.utils.six.string_types`. It refers to `basestring` in Py2 and
-`str` in Py3. `binary_type` and `text_type` are also available.
+`six.string_types`. It refers to `basestring` in Py2 and `str` in Py3.
+`binary_type` and `text_type` are also available.
 
 Numbers
 -------
