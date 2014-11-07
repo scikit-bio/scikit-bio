@@ -7,9 +7,8 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.utils.six import binary_type, text_type
 from future.builtins import zip
-from six import StringIO
+from six import StringIO, binary_type, text_type
 
 from unittest import TestCase, main
 
