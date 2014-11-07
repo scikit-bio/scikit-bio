@@ -18,7 +18,7 @@ def p_value_to_str(p_value, permutations):
 
     .. note:: Deprecated in scikit-bio 0.2.1-dev
        ``p_value_to_str`` will be removed in scikit-bio 0.3.0.
-       permutation-based p-values in scikit-bio are calculated as
+       Permutation-based p-values in scikit-bio are calculated as
        ``(num_extreme + 1) / (num_permutations + 1)``, so it is impossible to
        obtain a p-value of zero. This function historically existed for
        correcting the number of digits displayed when obtaining a p-value of
