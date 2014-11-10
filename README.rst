@@ -140,8 +140,9 @@ Jose Carlos Clemente (`@cleme <https://github.com/cleme>`__), Damien
 Coy, Levi McCracken, Andrew Butterfield, Will Van Treuren (`@wdwvt1
 <https://github.com/wdwvt1>`__), Justin Kuczynski (`@justin212k
 <https://github.com/justin212k>`__), Jose Antonio Navas Molina
-(`@josenavas <https://github.com/josenavas>`__) and Matthew Wakefield
-(`@genomematt <https://github.com/genomematt>`__).
+(`@josenavas <https://github.com/josenavas>`__), Matthew Wakefield
+(`@genomematt <https://github.com/genomematt>`__) and Jens Reeder
+(`@jensreeder <https://github.com/jensreeder>`__).
 
 Logo
 ----
