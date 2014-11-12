@@ -61,9 +61,9 @@ class TestPERMANOVA(TestCase):
             ['s1', 's2', 's3', 's4', 's5', 's6'])
 
         # Expected series index is the same across all tests.
-        self.exp_index = ['Method name', 'Sample size', 'Number of groups',
-                          'pseudo-F statistic', 'p-value',
-                          'Number of permutations']
+        self.exp_index = ['method name', 'test statistic name', 'sample size',
+                          'number of groups', 'test statistic', 'p-value',
+                          'number of permutations']
 
         # Stricter series equality testing than the default.
         self.assert_series_equal = partial(assert_series_equal,
@@ -75,7 +75,7 @@ class TestPERMANOVA(TestCase):
         # inputs. Also ensure we get the same results if we run the method
         # using a grouping vector or a data frame with equivalent groupings.
         exp = pd.Series(index=self.exp_index,
-                        data=['PERMANOVA', 4, 2, 2.0, 0.671, 999])
+                        data=['PERMANOVA', 'pseudo-F', 4, 2, 2.0, 0.671, 999])
 
         for _ in range(2):
             np.random.seed(0)
@@ -89,20 +89,21 @@ class TestPERMANOVA(TestCase):
 
     def test_call_no_ties(self):
         exp = pd.Series(index=self.exp_index,
-                        data=['PERMANOVA', 4, 2, 4.4, 0.332, 999])
+                        data=['PERMANOVA', 'pseudo-F', 4, 2, 4.4, 0.332, 999])
         np.random.seed(0)
         obs = permanova(self.dm_no_ties, self.grouping_equal)
         self.assert_series_equal(obs, exp)
 
     def test_call_no_permutations(self):
         exp = pd.Series(index=self.exp_index,
-                        data=['PERMANOVA', 4, 2, 4.4, np.nan, 0])
+                        data=['PERMANOVA', 'pseudo-F', 4, 2, 4.4, np.nan, 0])
         obs = permanova(self.dm_no_ties, self.grouping_equal, permutations=0)
         self.assert_series_equal(obs, exp)
 
     def test_call_unequal_group_sizes(self):
         exp = pd.Series(index=self.exp_index,
-                        data=['PERMANOVA', 6, 3, 0.578848, 0.645, 999])
+                        data=['PERMANOVA', 'pseudo-F', 6, 3, 0.578848, 0.645,
+                              999])
 
         np.random.seed(0)
         obs = permanova(self.dm_unequal, self.grouping_unequal)

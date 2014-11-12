@@ -968,10 +968,11 @@ def _build_results(method_name, test_stat_name, sample_size, num_groups, stat,
                    p_value, permutations):
     """Return ``pandas.Series`` containing results of statistical test."""
     return pd.Series(
-        data=[method_name, sample_size, num_groups, stat, p_value,
-              permutations],
-        index=['Method name', 'Sample size', 'Number of groups',
-               test_stat_name, 'p-value', 'Number of permutations'],
+        data=[method_name, test_stat_name, sample_size, num_groups, stat,
+              p_value, permutations],
+        index=['method name', 'test statistic name', 'sample size',
+               'number of groups', 'test statistic', 'p-value',
+               'number of permutations'],
         name='%s results' % method_name)
 
 

@@ -63,7 +63,8 @@ def anosim(distance_matrix, grouping, column=None, permutations=999):
     Returns
     -------
     pandas.Series
-        Results of the statistical test, including R statistic and p-value.
+        Results of the statistical test, including ``test statistic`` and
+        ``p-value``.
 
     See Also
     --------
@@ -105,12 +106,13 @@ def anosim(distance_matrix, grouping, column=None, permutations=999):
     >>> np.random.seed(0)
     >>> from skbio.stats.distance import anosim
     >>> anosim(dm, grouping, permutations=99)
-    Method name               ANOSIM
-    Sample size                    4
-    Number of groups               2
-    R statistic                 0.25
+    method name               ANOSIM
+    test statistic name            R
+    sample size                    4
+    number of groups               2
+    test statistic              0.25
     p-value                     0.67
-    Number of permutations        99
+    number of permutations        99
     Name: ANOSIM results, dtype: object
 
     The return value is a ``pandas.Series`` object containing the results of
@@ -120,12 +122,13 @@ def anosim(distance_matrix, grouping, column=None, permutations=999):
     specify zero permutations:
 
     >>> anosim(dm, grouping, permutations=0)
-    Method name               ANOSIM
-    Sample size                    4
-    Number of groups               2
-    R statistic                 0.25
+    method name               ANOSIM
+    test statistic name            R
+    sample size                    4
+    number of groups               2
+    test statistic              0.25
     p-value                      NaN
-    Number of permutations         0
+    number of permutations         0
     Name: ANOSIM results, dtype: object
 
     You can also provide a ``pandas.DataFrame`` and a column denoting the
@@ -140,12 +143,13 @@ def anosim(distance_matrix, grouping, column=None, permutations=999):
     ...     {'Group': {'s2': 'Group1', 's3': 'Group2', 's4': 'Group2',
     ...                's5': 'Group3', 's1': 'Group1'}})
     >>> anosim(dm, df, column='Group', permutations=99)
-    Method name               ANOSIM
-    Sample size                    4
-    Number of groups               2
-    R statistic                 0.25
+    method name               ANOSIM
+    test statistic name            R
+    sample size                    4
+    number of groups               2
+    test statistic              0.25
     p-value                     0.67
-    Number of permutations        99
+    number of permutations        99
     Name: ANOSIM results, dtype: object
 
     The results match the first example above.
@@ -175,8 +179,8 @@ def anosim(distance_matrix, grouping, column=None, permutations=999):
     stat, p_value = _run_stat_method(test_stat_function, grouping,
                                      permutations)
 
-    return _build_results('ANOSIM', 'R statistic', sample_size, num_groups,
-                          stat, p_value, permutations)
+    return _build_results('ANOSIM', 'R', sample_size, num_groups, stat,
+                          p_value, permutations)
 
 
 def _compute_r_stat(tri_idxs, ranked_dists, divisor, grouping):

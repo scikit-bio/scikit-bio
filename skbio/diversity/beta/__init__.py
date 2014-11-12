@@ -152,7 +152,7 @@ First test the grouping of samples by subject:
 
 >>> from skbio.stats.distance import anosim
 >>> results = anosim(bc_dm, sample_md, column='subject', permutations=999)
->>> results['R statistic']
+>>> results['test statistic']
 -0.4074074074074075
 >>> results['p-value'] < 0.1
 False
@@ -163,7 +163,7 @@ p-value is insignificant at an alpha of 0.1.
 Now let's test the grouping of samples by body site:
 
 >>> results = anosim(bc_dm, sample_md, column='body_site', permutations=999)
->>> results['R statistic']
+>>> results['test statistic']
 1.0
 >>> results['p-value'] < 0.1
 True

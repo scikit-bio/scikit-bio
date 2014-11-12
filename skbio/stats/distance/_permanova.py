@@ -64,8 +64,8 @@ def permanova(distance_matrix, grouping, column=None, permutations=999):
     Returns
     -------
     pandas.Series
-        Results of the statistical test, including pseudo-F statistic and
-        p-value.
+        Results of the statistical test, including ``test statistic`` and
+        ``p-value``.
 
     See Also
     --------
@@ -103,8 +103,8 @@ def permanova(distance_matrix, grouping, column=None, permutations=999):
     stat, p_value = _run_stat_method(test_stat_function, grouping,
                                      permutations)
 
-    return _build_results('PERMANOVA', 'pseudo-F statistic', sample_size,
-                          num_groups, stat, p_value, permutations)
+    return _build_results('PERMANOVA', 'pseudo-F', sample_size, num_groups,
+                          stat, p_value, permutations)
 
 
 def _compute_f_stat(sample_size, num_groups, tri_idxs, distances, group_sizes,
