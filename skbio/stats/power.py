@@ -184,10 +184,10 @@ def subsample_power(test, samples, draw_mode='ind', alpha_pwr=0.05,
     min_counts : unsigned int, optional
         How many samples should be drawn for the smallest
         subsample. If this is None, the `counts_interval` will be used.
-    num_iter : unsigned int
+    num_iter : unsigned int, optional
         The number of p-values to generate for each point
         on the curve.
-    num_runs : unsigned int
+    num_runs : unsigned int, optional
         The number of times to calculate each curve.
 
     Returns
@@ -373,9 +373,9 @@ def subsample_paired_power(test, meta, cat, control_cats, order=None,
     min_counts : unsigned int, optional
         How many samples should be drawn for the smallest
         subsample. If this is None, the `counts_interval` will be used.
-    num_iter : unsigned int
+    num_iter : unsigned int, optional
         The number of p-values to generate for each point on the curve.
-    num_runs : unsigned int
+    num_runs : unsigned int, optional
         The number of times to calculate each curve.
 
     Returns
@@ -579,7 +579,7 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
         the array corresponds to a sampled group.
     sample_counts : 1-D array
         A vector of the number of samples which should be sampled in each curve
-    ratio : None, 1-D array
+    ratio : 1-D array, optional
         The fraction of the sample counts which should be
         assigned to each
         group. This must be a none-type object, or the same length as samples.
@@ -593,9 +593,9 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
         this may be useful when working with regression data where
         :math:`x_{1}, x_{2}, ..., x_{n}` maps to :math:`y_{1}, y_{2}, ... ,
         y_{n}`.
-    num_iter : unsigned int
+    num_iter : unsigned int, optional
         The number of p-values to generate for each point on the curve.
-    num_runs : unsigned int
+    num_runs : unsigned int, optional
         The number of times to calculate each curve.
 
     Returns
@@ -686,7 +686,7 @@ def paired_subsamples(meta, cat, control_cats, order=None, strict_match=True):
         to limit the groups selected. For example, if there's a category with
         groups 'A', 'B' and 'C', and you only want to look at A vs B, `order`
         would be set to ['A', 'B'].
-    strict_match: bool
+    strict_match: bool, optional
         This determines how data is grouped using
         `control_cats`. If a sample within `meta` has an undefined value (NaN)
         for any of the columns in `control_cats`, the sample will not be
