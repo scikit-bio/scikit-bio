@@ -13,12 +13,18 @@ import csv
 import warnings
 from copy import deepcopy
 
+import matplotlib as mpl
+mpl.use('Agg')
+import matplotlib.pyplot as plt
+from IPython.core.pylabtools import print_figure
+from IPython.core.display import Image, SVG
 import numpy as np
 import pandas as pd
 from scipy.spatial.distance import squareform
 
 from skbio._base import SkbioObject
 from skbio.stats import p_value_to_str
+from skbio.stats._misc import _pprint_strs
 
 
 class DissimilarityMatrixError(Exception):
@@ -75,6 +81,8 @@ class DissimilarityMatrix(SkbioObject):
     shape
     size
     T
+    png
+    svg
 
     See Also
     --------
@@ -378,6 +386,93 @@ class DissimilarityMatrix(SkbioObject):
         filtered_data = self._data[idxs][:, idxs]
         return self.__class__(filtered_data, ids)
 
+    def plot(self, cmap=None, title=""):
+        """Creates a heatmap of the dissimilarity matrix
+
+        Parameters
+        ----------
+        cmap: str or matplotlib.colors.Colormap, optional
+            Sets the color scheme of the heatmap
+            If ``None``, defaults to the colormap specified in the matplotlib
+            rc file.
+
+        title: str, optional
+            Sets the title label of the heatmap
+            (Default is blank)
+
+        Returns
+        -------
+        matplotlib.figure.Figure
+            Figure containing the heatmap and colorbar of the plotted
+            dissimilarity matrix.
+
+        Examples
+        --------
+        .. plot::
+
+           Define a dissimilarity matrix with five objects labeled A-E:
+
+           >>> from skbio.stats.distance import DissimilarityMatrix
+           >>> dm = DissimilarityMatrix([[0, 1, 2, 3, 4], [1, 0, 1, 2, 3],
+           ...                           [2, 1, 0, 1, 2], [3, 2, 1, 0, 1],
+           ...                           [4, 3, 2, 1, 0]],
+           ...                          ['A', 'B', 'C', 'D', 'E'])
+
+           Plot the dissimilarity matrix as a heatmap:
+
+           >>> fig = dm.plot(cmap='Reds', title='Example heatmap')
+
+        """
+        # based on http://stackoverflow.com/q/14391959/3776794
+        fig, ax = plt.subplots()
+
+        # use pcolormesh instead of pcolor for performance
+        heatmap = ax.pcolormesh(self.data, cmap=cmap)
+        fig.colorbar(heatmap)
+
+        # center labels within each cell
+        ticks = np.arange(0.5, self.shape[0])
+        ax.set_xticks(ticks, minor=False)
+        ax.set_yticks(ticks, minor=False)
+
+        # display data as it is stored in the dissimilarity matrix
+        # (default is to have y-axis inverted)
+        ax.invert_yaxis()
+
+        ax.set_xticklabels(self.ids, rotation=90, minor=False)
+        ax.set_yticklabels(self.ids, minor=False)
+        ax.set_title(title)
+
+        return fig
+
+    def _repr_png_(self):
+        return self._figure_data('png')
+
+    def _repr_svg_(self):
+        return self._figure_data('svg')
+
+    @property
+    def png(self):
+        """Display heatmap in IPython Notebook as PNG.
+
+        """
+        return Image(self._repr_png_(), embed=True)
+
+    @property
+    def svg(self):
+        """Display heatmap in IPython Notebook as SVG.
+
+        """
+        return SVG(self._repr_svg_())
+
+    def _figure_data(self, format):
+        fig = self.plot()
+        data = print_figure(fig, format)
+        # We MUST close the figure, otherwise IPython's display machinery
+        # will pick it up and send it as output, resulting in a double display
+        plt.close(fig)
+        return data
+
     def __str__(self):
         """Return a string representation of the dissimilarity matrix.
 
@@ -394,7 +489,7 @@ class DissimilarityMatrix(SkbioObject):
         """
         return '%dx%d %s matrix\nIDs:\n%s\nData:\n' % (
             self.shape[0], self.shape[1], self._matrix_element_name,
-            self._pprint_ids()) + str(self.data)
+            _pprint_strs(self.ids)) + str(self.data)
 
     def __eq__(self, other):
         """Compare this dissimilarity matrix to another for equality.
@@ -589,16 +684,6 @@ class DissimilarityMatrix(SkbioObject):
         return (isinstance(index, tuple) and
                 len(index) == 2 and
                 all(map(lambda e: isinstance(e, string_types), index)))
-
-    def _pprint_ids(self, max_chars=80, delimiter=', ', suffix='...',):
-        # Adapted from http://stackoverflow.com/a/250373
-        ids_str = delimiter.join(self.ids)
-
-        if len(ids_str) > max_chars:
-            truncated = ids_str[:max_chars + 1].split(delimiter)[0:-1]
-            ids_str = delimiter.join(truncated) + delimiter + suffix
-
-        return ids_str
 
 
 class DistanceMatrix(DissimilarityMatrix):

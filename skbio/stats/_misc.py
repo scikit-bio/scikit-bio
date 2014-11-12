@@ -41,3 +41,18 @@ def p_value_to_str(p_value, permutations):
         result = ('%1.' + '%df' % decimal_places) % p_value
 
     return result
+
+
+def _pprint_strs(strs, max_chars=80, delimiter=', ', suffix='...',):
+    """Pretty-print an iterable of strings, truncating if necessary."""
+    # Adapted from http://stackoverflow.com/a/250373
+    joined_str = delimiter.join(repr(s) for s in strs)
+
+    if len(joined_str) > max_chars:
+        truncated = joined_str[:max_chars + 1].split(delimiter)[0:-1]
+        joined_str = delimiter.join(truncated)
+        if joined_str:
+            joined_str += delimiter
+        joined_str += suffix
+
+    return joined_str
