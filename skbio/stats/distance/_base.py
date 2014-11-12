@@ -859,7 +859,7 @@ def _preprocess_input(distance_matrix, grouping, column):
     regardless of grouping vector permutations (i.e., when calculating the
     p-value). These intermediate results are used by both ANOSIM and PERMANOVA.
 
-    Also validates and normalizes input (e.g., converting data frame column
+    Also validates and normalizes input (e.g., converting ``DataFrame`` column
     into grouping vector).
 
     """
@@ -869,12 +869,12 @@ def _preprocess_input(distance_matrix, grouping, column):
     if isinstance(grouping, pd.DataFrame):
         if column is None:
             raise ValueError(
-                "Must provide a column name if supplying a data frame.")
+                "Must provide a column name if supplying a DataFrame.")
         else:
             grouping = _df_to_vector(distance_matrix, grouping, column)
     elif column is not None:
         raise ValueError(
-            "Must provide a data frame if supplying a column name.")
+            "Must provide a DataFrame if supplying a column name.")
 
     sample_size = distance_matrix.shape[0]
     if len(grouping) != sample_size:
@@ -907,14 +907,14 @@ def _preprocess_input(distance_matrix, grouping, column):
 
 
 def _df_to_vector(distance_matrix, df, column):
-    """Return a grouping vector from a data frame column.
+    """Return a grouping vector from a ``DataFrame`` column.
 
     Parameters
     ----------
     distance_marix : DistanceMatrix
         Distance matrix whose IDs will be mapped to group labels.
     df : pandas.DataFrame
-        Data frame (indexed by distance matrix ID).
+        ``DataFrame`` (indexed by distance matrix ID).
     column : str
         Column name in `df` containing group labels.
 
@@ -922,18 +922,18 @@ def _df_to_vector(distance_matrix, df, column):
     -------
     list
         Grouping vector (vector of labels) based on the IDs in
-        `distance_matrix`. Each ID's label is looked up in the data frame
+        `distance_matrix`. Each ID's label is looked up in the ``DataFrame``
         under the column specified by `column`.
 
     Raises
     ------
     ValueError
-        If `column` is not in the data frame, or a distance matrix ID is
-        not in the data frame.
+        If `column` is not in the ``DataFrame``, or a distance matrix ID is
+        not in the ``DataFrame``.
 
     """
     if column not in df:
-        raise ValueError("Column '%s' not in data frame." % column)
+        raise ValueError("Column '%s' not in DataFrame." % column)
 
     grouping = df.loc[distance_matrix.ids, column]
     if grouping.isnull().any():
@@ -1043,7 +1043,7 @@ class CategoricalStats(object):
         distance_marix : DistanceMatrix
             Distance matrix whose IDs will be mapped to group labels.
         df : pandas.DataFrame
-            Data frame (indexed by distance matrix ID).
+            ``DataFrame`` (indexed by distance matrix ID).
         column : str
             Column name in `df` containing group labels.
 

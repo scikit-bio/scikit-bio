@@ -132,9 +132,9 @@ def anosim(distance_matrix, grouping, column=None, permutations=999):
     Name: ANOSIM results, dtype: object
 
     You can also provide a ``pandas.DataFrame`` and a column denoting the
-    grouping instead of a grouping vector. The following data frame's ``Group``
-    column specifies the same grouping as the vector we used in the previous
-    examples:
+    grouping instead of a grouping vector. The following ``DataFrame``'s
+    ``Group`` column specifies the same grouping as the vector we used in the
+    previous examples:
 
     >>> # make output deterministic; not necessary for normal use
     >>> np.random.seed(0)
@@ -154,18 +154,18 @@ def anosim(distance_matrix, grouping, column=None, permutations=999):
 
     The results match the first example above.
 
-    Note that when providing a data frame, the ordering of rows and/or columns
-    does not affect the grouping vector that is extracted. The data frame must
-    be indexed by the distance matrix IDs (i.e., the row labels must be
-    distance matrix IDs).
+    Note that when providing a ``DataFrame``, the ordering of rows and/or
+    columns does not affect the grouping vector that is extracted. The
+    ``DataFrame`` must be indexed by the distance matrix IDs (i.e., the row
+    labels must be distance matrix IDs).
 
-    If IDs (rows) are present in the data frame but not in the distance matrix,
-    they are ignored. The previous example's ``s5`` ID illustrates this
-    behavior: note that even though the data frame had 5 objects, only 4 were
-    used in the test (see the "Sample size" row in the results above to confirm
-    this). Thus, the data frame can be a superset of the distance matrix IDs.
-    Note that the reverse is not true: IDs in the distance matrix *must* be
-    present in the data frame or an error will be raised.
+    If IDs (rows) are present in the ``DataFrame`` but not in the distance
+    matrix, they are ignored. The previous example's ``s5`` ID illustrates this
+    behavior: note that even though the ``DataFrame`` had 5 objects, only 4
+    were used in the test (see the "Sample size" row in the results above to
+    confirm this). Thus, the ``DataFrame`` can be a superset of the distance
+    matrix IDs. Note that the reverse is not true: IDs in the distance matrix
+    *must* be present in the ``DataFrame`` or an error will be raised.
 
     """
     sample_size, num_groups, grouping, tri_idxs, distances = _preprocess_input(
