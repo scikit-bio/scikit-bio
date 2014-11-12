@@ -327,9 +327,10 @@ def subsample_power(test, samples, draw_mode='ind', scaling=5,
 
 
 def subsample_paired_power(test, meta, cat, control_cats, order=None,
-                           strict_match=True, alpha_pwr=0.05, min_observations=20,
-                           max_counts=50, counts_interval=10,
-                           min_counts=None, num_iter=500, num_runs=10):
+                           strict_match=True, alpha_pwr=0.05,
+                           min_observations=20, max_counts=50,
+                           counts_interval=10, min_counts=None,
+                           num_iter=500, num_runs=10):
     r"""Estimates power iteratively using samples with matching metadata
 
     Parameters
@@ -506,7 +507,8 @@ def subsample_paired_power(test, meta, cat, control_cats, order=None,
                                          alpha=alpha_pwr)
 
     for id1 in np.arange(1, num_runs):
-        sub_ids = paired_subsamples(meta, cat, control_cats, order, strict_match)
+        sub_ids = paired_subsamples(meta, cat, control_cats, order,
+                                    strict_match)
         # Calculates the power curve
         power[id1, :] = _calculate_power_curve(test,
                                                sub_ids,
@@ -882,8 +884,8 @@ def _compare_distributions(test, samples, counts=5, mode="ind", num_iter=1000):
         counts = np.array([counts] * num_groups)
 
     if not len(counts) == num_groups:
-        raise RuntimeError('If counts is a 1-D array, there must be a count to '
-                           'draw for each group.')
+        raise RuntimeError('If counts is a 1-D array, there must be a count to'
+                           ' draw for each group.')
 
     # Checks the group length
     samp_lens = [len(sample) for sample in samples]
