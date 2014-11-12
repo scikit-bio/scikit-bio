@@ -260,7 +260,7 @@ def subsample_power(test, samples, draw_mode='ind', scaling=5,
     information to try controlling the data, we'll use
     `skbio.stats.power.subsample_power` to compare the two groups. If we had
     metadata about other risk factors, like a family history, BMI, tobacco use,
-    we might instead want to use `scipy.stats.power.subsample_paired_power`
+    we might instead want to use `skbio.stats.power.subsample_paired_power`
     instead.
     We'll also use "ind" `draw_mode`, since there is no linkage between the
     two groups of samples.
@@ -627,8 +627,8 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
     >>> from scipy.stats import ttest_ind
     >>> f = lambda x: ttest_ind(x[0], x[1])[1]
 
-    Now, we can determine the statitical power, or the probability that do not
-    have a false negative given that we do not have a false positive, by
+    Now, we can determine the statitical power, or the probability that we do
+    not have a false negative given that we do not have a false positive, by
     varying a number of subsamples.
 
     >>> from skbio.stats.power import bootstrap_power_curve
@@ -640,7 +640,7 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
     20
 
     Based on this analysis, it looks like we need at least 20 observations
-    from each distribution to avoid comitting a type II error more than 20%
+    from each distribution to avoid committing a type II error more than 20%
     of the time.
 
     """
