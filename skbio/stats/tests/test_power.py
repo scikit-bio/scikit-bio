@@ -102,48 +102,48 @@ class PowerAnalysisTest(TestCase):
         self.control_cats = ['INT', 'ABX']
 
     def test_subsample_power_matched_relationship_error(self):
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(ValueError):
             subsample_power(self.f,
                             samples=[np.ones((2)), np.ones((5))],
                             draw_mode="matched")
 
-    def test_subsample_power_min_counts_error(self):
-        with self.assertRaises(RuntimeError):
+    def test_subsample_power_min_observations_error(self):
+        with self.assertRaises(ValueError):
             subsample_power(self.f,
                             samples=[np.ones((2)), np.ones((5))])
 
     def test_subsample_power_interval_error(self):
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(ValueError):
             subsample_power(self.f,
                             samples=[np.ones((2)), np.ones((5))],
-                            min_counts=2,
-                            counts_start=5,
+                            min_observations=2,
+                            min_counts=5,
                             max_counts=7)
-
-    def test_subsample_paired_power_min_counts_error(self):
-        with self.assertRaises(RuntimeError):
-            subsample_paired_power(self.f,
-                                   self.meta,
-                                   cat=self.cat,
-                                   control_cats=self.control_cats)
 
     def test_subsample_power(self):
         test_p, test_c = subsample_power(self.f,
                                          samples=self.pop,
                                          num_iter=10,
                                          num_runs=2,
-                                         counts_start=5)
+                                         min_counts=5)
         self.assertEqual(test_p.shape, (2, 5))
         npt.assert_array_equal(np.arange(5, 50, 10), test_c)
 
+    def test_subsample_paired_power_min_observations_error(self):
+        with self.assertRaises(ValueError):
+            subsample_paired_power(self.f,
+                                   self.meta,
+                                   cat=self.cat,
+                                   control_cats=self.control_cats)
+
     def test_subsample_paired_power_interval_error(self):
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(ValueError):
             subsample_paired_power(self.f,
                                    self.meta,
                                    cat=self.cat,
                                    control_cats=self.control_cats,
-                                   min_counts=2,
-                                   counts_start=5,
+                                   min_observations=2,
+                                   min_counts=5,
                                    max_counts=7)
 
     def test_subsample_paired_power(self):
@@ -156,7 +156,7 @@ class PowerAnalysisTest(TestCase):
                                                 meta=self.meta,
                                                 cat=cat,
                                                 control_cats=control_cats,
-                                                min_counts=1,
+                                                min_observations=1,
                                                 counts_interval=1,
                                                 num_iter=10,
                                                 num_runs=2)
@@ -364,7 +364,7 @@ class PowerAnalysisTest(TestCase):
         cat = 'INT'
         control_cats = ['ABX', 'AGE']
         test_array = paired_subsamples(self.meta, cat, control_cats,
-                                       strict=False)
+                                       strict_match=False)
         test_array[0] = sorted(test_array[0])
         test_array[1] = sorted(test_array[1])
         npt.assert_array_equal(known_array, test_array)
