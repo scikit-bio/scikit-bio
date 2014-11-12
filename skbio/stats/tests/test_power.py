@@ -234,7 +234,7 @@ class PowerAnalysisTest(TestCase):
             _compare_distributions(self.f, self.samps, mode='fig')
 
     def test__compare_distributions_count_error(self):
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(ValueError):
             _compare_distributions(self.f, self.samps, counts=[1, 2, 3],
                                    num_iter=100)
 

@@ -148,10 +148,9 @@ import numpy as np
 import scipy.stats
 
 
-def subsample_power(test, samples, draw_mode='ind', scaling=5,
-                    alpha_pwr=0.05, min_observations=20, max_counts=50,
-                    counts_interval=10, min_counts=None, num_iter=500,
-                    num_runs=10):
+def subsample_power(test, samples, draw_mode='ind', alpha_pwr=0.05,
+                    min_observations=20, max_counts=50, counts_interval=10,
+                    min_counts=None, num_iter=500, num_runs=10):
     r"""Subsamples data to iteratively calculate power
 
     Parameters
@@ -163,7 +162,7 @@ def subsample_power(test, samples, draw_mode='ind', scaling=5,
         `samples` can be a list of lists or a list of arrays where each
         sublist or row in the array corresponds to a sampled group.
     draw_mode : {"ind", "matched"}, optional
-        Default is "ind". "matched" samples should be used when observations in
+        "matched" samples should be used when observations in
         samples have corresponding observations in other groups. For instance,
         this may be useful when working with regression data where
         :math:`x_{1}, x_{2}, ..., x_{n}` maps to
@@ -172,24 +171,24 @@ def subsample_power(test, samples, draw_mode='ind', scaling=5,
         If there is no reciprocal relationship between samples, then
         "ind" mode should be used.
     alpha_pwr : float, optional
-        Default is 0.05. The critical value used to calculate the power.
+        The critical value used to calculate the power.
     min_observations : unsigned int, optional
-        Default is 20. The minimum number of observations in any sample to
+        The minimum number of observations in any sample to
         perform power analysis. Note that this is not the same as the minimum
         number of samples drawn per group.
     max_counts : unsigned int, optional
-        Default is 50. The maximum number of samples per group to draw for
+        The maximum number of samples per group to draw for
         effect size calculation.
     counts_interval : unsigned int, optional
-        Default is 10. The difference between each subsampling count.
+        The difference between each subsampling count.
     min_counts : unsigned int, optional
-        Default is None. How many samples should be drawn for the smallest
+        How many samples should be drawn for the smallest
         subsample. If this is None, the `counts_interval` will be used.
     num_iter : unsigned int
-        Default is 1000. The number of p-values to generate for each point
+        The number of p-values to generate for each point
         on the curve.
     num_runs : unsigned int
-        Default is 10. The number of times to calculate each curve.
+        The number of times to calculate each curve.
 
     Returns
     -------
@@ -204,7 +203,7 @@ def subsample_power(test, samples, draw_mode='ind', scaling=5,
         If the `mode` is "matched", an error will occur if the arrays in
         `samples` are not the same length.
     ValueError
-        There is a runtime error if there are fewer samples than the minimum
+        There is a value error if there are fewer samples than the minimum
         count.
     ValueError
         If the `counts_interval` is greater than the difference between the
@@ -348,37 +347,36 @@ def subsample_paired_power(test, meta, cat, control_cats, order=None,
         for gender and health status (i.e. `control_cats` = ["SEX",
         "HEALTHY"]).
     order : list, optional
-        Default is None. The order of groups in the category. This can be used
+        The order of groups in the category. This can be used
         to limit the groups selected. For example, if there's a category with
         groups 'A', 'B' and 'C', and you only want to look at A vs B, `order`
         would be set to ['A', 'B'].
     strict_match : bool, optional
-        Default is True. This determines how data is grouped using
+        This determines how data is grouped using
         `control_cats`. If a sample within `meta` has an undefined value (NaN)
         for any of the columns in `control_cats`, the sample will not be
         considered as having a match and will be ignored when `strict_match`
         is True. If `strict_match` is False, missing values (NaN) in the
         `control_cats` can be considered matches.
     alpha_pwr : float, optional
-        Default is 0.05. The critical value used to calculate the power.
+        The critical value used to calculate the power.
     min_observations : unsigned int, optional
-        Default is 20. The minimum number of paired samples which must exist
+        The minimum number of paired samples which must exist
         for a category and set of control categories to be able to subsample
         and make power calculations. This is not the same as the minimum
         number of observations to draw during subsampling.
     max_counts : unsigned int, optional
-        Default is 50. The maximum number of observations per sample to draw
+        The maximum number of observations per sample to draw
         for effect size calculation.
     counts_interval : unsigned int, optional
-        Default is 10. The difference between each subsampling count.
+        The difference between each subsampling count.
     min_counts : unsigned int, optional
-        Default is None. How many samples should be drawn for the smallest
+        How many samples should be drawn for the smallest
         subsample. If this is None, the `counts_interval` will be used.
     num_iter : unsigned int
-        Default is 1000. The number of p-values to generate for each point
-        on the curve.
+        The number of p-values to generate for each point on the curve.
     num_runs : unsigned int
-        Default is 10. The number of times to calculate each curve.
+        The number of times to calculate each curve.
 
     Returns
     -------
@@ -390,7 +388,7 @@ def subsample_paired_power(test, meta, cat, control_cats, order=None,
     Raises
     ------
     ValueError
-        There is a runtime error if there are fewer samples than the minimum
+        There is a value error if there are fewer samples than the minimum
         count.
     ValueError
         If the `counts_interval` is greater than the difference between the
@@ -405,7 +403,7 @@ def subsample_paired_power(test, meta, cat, control_cats, order=None,
     growth media must be acquired from multiple sources (lab, company A,
     company B). Also unfortunate, you must use labor-intense low throughput
     assays. You have some preliminary measurements, and you'd like to
-    predict how many (more) cells you need to analyze to for 80% power.
+    predict how many (more) cells you need to analyze for 80% power.
 
     You have information about 60 cells, which we'll simulate below. Note
     that we are setting a random seed value for consistency.
@@ -527,15 +525,14 @@ def confidence_bound(vec, alpha=0.05, df=None, axis=None):
     ----------
     vec : array
         A 1-D numpy array of the values to use in the bound calculation.
-    alpha : float
-        Default is 0.05 The critical value, used for the confidence bound
-        calculation.
+    alpha : float, optional
+        The critical value, used for the confidence bound calculation.
     df : None, float, optional
-        Default is None. The degrees of freedom associated with the
+        The degrees of freedom associated with the
         distribution. If None is given, df is assumed to be the number of
         elements in specified axis.
     axis : unsigned int, optional
-        Default is None. The axis over which to take the deviation. When axis
+        The axis over which to take the deviation. When axis
         is None, a single value will be calculated for the whole matrix.
 
     Returns
@@ -583,7 +580,7 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
     sample_counts : 1-D array
         A vector of the number of samples which should be sampled in each curve
     ratio : None, 1-D array
-        Default is None. The fraction of the sample counts which should be
+        The fraction of the sample counts which should be
         assigned to each
         group. This must be a none-type object, or the same length as samples.
         If Ratio is None, the same number of observations are drawn from
@@ -591,16 +588,15 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
     alpha : float, optional
         The default is 0.05. The critical value for calculating power.
     mode : {"ind", "matched"}, optional
-        Default is "ind". "matched" samples should be used when observations in
+        "matched" samples should be used when observations in
         samples have corresponding observations in other groups. For instance,
         this may be useful when working with regression data where
         :math:`x_{1}, x_{2}, ..., x_{n}` maps to :math:`y_{1}, y_{2}, ... ,
         y_{n}`.
     num_iter : unsigned int
-        Default is 500. The number of p-values to generate for each point
-        on the curve.
+        The number of p-values to generate for each point on the curve.
     num_runs : unsigned int
-        Default is 10. The number of times to calculate each curve.
+        The number of times to calculate each curve.
 
     Returns
     -------
@@ -686,12 +682,12 @@ def paired_subsamples(meta, cat, control_cats, order=None, strict_match=True):
         wanted to vary age (`cat` = "AGE"), you might want to control for
         gender and health status (i.e. `control_cats` = ["SEX", "HEALTHY"])
     order : list, optional
-        Default is None. The order of groups in the category. This can be used
+        The order of groups in the category. This can be used
         to limit the groups selected. For example, if there's a category with
         groups 'A', 'B' and 'C', and you only want to look at A vs B, `order`
         would be set to ['A', 'B'].
     strict_match: bool
-        Default is True. This determines how data is grouped using
+        This determines how data is grouped using
         `control_cats`. If a sample within `meta` has an undefined value (NaN)
         for any of the columns in `control_cats`, the sample will not be
         considered as having a match and will be ignored when `strict_match`
@@ -841,13 +837,13 @@ def _compare_distributions(test, samples, counts=5, mode="ind", num_iter=1000):
         "matched", there must be an equal number of observations in each
         sample.
     counts : unsigned int or 1-D array, optional
-        Default is 5. The number of samples to draw from each distribution.
+        The number of samples to draw from each distribution.
         If this is a 1-D array, the length must correspond to the number of
         samples. The function will not draw more observations than are in a
         sample. In "matched" `mode`, the same number of observations will be
         drawn from each group.
     mode : {"ind", "matched"}, optional
-        Default is "ind". "matched" samples should be used when observations in
+        "matched" samples should be used when observations in
         samples have corresponding observations in other groups. For instance,
         this may be useful when working with regression data where
         :math:`x_{1}, x_{2}, ..., x_{n}` maps to :math:`y_{1}, y_{2}, ... ,
@@ -865,9 +861,9 @@ def _compare_distributions(test, samples, counts=5, mode="ind", num_iter=1000):
     ------
     ValueError
         If mode is not "ind" or "matched".
-    RuntimeError
+    ValueError
         If the arrays in samples are not the same length in "matched" mode.
-    RuntimeError
+    ValueError
         If counts is a 1-D array and counts and samples are different lengths.
 
     """
@@ -884,19 +880,19 @@ def _compare_distributions(test, samples, counts=5, mode="ind", num_iter=1000):
         counts = np.array([counts] * num_groups)
 
     if not len(counts) == num_groups:
-        raise RuntimeError('If counts is a 1-D array, there must be a count to'
-                           ' draw for each group.')
+        raise ValueError('If counts is a 1-D array, there must be a count to'
+                         ' draw for each group.')
 
     # Checks the group length
     samp_lens = [len(sample) for sample in samples]
     # Checks the group length
     if mode == 'matched' and np.array([samp_lens[i] != samp_lens[i+1] for i in
                                        range(num_groups-1)]).all():
-        raise RuntimeError('In "matched" mode, each sample must have the same'
-                           ' number of observations.')
+        raise ValueError('In "matched" mode, each sample must have the same'
+                         ' number of observations.')
     if np.array([samp_lens[i] < counts[i] for i in range(num_groups)]).any():
-        raise RuntimeError('You cannot choose more observations that exist '
-                           'in a sample.')
+        raise ValueError('You cannot choose more observations that exist '
+                         'in a sample.')
 
     # Prealocates the pvalue matrix
     p_values = np.zeros((num_iter))
@@ -931,13 +927,13 @@ def _calculate_power_curve(test, samples, sample_counts, ratio=None,
         A vector of the number of samples which should be sampled in each
         curve.
     mode : {"ind", "matched"}, optional
-        Default is "ind". "matched" samples should be used when observations in
+        "matched" samples should be used when observations in
         samples have corresponding observations in other groups. For instance,
         this may be useful when working with regression data where
         :math:`x_{1}, x_{2}, ..., x_{n}` maps to :math:`y_{1}, y_{2}, ... ,
         y_{n}`.
     ratio : 1-D array, optional
-        Default is None. The fraction of the sample counts which should be
+        The fraction of the sample counts which should be
         assigned to each group. If this is a 1-D array, it must be the same
         length as `samples`. If no value is supplied (`ratio` is None),
         then an equal number of observations will be drawn for each sample.
