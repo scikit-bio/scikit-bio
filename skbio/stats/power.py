@@ -18,7 +18,7 @@ samples, we can use a test, :math:`f`, to show that :math:`x_{1} \neq x_{2}
 
 Since we know that :math:`\mu_{1} \neq \mu_{2} \neq ... \neq \mu_{n}`,
 we know we should reject the null hypothesis. If we fail to reject the null
-hypothesis, we have comitted a Type II error and our result is a false
+hypothesis, we have committed a Type II error and our result is a false
 negative. We can estimate the frequency of Type II errors at various sampling
 depths by repeatedly subsampling the populations and observing how often we
 see a false negative. If we repeat this several times for each subsampling
@@ -75,7 +75,7 @@ array([ 15.617,  47.533,  28.04 ,  33.788,  19.602,  12.229,   4.779,
 
 Let's define a test that will draw a list of sample pairs and determine
 if they're correlated. We'll use `scipy.stats.pearsonr` which takes two arrays
-and returns a correlation coeffecient and a p-value representing the
+and returns a correlation coefficient and a p-value representing the
 probability the two distributions are correlated.
 
 >>> from scipy.stats import pearsonr
@@ -128,8 +128,8 @@ array([ 0.0468,  0.2394,  0.5298,  0.8184,  0.951 ,  0.981 ,  0.9982])
 array([ 0.003 ,  0.0176,  0.1212,  0.3428,  0.5892,  0.8256,  0.9566])
 
 Based on this power estimate, as we increase our confidence that we have not
-comitted a type I error and identified a false positive, the number of samples
-we need to be confident that we have not comitted a type II error increases.
+committed a type I error and identified a false positive, the number of samples
+we need to be confident that we have not committed a type II error increases.
 
 """
 
@@ -143,15 +143,16 @@ we need to be confident that we have not comitted a type II error increases.
 
 from __future__ import absolute_import, division, print_function
 from future.utils import viewitems
+
 import numpy as np
-from scipy.stats import t, nanstd
+import scipy.stats
 
 
 def subsample_power(test, samples, draw_mode='ind', scaling=5,
                     alpha_pwr=0.05, min_counts=20, max_counts=50,
                     counts_interval=10, counts_start=None, num_iter=500,
                     num_runs=10):
-    r"""Subsamples data to iterative calculate power
+    r"""Subsamples data to iteratively calculate power
 
     Parameters
     ----------
@@ -168,7 +169,7 @@ def subsample_power(test, samples, draw_mode='ind', scaling=5,
         :math:`x_{1}, x_{2}, ..., x_{n}` maps to
         :math:`y_{1}, y_{2}, ..., y_{n}`. Sample vectors must be the same
         length in "matched" mode.
-        If there is no reciprical relationship between samples, then
+        If there is no reciprocal relationship between samples, then
         "ind" mode should be used.
     alpha_pwr : float, optional
         Default is 0.05. The critical value used to calculate the power.
@@ -182,7 +183,7 @@ def subsample_power(test, samples, draw_mode='ind', scaling=5,
     counts_interval : unsigned int, optional
         Default is 10. The difference between each subsampling count.
     counts_start : unsigned int, optional
-        Defualt is None. How many samples should be drawn for the smallest
+        Default is None. How many samples should be drawn for the smallest
         subsample. If this is None, the `counts_interval` will be used.
     num_iter : unsigned int
         Default is 1000. The number of p-values to generate for each point
@@ -204,6 +205,9 @@ def subsample_power(test, samples, draw_mode='ind', scaling=5,
     (50 premenopausal samples and 50 postmenopausal samples) where the taxa
     of interest was identified by 16s sequencing and the taxonomic abundance
     was confirmed in a certain fraction of samples at a minimum level.
+
+    We can simulate the probability that a woman positive for this taxa
+    experiences the health outcome using a binomial distribution.
 
     >>> import numpy as np
     >>> np.random.seed(25)
@@ -234,7 +238,7 @@ def subsample_power(test, samples, draw_mode='ind', scaling=5,
 
     Since there are an even number of samples, and we don't have enough
     information to try controlling the data, we'll use
-    `scipy.stats.power.subsample_power` to compare the two groups. If we had
+    `skbio.stats.power.subsample_power` to compare the two groups. If we had
     metadata about other risk factors, like a family history, BMI, tobacco use,
     we might instead want to use `scipy.stats.power.subsample_paired_power`
     instead.
@@ -343,7 +347,7 @@ def subsample_paired_power(test, meta, cat, control_cats, order=None,
     counts_interval : unsigned int, optional
         Default is 10. The difference between each subsampling count.
     counts_start : unsigned int, optional
-        Defualt is None. How many samples should be drawn for the smallest
+        Default is None. How many samples should be drawn for the smallest
         subsample. If this is None, the `counts_interval` will be used.
     num_iter : unsigned int
         Default is 1000. The number of p-values to generate for each point
@@ -374,7 +378,7 @@ def subsample_paired_power(test, meta, cat, control_cats, order=None,
     macrophage lineages (bone marrow derived phagocytes and
     peritoneally-derived macrophages). Due to unfortunate circumstances, your
     growth media must be acquired from multiple sources (lab, company A,
-    company B). Also unfortunate, you must use labor-intense low-through put
+    company B). Also unfortunate, you must use labor-intense low throughput
     assays. You have some preliminary measurements, and you'd like to
     predict how many (more) cells you need to analyze to for 80% power.
 
@@ -412,13 +416,14 @@ def subsample_paired_power(test, meta, cat, control_cats, order=None,
     may be an effect of cell line on the treatment outcome, which may be
     attributed to differences in receptor expression. It may also be possible
     that there are differences due cytokine source. Incubators were maintained
-    under the same conditions throughout the experiment, without on a 1 degree
+    under the same conditions throughout the experiment, within one degree of
     temperature difference at any given time, and the same level of CO2.
     So, at least initially, let's ignore differences due to the incubator.
+
     It's recommended that as a first pass analysis, control variables be
     selected based on an idea of what may be biologically relevant to the
     system, although further iteration might encourage the consideration of
-    variable with effect sizes simillar, or larger than the variable of
+    variable with effect sizes similar, or larger than the variable of
     interest.
 
     >>> control_cats = ['SOURCE', 'CELL_LINE']
@@ -528,8 +533,8 @@ def confidence_bound(vec, alpha=0.05, df=None, axis=None):
         df = num_counts - 1
 
     # Calculates the bound
-    bound = nanstd(vec, axis=axis) / np.sqrt(num_counts - 1) * \
-        t.ppf(1 - alpha / 2, df)
+    bound = scipy.stats.nanstd(vec, axis=axis) / np.sqrt(num_counts - 1) * \
+        scipy.stats.t.ppf(1 - alpha / 2, df)
 
     return bound
 
@@ -660,7 +665,7 @@ def paired_subsamples(meta, cat, control_cats, order=None, strict=True):
     Returns
     -------
     ids : array
-        a set of arrays which satisfy the criteria. These are not grouped by
+        a set of ids which satisfy the criteria. These are not grouped by
         `cat`. An empty array indicates there are no sample ids which satisfy
         the requirements.
 
@@ -694,9 +699,8 @@ def paired_subsamples(meta, cat, control_cats, order=None, strict=True):
 
     So, for this set of data, we can match TS, CB, and BB based on their age,
     sex, and antibiotic use. SW cannot be matched in either group becuase
-    `strict` was true, and there is missing AGE data for this sample.
+    `strict` was true, and there is missing AGE data for this sample."""
 
-    """
     # Sets the index data
     # Groups meta by category
     cat_groups = meta.groupby(cat).groups
