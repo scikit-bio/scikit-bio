@@ -23,8 +23,8 @@ from skbio import DistanceMatrix
 from skbio.stats.distance import (
     DissimilarityMatrixError, DistanceMatrixError, MissingIDError,
     DissimilarityMatrix, randdm, CategoricalStatsResults)
-from skbio.stats.distance._base import (_preprocess_input, _run_stat_method,
-                                        CategoricalStats)
+from skbio.stats.distance._base import (
+    _preprocess_input, _run_monte_carlo_stats, CategoricalStats)
 
 
 class DissimilarityMatrixTestData(TestCase):
@@ -655,17 +655,17 @@ class CategoricalStatsHelperFunctionTests(TestCase):
         with self.assertRaises(ValueError):
             _preprocess_input(self.dm, [1, 1, 1], None)
 
-    def test_run_stat_method_with_permutations(self):
-        obs = _run_stat_method(lambda e: 42, self.grouping, 50)
+    def test_run_monte_carlo_stats_with_permutations(self):
+        obs = _run_monte_carlo_stats(lambda e: 42, self.grouping, 50)
         npt.assert_equal(obs, (42, 1.0))
 
-    def test_run_stat_method_no_permutations(self):
-        obs = _run_stat_method(lambda e: 42, self.grouping, 0)
+    def test_run_monte_carlo_stats_no_permutations(self):
+        obs = _run_monte_carlo_stats(lambda e: 42, self.grouping, 0)
         npt.assert_equal(obs, (42, np.nan))
 
-    def test_run_stat_method_invalid_permutations(self):
+    def test_run_monte_carlo_stats_invalid_permutations(self):
         with self.assertRaises(ValueError):
-            _run_stat_method(lambda e: 42, self.grouping, -1)
+            _run_monte_carlo_stats(lambda e: 42, self.grouping, -1)
 
 
 class CategoricalStatsTests(TestCase):

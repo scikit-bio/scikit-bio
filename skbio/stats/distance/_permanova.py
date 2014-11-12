@@ -14,7 +14,7 @@ from functools import partial
 
 import numpy as np
 
-from ._base import (_preprocess_input, _run_stat_method, _build_results,
+from ._base import (_preprocess_input, _run_monte_carlo_stats, _build_results,
                     CategoricalStats)
 
 
@@ -22,10 +22,11 @@ def permanova(distance_matrix, grouping, column=None, permutations=999):
     """Test for significant differences between groups using PERMANOVA.
 
     Permutational Multivariate Analysis of Variance (PERMANOVA) is a
-    non-parametric method that tests whether two or more groups of objects are
-    significantly different based on a categorical factor. It is conceptually
-    similar to ANOVA except that it operates on a distance matrix, which allows
-    for multivariate analysis. PERMANOVA computes a pseudo-F statistic.
+    non-parametric method that tests whether two or more groups of objects
+    (e.g., samples) are significantly different based on a categorical factor.
+    It is conceptually similar to ANOVA except that it operates on a distance
+    matrix, which allows for multivariate analysis. PERMANOVA computes a
+    pseudo-F statistic.
 
     Statistical significance is assessed via a permutation test. The assignment
     of objects to groups (`grouping`) is randomly permuted a number of times
@@ -100,8 +101,8 @@ def permanova(distance_matrix, grouping, column=None, permutations=999):
 
     test_stat_function = partial(_compute_f_stat, sample_size, num_groups,
                                  tri_idxs, distances, group_sizes, s_T)
-    stat, p_value = _run_stat_method(test_stat_function, grouping,
-                                     permutations)
+    stat, p_value = _run_monte_carlo_stats(test_stat_function, grouping,
+                                           permutations)
 
     return _build_results('PERMANOVA', 'pseudo-F', sample_size, num_groups,
                           stat, p_value, permutations)

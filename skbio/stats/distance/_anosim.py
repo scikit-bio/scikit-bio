@@ -14,7 +14,7 @@ from functools import partial
 import numpy as np
 from scipy.stats import rankdata
 
-from ._base import (_preprocess_input, _run_stat_method, _build_results,
+from ._base import (_preprocess_input, _run_monte_carlo_stats, _build_results,
                     CategoricalStats)
 
 
@@ -22,10 +22,11 @@ def anosim(distance_matrix, grouping, column=None, permutations=999):
     """Test for significant differences between groups using ANOSIM.
 
     Analysis of Similarities (ANOSIM) is a non-parametric method that tests
-    whether two or more groups of objects are significantly different based on
-    a categorical factor. The ranks of the distances in the distance matrix are
-    used to calculate an R statistic, which ranges between -1 (anti-grouping)
-    to +1 (strong grouping), with an R value of 0 indicating random grouping.
+    whether two or more groups of objects (e.g., samples) are significantly
+    different based on a categorical factor. The ranks of the distances in the
+    distance matrix are used to calculate an R statistic, which ranges between
+    -1 (anti-grouping) to +1 (strong grouping), with an R value of 0 indicating
+    random grouping.
 
     Statistical significance is assessed via a permutation test. The assignment
     of objects to groups (`grouping`) is randomly permuted a number of times
@@ -176,8 +177,8 @@ def anosim(distance_matrix, grouping, column=None, permutations=999):
 
     test_stat_function = partial(_compute_r_stat, tri_idxs, ranked_dists,
                                  divisor)
-    stat, p_value = _run_stat_method(test_stat_function, grouping,
-                                     permutations)
+    stat, p_value = _run_monte_carlo_stats(test_stat_function, grouping,
+                                           permutations)
 
     return _build_results('ANOSIM', 'R', sample_size, num_groups, stat,
                           p_value, permutations)

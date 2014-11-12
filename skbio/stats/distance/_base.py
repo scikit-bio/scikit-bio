@@ -943,8 +943,8 @@ def _df_to_vector(distance_matrix, df, column):
     return grouping.tolist()
 
 
-def _run_stat_method(test_stat_function, grouping, permutations):
-    """Execute an arbitrary statistical method and compute significance."""
+def _run_monte_carlo_stats(test_stat_function, grouping, permutations):
+    """Run stat test and compute significance with Monte Carlo permutations."""
     if permutations < 0:
         raise ValueError(
             "Number of permutations must be greater than or equal to zero.")
