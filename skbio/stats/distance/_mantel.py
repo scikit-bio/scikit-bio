@@ -17,7 +17,6 @@ import scipy.misc
 from scipy.stats import pearsonr, spearmanr
 
 from skbio.stats.distance import DistanceMatrix
-from skbio.stats import p_value_to_str
 
 
 def mantel(x, y, method='pearson', permutations=999, alternative='two-sided',
@@ -337,9 +336,9 @@ def pwmantel(dms, labels=None, method='pearson', permutations=999,
         ``DataFrame`` containing the results of each pairwise test (one per
         row). Includes the number of objects considered in each test as column
         ``n`` (after applying `lookup` and filtering nonmatching IDs if
-        ``strict=False``). Column ``p-value`` has the p-values formatted as
-        strings with the correct number of decimal places, or ``N/A`` if a
-        p-value could not be computed.
+        ``strict=False``). Column ``p-value`` will display p-values as ``NaN``
+        if p-values could not be computed (they are stored as ``np.nan`` within
+        the ``DataFrame``; see ``mantel`` for more details).
 
     See Also
     --------
@@ -380,14 +379,14 @@ def pwmantel(dms, labels=None, method='pearson', permutations=999,
     ...          permutations=0) # doctest: +NORMALIZE_WHITESPACE
                  statistic p-value  n   method  permutations alternative
     dm1 dm2
-    x   y     0.755929     N/A  3  pearson             0   two-sided
-        z    -0.755929     N/A  3  pearson             0   two-sided
-    y   z    -0.142857     N/A  3  pearson             0   two-sided
+    x   y     0.755929     NaN  3  pearson             0   two-sided
+        z    -0.755929     NaN  3  pearson             0   two-sided
+    y   z    -0.142857     NaN  3  pearson             0   two-sided
     <BLANKLINE>
     [3 rows x 6 columns]
 
     Note that we passed ``permutations=0`` to suppress significance tests; the
-    p-values in the output are labelled ``N/A``.
+    p-values in the output are labelled ``NaN``.
 
     """
     num_dms = len(dms)
@@ -406,7 +405,7 @@ def pwmantel(dms, labels=None, method='pearson', permutations=999,
 
     num_combs = scipy.misc.comb(num_dms, 2, exact=True)
     results_dtype = [('dm1', object), ('dm2', object), ('statistic', float),
-                     ('p-value', object), ('n', int), ('method', object),
+                     ('p-value', float), ('n', int), ('method', object),
                      ('permutations', int), ('alternative', object)]
     results = np.empty(num_combs, dtype=results_dtype)
 
@@ -417,8 +416,7 @@ def pwmantel(dms, labels=None, method='pearson', permutations=999,
                                 alternative=alternative, strict=strict,
                                 lookup=lookup)
 
-        p_val_str = p_value_to_str(p_val, permutations)
-        results[i] = (xlabel, ylabel, stat, p_val_str, n, method, permutations,
+        results[i] = (xlabel, ylabel, stat, p_val, n, method, permutations,
                       alternative)
 
     return pd.DataFrame.from_records(results, index=('dm1', 'dm2'))

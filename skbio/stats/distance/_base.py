@@ -850,6 +850,132 @@ def randdm(num_objects, ids=None, constructor=None, random_fn=None):
     return constructor(data, ids)
 
 
+# helper functions for anosim and permanova
+
+def _preprocess_input(distance_matrix, grouping, column):
+    """Compute intermediate results not affected by permutations.
+
+    These intermediate results can be computed a single time for efficiency,
+    regardless of grouping vector permutations (i.e., when calculating the
+    p-value). These intermediate results are used by both ANOSIM and PERMANOVA.
+
+    Also validates and normalizes input (e.g., converting ``DataFrame`` column
+    into grouping vector).
+
+    """
+    if not isinstance(distance_matrix, DistanceMatrix):
+        raise TypeError("Input must be a DistanceMatrix.")
+
+    if isinstance(grouping, pd.DataFrame):
+        if column is None:
+            raise ValueError(
+                "Must provide a column name if supplying a DataFrame.")
+        else:
+            grouping = _df_to_vector(distance_matrix, grouping, column)
+    elif column is not None:
+        raise ValueError(
+            "Must provide a DataFrame if supplying a column name.")
+
+    sample_size = distance_matrix.shape[0]
+    if len(grouping) != sample_size:
+        raise ValueError(
+            "Grouping vector size must match the number of IDs in the "
+            "distance matrix.")
+
+    # Find the group labels and convert grouping to an integer vector
+    # (factor).
+    groups, grouping = np.unique(grouping, return_inverse=True)
+    num_groups = len(groups)
+
+    if num_groups == len(grouping):
+        raise ValueError(
+            "All values in the grouping vector are unique. This method cannot "
+            "operate on a grouping vector with only unique values (e.g., "
+            "there are no 'within' distances because each group of objects "
+            "contains only a single object).")
+    if num_groups == 1:
+        raise ValueError(
+            "All values in the grouping vector are the same. This method "
+            "cannot operate on a grouping vector with only a single group of "
+            "objects (e.g., there are no 'between' distances because there is "
+            "only a single group).")
+
+    tri_idxs = np.triu_indices(sample_size, k=1)
+    distances = distance_matrix.condensed_form()
+
+    return sample_size, num_groups, grouping, tri_idxs, distances
+
+
+def _df_to_vector(distance_matrix, df, column):
+    """Return a grouping vector from a ``DataFrame`` column.
+
+    Parameters
+    ----------
+    distance_marix : DistanceMatrix
+        Distance matrix whose IDs will be mapped to group labels.
+    df : pandas.DataFrame
+        ``DataFrame`` (indexed by distance matrix ID).
+    column : str
+        Column name in `df` containing group labels.
+
+    Returns
+    -------
+    list
+        Grouping vector (vector of labels) based on the IDs in
+        `distance_matrix`. Each ID's label is looked up in the ``DataFrame``
+        under the column specified by `column`.
+
+    Raises
+    ------
+    ValueError
+        If `column` is not in the ``DataFrame``, or a distance matrix ID is
+        not in the ``DataFrame``.
+
+    """
+    if column not in df:
+        raise ValueError("Column '%s' not in DataFrame." % column)
+
+    grouping = df.loc[distance_matrix.ids, column]
+    if grouping.isnull().any():
+        raise ValueError(
+            "One or more IDs in the distance matrix are not in the data "
+            "frame.")
+    return grouping.tolist()
+
+
+def _run_monte_carlo_stats(test_stat_function, grouping, permutations):
+    """Run stat test and compute significance with Monte Carlo permutations."""
+    if permutations < 0:
+        raise ValueError(
+            "Number of permutations must be greater than or equal to zero.")
+
+    stat = test_stat_function(grouping)
+
+    p_value = np.nan
+    if permutations > 0:
+        perm_stats = np.empty(permutations, dtype=np.float64)
+
+        for i in range(permutations):
+            perm_grouping = np.random.permutation(grouping)
+            perm_stats[i] = test_stat_function(perm_grouping)
+
+        p_value = ((perm_stats >= stat).sum() + 1) / (permutations + 1)
+
+    return stat, p_value
+
+
+def _build_results(method_name, test_stat_name, sample_size, num_groups, stat,
+                   p_value, permutations):
+    """Return ``pandas.Series`` containing results of statistical test."""
+    return pd.Series(
+        data=[method_name, test_stat_name, sample_size, num_groups, stat,
+              p_value, permutations],
+        index=['method name', 'test statistic name', 'sample size',
+               'number of groups', 'test statistic', 'p-value',
+               'number of permutations'],
+        name='%s results' % method_name)
+
+
 class CategoricalStats(object):
     """Base class for categorical statistical methods.
 
@@ -917,7 +1043,7 @@ class CategoricalStats(object):
         distance_marix : DistanceMatrix
             Distance matrix whose IDs will be mapped to group labels.
         df : pandas.DataFrame
-            Data frame (indexed by distance matrix ID).
+            ``DataFrame`` (indexed by distance matrix ID).
         column : str
             Column name in `df` containing group labels.
 
@@ -991,6 +1117,13 @@ class CategoricalStats(object):
 class CategoricalStatsResults(object):
     """Statistical method results container.
 
+    .. note:: Deprecated in scikit-bio 0.2.1-dev
+       ``CategoricalStatsResults`` will be removed in scikit-bio 0.3.0. It is
+       replaced by ``pandas.Series`` for storing statistical method results.
+       Please update your code to use ``skbio.stats.distance.anosim`` or
+       ``skbio.stats.distance.permanova``, which will return a
+       ``pandas.Series``.
+
     Stores the results of running a `CategoricalStats` method a single time,
     and provides a way to format the results.
 
@@ -1016,6 +1149,13 @@ class CategoricalStatsResults(object):
     def __init__(self, short_method_name, long_method_name,
                  test_statistic_name, sample_size, groups, statistic, p_value,
                  permutations):
+        warnings.warn(
+            "skbio.stats.distance.CategoricalStatsResults is deprecated and "
+            "will be removed in scikit-bio 0.3.0. Please update your code to "
+            "use either skbio.stats.distance.anosim or "
+            "skbio.stats.distance.permanova, which will return a "
+            "pandas.Series object.", UserWarning)
+
         self.short_method_name = short_method_name
         self.long_method_name = long_method_name
         self.test_statistic_name = test_statistic_name

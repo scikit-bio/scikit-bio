@@ -1,2 +1,0 @@
-dm1	dm2	statistic	p-value	n	method	permutations	alternative
-0	1	0.5	Too few permutations to compute p-value (permutations = 9)	3	spearman	9	two-sided
