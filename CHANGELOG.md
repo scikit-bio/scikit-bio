@@ -59,6 +59,7 @@ This is an alpha release of scikit-bio. At this stage, major backwards-incompati
         * Has sniffer
         * Readers: generator of ``BiologicalSequence`` or its subclasses, ``SequenceCollection``, ``Alignment``, ``BiologicalSequence``, ``NucleotideSequence``, ``DNASequence``, ``RNASequence``, ``ProteinSequence``
         * Writers: same as readers
+* Added a `skbio.stats.power` for performing emperical power analysis. The module uses existing datasets and iteratively draws samples to estimate the number of samples needed to see a signifignat difference for a given critical value.
 
 ### Bug fixes
 
