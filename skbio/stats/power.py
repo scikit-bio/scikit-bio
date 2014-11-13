@@ -579,7 +579,7 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
     samples : array_like
         samples can be a list of lists or an array where each sublist or row in
         the array corresponds to a sampled group.
-    sample_counts : 1-D array
+    sample_counts : 1-D array_like
         A vector of the number of samples which should be sampled in each curve
     ratio : 1-D array, optional
         The fraction of the sample counts which should be
