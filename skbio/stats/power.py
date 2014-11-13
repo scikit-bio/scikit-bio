@@ -143,6 +143,7 @@ we need to be confident that we have not committed a type II error increases.
 
 from __future__ import absolute_import, division, print_function
 from future.utils import viewitems
+from future.builtins import range
 
 import numpy as np
 import scipy.stats
@@ -481,7 +482,7 @@ def subsample_paired_power(test, meta, cat, control_cats, order=None,
 
     # Checks there are enough samples to subsample
     if num_ids <= min_observations:
-        raise ValueError('There are not enough samples for subsampling.')
+        raise RuntimeError('There are not enough samples for subsampling.')
 
     # Calculates the effect size vector
     if min_counts is None:
@@ -544,6 +545,7 @@ def confidence_bound(vec, alpha=0.05, df=None, axis=None):
     """
 
     # Determines the number of non-nan counts
+    vec = np.asarray(vec)
     vec_shape = vec.shape
     if axis is None and len(vec_shape) == 1:
         num_counts = vec_shape[0] - np.isnan(vec).sum()
@@ -728,10 +730,13 @@ def paired_subsamples(meta, cat, control_cats, order=None, strict_match=True):
     >>> ids = paired_subsamples(meta, 'HOUSING', ['SEX', 'AGE', 'ABX'])
     >>> np.hstack(ids) # doctest: +ELLIPSIS
     array(['BB', 'TS', 'CB']...
+        )
 
     So, for this set of data, we can match TS, CB, and BB based on their age,
     sex, and antibiotic use. SW cannot be matched in either group becuase
-    `strict_match` was true, and there is missing AGE data for this sample."""
+    `strict_match` was true, and there is missing AGE data for this sample.
+
+    """
 
     # Sets the index data
     # Groups meta by category
@@ -758,7 +763,9 @@ def paired_subsamples(meta, cat, control_cats, order=None, strict_match=True):
     for check_group, ctrl_ids in viewitems(ctrl_group):
         # Checks the categories have been defined
         undefed_check = np.array([_check_strs(p) for p in check_group])
+        print (not undefed_check.all() and strict_match)
         if not undefed_check.all() and strict_match:
+            print('continue!')
             continue
         # Removes the matched ids from order
         matched_ids = ctrl_match_groups[check_group]
@@ -953,6 +960,9 @@ def _calculate_power_curve(test, samples, sample_counts, ratio=None,
 
     """
 
+    # Casts array-likes to arrays
+    sample_counts = np.asarray(sample_counts)
+
     # Determines the number of groups
     num_groups = len(samples)
     num_samps = len(sample_counts)
@@ -970,6 +980,7 @@ def _calculate_power_curve(test, samples, sample_counts, ratio=None,
         ratio = np.ones((num_groups))
     elif not ratio.shape == (num_groups,):
         raise ValueError('There must be a ratio for each group.')
+    ratio = np.asarray(ratio)
 
     # Loops through the sample sizes
     for id2, s in enumerate(sample_counts):
