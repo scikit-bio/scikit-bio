@@ -260,8 +260,7 @@ def subsample_power(test, samples, draw_mode='ind', alpha_pwr=0.05,
     information to try controlling the data, we'll use
     `skbio.stats.power.subsample_power` to compare the two groups. If we had
     metadata about other risk factors, like a family history, BMI, tobacco use,
-    we might instead want to use `skbio.stats.power.subsample_paired_power`
-    instead.
+    we might want to use `skbio.stats.power.subsample_paired_power`.
     We'll also use "ind" `draw_mode`, since there is no linkage between the
     two groups of samples.
 
@@ -482,7 +481,7 @@ def subsample_paired_power(test, meta, cat, control_cats, order=None,
 
     # Checks there are enough samples to subsample
     if num_ids <= min_observations:
-        raise RuntimeError('There are not enough samples for subsampling.')
+        raise ValueError('There are not enough samples for subsampling.')
 
     # Calculates the effect size vector
     if min_counts is None:
@@ -525,7 +524,7 @@ def confidence_bound(vec, alpha=0.05, df=None, axis=None):
     Parameters
     ----------
     vec : array_like
-        A 1-D numpy array of the values to use in the bound calculation.
+        The array of values to use in the bound calculation.
     alpha : float, optional
         The critical value, used for the confidence bound calculation.
     df : float, optional
@@ -549,7 +548,6 @@ def confidence_bound(vec, alpha=0.05, df=None, axis=None):
     vec_shape = vec.shape
     if axis is None and len(vec_shape) == 1:
         num_counts = vec_shape[0] - np.isnan(vec).sum()
-        axis = None
     elif axis is None:
         num_counts = vec_shape[0] * vec_shape[1] - np.isnan(vec).sum()
     else:
@@ -581,7 +579,7 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
         the array corresponds to a sampled group.
     sample_counts : 1-D array_like
         A vector of the number of samples which should be sampled in each curve
-    ratio : 1-D array, optional
+    ratio : 1-D array_like, optional
         The fraction of the sample counts which should be
         assigned to each
         group. This must be a none-type object, or the same length as samples.
@@ -627,7 +625,7 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
     >>> from scipy.stats import ttest_ind
     >>> f = lambda x: ttest_ind(x[0], x[1])[1]
 
-    Now, we can determine the statitical power, or the probability that we do
+    Now, we can determine the statistical power, or the probability that we do
     not have a false negative given that we do not have a false positive, by
     varying a number of subsamples.
 
@@ -975,9 +973,9 @@ def _calculate_power_curve(test, samples, sample_counts, ratio=None,
     # Checks the ratio argument
     if ratio is None:
         ratio = np.ones((num_groups))
-    elif not ratio.shape == (num_groups,):
-        raise ValueError('There must be a ratio for each group.')
     ratio = np.asarray(ratio)
+    if not ratio.shape == (num_groups,):
+        raise ValueError('There must be a ratio for each group.')
 
     # Loops through the sample sizes
     for id2, s in enumerate(sample_counts):

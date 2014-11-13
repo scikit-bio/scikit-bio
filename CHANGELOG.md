@@ -5,6 +5,7 @@
 ### Features
 * Added ``plot`` method to ``skbio.stats.distance.DissimilarityMatrix`` for creating basic heatmaps of a dissimilarity/distance matrix (see [#684](https://github.com/biocore/scikit-bio/issues/684)). Also added  ``_repr_png_`` and ``_repr_svg_`` methods for automatic display in the IPython Notebook, with ``png`` and ``svg`` properties for direct access.
 * Added `__str__` method to `skbio.stats.ordination.OrdinationResults`.
+* Added `skbio.stats.power` for performing emperical power analysis. The module uses existing datasets and iteratively draws samples to estimate the number of samples needed to see a significant difference for a given critical value.
 
 ### Bug fixes
 * Fixed issue where SSW wouldn't compile on i686 architectures ([#409](https://github.com/biocore/scikit-bio/issues/409)).
@@ -59,7 +60,6 @@ This is an alpha release of scikit-bio. At this stage, major backwards-incompati
         * Has sniffer
         * Readers: generator of ``BiologicalSequence`` or its subclasses, ``SequenceCollection``, ``Alignment``, ``BiologicalSequence``, ``NucleotideSequence``, ``DNASequence``, ``RNASequence``, ``ProteinSequence``
         * Writers: same as readers
-* Added a `skbio.stats.power` for performing emperical power analysis. The module uses existing datasets and iteratively draws samples to estimate the number of samples needed to see a signifignat difference for a given critical value.
 
 ### Bug fixes
 

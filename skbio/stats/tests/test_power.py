@@ -135,7 +135,7 @@ class PowerAnalysisTest(TestCase):
         npt.assert_array_equal(np.arange(5, 50, 10), test_c)
 
     def test_subsample_paired_power_min_observations_error(self):
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(ValueError):
             subsample_paired_power(self.f,
                                    self.meta,
                                    cat=self.cat,
