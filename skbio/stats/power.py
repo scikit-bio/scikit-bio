@@ -204,7 +204,7 @@ def subsample_power(test, samples, draw_mode='ind', alpha_pwr=0.05,
         If the `mode` is "matched", an error will occur if the arrays in
         `samples` are not the same length.
     ValueError
-        There is a value error if there are fewer samples than the minimum
+        There is a ValueError if there are fewer samples than the minimum
         count.
     ValueError
         If the `counts_interval` is greater than the difference between the
@@ -524,11 +524,11 @@ def confidence_bound(vec, alpha=0.05, df=None, axis=None):
 
     Parameters
     ----------
-    vec : array
+    vec : array_like
         A 1-D numpy array of the values to use in the bound calculation.
     alpha : float, optional
         The critical value, used for the confidence bound calculation.
-    df : None, float, optional
+    df : float, optional
         The degrees of freedom associated with the
         distribution. If None is given, df is assumed to be the number of
         elements in specified axis.
