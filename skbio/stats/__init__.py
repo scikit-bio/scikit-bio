@@ -17,6 +17,7 @@ Subpackages
    ordination
    spatial
    gradient
+   power
 
 Functions
 ---------
