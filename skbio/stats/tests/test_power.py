@@ -1,13 +1,11 @@
 
-# -----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-# -----------------------------------------------------------------------------
-
-
+# ----------------------------------------------------------------------------
 from __future__ import absolute_import, division, print_function
 from unittest import TestCase, main
 
@@ -115,10 +113,17 @@ class PowerAnalysisTest(TestCase):
     def test_subsample_power_interval_error(self):
         with self.assertRaises(ValueError):
             subsample_power(self.f,
-                            samples=[np.ones((2)), np.ones((5))],
+                            samples=[np.ones((3)), np.ones((5))],
                             min_observations=2,
                             min_counts=5,
+                            counts_interval=1000,
                             max_counts=7)
+
+    def test_subsample_power_defaults(self):
+        test_p, test_c = subsample_power(self.f, self.pop,
+                                         num_iter=10, num_runs=5)
+        self.assertEqual(test_p.shape, (5, 4))
+        npt.assert_array_equal(np.array([10, 20, 30, 40]), test_c)
 
     def test_subsample_power(self):
         test_p, test_c = subsample_power(self.f,
@@ -130,7 +135,7 @@ class PowerAnalysisTest(TestCase):
         npt.assert_array_equal(np.arange(5, 50, 10), test_c)
 
     def test_subsample_paired_power_min_observations_error(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(RuntimeError):
             subsample_paired_power(self.f,
                                    self.meta,
                                    cat=self.cat,
@@ -140,9 +145,10 @@ class PowerAnalysisTest(TestCase):
         with self.assertRaises(ValueError):
             subsample_paired_power(self.f,
                                    self.meta,
-                                   cat=self.cat,
-                                   control_cats=self.control_cats,
+                                   cat='INT',
+                                   control_cats=['SEX', 'AGE'],
                                    min_observations=2,
+                                   counts_interval=12,
                                    min_counts=5,
                                    max_counts=7)
 
@@ -237,6 +243,16 @@ class PowerAnalysisTest(TestCase):
         with self.assertRaises(ValueError):
             _compare_distributions(self.f, self.samps, counts=[1, 2, 3],
                                    num_iter=100)
+
+    def test__compare_distributions_matched_length_error(self):
+        with self.assertRaises(ValueError):
+            _compare_distributions(self.f, [np.ones((5)), np.zeros((6))],
+                                   mode="matched")
+
+    def test__compare_distributions_sample_counts_error(self):
+        with self.assertRaises(ValueError):
+            _compare_distributions(self.f, [self.pop[0][:5], self.pop[1]],
+                                   25)
 
     def test__compare_distributions_all_mode(self):
         known = np.ones((100))*0.0026998
@@ -341,6 +357,15 @@ class PowerAnalysisTest(TestCase):
         control_cats = ['SEX', 'AGE', 'INT']
         test_array = paired_subsamples(self.meta, cat, control_cats)
         npt.assert_array_equal(known_array, test_array)
+
+    def test_paired_subsample_undefined(self):
+        known_array = np.zeros((2, 0))
+        cat = 'INT'
+        order = ['Y', 'N']
+        control_cats = ['AGE', 'ABX', 'SEX']
+        test_array = paired_subsamples(self.meta, cat, control_cats,
+                                       order=order)
+        npt.assert_array_equal(test_array, known_array)
 
     def test_paired_subsample_fewer(self):
         # Set known value
