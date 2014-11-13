@@ -728,9 +728,8 @@ def paired_subsamples(meta, cat, control_cats, order=None, strict_match=True):
 
     >>> from skbio.stats.power import paired_subsamples
     >>> ids = paired_subsamples(meta, 'HOUSING', ['SEX', 'AGE', 'ABX'])
-    >>> np.hstack(ids) # doctest: +ELLIPSIS
+    >>> np.hstack(ids) #doctest: +ELLIPSIS
     array(['BB', 'TS', 'CB']...
-        )
 
     So, for this set of data, we can match TS, CB, and BB based on their age,
     sex, and antibiotic use. SW cannot be matched in either group becuase
@@ -763,9 +762,7 @@ def paired_subsamples(meta, cat, control_cats, order=None, strict_match=True):
     for check_group, ctrl_ids in viewitems(ctrl_group):
         # Checks the categories have been defined
         undefed_check = np.array([_check_strs(p) for p in check_group])
-        print (not undefed_check.all() and strict_match)
         if not undefed_check.all() and strict_match:
-            print('continue!')
             continue
         # Removes the matched ids from order
         matched_ids = ctrl_match_groups[check_group]
