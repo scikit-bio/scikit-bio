@@ -17,7 +17,7 @@ mpl.use('Agg')
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
-from IPython.display import Image, SVG
+from IPython.core.display import Image, SVG
 
 from skbio import DistanceMatrix
 from skbio.stats.distance import (
@@ -326,9 +326,11 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         self.assertTrue(len(obs) > 0)
 
     def test_repr_svg(self):
-        dm = self.dm_1x1
-        obs = dm._repr_svg_()
-        self.assertIsInstance(obs, text_type)
+        obs = self.dm_1x1._repr_svg_()
+        # print_figure(format='svg') can return text or bytes depending on the
+        # version of IPython
+        self.assertTrue(isinstance(obs, text_type) or
+                        isinstance(obs, binary_type))
         self.assertTrue(len(obs) > 0)
 
     def test_png(self):

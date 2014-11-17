@@ -8,6 +8,9 @@
 * Added ``skbio.stats.distance.anosim`` and ``skbio.stats.distance.permanova`` functions, which replace the ``skbio.stats.distance.ANOSIM`` and ``skbio.stats.distance.PERMANOVA`` classes. These new functions provide simpler procedural interfaces to running these statistical methods. They also provide more convenient access to results by returning a ``pandas.Series`` instead of a ``CategoricalStatsResults`` object. These functions have more extensive documentation than their previous versions. If significance tests are suppressed, p-values are returned as ``np.nan`` instead of ``None`` for consistency with other statistical methods in scikit-bio. [#754](https://github.com/biocore/scikit-bio/issues/754)
 * Added `skbio.stats.power` for performing emperical power analysis. The module uses existing datasets and iteratively draws samples to estimate the number of samples needed to see a significant difference for a given critical value.
 
+### Bug fixes
+* Fixed issue where SSW wouldn't compile on i686 architectures ([#409](https://github.com/biocore/scikit-bio/issues/409)).
+
 ### Deprecated functionality
 * Deprecated ``skbio.stats.p_value_to_str``. This function will be removed in scikit-bio 0.3.0. Permutation-based p-values in scikit-bio are calculated as ``(num_extreme + 1) / (num_permutations + 1)``, so it is impossible to obtain a p-value of zero. This function historically existed for correcting the number of digits displayed when obtaining a p-value of zero. Since this is no longer possible, this functionality will be removed.
 * Deprecated ``skbio.stats.distance.ANOSIM`` and ``skbio.stats.distance.PERMANOVA`` in favor of ``skbio.stats.distance.anosim`` and ``skbio.stats.distance.permanova``, respectively.
@@ -15,9 +18,7 @@
 
 ### Miscellaneous
 * The ``pandas.DataFrame`` returned by ``skbio.stats.distance.pwmantel`` now stores p-values as floats and does not convert them to strings with a specific number of digits. p-values that were previously stored as "N/A" are now stored as ``np.nan`` for consistency with other statistical methods in scikit-bio. See note in "Deprecated functionality" above regarding ``p_value_to_str`` for details.
-
-### Bug fixes
-* Fixed issue where SSW wouldn't compile on i686 architectures ([#409](https://github.com/biocore/scikit-bio/issues/409)).
+* scikit-bio now supports versions of IPython < 2.0.0 ([#767](https://github.com/biocore/scikit-bio/issues/767)).
 
 ## Version 0.2.1 (2014-10-27)
 

@@ -879,7 +879,9 @@ class TestOrdinationResults(unittest.TestCase):
 
     def test_repr_svg(self):
         obs = self.min_ord_results._repr_svg_()
-        assert_is_instance(obs, text_type)
+        # print_figure(format='svg') can return text or bytes depending on the
+        # version of IPython
+        assert_true(isinstance(obs, text_type) or isinstance(obs, binary_type))
         assert_true(len(obs) > 0)
 
     def test_png(self):
