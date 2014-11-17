@@ -8,6 +8,7 @@
 
 from __future__ import absolute_import, division, print_function
 
+import sys
 from warnings import warn
 from heapq import heappush, heappop
 
@@ -21,11 +22,6 @@ try:
     from .__subsample import _subsample_without_replacement
 except ImportError:
     pass
-
-
-# six.sys.maxint exists, however, the six.sys module is only accessible in Py2
-# and is not in Py3. See https://bitbucket.org/gutworth/six/issue/104/
-MAXINT = 2**63 - 1
 
 
 def uneven_subsample(iter_, maximum, minimum=1, random_buf_size=100000,
@@ -103,7 +99,7 @@ def uneven_subsample(iter_, maximum, minimum=1, random_buf_size=100000,
         bin_f = lambda x: True
 
     # buffer some random values
-    random_values = np.random.randint(0, MAXINT, random_buf_size)
+    random_values = np.random.randint(0, sys.maxsize, random_buf_size)
     random_idx = 0
 
     result = defaultdict(list)
@@ -116,7 +112,7 @@ def uneven_subsample(iter_, maximum, minimum=1, random_buf_size=100000,
         random_value = random_values[random_idx]
         random_idx += 1
         if random_idx >= random_buf_size:
-            random_values = np.random.randint(0, MAXINT, random_buf_size)
+            random_values = np.random.randint(0, sys.maxsize, random_buf_size)
             random_idx = 0
 
         # push our item on to the heap and drop the smallest if necessary
