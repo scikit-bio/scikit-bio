@@ -141,19 +141,20 @@ class PySubsampleTests(SubsampleTests, unittest.TestCase):
 
         # note, the result here is sorted by sequence_id but is in heap order
         # by the random values associated to each sequence
-        exp = [('a', {'SequenceID': 'a_1', 'Sequence': 'AATTGGCC-a1'}),
-               ('a', {'SequenceID': 'a_2', 'Sequence': 'AATTGGCC-a2'}),
-               ('a', {'SequenceID': 'a_3', 'Sequence': 'AATTGGCC-a3'}),
-               ('a', {'SequenceID': 'a_4', 'Sequence': 'AATTGGCC-a4'}),
-               ('a', {'SequenceID': 'a_5', 'Sequence': 'AATTGGCC-a5'}),
-               ('b', {'SequenceID': 'b_1', 'Sequence': 'AATTGGCC-b1'}),
-               ('b', {'SequenceID': 'b_2', 'Sequence': 'AATTGGCC-b2'}),
-               ('c', {'SequenceID': 'c_1', 'Sequence': 'AATTGGCC-c1'}),
-               ('c', {'SequenceID': 'c_2', 'Sequence': 'AATTGGCC-c2'}),
-               ('c', {'SequenceID': 'c_3', 'Sequence': 'AATTGGCC-c3'})]
+        exp = sorted([('a', {'SequenceID': 'a_5', 'Sequence': 'AATTGGCC-a5'}),
+                      ('a', {'SequenceID': 'a_1', 'Sequence': 'AATTGGCC-a1'}),
+                      ('a', {'SequenceID': 'a_4', 'Sequence': 'AATTGGCC-a4'}),
+                      ('a', {'SequenceID': 'a_3', 'Sequence': 'AATTGGCC-a3'}),
+                      ('a', {'SequenceID': 'a_2', 'Sequence': 'AATTGGCC-a2'}),
+                      ('b', {'SequenceID': 'b_2', 'Sequence': 'AATTGGCC-b2'}),
+                      ('b', {'SequenceID': 'b_1', 'Sequence': 'AATTGGCC-b1'}),
+                      ('c', {'SequenceID': 'c_3', 'Sequence': 'AATTGGCC-c3'}),
+                      ('c', {'SequenceID': 'c_2', 'Sequence': 'AATTGGCC-c2'}),
+                      ('c', {'SequenceID': 'c_1', 'Sequence': 'AATTGGCC-c1'})],
+                     key=lambda x: x[0])
         obs = uneven_subsample(self.mock_sequence_iter(sequences), maximum,
                                bin_f=bin_f)
-        self.assertEqual(sorted(obs), exp)
+        self.assertEqual(sorted(obs, key=lambda x: x[0]), exp)
 
     def test_per_sample_sequences_min_seqs(self):
         maximum = 10
@@ -162,30 +163,32 @@ class PySubsampleTests(SubsampleTests, unittest.TestCase):
 
         # note, the result here is sorted by sequence_id but is in heap order
         # by the random values associated to each sequence
-        exp = [('a', {'SequenceID': 'a_1', 'Sequence': 'AATTGGCC-a1'}),
-               ('a', {'SequenceID': 'a_2', 'Sequence': 'AATTGGCC-a2'}),
-               ('a', {'SequenceID': 'a_3', 'Sequence': 'AATTGGCC-a3'}),
-               ('a', {'SequenceID': 'a_4', 'Sequence': 'AATTGGCC-a4'}),
-               ('a', {'SequenceID': 'a_5', 'Sequence': 'AATTGGCC-a5'}),
-               ('c', {'SequenceID': 'c_1', 'Sequence': 'AATTGGCC-c1'}),
-               ('c', {'SequenceID': 'c_2', 'Sequence': 'AATTGGCC-c2'}),
-               ('c', {'SequenceID': 'c_3', 'Sequence': 'AATTGGCC-c3'})]
+        exp = sorted([('a', {'SequenceID': 'a_5', 'Sequence': 'AATTGGCC-a5'}),
+                      ('a', {'SequenceID': 'a_1', 'Sequence': 'AATTGGCC-a1'}),
+                      ('a', {'SequenceID': 'a_4', 'Sequence': 'AATTGGCC-a4'}),
+                      ('a', {'SequenceID': 'a_3', 'Sequence': 'AATTGGCC-a3'}),
+                      ('a', {'SequenceID': 'a_2', 'Sequence': 'AATTGGCC-a2'}),
+                      ('c', {'SequenceID': 'c_3', 'Sequence': 'AATTGGCC-c3'}),
+                      ('c', {'SequenceID': 'c_2', 'Sequence': 'AATTGGCC-c2'}),
+                      ('c', {'SequenceID': 'c_1', 'Sequence': 'AATTGGCC-c1'})],
+                     key=lambda x: x[0])
         obs = uneven_subsample(self.mock_sequence_iter(sequences), maximum,
                                minimum, bin_f=bin_f)
-        self.assertEqual(sorted(obs), exp)
+        self.assertEqual(sorted(obs, key=lambda x: x[0]), exp)
 
     def test_per_sample_sequences_complex(self):
         maximum = 2
         bin_f = lambda x: x['SequenceID'].rsplit('_', 1)[0]
-        exp = [('a', {'SequenceID': 'a_2', 'Sequence': 'AATTGGCC-a2'}),
-               ('a', {'SequenceID': 'a_3', 'Sequence': 'AATTGGCC-a3'}),
-               ('b', {'SequenceID': 'b_1', 'Sequence': 'AATTGGCC-b1'}),
-               ('b', {'SequenceID': 'b_2', 'Sequence': 'AATTGGCC-b2'}),
-               ('c', {'SequenceID': 'c_1', 'Sequence': 'AATTGGCC-c1'}),
-               ('c', {'SequenceID': 'c_2', 'Sequence': 'AATTGGCC-c2'})]
+        exp = sorted([('a', {'SequenceID': 'a_2', 'Sequence': 'AATTGGCC-a2'}),
+                      ('a', {'SequenceID': 'a_3', 'Sequence': 'AATTGGCC-a3'}),
+                      ('b', {'SequenceID': 'b_2', 'Sequence': 'AATTGGCC-b2'}),
+                      ('b', {'SequenceID': 'b_1', 'Sequence': 'AATTGGCC-b1'}),
+                      ('c', {'SequenceID': 'c_1', 'Sequence': 'AATTGGCC-c1'}),
+                      ('c', {'SequenceID': 'c_2', 'Sequence': 'AATTGGCC-c2'})],
+                     key=lambda x: x[0])
         obs = uneven_subsample(self.mock_sequence_iter(sequences), maximum,
                                bin_f=bin_f)
-        self.assertEqual(sorted(obs), exp)
+        self.assertEqual(sorted(obs, key=lambda x: x[0]), exp)
 
 
 @unittest.skipIf(cy_subsample is None,
