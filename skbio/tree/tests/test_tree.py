@@ -10,12 +10,13 @@
 
 from __future__ import absolute_import, division, print_function
 
+import warnings
 from unittest import TestCase, main
 
 import numpy as np
 import numpy.testing as nptest
 from scipy.stats import pearsonr
-from future.utils.six import StringIO
+from six import StringIO
 
 from skbio import DistanceMatrix, TreeNode
 from skbio.tree._tree import _dnd_tokenizer
@@ -123,21 +124,21 @@ class TreeTests(TestCase):
     def test_gops(self):
         """Basic TreeNode operations should work as expected"""
         p = TreeNode()
-        self.assertEqual(str(p), ';')
+        self.assertEqual(str(p), ';\n')
         p.name = 'abc'
-        self.assertEqual(str(p), 'abc;')
+        self.assertEqual(str(p), 'abc;\n')
         p.length = 3
-        self.assertEqual(str(p), 'abc:3;')  # don't suppress branch from root
+        self.assertEqual(str(p), 'abc:3;\n')  # don't suppress branch from root
         q = TreeNode()
         p.append(q)
-        self.assertEqual(str(p), '()abc:3;')
+        self.assertEqual(str(p), '()abc:3;\n')
         r = TreeNode()
         q.append(r)
-        self.assertEqual(str(p), '(())abc:3;')
+        self.assertEqual(str(p), '(())abc:3;\n')
         r.name = 'xyz'
-        self.assertEqual(str(p), '((xyz))abc:3;')
+        self.assertEqual(str(p), '((xyz))abc:3;\n')
         q.length = 2
-        self.assertEqual(str(p), '((xyz):2)abc:3;')
+        self.assertEqual(str(p), '((xyz):2)abc:3;\n')
 
     def test_pop(self):
         """Pop off a node"""
@@ -170,8 +171,8 @@ class TreeTests(TestCase):
         """Remove nodes by function"""
         f = lambda node: node.name in ['b', 'd']
         self.simple_t.remove_deleted(f)
-        exp = "((a)i1,(c)i2)root;"
-        obs = self.simple_t.to_newick()
+        exp = "((a)i1,(c)i2)root;\n"
+        obs = str(self.simple_t)
         self.assertEqual(obs, exp)
 
     def test_adopt(self):
@@ -524,8 +525,8 @@ class TreeTests(TestCase):
     def test_shear(self):
         """Shear the nodes"""
         t = TreeNode.from_newick('((H:1,G:1):2,(R:0.5,M:0.7):3);')
-        obs = t.shear(['G', 'M']).to_newick(with_distances=True)
-        exp = '(G:3.0,M:3.7);'
+        obs = str(t.shear(['G', 'M']))
+        exp = '(G:3.0,M:3.7);\n'
         self.assertEqual(obs, exp)
 
     def test_compare_tip_distances(self):
@@ -693,7 +694,7 @@ class TreeTests(TestCase):
         with self.assertRaises(TreeError):
             t.root_at(t.find('h'))
 
-        exp = "(a,b,((d,e)f,(h)g)c)root;"
+        exp = "(a,b,((d,e)f,(h)g)c)root;\n"
         rooted = t.root_at('c')
         obs = str(rooted)
         self.assertEqual(obs, exp)
@@ -713,7 +714,7 @@ class TreeTests(TestCase):
 
     def test_root_at_midpoint_no_lengths(self):
         # should get same tree back (a copy)
-        nwk = '(a,b)c;'
+        nwk = '(a,b)c;\n'
         t = TreeNode.from_newick(nwk)
         obs = t.root_at_midpoint()
         self.assertEqual(str(obs), nwk)
@@ -809,7 +810,7 @@ class TreeTests(TestCase):
     def test_unrooted_deepcopy(self):
         """Do an unrooted_copy"""
         t = TreeNode.from_newick("((a,(b,c)d)e,(f,g)h)i;")
-        exp = "(b,c,(a,((f,g)h)e)d)root;"
+        exp = "(b,c,(a,((f,g)h)e)d)root;\n"
         obs = t.find('d').unrooted_deepcopy()
         self.assertEqual(str(obs), exp)
 
@@ -901,11 +902,53 @@ class TreeTests(TestCase):
         with self.assertRaises(AttributeError):
             t.to_array(attrs=[('name', object), ('brofist', int)])
 
+    def test_from_taxonomy(self):
+        input_lineages = {'1': ['a', 'b', 'c', 'd', 'e', 'f', 'g'],
+                          '2': ['a', 'b', 'c', None, None, 'x', 'y'],
+                          '3': ['h', 'i', 'j', 'k', 'l', 'm', 'n'],
+                          '4': ['h', 'i', 'j', 'k', 'l', 'm', 'q'],
+                          '5': ['h', 'i', 'j', 'k', 'l', 'm', 'n']}
+        exp = TreeNode.from_newick("((((((((1)g)f)e)d,((((2)y)x)))c)b)a,"
+                                   "(((((((3,5)n,(4)q)m)l)k)j)i)h);")
+
+        root = TreeNode.from_taxonomy(input_lineages.items())
+
+        self.assertEqual(root.compare_subsets(exp), 0.0)
+
+    def test_to_taxonomy(self):
+        input_lineages = {'1': ['a', 'b', 'c', 'd', 'e', 'f', 'g'],
+                          '2': ['a', 'b', 'c', None, None, 'x', 'y'],
+                          '3': ['h', 'i', 'j', 'k', 'l', 'm', 'n'],
+                          '4': ['h', 'i', 'j', 'k', 'l', 'm', 'q'],
+                          '5': ['h', 'i', 'j', 'k', 'l', 'm', 'n']}
+        tree = TreeNode.from_taxonomy(input_lineages.items())
+        exp = sorted(input_lineages.items())
+        obs = [(n.name, lin) for n, lin in tree.to_taxonomy(allow_empty=True)]
+        self.assertEqual(sorted(obs), exp)
+
+    def test_to_taxonomy_filter(self):
+        input_lineages = {'1': ['a', 'b', 'c', 'd', 'e', 'f', 'g'],
+                          '2': ['a', 'b', 'c', None, None, 'x', 'y'],
+                          '3': ['h', 'i', 'j', 'k', 'l'],  # test jagged
+                          '4': ['h', 'i', 'j', 'k', 'l', 'm', 'q'],
+                          '5': ['h', 'i', 'j', 'k', 'l', 'm', 'n']}
+        tree = TreeNode.from_taxonomy(input_lineages.items())
+        f = lambda node, lin: 'k' in lin or 'x' in lin
+
+        exp = [('2', ['a', 'b', 'c', 'x', 'y']),
+               ('3', ['h', 'i', 'j', 'k', 'l']),
+               ('4', ['h', 'i', 'j', 'k', 'l', 'm', 'q']),
+               ('5', ['h', 'i', 'j', 'k', 'l', 'm', 'n'])]
+        obs = [(n.name, lin) for n, lin in tree.to_taxonomy(filter_f=f)]
+        self.assertEqual(sorted(obs), exp)
+
     def test_from_file(self):
         """Parse a tree from a file"""
-        t_io = StringIO("((a,b)c,(d,e)f)g;")
-        t = TreeNode.from_file(t_io)
-        self.assertEqual(list('abcdefg'), [n.name for n in t.postorder()])
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("ignore")
+            t_io = StringIO("((a,b)c,(d,e)f)g;")
+            t = TreeNode.from_file(t_io)
+            self.assertEqual(list('abcdefg'), [n.name for n in t.postorder()])
 
     def test_linkage_matrix(self):
         # Ensure matches: http://www.southampton.ac.uk/~re1u06/teaching/upgma/
@@ -919,8 +962,8 @@ class TreeTests(TestCase):
 
         tree = TreeNode.from_linkage_matrix(linkage, id_list)
         self.assertEqual("(E:17.0,(C:14.5,((A:4.0,D:4.0):4.25,(G:6.25,(B:0.5,"
-                         "F:0.5):5.75):2.0):6.25):2.5);",
-                         tree.to_newick(with_distances=True))
+                         "F:0.5):5.75):2.0):6.25):2.5);\n",
+                         str(tree))
 
     def test_from_newick_empty(self):
         obs = TreeNode.from_newick('')
@@ -936,31 +979,35 @@ class TreeTests(TestCase):
 
     def test_to_newick_single_node(self):
         # single node, no name, with semicolon
-        obs = TreeNode().to_newick()
-        self.assertEqual(obs, ';')
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("ignore")
+            obs = TreeNode().to_newick()
+            self.assertEqual(obs, ';')
 
-        # single node, no name, without semicolon
-        obs = TreeNode().to_newick(semicolon=False)
-        self.assertEqual(obs, '')
+            # single node, no name, without semicolon
+            obs = TreeNode().to_newick(semicolon=False)
+            self.assertEqual(obs, '')
 
-        # single node, with name, with semicolon
-        obs = TreeNode(name='brofist').to_newick()
-        self.assertEqual(obs, 'brofist;')
+            # single node, with name, with semicolon
+            obs = TreeNode(name='brofist').to_newick()
+            self.assertEqual(obs, 'brofist;')
 
-        # single node, with name, without semicolon
-        obs = TreeNode(name='brofist').to_newick(semicolon=False)
-        self.assertEqual(obs, 'brofist')
+            # single node, with name, without semicolon
+            obs = TreeNode(name='brofist').to_newick(semicolon=False)
+            self.assertEqual(obs, 'brofist')
 
     def test_to_newick_multi_node(self):
-        t = TreeNode.from_newick(double)
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("ignore")
+            t = TreeNode.from_newick(double)
 
-        # with semicolon
-        obs = t.to_newick()
-        self.assertEqual(obs, '(abc,def);')
+            # with semicolon
+            obs = t.to_newick()
+            self.assertEqual(obs, '(abc,def);')
 
-        # without semicolon
-        obs = t.to_newick(semicolon=False)
-        self.assertEqual(obs, '(abc,def)')
+            # without semicolon
+            obs = t.to_newick(semicolon=False)
+            self.assertEqual(obs, '(abc,def)')
 
     def test_shuffle_invalid_iter(self):
         shuffler = self.simple_t.shuffle(n=-1)
@@ -968,45 +1015,45 @@ class TreeTests(TestCase):
             next(shuffler)
 
     def test_shuffle_n_2(self):
-        exp = ["((a,b)i1,(d,c)i2)root;",
-               "((a,b)i1,(c,d)i2)root;",
-               "((a,b)i1,(d,c)i2)root;",
-               "((a,b)i1,(c,d)i2)root;",
-               "((a,b)i1,(d,c)i2)root;"]
+        exp = ["((a,b)i1,(d,c)i2)root;\n",
+               "((a,b)i1,(c,d)i2)root;\n",
+               "((a,b)i1,(d,c)i2)root;\n",
+               "((a,b)i1,(c,d)i2)root;\n",
+               "((a,b)i1,(d,c)i2)root;\n"]
 
         obs_g = self.simple_t.shuffle(k=2, shuffle_f=self.rev_f, n=np.inf)
-        obs = [next(obs_g).to_newick() for i in range(5)]
+        obs = [str(next(obs_g)) for i in range(5)]
         self.assertEqual(obs, exp)
 
     def test_shuffle_n_none(self):
-        exp = ["((d,c)i1,(b,a)i2)root;",
-               "((a,b)i1,(c,d)i2)root;",
-               "((d,c)i1,(b,a)i2)root;",
-               "((a,b)i1,(c,d)i2)root;"]
+        exp = ["((d,c)i1,(b,a)i2)root;\n",
+               "((a,b)i1,(c,d)i2)root;\n",
+               "((d,c)i1,(b,a)i2)root;\n",
+               "((a,b)i1,(c,d)i2)root;\n"]
         obs_g = self.simple_t.shuffle(shuffle_f=self.rev_f, n=4)
-        obs = [next(obs_g).to_newick() for i in range(4)]
+        obs = [str(next(obs_g)) for i in range(4)]
         self.assertEqual(obs, exp)
 
     def test_shuffle_complex(self):
-        exp = ["(((a,b)int1,(x,y,(w,z)int2,(f,e)int3)int4),(d,c)int5);",
-               "(((a,b)int1,(x,y,(w,z)int2,(c,d)int3)int4),(e,f)int5);",
-               "(((a,b)int1,(x,y,(w,z)int2,(f,e)int3)int4),(d,c)int5);",
-               "(((a,b)int1,(x,y,(w,z)int2,(c,d)int3)int4),(e,f)int5);"]
+        exp = ["(((a,b)int1,(x,y,(w,z)int2,(f,e)int3)int4),(d,c)int5);\n",
+               "(((a,b)int1,(x,y,(w,z)int2,(c,d)int3)int4),(e,f)int5);\n",
+               "(((a,b)int1,(x,y,(w,z)int2,(f,e)int3)int4),(d,c)int5);\n",
+               "(((a,b)int1,(x,y,(w,z)int2,(c,d)int3)int4),(e,f)int5);\n"]
 
         obs_g = self.complex_tree.shuffle(shuffle_f=self.rev_f,
                                           names=['c', 'd', 'e', 'f'], n=4)
-        obs = [next(obs_g).to_newick() for i in range(4)]
+        obs = [str(next(obs_g)) for i in range(4)]
         self.assertEqual(obs, exp)
 
     def test_shuffle_names(self):
-        exp = ["((c,a)i1,(b,d)i2)root;",
-               "((b,c)i1,(a,d)i2)root;",
-               "((a,b)i1,(c,d)i2)root;",
-               "((c,a)i1,(b,d)i2)root;"]
+        exp = ["((c,a)i1,(b,d)i2)root;\n",
+               "((b,c)i1,(a,d)i2)root;\n",
+               "((a,b)i1,(c,d)i2)root;\n",
+               "((c,a)i1,(b,d)i2)root;\n"]
 
         obs_g = self.simple_t.shuffle(names=['a', 'b', 'c'],
                                       shuffle_f=self.rotate_f, n=np.inf)
-        obs = [next(obs_g).to_newick() for i in range(4)]
+        obs = [str(next(obs_g)) for i in range(4)]
         self.assertEqual(obs, exp)
 
     def test_shuffle_raises(self):
@@ -1101,13 +1148,13 @@ class DndParserTests(TestCase):
         child = t[0]
         self.assertEqual(child.name, 'abc')
         self.assertEqual(child.length, 3)
-        self.assertEqual(str(t), '(abc:3.0);')
+        self.assertEqual(str(t), '(abc:3.0);\n')
 
     def test_gdouble(self):
         """DndParser should produce a double-child TreeNode from data"""
         t = TreeNode.from_newick(double)
         self.assertEqual(len(t), 2)
-        self.assertEqual(str(t), '(abc:3.0,def:4.0);')
+        self.assertEqual(str(t), '(abc:3.0,def:4.0);\n')
 
     def test_gonenest(self):
         """DndParser should work correctly with nested data"""
@@ -1115,7 +1162,7 @@ class DndParserTests(TestCase):
         self.assertEqual(len(t), 2)
         self.assertEqual(len(t[0]), 0)  # first child is terminal
         self.assertEqual(len(t[1]), 2)  # second child has two children
-        self.assertEqual(str(t), '(abc:3.0,(def:4.0,ghi:5.0):6.0);')
+        self.assertEqual(str(t), '(abc:3.0,(def:4.0,ghi:5.0):6.0);\n')
 
     def test_gnodedata(self):
         """DndParser should assign name to internal nodes correctly"""
@@ -1123,7 +1170,7 @@ class DndParserTests(TestCase):
         self.assertEqual(len(t), 2)
         self.assertEqual(len(t[0]), 0)  # first child is terminal
         self.assertEqual(len(t[1]), 2)  # second child has two children
-        self.assertEqual(str(t), '(abc:3.0,(def:4.0,ghi:5.0)jkl:6.0);')
+        self.assertEqual(str(t), '(abc:3.0,(def:4.0,ghi:5.0)jkl:6.0);\n')
         info_dict = {}
         for node in t.traverse():
             info_dict[node.name] = node.length
@@ -1137,12 +1184,12 @@ class DndParserTests(TestCase):
         t = TreeNode.from_newick(sample)
         self.assertEqual(
             str(t), '((xyz:0.28124,(def:0.24498,mno:0.03627):0.1771):0.0487,'
-                    'abc:0.05925,(ghi:0.06914,jkl:0.13776):0.09853);')
+                    'abc:0.05925,(ghi:0.06914,jkl:0.13776):0.09853);\n')
         tdata = TreeNode.from_newick(node_data_sample, unescape_name=True)
         self.assertEqual(
             str(tdata), "((xyz:0.28124,(def:0.24498,mno:0.03627)A:0.1771)"
                         "B:0.0487,abc:0.05925,(ghi:0.06914,jkl:0.13776)"
-                        "C:0.09853);")
+                        "C:0.09853);\n")
 
     def test_gbad(self):
         """DndParser should fail if parens unbalanced"""
@@ -1153,52 +1200,57 @@ class DndParserTests(TestCase):
 
     def test_DndParser(self):
         """DndParser tests"""
-        t_str = "(A_a,(B:1.0,C),'D_e':0.5)E;"
-        tree_unesc = TreeNode.from_newick(t_str, unescape_name=True)
-        tree_esc = TreeNode.from_newick(t_str, unescape_name=False)
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("ignore")
+            t_str = "(A_a,(B:1.0,C),'D_e':0.5)E;"
+            tree_unesc = TreeNode.from_newick(t_str, unescape_name=True)
+            tree_esc = TreeNode.from_newick(t_str, unescape_name=False)
 
-        self.assertEqual(tree_unesc.name, 'E')
-        self.assertEqual(tree_unesc.children[0].name, 'A a')
-        self.assertEqual(tree_unesc.children[1].children[0].name, 'B')
-        self.assertEqual(tree_unesc.children[1].children[0].length, 1.0)
-        self.assertEqual(tree_unesc.children[1].children[1].name, 'C')
-        self.assertEqual(tree_unesc.children[2].name, 'D_e')
-        self.assertEqual(tree_unesc.children[2].length, 0.5)
+            self.assertEqual(tree_unesc.name, 'E')
+            self.assertEqual(tree_unesc.children[0].name, 'A a')
+            self.assertEqual(tree_unesc.children[1].children[0].name, 'B')
+            self.assertEqual(tree_unesc.children[1].children[0].length, 1.0)
+            self.assertEqual(tree_unesc.children[1].children[1].name, 'C')
+            self.assertEqual(tree_unesc.children[2].name, 'D_e')
+            self.assertEqual(tree_unesc.children[2].length, 0.5)
 
-        self.assertEqual(tree_esc.name, 'E')
-        self.assertEqual(tree_esc.children[0].name, 'A_a')
-        self.assertEqual(tree_esc.children[1].children[0].name, 'B')
-        self.assertEqual(tree_esc.children[1].children[0].length, 1.0)
-        self.assertEqual(tree_esc.children[1].children[1].name, 'C')
-        self.assertEqual(tree_esc.children[2].name, "'D_e'")
-        self.assertEqual(tree_esc.children[2].length, 0.5)
+            self.assertEqual(tree_esc.name, 'E')
+            self.assertEqual(tree_esc.children[0].name, 'A_a')
+            self.assertEqual(tree_esc.children[1].children[0].name, 'B')
+            self.assertEqual(tree_esc.children[1].children[0].length, 1.0)
+            self.assertEqual(tree_esc.children[1].children[1].name, 'C')
+            self.assertEqual(tree_esc.children[2].name, "'D_e'")
+            self.assertEqual(tree_esc.children[2].length, 0.5)
 
-        reload_test = tree_esc.to_newick(with_distances=True,
-                                         escape_name=False)
-        obs = TreeNode.from_newick(reload_test, unescape_name=False)
-        self.assertEqual(obs.to_newick(with_distances=True),
-                         tree_esc.to_newick(with_distances=True))
-        reload_test = tree_unesc.to_newick(with_distances=True,
-                                           escape_name=False)
-        obs = TreeNode.from_newick(reload_test, unescape_name=False)
-        self.assertEqual(obs.to_newick(with_distances=True),
-                         tree_unesc.to_newick(with_distances=True))
+            reload_test = tree_esc.to_newick(with_distances=True,
+                                             escape_name=False)
+            obs = TreeNode.from_newick(reload_test, unescape_name=False)
+            self.assertEqual(obs.to_newick(with_distances=True),
+                             tree_esc.to_newick(with_distances=True))
+            reload_test = tree_unesc.to_newick(with_distances=True,
+                                               escape_name=False)
+            obs = TreeNode.from_newick(reload_test, unescape_name=False)
+            self.assertEqual(obs.to_newick(with_distances=True),
+                             tree_unesc.to_newick(with_distances=True))
 
     def test_DndParser_list(self):
         """Make sure TreeNode.from_newick can handle list of strings"""
-        t_str = ["(A_a,(B:1.0,C)", ",'D_e':0.5)E;"]
-        tree_unesc = TreeNode.from_newick(t_str, unescape_name=True)
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("ignore")
 
-        self.assertEqual(tree_unesc.name, 'E')
-        self.assertEqual(tree_unesc.children[0].name, 'A a')
-        self.assertEqual(tree_unesc.children[1].children[0].name, 'B')
-        self.assertEqual(tree_unesc.children[1].children[0].length, 1.0)
-        self.assertEqual(tree_unesc.children[1].children[1].name, 'C')
-        self.assertEqual(tree_unesc.children[2].name, 'D_e')
-        self.assertEqual(tree_unesc.children[2].length, 0.5)
+            t_str = ["(A_a,(B:1.0,C)", ",'D_e':0.5)E;"]
+            tree_unesc = TreeNode.from_newick(t_str, unescape_name=True)
+
+            self.assertEqual(tree_unesc.name, 'E')
+            self.assertEqual(tree_unesc.children[0].name, 'A a')
+            self.assertEqual(tree_unesc.children[1].children[0].name, 'B')
+            self.assertEqual(tree_unesc.children[1].children[0].length, 1.0)
+            self.assertEqual(tree_unesc.children[1].children[1].name, 'C')
+            self.assertEqual(tree_unesc.children[2].name, 'D_e')
+            self.assertEqual(tree_unesc.children[2].length, 0.5)
 
     def test_cache_attr_tip_list(self):
-        tree = TreeNode.from_newick("((a,b,(c,d)e)f,(g,h)i)root;")
+        tree = TreeNode.read(StringIO("((a,b,(c,d)e)f,(g,h)i)root;"))
         f = lambda n: [n.name] if n.is_tip() else []
         tree.cache_attr(f, 'tip_names')
         self.assertEqual(tree.tip_names, ['a', 'b', 'c', 'd', 'g', 'h'])
@@ -1207,7 +1259,7 @@ class DndParserTests(TestCase):
         self.assertEqual(tree.children[0].children[2].tip_names, ['c', 'd'])
 
     def test_cache_attr_nontip_set(self):
-        tree = TreeNode.from_newick("((a,b,(c,d)e)f,(g,h)i)root;")
+        tree = TreeNode.read(StringIO("((a,b,(c,d)e)f,(g,h)i)root;"))
         f = lambda n: [n.name] if not n.is_tip() else []
         tree.cache_attr(f, 'nontip_names')
         self.assertEqual(tree.nontip_names, ['e', 'f', 'i', 'root'])
@@ -1216,7 +1268,7 @@ class DndParserTests(TestCase):
         self.assertEqual(tree.children[0].children[2].nontip_names, ['e'])
 
     def test_cache_attr_bad_type(self):
-        tree = TreeNode.from_newick("((a,b,(c,d)e)f,(g,h)i)root;")
+        tree = TreeNode.read(StringIO("((a,b,(c,d)e)f,(g,h)i)root;"))
         f = lambda n: [n.name] if not n.is_tip() else []
 
         with self.assertRaises(TypeError):

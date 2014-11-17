@@ -8,19 +8,23 @@
 
 from __future__ import absolute_import, division, print_function
 from future.builtins import zip
-from future.utils.six import StringIO
+from six import StringIO, binary_type, text_type
 
 from unittest import TestCase, main
 
+import matplotlib as mpl
+mpl.use('Agg')
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
+from IPython.display import Image, SVG
 
 from skbio import DistanceMatrix
 from skbio.stats.distance import (
     DissimilarityMatrixError, DistanceMatrixError, MissingIDError,
     DissimilarityMatrix, randdm, CategoricalStatsResults)
-from skbio.stats.distance._base import CategoricalStats
+from skbio.stats.distance._base import (
+    _preprocess_input, _run_monte_carlo_stats, CategoricalStats)
 
 
 class DissimilarityMatrixTestData(TestCase):
@@ -52,17 +56,6 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
                                    np.array(self.dm_2x2_data),
                                    np.array(self.dm_2x2_asym_data),
                                    np.array(self.dm_3x3_data)]
-
-    def test_io(self):
-        # Very basic check that read/write public API is present and appears to
-        # be functioning. Roundtrip from memory -> disk -> memory and ensure
-        # results match.
-        fh = StringIO()
-        self.dm_3x3.write(fh)
-        fh.seek(0)
-        deserialized = DissimilarityMatrix.read(fh)
-        self.assertEqual(deserialized, self.dm_3x3)
-        self.assertTrue(type(deserialized) == DissimilarityMatrix)
 
     def test_deprecated_io(self):
         fh = StringIO()
@@ -290,6 +283,62 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         with self.assertRaises(DissimilarityMatrixError):
             self.dm_3x3.filter([])
 
+    def test_plot_default(self):
+        fig = self.dm_1x1.plot()
+        self.assertIsInstance(fig, mpl.figure.Figure)
+        axes = fig.get_axes()
+        self.assertEqual(len(axes), 2)
+        ax = axes[0]
+        self.assertEqual(ax.get_title(), '')
+        xticks = []
+        for tick in ax.get_xticklabels():
+            xticks.append(tick.get_text())
+        self.assertEqual(xticks, ['a'])
+        yticks = []
+        for tick in ax.get_yticklabels():
+            yticks.append(tick.get_text())
+        self.assertEqual(yticks, ['a'])
+
+    def test_plot_no_default(self):
+        ids = ['0', 'one', '2', 'three', '4.000']
+        data = ([0, 1, 2, 3, 4], [1, 0, 1, 2, 3], [2, 1, 0, 1, 2],
+                [3, 2, 1, 0, 1], [4, 3, 2, 1, 0])
+        dm = DissimilarityMatrix(data, ids)
+        fig = dm.plot(cmap='Reds', title='Testplot')
+        self.assertIsInstance(fig, mpl.figure.Figure)
+        axes = fig.get_axes()
+        self.assertEqual(len(axes), 2)
+        ax = axes[0]
+        self.assertEqual(ax.get_title(), 'Testplot')
+        xticks = []
+        for tick in ax.get_xticklabels():
+            xticks.append(tick.get_text())
+        self.assertEqual(xticks, ['0', 'one', '2', 'three', '4.000'])
+        yticks = []
+        for tick in ax.get_yticklabels():
+            yticks.append(tick.get_text())
+        self.assertEqual(yticks, ['0', 'one', '2', 'three', '4.000'])
+
+    def test_repr_png(self):
+        dm = self.dm_1x1
+        obs = dm._repr_png_()
+        self.assertIsInstance(obs, binary_type)
+        self.assertTrue(len(obs) > 0)
+
+    def test_repr_svg(self):
+        dm = self.dm_1x1
+        obs = dm._repr_svg_()
+        self.assertIsInstance(obs, text_type)
+        self.assertTrue(len(obs) > 0)
+
+    def test_png(self):
+        dm = self.dm_1x1
+        self.assertIsInstance(dm.png, Image)
+
+    def test_svg(self):
+        dm = self.dm_1x1
+        self.assertIsInstance(dm.svg, SVG)
+
     def test_str(self):
         for dm in self.dms:
             obs = str(dm)
@@ -394,17 +443,6 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         with self.assertRaises(DissimilarityMatrixError):
             self.dm_3x3._validate(np.array([[0, 42], [42, 0]]), ['a', 'b'])
 
-    def test_pprint_ids(self):
-        # No truncation.
-        exp = 'a, b, c'
-        obs = self.dm_3x3._pprint_ids()
-        self.assertEqual(obs, exp)
-
-        # Truncation.
-        exp = 'a, b, ...'
-        obs = self.dm_3x3._pprint_ids(max_chars=5)
-        self.assertEqual(obs, exp)
-
 
 class DistanceMatrixTests(DissimilarityMatrixTestData):
     def setUp(self):
@@ -417,17 +455,6 @@ class DistanceMatrixTests(DissimilarityMatrixTestData):
         self.dms = [self.dm_1x1, self.dm_2x2, self.dm_3x3]
         self.dm_condensed_forms = [np.array([]), np.array([0.123]),
                                    np.array([0.01, 4.2, 12.0])]
-
-    def test_io(self):
-        # Very basic check that read/write public API is present and appears to
-        # be functioning. Roundtrip from memory -> disk -> memory and ensure
-        # results match.
-        fh = StringIO()
-        self.dm_3x3.write(fh)
-        fh.seek(0)
-        deserialized = DistanceMatrix.read(fh)
-        self.assertEqual(deserialized, self.dm_3x3)
-        self.assertTrue(type(deserialized) == DistanceMatrix)
 
     def test_deprecated_io(self):
         fh = StringIO()
@@ -566,6 +593,79 @@ class RandomDistanceMatrixTests(TestCase):
         # Invalid number of IDs.
         with self.assertRaises(DissimilarityMatrixError):
             randdm(2, ids=['foo'])
+
+
+class CategoricalStatsHelperFunctionTests(TestCase):
+    def setUp(self):
+        self.dm = DistanceMatrix([[0.0, 1.0, 2.0],
+                                  [1.0, 0.0, 3.0],
+                                  [2.0, 3.0, 0.0]], ['a', 'b', 'c'])
+        self.grouping = [1, 2, 1]
+        # Ordering of IDs shouldn't matter, nor should extra IDs.
+        self.df = pd.read_csv(
+            StringIO('ID,Group\nb,Group2\na,Group1\nc,Group1\nd,Group3'),
+            index_col=0)
+        self.df_missing_id = pd.read_csv(
+            StringIO('ID,Group\nb,Group2\nc,Group1'), index_col=0)
+
+    def test_preprocess_input_with_valid_input(self):
+        # Should obtain same result using grouping vector or data frame.
+        exp = (3, 2, np.array([0, 1, 0]),
+               (np.array([0, 0, 1]), np.array([1, 2, 2])),
+               np.array([1., 2., 3.]))
+
+        obs = _preprocess_input(self.dm, self.grouping, None)
+        npt.assert_equal(obs, exp)
+
+        obs = _preprocess_input(self.dm, self.df, 'Group')
+        npt.assert_equal(obs, exp)
+
+    def test_preprocess_input_raises_error(self):
+        # Requires a DistanceMatrix.
+        with self.assertRaises(TypeError):
+            _preprocess_input(
+                DissimilarityMatrix([[0, 2], [3, 0]], ['a', 'b']),
+                [1, 2], None)
+
+        # Requires column if DataFrame.
+        with self.assertRaises(ValueError):
+            _preprocess_input(self.dm, self.df, None)
+
+        # Cannot provide column if not data frame.
+        with self.assertRaises(ValueError):
+            _preprocess_input(self.dm, self.grouping, 'Group')
+
+        # Column must exist in data frame.
+        with self.assertRaises(ValueError):
+            _preprocess_input(self.dm, self.df, 'foo')
+
+        # All distance matrix IDs must be in data frame.
+        with self.assertRaises(ValueError):
+            _preprocess_input(self.dm, self.df_missing_id, 'Group')
+
+        # Grouping vector length must match number of objects in dm.
+        with self.assertRaises(ValueError):
+            _preprocess_input(self.dm, [1, 2], None)
+
+        # Grouping vector cannot have only unique values.
+        with self.assertRaises(ValueError):
+            _preprocess_input(self.dm, [1, 2, 3], None)
+
+        # Grouping vector cannot have only a single group.
+        with self.assertRaises(ValueError):
+            _preprocess_input(self.dm, [1, 1, 1], None)
+
+    def test_run_monte_carlo_stats_with_permutations(self):
+        obs = _run_monte_carlo_stats(lambda e: 42, self.grouping, 50)
+        npt.assert_equal(obs, (42, 1.0))
+
+    def test_run_monte_carlo_stats_no_permutations(self):
+        obs = _run_monte_carlo_stats(lambda e: 42, self.grouping, 0)
+        npt.assert_equal(obs, (42, np.nan))
+
+    def test_run_monte_carlo_stats_invalid_permutations(self):
+        with self.assertRaises(ValueError):
+            _run_monte_carlo_stats(lambda e: 42, self.grouping, -1)
 
 
 class CategoricalStatsTests(TestCase):

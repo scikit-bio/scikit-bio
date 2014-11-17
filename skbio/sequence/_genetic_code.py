@@ -10,6 +10,7 @@ import re
 
 from collections import defaultdict
 
+from skbio._base import SkbioObject
 from skbio.sequence import Protein, InvalidCodonError, GeneticCodeInitError
 
 # py3k compatibility
@@ -26,7 +27,7 @@ def _simple_rc(seq):
     return seq.translate(_dna_trans)[::-1]
 
 
-class GeneticCode(object):
+class GeneticCode(SkbioObject):
 
     """Class to hold codon to amino acid mapping, and vice versa.
 

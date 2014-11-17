@@ -280,10 +280,10 @@ class APIRegressionValidator(RepoValidator):
     """Flag tests that import from a non-minimized subpackage hierarchy.
 
     Flags tests that aren't imported from a minimally deep API target. (e.g.
-    skbio.parse_fastq vs skbio.parse.sequences.parse_fastq). This should
-    prevent accidental regression in our API because tests will fail if any
-    alias is removed, and this checklist will fail if any test doesn't import
-    from the least deep API target.
+    skbio.Alignment vs skbio.alignment.Alignment). This should prevent
+    accidental regression in our API because tests will fail if any alias is
+    removed, and this checklist will fail if any test doesn't import from the
+    least deep API target.
 
     """
     reason = ("The following tests import `A` but should import `B`"

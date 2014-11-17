@@ -12,7 +12,7 @@ from itertools import product
 
 import numpy as np
 from future.builtins import range, zip
-from future.utils.six import string_types
+from six import string_types
 
 from skbio.alignment import Alignment
 from skbio.sequence import BiologicalSequence
@@ -767,12 +767,10 @@ def _compute_score_and_traceback_matrices(
 
     # Iterate over the characters in aln2 (which corresponds to the horizontal
     # sequence in the matrix)
-    for aln2_pos, aln2_chars in zip(range(1, aln2_length+1),
-                                    aln2.iter_positions(str)):
+    for aln2_pos, aln2_chars in enumerate(aln2.iter_positions(str), 1):
         # Iterate over the characters in aln1 (which corresponds to the
         # horizontal sequence in the matrix)
-        for aln1_pos, aln1_chars in zip(range(1, aln1_length+1),
-                                        aln1.iter_positions(str)):
+        for aln1_pos, aln1_chars in enumerate(aln1.iter_positions(str), 1):
             # compute the score for a match/mismatch
             substitution_score = _compute_substitution_score(
                 aln1_chars, aln2_chars, substitution_matrix,

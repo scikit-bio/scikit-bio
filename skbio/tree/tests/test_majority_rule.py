@@ -10,6 +10,7 @@ from __future__ import absolute_import, division, print_function
 
 from unittest import TestCase, main
 
+from six import StringIO
 import numpy as np
 
 from skbio import TreeNode
@@ -21,17 +22,17 @@ from skbio.tree._majority_rule import (_walk_clades, _filter_clades,
 class MajorityRuleTests(TestCase):
     def test_majority_rule(self):
         trees = [
-            TreeNode.from_newick("(A,(B,(H,(D,(J,(((G,E),(F,I)),C))))));"),
-            TreeNode.from_newick("(A,(B,(D,((J,H),(((G,E),(F,I)),C)))));"),
-            TreeNode.from_newick("(A,(B,(D,(H,(J,(((G,E),(F,I)),C))))));"),
-            TreeNode.from_newick("(A,(B,(E,(G,((F,I),((J,(H,D)),C))))));"),
-            TreeNode.from_newick("(A,(B,(E,(G,((F,I),(((J,H),D),C))))));"),
-            TreeNode.from_newick("(A,(B,(E,((F,I),(G,((J,(H,D)),C))))));"),
-            TreeNode.from_newick("(A,(B,(E,((F,I),(G,(((J,H),D),C))))));"),
-            TreeNode.from_newick("(A,(B,(E,((G,(F,I)),((J,(H,D)),C)))));"),
-            TreeNode.from_newick("(A,(B,(E,((G,(F,I)),(((J,H),D),C)))));")]
+            TreeNode.read(StringIO("(A,(B,(H,(D,(J,(((G,E),(F,I)),C))))));")),
+            TreeNode.read(StringIO("(A,(B,(D,((J,H),(((G,E),(F,I)),C)))));")),
+            TreeNode.read(StringIO("(A,(B,(D,(H,(J,(((G,E),(F,I)),C))))));")),
+            TreeNode.read(StringIO("(A,(B,(E,(G,((F,I),((J,(H,D)),C))))));")),
+            TreeNode.read(StringIO("(A,(B,(E,(G,((F,I),(((J,H),D),C))))));")),
+            TreeNode.read(StringIO("(A,(B,(E,((F,I),(G,((J,(H,D)),C))))));")),
+            TreeNode.read(StringIO("(A,(B,(E,((F,I),(G,(((J,H),D),C))))));")),
+            TreeNode.read(StringIO("(A,(B,(E,((G,(F,I)),((J,(H,D)),C)))));")),
+            TreeNode.read(StringIO("(A,(B,(E,((G,(F,I)),(((J,H),D),C)))));"))]
 
-        exp = TreeNode.from_newick("(((E,(G,(F,I),(C,(D,J,H)))),B),A);")
+        exp = TreeNode.read(StringIO("(((E,(G,(F,I),(C,(D,J,H)))),B),A);"))
         obs = majority_rule(trees)
         self.assertEqual(exp.compare_subsets(obs[0]), 0.0)
         self.assertEqual(len(obs), 1)
@@ -54,10 +55,10 @@ class MajorityRuleTests(TestCase):
 
     def test_majority_rule_multiple_trees(self):
         trees = [
-            TreeNode.from_newick("((a,b),(c,d),(e,f))"),
-            TreeNode.from_newick("(a,(c,d),b,(e,f))"),
-            TreeNode.from_newick("((c,d),(e,f),b)"),
-            TreeNode.from_newick("(a,(c,d),(e,f))")]
+            TreeNode.read(StringIO("((a,b),(c,d),(e,f));")),
+            TreeNode.read(StringIO("(a,(c,d),b,(e,f));")),
+            TreeNode.read(StringIO("((c,d),(e,f),b);")),
+            TreeNode.read(StringIO("(a,(c,d),(e,f));"))]
 
         trees = majority_rule(trees)
         self.assertEqual(len(trees), 4)
@@ -72,8 +73,8 @@ class MajorityRuleTests(TestCase):
         self.assertEqual(obs, exp)
 
     def test_walk_clades(self):
-        trees = [TreeNode.from_newick("((A,B),(D,E));"),
-                 TreeNode.from_newick("((A,B),(D,(E,X)));")]
+        trees = [TreeNode.read(StringIO("((A,B),(D,E));")),
+                 TreeNode.read(StringIO("((A,B),(D,(E,X)));"))]
         exp_clades = [
             (frozenset(['A']), 2.0),
             (frozenset(['B']), 2.0),
