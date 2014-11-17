@@ -18,7 +18,7 @@ import warnings
 
 import numpy as np
 
-from skbio.stats import uneven_subsample
+from skbio.stats import subsample_items
 
 
 cy_subsample = import_fresh_module('skbio.stats._subsample',
@@ -135,7 +135,7 @@ class PySubsampleTests(SubsampleTests, unittest.TestCase):
     def setUp(self):
         np.random.seed(123)
 
-    def test_uneven_subsample_simple(self):
+    def test_subsample_items_simple(self):
         maximum = 10
         bin_f = lambda x: x['SequenceID'].rsplit('_', 1)[0]
 
@@ -152,7 +152,7 @@ class PySubsampleTests(SubsampleTests, unittest.TestCase):
                       ('c', {'SequenceID': 'c_2', 'Sequence': 'AATTGGCC-c2'}),
                       ('c', {'SequenceID': 'c_1', 'Sequence': 'AATTGGCC-c1'})],
                      key=lambda x: x[0])
-        obs = uneven_subsample(self.mock_sequence_iter(sequences), maximum,
+        obs = subsample_items(self.mock_sequence_iter(sequences), maximum,
                                bin_f=bin_f)
         self.assertEqual(sorted(obs, key=lambda x: x[0]), exp)
 
@@ -172,7 +172,7 @@ class PySubsampleTests(SubsampleTests, unittest.TestCase):
                       ('c', {'SequenceID': 'c_2', 'Sequence': 'AATTGGCC-c2'}),
                       ('c', {'SequenceID': 'c_1', 'Sequence': 'AATTGGCC-c1'})],
                      key=lambda x: x[0])
-        obs = uneven_subsample(self.mock_sequence_iter(sequences), maximum,
+        obs = subsample_items(self.mock_sequence_iter(sequences), maximum,
                                minimum, bin_f=bin_f)
         self.assertEqual(sorted(obs, key=lambda x: x[0]), exp)
 
@@ -186,7 +186,7 @@ class PySubsampleTests(SubsampleTests, unittest.TestCase):
                       ('c', {'SequenceID': 'c_1', 'Sequence': 'AATTGGCC-c1'}),
                       ('c', {'SequenceID': 'c_2', 'Sequence': 'AATTGGCC-c2'})],
                      key=lambda x: x[0])
-        obs = uneven_subsample(self.mock_sequence_iter(sequences), maximum,
+        obs = subsample_items(self.mock_sequence_iter(sequences), maximum,
                                bin_f=bin_f)
         self.assertEqual(sorted(obs, key=lambda x: x[0]), exp)
 

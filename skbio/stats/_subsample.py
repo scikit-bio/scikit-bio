@@ -24,7 +24,7 @@ except ImportError:
     pass
 
 
-def uneven_subsample(iter_, maximum, minimum=1, buf_size=1000, bin_f=None):
+def subsample_items(iter_, maximum, minimum=1, buf_size=1000, bin_f=None):
     """Get a random subset of items per bin
 
     Parameters
@@ -75,7 +75,7 @@ def uneven_subsample(iter_, maximum, minimum=1, buf_size=1000, bin_f=None):
     Randomly keep up to 2 sequences per sample from a set of demultiplexed
     sequences:
 
-    >>> from skbio.stats import uneven_subsample
+    >>> from skbio.stats import subsample_items
     >>> import numpy as np
     >>> np.random.seed(123)
     >>> seqs = [('sampleA', 'AATTGG'),
@@ -85,7 +85,7 @@ def uneven_subsample(iter_, maximum, minimum=1, buf_size=1000, bin_f=None):
     ...         ('sampleB', 'ATGGCG'),
     ...         ('sampleA', 'ATGGCA')]
     >>> bin_f = lambda item: item[0]
-    >>> for bin_, item in sorted(uneven_subsample(seqs, 2, bin_f=bin_f)):
+    >>> for bin_, item in sorted(subsample_items(seqs, 2, bin_f=bin_f)):
     ...     print(bin_, item[1])
     sampleA AATTGG
     sampleA ATGGCA
@@ -96,7 +96,7 @@ def uneven_subsample(iter_, maximum, minimum=1, buf_size=1000, bin_f=None):
     Now, lets set the minimum to 2:
 
     >>> bin_f = lambda item: item[0]
-    >>> for bin_, item in sorted(uneven_subsample(seqs, 2, 2, bin_f=bin_f)):
+    >>> for bin_, item in sorted(subsample_items(seqs, 2, 2, bin_f=bin_f)):
     ...     print(bin_, item[1])
     sampleA AATTGG
     sampleA ATGGCA
