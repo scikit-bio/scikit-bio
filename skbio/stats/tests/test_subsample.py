@@ -153,7 +153,7 @@ class PySubsampleTests(SubsampleTests, unittest.TestCase):
                       ('c', {'SequenceID': 'c_1', 'Sequence': 'AATTGGCC-c1'})],
                      key=lambda x: x[0])
         obs = subsample_items(self.mock_sequence_iter(sequences), maximum,
-                               bin_f=bin_f)
+                              bin_f=bin_f)
         self.assertEqual(sorted(obs, key=lambda x: x[0]), exp)
 
     def test_per_sample_sequences_min_seqs(self):
@@ -173,7 +173,7 @@ class PySubsampleTests(SubsampleTests, unittest.TestCase):
                       ('c', {'SequenceID': 'c_1', 'Sequence': 'AATTGGCC-c1'})],
                      key=lambda x: x[0])
         obs = subsample_items(self.mock_sequence_iter(sequences), maximum,
-                               minimum, bin_f=bin_f)
+                              minimum, bin_f=bin_f)
         self.assertEqual(sorted(obs, key=lambda x: x[0]), exp)
 
     def test_per_sample_sequences_complex(self):
@@ -187,7 +187,7 @@ class PySubsampleTests(SubsampleTests, unittest.TestCase):
                       ('c', {'SequenceID': 'c_2', 'Sequence': 'AATTGGCC-c2'})],
                      key=lambda x: x[0])
         obs = subsample_items(self.mock_sequence_iter(sequences), maximum,
-                               bin_f=bin_f)
+                              bin_f=bin_f)
         self.assertEqual(sorted(obs, key=lambda x: x[0]), exp)
 
 
