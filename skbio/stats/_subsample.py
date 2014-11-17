@@ -24,8 +24,7 @@ except ImportError:
     pass
 
 
-def uneven_subsample(iter_, maximum, minimum=1, random_buf_size=100000,
-                     bin_f=None):
+def uneven_subsample(iter_, maximum, minimum=1, buf_size=1000, bin_f=None):
     """Get a random subset of items per bin
 
     Parameters
@@ -36,8 +35,8 @@ def uneven_subsample(iter_, maximum, minimum=1, random_buf_size=100000,
         The maximum number of items per bin.
     minimum : unsigned int, optional
         The minimum number of items per bin. The default is 1.
-    random_buf_size : unsigned int, optional
-        The size of the random value buffer. The default is 100000.
+    buf_size : unsigned int, optional
+        The size of the random value buffer. The default is 1000.
     bin_f : function, optional
         Method to determine what bin an item is associated with. If None (the
         default), then all items are considered to be part of the same bin.
@@ -99,7 +98,7 @@ def uneven_subsample(iter_, maximum, minimum=1, random_buf_size=100000,
         bin_f = lambda x: True
 
     # buffer some random values
-    random_values = np.random.randint(0, sys.maxsize, random_buf_size)
+    random_values = np.random.randint(0, sys.maxsize, buf_size)
     random_idx = 0
 
     result = defaultdict(list)
@@ -111,8 +110,8 @@ def uneven_subsample(iter_, maximum, minimum=1, random_buf_size=100000,
         # our buffer
         random_value = random_values[random_idx]
         random_idx += 1
-        if random_idx >= random_buf_size:
-            random_values = np.random.randint(0, sys.maxsize, random_buf_size)
+        if random_idx >= buf_size:
+            random_values = np.random.randint(0, sys.maxsize, buf_size)
             random_idx = 0
 
         # push our item on to the heap and drop the smallest if necessary
