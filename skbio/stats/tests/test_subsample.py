@@ -18,7 +18,7 @@ import warnings
 
 import numpy as np
 
-from skbio.stats._subsample import uneven_subsample
+from skbio.stats import uneven_subsample
 
 
 cy_subsample = import_fresh_module('skbio.stats._subsample',
@@ -124,6 +124,7 @@ class SubsampleTests(object):
         # Input has too few counts.
         with self.assertRaises(ValueError):
             self.module.subsample([0, 5, 0], 6)
+
 
 class PySubsampleTests(SubsampleTests, unittest.TestCase):
     module = py_subsample
