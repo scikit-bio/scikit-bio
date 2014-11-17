@@ -44,7 +44,7 @@ def uneven_subsample(iter_, maximum, minimum=1, random_buf_size=100000,
 
     Notes
     -----
-    Randomly get ``maximum`` items for each bin. If the bin has less than
+    Randomly get up to ``maximum`` items for each bin. If the bin has less than
     ``maximum``, only those bins that have >= ``minimum`` items are
     returned.
 
