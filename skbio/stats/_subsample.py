@@ -24,13 +24,13 @@ except ImportError:
     pass
 
 
-def subsample_items(iter_, maximum, minimum=1, buf_size=1000, bin_f=None):
+def subsample_items(items, maximum, minimum=1, buf_size=1000, bin_f=None):
     """Get a random subset of items per bin
 
     Parameters
     ----------
-    iter_ : Iterable
-        The iterable to walk over.
+    items : Iterable
+        The items to evaluate.
     maximum : unsigned int
         The maximum number of items per bin.
     minimum : unsigned int, optional
@@ -115,7 +115,7 @@ def subsample_items(iter_, maximum, minimum=1, buf_size=1000, bin_f=None):
     random_idx = 0
 
     result = defaultdict(list)
-    for item in iter_:
+    for item in items:
         bin_ = bin_f(item)
         heap = result[bin_]
 
