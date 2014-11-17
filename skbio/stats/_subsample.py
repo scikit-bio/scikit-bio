@@ -75,20 +75,30 @@ def uneven_subsample(iter_, maximum, minimum=1, buf_size=1000, bin_f=None):
     >>> from skbio.stats import uneven_subsample
     >>> import numpy as np
     >>> np.random.seed(123)
-    >>> sequences = [('sampleA', 'AATTGG'),
-    ...              ('sampleB', 'ATATATAT'),
-    ...              ('sampleC', 'ATGGCC'),
-    ...              ('sampleB', 'ATGGCT'),
-    ...              ('sampleB', 'ATGGCG'),
-    ...              ('sampleA', 'ATGGCA')]
+    >>> seqs = [('sampleA', 'AATTGG'),
+    ...         ('sampleB', 'ATATATAT'),
+    ...         ('sampleC', 'ATGGCC'),
+    ...         ('sampleB', 'ATGGCT'),
+    ...         ('sampleB', 'ATGGCG'),
+    ...         ('sampleA', 'ATGGCA')]
     >>> bin_f = lambda item: item[0]
-    >>> for bin_, item in sorted(uneven_subsample(sequences, 2, bin_f=bin_f)):
+    >>> for bin_, item in sorted(uneven_subsample(seqs, 2, bin_f=bin_f)):
     ...     print(bin_, item[1])
     sampleA AATTGG
     sampleA ATGGCA
     sampleB ATATATAT
     sampleB ATGGCG
     sampleC ATGGCC
+
+    Now, lets set the minimum to 2:
+
+    >>> bin_f = lambda item: item[0]
+    >>> for bin_, item in sorted(uneven_subsample(seqs, 2, 2, bin_f=bin_f)):
+    ...     print(bin_, item[1])
+    sampleA AATTGG
+    sampleA ATGGCA
+    sampleB ATATATAT
+    sampleB ATGGCG
     """
     if minimum > maximum:
         raise ValueError("minimum cannot be > maximum!")
