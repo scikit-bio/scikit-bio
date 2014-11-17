@@ -40,6 +40,9 @@ def uneven_subsample(iter_, maximum, minimum=1, buf_size=1000, bin_f=None):
     bin_f : function, optional
         Method to determine what bin an item is associated with. If None (the
         default), then all items are considered to be part of the same bin.
+        This function will be provided with each entry in iter_, and must
+        return a hashable value indicating the bin that that entry should be
+        placed in.
 
     Notes
     -----
