@@ -45,7 +45,7 @@ def subsample_items(items, maximum, minimum=1, buf_size=1000, bin_f=None):
         values assigned to each item from items. In practice, it is unlikely
         that this value will need to change. Increasing it will require more
         resident memory, but potentially reduce the number of function calls
-        made the the PRNG, whereas decreasing it will result in more function
+        made to the PRNG, whereas decreasing it will result in more function
         calls and lower memory overhead. The default is 1000.
     bin_f : function, optional
         Method to determine what bin an item is associated with. If None (the
