@@ -43,6 +43,10 @@ To install the latest release version of scikit-bio you should run::
     pip install scikit-bio
 
 If you have trouble getting scikit-bio's dependencies installed (scipy, in particular, can be tricky), you should try installing `Canopy Express <https://www.enthought.com/canopy-express/>`_, which includes all of these dependencies.
+Equivalently, you can use the ``conda`` package manager available in `Anaconda <http://continuum.io/downloads>`_ or `miniconda <http://conda.pydata.org/miniconda.html>`_ to install scikit-bio and all its dependencies, without having to compile them::
+
+     conda install scikit-bio
+
 
 You can verify your installation by running the scikit-bio unit tests as follows::
 
