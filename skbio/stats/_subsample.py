@@ -118,9 +118,9 @@ def subsample_items(items, maximum, minimum=1, buf_size=1000, bin_f=None):
     sampleB ATGGCG
     """
     if minimum > maximum:
-        raise ValueError("minimum cannot be > maximum!")
+        raise ValueError("minimum cannot be > maximum.")
     if minimum < 1 or maximum < 1:
-        raise ValueError("minimum and maximum must be > 0!")
+        raise ValueError("minimum and maximum must be > 0.")
     if bin_f is None:
         bin_f = lambda x: True
 
