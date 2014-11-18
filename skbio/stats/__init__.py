@@ -27,6 +27,7 @@ Functions
 
    p_value_to_str
    subsample
+   subsample_items
 
 """
 
@@ -39,9 +40,9 @@ Functions
 # ----------------------------------------------------------------------------
 
 from ._misc import p_value_to_str
-from ._subsample import subsample
+from ._subsample import subsample, subsample_items
 
-__all__ = ['p_value_to_str', 'subsample']
+__all__ = ['p_value_to_str', 'subsample', 'subsample_items']
 
 from numpy.testing import Tester
 test = Tester().test

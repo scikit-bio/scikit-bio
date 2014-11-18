@@ -7,6 +7,7 @@
 * Added `__str__` method to `skbio.stats.ordination.OrdinationResults`.
 * Added ``skbio.stats.distance.anosim`` and ``skbio.stats.distance.permanova`` functions, which replace the ``skbio.stats.distance.ANOSIM`` and ``skbio.stats.distance.PERMANOVA`` classes. These new functions provide simpler procedural interfaces to running these statistical methods. They also provide more convenient access to results by returning a ``pandas.Series`` instead of a ``CategoricalStatsResults`` object. These functions have more extensive documentation than their previous versions. If significance tests are suppressed, p-values are returned as ``np.nan`` instead of ``None`` for consistency with other statistical methods in scikit-bio. [#754](https://github.com/biocore/scikit-bio/issues/754)
 * Added `skbio.stats.power` for performing emperical power analysis. The module uses existing datasets and iteratively draws samples to estimate the number of samples needed to see a significant difference for a given critical value.
+* Added `skbio.stats.subsample_items` for subsampling from an unknown number of values. This method supports subsampling from multiple partitions, and does not require that all items be stored in memory requiring approximately O(N*M) space where N is the number of partitions and M is the maximum subsample size.
 
 ### Bug fixes
 * Fixed issue where SSW wouldn't compile on i686 architectures ([#409](https://github.com/biocore/scikit-bio/issues/409)).
