@@ -213,7 +213,6 @@ class SubsampleItemsTests(unittest.TestCase):
         self.assertEqual(sorted(obs, key=lambda x: x[0]), exp)
 
 
-
 if __name__ == '__main__':
     import nose
     nose.runmodule()
