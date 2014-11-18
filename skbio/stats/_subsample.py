@@ -7,15 +7,15 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
+from future.utils import viewitems
 
 import sys
 from warnings import warn
 from heapq import heappush, heappop
-
-import numpy as np
-from future.utils import viewitems
 from collections import defaultdict
 from copy import copy
+
+import numpy as np
 
 from skbio.util import EfficiencyWarning
 try:
