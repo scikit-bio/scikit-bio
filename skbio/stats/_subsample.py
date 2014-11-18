@@ -25,7 +25,12 @@ except ImportError:
 
 
 def subsample_items(items, maximum, minimum=1, buf_size=1000, bin_f=None):
-    """Get a random subset of items per bin
+    """Randomly subsample items from bins, without replacement.
+
+    Randomly subsample items without replacement from an unknown number of
+    input items, that may fall into an unknown number of bins. This method is
+    intended for data that either a) cannot fit into memory or b) subsampling
+    collections of arbitrary datatypes.
 
     Parameters
     ----------
@@ -36,13 +41,34 @@ def subsample_items(items, maximum, minimum=1, buf_size=1000, bin_f=None):
     minimum : unsigned int, optional
         The minimum number of items per bin. The default is 1.
     buf_size : unsigned int, optional
-        The size of the random value buffer. The default is 1000.
+        The size of the random value buffer. This buffer holds the random
+        values assigned to each item from items. In practice, it is unlikely
+        that this value will need to change. Increasing it will require more
+        resident memory, but potentially reduce the number of function calls
+        made the the PRNG, whereas decreasing it will result in more function
+        calls and lower memory overhead. The default is 1000.
     bin_f : function, optional
         Method to determine what bin an item is associated with. If None (the
         default), then all items are considered to be part of the same bin.
         This function will be provided with each entry in iter_, and must
         return a hashable value indicating the bin that that entry should be
         placed in.
+
+    Returns
+    -------
+    generator
+        (bin, item)
+
+    Raises
+    ------
+    ValueError
+        If ``minimum`` is > ``maximum``.
+    ValueError
+        If ``minimum`` < 1 or if ``maximum`` < 1.
+
+    See Also
+    --------
+    subsample
 
     Notes
     -----
@@ -57,18 +83,6 @@ def subsample_items(items, maximum, minimum=1, buf_size=1000, bin_f=None):
 
     If ``maximum`` is equal to ``minimum``, then this method should be the
     same as ``subsample``.
-
-    Raises
-    ------
-    ValueError
-        If ``minimum`` is > ``maximum``.
-    ValueError
-        If ``minimum`` < 1 or if ``maximum`` < 1.
-
-    Returns
-    -------
-    generator
-        (bin, item)
 
     Examples
     --------
@@ -93,7 +107,7 @@ def subsample_items(items, maximum, minimum=1, buf_size=1000, bin_f=None):
     sampleB ATGGCG
     sampleC ATGGCC
 
-    Now, lets set the minimum to 2:
+    Now, let's set the minimum to 2:
 
     >>> bin_f = lambda item: item[0]
     >>> for bin_, item in sorted(subsample_items(seqs, 2, 2, bin_f=bin_f)):

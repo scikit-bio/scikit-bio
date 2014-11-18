@@ -129,11 +129,33 @@ class SubsampleTests(object):
 class PySubsampleTests(SubsampleTests, unittest.TestCase):
     module = py_subsample
 
-    def mock_sequence_iter(self, items):
-        return ({'SequenceID': sid, 'Sequence': seq} for sid, seq in items)
 
+@unittest.skipIf(cy_subsample is None,
+                 "Accelerated subsample module unavailable.")
+class CySubsampleTests(SubsampleTests, unittest.TestCase):
+    module = cy_subsample
+
+
+class SubsampleItemsTests(unittest.TestCase):
     def setUp(self):
         np.random.seed(123)
+
+        # comment indicates the expected random value
+        self.sequences = [
+            ('a_1', 'AATTGGCC-a1'),  # 2, 3624216819017203053
+            ('a_2', 'AATTGGCC-a2'),  # 5, 5278339153051796802
+            ('b_1', 'AATTGGCC-b1'),  # 4, 4184670734919783522
+            ('b_2', 'AATTGGCC-b2'),  # 0, 946590342492863505
+            ('a_4', 'AATTGGCC-a4'),  # 3, 4048487933969823850
+            ('a_3', 'AATTGGCC-a3'),  # 7, 7804936597957240377
+            ('c_1', 'AATTGGCC-c1'),  # 8, 8868534167180302049
+            ('a_5', 'AATTGGCC-a5'),  # 1, 3409506807702804593
+            ('c_2', 'AATTGGCC-c2'),  # 9, 8871627813779918895
+            ('c_3', 'AATTGGCC-c3')   # 6, 7233291490207274528
+        ]
+
+    def mock_sequence_iter(self, items):
+        return ({'SequenceID': sid, 'Sequence': seq} for sid, seq in items)
 
     def test_subsample_items_simple(self):
         maximum = 10
@@ -152,7 +174,7 @@ class PySubsampleTests(SubsampleTests, unittest.TestCase):
                       ('c', {'SequenceID': 'c_2', 'Sequence': 'AATTGGCC-c2'}),
                       ('c', {'SequenceID': 'c_1', 'Sequence': 'AATTGGCC-c1'})],
                      key=lambda x: x[0])
-        obs = subsample_items(self.mock_sequence_iter(sequences), maximum,
+        obs = subsample_items(self.mock_sequence_iter(self.sequences), maximum,
                               bin_f=bin_f)
         self.assertEqual(sorted(obs, key=lambda x: x[0]), exp)
 
@@ -172,7 +194,7 @@ class PySubsampleTests(SubsampleTests, unittest.TestCase):
                       ('c', {'SequenceID': 'c_2', 'Sequence': 'AATTGGCC-c2'}),
                       ('c', {'SequenceID': 'c_1', 'Sequence': 'AATTGGCC-c1'})],
                      key=lambda x: x[0])
-        obs = subsample_items(self.mock_sequence_iter(sequences), maximum,
+        obs = subsample_items(self.mock_sequence_iter(self.sequences), maximum,
                               minimum, bin_f=bin_f)
         self.assertEqual(sorted(obs, key=lambda x: x[0]), exp)
 
@@ -186,30 +208,10 @@ class PySubsampleTests(SubsampleTests, unittest.TestCase):
                       ('c', {'SequenceID': 'c_1', 'Sequence': 'AATTGGCC-c1'}),
                       ('c', {'SequenceID': 'c_2', 'Sequence': 'AATTGGCC-c2'})],
                      key=lambda x: x[0])
-        obs = subsample_items(self.mock_sequence_iter(sequences), maximum,
+        obs = subsample_items(self.mock_sequence_iter(self.sequences), maximum,
                               bin_f=bin_f)
         self.assertEqual(sorted(obs, key=lambda x: x[0]), exp)
 
-
-@unittest.skipIf(cy_subsample is None,
-                 "Accelerated subsample module unavailable.")
-class CySubsampleTests(SubsampleTests, unittest.TestCase):
-    module = cy_subsample
-
-
-# comment indicates the expected random value
-sequences = [
-    ('a_1', 'AATTGGCC-a1'),  # 2, 3624216819017203053
-    ('a_2', 'AATTGGCC-a2'),  # 5, 5278339153051796802
-    ('b_1', 'AATTGGCC-b1'),  # 4, 4184670734919783522
-    ('b_2', 'AATTGGCC-b2'),  # 0, 946590342492863505
-    ('a_4', 'AATTGGCC-a4'),  # 3, 4048487933969823850
-    ('a_3', 'AATTGGCC-a3'),  # 7, 7804936597957240377
-    ('c_1', 'AATTGGCC-c1'),  # 8, 8868534167180302049
-    ('a_5', 'AATTGGCC-a5'),  # 1, 3409506807702804593
-    ('c_2', 'AATTGGCC-c2'),  # 9, 8871627813779918895
-    ('c_3', 'AATTGGCC-c3')   # 6, 7233291490207274528
-]
 
 
 if __name__ == '__main__':

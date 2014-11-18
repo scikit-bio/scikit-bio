@@ -27,6 +27,7 @@ Functions
 
    p_value_to_str
    subsample
+   subsample_items
 
 """
 
