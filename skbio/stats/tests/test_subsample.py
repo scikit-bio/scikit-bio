@@ -209,8 +209,30 @@ class SubsampleItemsTests(unittest.TestCase):
                       ('c', {'SequenceID': 'c_2', 'Sequence': 'AATTGGCC-c2'})],
                      key=lambda x: x[0])
         obs = subsample_items(self.mock_sequence_iter(self.sequences), maximum,
-                              bin_f=bin_f)
+                              bin_f=bin_f, buf_size=1)
         self.assertEqual(sorted(obs, key=lambda x: x[0]), exp)
+
+    def test_min_gt_max(self):
+        gen = subsample_items([1, 2, 3], maximum=2, minimum=10)
+        with self.assertRaises(ValueError):
+            next(gen)
+
+    def test_min_lt_zero(self):
+        gen = subsample_items([1, 2, 3], maximum=0, minimum=-10)
+        with self.assertRaises(ValueError):
+            next(gen)
+
+    def test_max_lt_zero(self):
+        gen = subsample_items([1, 2, 3], maximum=-10)
+        with self.assertRaises(ValueError):
+            next(gen)
+
+    def test_binf_is_none(self):
+        maximum = 2
+        items = [1, 2]
+        exp = [(True, 1), (True, 2)]
+        obs = subsample_items(items, maximum)
+        self.assertEqual(list(obs), exp)
 
 
 if __name__ == '__main__':
