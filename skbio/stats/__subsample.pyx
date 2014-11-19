@@ -12,8 +12,8 @@ import numpy as np
 cimport numpy as cnp
 
 
-def _subsample_without_replacement(cnp.ndarray[cnp.int64_t, ndim=1] counts, n,
-                                   counts_sum):
+def _subsample_counts_without_replacement(
+    cnp.ndarray[cnp.int64_t, ndim=1] counts, n, counts_sum):
     cdef:
         cnp.ndarray[cnp.int64_t, ndim=1] result, permuted, unpacked
         cnp.int64_t cnt
