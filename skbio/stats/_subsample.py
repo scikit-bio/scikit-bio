@@ -81,9 +81,6 @@ def isubsample(items, maximum, minimum=1, buf_size=1000, bin_f=None):
 
     All items associated to a bin have an equal probability of being retained.
 
-    If ``maximum`` is equal to ``minimum``, then this method should be the
-    same as ``subsample_counts``.
-
     Examples
     --------
     Randomly keep up to 2 sequences per sample from a set of demultiplexed
