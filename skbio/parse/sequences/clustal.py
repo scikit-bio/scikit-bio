@@ -72,7 +72,7 @@ def write_clustal(records, fh):
     warnings.warn(
         "write_clustal is deprecated and will be removed in "
         "scikit-bio 0.3.0. Please update your code to use Alignment.write.",
-        UserWarning)
+        DeprecationWarning)
     clen = 60
     records = list(records)
     names, seqs = zip(*records)
@@ -90,7 +90,7 @@ def parse_clustal(record, strict=True):
     warnings.warn(
         "parse_clustal is deprecated and will be removed in "
         "scikit-bio 0.3.0. Please update your code to use Alignment.read.",
-        UserWarning)
+        DeprecationWarning)
 
     records = map(_delete_trailing_number,
                   filter(_is_clustal_seq_line, record))

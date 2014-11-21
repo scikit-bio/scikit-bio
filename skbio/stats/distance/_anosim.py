@@ -244,7 +244,7 @@ class ANOSIM(CategoricalStats):
         warnings.warn(
             "skbio.stats.distance.ANOSIM is deprecated and will be removed in "
             "scikit-bio 0.3.0. Please update your code to use "
-            "skbio.stats.distance.anosim.", UserWarning)
+            "skbio.stats.distance.anosim.", DeprecationWarning)
 
         super(ANOSIM, self).__init__(distance_matrix, grouping, column=column)
 

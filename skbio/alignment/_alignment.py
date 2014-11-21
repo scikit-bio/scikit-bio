@@ -128,7 +128,7 @@ class SequenceCollection(SkbioObject):
         warnings.warn(
             "SequenceCollection.from_fasta_records is deprecated and will be "
             "removed in scikit-bio 0.3.0. Please update your code to use "
-            "SequenceCollection.read.", UserWarning)
+            "SequenceCollection.read.", DeprecationWarning)
 
         data = []
         for seq_id, seq in fasta_records:
@@ -691,7 +691,7 @@ class SequenceCollection(SkbioObject):
         warnings.warn(
             "SequenceCollection.int_map is deprecated and will be removed in "
             "scikit-bio 0.3.0. Please update your code to use "
-            "SequenceCollection.update_ids instead.", UserWarning)
+            "SequenceCollection.update_ids instead.", DeprecationWarning)
 
         int_keys = []
         int_map = []
@@ -880,7 +880,7 @@ class SequenceCollection(SkbioObject):
         warnings.warn(
             "SequenceCollection.to_fasta is deprecated and will be removed in "
             "scikit-bio 0.3.0. Please update your code to use "
-            "SequenceCollection.write.", UserWarning)
+            "SequenceCollection.write.", DeprecationWarning)
 
         return ''.join([seq.to_fasta() for seq in self._data])
 
@@ -904,7 +904,7 @@ class SequenceCollection(SkbioObject):
         """
         warnings.warn(
             "SequenceCollection.toFasta() is deprecated. You should use "
-            "SequenceCollection.to_fasta().")
+            "SequenceCollection.to_fasta().", DeprecationWarning)
         return self.to_fasta()
 
     def upper(self):
@@ -1336,7 +1336,7 @@ class Alignment(SequenceCollection):
                 "deprecated and will be removed in scikit-bio 0.3.0. Please "
                 "update your code to construct the desired object from the "
                 "BiologicalSequence (or subclass) that is returned by this "
-                "method.", UserWarning)
+                "method.", DeprecationWarning)
 
         result = []
         for c in self.position_counters():
@@ -1638,7 +1638,7 @@ class Alignment(SequenceCollection):
         warnings.warn(
             "Alignment.to_phylip is deprecated and will be removed in "
             "scikit-bio 0.3.0. Please update your code to use "
-            "Alignment.write.", UserWarning)
+            "Alignment.write.", DeprecationWarning)
 
         if self.is_empty():
             raise SequenceCollectionError("PHYLIP-formatted string can only "

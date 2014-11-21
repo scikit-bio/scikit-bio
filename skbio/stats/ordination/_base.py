@@ -111,7 +111,7 @@ class OrdinationResults(SkbioObject):
         warnings.warn(
             "OrdinationResults.from_file is deprecated and will be removed in "
             "scikit-bio 0.3.0. Please update your code to use "
-            "OrdinationResults.read.", UserWarning)
+            "OrdinationResults.read.", DeprecationWarning)
         return cls.read(ord_res_f, format='ordination')
 
     def to_file(self, out_f):
@@ -140,7 +140,7 @@ class OrdinationResults(SkbioObject):
         warnings.warn(
             "OrdinationResults.to_file is deprecated and will be removed in "
             "scikit-bio 0.3.0. Please update your code to use "
-            "OrdinationResults.write.", UserWarning)
+            "OrdinationResults.write.", DeprecationWarning)
         self.write(out_f, format='ordination')
 
     def __str__(self):

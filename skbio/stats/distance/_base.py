@@ -141,7 +141,7 @@ class DissimilarityMatrix(SkbioObject):
             "DissimilarityMatrix.from_file and DistanceMatrix.from_file are "
             "deprecated and will be removed in scikit-bio 0.3.0. Please "
             "update your code to use DissimilarityMatrix.read and "
-            "DistanceMatrix.read.", UserWarning)
+            "DistanceMatrix.read.", DeprecationWarning)
         return cls.read(lsmat_f, format='lsmat', delimiter=delimiter)
 
     def to_file(self, out_f, delimiter='\t'):
@@ -173,7 +173,7 @@ class DissimilarityMatrix(SkbioObject):
             "DissimilarityMatrix.to_file and DistanceMatrix.to_file are "
             "deprecated and will be removed in scikit-bio 0.3.0. Please "
             "update your code to use DissimilarityMatrix.write and "
-            "DistanceMatrix.write.", UserWarning)
+            "DistanceMatrix.write.", DeprecationWarning)
         self.write(out_f, format='lsmat', delimiter=delimiter)
 
     def __init__(self, data, ids=None):
@@ -1154,7 +1154,7 @@ class CategoricalStatsResults(object):
             "will be removed in scikit-bio 0.3.0. Please update your code to "
             "use either skbio.stats.distance.anosim or "
             "skbio.stats.distance.permanova, which will return a "
-            "pandas.Series object.", UserWarning)
+            "pandas.Series object.", DeprecationWarning)
 
         self.short_method_name = short_method_name
         self.long_method_name = long_method_name

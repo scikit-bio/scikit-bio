@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -439,12 +437,13 @@ class SequenceCollectionTests(TestCase):
     def test_int_map(self):
         expected1 = {"1": self.d1, "2": self.d2}
         expected2 = {"1": "d1", "2": "d2"}
-        obs = npt.assert_warns(UserWarning, self.s1.int_map)
+        obs = npt.assert_warns(DeprecationWarning, self.s1.int_map)
         self.assertEqual(obs, (expected1, expected2))
 
         expected1 = {"h-1": self.d1, "h-2": self.d2}
         expected2 = {"h-1": "d1", "h-2": "d2"}
-        obs = npt.assert_warns(UserWarning, self.s1.int_map, prefix='h-')
+        obs = npt.assert_warns(DeprecationWarning, self.s1.int_map,
+                               prefix='h-')
         self.assertEqual(obs, (expected1, expected2))
 
     def test_is_empty(self):
@@ -503,7 +502,7 @@ class SequenceCollectionTests(TestCase):
 
     def test_toFasta(self):
         exp = ">d1\nGATTACA\n>d2\nTTG\n"
-        obs = npt.assert_warns(UserWarning, self.s1.toFasta)
+        obs = npt.assert_warns(DeprecationWarning, self.s1.toFasta)
         self.assertEqual(obs, exp)
 
     def test_upper(self):
@@ -711,7 +710,7 @@ class AlignmentTests(TestCase):
         d3 = DNASequence('TC-', id="d3")
         a1 = Alignment([d1, d2, d3])
 
-        obs = npt.assert_warns(UserWarning, a1.majority_consensus,
+        obs = npt.assert_warns(DeprecationWarning, a1.majority_consensus,
                                constructor=str)
         self.assertEqual(obs, 'TT-')
 
@@ -816,7 +815,7 @@ class AlignmentTests(TestCase):
         d3 = DNASequence('.-ACC-GTTGC--', id="d3")
         a = Alignment([d1, d2, d3])
 
-        phylip_str, id_map = npt.assert_warns(UserWarning, a.to_phylip,
+        phylip_str, id_map = npt.assert_warns(DeprecationWarning, a.to_phylip,
                                               map_labels=False)
         self.assertEqual(id_map, {'d1': 'd1',
                                   'd3': 'd3',
@@ -833,7 +832,7 @@ class AlignmentTests(TestCase):
         d3 = DNASequence('.-ACC-GTTGC--', id="d3")
         a = Alignment([d1, d2, d3])
 
-        phylip_str, id_map = npt.assert_warns(UserWarning, a.to_phylip,
+        phylip_str, id_map = npt.assert_warns(DeprecationWarning, a.to_phylip,
                                               map_labels=True,
                                               label_prefix="s")
         self.assertEqual(id_map, {'s1': 'd1',
@@ -847,7 +846,7 @@ class AlignmentTests(TestCase):
 
     def test_to_phylip_no_sequences(self):
         with self.assertRaises(SequenceCollectionError):
-            npt.assert_warns(UserWarning, Alignment([]).to_phylip)
+            npt.assert_warns(DeprecationWarning, Alignment([]).to_phylip)
 
     def test_to_phylip_no_positions(self):
         d1 = DNASequence('', id="d1")
@@ -855,7 +854,7 @@ class AlignmentTests(TestCase):
         a = Alignment([d1, d2])
 
         with self.assertRaises(SequenceCollectionError):
-            npt.assert_warns(UserWarning, a.to_phylip)
+            npt.assert_warns(DeprecationWarning, a.to_phylip)
 
     def test_validate_lengths(self):
         self.assertTrue(self.a1._validate_lengths())

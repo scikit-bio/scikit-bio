@@ -122,7 +122,7 @@ def parse_fastq(data, strict=False, enforce_qual_range=True, phred_offset=33):
         "`parse_fastq` is deprecated and will be removed in scikit-bio 0.3.0. "
         "Please update your code to use `skbio.io.read(fh, format='fastq')` "
         "to obtain a generator of `BiologicalSequence` objects (or "
-        "subclasses, see the `constructor` parameter).", UserWarning)
+        "subclasses, see the `constructor` parameter).", DeprecationWarning)
 
     if phred_offset == 33:
         phred_f = ascii_to_phred33

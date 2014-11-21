@@ -175,7 +175,7 @@ class PERMANOVA(CategoricalStats):
         warnings.warn(
             "skbio.stats.distance.PERMANOVA is deprecated and will be removed "
             "in scikit-bio 0.3.0. Please update your code to use "
-            "skbio.stats.distance.permanova.", UserWarning)
+            "skbio.stats.distance.permanova.", DeprecationWarning)
 
         super(PERMANOVA, self).__init__(distance_matrix, grouping,
                                         column=column)
