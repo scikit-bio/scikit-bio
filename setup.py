@@ -15,8 +15,6 @@ import platform
 from setuptools import find_packages, setup
 from setuptools.extension import Extension
 
-import numpy as np
-
 classes = """
     Development Status :: 1 - Planning
     License :: OSI Approved :: BSD License
@@ -84,7 +82,6 @@ setup(name='scikit-bio',
       test_suite='nose.collector',
       packages=find_packages(),
       ext_modules=extensions,
-      include_dirs=[np.get_include()],
       install_requires=['numpy >= 1.7', 'matplotlib >= 1.1.0',
                         'scipy >= 0.13.0', 'pandas', 'future', 'six',
                         'natsort', 'IPython'],
