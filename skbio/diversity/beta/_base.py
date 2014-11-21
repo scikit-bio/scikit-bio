@@ -88,7 +88,7 @@ def pw_distances_from_table(table, metric="braycurtis"):
     warn("pw_distances_from_table is deprecated. In the future (tentatively "
          "scikit-bio 0.2.0), pw_distance will take a biom.table.Table object "
          "and this function will be removed. You will need to update your "
-         "code to call pw_distances at that time.")
+         "code to call pw_distances at that time.", DeprecationWarning)
     sample_ids = table.ids(axis="sample")
     num_samples = len(sample_ids)
 

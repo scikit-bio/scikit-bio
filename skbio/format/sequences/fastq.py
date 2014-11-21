@@ -1,5 +1,3 @@
-"""Formatters for FASTQ"""
-
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -68,7 +66,7 @@ def format_fastq_record(seqid, seq, qual, phred_offset=33):
     warnings.warn(
         "`format_fastq_record` is deprecated and will be removed in "
         "scikit-bio 0.3.0. Please update your code to use `skbio.io.write`.",
-        UserWarning)
+        DeprecationWarning)
 
     if phred_offset == 33:
         phred_f = _phred_to_ascii33

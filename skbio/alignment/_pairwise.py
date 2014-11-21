@@ -594,7 +594,8 @@ def make_identity_substitution_matrix(match_score, mismatch_score,
     warn("make_identity_substitution_matrix is deprecated and will soon be "
          "replaced, though at the time of this writing the new name has not "
          "been finalized. Updates will be posted to issue #161: "
-         "https://github.com/biocore/scikit-bio/issues/161")
+         "https://github.com/biocore/scikit-bio/issues/161",
+         DeprecationWarning)
 
     result = {}
     for c1 in alphabet:

@@ -45,7 +45,7 @@ def p_value_to_str(p_value, permutations):
     warnings.warn(
         "skbio.stats.p_value_to_str is deprecated and will be removed in "
         "scikit-bio 0.3.0. There are no plans to provide a replacement for "
-        "this functionality.", UserWarning)
+        "this functionality.", DeprecationWarning)
 
     if p_value is None or np.isnan(p_value):
         result = 'N/A'

@@ -29,10 +29,12 @@
 
 scikit-bio is an open-source, BSD-licensed python package providing data structures, algorithms and educational resources for bioinformatics.
 
-scikit-bio is currently in alpha. We are very actively developing it, and **backwards-incompatible interface changes can and will arise**. Once the API has started to solidify, we will strive to maintain backwards compatibility. We will provide deprecation warnings, etc. wherever possible.
-
 To view scikit-bio's documentation, visit `scikit-bio.org
 <http://scikit-bio.org>`__.
+
+scikit-bio is currently in alpha. We are very actively developing it, and **backwards-incompatible interface changes can and will arise**. Once the API has started to solidify, we will strive to maintain backwards compatibility. We will provide deprecation warnings wherever possible in the scikit-bio code, documentation, and CHANGELOG.md.
+
+**Note:** Deprecation warnings will be issued using Python's ``DeprecationWarning`` class. Since Python 2.7, these types of warnings are **silenced by default**. When developing a tool that uses scikit-bio, we recommend enabling the display of deprecation warnings to be informed of upcoming API changes. For details on how to display deprecation warnings, see `Python's deprecation warning docs <https://docs.python.org/3/whatsnew/2.7.html#changes-to-the-handling-of-deprecation-warnings>`_.
 
 Installation of release version (recommended for most users)
 ------------------------------------------------------------

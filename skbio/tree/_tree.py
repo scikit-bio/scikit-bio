@@ -1869,7 +1869,7 @@ class TreeNode(SkbioObject):
         warnings.warn(
             "TreeNode.from_file is deprecated and will be removed in "
             "scikit-bio 0.3.0. Please update your code to use TreeNode.read.",
-            UserWarning)
+            DeprecationWarning)
         return cls.read(tree_f, format='newick')
 
     def _balanced_distance_to_tip(self):
@@ -2033,7 +2033,7 @@ class TreeNode(SkbioObject):
         warnings.warn(
             "TreeNode.from_newick is deprecated and will be removed in "
             "scikit-bio 0.3.0. Please update your code to use TreeNode.read.",
-            UserWarning)
+            DeprecationWarning)
 
         def _new_child(old_node):
             """Returns new_node which has old_node as its parent."""
@@ -2341,7 +2341,7 @@ class TreeNode(SkbioObject):
         warnings.warn(
             "TreeNode.to_newick is deprecated and will be removed in "
             "scikit-bio 0.3.0. Please update your code to use TreeNode.write.",
-            UserWarning)
+            DeprecationWarning)
         result = ['(']
         nodes_stack = [[self, len(self.children)]]
         node_count = 1

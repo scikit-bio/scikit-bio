@@ -1421,7 +1421,7 @@ class BiologicalSequence(Sequence, SkbioObject):
         warnings.warn(
             "BiologicalSequence.to_fasta is deprecated and will be removed in "
             "scikit-bio 0.3.0. Please update your code to use "
-            "BiologicalSequence.write.", UserWarning)
+            "BiologicalSequence.write.", DeprecationWarning)
 
         if self._description:
             header_line = '%s%s%s' % (self._id, field_delimiter,

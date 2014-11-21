@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -132,7 +131,7 @@ def parse_fasta(infile, strict=True, label_to_name=None, finder=FastaFinder,
         "`parse_fasta` is deprecated and will be removed in scikit-bio 0.3.0. "
         "Please update your code to use `skbio.io.read(fh, format='fasta')` "
         "to obtain a generator of `BiologicalSequence` objects (or "
-        "subclasses, see the `constructor` parameter).", UserWarning)
+        "subclasses, see the `constructor` parameter).", DeprecationWarning)
 
     for rec in finder(infile):
         # first line must be a label line
@@ -223,7 +222,7 @@ def parse_qual(infile, full_header=False):
         "Please update your code to use "
         "`skbio.io.read(fasta_fh, qual=qual_fh, format='fasta')` to obtain a "
         "generator of `BiologicalSequence` objects (or subclasses, see the "
-        "`constructor` parameter) with quality scores.", UserWarning)
+        "`constructor` parameter) with quality scores.", DeprecationWarning)
 
     for rec in FastaFinder(infile):
         curr_id = rec[0][1:]

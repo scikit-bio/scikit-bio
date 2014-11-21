@@ -665,9 +665,10 @@ class TestOrdinationResults(unittest.TestCase):
 
     def test_deprecated_io(self):
         fh = StringIO()
-        npt.assert_warns(UserWarning, self.ordination_results.to_file, fh)
+        npt.assert_warns(DeprecationWarning, self.ordination_results.to_file,
+                         fh)
         fh.seek(0)
-        deserialized = npt.assert_warns(UserWarning,
+        deserialized = npt.assert_warns(DeprecationWarning,
                                         OrdinationResults.from_file, fh)
         assert_ordination_results_equal(deserialized, self.ordination_results)
         self.assertTrue(type(deserialized) == OrdinationResults)

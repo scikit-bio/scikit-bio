@@ -19,6 +19,9 @@
 * Deprecated ``skbio.stats.distance.CategoricalStatsResults`` in favor of using ``pandas.Series`` to store statistical method results. ``anosim`` and ``permanova`` return ``pandas.Series`` instead of ``CategoricalStatsResults``.
 * Deprecated ``skbio.stats.subsample`` in favor of ``skbio.stats.subsample_counts``, which provides an identical interface; only the function name has changed. ``skbio.stats.subsample`` will be removed in scikit-bio 0.3.0.
 
+### Backward-incompatible changes
+* Deprecation warnings are now raised using ``DeprecationWarning`` instead of ``UserWarning`` ([#774](https://github.com/biocore/scikit-bio/issues/774)).
+
 ### Miscellaneous
 * The ``pandas.DataFrame`` returned by ``skbio.stats.distance.pwmantel`` now stores p-values as floats and does not convert them to strings with a specific number of digits. p-values that were previously stored as "N/A" are now stored as ``np.nan`` for consistency with other statistical methods in scikit-bio. See note in "Deprecated functionality" above regarding ``p_value_to_str`` for details.
 * scikit-bio now supports versions of IPython < 2.0.0 ([#767](https://github.com/biocore/scikit-bio/issues/767)).

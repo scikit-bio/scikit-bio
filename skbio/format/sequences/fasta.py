@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-"""Writer for FASTA sequence format"""
-
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -68,7 +65,7 @@ def fasta_from_sequences(seqs, make_seqlabel=None, line_wrap=None):
     warnings.warn(
         "`fasta_from_sequences` is deprecated and will be removed in "
         "scikit-bio 0.3.0. Please update your code to use `skbio.io.write`.",
-        UserWarning)
+        DeprecationWarning)
 
     fasta_list = []
     for i, seq in enumerate(seqs):
@@ -158,7 +155,7 @@ def fasta_from_alignment(aln, make_seqlabel=None, line_wrap=None, sort=True):
     warnings.warn(
         "`fasta_from_alignment` is deprecated and will be removed in "
         "scikit-bio 0.3.0. Please update your code to use `skbio.io.write` "
-        "or `skbio.Alignment.write`.", UserWarning)
+        "or `skbio.Alignment.write`.", DeprecationWarning)
 
     # check if it's an Alignment object or a dictionary
     if isinstance(aln, Alignment):
