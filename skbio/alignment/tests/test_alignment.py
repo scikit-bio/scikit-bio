@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -19,6 +21,7 @@ import tempfile
 import numpy as np
 import numpy.testing as npt
 from scipy.spatial.distance import hamming
+import matplotlib as mpl
 
 from skbio import (NucleotideSequence, DNASequence, RNASequence, DNA, RNA,
                    DistanceMatrix, Alignment, SequenceCollection)
@@ -437,13 +440,12 @@ class SequenceCollectionTests(TestCase):
     def test_int_map(self):
         expected1 = {"1": self.d1, "2": self.d2}
         expected2 = {"1": "d1", "2": "d2"}
-        obs = npt.assert_warns(DeprecationWarning, self.s1.int_map)
+        obs = npt.assert_warns(UserWarning, self.s1.int_map)
         self.assertEqual(obs, (expected1, expected2))
 
         expected1 = {"h-1": self.d1, "h-2": self.d2}
         expected2 = {"h-1": "d1", "h-2": "d2"}
-        obs = npt.assert_warns(DeprecationWarning, self.s1.int_map,
-                               prefix='h-')
+        obs = npt.assert_warns(UserWarning, self.s1.int_map, prefix='h-')
         self.assertEqual(obs, (expected1, expected2))
 
     def test_is_empty(self):
@@ -502,7 +504,7 @@ class SequenceCollectionTests(TestCase):
 
     def test_toFasta(self):
         exp = ">d1\nGATTACA\n>d2\nTTG\n"
-        obs = npt.assert_warns(DeprecationWarning, self.s1.toFasta)
+        obs = npt.assert_warns(UserWarning, self.s1.toFasta)
         self.assertEqual(obs, exp)
 
     def test_upper(self):
@@ -710,7 +712,7 @@ class AlignmentTests(TestCase):
         d3 = DNASequence('TC-', id="d3")
         a1 = Alignment([d1, d2, d3])
 
-        obs = npt.assert_warns(DeprecationWarning, a1.majority_consensus,
+        obs = npt.assert_warns(UserWarning, a1.majority_consensus,
                                constructor=str)
         self.assertEqual(obs, 'TT-')
 
@@ -815,7 +817,7 @@ class AlignmentTests(TestCase):
         d3 = DNASequence('.-ACC-GTTGC--', id="d3")
         a = Alignment([d1, d2, d3])
 
-        phylip_str, id_map = npt.assert_warns(DeprecationWarning, a.to_phylip,
+        phylip_str, id_map = npt.assert_warns(UserWarning, a.to_phylip,
                                               map_labels=False)
         self.assertEqual(id_map, {'d1': 'd1',
                                   'd3': 'd3',
@@ -832,7 +834,7 @@ class AlignmentTests(TestCase):
         d3 = DNASequence('.-ACC-GTTGC--', id="d3")
         a = Alignment([d1, d2, d3])
 
-        phylip_str, id_map = npt.assert_warns(DeprecationWarning, a.to_phylip,
+        phylip_str, id_map = npt.assert_warns(UserWarning, a.to_phylip,
                                               map_labels=True,
                                               label_prefix="s")
         self.assertEqual(id_map, {'s1': 'd1',
@@ -846,7 +848,7 @@ class AlignmentTests(TestCase):
 
     def test_to_phylip_no_sequences(self):
         with self.assertRaises(SequenceCollectionError):
-            npt.assert_warns(DeprecationWarning, Alignment([]).to_phylip)
+            npt.assert_warns(UserWarning, Alignment([]).to_phylip)
 
     def test_to_phylip_no_positions(self):
         d1 = DNASequence('', id="d1")
@@ -854,7 +856,7 @@ class AlignmentTests(TestCase):
         a = Alignment([d1, d2])
 
         with self.assertRaises(SequenceCollectionError):
-            npt.assert_warns(DeprecationWarning, a.to_phylip)
+            npt.assert_warns(UserWarning, a.to_phylip)
 
     def test_validate_lengths(self):
         self.assertTrue(self.a1._validate_lengths())
@@ -863,6 +865,35 @@ class AlignmentTests(TestCase):
 
         self.assertTrue(Alignment([
             DNASequence('TTT', id="d1")])._validate_lengths())
+
+    def test_heatmap_sanity(self):
+        fig = self.heatmap_for_tests()
+        axes = fig.get_axes()
+        ax = axes[0]
+        xticks = []
+        for tick in ax.get_xticklabels():
+            xticks.append(tick.get_text())
+        self.assertEqual(xticks, ['A', 'A', 'C', 'C', 'C', 'G', 'T'])
+        yticks = []
+        for tick in ax.get_yticklabels():
+            yticks.append(tick.get_text())
+        self.assertEqual(yticks, ['seq1', 'seq2'])
+        self.assertIsInstance(fig, mpl.figure.Figure)
+
+    def heatmap_for_tests(self):
+        sequences = [DNA('A--CCGT', id="seq1"),
+                     DNA('AACCGGT', id="seq2")]
+        a1 = Alignment(sequences)
+        hydrophobicity_idx = defaultdict(lambda: np.nan)
+        hydrophobicity_idx.update({'A': 0.61, 'L': 1.53, 'R': 0.60, 'K': 1.15,
+                                   'N': 0.06, 'M': 1.18, 'D': 0.46, 'F': 2.02,
+                                   'C': 1.07, 'P': 1.95, 'Q': 0., 'S': 0.05,
+                                   'E': 0.47, 'T': 0.05, 'G': 0.07, 'W': 2.65,
+                                   'H': 0.61, 'Y': 1.88, 'I': 2.22, 'V': 1.32})
+        hydrophobicity_labels = ['Hydrophilic', 'Medium', 'Hydrophobic']
+        fig = a1.heatmap(hydrophobicity_idx,
+                         legend_labels=hydrophobicity_labels)
+        return(fig)
 
 
 class StockholmAlignmentTests(TestCase):
