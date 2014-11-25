@@ -9,7 +9,7 @@
 * Added `skbio.stats.power` for performing emperical power analysis. The module uses existing datasets and iteratively draws samples to estimate the number of samples needed to see a significant difference for a given critical value.
 * Added `skbio.stats.isubsample` for subsampling from an unknown number of values. This method supports subsampling from multiple partitions and does not require that all items be stored in memory, requiring approximately `O(N*M)`` space where `N` is the number of partitions and `M` is the maximum subsample size.
 * Added ``skbio.stats.subsample_counts``, which replaces ``skbio.stats.subsample``. See deprecation section below for more details ([#770](https://github.com/biocore/scikit-bio/issues/770)).
-
+* Added ``heatmap`` method to ``skbio.alignment.Alignment`` for creating a heatmap from an alignment (see [#765](https://github.com/biocore/scikit-bio/issues/765)).
 ### Bug fixes
 * Fixed issue where SSW wouldn't compile on i686 architectures ([#409](https://github.com/biocore/scikit-bio/issues/409)).
 
