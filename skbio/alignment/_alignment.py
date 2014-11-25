@@ -1705,15 +1705,22 @@ class Alignment(SequenceCollection):
             If a character in self is not in ``value_map``, and ``value_map``
             is not a  ``collections.defaultdict``.
 
+        References
+        ----------
+        .. [1] http://www.genome.jp/aaindex/
+        .. [2] http://www.genome.jp/dbget-bin/www_bget?aaindex:ARGP820101
+
         Examples
         --------
         .. plot::
 
-           Define an Alignment and use hydrophobicity as your value map:
+           Let's visualize an alignment of protein sequences as a heatmap, with
+           amino acids colored by their hydrophobicity.
 
-           >>> from skbio import Alignment, Protein
-           >>> import numpy as np
+           Load the AAIndex database [1]_ hydrophobicity index values [2]_:
+
            >>> from collections import defaultdict
+           >>> import numpy as np
            >>> hydrophobicity_idx = defaultdict(lambda: np.nan)
            >>> hydrophobicity_idx.update({'A': 0.61, 'L': 1.53, 'R': 0.60,
            ...                            'K': 1.15, 'N': 0.06, 'M': 1.18,
@@ -1722,7 +1729,14 @@ class Alignment(SequenceCollection):
            ...                            'E': 0.47, 'T': 0.05, 'G': 0.07,
            ...                            'W': 2.65, 'H': 0.61, 'Y': 1.88,
            ...                            'I': 2.22, 'V': 1.32})
+
+           Label colormap based on hydrophobicity:
+
            >>> hydrophobicity_labels=['Hydrophilic', 'Medium', 'Hydrophobic']
+
+           Define an Alignment of proteins:
+
+           >>> from skbio import Alignment, Protein
            >>> sequences = [Protein('VHLTPEEKSAVTALWGKVNVDEV--', id="seq1"),
            ...              Protein('-GLSDGEWQLVLKVWGKVEGDLPGH', id="seq2"),
            ...              Protein('-GLSDGEWQLVLKVWGKVETDITGH', id="seq3"),

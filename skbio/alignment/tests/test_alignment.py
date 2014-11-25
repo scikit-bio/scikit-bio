@@ -877,6 +877,8 @@ class AlignmentTests(TestCase):
                      DNA('AACCGGT', id="seq2")]
         a1 = Alignment(sequences)
         hydrophobicity_idx = defaultdict(lambda: np.nan)
+        # Data derived from AAIndex:
+        # http://www.genome.jp/dbget-bin/www_bget?aaindex:ARGP820101
         hydrophobicity_idx.update({'A': 0.61, 'L': 1.53, 'R': 0.60, 'K': 1.15,
                                    'N': 0.06, 'M': 1.18, 'D': 0.46, 'F': 2.02,
                                    'C': 1.07, 'P': 1.95, 'Q': 0., 'S': 0.05,
