@@ -19,6 +19,7 @@ import tempfile
 import numpy as np
 import numpy.testing as npt
 from scipy.spatial.distance import hamming
+import matplotlib as mpl
 
 from skbio import (NucleotideSequence, DNASequence, RNASequence, DNA, RNA,
                    DistanceMatrix, Alignment, SequenceCollection)
@@ -855,6 +856,35 @@ class AlignmentTests(TestCase):
 
         with self.assertRaises(SequenceCollectionError):
             npt.assert_warns(DeprecationWarning, a.to_phylip)
+
+    def test_heatmap_sanity(self):
+        fig = self.heatmap_for_tests()
+        axes = fig.get_axes()
+        ax = axes[0]
+        xticks = []
+        for tick in ax.get_xticklabels():
+            xticks.append(tick.get_text())
+        self.assertEqual(xticks, ['A', 'A', 'C', 'C', 'C', 'G', 'T'])
+        yticks = []
+        for tick in ax.get_yticklabels():
+            yticks.append(tick.get_text())
+        self.assertEqual(yticks, ['seq1', 'seq2'])
+        self.assertIsInstance(fig, mpl.figure.Figure)
+
+    def heatmap_for_tests(self):
+        sequences = [DNA('A--CCGT', id="seq1"),
+                     DNA('AACCGGT', id="seq2")]
+        a1 = Alignment(sequences)
+        hydrophobicity_idx = defaultdict(lambda: np.nan)
+        hydrophobicity_idx.update({'A': 0.61, 'L': 1.53, 'R': 0.60, 'K': 1.15,
+                                   'N': 0.06, 'M': 1.18, 'D': 0.46, 'F': 2.02,
+                                   'C': 1.07, 'P': 1.95, 'Q': 0., 'S': 0.05,
+                                   'E': 0.47, 'T': 0.05, 'G': 0.07, 'W': 2.65,
+                                   'H': 0.61, 'Y': 1.88, 'I': 2.22, 'V': 1.32})
+        hydrophobicity_labels = ['Hydrophilic', 'Medium', 'Hydrophobic']
+        fig = a1.heatmap(hydrophobicity_idx,
+                         legend_labels=hydrophobicity_labels)
+        return(fig)
 
     def test_validate_lengths(self):
         self.assertTrue(self.a1._validate_lengths())
