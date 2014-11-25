@@ -16,7 +16,7 @@ from collections import Counter, defaultdict, OrderedDict
 
 import numpy as np
 from scipy.stats import entropy
-from matplotlib import pyplot as plt
+import matplotlib.pyplot as plt
 
 from skbio._base import SkbioObject
 from skbio.stats.distance import DistanceMatrix
