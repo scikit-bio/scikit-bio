@@ -8,6 +8,7 @@ from __future__ import absolute_import, division, print_function
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+
 class QueryNotFoundError(Exception):
     """Exception raised by EUtils when no data is retrieved"""
     pass

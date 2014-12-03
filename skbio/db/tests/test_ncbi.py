@@ -35,7 +35,7 @@ from __future__ import absolute_import, division, print_function
 # ----------------------------------------------------------------------------
 
 from unittest import TestCase, main
-from future.utils.six import StringIO
+from six import StringIO
 
 from skbio.db.ncbi import (EUtils, ESearch, EFetch, ELink,
                            _esearch_result_parser, _elink_result_parser,

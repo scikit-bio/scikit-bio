@@ -39,7 +39,7 @@ from xml.dom.minidom import parseString
 from xml.etree.ElementTree import parse
 
 from future.utils import PY3
-from future.utils.six import StringIO
+from six import StringIO
 
 from ._exception import QueryNotFoundError
 from skbio.db.base import (URLGetter,
@@ -763,8 +763,6 @@ def _parse_taxonomy_using_elementtree_xml_parse(search_result):
     """
     xml_data = parse(search_result)
     xml_data_root = xml_data.getroot()
-
-    tax_info_list = ['']
 
     l = []
     for individual_result in xml_data_root:
