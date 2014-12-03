@@ -1671,8 +1671,9 @@ class Alignment(SequenceCollection):
 
         return '\n'.join(result), new_id_to_old_id
 
-    def heatmap(self, value_map, legend_labels=['Low', 'Medium', 'High'],
-                fig_size=(15, 10), cmap='YlGn', sequence_order=None):
+    def heatmap(self, value_map, legend_labels=['Minimum', 'Median',
+                                                'Maximum'],
+                fig_size=None, cmap=None, sequence_order=None):
         """Plot the alignment as a heatmap
 
         Parameters
@@ -1697,13 +1698,14 @@ class Alignment(SequenceCollection):
         -------
         matplotlib.figure.Figure
             Figure containing the heatmap and colorbar of the plotted
-            dissimilarity matrix.
+            alignment.
 
         Raises
         ------
         KeyError
-            If a character in self is not in ``value_map``, and ``value_map``
-            is not a  ``collections.defaultdict``.
+            If a sequence character in the alignment is not in
+            ``value_map``, and ``value_map`` is not a
+            ``collections.defaultdict``.
 
         References
         ----------

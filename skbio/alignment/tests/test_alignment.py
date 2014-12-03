@@ -885,7 +885,7 @@ class AlignmentTests(TestCase):
                                    'E': 0.47, 'T': 0.05, 'G': 0.07, 'W': 2.65,
                                    'H': 0.61, 'Y': 1.88, 'I': 2.22, 'V': 1.32})
         hydrophobicity_labels = ['Hydrophilic', 'Medium', 'Hydrophobic']
-        fig = a1.heatmap(hydrophobicity_idx,
+        fig = a1.heatmap(hydrophobicity_idx, fig_size=(15, 10),
                          legend_labels=hydrophobicity_labels)
         return(fig)
 
