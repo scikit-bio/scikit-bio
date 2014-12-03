@@ -41,7 +41,7 @@ from xml.etree.ElementTree import parse
 from future.utils import PY3
 from future.utils.six import StringIO
 
-from skbio.core.exception import QueryNotFoundError
+from ._exception import QueryNotFoundError
 from skbio.db.base import (URLGetter,
                            make_lists_of_expanded_slices_of_set_size,
                            make_lists_of_accessions_of_set_size)
