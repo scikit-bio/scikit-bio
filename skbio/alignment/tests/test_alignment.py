@@ -873,7 +873,7 @@ class AlignmentTests(TestCase):
         self.assertIsInstance(fig, mpl.figure.Figure)
 
     def heatmap_for_tests(self):
-        sequences = [DNA('A--CCGT', id="seq1"),
+        sequences = [DNA('AACCCGT', id="seq1"),
                      DNA('AACCGGT', id="seq2")]
         a1 = Alignment(sequences)
         hydrophobicity_idx = defaultdict(lambda: np.nan)
