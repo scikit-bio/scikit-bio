@@ -1,5 +1,3 @@
-"""Formatters for FASTQ"""
-
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -7,6 +5,8 @@
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
+
+import warnings
 
 
 def _phred_to_ascii(a, offset):
@@ -26,6 +26,13 @@ def _phred_to_ascii64(a):
 
 def format_fastq_record(seqid, seq, qual, phred_offset=33):
     """Format a FASTQ record
+
+    .. note:: Deprecated in scikit-bio 0.2.0-dev
+       ``format_fastq_record`` will be removed in scikit-bio 0.3.0. It is
+       replaced by ``write``, which is a more general method for serializing
+       FASTQ-formatted files. ``write`` supports multiple file formats by
+       taking advantage of scikit-bio's I/O registry system. See
+       :mod:`skbio.io` for more details.
 
     Parameters
     ----------
@@ -56,6 +63,11 @@ def format_fastq_record(seqid, seq, qual, phred_offset=33):
     GGHHII
 
     """
+    warnings.warn(
+        "`format_fastq_record` is deprecated and will be removed in "
+        "scikit-bio 0.3.0. Please update your code to use `skbio.io.write`.",
+        DeprecationWarning)
+
     if phred_offset == 33:
         phred_f = _phred_to_ascii33
     elif phred_offset == 64:

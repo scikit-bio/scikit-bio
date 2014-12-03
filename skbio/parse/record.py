@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -13,7 +11,7 @@ from future.utils import viewitems
 from numbers import Integral
 from copy import deepcopy
 
-from skbio.core.exception import FieldError
+from skbio.io import FieldError
 
 
 def string_and_strip(*items):

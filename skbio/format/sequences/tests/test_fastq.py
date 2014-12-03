@@ -2,9 +2,9 @@
 
 import numpy as np
 from unittest import TestCase, main
-from skbio.format.sequences.fastq import (format_fastq_record,
-                                          _phred_to_ascii33,
-                                          _phred_to_ascii64)
+
+from skbio.format.sequences import format_fastq_record
+from skbio.format.sequences.fastq import _phred_to_ascii33, _phred_to_ascii64
 
 
 class FASTQFormatTests(TestCase):

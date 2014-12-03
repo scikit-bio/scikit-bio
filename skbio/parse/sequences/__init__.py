@@ -161,10 +161,20 @@ Functions
 .. autosummary::
    :toctree: generated/
 
-    parse_clustal
-    parse_fasta
-    parse_fastq
-    parse_qual
+   parse_fasta
+   parse_fastq
+   parse_qual
+   write_clustal
+   parse_clustal
+
+Exceptions
+----------
+
+.. autosummary::
+   :toctree: generated/
+
+   FastqParseError
+
 """
 
 # ----------------------------------------------------------------------------
@@ -175,14 +185,16 @@ Functions
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from .clustal import parse_clustal
 from .fasta import parse_fasta, parse_qual
 from .fastq import parse_fastq
+from .clustal import parse_clustal, write_clustal
 from .iterator import FastaIterator, FastqIterator, SequenceIterator
 from .factory import load
+from ._exception import FastqParseError
 
-__all__ = ['parse_clustal', 'parse_fasta', 'parse_fastq', 'parse_qual',
-           'FastqIterator', 'FastaIterator', 'SequenceIterator', 'load']
+__all__ = ['write_clustal', 'parse_clustal',
+           'parse_fasta', 'parse_fastq', 'parse_qual', 'FastqIterator',
+           'FastaIterator', 'SequenceIterator', 'load', 'FastqParseError']
 
 from numpy.testing import Tester
 test = Tester().test

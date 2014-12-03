@@ -21,8 +21,8 @@ DelimitedRecordFinder except that it accept a is_tail function instead of a
 str.  Note that its default constuctor is rstrip instead of strip.
 """
 
-from skbio.core.exception import RecordError
-from skbio.util.io import open_file
+from skbio.io import RecordError
+from skbio.io.util import open_file
 
 
 def is_empty(line):

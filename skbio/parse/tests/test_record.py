@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-"""Unit tests for parser support libraries dealing with records."""
-
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -9,15 +6,16 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from skbio.parse.record import (FieldError, DelimitedSplitter,
+from unittest import TestCase, main
+
+from skbio.parse.record import (DelimitedSplitter,
                                 GenericRecord, MappedRecord, TypeSetter,
                                 list_adder, dict_adder,
                                 LineOrientedConstructor, int_setter,
                                 bool_setter, string_and_strip, FieldWrapper,
                                 StrictFieldWrapper, raise_unknown_field,
                                 FieldMorpher)
-
-from unittest import TestCase, main
+from skbio.io import FieldError
 
 
 class recordsTests(TestCase):

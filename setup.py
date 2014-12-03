@@ -8,9 +8,10 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-__version__ = "0.1.4-dev"
+__version__ = "0.2.1-dev"
 
 import os
+import platform
 from setuptools import find_packages, setup
 from setuptools.extension import Extension
 
@@ -43,11 +44,28 @@ with open('README.rst') as f:
 # Dealing with Cython
 USE_CYTHON = os.environ.get('USE_CYTHON', False)
 ext = '.pyx' if USE_CYTHON else '.c'
-extensions = [Extension("skbio.math._subsample",
-                        ["skbio/math/_subsample" + ext]),
-              Extension("skbio.core.alignment.ssw.ssw_wrapper",
-                        ["skbio/core/alignment/ssw/ssw_wrapper" + ext,
-                         "skbio/core/alignment/ssw/ssw.c"])]
+
+# There's a bug in some versions of Python 3.4 that propagates
+# -Werror=declaration-after-statement to extensions, instead of just affecting
+# the compilation of the interpreter. See http://bugs.python.org/issue21121 for
+# details. This acts as a workaround until the next Python 3 release -- thanks
+# Wolfgang Maier (wolma) for the workaround!
+ssw_extra_compile_args = ['-Wno-error=declaration-after-statement']
+
+# Users with i686 architectures have reported that adding this flag allows
+# SSW to be compiled. See https://github.com/biocore/scikit-bio/issues/409 and
+# http://stackoverflow.com/q/26211814/3776794 for details.
+if platform.machine() == 'i686':
+    ssw_extra_compile_args.append('-msse2')
+
+extensions = [
+    Extension("skbio.stats.__subsample",
+              ["skbio/stats/__subsample" + ext]),
+    Extension("skbio.alignment._ssw_wrapper",
+              ["skbio/alignment/_ssw_wrapper" + ext,
+               "skbio/alignment/_lib/ssw.c"],
+              extra_compile_args=ssw_extra_compile_args)
+]
 
 if USE_CYTHON:
     from Cython.Build import cythonize
@@ -68,15 +86,17 @@ setup(name='scikit-bio',
       ext_modules=extensions,
       include_dirs=[np.get_include()],
       install_requires=['numpy >= 1.7', 'matplotlib >= 1.1.0',
-                        'scipy >= 0.13.0', 'pandas', 'future', 'natsort'],
-      extras_require={'test': ["nose >= 0.10.1", "pep8", "flake8"],
-                      'doc': ["Sphinx >= 1.2.2", "sphinx-bootstrap-theme"]},
+                        'scipy >= 0.13.0', 'pandas', 'future', 'six',
+                        'natsort', 'IPython'],
+      extras_require={'test': ["nose >= 0.10.1", "pep8", "flake8",
+                               "python-dateutil"],
+                      'doc': ["Sphinx == 1.2.2", "sphinx-bootstrap-theme"]},
       classifiers=classifiers,
       package_data={
-          'skbio.core.tests': ['data/*.txt'],
-          'skbio.math.tests': ['data/*'],
-          'skbio.math.stats.distance.tests': ['data/*'],
-          'skbio.math.stats.ordination.tests': ['data/*'],
+          'skbio.io.tests': ['data/*'],
+          'skbio.stats.tests': ['data/*'],
+          'skbio.stats.distance.tests': ['data/*'],
+          'skbio.stats.ordination.tests': ['data/*'],
           'skbio.parse.sequences.tests': ['data/*'],
           }
       )

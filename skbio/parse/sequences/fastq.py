@@ -6,14 +6,16 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # -----------------------------------------------------------------------------
 from __future__ import absolute_import, division, print_function
-from future import standard_library
-with standard_library.hooks():
+from future.standard_library import hooks
+with hooks():
     from itertools import zip_longest
+
+import warnings
 
 import numpy as np
 
-from skbio.core.exception import FastqParseError
-from skbio.util.io import open_file
+from skbio.io.util import open_file
+from ._exception import FastqParseError
 
 
 def _ascii_to_phred(s, offset):
@@ -21,7 +23,7 @@ def _ascii_to_phred(s, offset):
     return np.fromstring(s, dtype='|S1').view(np.int8) - offset
 
 
-def _ascii_to_phred33(s):
+def ascii_to_phred33(s):
     """Convert ascii string to Phred quality score with ASCII offset of 33.
 
     Standard "Sanger" ASCII offset of 33. This is used by Illumina in CASAVA
@@ -31,7 +33,7 @@ def _ascii_to_phred33(s):
     return _ascii_to_phred(s, 33)
 
 
-def _ascii_to_phred64(s):
+def ascii_to_phred64(s):
     """Convert ascii string to Phred quality score with ASCII offset of 64.
 
     Illumina-specific ASCII offset of 64. This is used by Illumina in CASAVA
@@ -52,6 +54,13 @@ def _drop_id_marker(s):
 
 def parse_fastq(data, strict=False, enforce_qual_range=True, phred_offset=33):
     r"""yields label, seq, and qual from a fastq file.
+
+    .. note:: Deprecated in scikit-bio 0.2.0-dev
+       ``parse_fastq`` will be removed in scikit-bio 0.3.0. It is replaced by
+       ``read``, which is a more general method for deserializing
+       FASTQ-formatted files. ``read`` supports multiple file formats,
+       automatic file format detection, etc. by taking advantage of
+       scikit-bio's I/O registry system. See :mod:`skbio.io` for more details.
 
     Parameters
     ----------
@@ -109,10 +118,16 @@ def parse_fastq(data, strict=False, enforce_qual_range=True, phred_offset=33):
     [29 11 26 27 16 25 29 31 27 25 25 30 32 32 32 33 35 30 28 28 32 34 20 32 32
      35 32 28 33 20 32 32 34 34 34]
     """
+    warnings.warn(
+        "`parse_fastq` is deprecated and will be removed in scikit-bio 0.3.0. "
+        "Please update your code to use `skbio.io.read(fh, format='fastq')` "
+        "to obtain a generator of `BiologicalSequence` objects (or "
+        "subclasses, see the `constructor` parameter).", DeprecationWarning)
+
     if phred_offset == 33:
-        phred_f = _ascii_to_phred33
+        phred_f = ascii_to_phred33
     elif phred_offset == 64:
-        phred_f = _ascii_to_phred64
+        phred_f = ascii_to_phred64
     else:
         raise ValueError("Unknown PHRED offset of %s" % phred_offset)
 
