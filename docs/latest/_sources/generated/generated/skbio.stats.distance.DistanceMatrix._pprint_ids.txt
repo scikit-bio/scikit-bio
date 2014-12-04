@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.stats.distance.DistanceMatrix._pprint_ids
-===============================================
-
-.. currentmodule:: skbio.stats.distance
-
-.. automethod:: DistanceMatrix._pprint_ids

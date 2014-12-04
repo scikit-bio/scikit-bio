@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.Alignment.__subclasshook__
+==========================================
+
+.. currentmodule:: skbio.alignment
+
+.. automethod:: Alignment.__subclasshook__

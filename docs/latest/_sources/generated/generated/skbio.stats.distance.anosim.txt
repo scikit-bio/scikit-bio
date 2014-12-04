@@ -1,0 +1,6 @@
+skbio.stats.distance.anosim
+===========================
+
+.. currentmodule:: skbio.stats.distance
+
+.. autofunction:: anosim

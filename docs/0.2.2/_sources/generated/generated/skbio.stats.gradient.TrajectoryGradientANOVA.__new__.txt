@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.stats.gradient.TrajectoryGradientANOVA.__new__
+====================================================
+
+.. currentmodule:: skbio.stats.gradient
+
+.. automethod:: TrajectoryGradientANOVA.__new__

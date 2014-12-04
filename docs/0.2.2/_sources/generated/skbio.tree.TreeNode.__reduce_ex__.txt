@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.tree.TreeNode.__reduce_ex__
+=================================
+
+.. currentmodule:: skbio.tree
+
+.. automethod:: TreeNode.__reduce_ex__

@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.tree.TreeNode._set_max_distance
+=====================================
+
+.. currentmodule:: skbio.tree
+
+.. automethod:: TreeNode._set_max_distance

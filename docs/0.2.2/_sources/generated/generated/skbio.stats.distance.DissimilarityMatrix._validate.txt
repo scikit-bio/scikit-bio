@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.stats.distance.DissimilarityMatrix._validate
+==================================================
+
+.. currentmodule:: skbio.stats.distance
+
+.. automethod:: DissimilarityMatrix._validate

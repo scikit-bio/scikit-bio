@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.BiologicalSequence.gap_vector
+============================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: BiologicalSequence.gap_vector

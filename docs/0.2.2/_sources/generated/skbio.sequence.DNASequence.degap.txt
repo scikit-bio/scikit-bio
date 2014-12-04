@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.DNASequence.degap
+================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: DNASequence.degap

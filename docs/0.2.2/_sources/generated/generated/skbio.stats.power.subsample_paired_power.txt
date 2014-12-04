@@ -1,0 +1,6 @@
+skbio.stats.power.subsample_paired_power
+========================================
+
+.. currentmodule:: skbio.stats.power
+
+.. autofunction:: subsample_paired_power

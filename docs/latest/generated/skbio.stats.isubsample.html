@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>skbio.stats.isubsample &mdash; scikit-bio 0.2.2 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/style.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.1.0/united/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.2.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/copybutton.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="top" title="scikit-bio 0.2.2 documentation" href="../index.html" />
+    <link rel="up" title="Statistics (skbio.stats)" href="../stats.html" />
+    <link rel="next" title="Parse biological sequences (skbio.parse.sequences)" href="../parse.sequences.html" />
+    <link rel="prev" title="skbio.stats.subsample_counts" href="skbio.stats.subsample_counts.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body>
+  
+  <a href="https://github.com/biocore/scikit-bio"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          scikit-bio docs</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.2.2</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            <li class="divider-vertical"></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../alignment.html">Sequence collections and alignments (<tt class="docutils literal"><span class="pre">skbio.alignment</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sequence.html">Biological sequences (<tt class="docutils literal"><span class="pre">skbio.sequence</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tree.html">Tree representations (<tt class="docutils literal"><span class="pre">skbio.tree</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../workflow.html">Constructing workflows (<tt class="docutils literal"><span class="pre">skbio.workflow</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../draw.html">Visualizations (<tt class="docutils literal"><span class="pre">skbio.draw</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../format.sequences.html">Format biological sequences (<tt class="docutils literal"><span class="pre">skbio.format.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../diversity.html">Diversity calculations (<tt class="docutils literal"><span class="pre">skbio.diversity</span></tt>)</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../stats.html">Statistics (<tt class="docutils literal"><span class="pre">skbio.stats</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../parse.sequences.html">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../io.html">File I/O (<tt class="docutils literal"><span class="pre">skbio.io</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.html">Utility functionality (<tt class="docutils literal"><span class="pre">skbio.util</span></tt>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/py3.html">Supporting Python 2 and Python 3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/coding_guidelines.html">Coding guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/new_module.html">Adding a new module to skbio</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">skbio.stats.isubsample</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      
+  <div class="section" id="skbio-stats-isubsample">
+<h1>skbio.stats.isubsample<a class="headerlink" href="#skbio-stats-isubsample" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="skbio.stats.isubsample">
+<tt class="descclassname">skbio.stats.</tt><tt class="descname">isubsample</tt><big>(</big><em>items</em>, <em>maximum</em>, <em>minimum=1</em>, <em>buf_size=1000</em>, <em>bin_f=None</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.2.2/skbio/stats/_subsample.py#L27"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.stats.isubsample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Randomly subsample items from bins, without replacement.</p>
+<p>Randomly subsample items without replacement from an unknown number of
+input items, that may fall into an unknown number of bins. This method is
+intended for data that either a) cannot fit into memory or b) subsampling
+collections of arbitrary datatypes.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>items</strong> : Iterable</p>
+<blockquote>
+<div><p>The items to evaluate.</p>
+</div></blockquote>
+<p><strong>maximum</strong> : unsigned int</p>
+<blockquote>
+<div><p>The maximum number of items per bin.</p>
+</div></blockquote>
+<p><strong>minimum</strong> : unsigned int, optional</p>
+<blockquote>
+<div><p>The minimum number of items per bin. The default is 1.</p>
+</div></blockquote>
+<p><strong>buf_size</strong> : unsigned int, optional</p>
+<blockquote>
+<div><p>The size of the random value buffer. This buffer holds the random
+values assigned to each item from items. In practice, it is unlikely
+that this value will need to change. Increasing it will require more
+resident memory, but potentially reduce the number of function calls
+made to the PRNG, whereas decreasing it will result in more function
+calls and lower memory overhead. The default is 1000.</p>
+</div></blockquote>
+<p><strong>bin_f</strong> : function, optional</p>
+<blockquote>
+<div><p>Method to determine what bin an item is associated with. If None (the
+default), then all items are considered to be part of the same bin.
+This function will be provided with each entry in items, and must
+return a hashable value indicating the bin that that entry should be
+placed in.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">generator</p>
+<blockquote>
+<div><p>(bin, item)</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><strong>ValueError</strong></p>
+<blockquote>
+<div><p>If <tt class="docutils literal"><span class="pre">minimum</span></tt> is &gt; <tt class="docutils literal"><span class="pre">maximum</span></tt>.</p>
+</div></blockquote>
+<p><strong>ValueError</strong></p>
+<blockquote class="last">
+<div><p>If <tt class="docutils literal"><span class="pre">minimum</span></tt> &lt; 1 or if <tt class="docutils literal"><span class="pre">maximum</span></tt> &lt; 1.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="skbio.stats.subsample_counts.html#skbio.stats.subsample_counts" title="skbio.stats.subsample_counts"><tt class="xref py py-obj docutils literal"><span class="pre">subsample_counts</span></tt></a></p>
+</div>
+<p class="rubric">Notes</p>
+<p>Randomly get up to <tt class="docutils literal"><span class="pre">maximum</span></tt> items for each bin. If the bin has less than
+<tt class="docutils literal"><span class="pre">maximum</span></tt>, only those bins that have &gt;= <tt class="docutils literal"><span class="pre">minimum</span></tt> items are
+returned.</p>
+<p>This method will at most hold <tt class="docutils literal"><span class="pre">maximum</span></tt> * N data, where N is the number
+of bins.</p>
+<p>All items associated to a bin have an equal probability of being retained.</p>
+<p class="rubric">Examples</p>
+<p>Randomly keep up to 2 sequences per sample from a set of demultiplexed
+sequences:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.stats</span> <span class="kn">import</span> <span class="n">isubsample</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seqs</span> <span class="o">=</span> <span class="p">[(</span><span class="s">&#39;sampleA&#39;</span><span class="p">,</span> <span class="s">&#39;AATTGG&#39;</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="p">(</span><span class="s">&#39;sampleB&#39;</span><span class="p">,</span> <span class="s">&#39;ATATATAT&#39;</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="p">(</span><span class="s">&#39;sampleC&#39;</span><span class="p">,</span> <span class="s">&#39;ATGGCC&#39;</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="p">(</span><span class="s">&#39;sampleB&#39;</span><span class="p">,</span> <span class="s">&#39;ATGGCT&#39;</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="p">(</span><span class="s">&#39;sampleB&#39;</span><span class="p">,</span> <span class="s">&#39;ATGGCG&#39;</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="p">(</span><span class="s">&#39;sampleA&#39;</span><span class="p">,</span> <span class="s">&#39;ATGGCA&#39;</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bin_f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">item</span><span class="p">:</span> <span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">bin_</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">isubsample</span><span class="p">(</span><span class="n">seqs</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">bin_f</span><span class="o">=</span><span class="n">bin_f</span><span class="p">)):</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="n">bin_</span><span class="p">,</span> <span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="go">sampleA AATTGG</span>
+<span class="go">sampleA ATGGCA</span>
+<span class="go">sampleB ATATATAT</span>
+<span class="go">sampleB ATGGCG</span>
+<span class="go">sampleC ATGGCC</span>
+</pre></div>
+</div>
+<p>Now, let&#8217;s set the minimum to 2:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">bin_f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">item</span><span class="p">:</span> <span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">bin_</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">isubsample</span><span class="p">(</span><span class="n">seqs</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">bin_f</span><span class="o">=</span><span class="n">bin_f</span><span class="p">)):</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="n">bin_</span><span class="p">,</span> <span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="go">sampleA AATTGG</span>
+<span class="go">sampleA ATGGCA</span>
+<span class="go">sampleB ATATATAT</span>
+<span class="go">sampleB ATGGCG</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+  
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014--, scikit-bio development team.<br/>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.2.2.<br/>
+    </p>
+  </div>
+</footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
+  </body>
+</html>

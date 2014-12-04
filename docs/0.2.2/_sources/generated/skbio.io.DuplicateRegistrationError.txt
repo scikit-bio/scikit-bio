@@ -1,0 +1,6 @@
+skbio.io.DuplicateRegistrationError
+===================================
+
+.. currentmodule:: skbio.io
+
+.. autoexception:: DuplicateRegistrationError

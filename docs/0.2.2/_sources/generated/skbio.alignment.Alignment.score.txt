@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.Alignment.score
+===============================
+
+.. currentmodule:: skbio.alignment
+
+.. automethod:: Alignment.score

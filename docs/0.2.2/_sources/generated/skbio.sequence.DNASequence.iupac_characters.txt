@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.DNASequence.iupac_characters
+===========================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: DNASequence.iupac_characters
