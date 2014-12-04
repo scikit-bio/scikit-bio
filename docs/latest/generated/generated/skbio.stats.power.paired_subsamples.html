@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>skbio.stats.power.paired_subsamples &mdash; scikit-bio 0.2.2 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/style.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/bootswatch-3.1.0/united/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.2.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/copybutton.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-sphinx.js"></script>
+    <link rel="top" title="scikit-bio 0.2.2 documentation" href="../../index.html" />
+    <link rel="up" title="Empirical Power Estimation (skbio.stats.power)" href="../skbio.stats.power.html" />
+    <link rel="next" title="skbio.stats.p_value_to_str" href="../skbio.stats.p_value_to_str.html" />
+    <link rel="prev" title="skbio.stats.power.bootstrap_power_curve" href="skbio.stats.power.bootstrap_power_curve.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body>
+  
+  <a href="https://github.com/biocore/scikit-bio"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../index.html">
+          scikit-bio docs</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.2.2</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            <li class="divider-vertical"></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../alignment.html">Sequence collections and alignments (<tt class="docutils literal"><span class="pre">skbio.alignment</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sequence.html">Biological sequences (<tt class="docutils literal"><span class="pre">skbio.sequence</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tree.html">Tree representations (<tt class="docutils literal"><span class="pre">skbio.tree</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../workflow.html">Constructing workflows (<tt class="docutils literal"><span class="pre">skbio.workflow</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../draw.html">Visualizations (<tt class="docutils literal"><span class="pre">skbio.draw</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../format.sequences.html">Format biological sequences (<tt class="docutils literal"><span class="pre">skbio.format.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../diversity.html">Diversity calculations (<tt class="docutils literal"><span class="pre">skbio.diversity</span></tt>)</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../stats.html">Statistics (<tt class="docutils literal"><span class="pre">skbio.stats</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../parse.sequences.html">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../io.html">File I/O (<tt class="docutils literal"><span class="pre">skbio.io</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../util.html">Utility functionality (<tt class="docutils literal"><span class="pre">skbio.util</span></tt>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../development/py3.html">Supporting Python 2 and Python 3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/coding_guidelines.html">Coding guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/new_module.html">Adding a new module to skbio</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">skbio.stats.power.paired_subsamples</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      
+  <div class="section" id="skbio-stats-power-paired-subsamples">
+<h1>skbio.stats.power.paired_subsamples<a class="headerlink" href="#skbio-stats-power-paired-subsamples" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="skbio.stats.power.paired_subsamples">
+<tt class="descclassname">skbio.stats.power.</tt><tt class="descname">paired_subsamples</tt><big>(</big><em>meta</em>, <em>cat</em>, <em>control_cats</em>, <em>order=None</em>, <em>strict_match=True</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.2.2/skbio/stats/power.py#L666"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.stats.power.paired_subsamples" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets a set of samples to serve as controls</p>
+<p>This function is designed to provide controlled samples, based on a
+metadata category. For example, one could control for age, sex, education
+level, and diet type while measuring exercise frequency. No outcome
+value is considered in this subsampling process.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>meta</strong> : pandas.DataFrame</p>
+<blockquote>
+<div><p>The metadata associated with the samples.</p>
+</div></blockquote>
+<p><strong>cat</strong> : str, list</p>
+<blockquote>
+<div><p>The metadata category (or a list of categories) for comparison.</p>
+</div></blockquote>
+<p><strong>control_cats</strong> : list</p>
+<blockquote>
+<div><p>The metadata categories to be used as controls. For example, if you
+wanted to vary age (<cite>cat</cite> = &#8220;AGE&#8221;), you might want to control for
+gender and health status (i.e. <cite>control_cats</cite> = [&#8220;SEX&#8221;, &#8220;HEALTHY&#8221;])</p>
+</div></blockquote>
+<p><strong>order</strong> : list, optional</p>
+<blockquote>
+<div><p>The order of groups in the category. This can be used
+to limit the groups selected. For example, if there&#8217;s a category with
+groups &#8216;A&#8217;, &#8216;B&#8217; and &#8216;C&#8217;, and you only want to look at A vs B, <cite>order</cite>
+would be set to [&#8216;A&#8217;, &#8216;B&#8217;].</p>
+</div></blockquote>
+<p><strong>strict_match: bool, optional</strong></p>
+<blockquote>
+<div><p>This determines how data is grouped using
+<cite>control_cats</cite>. If a sample within <cite>meta</cite> has an undefined value (NaN)
+for any of the columns in <cite>control_cats</cite>, the sample will not be
+considered as having a match and will be ignored when <cite>strict_match</cite>
+is True. If <cite>strict_match</cite> is False, missing values (NaN) in the
+<cite>control_cats</cite> can be considered matches.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>ids</strong> : array</p>
+<blockquote class="last">
+<div><p>a set of ids which satisfy the criteria. These are not grouped by
+<cite>cat</cite>. An empty array indicates there are no sample ids which satisfy
+the requirements.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>If we have a mapping file for a set of random individuals looking at
+housing, sex, age and antibiotic use.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;SW&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;HOUSING&#39;</span><span class="p">:</span> <span class="s">&#39;2&#39;</span><span class="p">,</span> <span class="s">&#39;SEX&#39;</span><span class="p">:</span> <span class="s">&#39;M&#39;</span><span class="p">,</span> <span class="s">&#39;AGE&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="s">&#39;ABX&#39;</span><span class="p">:</span> <span class="s">&#39;Y&#39;</span><span class="p">},</span>
+<span class="gp">... </span>        <span class="s">&#39;TS&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;HOUSING&#39;</span><span class="p">:</span> <span class="s">&#39;2&#39;</span><span class="p">,</span> <span class="s">&#39;SEX&#39;</span><span class="p">:</span> <span class="s">&#39;M&#39;</span><span class="p">,</span> <span class="s">&#39;AGE&#39;</span><span class="p">:</span> <span class="s">&#39;40s&#39;</span><span class="p">,</span> <span class="s">&#39;ABX&#39;</span><span class="p">:</span> <span class="s">&#39;Y&#39;</span><span class="p">},</span>
+<span class="gp">... </span>        <span class="s">&#39;CB&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;HOUSING&#39;</span><span class="p">:</span> <span class="s">&#39;3&#39;</span><span class="p">,</span> <span class="s">&#39;SEX&#39;</span><span class="p">:</span> <span class="s">&#39;M&#39;</span><span class="p">,</span> <span class="s">&#39;AGE&#39;</span><span class="p">:</span> <span class="s">&#39;40s&#39;</span><span class="p">,</span> <span class="s">&#39;ABX&#39;</span><span class="p">:</span> <span class="s">&#39;Y&#39;</span><span class="p">},</span>
+<span class="gp">... </span>        <span class="s">&#39;BB&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;HOUSING&#39;</span><span class="p">:</span> <span class="s">&#39;1&#39;</span><span class="p">,</span> <span class="s">&#39;SEX&#39;</span><span class="p">:</span> <span class="s">&#39;M&#39;</span><span class="p">,</span> <span class="s">&#39;AGE&#39;</span><span class="p">:</span> <span class="s">&#39;40s&#39;</span><span class="p">,</span> <span class="s">&#39;ABX&#39;</span><span class="p">:</span> <span class="s">&#39;Y&#39;</span><span class="p">}}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">meta</span><span class="p">,</span> <span class="n">orient</span><span class="o">=</span><span class="s">&quot;index&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span> 
+<span class="go">   ABX HOUSING  AGE SEX</span>
+<span class="go">BB   Y       1  40s   M</span>
+<span class="go">CB   Y       3  40s   M</span>
+<span class="go">SW   Y       2  NaN   M</span>
+<span class="go">TS   Y       2  40s   M</span>
+</pre></div>
+</div>
+<p>We may want to vary an individual&#8217;s housing situation, while holding
+constant their age, sex and antibiotic use so we can estimate the effect
+size for housing, and later compare it to the effects of other variables.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.stats.power</span> <span class="kn">import</span> <span class="n">paired_subsamples</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ids</span> <span class="o">=</span> <span class="n">paired_subsamples</span><span class="p">(</span><span class="n">meta</span><span class="p">,</span> <span class="s">&#39;HOUSING&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;SEX&#39;</span><span class="p">,</span> <span class="s">&#39;AGE&#39;</span><span class="p">,</span> <span class="s">&#39;ABX&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span> 
+<span class="go">array([&#39;BB&#39;, &#39;TS&#39;, &#39;CB&#39;]...</span>
+</pre></div>
+</div>
+<p>So, for this set of data, we can match TS, CB, and BB based on their age,
+sex, and antibiotic use. SW cannot be matched in either group becuase
+<cite>strict_match</cite> was true, and there is missing AGE data for this sample.</p>
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+  
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014--, scikit-bio development team.<br/>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.2.2.<br/>
+    </p>
+  </div>
+</footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
+  </body>
+</html>

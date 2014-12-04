@@ -1,0 +1,6 @@
+skbio.stats.power.confidence_bound
+==================================
+
+.. currentmodule:: skbio.stats.power
+
+.. autofunction:: confidence_bound

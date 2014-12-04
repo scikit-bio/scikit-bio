@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Empirical Power Estimation (skbio.stats.power) &mdash; scikit-bio 0.2.2 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/style.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.1.0/united/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.2.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/copybutton.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="top" title="scikit-bio 0.2.2 documentation" href="../index.html" />
+    <link rel="up" title="Statistics (skbio.stats)" href="../stats.html" />
+    <link rel="next" title="skbio.stats.power.subsample_power" href="generated/skbio.stats.power.subsample_power.html" />
+    <link rel="prev" title="skbio.stats.gradient.GradientANOVAResults.to_files" href="generated/skbio.stats.gradient.GradientANOVAResults.to_files.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body>
+  
+  <a href="https://github.com/biocore/scikit-bio"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          scikit-bio docs</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.2.2</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            <li class="divider-vertical"></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../alignment.html">Sequence collections and alignments (<tt class="docutils literal"><span class="pre">skbio.alignment</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sequence.html">Biological sequences (<tt class="docutils literal"><span class="pre">skbio.sequence</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tree.html">Tree representations (<tt class="docutils literal"><span class="pre">skbio.tree</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../workflow.html">Constructing workflows (<tt class="docutils literal"><span class="pre">skbio.workflow</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../draw.html">Visualizations (<tt class="docutils literal"><span class="pre">skbio.draw</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../format.sequences.html">Format biological sequences (<tt class="docutils literal"><span class="pre">skbio.format.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../diversity.html">Diversity calculations (<tt class="docutils literal"><span class="pre">skbio.diversity</span></tt>)</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../stats.html">Statistics (<tt class="docutils literal"><span class="pre">skbio.stats</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../parse.sequences.html">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../io.html">File I/O (<tt class="docutils literal"><span class="pre">skbio.io</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.html">Utility functionality (<tt class="docutils literal"><span class="pre">skbio.util</span></tt>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/py3.html">Supporting Python 2 and Python 3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/coding_guidelines.html">Coding guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/new_module.html">Adding a new module to skbio</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Empirical Power Estimation (<tt class="docutils literal"><span class="pre">skbio.stats.power</span></tt>)</a><ul>
+<li><a class="reference internal" href="#functions">Functions</a></li>
+<li><a class="reference internal" href="#examples">Examples</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      
+  <span class="target" id="module-skbio.stats.power"></span><div class="section" id="empirical-power-estimation-skbio-stats-power">
+<h1>Empirical Power Estimation (<a class="reference internal" href="#module-skbio.stats.power" title="skbio.stats.power"><tt class="xref py py-mod docutils literal"><span class="pre">skbio.stats.power</span></tt></a>)<a class="headerlink" href="#empirical-power-estimation-skbio-stats-power" title="Permalink to this headline">¶</a></h1>
+<p>The purpose of this module is to provide empirical, post-hoc power estimation
+of normally and non-normally distributed data. It also provides support to
+subsample data to facilitate this analysis.</p>
+<p>The underlying principle is based on subsampling and Monte Carlo simulation.
+Assume that there is some set of populations, <span class="math">\(K_{1}, K_{2}, ... K_{n}\)</span>
+which have some property, <span class="math">\(\mu\)</span> such that <span class="math">\(\mu_{1} \neq \mu_{2}
+\neq ... \neq \mu_{n}\)</span>. For each of the populations, a sample, <span class="math">\(S\)</span> can be
+drawn, with a parameter, <span class="math">\(x\)</span> where <span class="math">\(x \approx \mu\)</span> and for the
+samples, we can use a test, <span class="math">\(f\)</span>, to show that <span class="math">\(x_{1} \neq x_{2}
+\neq ... \neq x_{n}\)</span>.</p>
+<p>Since we know that <span class="math">\(\mu_{1} \neq \mu_{2} \neq ... \neq \mu_{n}\)</span>,
+we know we should reject the null hypothesis. If we fail to reject the null
+hypothesis, we have committed a Type II error and our result is a false
+negative. We can estimate the frequency of Type II errors at various sampling
+depths by repeatedly subsampling the populations and observing how often we
+see a false negative. If we repeat this several times for each subsampling
+depth, and vary the depths we use, we can start to approximate a relationship
+between the number of samples we use and the rate of false negatives, also
+called the statistical power of the test.</p>
+<p>To generate complete power curves from data which appears underpowered, the
+<cite>statsmodels.stats.power</cite> package can be used to solve for an effect size. The
+effect size can be used to extrapolate a power curve for the data.</p>
+<p>Most functions in this module accept a statistical test function which takes a
+list of samples and returns a p value. The test is then evaluated over a series
+of subsamples.</p>
+<p>Sampling may be handled in two ways. For any set of samples, we may simply
+choose to draw <span class="math">\(n\)</span> observations at random for each sample. Alternatively,
+if metadata is avalaible, samples can be matched based on a set of control
+categories so that paired samples are drawn at random from the set of avaliable
+matches.</p>
+<div class="section" id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.stats.power.subsample_power.html#skbio.stats.power.subsample_power" title="skbio.stats.power.subsample_power"><tt class="xref py py-obj docutils literal"><span class="pre">subsample_power</span></tt></a>(test,&nbsp;samples[,&nbsp;draw_mode,&nbsp;...])</td>
+<td>Subsamples data to iteratively calculate power</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.stats.power.subsample_paired_power.html#skbio.stats.power.subsample_paired_power" title="skbio.stats.power.subsample_paired_power"><tt class="xref py py-obj docutils literal"><span class="pre">subsample_paired_power</span></tt></a>(test,&nbsp;meta,&nbsp;cat,&nbsp;...)</td>
+<td>Estimates power iteratively using samples with matching metadata</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.stats.power.confidence_bound.html#skbio.stats.power.confidence_bound" title="skbio.stats.power.confidence_bound"><tt class="xref py py-obj docutils literal"><span class="pre">confidence_bound</span></tt></a>(vec[,&nbsp;alpha,&nbsp;df,&nbsp;axis])</td>
+<td>Calculates a confidence bound assuming a normal distribution</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.stats.power.bootstrap_power_curve.html#skbio.stats.power.bootstrap_power_curve" title="skbio.stats.power.bootstrap_power_curve"><tt class="xref py py-obj docutils literal"><span class="pre">bootstrap_power_curve</span></tt></a>(test,&nbsp;samples,&nbsp;...[,&nbsp;...])</td>
+<td>Repeatedly calculates the power curve for a specified alpha level</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.stats.power.paired_subsamples.html#skbio.stats.power.paired_subsamples" title="skbio.stats.power.paired_subsamples"><tt class="xref py py-obj docutils literal"><span class="pre">paired_subsamples</span></tt></a>(meta,&nbsp;cat,&nbsp;control_cats[,&nbsp;...])</td>
+<td>Gets a set of samples to serve as controls</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>Suppose we wanted to test that there&#8217;s a relationship between two random
+variables, <cite>ind</cite> and <cite>dep</cite>. Let&#8217;s use random subsampling to estimate the
+statistical power of our test with an alpha of 0.1, 0.01, and 0.001.</p>
+<p>To control for the pseudo-random number generation, we will use a seed.
+When using these functions with your own data, you don&#8217;t need to include the
+step.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">15</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ind</span>
+<span class="go">array([ 3, 15,  9, 11,  7,  2,  0,  8, 19, 16,  6,  6, 16,  9,  5])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dep</span> <span class="o">=</span> <span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="n">ind</span> <span class="o">+</span> <span class="mi">5</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span> <span class="o">*</span> <span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dep</span>
+<span class="go">array([ 15.617,  47.533,  28.04 ,  33.788,  19.602,  12.229,   4.779,</span>
+<span class="go">        36.838,  67.256,  55.032,  22.157,   7.051,  58.601,  38.664,</span>
+<span class="go">        18.783])</span>
+</pre></div>
+</div>
+<p>Let&#8217;s define a test that will draw a list of sample pairs and determine
+if they&#8217;re correlated. We&#8217;ll use <cite>scipy.stats.pearsonr</cite> which takes two arrays
+and returns a correlation coefficient and a p-value representing the
+probability the two distributions are correlated.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">pearsonr</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">pearsonr</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])[</span><span class="mi">1</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Now, let&#8217;s use random sampling to estimate the power of our test on
+the first distribution.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">samples</span> <span class="o">=</span> <span class="p">[</span><span class="n">ind</span><span class="p">,</span> <span class="n">dep</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
+<span class="go">3.6459452596563003e-08</span>
+</pre></div>
+</div>
+<p>In <cite>subsample_power</cite>, we can maintain a paired relationship between samples
+by setting <cite>draw_mode</cite> to &#8220;matched&#8221;. We can also set our critical value, so
+that we estimate power for a critical value of <span class="math">\(\alpha = 0.05\)</span>, an
+estimate for the critical value of 0.01, and a critical value of 0.001.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.stats.power</span> <span class="kn">import</span> <span class="n">subsample_power</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pwr_100</span><span class="p">,</span> <span class="n">counts_100</span> <span class="o">=</span> <span class="n">subsample_power</span><span class="p">(</span><span class="n">test</span><span class="o">=</span><span class="n">f</span><span class="p">,</span>
+<span class="gp">... </span>                                      <span class="n">samples</span><span class="o">=</span><span class="n">samples</span><span class="p">,</span>
+<span class="gp">... </span>                                      <span class="n">min_observations</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<span class="gp">... </span>                                      <span class="n">max_counts</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+<span class="gp">... </span>                                      <span class="n">min_counts</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<span class="gp">... </span>                                      <span class="n">counts_interval</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="gp">... </span>                                      <span class="n">draw_mode</span><span class="o">=</span><span class="s">&quot;matched&quot;</span><span class="p">,</span>
+<span class="gp">... </span>                                      <span class="n">alpha_pwr</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pwr_010</span><span class="p">,</span> <span class="n">counts_010</span> <span class="o">=</span> <span class="n">subsample_power</span><span class="p">(</span><span class="n">test</span><span class="o">=</span><span class="n">f</span><span class="p">,</span>
+<span class="gp">... </span>                                      <span class="n">samples</span><span class="o">=</span><span class="n">samples</span><span class="p">,</span>
+<span class="gp">... </span>                                      <span class="n">min_observations</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<span class="gp">... </span>                                      <span class="n">max_counts</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+<span class="gp">... </span>                                      <span class="n">min_counts</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<span class="gp">... </span>                                      <span class="n">counts_interval</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="gp">... </span>                                      <span class="n">draw_mode</span><span class="o">=</span><span class="s">&quot;matched&quot;</span><span class="p">,</span>
+<span class="gp">... </span>                                      <span class="n">alpha_pwr</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pwr_001</span><span class="p">,</span> <span class="n">counts_001</span> <span class="o">=</span> <span class="n">subsample_power</span><span class="p">(</span><span class="n">test</span><span class="o">=</span><span class="n">f</span><span class="p">,</span>
+<span class="gp">... </span>                                      <span class="n">samples</span><span class="o">=</span><span class="n">samples</span><span class="p">,</span>
+<span class="gp">... </span>                                      <span class="n">min_observations</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<span class="gp">... </span>                                      <span class="n">max_counts</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+<span class="gp">... </span>                                      <span class="n">min_counts</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<span class="gp">... </span>                                      <span class="n">counts_interval</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="gp">... </span>                                      <span class="n">draw_mode</span><span class="o">=</span><span class="s">&quot;matched&quot;</span><span class="p">,</span>
+<span class="gp">... </span>                                      <span class="n">alpha_pwr</span><span class="o">=</span><span class="mf">0.001</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts_100</span>
+<span class="go">array([3, 4, 5, 6, 7, 8, 9])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pwr_100</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">array([ 0.466 ,  0.827 ,  0.936 ,  0.9852,  0.998 ,  1.    ,  1.    ])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pwr_010</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">array([ 0.0468,  0.2394,  0.5298,  0.8184,  0.951 ,  0.981 ,  0.9982])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pwr_001</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">array([ 0.003 ,  0.0176,  0.1212,  0.3428,  0.5892,  0.8256,  0.9566])</span>
+</pre></div>
+</div>
+<p>Based on this power estimate, as we increase our confidence that we have not
+committed a type I error and identified a false positive, the number of samples
+we need to be confident that we have not committed a type II error increases.</p>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+  
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014--, scikit-bio development team.<br/>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.2.2.<br/>
+    </p>
+  </div>
+</footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
+  </body>
+</html>

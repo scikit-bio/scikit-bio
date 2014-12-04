@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.stats.distance.ANOSIM._run
-================================
-
-.. currentmodule:: skbio.stats.distance
-
-.. automethod:: ANOSIM._run

@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.NucleotideSequence.k_word_counts
+===============================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: NucleotideSequence.k_word_counts

@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.ProteinSequence.iupac_standard_characters
+========================================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: ProteinSequence.iupac_standard_characters

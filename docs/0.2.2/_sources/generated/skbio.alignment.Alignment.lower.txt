@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.Alignment.lower
+===============================
+
+.. currentmodule:: skbio.alignment
+
+.. automethod:: Alignment.lower

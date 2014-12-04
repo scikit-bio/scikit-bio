@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.stats.distance.PERMANOVA.long_method_name
-===============================================
-
-.. currentmodule:: skbio.stats.distance
-
-.. autoattribute:: PERMANOVA.long_method_name

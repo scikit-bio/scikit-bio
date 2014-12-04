@@ -1,0 +1,6 @@
+skbio.util.TestingUtilError
+===========================
+
+.. currentmodule:: skbio.util
+
+.. autoexception:: TestingUtilError

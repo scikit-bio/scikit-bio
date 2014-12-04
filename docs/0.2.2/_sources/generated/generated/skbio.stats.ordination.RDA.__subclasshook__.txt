@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.stats.ordination.RDA.__subclasshook__
+===========================================
+
+.. currentmodule:: skbio.stats.ordination
+
+.. automethod:: RDA.__subclasshook__

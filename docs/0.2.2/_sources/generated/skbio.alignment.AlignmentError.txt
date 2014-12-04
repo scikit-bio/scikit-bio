@@ -1,0 +1,6 @@
+skbio.alignment.AlignmentError
+==============================
+
+.. currentmodule:: skbio.alignment
+
+.. autoexception:: AlignmentError

@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.SequenceCollection.default_write_format
+=======================================================
+
+.. currentmodule:: skbio.alignment
+
+.. autoattribute:: SequenceCollection.default_write_format

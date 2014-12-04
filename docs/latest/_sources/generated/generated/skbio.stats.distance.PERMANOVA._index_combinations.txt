@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.stats.distance.PERMANOVA._index_combinations
-==================================================
-
-.. currentmodule:: skbio.stats.distance
-
-.. automethod:: PERMANOVA._index_combinations

@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.stats.ordination.CA.__reduce__
+====================================
+
+.. currentmodule:: skbio.stats.ordination
+
+.. automethod:: CA.__reduce__

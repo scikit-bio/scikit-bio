@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.stats.ordination.OrdinationResults._get_plot_point_colors
+===============================================================
+
+.. currentmodule:: skbio.stats.ordination
+
+.. automethod:: OrdinationResults._get_plot_point_colors

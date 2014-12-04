@@ -1,0 +1,6 @@
+skbio.diversity.beta.pw_distances
+=================================
+
+.. currentmodule:: skbio.diversity.beta
+
+.. autofunction:: pw_distances

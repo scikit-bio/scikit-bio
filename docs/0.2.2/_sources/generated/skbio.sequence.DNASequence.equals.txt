@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.DNASequence.equals
+=================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: DNASequence.equals

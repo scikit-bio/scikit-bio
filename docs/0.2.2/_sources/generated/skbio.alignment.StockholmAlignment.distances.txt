@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.StockholmAlignment.distances
+============================================
+
+.. currentmodule:: skbio.alignment
+
+.. automethod:: StockholmAlignment.distances

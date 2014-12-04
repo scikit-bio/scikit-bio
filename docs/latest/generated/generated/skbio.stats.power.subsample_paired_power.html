@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>skbio.stats.power.subsample_paired_power &mdash; scikit-bio 0.2.2 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/style.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/bootswatch-3.1.0/united/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.2.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/copybutton.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-sphinx.js"></script>
+    <link rel="top" title="scikit-bio 0.2.2 documentation" href="../../index.html" />
+    <link rel="up" title="Empirical Power Estimation (skbio.stats.power)" href="../skbio.stats.power.html" />
+    <link rel="next" title="skbio.stats.power.confidence_bound" href="skbio.stats.power.confidence_bound.html" />
+    <link rel="prev" title="skbio.stats.power.subsample_power" href="skbio.stats.power.subsample_power.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body>
+  
+  <a href="https://github.com/biocore/scikit-bio"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../index.html">
+          scikit-bio docs</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.2.2</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            <li class="divider-vertical"></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../alignment.html">Sequence collections and alignments (<tt class="docutils literal"><span class="pre">skbio.alignment</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sequence.html">Biological sequences (<tt class="docutils literal"><span class="pre">skbio.sequence</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tree.html">Tree representations (<tt class="docutils literal"><span class="pre">skbio.tree</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../workflow.html">Constructing workflows (<tt class="docutils literal"><span class="pre">skbio.workflow</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../draw.html">Visualizations (<tt class="docutils literal"><span class="pre">skbio.draw</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../format.sequences.html">Format biological sequences (<tt class="docutils literal"><span class="pre">skbio.format.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../diversity.html">Diversity calculations (<tt class="docutils literal"><span class="pre">skbio.diversity</span></tt>)</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../stats.html">Statistics (<tt class="docutils literal"><span class="pre">skbio.stats</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../parse.sequences.html">Parse biological sequences (<tt class="docutils literal"><span class="pre">skbio.parse.sequences</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../io.html">File I/O (<tt class="docutils literal"><span class="pre">skbio.io</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../util.html">Utility functionality (<tt class="docutils literal"><span class="pre">skbio.util</span></tt>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../development/py3.html">Supporting Python 2 and Python 3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/coding_guidelines.html">Coding guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/new_module.html">Adding a new module to skbio</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">skbio.stats.power.subsample_paired_power</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      
+  <div class="section" id="skbio-stats-power-subsample-paired-power">
+<h1>skbio.stats.power.subsample_paired_power<a class="headerlink" href="#skbio-stats-power-subsample-paired-power" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="skbio.stats.power.subsample_paired_power">
+<tt class="descclassname">skbio.stats.power.</tt><tt class="descname">subsample_paired_power</tt><big>(</big><em>test</em>, <em>meta</em>, <em>cat</em>, <em>control_cats</em>, <em>order=None</em>, <em>strict_match=True</em>, <em>alpha_pwr=0.05</em>, <em>min_observations=20</em>, <em>max_counts=50</em>, <em>counts_interval=10</em>, <em>min_counts=None</em>, <em>num_iter=500</em>, <em>num_runs=10</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.2.2/skbio/stats/power.py#L328"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.stats.power.subsample_paired_power" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimates power iteratively using samples with matching metadata</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>test</strong> : function</p>
+<blockquote>
+<div><p>The statistical test which accepts a list of arrays sample ids and
+returns a p value.</p>
+</div></blockquote>
+<p><strong>meta</strong> : pandas.DataFrame</p>
+<blockquote>
+<div><p>The metadata associated with the samples.</p>
+</div></blockquote>
+<p><strong>cat</strong> : str</p>
+<blockquote>
+<div><p>The metadata category being varied between samples.</p>
+</div></blockquote>
+<p><strong>control_cats</strong> : list</p>
+<blockquote>
+<div><p>The metadata categories to be used as controls. For example, if
+you wanted to vary age (<cite>cat</cite> = &#8220;AGE&#8221;), you might want to control
+for gender and health status (i.e. <cite>control_cats</cite> = [&#8220;SEX&#8221;,
+&#8220;HEALTHY&#8221;]).</p>
+</div></blockquote>
+<p><strong>order</strong> : list, optional</p>
+<blockquote>
+<div><p>The order of groups in the category. This can be used
+to limit the groups selected. For example, if there&#8217;s a category with
+groups &#8216;A&#8217;, &#8216;B&#8217; and &#8216;C&#8217;, and you only want to look at A vs B, <cite>order</cite>
+would be set to [&#8216;A&#8217;, &#8216;B&#8217;].</p>
+</div></blockquote>
+<p><strong>strict_match</strong> : bool, optional</p>
+<blockquote>
+<div><p>This determines how data is grouped using
+<cite>control_cats</cite>. If a sample within <cite>meta</cite> has an undefined value (NaN)
+for any of the columns in <cite>control_cats</cite>, the sample will not be
+considered as having a match and will be ignored when <cite>strict_match</cite>
+is True. If <cite>strict_match</cite> is False, missing values (NaN) in the
+<cite>control_cats</cite> can be considered matches.</p>
+</div></blockquote>
+<p><strong>alpha_pwr</strong> : float, optional</p>
+<blockquote>
+<div><p>The critical value used to calculate the power.</p>
+</div></blockquote>
+<p><strong>min_observations</strong> : unsigned int, optional</p>
+<blockquote>
+<div><p>The minimum number of paired samples which must exist
+for a category and set of control categories to be able to subsample
+and make power calculations. This is not the same as the minimum
+number of observations to draw during subsampling.</p>
+</div></blockquote>
+<p><strong>max_counts</strong> : unsigned int, optional</p>
+<blockquote>
+<div><p>The maximum number of observations per sample to draw
+for effect size calculation.</p>
+</div></blockquote>
+<p><strong>counts_interval</strong> : unsigned int, optional</p>
+<blockquote>
+<div><p>The difference between each subsampling count.</p>
+</div></blockquote>
+<p><strong>min_counts</strong> : unsigned int, optional</p>
+<blockquote>
+<div><p>How many samples should be drawn for the smallest
+subsample. If this is None, the <cite>counts_interval</cite> will be used.</p>
+</div></blockquote>
+<p><strong>num_iter</strong> : unsigned int, optional</p>
+<blockquote>
+<div><p>The number of p-values to generate for each point on the curve.</p>
+</div></blockquote>
+<p><strong>num_runs</strong> : unsigned int, optional</p>
+<blockquote>
+<div><p>The number of times to calculate each curve.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>power</strong> : array</p>
+<blockquote>
+<div><p>The power calculated for each subsample at each count.</p>
+</div></blockquote>
+<p><strong>sample_counts</strong> : array</p>
+<blockquote>
+<div><p>The number of samples drawn at each power calculation.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><strong>ValueError</strong></p>
+<blockquote>
+<div><p>There is a value error if there are fewer samples than the minimum
+count.</p>
+</div></blockquote>
+<p><strong>ValueError</strong></p>
+<blockquote class="last">
+<div><p>If the <cite>counts_interval</cite> is greater than the difference between the
+sample start and the max value, the function raises a ValueError.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Assume you are interested in the role of a specific cytokine of protein
+translocation in myloid-lineage cells. You are able to culture two
+macrophage lineages (bone marrow derived phagocytes and
+peritoneally-derived macrophages). Due to unfortunate circumstances, your
+growth media must be acquired from multiple sources (lab, company A,
+company B). Also unfortunate, you must use labor-intense low throughput
+assays. You have some preliminary measurements, and you&#8217;d like to
+predict how many (more) cells you need to analyze for 80% power.</p>
+<p>You have information about 60 cells, which we&#8217;ll simulate below. Note
+that we are setting a random seed value for consistency.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">25</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">({</span>
+<span class="gp">... </span>    <span class="s">&#39;CELL_LINE&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">60</span><span class="p">,)),</span>
+<span class="gp">... </span>    <span class="s">&#39;SOURCE&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mf">0.33</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">60</span><span class="p">,)),</span>
+<span class="gp">... </span>    <span class="s">&#39;TREATMENT&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">30</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">30</span><span class="p">)))),</span>
+<span class="gp">... </span>    <span class="s">&#39;INCUBATOR&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">60</span><span class="p">,))})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="p">[</span><span class="s">&#39;OUTCOME&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.25</span> <span class="o">+</span> <span class="n">data</span><span class="o">.</span><span class="n">TREATMENT</span> <span class="o">*</span> <span class="mf">0.25</span><span class="p">)</span> <span class="o">+</span> \
+<span class="gp">... </span>    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">60</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">0.1</span> <span class="o">+</span> <span class="n">data</span><span class="o">.</span><span class="n">SOURCE</span><span class="o">/</span><span class="mi">10</span> <span class="o">+</span> <span class="n">data</span><span class="o">.</span><span class="n">CELL_LINE</span><span class="o">/</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">OUTCOME</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;OUTCOME&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">OUTCOME</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&#39;OUTCOME&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+</pre></div>
+</div>
+<p>We will approach this by assuming that the distribution of our outcome is
+not normally distributed, and apply a kruskal-wallis test to compare
+between the cytokine treated and untreated cells.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">kruskal</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">kruskal</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="s">&#39;OUTCOME&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">x</span><span class="p">])[</span><span class="mi">1</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Let&#8217;s check that cytokine treatment has a signifigant effect across all
+the cells.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">treatment_stat</span> <span class="o">=</span> <span class="p">[</span><span class="n">g</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s">&#39;TREATMENT&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">groups</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">(</span><span class="n">treatment_stat</span><span class="p">)</span>
+<span class="go">0.0019386336266250209</span>
+</pre></div>
+</div>
+<p>Now, let&#8217;s pick the control categories. It seems reasonable to assume there
+may be an effect of cell line on the treatment outcome, which may be
+attributed to differences in receptor expression. It may also be possible
+that there are differences due cytokine source. Incubators were maintained
+under the same conditions throughout the experiment, within one degree of
+temperature difference at any given time, and the same level of CO2.
+So, at least initially, let&#8217;s ignore differences due to the incubator.</p>
+<p>It&#8217;s recommended that as a first pass analysis, control variables be
+selected based on an idea of what may be biologically relevant to the
+system, although further iteration might encourage the consideration of
+variable with effect sizes similar, or larger than the variable of
+interest.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">control_cats</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;SOURCE&#39;</span><span class="p">,</span> <span class="s">&#39;CELL_LINE&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.stats.power</span> <span class="kn">import</span> <span class="n">subsample_paired_power</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pwr</span><span class="p">,</span> <span class="n">cnt</span> <span class="o">=</span> <span class="n">subsample_paired_power</span><span class="p">(</span><span class="n">test</span><span class="o">=</span><span class="n">f</span><span class="p">,</span>
+<span class="gp">... </span>                                  <span class="n">meta</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+<span class="gp">... </span>                                  <span class="n">cat</span><span class="o">=</span><span class="s">&#39;TREATMENT&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                                  <span class="n">control_cats</span><span class="o">=</span><span class="n">control_cats</span><span class="p">,</span>
+<span class="gp">... </span>                                  <span class="n">min_observations</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<span class="gp">... </span>                                  <span class="n">counts_interval</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<span class="gp">... </span>                                  <span class="n">num_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+<span class="gp">... </span>                                  <span class="n">num_runs</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cnt</span>
+<span class="go">array([ 5, 10, 15, 20])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pwr</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">array([ 0.15 ,  0.376,  0.614,  0.836])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pwr</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">array([ 0.046,  0.106,  0.176,  0.153])</span>
+</pre></div>
+</div>
+<p>Estimating off the power curve, it looks like 20 cells per group may
+provide addiquite power for this experiment, although the large variance
+in power might suggest extending the curves or increasing the number of
+samples per group.</p>
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+  
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014--, scikit-bio development team.<br/>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.2.2.<br/>
+    </p>
+  </div>
+</footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
+  </body>
+</html>

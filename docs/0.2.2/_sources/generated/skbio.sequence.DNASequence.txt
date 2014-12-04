@@ -1,0 +1,86 @@
+skbio.sequence.DNASequence
+==========================
+
+.. currentmodule:: skbio.sequence
+
+.. autoclass:: DNASequence
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         DNASequence.__contains__
+         DNASequence.__eq__
+         DNASequence.__format__
+         DNASequence.__getitem__
+         DNASequence.__hash__
+         DNASequence.__init__
+         DNASequence.__iter__
+         DNASequence.__len__
+         DNASequence.__ne__
+         DNASequence.__new__
+         DNASequence.__reduce__
+         DNASequence.__reduce_ex__
+         DNASequence.__repr__
+         DNASequence.__reversed__
+         DNASequence.__sizeof__
+         DNASequence.__str__
+         DNASequence.__subclasshook__
+         DNASequence._complement
+         DNASequence._set_quality
+         DNASequence.alphabet
+         DNASequence.complement
+         DNASequence.complement_map
+         DNASequence.copy
+         DNASequence.count
+         DNASequence.degap
+         DNASequence.distance
+         DNASequence.equals
+         DNASequence.find_features
+         DNASequence.fraction_diff
+         DNASequence.fraction_same
+         DNASequence.gap_alphabet
+         DNASequence.gap_maps
+         DNASequence.gap_vector
+         DNASequence.has_quality
+         DNASequence.has_unsupported_characters
+         DNASequence.index
+         DNASequence.is_gap
+         DNASequence.is_gapped
+         DNASequence.is_reverse_complement
+         DNASequence.is_valid
+         DNASequence.iupac_characters
+         DNASequence.iupac_degeneracies
+         DNASequence.iupac_degenerate_characters
+         DNASequence.iupac_standard_characters
+         DNASequence.k_word_counts
+         DNASequence.k_word_frequencies
+         DNASequence.k_words
+         DNASequence.lower
+         DNASequence.nondegenerates
+         DNASequence.rc
+         DNASequence.read
+         DNASequence.regex_iter
+         DNASequence.reverse_complement
+         DNASequence.to_fasta
+         DNASequence.unsupported_characters
+         DNASequence.upper
+         DNASequence.write
+
+
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         DNASequence.default_write_format
+         DNASequence.description
+         DNASequence.feature_types
+         DNASequence.id
+         DNASequence.quality
+         DNASequence.sequence
+
