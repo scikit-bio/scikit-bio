@@ -1,5 +1,7 @@
 # scikit-bio changelog
 
+## Version 0.2.2-dev (changes since 0.2.2 release go here)
+
 ## Version 0.2.2 (2014-12-04)
 
 ### Features
