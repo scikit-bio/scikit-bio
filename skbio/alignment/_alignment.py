@@ -1747,7 +1747,7 @@ class Alignment(SequenceCollection):
 
            Plot the Alignment as a heatmap:
 
-           >>> fig = aln.heatmap(hydrophobicity_idx,
+           >>> fig = aln.heatmap(hydrophobicity_idx, fig_size=(15, 10),
            ...                   legend_labels=hydrophobicity_labels,
            ...                   cmap='Greens')
 
