@@ -58,7 +58,7 @@ class URLGetterTests(TestCase):
         close(fd)
 
         self.g = URLGetter()
-        self.g.base_url = 'http://www.google.com'
+        self.g.base_url = 'http://www.google.com/'
 
     def tearDown(self):
         try:
@@ -68,7 +68,7 @@ class URLGetterTests(TestCase):
 
     def test_str(self):
         # test URL construction
-        self.assertEqual(str(self.g), 'http://www.google.com')
+        self.assertEqual(str(self.g), 'http://www.google.com/')
 
     def test_read(self):
         # test reading

@@ -37,23 +37,16 @@ from __future__ import absolute_import, division, print_function
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from future.utils import PY3
-from future import standard_library
+from future.utils import PY3, viewitems
+import requests
 
-# do nothing if it's not python 3
-decode_bytes = lambda x: x
+from skbio.io.util import open_file
 
 if PY3:
     long = int
-    decode_bytes = lambda x: x.decode('utf-8')
-
-with standard_library.hooks():
-    from urllib.request import urlopen, urlretrieve
-    from urllib.parse import quote_plus
 
 
 class URLGetter(object):
-
     """Base class to submit queries with EUtils
 
     This class provides the base functionality to work with the Entrez database
@@ -84,6 +77,17 @@ class URLGetter(object):
         self.__dict__.update(kwargs)
         self._temp_args = {}
 
+    def request(self, stream=False, **kwargs):
+        """"""
+        to_get = self.__dict__.copy()
+        to_get.update(self._temp_args)
+        to_get.update(kwargs)
+
+        # only "printable" keys should be added to the request
+        par = {k: v for k, v in viewitems(to_get) if k in self.printed_fields}
+
+        return requests.get(self.base_url, params=par, stream=stream)
+
     def __str__(self):
         """Returns the formatted URL for this object
 
@@ -99,34 +103,13 @@ class URLGetter(object):
         >>> a.base_url = "http://www.google.com/"
         >>> a.printed_fields['search'] = None
         >>> a.printed_fields['db'] = None
-        >>> print(a)
-        http://www.google.com/search=foo&db=bar
+        >>> str(a)
+        'http://www.google.com/?search=foo&db=bar'
 
         ..shownumpydoc
         """
-        to_get = self.__dict__.copy()
-        to_get.update(self._temp_args)
-        fields = []
-
-        for key, value in to_get.items():
-            if key in self.printed_fields:
-                fields.append(quote_plus(key) + self.key_value_delimiter +
-                              quote_plus(str(value)))
-
-        return self.base_url + self.field_delimiter.join(fields)
-
-    def open(self, **kwargs):
-        """Return a stream to the URL constructed by this class
-
-        Returns
-        -------
-        file-like object
-            Returns a file-like object from which information can be read
-        """
-        self._temp_args = kwargs
-        result = urlopen(str(self))
-        self._temp_args = {}
-        return result
+        # we set stream to prevent from performing the actual request
+        return self.request(stream=True).url
 
     def read(self, **kwargs):
         """Reads the contents of the URL constructed by this class
@@ -137,29 +120,22 @@ class URLGetter(object):
             Read data from the URL, this can be a string, bytes or the binary
             data contained in the URL.
         """
-        result = self.open(**kwargs)
+        return self.request(**kwargs).content
 
-        # will only decode if it's py3k
-        data = decode_bytes(result.read())
-
-        result.close()
-        return data
-
-    def retrieve(self, fp, **kwargs):
+    def retrieve(self, filepath_or, **kwargs):
         """Reads and writes to a file the contents of the URL
 
         Parameters
         ----------
-        fp : str
+        filepath_or : str/bytes/unicode string or file-like
             File path where the contents will be written to.
 
         Notes
         -----
         This method produces no return value.
         """
-        self._temp_args = kwargs
-        urlretrieve(str(self), fp)
-        self._temp_args = None
+        with open_file(filepath_or, 'w') as handle:
+            handle.write(self.read(**kwargs))
 
 
 def expand_slice(s):
