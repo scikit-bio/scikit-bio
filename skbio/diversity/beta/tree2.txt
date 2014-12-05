@@ -1,0 +1,1 @@
+((((species1:0.2,species2:0.3):0.3,((species3:0.5,species4:0.3):0.2,species5:0.9):0.3):0.35,(((species6:0.2,species7:0.3):0.3,(species8:0.3,species9:0.4):0.7):0.2)))root;
