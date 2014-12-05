@@ -103,8 +103,8 @@ class URLGetter(object):
         >>> a.base_url = "http://www.google.com/"
         >>> a.printed_fields['search'] = None
         >>> a.printed_fields['db'] = None
-        >>> str(a)
-        'http://www.google.com/?search=foo&db=bar'
+        >>> str(a) # doctest: +ELLIPSIS
+        'http://www.google.com/...'
 
         ..shownumpydoc
         """

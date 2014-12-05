@@ -235,7 +235,7 @@ command-line and run it in a web browser. You can do this by calling str() on
 the ``ef``, or by printing it. For example:
 
 >>> print(ef) # doctest: +ELLIPSIS
-http://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?retmax=100&retmod...
+http://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi...
 
 If you paste the resulting string into your web browser and you get the same
 incorrect result that you get using PyCogent, you know that you should direct
@@ -248,7 +248,7 @@ I can achieve that as follows:
 >>> ef = EFetch(id='459567', rettype='fasta', retmode='xml',
 ...             email='rob@spot.colorado.edu')
 >>> print(ef) # doctest: +ELLIPSIS
-http://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?retmax=100&retmod...
+http://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi...
 
 You can also select multiple ids (pass in as comma-delimited list):
 
