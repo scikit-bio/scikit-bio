@@ -120,7 +120,7 @@ class URLGetter(object):
             Read data from the URL, this can be a string, bytes or the binary
             data contained in the URL.
         """
-        return self.request(**kwargs).content
+        return str(self.request(**kwargs).text)
 
     def retrieve(self, filepath_or, **kwargs):
         """Reads and writes to a file the contents of the URL
