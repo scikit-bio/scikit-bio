@@ -401,7 +401,7 @@ def _int_constructor(node):
 
 def _str_constructor(node):
     """Makes an str out of node's first textnode child."""
-    return str(node.firstChild.data)
+    return node.firstChild.data
 
 # the following are the only keys we explicitly handle now:
 # (note difference in capitalization from parameters passed in)
@@ -442,7 +442,7 @@ def _esearch_result_parser(result_as_string):
         # skip top-level text nodes
         if n.nodeType == n.TEXT_NODE:
             continue
-        name = str(n.tagName)  # who cares about unicode anyway...
+        name = n.tagName
         if name in ESEARCH_CONSTRUCTORS:
             result[name] = ESEARCH_CONSTRUCTORS[name](n)
         else:  # just keep the data if we don't know what it is
@@ -460,7 +460,6 @@ def _elink_result_parser(text):
     result = []
     in_links = False
     for line in text.splitlines():
-        line = str(line)  # py3k compatibility
         if '<LinkName>' in line:
             in_links = True
         elif in_links and ('<Id>' in line):
@@ -651,7 +650,7 @@ class EUtils(object):
                     print('CURR REC:', curr_rec, 'COUNT:', count)
                     print(str(fetch_query))
                 # return the result of the fetch
-                curr = str(fetch_query.read())
+                curr = fetch_query.read()
                 result.write(curr)
                 if not curr.endswith('\n'):
                     result.write('\n')

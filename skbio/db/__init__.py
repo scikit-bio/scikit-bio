@@ -265,8 +265,8 @@ AND bacteria[orgn]'`` in the snippet below.
 
 >>> from skbio.db.ncbi import EUtils
 >>> e = EUtils(numseqs=100, db='protein', rettype='gp')
->>> result = e['BAB52044']
->>> print(result.read()) # doctest: +ELLIPSIS
+>>> result = e['BAB52044'].read()
+>>> print(result) # doctest: +ELLIPSIS
 LOCUS       BAB52044                 548 aa            linear   BCT 16-MAY-2009
 DEFINITION  lysyl tRNA synthetase [Mesorhizobium loti MAFF303099].
 ACCESSION   BAB52044

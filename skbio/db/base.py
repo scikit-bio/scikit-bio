@@ -65,6 +65,8 @@ class URLGetter(object):
         Character that delimits keys & values. Defaults to `=`.
     field_delimiter : str
         Character that separates key-value pairs. Defaults to `&`.
+    data_encoding : str
+        The encoding of the last piece of read data.
     """
     defaults = {}
     printed_fields = {}
@@ -77,8 +79,25 @@ class URLGetter(object):
         self.__dict__.update(kwargs)
         self._temp_args = {}
 
-    def request(self, stream=False, **kwargs):
-        """"""
+        self.data_encoding = None
+
+    def response(self, stream=False, **kwargs):
+        """Return a response object for the given parameters
+
+        Parameters
+        ----------
+        stream : bool, optional
+            If ``True`` the data won't be retrieved until you request the
+            information from the response object.
+        kwargs
+            Optional parameters passed to the GET request.
+
+        Returns
+        -------
+        resuests.Response
+            `Response` object initialized with the `printed_fields` as
+            parameters.
+        """
         to_get = self.__dict__.copy()
         to_get.update(self._temp_args)
         to_get.update(kwargs)
@@ -109,18 +128,24 @@ class URLGetter(object):
         ..shownumpydoc
         """
         # we set stream to prevent from performing the actual request
-        return self.request(stream=True).url
+        return self.response(stream=True).url
 
     def read(self, **kwargs):
         """Reads the contents of the URL constructed by this class
 
         Returns
         -------
-        object
-            Read data from the URL, this can be a string, bytes or the binary
-            data contained in the URL.
+        str
+            String representation of the fetched data.
+
+        Notes
+        -----
+        After this method is executed the `data_encoding` attribute of the
+        object is updated to contain the encoding of the downloaded data.
         """
-        return str(self.request(**kwargs).text)
+        response = self.response(**kwargs)
+        self.data_encoding = response.encoding
+        return response.text
 
     def retrieve(self, filepath_or, **kwargs):
         """Reads and writes to a file the contents of the URL
