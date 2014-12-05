@@ -858,36 +858,51 @@ class AlignmentTests(TestCase):
         with self.assertRaises(SequenceCollectionError):
             npt.assert_warns(DeprecationWarning, a.to_phylip)
 
-    def test_heatmap_sanity(self):
-        fig = self.heatmap_for_tests()
-        axes = fig.get_axes()
-        ax = axes[0]
-        xticks = []
-        for tick in ax.get_xticklabels():
-            xticks.append(tick.get_text())
-        self.assertEqual(xticks, ['A', 'A', 'C', 'C', 'C', 'G', 'T'])
-        yticks = []
-        for tick in ax.get_yticklabels():
-            yticks.append(tick.get_text())
-        self.assertEqual(yticks, ['seq1', 'seq2'])
-        self.assertIsInstance(fig, mpl.figure.Figure)
+    def test_heatmap_with_defaults(self):
+        values, sequences, a1 = self.heatmap_set_values()
+        fig = a1.heatmap(values)
+        self.heatmap_basic_sanity(fig, ['A', 'A', 'C', 'C', 'C', 'G', 'T'],
+                                  ['seq1', 'seq2'], ['Minimum', 'Median',
+                                                     'Maximum'])
 
-    def heatmap_for_tests(self):
+    def test_heatmap_with_custom(self):
         sequences = [DNA('AACCCGT', id="seq1"),
                      DNA('AACCGGT', id="seq2")]
         a1 = Alignment(sequences)
-        hydrophobicity_idx = defaultdict(lambda: np.nan)
-        # Data derived from AAIndex:
-        # http://www.genome.jp/dbget-bin/www_bget?aaindex:ARGP820101
-        hydrophobicity_idx.update({'A': 0.61, 'L': 1.53, 'R': 0.60, 'K': 1.15,
-                                   'N': 0.06, 'M': 1.18, 'D': 0.46, 'F': 2.02,
-                                   'C': 1.07, 'P': 1.95, 'Q': 0., 'S': 0.05,
-                                   'E': 0.47, 'T': 0.05, 'G': 0.07, 'W': 2.65,
-                                   'H': 0.61, 'Y': 1.88, 'I': 2.22, 'V': 1.32})
-        hydrophobicity_labels = ['Hydrophilic', 'Medium', 'Hydrophobic']
-        fig = a1.heatmap(hydrophobicity_idx, fig_size=(15, 10),
-                         legend_labels=hydrophobicity_labels)
-        return(fig)
+        values = {'A': 0.61, 'C': 1.07, 'T': 0.05, 'G': 0.07}
+        clabels = ['a', 'b', 'c']
+        fig = a1.heatmap(values, fig_size=(15, 10), cmap='Blues',
+                         legend_labels=clabels,
+                         sequence_order=('seq2', 'seq1'))
+        self.heatmap_basic_sanity(fig, ['A', 'A', 'C', 'C', 'C', 'G', 'T'],
+                                  ['seq2', 'seq1'], ['a', 'b', 'c'])
+        self.assertEqual(fig.get_figwidth(), 15.0)
+        self.assertEqual(fig.get_figheight(), 10.0)
+
+    def heatmap_set_values(self):
+        sequences = [DNA('AACCCGT', id="seq1"),
+                     DNA('AACCGGT', id="seq2")]
+        a1 = Alignment(sequences)
+        values = {'A': 0.61, 'C': 1.07, 'T': 0.05, 'G': 0.07}
+        return(values, sequences, a1)
+
+    def heatmap_basic_sanity(self, fig, xt, yt, clabels):
+        axes = fig.get_axes()
+        self.assertEqual(len(axes), 2)
+        ax = axes[0]
+        axc = axes[1]
+        xticks = []
+        for tick in ax.get_xticklabels():
+            xticks.append(tick.get_text())
+        self.assertEqual(xticks, xt)
+        yticks = []
+        for tick in ax.get_yticklabels():
+            yticks.append(tick.get_text())
+        self.assertEqual(yticks, yt)
+        cticks = []
+        for tick in axc.get_xticklabels():
+            cticks.append(tick.get_text())
+        self.assertEqual(clabels, cticks)
 
     def test_validate_lengths(self):
         self.assertTrue(self.a1._validate_lengths())

@@ -1772,7 +1772,8 @@ class Alignment(SequenceCollection):
         # http://matplotlib.org/examples/pylab_examples/...
         # colorbar_tick_labelling_demo.html
         fig, ax = plt.subplots()
-        fig.set_size_inches(fig_size)
+        if fig_size is not None:
+            fig.set_size_inches(fig_size)
 
         cax = ax.imshow(mtx.T, interpolation='nearest', cmap=cmap)
 
