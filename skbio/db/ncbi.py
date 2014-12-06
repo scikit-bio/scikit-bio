@@ -58,18 +58,14 @@ EUTILS_BASE_URL = 'http://www.ncbi.nlm.nih.gov/entrez/eutils'
 
 # EUtils requires a tool and and email address
 DEFAULT_TOOL_STRING = 'scikit-bio'
-DEFAULT_EMAIL_ADDRESS = 'yoshiki.vazquezbaeza@colorado.edu'
+DEFAULT_EMAIL_ADDRESS = 'foo@bar.com'
 
-# databases last updated 7/22/05
-VALID_DATABASES = dict.fromkeys(["pubmed", "protein", "nucleotide",
-                                 "structure", "genome", "books",
-                                 "cancerchromosomes", "cdd", "domains", "gene",
-                                 "genomeprj", "gensat", "geo", "gds",
-                                 "homologene", "journals", "mesh",
-                                 "ncbisearch", "nlmcatalog", "omim", "pmc",
-                                 "popset", "probe", "pcassay", "pccompound",
-                                 "pcsubstance", "snp", "taxonomy", "unigene",
-                                 "unists"])
+VALID_DATABASES = {"pubmed", "protein", "nucleotide", "structure", "genome",
+                   "books", "cancerchromosomes", "cdd", "domains", "gene",
+                   "genomeprj", "gensat", "geo", "gds", "homologene",
+                   "journals", "mesh", "ncbisearch", "nlmcatalog", "omim",
+                   "pmc", "popset", "probe", "pcassay", "pccompound",
+                   "pcsubstance", "snp", "taxonomy", "unigene", "unists"}
 
 # RETTYPES last updated 7/22/05 somehow, I don't think we'll be writing parsers
 # for all these...
@@ -312,8 +308,8 @@ class ESearch(URLGetter):
     skbio.db.base.URLGetter
 
     """
-    printed_fields = dict.fromkeys(['db', 'usehistory', 'term', 'retmax',
-                                   'retstart', 'tool', 'email'])
+    printed_fields = {'db', 'usehistory', 'term', 'retmax', 'retstart', 'tool',
+                      'email'}
     defaults = {'db': 'nucleotide', 'usehistory': 'y', 'retmax': 1000,
                 'tool': DEFAULT_TOOL_STRING, 'email': DEFAULT_EMAIL_ADDRESS}
     base_url = EUTILS_BASE_URL + '/esearch.fcgi?'
@@ -335,9 +331,8 @@ class EFetch(URLGetter):
     skbio.db.base.URLGetter
 
     """
-    printed_fields = dict.fromkeys(['db', 'rettype', 'retmode', 'query_key',
-                                    'WebEnv', 'retmax', 'retstart', 'id',
-                                    'tool', 'email'])
+    printed_fields = {'db', 'rettype', 'retmode', 'query_key', 'WebEnv',
+                      'retmax', 'retstart', 'id', 'tool', 'email'}
     defaults = {'retmode': 'text', 'rettype': 'fasta', 'db': 'nucleotide',
                 'retstart': 0, 'retmax': 100, 'tool': DEFAULT_TOOL_STRING,
                 'email': DEFAULT_EMAIL_ADDRESS}
@@ -360,12 +355,9 @@ class ELink(URLGetter):
     skbio.db.base.URLGetter
 
     """
-    printed_fields = dict.fromkeys(['db', 'id', 'reldate',
-                                    'mindate', 'maxdate', 'datetype',
-                                    'term', 'retmode', 'db',
-                                    'dbfrom', 'WebEnv', 'query_key',
-                                    'holding', 'cmd', 'tool',
-                                    'email'])
+    printed_fields = {'db', 'id', 'reldate', 'mindate', 'maxdate', 'datetype',
+                      'term', 'retmode', 'db', 'dbfrom', 'WebEnv', 'query_key',
+                      'holding', 'cmd', 'tool', 'email'}
     defaults = {'tool': DEFAULT_TOOL_STRING,
                 'email': DEFAULT_EMAIL_ADDRESS}
     base_url = EUTILS_BASE_URL + '/elink.fcgi?'

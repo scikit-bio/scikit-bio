@@ -170,12 +170,17 @@ def expand_slice(s):
 
     Parameters
     ----------
-    s : list
-        List of accession numbers.
+    s : slice
+        slice containing accession numbers.
+
+    Returns
+    -------
+    list
+        List containing the full range given by the input slice.
 
     Notes
     -----
-    Unlike standard slices, includes the last item in the range. In other
+    Unlike standard slices, this includes the last item in the range. In other
     words, `obj[AF1001:AF1010]` will include `AF1010`.
 
     Raises
@@ -201,12 +206,13 @@ def expand_slice(s):
 
     if not step:
         step = 1
+
     range_start = long(start[start_index:])
     range_end = long(end[end_index:])
-    field_width = str(len(start) - start_index)
-    format_string = '%' + field_width + '.' + field_width + 'd'
-    return [prefix + format_string % i
-            for i in range(range_start, range_end + 1, step)]
+    field_width = len(start) - start_index
+
+    return [prefix+str(i).zfill(field_width)
+            for i in range(range_start, range_end+1, step)]
 
 
 def make_lists_of_expanded_slices_of_set_size(s, size_limit=200):
@@ -218,8 +224,8 @@ def make_lists_of_expanded_slices_of_set_size(s, size_limit=200):
 
     Parameters
     ----------
-    s : list
-        Expanded list of accession strings
+    s : slice
+        Expanded slice of accession strings
     size_limit : int
         max items each list should contain
 
@@ -295,7 +301,7 @@ def last_nondigit_index(s):
     Returns
     -------
     int
-        Index of the last non-digit character, will return None if there werer
+        Index of the last non-digit character, will return None if there were
         no trailing digits.
 
     Examples
