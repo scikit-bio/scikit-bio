@@ -16,37 +16,31 @@ Retrieving PubMed records from NCBI by PubMed ID
 
 The process for getting PubMed records by PubMed ID (PMID) is very similar to
 that for getting sequences. Basically, you just need to pass in the unique id
-associated with the article. For example, if you want to get the reference to
-the original PyCogent paper to see how far we've come since then, you can do
-this:
+associated with the article (this is referred to as the PubMed identifier, or
+PMID). For example, if you want to get the reference to the original QIIME
+paper to see how far we've come since then, you can do this:
 
 
 >>> from skbio.db.ncbi import EFetch
->>> ef = EFetch(id='17708774', db='pubmed', rettype='brief')
+>>> ef = EFetch(id='20383131', db='pubmed', rettype='brief')
 >>> print(ef.read()) # doctest: +ELLIPSIS
 <BLANKLINE>
-1. Genome Biol. 2007;8(8):R171.
+1. Nat Methods. 2010 May;7(5):335-6. doi: 10.1038/nmeth.f.303. Epub 2010 Apr...
 <BLANKLINE>
-PyCogent: a toolkit for making sense from sequen...
+QIIME allows analysis of high-throughput community sequencing data.
 <BLANKLINE>
-<BLANKLINE>
+Caporaso JG, Kuczynski J, Stombaugh J,...
 
 If you want more information, there are other rettypes, e.g.
 
->>> ef = EFetch(id='17708774', db='pubmed', rettype='citation')
+>>> ef = EFetch(id='20383131', db='pubmed', rettype='citation')
 >>> print(ef.read()) # doctest: +ELLIPSIS
 <BLANKLINE>
-1. Genome Biol. 2007;8(8):R171.
+1. Nat Methods. 2010 May;7(5):335-6. doi: 10.1038/nmeth.f.303. Epub 2010 Apr...
 <BLANKLINE>
-PyCogent: a toolkit for making sense from sequence.
+QIIME allows analysis of high-throughput community sequencing data.
 <BLANKLINE>
-Knight R(1), Maxwell P, Birmingham A, Carnes J, Caporaso...
-<BLANKLINE>
-PMCID: PMC2375001
-PMID: 17708774  [PubMed - indexed for MEDLINE]
-<BLANKLINE>
-<BLANKLINE>
-
+Caporaso JG, Kuczynski J, Stombaugh J,...
 
 Similarly, if you want something more machine-readable (but quite a lot less
 human-readable), you can specify XML in the retmode:
@@ -75,48 +69,69 @@ than a gi, or want to get a range of records?
 
 Fortunately, the more general EUtils class allows this kind of complex workflow
 with relatively little intervention. For example, if you want to search for
-articles that mention PyCogent:
+articles that mention QIIME:
 
 >>> from skbio.db.ncbi import EUtils
 >>> eu = EUtils(db='pubmed', rettype='brief')
->>> res = eu['PyCogent']
+>>> res = eu['QIIME']
 >>> print(res.read()) # doctest: +ELLIPSIS
 <BLANKLINE>
-1. J Appl Crystallogr. 2011 Apr 1;44(Pt 2):424-428...
-2. RNA. 2008 Mar;14(3):410-6. doi: 10.1261/rna.881...
-3. Genome Biol. 2007;8(8):R...
+1...
+2...
+3...
 
-Perhaps you want only the ones with PyCogent in the title, in which case you
+Perhaps you want only the ones with QIIME in the title, in which case you
 can use any qualifier that NCBI supports:
 
->>> res = eu['PyCogent[ti]']
+>>> res = eu['QIIME[ti]']
 >>> print(res.read()) # doctest: +ELLIPSIS
 <BLANKLINE>
-1. J Appl Crystallogr. 2011 Apr 1;44(Pt 2):424-4...
-2. Genome Biol. 2007;8(8):R1...
+1...
+2...
 
 The NCBI-supported list of field qualifiers, and lots of documentation
 generally on how to do pubmed queries, is `here
 <http://www.ncbi.nlm.nih.gov/bookshelf/br.fcgi?book=helppubmed&part=pubmedhelp>`_.
 
 One especially useful feature is the ability to get a list of primary
-identifiers matching a query. You do this by setting ``rettype='uilist'`` (not
-idlist any more, so again you may need to update old code examples). For
+identifiers matching a query. You do this by setting ``rettype='uilist'``. For
 example:
 
 >>> eu = EUtils(db='pubmed', rettype='uilist')
->>> res = eu['PyCogent']
->>> print(res.read())
-22479120
-18230758
-17708774
-<BLANKLINE>
+>>> res = eu['QIIME']
+>>> print(res.read()) # doctest: +ELLIPSIS
+25421430
+25365522
+25349354
+2...
 
 This is especially useful when you want to do a bunch of queries (whether for
 journal articles, as shown here, or for sequences), combine the results, then
 download the actual unique records only once. You could of course do this with
 an incredibly complex single query, but good luck debugging that query...
 
+Retrieving PubMed abstracts from NCBI via EUtils:
+
+>>> from skbio.db.ncbi import EUtils
+>>> e = EUtils(db='pubmed',rettype='brief')
+>>> result = e['Simon Easteal AND Von Bing Yap'].read()
+>>> print(result) # doctest: +ELLIPSIS
+<BLANKLINE>
+1. Mol Biol Evol. 2010 Mar;27(3):726-34. doi: 10.1093/molbev/msp232...
+<BLANKLINE>
+2. BMC Bioinformatics. 2008 Dec 19;9:550. doi: 10.1186/1471-2105-9...
+<BLANKLINE>
+
+Retrieving PubMed abstracts via PMID:
+
+>>> from skbio.db.ncbi import EUtils
+>>> e = EUtils(db='pubmed',rettype='abstract')
+>>> result = e['14983078'].read()
+>>> print(result) # doctest: +ELLIPSIS
+<BLANKLINE>
+1. Protein Eng. 2003 Dec;16(12):979-85.
+<BLANKLINE>
+Loops In Proteins (LIP)--a comprehensive loop database for...
 
 For sequences
 -------------
@@ -228,25 +243,24 @@ TC
 </TSeqSet>
 <BLANKLINE>
 
-You'll notice that the second case is some funny-looking html. Thanks, NCBI!
-This is not our fault, please don't file a bug report. To figure out whether
-something is actually surprising behavior at NCBI, you can always capture the
-command-line and run it in a web browser. You can do this by calling str() on
-the ``ef``, or by printing it. For example:
+You'll notice that the second case returns some funny-looking HTML. Thanks,
+NCBI!  This is not our fault, please don't file a bug report. To figure out
+whether something is actually surprising behavior at NCBI, you can always
+capture the command-line and run it in a web browser. You can do this by
+calling ``str()`` on the ``ef``, or by printing it. For example:
 
 >>> print(ef) # doctest: +ELLIPSIS
 http://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi...
 
 If you paste the resulting string into your web browser and you get the same
-incorrect result that you get using PyCogent, you know that you should direct
+incorrect result that you get using scikit-bio, you know that you should direct
 your support requests NCBI's way. If you want to use your own email address
 instead of leaving it as the default (the module developer), you can do that
-just by passing it in as a parameter. For example, in the unlikely event that I
-want NCBI to contact me instead of Mike if something goes wrong with my script,
-I can achieve that as follows:
+just by passing it in as a parameter. For example, if I want NCBI to contact me
+if something goes wrong with my script, I can achieve that as follows:
 
 >>> ef = EFetch(id='459567', rettype='fasta', retmode='xml',
-...             email='rob@spot.colorado.edu')
+...             email='me@mydomain.com')
 >>> print(ef) # doctest: +ELLIPSIS
 http://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi...
 
@@ -274,29 +288,6 @@ VERSION     BAB52044.1  GI:14025444...
 
 The EUtils modules are generic, so additional databases like OMIM can be
 accessed using similar mechanisms.
-
-Retrieving PubMed abstracts from NCBI via EUtils:
-
->>> from skbio.db.ncbi import EUtils
->>> e = EUtils(db='pubmed',rettype='brief')
->>> result = e['Simon Easteal AND Von Bing Yap'].read()
->>> print(result) # doctest: +ELLIPSIS
-<BLANKLINE>
-1. Mol Biol Evol. 2010 Mar;27(3):726-34. doi: 10.1093/molbev/msp232...
-<BLANKLINE>
-2. BMC Bioinformatics. 2008 Dec 19;9:550. doi: 10.1186/1471-2105-9...
-<BLANKLINE>
-
-Retrieving PubMed abstracts via PMID:
-
->>> from skbio.db.ncbi import EUtils
->>> e = EUtils(db='pubmed',rettype='abstract')
->>> result = e['14983078'].read()
->>> print(result) # doctest: +ELLIPSIS
-<BLANKLINE>
-1. Protein Eng. 2003 Dec;16(12):979-85.
-<BLANKLINE>
-Loops In Proteins (LIP)--a comprehensive loop database for...
 
 """
 
