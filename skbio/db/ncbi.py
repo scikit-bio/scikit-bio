@@ -38,7 +38,6 @@ from time import sleep
 from xml.dom.minidom import parseString
 from xml.etree.ElementTree import parse
 
-from future.utils import PY3
 from six import StringIO
 
 from ._exception import QueryNotFoundError
@@ -47,11 +46,6 @@ from skbio.db.base import (URLGetter,
                            make_lists_of_accessions_of_set_size)
 from skbio.parse.record_finder import DelimitedRecordFinder
 
-# py3k compatibility
-if PY3:
-    strip = str.strip
-else:
-    from string import strip
 
 # eutils_base='http://eutils.ncbi.nlm.nih.gov/entrez/eutils'
 EUTILS_BASE_URL = 'http://www.ncbi.nlm.nih.gov/entrez/eutils'
@@ -708,7 +702,7 @@ def _taxon_lineage_extractor(lines):
             # expect line of form <Lineage>xxxx</Lineage> where xxxx semicolon-
             # delimited
             between_tags = line.split('>', 1)[1].rsplit('<', 1)[0]
-            yield [strip(element) for element in between_tags.split(';')]
+            yield [element.strip() for element in between_tags.split(';')]
 
 TAXON_RECORD_FINDER = DelimitedRecordFinder('</Taxon>', constructor=None,
                                             strict=False)
@@ -726,7 +720,7 @@ def _get_taxid_name_lineage(rec):
         elif line.startswith(name_tag):
             name = _get_between_tags(line)
         elif line.startswith(lineage_tag):
-            lineage = [strip(e) for e in _get_between_tags(line).split(';')]
+            lineage = [e.strip() for e in _get_between_tags(line).split(';')]
     return taxid, name, lineage
 
 
