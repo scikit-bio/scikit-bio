@@ -47,7 +47,6 @@ from skbio.db.base import (URLGetter,
 from skbio.parse.record_finder import DelimitedRecordFinder
 
 
-# eutils_base='http://eutils.ncbi.nlm.nih.gov/entrez/eutils'
 EUTILS_BASE_URL = 'http://www.ncbi.nlm.nih.gov/entrez/eutils'
 
 # EUtils requires a tool and and email address
@@ -61,229 +60,35 @@ VALID_DATABASES = {"pubmed", "protein", "nucleotide", "structure", "genome",
                    "pmc", "popset", "probe", "pcassay", "pccompound",
                    "pcsubstance", "snp", "taxonomy", "unigene", "unists"}
 
-# RETTYPES last updated 7/22/05 somehow, I don't think we'll be writing parsers
-# for all these...
-# WARNING BY RK 4/13/09: THESE RETTYPES ARE HIGHLY MISLEADING AND NO LONGER
-# WORK. See this URL for the list of "official" rettypes, which is highly
-# incomplete and has some important omissions (e.g. rettype 'gi' is missing but
-# is the "official" replacement for 'GiList'):
-# http://eutils.ncbi.nlm.nih.gov/entrez/query/static/efetchseq_help.html In
-# particular, use gb or gp for GenBank or GenPept, use gi for GiList, use fasta
-# for FASTA, and several other changes.  Until we get a complete accounting of
-# what all the changes are, treat the rettypes below with extreme caution and
-# experiment in the interpreter.
+# Updated on December 6, 2014 from:
+# http://www.ncbi.nlm.nih.gov/books/NBK25499/table/chapter4.T._valid_values_
+# of__retmode_and/
 RETTYPES = {}
-RETTYPES['pubmed'] = ('DocSum Brief Abstract Citation MEDLINE XML uilist '
-                      'ExternalLink ASN1 pubmed_pubmed pubmed_pubmed_refs '
-                      'pubmed_books_refs pubmed_cancerchromosomes pubmed_cdd '
-                      'pubmed_domains pubmed_gds pubmed_gene pubmed_gene_rif '
-                      'pubmed_genome pubmed_genomeprj pubmed_gensat pubmed_geo'
-                      ' pubmed_homologene pubmed_nucleotide pubmed_omim '
-                      ' pubmed_pcassay pubmed_pccompound '
-                      'pubmed_pccompound_mesh '
-                      'pubmed_pcsubstance pubmed_pcsubstance_mesh pubmed_pmc '
-                      'pubmed_pmc_refs pubmed_popset '
-                      'pubmed_probe pubmed_protein '
-                      'pubmed_snp pubmed_structure '
-                      'pubmed_unigene pubmed_unists')
-
-RETTYPES['protein'] = ('DocSum ASN1 FASTA XML GenPept GiList graph fasta_xml '
-                       'igp_xml gpc_xml ExternalLink protein_protein '
-                       'protein_cdd protein_domains protein_gene protein_genom'
-                       'e protein_genomeprj protein_homologene '
-                       'protein_nucleotide protein_nucleotide_mgc protein_omim'
-                       ' protein_pcassay protein_pccompound protein_pcsubstanc'
-                       'e protein_pmc protein_popset protein_pubmed protein_sn'
-                       'p protein_snp_genegenotype protein_structure '
-                       'protein_taxonomy protein_unigene')
-
-RETTYPES['nucleotide'] = ('DocSum ASN1 FASTA XML GenBank GiList graph '
-                          'fasta_xml gb_xml gbc_xml ExternalLink '
-                          'nucleotide_comp_nucleotide nucleotide_nucleotide '
-                          'nucleotide_nucleotide_comp '
-                          'nucleotide_nucleotide_mrna nucleotide_comp_genome '
-                          'nucleotide_gene nucleotide_genome '
-                          'nucleotide_genome_samespecies nucleotide_gensat '
-                          'nucleotide_geo nucleotide_homologene '
-                          'nucleotide_mrna_genome nucleotide_omim '
-                          'nucleotide_pcassay nucleotide_pccompound '
-                          'nucleotide_pcsubstance nucleotide_pmc '
-                          'nucleotide_popset nucleotide_probe '
-                          'nucleotide_protein nucleotide_pubmed nucleotide_snp'
-                          ' nucleotide_snp_genegenotype nucleotide_structure'
-                          ' nucleotide_taxonomy nucleotide_unigene '
-                          'nucleotide_unists')
-
-RETTYPES['structure'] = ('DocSum Brief Structure Summary uilist ExternalLink'
-                         ' structure_domains structure_genome '
-                         'structure_nucleotide structure_omim '
-                         'structure_pcassay structure_pccompound '
-                         'structure_pcsubstance structure_pmc '
-                         'structure_protein structure_pubmed structure_snp '
-                         'structure_taxonomy')
-
-RETTYPES['genome'] = ('DocSum ASN1 GenBank XML ExternalLink genome_genomeprj '
-                      'genome_nucleotide genome_nucleotide_comp '
-                      'genome_nucleotide_mrna genome_nucleotide_samespecies '
-                      'genome_omim genome_pmc genome_protein genome_pubmed '
-                      'genome_structure genome_taxonomy')
-
-RETTYPES['books'] = ('DocSum Brief Books books_gene books_omim books_pmc_refs '
-                     'books_pubmed_refs')
-
-RETTYPES['cancerchromosomes'] = ('DocSum SkyCghDetails SkyCghCommon '
-                                 'SkyCghCommonVerbose '
-                                 'cancerchromosomes_cancerchromosomes_casecell'
-                                 ' cancerchromosomes_cancerchromosomes_cellca'
-                                 'se cancerchromosomes_cancerchromosomes_cytoc'
-                                 'gh cancerchromosomes_cancerchromosomes_cytoc'
-                                 'lincgh cancerchromosomes_cancerchromosomes_'
-                                 'cytoclinsky cancerchromosomes_cancerchromos'
-                                 'omes_cytodiagcgh cancerchromosomes_cancerch'
-                                 'romosomes_cytodiagsky cancerchromosomes_can'
-                                 'cerchromosomes_cytosky cancerchromosomes_ca'
-                                 'ncerchromosomes_diag cancerchromosomes_canc'
-                                 'erchromosomes_textual cancerchromosomes_pmc'
-                                 ' cancerchromosomes_pubmed')
-
-RETTYPES['cdd'] = ('DocSum Brief uilist cdd_cdd_fused cdd_cdd_related '
-                   'cdd_gene cdd_homologene cdd_pmc cdd_protein cdd_pubmed '
-                   'cdd_taxonomy')
-
-RETTYPES['domains'] = ('DocSum Brief uilist domains_domains_new domains_pmc '
-                       'domains_protein domains_pubmed domains_structure '
-                       'domains_taxonomy')
-
-RETTYPES['gene'] = ('Default DocSum Brief ASN.1 XML Graphics gene_table uilist'
-                    ' ExternalLink gene_books gene_cdd gene_gensat gene_geo '
-                    'gene_homologene gene_nucleotide gene_nucleotide_mgc '
-                    'gene_omim gene_pmc gene_probe gene_protein gene_pubmed '
-                    'gene_pubmed_rif gene_snp gene_snp_genegenotype '
-                    'gene_taxonomy gene_unigene gene_unists')
-
-RETTYPES['genomeprj'] = ('DocSum Brief Overview genomeprj_genomeprj '
-                         'genomeprj_genome genomeprj_nucleotide '
-                         'genomeprj_nucleotide_mrna genomeprj_nucleotide_orga'
-                         'nella genomeprj_nucleotide_wgs genomeprj_pmc '
-                         'genomeprj_popset genomeprj_protein genomeprj_pubmed '
-                         'genomeprj_taxonomy')
-
-RETTYPES['gensat'] = ('Group Detail DocSum Brief gensat_gensat gensat_gene '
-                      'gensat_geo gensat_nucleotide gensat_pmc gensat_pubmed '
-                      'gensat_taxonomy gensat_unigene')
-
-RETTYPES['geo'] = ('DocSum Brief ExternalLink geo_geo_homologs geo_geo_prof '
-                   'geo_geo_seq geo_gds geo_gene geo_gensat geo_homologene '
-                   'geo_nucleotide geo_omim geo_pmc geo_pubmed geo_taxonomy '
-                   'geo_unigene')
-
-RETTYPES['gds'] = ('DocSum Brief gds_gds gds_geo gds_pmc gds_pubmed '
-                   'gds_taxonomy')
-
-RETTYPES['homologene'] = ('DocSum Brief HomoloGene AlignmentScores '
-                          'MultipleAlignment ASN1 XML FASTA '
-                          'homologene_homologene homologene_cdd '
-                          'homologene_gene homologene_geo homologene_nucleoti'
-                          'de homologene_omim homologene_pmc homologene_prote'
-                          'in homologene_pubmed homologene_snp homologene_snp'
-                          '_genegenotype homologene_taxonomy '
-                          'homologene_unigene')
-
-RETTYPES['journals'] = ('DocSum full journals_PubMed journals_Protein '
-                        'journals_Nucleotide journals_Genome journals_Popset '
-                        'journals_PMC journals_nlmcatalog')
-
-RETTYPES['mesh'] = 'Full DocSum Brief mesh_PubMed'
-
-RETTYPES['ncbisearch'] = 'DocSum Brief Home+Page+View ncbisearch_ncbisearch'
-
-RETTYPES['nlmcatalog'] = 'Brief DocSum XML Expanded Full Subject ExternalLink'
-
-RETTYPES['omim'] = ('DocSum Detailed Synopsis Variants ASN1 XML ExternalLink '
-                    'omim_omim omim_books omim_gene omim_genome omim_geo '
-                    'omim_homologene omim_nucleotide omim_pmc omim_protein '
-                    'omim_pubmed omim_snp omim_snp_genegenotype omim_structure'
-                    ' omim_unigene omim_unists')
-
-RETTYPES['pmc'] = ('DocSum Brief XML TxTree pmc_books_refs '
-                   'pmc_cancerchromosomes pmc_cdd pmc_domains pmc_gds pmc_gene'
-                   ' pmc_genome pmc_genomeprj pmc_gensat pmc_geo '
-                   'pmc_homologene pmc_nucleotide pmc_omim pmc_pccompound '
-                   'pmc_pcsubstance pmc_popset pmc_protein pmc_pubmed '
-                   'pmc_refs_pubmed pmc_snp pmc_structure pmc_taxonomy '
-                   'pmc_unists')
-
-RETTYPES['popset'] = ('DocSum PS ASN1 XML GiList ExternalLink TxTree '
-                      'popset_genomeprj popset_nucleotide popset_protein '
-                      'popset_pubmed popset_taxonomy')
-
-RETTYPES['probe'] = ('DocSum Brief ASN1 XML Probe probe_probe probe_gene '
-                     'probe_nucleotide probe_pubmed probe_taxonomy')
-
-RETTYPES['pcassay'] = ('DocSum Brief uilist pcassay_nucleotide '
-                       'pcassay_pccompound pcassay_pccompound_active '
-                       'pcassay_pccompound_inactive pcassay_pcsubstance '
-                       'pcassay_pcsubstance_active '
-                       'pcassay_pcsubstance_inactive pcassay_protein '
-                       'pcassay_pubmed pcassay_structure')
-
-RETTYPES['pccompound'] = ('Brief DocSum PROP SYNONYMS pc_fetch '
-                          'pccompound_pccompound_pulldown '
-                          'pccompound_pccompound_sameanytautomer_pulldown '
-                          'pccompound_pccompound_sameconnectivity_pulldown '
-                          'pccompound_pccompound_sameisotopic_pulldown '
-                          'pccompound_pccompound_samestereochem_pulldown '
-                          'pccompound_nucleotide pccompound_pcassay '
-                          'pccompound_pcassay_active '
-                          'pccompound_pcassay_inactive pccompound_pcsubstance '
-                          'pccompound_pmc pccompound_protein pccompound_pubmed'
-                          ' pccompound_pubmed_mesh pccompound_structure')
-
-RETTYPES['pcsubstance'] = ('Brief DocSum PROP SYNONYMS pc_fetch IDLIST '
-                           'pcsubstance_pcsubstance_pulldown '
-                           'pcsubstance_pcsubstance_same_pulldown '
-                           'pcsubstance_pcsubstance_sameanytautomer_pulldown '
-                           'pcsubstance_pcsubstance_sameconnectivity_pulldow '
-                           'pcsubstance_pcsubstance_sameisotopic_pulldown '
-                           'pcsubstance_pcsubstance_samestereochem_pulldown '
-                           'pcsubstance_mesh pcsubstance_nucleotide '
-                           'pcsubstance_pcassay pcsubstance_pcassay_active '
-                           'pcsubstance_pcassay_inactive '
-                           'pcsubstance_pccompound pcsubstance_pmc '
-                           'pcsubstance_protein pcsubstance_pubmed '
-                           'pcsubstance_pubmed_mesh pcsubstance_structure')
-
-RETTYPES['snp'] = ('DocSum Brief FLT ASN1 XML FASTA RSR ssexemplar CHR FREQXML'
-                   ' GENB GEN GENXML DocSet Batch uilist GbExp ExternalLink '
-                   'MergeStatus snp_snp_genegenotype snp_gene snp_homologene '
-                   'snp_nucleotide snp_omim snp_pmc snp_protein snp_pubmed '
-                   'snp_structure snp_taxonomy snp_unigene snp_unists')
-
-RETTYPES['taxonomy'] = ('DocSum Brief TxUidList TxInfo XML TxTree ExternalLink'
-                        ' taxonomy_protein taxonomy_nucleotide '
-                        'taxonomy_structure taxonomy_genome taxonomy_gene '
-                        'taxonomy_cdd taxonomy_domains taxonomy_gds '
-                        'taxonomy_genomeprj taxonomy_gensat '
-                        'taxonomy_homologene taxonomy_pmc taxonomy_popset '
-                        'taxonomy_probe taxonomy_pubmed taxonomy_snp '
-                        'taxonomy_unigene taxonomy_unists')
-
-RETTYPES['unigene'] = ('DocSum Brief ExternalLink unigene_unigene '
-                       'unigene_unigene_expression unigene_unigene_homologous '
-                       'unigene_gene unigene_gensat unigene_geo '
-                       'unigene_homologene unigene_nucleotide '
-                       'unigene_nucleotide_mgc unigene_omim unigene_protein '
-                       'unigene_pubmed unigene_snp unigene_snp_genegenotype '
-                       'unigene_taxonomy unigene_unists')
-
-RETTYPES['unists'] = ('DocSum Brief ExternalLink unists_gene unists_nucleotide'
-                      ' unists_omim unists_pmc unists_pubmed unists_snp '
-                      'unists_taxonomy unists_unigene')
-
-# convert into dict of known rettypes for efficient lookups -- don't want to
-# scan list every time.
-for key, val in RETTYPES.items():
-    RETTYPES[key] = dict.fromkeys(val.split())
+RETTYPES['bioproject'] = {'docsum', 'uilist', 'xml'}
+RETTYPES['biosample'] = {'docsum', 'uilist', 'full'}
+RETTYPES['biosystems'] = {'docsum', 'uilist', 'xml'}
+RETTYPES['gds'] = {'docsum', 'uilist', 'summary'}
+RETTYPES['gene'] = {'docsum', 'uilist', 'gene_table', ''}
+RETTYPES['homologene'] = {'docsum', 'uilist', 'alignmentscores', 'fasta',
+                          'homologene'}
+RETTYPES['mesh'] = {'docsum', 'uilist', 'full'}
+RETTYPES['nlmcatalog'] = {'docsum', 'uilist'}
+RETTYPES['nuccore'] = {'docsum', 'uilist', 'native', 'acc', 'fasta', 'seqid',
+                       'gb', 'gbc', 'ft', 'gbwithparts', 'fasta_cds_na'}
+RETTYPES['nucest'] = {'docsum', 'uilist', 'native', 'acc', 'fasta', 'seqid',
+                      'gb', 'gbc', 'est'}
+RETTYPES['nucgss'] = {'docsum', 'uilist', 'native', 'acc', 'fasta', 'seqid',
+                      'gb', 'gbc', 'gss'}
+RETTYPES['protein'] = {'docsum', 'uilist', 'native', 'acc', 'fasta', 'seqid',
+                       'ft', 'gp', 'gp', 'gpc', 'ipg'}
+RETTYPES['popset'] = {'docsum', 'uilist', 'native', 'acc', 'fasta', 'seqid',
+                      'gb', 'gbc'}
+RETTYPES['pmc'] = {'docsum', 'uilist', 'medline'}
+RETTYPES['pubmed'] = {'docsum', 'uilist', 'medline', 'uilist', 'abstract'}
+RETTYPES['snp'] = {'docsum', 'uilist', 'flt', 'fasta', 'rsr', 'ssexemplar',
+                   'chr', 'genxml', 'docset'}
+RETTYPES['sra'] = {'docsum', 'uilist', 'full'}
+RETTYPES['taxonomy'] = {'docsum', 'uilist'}
 
 
 class ESearch(URLGetter):

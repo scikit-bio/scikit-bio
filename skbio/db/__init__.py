@@ -182,7 +182,7 @@ record you get back. For example, if we do the same search with
 ...
 D28543 Hepatitis C virus... [gi:459567]
 
-The current ``rettypes`` (as of this writing on 4/14/2010) for the 'core' NCBI
+The current ``rettypes`` (as of this writing on 12/06/2014) for the 'core' NCBI
 databases are native, fasta, gb, gp, gbwithparts, gbc, gpc, est, gss, seqid,
 acc, ft. Formerly, but not currently, 'genbank' was a synonym for 'gb' and
 'genpept' was a synonym for 'gp': however, these synonyms no longer work and
