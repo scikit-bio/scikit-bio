@@ -1671,28 +1671,38 @@ class Alignment(SequenceCollection):
 
         return '\n'.join(result), new_id_to_old_id
 
-    def heatmap(self, value_map, legend_labels=['Minimum', 'Median',
-                                                'Maximum'],
+    def heatmap(self, value_map, legend_labels=('Minimum', 'Median',
+                                                'Maximum'),
                 fig_size=None, cmap=None, sequence_order=None):
         """Plot the alignment as a heatmap
+           X-axis labeled by majority consensus
+           Y-axis labeled by sequence IDs
 
         Parameters
         ----------
         value_map : dict, collections.defaultdict
-            Dictionary mapping characters in the alignment to values. KeyErrors
-            are not caught, so all possible values should be in this dict, or
-            it should be a collections.defaultdict with can, for example,
-            default to ``nan``.
+            Dictionary mapping characters in the alignment to numeric values.
+            KeyErrors are not caught, so all possible values should be in this
+            dict, or it should be a collections.defaultdict which can, for
+            example, default to ``nan``.
         legend_labels : iterable, optional
             Labels for the min, median, and max values in the legend.
+            Must be an iterable of exactly three strings.
         fig_size : tuple, optional
             Size of figure in inches.
+            If None, defaults to best fit size.
         cmap : matplotlib colormap, optional
             See here for choices:
-            http://wiki.scipy.org/Cookbook/Matplotlib/Show_colormaps
+            http://matplotlib.org/examples/color/colormaps_reference.html
+            If None, defaults to the colormap specified in the matplotlib
+            rc file.
         sequence_order : iterable
             The order, from top-to-bottom, that the sequences should be
             plotted in.
+            Can be passed as a set of all sequence ids in the order to be
+            plotted.
+            If None, defaults to the order in which they were
+            passed; 0,1,2...etc.
 
         Returns
         -------
@@ -1705,7 +1715,8 @@ class Alignment(SequenceCollection):
         KeyError
             If a sequence character in the alignment is not in
             ``value_map``, and ``value_map`` is not a
-            ``collections.defaultdict``.
+            ``collections.defaultdict`` or if sequence_order contains an
+            id that isn't in the alignment.
 
         References
         ----------
@@ -1736,7 +1747,7 @@ class Alignment(SequenceCollection):
 
            >>> hydrophobicity_labels=['Hydrophilic', 'Medium', 'Hydrophobic']
 
-           Define an Alignment of proteins:
+           Define an Alignment of protein sequences:
 
            >>> from skbio import Alignment, Protein
            >>> sequences = [Protein('VHLTPEEKSAVTALWGKVNVDEV--', id="seq1"),
@@ -1748,25 +1759,32 @@ class Alignment(SequenceCollection):
            Plot the Alignment as a heatmap:
 
            >>> fig = aln.heatmap(hydrophobicity_idx, fig_size=(15, 10),
-           ...                   legend_labels=hydrophobicity_labels,
+           ...                   legend_labels=['Hydrophilic', 'Medium',
+           ...                                  'Hydrophobic'],
            ...                   cmap='Greens')
 
         """
         # cache the sequence length, count, and ids, to avoid multiple look-ups
         sequence_length = self.sequence_length()
         sequence_count = self.sequence_count()
-        sequence_ids = self.ids()
-        sequence_order = sequence_order or sequence_ids
+        sequence_order = sequence_order or self.ids()
+        if sequence_order is not None:
+            if len(sequence_order) != sequence_count:
+                raise ValueError
+            if sequence_order == sequence_count:
+                raise ValueError
+        if len(legend_labels) != 3:
+            raise ValueError
         values = list(value_map.values())
 
         # create an empty data matrix
-        mtx = np.zeros((sequence_length, sequence_count))
+        mtx = np.empty([sequence_length, sequence_count])
         # fill the data matrix by iterating over the alignment and mapping
         # characters to values
         for i in range(sequence_length):
             for j, sequence_id in enumerate(sequence_order):
-                aa = str(self[sequence_id][i])
-                mtx[i][j] = value_map[aa]
+                mp = str(self[sequence_id][i])
+                mtx[i][j] = value_map[mp]
 
         # build the heatmap, this code derived from the Matplotlib Gallery
         # http://matplotlib.org/examples/pylab_examples/...
@@ -1783,12 +1801,16 @@ class Alignment(SequenceCollection):
                                    max(values)], orientation='horizontal')
         ax.set_yticks([0] + list(range(3, sequence_count - 3, 3)) +
                       [sequence_count-1])
-        ax.set_yticklabels(sequence_order)
+        yt = ax.get_yticks()
+        ytl = []
+        for i in range(len(yt)):
+            ytl.append(sequence_order[yt[i]])
+        ax.set_yticklabels(ytl)
+
         ax.set_xticks(range(sequence_length))
         ax.set_xticklabels(self.majority_consensus(), size=7)
         cbar.ax.set_xticklabels(legend_labels)
-        # horizontal colorbar
-        return(fig)
+        return fig
 
     def _validate_lengths(self):
         """Return ``True`` if all sequences same length, ``False`` otherwise

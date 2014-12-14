@@ -866,18 +866,25 @@ class AlignmentTests(TestCase):
                                                      'Maximum'])
 
     def test_heatmap_with_custom(self):
-        sequences = [DNA('AACCCGT', id="seq1"),
-                     DNA('AACCGGT', id="seq2")]
+        sequences = [DNA('AGTCGGT', id="seq1"),
+                     DNA('CAACCGA', id="seq2"),
+                     DNA('AACCCCT', id="seq3"),
+                     DNA('TACTCGT', id="seq4")]
         a1 = Alignment(sequences)
         values = {'A': 0.61, 'C': 1.07, 'T': 0.05, 'G': 0.07}
         clabels = ['a', 'b', 'c']
         fig = a1.heatmap(values, fig_size=(15, 10), cmap='Blues',
                          legend_labels=clabels,
-                         sequence_order=('seq2', 'seq1'))
+                         sequence_order=('seq4', 'seq3', 'seq2', 'seq1'))
         self.heatmap_basic_sanity(fig, ['A', 'A', 'C', 'C', 'C', 'G', 'T'],
-                                  ['seq2', 'seq1'], ['a', 'b', 'c'])
+                                  ['seq4', 'seq1'], clabels)
         self.assertEqual(fig.get_figwidth(), 15.0)
         self.assertEqual(fig.get_figheight(), 10.0)
+
+    def test_heatmap_raises(self):
+        values, sequences, a1 = self.heatmap_set_values()
+        with self.assertRaises(ValueError):
+            a1.heatmap(values, legend_labels=['a', 'b', 'c', 'd'])
 
     def heatmap_set_values(self):
         sequences = [DNA('AACCCGT', id="seq1"),
