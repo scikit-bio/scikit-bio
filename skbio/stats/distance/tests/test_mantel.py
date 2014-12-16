@@ -346,6 +346,11 @@ class PairwiseMantelTests(MantelTestData):
                           '.txt'),
             sep='\t', index_col=(0, 1))
 
+        self.exp_results_all_dms = pd.read_csv(
+            get_data_path('pwmantel_exp_results_all_dms'
+                          '.txt'),
+            sep='\t', index_col=(0, 1))
+
     def test_minimal_compatible_input(self):
         # Matrices are already in the correct order and have matching IDs.
         np.random.seed(0)
@@ -456,6 +461,20 @@ class PairwiseMantelTests(MantelTestData):
         # input as DistanceMatrix instances
         obs = pwmantel(dms)
         assert_frame_equal(obs, self.exp_results_dm_dm2)
+
+    def test_many_filepaths_as_input(self):
+        dms = [
+            get_data_path('dm2.txt'),
+            get_data_path('dm.txt'),
+            get_data_path('dm4.txt'),
+            get_data_path('dm3.txt')
+        ]
+        np.random.seed(0)
+
+        # input as DistanceMatrix instances
+        obs = pwmantel(dms)
+        assert_frame_equal(obs, self.exp_results_all_dms)
+
 
 class OrderDistanceMatricesTests(MantelTestData):
     def setUp(self):

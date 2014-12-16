@@ -2,6 +2,9 @@
 
 ## Version 0.2.2-dev (changes since 0.2.2 release go here)
 
+### Features
+* Modified ``skbio.stats.distance.pwmantel`` to accept a list of filepaths.
+
 ## Version 0.2.2 (2014-12-04)
 
 ### Features

@@ -299,7 +299,7 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided',
 
 def pwmantel(dms, labels=None, method='pearson', permutations=999,
              alternative='two-sided', strict=True, lookup=None):
-    """Run Mantel tests for every pair of distance matrices.
+    """Run Mantel tests for every pair of given distance matrices.
 
     Runs a Mantel test for each pair of distance matrices and collates the
     results in a ``DataFrame``. Distance matrices do not need to be in the same
@@ -311,10 +311,10 @@ def pwmantel(dms, labels=None, method='pearson', permutations=999,
 
     Parameters
     ----------
-    dms : iterable of DistanceMatrix objects or array_like objects
-        Distance matrices to perform pairwise Mantel tests upon. If they are
-        ``array_like`` (but not ``DistanceMatrix`` instances), no
-        reordering/matching of IDs will be performed.
+    dms : iterable of DistanceMatrix objects, array_like objects, or filepaths
+        to ditance matrices. If they are ``array_like`` (but not
+        ``DistanceMatrix`` instances), no reordering/matching of IDs will be
+        performed.
     labels : iterable of str or int, optional
         Labels for each distance matrix in `dms`. These are used in the results
         ``DataFrame`` to identify the pair of distance matrices used in a
@@ -416,7 +416,7 @@ def pwmantel(dms, labels=None, method='pearson', permutations=999,
             x = DistanceMatrix.read(x)
         if isinstance(y, six.string_types):
             y = DistanceMatrix.read(y)
-    
+
         stat, p_val, n = mantel(x, y, method=method, permutations=permutations,
                                 alternative=alternative, strict=strict,
                                 lookup=lookup)
