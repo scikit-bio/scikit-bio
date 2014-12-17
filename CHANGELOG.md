@@ -3,7 +3,7 @@
 ## Version 0.2.2-dev (changes since 0.2.2 release go here)
 
 ### Features
-* Modified ``skbio.stats.distance.pwmantel`` to accept a list of filepaths.
+* Modified ``skbio.stats.distance.pwmantel`` to accept a list of filepaths. This is useful as it allows for a smaller amount of memory consumption as it only loads two matrices at a time as opposed to running a large amount at one time.
 
 ## Version 0.2.2 (2014-12-04)
 

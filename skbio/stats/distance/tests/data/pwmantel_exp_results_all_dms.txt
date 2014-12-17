@@ -1,0 +1,7 @@
+dm1	dm2	statistic	p-value	n	method	permutations	alternative
+0	1	0.7020310705446676	0.001	6	pearson	999	two-sided
+0	2	0.8633966325233801	0.002	6	pearson	999	two-sided
+0	3	0.6476901774685102	0.006	6	pearson	999	two-sided
+1	2	0.7784836464659731	0.003	6	pearson	999	two-sided
+1	3	0.9206880242368882	0.004	6	pearson	999	two-sided
+2	3	0.7172972179393844	0.003	6	pearson	999	two-sided
