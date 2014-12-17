@@ -342,13 +342,11 @@ class PairwiseMantelTests(MantelTestData):
             sep='\t', index_col=(0, 1))
 
         self.exp_results_dm_dm2 = pd.read_csv(
-            get_data_path('pwmantel_exp_results_dm_dm2'
-                          '.txt'),
+            get_data_path('pwmantel_exp_results_dm_dm2.txt'),
             sep='\t', index_col=(0, 1))
 
         self.exp_results_all_dms = pd.read_csv(
-            get_data_path('pwmantel_exp_results_all_dms'
-                          '.txt'),
+            get_data_path('pwmantel_exp_results_all_dms.txt'),
             sep='\t', index_col=(0, 1))
 
     def test_minimal_compatible_input(self):
@@ -458,7 +456,6 @@ class PairwiseMantelTests(MantelTestData):
         ]
         np.random.seed(0)
 
-        # input as DistanceMatrix instances
         obs = pwmantel(dms)
         assert_frame_equal(obs, self.exp_results_dm_dm2)
 
@@ -471,7 +468,6 @@ class PairwiseMantelTests(MantelTestData):
         ]
         np.random.seed(0)
 
-        # input as DistanceMatrix instances
         obs = pwmantel(dms)
         assert_frame_equal(obs, self.exp_results_all_dms)
 

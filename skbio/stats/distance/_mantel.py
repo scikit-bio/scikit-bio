@@ -312,9 +312,8 @@ def pwmantel(dms, labels=None, method='pearson', permutations=999,
     Parameters
     ----------
     dms : iterable of DistanceMatrix objects, array_like objects, or filepaths
-        to ditance matrices. If they are ``array_like`` (but not
-        ``DistanceMatrix`` instances), no reordering/matching of IDs will be
-        performed.
+        to distance matrices. If they are ``array_like``, no reordering/matching
+        of IDs will be performed.
     labels : iterable of str or int, optional
         Labels for each distance matrix in `dms`. These are used in the results
         ``DataFrame`` to identify the pair of distance matrices used in a
@@ -344,6 +343,13 @@ def pwmantel(dms, labels=None, method='pearson', permutations=999,
     See Also
     --------
     mantel
+    DistanceMatrix.read
+
+    Notes
+    --------
+    Passing a list of filepaths can be useful as it allows for a smaller amount
+    of memory consumption as it only loads two matrices at a time as opposed to
+    loading all distance matrices into memory.
 
     Examples
     --------
