@@ -11,6 +11,7 @@ from future.builtins import zip
 
 from itertools import combinations
 
+import six
 import numpy as np
 import pandas as pd
 import scipy.misc
@@ -298,7 +299,7 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided',
 
 def pwmantel(dms, labels=None, method='pearson', permutations=999,
              alternative='two-sided', strict=True, lookup=None):
-    """Run Mantel tests for every pair of distance matrices.
+    """Run Mantel tests for every pair of given distance matrices.
 
     Runs a Mantel test for each pair of distance matrices and collates the
     results in a ``DataFrame``. Distance matrices do not need to be in the same
@@ -310,10 +311,9 @@ def pwmantel(dms, labels=None, method='pearson', permutations=999,
 
     Parameters
     ----------
-    dms : iterable of DistanceMatrix objects or array_like objects
-        Distance matrices to perform pairwise Mantel tests upon. If they are
-        ``array_like`` (but not ``DistanceMatrix`` instances), no
-        reordering/matching of IDs will be performed.
+    dms : iterable of DistanceMatrix objects, array_like objects, or filepaths
+        to distance matrices. If they are ``array_like``, no reordering or
+        matching of IDs will be performed.
     labels : iterable of str or int, optional
         Labels for each distance matrix in `dms`. These are used in the results
         ``DataFrame`` to identify the pair of distance matrices used in a
@@ -343,6 +343,13 @@ def pwmantel(dms, labels=None, method='pearson', permutations=999,
     See Also
     --------
     mantel
+    DistanceMatrix.read
+
+    Notes
+    --------
+    Passing a list of filepaths can be useful as it allows for a smaller amount
+    of memory consumption as it only loads two matrices at a time as opposed to
+    loading all distance matrices into memory.
 
     Examples
     --------
@@ -411,6 +418,10 @@ def pwmantel(dms, labels=None, method='pearson', permutations=999,
 
     for i, pair in enumerate(combinations(zip(labels, dms), 2)):
         (xlabel, x), (ylabel, y) = pair
+        if isinstance(x, six.string_types):
+            x = DistanceMatrix.read(x)
+        if isinstance(y, six.string_types):
+            y = DistanceMatrix.read(y)
 
         stat, p_val, n = mantel(x, y, method=method, permutations=permutations,
                                 alternative=alternative, strict=strict,
