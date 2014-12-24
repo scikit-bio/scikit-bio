@@ -88,8 +88,6 @@ class BiologicalSequence(Sequence, SkbioObject):
     """
     default_write_format = 'fasta'
 
-    feature_types = set([])
-
     @classmethod
     def alphabet(cls):
         """Return the set of characters allowed in a `BiologicalSequence`.
@@ -1502,29 +1500,6 @@ class BiologicalSequence(Sequence, SkbioObject):
         for match in regex.finditer(self._sequence):
             for g in range(start, len(match.groups())+1):
                 yield (match.start(g), match.end(g), match.group(g))
-
-    def find_features(self, feature_type, min_length=1, allow_gaps=False):
-        """Search the sequence for features
-
-        Parameters
-        ----------
-        feature_type : str
-            The type of feature to find
-        min_length : int, optional
-            Defaults to 1. Only features at least as long as this will be
-            returned
-        allow_gaps : bool, optional
-            Defaults to ``False``. If ``True``, then gaps will not be
-            considered to disrupt a feature
-
-        Returns
-        -------
-        generator
-            Yields tuples of the start of the feature, the end of the feature,
-            and the subsequence that composes the feature
-        """
-        if feature_type not in self.feature_types:
-            raise ValueError("Unknown feature type: %s" % feature_type)
 
 
 class NucleotideSequence(BiologicalSequence):
