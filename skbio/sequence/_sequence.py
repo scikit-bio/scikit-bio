@@ -1766,8 +1766,6 @@ class NucleotideSequence(BiologicalSequence):
                 yield hits
 
 
-
-
 class DNASequence(NucleotideSequence):
     """Base class for DNA sequences.
 
