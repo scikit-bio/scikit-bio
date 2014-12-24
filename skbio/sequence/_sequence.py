@@ -1519,8 +1519,6 @@ class NucleotideSequence(BiologicalSequence):
 
     """
 
-    feature_types = set(['purine_run', 'pyrimidine_run'])
-
     @classmethod
     def complement_map(cls):
         """Return the mapping of characters to their complements.
@@ -1721,15 +1719,14 @@ class NucleotideSequence(BiologicalSequence):
             Yields tuples of the start of the feature, the end of the feature,
             and the subsequence that composes the feature
         """
-        if feature_type not in self.feature_types:
-            raise ValueError("Unknown feature type: %s" % feature_type)
-
         acceptable = '-' if allow_gaps else ''
 
         if feature_type == 'purine_run':
             pat_str = '([AGag%s]{%d,})' % (acceptable, min_length)
-        if feature_type == 'pyrimidine_run':
+        elif feature_type == 'pyrimidine_run':
             pat_str = '([CTUctu%s]{%d,})' % (acceptable, min_length)
+        else:
+            raise ValueError("Unknown feature type: %s" % feature_type)
 
         pat = re.compile(pat_str)
 
