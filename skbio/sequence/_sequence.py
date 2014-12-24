@@ -1704,7 +1704,7 @@ class NucleotideSequence(BiologicalSequence):
 
         Parameters
         ----------
-        feature_type : str
+        feature_type : {'purine_run', 'pyrimidine_run'}
             The type of feature to find
         min_length : int, optional
             Defaults to 1. Only features at least as long as this will be
