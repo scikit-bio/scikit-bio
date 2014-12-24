@@ -1719,7 +1719,8 @@ class NucleotideSequence(BiologicalSequence):
             Yields tuples of the start of the feature, the end of the feature,
             and the subsequence that composes the feature
         """
-        acceptable = '-' if allow_gaps else ''
+        gaps = re.escape(''.join(self.gap_alphabet()))
+        acceptable = gaps if allow_gaps else ''
 
         if feature_type == 'purine_run':
             pat_str = '([AGag%s]{%d,})' % (acceptable, min_length)
@@ -1732,7 +1733,10 @@ class NucleotideSequence(BiologicalSequence):
 
         for hits in self.regex_iter(pat):
             if allow_gaps:
-                if len(hits[2].replace('-', '')) >= min_length:
+                degapped = hits[2]
+                for gap_char in self.gap_alphabet():
+                    degapped = degapped.replace(gap_char, '')
+                if len(degapped) >= min_length:
                     yield hits
             else:
                 yield hits
