@@ -12,7 +12,7 @@ Jinja2, Django, and Pandas". Recent versions of the future project stopped
 bundling the six library, so we also directly depend on six (e.g., for StringIO
 compatibility).
 
-So far, this notes are based on issues that have appeared when porting
+So far, these notes are based on issues that have appeared when porting
 skbio, so it is not a complete guide. Refer to the `official porting
 guide <https://docs.python.org/3/howto/pyporting.html>`_ and the
 `python-future docs <http://python-future.org/>`_ for more
@@ -41,7 +41,7 @@ Builtins
 --------
 
 Builtin iterators in Python 2 usually return lists, and have an
-alternative that returns and iterator (i.e., `range` and `xrange`,
+alternative that returns an iterator (i.e., `range` and `xrange`,
 `items` and `iteritems`). In Python 3, only the iterator version
 exists but it uses the list-returning name (i.e., `range` and
 `items`).
