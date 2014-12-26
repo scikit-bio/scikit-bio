@@ -1718,6 +1718,20 @@ class NucleotideSequence(BiologicalSequence):
         generator
             Yields tuples of the start of the feature, the end of the feature,
             and the subsequence that composes the feature
+
+        Examples
+        --------
+        >>> from skbio.sequence import NucleotideSequence
+        >>> s = NucleotideSequence('G-AT.T')
+        >>> list(s.find_features('purine_run'))
+        [(0, 1, 'G'), (2, 3, 'A')]
+        >>> list(s.find_features('purine_run', 2))
+        []
+        >>> list(s.find_features('purine_run', 2, allow_gaps=True))
+        [(0, 3, 'G-A')]
+        >>> list(s.find_features('pyrimidine_run', 2, allow_gaps=True))
+        [(3, 6, 'T.T')]
+
         """
         gaps = re.escape(''.join(self.gap_alphabet()))
         acceptable = gaps if allow_gaps else ''
