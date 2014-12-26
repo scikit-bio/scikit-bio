@@ -1,0 +1,53 @@
+#!/bin/bash
+
+# ----------------------------------------------------------------------------
+# Copyright (c) 2013--, scikit-bio development team.
+#
+# Distributed under the terms of the Modified BSD License.
+#
+# The full license is in the file COPYING.txt, distributed with this software.
+# ----------------------------------------------------------------------------
+
+ROOT_DIR=skbio
+
+usage() {
+  echo "Usage: ${0} [test | pep8 ] [subdirectory]"
+}
+
+run_tests() {
+  echo "Begin running tests in $ROOT_DIR/$1"
+  nosetests --with-doctest --ignore DONOTIGNOREANYTHING $ROOT_DIR/$1
+  echo "End running tests"
+}
+
+run_pep8() {
+  echo "Begin running pep8 in $ROOT_DIR/$1"
+  pep8 $ROOT_DIR/$1
+  echo "End running pep8"
+}
+
+all() {
+  # most commonly you just want to test and pep8
+  run_tests $1
+  run_pep8 $1
+}
+
+case "$1" in 
+  "test" )
+    run_tests $2 ;;
+  "pep8" )
+    run_pep8 $2 ;;
+  *)
+    if [ "$#" = 0 ]; then
+      all
+    elif [ "$#" = 1 ]; then
+      if [ -d "$ROOT_DIR/$1" ]; then
+        all $1
+      else
+        usage
+      fi
+    else
+      usage
+    fi ;;
+esac
+
