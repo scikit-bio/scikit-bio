@@ -779,10 +779,6 @@ class BiologicalSequenceTests(TestCase):
         exp = [(2, 7, 'TTACA'), (2, 5, 'TTA'), (5, 7, 'CA')]
         self.assertEqual(obs, exp)
 
-    def test_find_features_nonexistent_feature_type(self):
-        with self.assertRaises(ValueError):
-            list(self.b1.find_features('purine_run'))
-
 
 class NucelotideSequenceTests(TestCase):
 
@@ -792,6 +788,7 @@ class NucelotideSequenceTests(TestCase):
         self.b2 = NucleotideSequence(
             'ACCGGUACC', id="test-seq-2",
             description="A test sequence")
+        self.b3 = NucleotideSequence('G-AT-TG.AT.T')
 
     def test_alphabet(self):
         exp = {
@@ -950,6 +947,15 @@ class NucelotideSequenceTests(TestCase):
     def test_find_features_no_feature_type(self):
         with self.assertRaises(ValueError):
             list(self.b1.find_features('nonexistent_feature_type'))
+
+    def test_find_features_allow_gaps(self):
+        exp = [(0, 3, 'G-A'), (6, 9, 'G.A')]
+        obs = list(self.b3.find_features('purine_run', 2, True))
+        self.assertEqual(obs, exp)
+
+        exp = [(3, 6, 'T-T'), (9, 12, 'T.T')]
+        obs = list(self.b3.find_features('pyrimidine_run', 2, True))
+        self.assertEqual(obs, exp)
 
     def test_nondegenerates_propagate_optional_properties(self):
         seq = NucleotideSequence('RS', id='foo', description='bar',
