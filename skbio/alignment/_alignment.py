@@ -1502,23 +1502,19 @@ class Alignment(SequenceCollection):
         ...              DNA('TT-C', id="seq3")]
         >>> a1 = Alignment(sequences)
         >>> position_freqs = a1.position_frequencies()
-        >>> print(round(position_freqs[0]['A'],3))
+        >>> round(position_freqs[0]['A'], 3)
         0.667
-        >>> print(round(position_freqs[1]['A'],3))
+        >>> round(position_freqs[1]['A'], 3)
         0.0
 
         """
+        seq_count = self.sequence_count()
         result = []
-        # handle the empty Alignment case
-        if self.is_empty():
-            return result
-
-        count = 1 / self.sequence_count()
-        for p in self.iter_positions(constructor=str):
-            current_freqs = defaultdict(float)
-            for c in p:
-                current_freqs[c] += count
-            result.append(current_freqs)
+        for pos_counter in self.position_counters():
+            freqs = defaultdict(float)
+            for char, count in viewitems(pos_counter):
+                freqs[char] = count / seq_count
+            result.append(freqs)
         return result
 
     def position_entropies(self, base=None,

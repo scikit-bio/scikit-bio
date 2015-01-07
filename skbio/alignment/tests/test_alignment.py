@@ -534,7 +534,12 @@ class AlignmentTests(TestCase):
                             start_end_positions=[(0, 3), (5, 9)])
         self.a4 = Alignment(self.seqs2, score=-42.0,
                             start_end_positions=[(1, 4), (6, 10)])
+
+        # no sequences
         self.empty = Alignment([])
+
+        # sequences, but no positions
+        self.no_positions = Alignment([RNA('', id='a'), RNA('', id='b')])
 
     def test_degap(self):
         """degap functions as expected
@@ -752,6 +757,10 @@ class AlignmentTests(TestCase):
     def test_position_counters(self):
         """position_counters functions as expected
         """
+        self.assertEqual(self.empty.position_counters(), [])
+
+        self.assertEqual(self.no_positions.position_counters(), [])
+
         expected = [Counter({'U': 1, 'A': 1}),
                     Counter({'U': 1, 'C': 1}),
                     Counter({'A': 1, 'G': 1}),
@@ -759,19 +768,40 @@ class AlignmentTests(TestCase):
                     Counter({'-': 1, 'U': 1})]
         self.assertEqual(self.a2.position_counters(), expected)
 
-        self.assertEqual(self.empty.position_counters(), [])
-
     def test_position_frequencies(self):
         """computing position frequencies functions as expected
         """
-        expected = [defaultdict(int, {'U': 0.5, 'A': 0.5}),
-                    defaultdict(int, {'U': 0.5, 'C': 0.5}),
-                    defaultdict(int, {'A': 0.5, 'G': 0.5}),
-                    defaultdict(int, {'U': 1.0}),
-                    defaultdict(int, {'-': 0.5, 'U': 0.5})]
+        self.assertEqual(self.empty.position_frequencies(), [])
+
+        self.assertEqual(self.no_positions.position_frequencies(), [])
+
+        expected = [defaultdict(float, {'U': 0.5, 'A': 0.5}),
+                    defaultdict(float, {'U': 0.5, 'C': 0.5}),
+                    defaultdict(float, {'A': 0.5, 'G': 0.5}),
+                    defaultdict(float, {'U': 1.0}),
+                    defaultdict(float, {'-': 0.5, 'U': 0.5})]
         self.assertEqual(self.a2.position_frequencies(), expected)
 
-        self.assertEqual(self.empty.position_frequencies(), [])
+    def test_position_frequencies_floating_point_precision(self):
+        # Test that a position with no variation yields a frequency of exactly
+        # 1.0. Note that it is important to use self.assertEqual here instead
+        # of self.assertAlmostEqual because we want to test for exactly 1.0. A
+        # previous implementation of Alignment.position_frequencies added
+        # (1 / sequence_count) for each occurrence of a character in a position
+        # to compute the frequencies (see
+        # https://github.com/biocore/scikit-bio/issues/801). In certain cases,
+        # this yielded a frequency slightly less than 1.0 due to roundoff
+        # error. The test case here uses an alignment of 10 sequences with no
+        # variation at a position. This test case exposes the roundoff error
+        # present in the previous implementation because 1/10 added 10 times
+        # yields a number slightly less than 1.0. This occurs because 1/10
+        # cannot be represented exactly as a floating point number.
+        seqs = []
+        for i in range(10):
+            seqs.append(DNA('A', id=str(i)))
+        aln = Alignment(seqs)
+        self.assertEqual(aln.position_frequencies(),
+                         [defaultdict(float, {'A': 1.0})])
 
     def test_position_entropies(self):
         """computing positional uncertainties functions as expected

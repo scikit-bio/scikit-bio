@@ -5,6 +5,9 @@
 ### Features
 * Modified ``skbio.stats.distance.pwmantel`` to accept a list of filepaths. This is useful as it allows for a smaller amount of memory consumption as it only loads two matrices at a time as opposed to requiring that all distance matrices are loaded into memory.
 
+### Bug fixes
+* Fixed floating point precision bug in ``Alignment.position_frequencies`` ([#801](https://github.com/biocore/scikit-bio/issues/801)).
+
 ### Backward-incompatible changes
 * Removed ``feature_types`` attribute from ``BiologicalSequence`` and all subclasses ([#797](https://github.com/biocore/scikit-bio/pull/797)).
 * Removed ``find_features`` method from ``BiologicalSequence`` and ``ProteinSequence`` ([#797](https://github.com/biocore/scikit-bio/pull/797)).
