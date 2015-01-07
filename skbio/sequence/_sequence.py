@@ -1273,7 +1273,7 @@ class BiologicalSequence(Sequence, SkbioObject):
         return Counter((str(seq) for seq in k_words))
 
     def k_word_frequencies(self, k, overlapping=True):
-        """Get the frequencies of words of length k
+        """Get the frequencies of words of length `k`
 
         Parameters
         ----------
@@ -1287,17 +1287,17 @@ class BiologicalSequence(Sequence, SkbioObject):
         -------
         collections.defaultdict
             The frequencies of words of length `k` contained in the
-            BiologicalSequence.
+            ``BiologicalSequence``.
 
         Examples
         --------
         >>> from skbio.sequence import BiologicalSequence
         >>> s = BiologicalSequence('ACACAT')
         >>> s.k_word_frequencies(3, overlapping=True)
-        defaultdict(<type 'int'>, {'CAC': 0.25, 'ACA': 0.5, 'CAT': 0.25})
+        defaultdict(<type 'float'>, {'CAC': 0.25, 'ACA': 0.5, 'CAT': 0.25})
 
         """
-        result = defaultdict(int)
+        result = defaultdict(float)
         if overlapping:
             num_words = len(self) - k + 1
         else:

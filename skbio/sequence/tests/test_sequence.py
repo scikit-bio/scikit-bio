@@ -337,14 +337,14 @@ class BiologicalSequenceTests(TestCase):
 
     def test_k_word_frequencies(self):
         # overlapping = True
-        expected = defaultdict(int)
+        expected = defaultdict(float)
         expected['A'] = 3/7.
         expected['C'] = 1/7.
         expected['G'] = 1/7.
         expected['T'] = 2/7.
         self.assertEqual(self.b1.k_word_frequencies(1, overlapping=True),
                          expected)
-        expected = defaultdict(int)
+        expected = defaultdict(float)
         expected['GAT'] = 1/5.
         expected['ATT'] = 1/5.
         expected['TTA'] = 1/5.
@@ -354,16 +354,16 @@ class BiologicalSequenceTests(TestCase):
                          expected)
 
         # overlapping = False
-        expected = defaultdict(int)
+        expected = defaultdict(float)
         expected['GAT'] = 1/2.
         expected['TAC'] = 1/2.
         self.assertEqual(self.b1.k_word_frequencies(3, overlapping=False),
                          expected)
-        expected = defaultdict(int)
+        expected = defaultdict(float)
         expected['GATTACA'] = 1.0
         self.assertEqual(self.b1.k_word_frequencies(7, overlapping=False),
                          expected)
-        expected = defaultdict(int)
+        expected = defaultdict(float)
         empty = BiologicalSequence('')
         self.assertEqual(empty.k_word_frequencies(1, overlapping=False),
                          expected)
