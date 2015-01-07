@@ -368,6 +368,26 @@ class BiologicalSequenceTests(TestCase):
         self.assertEqual(empty.k_word_frequencies(1, overlapping=False),
                          expected)
 
+    def test_k_word_frequencies_floating_point_precision(self):
+        # Test that a sequence having no variation in k-words yields a
+        # frequency of exactly 1.0. Note that it is important to use
+        # self.assertEqual here instead of self.assertAlmostEqual because we
+        # want to test for exactly 1.0. A previous implementation of
+        # BiologicalSequence.k_word_frequencies added (1 / num_words) for each
+        # occurrence of a k-word to compute the frequencies (see
+        # https://github.com/biocore/scikit-bio/issues/801). In certain cases,
+        # this yielded a frequency slightly less than 1.0 due to roundoff
+        # error. The test case here uses a sequence with 10 characters that are
+        # all identical and computes nonoverlapping k-word frequencies with
+        # k=1. This test case exposes the roundoff error present in the
+        # previous implementation because there are 10 k-words (which are all
+        # identical), so 1/10 added 10 times yields a number slightly less than
+        # 1.0. This occurs because 1/10 cannot be represented exactly as a
+        # floating point number.
+        seq = BiologicalSequence('AAAAAAAAAA')
+        self.assertEqual(seq.k_word_frequencies(1, overlapping=False),
+                         defaultdict(float, {'A': 1.0}))
+
     def test_len(self):
         self.assertEqual(len(self.b1), 7)
         self.assertEqual(len(self.b2), 9)

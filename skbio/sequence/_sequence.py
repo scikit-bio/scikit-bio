@@ -8,6 +8,7 @@
 
 from __future__ import absolute_import, division, print_function
 from future.builtins import range
+from future.utils import viewitems
 from six import string_types
 
 import re
@@ -1297,18 +1298,15 @@ class BiologicalSequence(Sequence, SkbioObject):
         defaultdict(<type 'float'>, {'CAC': 0.25, 'ACA': 0.5, 'CAT': 0.25})
 
         """
-        result = defaultdict(float)
         if overlapping:
             num_words = len(self) - k + 1
         else:
-            num_words = int(len(self) / k)
+            num_words = len(self) // k
 
-        if num_words == 0:
-            return result
-
-        count = 1. / num_words
-        for word in self.k_words(k, overlapping):
-            result[str(word)] += count
+        result = defaultdict(float)
+        k_word_counts = self.k_word_counts(k, overlapping=overlapping)
+        for word, count in viewitems(k_word_counts):
+            result[str(word)] = count / num_words
         return result
 
     def lower(self):
