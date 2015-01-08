@@ -797,7 +797,7 @@ class SequenceCollection(SkbioObject):
         return len(self._data)
 
     def k_word_frequencies(self, k, overlapping=True):
-        """Return frequencies of length k words for sequences in Alignment
+        """Return k-word frequencies for sequences in ``SequenceCollection``.
 
         Parameters
         ----------
@@ -805,43 +805,39 @@ class SequenceCollection(SkbioObject):
             The word length.
         overlapping : bool, optional
             Defines whether the k-words should be overlapping or not
-            overlapping. This is only relevant when k > 1.
+            overlapping. This is only relevant when `k` > 1.
 
         Returns
         -------
         list
             List of ``collections.defaultdict`` objects, one for each sequence
-            in the `Alignment`, representing the frequency of each k word in
-            each sequence of the `Alignment`.
+            in the ``SequenceCollection``, representing the frequency of each
+            k-word in each sequence of the ``SequenceCollection``.
 
         See Also
         --------
-        position_frequencies
+        Alignment.position_frequencies
 
         Examples
         --------
-        >>> from skbio.alignment import Alignment
-        >>> from skbio.sequence import DNA
+        >>> from skbio import SequenceCollection, DNA
         >>> sequences = [DNA('A', id="seq1"),
         ...              DNA('AT', id="seq2"),
         ...              DNA('TTTT', id="seq3")]
         >>> s1 = SequenceCollection(sequences)
         >>> for freqs in s1.k_word_frequencies(1):
         ...     print(freqs)
-        defaultdict(<type 'int'>, {'A': 1.0})
-        defaultdict(<type 'int'>, {'A': 0.5, 'T': 0.5})
-        defaultdict(<type 'int'>, {'T': 1.0})
+        defaultdict(<type 'float'>, {'A': 1.0})
+        defaultdict(<type 'float'>, {'A': 0.5, 'T': 0.5})
+        defaultdict(<type 'float'>, {'T': 1.0})
         >>> for freqs in s1.k_word_frequencies(2):
         ...     print(freqs)
-        defaultdict(<type 'int'>, {})
-        defaultdict(<type 'int'>, {'AT': 1.0})
-        defaultdict(<type 'int'>, {'TT': 1.0})
+        defaultdict(<type 'float'>, {})
+        defaultdict(<type 'float'>, {'AT': 1.0})
+        defaultdict(<type 'float'>, {'TT': 1.0})
 
         """
-        result = []
-        for s in self:
-            result.append(s.k_word_frequencies(k, overlapping))
-        return result
+        return [s.k_word_frequencies(k, overlapping) for s in self]
 
     def sequence_lengths(self):
         """Return lengths of the sequences in the `SequenceCollection`

@@ -378,14 +378,14 @@ class BiologicalSequenceTests(TestCase):
         # https://github.com/biocore/scikit-bio/issues/801). In certain cases,
         # this yielded a frequency slightly less than 1.0 due to roundoff
         # error. The test case here uses a sequence with 10 characters that are
-        # all identical and computes nonoverlapping k-word frequencies with
-        # k=1. This test case exposes the roundoff error present in the
-        # previous implementation because there are 10 k-words (which are all
+        # all identical and computes k-word frequencies with k=1. This test
+        # case exposes the roundoff error present in the previous
+        # implementation because there are 10 k-words (which are all
         # identical), so 1/10 added 10 times yields a number slightly less than
         # 1.0. This occurs because 1/10 cannot be represented exactly as a
         # floating point number.
         seq = BiologicalSequence('AAAAAAAAAA')
-        self.assertEqual(seq.k_word_frequencies(1, overlapping=False),
+        self.assertEqual(seq.k_word_frequencies(1),
                          defaultdict(float, {'A': 1.0}))
 
     def test_len(self):

@@ -203,26 +203,34 @@ class SequenceCollectionTests(TestCase):
     def test_k_word_frequencies(self):
         """k_word_frequencies functions as expected
         """
-        expected1 = defaultdict(int)
+        expected1 = defaultdict(float)
         expected1['A'] = 3 / 7.
         expected1['C'] = 1 / 7.
         expected1['G'] = 1 / 7.
         expected1['T'] = 2 / 7.
-        expected2 = defaultdict(int)
+        expected2 = defaultdict(float)
         expected2['G'] = 1 / 3.
         expected2['T'] = 2 / 3.
         self.assertEqual(self.s1.k_word_frequencies(k=1),
                          [expected1, expected2])
 
-        expected1 = defaultdict(int)
+        expected1 = defaultdict(float)
         expected1['GAT'] = 1 / 2.
         expected1['TAC'] = 1 / 2.
-        expected2 = defaultdict(int)
+        expected2 = defaultdict(float)
         expected2['TTG'] = 1 / 1.
         self.assertEqual(self.s1.k_word_frequencies(k=3, overlapping=False),
                          [expected1, expected2])
 
         self.assertEqual(self.empty.k_word_frequencies(k=1), [])
+
+        # Test to ensure floating point precision bug isn't present. See the
+        # tests for BiologicalSequence.k_word_frequencies for more details.
+        sc = SequenceCollection([RNA('C' * 10, id='s1'),
+                                 RNA('G' * 10, id='s2')])
+        self.assertEqual(sc.k_word_frequencies(1),
+                         [defaultdict(float, {'C': 1.0}),
+                          defaultdict(float, {'G': 1.0})])
 
     def test_str(self):
         """str functions as expected
@@ -823,9 +831,9 @@ class AlignmentTests(TestCase):
     def test_k_word_frequencies(self):
         """k_word_frequencies functions as expected
         """
-        expected = [defaultdict(int, {'U': 3 / 5, 'A': 1 / 5, '-': 1 / 5}),
-                    defaultdict(int, {'A': 1 / 5, 'C': 1 / 5, 'G': 1 / 5,
-                                      'U': 2 / 5})]
+        expected = [defaultdict(float, {'U': 3 / 5, 'A': 1 / 5, '-': 1 / 5}),
+                    defaultdict(float, {'A': 1 / 5, 'C': 1 / 5, 'G': 1 / 5,
+                                        'U': 2 / 5})]
         actual = self.a2.k_word_frequencies(k=1)
         for a, e in zip(actual, expected):
             self.assertEqual(sorted(a), sorted(e), 5)

@@ -1282,7 +1282,7 @@ class BiologicalSequence(Sequence, SkbioObject):
             The word length.
         overlapping : bool, optional
             Defines whether the k-words should be overlapping or not
-            overlapping.
+            overlapping. This is only relevant when `k` > 1.
 
         Returns
         -------
