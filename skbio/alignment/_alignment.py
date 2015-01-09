@@ -1675,8 +1675,10 @@ class Alignment(SequenceCollection):
                                                 'Maximum'),
                 fig_size=None, cmap=None, sequence_order=None):
         """Plot the alignment as a heatmap
-           X-axis labeled by majority consensus
-           Y-axis labeled by sequence IDs
+
+        The X-axis is labeled by majority consensus
+        The Y-axis is labeled by sequence IDs (every third sequence ID is
+        shown)
 
         Parameters
         ----------
@@ -1690,19 +1692,19 @@ class Alignment(SequenceCollection):
             Must be an iterable of exactly three strings.
         fig_size : tuple, optional
             Size of figure in inches.
-            If None, defaults to best fit size.
+            If None, defaults to fig size specified in the user's matplotlib
+            rc file.
         cmap : matplotlib colormap, optional
             See here for choices:
             http://matplotlib.org/examples/color/colormaps_reference.html
             If None, defaults to the colormap specified in the matplotlib
             rc file.
-        sequence_order : iterable
+        sequence_order : iterable, optional
             The order, from top-to-bottom, that the sequences should be
             plotted in.
-            Can be passed as a set of all sequence ids in the order to be
-            plotted.
-            If None, defaults to the order in which they were
-            passed; 0,1,2...etc.
+            Must be an iterable containing all sequence IDs in the alignment.
+            If None, sequences are plotted as they are ordered in the
+            alignment.
 
         Returns
         -------
@@ -1767,12 +1769,22 @@ class Alignment(SequenceCollection):
         # cache the sequence length, count, and ids, to avoid multiple look-ups
         sequence_length = self.sequence_length()
         sequence_count = self.sequence_count()
-        sequence_order = sequence_order or self.ids()
+        sequence_order = sequence_order
         if sequence_order is not None:
             if len(sequence_order) != sequence_count:
                 raise ValueError
-            if sequence_order == sequence_count:
+                print("Too many objects in passed tuple, you must use",
+                      sequence_count, "objects.")
+            if sequence_order == self.ids():
                 raise ValueError
+                print("""This ordering of sequences is the same as the default
+                      ordering, there is no need to pass sequence_order
+                      in this case.""")
+            if len(sequence_order) > len(set(sequence_order)):
+                raise ValueError
+                print("The sequence_order must only contain unique elements")
+        else:
+            sequence_order = self.ids()
         if len(legend_labels) != 3:
             raise ValueError
         values = list(value_map.values())
