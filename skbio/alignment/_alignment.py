@@ -1360,7 +1360,8 @@ class Alignment(SequenceCollection):
         -------
         Alignment
             The subalignment containing only the positions with gaps in fewer
-            than `maximum_gap_frequency` fraction of the sequences.
+            than (or equal to) `maximum_gap_frequency` fraction of the
+            sequences.
 
         Examples
         --------
@@ -1409,7 +1410,8 @@ class Alignment(SequenceCollection):
         -------
         Alignment
             The subalignment containing only the sequences with gaps in fewer
-            than `maximum_gap_frequency` fraction of the positions.
+            than (or equal to) `maximum_gap_frequency` fraction of the
+            positions.
 
         Examples
         --------

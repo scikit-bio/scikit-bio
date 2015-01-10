@@ -748,6 +748,15 @@ class AlignmentTests(TestCase):
         self.assertEqual(self.empty.omit_gap_positions(0.49), self.empty)
         self.assertEqual(self.empty.omit_gap_positions(1.0), self.empty)
 
+        # Test to ensure floating point precision bug isn't present. See the
+        # tests for Alignment.position_frequencies for more details.
+        seqs = []
+        for i in range(33):
+            seqs.append(DNA('-.', id=str(i)))
+        aln = Alignment(seqs)
+        self.assertEqual(aln.omit_gap_positions(1 - np.finfo(float).eps),
+                         Alignment([DNA('', id=str(i)) for i in range(33)]))
+
     def test_omit_gap_sequences(self):
         """omitting gap sequences functions as expected
         """
@@ -761,6 +770,12 @@ class AlignmentTests(TestCase):
         self.assertEqual(self.empty.omit_gap_sequences(0.0), self.empty)
         self.assertEqual(self.empty.omit_gap_sequences(0.2), self.empty)
         self.assertEqual(self.empty.omit_gap_sequences(1.0), self.empty)
+
+        # Test to ensure floating point precision bug isn't present. See the
+        # tests for Alignment.position_frequencies for more details.
+        aln = Alignment([DNA('.' * 33, id='abc'), DNA('-' * 33, id='def')])
+        self.assertEqual(aln.omit_gap_sequences(1 - np.finfo(float).eps),
+                         Alignment([]))
 
     def test_position_counters(self):
         """position_counters functions as expected
