@@ -8,46 +8,62 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-ROOT_DIR=skbio
+CONDA_DIR=${PWD}/.conda_test_sandbox
+CONDA=${CONDA_DIR}/bin/conda
 
-usage() {
-  echo "Usage: ${0} [test | pep8 ] [subdirectory]"
+clean() {
+  rm -rf ${CONDA_DIR}
 }
 
-run_tests() {
-  echo "Begin running tests in $ROOT_DIR/$1"
-  nosetests --with-doctest --ignore DONOTIGNOREANYTHING $ROOT_DIR/$1
-  echo "End running tests"
+install_conda() {
+  #wget http://repo.continuum.io/miniconda/Miniconda3-3.7.3-Linux-x86_64.sh -O miniconda.sh
+  chmod +x miniconda.sh
+  ./miniconda.sh -b -p ${CONDA_DIR}
+  # Update conda itself
+  ${CONDA} update --yes conda
 }
 
-run_pep8() {
-  echo "Begin running pep8 in $ROOT_DIR/$1"
-  pep8 $ROOT_DIR/$1
-  echo "End running pep8"
+
+setup_environment() {
+  ${CONDA} create --yes -n ${ENV_NAME} python=$PYTHON_VERSION pip \
+    numpy$NUMPY_VERSION scipy matplotlib$MATPLOTLIB_VERSION pandas nose pep8 \
+    Sphinx=1.2.2 IPython
+  if [ ${USE_CYTHON} ]; then ${CONDA} install --yes -n ${ENV_NAME} cython; fi
+  #source activate env_name
+  BIN=${CONDA_DIR}/envs/${ENV_NAME}/bin
+  ${BIN}/pip install sphinx-bootstrap-theme future \
+    six coveralls natsort pyflakes flake8 python-dateutil
 }
 
-all() {
-  # most commonly you just want to test and pep8
-  run_tests $1
-  run_pep8 $1
+install() {
+  ${BIN}/pip install -e . --no-deps
+}
+
+tests() {
+  if [ ${WITH_DOCTEST} ]; then 
+    PYTHONWARNINGS=ignore ${BIN}/nosetests skbio --with-doctest --with-coverage \
+    -I DONOTIGNOREANYTHING 
+  else
+    PYTHONWARNINGS=ignore ${BIN}/nosetests skbio --with-coverage -I DONOTIGNOREANYTHING
+  fi
+  ${BIN}/pep8 skbio setup.py checklist.py
+  ${BIN}/flake8 skbio setup.py checklist.py
+  ./checklist.py
+}
+
+run_local() {
+  PYTHON_VERSION=3.4
+  ENV_NAME=py${PYTHON_VERSION}
+  NUMPY_VERSION=
+  MATPLOTLIB_VERSION=
 }
 
 case "$1" in 
-  "test" )
-    run_tests $2 ;;
-  "pep8" )
-    run_pep8 $2 ;;
+  "tests" )
+    tests;;
+  "clean" )
+    clean;;
   *)
-    if [ "$#" = 0 ]; then
-      all
-    elif [ "$#" = 1 ]; then
-      if [ -d "$ROOT_DIR/$1" ]; then
-        all $1
-      else
-        usage
-      fi
-    else
-      usage
-    fi ;;
+    echo "ERROR"
 esac
 
