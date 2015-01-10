@@ -725,7 +725,6 @@ class BiologicalSequenceTests(TestCase):
         self.assertFalse(self.b7.has_unsupported_characters())
 
     def test_index(self):
-        """ index functions as expected """
         self.assertEqual(self.b1.index('G'), 0)
         self.assertEqual(self.b1.index('A'), 1)
         self.assertEqual(self.b1.index('AC'), 4)

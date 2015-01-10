@@ -27,12 +27,7 @@ from skbio.alignment import (StockholmAlignment, SequenceCollectionError,
 
 
 class SequenceCollectionTests(TestCase):
-
-    """Tests of the SequenceCollection class """
-
     def setUp(self):
-        """Initialize values to be used in tests
-        """
         self.d1 = DNASequence('GATTACA', id="d1")
         self.d2 = DNASequence('TTG', id="d2")
         self.d3 = DNASequence('GTATACA', id="d3")
@@ -66,22 +61,17 @@ class SequenceCollectionTests(TestCase):
         self.invalid_s1 = SequenceCollection([self.i1])
 
     def test_init(self):
-        """Initialization functions as expected with varied input types
-        """
         SequenceCollection(self.seqs1)
         SequenceCollection(self.seqs2)
         SequenceCollection(self.seqs3)
         SequenceCollection([])
 
     def test_init_fail(self):
-        """initialization with sequences with overlapping ids fails
-        """
+        # sequences with overlapping ids
         s1 = [self.d1, self.d1]
         self.assertRaises(SequenceCollectionError, SequenceCollection, s1)
 
     def test_init_validate(self):
-        """initialization with validation functions as expected
-        """
         SequenceCollection(self.seqs1, validate=True)
         SequenceCollection(self.seqs1, validate=True)
         # can't validate self.seqs2 as a DNASequence
@@ -89,22 +79,16 @@ class SequenceCollectionTests(TestCase):
                           self.invalid_s1, validate=True)
 
     def test_from_fasta_records(self):
-        """Initialization from list of tuples functions as expected
-        """
         SequenceCollection.from_fasta_records(self.seqs1_t, DNASequence)
         SequenceCollection.from_fasta_records(self.seqs2_t, RNASequence)
         SequenceCollection.from_fasta_records(self.seqs3_t, NucleotideSequence)
 
     def test_contains(self):
-        """in operator functions as expected
-        """
         self.assertTrue('d1' in self.s1)
         self.assertTrue('r2' in self.s2)
         self.assertFalse('r2' in self.s1)
 
     def test_eq(self):
-        """equality operator functions as expected
-        """
         self.assertTrue(self.s1 == self.s1)
         self.assertFalse(self.s1 == self.s2)
 
@@ -125,8 +109,6 @@ class SequenceCollectionTests(TestCase):
         self.assertFalse(self.s1 == SequenceCollection([self.d1, self.r1]))
 
     def test_getitem(self):
-        """getitem functions as expected
-        """
         self.assertEqual(self.s1[0], self.d1)
         self.assertEqual(self.s1[1], self.d2)
         self.assertEqual(self.s2[0], self.r1)
@@ -136,8 +118,6 @@ class SequenceCollectionTests(TestCase):
         self.assertRaises(KeyError, self.empty.__getitem__, '0')
 
     def test_iter(self):
-        """iter functions as expected
-        """
         s1_iter = iter(self.s1)
         count = 0
         for actual, expected in zip(s1_iter, self.seqs1):
@@ -147,16 +127,12 @@ class SequenceCollectionTests(TestCase):
         self.assertRaises(StopIteration, lambda: next(s1_iter))
 
     def test_len(self):
-        """len functions as expected
-        """
         self.assertEqual(len(self.s1), 2)
         self.assertEqual(len(self.s2), 3)
         self.assertEqual(len(self.s3), 5)
         self.assertEqual(len(self.empty), 0)
 
     def test_ne(self):
-        """inequality operator functions as expected
-        """
         self.assertFalse(self.s1 != self.s1)
         self.assertTrue(self.s1 != self.s2)
 
@@ -174,8 +150,6 @@ class SequenceCollectionTests(TestCase):
                         SequenceCollection([self.d1, self.r1]))
 
     def test_repr(self):
-        """repr functions as expected
-        """
         self.assertEqual(repr(self.s1),
                          "<SequenceCollection: n=2; "
                          "mean +/- std length=5.00 +/- 2.00>")
@@ -190,8 +164,6 @@ class SequenceCollectionTests(TestCase):
                          "mean +/- std length=0.00 +/- 0.00>")
 
     def test_reversed(self):
-        """reversed functions as expected
-        """
         s1_iter = reversed(self.s1)
         count = 0
         for actual, expected in zip(s1_iter, self.seqs1[::-1]):
@@ -201,8 +173,6 @@ class SequenceCollectionTests(TestCase):
         self.assertRaises(StopIteration, lambda: next(s1_iter))
 
     def test_k_word_frequencies(self):
-        """k_word_frequencies functions as expected
-        """
         expected1 = defaultdict(float)
         expected1['A'] = 3 / 7.
         expected1['C'] = 1 / 7.
@@ -233,8 +203,6 @@ class SequenceCollectionTests(TestCase):
                           defaultdict(float, {'G': 1.0})])
 
     def test_str(self):
-        """str functions as expected
-        """
         exp1 = ">d1\nGATTACA\n>d2\nTTG\n"
         self.assertEqual(str(self.s1), exp1)
         exp2 = ">r1\nGAUUACA\n>r2\nUUG\n>r3\nU-----UGCC--\n"
@@ -243,8 +211,6 @@ class SequenceCollectionTests(TestCase):
         self.assertEqual(str(self.empty), exp4)
 
     def test_distances(self):
-        """distances functions as expected
-        """
         s1 = SequenceCollection([DNA("ACGT", "d1"), DNA("ACGG", "d2")])
         expected = [[0, 0.25],
                     [0.25, 0]]
@@ -262,8 +228,6 @@ class SequenceCollectionTests(TestCase):
         self.assertEqual(actual, expected)
 
     def test_distribution_stats(self):
-        """distribution_stats functions as expected
-        """
         actual1 = self.s1.distribution_stats()
         self.assertEqual(actual1[0], 2)
         self.assertAlmostEqual(actual1[1], 5.0, 3)
@@ -285,8 +249,6 @@ class SequenceCollectionTests(TestCase):
         self.assertEqual(actual4[2], 0.0)
 
     def test_degap(self):
-        """degap functions as expected
-        """
         expected = [(id_, seq.replace('.', '').replace('-', ''))
                     for id_, seq in self.seqs2_t]
         expected = SequenceCollection.from_fasta_records(expected, RNASequence)
@@ -294,14 +256,10 @@ class SequenceCollectionTests(TestCase):
         self.assertEqual(actual, expected)
 
     def test_get_seq(self):
-        """getseq functions asexpected
-        """
         self.assertEqual(self.s1.get_seq('d1'), self.d1)
         self.assertEqual(self.s1.get_seq('d2'), self.d2)
 
     def test_ids(self):
-        """ids functions as expected
-        """
         self.assertEqual(self.s1.ids(), ['d1', 'd2'])
         self.assertEqual(self.s2.ids(), ['r1', 'r2', 'r3'])
         self.assertEqual(self.s3.ids(),
@@ -455,8 +413,6 @@ class SequenceCollectionTests(TestCase):
         self.assertEqual(obs, (expected1, expected2))
 
     def test_is_empty(self):
-        """is_empty functions as expected
-        """
         self.assertFalse(self.s1.is_empty())
         self.assertFalse(self.s2.is_empty())
         self.assertFalse(self.s3.is_empty())
@@ -464,8 +420,6 @@ class SequenceCollectionTests(TestCase):
         self.assertTrue(self.empty.is_empty())
 
     def test_is_valid(self):
-        """is_valid functions as expected
-        """
         self.assertTrue(self.s1.is_valid())
         self.assertTrue(self.s2.is_valid())
         self.assertTrue(self.s3.is_valid())
@@ -474,35 +428,25 @@ class SequenceCollectionTests(TestCase):
         self.assertFalse(self.invalid_s1.is_valid())
 
     def test_iteritems(self):
-        """iteritems functions as expected
-        """
         self.assertEqual(list(self.s1.iteritems()),
                          [(s.id, s) for s in self.s1])
 
     def test_lower(self):
-        """lower functions as expected
-        """
         self.assertEqual(self.s1.lower(), self.s1_lower)
 
     def test_sequence_count(self):
-        """num_seqs functions as expected
-        """
         self.assertEqual(self.s1.sequence_count(), 2)
         self.assertEqual(self.s2.sequence_count(), 3)
         self.assertEqual(self.s3.sequence_count(), 5)
         self.assertEqual(self.empty.sequence_count(), 0)
 
     def test_sequence_lengths(self):
-        """sequence_lengths functions as expected
-        """
         self.assertEqual(self.s1.sequence_lengths(), [7, 3])
         self.assertEqual(self.s2.sequence_lengths(), [7, 3, 12])
         self.assertEqual(self.s3.sequence_lengths(), [7, 3, 7, 3, 12])
         self.assertEqual(self.empty.sequence_lengths(), [])
 
     def test_to_fasta(self):
-        """to_fasta functions as expected
-        """
         exp1 = ">d1\nGATTACA\n>d2\nTTG\n"
         self.assertEqual(self.s1.to_fasta(), exp1)
         exp2 = ">r1\nGAUUACA\n>r2\nUUG\n>r3\nU-----UGCC--\n"
@@ -514,8 +458,6 @@ class SequenceCollectionTests(TestCase):
         self.assertEqual(obs, exp)
 
     def test_upper(self):
-        """upper functions as expected
-        """
         self.assertEqual(self.s1_lower.upper(), self.s1)
 
 
@@ -550,8 +492,6 @@ class AlignmentTests(TestCase):
         self.no_positions = Alignment([RNA('', id='a'), RNA('', id='b')])
 
     def test_degap(self):
-        """degap functions as expected
-        """
         expected = [(id_, seq.replace('.', '').replace('-', ''))
                     for id_, seq in self.seqs1_t]
         expected = SequenceCollection.from_fasta_records(expected, DNASequence)
@@ -565,8 +505,6 @@ class AlignmentTests(TestCase):
         self.assertEqual(actual, expected)
 
     def test_distances(self):
-        """distances functions as expected
-        """
         expected = [[0, 6. / 13, 4. / 13],
                     [6. / 13, 0, 7. / 13],
                     [4. / 13, 7. / 13, 0]]
@@ -593,8 +531,6 @@ class AlignmentTests(TestCase):
         self.assertEqual(self.a4.start_end_positions(), [(1, 4), (6, 10)])
 
     def test_subalignment(self):
-        """subalignment functions as expected
-        """
         # keep seqs by ids
         actual = self.a1.subalignment(seqs_to_keep=['d1', 'd3'])
         expected = Alignment([self.d1, self.d3])
@@ -674,8 +610,6 @@ class AlignmentTests(TestCase):
         Alignment(seqs)
 
     def test_init_validate(self):
-        """initialization with validation functions as expected
-        """
         Alignment(self.seqs1, validate=True)
 
         # invalid DNA character
@@ -685,8 +619,6 @@ class AlignmentTests(TestCase):
                           invalid_seqs1, validate=True)
 
     def test_iter_positions(self):
-        """iter_positions functions as expected
-        """
         actual = list(self.a2.iter_positions())
         expected = [[RNASequence(j) for j in i] for i in
                     ['UA', 'UC', 'AG', 'UU', '-U']]
@@ -728,8 +660,6 @@ class AlignmentTests(TestCase):
         self.assertEqual(obs, 'TT-')
 
     def test_omit_gap_positions(self):
-        """omitting gap positions functions as expected
-        """
         expected = self.a2
         self.assertEqual(self.a2.omit_gap_positions(1.0), expected)
         self.assertEqual(self.a2.omit_gap_positions(0.51), expected)
@@ -758,8 +688,6 @@ class AlignmentTests(TestCase):
                          Alignment([DNA('', id=str(i)) for i in range(33)]))
 
     def test_omit_gap_sequences(self):
-        """omitting gap sequences functions as expected
-        """
         expected = self.a2
         self.assertEqual(self.a2.omit_gap_sequences(1.0), expected)
         self.assertEqual(self.a2.omit_gap_sequences(0.20), expected)
@@ -778,8 +706,6 @@ class AlignmentTests(TestCase):
                          Alignment([]))
 
     def test_position_counters(self):
-        """position_counters functions as expected
-        """
         self.assertEqual(self.empty.position_counters(), [])
 
         self.assertEqual(self.no_positions.position_counters(), [])
@@ -792,8 +718,6 @@ class AlignmentTests(TestCase):
         self.assertEqual(self.a2.position_counters(), expected)
 
     def test_position_frequencies(self):
-        """computing position frequencies functions as expected
-        """
         self.assertEqual(self.empty.position_frequencies(), [])
 
         self.assertEqual(self.no_positions.position_frequencies(), [])
@@ -827,11 +751,8 @@ class AlignmentTests(TestCase):
                          [defaultdict(float, {'A': 1.0})])
 
     def test_position_entropies(self):
-        """computing positional uncertainties functions as expected
-
-        tested by calculating values as described in this post:
-         http://stackoverflow.com/a/15476958/3424666
-        """
+        # tested by calculating values as described in this post:
+        #  http://stackoverflow.com/a/15476958/3424666
         expected = [0.69314, 0.69314, 0.69314, 0.0, np.nan]
         np.testing.assert_almost_equal(self.a2.position_entropies(),
                                        expected, 5)
@@ -844,8 +765,6 @@ class AlignmentTests(TestCase):
                                        [])
 
     def test_k_word_frequencies(self):
-        """k_word_frequencies functions as expected
-        """
         expected = [defaultdict(float, {'U': 3 / 5, 'A': 1 / 5, '-': 1 / 5}),
                     defaultdict(float, {'A': 1 / 5, 'C': 1 / 5, 'G': 1 / 5,
                                         'U': 2 / 5})]
@@ -856,8 +775,6 @@ class AlignmentTests(TestCase):
                                            sorted(e.values()), 5)
 
     def test_sequence_length(self):
-        """sequence_length functions as expected
-        """
         self.assertEqual(self.a1.sequence_length(), 13)
         self.assertEqual(self.a2.sequence_length(), 5)
         self.assertEqual(self.empty.sequence_length(), 0)
@@ -919,11 +836,7 @@ class AlignmentTests(TestCase):
 
 
 class StockholmAlignmentTests(TestCase):
-
-    """Tests for stockholmAlignment object"""
-
     def setUp(self):
-        """Setup for stockholm tests."""
         self.seqs = [DNASequence("ACC-G-GGTA", id="seq1"),
                      DNASequence("TCC-G-GGCA", id="seq2")]
         self.GF = OrderedDict([
@@ -952,7 +865,8 @@ class StockholmAlignmentTests(TestCase):
         self.assertEqual(self.st.gr, self.GR)
 
     def test_from_file_alignment(self):
-        """make sure can parse basic sto file with interleaved alignment"""
+        # test that a basic stockholm file with interleaved alignment can be
+        # parsed
         sto = StringIO("# STOCKHOLM 1.0\n"
                        "seq1      ACC-G\n"
                        "seq2      TCC-G\n\n"
@@ -963,7 +877,6 @@ class StockholmAlignmentTests(TestCase):
         self.assertEqual(obs_sto, exp_sto)
 
     def test_from_file_GF(self):
-        """Make sure GF lines are parsed correctly"""
         # remove rn line to make sure auto-added
         self.GF.pop("RN")
         sto = StringIO("# STOCKHOLM 1.0\n#=GF RN [1]\n#=GF RM 11469857\n"
@@ -978,7 +891,6 @@ class StockholmAlignmentTests(TestCase):
         self.assertEqual(obs_sto, exp_sto)
 
     def test_from_file_GC(self):
-        """Make sure GC lines are parsed correctly"""
         sto = StringIO("# STOCKHOLM 1.0\n"
                        "seq1         ACC-G-GGTA\nseq2         TCC-G-GGCA\n"
                        "#=GC SS_cons (((....)))\n//")
@@ -987,7 +899,6 @@ class StockholmAlignmentTests(TestCase):
         self.assertEqual(obs_sto, exp_sto)
 
     def test_from_file_GS(self):
-        """Make sure GS lines are parsed correctly"""
         sto = StringIO("# STOCKHOLM 1.0\n#=GS seq2 AC 222\n#=GS seq1 AC 111\n"
                        "seq1          ACC-G-GGTA\n"
                        "seq2          TCC-G-GGCA\n//")
@@ -996,7 +907,6 @@ class StockholmAlignmentTests(TestCase):
         self.assertEqual(obs_sto, exp_sto)
 
     def test_from_file_GR(self):
-        """Make sure GR lines are parsed correctly"""
         sto = StringIO("# STOCKHOLM 1.0\nseq1          ACC-G\n"
                        "#=GR seq1 SS  11101\nseq2          TCC-G\n"
                        "#=GR seq2 SS  01101\n\nseq1          -GGTA\n"
@@ -1007,7 +917,6 @@ class StockholmAlignmentTests(TestCase):
         self.assertEqual(obs_sto, exp_sto)
 
     def test_from_file_multi(self):
-        """Make sure yield works correctly with multi-alignment sto files"""
         sto = StringIO("# STOCKHOLM 1.0\n#=GS seq2 AC 222\n#=GS seq1 AC 111\n"
                        "seq1          ACC-G-GGTA\n"
                        "seq2          TCC-G-GGCA\n//\n"
@@ -1028,7 +937,6 @@ class StockholmAlignmentTests(TestCase):
             count += 1
 
     def test_parse_gf_multiline_nh(self):
-        """Makes sure a multiline NH code is parsed correctly"""
         sto = ["#=GF TN MULTILINE TREE",
                "#=GF NH THIS IS FIRST", "#=GF NH THIS IS SECOND",
                "#=GF AC 1283394"]
@@ -1038,68 +946,59 @@ class StockholmAlignmentTests(TestCase):
         self.assertEqual(self.st._parse_gf_info(sto), exp)
 
     def test_parse_gf_multiline_cc(self):
-        """Makes sure a multiline CC code is parsed correctly"""
         sto = ["#=GF CC THIS IS FIRST", "#=GF CC THIS IS SECOND"]
         exp = {'CC': 'THIS IS FIRST THIS IS SECOND'}
         self.assertEqual(self.st._parse_gf_info(sto), exp)
 
     def test_parse_gf_info_nongf(self):
-        """Makes sure error raised if non-GF line passed"""
         sto = ["#=GF AC BLAAAAAAAHHH", "#=GC HUH THIS SHOULD NOT BE HERE"]
         with self.assertRaises(StockholmParseError):
             self.st._parse_gf_info(sto)
 
     def test_parse_gf_info_malformed(self):
-        """Makes sure error raised if too short a line passed"""
+        # too short of a line
         sto = ["#=GF AC", "#=GF"]
         with self.assertRaises(StockholmParseError):
             self.st._parse_gf_info(sto)
 
     def test_parse_gc_info_nongf(self):
-        """Makes sure error raised if non-GC line passed"""
         sto = ["#=GC AC BLAAAAAAAHHH", "#=GF HUH THIS SHOULD NOT BE HERE"]
         with self.assertRaises(StockholmParseError):
             self.st._parse_gf_info(sto)
 
     def test_parse_gc_info_strict_len(self):
-        """Make sure error raised if GC lines bad length and strict parsing"""
         sto = ["#=GC SS_cons (((..)))"]
         with self.assertRaises(StockholmParseError):
             self.st._parse_gc_info(sto, seqlen=20, strict=True)
 
     def test_parse_gc_info_strict_duplicate(self):
-        """Make sure error raised if GC lines repeated"""
         sto = ["#=GC SS_cons (((..)))", "#=GC SS_cons (((..)))"]
         with self.assertRaises(StockholmParseError):
             self.st._parse_gc_info(sto, seqlen=8, strict=True)
 
     def test_parse_gc_info_malformed(self):
-        """Makes sure error raised if too short a line passed"""
+        # too short of a line
         sto = ["#=GC AC BLAAAAAAAHHH", "#=GC"]
         with self.assertRaises(StockholmParseError):
             self.st._parse_gc_info(sto)
 
     def test_parse_gs_gr_info_mixed(self):
-        """Makes sure error raised if mixed GS and GR lines passed"""
         sto = ["#=GS seq1 AC BLAAA", "#=GR seq2 HUH THIS SHOULD NOT BE HERE"]
         with self.assertRaises(StockholmParseError):
             self.st._parse_gs_gr_info(sto)
 
     def test_parse_gs_gr_info_malformed(self):
-        """Makes sure error raised if too short a line passed"""
+        # too short of a line
         sto = ["#=GS AC BLAAAAAAAHHH", "#=GS"]
         with self.assertRaises(StockholmParseError):
             self.st._parse_gs_gr_info(sto)
 
     def test_parse_gs_gr_info_strict(self):
-        """Make sure error raised if GR lines bad length and strict parsing"""
         sto = ["#=GR seq1 SS  10101111", "#=GR seq2 SS  01101"]
         with self.assertRaises(StockholmParseError):
             self.st._parse_gs_gr_info(sto, seqlen=20, strict=True)
 
     def test_str(self):
-        """ Make sure stockholm with all information contained is formatted
-        correctly """
         st = StockholmAlignment(self.seqs, gc=self.GC, gf=self.GF, gs=self.GS,
                                 gr=self.GR)
         obs = str(st)
@@ -1161,8 +1060,6 @@ class StockholmAlignmentTests(TestCase):
         self.assertEqual(obs, exp)
 
     def test_str_gc(self):
-        """ Make sure stockholm with only GC information contained is formatted
-        correctly """
         st = StockholmAlignment(self.seqs, gc=self.GC, gf=None, gs=None,
                                 gr=None)
         obs = str(st)
@@ -1172,8 +1069,6 @@ class StockholmAlignmentTests(TestCase):
         self.assertEqual(obs, exp)
 
     def test_str_gf(self):
-        """ Make sure stockholm with only GF information contained is formatted
-        correctly """
         st = StockholmAlignment(self.seqs, gc=None, gf=self.GF, gs=None,
                                 gr=None)
         obs = str(st)
@@ -1197,8 +1092,6 @@ class StockholmAlignmentTests(TestCase):
         self.assertEqual(obs, exp)
 
     def test_str_gs(self):
-        """ Make sure stockholm with only GS information contained is formatted
-        correctly """
         st = StockholmAlignment(self.seqs, gc=None, gf=None, gs=self.GS,
                                 gr=None)
         obs = str(st)
@@ -1210,8 +1103,6 @@ class StockholmAlignmentTests(TestCase):
         self.assertEqual(obs, exp)
 
     def test_str_gr(self):
-        """ Make sure stockholm with only GR information contained is formatted
-        correctly """
         st = StockholmAlignment(self.seqs, gc=None, gf=None, gs=None,
                                 gr=self.GR)
         obs = str(st)
@@ -1221,7 +1112,6 @@ class StockholmAlignmentTests(TestCase):
         self.assertEqual(obs, exp)
 
     def test_str_trees(self):
-        """ Make sure stockholm with trees printed correctly"""
         GF = OrderedDict({"NH": ["IMATREE", "IMATREETOO"],
                           "TN": ["Tree2", "Tree1"]})
         st = StockholmAlignment(self.seqs, gc=None, gf=GF, gs=None,
