@@ -7,6 +7,8 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
+from future.builtins import range
+from future.utils import viewitems
 from six import string_types
 
 import re
@@ -1272,7 +1274,7 @@ class BiologicalSequence(Sequence, SkbioObject):
         return Counter((str(seq) for seq in k_words))
 
     def k_word_frequencies(self, k, overlapping=True):
-        """Get the frequencies of words of length k
+        """Get the frequencies of words of length `k`
 
         Parameters
         ----------
@@ -1280,34 +1282,31 @@ class BiologicalSequence(Sequence, SkbioObject):
             The word length.
         overlapping : bool, optional
             Defines whether the k-words should be overlapping or not
-            overlapping.
+            overlapping. This is only relevant when `k` > 1.
 
         Returns
         -------
         collections.defaultdict
             The frequencies of words of length `k` contained in the
-            BiologicalSequence.
+            ``BiologicalSequence``.
 
         Examples
         --------
         >>> from skbio.sequence import BiologicalSequence
         >>> s = BiologicalSequence('ACACAT')
         >>> s.k_word_frequencies(3, overlapping=True)
-        defaultdict(<type 'int'>, {'CAC': 0.25, 'ACA': 0.5, 'CAT': 0.25})
+        defaultdict(<type 'float'>, {'CAC': 0.25, 'ACA': 0.5, 'CAT': 0.25})
 
         """
-        result = defaultdict(int)
         if overlapping:
             num_words = len(self) - k + 1
         else:
-            num_words = int(len(self) / k)
+            num_words = len(self) // k
 
-        if num_words == 0:
-            return result
-
-        count = 1. / num_words
-        for word in self.k_words(k, overlapping):
-            result[str(word)] += count
+        result = defaultdict(float)
+        k_word_counts = self.k_word_counts(k, overlapping=overlapping)
+        for word, count in viewitems(k_word_counts):
+            result[str(word)] = count / num_words
         return result
 
     def lower(self):
