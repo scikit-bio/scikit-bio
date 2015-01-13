@@ -16,6 +16,9 @@ from collections import Counter, defaultdict, OrderedDict
 
 import numpy as np
 from scipy.stats import entropy
+import matplotlib as mpl
+mpl.use('Agg')
+import matplotlib.pyplot as plt
 
 from skbio._base import SkbioObject
 from skbio.stats.distance import DistanceMatrix
@@ -1661,6 +1664,152 @@ class Alignment(SequenceCollection):
             result.append("%s %s" % (new_id, str(seq)))
 
         return '\n'.join(result), new_id_to_old_id
+
+    def heatmap(self, value_map, legend_labels=('Minimum', 'Median',
+                                                'Maximum'),
+                fig_size=None, cmap=None, sequence_order=None):
+        """Plot the alignment as a heatmap
+
+        The X-axis is labeled by majority consensus
+        The Y-axis is labeled by sequence IDs (every third sequence ID is
+        shown)
+
+        Parameters
+        ----------
+        value_map : dict, collections.defaultdict
+            Dictionary mapping characters in the alignment to numeric values.
+            KeyErrors are not caught, so all possible values should be in this
+            dict, or it should be a collections.defaultdict which can, for
+            example, default to ``nan``.
+        legend_labels : iterable, optional
+            Labels for the min, median, and max values in the legend.
+            Must be an iterable of exactly three strings.
+        fig_size : tuple, optional
+            Size of figure in inches.
+            If None, defaults to fig size specified in the user's matplotlib
+            rc file.
+        cmap : matplotlib colormap, optional
+            See here for choices:
+            http://matplotlib.org/examples/color/colormaps_reference.html
+            If None, defaults to the colormap specified in the matplotlib
+            rc file.
+        sequence_order : iterable, optional
+            The order, from top-to-bottom, that the sequences should be
+            plotted in.
+            Must be an iterable containing all sequence IDs in the alignment.
+            If None, sequences are plotted as they are ordered in the
+            alignment.
+
+        Returns
+        -------
+        matplotlib.figure.Figure
+            Figure containing the heatmap and colorbar of the plotted
+            alignment.
+
+        Raises
+        ------
+        KeyError
+            If a sequence character in the alignment is not in
+            ``value_map``, and ``value_map`` is not a
+            ``collections.defaultdict`` or if sequence_order contains an
+            id that isn't in the alignment.
+
+        References
+        ----------
+        .. [1] http://www.genome.jp/aaindex/
+        .. [2] http://www.genome.jp/dbget-bin/www_bget?aaindex:ARGP820101
+
+        Examples
+        --------
+        .. plot::
+
+           Let's visualize an alignment of protein sequences as a heatmap, with
+           amino acids colored by their hydrophobicity.
+
+           Load the AAIndex database [1]_ hydrophobicity index values [2]_:
+
+           >>> from collections import defaultdict
+           >>> import numpy as np
+           >>> hydrophobicity_idx = defaultdict(lambda: np.nan)
+           >>> hydrophobicity_idx.update({'A': 0.61, 'L': 1.53, 'R': 0.60,
+           ...                            'K': 1.15, 'N': 0.06, 'M': 1.18,
+           ...                            'D': 0.46, 'F': 2.02, 'C': 1.07,
+           ...                            'P': 1.95, 'Q': 0., 'S': 0.05,
+           ...                            'E': 0.47, 'T': 0.05, 'G': 0.07,
+           ...                            'W': 2.65, 'H': 0.61, 'Y': 1.88,
+           ...                            'I': 2.22, 'V': 1.32})
+
+           Label colormap based on hydrophobicity:
+
+           >>> hydrophobicity_labels=['Hydrophilic', 'Medium', 'Hydrophobic']
+
+           Define an Alignment of protein sequences:
+
+           >>> from skbio import Alignment, Protein
+           >>> sequences = [Protein('VHLTPEEKSAVTALWGKVNVDEV--', id="seq1"),
+           ...              Protein('-GLSDGEWQLVLKVWGKVEGDLPGH', id="seq2"),
+           ...              Protein('-GLSDGEWQLVLKVWGKVETDITGH', id="seq3"),
+           ...              Protein('-VLSEGEWQLVLHVWAKVEADIAGH', id="seq4")]
+           >>> aln = Alignment(sequences)
+
+           Plot the Alignment as a heatmap:
+
+           >>> fig = aln.heatmap(hydrophobicity_idx, fig_size=(15, 10),
+           ...                   legend_labels=['Hydrophilic', 'Medium',
+           ...                                  'Hydrophobic'],
+           ...                   cmap='Greens')
+
+        """
+        # cache the sequence length, count, and ids, to avoid multiple look-ups
+        sequence_length = self.sequence_length()
+        sequence_count = self.sequence_count()
+        if sequence_order is not None:
+            if len(sequence_order) != sequence_count:
+                raise ValueError("Too many objects in passed tuple, you must"
+                                 "use", sequence_count, "objects.")
+            if len(sequence_order) > len(set(sequence_order)):
+                raise ValueError("The sequence_order must only contain"
+                                 "unique elements")
+        else:
+            sequence_order = self.ids()
+        if len(legend_labels) != 3:
+            raise ValueError
+        values = list(value_map.values())
+
+        # create an empty data matrix
+        mtx = np.empty([sequence_length, sequence_count])
+        # fill the data matrix by iterating over the alignment and mapping
+        # characters to values
+        for i in range(sequence_length):
+            for j, sequence_id in enumerate(sequence_order):
+                mp = str(self[sequence_id][i])
+                mtx[i][j] = value_map[mp]
+
+        # build the heatmap, this code derived from the Matplotlib Gallery
+        # http://matplotlib.org/examples/pylab_examples/...
+        # colorbar_tick_labelling_demo.html
+        fig, ax = plt.subplots()
+        if fig_size is not None:
+            fig.set_size_inches(fig_size)
+
+        cax = ax.imshow(mtx.T, interpolation='nearest', cmap=cmap)
+
+        # Add colorbar and define tick labels
+        cbar = fig.colorbar(cax,
+                            ticks=[min(values), np.median(values),
+                                   max(values)], orientation='horizontal')
+        ax.set_yticks([0] + list(range(3, sequence_count - 3, 3)) +
+                      [sequence_count-1])
+        yt = ax.get_yticks()
+        ytl = []
+        for i in range(len(yt)):
+            ytl.append(sequence_order[yt[i]])
+        ax.set_yticklabels(ytl)
+
+        ax.set_xticks(range(sequence_length))
+        ax.set_xticklabels(self.majority_consensus(), size=7)
+        cbar.ax.set_xticklabels(legend_labels)
+        return fig
 
     def _validate_lengths(self):
         """Return ``True`` if all sequences same length, ``False`` otherwise
