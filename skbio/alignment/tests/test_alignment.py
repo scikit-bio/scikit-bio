@@ -886,6 +886,24 @@ class AlignmentTests(TestCase):
         with self.assertRaises(ValueError):
             a1.heatmap(values, legend_labels=['a', 'b', 'c', 'd'])
 
+    def test_heatmap_errors(self):
+        sequences = [DNA('AGTCGGT', id="seq1"),
+                     DNA('CAACGGA', id="seq2"),
+                     DNA('AACCTCT', id="seq3"),
+                     DNA('TACTCGT', id="seq4")]
+        a1 = Alignment(sequences)
+        values = {'A': 0.61, 'C': 1.07, 'T': 0.05, 'G': 0.07}
+        clabels = ['a', 'b', 'c']
+        with self.assertRaises(ValueError):
+            a1.heatmap(values, fig_size=(15, 10), cmap='Blues',
+                       legend_labels=clabels,
+                       sequence_order=('seq1', 'seq2', 'seq3', 'seq3'))
+        with self.assertRaises(ValueError):
+            a1.heatmap(values, fig_size=(15, 10), cmap='Blues',
+                       legend_labels=clabels,
+                       sequence_order=('seq1', 'seq2', 'seq4', 'seq3',
+                                       'seq5'))
+
     def heatmap_set_values(self):
         sequences = [DNA('AACCCGT', id="seq1"),
                      DNA('AACCGGT', id="seq2")]

@@ -1769,20 +1769,13 @@ class Alignment(SequenceCollection):
         # cache the sequence length, count, and ids, to avoid multiple look-ups
         sequence_length = self.sequence_length()
         sequence_count = self.sequence_count()
-        sequence_order = sequence_order
         if sequence_order is not None:
             if len(sequence_order) != sequence_count:
-                raise ValueError
-                print("Too many objects in passed tuple, you must use",
-                      sequence_count, "objects.")
-            if sequence_order == self.ids():
-                raise ValueError
-                print("""This ordering of sequences is the same as the default
-                      ordering, there is no need to pass sequence_order
-                      in this case.""")
+                raise ValueError("Too many objects in passed tuple, you must"
+                                 "use", sequence_count, "objects.")
             if len(sequence_order) > len(set(sequence_order)):
-                raise ValueError
-                print("The sequence_order must only contain unique elements")
+                raise ValueError("The sequence_order must only contain"
+                                 "unique elements")
         else:
             sequence_order = self.ids()
         if len(legend_labels) != 3:
