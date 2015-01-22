@@ -8,9 +8,10 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-__version__ = "0.2.0-dev"
+__version__ = "0.2.2-dev"
 
 import os
+import platform
 from setuptools import find_packages, setup
 from setuptools.extension import Extension
 
@@ -43,19 +44,27 @@ with open('README.rst') as f:
 # Dealing with Cython
 USE_CYTHON = os.environ.get('USE_CYTHON', False)
 ext = '.pyx' if USE_CYTHON else '.c'
+
+# There's a bug in some versions of Python 3.4 that propagates
+# -Werror=declaration-after-statement to extensions, instead of just affecting
+# the compilation of the interpreter. See http://bugs.python.org/issue21121 for
+# details. This acts as a workaround until the next Python 3 release -- thanks
+# Wolfgang Maier (wolma) for the workaround!
+ssw_extra_compile_args = ['-Wno-error=declaration-after-statement']
+
+# Users with i686 architectures have reported that adding this flag allows
+# SSW to be compiled. See https://github.com/biocore/scikit-bio/issues/409 and
+# http://stackoverflow.com/q/26211814/3776794 for details.
+if platform.machine() == 'i686':
+    ssw_extra_compile_args.append('-msse2')
+
 extensions = [
     Extension("skbio.stats.__subsample",
               ["skbio/stats/__subsample" + ext]),
     Extension("skbio.alignment._ssw_wrapper",
               ["skbio/alignment/_ssw_wrapper" + ext,
                "skbio/alignment/_lib/ssw.c"],
-              # There's a bug in some versions of Python 3.4 that propagates
-              # -Werror=declaration-after-statement to extensions, instead of
-              # just affecting the compilation of the interpreter. See
-              # http://bugs.python.org/issue21121 for details. This acts as a
-              # workaround until the next Python 3 release -- thanks
-              # Wolfgang Maier (wolma) for the workaround!
-              extra_compile_args=["-Wno-error=declaration-after-statement"])
+              extra_compile_args=ssw_extra_compile_args)
 ]
 
 if USE_CYTHON:

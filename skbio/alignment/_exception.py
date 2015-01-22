@@ -16,6 +16,11 @@ class SequenceCollectionError(Exception):
     pass
 
 
+class AlignmentError(SequenceCollectionError):
+    """General error for alignment validation failures."""
+    pass
+
+
 class StockholmParseError(FileFormatError):
     """Exception raised when a Stockholm formatted file cannot be parsed."""
     pass

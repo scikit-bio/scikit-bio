@@ -14,6 +14,49 @@ from os.path import exists, isdir
 from functools import partial
 
 
+def cardinal_to_ordinal(n):
+    """Return ordinal string version of cardinal int `n`.
+
+    Parameters
+    ----------
+    n : int
+        Cardinal to convert to ordinal. Must be >= 0.
+
+    Returns
+    -------
+    str
+        Ordinal version of cardinal `n`.
+
+    Raises
+    ------
+    ValueError
+        If `n` is less than 0.
+
+    Notes
+    -----
+    This function can be useful when writing human-readable error messages.
+
+    Examples
+    --------
+    >>> from skbio.util import cardinal_to_ordinal
+    >>> cardinal_to_ordinal(0)
+    '0th'
+    >>> cardinal_to_ordinal(1)
+    '1st'
+    >>> cardinal_to_ordinal(2)
+    '2nd'
+    >>> cardinal_to_ordinal(3)
+    '3rd'
+
+    """
+    # Taken and modified from http://stackoverflow.com/a/20007730/3776794
+    # Originally from http://codegolf.stackexchange.com/a/4712 by Gareth
+    if n < 0:
+        raise ValueError("Cannot convert negative integer %d to ordinal "
+                         "string." % n)
+    return "%d%s" % (n, "tsnrhtdd"[(n//10 % 10 != 1)*(n % 10 < 4)*n % 10::4])
+
+
 def is_casava_v180_or_later(header_line):
     """Check if the header looks like it is Illumina software post-casava v1.8
 

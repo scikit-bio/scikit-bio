@@ -27,13 +27,13 @@ An example PHYLIP-formatted file taken from [3]_::
 
 Format Support
 --------------
-**Has Sniffer: Yes**
+**Has Sniffer: No**
 
-+----------+----------+------------------------------------------------------+
-|**Reader**|**Writer**|                   **Object Class**                   |
-+----------+----------+------------------------------------------------------+
-|No        |Yes       |:mod:`skbio.alignment.Alignment`                      |
-+----------+----------+------------------------------------------------------+
++------+------+---------------------------------------------------------------+
+|Reader|Writer|                          Object Class                         |
++======+======+===============================================================+
+|No    |Yes   |:mod:`skbio.alignment.Alignment`                               |
++------+------+---------------------------------------------------------------+
 
 Format Specification
 --------------------
@@ -100,10 +100,11 @@ PHYLIP specification uses ``-`` as a gap character, though older versions also
 supported ``.``. The sequence characters may contain optional spaces (e.g., to
 improve readability), and both upper and lower case characters are supported.
 
-.. note:: scikit-bio will only write a PHYLIP-formatted file if the alignment's
-   sequence characters are valid IUPAC characters, as defined in
-   :mod:`skbio.sequence`. The specific lexicon that is validated against
-   depends on the type of sequences stored in the alignment.
+.. note:: scikit-bio will write a PHYLIP-formatted file even if the alignment's
+   sequence characters are not valid IUPAC characters. This differs from the
+   PHYLIP specification, which states that a PHYLIP-formatted file can only
+   contain valid IUPAC characters. To check whether all characters are valid
+   before writing, the user can call ``Alignment.is_valid()``.
 
    Since scikit-bio supports both ``-`` and ``.`` as gap characters (e.g., in
    ``skbio.alignment.Alignment``), both are supported when writing a
@@ -205,20 +206,14 @@ References
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.builtins import range
 
 from skbio.alignment import Alignment
 from skbio.io import register_writer, PhylipFormatError
+from skbio.io._base import _chunk_str
 
 
 @register_writer('phylip', Alignment)
 def _alignment_to_phylip(obj, fh):
-    if not obj.is_valid():
-        # TODO update this error message when #670 is resolved
-        raise PhylipFormatError(
-            "Alignment can only be written in PHYLIP format if all sequences "
-            "are of equal length and contain only valid characters within "
-            "their character sets.")
 
     if obj.is_empty():
         raise PhylipFormatError(
@@ -246,11 +241,5 @@ def _alignment_to_phylip(obj, fh):
 
     fmt = '{0:%d}{1}\n' % chunk_size
     for seq in obj:
-        chunked_seq = _chunk_str(str(seq), chunk_size)
+        chunked_seq = _chunk_str(str(seq), chunk_size, ' ')
         fh.write(fmt.format(seq.id, chunked_seq))
-
-
-def _chunk_str(s, n):
-    """Insert a space every `n` characters in `s`."""
-    # Modified from http://stackoverflow.com/a/312464/3776794
-    return ' '.join((s[i:i+n] for i in range(0, len(s), n)))

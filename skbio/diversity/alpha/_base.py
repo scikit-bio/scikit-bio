@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division, print_function
-
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -9,11 +6,13 @@ from __future__ import absolute_import, division, print_function
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from __future__ import absolute_import, division, print_function
+
 import numpy as np
 from scipy.special import gammaln
 from scipy.optimize import fmin_powell, minimize_scalar
 
-from skbio.stats import subsample
+from skbio.stats import subsample_counts
 
 
 def _validate(counts, suppress_cast=False):
@@ -633,7 +632,7 @@ def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
 
     See Also
     --------
-    skbio.math.subsample
+    skbio.stats.subsample_counts
 
     Notes
     -----
@@ -661,7 +660,7 @@ def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
     xvals = np.arange(1, n_indiv + 1)
     ymtx = np.empty((num_repeats, len(xvals)), dtype=int)
     for i in range(num_repeats):
-        ymtx[i] = np.asarray([observed_otus(subsample(counts, n))
+        ymtx[i] = np.asarray([observed_otus(subsample_counts(counts, n))
                               for n in xvals], dtype=int)
     yvals = ymtx.mean(0)
 

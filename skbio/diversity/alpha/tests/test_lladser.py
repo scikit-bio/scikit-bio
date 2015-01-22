@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division, print_function
-
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -9,12 +6,14 @@ from __future__ import absolute_import, division, print_function
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from __future__ import absolute_import, division, print_function
+
 import numpy as np
 import numpy.testing as npt
 from nose.tools import (assert_equal, assert_almost_equal, assert_raises,
                         assert_true)
 
-from skbio.stats import subsample
+from skbio.stats import subsample_counts
 from skbio.diversity.alpha import lladser_pe, lladser_ci
 from skbio.diversity.alpha._lladser import (
     _expand_counts, _lladser_point_estimates,
@@ -31,7 +30,7 @@ def create_fake_observation():
     counts[0] = 9000
     total = counts.sum()
 
-    fake_obs = subsample(counts, 1000)
+    fake_obs = subsample_counts(counts, 1000)
     exp_p = 1 - sum([x/total for (x, y) in zip(counts, fake_obs) if y > 0])
 
     return fake_obs, exp_p

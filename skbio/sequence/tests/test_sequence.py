@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -9,11 +7,12 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future import standard_library
-standard_library.install_hooks()
+from future.standard_library import hooks
+with hooks():
+    from itertools import zip_longest
 
+from re import compile as re_compile
 from collections import Counter, defaultdict
-from itertools import zip_longest
 from unittest import TestCase, main
 
 import numpy as np
@@ -95,6 +94,11 @@ class BiologicalSequenceTests(TestCase):
         # wrong number of elements
         with self.assertRaisesRegexp(BiologicalSequenceError, '\(3\).*\(4\)'):
             BiologicalSequence('ACGT', quality=[2, 3, 4])
+
+        # negatives
+        with self.assertRaisesRegexp(BiologicalSequenceError,
+                                     'quality scores.*greater than.*zero'):
+            BiologicalSequence('ACGT', quality=[2, 3, -1, 4])
 
     def test_contains(self):
         self.assertTrue('G' in self.b1)
@@ -333,14 +337,14 @@ class BiologicalSequenceTests(TestCase):
 
     def test_k_word_frequencies(self):
         # overlapping = True
-        expected = defaultdict(int)
+        expected = defaultdict(float)
         expected['A'] = 3/7.
         expected['C'] = 1/7.
         expected['G'] = 1/7.
         expected['T'] = 2/7.
         self.assertEqual(self.b1.k_word_frequencies(1, overlapping=True),
                          expected)
-        expected = defaultdict(int)
+        expected = defaultdict(float)
         expected['GAT'] = 1/5.
         expected['ATT'] = 1/5.
         expected['TTA'] = 1/5.
@@ -350,19 +354,39 @@ class BiologicalSequenceTests(TestCase):
                          expected)
 
         # overlapping = False
-        expected = defaultdict(int)
+        expected = defaultdict(float)
         expected['GAT'] = 1/2.
         expected['TAC'] = 1/2.
         self.assertEqual(self.b1.k_word_frequencies(3, overlapping=False),
                          expected)
-        expected = defaultdict(int)
+        expected = defaultdict(float)
         expected['GATTACA'] = 1.0
         self.assertEqual(self.b1.k_word_frequencies(7, overlapping=False),
                          expected)
-        expected = defaultdict(int)
+        expected = defaultdict(float)
         empty = BiologicalSequence('')
         self.assertEqual(empty.k_word_frequencies(1, overlapping=False),
                          expected)
+
+    def test_k_word_frequencies_floating_point_precision(self):
+        # Test that a sequence having no variation in k-words yields a
+        # frequency of exactly 1.0. Note that it is important to use
+        # self.assertEqual here instead of self.assertAlmostEqual because we
+        # want to test for exactly 1.0. A previous implementation of
+        # BiologicalSequence.k_word_frequencies added (1 / num_words) for each
+        # occurrence of a k-word to compute the frequencies (see
+        # https://github.com/biocore/scikit-bio/issues/801). In certain cases,
+        # this yielded a frequency slightly less than 1.0 due to roundoff
+        # error. The test case here uses a sequence with 10 characters that are
+        # all identical and computes k-word frequencies with k=1. This test
+        # case exposes the roundoff error present in the previous
+        # implementation because there are 10 k-words (which are all
+        # identical), so 1/10 added 10 times yields a number slightly less than
+        # 1.0. This occurs because 1/10 cannot be represented exactly as a
+        # floating point number.
+        seq = BiologicalSequence('AAAAAAAAAA')
+        self.assertEqual(seq.k_word_frequencies(1),
+                         defaultdict(float, {'A': 1.0}))
 
     def test_len(self):
         self.assertEqual(len(self.b1), 7)
@@ -701,7 +725,6 @@ class BiologicalSequenceTests(TestCase):
         self.assertFalse(self.b7.has_unsupported_characters())
 
     def test_index(self):
-        """ index functions as expected """
         self.assertEqual(self.b1.index('G'), 0)
         self.assertEqual(self.b1.index('A'), 1)
         self.assertEqual(self.b1.index('AC'), 4)
@@ -764,6 +787,17 @@ class BiologicalSequenceTests(TestCase):
         # correctly propagated to the resulting sequence
         self.assertTrue(b.lower().equals(expected))
 
+    def test_regex_iter(self):
+        pat = re_compile('(T+A)(CA)')
+
+        obs = list(self.b1.regex_iter(pat))
+        exp = [(2, 5, 'TTA'), (5, 7, 'CA')]
+        self.assertEqual(obs, exp)
+
+        obs = list(self.b1.regex_iter(pat, retrieve_group_0=True))
+        exp = [(2, 7, 'TTACA'), (2, 5, 'TTA'), (5, 7, 'CA')]
+        self.assertEqual(obs, exp)
+
 
 class NucelotideSequenceTests(TestCase):
 
@@ -773,6 +807,7 @@ class NucelotideSequenceTests(TestCase):
         self.b2 = NucleotideSequence(
             'ACCGGUACC', id="test-seq-2",
             description="A test sequence")
+        self.b3 = NucleotideSequence('G-AT-TG.AT.T')
 
     def test_alphabet(self):
         exp = {
@@ -892,6 +927,53 @@ class NucelotideSequenceTests(TestCase):
         exp = [NucleotideSequence('-A.a'), NucleotideSequence('-A.c'),
                NucleotideSequence('-C.a'), NucleotideSequence('-C.c')]
         obs = sorted(NucleotideSequence('-M.m').nondegenerates(), key=str)
+        self.assertEqual(obs, exp)
+
+    def test_find_features(self):
+        exp = [(0, 2, 'GA'), (4, 5, 'A'), (6, 7, 'A')]
+        obs = list(self.b1.find_features('purine_run'))
+        self.assertEqual(obs, exp)
+
+        exp = [(2, 4, 'TT'), (5, 6, 'C')]
+        obs = list(self.b1.find_features('pyrimidine_run'))
+        self.assertEqual(obs, exp)
+
+        exp = [(0, 1, 'A'), (3, 5, 'GG'), (6, 7, 'A')]
+        obs = list(self.b2.find_features('purine_run'))
+        self.assertEqual(obs, exp)
+
+        exp = [(1, 3, 'CC'), (5, 6, 'U'), (7, 9, 'CC')]
+        obs = list(self.b2.find_features('pyrimidine_run'))
+        self.assertEqual(obs, exp)
+
+    def test_find_features_min_length(self):
+        exp = [(0, 2, 'GA')]
+        obs = list(self.b1.find_features('purine_run', 2))
+        self.assertEqual(obs, exp)
+
+        exp = [(2, 4, 'TT')]
+        obs = list(self.b1.find_features('pyrimidine_run', 2))
+        self.assertEqual(obs, exp)
+
+        exp = [(3, 5, 'GG')]
+        obs = list(self.b2.find_features('purine_run', 2))
+        self.assertEqual(obs, exp)
+
+        exp = [(1, 3, 'CC'), (7, 9, 'CC')]
+        obs = list(self.b2.find_features('pyrimidine_run', 2))
+        self.assertEqual(obs, exp)
+
+    def test_find_features_no_feature_type(self):
+        with self.assertRaises(ValueError):
+            list(self.b1.find_features('nonexistent_feature_type'))
+
+    def test_find_features_allow_gaps(self):
+        exp = [(0, 3, 'G-A'), (6, 9, 'G.A')]
+        obs = list(self.b3.find_features('purine_run', 2, True))
+        self.assertEqual(obs, exp)
+
+        exp = [(3, 6, 'T-T'), (9, 12, 'T.T')]
+        obs = list(self.b3.find_features('pyrimidine_run', 2, True))
         self.assertEqual(obs, exp)
 
     def test_nondegenerates_propagate_optional_properties(self):

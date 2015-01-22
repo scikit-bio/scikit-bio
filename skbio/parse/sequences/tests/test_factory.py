@@ -27,8 +27,6 @@ class SequenceLoadTests(TestCase):
         self.fq1gz = get_data_path('fq1.fastq.gz')
         self.qual1 = get_data_path('fna1.qual')
         self.noext = get_data_path('noextensionfasta')
-        self.qs1 = get_data_path('qs1.qseq')
-        self.qs1gz = get_data_path('qs1.qseq.gz')
 
     def test_single_files(self):
         """load should handle a single file, and can be gzipped"""
@@ -51,22 +49,6 @@ class SequenceLoadTests(TestCase):
             self.assertEqual(o['QualID'], e['QualID'])
             self.assertTrue((o['Qual'] == e['Qual']).all())
 
-        it = load(self.qs1, phred_offset=64)
-        obs = [rec.copy() for rec in it]
-        exp = [{'Qual': array([2, 27, 27, 27]),
-                'QualID': 'CRESSIA_242:1:2204:1453:1918#0/1',
-                'Sequence': 'TTAA',
-                'SequenceID': 'CRESSIA_242:1:2204:1453:1918#0/1'},
-               {'Qual': array([2, 2, 2, 2],),
-                'QualID': 'CRESSIA_242:1:2204:1491:1920#0/1',
-                'Sequence': 'AAAA',
-                'SequenceID': 'CRESSIA_242:1:2204:1491:1920#0/1'}]
-        for o, e in zip(obs, exp):
-            self.assertEqual(o['Sequence'], e['Sequence'])
-            self.assertEqual(o['SequenceID'], e['SequenceID'])
-            self.assertEqual(o['QualID'], e['QualID'])
-            self.assertTrue((o['Qual'] == e['Qual']).all())
-
         it = load(self.fna1gz)
         obs = [rec.copy() for rec in it]
         exp = [{'Sequence': 'ATGC', 'SequenceID': 's1',
@@ -81,22 +63,6 @@ class SequenceLoadTests(TestCase):
                 'QualID': 's1', 'Qual': array([40, 40, 40, 40])},
                {'Sequence': 'AATTGG', 'SequenceID': 's2',
                 'QualID': 's2', 'Qual': array([39, 39, 39, 39, 40, 40])}]
-        for o, e in zip(obs, exp):
-            self.assertEqual(o['Sequence'], e['Sequence'])
-            self.assertEqual(o['SequenceID'], e['SequenceID'])
-            self.assertEqual(o['QualID'], e['QualID'])
-            self.assertTrue((o['Qual'] == e['Qual']).all())
-
-        it = load(self.qs1gz, phred_offset=64)
-        obs = [rec.copy() for rec in it]
-        exp = [{'Qual': array([2, 27, 27, 27]),
-                'QualID': 'CRESSIA_242:1:2204:1453:1918#0/1',
-                'Sequence': 'TTAA',
-                'SequenceID': 'CRESSIA_242:1:2204:1453:1918#0/1'},
-               {'Qual': array([2, 2, 2, 2],),
-                'QualID': 'CRESSIA_242:1:2204:1491:1920#0/1',
-                'Sequence': 'AAAA',
-                'SequenceID': 'CRESSIA_242:1:2204:1491:1920#0/1'}]
         for o, e in zip(obs, exp):
             self.assertEqual(o['Sequence'], e['Sequence'])
             self.assertEqual(o['SequenceID'], e['SequenceID'])

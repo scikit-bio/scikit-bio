@@ -11,7 +11,6 @@ from future.builtins import zip
 
 import warnings
 from functools import partial
-from importlib import import_module
 
 import numpy as np
 import matplotlib as mpl
@@ -21,13 +20,13 @@ from mpl_toolkits.mplot3d import Axes3D
 # avoid flake8 unused import error
 Axes3D
 from IPython.core.pylabtools import print_figure
-from IPython.display import Image, SVG
+from IPython.core.display import Image, SVG
 
-# This will be the responsibility of the ABC in the future.
-import_module('skbio.io')
+from skbio._base import SkbioObject
+from skbio.stats._misc import _pprint_strs
 
 
-class OrdinationResults(object):
+class OrdinationResults(SkbioObject):
     """Store ordination results, providing serialization and plotting support.
 
     Stores various components of ordination results. Provides methods for
@@ -57,7 +56,7 @@ class OrdinationResults(object):
     svg
 
     """
-    default_write_format = 'ordres'
+    default_write_format = 'ordination'
 
     def __init__(self, eigvals, species=None, site=None, biplot=None,
                  site_constraints=None, proportion_explained=None,
@@ -83,8 +82,9 @@ class OrdinationResults(object):
            scikit-bio's I/O registry system. See :mod:`skbio.io` for more
            details.
 
-        Creates an ``OrdinationResults`` instance from a ``ordres`` formatted
-        file. See :mod:`skbio.io.ordres` for the format specification.
+        Creates an ``OrdinationResults`` instance from a ``ordination``
+        formatted file. See :mod:`skbio.io.ordination` for the format
+        specification.
 
         Parameters
         ----------
@@ -99,7 +99,7 @@ class OrdinationResults(object):
 
         Raises
         ------
-        OrdResFormatError
+        OrdinationFormatError
             If the format of the file is not valid, or if the shapes of the
             different sections of the file are not consistent.
 
@@ -111,8 +111,8 @@ class OrdinationResults(object):
         warnings.warn(
             "OrdinationResults.from_file is deprecated and will be removed in "
             "scikit-bio 0.3.0. Please update your code to use "
-            "OrdinationResults.read.", UserWarning)
-        return cls.read(ord_res_f, format='ordres')
+            "OrdinationResults.read.", DeprecationWarning)
+        return cls.read(ord_res_f, format='ordination')
 
     def to_file(self, out_f):
         """Save ordination results to file in text format.
@@ -124,8 +124,8 @@ class OrdinationResults(object):
            advantage of scikit-bio's I/O registry system. See :mod:`skbio.io`
            for more details.
 
-        Serializes ordination results as an ``ordres`` formatted file. See
-        :mod:`skbio.io.ordres` for the format specification.
+        Serializes ordination results as an ``ordination`` formatted file. See
+        :mod:`skbio.io.ordination` for the format specification.
 
         Parameters
         ----------
@@ -140,8 +140,43 @@ class OrdinationResults(object):
         warnings.warn(
             "OrdinationResults.to_file is deprecated and will be removed in "
             "scikit-bio 0.3.0. Please update your code to use "
-            "OrdinationResults.write.", UserWarning)
-        self.write(out_f, format='ordres')
+            "OrdinationResults.write.", DeprecationWarning)
+        self.write(out_f, format='ordination')
+
+    def __str__(self):
+        """Return a string representation of the ordination results.
+
+        String representation lists ordination results attributes and indicates
+        whether or not they are present. If an attribute is present, its
+        dimensions are listed. A truncated list of species and site IDs are
+        included (if they are present).
+
+        Returns
+        -------
+        str
+            String representation of the ordination results.
+
+        .. shownumpydoc
+
+        """
+        lines = ['Ordination results:']
+
+        attrs = [(self.eigvals, 'Eigvals'),
+                 (self.proportion_explained, 'Proportion explained'),
+                 (self.species, 'Species'),
+                 (self.site, 'Site'),
+                 (self.biplot, 'Biplot'),
+                 (self.site_constraints, 'Site constraints')]
+        for attr, attr_label in attrs:
+            formatter = lambda e: 'x'.join(['%d' % s for s in e.shape])
+            lines.append(self._format_attribute(attr, attr_label, formatter))
+
+        lines.append(self._format_attribute(self.species_ids, 'Species IDs',
+                                            lambda e: _pprint_strs(e)))
+        lines.append(self._format_attribute(self.site_ids, 'Site IDs',
+                                            lambda e: _pprint_strs(e)))
+
+        return '\n'.join(lines)
 
     def plot(self, df=None, column=None, axes=(0, 1, 2), axis_labels=None,
              title='', cmap=None, s=20):
@@ -421,6 +456,13 @@ class OrdinationResults(object):
         # will pick it up and send it as output, resulting in a double display
         plt.close(fig)
         return data
+
+    def _format_attribute(self, attr, attr_label, formatter):
+        if attr is None:
+            formatted_attr = 'N/A'
+        else:
+            formatted_attr = formatter(attr)
+        return '\t%s: %s' % (attr_label, formatted_attr)
 
 
 class Ordination(object):

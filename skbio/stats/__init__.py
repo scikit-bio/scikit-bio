@@ -18,6 +18,7 @@ Subpackages
    ordination
    spatial
    gradient
+   power
 
 Functions
 ---------
@@ -27,6 +28,8 @@ Functions
 
    p_value_to_str
    subsample
+   subsample_counts
+   isubsample
 
 """
 
@@ -39,9 +42,9 @@ Functions
 # ----------------------------------------------------------------------------
 
 from ._misc import p_value_to_str
-from ._subsample import subsample
+from ._subsample import subsample, subsample_counts, isubsample
 
-__all__ = ['p_value_to_str', 'subsample']
+__all__ = ['p_value_to_str', 'subsample', 'subsample_counts', 'isubsample']
 
 from numpy.testing import Tester
 test = Tester().test

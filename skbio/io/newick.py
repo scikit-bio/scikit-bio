@@ -13,11 +13,11 @@ Format Support
 --------------
 **Has Sniffer: Yes**
 
-+----------+----------+------------------------------------------------------+
-|**Reader**|**Writer**|                   **Object Class**                   |
-+----------+----------+------------------------------------------------------+
-|Yes       |Yes       |:mod:`skbio.tree.TreeNode`                            |
-+----------+----------+------------------------------------------------------+
++------+------+---------------------------------------------------------------+
+|Reader|Writer|                          Object Class                         |
++======+======+===============================================================+
+|Yes   |Yes   |:mod:`skbio.tree.TreeNode`                                     |
++------+------+---------------------------------------------------------------+
 
 Format Specification
 --------------------
@@ -174,7 +174,7 @@ Examples
 This is a simple Newick string.
 
 >>> from StringIO import StringIO
->>> from skbio.io import read
+>>> from skbio import read
 >>> from skbio.tree import TreeNode
 >>> f = StringIO(u"((D, E)B, (F, G)C)A;")
 >>> tree = read(f, format="newick", into=TreeNode)
@@ -248,7 +248,7 @@ def _newick_sniffer(fh):
         for token, _ in zip(_tokenize_newick(fh), range(100)):
             if token not in operators:
                 pass
-            elif token == ',' and last_token != ':':
+            elif token == ',' and last_token != ':' and indent > 0:
                 pass
             elif token == ':' and last_token != ':':
                 pass

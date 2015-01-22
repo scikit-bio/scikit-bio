@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-
-from __future__ import absolute_import, division, print_function
-
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -10,6 +6,8 @@ from __future__ import absolute_import, division, print_function
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from __future__ import absolute_import, division, print_function
+
 import re
 import warnings
 from operator import or_
@@ -17,20 +15,17 @@ from copy import deepcopy
 from itertools import combinations
 from functools import reduce
 from collections import defaultdict
-from importlib import import_module
 
 import numpy as np
 from scipy.stats import pearsonr
 from future.builtins import zip
 from six import StringIO
 
+from skbio._base import SkbioObject
 from skbio.stats.distance import DistanceMatrix
 from skbio.io import RecordError
 from ._exception import (NoLengthError, DuplicateNodeError, NoParentError,
                          MissingNodeError, TreeError)
-
-# This will be the responsibility of the ABC in the future.
-import_module('skbio.io')
 
 
 def distance_from_r(m1, m2):
@@ -52,7 +47,7 @@ def distance_from_r(m1, m2):
     return (1-pearsonr(m1.data.flat, m2.data.flat)[0])/2
 
 
-class TreeNode(object):
+class TreeNode(SkbioObject):
     r"""Representation of a node within a tree
 
     A `TreeNode` instance stores links to its parent and optional children
@@ -1874,7 +1869,7 @@ class TreeNode(object):
         warnings.warn(
             "TreeNode.from_file is deprecated and will be removed in "
             "scikit-bio 0.3.0. Please update your code to use TreeNode.read.",
-            UserWarning)
+            DeprecationWarning)
         return cls.read(tree_f, format='newick')
 
     def _balanced_distance_to_tip(self):
@@ -2038,7 +2033,7 @@ class TreeNode(object):
         warnings.warn(
             "TreeNode.from_newick is deprecated and will be removed in "
             "scikit-bio 0.3.0. Please update your code to use TreeNode.read.",
-            UserWarning)
+            DeprecationWarning)
 
         def _new_child(old_node):
             """Returns new_node which has old_node as its parent."""
@@ -2346,7 +2341,7 @@ class TreeNode(object):
         warnings.warn(
             "TreeNode.to_newick is deprecated and will be removed in "
             "scikit-bio 0.3.0. Please update your code to use TreeNode.write.",
-            UserWarning)
+            DeprecationWarning)
         result = ['(']
         nodes_stack = [[self, len(self.children)]]
         node_count = 1
@@ -2691,7 +2686,7 @@ class TreeNode(object):
         >>> print(mat)
         4x4 distance matrix
         IDs:
-        a, b, d, e
+        'a', 'b', 'd', 'e'
         Data:
         [[  0.   3.  14.  15.]
          [  3.   0.  15.  16.]

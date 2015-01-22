@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-"""Writer for FASTA sequence format"""
-
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -9,12 +6,21 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import warnings
+
 from skbio.alignment import Alignment
 from skbio.sequence import BiologicalSequence
 
 
 def fasta_from_sequences(seqs, make_seqlabel=None, line_wrap=None):
     """Returns a FASTA string given a list of sequence objects.
+
+    .. note:: Deprecated in scikit-bio 0.2.0-dev
+       ``fasta_from_sequences`` will be removed in scikit-bio 0.3.0. It is
+       replaced by ``write``, which is a more general method for serializing
+       FASTA-formatted files. ``write`` supports multiple file formats by
+       taking advantage of scikit-bio's I/O registry system. See
+       :mod:`skbio.io` for more details.
 
     A ``sequence.Label`` attribute takes precedence over ``sequence.Name``.
 
@@ -56,6 +62,11 @@ def fasta_from_sequences(seqs, make_seqlabel=None, line_wrap=None):
     GGCCT
 
     """
+    warnings.warn(
+        "`fasta_from_sequences` is deprecated and will be removed in "
+        "scikit-bio 0.3.0. Please update your code to use `skbio.io.write`.",
+        DeprecationWarning)
+
     fasta_list = []
     for i, seq in enumerate(seqs):
         # Check if it has a label, or one is to be created
@@ -88,6 +99,13 @@ def fasta_from_sequences(seqs, make_seqlabel=None, line_wrap=None):
 
 def fasta_from_alignment(aln, make_seqlabel=None, line_wrap=None, sort=True):
     """Returns a FASTA string given an alignment object
+
+    .. note:: Deprecated in scikit-bio 0.2.0-dev
+       ``fasta_from_alignment`` will be removed in scikit-bio 0.3.0. It is
+       replaced by ``write``, which is a more general method for serializing
+       FASTA-formatted files. ``write`` supports multiple file formats by
+       taking advantage of scikit-bio's I/O registry system. See
+       :mod:`skbio.io` for more details.
 
     Parameters
     ----------
@@ -134,6 +152,11 @@ def fasta_from_alignment(aln, make_seqlabel=None, line_wrap=None, sort=True):
     TCC--G-GGCA..
 
     """
+    warnings.warn(
+        "`fasta_from_alignment` is deprecated and will be removed in "
+        "scikit-bio 0.3.0. Please update your code to use `skbio.io.write` "
+        "or `skbio.Alignment.write`.", DeprecationWarning)
+
     # check if it's an Alignment object or a dictionary
     if isinstance(aln, Alignment):
         order = aln.ids()
