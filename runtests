@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+# ----------------------------------------------------------------------------
+# Copyright (c) 2013--, scikit-bio development team.
+#
+# Distributed under the terms of the Modified BSD License.
+#
+# The full license is in the file COPYING.txt, distributed with this software.
+# ----------------------------------------------------------------------------
+
+TARGET=skbio
+
+if [ ${1} ]; then
+  TARGET=${1}
+fi
+
+DOCTEST=--with-doctest
+
+if [ "${WITH_DOCTEST}" == "FALSE" ]; then
+  DOCTEST=''
+fi
+
+if [ "${WITH_COVERAGE}" == "TRUE" ]; then
+  COVERAGE=--with-coverage
+fi
+
+set -x
+nosetests ${TARGET} ${DOCTEST} ${COVERAGE} --ignore DO_NOT_IGNORE_ANYTHING
+pep8 ${TARGET} setup.py checklist.py
+flake8 ${TARGET} setup.py checklist.py
+./checklist.py
+
