@@ -74,10 +74,6 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations=999):
         Number of permutations to run. Default 999. Must be greater than or
         equal to zero. If zero, statistical significance calculations will be
         skipped and the p-value will be ``np.nan``
-    perm_host : bool
-        permute host matrix. Default True.
-    perm_par : bool
-        permute parasite matrix. Default True.
 
     Returns
     -------
@@ -191,6 +187,7 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations=999):
 
     if permutations == 0 or np.isnan(r):
         p_val = np.nan
+        perm_stats[:] = np.nan
     else:
         for i in range(permutations):
             # Generate a shuffled list of indexes for each permutation. This
