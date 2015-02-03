@@ -454,9 +454,11 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         self.assertEqual(
             self.dm_3x3._find_duplicates(['cat', 'dog', 'cat']), ['cat'])
 
-        # Many duplicates. Order isn't guaranteed so we use assertItemsEqual.
-        self.assertItemsEqual(self.dm_3x3._find_duplicates(
-            ['cat', 'dog', 'cat', 'fish', 'fish', 'fish']), ['cat', 'fish'])
+        # Many duplicates. Order isn't guaranteed so we sort first.
+        # assertItemsEqual isn't available in Python 3.
+        obs = sorted(self.dm_3x3._find_duplicates(
+            ['cat', 'dog', 'cat', 'fish', 'fish', 'fish']))
+        self.assertEqual(obs, ['cat', 'fish'])
 
 
 class DistanceMatrixTests(DissimilarityMatrixTestData):
