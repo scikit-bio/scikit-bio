@@ -445,6 +445,19 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         with self.assertRaises(DissimilarityMatrixError):
             self.dm_3x3._validate(np.array([[0, 42], [42, 0]]), ['a', 'b'])
 
+    def test_find_duplicates(self):
+        # No duplicates.
+        self.assertEqual(
+            self.dm_3x3._find_duplicates(['cat', 'dog', 'fish']), [])
+
+        # One duplicate.
+        self.assertEqual(
+            self.dm_3x3._find_duplicates(['cat', 'dog', 'cat']), ['cat'])
+
+        # Many duplicates. Order isn't guaranteed so we use assertItemsEqual.
+        self.assertItemsEqual(self.dm_3x3._find_duplicates(
+            ['cat', 'dog', 'cat', 'fish', 'fish', 'fish']), ['cat', 'fish'])
+
 
 class DistanceMatrixTests(DissimilarityMatrixTestData):
     def setUp(self):

@@ -7,8 +7,10 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
+from future.utils import viewitems
 from six import StringIO, string_types
 
+import collections
 import csv
 import warnings
 from copy import deepcopy
@@ -652,27 +654,29 @@ class DissimilarityMatrix(SkbioObject):
         exception is caught and handled.
 
         """
-        num_ids = len(ids)
-
         if 0 in data.shape:
             raise DissimilarityMatrixError("Data must be at least 1x1 in "
                                            "size.")
-        elif len(data.shape) != 2:
+        if len(data.shape) != 2:
             raise DissimilarityMatrixError("Data must have exactly two "
                                            "dimensions.")
-        elif data.shape[0] != data.shape[1]:
+        if data.shape[0] != data.shape[1]:
             raise DissimilarityMatrixError("Data must be square (i.e., have "
                                            "the same number of rows and "
                                            "columns).")
-        elif data.dtype != np.double:
+        if data.dtype != np.double:
             raise DissimilarityMatrixError("Data must contain only floating "
                                            "point values.")
-        elif np.trace(data) != 0:
+        if np.trace(data) != 0:
             raise DissimilarityMatrixError("Data must be hollow (i.e., the "
                                            "diagonal can only contain zeros).")
-        elif num_ids != len(set(ids)):
-            raise DissimilarityMatrixError("IDs must be unique.")
-        elif num_ids != data.shape[0]:
+        num_ids = len(ids)
+        if num_ids != len(set(ids)):
+            duplicates = self._find_duplicates(ids)
+            raise DissimilarityMatrixError("IDs must be unique. Found the "
+                                           "following duplicate IDs: %r" %
+                                           duplicates)
+        if num_ids != data.shape[0]:
             raise DissimilarityMatrixError("The number of IDs must match the "
                                            "number of rows/columns in the "
                                            "data.")
@@ -684,6 +688,11 @@ class DissimilarityMatrix(SkbioObject):
         return (isinstance(index, tuple) and
                 len(index) == 2 and
                 all(map(lambda e: isinstance(e, string_types), index)))
+
+    def _find_duplicates(self, iterable):
+        # Modified from http://stackoverflow.com/a/9835819/3776794
+        return [item for item, count in
+                viewitems(collections.Counter(iterable)) if count > 1]
 
 
 class DistanceMatrix(DissimilarityMatrix):

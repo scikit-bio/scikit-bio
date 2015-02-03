@@ -13,6 +13,9 @@
 * Removed ``find_features`` method from ``BiologicalSequence`` and ``ProteinSequence`` ([#797](https://github.com/biocore/scikit-bio/pull/797)).
 * ``BiologicalSequence.k_word_frequencies`` now returns a ``collections.defaultdict`` of type ``float`` instead of type ``int``. This only affects the "default" case, when a key isn't present in the dictionary. Previous behavior would return ``0`` as an ``int``, while the new behavior is to return ``0.0`` as a ``float``. This change also affects the ``defaultdict``s that are returned by ``SequenceCollection.k_word_frequencies``.
 
+### Miscellaneous
+* ``DissimilarityMatrix`` and ``DistanceMatrix`` now report duplicate IDs in the ``DissimilarityMatrixError`` message that can be raised during validation.
+
 ## Version 0.2.2 (2014-12-04)
 
 ### Features
