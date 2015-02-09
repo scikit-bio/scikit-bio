@@ -19,6 +19,8 @@ import tempfile
 import numpy as np
 import numpy.testing as npt
 from scipy.spatial.distance import hamming
+import matplotlib as mpl
+mpl.use('Agg')
 
 from skbio import (NucleotideSequence, DNASequence, RNASequence, DNA, RNA,
                    DistanceMatrix, Alignment, SequenceCollection)
@@ -825,6 +827,77 @@ class AlignmentTests(TestCase):
 
         with self.assertRaises(SequenceCollectionError):
             npt.assert_warns(DeprecationWarning, a.to_phylip)
+
+    def test_heatmap_with_defaults(self):
+        values, sequences, a1 = self.heatmap_set_values()
+        fig = a1.heatmap(values)
+        self.heatmap_basic_sanity(fig, ['A', 'A', 'C', 'C', 'C', 'G', 'T'],
+                                  ['seq1', 'seq2'], ['Minimum', 'Median',
+                                                     'Maximum'])
+
+    def test_heatmap_with_custom(self):
+        sequences = [DNA('AGTCGGT', id="seq1"),
+                     DNA('CAACGGA', id="seq2"),
+                     DNA('AACCTCT', id="seq3"),
+                     DNA('TACTCGT', id="seq4")]
+        a1 = Alignment(sequences)
+        values = {'A': 0.61, 'C': 1.07, 'T': 0.05, 'G': 0.07}
+        clabels = ['a', 'b', 'c']
+        fig = a1.heatmap(values, fig_size=(15, 10), cmap='Blues',
+                         legend_labels=clabels,
+                         sequence_order=('seq4', 'seq3', 'seq2', 'seq1'))
+        self.heatmap_basic_sanity(fig, ['A', 'A', 'C', 'C', 'G', 'G', 'T'],
+                                  ['seq4', 'seq1'], clabels)
+        self.assertEqual(fig.get_figwidth(), 15.0)
+        self.assertEqual(fig.get_figheight(), 10.0)
+
+    def test_heatmap_raises(self):
+        values, sequences, a1 = self.heatmap_set_values()
+        with self.assertRaises(ValueError):
+            a1.heatmap(values, legend_labels=['a', 'b', 'c', 'd'])
+
+    def test_heatmap_errors(self):
+        sequences = [DNA('AGTCGGT', id="seq1"),
+                     DNA('CAACGGA', id="seq2"),
+                     DNA('AACCTCT', id="seq3"),
+                     DNA('TACTCGT', id="seq4")]
+        a1 = Alignment(sequences)
+        values = {'A': 0.61, 'C': 1.07, 'T': 0.05, 'G': 0.07}
+        clabels = ['a', 'b', 'c']
+        with self.assertRaises(ValueError):
+            a1.heatmap(values, fig_size=(15, 10), cmap='Blues',
+                       legend_labels=clabels,
+                       sequence_order=('seq1', 'seq2', 'seq3', 'seq3'))
+        with self.assertRaises(ValueError):
+            a1.heatmap(values, fig_size=(15, 10), cmap='Blues',
+                       legend_labels=clabels,
+                       sequence_order=('seq1', 'seq2', 'seq4', 'seq3',
+                                       'seq5'))
+
+    def heatmap_set_values(self):
+        sequences = [DNA('AACCCGT', id="seq1"),
+                     DNA('AACCGGT', id="seq2")]
+        a1 = Alignment(sequences)
+        values = {'A': 0.61, 'C': 1.07, 'T': 0.05, 'G': 0.07}
+        return(values, sequences, a1)
+
+    def heatmap_basic_sanity(self, fig, xt, yt, clabels):
+        axes = fig.get_axes()
+        self.assertEqual(len(axes), 2)
+        ax = axes[0]
+        axc = axes[1]
+        xticks = []
+        for tick in ax.get_xticklabels():
+            xticks.append(tick.get_text())
+        self.assertEqual(xticks, xt)
+        yticks = []
+        for tick in ax.get_yticklabels():
+            yticks.append(tick.get_text())
+        self.assertEqual(yticks, yt)
+        cticks = []
+        for tick in axc.get_xticklabels():
+            cticks.append(tick.get_text())
+        self.assertEqual(clabels, cticks)
 
     def test_validate_lengths(self):
         self.assertTrue(self.a1._validate_lengths())
