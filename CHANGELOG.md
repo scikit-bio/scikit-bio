@@ -4,6 +4,7 @@
 
 ### Features
 * Modified ``skbio.stats.distance.pwmantel`` to accept a list of filepaths. This is useful as it allows for a smaller amount of memory consumption as it only loads two matrices at a time as opposed to requiring that all distance matrices are loaded into memory.
+* Added ``heatmap`` method to ``skbio.alignment.Alignment`` for creating a heatmap from an alignment ([#765](https://github.com/biocore/scikit-bio/issues/765)).
 
 ### Bug fixes
 * Fixed floating point precision bugs in ``Alignment.position_frequencies``, ``Alignment.position_entropies``, ``Alignment.omit_gap_positions``, ``Alignment.omit_gap_sequences``, ``BiologicalSequence.k_word_frequencies``, and ``SequenceCollection.k_word_frequencies`` ([#801](https://github.com/biocore/scikit-bio/issues/801)).
@@ -16,7 +17,6 @@
 ## Version 0.2.2 (2014-12-04)
 
 ### Features
-* Added ``heatmap`` method to ``skbio.alignment.Alignment`` for creating a heatmap from an alignment (see [#765](https://github.com/biocore/scikit-bio/issues/765)).
 * Added ``plot`` method to ``skbio.stats.distance.DissimilarityMatrix`` for creating basic heatmaps of a dissimilarity/distance matrix (see [#684](https://github.com/biocore/scikit-bio/issues/684)). Also added  ``_repr_png_`` and ``_repr_svg_`` methods for automatic display in the IPython Notebook, with ``png`` and ``svg`` properties for direct access.
 * Added `__str__` method to `skbio.stats.ordination.OrdinationResults`.
 * Added ``skbio.stats.distance.anosim`` and ``skbio.stats.distance.permanova`` functions, which replace the ``skbio.stats.distance.ANOSIM`` and ``skbio.stats.distance.PERMANOVA`` classes. These new functions provide simpler procedural interfaces to running these statistical methods. They also provide more convenient access to results by returning a ``pandas.Series`` instead of a ``CategoricalStatsResults`` object. These functions have more extensive documentation than their previous versions. If significance tests are suppressed, p-values are returned as ``np.nan`` instead of ``None`` for consistency with other statistical methods in scikit-bio. [#754](https://github.com/biocore/scikit-bio/issues/754)
