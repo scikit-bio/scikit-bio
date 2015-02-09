@@ -1665,54 +1665,56 @@ class Alignment(SequenceCollection):
 
         return '\n'.join(result), new_id_to_old_id
 
-    def heatmap(self, value_map, legend_labels=('Minimum', 'Median',
-                                                'Maximum'),
-                fig_size=None, cmap=None, sequence_order=None):
-        """Plot the alignment as a heatmap
+    def heatmap(self, value_map,
+                legend_labels=('Minimum', 'Median', 'Maximum'), fig_size=None,
+                cmap=None, sequence_order=None):
+        """Plot alignment as a heatmap.
 
-        The X-axis is labeled by majority consensus
-        The Y-axis is labeled by sequence IDs (every third sequence ID is
-        shown)
+        Plot the alignment as a heatmap, coloring heatmap cells using the
+        character mapping in `value_map`. The x-axis is labeled by majority
+        consensus, and the y-axis is labeled by sequence IDs (every third
+        sequence ID is displayed).
 
         Parameters
         ----------
         value_map : dict, collections.defaultdict
             Dictionary mapping characters in the alignment to numeric values.
-            KeyErrors are not caught, so all possible values should be in this
-            dict, or it should be a collections.defaultdict which can, for
-            example, default to ``nan``.
+            ``KeyErrors`` are not caught, so all possible values should be in
+            `value_map`, or it should be a ``collections.defaultdict`` which
+            can, for example, default to ``nan``.
         legend_labels : iterable, optional
-            Labels for the min, median, and max values in the legend.
+            Labels for the minimum, median, and maximum values in the legend.
             Must be an iterable of exactly three strings.
         fig_size : tuple, optional
-            Size of figure in inches.
-            If None, defaults to fig size specified in the user's matplotlib
-            rc file.
+            Size of the figure in inches. If ``None``, defaults to figure size
+            specified in the user's matplotlibrc file.
         cmap : matplotlib colormap, optional
             See here for choices:
             http://matplotlib.org/examples/color/colormaps_reference.html
-            If None, defaults to the colormap specified in the matplotlib
-            rc file.
+            If ``None``, defaults to the colormap specified in the user's
+            matplotlibrc file.
         sequence_order : iterable, optional
             The order, from top-to-bottom, that the sequences should be
-            plotted in.
-            Must be an iterable containing all sequence IDs in the alignment.
-            If None, sequences are plotted as they are ordered in the
-            alignment.
+            plotted in. Must be an iterable containing all sequence IDs in the
+            alignment. If ``None``, sequences are plotted as they are ordered
+            in the alignment.
 
         Returns
         -------
         matplotlib.figure.Figure
-            Figure containing the heatmap and colorbar of the plotted
-            alignment.
+            Figure containing the heatmap and legend of the plotted alignment.
 
         Raises
         ------
         KeyError
-            If a sequence character in the alignment is not in
-            ``value_map``, and ``value_map`` is not a
-            ``collections.defaultdict`` or if sequence_order contains an
-            id that isn't in the alignment.
+            If a sequence character in the alignment is not in `value_map` and
+            `value_map` is not a ``collections.defaultdict``, or if
+            `sequence_order` contains a sequence ID that isn't in the
+            alignment.
+
+        See Also
+        --------
+        majority_consensus
 
         References
         ----------
@@ -1739,10 +1741,6 @@ class Alignment(SequenceCollection):
            ...                            'W': 2.65, 'H': 0.61, 'Y': 1.88,
            ...                            'I': 2.22, 'V': 1.32})
 
-           Label colormap based on hydrophobicity:
-
-           >>> hydrophobicity_labels=['Hydrophilic', 'Medium', 'Hydrophobic']
-
            Define an Alignment of protein sequences:
 
            >>> from skbio import Alignment, Protein
@@ -1760,7 +1758,7 @@ class Alignment(SequenceCollection):
            ...                   cmap='Greens')
 
         """
-        # cache the sequence length, count, and ids, to avoid multiple look-ups
+        # cache the sequence length, count, and ids to avoid multiple look-ups
         sequence_length = self.sequence_length()
         sequence_count = self.sequence_count()
         if sequence_order is not None:
