@@ -828,76 +828,132 @@ class AlignmentTests(TestCase):
         with self.assertRaises(SequenceCollectionError):
             npt.assert_warns(DeprecationWarning, a.to_phylip)
 
-    def test_heatmap_with_defaults(self):
-        values, sequences, a1 = self.heatmap_set_values()
-        fig = a1.heatmap(values)
-        self.heatmap_basic_sanity(fig, ['A', 'A', 'C', 'C', 'C', 'G', 'T'],
-                                  ['seq1', 'seq2'], ['Minimum', 'Median',
-                                                     'Maximum'])
-
-    def test_heatmap_with_custom(self):
-        sequences = [DNA('AGTCGGT', id="seq1"),
-                     DNA('CAACGGA', id="seq2"),
-                     DNA('AACCTCT', id="seq3"),
-                     DNA('TACTCGT', id="seq4")]
-        a1 = Alignment(sequences)
-        values = {'A': 0.61, 'C': 1.07, 'T': 0.05, 'G': 0.07}
-        clabels = ['a', 'b', 'c']
-        fig = a1.heatmap(values, fig_size=(15, 10), cmap='Blues',
-                         legend_labels=clabels,
-                         sequence_order=('seq4', 'seq3', 'seq2', 'seq1'))
-        self.heatmap_basic_sanity(fig, ['A', 'A', 'C', 'C', 'G', 'G', 'T'],
-                                  ['seq4', 'seq1'], clabels)
-        self.assertEqual(fig.get_figwidth(), 15.0)
-        self.assertEqual(fig.get_figheight(), 10.0)
-
-    def test_heatmap_raises(self):
-        values, sequences, a1 = self.heatmap_set_values()
-        with self.assertRaises(ValueError):
-            a1.heatmap(values, legend_labels=['a', 'b', 'c', 'd'])
-
-    def test_heatmap_errors(self):
-        sequences = [DNA('AGTCGGT', id="seq1"),
-                     DNA('CAACGGA', id="seq2"),
-                     DNA('AACCTCT', id="seq3"),
-                     DNA('TACTCGT', id="seq4")]
-        a1 = Alignment(sequences)
-        values = {'A': 0.61, 'C': 1.07, 'T': 0.05, 'G': 0.07}
-        clabels = ['a', 'b', 'c']
-        with self.assertRaises(ValueError):
-            a1.heatmap(values, fig_size=(15, 10), cmap='Blues',
-                       legend_labels=clabels,
-                       sequence_order=('seq1', 'seq2', 'seq3', 'seq3'))
-        with self.assertRaises(ValueError):
-            a1.heatmap(values, fig_size=(15, 10), cmap='Blues',
-                       legend_labels=clabels,
-                       sequence_order=('seq1', 'seq2', 'seq4', 'seq3',
-                                       'seq5'))
-
-    def heatmap_set_values(self):
-        sequences = [DNA('AACCCGT', id="seq1"),
-                     DNA('AACCGGT', id="seq2")]
-        a1 = Alignment(sequences)
-        values = {'A': 0.61, 'C': 1.07, 'T': 0.05, 'G': 0.07}
-        return(values, sequences, a1)
-
-    def heatmap_basic_sanity(self, fig, xt, yt, clabels):
+    def check_heatmap_sanity(self, fig, exp_x_tick_labels, exp_y_tick_labels,
+                             exp_legend_labels):
+        """Helper method for testing basic heatmap figure properties."""
         axes = fig.get_axes()
         self.assertEqual(len(axes), 2)
-        ax = axes[0]
-        axc = axes[1]
-        xticks = []
-        for tick in ax.get_xticklabels():
-            xticks.append(tick.get_text())
-        self.assertEqual(xticks, xt)
-        yticks = []
-        for tick in ax.get_yticklabels():
-            yticks.append(tick.get_text())
-        self.assertEqual(yticks, yt)
-        cticks = []
-        for tick in axc.get_xticklabels():
-            cticks.append(tick.get_text())
-        self.assertEqual(clabels, cticks)
+
+        ax, axc = axes
+
+        x_tick_labels = [e.get_text() for e in ax.get_xticklabels()]
+        self.assertEqual(x_tick_labels, exp_x_tick_labels)
+
+        y_tick_labels = [e.get_text() for e in ax.get_yticklabels()]
+        self.assertEqual(y_tick_labels, exp_y_tick_labels)
+
+        legend_labels = [e.get_text() for e in axc.get_xticklabels()]
+        self.assertEqual(legend_labels, exp_legend_labels)
+
+    def test_heatmap_empty(self):
+        # no seqs
+        aln = Alignment([])
+        value_map = {'A': 0.1, 'C': 1.5, 'U': -0.42, 'G': 0.55, 'T': 99}
+        with self.assertRaises(AlignmentError):
+            aln.heatmap(value_map)
+
+        # no positions
+        aln = Alignment([DNA(''), RNA('', id="s2")])
+        with self.assertRaises(AlignmentError):
+            aln.heatmap(value_map)
+
+    def test_heatmap_1_seq(self):
+        aln = Alignment([RNA('AACGU', id="seq1")])
+        value_map = {'A': 0.1, 'C': 1.5, 'U': -0.42, 'G': 0.55, 'T': 99}
+        fig = aln.heatmap(value_map)
+
+        self.check_heatmap_sanity(
+            fig, ['A', 'A', 'C', 'G', 'U'], ['seq1'],
+            ['Minimum', 'Median', 'Maximum'])
+
+    def test_heatmap_2_seqs(self):
+        aln = Alignment([RNA('AACGU', id="seq1"),
+                         RNA('AACGU', id="seq2")])
+        value_map = {'A': 0.1, 'C': 1.5, 'U': -0.42, 'G': 0.55, 'T': 99}
+        fig = aln.heatmap(value_map)
+
+        self.check_heatmap_sanity(
+            fig, ['A', 'A', 'C', 'G', 'U'], ['seq1', 'seq2'],
+            ['Minimum', 'Median', 'Maximum'])
+
+    def test_heatmap_3_seqs(self):
+        aln = Alignment([DNA('AACCCGT', id="seq1"),
+                         DNA('ACCCGGT', id="seq2"),
+                         DNA('ACCCGGT', id="seq3")])
+        value_map = {'A': 0.61, 'C': 1.07, 'T': 0.05, 'G': 0.07}
+        fig = aln.heatmap(value_map)
+
+        self.check_heatmap_sanity(
+            fig, ['A', 'C', 'C', 'C', 'G', 'G', 'T'], ['seq1', 'seq3'],
+            ['Minimum', 'Median', 'Maximum'])
+
+    def test_heatmap_with_non_defaults(self):
+        aln = Alignment([DNA('AGTCGGT', id="seq1"),
+                         DNA('CAACGGA', id="seq2"),
+                         DNA('AACCTCT', id="seq3"),
+                         DNA('TACTCGT', id="seq4")])
+        value_map = {'A': 0.61, 'C': 1.07, 'T': 0.05, 'G': 0.07}
+        labels = ['a', 'b', 'c']
+        fig = aln.heatmap(
+            value_map, legend_labels=labels, fig_size=(42, 22), cmap='Blues',
+            sequence_order=('seq4', 'seq3', 'seq1', 'seq2'))
+
+        self.check_heatmap_sanity(fig, ['A', 'A', 'C', 'C', 'G', 'G', 'T'],
+                                  ['seq4', 'seq2'], labels)
+        self.assertEqual(fig.get_figwidth(), 42.0)
+        self.assertEqual(fig.get_figheight(), 22.0)
+
+    def test_heatmap_invalid_legend_labels(self):
+        with self.assertRaises(ValueError):
+            self.a1.heatmap({}, legend_labels=['a', 'b', 'c', 'd'])
+
+    def test_heatmap_invalid_sequence_order(self):
+        # duplicate ids
+        with self.assertRaises(ValueError):
+            self.a1.heatmap({}, sequence_order=['d1', 'd2', 'd1'])
+
+        # provided set of ids doesn't match alignment's set of ids
+        with self.assertRaises(ValueError):
+            self.a1.heatmap({}, sequence_order=['d2', 'd3', 'd0'])
+
+    def test_heatmap_missing_character_in_value_map(self):
+        with self.assertRaises(KeyError):
+            self.a1.heatmap({})
+
+    def test_alignment_to_heatmap_matrix(self):
+        aln = Alignment([DNA('ACTG', id='d1'),
+                         DNA('A.-G', id='d2'),
+                         DNA('TC-G', id='d3')])
+        value_map = defaultdict(lambda: np.nan)
+        value_map.update({'A': 42, 'C': 10.5, 'T': 22.1, 'G': -7.789,
+                          'U': -999.9, 'Z': 42000})
+        exp_min = -7.789
+        exp_median = 16.3
+        exp_max = 42
+
+        # sequence order is same as what's in the alignment
+        mtx, min_val, median_val, max_val = \
+            aln._alignment_to_heatmap_matrix(value_map, ['d1', 'd2', 'd3'])
+
+        exp_mtx = np.array([[42., 10.5, 22.1, -7.789],
+                            [42., np.nan, np.nan, -7.789],
+                            [22.1, 10.5, np.nan, -7.789]])
+        npt.assert_array_equal(mtx, exp_mtx)
+        self.assertEqual(min_val, exp_min)
+        self.assertAlmostEqual(median_val, exp_median)
+        self.assertEqual(max_val, exp_max)
+
+        # sequence order is different from what's in the alignment
+        mtx, min_val, median_val, max_val = \
+            aln._alignment_to_heatmap_matrix(value_map, ['d3', 'd1', 'd2'])
+
+        exp_mtx = np.array([[22.1, 10.5, np.nan, -7.789],
+                            [42., 10.5, 22.1, -7.789],
+                            [42., np.nan, np.nan, -7.789]])
+        npt.assert_array_equal(mtx, exp_mtx)
+        self.assertEqual(min_val, exp_min)
+        self.assertAlmostEqual(median_val, exp_median)
+        self.assertEqual(max_val, exp_max)
 
     def test_validate_lengths(self):
         self.assertTrue(self.a1._validate_lengths())

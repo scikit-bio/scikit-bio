@@ -1672,8 +1672,8 @@ class Alignment(SequenceCollection):
 
         Plot the alignment as a heatmap, coloring heatmap cells using the
         character mapping in `value_map`. The x-axis is labeled by majority
-        consensus, and the y-axis is labeled by sequence IDs (every third
-        sequence ID is displayed).
+        consensus, and the y-axis is labeled by sequence IDs (first, last, and
+        every third sequence ID are displayed).
 
         Parameters
         ----------
@@ -1684,7 +1684,11 @@ class Alignment(SequenceCollection):
             can, for example, default to ``nan``.
         legend_labels : iterable, optional
             Labels for the minimum, median, and maximum values in the legend.
-            Must be an iterable of exactly three strings.
+            Must be an iterable of exactly three strings. Mininum, median, and
+            maximum values are computed from the values in `value_map`. Only
+            values that are actually used to perform a character-to-value
+            mapping are included when computing the minimum, median, and
+            maximum. ``nan`` values are ignored.
         fig_size : tuple, optional
             Size of the figure in inches. If ``None``, defaults to figure size
             specified in the user's matplotlibrc file.
@@ -1708,9 +1712,10 @@ class Alignment(SequenceCollection):
         ------
         KeyError
             If a sequence character in the alignment is not in `value_map` and
-            `value_map` is not a ``collections.defaultdict``, or if
-            `sequence_order` contains a sequence ID that isn't in the
-            alignment.
+            `value_map` is not a ``collections.defaultdict``.
+        ValueError
+            If `sequence_order` isn't the same set of sequence IDs in the
+            alignment, or if `sequence_order` contains duplicate sequence IDs.
 
         See Also
         --------
@@ -1741,7 +1746,7 @@ class Alignment(SequenceCollection):
            ...                            'W': 2.65, 'H': 0.61, 'Y': 1.88,
            ...                            'I': 2.22, 'V': 1.32})
 
-           Define an Alignment of protein sequences:
+           Define an alignment of protein sequences:
 
            >>> from skbio import Alignment, Protein
            >>> sequences = [Protein('VHLTPEEKSAVTALWGKVNVDEV--', id="seq1"),
@@ -1750,7 +1755,7 @@ class Alignment(SequenceCollection):
            ...              Protein('-VLSEGEWQLVLHVWAKVEADIAGH', id="seq4")]
            >>> aln = Alignment(sequences)
 
-           Plot the Alignment as a heatmap:
+           Plot the alignment as a heatmap:
 
            >>> fig = aln.heatmap(hydrophobicity_idx, fig_size=(15, 10),
            ...                   legend_labels=['Hydrophilic', 'Medium',
@@ -1758,56 +1763,90 @@ class Alignment(SequenceCollection):
            ...                   cmap='Greens')
 
         """
-        # cache the sequence length, count, and ids to avoid multiple look-ups
-        sequence_length = self.sequence_length()
-        sequence_count = self.sequence_count()
+        if len(legend_labels) != 3:
+            raise ValueError(
+                "`legend_labels` must contain exactly three labels.")
+
         if sequence_order is not None:
-            if len(sequence_order) != sequence_count:
-                raise ValueError("Too many objects in passed tuple, you must"
-                                 "use", sequence_count, "objects.")
-            if len(sequence_order) > len(set(sequence_order)):
-                raise ValueError("The sequence_order must only contain"
-                                 "unique elements")
+            sequence_order_set = set(sequence_order)
+            if len(sequence_order) != len(sequence_order_set):
+                raise ValueError(
+                    "Found duplicate sequence ID(s) in `sequence_order`.")
+            if sequence_order_set != set(self.ids()):
+                raise ValueError(
+                    "`sequence_order` must contain the same set of sequence "
+                    "IDs in the alignment.")
         else:
             sequence_order = self.ids()
-        if len(legend_labels) != 3:
-            raise ValueError
-        values = list(value_map.values())
 
-        # create an empty data matrix
-        mtx = np.empty([sequence_length, sequence_count])
-        # fill the data matrix by iterating over the alignment and mapping
-        # characters to values
-        for i in range(sequence_length):
-            for j, sequence_id in enumerate(sequence_order):
-                mp = str(self[sequence_id][i])
-                mtx[i][j] = value_map[mp]
+        mtx, min_val, median_val, max_val = self._alignment_to_heatmap_matrix(
+            value_map, sequence_order)
 
-        # build the heatmap, this code derived from the Matplotlib Gallery
-        # http://matplotlib.org/examples/pylab_examples/...
-        # colorbar_tick_labelling_demo.html
+        # heatmap code derived from the matplotlib gallery:
+        #     http://matplotlib.org/examples/pylab_examples/
+        #     colorbar_tick_labelling_demo.html
         fig, ax = plt.subplots()
         if fig_size is not None:
             fig.set_size_inches(fig_size)
 
-        cax = ax.imshow(mtx.T, interpolation='nearest', cmap=cmap)
+        cax = ax.imshow(mtx, interpolation='nearest', cmap=cmap)
 
-        # Add colorbar and define tick labels
-        cbar = fig.colorbar(cax,
-                            ticks=[min(values), np.median(values),
-                                   max(values)], orientation='horizontal')
-        ax.set_yticks([0] + list(range(3, sequence_count - 3, 3)) +
-                      [sequence_count-1])
-        yt = ax.get_yticks()
-        ytl = []
-        for i in range(len(yt)):
-            ytl.append(sequence_order[yt[i]])
-        ax.set_yticklabels(ytl)
+        sequence_count = self.sequence_count()
+        y_ticks = [0] + list(range(3, sequence_count - 3, 3))
+        if sequence_count > 1:
+            # we have more than one sequence, so add the index of the last
+            # sequence
+            y_ticks += [sequence_count - 1]
+        y_tick_labels = [sequence_order[tick] for tick in y_ticks]
+        ax.set_yticks(y_ticks)
+        ax.set_yticklabels(y_tick_labels)
 
-        ax.set_xticks(range(sequence_length))
+        ax.set_xticks(range(self.sequence_length()))
         ax.set_xticklabels(self.majority_consensus(), size=7)
+
+        # add colorbar legend
+        cbar = fig.colorbar(cax, ticks=[min_val, median_val, max_val],
+                            orientation='horizontal')
         cbar.ax.set_xticklabels(legend_labels)
+
         return fig
+
+    def _alignment_to_heatmap_matrix(self, value_map, sequence_order):
+        """Convert alignment to numeric matrix for heatmap plotting."""
+        if self.is_empty():
+            raise AlignmentError(
+                "Cannot create heatmap from an empty alignment.")
+
+        sequence_length = self.sequence_length()
+        if sequence_length < 1:
+            raise AlignmentError(
+                "Cannot create heatmap from an alignment without any "
+                "positions.")
+
+        # track the values that are actually used -- this can differ from the
+        # values in `value_map` (e.g., if `value_map` is a superset or a
+        # defaultdict). we want to use these values to compute the min, median,
+        # and max for the colorbar legend labels
+        values = {}
+        mtx = np.empty([self.sequence_count(), sequence_length])
+        for row_idx, sequence_id in enumerate(sequence_order):
+            seq = str(self[sequence_id])
+            for col_idx in range(sequence_length):
+                char = seq[col_idx]
+                value = value_map[char]
+                mtx[row_idx][col_idx] = value
+                values[char] = value
+
+        # remove nans as this can mess up the median calculation below.
+        # numpy.nanmedian was added in 1.9.0, so consider updating this code
+        # if/when we start supporting numpy >= 1.9.0. scipy.stats.nanmedian is
+        # deprecated so we can't use that either.
+        #
+        # modified from http://stackoverflow.com/a/26475626/3776794
+        values = np.asarray(values.values())
+        values = values[~np.isnan(values)]
+
+        return mtx, min(values), np.median(values), max(values)
 
     def _validate_lengths(self):
         """Return ``True`` if all sequences same length, ``False`` otherwise
