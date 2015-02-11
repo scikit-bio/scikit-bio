@@ -1843,7 +1843,12 @@ class Alignment(SequenceCollection):
         # deprecated so we can't use that either.
         #
         # modified from http://stackoverflow.com/a/26475626/3776794
-        values = np.asarray(values.values())
+        #
+        # note: we need to explicitly create a list from the dict's values in
+        # order to have this work in Python 3. Using values.values() directly,
+        # or with future.utils.viewvalues, creates a numpy array of object
+        # dtype, which makes np.isnan fail.
+        values = np.asarray(list(values.values()))
         values = values[~np.isnan(values)]
 
         return mtx, min(values), np.median(values), max(values)
