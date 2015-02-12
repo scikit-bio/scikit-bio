@@ -14,7 +14,6 @@ import warnings
 from copy import deepcopy
 
 import matplotlib as mpl
-mpl.use('Agg')
 import matplotlib.pyplot as plt
 from IPython.core.pylabtools import print_figure
 from IPython.core.display import Image, SVG
@@ -25,6 +24,8 @@ from scipy.spatial.distance import squareform
 from skbio._base import SkbioObject
 from skbio.stats import p_value_to_str
 from skbio.stats._misc import _pprint_strs
+
+mpl.use('Agg')
 
 
 class DissimilarityMatrixError(Exception):

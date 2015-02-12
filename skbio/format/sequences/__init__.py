@@ -27,6 +27,8 @@ Functions
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from numpy.testing import Tester
+
 from .fasta import fasta_from_sequences, fasta_from_alignment
 from .fastq import format_fastq_record
 
@@ -34,5 +36,4 @@ __all__ = ['fasta_from_sequences', 'fasta_from_alignment',
            'format_fastq_record']
 
 
-from numpy.testing import Tester
 test = Tester().test

@@ -13,7 +13,6 @@ import warnings
 import unittest
 
 import matplotlib as mpl
-mpl.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 import numpy.testing as npt
@@ -27,6 +26,8 @@ from skbio.stats.ordination import (
     CA, RDA, CCA, PCoA, OrdinationResults, corr, mean_and_std,
     assert_ordination_results_equal)
 from skbio.util import get_data_path
+
+mpl.use('Agg')
 
 
 def normalize_signs(arr1, arr2):

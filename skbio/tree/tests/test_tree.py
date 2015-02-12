@@ -167,7 +167,9 @@ class TreeTests(TestCase):
 
     def test_remove_deleted(self):
         """Remove nodes by function"""
-        f = lambda node: node.name in ['b', 'd']
+        def f(node):
+            return node.name in ['b', 'd']
+
         self.simple_t.remove_deleted(f)
         exp = "((a)i1,(c)i2)root;\n"
         obs = str(self.simple_t)
@@ -293,7 +295,10 @@ class TreeTests(TestCase):
 
     def test_invalidate_attr_caches(self):
         tree = TreeNode.from_newick("((a,b,(c,d)e)f,(g,h)i)root;")
-        f = lambda n: [n.name] if n.is_tip() else []
+
+        def f(n):
+            return [n.name] if n.is_tip() else []
+
         tree.cache_attr(f, 'tip_names')
         tree.invalidate_caches()
         for n in tree.traverse(include_self=True):
@@ -373,7 +378,10 @@ class TreeTests(TestCase):
     def test_find_by_func(self):
         """Find nodes by a function"""
         t = TreeNode.from_newick("((a,b)c,(d,e)f);")
-        func = lambda x: x.parent == t.find('c')
+
+        def func(x):
+            return x.parent == t.find('c')
+
         exp = ['a', 'b']
         obs = [n.name for n in t.find_by_func(func)]
         self.assertEqual(obs, exp)
@@ -931,7 +939,9 @@ class TreeTests(TestCase):
                           '4': ['h', 'i', 'j', 'k', 'l', 'm', 'q'],
                           '5': ['h', 'i', 'j', 'k', 'l', 'm', 'n']}
         tree = TreeNode.from_taxonomy(input_lineages.items())
-        f = lambda node, lin: 'k' in lin or 'x' in lin
+
+        def f(node, lin):
+            return 'k' in lin or 'x' in lin
 
         exp = [('2', ['a', 'b', 'c', 'x', 'y']),
                ('3', ['h', 'i', 'j', 'k', 'l']),
@@ -1249,7 +1259,10 @@ class DndParserTests(TestCase):
 
     def test_cache_attr_tip_list(self):
         tree = TreeNode.read(StringIO("((a,b,(c,d)e)f,(g,h)i)root;"))
-        f = lambda n: [n.name] if n.is_tip() else []
+
+        def f(n):
+            return [n.name] if n.is_tip() else []
+
         tree.cache_attr(f, 'tip_names')
         self.assertEqual(tree.tip_names, ['a', 'b', 'c', 'd', 'g', 'h'])
         self.assertEqual(tree.children[0].tip_names, ['a', 'b', 'c', 'd'])
@@ -1258,7 +1271,10 @@ class DndParserTests(TestCase):
 
     def test_cache_attr_nontip_set(self):
         tree = TreeNode.read(StringIO("((a,b,(c,d)e)f,(g,h)i)root;"))
-        f = lambda n: [n.name] if not n.is_tip() else []
+
+        def f(n):
+            return [n.name] if not n.is_tip() else []
+
         tree.cache_attr(f, 'nontip_names')
         self.assertEqual(tree.nontip_names, ['e', 'f', 'i', 'root'])
         self.assertEqual(tree.children[0].nontip_names, ['e', 'f'])
@@ -1267,7 +1283,9 @@ class DndParserTests(TestCase):
 
     def test_cache_attr_bad_type(self):
         tree = TreeNode.read(StringIO("((a,b,(c,d)e)f,(g,h)i)root;"))
-        f = lambda n: [n.name] if not n.is_tip() else []
+
+        def f(n):
+            return [n.name] if not n.is_tip() else []
 
         with self.assertRaises(TypeError):
             tree.cache_attr(f, 'nontip_names', TreeNode)

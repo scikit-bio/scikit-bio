@@ -43,7 +43,9 @@ def _walk_clades(trees, weights):
     total = weights.sum()
 
     # get clade counts
-    tipnames_f = lambda n: [n.name] if n.is_tip() else []
+    def tipnames_f(n):
+        return [n.name] if n.is_tip() else []
+
     for tree, weight in zip(trees, weights):
         tree.cache_attr(tipnames_f, 'tip_names', frozenset)
 

@@ -14,12 +14,12 @@ from itertools import cycle
 import warnings
 
 import numpy as np
-
 from matplotlib import use
-use('Agg', warn=False)
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from matplotlib.patches import Polygon, Rectangle
+
+use('Agg', warn=False)
 
 
 def boxplots(distributions, x_values=None, x_tick_labels=None, title=None,

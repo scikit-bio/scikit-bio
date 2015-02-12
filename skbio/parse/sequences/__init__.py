@@ -185,6 +185,8 @@ Exceptions
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from numpy.testing import Tester
+
 from .fasta import parse_fasta, parse_qual
 from .fastq import parse_fastq
 from .clustal import parse_clustal, write_clustal
@@ -196,5 +198,4 @@ __all__ = ['write_clustal', 'parse_clustal',
            'parse_fasta', 'parse_fastq', 'parse_qual', 'FastqIterator',
            'FastaIterator', 'SequenceIterator', 'load', 'FastqParseError']
 
-from numpy.testing import Tester
 test = Tester().test

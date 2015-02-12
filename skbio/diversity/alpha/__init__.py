@@ -138,6 +138,8 @@ Let's see how many singletons and doubletons there are in the sample:
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from numpy.testing import Tester
+
 from ._ace import ace
 from ._chao1 import chao1, chao1_ci
 from ._base import (
@@ -156,5 +158,4 @@ __all__ = ['ace', 'chao1', 'chao1_ci', 'berger_parker_d', 'brillouin_d',
            'shannon', 'simpson', 'simpson_e', 'singles', 'strong',
            'gini_index', 'lladser_pe', 'lladser_ci']
 
-from numpy.testing import Tester
 test = Tester().test

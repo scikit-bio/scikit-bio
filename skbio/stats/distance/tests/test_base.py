@@ -13,7 +13,6 @@ from six import StringIO, binary_type, text_type
 from unittest import TestCase, main
 
 import matplotlib as mpl
-mpl.use('Agg')
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
@@ -25,6 +24,8 @@ from skbio.stats.distance import (
     DissimilarityMatrix, randdm, CategoricalStatsResults)
 from skbio.stats.distance._base import (
     _preprocess_input, _run_monte_carlo_stats, CategoricalStats)
+
+mpl.use('Agg')
 
 
 class DissimilarityMatrixTestData(TestCase):
