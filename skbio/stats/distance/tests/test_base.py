@@ -25,8 +25,6 @@ from skbio.stats.distance import (
 from skbio.stats.distance._base import (
     _preprocess_input, _run_monte_carlo_stats, CategoricalStats)
 
-mpl.use('Agg')
-
 
 class DissimilarityMatrixTestData(TestCase):
     def setUp(self):

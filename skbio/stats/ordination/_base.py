@@ -22,7 +22,6 @@ from IPython.core.display import Image, SVG
 from skbio._base import SkbioObject
 from skbio.stats._misc import _pprint_strs
 
-mpl.use('Agg')
 # avoid flake8 unused import error
 Axes3D
 

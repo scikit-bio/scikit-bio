@@ -12,7 +12,6 @@ from unittest import TestCase, main
 
 import numpy as np
 import numpy.testing as npt
-from matplotlib import use
 import matplotlib.pyplot as plt
 
 from skbio.draw import boxplots, grouped_distributions
@@ -21,8 +20,6 @@ from skbio.draw._distributions import (
     _create_legend, _get_distribution_markers, _is_single_matplotlib_color,
     _plot_bar_data, _plot_box_data, _plot_scatter_data, _set_axes_options,
     _set_figure_size, _validate_input, _validate_x_values)
-
-use('Agg', warn=False)
 
 
 class DistributionsTests(TestCase):

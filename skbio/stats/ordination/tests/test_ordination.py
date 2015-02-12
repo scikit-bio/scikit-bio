@@ -27,8 +27,6 @@ from skbio.stats.ordination import (
     assert_ordination_results_equal)
 from skbio.util import get_data_path
 
-mpl.use('Agg')
-
 
 def normalize_signs(arr1, arr2):
     """Change column signs so that "column" and "-column" compare equal.
