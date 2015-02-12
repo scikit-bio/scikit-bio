@@ -2190,7 +2190,8 @@ class TreeNode(SkbioObject):
 
         """
         if filter_f is None:
-            filter_f = lambda a, b: True
+            def filter_f(a, b):
+                return True
 
         self.assign_ids()
         seen = set()
@@ -3128,9 +3129,13 @@ class TreeNode(SkbioObject):
 
         """
         if cache_type in [set, frozenset]:
-            reduce_f = lambda a, b: a | b
+            def reduce_f(a, b):
+                return a | b
+
         elif cache_type == list:
-            reduce_f = lambda a, b: a + b
+            def reduce_f(a, b):
+                return a + b
+
         else:
             raise TypeError("Only list, set and frozenset are supported!")
 

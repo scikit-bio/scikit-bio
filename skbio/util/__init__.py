@@ -59,6 +59,8 @@ Warnings
 # The full license is in the file COPYING.txt, distributed with this software.
 # -----------------------------------------------------------------------------
 
+from numpy.testing import Tester
+
 from ._warning import EfficiencyWarning
 from ._exception import TestingUtilError
 from ._misc import (cardinal_to_ordinal, create_dir, flatten,
@@ -70,5 +72,4 @@ __all__ = ['EfficiencyWarning', 'TestingUtilError',
            'is_casava_v180_or_later', 'remove_files', 'safe_md5',
            'get_data_path']
 
-from numpy.testing import Tester
 test = Tester().test

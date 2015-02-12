@@ -13,8 +13,6 @@ import csv
 import warnings
 from copy import deepcopy
 
-import matplotlib as mpl
-mpl.use('Agg')
 import matplotlib.pyplot as plt
 from IPython.core.pylabtools import print_figure
 from IPython.core.display import Image, SVG
