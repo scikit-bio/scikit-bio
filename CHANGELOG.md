@@ -1,6 +1,6 @@
 # scikit-bio changelog
 
-## Version 0.2.2-dev (changes since 0.2.2 release go here)
+## Version 0.3.0-dev (changes since 0.2.2 release go here)
 
 ### Features
 * Modified ``skbio.stats.distance.pwmantel`` to accept a list of filepaths. This is useful as it allows for a smaller amount of memory consumption as it only loads two matrices at a time as opposed to requiring that all distance matrices are loaded into memory.
@@ -12,6 +12,9 @@
 * Removed ``feature_types`` attribute from ``BiologicalSequence`` and all subclasses ([#797](https://github.com/biocore/scikit-bio/pull/797)).
 * Removed ``find_features`` method from ``BiologicalSequence`` and ``ProteinSequence`` ([#797](https://github.com/biocore/scikit-bio/pull/797)).
 * ``BiologicalSequence.k_word_frequencies`` now returns a ``collections.defaultdict`` of type ``float`` instead of type ``int``. This only affects the "default" case, when a key isn't present in the dictionary. Previous behavior would return ``0`` as an ``int``, while the new behavior is to return ``0.0`` as a ``float``. This change also affects the ``defaultdict``s that are returned by ``SequenceCollection.k_word_frequencies``.
+
+## Version 0.2.3-dev (reserved for future use)
+This section is reserved in the event we need to backport backwards compatible changes to QIIME.
 
 ## Version 0.2.2 (2014-12-04)
 
