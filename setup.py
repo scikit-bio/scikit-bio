@@ -15,7 +15,7 @@ from setuptools.extension import Extension
 
 import numpy as np
 
-__version__ = "0.2.3"
+__version__ = "0.2.3-dev"
 
 classes = """
     Development Status :: 1 - Planning
