@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.stats.ordination.OrdinationResults.__init__
+=================================================
+
+.. currentmodule:: skbio.stats.ordination
+
+.. automethod:: OrdinationResults.__init__

@@ -1,0 +1,6 @@
+skbio.stats.spatial.procrustes
+==============================
+
+.. currentmodule:: skbio.stats.spatial
+
+.. autofunction:: procrustes

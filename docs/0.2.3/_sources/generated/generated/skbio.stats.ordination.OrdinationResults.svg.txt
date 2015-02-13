@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.stats.ordination.OrdinationResults.svg
+============================================
+
+.. currentmodule:: skbio.stats.ordination
+
+.. autoattribute:: OrdinationResults.svg

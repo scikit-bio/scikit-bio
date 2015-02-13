@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.stats.gradient.AverageGradientANOVA._make_groups
+======================================================
+
+.. currentmodule:: skbio.stats.gradient
+
+.. automethod:: AverageGradientANOVA._make_groups

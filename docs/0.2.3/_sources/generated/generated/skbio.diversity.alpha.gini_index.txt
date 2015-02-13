@@ -1,0 +1,6 @@
+skbio.diversity.alpha.gini_index
+================================
+
+.. currentmodule:: skbio.diversity.alpha
+
+.. autofunction:: gini_index

@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.Alignment.from_fasta_records
+============================================
+
+.. currentmodule:: skbio.alignment
+
+.. automethod:: Alignment.from_fasta_records

@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.ProteinSequence.feature_types
-============================================
-
-.. currentmodule:: skbio.sequence
-
-.. autoattribute:: ProteinSequence.feature_types

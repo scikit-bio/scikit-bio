@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.StockholmAlignment.__repr__
+===========================================
+
+.. currentmodule:: skbio.alignment
+
+.. automethod:: StockholmAlignment.__repr__

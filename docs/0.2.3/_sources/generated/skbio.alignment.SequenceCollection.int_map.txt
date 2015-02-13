@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.SequenceCollection.int_map
+==========================================
+
+.. currentmodule:: skbio.alignment
+
+.. automethod:: SequenceCollection.int_map

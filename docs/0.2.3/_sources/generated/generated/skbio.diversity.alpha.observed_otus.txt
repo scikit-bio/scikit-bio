@@ -1,0 +1,6 @@
+skbio.diversity.alpha.observed_otus
+===================================
+
+.. currentmodule:: skbio.diversity.alpha
+
+.. autofunction:: observed_otus

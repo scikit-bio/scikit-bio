@@ -1,0 +1,6 @@
+skbio.io.register_writer
+========================
+
+.. currentmodule:: skbio.io
+
+.. autofunction:: register_writer

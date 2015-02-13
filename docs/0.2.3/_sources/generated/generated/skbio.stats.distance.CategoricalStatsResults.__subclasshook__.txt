@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.stats.distance.CategoricalStatsResults.__subclasshook__
+=============================================================
+
+.. currentmodule:: skbio.stats.distance
+
+.. automethod:: CategoricalStatsResults.__subclasshook__

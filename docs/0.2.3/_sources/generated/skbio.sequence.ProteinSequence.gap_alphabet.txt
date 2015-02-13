@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.ProteinSequence.gap_alphabet
+===========================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: ProteinSequence.gap_alphabet

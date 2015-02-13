@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.DNASequence.feature_types
-========================================
-
-.. currentmodule:: skbio.sequence
-
-.. autoattribute:: DNASequence.feature_types

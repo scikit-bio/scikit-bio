@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.tree.TreeNode._remove_node
+================================
+
+.. currentmodule:: skbio.tree
+
+.. automethod:: TreeNode._remove_node
