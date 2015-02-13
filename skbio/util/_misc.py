@@ -238,6 +238,33 @@ def create_dir(dir_name, fail_on_exist=False, handle_errors_externally=False):
     return error_code_lookup['NO_ERROR']
 
 
+def find_duplicates(iterable):
+    """Find duplicate elements in an iterable.
+
+    Parameters
+    ----------
+    iterable : iterable
+        Iterable to be searched for duplicates (i.e., elements that are
+        repeated).
+
+    Returns
+    -------
+    set
+        Repeated elements in `iterable`.
+
+    """
+    # modified from qiita.qiita_db.util.find_repeated
+    # https://github.com/biocore/qiita
+    # see licenses/qiita.txt
+    seen, repeated = set(), set()
+    for e in iterable:
+        if e in seen:
+            repeated.add(e)
+        else:
+            seen.add(e)
+    return repeated
+
+
 def flatten(items):
     """Removes one level of nesting from items
 

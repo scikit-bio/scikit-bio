@@ -17,7 +17,8 @@ from shutil import rmtree
 from uuid import uuid4
 
 from skbio.util import (cardinal_to_ordinal, safe_md5, remove_files,
-                        create_dir, flatten, is_casava_v180_or_later)
+                        create_dir, find_duplicates, flatten,
+                        is_casava_v180_or_later)
 from skbio.util._misc import _handle_error_codes
 
 
@@ -121,6 +122,38 @@ class CardinalToOrdinalTests(TestCase):
     def test_invalid_n(self):
         with self.assertRaisesRegexp(ValueError, '-1'):
             cardinal_to_ordinal(-1)
+
+
+class TestFindDuplicates(TestCase):
+    def test_empty_input(self):
+        def empty_gen():
+            raise StopIteration()
+            yield
+
+        for empty in [], (), '', set(), {}, empty_gen():
+            self.assertEqual(find_duplicates(empty), set())
+
+    def test_no_duplicates(self):
+        self.assertEqual(find_duplicates(['a', 'bc', 'def', 'A']), set())
+
+    def test_one_duplicate(self):
+        self.assertEqual(find_duplicates(['a', 'bc', 'def', 'a']), set(['a']))
+
+    def test_many_duplicates(self):
+        self.assertEqual(find_duplicates(['a', 'bc', 'bc', 'def', 'a']),
+                         set(['a', 'bc']))
+
+    def test_all_duplicates(self):
+        self.assertEqual(
+            find_duplicates(('a', 'bc', 'bc', 'def', 'a', 'def', 'def')),
+            set(['a', 'bc', 'def']))
+
+    def test_mixed_types(self):
+        def gen():
+            for e in 'a', 1, 'bc', 2, 'a', 2, 2, 3.0:
+                yield e
+
+        self.assertEqual(find_duplicates(gen()), set(['a', 2]))
 
 
 if __name__ == '__main__':
