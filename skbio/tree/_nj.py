@@ -109,8 +109,8 @@ def nj(dm, disallow_negative_branch_length=True, result_constructor=None):
             "generate a neighbor joining tree.")
 
     if result_constructor is None:
-        result_constructor = \
-            lambda x: TreeNode.read(StringIO(x), format='newick')
+        def result_constructor(x):
+            return TreeNode.read(StringIO(x), format='newick')
 
     # initialize variables
     node_definition = None

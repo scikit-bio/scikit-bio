@@ -7,8 +7,6 @@
 # -----------------------------------------------------------------------------
 from __future__ import absolute_import, division, print_function
 from future.standard_library import hooks
-with hooks():
-    from itertools import zip_longest
 
 import warnings
 
@@ -16,6 +14,9 @@ import numpy as np
 
 from skbio.io.util import open_file
 from ._exception import FastqParseError
+
+with hooks():
+    from itertools import zip_longest
 
 
 def _ascii_to_phred(s, offset):

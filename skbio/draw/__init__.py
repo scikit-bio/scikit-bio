@@ -28,9 +28,10 @@ Functions
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from numpy.testing import Tester
+
 from ._distributions import boxplots, grouped_distributions
 
 __all__ = ['boxplots', 'grouped_distributions']
 
-from numpy.testing import Tester
 test = Tester().test

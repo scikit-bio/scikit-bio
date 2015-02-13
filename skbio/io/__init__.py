@@ -268,6 +268,8 @@ Developer exceptions
 
 from importlib import import_module
 
+from numpy.testing import Tester
+
 from ._warning import FormatIdentificationWarning, ArgumentOverrideWarning
 from ._exception import (DuplicateRegistrationError, InvalidRegistrationError,
                          RecordError, FieldError, UnrecognizedFormatError,
@@ -317,5 +319,4 @@ import_module('skbio.io.qseq')
 # (read and write) to each class which has registered I/O operations.
 initialize_oop_interface()
 
-from numpy.testing import Tester
 test = Tester().test

@@ -174,7 +174,9 @@ class ISubsampleTests(unittest.TestCase):
 
     def test_isubsample_simple(self):
         maximum = 10
-        bin_f = lambda x: x['SequenceID'].rsplit('_', 1)[0]
+
+        def bin_f(x):
+            return x['SequenceID'].rsplit('_', 1)[0]
 
         # note, the result here is sorted by sequence_id but is in heap order
         # by the random values associated to each sequence
@@ -196,7 +198,9 @@ class ISubsampleTests(unittest.TestCase):
     def test_per_sample_sequences_min_seqs(self):
         maximum = 10
         minimum = 3
-        bin_f = lambda x: x['SequenceID'].rsplit('_', 1)[0]
+
+        def bin_f(x):
+            return x['SequenceID'].rsplit('_', 1)[0]
 
         # note, the result here is sorted by sequence_id but is in heap order
         # by the random values associated to each sequence
@@ -215,7 +219,10 @@ class ISubsampleTests(unittest.TestCase):
 
     def test_per_sample_sequences_complex(self):
         maximum = 2
-        bin_f = lambda x: x['SequenceID'].rsplit('_', 1)[0]
+
+        def bin_f(x):
+            return x['SequenceID'].rsplit('_', 1)[0]
+
         exp = sorted([('a', {'SequenceID': 'a_2', 'Sequence': 'AATTGGCC-a2'}),
                       ('a', {'SequenceID': 'a_3', 'Sequence': 'AATTGGCC-a3'}),
                       ('b', {'SequenceID': 'b_2', 'Sequence': 'AATTGGCC-b2'}),

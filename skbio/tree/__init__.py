@@ -244,6 +244,8 @@ Create a new trie with a list of sequences
 # The full license is in the file COPYING.txt, distributed with this software.
 # -----------------------------------------------------------------------------
 
+from numpy.testing import Tester
+
 from ._tree import TreeNode
 from ._trie import CompressedTrie, fasta_to_pairlist
 from ._nj import nj
@@ -255,5 +257,4 @@ __all__ = ['TreeNode', 'CompressedTrie', 'fasta_to_pairlist', 'nj',
            'majority_rule', 'TreeError', 'NoLengthError', 'DuplicateNodeError',
            'MissingNodeError', 'NoParentError']
 
-from numpy.testing import Tester
 test = Tester().test

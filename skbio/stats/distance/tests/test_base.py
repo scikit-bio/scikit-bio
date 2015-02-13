@@ -13,7 +13,6 @@ from six import StringIO, binary_type, text_type
 from unittest import TestCase, main
 
 import matplotlib as mpl
-mpl.use('Agg')
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
