@@ -1,0 +1,34 @@
+skbio.stats.ordination.CCA
+==========================
+
+.. currentmodule:: skbio.stats.ordination
+
+.. autoclass:: CCA
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         CCA.__format__
+         CCA.__init__
+         CCA.__new__
+         CCA.__reduce__
+         CCA.__reduce_ex__
+         CCA.__sizeof__
+         CCA.__subclasshook__
+         CCA._cca
+         CCA.scores
+
+
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         CCA.long_method_name
+         CCA.short_method_name
+

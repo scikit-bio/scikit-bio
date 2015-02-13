@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.NucleotideSequence.write
+=======================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: NucleotideSequence.write

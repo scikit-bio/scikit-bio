@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.stats.distance.DistanceMatrix.index
+=========================================
+
+.. currentmodule:: skbio.stats.distance
+
+.. automethod:: DistanceMatrix.index

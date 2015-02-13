@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.ProteinSequence.__ne__
+=====================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: ProteinSequence.__ne__

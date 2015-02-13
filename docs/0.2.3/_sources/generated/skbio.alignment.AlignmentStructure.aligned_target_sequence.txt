@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.AlignmentStructure.aligned_target_sequence
+==========================================================
+
+.. currentmodule:: skbio.alignment
+
+.. autoattribute:: AlignmentStructure.aligned_target_sequence

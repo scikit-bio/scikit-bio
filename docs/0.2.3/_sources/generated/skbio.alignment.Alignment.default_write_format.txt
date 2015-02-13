@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.Alignment.default_write_format
+==============================================
+
+.. currentmodule:: skbio.alignment
+
+.. autoattribute:: Alignment.default_write_format

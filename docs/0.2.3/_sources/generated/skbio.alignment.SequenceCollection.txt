@@ -1,0 +1,61 @@
+skbio.alignment.SequenceCollection
+==================================
+
+.. currentmodule:: skbio.alignment
+
+.. autoclass:: SequenceCollection
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         SequenceCollection.__contains__
+         SequenceCollection.__eq__
+         SequenceCollection.__format__
+         SequenceCollection.__getitem__
+         SequenceCollection.__init__
+         SequenceCollection.__iter__
+         SequenceCollection.__len__
+         SequenceCollection.__ne__
+         SequenceCollection.__new__
+         SequenceCollection.__reduce__
+         SequenceCollection.__reduce_ex__
+         SequenceCollection.__repr__
+         SequenceCollection.__reversed__
+         SequenceCollection.__sizeof__
+         SequenceCollection.__str__
+         SequenceCollection.__subclasshook__
+         SequenceCollection._validate_character_set
+         SequenceCollection.degap
+         SequenceCollection.distances
+         SequenceCollection.distribution_stats
+         SequenceCollection.from_fasta_records
+         SequenceCollection.get_seq
+         SequenceCollection.ids
+         SequenceCollection.int_map
+         SequenceCollection.is_empty
+         SequenceCollection.is_valid
+         SequenceCollection.iteritems
+         SequenceCollection.k_word_frequencies
+         SequenceCollection.lower
+         SequenceCollection.read
+         SequenceCollection.sequence_count
+         SequenceCollection.sequence_lengths
+         SequenceCollection.toFasta
+         SequenceCollection.to_fasta
+         SequenceCollection.update_ids
+         SequenceCollection.upper
+         SequenceCollection.write
+
+
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         SequenceCollection.default_write_format
+

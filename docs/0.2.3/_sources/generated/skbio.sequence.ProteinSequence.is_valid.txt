@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.ProteinSequence.is_valid
+=======================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: ProteinSequence.is_valid

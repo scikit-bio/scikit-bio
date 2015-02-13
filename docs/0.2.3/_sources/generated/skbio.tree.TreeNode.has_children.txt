@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.tree.TreeNode.has_children
+================================
+
+.. currentmodule:: skbio.tree
+
+.. automethod:: TreeNode.has_children

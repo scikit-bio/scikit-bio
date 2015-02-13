@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.SequenceCollection.update_ids
+=============================================
+
+.. currentmodule:: skbio.alignment
+
+.. automethod:: SequenceCollection.update_ids

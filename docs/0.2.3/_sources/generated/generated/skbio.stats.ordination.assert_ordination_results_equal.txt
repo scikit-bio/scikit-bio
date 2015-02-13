@@ -1,0 +1,6 @@
+skbio.stats.ordination.assert_ordination_results_equal
+======================================================
+
+.. currentmodule:: skbio.stats.ordination
+
+.. autofunction:: assert_ordination_results_equal

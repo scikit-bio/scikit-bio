@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.NucleotideSequence.iupac_degenerate_characters
+=============================================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: NucleotideSequence.iupac_degenerate_characters

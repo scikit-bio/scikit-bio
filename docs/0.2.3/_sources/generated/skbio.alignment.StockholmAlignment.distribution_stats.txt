@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.StockholmAlignment.distribution_stats
+=====================================================
+
+.. currentmodule:: skbio.alignment
+
+.. automethod:: StockholmAlignment.distribution_stats

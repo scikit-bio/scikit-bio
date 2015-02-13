@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.stats.ordination.CCA.short_method_name
+============================================
+
+.. currentmodule:: skbio.stats.ordination
+
+.. autoattribute:: CCA.short_method_name

@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.SequenceCollection.to_fasta
+===========================================
+
+.. currentmodule:: skbio.alignment
+
+.. automethod:: SequenceCollection.to_fasta

@@ -1,0 +1,6 @@
+skbio.stats.distance.mantel
+===========================
+
+.. currentmodule:: skbio.stats.distance
+
+.. autofunction:: mantel

@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.stats.gradient.TrajectoryGradientANOVA.__subclasshook__
+=============================================================
+
+.. currentmodule:: skbio.stats.gradient
+
+.. automethod:: TrajectoryGradientANOVA.__subclasshook__

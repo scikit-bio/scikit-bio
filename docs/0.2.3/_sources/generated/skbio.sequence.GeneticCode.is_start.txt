@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.GeneticCode.is_start
+===================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: GeneticCode.is_start

@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.DNASequence.has_unsupported_characters
+=====================================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: DNASequence.has_unsupported_characters

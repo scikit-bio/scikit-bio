@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.stats.ordination.CCA.__subclasshook__
+===========================================
+
+.. currentmodule:: skbio.stats.ordination
+
+.. automethod:: CCA.__subclasshook__
