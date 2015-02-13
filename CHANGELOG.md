@@ -1,6 +1,6 @@
 # scikit-bio changelog
 
-## Version 0.2.2-dev (changes since 0.2.2 release go here)
+## Version 0.2.3 (2015-02-13)
 
 ### Features
 * Modified ``skbio.stats.distance.pwmantel`` to accept a list of filepaths. This is useful as it allows for a smaller amount of memory consumption as it only loads two matrices at a time as opposed to requiring that all distance matrices are loaded into memory.
