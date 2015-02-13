@@ -28,6 +28,7 @@ Generally useful functions that don't fit in more specific locations.
 
    cardinal_to_ordinal
    create_dir
+   find_duplicates
    flatten
    is_casava_v180_or_later
    remove_files
@@ -63,12 +64,12 @@ from numpy.testing import Tester
 
 from ._warning import EfficiencyWarning
 from ._exception import TestingUtilError
-from ._misc import (cardinal_to_ordinal, create_dir, flatten,
+from ._misc import (cardinal_to_ordinal, create_dir, find_duplicates, flatten,
                     is_casava_v180_or_later, remove_files, safe_md5)
 from ._testing import get_data_path
 
 __all__ = ['EfficiencyWarning', 'TestingUtilError',
-           'cardinal_to_ordinal', 'create_dir', 'flatten',
+           'cardinal_to_ordinal', 'create_dir', 'find_duplicates', 'flatten',
            'is_casava_v180_or_later', 'remove_files', 'safe_md5',
            'get_data_path']
 

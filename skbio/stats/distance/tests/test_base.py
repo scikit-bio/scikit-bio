@@ -119,6 +119,8 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         # Number of IDs don't match dimensions.
         with self.assertRaises(DissimilarityMatrixError):
             DissimilarityMatrix(data, ['a', 'b', 'c'])
+        with self.assertRaises(DissimilarityMatrixError):
+            DissimilarityMatrix(data, [])
 
         # Non-hollow.
         data = [[0.0, 1.0], [1.0, 0.01]]
