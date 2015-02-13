@@ -7,10 +7,8 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.utils import viewitems
 from six import StringIO, string_types
 
-import collections
 import csv
 import warnings
 from copy import deepcopy
