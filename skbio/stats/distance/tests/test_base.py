@@ -120,6 +120,8 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         # Number of IDs don't match dimensions.
         with self.assertRaises(DissimilarityMatrixError):
             DissimilarityMatrix(data, ['a', 'b', 'c'])
+        with self.assertRaises(DissimilarityMatrixError):
+            DissimilarityMatrix(data, [])
 
         # Non-hollow.
         data = [[0.0, 1.0], [1.0, 0.01]]
@@ -444,21 +446,6 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
     def test_validate_invalid_dtype(self):
         with self.assertRaises(DissimilarityMatrixError):
             self.dm_3x3._validate(np.array([[0, 42], [42, 0]]), ['a', 'b'])
-
-    def test_find_duplicates(self):
-        # No duplicates.
-        self.assertEqual(
-            self.dm_3x3._find_duplicates(['cat', 'dog', 'fish']), [])
-
-        # One duplicate.
-        self.assertEqual(
-            self.dm_3x3._find_duplicates(['cat', 'dog', 'cat']), ['cat'])
-
-        # Many duplicates. Order isn't guaranteed so we sort first.
-        # assertItemsEqual isn't available in Python 3.
-        obs = sorted(self.dm_3x3._find_duplicates(
-            ['cat', 'dog', 'cat', 'fish', 'fish', 'fish']))
-        self.assertEqual(obs, ['cat', 'fish'])
 
 
 class DistanceMatrixTests(DissimilarityMatrixTestData):

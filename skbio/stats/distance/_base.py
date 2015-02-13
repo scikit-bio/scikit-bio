@@ -27,6 +27,7 @@ from scipy.spatial.distance import squareform
 from skbio._base import SkbioObject
 from skbio.stats import p_value_to_str
 from skbio.stats._misc import _pprint_strs
+from skbio.util import find_duplicates
 
 
 class DissimilarityMatrixError(Exception):
@@ -670,16 +671,17 @@ class DissimilarityMatrix(SkbioObject):
         if np.trace(data) != 0:
             raise DissimilarityMatrixError("Data must be hollow (i.e., the "
                                            "diagonal can only contain zeros).")
-        num_ids = len(ids)
-        if num_ids != len(set(ids)):
-            duplicates = self._find_duplicates(ids)
+        duplicates = find_duplicates(ids)
+        if duplicates:
+            formatted_duplicates = ', '.join(repr(e) for e in duplicates)
             raise DissimilarityMatrixError("IDs must be unique. Found the "
-                                           "following duplicate IDs: %r" %
-                                           duplicates)
-        if num_ids != data.shape[0]:
-            raise DissimilarityMatrixError("The number of IDs must match the "
-                                           "number of rows/columns in the "
-                                           "data.")
+                                           "following duplicate IDs: %s" %
+                                           formatted_duplicates)
+        if len(ids) != data.shape[0]:
+            raise DissimilarityMatrixError("The number of IDs (%d) must match "
+                                           "the number of rows/columns in the "
+                                           "data (%d)." %
+                                           (len(ids), data.shape[0]))
 
     def _index_list(self, list_):
         return {id_: idx for idx, id_ in enumerate(list_)}
@@ -688,11 +690,6 @@ class DissimilarityMatrix(SkbioObject):
         return (isinstance(index, tuple) and
                 len(index) == 2 and
                 all(map(lambda e: isinstance(e, string_types), index)))
-
-    def _find_duplicates(self, iterable):
-        # Modified from http://stackoverflow.com/a/9835819/3776794
-        return [item for item, count in
-                viewitems(collections.Counter(iterable)) if count > 1]
 
 
 class DistanceMatrix(DissimilarityMatrix):
