@@ -116,8 +116,8 @@ Tests can be executed using [nose](https://nose.readthedocs.org/en/latest/) by r
 >>> import skbio
 >>> skbio.test()
 # full test suite is executed
->>> skbio.parse.test()
-# tests for the parse module are executed
+>>> skbio.io.test()
+# tests for the io module are executed
 ```
 
 Note that this is possible because the lines below are added at the end of each `__init__.py` file in the package, so if you add a new module, be sure to include these lines in its `__init__.py`:

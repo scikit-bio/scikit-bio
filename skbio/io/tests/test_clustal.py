@@ -13,46 +13,31 @@ from unittest import TestCase, main
 
 from skbio.io.clustal import (_clustal_to_alignment, _alignment_to_clustal,
                               _clustal_sniffer)
-from skbio.io.clustal import (_is_clustal_seq_line, last_space,
-                              _delete_trailing_number, _check_length,
-                              _label_line_parser)
+from skbio.io.clustal import (_is_clustal_seq_line, _delete_trailing_number,
+                              _check_length, _label_line_parser)
 
 from skbio.io import ClustalFormatError
-from skbio.parse.record import DelimitedSplitter
 
 
 class ClustalHelperTests(TestCase):
-
-    """Tests of top-level functions."""
-
     def test_label_line_parser(self):
-        last_space = DelimitedSplitter(None, -1)
-        self.assertEquals(_label_line_parser(StringIO('abc\tucag'),
-                                             last_space),
+        self.assertEquals(_label_line_parser(StringIO('abc\tucag')),
                           ({"abc": ["ucag"]}, ['abc']))
 
         with self.assertRaises(ClustalFormatError):
-            _label_line_parser(StringIO('abctucag'), last_space)
+            _label_line_parser(StringIO('abctucag'))
 
     def test_is_clustal_seq_line(self):
-
         ic = _is_clustal_seq_line
-        assert ic('abc')
-        assert ic('abc  def')
-        assert not ic('CLUSTAL')
-        assert not ic('CLUSTAL W fsdhicjkjsdk')
-        assert not ic('  *   *')
-        assert not ic(' abc def')
-        assert not ic('MUSCLE (3.41) multiple sequence alignment')
-
-    def test_last_space(self):
-
-        self.assertEqual(last_space('a\t\t\t  b    c'), ['a b', 'c'])
-        self.assertEqual(last_space('xyz'), ['xyz'])
-        self.assertEqual(last_space('  a b'), ['a', 'b'])
+        self.assertTrue(ic('abc'))
+        self.assertTrue(ic('abc  def'))
+        self.assertFalse(ic('CLUSTAL'))
+        self.assertFalse(ic('CLUSTAL W fsdhicjkjsdk'))
+        self.assertFalse(ic('  *   *'))
+        self.assertFalse(ic(' abc def'))
+        self.assertFalse(ic('MUSCLE (3.41) multiple sequence alignment'))
 
     def test_delete_trailing_number(self):
-
         dtn = _delete_trailing_number
         self.assertEqual(dtn('abc'), 'abc')
         self.assertEqual(dtn('a b c'), 'a b c')

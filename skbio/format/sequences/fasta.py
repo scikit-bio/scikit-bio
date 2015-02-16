@@ -43,10 +43,6 @@ def fasta_from_sequences(seqs, make_seqlabel=None, line_wrap=None):
     str
         FASTA formatted string composed of the objects passed in via `seqs`.
 
-    See Also
-    --------
-    skbio.parse.sequences.parse_fasta
-
     Examples
     --------
     Formatting a list of sequence objects
@@ -132,7 +128,6 @@ def fasta_from_alignment(aln, make_seqlabel=None, line_wrap=None, sort=True):
 
     See Also
     --------
-    skbio.parse.sequences.parse_fasta
     skbio.alignment.Alignment
 
     Examples

@@ -96,7 +96,6 @@ setup(name='scikit-bio',
           'skbio.io.tests': ['data/*'],
           'skbio.stats.tests': ['data/*'],
           'skbio.stats.distance.tests': ['data/*'],
-          'skbio.stats.ordination.tests': ['data/*'],
-          'skbio.parse.sequences.tests': ['data/*'],
+          'skbio.stats.ordination.tests': ['data/*']
           }
       )

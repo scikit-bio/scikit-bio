@@ -22,9 +22,6 @@ from skbio.alignment import (
     local_pairwise_align_ssw, SequenceCollection, Alignment)
 from skbio.tree import (
     TreeNode, nj)
-from skbio.parse.sequences import (
-    parse_fasta, parse_fastq, parse_qual, FastaIterator, FastqIterator,
-    SequenceIterator)
 from skbio.io import read, write
 
 skbio.io  # Stop flake8 error
