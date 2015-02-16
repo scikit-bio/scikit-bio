@@ -2,6 +2,15 @@
 
 ## Version 0.2.3-dev (changes since 0.2.3 release go here)
 
+### Features
+
+### Bug fixes
+
+### Backward-incompatible changes
+* Removed `from_newick`, `from_file`, and `to_newick` from `skbio.tree.TreeNode`; please use `TreeNode.read` and `TreeNode.write` instead.
+
+### Miscellaneous
+
 ## Version 0.2.3 (2015-02-13)
 
 ### Features
