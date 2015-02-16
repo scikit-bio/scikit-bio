@@ -227,16 +227,17 @@ def majority_rule(trees, weights=None, cutoff=0.5, support_attr='support'):
     rule extended.
 
     >>> from skbio.tree import TreeNode
+    >>> from io import StringIO
     >>> trees = [
-    ... TreeNode.from_newick("(A,(B,(H,(D,(J,(((G,E),(F,I)),C))))));"),
-    ... TreeNode.from_newick("(A,(B,(D,((J,H),(((G,E),(F,I)),C)))));"),
-    ... TreeNode.from_newick("(A,(B,(D,(H,(J,(((G,E),(F,I)),C))))));"),
-    ... TreeNode.from_newick("(A,(B,(E,(G,((F,I),((J,(H,D)),C))))));"),
-    ... TreeNode.from_newick("(A,(B,(E,(G,((F,I),(((J,H),D),C))))));"),
-    ... TreeNode.from_newick("(A,(B,(E,((F,I),(G,((J,(H,D)),C))))));"),
-    ... TreeNode.from_newick("(A,(B,(E,((F,I),(G,(((J,H),D),C))))));"),
-    ... TreeNode.from_newick("(A,(B,(E,((G,(F,I)),((J,(H,D)),C)))));"),
-    ... TreeNode.from_newick("(A,(B,(E,((G,(F,I)),(((J,H),D),C)))));")]
+    ... TreeNode.read(StringIO(u"(A,(B,(H,(D,(J,(((G,E),(F,I)),C))))));")),
+    ... TreeNode.read(StringIO(u"(A,(B,(D,((J,H),(((G,E),(F,I)),C)))));")),
+    ... TreeNode.read(StringIO(u"(A,(B,(D,(H,(J,(((G,E),(F,I)),C))))));")),
+    ... TreeNode.read(StringIO(u"(A,(B,(E,(G,((F,I),((J,(H,D)),C))))));")),
+    ... TreeNode.read(StringIO(u"(A,(B,(E,(G,((F,I),(((J,H),D),C))))));")),
+    ... TreeNode.read(StringIO(u"(A,(B,(E,((F,I),(G,((J,(H,D)),C))))));")),
+    ... TreeNode.read(StringIO(u"(A,(B,(E,((F,I),(G,(((J,H),D),C))))));")),
+    ... TreeNode.read(StringIO(u"(A,(B,(E,((G,(F,I)),((J,(H,D)),C)))));")),
+    ... TreeNode.read(StringIO(u"(A,(B,(E,((G,(F,I)),(((J,H),D),C)))));"))]
     >>> consensus = majority_rule(trees, cutoff=0.5)[0]
     >>> print(consensus.ascii_art())
                                   /-E
@@ -274,10 +275,10 @@ def majority_rule(trees, weights=None, cutoff=0.5, support_attr='support'):
     if not all tips are present across all trees.
 
     >>> trees = [
-    ...     TreeNode.from_newick("((a,b),(c,d),(e,f))"),
-    ...     TreeNode.from_newick("(a,(c,d),b,(e,f))"),
-    ...     TreeNode.from_newick("((c,d),(e,f),b)"),
-    ...     TreeNode.from_newick("(a,(c,d),(e,f))")]
+    ...     TreeNode.read(StringIO(u"((a,b),(c,d),(e,f));")),
+    ...     TreeNode.read(StringIO(u"(a,(c,d),b,(e,f));")),
+    ...     TreeNode.read(StringIO(u"((c,d),(e,f),b);")),
+    ...     TreeNode.read(StringIO(u"(a,(c,d),(e,f));"))]
     >>> consensus_trees = majority_rule(trees)
     >>> print(len(consensus_trees))
     4

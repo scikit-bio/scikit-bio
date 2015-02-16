@@ -52,6 +52,7 @@ Examples
 --------
 
 >>> from skbio import TreeNode
+>>> from io import StringIO
 
 A new tree can be constructed from a Newick string. Newick is a common format
 used to represent tree objects within a file. Newick was part of the original
@@ -67,7 +68,7 @@ tips A and B.
 
 Now let's construct a simple tree and dump an ASCII representation:
 
->>> tree = TreeNode.from_newick("((A, B)C, D)root;")
+>>> tree = TreeNode.read(StringIO(u"((A, B)C, D)root;"))
 >>> print tree.is_root()  # is this the root of the tree?
 True
 >>> print tree.is_tip()  # is this node a tip?
@@ -132,9 +133,9 @@ distance is the fraction of common clades present in the two trees, where a
 distance of 0 means the trees contain identical clades, and a distance of 1
 indicates the trees do not share any common clades:
 
->>> tree1 = TreeNode.from_newick("((A, B)C, (D, E)F, (G, H)I)root;")
->>> tree2 = TreeNode.from_newick("((G, H)C, (D, E)F, (B, A)I)root;")
->>> tree3 = TreeNode.from_newick("((D, B)C, (A, E)F, (G, H)I)root;")
+>>> tree1 = TreeNode.read(StringIO(u"((A, B)C, (D, E)F, (G, H)I)root;"))
+>>> tree2 = TreeNode.read(StringIO(u"((G, H)C, (D, E)F, (B, A)I)root;"))
+>>> tree3 = TreeNode.read(StringIO(u"((D, B)C, (A, E)F, (G, H)I)root;"))
 >>> print tree1.compare_subsets(tree1)  # identity case
 0.0
 >>> print tree1.compare_subsets(tree2)  # same tree but different clade order
@@ -146,8 +147,10 @@ We can additionally take into account branch length when computing distances
 between trees. First, we're going to construct two new trees with described
 branch length, note the difference in the Newick strings:
 
->>> tree1 = TreeNode.from_newick("((A:0.1, B:0.2)C:0.3, D:0.4, E:0.5)root;")
->>> tree2 = TreeNode.from_newick("((A:0.4, B:0.8)C:0.3, D:0.1, E:0.5)root;")
+>>> tree1 = \
+...     TreeNode.read(StringIO(u"((A:0.1, B:0.2)C:0.3, D:0.4, E:0.5)root;"))
+>>> tree2 = \
+...     TreeNode.read(StringIO(u"((A:0.4, B:0.8)C:0.3, D:0.1, E:0.5)root;"))
 
 In these two trees, we've added on a description of length from the node to
 its parent, so for instance:
