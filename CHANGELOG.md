@@ -7,7 +7,10 @@
 ### Bug fixes
 
 ### Backward-incompatible changes
-* Removed deprecated functionality: `from_newick`, `from_file`, and `to_newick` from `skbio.tree.TreeNode`; please use `TreeNode.read` and `TreeNode.write` instead.
+* Removed the following deprecated functionality:
+    - `skbio.tree.TreeNode` methods `from_newick`, `from_file`, and `to_newick`; please use `TreeNode.read` and `TreeNode.write` instead.
+    - `skbio.parse` subpackage, including `SequenceIterator`, `FastaIterator`, `FastqIterator`, `load`, `parse_fasta`, `parse_fastq`, `parse_qual`, `write_clustal`, `parse_clustal`, and `FastqParseError`; please use `skbio.io` instead.
+    - `skbio.format` subpackage, including `fasta_from_sequence`, `fasta_from_alignment`, and `format_fastq_record`; please use `skbio.io` instead.
 
 ### Miscellaneous
 
