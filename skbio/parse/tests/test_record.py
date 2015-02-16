@@ -537,7 +537,9 @@ class FieldMorpherTests(TestCase):
 
     def test_altered_default(self):
         """FieldMorpher with default set should apply it"""
-        func = lambda x, y: (str(x), float(y) - 0.5)
+        def func(x, y):
+            return str(x), float(y) - 0.5
+
         fm = FieldMorpher({'3': str, 4: int}, func)
         # check that recognized values aren't tampered with
         self.assertEqual(fm({3: 3, 4: '4'}), {'3': '3', 4: 4})

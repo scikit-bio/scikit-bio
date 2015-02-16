@@ -13,7 +13,6 @@ from six import StringIO, binary_type, text_type
 from unittest import TestCase, main
 
 import matplotlib as mpl
-mpl.use('Agg')
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
@@ -120,6 +119,8 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         # Number of IDs don't match dimensions.
         with self.assertRaises(DissimilarityMatrixError):
             DissimilarityMatrix(data, ['a', 'b', 'c'])
+        with self.assertRaises(DissimilarityMatrixError):
+            DissimilarityMatrix(data, [])
 
         # Non-hollow.
         data = [[0.0, 1.0], [1.0, 0.01]]

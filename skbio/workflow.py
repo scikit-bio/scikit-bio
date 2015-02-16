@@ -339,7 +339,9 @@ class Workflow(object):
             if hasattr(obj, 'priority'):
                 methods.append(obj)
 
-        key = lambda x: getattr(x, 'priority')
+        def key(x):
+            return getattr(x, 'priority')
+
         methods_sorted = sorted(methods, key=key, reverse=True)
 
         if self.debug:
@@ -393,7 +395,8 @@ class Workflow(object):
         .. shownumpydoc
         """
         if success_callback is None:
-            success_callback = lambda x: x.state
+            def success_callback(x):
+                return x.state
 
         self.iter_ = iter_
         workflow = self._all_wf_methods()

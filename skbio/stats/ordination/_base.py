@@ -14,16 +14,16 @@ from functools import partial
 
 import numpy as np
 import matplotlib as mpl
-mpl.use('Agg')
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-# avoid flake8 unused import error
-Axes3D
 from IPython.core.pylabtools import print_figure
 from IPython.core.display import Image, SVG
 
 from skbio._base import SkbioObject
 from skbio.stats._misc import _pprint_strs
+
+# avoid flake8 unused import error
+Axes3D
 
 
 class OrdinationResults(SkbioObject):
@@ -168,7 +168,9 @@ class OrdinationResults(SkbioObject):
                  (self.biplot, 'Biplot'),
                  (self.site_constraints, 'Site constraints')]
         for attr, attr_label in attrs:
-            formatter = lambda e: 'x'.join(['%d' % s for s in e.shape])
+            def formatter(e):
+                return 'x'.join(['%d' % s for s in e.shape])
+
             lines.append(self._format_attribute(attr, attr_label, formatter))
 
         lines.append(self._format_attribute(self.species_ids, 'Species IDs',

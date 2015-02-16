@@ -13,8 +13,6 @@ import csv
 import warnings
 from copy import deepcopy
 
-import matplotlib as mpl
-mpl.use('Agg')
 import matplotlib.pyplot as plt
 from IPython.core.pylabtools import print_figure
 from IPython.core.display import Image, SVG
@@ -25,6 +23,7 @@ from scipy.spatial.distance import squareform
 from skbio._base import SkbioObject
 from skbio.stats import p_value_to_str
 from skbio.stats._misc import _pprint_strs
+from skbio.util import find_duplicates
 
 
 class DissimilarityMatrixError(Exception):
@@ -652,30 +651,33 @@ class DissimilarityMatrix(SkbioObject):
         exception is caught and handled.
 
         """
-        num_ids = len(ids)
-
         if 0 in data.shape:
             raise DissimilarityMatrixError("Data must be at least 1x1 in "
                                            "size.")
-        elif len(data.shape) != 2:
+        if len(data.shape) != 2:
             raise DissimilarityMatrixError("Data must have exactly two "
                                            "dimensions.")
-        elif data.shape[0] != data.shape[1]:
+        if data.shape[0] != data.shape[1]:
             raise DissimilarityMatrixError("Data must be square (i.e., have "
                                            "the same number of rows and "
                                            "columns).")
-        elif data.dtype != np.double:
+        if data.dtype != np.double:
             raise DissimilarityMatrixError("Data must contain only floating "
                                            "point values.")
-        elif np.trace(data) != 0:
+        if np.trace(data) != 0:
             raise DissimilarityMatrixError("Data must be hollow (i.e., the "
                                            "diagonal can only contain zeros).")
-        elif num_ids != len(set(ids)):
-            raise DissimilarityMatrixError("IDs must be unique.")
-        elif num_ids != data.shape[0]:
-            raise DissimilarityMatrixError("The number of IDs must match the "
-                                           "number of rows/columns in the "
-                                           "data.")
+        duplicates = find_duplicates(ids)
+        if duplicates:
+            formatted_duplicates = ', '.join(repr(e) for e in duplicates)
+            raise DissimilarityMatrixError("IDs must be unique. Found the "
+                                           "following duplicate IDs: %s" %
+                                           formatted_duplicates)
+        if len(ids) != data.shape[0]:
+            raise DissimilarityMatrixError("The number of IDs (%d) must match "
+                                           "the number of rows/columns in the "
+                                           "data (%d)." %
+                                           (len(ids), data.shape[0]))
 
     def _index_list(self, list_):
         return {id_: idx for idx, id_ in enumerate(list_)}

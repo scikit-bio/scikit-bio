@@ -630,7 +630,9 @@ class SequenceCollection(SkbioObject):
                                           "or fn is provided.")
 
         if ids is not None:
-            fn = lambda _: ids
+            def fn(_):
+                return ids
+
         elif fn is None:
             def fn(_):
                 new_ids = []

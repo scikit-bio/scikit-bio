@@ -165,7 +165,10 @@ class WorkflowTests(TestCase):
 
     def test_call_AC_no_fail(self):
         iter_ = construct_iterator(**{'iter_x': [1, 2, 3, 4, 5]})
-        sf = lambda x: x.state[:]  # success function
+
+        # success function
+        def sf(x):
+            return x.state[:]
 
         exp_stats = {'A1': 5, 'A2': 5, 'C1': 5}
         # C2 isn't executed as its requirements aren't met in the options
@@ -178,8 +181,12 @@ class WorkflowTests(TestCase):
 
     def test_call_AC_fail(self):
         iter_ = construct_iterator(**{'iter_x': [1, 2, 'fail A2', 4, 5]})
-        sf = lambda x: x.state[:]  # success function
-        ff = lambda x: x.state[:]  # failed function
+
+        # success function
+        def sf(x):
+            return x.state[:]
+
+        ff = sf  # failed function
 
         exp_stats = {'A1': 5, 'A2': 5, 'C1': 4, 'C2': 4}
 
@@ -212,8 +219,12 @@ class WorkflowTests(TestCase):
 
     def test_call_AC_fail_noshort(self):
         iter_ = construct_iterator(**{'iter_x': [1, 2, 'fail A2', 4, 5]})
-        sf = lambda x: x.state[:]  # success function
-        ff = lambda x: x.state[:]  # failed function
+
+        # success function
+        def sf(x):
+            return x.state[:]
+
+        ff = sf  # failed function
 
         exp_stats = {'A1': 5, 'A2': 5, 'C1': 5}
 

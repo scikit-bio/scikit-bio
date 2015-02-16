@@ -185,9 +185,10 @@ References
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from numpy.testing import Tester
+
 from ._base import pw_distances, pw_distances_from_table
 
 __all__ = ["pw_distances", "pw_distances_from_table"]
 
-from numpy.testing import Tester
 test = Tester().test

@@ -8,8 +8,6 @@
 
 from __future__ import absolute_import, division, print_function
 from future.standard_library import hooks
-with hooks():
-    from itertools import zip_longest
 
 from re import compile as re_compile
 from collections import Counter, defaultdict
@@ -22,6 +20,9 @@ from skbio import (
     BiologicalSequence, NucleotideSequence, DNASequence, RNASequence,
     ProteinSequence)
 from skbio.sequence import BiologicalSequenceError
+
+with hooks():
+    from itertools import zip_longest
 
 
 class BiologicalSequenceTests(TestCase):

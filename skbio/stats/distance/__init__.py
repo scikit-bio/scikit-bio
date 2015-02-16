@@ -188,6 +188,8 @@ References
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from numpy.testing import Tester
+
 from ._base import (DissimilarityMatrixError, DistanceMatrixError,
                     MissingIDError, DissimilarityMatrix, DistanceMatrix,
                     CategoricalStatsResults, randdm)
@@ -201,5 +203,4 @@ __all__ = ['DissimilarityMatrixError', 'DistanceMatrixError', 'MissingIDError',
            'ANOSIM', 'permanova', 'PERMANOVA', 'CategoricalStatsResults',
            'bioenv', 'mantel', 'pwmantel']
 
-from numpy.testing import Tester
 test = Tester().test

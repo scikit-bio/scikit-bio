@@ -119,7 +119,8 @@ def isubsample(items, maximum, minimum=1, buf_size=1000, bin_f=None):
     if minimum < 1 or maximum < 1:
         raise ValueError("minimum and maximum must be > 0.")
     if bin_f is None:
-        bin_f = lambda x: True
+        def bin_f(x):
+            return True
 
     # buffer some random values
     random_values = np.random.randint(0, sys.maxsize, buf_size)

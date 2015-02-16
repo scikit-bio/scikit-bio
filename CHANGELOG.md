@@ -1,10 +1,15 @@
 # scikit-bio changelog
 
-## Version 0.2.2-dev (changes since 0.2.2 release go here)
+## Version 0.2.3-dev (changes since 0.2.3 release go here)
+
+### Features
+* Added ``heatmap`` method to ``skbio.alignment.Alignment`` for creating a heatmap from an alignment ([#765](https://github.com/biocore/scikit-bio/issues/765)).
+
+## Version 0.2.3 (2015-02-13)
 
 ### Features
 * Modified ``skbio.stats.distance.pwmantel`` to accept a list of filepaths. This is useful as it allows for a smaller amount of memory consumption as it only loads two matrices at a time as opposed to requiring that all distance matrices are loaded into memory.
-* Added ``heatmap`` method to ``skbio.alignment.Alignment`` for creating a heatmap from an alignment ([#765](https://github.com/biocore/scikit-bio/issues/765)).
+* Added ``skbio.util.find_duplicates`` for finding duplicate elements in an iterable.
 
 ### Bug fixes
 * Fixed floating point precision bugs in ``Alignment.position_frequencies``, ``Alignment.position_entropies``, ``Alignment.omit_gap_positions``, ``Alignment.omit_gap_sequences``, ``BiologicalSequence.k_word_frequencies``, and ``SequenceCollection.k_word_frequencies`` ([#801](https://github.com/biocore/scikit-bio/issues/801)).
@@ -13,6 +18,9 @@
 * Removed ``feature_types`` attribute from ``BiologicalSequence`` and all subclasses ([#797](https://github.com/biocore/scikit-bio/pull/797)).
 * Removed ``find_features`` method from ``BiologicalSequence`` and ``ProteinSequence`` ([#797](https://github.com/biocore/scikit-bio/pull/797)).
 * ``BiologicalSequence.k_word_frequencies`` now returns a ``collections.defaultdict`` of type ``float`` instead of type ``int``. This only affects the "default" case, when a key isn't present in the dictionary. Previous behavior would return ``0`` as an ``int``, while the new behavior is to return ``0.0`` as a ``float``. This change also affects the ``defaultdict``s that are returned by ``SequenceCollection.k_word_frequencies``.
+
+### Miscellaneous
+* ``DissimilarityMatrix`` and ``DistanceMatrix`` now report duplicate IDs in the ``DissimilarityMatrixError`` message that can be raised during validation.
 
 ## Version 0.2.2 (2014-12-04)
 
