@@ -19,8 +19,6 @@ import tempfile
 import numpy as np
 import numpy.testing as npt
 from scipy.spatial.distance import hamming
-import matplotlib as mpl
-mpl.use('Agg')
 
 from skbio import (NucleotideSequence, DNASequence, RNASequence, DNA, RNA,
                    DistanceMatrix, Alignment, SequenceCollection)

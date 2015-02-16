@@ -16,8 +16,6 @@ from collections import Counter, defaultdict, OrderedDict
 
 import numpy as np
 from scipy.stats import entropy
-import matplotlib as mpl
-mpl.use('Agg')
 import matplotlib.pyplot as plt
 
 from skbio._base import SkbioObject
