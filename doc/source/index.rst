@@ -16,10 +16,8 @@ API Reference
    tree
    workflow
    draw
-   format.sequences
    diversity
    stats
-   parse.sequences
    io
    util
 

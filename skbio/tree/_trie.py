@@ -252,8 +252,7 @@ def fasta_to_pairlist(seqs):
     Parameters
     ----------
     seqs : Iterable
-        tuples of the form ``(label, seq)``, e.g., as obtained by
-        skbio.parse.sequences.parse_fasta
+        tuples of the form ``(label, seq)``
 
     Returns
     -------

@@ -48,8 +48,6 @@ class SequenceCollection(SkbioObject):
     skbio.sequence.DNASequence
     skbio.sequence.RNASequence
     Alignment
-    skbio.parse.sequences
-    skbio.parse.sequences.parse_fasta
 
     Examples
     --------
@@ -63,84 +61,6 @@ class SequenceCollection(SkbioObject):
 
     """
     default_write_format = 'fasta'
-
-    @classmethod
-    def from_fasta_records(cls, fasta_records, seq_constructor,
-                           validate=False):
-        r"""Initialize a `SequenceCollection` object
-
-        .. note:: Deprecated in scikit-bio 0.2.0-dev
-           ``from_fasta_records`` will be removed in scikit-bio 0.3.0. It is
-           replaced by ``read``, which is a more general method for
-           deserializing FASTA-formatted files. ``read`` supports multiple file
-           formats, automatic file format detection, etc. by taking advantage
-           of scikit-bio's I/O registry system. See :mod:`skbio.io` for more
-           details.
-
-        Parameters
-        ----------
-        fasta_records : iterator of tuples
-            The records to load into a new `SequenceCollection` object. These
-            should be tuples of ``(sequence_id, sequence)``.
-        seq_constructor : skbio.sequence.BiologicalSequence
-        validate : bool, optional
-            If True, runs the `is_valid` method after construction and raises
-            `SequenceCollectionError` if ``is_valid == False``.
-
-        Returns
-        -------
-        SequenceCollection (or a derived class)
-            The new `SequenceCollection` object.
-
-        Raises
-        ------
-        skbio.alignment.SequenceCollectionError
-            If ``validate == True`` and ``is_valid == False``.
-
-        See Also
-        --------
-        skbio.sequence.BiologicalSequence
-        skbio.sequence.NucleotideSequence
-        skbio.sequence.DNASequence
-        skbio.sequence.RNASequence
-        Alignment
-        skbio.parse.sequences
-        skbio.parse.sequences.parse_fasta
-
-        Examples
-        --------
-        >>> from skbio.alignment import SequenceCollection
-        >>> from skbio.parse.sequences import parse_fasta
-        >>> from StringIO import StringIO
-        >>> from skbio.sequence import DNA
-        >>> fasta_f = StringIO('>seq1\nACCGT\n>seq2\nAACCGGT\n')
-        >>> s1 = SequenceCollection.from_fasta_records(
-        ...     parse_fasta(fasta_f), DNA)
-        >>> s1
-        <SequenceCollection: n=2; mean +/- std length=6.00 +/- 1.00>
-
-        >>> records = [('seq1', 'ACCGT'), ('seq2', 'AACCGGT')]
-        >>> s1 = SequenceCollection.from_fasta_records(records, DNA)
-        >>> s1
-        <SequenceCollection: n=2; mean +/- std length=6.00 +/- 1.00>
-
-        """
-        warnings.warn(
-            "SequenceCollection.from_fasta_records is deprecated and will be "
-            "removed in scikit-bio 0.3.0. Please update your code to use "
-            "SequenceCollection.read.", DeprecationWarning)
-
-        data = []
-        for seq_id, seq in fasta_records:
-            try:
-                id, description = seq_id.split(None, 1)
-            except ValueError:
-                id = seq_id.strip()
-                description = None
-            data.append(seq_constructor(seq, id=id,
-                                        description=description))
-
-        return cls(data, validate=validate)
 
     def __init__(self, seqs, validate=False):
         self._data = seqs
@@ -871,9 +791,6 @@ class SequenceCollection(SkbioObject):
         str
             A fasta-formatted string representing the `SequenceCollection`.
 
-        See Also
-        --------
-        skbio.parse.sequences.parse_fasta
         """
         warnings.warn(
             "SequenceCollection.to_fasta is deprecated and will be removed in "
@@ -976,8 +893,6 @@ class Alignment(SequenceCollection):
     skbio.sequence.DNASequence
     skbio.sequence.RNASequence
     SequenceCollection
-    skbio.parse.sequences
-    skbio.parse.sequences.parse_fasta
 
     Examples
     --------

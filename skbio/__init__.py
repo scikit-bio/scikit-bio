@@ -22,20 +22,14 @@ from skbio.alignment import (
     local_pairwise_align_ssw, SequenceCollection, Alignment)
 from skbio.tree import (
     TreeNode, nj)
-from skbio.parse.sequences import (
-    parse_fasta, parse_fastq, parse_qual, FastaIterator, FastqIterator,
-    SequenceIterator)
 from skbio.io import read, write
 
 skbio.io  # Stop flake8 error
 
 __all__ = ['BiologicalSequence', 'NucleotideSequence', 'DNA', 'DNASequence',
            'RNA', 'RNASequence', 'Protein', 'ProteinSequence',
-           'DistanceMatrix', 'local_pairwise_align_ssw',
-           'SequenceCollection', 'Alignment', 'TreeNode', 'nj', 'parse_fasta',
-           'parse_fastq', 'parse_qual', 'FastaIterator',
-           'FastqIterator', 'SequenceIterator', 'read',
-           'write']
+           'DistanceMatrix', 'local_pairwise_align_ssw', 'SequenceCollection',
+           'Alignment', 'TreeNode', 'nj', 'read', 'write']
 
 test = Tester().test
 

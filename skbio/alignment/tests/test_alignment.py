@@ -20,8 +20,8 @@ import numpy as np
 import numpy.testing as npt
 from scipy.spatial.distance import hamming
 
-from skbio import (NucleotideSequence, DNASequence, RNASequence, DNA, RNA,
-                   DistanceMatrix, Alignment, SequenceCollection)
+from skbio import (DNASequence, RNASequence, DNA, RNA, DistanceMatrix,
+                   Alignment, SequenceCollection)
 from skbio.alignment import (StockholmAlignment, SequenceCollectionError,
                              StockholmParseError, AlignmentError)
 
@@ -77,11 +77,6 @@ class SequenceCollectionTests(TestCase):
         # can't validate self.seqs2 as a DNASequence
         self.assertRaises(SequenceCollectionError, SequenceCollection,
                           self.invalid_s1, validate=True)
-
-    def test_from_fasta_records(self):
-        SequenceCollection.from_fasta_records(self.seqs1_t, DNASequence)
-        SequenceCollection.from_fasta_records(self.seqs2_t, RNASequence)
-        SequenceCollection.from_fasta_records(self.seqs3_t, NucleotideSequence)
 
     def test_contains(self):
         self.assertTrue('d1' in self.s1)
@@ -249,9 +244,10 @@ class SequenceCollectionTests(TestCase):
         self.assertEqual(actual4[2], 0.0)
 
     def test_degap(self):
-        expected = [(id_, seq.replace('.', '').replace('-', ''))
-                    for id_, seq in self.seqs2_t]
-        expected = SequenceCollection.from_fasta_records(expected, RNASequence)
+        expected = SequenceCollection([
+            RNASequence('GAUUACA', id="r1"),
+            RNASequence('UUG', id="r2"),
+            RNASequence('UUGCC', id="r3")])
         actual = self.s2.degap()
         self.assertEqual(actual, expected)
 
@@ -492,15 +488,16 @@ class AlignmentTests(TestCase):
         self.no_positions = Alignment([RNA('', id='a'), RNA('', id='b')])
 
     def test_degap(self):
-        expected = [(id_, seq.replace('.', '').replace('-', ''))
-                    for id_, seq in self.seqs1_t]
-        expected = SequenceCollection.from_fasta_records(expected, DNASequence)
+        expected = SequenceCollection([
+            DNASequence('ACCGTTGG', id="d1"),
+            DNASequence('TTACCGGTGGCC', id="d2"),
+            DNASequence('ACCGTTGC', id="d3")])
         actual = self.a1.degap()
         self.assertEqual(actual, expected)
 
-        expected = [(id_, seq.replace('.', '').replace('-', ''))
-                    for id_, seq in self.seqs2_t]
-        expected = SequenceCollection.from_fasta_records(expected, RNASequence)
+        expected = SequenceCollection([
+            RNASequence('UUAU', id="r1"),
+            RNASequence('ACGUU', id="r2")])
         actual = self.a2.degap()
         self.assertEqual(actual, expected)
 
