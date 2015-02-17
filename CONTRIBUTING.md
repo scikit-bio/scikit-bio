@@ -26,11 +26,16 @@ When considering submitting a new feature to scikit-bio, you should begin by pos
 When you post your issue, the scikit-bio developers will respond to let you know if we agree with the addition or change. It's very important that you go through this step to avoid wasting time working on a feature that we are not interested in including in scikit-bio.
 
 
-Getting started: "quick fixes"
-------------------------------
+Getting started:
+----------------
+
+### "quick fixes"
 
 Some of our issues are labeled as ``quick fix``. Working on [these issues](https://github.com/biocore/scikit-bio/issues?direction=desc&labels=quick+fix&milestone=&page=1&sort=updated&state=open) is a good way to get started with contributing to scikit-bio. These are usually small bugs or documentation errors that will only require one or a few lines of code to fix. Getting started by working on one of these issues will allow you to familiarize yourself with our development process before committing to a large amount of work (e.g., adding a new feature to scikit-bio). If you're interested in working on one of these issues, you should comment on the issue requesting that it be assigned to you.
 
+### Joining Developement
+
+Once you are more comfortable with our development process, you can check out the [``on deck`` label](https://github.com/biocore/scikit-bio/labels/on%20deck) on our issue tracker. These issues represent what our current focus is in the project. As such, they are probably the best place to start if you are looking to join the conversation and volunteer code.
 
 Code Review
 -----------
