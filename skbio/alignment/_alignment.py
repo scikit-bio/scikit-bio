@@ -11,13 +11,13 @@ from future.builtins import zip, range
 from future.utils import viewkeys, viewitems
 from six import StringIO
 
-import warnings
 from collections import Counter, defaultdict, OrderedDict
 
 import numpy as np
 from scipy.stats import entropy
 
 from skbio._base import SkbioObject
+from skbio.sequence import BiologicalSequence
 from skbio.stats.distance import DistanceMatrix
 from skbio.io.util import open_file
 from ._exception import (SequenceCollectionError, StockholmParseError,
@@ -573,56 +573,6 @@ class SequenceCollection(SkbioObject):
 
         return self.__class__(new_seqs), new_to_old_ids
 
-    def int_map(self, prefix=""):
-        """Create an integer-based mapping of sequence ids
-
-        .. note:: Deprecated in scikit-bio 0.2.0-dev
-           ``SequenceCollection.int_map`` will be removed in scikit-bio 0.3.0
-           in favor of ``SequenceCollection.update_ids``, which provides a
-           generalized way of updating IDs on a ``SequenceCollection``. The
-           default behavior of ``SequenceCollection.update_ids`` matches the
-           behavior in ``int_map``, except that a new ``SequenceCollection`` is
-           returned instead of a ``dict``.
-
-        Parameters
-        ----------
-        prefix : str
-            String prefix for new integer-based ids.
-
-        Returns
-        -------
-        dict
-            Mapping of new ids to sequences.
-        dict
-            Mapping of new ids to old ids.
-
-        Notes
-        -----
-        This is useful when writing sequences out for use with programs that
-        are picky about their sequence ids (e.g., raXML).
-
-        The integer-based ids will be strings, for consistency (e.g., if prefix
-        is passed) and begin at 1.
-
-        References
-        ----------
-        RAxML Version 8: A tool for Phylogenetic Analysis and Post-Analysis of
-        Large Phylogenies". In Bioinformatics, 2014
-
-        """
-        warnings.warn(
-            "SequenceCollection.int_map is deprecated and will be removed in "
-            "scikit-bio 0.3.0. Please update your code to use "
-            "SequenceCollection.update_ids instead.", DeprecationWarning)
-
-        int_keys = []
-        int_map = []
-        for i, seq in enumerate(self):
-            k = ("%s%d" % (prefix, i+1))
-            int_map.append((k, seq))
-            int_keys.append((k, seq.id))
-        return dict(int_map), dict(int_keys)
-
     def is_empty(self):
         """Return True if the SequenceCollection is empty
 
@@ -775,52 +725,6 @@ class SequenceCollection(SkbioObject):
 
         """
         return [len(seq) for seq in self]
-
-    def to_fasta(self):
-        """Return fasta-formatted string representing the `SequenceCollection`
-
-        .. note:: Deprecated in scikit-bio 0.2.0-dev
-           ``to_fasta`` will be removed in scikit-bio 0.3.0. It is replaced by
-           ``write``, which is a more general method for serializing
-           FASTA-formatted files. ``write`` supports multiple file formats by
-           taking advantage of scikit-bio's I/O registry system. See
-           :mod:`skbio.io` for more details.
-
-        Returns
-        -------
-        str
-            A fasta-formatted string representing the `SequenceCollection`.
-
-        """
-        warnings.warn(
-            "SequenceCollection.to_fasta is deprecated and will be removed in "
-            "scikit-bio 0.3.0. Please update your code to use "
-            "SequenceCollection.write.", DeprecationWarning)
-
-        return ''.join([seq.to_fasta() for seq in self._data])
-
-    def toFasta(self):
-        """Return fasta-formatted string representing the `SequenceCollection`
-
-        .. note:: Deprecated in skbio 0.3.0
-                  `SequenceCollection.toFasta` will be removed in skbio 0.2.0,
-                  it is replaced by `SequenceCollection.to_fasta` as the latter
-                  adheres to PEP8 naming conventions. This is necessary to keep
-                  in place now as these objects are sometimes passed into
-                  code that expects a `cogent.alignment.Alignment` object
-                  (e.g., PyNAST), so we need to support the method with this
-                  name.
-
-        Returns
-        -------
-        str
-            A fasta-formatted string representing the `SequenceCollection`.
-
-        """
-        warnings.warn(
-            "SequenceCollection.toFasta() is deprecated. You should use "
-            "SequenceCollection.to_fasta().", DeprecationWarning)
-        return self.to_fasta()
 
     def upper(self):
         """Converts all sequences to uppercase
@@ -1194,21 +1098,8 @@ class Alignment(SequenceCollection):
             position = [constructor(seq[i]) for seq in self]
             yield position
 
-    def majority_consensus(self, constructor=None):
-        """Return the majority consensus sequence for the `Alignment`
-
-        .. note:: `constructor` parameter deprecated in scikit-bio 0.2.0-dev
-           `constructor` parameter will be removed in scikit-bio 0.3.0 as its
-           most common use is to convert to ``str``, and this functionality is
-           already accessible by calling ``str`` on the returned
-           ``BiologicalSequence`` (e.g., ``str(seq)``).
-
-        Parameters
-        ----------
-        constructor : function, optional
-            Constructor function for creating the consensus sequence. By
-            default, this will be the same type as the first sequence in the
-            `Alignment`.
+    def majority_consensus(self):
+        """Return the majority consensus sequence for the alignment.
 
         Returns
         -------
@@ -1217,7 +1108,9 @@ class Alignment(SequenceCollection):
             position the most common character is chosen, and those characters
             are combined to create a new sequence. The sequence will not have
             its ID, description, or quality set; only the consensus sequence
-            will be set.
+            will be set. The type of biological sequence that is returned will
+            be the same type as the first sequence in the alignment, or
+            ``BiologicalSequence`` if the alignment is empty.
 
         Notes
         -----
@@ -1237,31 +1130,16 @@ class Alignment(SequenceCollection):
         <DNASequence: AT-C (length: 4)>
 
         """
-        # handle empty Alignment case
         if self.is_empty():
-            return ''
-
-        if constructor is None:
-            constructor = self[0].__class__
+            seq_constructor = BiologicalSequence
         else:
-            warnings.warn(
-                "constructor parameter in Alignment.majority_consensus is "
-                "deprecated and will be removed in scikit-bio 0.3.0. Please "
-                "update your code to construct the desired object from the "
-                "BiologicalSequence (or subclass) that is returned by this "
-                "method.", DeprecationWarning)
+            seq_constructor = self[0].__class__
 
-        result = []
-        for c in self.position_counters():
-            # Counter.most_common returns an ordered list of the
-            # n most common (sequence, count) items in Counter. Here
-            # we set n=1, and take only the character, not the count.
-            result.append(c.most_common(1)[0][0])
-
-        # TODO when constructor parameter is removed, this join call can be
-        # removed
-        result = ''.join(result)
-        return constructor(result)
+        # Counter.most_common returns an ordered list of the n most common
+        # (sequence, count) items in Counter. Here we set n=1, and take only
+        # the character, not the count.
+        return seq_constructor(c.most_common(1)[0][0]
+                               for c in self.position_counters())
 
     def omit_gap_positions(self, maximum_gap_frequency):
         """Returns Alignment with positions filtered based on gap frequency
@@ -1525,59 +1403,6 @@ class Alignment(SequenceCollection):
             return 0
         else:
             return len(self._data[0])
-
-    def to_phylip(self, map_labels=False, label_prefix=""):
-        """Return phylip-formatted string representing the `SequenceCollection`
-
-        .. note:: Deprecated in scikit-bio 0.2.0-dev
-           ``Alignment.to_phylip`` will be removed in scikit-bio 0.3.0. It is
-           replaced by ``Alignment.write``, which is a more general method for
-           serializing alignments. ``Alignment.write`` supports multiple file
-           formats by taking advantage of scikit-bio's I/O registry system. See
-           :mod:`skbio.io` for more details.
-
-        Returns
-        -------
-        str
-            A phylip-formatted string representing the `Alignment`.
-
-        See Also
-        --------
-        write
-
-        """
-        warnings.warn(
-            "Alignment.to_phylip is deprecated and will be removed in "
-            "scikit-bio 0.3.0. Please update your code to use "
-            "Alignment.write.", DeprecationWarning)
-
-        if self.is_empty():
-            raise SequenceCollectionError("PHYLIP-formatted string can only "
-                                          "be generated if there is at least "
-                                          "one sequence in the Alignment.")
-
-        sequence_length = self.sequence_length()
-        if sequence_length == 0:
-            raise SequenceCollectionError("PHYLIP-formatted string can only "
-                                          "be generated if there is at least "
-                                          "one position in the Alignment.")
-
-        ids = self.ids()
-        sequence_count = self.sequence_count()
-        result = ["%d %d" % (sequence_count, sequence_length)]
-        if map_labels:
-            _, new_id_to_old_id = self.update_ids(prefix=label_prefix)
-            old_id_to_new_id = {v: k for k, v in new_id_to_old_id.items()}
-        else:
-            new_id_to_old_id = {seq_id: seq_id for seq_id in ids}
-            old_id_to_new_id = new_id_to_old_id
-
-        for seq_id in ids:
-            new_id = old_id_to_new_id[seq_id]
-            seq = self[seq_id]
-            result.append("%s %s" % (new_id, str(seq)))
-
-        return '\n'.join(result), new_id_to_old_id
 
     def _validate_lengths(self):
         """Return ``True`` if all sequences same length, ``False`` otherwise

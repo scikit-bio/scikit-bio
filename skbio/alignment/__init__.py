@@ -199,13 +199,13 @@ And we can view the score of the alignment using the ``score`` method:
 25.0
 
 Similarly, we can perform global alignment of nucleotide sequences, and print
-the resulting alignment as fasta records:
+the resulting alignment in FASTA format:
 
 >>> from skbio.alignment import global_pairwise_align_nucleotide
 >>> s1 = "GCGTGCCTAAGGTATGCAAG"
 >>> s2 = "ACGTGCCTAGGTACGCAAG"
 >>> r = global_pairwise_align_nucleotide(s1, s2)
->>> print(r.to_fasta())
+>>> print(r)
 >0
 GCGTGCCTAAGGTATGCAAG
 >1

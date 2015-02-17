@@ -17,11 +17,10 @@ except ImportError:  # python3 system
 import tempfile
 
 import numpy as np
-import numpy.testing as npt
 from scipy.spatial.distance import hamming
 
-from skbio import (DNASequence, RNASequence, DNA, RNA, DistanceMatrix,
-                   Alignment, SequenceCollection)
+from skbio import (BiologicalSequence, DNASequence, RNASequence, DNA, RNA,
+                   DistanceMatrix, Alignment, SequenceCollection)
 from skbio.alignment import (StockholmAlignment, SequenceCollectionError,
                              StockholmParseError, AlignmentError)
 
@@ -396,18 +395,6 @@ class SequenceCollectionTests(TestCase):
         with self.assertRaisesRegexp(SequenceCollectionError, 'bar'):
             self.s2.update_ids(fn=lambda e: ['foo', 'bar', 'bar'])
 
-    def test_int_map(self):
-        expected1 = {"1": self.d1, "2": self.d2}
-        expected2 = {"1": "d1", "2": "d2"}
-        obs = npt.assert_warns(DeprecationWarning, self.s1.int_map)
-        self.assertEqual(obs, (expected1, expected2))
-
-        expected1 = {"h-1": self.d1, "h-2": self.d2}
-        expected2 = {"h-1": "d1", "h-2": "d2"}
-        obs = npt.assert_warns(DeprecationWarning, self.s1.int_map,
-                               prefix='h-')
-        self.assertEqual(obs, (expected1, expected2))
-
     def test_is_empty(self):
         self.assertFalse(self.s1.is_empty())
         self.assertFalse(self.s2.is_empty())
@@ -441,17 +428,6 @@ class SequenceCollectionTests(TestCase):
         self.assertEqual(self.s2.sequence_lengths(), [7, 3, 12])
         self.assertEqual(self.s3.sequence_lengths(), [7, 3, 7, 3, 12])
         self.assertEqual(self.empty.sequence_lengths(), [])
-
-    def test_to_fasta(self):
-        exp1 = ">d1\nGATTACA\n>d2\nTTG\n"
-        self.assertEqual(self.s1.to_fasta(), exp1)
-        exp2 = ">r1\nGAUUACA\n>r2\nUUG\n>r3\nU-----UGCC--\n"
-        self.assertEqual(self.s2.to_fasta(), exp2)
-
-    def test_toFasta(self):
-        exp = ">d1\nGATTACA\n>d2\nTTG\n"
-        obs = npt.assert_warns(DeprecationWarning, self.s1.toFasta)
-        self.assertEqual(obs, exp)
 
     def test_upper(self):
         self.assertEqual(self.s1_lower.upper(), self.s1)
@@ -632,29 +608,30 @@ class AlignmentTests(TestCase):
         self.assertEqual(actual, expected)
 
     def test_majority_consensus(self):
+        # empty cases
+        self.assertTrue(
+            self.empty.majority_consensus().equals(BiologicalSequence('')))
+        self.assertTrue(
+            self.no_positions.majority_consensus().equals(RNASequence('')))
+
+        # alignment where all sequences are the same
+        aln = Alignment([DNASequence('AG', id='a'),
+                         DNASequence('AG', id='b')])
+        self.assertTrue(aln.majority_consensus().equals(DNASequence('AG')))
+
+        # no ties
         d1 = DNASequence('TTT', id="d1")
         d2 = DNASequence('TT-', id="d2")
         d3 = DNASequence('TC-', id="d3")
         a1 = Alignment([d1, d2, d3])
         self.assertTrue(a1.majority_consensus().equals(DNASequence('TT-')))
 
+        # ties
         d1 = DNASequence('T', id="d1")
         d2 = DNASequence('A', id="d2")
         a1 = Alignment([d1, d2])
         self.assertTrue(a1.majority_consensus() in
                         [DNASequence('T'), DNASequence('A')])
-
-        self.assertEqual(self.empty.majority_consensus(), '')
-
-    def test_majority_consensus_constructor(self):
-        d1 = DNASequence('TTT', id="d1")
-        d2 = DNASequence('TT-', id="d2")
-        d3 = DNASequence('TC-', id="d3")
-        a1 = Alignment([d1, d2, d3])
-
-        obs = npt.assert_warns(DeprecationWarning, a1.majority_consensus,
-                               constructor=str)
-        self.assertEqual(obs, 'TT-')
 
     def test_omit_gap_positions(self):
         expected = self.a2
@@ -775,53 +752,6 @@ class AlignmentTests(TestCase):
         self.assertEqual(self.a1.sequence_length(), 13)
         self.assertEqual(self.a2.sequence_length(), 5)
         self.assertEqual(self.empty.sequence_length(), 0)
-
-    def test_to_phylip(self):
-        d1 = DNASequence('..ACC-GTTGG..', id="d1")
-        d2 = DNASequence('TTACCGGT-GGCC', id="d2")
-        d3 = DNASequence('.-ACC-GTTGC--', id="d3")
-        a = Alignment([d1, d2, d3])
-
-        phylip_str, id_map = npt.assert_warns(DeprecationWarning, a.to_phylip,
-                                              map_labels=False)
-        self.assertEqual(id_map, {'d1': 'd1',
-                                  'd3': 'd3',
-                                  'd2': 'd2'})
-        expected = "\n".join(["3 13",
-                              "d1 ..ACC-GTTGG..",
-                              "d2 TTACCGGT-GGCC",
-                              "d3 .-ACC-GTTGC--"])
-        self.assertEqual(phylip_str, expected)
-
-    def test_to_phylip_map_labels(self):
-        d1 = DNASequence('..ACC-GTTGG..', id="d1")
-        d2 = DNASequence('TTACCGGT-GGCC', id="d2")
-        d3 = DNASequence('.-ACC-GTTGC--', id="d3")
-        a = Alignment([d1, d2, d3])
-
-        phylip_str, id_map = npt.assert_warns(DeprecationWarning, a.to_phylip,
-                                              map_labels=True,
-                                              label_prefix="s")
-        self.assertEqual(id_map, {'s1': 'd1',
-                                  's3': 'd3',
-                                  's2': 'd2'})
-        expected = "\n".join(["3 13",
-                              "s1 ..ACC-GTTGG..",
-                              "s2 TTACCGGT-GGCC",
-                              "s3 .-ACC-GTTGC--"])
-        self.assertEqual(phylip_str, expected)
-
-    def test_to_phylip_no_sequences(self):
-        with self.assertRaises(SequenceCollectionError):
-            npt.assert_warns(DeprecationWarning, Alignment([]).to_phylip)
-
-    def test_to_phylip_no_positions(self):
-        d1 = DNASequence('', id="d1")
-        d2 = DNASequence('', id="d2")
-        a = Alignment([d1, d2])
-
-        with self.assertRaises(SequenceCollectionError):
-            npt.assert_warns(DeprecationWarning, a.to_phylip)
 
     def test_validate_lengths(self):
         self.assertTrue(self.a1._validate_lengths())

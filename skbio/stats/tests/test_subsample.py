@@ -19,7 +19,7 @@ import warnings
 import numpy as np
 import numpy.testing as npt
 
-from skbio.stats import isubsample, subsample
+from skbio.stats import isubsample
 
 
 cy_subsample = import_fresh_module('skbio.stats._subsample',
@@ -131,24 +131,6 @@ class PySubsampleCountsTests(SubsampleCountsTests, unittest.TestCase):
                  "Accelerated subsample module unavailable.")
 class CySubsampleCountsTests(SubsampleCountsTests, unittest.TestCase):
     module = cy_subsample
-
-
-class SubsampleTests(unittest.TestCase):
-    def test_deprecated_api(self):
-        # light test to make sure deprecated API exists; subsample_counts is
-        # more thoroughly tested
-        obs = npt.assert_warns(DeprecationWarning, subsample, [0, 5, 0], 5)
-        npt.assert_equal(obs, [0, 5, 0])
-
-        # replace=True
-        a = np.array([0, 0, 3, 4, 2, 1])
-        actual = set()
-        for i in range(1000):
-            obs = npt.assert_warns(DeprecationWarning, subsample, a, 10,
-                                   replace=True)
-            self.assertEqual(obs.sum(), 10)
-            actual.add(tuple(obs))
-        self.assertTrue(len(actual) > 1)
 
 
 class ISubsampleTests(unittest.TestCase):

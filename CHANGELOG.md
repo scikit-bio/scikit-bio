@@ -8,9 +8,22 @@
 
 ### Backward-incompatible changes
 * Removed the following deprecated functionality:
-    - `skbio.tree.TreeNode` methods `from_newick`, `from_file`, and `to_newick`; please use `TreeNode.read` and `TreeNode.write` instead.
     - `skbio.parse` subpackage, including `SequenceIterator`, `FastaIterator`, `FastqIterator`, `load`, `parse_fasta`, `parse_fastq`, `parse_qual`, `write_clustal`, `parse_clustal`, and `FastqParseError`; please use `skbio.io` instead.
     - `skbio.format` subpackage, including `fasta_from_sequence`, `fasta_from_alignment`, and `format_fastq_record`; please use `skbio.io` instead.
+    - `skbio.alignment.SequenceCollection.int_map`; please use `SequenceCollection.update_ids` instead.
+    - `skbio.alignment.SequenceCollection` methods `to_fasta` and `toFasta`; please use `SequenceCollection.write` instead.
+    - `constructor` parameter in `skbio.alignment.Alignment.majority_consensus`; please convert returned biological sequence object manually as desired (e.g., `str(seq)`).
+    - `skbio.alignment.Alignment.to_phylip`; please use `Alignment.write` instead.
+    - `skbio.sequence.BiologicalSequence.to_fasta`; please use `BiologicalSequence.write` instead.
+    - `skbio.tree.TreeNode` methods `from_newick`, `from_file`, and `to_newick`; please use `TreeNode.read` and `TreeNode.write` instead.
+    - `skbio.stats.distance.DissimilarityMatrix` methods `from_file` and `to_file`; please use `DissimilarityMatrix.read` and `DissimilarityMatrix.write` instead.
+    - `skbio.stats.ordination.OrdinationResults` methods `from_file` and `to_file`; please use `OrdinationResults.read` and `OrdinationResults.write` instead.
+    - `skbio.stats.p_value_to_str`; there is no replacement.
+    - `skbio.stats.subsample`; please use `skbio.stats.subsample_counts` instead.
+    - `skbio.stats.distance.ANOSIM`; please use `skbio.stats.distance.anosim` instead.
+    - `skbio.stats.distance.PERMANOVA`; please use `skbio.stats.distance.permanova` instead.
+    - `skbio.stats.distance.CategoricalStatsResults`; there is no replacement, please use `skbio.stats.distance.anosim` or `skbio.stats.distance.permanova`, which will return a `pandas.Series` object.
+* `skbio.alignment.Alignment.majority_consensus` now returns `BiologicalSequence('')` if the alignment is empty. Previously, `''` was returned.
 
 ### Miscellaneous
 

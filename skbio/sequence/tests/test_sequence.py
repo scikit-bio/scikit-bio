@@ -749,27 +749,6 @@ class BiologicalSequenceTests(TestCase):
         self.assertFalse(self.b1.is_valid())
         self.assertTrue(self.b7.is_valid())
 
-    def test_to_fasta(self):
-        self.assertEqual(self.b1.to_fasta(), ">\nGATTACA\n")
-        self.assertEqual(self.b1.to_fasta(terminal_character=""), ">\nGATTACA")
-        self.assertEqual(self.b2.to_fasta(),
-                         ">test-seq-2 A test sequence\nACCGGTACC\n")
-        self.assertEqual(self.b3.to_fasta(),
-                         ">test-seq-3 A protein sequence\nGREG\n")
-        self.assertEqual(self.b4.to_fasta(),
-                         ">test-seq-4\nPRTEIN\n")
-        self.assertEqual(self.b5.to_fasta(),
-                         "> some description\nLLPRTEIN\n")
-
-        # alt parameters
-        self.assertEqual(self.b2.to_fasta(field_delimiter=":"),
-                         ">test-seq-2:A test sequence\nACCGGTACC\n")
-        self.assertEqual(self.b2.to_fasta(terminal_character="!"),
-                         ">test-seq-2 A test sequence\nACCGGTACC!")
-        self.assertEqual(
-            self.b2.to_fasta(field_delimiter=":", terminal_character="!"),
-            ">test-seq-2:A test sequence\nACCGGTACC!")
-
     def test_upper(self):
         b = NucleotideSequence('GAt.ACa-', id='x', description='42',
                                quality=range(8))
