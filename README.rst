@@ -39,6 +39,10 @@ scikit-bio is currently in alpha. We are very actively developing it, and **back
 Installation of release version (recommended for most users)
 ------------------------------------------------------------
 
+.. image:: https://badges.gitter.im/Join%20Chat.svg
+   :alt: Join the chat at https://gitter.im/biocore/scikit-bio
+   :target: https://gitter.im/biocore/scikit-bio?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+
 To install the latest release version of scikit-bio you should run::
 
     pip install numpy
