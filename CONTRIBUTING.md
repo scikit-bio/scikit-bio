@@ -33,9 +33,9 @@ Getting started:
 
 Some of our issues are labeled as ``quick fix``. Working on [these issues](https://github.com/biocore/scikit-bio/issues?direction=desc&labels=quick+fix&milestone=&page=1&sort=updated&state=open) is a good way to get started with contributing to scikit-bio. These are usually small bugs or documentation errors that will only require one or a few lines of code to fix. Getting started by working on one of these issues will allow you to familiarize yourself with our development process before committing to a large amount of work (e.g., adding a new feature to scikit-bio). If you're interested in working on one of these issues, you should comment on the issue requesting that it be assigned to you.
 
-### Joining Developement
+### Joining Development
 
-Once you are more comfortable with our development process, you can check out the [``on deck`` label](https://github.com/biocore/scikit-bio/labels/on%20deck) on our issue tracker. These issues represent what our current focus is in the project. As such, they are probably the best place to start if you are looking to join the conversation and volunteer code.
+Once you are more comfortable with our development process, you can check out the [``on deck`` label](https://github.com/biocore/scikit-bio/labels/on%20deck) on our issue tracker. These issues represent what our current focus is in the project. As such, they are probably the best place to start if you are looking to join the conversation and contribute code.
 
 Code Review
 -----------
