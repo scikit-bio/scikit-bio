@@ -36,3 +36,9 @@ script:
   - popd
 after_success:
   - coveralls
+notifications:
+  webhooks:
+    urls:
+      - https://webhooks.gitter.im/e/9a439713959e710c7971
+    on_success: change
+    on_failure: always
