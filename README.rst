@@ -51,7 +51,7 @@ Finally, most scikit-bio's dependencies (in particular, the ones that are tricki
 
 You can verify your installation by running the scikit-bio unit tests as follows::
 
-    nosetests --with-doctest skbio
+    make test
 
 Installation of development version
 -----------------------------------
@@ -67,7 +67,7 @@ After this completes, you can run the scikit-bio unit tests as follows. You must
 ::
 
     cd
-    nosetests --with-doctest skbio
+    make test
 
 For developers of scikit-bio, if you don't want to be forced to re-install after every change, you can modify the above ``pip install`` command to::
 
