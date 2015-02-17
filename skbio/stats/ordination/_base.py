@@ -9,7 +9,6 @@
 from __future__ import absolute_import, division, print_function
 from future.builtins import zip
 
-import warnings
 from functools import partial
 
 import numpy as np
@@ -69,79 +68,6 @@ class OrdinationResults(SkbioObject):
         self.proportion_explained = proportion_explained
         self.species_ids = species_ids
         self.site_ids = site_ids
-
-    @classmethod
-    def from_file(cls, ord_res_f):
-        """Load ordination results from text file.
-
-        .. note:: Deprecated in scikit-bio 0.2.0-dev
-           ``from_file`` will be removed in scikit-bio 0.3.0. It is replaced by
-           ``read``, which is a more general method for deserializing
-           ordination results. ``read`` supports multiple file formats,
-           automatic file format detection, etc. by taking advantage of
-           scikit-bio's I/O registry system. See :mod:`skbio.io` for more
-           details.
-
-        Creates an ``OrdinationResults`` instance from a ``ordination``
-        formatted file. See :mod:`skbio.io.ordination` for the format
-        specification.
-
-        Parameters
-        ----------
-        ord_res_f: filepath or filehandle
-            File to read from.
-
-        Returns
-        -------
-        OrdinationResults
-            Instance of type `cls` containing the parsed contents of
-            `ord_res_f`.
-
-        Raises
-        ------
-        OrdinationFormatError
-            If the format of the file is not valid, or if the shapes of the
-            different sections of the file are not consistent.
-
-        See Also
-        --------
-        read
-
-        """
-        warnings.warn(
-            "OrdinationResults.from_file is deprecated and will be removed in "
-            "scikit-bio 0.3.0. Please update your code to use "
-            "OrdinationResults.read.", DeprecationWarning)
-        return cls.read(ord_res_f, format='ordination')
-
-    def to_file(self, out_f):
-        """Save ordination results to file in text format.
-
-        .. note:: Deprecated in scikit-bio 0.2.0-dev
-           ``to_file`` will be removed in scikit-bio 0.3.0. It is replaced by
-           ``write``, which is a more general method for serializing ordination
-           results. ``write`` supports multiple file formats by taking
-           advantage of scikit-bio's I/O registry system. See :mod:`skbio.io`
-           for more details.
-
-        Serializes ordination results as an ``ordination`` formatted file. See
-        :mod:`skbio.io.ordination` for the format specification.
-
-        Parameters
-        ----------
-        out_f : filepath or filehandle
-            File to write to.
-
-        See Also
-        --------
-        write
-
-        """
-        warnings.warn(
-            "OrdinationResults.to_file is deprecated and will be removed in "
-            "scikit-bio 0.3.0. Please update your code to use "
-            "OrdinationResults.write.", DeprecationWarning)
-        self.write(out_f, format='ordination')
 
     def __str__(self):
         """Return a string representation of the ordination results.

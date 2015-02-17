@@ -12,7 +12,6 @@ from future.utils import viewitems
 from six import string_types
 
 import re
-import warnings
 from collections import Sequence, Counter, defaultdict
 from itertools import product
 
@@ -1375,59 +1374,6 @@ class BiologicalSequence(Sequence, SkbioObject):
 
         result = product(*expansions)
         return (self.copy(sequence=nondegen_seq) for nondegen_seq in result)
-
-    def to_fasta(self, field_delimiter=" ", terminal_character="\n"):
-        """Return the sequence as a fasta-formatted string
-
-        .. note:: Deprecated in scikit-bio 0.2.0-dev
-           ``to_fasta`` will be removed in scikit-bio 0.3.0. It is replaced by
-           ``write``, which is a more general method for serializing
-           FASTA-formatted files. ``write`` supports multiple file formats by
-           taking advantage of scikit-bio's I/O registry system. See
-           :mod:`skbio.io` for more details.
-
-        Parameters
-        ----------
-        field_delimiter : str, optional
-            The character(s) to use on the header line between the
-            `self.id` and `self.description`.
-
-        terminal_character : str, optional
-            The last character to be included in the result (if you don't want
-            a trailing newline or other character in the result, you can pass
-            ``terminal_character=""``).
-
-        Returns
-        -------
-        str
-            The `BiologicalSequence` as a fasta-formatted string.
-
-        Examples
-        --------
-        >>> from skbio.sequence import BiologicalSequence
-        >>> s = BiologicalSequence('ACACGACGTT')
-        >>> print(s.to_fasta(terminal_character=""))
-        >
-        ACACGACGTT
-        >>> t = BiologicalSequence('ACA',id='my-seq',description='h')
-        >>> print(t.to_fasta(terminal_character=""))
-        >my-seq h
-        ACA
-
-        """
-        warnings.warn(
-            "BiologicalSequence.to_fasta is deprecated and will be removed in "
-            "scikit-bio 0.3.0. Please update your code to use "
-            "BiologicalSequence.write.", DeprecationWarning)
-
-        if self._description:
-            header_line = '%s%s%s' % (self._id, field_delimiter,
-                                      self._description)
-        else:
-            header_line = self._id
-
-        return '>%s\n%s%s' % (
-            header_line, self.sequence, terminal_character)
 
     def upper(self):
         """Convert the BiologicalSequence to uppercase

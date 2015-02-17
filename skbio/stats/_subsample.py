@@ -153,65 +153,6 @@ def isubsample(items, maximum, minimum=1, buf_size=1000, bin_f=None):
             yield (bin_, item)
 
 
-def subsample(counts, n, replace=False):
-    """Randomly subsample from a vector of counts, with or without replacement.
-
-    .. note:: Deprecated in scikit-bio 0.2.1-dev
-       ``subsample`` will be removed in scikit-bio 0.3.0. It is replaced by
-       ``subsample_counts``, which provides an identical interface; only the
-       function name has changed.
-
-    Parameters
-    ----------
-    counts : 1-D array_like
-        Vector of counts (integers) to randomly subsample from.
-    n : int
-        Number of items to subsample from `counts`. Must be less than or equal
-        to the sum of `counts`.
-    replace : bool, optional
-        If ``True``, subsample with replacement. If ``False`` (the default),
-        subsample without replacement.
-
-    Returns
-    -------
-    subsampled : ndarray
-        Subsampled vector of counts where the sum of the elements equals `n`
-        (i.e., ``subsampled.sum() == n``). Will have the same shape as
-        `counts`.
-
-    Raises
-    ------
-    TypeError
-        If `counts` cannot be safely converted to an integer datatype.
-    ValueError
-        If `n` is less than zero or greater than the sum of `counts`.
-
-    Raises
-    ------
-    EfficiencyWarning
-        If the accelerated code isn't present or hasn't been compiled.
-
-    See Also
-    --------
-    subsample_counts
-
-    Notes
-    -----
-    If subsampling is performed without replacement (``replace=False``), a copy
-    of `counts` is returned if `n` is equal to the number of items in `counts`,
-    as all items will be chosen from the original vector.
-
-    If subsampling is performed with replacement (``replace=True``) and `n` is
-    equal to the number of items in `counts`, the subsampled vector that is
-    returned may not necessarily be the same vector as `counts`.
-
-    """
-    warn("skbio.stats.subsample is deprecated and will be removed in "
-         "scikit-bio 0.3.0. Please update your code to use "
-         "skbio.stats.subsample_counts.", DeprecationWarning)
-    return subsample_counts(counts, n, replace=replace)
-
-
 def subsample_counts(counts, n, replace=False):
     """Randomly subsample from a vector of counts, with or without replacement.
 

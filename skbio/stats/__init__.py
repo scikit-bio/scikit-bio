@@ -25,8 +25,6 @@ Functions
 .. autosummary::
    :toctree: generated/
 
-   p_value_to_str
-   subsample
    subsample_counts
    isubsample
 
@@ -41,9 +39,8 @@ Functions
 
 from numpy.testing import Tester
 
-from ._misc import p_value_to_str
-from ._subsample import subsample, subsample_counts, isubsample
+from ._subsample import subsample_counts, isubsample
 
-__all__ = ['p_value_to_str', 'subsample', 'subsample_counts', 'isubsample']
+__all__ = ['subsample_counts', 'isubsample']
 
 test = Tester().test

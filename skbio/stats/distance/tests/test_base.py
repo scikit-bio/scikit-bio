@@ -21,9 +21,9 @@ from IPython.core.display import Image, SVG
 from skbio import DistanceMatrix
 from skbio.stats.distance import (
     DissimilarityMatrixError, DistanceMatrixError, MissingIDError,
-    DissimilarityMatrix, randdm, CategoricalStatsResults)
-from skbio.stats.distance._base import (
-    _preprocess_input, _run_monte_carlo_stats, CategoricalStats)
+    DissimilarityMatrix, randdm)
+from skbio.stats.distance._base import (_preprocess_input,
+                                        _run_monte_carlo_stats)
 
 
 class DissimilarityMatrixTestData(TestCase):
@@ -55,15 +55,6 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
                                    np.array(self.dm_2x2_data),
                                    np.array(self.dm_2x2_asym_data),
                                    np.array(self.dm_3x3_data)]
-
-    def test_deprecated_io(self):
-        fh = StringIO()
-        npt.assert_warns(DeprecationWarning, self.dm_3x3.to_file, fh)
-        fh.seek(0)
-        deserialized = npt.assert_warns(DeprecationWarning,
-                                        DissimilarityMatrix.from_file, fh)
-        self.assertEqual(deserialized, self.dm_3x3)
-        self.assertTrue(type(deserialized) == DissimilarityMatrix)
 
     def test_init_from_dm(self):
         ids = ['foo', 'bar', 'baz']
@@ -459,15 +450,6 @@ class DistanceMatrixTests(DissimilarityMatrixTestData):
         self.dm_condensed_forms = [np.array([]), np.array([0.123]),
                                    np.array([0.01, 4.2, 12.0])]
 
-    def test_deprecated_io(self):
-        fh = StringIO()
-        npt.assert_warns(DeprecationWarning, self.dm_3x3.to_file, fh)
-        fh.seek(0)
-        deserialized = npt.assert_warns(DeprecationWarning,
-                                        DistanceMatrix.from_file, fh)
-        self.assertEqual(deserialized, self.dm_3x3)
-        self.assertTrue(type(deserialized) == DistanceMatrix)
-
     def test_init_invalid_input(self):
         # Asymmetric.
         data = [[0.0, 2.0], [1.0, 0.0]]
@@ -669,97 +651,6 @@ class CategoricalStatsHelperFunctionTests(TestCase):
     def test_run_monte_carlo_stats_invalid_permutations(self):
         with self.assertRaises(ValueError):
             _run_monte_carlo_stats(lambda e: 42, self.grouping, -1)
-
-
-class CategoricalStatsTests(TestCase):
-    def setUp(self):
-        self.dm = DistanceMatrix([[0.0, 1.0, 2.0], [1.0, 0.0, 3.0],
-                                  [2.0, 3.0, 0.0]], ['a', 'b', 'c'])
-        self.grouping = [1, 2, 1]
-        # Ordering of IDs shouldn't matter, nor should extra IDs.
-        self.df = pd.read_csv(
-            StringIO('ID,Group\nb,Group1\na,Group2\nc,Group1\nd,Group3'),
-            index_col=0)
-        self.df_missing_id = pd.read_csv(
-            StringIO('ID,Group\nb,Group1\nc,Group1'), index_col=0)
-        self.categorical_stats = CategoricalStats(self.dm, self.grouping)
-        self.categorical_stats_from_df = CategoricalStats(self.dm, self.df,
-                                                          column='Group')
-
-    def test_init_invalid_input(self):
-        # Requires a DistanceMatrix.
-        with self.assertRaises(TypeError):
-            CategoricalStats(DissimilarityMatrix([[0, 2], [3, 0]], ['a', 'b']),
-                             [1, 2])
-
-        # Requires column if DataFrame.
-        with self.assertRaises(ValueError):
-            CategoricalStats(self.dm, self.df)
-
-        # Cannot provide column if not data frame.
-        with self.assertRaises(ValueError):
-            CategoricalStats(self.dm, self.grouping, column='Group')
-
-        # Column must exist in data frame.
-        with self.assertRaises(ValueError):
-            CategoricalStats(self.dm, self.df, column='foo')
-
-        # All distance matrix IDs must be in data frame.
-        with self.assertRaises(ValueError):
-            CategoricalStats(self.dm, self.df_missing_id, column='Group')
-
-        # Grouping vector length must match number of objects in dm.
-        with self.assertRaises(ValueError):
-            CategoricalStats(self.dm, [1, 2])
-
-        # Grouping vector cannot have only unique values.
-        with self.assertRaises(ValueError):
-            CategoricalStats(self.dm, [1, 2, 3])
-
-        # Grouping vector cannot have only a single group.
-        with self.assertRaises(ValueError):
-            CategoricalStats(self.dm, [1, 1, 1])
-
-    def test_call(self):
-        with self.assertRaises(NotImplementedError):
-            self.categorical_stats()
-
-    def test_call_invalid_permutations(self):
-        with self.assertRaises(ValueError):
-            self.categorical_stats(-1)
-
-
-class CategoricalStatsResultsTests(TestCase):
-    def setUp(self):
-        self.results = CategoricalStatsResults('foo', 'Foo', 'my stat', 42,
-                                               ['a', 'b', 'c', 'd'],
-                                               0.01234567890, 0.1151111, 99)
-
-    def test_str(self):
-        exp = ('Method name  Sample size  Number of groups       my stat  '
-               'p-value  Number of permutations\n        foo           42'
-               '                 4  0.0123456789     0.12'
-               '                      99\n')
-        obs = str(self.results)
-        self.assertEqual(obs, exp)
-
-    def test_repr_html(self):
-        # Not going to test against exact HTML that we expect, as this could
-        # easily break and be annoying to constantly update. Do some light
-        # sanity-checking to ensure there are some of the expected HTML tags.
-        obs = self.results._repr_html_()
-        self.assertTrue('<table' in obs)
-        self.assertTrue('<thead' in obs)
-        self.assertTrue('<tr' in obs)
-        self.assertTrue('<th' in obs)
-        self.assertTrue('<tbody' in obs)
-        self.assertTrue('<td' in obs)
-
-    def test_summary(self):
-        exp = ('Method name\tSample size\tNumber of groups\tmy stat\tp-value\t'
-               'Number of permutations\nfoo\t42\t4\t0.0123456789\t0.12\t99\n')
-        obs = self.results.summary()
-        self.assertEqual(obs, exp)
 
 
 if __name__ == '__main__':

@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from six import binary_type, text_type, StringIO
+from six import binary_type, text_type
 
 import warnings
 import unittest
@@ -661,16 +661,6 @@ class TestOrdinationResults(unittest.TestCase):
                          [0.4, 0.5, 0.6]])
         self.min_ord_results = OrdinationResults(eigvals=eigvals, site=site,
                                                  site_ids=['A', 'B', 'C', 'D'])
-
-    def test_deprecated_io(self):
-        fh = StringIO()
-        npt.assert_warns(DeprecationWarning, self.ordination_results.to_file,
-                         fh)
-        fh.seek(0)
-        deserialized = npt.assert_warns(DeprecationWarning,
-                                        OrdinationResults.from_file, fh)
-        assert_ordination_results_equal(deserialized, self.ordination_results)
-        self.assertTrue(type(deserialized) == OrdinationResults)
 
     def test_str(self):
         exp = ("Ordination results:\n"
