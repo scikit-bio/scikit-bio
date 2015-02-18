@@ -668,10 +668,10 @@ class BiologicalSequenceTests(TestCase):
             self.b1.distance(self.b1, distance_fn=dumb_distance), 42)
 
     def test_distance_unequal_length(self):
-        # Distanace requires sequences to be of equal length
+        # distance requires sequences to be of equal length
         # While some functions passed to distance may throw an error not all
         # will. Therefore an error will be raised for sequences of unequal
-        # length regardless of the fucntion being passed.
+        # length regardless of the function being passed.
         # With default hamming distance fucntion
         with self.assertRaises(BiologicalSequenceError):
             self.b1.distance(self.b2)

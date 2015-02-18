@@ -887,7 +887,7 @@ class BiologicalSequence(Sequence, SkbioObject):
         """
         if len(self) != len(other):
             raise BiologicalSequenceError(
-                "Sequences do not have equal length "
+                "Sequences do not have equal length. "
                 "Distance can only be computed between "
                 "BiologicalSequences of equal length.")
         if distance_fn is None:
