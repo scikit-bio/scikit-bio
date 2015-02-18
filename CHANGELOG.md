@@ -5,7 +5,7 @@
 ### Features
 
 ### Bug fixes
-* Changed `BiologicalSequences.distance` to raise an error any time two sequences are passes of different lengths regardless of the `distance_fn` being passed.
+* Changed `BiologicalSequence.distance` to raise an error any time two sequences are passed of different lengths regardless of the `distance_fn` being passed. Fixes #514
 
 ### Backward-incompatible changes
 * Removed the following deprecated functionality:

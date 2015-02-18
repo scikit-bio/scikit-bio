@@ -672,7 +672,7 @@ class BiologicalSequenceTests(TestCase):
         # While some functions passed to distance may throw an error not all
         # will. Therefore an error will be raised for sequences of unequal
         # length regardless of the function being passed.
-        # With default hamming distance fucntion
+        # With default hamming distance function
         with self.assertRaises(BiologicalSequenceError):
             self.b1.distance(self.b2)
 
@@ -681,7 +681,7 @@ class BiologicalSequenceTests(TestCase):
         with self.assertRaises(BiologicalSequenceError):
             self.b1.distance(self.b2, distance_fn=euclidean)
 
-        # Any other function should raise error as well
+        # Any other function should raise an error as well
         def dumb_distance(x, y):
             return 42
 
