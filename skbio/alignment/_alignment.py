@@ -1351,12 +1351,13 @@ class Alignment(SequenceCollection):
         --------
         >>> from skbio.alignment import Alignment
         >>> from skbio.sequence import DNA
-        >>> sequences = [DNA('AC--', id="seq1"),
-        ...              DNA('AT-C', id="seq2"),
-        ...              DNA('TT-C', id="seq3")]
+        >>> sequences = [DNA('AA--', id="seq1"),
+        ...              DNA('AC-C', id="seq2"),
+        ...              DNA('AT-C', id="seq3"),
+        ...              DNA('TG-C', id="seq4")]
         >>> a1 = Alignment(sequences)
         >>> print(a1.position_entropies())
-        [0.63651416829481278, 0.63651416829481278, nan, nan]
+        [0.56233514461880829, 1.3862943611198906, nan, nan]
 
         """
         result = []

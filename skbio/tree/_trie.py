@@ -39,8 +39,8 @@ class _CompressedNode(object):
         self.children = {}
 
     def __nonzero__(self):
-        return (self.key != "" or len(self.values) > 0
-                or len(self.children.keys()) > 0)
+        return (self.key != "" or len(self.values) > 0 or
+                len(self.children.keys()) > 0)
 
     def __len__(self):
         """Returns the number of values attached to the node
