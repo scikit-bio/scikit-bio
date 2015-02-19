@@ -5,7 +5,7 @@
 ### Features
 
 ### Bug fixes
-* Changed `BiologicalSequence.distance` to raise an error any time two sequences are passed of different lengths regardless of the `distance_fn` being passed. [514](https://github.com/biocore/scikit-bio/issues/514)
+* Changed `BiologicalSequence.distance` to raise an error any time two sequences are passed of different lengths regardless of the `distance_fn` being passed. [(#514)](https://github.com/biocore/scikit-bio/issues/514)
 
 ### Backward-incompatible changes
 * Removed the following deprecated functionality:
