@@ -864,8 +864,7 @@ class BiologicalSequence(Sequence, SkbioObject):
         Raises
         ------
         skbio.sequence.BiologicalSequenceError
-            If ``len(self) != len(other)`` and ``distance_fn`` ==
-            ``scipy.spatial.distance.hamming``.
+            If ``len(self) != len(other)``
 
         See Also
         --------
@@ -886,12 +885,13 @@ class BiologicalSequence(Sequence, SkbioObject):
         0.42
 
         """
+        if len(self) != len(other):
+            raise BiologicalSequenceError(
+                "Sequences do not have equal length. "
+                "Distance can only be computed between "
+                "BiologicalSequences of equal length.")
         if distance_fn is None:
             distance_fn = hamming
-            if len(self) != len(other):
-                raise BiologicalSequenceError(
-                    "Hamming distance can only be computed between "
-                    "BiologicalSequences of equal length.")
         return distance_fn(self, other)
 
     def fraction_diff(self, other):
