@@ -83,10 +83,9 @@ you'd like to add to scikit-bio (let's call it ```skbio/example.py```).
 #### Module docstring
 
 The first thing you'll need to add is a docstring for the module. The docstring
-should be the first thing in the file following the ```#!``` line. It should
-start with a title for the module:
+must start at the first line of the file. It should start with a title for the
+module:
 
-    #!/usr/bin/env python
     """
     Documentation examples (:mod:`skbio.example`)
     =============================================

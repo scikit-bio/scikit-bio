@@ -301,9 +301,6 @@ Example of a ``nose`` test module structure
 
 .. code-block:: python
 
-    #!/usr/bin/env python
-    from __future__ import division
-
     # ----------------------------------------------------------------------------
     # Copyright (c) 2013--, scikit-bio development team.
     #
@@ -311,6 +308,8 @@ Example of a ``nose`` test module structure
     #
     # The full license is in the file COPYING.txt, distributed with this software.
     # ----------------------------------------------------------------------------
+
+    from __future__ import absolute_import, division, print_function
 
     import numpy as np
     from nose.tools import assert_almost_equal, assert_raises

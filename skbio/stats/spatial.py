@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 r"""
 Spatial Statistics (:mod:`skbio.stats.spatial`)
 ===============================================
