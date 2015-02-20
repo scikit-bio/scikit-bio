@@ -14,6 +14,27 @@ from nose.tools import nottest
 
 @nottest
 class TestRunner(object):
+    """Simple wrapper class around nosetests functionality.
+
+    Parameters
+    ----------
+    filename : __file__ attribute passed in from the caller. This tells the
+        tester where to start looking for tests.
+
+    Attributes
+    ----------
+    argv
+    test_dir
+
+    Notes
+    -----
+    The primary purpose of this class is to create an interface which users
+    of scikit-bio can use to run all of the built in tests. Normally this
+    would be done by invoking nosetests directly from the command line, but
+    scikit-bio needs several additional options which make the command long
+    and ugly. This class invokes nose with the required options.
+
+    """
     def __init__(self, filename):
         self._test_dir = os.path.dirname(filename)
         # NOTE: it doesn't seem to matter what the first element of the argv
@@ -21,6 +42,8 @@ class TestRunner(object):
         self._argv = [filename, '-I DO_NOT_IGNORE_ANYTHING', '--with-doctest']
 
     def test(self):
+        """Performs the actual running of the tests.
+        """
         core.run(argv=self._argv, defaultTest=self._test_dir)
 
 
