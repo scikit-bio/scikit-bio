@@ -26,5 +26,5 @@ Subpackages
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from numpy.testing import Tester
-test = Tester().test
+from skbio.util import TestRunner
+test = TestRunner(__file__).test

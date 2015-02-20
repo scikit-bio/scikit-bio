@@ -8,6 +8,20 @@
 
 import os
 import inspect
+from nose import core
+from nose.tools import nottest
+
+
+@nottest
+class TestRunner(object):
+    def __init__(self, filename):
+        self._test_dir = os.path.dirname(filename)
+        # NOTE: it doesn't seem to matter what the first element of the argv
+        # list is, there just needs to be something there.
+        self._argv = [filename, '-I DO_NOT_IGNORE_ANYTHING', '--with-doctest']
+
+    def test(self):
+        core.run(argv=self._argv, defaultTest=self._test_dir)
 
 
 def get_data_path(fn, subfolder='data'):

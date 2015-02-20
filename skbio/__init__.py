@@ -8,7 +8,7 @@
 
 from __future__ import absolute_import, division, print_function
 
-from numpy.testing import Tester
+from skbio.util import TestRunner
 
 # Add skbio.io to sys.modules to prevent cycles in our imports
 import skbio.io
@@ -79,3 +79,5 @@ if __doc__ is None:
     __doc__ = title + art
 else:
     __doc__ = title + art + __doc__
+
+test = TestRunner(__file__).test

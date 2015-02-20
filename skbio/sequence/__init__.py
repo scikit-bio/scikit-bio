@@ -146,7 +146,7 @@ NucleotideSequences can be translated using a ``GeneticCode`` object.
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from numpy.testing import Tester
+from skbio.util import TestRunner
 
 from ._exception import (BiologicalSequenceError, GeneticCodeError,
                          GeneticCodeInitError, InvalidCodonError)
@@ -160,4 +160,4 @@ __all__ = ['BiologicalSequenceError', 'GeneticCodeError',
            'ProteinSequence', 'DNA', 'RNA', 'Protein', 'GeneticCode',
            'genetic_code']
 
-test = Tester().test
+test = TestRunner(__file__).test

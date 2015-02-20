@@ -60,17 +60,15 @@ Warnings
 # The full license is in the file COPYING.txt, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from numpy.testing import Tester
-
 from ._warning import EfficiencyWarning
 from ._exception import TestingUtilError
 from ._misc import (cardinal_to_ordinal, create_dir, find_duplicates, flatten,
                     is_casava_v180_or_later, remove_files, safe_md5)
-from ._testing import get_data_path
+from ._testing import get_data_path, TestRunner
 
 __all__ = ['EfficiencyWarning', 'TestingUtilError',
            'cardinal_to_ordinal', 'create_dir', 'find_duplicates', 'flatten',
            'is_casava_v180_or_later', 'remove_files', 'safe_md5',
-           'get_data_path']
+           'get_data_path', 'TestRunner']
 
-test = Tester().test
+test = TestRunner(__file__).test
