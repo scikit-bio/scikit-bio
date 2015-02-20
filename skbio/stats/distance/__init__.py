@@ -154,7 +154,6 @@ Categorical Variable Stats
 
    anosim
    permanova
-   CategoricalStatsResults
 
 Continuous Variable Stats
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -192,15 +191,14 @@ from numpy.testing import Tester
 
 from ._base import (DissimilarityMatrixError, DistanceMatrixError,
                     MissingIDError, DissimilarityMatrix, DistanceMatrix,
-                    CategoricalStatsResults, randdm)
+                    randdm)
 from ._bioenv import bioenv
-from ._anosim import anosim, ANOSIM
-from ._permanova import permanova, PERMANOVA
+from ._anosim import anosim
+from ._permanova import permanova
 from ._mantel import mantel, pwmantel
 
 __all__ = ['DissimilarityMatrixError', 'DistanceMatrixError', 'MissingIDError',
            'DissimilarityMatrix', 'DistanceMatrix', 'randdm', 'anosim',
-           'ANOSIM', 'permanova', 'PERMANOVA', 'CategoricalStatsResults',
-           'bioenv', 'mantel', 'pwmantel']
+           'permanova', 'bioenv', 'mantel', 'pwmantel']
 
 test = Tester().test

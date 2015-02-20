@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -39,8 +37,8 @@ class _CompressedNode(object):
         self.children = {}
 
     def __nonzero__(self):
-        return (self.key != "" or len(self.values) > 0
-                or len(self.children.keys()) > 0)
+        return (self.key != "" or len(self.values) > 0 or
+                len(self.children.keys()) > 0)
 
     def __len__(self):
         """Returns the number of values attached to the node
@@ -252,8 +250,7 @@ def fasta_to_pairlist(seqs):
     Parameters
     ----------
     seqs : Iterable
-        tuples of the form ``(label, seq)``, e.g., as obtained by
-        skbio.parse.sequences.parse_fasta
+        tuples of the form ``(label, seq)``
 
     Returns
     -------

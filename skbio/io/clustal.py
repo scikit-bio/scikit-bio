@@ -41,10 +41,8 @@ subsequences (not included in the examples below).
    :mod:`skbio.sequence`. The specific lexicon that is validated against
    depends on the type of sequences stored in the alignment.
 
-
 Examples
 --------
-
 Assume we have a clustal-formatted file with the following contents::
 
     CLUSTAL W (1.82) multiple sequence alignment
@@ -116,14 +114,13 @@ References
 # -----------------------------------------------------------------------------
 from __future__ import absolute_import, division, print_function
 
-from skbio.parse.record import DelimitedSplitter
 from skbio.io import (register_reader, register_writer, register_sniffer,
                       ClustalFormatError)
 from skbio.sequence import BiologicalSequence
 from skbio.alignment import Alignment
 
 
-def _label_line_parser(record, splitter, strict=True):
+def _label_line_parser(record, strict=True):
     """Returns dict mapping list of data to labels, plus list with field order.
 
     Field order contains labels in order encountered in file.
@@ -135,14 +132,15 @@ def _label_line_parser(record, splitter, strict=True):
     labels = []
     result = {}
     for line in record:
-        try:
-            key, val = splitter(line.rstrip())
-        except:
+        split_line = line.strip().rsplit(None, 1)
 
+        if len(split_line) == 2:
+            key, val = split_line
+        else:
             if strict:
                 raise ClustalFormatError(
-                    "Failed to extract key and value from line %s" %
-                    line)
+                    "Failed to parse sequence identifier and subsequence from "
+                    "the following line: %r" % line)
             else:
                 continue  # just skip the line if not strict
 
@@ -161,8 +159,6 @@ def _is_clustal_seq_line(line):
     """
     return line and (not line[0].isspace()) and\
         (not line.startswith('CLUSTAL')) and (not line.startswith('MUSCLE'))
-
-last_space = DelimitedSplitter(None, -1)
 
 
 def _delete_trailing_number(line):
@@ -231,7 +227,7 @@ def _clustal_sniffer(fh):
     try:
         records = map(_delete_trailing_number,
                       filter(_is_clustal_seq_line, fh))
-        data, labels = _label_line_parser(records, last_space, strict=True)
+        data, labels = _label_line_parser(records, strict=True)
         if len(data) > 0:
             empty = False
         # Only check first 50 sequences
@@ -317,7 +313,7 @@ def _clustal_to_alignment(fh, strict=True):
 
     records = map(_delete_trailing_number,
                   filter(_is_clustal_seq_line, fh))
-    data, labels = _label_line_parser(records, last_space, strict)
+    data, labels = _label_line_parser(records, strict)
 
     aligned_correctly = _check_length(data, labels)
     if not aligned_correctly:

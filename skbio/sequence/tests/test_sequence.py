@@ -15,6 +15,7 @@ from unittest import TestCase, main
 
 import numpy as np
 import numpy.testing as npt
+from scipy.spatial.distance import euclidean
 
 from skbio import (
     BiologicalSequence, NucleotideSequence, DNASequence, RNASequence,
@@ -667,17 +668,25 @@ class BiologicalSequenceTests(TestCase):
             self.b1.distance(self.b1, distance_fn=dumb_distance), 42)
 
     def test_distance_unequal_length(self):
-        # Hamming distance (default) requires that sequences are of equal
-        # length
+        # distance requires sequences to be of equal length
+        # While some functions passed to distance may throw an error not all
+        # will. Therefore an error will be raised for sequences of unequal
+        # length regardless of the function being passed.
+        # With default hamming distance function
         with self.assertRaises(BiologicalSequenceError):
             self.b1.distance(self.b2)
 
-        # alternate distance functions don't have that requirement (unless
-        # it's implemented within the provided distance function)
+        # Alternate functions should also raise an error
+        # Another distance function from scipy:
+        with self.assertRaises(BiologicalSequenceError):
+            self.b1.distance(self.b2, distance_fn=euclidean)
+
+        # Any other function should raise an error as well
         def dumb_distance(x, y):
             return 42
-        self.assertEqual(
-            self.b1.distance(self.b2, distance_fn=dumb_distance), 42)
+
+        with self.assertRaises(BiologicalSequenceError):
+            self.b1.distance(self.b2, distance_fn=dumb_distance)
 
     def test_fraction_diff(self):
         self.assertEqual(self.b1.fraction_diff(self.b1), 0., 5)
@@ -748,27 +757,6 @@ class BiologicalSequenceTests(TestCase):
     def test_is_valid(self):
         self.assertFalse(self.b1.is_valid())
         self.assertTrue(self.b7.is_valid())
-
-    def test_to_fasta(self):
-        self.assertEqual(self.b1.to_fasta(), ">\nGATTACA\n")
-        self.assertEqual(self.b1.to_fasta(terminal_character=""), ">\nGATTACA")
-        self.assertEqual(self.b2.to_fasta(),
-                         ">test-seq-2 A test sequence\nACCGGTACC\n")
-        self.assertEqual(self.b3.to_fasta(),
-                         ">test-seq-3 A protein sequence\nGREG\n")
-        self.assertEqual(self.b4.to_fasta(),
-                         ">test-seq-4\nPRTEIN\n")
-        self.assertEqual(self.b5.to_fasta(),
-                         "> some description\nLLPRTEIN\n")
-
-        # alt parameters
-        self.assertEqual(self.b2.to_fasta(field_delimiter=":"),
-                         ">test-seq-2:A test sequence\nACCGGTACC\n")
-        self.assertEqual(self.b2.to_fasta(terminal_character="!"),
-                         ">test-seq-2 A test sequence\nACCGGTACC!")
-        self.assertEqual(
-            self.b2.to_fasta(field_delimiter=":", terminal_character="!"),
-            ">test-seq-2:A test sequence\nACCGGTACC!")
 
     def test_upper(self):
         b = NucleotideSequence('GAt.ACa-', id='x', description='42',

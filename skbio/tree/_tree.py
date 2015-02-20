@@ -8,8 +8,6 @@
 
 from __future__ import absolute_import, division, print_function
 
-import re
-import warnings
 from operator import or_
 from copy import deepcopy
 from itertools import combinations
@@ -23,7 +21,6 @@ from six import StringIO
 
 from skbio._base import SkbioObject
 from skbio.stats.distance import DistanceMatrix
-from skbio.io import RecordError
 from ._exception import (NoLengthError, DuplicateNodeError, NoParentError,
                          MissingNodeError, TreeError)
 
@@ -430,8 +427,9 @@ class TreeNode(SkbioObject):
         >>> from skbio import TreeNode
         >>> t = TreeNode.read(StringIO('((H:1,G:1):2,(R:0.5,M:0.7):3);'))
         >>> sheared = t.shear(['G', 'M'])
-        >>> print(sheared.to_newick(with_distances=True))
+        >>> print(sheared)
         (G:3.0,M:3.7);
+        <BLANKLINE>
 
         """
         tcopy = self.deepcopy()
@@ -1853,25 +1851,6 @@ class TreeNode(SkbioObject):
 
         return root
 
-    @classmethod
-    def from_file(cls, tree_f):
-        """Load a tree from a file or file-like object
-
-        .. note:: Deprecated in scikit-bio 0.2.0-dev
-           ``from_file`` will be removed in scikit-bio 0.3.0. It is replaced
-           by ``read``, which is a more general method for deserializing
-           TreeNode instances. ``read`` supports multiple file formats,
-           automatic file format detection, etc. by taking advantage of
-           scikit-bio's I/O registry system. See :mod:`skbio.io` for more
-           details.
-
-        """
-        warnings.warn(
-            "TreeNode.from_file is deprecated and will be removed in "
-            "scikit-bio 0.3.0. Please update your code to use TreeNode.read.",
-            DeprecationWarning)
-        return cls.read(tree_f, format='newick')
-
     def _balanced_distance_to_tip(self):
         """Return the distance to tip from this node.
 
@@ -1940,199 +1919,6 @@ class TreeNode(SkbioObject):
             newest_cluster_index += 1
 
         return node_lookup[-1]
-
-    @classmethod
-    def from_newick(cls, lines, unescape_name=True):
-        r"""Returns tree from the Clustal .dnd file format and equivalent
-
-        .. note:: Deprecated in scikit-bio 0.2.0-dev
-           ``from_newick`` will be removed in scikit-bio 0.3.0. It is replaced
-           by ``read``, which is a more general method for deserializing
-           TreeNode instances. ``read`` supports multiple file formats,
-           automatic file format detection, etc. by taking advantage of
-           scikit-bio's I/O registry system. See :mod:`skbio.io` for more
-           details.
-
-        The tree is made of `skbio.TreeNode` objects, with branch
-        lengths if specified by the format.
-
-        More information on the Newick format can be found here [1]. In brief,
-        the format uses parentheses to define nesting. For instance, a three
-        taxon tree can be represented with::
-
-            ((a,b),c);
-
-        Two possible ways to represent this tree drawing it out would be::
-
-               *
-              / \
-             *   \
-            / \   \
-            a b   c
-
-            a
-             \__|___ c
-             /
-            b
-
-        The Newick format allows for defining branch length as well, for
-        example::
-
-            ((a:0.1,b:0.2):0.3,c:0.4);
-
-        This structure has a the same topology as the first example but the
-        tree now contains more information about how similar or dissimilar
-        nodes are to their parents. In the above example, we can see that tip
-        `a` has a distance of 0.1 to its parent, and `b` has a distance of 0.2
-        to its parent. We can additionally see that the clade that encloses
-        tips `a` and `b` has a distance of 0.3 to its parent, or in this case,
-        the root.
-
-        Parameters
-        ----------
-        lines : a str, a list of str, or a file-like object
-            The input newick string to parse
-        unescape_names : bool
-            Remove extraneous quote marks around names. Sometimes other
-            programs are sensitive to the characters used in names, and it
-            is essential (at times) to quote node names for compatibility.
-
-        Returns
-        -------
-        TreeNode
-            The root of the parsed tree
-
-        Raises
-        ------
-        RecordError
-            The following three conditions will trigger a `RecordError`:
-                * Unbalanced number of left and right parentheses
-                * A malformed newick string. For instance, if a semicolon is
-                    embedded within the string as opposed to at the end.
-                * If a non-newick string is passed.
-
-        See Also
-        --------
-        to_newick
-
-        Examples
-        --------
-        >>> from skbio import TreeNode
-        >>> TreeNode.from_newick("((a,b)c,(d,e)f)root;")
-        <TreeNode, name: root, internal node count: 2, tips count: 4>
-        >>> from six import StringIO
-        >>> s = StringIO("((a,b),c);")
-        >>> TreeNode.from_newick(s)
-        <TreeNode, name: unnamed, internal node count: 1, tips count: 3>
-
-        References
-        ----------
-        [1] http://evolution.genetics.washington.edu/phylip/newicktree.html
-
-        """
-        warnings.warn(
-            "TreeNode.from_newick is deprecated and will be removed in "
-            "scikit-bio 0.3.0. Please update your code to use TreeNode.read.",
-            DeprecationWarning)
-
-        def _new_child(old_node):
-            """Returns new_node which has old_node as its parent."""
-            new_node = cls()
-            new_node.parent = old_node
-            if old_node is not None:
-                if new_node not in old_node.children:
-                    old_node.children.append(new_node)
-            return new_node
-
-        if isinstance(lines, str):
-            data = lines
-        else:
-            data = ''.join(lines)
-
-        # skip arb comment stuff if present: start at first paren
-        paren_index = data.find('(')
-        data = data[paren_index:]
-        left_count = data.count('(')
-        right_count = data.count(')')
-
-        if left_count != right_count:
-            raise RecordError("Found %s left parens but %s right parens." %
-                              (left_count, right_count))
-
-        curr_node = None
-        state = 'PreColon'
-        state1 = 'PreClosed'
-        last_token = None
-
-        for t in _dnd_tokenizer(data):
-            if t == ':':
-                # expecting branch length
-                state = 'PostColon'
-                # prevent state reset
-                last_token = t
-                continue
-            if t == ')' and last_token in ',(':
-                # node without name
-                new_node = _new_child(curr_node)
-                new_node.name = None
-                curr_node = new_node.parent
-                state1 = 'PostClosed'
-                last_token = t
-                continue
-            if t == ')':
-                # closing the current node
-                curr_node = curr_node.parent
-                state1 = 'PostClosed'
-                last_token = t
-                continue
-            if t == '(':
-                # opening a new node
-                curr_node = _new_child(curr_node)
-            elif t == ';':  # end of data
-                last_token = t
-                break
-            elif t == ',' and last_token in ',(':
-                # node without name
-                new_node = _new_child(curr_node)
-                new_node.name = None
-                curr_node = new_node.parent
-            elif t == ',':
-                # separator: next node adds to this node's parent
-                curr_node = curr_node.parent
-            elif state == 'PreColon' and state1 == 'PreClosed':
-                # data for the current node
-                new_node = _new_child(curr_node)
-                if unescape_name:
-                    if t.startswith("'") and t.endswith("'"):
-                        while t.startswith("'") and t.endswith("'"):
-                            t = t[1:-1]
-                    else:
-                        if '_' in t:
-                            t = t.replace('_', ' ')
-                new_node.name = t
-                curr_node = new_node
-            elif state == 'PreColon' and state1 == 'PostClosed':
-                if unescape_name:
-                    while t.startswith("'") and t.endswith("'"):
-                        t = t[1:-1]
-                curr_node.name = t
-            elif state == 'PostColon':
-                # length data for the current node
-                curr_node.length = float(t)
-            else:
-                # can't think of a reason to get here
-                raise RecordError("Incorrect PhyloNode state? %s" % t)
-            state = 'PreColon'  # get here for any non-colon token
-            state1 = 'PreClosed'
-            last_token = t
-
-        if curr_node is not None and curr_node.parent is not None:
-            raise RecordError("Didn't get back to root of tree. The newick "
-                              "string may be malformed.")
-
-        if curr_node is None:  # no data -- return empty node
-            return cls()
-        return curr_node  # this should be the root of the tree
 
     def to_taxonomy(self, allow_empty=False, filter_f=None):
         """Returns a taxonomy representation of self
@@ -2298,101 +2084,6 @@ class TreeNode(SkbioObject):
         results = {'id_index': id_index, 'child_index': child_index}
         results.update({attr: arr for (attr, dtype), arr in zip(attrs, tmp)})
         return results
-
-    def to_newick(self, with_distances=False, semicolon=True,
-                  escape_name=True):
-        r"""Return the newick string representation of this tree.
-
-        .. note:: Deprecated in scikit-bio 0.2.0-dev
-           ``to_newick`` will be removed in scikit-bio 0.3.0. It is replaced by
-           ``write``, which is a more general method for serializing TreeNode
-           instances. ``write`` supports multiple file formats by taking
-           advantage of scikit-bio's I/O registry system. See :mod:`skbio.io`
-           for more details.
-
-        Please see `TreeNode.from_newick` for a further description of the
-        Newick format.
-
-        Parameters
-        ----------
-        with_distances : bool
-            If true, include lengths between nodes
-        semicolon : bool
-            If true, terminate the tree string with a semicolon
-        escape_name : bool
-            If true, wrap node names that include []'"(),:;_ in single quotes
-
-        Returns
-        -------
-        str
-            A Newick string representation of the tree
-
-        See Also
-        --------
-        from_newick
-
-        Examples
-        --------
-        >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(StringIO("((a,b)c,(d,e)f)root;"))
-        >>> print(tree.to_newick())
-        ((a,b)c,(d,e)f)root;
-
-        """
-        warnings.warn(
-            "TreeNode.to_newick is deprecated and will be removed in "
-            "scikit-bio 0.3.0. Please update your code to use TreeNode.write.",
-            DeprecationWarning)
-        result = ['(']
-        nodes_stack = [[self, len(self.children)]]
-        node_count = 1
-
-        while nodes_stack:
-            node_count += 1
-            # check the top node, any children left unvisited?
-            top = nodes_stack[-1]
-            top_node, num_unvisited_children = top
-            if num_unvisited_children:  # has any child unvisited
-                top[1] -= 1  # decrease the #of children unvisited
-                next_child = top_node.children[-num_unvisited_children]
-                # pre-visit
-                if next_child.children:
-                    result.append('(')
-                nodes_stack.append([next_child, len(next_child.children)])
-            else:  # no unvisited children
-                nodes_stack.pop()
-                # post-visit
-                if top_node.children:
-                    result[-1] = ')'
-
-                if top_node.name is None:
-                    name = ''
-                else:
-                    name = str(top_node.name)
-                    if escape_name and not (name.startswith("'") and
-                                            name.endswith("'")):
-                        if re.search("""[]['"(),:;_]""", name):
-                            name = "'%s'" % name.replace("'", "''")
-                        else:
-                            name = name.replace(' ', '_')
-                result.append(name)
-
-                if with_distances and top_node.length is not None:
-                    result[-1] = "%s:%s" % (result[-1], top_node.length)
-
-                result.append(',')
-
-        if len(result) <= 3:  # single node with or without name
-            if semicolon:
-                return "%s;" % result[1]
-            else:
-                return result[1]
-        else:
-            if semicolon:
-                result[-1] = ';'
-            else:
-                result.pop(-1)
-            return ''.join(result)
 
     def _ascii_art(self, char1='-', show_internal=True, compact=False):
         LEN = 10
@@ -3240,55 +2931,3 @@ class TreeNode(SkbioObject):
 
             yield self
             counter += 1
-
-
-def _dnd_tokenizer(data):
-    r"""Tokenizes data into a stream of punctuation, labels and lengths.
-
-    Parameters
-    ----------
-    data : str
-        a DND-like (e.g., newick) string
-
-    Returns
-    -------
-    GeneratorType
-        Yields successive DND tokens
-
-    See Also
-    --------
-    TreeNode.from_newick
-    TreeNode.to_newick
-
-    Examples
-    --------
-    >>> from skbio.tree._tree import _dnd_tokenizer
-    >>> for token in _dnd_tokenizer("((tip1, tip2)internal1)"):
-    ...     print(token)
-    (
-    (
-    tip1
-    ,
-    tip2
-    )
-    internal1
-    )
-
-    """
-    dnd_tokens = set('(:),;')
-
-    in_quotes = False
-    saved = []
-    sa = saved.append
-    for d in data:
-        if d == "'":
-            in_quotes = not in_quotes
-        if d in dnd_tokens and not in_quotes:
-            curr = ''.join(saved).strip()
-            if curr:
-                yield curr
-            yield d
-            saved = []
-            sa = saved.append
-        else:
-            sa(d)

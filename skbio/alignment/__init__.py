@@ -65,33 +65,31 @@ Exceptions
 Data Structure Examples
 -----------------------
 >>> from StringIO import StringIO
->>> from skbio.alignment import SequenceCollection, Alignment
->>> from skbio.sequence import DNA
+>>> from skbio import SequenceCollection, Alignment, DNA
 >>> seqs = [DNA("ACC--G-GGTA..", id="seq1"),
-...     DNA("TCC--G-GGCA..", id="seqs2")]
+...         DNA("TCC--G-GGCA..", id="seqs2")]
 >>> a1 = Alignment(seqs)
 >>> a1
 <Alignment: n=2; mean +/- std length=13.00 +/- 0.00>
 
 >>> seqs = [DNA("ACCGGG", id="seq1"),
-...     DNA("TCCGGGCA", id="seq2")]
+...         DNA("TCCGGGCA", id="seq2")]
 >>> s1 = SequenceCollection(seqs)
 >>> s1
 <SequenceCollection: n=2; mean +/- std length=7.00 +/- 1.00>
 
->>> from skbio.parse.sequences import parse_fasta
->>> fasta_f = StringIO('>seq1\n'
-...                    'CGATGTCGATCGATCGATCGATCAG\n'
-...                    '>seq2\n'
-...                    'CATCGATCGATCGATGCATGCATGCATG\n')
->>> s1 = SequenceCollection.from_fasta_records(parse_fasta(fasta_f), DNA)
+>>> fasta_fh = StringIO('>seq1\n'
+...                     'CGATGTCGATCGATCGATCGATCAG\n'
+...                     '>seq2\n'
+...                     'CATCGATCGATCGATGCATGCATGCATG\n')
+>>> s1 = SequenceCollection.read(fasta_fh, constructor=DNA)
 >>> s1
 <SequenceCollection: n=2; mean +/- std length=26.50 +/- 1.50>
 
 >>> from skbio.sequence import RNA
 >>> from skbio.alignment import StockholmAlignment
 >>> seqs = [RNA("ACC--G-GGGU", id="seq1"),
-...     RNA("TCC--G-GGGA", id="seq2")]
+...         RNA("TCC--G-GGGA", id="seq2")]
 >>> gc = {'SS_cons': '(((.....)))'}
 >>> sto = StockholmAlignment(seqs, gc=gc)
 >>> print(sto)
@@ -201,13 +199,13 @@ And we can view the score of the alignment using the ``score`` method:
 25.0
 
 Similarly, we can perform global alignment of nucleotide sequences, and print
-the resulting alignment as fasta records:
+the resulting alignment in FASTA format:
 
 >>> from skbio.alignment import global_pairwise_align_nucleotide
 >>> s1 = "GCGTGCCTAAGGTATGCAAG"
 >>> s2 = "ACGTGCCTAGGTACGCAAG"
 >>> r = global_pairwise_align_nucleotide(s1, s2)
->>> print(r.to_fasta())
+>>> print(r)
 >0
 GCGTGCCTAAGGTATGCAAG
 >1

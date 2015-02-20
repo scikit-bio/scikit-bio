@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -22,20 +21,14 @@ from skbio.alignment import (
     local_pairwise_align_ssw, SequenceCollection, Alignment)
 from skbio.tree import (
     TreeNode, nj)
-from skbio.parse.sequences import (
-    parse_fasta, parse_fastq, parse_qual, FastaIterator, FastqIterator,
-    SequenceIterator)
 from skbio.io import read, write
 
 skbio.io  # Stop flake8 error
 
 __all__ = ['BiologicalSequence', 'NucleotideSequence', 'DNA', 'DNASequence',
            'RNA', 'RNASequence', 'Protein', 'ProteinSequence',
-           'DistanceMatrix', 'local_pairwise_align_ssw',
-           'SequenceCollection', 'Alignment', 'TreeNode', 'nj', 'parse_fasta',
-           'parse_fastq', 'parse_qual', 'FastaIterator',
-           'FastqIterator', 'SequenceIterator', 'read',
-           'write']
+           'DistanceMatrix', 'local_pairwise_align_ssw', 'SequenceCollection',
+           'Alignment', 'TreeNode', 'nj', 'read', 'write']
 
 test = Tester().test
 
@@ -86,7 +79,3 @@ if __doc__ is None:
     __doc__ = title + art
 else:
     __doc__ = title + art + __doc__
-
-if __name__ == '__main__':
-    print(title)
-    print(art)
