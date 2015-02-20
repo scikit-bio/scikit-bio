@@ -17,6 +17,7 @@ except ImportError:  # python3 system
 import tempfile
 
 import numpy as np
+import numpy.testing as npt
 from scipy.spatial.distance import hamming
 
 from skbio import (BiologicalSequence, DNASequence, RNASequence, DNA, RNA,
