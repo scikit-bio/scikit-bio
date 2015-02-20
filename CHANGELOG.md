@@ -6,6 +6,11 @@
 
 ### Bug fixes
 
+### Deprecated functionality
+* Deprecated `skbio.util.flatten`. Please use standard python library functionality
+described here (http://stackoverflow.com/questions/952914/making-a-flat-list-out-of-list-of-lists-in-python)
+ (http://stackoverflow.com/questions/406121/flattening-a-shallow-list-in-python) ([#833](https://github.com/biocore/scikit-bio/issues/833))
+
 ### Backward-incompatible changes
 * Removed the following deprecated functionality:
     - `skbio.parse` subpackage, including `SequenceIterator`, `FastaIterator`, `FastqIterator`, `load`, `parse_fasta`, `parse_fastq`, `parse_qual`, `write_clustal`, `parse_clustal`, and `FastqParseError`; please use `skbio.io` instead.
