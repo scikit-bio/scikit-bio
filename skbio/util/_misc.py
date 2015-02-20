@@ -15,7 +15,6 @@ from functools import partial
 from warnings import warn
 
 
-
 def cardinal_to_ordinal(n):
     """Return ordinal string version of cardinal int `n`.
 
@@ -279,7 +278,6 @@ def flatten(items):
        -out-of-list-of-lists-in-python
        http://stackoverflow.com/questions/406121/flattening-a-shallow-
        list-in-python.
-
 
     Parameters
     ----------
