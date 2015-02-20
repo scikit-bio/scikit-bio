@@ -63,9 +63,14 @@ If you're interested in working with the latest development release of scikit-bi
     cd scikit-bio
     pip install .
 
-After this completes, you can run the scikit-bio unit tests from within the ``scikit-bio`` source directory as follows::
+After this completes, you can run the scikit-bio unit tests from with a Python or IPython session as follows::
 
-    make test
+    import skbio
+    skbio.test()
+
+To only run tests for a specific scikit-bio module, for example sequence, you can do::
+
+    skbio.sequence.test()
 
 For developers of scikit-bio, if you don't want to be forced to re-install after every change, you can modify the above ``pip install`` command to::
 
