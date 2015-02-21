@@ -270,14 +270,12 @@ def flatten(items):
     """Removes one level of nesting from items
 
     .. note:: Deprecated in scikit-bio 0.2.3-dev
-       ``util.flatten`` will be removed in scikit-bio 0.3.1
+       ``skbio.util.flatten`` will be removed in scikit-bio 0.3.1
        it is being deprecated in favor of solutions present
        in the standard python library.
        Please refer to the following links for good alternatives:
-       http://stackoverflow.com/questions/952914/making-a-flat-list
-       -out-of-list-of-lists-in-python
-       http://stackoverflow.com/questions/406121/flattening-a-shallow-
-       list-in-python.
+       http://stackoverflow.com/a/952952/3639023
+       http://stackoverflow.com/a/406199/3639023.
 
     Parameters
     ----------
@@ -298,12 +296,10 @@ def flatten(items):
     ['a', 'b', 'c', 'd', 1, 2, 3, 4, 5, 'x', 'y', 'foo']
 
     """
-    warn("flatten is deprecated. Please refer to the following links for "
-         "solutions from the standard python library "
-         "http://stackoverflow.com/questions/952914/making-a-flat-list"
-         "-out-of-list-of-lists-in-python "
-         "http://stackoverflow.com/questions/406121/flattening-a-shallow-"
-         "list-in-python.", DeprecationWarning)
+    warn("skbio.util.flatten is deprecated. Please refer to the following "
+         "links for solutions from the standard python library: "
+         "http://stackoverflow.com/a/952952/3639023 "
+         "http://stackoverflow.com/a/406199/3639023", DeprecationWarning)
 
     result = []
     for i in items:
