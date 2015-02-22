@@ -2,7 +2,7 @@ r"""
 Composition Statistics (:mod:`skbio.stats.composition`)
 ===============================================
 
-.. currentmodule:: skbio.stats.spatial
+.. currentmodule:: skbio.stats.composition
 
 This module provides functions for compositional data analysis.
 
@@ -38,7 +38,7 @@ import scipy.stats as ss
 
 def _closure(mat):
     """
-    Performs closure to ensure that all elements add up to 1
+    Performs _closure to ensure that all elements add up to 1
     mat: numpy.ndarray
        columns = features
        rows = samples
@@ -54,23 +54,8 @@ def _closure(mat):
         total = np.reshape(mat.sum(axis=1), (num_samps, 1))
     return np.divide(mat, total)
 
-def zero_imputation(mat, method="multiplicative", delta=None):
-    """
-    Replaces zeros with a non-negative value
-    mat: numpy.ndarray
-       columns = features
-       rows = samples
-    method: str
-       method of zero imputation to use
-    delta: float
-       size of delta to be used to replace zeros
-    Returns:
-    --------
-    mat: numpy.ndarray
-    """
-    return _multiplicative_replacement(mat, delta)
 
-def _multiplicative_replacement(mat, delta=None):
+def multiplicative_replacement(mat, delta=None):
     """
     Performs multiplicative replacement strategy
     mat: numpy.ndarray
@@ -86,7 +71,7 @@ def _multiplicative_replacement(mat, delta=None):
     z_mat = (mat == 0).astype(np.float32)
     zcnts = 1 - np.reshape(z_mat.sum(axis=1) * delta, (num_samps, 1) )
     mat = z_mat*delta + np.multiply((1-z_mat), np.multiply(zcnts,mat))
-    return closure(mat)
+    return _closure(mat)
 
 def perturb(x, y):
     """
@@ -95,7 +80,7 @@ def perturb(x, y):
     y: numpy.ndarray
     """    
     mat = np.multiply(x, y)
-    return closure(mat)
+    return _closure(mat)
 
 def perturb_inv(x, y):
     """
@@ -105,7 +90,7 @@ def perturb_inv(x, y):
     """
     _y = power(y,-1)
     mat = np.multiply(x, _y)
-    return closure(mat)
+    return _closure(mat)
 
 def power(x, y):
     """
@@ -114,7 +99,7 @@ def power(x, y):
     y: numpy.ndarray
     """
     mat = np.multiply(np.log(x), y)
-    return closure(np.exp(mat))
+    return _closure(np.exp(mat))
 
 def clr(mat):
     """
@@ -122,7 +107,7 @@ def clr(mat):
     Returns
     =======
     clr: numpy.ndarray
-    clr transformed matrix
+    
     """
     lmat = np.log(mat) # Need to account for zeros
     if len(mat.shape) == 1:
@@ -156,6 +141,7 @@ def centralize(mat):
     .. [1] J.J. Ezogcue http://www.sediment.uni-goettingen.de/staff/tolosana/extra/CoDa.pdf
 
     """
+    assert len(mat.shape)>1, "Need more than 1 row"
     r,c = mat.shape
     cen = ss.gmean(mat, axis=0)
     cen = np.tile(cen, (r,1))
