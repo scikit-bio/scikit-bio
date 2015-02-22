@@ -12,7 +12,13 @@ Functions
 .. autosummary::
    :toctree: generated/
 
-   procrustes
+   zero_imputation
+   perturb
+   perturb_inv
+   power
+   clr
+   centralize
+   
 
 """
 from __future__ import absolute_import, division, print_function
@@ -30,7 +36,7 @@ import numpy as np
 import scipy.stats as ss
 
 
-def closure(mat):
+def _closure(mat):
     """
     Performs closure to ensure that all elements add up to 1
     mat: numpy.ndarray
@@ -62,7 +68,6 @@ def zero_imputation(mat, method="multiplicative", delta=None):
     --------
     mat: numpy.ndarray
     """
-
     return _multiplicative_replacement(mat, delta)
 
 def _multiplicative_replacement(mat, delta=None):

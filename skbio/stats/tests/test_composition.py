@@ -12,7 +12,7 @@ from unittest import TestCase, main
 
 import numpy as np
 
-from skbio.stats.composition import (closure, zero_imputation,
+from skbio.stats.composition import (_closure, zero_imputation,
                                      perturb, perturb_inv, power,
                                      clr, centralize)
 
