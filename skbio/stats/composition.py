@@ -48,7 +48,24 @@ def closure(mat):
         total = np.reshape(mat.sum(axis=1), (num_samps, 1))
     return np.divide(mat, total)
 
-def multiplicative_replacement(mat):
+def zero_imputation(mat, method="multiplicative", delta=None):
+    """
+    Replaces zeros with a non-negative value
+    mat: numpy.ndarray
+       columns = features
+       rows = samples
+    method: str
+       method of zero imputation to use
+    delta: float
+       size of delta to be used to replace zeros
+    Returns:
+    --------
+    mat: numpy.ndarray
+    """
+
+    return _multiplicative_replacement(mat, delta)
+
+def _multiplicative_replacement(mat, delta=None):
     """
     Performs multiplicative replacement strategy
     mat: numpy.ndarray
@@ -59,7 +76,8 @@ def multiplicative_replacement(mat):
     mat: numpy.ndarray
     """
     num_samps, num_feats = mat.shape
-    delta = (1. / num_feats)**2
+    if delta==None:
+        delta = (1. / num_feats)**2
     z_mat = (mat == 0).astype(np.float32)
     zcnts = 1 - np.reshape(z_mat.sum(axis=1) * delta, (num_samps, 1) )
     mat = z_mat*delta + np.multiply((1-z_mat), np.multiply(zcnts,mat))
