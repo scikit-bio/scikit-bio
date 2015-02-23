@@ -1,6 +1,6 @@
 r"""
 Composition Statistics (:mod:`skbio.stats.composition`)
-===============================================
+=======================================================
 
 .. currentmodule:: skbio.stats.composition
 
@@ -9,26 +9,26 @@ This module provides functions for compositional data analysis.
 Many 'omics datasets are inheriently compositional - meaning that they are best
 interpreted as proportions or percentages rather than absolute counts.
 
-Formally, :math:`x` is a composition if :math:`\sum_{i=0}^D x_i = \kappa` and
-`x_i > 0 \forall i` where :math:`\kappa` is a real valued constant and there
-are :math:`D` components for each composition.  In this module :math:`\kappa=1`
-Compositional data can be analyzed using Aitchison geometry [1]_
+Formally, :math:`x` is a composition if :math:`\sum_{i=0}^D x_{i} = c` and
+:math:`x_{i} > 0`, :math:`1 \leq i \leq D`  and :math:`c` is a real valued constant
+and there are :math:`D` components for each composition. In this module
+:math:`c=1`. Compositional data can be analyzed using Aitchison geometry [1]_
 
 However, in this framework, standard real Euclidean operations such as addition
 and multiplication no longer apply.  Only operations such as perturbation and
 power can be used to manipulate this data [1]_
 
 This module allows two styles of manipulation of compositional data.
-Compositional data can be analyzed using perturbation and power operations.
-This can be useful for simulation studies. The alternative strategy is to
+Compositional data can be analyzed using perturbation and power operations,
+which can be useful for simulation studies. The alternative strategy is to
 transform compositional data into the real space.  Right now, the centre log
 ratio transform (clr) [1]_ can be used to accomplish this.  This transform can
 be useful for performing standard statistical tools such as parametric
 hypothesis testing, regressions and more.
 
-The most major caveat of using this framework is dealing with zeros.
+The major caveat of using this framework is dealing with zeros.
 In the Aitchison geometry, only compositions with nonzero components can be
-considered. The multiplicative replacement][2]_ technique can be used to
+considered. The multiplicative replacement technique [2]_ can be used to
 substitute these zeros with small pseudocounts without introducing major
 distortions to the data.
 
@@ -104,7 +104,7 @@ def multiplicative_replacement(mat, delta=None):
 
     mat: numpy.ndarray
        a matrix of proportions where
-       rows = compositions
+       rows = compositions and 
        columns = components
 
     Returns:
@@ -124,12 +124,12 @@ def multiplicative_replacement(mat, delta=None):
 
 
 def perturb(x, y):
-    """
+    r"""
     Performs the perturbation operation
 
-    This operation is defined as follows
-    :math:`x \oplus y = C\[x_1 y_1, ..., x_D y_D\]`
-    Where :math:`C\[x\]` is the closure operation on the composition
+    This operation is defined as
+    :math:`x \oplus y = C[x_1 y_1, ..., x_D y_D]`
+    where :math:`C[x]` is the closure operation on the composition
     :math:`x` and :math:`D` is the number of components for every
     composition.
 
@@ -137,11 +137,11 @@ def perturb(x, y):
     ----------
     x : numpy.ndarray, float
         a matrix of proportions where
-        rows = compositions
+        rows = compositions and
         columns = components
     y : numpy.ndarray, float
         a matrix of proportions where
-        rows = compositions
+        rows = compositions and
         columns = components
 
     Returns
@@ -162,12 +162,12 @@ def perturb(x, y):
 
 
 def perturb_inv(x, y):
-    """
+    r"""
     Performs the inverse perturbation operation
 
-    This operation is defined as follows
-    :math:`x \ominus y = C\[x_1 y_1^{-1}, ..., x_D y_D^{-1}\]`
-    Where :math:`C\[x\]` is the closure operation on the composition
+    This operation is defined as
+    :math:`x \ominus y = C[x_1 y_1^{-1}, ..., x_D y_D^{-1}]`
+    where :math:`C[x]` is the closure operation on the composition
     :math:`x` and :math:`D` is the number of components for every
     composition.
 
@@ -175,11 +175,11 @@ def perturb_inv(x, y):
     ----------
     x : numpy.ndarray
         a matrix of proportions where
-        rows = compositions
+        rows = compositions and
         columns = components
     y : numpy.ndarray
         a matrix of proportions where
-        rows = compositions
+        rows = compositions and
         columns = components
 
     Returns
@@ -200,12 +200,12 @@ def perturb_inv(x, y):
 
 
 def power(x, a):
-    """
+    r"""
     Performs the power operation
 
     This operation is defined as follows
-    :math:`x \odot y = C\[x_1^a, ..., x_D^a\]`
-    Where :math:`C\[x\]` is the closure operation on the composition
+    :math:`x \odot y = C[x_1^a, ..., x_D^a]`
+    Where :math:`C[x]` is the closure operation on the composition
     :math:`x` and :math:`D` is the number of components for every
     composition.
 
@@ -213,11 +213,11 @@ def power(x, a):
     ----------
     x : numpy.ndarray, float
         a matrix of proportions where
-        rows = compositions
+        rows = compositions and
         columns = components
     a : numpy.ndarray, float
         a matrix of proportions where
-        rows = compositions
+        rows = compositions and
         columns = components
 
     Returns
@@ -238,23 +238,21 @@ def power(x, a):
 
 
 def clr(mat):
-    """
+    r"""
     Performs centre log ratio transformation that transforms
     compositions from Aitchison geometry to the real space.
     This transformation is an isometry, but not an isomorphism.
 
-    This transformation is defined as follows for a composition
-    :math:`x`
+    This transformation is defined for a composition :math:`x` as follows
 
     :math:`clr(x) = ln[\frac{x_1}{g_m(x)}, ..., \frac{x_D}{g_m(x)}]`
     where :math:`g_m(x) = (\prod_{i=1}^{D} x_i)^{1/D}` is the geometric
-    mean.
+    mean of :math:`x`.
 
     mat : numpy.ndarray, float
        a matrix of proportions where
-       rows = compositions
+       rows = compositions and
        columns = components
-
 
     Returns
     =======
@@ -287,7 +285,7 @@ def centralize(mat):
 
     mat : numpy.ndarray, float
        a matrix of proportions where
-       rows = compositions
+       rows = compositions and
        columns = components
 
     Returns
