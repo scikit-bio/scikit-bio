@@ -24,12 +24,12 @@ class CompositionTests(TestCase):
             np.array([2, 2, 6]),
             np.array([4, 4, 2])))
         self.data2 = np.array([2, 2, 6])
-        D = 5
+
         self.data3 = np.vstack((
-            np.array(range(1, 4) + [0]*1 + [5]),
-            np.array(range(1, 2) + [0]*2 + range(4, 6)),
-            np.array(range(1, D+1))))
-        self.data4 = np.array(range(1, 4) + [0]*1 + [5])
+            np.array([1, 2, 3, 0, 5]),
+            np.array([1, 0, 0, 4, 5]),
+            np.array(range(1, 6))))
+        self.data4 = np.array([1, 2, 3, 0, 5])
 
     def test_closure(self):
         assert_array_almost_equal(_closure(self.data1),
