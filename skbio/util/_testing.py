@@ -10,6 +10,7 @@ import os
 import inspect
 from nose import core
 from nose.tools import nottest
+from future.utils import PY3
 
 
 @nottest
@@ -39,12 +40,20 @@ class TestRunner(object):
         self._test_dir = os.path.dirname(filename)
         # NOTE: it doesn't seem to matter what the first element of the argv
         # list is, there just needs to be something there.
-        self._argv = [filename, '-I DO_NOT_IGNORE_ANYTHING', '--with-doctest']
+        self._argv = [filename, '-I DO_NOT_IGNORE_ANYTHING']
+        if not self.is_py3():
+            self._argv.append('--with-doctest')
 
     def test(self):
         """Performs the actual running of the tests.
         """
         core.run(argv=self._argv, defaultTest=self._test_dir)
+
+    def is_py3(self):
+        """Returns boolean indicating whether the user is running Python 3.
+        This provides a flag for disabling doctests for Python 3.
+        """
+        return PY3
 
 
 def get_data_path(fn, subfolder='data'):
