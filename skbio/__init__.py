@@ -30,8 +30,6 @@ __all__ = ['BiologicalSequence', 'NucleotideSequence', 'DNA', 'DNASequence',
            'DistanceMatrix', 'local_pairwise_align_ssw', 'SequenceCollection',
            'Alignment', 'TreeNode', 'nj', 'read', 'write']
 
-test = Tester().test
-
 __credits__ = "https://github.com/biocore/scikit-bio/graphs/contributors"
 __version__ = "0.2.3-dev"
 
