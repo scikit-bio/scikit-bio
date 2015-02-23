@@ -10,9 +10,10 @@ Many 'omics datasets are inheriently compositional - meaning that they are best
 interpreted as proportions or percentages rather than absolute counts.
 
 Formally, :math:`x` is a composition if :math:`\sum_{i=0}^D x_{i} = c` and
-:math:`x_{i} > 0`, :math:`1 \leq i \leq D`  and :math:`c` is a real valued constant
-and there are :math:`D` components for each composition. In this module
-:math:`c=1`. Compositional data can be analyzed using Aitchison geometry [1]_
+:math:`x_{i} > 0`, :math:`1 \leq i \leq D`  and :math:`c` is a real valued
+constant and there are :math:`D` components for each composition. In this
+module :math:`c=1`. Compositional data can be analyzed using Aitchison
+geometry [1]_
 
 However, in this framework, standard real Euclidean operations such as addition
 and multiplication no longer apply.  Only operations such as perturbation and
@@ -86,11 +87,12 @@ def _closure(mat):
         mat = mat.astype(np.float64)
 
     if len(mat.shape) == 1:
-        num_samps = len(mat)
         total = mat.sum()
-    else:
+    elif len(mat.shape) == 2:
         num_samps, num_feats = mat.shape
         total = np.reshape(mat.sum(axis=1), (num_samps, 1))
+    else:
+        raise ValueError("mat has too many dimensions")
     mat_ = np.divide(mat, total)
     return mat_
 
@@ -102,22 +104,45 @@ def multiplicative_replacement(mat, delta=None):
     operation is applied so that the compositions still
     add up to 1
 
+    Parameters
+    ----------
     mat: numpy.ndarray
        a matrix of proportions where
-       rows = compositions and 
+       rows = compositions and
        columns = components
 
-    Returns:
-    --------
+    Returns
+    -------
     mat_ : numpy.ndarray, np.float64
        A matrix of proportions where all of the values
        are nonzero and each composition (row) adds up to 1
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from skbio.stats.composition import multiplicative_replacement
+    >>> X = np.array([[.2,.4,.4, 0],[0,.5,.5,0]])
+    >>> multiplicative_replacement(X)
+    array([[ 0.1875,  0.375 ,  0.375 ,  0.0625],
+           [ 0.0625,  0.4375,  0.4375,  0.0625]])
+
     """
-    num_samps, num_feats = mat.shape
+    z_mat = (mat == 0).astype(np.float32)
+
+    if len(mat.shape) == 1:
+        num_feats = len(mat)
+        num_samps = 1
+        tot = z_mat.sum()
+    elif len(mat.shape) == 2:
+        num_samps, num_feats = mat.shape
+        tot = z_mat.sum(axis=1)
+    else:
+        raise ValueError("mat has too many dimensions")
+
     if delta is None:
         delta = (1. / num_feats)**2
-    z_mat = (mat == 0).astype(np.float32)
-    zcnts = 1 - np.reshape(z_mat.sum(axis=1) * delta, (num_samps, 1))
+
+    zcnts = 1 - np.reshape(tot * delta, (num_samps, 1))
     mat_ = _closure(z_mat*delta + np.multiply((1-z_mat),
                                               np.multiply(zcnts, mat)))
     return mat_
@@ -156,6 +181,15 @@ def perturb(x, y):
 
     - All of the values in x and y must be greater than zero
 
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from skbio.stats.composition import perturb
+    >>> x = np.array([.1,.3,.4, .2])
+    >>> y = np.array([1./6,1./6,1./3,1./3])
+    >>> perturb(x,y)
+    array([ 0.0625,  0.1875,  0.5   ,  0.25  ])
+
     """
     mat_ = _closure(np.multiply(x, y))
     return mat_
@@ -193,6 +227,16 @@ def perturb_inv(x, y):
     - Each row must add up to 1
 
     - All of the values in x and y must be greater than zero
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from skbio.stats.composition import perturb_inv
+    >>> x = np.array([.1,.3,.4, .2])
+    >>> y = np.array([1./6,1./6,1./3,1./3])
+    >>> perturb_inv(x,y)
+    array([ 0.14285714,  0.42857143,  0.28571429,  0.14285714])
+
     """
     _y = power(y, -1)
     mat = np.multiply(x, _y)
@@ -215,10 +259,8 @@ def power(x, a):
         a matrix of proportions where
         rows = compositions and
         columns = components
-    a : numpy.ndarray, float
-        a matrix of proportions where
-        rows = compositions and
-        columns = components
+    a : float
+        a scalar float
 
     Returns
     -------
@@ -231,6 +273,12 @@ def power(x, a):
     - Each row must add up to 1
 
     - All of the values in x must be greater than zero
+
+    >>> import numpy as np
+    >>> from skbio.stats.composition import power
+    >>> x = np.array([.1,.3,.4, .2])
+    >>> power(x, .1)
+    array([ 0.23059566,  0.25737316,  0.26488486,  0.24714631])
 
     """
     mat = np.multiply(np.log(x), a)
@@ -249,13 +297,15 @@ def clr(mat):
     where :math:`g_m(x) = (\prod_{i=1}^{D} x_i)^{1/D}` is the geometric
     mean of :math:`x`.
 
+    Parameters
+    ----------
     mat : numpy.ndarray, float
        a matrix of proportions where
        rows = compositions and
        columns = components
 
     Returns
-    =======
+    -------
     _clr : numpy.ndarray
          clr transformed matrix
 
@@ -265,15 +315,23 @@ def clr(mat):
 
     - All of the values must be greater than zero
 
+    >>> import numpy as np
+    >>> from skbio.stats.composition import clr
+    >>> x = np.array([.1,.3,.4, .2])
+    >>> clr(x)
+    array([-0.79451346,  0.30409883,  0.5917809 , -0.10136628])
+
     """
     lmat = np.log(mat)
     if len(mat.shape) == 1:
         num_samps = len(mat)
         gm = lmat.mean()
-    else:
+    elif len(mat.shape) == 2:
         num_samps, num_feats = mat.shape
         gm = lmat.mean(axis=1)
         gm = np.reshape(gm, (num_samps, 1))
+    else:
+        raise ValueError("mat has too many dimensions")
     _clr = lmat - gm
     return _clr
 
@@ -283,13 +341,15 @@ def centralize(mat):
     This calculates the average sample and centers the data
     around this sample.
 
+    Parameters
+    ----------
     mat : numpy.ndarray, float
        a matrix of proportions where
        rows = compositions and
        columns = components
 
     Returns
-    =======
+    -------
     centered : numpy.ndarray
          centered proportion matrix
 
@@ -298,6 +358,13 @@ def centralize(mat):
     - Each row must add up to 1
 
     - All of the values must be greater than zero
+
+    >>> import numpy as np
+    >>> from skbio.stats.composition import centralize
+    >>> X = np.array([[.1,.3,.4, .2],[.2,.2,.2,.4]])
+    >>> centralize(X)
+    array([[ 0.17445763,  0.30216948,  0.34891526,  0.17445763],
+           [ 0.32495488,  0.18761279,  0.16247744,  0.32495488]])
 
     """
     assert len(mat.shape) > 1, "Need more than 1 row"

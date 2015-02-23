@@ -29,8 +29,9 @@ class CompositionTests(TestCase):
             np.array(range(1, 4) + [0]*1 + [5]),
             np.array(range(1, 2) + [0]*2 + range(4, 6)),
             np.array(range(1, D+1))))
+        self.data4 = np.array(range(1, 4) + [0]*1 + [5])
 
-    def test__closure(self):
+    def test_closure(self):
         assert_array_almost_equal(_closure(self.data1),
                                   np.vstack((np.array([.2, .2, .6]),
                                              np.array([.4, .4, .2]))))
