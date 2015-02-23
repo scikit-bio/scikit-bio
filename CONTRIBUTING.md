@@ -128,8 +128,8 @@ Tests can be executed using [nose](https://nose.readthedocs.org/en/latest/) by r
 Note that this is possible because the lines below are added at the end of each `__init__.py` file in the package, so if you add a new module, be sure to include these lines in its `__init__.py`:
 
 ```python
-from numpy.testing import Tester
-test = Tester().test
+from skbio.util import TestRunner
+test = Tester(__file__).test
 ```
 
 
