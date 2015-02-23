@@ -37,17 +37,20 @@ class TestRunner(object):
 
     """
     def __init__(self, filename):
+        self._filename = filename
         self._test_dir = os.path.dirname(filename)
-        # NOTE: it doesn't seem to matter what the first element of the argv
-        # list is, there just needs to be something there.
-        self._argv = [filename, '-I DO_NOT_IGNORE_ANYTHING']
-        if not self.is_py3():
-            self._argv.append('--with-doctest')
 
-    def test(self):
+    def test(self, coverage=False):
         """Performs the actual running of the tests.
         """
-        core.run(argv=self._argv, defaultTest=self._test_dir)
+        # NOTE: it doesn't seem to matter what the first element of the argv
+        # list is, there just needs to be something there.
+        argv = [self._filename, '-I DO_NOT_IGNORE_ANYTHING']
+        if not self.is_py3():
+            argv.append('--with-doctest')
+        if coverage:
+            argv.append('--with-coverage')
+        core.run(argv=argv, defaultTest=self._test_dir)
 
     def is_py3(self):
         """Returns boolean indicating whether the user is running Python 3.
