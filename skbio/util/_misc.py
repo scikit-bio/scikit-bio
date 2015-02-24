@@ -12,6 +12,7 @@ import hashlib
 from os import remove, makedirs
 from os.path import exists, isdir
 from functools import partial
+from warnings import warn
 
 
 def cardinal_to_ordinal(n):
@@ -268,6 +269,14 @@ def find_duplicates(iterable):
 def flatten(items):
     """Removes one level of nesting from items
 
+    .. note:: Deprecated in scikit-bio 0.2.3-dev
+       ``skbio.util.flatten`` will be removed in scikit-bio 0.3.1
+       it is being deprecated in favor of solutions present
+       in the standard python library.
+       Please refer to the following links for good alternatives:
+       http://stackoverflow.com/a/952952/3639023
+       http://stackoverflow.com/a/406199/3639023.
+
     Parameters
     ----------
     items : iterable
@@ -287,6 +296,11 @@ def flatten(items):
     ['a', 'b', 'c', 'd', 1, 2, 3, 4, 5, 'x', 'y', 'foo']
 
     """
+    warn("skbio.util.flatten is deprecated. Please refer to the following "
+         "links for solutions from the standard python library: "
+         "http://stackoverflow.com/a/952952/3639023 "
+         "http://stackoverflow.com/a/406199/3639023", DeprecationWarning)
+
     result = []
     for i in items:
         try:
