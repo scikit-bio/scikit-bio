@@ -9,13 +9,17 @@
 TARGET ?= skbio
 
 ifeq ($(WITH_COVERAGE), TRUE)
-	COVERAGE = coverage=True
+	COVERAGE = --with-coverage
+endif
+
+ifeq ($(WITH_DOCTEST), FALSE)
+	DOCTEST =
 else
-	COVERAGE = coverage=False
+	DOCTEST = --with-doctest
 endif
 
 test:
-	python -c "import skbio; skbio.test($(COVERAGE))"
-	pep8 skbio setup.py checklist.py
-	flake8 skbio setup.py checklist.py
+	nosetests -v $(TARGET) $(DOCTEST) $(COVERAGE) --ignore DO_NOT_IGNORE_ANYTHING
+	pep8 $(TARGET) setup.py checklist.py
+	flake8 $(TARGET) setup.py checklist.py
 	./checklist.py
