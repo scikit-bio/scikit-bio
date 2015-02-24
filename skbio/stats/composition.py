@@ -46,6 +46,28 @@ Functions
    clr
    centralize
 
+Examples
+--------
+
+>>> import numpy as np
+
+Consider a very simple environment with only 3 species.
+The species in the environment are equally distributed and their
+proportions are equilvalent:
+
+>>> otus = np.array([1./3, 1./3., 1./3])
+
+Suppose that an antibiotic kills off half of the population for the
+first two species, but doesn't harm the third species.
+Then the perturbation vector would be as follows
+
+>>> antibiotic = np.array([1./2, 1./2, 1])
+
+And the resulting perturbation would be
+
+>>> perturb(otus, antibiotic)
+array([ 0.25,  0.25,  0.5 ])
+
 Reference
 ---------
 .. [1] V. Pawlowsky-Glahn. "Lecture Notes on Compositional Data Analysis"
@@ -212,7 +234,6 @@ def perturb_inv(x, y):
         rows = compositions and
         columns = components
     y : numpy.ndarray
-        a matrix of proportions where
         rows = compositions and
         columns = components
 
@@ -224,7 +245,9 @@ def perturb_inv(x, y):
 
     Notes
     -----
-    - Each row must add up to 1
+    - Each row must add up to 1 for x.
+
+    - y doesn't neccessary have to be a matrix of compositions
 
     - All of the values in x and y must be greater than zero
 
@@ -248,7 +271,7 @@ def power(x, a):
     Performs the power operation
 
     This operation is defined as follows
-    :math:`x \odot y = C[x_1^a, ..., x_D^a]`
+    :math:`x \odot a = C[x_1^a, ..., x_D^a]`
     Where :math:`C[x]` is the closure operation on the composition
     :math:`x` and :math:`D` is the number of components for every
     composition.
@@ -270,7 +293,7 @@ def power(x, a):
 
     Notes
     -----
-    - Each row must add up to 1
+    - Each row must add up to 1 for x
 
     - All of the values in x must be greater than zero
 
@@ -313,7 +336,7 @@ def clr(mat):
     -----
     - Each row must add up to 1
 
-    - All of the values must be greater than zero
+    - All of the values must be greater than zero for mat
 
     >>> import numpy as np
     >>> from skbio.stats.composition import clr
@@ -355,7 +378,7 @@ def centralize(mat):
 
     Notes
     -----
-    - Each row must add up to 1
+    - Each row must add up to 1 for mat
 
     - All of the values must be greater than zero
 
