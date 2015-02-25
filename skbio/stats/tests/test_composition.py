@@ -94,9 +94,9 @@ class CompositionTests(TestCase):
                                             [0.06666667, 0.13333333,
                                              0.2, 0.26666667, 0.33333333]]))
         amat = multiplicative_replacement(self.data4)
-        assert_array_almost_equal(amat,np.array([[ 0.09056604, 0.18113208,
-                                                   0.27169811, 0.00377358,
-                                                   0.45283019]]))
+        assert_array_almost_equal(amat,np.array([0.09056604, 0.18113208,
+                                                 0.27169811, 0.00377358,
+                                                 0.45283019]))
         with self.assertRaises(ValueError):
             multiplicative_replacement(self.data5)
 
