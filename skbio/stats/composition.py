@@ -390,7 +390,10 @@ def centralize(mat):
            [ 0.32495488,  0.18761279,  0.16247744,  0.32495488]])
 
     """
-    assert len(mat.shape) > 1, "Need more than 1 row"
+    if len(mat.shape) == 1:
+        raise ValueError("mat needs more than 1 row")
+    if len(mat.shape) > 2:
+        raise ValueError("mat has too many dimensions")
     r, c = mat.shape
     cen = ss.gmean(mat, axis=0)
     cen = np.tile(cen, (r, 1))

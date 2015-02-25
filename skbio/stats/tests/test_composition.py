@@ -30,6 +30,7 @@ class CompositionTests(TestCase):
             np.array([1, 0, 0, 4, 5]),
             np.array(range(1, 6))))
         self.data4 = np.array([1, 2, 3, 0, 5])
+        self.data5 = np.array([[[1, 2, 3, 0, 5]]])
 
     def test_closure(self):
         assert_array_almost_equal(_closure(self.data1),
@@ -37,6 +38,8 @@ class CompositionTests(TestCase):
                                              np.array([.4, .4, .2]))))
         assert_array_almost_equal(_closure(self.data2),
                                   np.array([.2, .2, .6]))
+        with self.assertRaises(ValueError):
+            _closure(self.data5)
 
     def test_perturb(self):
         pmat = perturb(_closure(self.data1), np.array([1, 1, 1]))
@@ -90,6 +93,12 @@ class CompositionTests(TestCase):
                                              0.49568966],
                                             [0.06666667, 0.13333333,
                                              0.2, 0.26666667, 0.33333333]]))
+        amat = multiplicative_replacement(self.data4)
+        assert_array_almost_equal(amat,np.array([[ 0.09056604, 0.18113208,
+                                                   0.27169811, 0.00377358,
+                                                   0.45283019]]))
+        with self.assertRaises(ValueError):
+            multiplicative_replacement(self.data5)
 
     def test_clr(self):
         cmat = clr(_closure(self.data1))
@@ -104,6 +113,8 @@ class CompositionTests(TestCase):
         A = np.array([.2, .2, .6])
         assert_array_almost_equal(cmat,
                                   np.log(A / np.exp(np.log(A).mean())))
+        with self.assertRaises(ValueError):
+            clr(self.data5)
 
     def test_centralize(self):
         cmat = centralize(_closure(self.data1))
@@ -112,6 +123,10 @@ class CompositionTests(TestCase):
                                              0.55051026],
                                             [0.41523958, 0.41523958,
                                              0.16952085]]))
+        with self.assertRaises(ValueError):
+            centralize(self.data2)
+        with self.assertRaises(ValueError):
+            centralize(self.data5)
 
 if __name__ == "__main__":
     main()
