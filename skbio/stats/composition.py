@@ -167,7 +167,7 @@ def multiplicative_replacement(mat, delta=None):
     zcnts = 1 - np.reshape(tot * delta, (num_samps, 1))
     mat_ = _closure(z_mat*delta + np.multiply((1-z_mat),
                                               np.multiply(zcnts, mat)))
-    if len(mat.shape)==1:
+    if len(mat.shape) == 1:
         mat_ = np.ravel(mat_)
     return mat_
 
