@@ -178,9 +178,11 @@ def perturb(x, y):
 
     This operation is defined as
     :math:`x \oplus y = C[x_1 y_1, ..., x_D y_D]`
-    where :math:`C[x]` is the closure operation on the composition
-    :math:`x` and :math:`D` is the number of components for every
-    composition.
+
+    :math:`C[x]` is the closure operation defined as
+    :math:`C[x] = [\frac{x_1}{\sum x},...,\frac{x_D}{\sum x}]`
+    for some :math:`D` dimensional real vector :math:`x` and
+    :math:`D` is the number of components for every composition.
 
     Parameters
     ----------
@@ -225,9 +227,11 @@ def perturb_inv(x, y):
 
     This operation is defined as
     :math:`x \ominus y = C[x_1 y_1^{-1}, ..., x_D y_D^{-1}]`
-    where :math:`C[x]` is the closure operation on the composition
-    :math:`x` and :math:`D` is the number of components for every
-    composition.
+
+    :math:`C[x]` is the closure operation defined as
+    :math:`C[x] = [\frac{x_1}{\sum x},...,\frac{x_D}{\sum x}]`
+    for some :math:`D` dimensional real vector :math:`x` and
+    :math:`D` is the number of components for every composition.
 
     Parameters
     ----------
@@ -274,9 +278,12 @@ def power(x, a):
 
     This operation is defined as follows
     :math:`x \odot a = C[x_1^a, ..., x_D^a]`
-    Where :math:`C[x]` is the closure operation on the composition
-    :math:`x` and :math:`D` is the number of components for every
-    composition.
+
+    :math:`C[x]` is the closure operation defined as
+    :math:`C[x] = [\frac{x_1}{\sum x},...,\frac{x_D}{\sum x}]`
+    for some :math:`D` dimensional real vector :math:`x` and
+    :math:`D` is the number of components for every composition.
+
 
     Parameters
     ----------
