@@ -20,9 +20,8 @@ from skbio.stats.power import (subsample_power,
                                confidence_bound,
                                _calculate_power,
                                _compare_distributions,
-                               _calculate_power_curve,
-                               bootstrap_power_curve,
-                               paired_subsamples)
+                               paired_subsamples
+                               )
 
 
 class PowerAnalysisTest(TestCase):
@@ -119,13 +118,22 @@ class PowerAnalysisTest(TestCase):
                             counts_interval=1000,
                             max_counts=7)
 
+    def test_subsample_power_p_values_error(self):
+        with self.assertRaises(TypeError):
+            subsample_power(lambda x: 'foo', self.pop)
+
+    def test_subsample_power_ratio_error(self):
+        with self.assertRaises(ValueError):
+            subsample_power(self.f, samples=self.pop,
+                            ratio=np.array([1, 2, 3]))
+
     def test_subsample_power_defaults(self):
         test_p, test_c = subsample_power(self.f, self.pop,
                                          num_iter=10, num_runs=5)
         self.assertEqual(test_p.shape, (5, 4))
         npt.assert_array_equal(np.array([10, 20, 30, 40]), test_c)
 
-    def test_subsample_power(self):
+    def test_subsample_power_counts(self):
         test_p, test_c = subsample_power(self.f,
                                          samples=self.pop,
                                          num_iter=10,
@@ -134,6 +142,24 @@ class PowerAnalysisTest(TestCase):
         self.assertEqual(test_p.shape, (2, 5))
         npt.assert_array_equal(np.arange(5, 50, 10), test_c)
 
+    def test_subsample_power_matches(self):
+        test_p, test_c = subsample_power(self.f,
+                                         samples=self.pop,
+                                         num_iter=10,
+                                         num_runs=5,
+                                         draw_mode="matched")
+        self.assertEqual(test_p.shape, (5, 4))
+        npt.assert_array_equal(np.array([10, 20, 30, 40]), test_c)
+
+    def test_subsample_power_multi_p(self):
+        f = lambda x: np.array([0.5, 0.5])
+        test_p, test_c = subsample_power(f,
+                                         samples=self.pop,
+                                         num_iter=10,
+                                         num_runs=5)
+        self.assertEqual(test_p.shape, (5, 4, 2))
+        npt.assert_array_equal(np.array([10, 20, 30, 40]), test_c)
+
     def test_subsample_paired_power_min_observations_error(self):
         with self.assertRaises(ValueError):
             subsample_paired_power(self.f,
@@ -141,14 +167,31 @@ class PowerAnalysisTest(TestCase):
                                    cat=self.cat,
                                    control_cats=self.control_cats)
 
-    def test_subsample_paired_power_interval_error(self):
+    def test_subsample_paired_power_ratio_error(self):
         with self.assertRaises(ValueError):
             subsample_paired_power(self.f,
                                    self.meta,
+                                   cat='ABX',
+                                   control_cats=['SEX'],
+                                   ratio=0,
+                                   min_observations=1)
+
+    def test_subsample_paired_power_p_values_error(self):
+        with self.assertRaises(TypeError):
+            subsample_paired_power(lambda x: 'foo',
+                                   self.meta,
+                                   cat='INT',
+                                   control_cats=['SEX'],
+                                   min_observations=0)
+
+    def test_subsample_paired_power_interval_error(self):
+        with self.assertRaises(ValueError):
+            subsample_paired_power(self.meta_f,
+                                   self.meta,
                                    cat='INT',
                                    control_cats=['SEX', 'AGE'],
-                                   min_observations=2,
-                                   counts_interval=12,
+                                   min_observations=1,
+                                   counts_interval=50,
                                    min_counts=5,
                                    max_counts=7)
 
@@ -167,8 +210,23 @@ class PowerAnalysisTest(TestCase):
                                                 num_iter=10,
                                                 num_runs=2)
         # Test the output shapes are sane
-        npt.assert_array_equal(test_p.shape, (2, 5))
+        self.assertEqual(test_p.shape, (2, 5))
         npt.assert_array_equal(known_c, test_c)
+
+    def test_subsample_paired_power_multi(self):
+        f = lambda x: np.array([0.5, 0.5, 0.005])
+        cat = 'INT'
+        control_cats = ['SEX']
+        # Tests for the control cats
+        test_p, test_c = subsample_paired_power(f,
+                                                meta=self.meta,
+                                                cat=cat,
+                                                control_cats=control_cats,
+                                                min_observations=1,
+                                                counts_interval=1,
+                                                num_iter=10,
+                                                num_runs=2)
+        self.assertEqual(test_p.shape, (2, 5, 3))
 
     def test__check_strs_str(self):
         self.assertTrue(_check_strs('string'))
@@ -235,28 +293,35 @@ class PowerAnalysisTest(TestCase):
         # Checks the test value
         npt.assert_almost_equal(known, test)
 
+    def test__calculate_power_n(self):
+        crit = 0.025
+        known = np.array([0.5, 0.5])
+        alpha = np.vstack((self.alpha, self.alpha))
+        test = _calculate_power(alpha, crit)
+        npt.assert_almost_equal(known, test)
+
     def test__compare_distributions_mode_error(self):
         with self.assertRaises(ValueError):
-            _compare_distributions(self.f, self.samps, mode='fig')
+            _compare_distributions(self.f, self.samps, 1, mode='fig')
 
     def test__compare_distributions_count_error(self):
         with self.assertRaises(ValueError):
-            _compare_distributions(self.f, self.samps, counts=[1, 2, 3],
+            _compare_distributions(self.f, self.samps, 1, counts=[1, 2, 3],
                                    num_iter=100)
 
     def test__compare_distributions_matched_length_error(self):
         with self.assertRaises(ValueError):
-            _compare_distributions(self.f, [np.ones((5)), np.zeros((6))],
+            _compare_distributions(self.f, [np.ones((5)), np.zeros((6))], 1,
                                    mode="matched")
 
     def test__compare_distributions_sample_counts_error(self):
         with self.assertRaises(ValueError):
-            _compare_distributions(self.f, [self.pop[0][:5], self.pop[1]],
-                                   25)
+            _compare_distributions(self.f, [self.pop[0][:5], self.pop[1]], 1,
+                                   counts=25)
 
     def test__compare_distributions_all_mode(self):
         known = np.ones((100))*0.0026998
-        test = _compare_distributions(self.f, self.samps, num_iter=100)
+        test = _compare_distributions(self.f, self.samps, 1, num_iter=100)
         npt.assert_allclose(known, test, 5)
 
     def test__compare_distributions_matched_mode(self):
@@ -264,77 +329,19 @@ class PowerAnalysisTest(TestCase):
         known_mean = 0.162195
         known_std = 0.121887
         known_shape = (100,)
-        # Sets the sample value
         # Tests the sample value
-        test = _compare_distributions(self.f, self.pop, mode='matched',
+        test = _compare_distributions(self.f, self.pop, 1, mode='matched',
                                       num_iter=100)
         npt.assert_allclose(known_mean, test.mean(), rtol=0.1, atol=0.02)
         npt.assert_allclose(known_std, test.std(), rtol=0.1, atol=0.02)
         self.assertEqual(known_shape, test.shape)
 
-    def test__calculate_power_curve_ratio_error(self):
-        with self.assertRaises(ValueError):
-            _calculate_power_curve(self.f, self.pop, self.num_samps,
-                                   ratio=np.array([0.1, 0.2, 0.3]),
-                                   num_iter=100)
-
-    def test__calculate_power_curve_default(self):
-        # Sets the know output
-        known = np.array([0.509, 0.822, 0.962, 0.997, 1.000, 1.000, 1.000,
-                          1.000,  1.000])
-
-        # Generates the test values.
-        test = _calculate_power_curve(self.f,
-                                      self.pop,
-                                      self.num_samps,
-                                      num_iter=100)
-        # Checks the samples returned sanely
-        npt.assert_allclose(test, known, rtol=0.1, atol=0.1)
-
-    def test__calculate_power_curve_alpha(self):
-        # Sets the know output
-        known = np.array([0.31, 0.568, 0.842, 0.954, 0.995, 1.000, 1.000,
-                          1.000, 1.000])
-
-        # Generates the test values
-        test = _calculate_power_curve(self.f,
-                                      self.pop,
-                                      self.num_samps,
-                                      alpha=0.01,
-                                      num_iter=100)
-
-        # Checks the samples returned sanely
-        npt.assert_allclose(test, known, rtol=0.1, atol=0.1)
-
-    def test__calculate_power_curve_ratio(self):
-        # Sets the know output
-        known = np.array([0.096, 0.333, 0.493, 0.743, 0.824, 0.937, 0.969,
-                          0.996, 0.998])
-
-        # Generates the test values
-        test = _calculate_power_curve(self.f,
-                                      self.pop,
-                                      self.num_samps,
-                                      ratio=np.array([0.25, 0.75]),
-                                      num_iter=100)
-
-        # Checks the samples returned sanely
-        npt.assert_allclose(test, known, rtol=0.1, atol=0.1)
-
-    def test_bootstrap_power_curve(self):
-        # Sets the known values
-        known_mean = np.array([0.500, 0.82, 0.965, 0.995, 1.000, 1.000,
-                               1.000, 1.000,  1.000])
-        known_bound = np.array([0.03, 0.02, 0.01, 0.01, 0.00, 0.00, 0.00, 0.00,
-                                0.00])
-        # Generates the test values
-        test_mean, test_bound = bootstrap_power_curve(self.f,
-                                                      self.pop,
-                                                      self.num_samps,
-                                                      num_iter=100)
-        # Checks the function returned sanely
-        npt.assert_allclose(test_mean, known_mean, rtol=0.05, atol=0.05)
-        npt.assert_allclose(test_bound, known_bound, rtol=0.1, atol=0.01)
+    def test__compare_distributions_multiple_returns(self):
+        known = np.array([[1, 1, 1], [2, 2, 2], [3, 3, 3]])
+        f = lambda x: np.array([1, 2, 3])
+        test = _compare_distributions(f, self.pop, 3, mode='matched',
+                                      num_iter=3)
+        npt.assert_array_equal(known, test)
 
     def test_paired_subsamples_default(self):
         # Sets the known np.array set
