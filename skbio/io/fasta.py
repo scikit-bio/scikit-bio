@@ -525,6 +525,7 @@ References
 .. [6] http://evolution.genetics.washington.edu/phylip/doc/sequence.html
 
 """
+
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #

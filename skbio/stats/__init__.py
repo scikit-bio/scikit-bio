@@ -29,6 +29,7 @@ Functions
    isubsample
 
 """
+
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #

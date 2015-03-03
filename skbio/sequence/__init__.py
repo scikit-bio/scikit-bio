@@ -138,6 +138,7 @@ NucleotideSequences can be translated using a ``GeneticCode`` object.
 <ProteinSequence: MSK* (length: 4)>
 
 """
+
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
