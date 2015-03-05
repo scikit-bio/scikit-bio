@@ -93,7 +93,7 @@ import scipy.stats as ss
 def _closure(mat):
     """
     Performs closure to ensure that all elements add up to 1
-    mat : numpy.ndarray
+    mat : array-like
        a matrix of proportions where
        rows = compositions
        columns = components
@@ -105,6 +105,7 @@ def _closure(mat):
        are nonzero and each composition (row) adds up to 1
 
     """
+    mat = np.asarray(mat)
     if not isinstance(mat.dtype, float):
         mat = mat.astype(np.float64)
 
@@ -128,7 +129,7 @@ def multiplicative_replacement(mat, delta=None):
 
     Parameters
     ----------
-    mat: numpy.ndarray
+    mat: array-like
        a matrix of proportions where
        rows = compositions and
        columns = components
@@ -149,6 +150,7 @@ def multiplicative_replacement(mat, delta=None):
            [ 0.0625,  0.4375,  0.4375,  0.0625]])
 
     """
+    mat = np.asarray(mat)
     z_mat = (mat == 0).astype(np.float32)
 
     if len(mat.shape) == 1:
@@ -186,11 +188,11 @@ def perturb(x, y):
 
     Parameters
     ----------
-    x : numpy.ndarray, float
+    x : array-like, float
         a matrix of proportions where
         rows = compositions and
         columns = components
-    y : numpy.ndarray, float
+    y : array-like, float
         a matrix of proportions where
         rows = compositions and
         columns = components
@@ -217,6 +219,8 @@ def perturb(x, y):
     array([ 0.0625,  0.1875,  0.5   ,  0.25  ])
 
     """
+    x = np.asarray(x)
+    y = np.asarray(y)
     mat_ = _closure(np.multiply(x, y))
     return mat_
 
@@ -267,6 +271,8 @@ def perturb_inv(x, y):
     array([ 0.14285714,  0.42857143,  0.28571429,  0.14285714])
 
     """
+    x = np.asarray(x)
+    y = np.asarray(y)
     _y = power(y, -1)
     mat = np.multiply(x, _y)
     return _closure(mat)
@@ -313,6 +319,7 @@ def power(x, a):
     array([ 0.23059566,  0.25737316,  0.26488486,  0.24714631])
 
     """
+    x = np.asarray(x)
     mat = np.multiply(np.log(x), a)
     return _closure(np.exp(mat))
 
@@ -354,6 +361,7 @@ def clr(mat):
     array([-0.79451346,  0.30409883,  0.5917809 , -0.10136628])
 
     """
+    mat = np.asarray(mat)
     lmat = np.log(mat)
     if len(mat.shape) == 1:
         num_samps = len(mat)
@@ -399,6 +407,7 @@ def centralize(mat):
            [ 0.32495488,  0.18761279,  0.16247744,  0.32495488]])
 
     """
+    mat = np.asarray(mat)
     if len(mat.shape) == 1:
         raise ValueError("mat needs more than 1 row")
     if len(mat.shape) > 2:
