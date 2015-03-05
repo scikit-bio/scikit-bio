@@ -12,6 +12,7 @@ from future.utils import viewkeys, viewitems
 from six import StringIO
 
 from collections import Counter, defaultdict, OrderedDict
+from functools import partial
 
 import numpy as np
 from scipy.stats import entropy
@@ -1406,9 +1407,8 @@ class Alignment(SequenceCollection):
         else:
             return len(self._data[0])
 
-    def heatmap(self, value_map,
-                legend_labels=('Minimum', 'Median', 'Maximum'), fig_size=None,
-                cmap=None, sequence_order=None):
+    def heatmap(self, value_map, legend_labels=None, fig_size=None, cmap=None,
+                sequence_order=None):
         """Plot alignment as a heatmap.
 
         Plot the alignment as a heatmap, coloring heatmap cells using the
@@ -1425,11 +1425,13 @@ class Alignment(SequenceCollection):
             can, for example, default to ``nan``.
         legend_labels : iterable, optional
             Labels for the minimum, median, and maximum values in the legend.
-            Must be an iterable of exactly three strings. Mininum, median, and
-            maximum values are computed from the values in `value_map`. Only
-            values that are actually used to perform a character-to-value
-            mapping are included when computing the minimum, median, and
-            maximum. ``nan`` values are ignored.
+            Must be an iterable of exactly three strings. The minimum, median,
+            and maximum values will be included in the legend labels.
+            Mininum, median, and maximum values are computed from the values in
+            `value_map`. Only values that are actually used to perform a
+            character-to-value mapping are included when computing the minimum,
+            median, and maximum. ``nan`` values are ignored. If ``None`` (the
+            default), labels will not be included in the legend.
         fig_size : tuple, optional
             Size of the figure in inches. If ``None``, defaults to figure size
             specified in the user's matplotlibrc file.
@@ -1504,10 +1506,6 @@ class Alignment(SequenceCollection):
            ...                   cmap='Greens')
 
         """
-        if len(legend_labels) != 3:
-            raise ValueError(
-                "`legend_labels` must contain exactly three labels.")
-
         if sequence_order is not None:
             sequence_order_set = set(sequence_order)
             if len(sequence_order) != len(sequence_order_set):
@@ -1520,8 +1518,8 @@ class Alignment(SequenceCollection):
         else:
             sequence_order = self.ids()
 
-        mtx, min_val, median_val, max_val = self._alignment_to_heatmap_matrix(
-            value_map, sequence_order)
+        mtx, stats = self._alignment_to_heatmap_matrix(value_map,
+                                                       sequence_order)
 
         # heatmap code derived from the matplotlib gallery:
         #     http://matplotlib.org/examples/pylab_examples/
@@ -1545,10 +1543,19 @@ class Alignment(SequenceCollection):
         ax.set_xticks(range(self.sequence_length()))
         ax.set_xticklabels(self.majority_consensus(), size=7)
 
-        # add colorbar legend
-        cbar = fig.colorbar(cax, ticks=[min_val, median_val, max_val],
-                            orientation='horizontal')
-        cbar.ax.set_xticklabels(legend_labels)
+        colorbar = partial(fig.colorbar, cax, orientation='horizontal')
+        if legend_labels is None:
+            cbar = colorbar()
+        else:
+            if len(legend_labels) != 3:
+                raise ValueError(
+                    "`legend_labels` must contain exactly three labels. %d "
+                    "labels were provided." % len(legend_labels))
+
+            legend_labels = ['%s (%.4f)' % (l, s)
+                             for l, s in zip(legend_labels, stats)]
+            cbar = colorbar(ticks=stats)
+            cbar.ax.set_xticklabels(legend_labels)
 
         return fig
 
@@ -1592,7 +1599,7 @@ class Alignment(SequenceCollection):
         values = np.asarray(list(values.values()))
         values = values[~np.isnan(values)]
 
-        return mtx, min(values), np.median(values), max(values)
+        return mtx, (min(values), np.median(values), max(values))
 
     def _validate_lengths(self):
         """Return ``True`` if all sequences same length, ``False`` otherwise
