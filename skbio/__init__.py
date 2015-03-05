@@ -79,3 +79,6 @@ else:
     __doc__ = title + art + __doc__
 
 test = TestRunner(__file__).test
+
+if __name__ == '__main__':
+    test()

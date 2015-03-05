@@ -40,7 +40,7 @@ class TestRunner(object):
         self._filename = filename
         self._test_dir = os.path.dirname(filename)
 
-    def test(self, coverage=False):
+    def test(self):
         """Performs the actual running of the tests.
         """
         # NOTE: it doesn't seem to matter what the first element of the argv
@@ -48,8 +48,6 @@ class TestRunner(object):
         argv = [self._filename, '-I DO_NOT_IGNORE_ANYTHING']
         if not self.is_py3():
             argv.append('--with-doctest')
-        if coverage:
-            argv.append('--with-coverage')
         core.run(argv=argv, defaultTest=self._test_dir)
 
     def is_py3(self):
