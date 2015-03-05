@@ -93,31 +93,32 @@ import scipy.stats as ss
 def _closure(mat):
     """
     Performs closure to ensure that all elements add up to 1
-    mat : array-like
+
+    Parameters
+    ----------
+    mat : array_like
        a matrix of proportions where
        rows = compositions
        columns = components
 
     Returns
     -------
-    mat_ : numpy.ndarray, np.float64
+    numpy.ndarray, np.float64
        A matrix of proportions where all of the values
        are nonzero and each composition (row) adds up to 1
 
     """
-    mat = np.asarray(mat)
-    if not isinstance(mat.dtype, float):
-        mat = mat.astype(np.float64)
 
-    if len(mat.shape) == 1:
+    mat = np.asarray(mat, dtype=np.float64)
+
+    if mat.ndim == 1:
         total = mat.sum()
-    elif len(mat.shape) == 2:
+    elif mat.ndim == 2:
         num_samps, num_feats = mat.shape
         total = np.reshape(mat.sum(axis=1), (num_samps, 1))
     else:
         raise ValueError("mat has too many dimensions")
-    mat_ = np.divide(mat, total)
-    return mat_
+    return np.divide(mat, total)
 
 
 def multiplicative_replacement(mat, delta=None):
@@ -129,14 +130,14 @@ def multiplicative_replacement(mat, delta=None):
 
     Parameters
     ----------
-    mat: array-like
+    mat: array_like
        a matrix of proportions where
        rows = compositions and
        columns = components
 
     Returns
     -------
-    mat_ : numpy.ndarray, np.float64
+    numpy.ndarray, np.float64
        A matrix of proportions where all of the values
        are nonzero and each composition (row) adds up to 1
 
@@ -150,14 +151,14 @@ def multiplicative_replacement(mat, delta=None):
            [ 0.0625,  0.4375,  0.4375,  0.0625]])
 
     """
-    mat = np.asarray(mat)
-    z_mat = (mat == 0).astype(np.float32)
+    mat = np.asarray(mat, dtype=np.float64)
+    z_mat = (mat == 0)
 
-    if len(mat.shape) == 1:
+    if mat.ndim == 1:
         num_feats = len(mat)
         num_samps = 1
         tot = z_mat.sum()
-    elif len(mat.shape) == 2:
+    elif mat.ndim == 2:
         num_samps, num_feats = mat.shape
         tot = z_mat.sum(axis=1)
     else:
@@ -169,7 +170,7 @@ def multiplicative_replacement(mat, delta=None):
     zcnts = 1 - np.reshape(tot * delta, (num_samps, 1))
     mat_ = _closure(z_mat*delta + np.multiply((1-z_mat),
                                               np.multiply(zcnts, mat)))
-    if len(mat.shape) == 1:
+    if mat.ndim == 1:
         mat_ = np.ravel(mat_)
     return mat_
 
@@ -188,18 +189,18 @@ def perturb(x, y):
 
     Parameters
     ----------
-    x : array-like, float
+    x : array_like, float
         a matrix of proportions where
         rows = compositions and
         columns = components
-    y : array-like, float
+    y : array_like, float
         a matrix of proportions where
         rows = compositions and
         columns = components
 
     Returns
     -------
-    mat_ : numpy.ndarray, np.float64
+    numpy.ndarray, np.float64
        A matrix of proportions where all of the values
        are nonzero and each composition (row) adds up to 1
 
@@ -219,10 +220,9 @@ def perturb(x, y):
     array([ 0.0625,  0.1875,  0.5   ,  0.25  ])
 
     """
-    x = np.asarray(x)
-    y = np.asarray(y)
-    mat_ = _closure(np.multiply(x, y))
-    return mat_
+    x = np.asarray(x, dtype=np.float64)
+    y = np.asarray(y, dtype=np.float64)
+    return _closure(np.multiply(x, y))
 
 
 def perturb_inv(x, y):
@@ -249,7 +249,7 @@ def perturb_inv(x, y):
 
     Returns
     -------
-    mat_ : numpy.ndarray, np.float64
+    numpy.ndarray, np.float64
        A matrix of proportions where all of the values
        are nonzero and each composition (row) adds up to 1
 
@@ -271,11 +271,10 @@ def perturb_inv(x, y):
     array([ 0.14285714,  0.42857143,  0.28571429,  0.14285714])
 
     """
-    x = np.asarray(x)
-    y = np.asarray(y)
+    x = np.asarray(x, dtype=np.float64)
+    y = np.asarray(y, dtype=np.float64)
     _y = power(y, -1)
-    mat = np.multiply(x, _y)
-    return _closure(mat)
+    return _closure(np.multiply(x, _y))
 
 
 def power(x, a):
@@ -302,7 +301,7 @@ def power(x, a):
 
     Returns
     -------
-    mat_ : numpy.ndarray, np.float64
+    numpy.ndarray, np.float64
        A matrix of proportions where all of the values
        are nonzero and each composition (row) adds up to 1
 
@@ -319,7 +318,7 @@ def power(x, a):
     array([ 0.23059566,  0.25737316,  0.26488486,  0.24714631])
 
     """
-    x = np.asarray(x)
+    x = np.asarray(x, dtype=np.float64)
     mat = np.multiply(np.log(x), a)
     return _closure(np.exp(mat))
 
@@ -345,7 +344,7 @@ def clr(mat):
 
     Returns
     -------
-    _clr : numpy.ndarray
+    numpy.ndarray
          clr transformed matrix
 
     Notes
@@ -361,19 +360,18 @@ def clr(mat):
     array([-0.79451346,  0.30409883,  0.5917809 , -0.10136628])
 
     """
-    mat = np.asarray(mat)
+    mat = np.asarray(mat, dtype=np.float64)
     lmat = np.log(mat)
-    if len(mat.shape) == 1:
+    if mat.ndim == 1:
         num_samps = len(mat)
         gm = lmat.mean()
-    elif len(mat.shape) == 2:
+    elif mat.ndim == 2:
         num_samps, num_feats = mat.shape
         gm = lmat.mean(axis=1)
         gm = np.reshape(gm, (num_samps, 1))
     else:
         raise ValueError("mat has too many dimensions")
-    _clr = lmat - gm
-    return _clr
+    return lmat - gm
 
 
 def centralize(mat):
@@ -390,8 +388,8 @@ def centralize(mat):
 
     Returns
     -------
-    centered : numpy.ndarray
-         centered proportion matrix
+    numpy.ndarray
+         centered composition matrix
 
     Notes
     -----
@@ -407,13 +405,12 @@ def centralize(mat):
            [ 0.32495488,  0.18761279,  0.16247744,  0.32495488]])
 
     """
-    mat = np.asarray(mat)
-    if len(mat.shape) == 1:
+    mat = np.asarray(mat, dtype=np.float64)
+    if mat.ndim == 1:
         raise ValueError("mat needs more than 1 row")
-    if len(mat.shape) > 2:
+    if mat.ndim > 2:
         raise ValueError("mat has too many dimensions")
     r, c = mat.shape
     cen = ss.gmean(mat, axis=0)
     cen = np.tile(cen, (r, 1))
-    centered = perturb_inv(mat, cen)
-    return centered
+    return perturb_inv(mat, cen)
