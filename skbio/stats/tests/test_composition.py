@@ -113,7 +113,7 @@ class CompositionTests(TestCase):
         npt.assert_allclose(amat, np.array([0.09056604, 0.18113208,
                                             0.27169811, 0.00377358,
                                             0.45283019]),
-                                            rtol=1e-5, atol=1e-5)
+                            rtol=1e-5, atol=1e-5)
 
         amat = multiplicative_replacement(self.data7)
         npt.assert_allclose(amat,
