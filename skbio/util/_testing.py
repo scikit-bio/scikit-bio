@@ -48,7 +48,7 @@ class TestRunner(object):
         argv = [self._filename, '-I DO_NOT_IGNORE_ANYTHING']
         if not self.is_py3():
             argv.append('--with-doctest')
-        core.run(argv=argv, defaultTest=self._test_dir)
+        core.run_exit(argv=argv, defaultTest=self._test_dir)
 
     def is_py3(self):
         """Returns boolean indicating whether the user is running Python 3.
