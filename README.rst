@@ -1,8 +1,7 @@
-::
 
-![Alt text](/assets/logo.png?raw=true)
+.. image:: /assets/logo.png
 
-|Build Status| |Coverage Status|
+|Build Status| |Coverage Status| |Gitter Badge|
 
 scikit-bio is an open-source, BSD-licensed python package providing data structures, algorithms and educational resources for bioinformatics.
 
@@ -139,3 +138,6 @@ scikit-bio's ASCII art tree was created by `@gregcaporaso
    :target: https://travis-ci.org/biocore/scikit-bio
 .. |Coverage Status| image:: https://coveralls.io/repos/biocore/scikit-bio/badge.png
    :target: https://coveralls.io/r/biocore/scikit-bio
+.. |Gitter Badge| image:: https://badges.gitter.im/Join%20Chat.svg
+   :alt: Join the chat at https://gitter.im/biocore/scikit-bio
+   :target: https://gitter.im/biocore/scikit-bio?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
