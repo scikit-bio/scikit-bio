@@ -1,29 +1,6 @@
 ::
 
-               _ _    _ _          _     _
-              (_) |  (_) |        | |   (_)
-      ___  ___ _| | ___| |_ ______| |__  _  ___
-     / __|/ __| | |/ / | __|______| '_ \| |/ _ \
-     \__ \ (__| |   <| | |_       | |_) | | (_) |
-     |___/\___|_|_|\_\_|\__|      |_.__/|_|\___/
-
-
-           Opisthokonta
-                   \  Amoebozoa
-                    \ /
-                     *    Euryarchaeota
-                      \     |_ Crenarchaeota
-                       \   *
-                        \ /
-                         *
-                        /
-                       /
-                      /
-                     *
-                    / \
-                   /   \
-        Proteobacteria  \
-                       Cyanobacteria
+![Alt text](/assets/logo.png?raw=true)
 
 |Build Status| |Coverage Status|
 
