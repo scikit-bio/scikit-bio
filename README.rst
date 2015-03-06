@@ -1,5 +1,6 @@
 
 .. image:: /assets/logo.png
+  :alt: Scikit-Bio Logo
 
 |Build Status| |Coverage Status| |Gitter Badge|
 
