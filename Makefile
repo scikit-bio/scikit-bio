@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------------
 
 ifeq ($(WITH_COVERAGE), TRUE)
-	TEST_COMMAND = coverage run -m skbio/__init__
+	TEST_COMMAND = coverage run -m skbio.__init__
 else
 	TEST_COMMAND = python -c "import skbio; skbio.test()"
 endif
