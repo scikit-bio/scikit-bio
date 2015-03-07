@@ -6,10 +6,14 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+ifeq ($(VERBOSE), TRUE)
+	TEST_OPTIONS = verbose=True
+endif
+
 ifeq ($(WITH_COVERAGE), TRUE)
 	TEST_COMMAND = coverage run -m skbio.__init__
 else
-	TEST_COMMAND = python -c "import skbio; skbio.test()"
+	TEST_COMMAND = python -c "import skbio; skbio.test($(TEST_OPTIONS))"
 endif
 
 test:
