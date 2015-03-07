@@ -42,17 +42,11 @@ class TestRunner(object):
         # NOTE: it doesn't seem to matter what the first element of the argv
         # list is, there just needs to be something there.
         argv = [self._filename, '-I DO_NOT_IGNORE_ANYTHING']
-        if not self.is_py3():
+        if not PY3:
             argv.append('--with-doctest')
         if verbose:
             argv.append('-v')
         core.run_exit(argv=argv, defaultTest=self._test_dir)
-
-    def is_py3(self):
-        """Returns boolean indicating whether the user is running Python 3.
-        This provides a flag for disabling doctests for Python 3.
-        """
-        return PY3
 
 
 def get_data_path(fn, subfolder='data'):
