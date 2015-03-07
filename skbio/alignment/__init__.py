@@ -223,7 +223,7 @@ ACGTGCCTA-GGTACGCAAG
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from numpy.testing import Tester
+from skbio.util import TestRunner
 
 from ._alignment import Alignment, SequenceCollection, StockholmAlignment
 from ._pairwise import (
@@ -245,4 +245,4 @@ __all__ = ['Alignment', 'SequenceCollection', 'StockholmAlignment',
            'local_pairwise_align', 'local_pairwise_align_nucleotide',
            'local_pairwise_align_protein', 'make_identity_substitution_matrix']
 
-test = Tester().test
+test = TestRunner(__file__).test

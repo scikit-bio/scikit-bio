@@ -8,7 +8,7 @@
 
 from __future__ import absolute_import, division, print_function
 
-from numpy.testing import Tester
+from skbio.util import TestRunner
 
 # Add skbio.io to sys.modules to prevent cycles in our imports
 import skbio.io
@@ -29,8 +29,6 @@ __all__ = ['BiologicalSequence', 'NucleotideSequence', 'DNA', 'DNASequence',
            'RNA', 'RNASequence', 'Protein', 'ProteinSequence',
            'DistanceMatrix', 'local_pairwise_align_ssw', 'SequenceCollection',
            'Alignment', 'TreeNode', 'nj', 'read', 'write']
-
-test = Tester().test
 
 __credits__ = "https://github.com/biocore/scikit-bio/graphs/contributors"
 __version__ = "0.2.3-dev"
@@ -79,3 +77,8 @@ if __doc__ is None:
     __doc__ = title + art
 else:
     __doc__ = title + art + __doc__
+
+test = TestRunner(__file__).test
+
+if __name__ == '__main__':
+    test()

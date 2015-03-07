@@ -24,8 +24,8 @@ like this::
 
   from __future__ import absolute_import, division, print_function
 
-  from numpy.testing import Tester
-  test = Tester().test
+  from skbio.util import TestRunner
+  test = TestRunner(__file__).test
 
 Usually, some functionality from the module will be made accessible by
 importing it in `__init__.py`. It's convenient to use explicit
