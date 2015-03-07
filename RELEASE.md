@@ -70,7 +70,6 @@ Once the release is created on GitHub, it's a good idea to test out the release 
 
 3. Install the release and run the tests:
 
-        pip install numpy
         pip install .
         cd
         nosetests --with-doctest skbio
@@ -92,7 +91,6 @@ Assuming the GitHub release tarball correctly installs and passes its tests, you
 3. Create a new virtualenv and run:
 
         cd
-        pip install numpy
         pip install <path to extracted scikit-bio release>/dist/scikit-bio-1.2.4.tar.gz
         nosetests --with-doctest skbio
 
@@ -105,7 +103,6 @@ Assuming the GitHub release tarball correctly installs and passes its tests, you
 5. Once the release is available on PyPI, do a final round of testing. Create a new virtualenv and run:
 
         cd
-        pip install numpy
         pip install scikit-bio
         nosetests --with-doctest skbio
 

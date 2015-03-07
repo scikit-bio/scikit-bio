@@ -41,7 +41,6 @@ Installation of release version (recommended for most users)
 
 To install the latest release version of scikit-bio you should run::
 
-    pip install numpy
     pip install scikit-bio
 
 Equivalently, you can use the ``conda`` package manager available in `Anaconda <http://continuum.io/downloads>`_ or `miniconda <http://conda.pydata.org/miniconda.html>`_ to install scikit-bio and all its dependencies, without having to compile them::

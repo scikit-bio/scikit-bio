@@ -32,6 +32,8 @@ described here [Making a flat list out of lists of lists](http://stackoverflow.c
 
 ### Miscellaneous
 
+* `numpy` is no longer required to be installed before installing scikit-bio!
+
 ## Version 0.2.3 (2015-02-13)
 
 ### Features
