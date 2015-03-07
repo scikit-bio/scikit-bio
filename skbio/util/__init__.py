@@ -17,6 +17,7 @@ Common functionality to support testing in skbio.
    :toctree: generated/
 
    get_data_path
+   TestRunner
 
 Miscellaneous functionality
 ---------------------------

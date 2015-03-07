@@ -19,13 +19,9 @@ class TestRunner(object):
 
     Parameters
     ----------
-    filename : __file__ attribute passed in from the caller. This tells the
+    filename : str
+        __file__ attribute passed in from the caller. This tells the
         tester where to start looking for tests.
-
-    Attributes
-    ----------
-    argv
-    test_dir
 
     Notes
     -----
