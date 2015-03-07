@@ -129,7 +129,7 @@ Note that this is possible because the lines below are added at the end of each 
 
 ```python
 from skbio.util import TestRunner
-test = Tester(__file__).test
+test = TestRunner(__file__).test
 ```
 
 

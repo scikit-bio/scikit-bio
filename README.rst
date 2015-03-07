@@ -68,7 +68,7 @@ After this completes, you can run the scikit-bio unit tests from with a Python o
     import skbio
     skbio.test()
 
-To only run tests for a specific scikit-bio module, for example sequence, you can do::
+To only run tests for a specific scikit-bio module, for example skbio.sequence, you can do::
 
     skbio.sequence.test()
 
