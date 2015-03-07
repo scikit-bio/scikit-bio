@@ -51,7 +51,7 @@ Finally, most scikit-bio's dependencies (in particular, the ones that are tricki
 
 You can verify your installation by running the scikit-bio unit tests as follows::
 
-    nosetests --with-doctest skbio
+    python -c "import skbio; skbio.test()"
 
 Installation of development version
 -----------------------------------
