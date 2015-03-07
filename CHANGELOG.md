@@ -31,6 +31,11 @@ described here [Making a flat list out of lists of lists](http://stackoverflow.c
 * `skbio.alignment.Alignment.majority_consensus` now returns `BiologicalSequence('')` if the alignment is empty. Previously, `''` was returned.
 
 ### Miscellaneous
+  * Changed testing procedures
+    - Developers should now use `make test`
+    - Users can use `python -c "import skbio; skbio.test()"`
+    - Added `skbio.util._testing.TestRunner` (available through `skbio.util.TestRunner`). Used to provide a `test` method for each module init file. This class represents a unified testing path which wraps all `skbio` testing functionality.
+    - Autodetect Python version and disable doctests for Python 3.
 
 * `numpy` is no longer required to be installed before installing scikit-bio!
 
