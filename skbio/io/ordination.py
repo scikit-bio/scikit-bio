@@ -177,6 +177,7 @@ Load the ordination results from the file:
 >>> ord_res = OrdinationResults.read(or_f)
 
 """
+
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #

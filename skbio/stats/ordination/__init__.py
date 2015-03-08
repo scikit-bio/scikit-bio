@@ -99,6 +99,7 @@ References
    Amsterdam.
 
 """
+
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
