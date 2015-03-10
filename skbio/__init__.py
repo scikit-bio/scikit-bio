@@ -4,6 +4,8 @@
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
+#
+#scikit-bio's ASCII art tree was created by `@gregcaporaso`
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
