@@ -6,14 +6,13 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-ifeq ($(WITH_COVERAGE), TRUE)
-	TEST_COMMAND = coverage run -m skbio.test
-else
-	TEST_COMMAND = python -m skbio.test
-endif
+import sys
+from skbio.util import TestRunner
 
-test:
-	$(TEST_COMMAND)
-	pep8 skbio setup.py checklist.py
-	flake8 skbio setup.py checklist.py
-	./checklist.py
+test = TestRunner(__file__).test
+
+if __name__ == '__main__':
+    if test():
+        sys.exit(0)
+    else:
+        sys.exit(1)
