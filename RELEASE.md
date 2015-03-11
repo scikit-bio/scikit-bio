@@ -72,7 +72,7 @@ Once the release is created on GitHub, it's a good idea to test out the release 
 
         pip install .
         cd
-        python -c "import skbio; skbio.test()"
+        python -m skbio.test
 
 4. During this process (it can take awhile to install all of scikit-bio's dependencies), submit a pull request to update the version strings from 1.2.4 to 1.2.4-dev. Use the same strategy described above to update the version strings. Update ``CHANGELOG.md`` to include a new section for 1.2.4-dev (there won't be any changes to note here yet). **Do not merge this pull request yet.**
 
@@ -92,7 +92,7 @@ Assuming the GitHub release tarball correctly installs and passes its tests, you
 
         cd
         pip install <path to extracted scikit-bio release>/dist/scikit-bio-1.2.4.tar.gz
-        python -c "import skbio; skbio.test()"
+        python -m skbio.test
 
 4. If everything goes well, it is finally time to push the release to PyPI:
 
@@ -104,7 +104,7 @@ Assuming the GitHub release tarball correctly installs and passes its tests, you
 
         cd
         pip install scikit-bio
-        python -c "import skbio; skbio.test()"
+        python -m skbio.test
 
 If this succeeds, the release appears to be a success!
 

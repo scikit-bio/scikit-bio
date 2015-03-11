@@ -149,7 +149,7 @@ After listing public module members, we encourage a usage example section
 showing how to use some of the module's functionality. Examples should be
 written in [doctest](http://docs.python.org/2/library/doctest.html) format so
 that they can be automatically tested (e.g., using ```make test```,
-```python -c "import skbio; skbio.test()"```, or ```make doctest```).
+```python -m skbio.test```, or ```make doctest```).
 
     Examples
     --------
