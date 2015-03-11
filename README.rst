@@ -1,6 +1,6 @@
 
 .. image:: http://scikit-bio.org/assets/logo.svg
-   :target: http://scikit-bio.org/assets/
+   :target: http://scikit-bio.org
    :alt: scikit-bio logo
 
 |Build Status| |Coverage Status| |Gitter Badge|
@@ -132,9 +132,6 @@ Logo
 ----
 
 scikit-bio's logo was created by `Alina Prassas <http://cargocollective.com/alinaprassas>`_.
-scikit-bio's ASCII art tree was created by `@gregcaporaso
-<https://github.com/gregcaporaso>`_. Our text logo was created at `patorjk.com
-<http://patorjk.com/software/taag/>`__.
 
 .. |Build Status| image:: https://travis-ci.org/biocore/scikit-bio.svg?branch=master
    :target: https://travis-ci.org/biocore/scikit-bio
