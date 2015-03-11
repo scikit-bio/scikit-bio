@@ -41,6 +41,8 @@ mottos = [
 ]
 motto = mottos[-1]
 
+# Created at patorjk.com
+
 title = r"""
 *                                                    *
                _ _    _ _          _     _
@@ -52,6 +54,8 @@ title = r"""
 
 *                                                    *
 """
+
+# Created by @gregcaporaso
 
 art = r"""
 

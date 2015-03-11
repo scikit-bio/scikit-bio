@@ -1,31 +1,9 @@
-::
 
-               _ _    _ _          _     _
-              (_) |  (_) |        | |   (_)
-      ___  ___ _| | ___| |_ ______| |__  _  ___
-     / __|/ __| | |/ / | __|______| '_ \| |/ _ \
-     \__ \ (__| |   <| | |_       | |_) | | (_) |
-     |___/\___|_|_|\_\_|\__|      |_.__/|_|\___/
+.. image:: http://scikit-bio.org/assets/logo.svg
+   :target: http://scikit-bio.org
+   :alt: scikit-bio logo
 
-
-           Opisthokonta
-                   \  Amoebozoa
-                    \ /
-                     *    Euryarchaeota
-                      \     |_ Crenarchaeota
-                       \   *
-                        \ /
-                         *
-                        /
-                       /
-                      /
-                     *
-                    / \
-                   /   \
-        Proteobacteria  \
-                       Cyanobacteria
-
-|Build Status| |Coverage Status|
+|Build Status| |Coverage Status| |Gitter Badge|
 
 scikit-bio is an open-source, BSD-licensed python package providing data structures, algorithms and educational resources for bioinformatics.
 
@@ -156,11 +134,11 @@ Logo
 ----
 
 scikit-bio's logo was created by `Alina Prassas <http://cargocollective.com/alinaprassas>`_.
-scikit-bio's ASCII art tree was created by `@gregcaporaso
-<https://github.com/gregcaporaso>`_. Our text logo was created at `patorjk.com
-<http://patorjk.com/software/taag/>`__.
 
 .. |Build Status| image:: https://travis-ci.org/biocore/scikit-bio.svg?branch=master
    :target: https://travis-ci.org/biocore/scikit-bio
 .. |Coverage Status| image:: https://coveralls.io/repos/biocore/scikit-bio/badge.png
    :target: https://coveralls.io/r/biocore/scikit-bio
+.. |Gitter Badge| image:: https://badges.gitter.im/Join%20Chat.svg
+   :alt: Join the chat at https://gitter.im/biocore/scikit-bio
+   :target: https://gitter.im/biocore/scikit-bio?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
