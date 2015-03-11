@@ -273,7 +273,7 @@ Some pointers
 
 .. code-block:: none
 
-    $ VERBOSE=TRUE make test
+    $ python -c "import skbio; skbio.test()"
     skbio.maths.diversity.alpha.tests.test_ace.test_ace ... ok
     test_berger_parker_d (skbio.maths.diversity.alpha.tests.test_base.BaseTests) ... ok
 

@@ -38,6 +38,16 @@ class TestRunner(object):
 
     def test(self, verbose=False):
         """Performs the actual running of the tests.
+
+        Parameters
+        ----------
+        verbose : bool
+            flag for running in verbose mode.
+
+        Returns
+        -------
+        bool
+            test run success status
         """
         # NOTE: it doesn't seem to matter what the first element of the argv
         # list is, there just needs to be something there.
@@ -46,7 +56,7 @@ class TestRunner(object):
             argv.append('--with-doctest')
         if verbose:
             argv.append('-v')
-        core.run_exit(argv=argv, defaultTest=self._test_dir)
+        return core.run(argv=argv, defaultTest=self._test_dir)
 
 
 def get_data_path(fn, subfolder='data'):
