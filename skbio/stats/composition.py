@@ -258,8 +258,7 @@ def perturb_inv(x, y):
     """
     x = np.asarray(x, dtype=np.float64)
     y = np.asarray(y, dtype=np.float64)
-    _y = power(y, -1)
-    return _closure(x * _y)
+    return _closure(x / y)
 
 
 def power(x, a):
