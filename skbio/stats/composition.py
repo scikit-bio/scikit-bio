@@ -107,7 +107,6 @@ def _closure(mat):
        are nonzero and each composition (row) adds up to 1
 
     """
-
     mat = np.atleast_2d(mat)
     if mat.ndim > 2:
         raise ValueError("Input matrix can only have two dimensions or less")
@@ -145,27 +144,20 @@ def multiplicative_replacement(mat, delta=None):
            [ 0.0625,  0.4375,  0.4375,  0.0625]])
 
     """
-    mat = np.asarray(mat, dtype=np.float64)
+    mat = np.atleast_2d(mat)
+    if mat.ndim > 2:
+        raise ValueError("Input matrix can only have two dimensions or less")
     z_mat = (mat == 0)
 
-    if mat.ndim == 1:
-        num_feats = len(mat)
-        num_samps = 1
-        tot = z_mat.sum()
-    elif mat.ndim == 2:
-        num_samps, num_feats = mat.shape
-        tot = z_mat.sum(axis=1)
-    else:
-        raise ValueError("mat has too many dimensions")
+    num_samps, num_feats = mat.shape
+    tot = z_mat.sum(axis=1, keepdims=True)
 
     if delta is None:
         delta = (1. / num_feats)**2
 
-    zcnts = 1 - np.reshape(tot * delta, (num_samps, 1))
-    mat_ = _closure(z_mat*delta + (1-z_mat) * zcnts * mat)
-    if mat.ndim == 1:
-        mat_ = np.ravel(mat_)
-    return mat_
+    zcnts = 1 - tot * delta
+    mat = _closure(z_mat*delta + (1-z_mat) * zcnts * mat)
+    return mat.squeeze()
 
 
 def perturb(x, y):
