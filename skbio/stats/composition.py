@@ -109,6 +109,8 @@ def _closure(mat):
     """
 
     mat = np.atleast_2d(mat)
+    if mat.ndim > 2:
+        raise ValueError("Input matrix can only have two dimensions or less")
     mat = mat / mat.sum(axis=1, keepdims=True)
     return mat.squeeze()
 
