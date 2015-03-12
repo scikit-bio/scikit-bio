@@ -317,8 +317,7 @@ def power(x, a):
 
     """
     x = np.asarray(x, dtype=np.float64)
-    mat = np.log(x) * a
-    return _closure(np.exp(mat))
+    return _closure(x**a)
 
 
 def clr(mat):
