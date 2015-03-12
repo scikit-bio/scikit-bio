@@ -108,16 +108,9 @@ def _closure(mat):
 
     """
 
-    mat = np.asarray(mat, dtype=np.float64)
-
-    if mat.ndim == 1:
-        total = mat.sum()
-    elif mat.ndim == 2:
-        num_samps, num_feats = mat.shape
-        total = np.reshape(mat.sum(axis=1), (num_samps, 1))
-    else:
-        raise ValueError("mat has too many dimensions")
-    return mat / total
+    mat = np.atleast_2d(mat)
+    mat = mat / mat.sum(axis=1, keepdims=True)
+    return mat.squeeze()
 
 
 def multiplicative_replacement(mat, delta=None):
