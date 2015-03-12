@@ -117,7 +117,7 @@ def _closure(mat):
         total = np.reshape(mat.sum(axis=1), (num_samps, 1))
     else:
         raise ValueError("mat has too many dimensions")
-    return np.divide(mat, total)
+    return mat / total
 
 
 def multiplicative_replacement(mat, delta=None):
@@ -317,7 +317,7 @@ def power(x, a):
 
     """
     x = np.asarray(x, dtype=np.float64)
-    mat = np.multiply(np.log(x), a)
+    mat = np.log(x) * a
     return _closure(np.exp(mat))
 
 
