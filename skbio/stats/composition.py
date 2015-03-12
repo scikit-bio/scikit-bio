@@ -384,10 +384,8 @@ def centralize(mat):
            [ 0.32495488,  0.18761279,  0.16247744,  0.32495488]])
 
     """
-    mat = np.asarray(mat, dtype=np.float64)
-    if mat.ndim == 1:
-        raise ValueError("mat needs more than 1 row")
+    mat = np.atleast_2d(mat)
     if mat.ndim > 2:
-        raise ValueError("mat has too many dimensions")
+        raise ValueError("Input matrix can only have two dimensions or less")
     cen = ss.gmean(mat, axis=0)
     return perturb_inv(mat, cen)

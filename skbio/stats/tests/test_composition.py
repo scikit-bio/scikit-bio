@@ -169,8 +169,6 @@ class CompositionTests(TestCase):
                                        0.16952085]]))
 
         with self.assertRaises(ValueError):
-            centralize(self.data2)
-        with self.assertRaises(ValueError):
             centralize(self.data5)
 
 if __name__ == "__main__":
