@@ -167,8 +167,7 @@ def multiplicative_replacement(mat, delta=None):
         delta = (1. / num_feats)**2
 
     zcnts = 1 - np.reshape(tot * delta, (num_samps, 1))
-    mat_ = _closure(z_mat*delta + np.multiply((1-z_mat),
-                                              np.multiply(zcnts, mat)))
+    mat_ = _closure(z_mat*delta + (1-z_mat) * zcnts * mat)
     if mat.ndim == 1:
         mat_ = np.ravel(mat_)
     return mat_
@@ -221,7 +220,7 @@ def perturb(x, y):
     """
     x = np.asarray(x, dtype=np.float64)
     y = np.asarray(y, dtype=np.float64)
-    return _closure(np.multiply(x, y))
+    return _closure(x * y)
 
 
 def perturb_inv(x, y):
@@ -273,7 +272,7 @@ def perturb_inv(x, y):
     x = np.asarray(x, dtype=np.float64)
     y = np.asarray(y, dtype=np.float64)
     _y = power(y, -1)
-    return _closure(np.multiply(x, _y))
+    return _closure(x * _y)
 
 
 def power(x, a):
