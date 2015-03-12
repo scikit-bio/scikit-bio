@@ -156,7 +156,7 @@ def multiplicative_replacement(mat, delta=None):
         delta = (1. / num_feats)**2
 
     zcnts = 1 - tot * delta
-    mat = _closure(z_mat*delta + (1-z_mat) * zcnts * mat)
+    mat = _closure(np.where(z_mat, delta, zcnts * mat))
     return mat.squeeze()
 
 
