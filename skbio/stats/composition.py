@@ -343,18 +343,14 @@ def clr(mat):
     array([-0.79451346,  0.30409883,  0.5917809 , -0.10136628])
 
     """
-    mat = np.asarray(mat, dtype=np.float64)
-    lmat = np.log(mat)
-    if mat.ndim == 1:
-        num_samps = len(mat)
-        gm = lmat.mean()
-    elif mat.ndim == 2:
-        num_samps, num_feats = mat.shape
-        gm = lmat.mean(axis=1)
-        gm = np.reshape(gm, (num_samps, 1))
-    else:
-        raise ValueError("mat has too many dimensions")
-    return lmat - gm
+    lmat = np.log(np.atleast_2d(mat))
+    if mat.ndim > 2:
+        raise ValueError("Input matrix can only have two dimensions or less")
+
+    num_samps, num_feats = lmat.shape
+    gm = lmat.mean(axis=1, keepdims=True)
+
+    return (lmat - gm).squeeze()
 
 
 def centralize(mat):
