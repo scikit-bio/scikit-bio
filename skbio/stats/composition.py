@@ -389,7 +389,5 @@ def centralize(mat):
         raise ValueError("mat needs more than 1 row")
     if mat.ndim > 2:
         raise ValueError("mat has too many dimensions")
-    r, c = mat.shape
     cen = ss.gmean(mat, axis=0)
-    cen = np.tile(cen, (r, 1))
     return perturb_inv(mat, cen)
