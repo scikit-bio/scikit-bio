@@ -107,17 +107,11 @@ def _closure(mat):
        are nonzero and each composition (row) adds up to 1
 
     """
-
-    mat = np.asarray(mat, dtype=np.float64)
-
-    if mat.ndim == 1:
-        total = mat.sum()
-    elif mat.ndim == 2:
-        num_samps, num_feats = mat.shape
-        total = np.reshape(mat.sum(axis=1), (num_samps, 1))
-    else:
-        raise ValueError("mat has too many dimensions")
-    return np.divide(mat, total)
+    mat = np.atleast_2d(mat)
+    if mat.ndim > 2:
+        raise ValueError("Input matrix can only have two dimensions or less")
+    mat = mat / mat.sum(axis=1, keepdims=True)
+    return mat.squeeze()
 
 
 def multiplicative_replacement(mat, delta=None):
@@ -150,28 +144,20 @@ def multiplicative_replacement(mat, delta=None):
            [ 0.0625,  0.4375,  0.4375,  0.0625]])
 
     """
-    mat = np.asarray(mat, dtype=np.float64)
+    mat = np.atleast_2d(mat)
+    if mat.ndim > 2:
+        raise ValueError("Input matrix can only have two dimensions or less")
     z_mat = (mat == 0)
 
-    if mat.ndim == 1:
-        num_feats = len(mat)
-        num_samps = 1
-        tot = z_mat.sum()
-    elif mat.ndim == 2:
-        num_samps, num_feats = mat.shape
-        tot = z_mat.sum(axis=1)
-    else:
-        raise ValueError("mat has too many dimensions")
+    num_samps, num_feats = mat.shape
+    tot = z_mat.sum(axis=1, keepdims=True)
 
     if delta is None:
         delta = (1. / num_feats)**2
 
-    zcnts = 1 - np.reshape(tot * delta, (num_samps, 1))
-    mat_ = _closure(z_mat*delta + np.multiply((1-z_mat),
-                                              np.multiply(zcnts, mat)))
-    if mat.ndim == 1:
-        mat_ = np.ravel(mat_)
-    return mat_
+    zcnts = 1 - tot * delta
+    mat = _closure(np.where(z_mat, delta, zcnts * mat))
+    return mat.squeeze()
 
 
 def perturb(x, y):
@@ -221,7 +207,7 @@ def perturb(x, y):
     """
     x = np.asarray(x, dtype=np.float64)
     y = np.asarray(y, dtype=np.float64)
-    return _closure(np.multiply(x, y))
+    return _closure(x * y)
 
 
 def perturb_inv(x, y):
@@ -272,8 +258,7 @@ def perturb_inv(x, y):
     """
     x = np.asarray(x, dtype=np.float64)
     y = np.asarray(y, dtype=np.float64)
-    _y = power(y, -1)
-    return _closure(np.multiply(x, _y))
+    return _closure(x / y)
 
 
 def power(x, a):
@@ -318,8 +303,7 @@ def power(x, a):
 
     """
     x = np.asarray(x, dtype=np.float64)
-    mat = np.multiply(np.log(x), a)
-    return _closure(np.exp(mat))
+    return _closure(x**a)
 
 
 def clr(mat):
@@ -359,18 +343,14 @@ def clr(mat):
     array([-0.79451346,  0.30409883,  0.5917809 , -0.10136628])
 
     """
-    mat = np.asarray(mat, dtype=np.float64)
-    lmat = np.log(mat)
-    if mat.ndim == 1:
-        num_samps = len(mat)
-        gm = lmat.mean()
-    elif mat.ndim == 2:
-        num_samps, num_feats = mat.shape
-        gm = lmat.mean(axis=1)
-        gm = np.reshape(gm, (num_samps, 1))
-    else:
-        raise ValueError("mat has too many dimensions")
-    return lmat - gm
+    lmat = np.log(np.atleast_2d(mat))
+    if mat.ndim > 2:
+        raise ValueError("Input matrix can only have two dimensions or less")
+
+    num_samps, num_feats = lmat.shape
+    gm = lmat.mean(axis=1, keepdims=True)
+
+    return (lmat - gm).squeeze()
 
 
 def centralize(mat):
@@ -404,12 +384,8 @@ def centralize(mat):
            [ 0.32495488,  0.18761279,  0.16247744,  0.32495488]])
 
     """
-    mat = np.asarray(mat, dtype=np.float64)
-    if mat.ndim == 1:
-        raise ValueError("mat needs more than 1 row")
+    mat = np.atleast_2d(mat)
     if mat.ndim > 2:
-        raise ValueError("mat has too many dimensions")
-    r, c = mat.shape
+        raise ValueError("Input matrix can only have two dimensions or less")
     cen = ss.gmean(mat, axis=0)
-    cen = np.tile(cen, (r, 1))
     return perturb_inv(mat, cen)
