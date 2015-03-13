@@ -157,19 +157,13 @@ class CompositionTests(TestCase):
     def test_centralize(self):
         cmat = centralize(_closure(self.data1))
         npt.assert_allclose(cmat,
-                            np.array([[0.22474487, 0.22474487,
-                                       0.55051026],
-                                      [0.41523958, 0.41523958,
-                                       0.16952085]]))
+                            np.array([[0.22474487, 0.22474487, 0.55051026],
+                                      [0.41523958, 0.41523958, 0.16952085]]))
         cmat = centralize(_closure(self.data6))
         npt.assert_allclose(cmat,
-                            np.array([[0.22474487, 0.22474487,
-                                       0.55051026],
-                                      [0.41523958, 0.41523958,
-                                       0.16952085]]))
+                            np.array([[0.22474487, 0.22474487, 0.55051026],
+                                      [0.41523958, 0.41523958, 0.16952085]]))
 
-        with self.assertRaises(ValueError):
-            centralize(self.data2)
         with self.assertRaises(ValueError):
             centralize(self.data5)
 
