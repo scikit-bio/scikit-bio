@@ -108,6 +108,8 @@ def _closure(mat):
 
     """
     mat = np.atleast_2d(mat)
+    if np.any(mat < 0):
+        raise ValueError("Cannot have negative proportions")
     if mat.ndim > 2:
         raise ValueError("Input matrix can only have two dimensions or less")
     mat = mat / mat.sum(axis=1, keepdims=True)
@@ -147,6 +149,11 @@ def multiplicative_replacement(mat, delta=None):
     mat = np.atleast_2d(mat)
     if mat.ndim > 2:
         raise ValueError("Input matrix can only have two dimensions or less")
+    if np.any(mat < 0):
+        raise ValueError("Cannot have negative proportions")
+    if np.any(np.logical_not(np.isclose(mat.sum(axis=1), 1))):
+        raise ValueError("Rows need to sum up to 1")
+
     z_mat = (mat == 0)
 
     num_samps, num_feats = mat.shape
@@ -191,8 +198,6 @@ def perturb(x, y):
 
     Notes
     -----
-    - Each row must add up to 1
-
     - All of the values in x and y must be greater than zero
 
     Examples
@@ -207,6 +212,8 @@ def perturb(x, y):
     """
     x = np.asarray(x, dtype=np.float64)
     y = np.asarray(y, dtype=np.float64)
+    if np.any(x < 0) or np.any(y < 0):
+        raise ValueError("Cannot have negative proportions")
     return _closure(x * y)
 
 
@@ -240,10 +247,6 @@ def perturb_inv(x, y):
 
     Notes
     -----
-    - Each row must add up to 1 for x.
-
-    - y doesn't neccessary have to be a matrix of compositions
-
     - All of the values in x and y must be greater than zero
 
     Examples
@@ -258,6 +261,8 @@ def perturb_inv(x, y):
     """
     x = np.asarray(x, dtype=np.float64)
     y = np.asarray(y, dtype=np.float64)
+    if np.any(x < 0) or np.any(y < 0):
+        raise ValueError("Cannot have negative proportions")
     return _closure(x / y)
 
 
@@ -272,7 +277,6 @@ def power(x, a):
     :math:`C[x] = [\frac{x_1}{\sum x},...,\frac{x_D}{\sum x}]`
     for some :math:`D` dimensional real vector :math:`x` and
     :math:`D` is the number of components for every composition.
-
 
     Parameters
     ----------
@@ -302,8 +306,12 @@ def power(x, a):
     array([ 0.23059566,  0.25737316,  0.26488486,  0.24714631])
 
     """
-    x = np.asarray(x, dtype=np.float64)
-    return _closure(x**a)
+    x = np.atleast_2d(x)
+    if np.any(x < 0):
+        raise ValueError("Cannot have negative proportions")
+    if np.any(np.logical_not(np.isclose(x.sum(axis=1), 1))):
+        raise ValueError("Rows need to sum up to 1")
+    return _closure(x**a).squeeze()
 
 
 def clr(mat):
@@ -343,10 +351,15 @@ def clr(mat):
     array([-0.79451346,  0.30409883,  0.5917809 , -0.10136628])
 
     """
-    lmat = np.log(np.atleast_2d(mat))
+    mat = np.atleast_2d(mat)
     if mat.ndim > 2:
         raise ValueError("Input matrix can only have two dimensions or less")
+    if np.any(mat < 0):
+        raise ValueError("Cannot have negative proportions")
+    if np.any(np.logical_not(np.isclose(mat.sum(axis=1), 1))):
+        raise ValueError("Rows need to sum up to 1")
 
+    lmat = np.log(mat)
     num_samps, num_feats = lmat.shape
     gm = lmat.mean(axis=1, keepdims=True)
 
@@ -387,5 +400,10 @@ def centralize(mat):
     mat = np.atleast_2d(mat)
     if mat.ndim > 2:
         raise ValueError("Input matrix can only have two dimensions or less")
+    if np.any(mat < 0):
+        raise ValueError("Cannot have negative proportions")
+    if np.any(np.logical_not(np.isclose(mat.sum(axis=1), 1))):
+        raise ValueError("Rows need to sum up to 1")
+
     cen = ss.gmean(mat, axis=0)
     return perturb_inv(mat, cen)
