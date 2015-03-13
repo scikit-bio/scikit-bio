@@ -97,35 +97,29 @@ class CompositionTests(TestCase):
 
     def test_multiplicative_replacement(self):
         np.set_printoptions(precision=10)
-        amat = multiplicative_replacement(self.data3)
+        amat = multiplicative_replacement(_closure(self.data3))
         npt.assert_allclose(amat,
-                            np.array([[0.09056604, 0.18113208,
-                                       0.27169811, 0.00377358,
-                                       0.45283019],
-                                      [0.09913793, 0.00431034,
-                                       0.00431034, 0.39655172,
-                                       0.49568966],
-                                      [0.06666667, 0.13333333,
-                                       0.2, 0.26666667,
-                                       0.33333333]]), rtol=1e-5, atol=1e-5)
-
-        amat = multiplicative_replacement(self.data4)
-        npt.assert_allclose(amat, np.array([0.09056604, 0.18113208,
-                                            0.27169811, 0.00377358,
-                                            0.45283019]),
+                            np.array([[0.087273, 0.174545, 0.261818,
+                                       0.04, 0.436364],
+                                      [0.092, 0.04, 0.04, 0.368, 0.46],
+                                      [0.066667, 0.133333, 0.2,
+                                       0.266667, 0.333333]]),
                             rtol=1e-5, atol=1e-5)
 
-        amat = multiplicative_replacement(self.data7)
+        amat = multiplicative_replacement(_closure(self.data4))
         npt.assert_allclose(amat,
-                            np.array([[0.09056604, 0.18113208,
-                                       0.27169811, 0.00377358,
-                                       0.45283019],
-                                      [0.09913793, 0.00431034,
-                                       0.00431034, 0.39655172,
-                                       0.49568966],
-                                      [0.06666667, 0.13333333,
-                                       0.2, 0.26666667,
-                                       0.33333333]]), rtol=1e-5, atol=1e-5)
+                            np.array([0.087273, 0.174545, 0.261818,
+                                      0.04, 0.436364]),
+                            rtol=1e-5, atol=1e-5)
+
+        amat = multiplicative_replacement(_closure(self.data7))
+        npt.assert_allclose(amat,
+                            np.array([[0.087273, 0.174545, 0.261818,
+                                       0.04, 0.436364],
+                                      [0.092, 0.04, 0.04, 0.368, 0.46],
+                                      [0.066667, 0.133333, 0.2,
+                                       0.266667, 0.333333]]),
+                            rtol=1e-5, atol=1e-5)
 
         with self.assertRaises(ValueError):
             multiplicative_replacement(self.data5)
