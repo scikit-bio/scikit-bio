@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -7,6 +5,8 @@ from __future__ import absolute_import, division, print_function
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
+
+from __future__ import absolute_import, division, print_function
 
 from unittest import TestCase, main
 import numpy as np
@@ -192,11 +192,11 @@ class CompositionTests(TestCase):
                                       [0.41523958, 0.41523958, 0.16952085]]))
 
         with self.assertRaises(ValueError):
-            clr(self.data1)
+            centralize(self.data1)
         with self.assertRaises(ValueError):
-            clr(self.bad1)
+            centralize(self.bad1)
         with self.assertRaises(ValueError):
-            clr(self.bad2)
+            centralize(self.bad2)
 
 if __name__ == "__main__":
     main()
