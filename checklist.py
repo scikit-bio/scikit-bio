@@ -16,6 +16,7 @@ import os.path
 import subprocess
 import sys
 import ast
+import tokenize
 
 import dateutil.parser
 
@@ -36,8 +37,9 @@ def main():
 
     """
     root = 'skbio'
-    validators = [InitValidator(), ExecPermissionValidator(),
-                  GeneratedCythonValidator(), APIRegressionValidator()]
+    validators = [InitValidator(), CopyrightHeadersValidator(),
+                  ExecPermissionValidator(), GeneratedCythonValidator(),
+                  APIRegressionValidator()]
 
     return_code = 0
     for validator in validators:
@@ -142,6 +144,71 @@ class RepoValidator(object):
         stdout, stderr = proc.communicate()
         return_value = proc.returncode
         return stdout, stderr, return_value
+
+
+class CopyrightHeadersValidator(RepoValidator):
+    """Flag library files with non-standard copyright headers
+
+    See the current standard for scikit-bio's copyright headers at
+    ``http://scikit-bio.org/docs/latest/development/new_module.html``
+
+    Parameters
+    ----------
+    skip_dirs : iterable of str, optional
+        Directory names to skip during validation. Defaults to skipping any
+        directories named ``'data'`` or ``'__pycache__'`` (and anything
+        contained within them).
+
+    """
+
+    reason = ("Files non-conforming to standard headers as described in:\n"
+              "http://scikit-bio.org/docs/latest/development/new_module.html")
+
+    COPYRIGHT_HEADER = """\
+# ----------------------------------------------------------------------------
+# Copyright (c) 2013--, scikit-bio development team.
+#
+# Distributed under the terms of the Modified BSD License.
+#
+# The full license is in the file COPYING.txt, distributed with this software.
+# ----------------------------------------------------------------------------
+"""
+
+    def __init__(self, skip_dirs=None):
+        if skip_dirs is None:
+            skip_dirs = {'data', '__pycache__'}
+        self.skip_dirs = set(skip_dirs)
+
+    def _validate(self, root, dirs, files):
+        for skip_dir in self.skip_dirs:
+            if skip_dir in dirs:
+                dirs.remove(skip_dir)
+
+        invalid_files = []
+        for _file in files:
+            if not _file.endswith('.py'):
+                continue
+            pos = 0
+            f = open(os.path.join(root, _file))
+            tokens = list(tokenize.generate_tokens(f.readline))
+
+            # A module docstring is fully described using just two tokens: the
+            # main string and a terminating newline. By convention, however, it
+            # is always followed by a newline, and thus we advance by three
+            # positions to get to the next logical line.
+            if tokens[pos][0] == tokenize.STRING:
+                pos += 3
+            # copyright header consists of 7 lines, and by discussion in
+            # preceding comment, spans through 14 tokens.
+            cheader = ''.join(map(lambda x: x[1], tokens[pos:pos + 14]))
+            # Ensure that there is no blank line at the end of the file
+            if (cheader != self.COPYRIGHT_HEADER or
+                    (tokens[pos + 14][0] != tokenize.NL and
+                     tokens[pos + 14][0] != tokenize.ENDMARKER)):
+                invalid_files.append(f.name)
+            f.close()
+
+        return invalid_files
 
 
 class InitValidator(RepoValidator):

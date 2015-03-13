@@ -211,6 +211,7 @@ References
 .. [2] http://evolution.genetics.washington.edu/phylip/newicktree.html
 
 """
+
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #

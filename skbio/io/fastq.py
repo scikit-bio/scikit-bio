@@ -243,6 +243,7 @@ References
 .. [3] http://www.open-bio.org/
 
 """
+
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #

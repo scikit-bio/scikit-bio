@@ -12,8 +12,19 @@ import os
 import platform
 from setuptools import find_packages, setup
 from setuptools.extension import Extension
+from setuptools.command.build_ext import build_ext as _build_ext
 
-import numpy as np
+
+# Bootstrap setup.py with numpy
+# Huge thanks to coldfix's solution
+# http://stackoverflow.com/a/21621689/579416
+class build_ext(_build_ext):
+    def finalize_options(self):
+        _build_ext.finalize_options(self)
+        # Prevent numpy from thinking it is still in its setup process:
+        __builtins__.__NUMPY_SETUP__ = False
+        import numpy
+        self.include_dirs.append(numpy.get_include())
 
 __version__ = "0.2.3-dev"
 
@@ -84,7 +95,8 @@ setup(name='scikit-bio',
       test_suite='nose.collector',
       packages=find_packages(),
       ext_modules=extensions,
-      include_dirs=[np.get_include()],
+      cmdclass={'build_ext': build_ext},
+      setup_requires=['numpy >= 1.7'],
       install_requires=['numpy >= 1.7', 'matplotlib >= 1.1.0',
                         'scipy >= 0.13.0', 'pandas', 'future', 'six',
                         'natsort', 'IPython'],

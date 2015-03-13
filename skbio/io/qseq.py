@@ -108,6 +108,7 @@ References
 .. [1] http://biowulf.nih.gov/apps/CASAVA_UG_15011196B.pdf
 
 """
+
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #

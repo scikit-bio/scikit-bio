@@ -104,14 +104,14 @@ References
 .. [2] http://web.mit.edu/meme_v4.9.0/doc/clustalw-format.html
 """
 
-
-# -----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-# -----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
+
 from __future__ import absolute_import, division, print_function
 
 from skbio.io import (register_reader, register_writer, register_sniffer,

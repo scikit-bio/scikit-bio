@@ -70,10 +70,9 @@ Once the release is created on GitHub, it's a good idea to test out the release 
 
 3. Install the release and run the tests:
 
-        pip install numpy
         pip install .
         cd
-        nosetests --with-doctest skbio
+        python -m skbio.test
 
 4. During this process (it can take awhile to install all of scikit-bio's dependencies), submit a pull request to update the version strings from 1.2.4 to 1.2.4-dev. Use the same strategy described above to update the version strings. Update ``CHANGELOG.md`` to include a new section for 1.2.4-dev (there won't be any changes to note here yet). **Do not merge this pull request yet.**
 
@@ -92,9 +91,8 @@ Assuming the GitHub release tarball correctly installs and passes its tests, you
 3. Create a new virtualenv and run:
 
         cd
-        pip install numpy
         pip install <path to extracted scikit-bio release>/dist/scikit-bio-1.2.4.tar.gz
-        nosetests --with-doctest skbio
+        python -m skbio.test
 
 4. If everything goes well, it is finally time to push the release to PyPI:
 
@@ -105,9 +103,8 @@ Assuming the GitHub release tarball correctly installs and passes its tests, you
 5. Once the release is available on PyPI, do a final round of testing. Create a new virtualenv and run:
 
         cd
-        pip install numpy
         pip install scikit-bio
-        nosetests --with-doctest skbio
+        python -m skbio.test
 
 If this succeeds, the release appears to be a success!
 
