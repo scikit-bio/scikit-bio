@@ -151,7 +151,7 @@ def multiplicative_replacement(mat, delta=None):
         raise ValueError("Input matrix can only have two dimensions or less")
     if np.any(mat < 0):
         raise ValueError("Cannot have negative proportions")
-    if np.any(np.logical_not(np.isclose(mat.sum(axis=1), 1))):
+    if not np.all(np.isclose(mat.sum(axis=1), 1)):
         raise ValueError("Rows need to sum up to 1")
 
     z_mat = (mat == 0)
@@ -309,7 +309,7 @@ def power(x, a):
     x = np.atleast_2d(x)
     if np.any(x < 0):
         raise ValueError("Cannot have negative proportions")
-    if np.any(np.logical_not(np.isclose(x.sum(axis=1), 1))):
+    if not np.all(np.isclose(x.sum(axis=1), 1)):
         raise ValueError("Rows need to sum up to 1")
     return _closure(x**a).squeeze()
 
@@ -356,7 +356,7 @@ def clr(mat):
         raise ValueError("Input matrix can only have two dimensions or less")
     if np.any(mat < 0):
         raise ValueError("Cannot have negative proportions")
-    if np.any(np.logical_not(np.isclose(mat.sum(axis=1), 1))):
+    if not np.all(np.isclose(mat.sum(axis=1), 1)):
         raise ValueError("Rows need to sum up to 1")
 
     lmat = np.log(mat)
@@ -402,7 +402,7 @@ def centralize(mat):
         raise ValueError("Input matrix can only have two dimensions or less")
     if np.any(mat < 0):
         raise ValueError("Cannot have negative proportions")
-    if np.any(np.logical_not(np.isclose(mat.sum(axis=1), 1))):
+    if not np.all(np.isclose(mat.sum(axis=1), 1)):
         raise ValueError("Rows need to sum up to 1")
 
     cen = ss.gmean(mat, axis=0)
