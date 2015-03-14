@@ -102,7 +102,7 @@ def _closure(mat):
 
     Returns
     -------
-    numpy.ndarray, np.float64
+    array_like, np.float64
        A matrix of proportions where all of the values
        are nonzero and each composition (row) adds up to 1
 
@@ -231,11 +231,11 @@ def perturb_inv(x, y):
 
     Parameters
     ----------
-    x : numpy.ndarray
+    x : array_like
         a matrix of proportions where
         rows = compositions and
         columns = components
-    y : numpy.ndarray
+    y : array_like
         rows = compositions and
         columns = components
 
@@ -280,7 +280,7 @@ def power(x, a):
 
     Parameters
     ----------
-    x : numpy.ndarray, float
+    x : array_like, float
         a matrix of proportions where
         rows = compositions and
         columns = components
@@ -328,7 +328,7 @@ def clr(mat):
 
     Parameters
     ----------
-    mat : numpy.ndarray, float
+    mat : array_like, float
        a matrix of proportions where
        rows = compositions and
        columns = components
@@ -373,7 +373,7 @@ def centralize(mat):
 
     Parameters
     ----------
-    mat : numpy.ndarray, float
+    mat : array_like, float
        a matrix of proportions where
        rows = compositions and
        columns = components
