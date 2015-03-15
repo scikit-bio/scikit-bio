@@ -39,6 +39,7 @@ Functions
 .. autosummary::
    :toctree: generated/
 
+   closure
    multiplicative_replacement
    perturb
    perturb_inv
@@ -89,7 +90,7 @@ import numpy as np
 import scipy.stats as ss
 
 
-def _closure(mat):
+def closure(mat):
     """
     Performs closure to ensure that all elements add up to 1
 
@@ -214,7 +215,7 @@ def perturb(x, y):
     y = np.asarray(y, dtype=np.float64)
     if np.any(x < 0) or np.any(y < 0):
         raise ValueError("Cannot have negative proportions")
-    return _closure(x * y)
+    return closure(x * y)
 
 
 def perturb_inv(x, y):
@@ -263,7 +264,7 @@ def perturb_inv(x, y):
     y = np.asarray(y, dtype=np.float64)
     if np.any(x < 0) or np.any(y < 0):
         raise ValueError("Cannot have negative proportions")
-    return _closure(x / y)
+    return closure(x / y)
 
 
 def power(x, a):
@@ -311,7 +312,7 @@ def power(x, a):
         raise ValueError("Cannot have negative proportions")
     if not np.all(np.isclose(x.sum(axis=1), 1)):
         raise ValueError("Rows need to sum up to 1")
-    return _closure(x**a).squeeze()
+    return closure(x**a).squeeze()
 
 
 def clr(mat):
