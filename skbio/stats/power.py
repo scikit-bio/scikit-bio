@@ -49,7 +49,6 @@ Functions
     subsample_power
     subsample_paired_power
     confidence_bound
-    bootstrap_power_curve
     paired_subsamples
 
 Examples
