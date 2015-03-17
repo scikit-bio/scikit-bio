@@ -214,7 +214,8 @@ class PowerAnalysisTest(TestCase):
         npt.assert_array_equal(known_c, test_c)
 
     def test_subsample_paired_power_multi(self):
-        f = lambda x: np.array([0.5, 0.5, 0.005])
+        def f(x):
+            return np.array([0.5, 0.5, 0.005])
         cat = 'INT'
         control_cats = ['SEX']
         # Tests for the control cats
@@ -338,7 +339,8 @@ class PowerAnalysisTest(TestCase):
 
     def test__compare_distributions_multiple_returns(self):
         known = np.array([[1, 1, 1], [2, 2, 2], [3, 3, 3]])
-        f = lambda x: np.array([1, 2, 3])
+        def f(x):
+            return np.array([1, 2, 3])
         test = _compare_distributions(f, self.pop, 3, mode='matched',
                                       num_iter=3)
         npt.assert_array_equal(known, test)

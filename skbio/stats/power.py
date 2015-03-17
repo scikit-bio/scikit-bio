@@ -770,7 +770,7 @@ def _calculate_power(p_values, alpha=0.05):
 
     """
 
-    if len(p_values.shape) == 1:
+    if p_values.ndim == 1:
         p_values = p_values * np.array([[1]])
 
     w = (p_values < float(alpha)).sum(1)/float(p_values.shape[1])
