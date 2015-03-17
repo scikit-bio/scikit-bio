@@ -75,7 +75,7 @@ git pull upstream master
 git checkout -b my-topic-branch
 ```
 
-6. Run ``nosetests --with-doctest ; pep8 skbio setup.py`` to confirm that the tests pass before you make any changes.
+6. Run ``make test`` to confirm that the tests pass before you make any changes.
 
 7. Make your changes, add them (with ``git add``), and commit them (with ``git commit``). Don't forget to update associated scripts and tests as necessary. You should make incremental commits, rather than one massive commit at the end. Write descriptive commit messages to accompany each commit.
 
@@ -85,7 +85,7 @@ git checkout my-topic-branch
 git pull upstream master
 ```
 
-9. Run ``nosetests --with-doctest ; pep8 skbio setup.py`` to ensure that your changes did not cause anything expected to break.
+9. Run ``make test`` to ensure that your changes did not cause anything expected to break.
 
 10. Once the tests pass, you should push your changes to your forked repository on GitHub using:
 ```
@@ -115,7 +115,7 @@ All code that is added to scikit-bio must be unit tested, and the unit test code
 
 The scikit-bio coding guidelines describe our [expectations for unit tests](http://scikit-bio.org/development/coding_guidelines.html). You should review the unit test section before working on your test code.
 
-Tests can be executed using [nose](https://nose.readthedocs.org/en/latest/) by running `nosetests --with-doctest` from the base directory of the project or from within a Python or IPython session running the following code:
+Tests can be executed using [nose](https://nose.readthedocs.org/en/latest/) by running `make test` from the base directory of the project or from within a Python or IPython session running the following code:
 
 ``` python
 >>> import skbio
@@ -128,8 +128,8 @@ Tests can be executed using [nose](https://nose.readthedocs.org/en/latest/) by r
 Note that this is possible because the lines below are added at the end of each `__init__.py` file in the package, so if you add a new module, be sure to include these lines in its `__init__.py`:
 
 ```python
-from numpy.testing import Tester
-test = Tester().test
+from skbio.util import TestRunner
+test = TestRunner(__file__).test
 ```
 
 

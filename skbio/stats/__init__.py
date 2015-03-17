@@ -29,6 +29,7 @@ Functions
    isubsample
 
 """
+
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -37,10 +38,10 @@ Functions
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from numpy.testing import Tester
+from skbio.util import TestRunner
 
 from ._subsample import subsample_counts, isubsample
 
 __all__ = ['subsample_counts', 'isubsample']
 
-test = Tester().test
+test = TestRunner(__file__).test

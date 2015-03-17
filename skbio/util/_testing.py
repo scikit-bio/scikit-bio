@@ -8,6 +8,55 @@
 
 import os
 import inspect
+from nose import core
+from nose.tools import nottest
+from future.utils import PY3
+
+
+@nottest
+class TestRunner(object):
+    """Simple wrapper class around nosetests functionality.
+
+    Parameters
+    ----------
+    filename : str
+        __file__ attribute passed in from the caller. This tells the
+        tester where to start looking for tests.
+
+    Notes
+    -----
+    The primary purpose of this class is to create an interface which users
+    of scikit-bio can use to run all of the built in tests. Normally this
+    would be done by invoking nosetests directly from the command line, but
+    scikit-bio needs several additional options which make the command long
+    and ugly. This class invokes nose with the required options.
+
+    """
+    def __init__(self, filename):
+        self._filename = filename
+        self._test_dir = os.path.dirname(filename)
+
+    def test(self, verbose=False):
+        """Performs the actual running of the tests.
+
+        Parameters
+        ----------
+        verbose : bool
+            flag for running in verbose mode.
+
+        Returns
+        -------
+        bool
+            test run success status
+        """
+        # NOTE: it doesn't seem to matter what the first element of the argv
+        # list is, there just needs to be something there.
+        argv = [self._filename, '-I DO_NOT_IGNORE_ANYTHING']
+        if not PY3:
+            argv.append('--with-doctest')
+        if verbose:
+            argv.append('-v')
+        return core.run(argv=argv, defaultTest=self._test_dir)
 
 
 def get_data_path(fn, subfolder='data'):

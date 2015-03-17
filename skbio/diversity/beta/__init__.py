@@ -185,10 +185,10 @@ References
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from numpy.testing import Tester
+from skbio.util import TestRunner
 
 from ._base import pw_distances, pw_distances_from_table
 
 __all__ = ["pw_distances", "pw_distances_from_table"]
 
-test = Tester().test
+test = TestRunner(__file__).test

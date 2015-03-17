@@ -1,31 +1,9 @@
-::
 
-               _ _    _ _          _     _
-              (_) |  (_) |        | |   (_)
-      ___  ___ _| | ___| |_ ______| |__  _  ___
-     / __|/ __| | |/ / | __|______| '_ \| |/ _ \
-     \__ \ (__| |   <| | |_       | |_) | | (_) |
-     |___/\___|_|_|\_\_|\__|      |_.__/|_|\___/
+.. image:: http://scikit-bio.org/assets/logo.svg
+   :target: http://scikit-bio.org
+   :alt: scikit-bio logo
 
-
-           Opisthokonta
-                   \  Amoebozoa
-                    \ /
-                     *    Euryarchaeota
-                      \     |_ Crenarchaeota
-                       \   *
-                        \ /
-                         *
-                        /
-                       /
-                      /
-                     *
-                    / \
-                   /   \
-        Proteobacteria  \
-                       Cyanobacteria
-
-|Build Status| |Coverage Status|
+|Build Status| |Coverage Status| |Gitter Badge|
 
 scikit-bio is an open-source, BSD-licensed python package providing data structures, algorithms and educational resources for bioinformatics.
 
@@ -41,7 +19,6 @@ Installation of release version (recommended for most users)
 
 To install the latest release version of scikit-bio you should run::
 
-    pip install numpy
     pip install scikit-bio
 
 Equivalently, you can use the ``conda`` package manager available in `Anaconda <http://continuum.io/downloads>`_ or `miniconda <http://conda.pydata.org/miniconda.html>`_ to install scikit-bio and all its dependencies, without having to compile them::
@@ -52,7 +29,7 @@ Finally, most scikit-bio's dependencies (in particular, the ones that are tricki
 
 You can verify your installation by running the scikit-bio unit tests as follows::
 
-    nosetests --with-doctest skbio
+    python -m skbio.test
 
 Installation of development version
 -----------------------------------
@@ -64,11 +41,14 @@ If you're interested in working with the latest development release of scikit-bi
     cd scikit-bio
     pip install .
 
-After this completes, you can run the scikit-bio unit tests as follows. You must first ``cd`` out of the ``scikit-bio`` directory for the tests to pass (here we ``cd`` to the home directory).
-::
+After this completes, you can run the scikit-bio unit tests from with a Python or IPython session as follows::
 
-    cd
-    nosetests --with-doctest skbio
+    import skbio
+    skbio.test()
+
+To only run tests for a specific scikit-bio module, for example skbio.sequence, you can do::
+
+    skbio.sequence.test()
 
 For developers of scikit-bio, if you don't want to be forced to re-install after every change, you can modify the above ``pip install`` command to::
 
@@ -154,11 +134,11 @@ Logo
 ----
 
 scikit-bio's logo was created by `Alina Prassas <http://cargocollective.com/alinaprassas>`_.
-scikit-bio's ASCII art tree was created by `@gregcaporaso
-<https://github.com/gregcaporaso>`_. Our text logo was created at `patorjk.com
-<http://patorjk.com/software/taag/>`__.
 
 .. |Build Status| image:: https://travis-ci.org/biocore/scikit-bio.svg?branch=master
    :target: https://travis-ci.org/biocore/scikit-bio
 .. |Coverage Status| image:: https://coveralls.io/repos/biocore/scikit-bio/badge.png
    :target: https://coveralls.io/r/biocore/scikit-bio
+.. |Gitter Badge| image:: https://badges.gitter.im/Join%20Chat.svg
+   :alt: Join the chat at https://gitter.im/biocore/scikit-bio
+   :target: https://gitter.im/biocore/scikit-bio?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge

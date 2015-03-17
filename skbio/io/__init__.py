@@ -258,6 +258,7 @@ Developer exceptions
    InvalidRegistrationError
 
 """
+
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -268,7 +269,7 @@ Developer exceptions
 
 from importlib import import_module
 
-from numpy.testing import Tester
+from skbio.util import TestRunner
 
 from ._warning import FormatIdentificationWarning, ArgumentOverrideWarning
 from ._exception import (DuplicateRegistrationError, InvalidRegistrationError,
@@ -319,4 +320,4 @@ import_module('skbio.io.qseq')
 # (read and write) to each class which has registered I/O operations.
 initialize_oop_interface()
 
-test = Tester().test
+test = TestRunner(__file__).test
