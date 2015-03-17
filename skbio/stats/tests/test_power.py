@@ -339,8 +339,10 @@ class PowerAnalysisTest(TestCase):
 
     def test__compare_distributions_multiple_returns(self):
         known = np.array([[1, 1, 1], [2, 2, 2], [3, 3, 3]])
+
         def f(x):
             return np.array([1, 2, 3])
+
         test = _compare_distributions(f, self.pop, 3, mode='matched',
                                       num_iter=3)
         npt.assert_array_equal(known, test)
