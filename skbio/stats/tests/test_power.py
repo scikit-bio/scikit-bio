@@ -20,6 +20,8 @@ from skbio.stats.power import (subsample_power,
                                confidence_bound,
                                _calculate_power,
                                _compare_distributions,
+                               _calculate_power_curve,
+                               bootstrap_power_curve,
                                paired_subsamples
                                )
 
@@ -112,7 +114,7 @@ class PowerAnalysisTest(TestCase):
     def test_subsample_power_interval_error(self):
         with self.assertRaises(ValueError):
             subsample_power(self.f,
-                            samples=[np.ones((3)), np.ones((5))],
+                            samples=[np.ones((3)), np.zeros((5))],
                             min_observations=2,
                             min_counts=5,
                             counts_interval=1000,
@@ -346,6 +348,71 @@ class PowerAnalysisTest(TestCase):
         test = _compare_distributions(f, self.pop, 3, mode='matched',
                                       num_iter=3)
         npt.assert_array_equal(known, test)
+
+    def test__calculate_power_curve_ratio_error(self):
+        with self.assertRaises(ValueError):
+            _calculate_power_curve(self.f, self.pop, self.num_samps,
+                                   ratio=np.array([0.1, 0.2, 0.3]),
+                                   num_iter=100)
+
+    def test__calculate_power_curve_default(self):
+        # Sets the known output
+        known = np.array([0.509, 0.822, 0.962, 0.997, 1.000, 1.000, 1.000,
+                          1.000, 1.000])
+        # Generates the test values
+        test = _calculate_power_curve(self.f,
+                                      self.pop,
+                                      self.num_samps,
+                                      num_iter=100)
+        # Checks the samples returned sanely
+        npt.assert_allclose(test, known, rtol=0.1, atol=0.01)
+
+    def test__calculate_power_curve_alpha(self):
+        # Sets the know output
+        known = np.array([0.31, 0.568, 0.842, 0.954, 0.995, 1.000, 1.000,
+                          1.000, 1.000])
+
+        # Generates the test values
+        test = _calculate_power_curve(self.f,
+                                      self.pop,
+                                      self.num_samps,
+                                      alpha=0.01,
+                                      num_iter=100)
+
+        # Checks the samples returned sanely
+        npt.assert_allclose(test, known, rtol=0.1, atol=0.1)
+
+    def test__calculate_power_curve_ratio(self):
+        # Sets the know output
+        known = np.array([0.096, 0.333, 0.493, 0.743, 0.824, 0.937, 0.969,
+                          0.996, 0.998])
+
+        # Generates the test values
+        test = _calculate_power_curve(self.f,
+                                      self.pop,
+                                      self.num_samps,
+                                      ratio=np.array([0.25, 0.75]),
+                                      num_iter=100)
+
+        # Checks the samples returned sanely
+        npt.assert_allclose(test, known, rtol=0.1, atol=0.1)
+
+    def test_bootstrap_power_curve(self):
+        # Sets the known values
+        known_mean = np.array([0.500, 0.82, 0.965, 0.995, 1.000, 1.000,
+                               1.000, 1.000,  1.000])
+        known_bound = np.array([0.03, 0.02, 0.01, 0.01, 0.00, 0.00, 0.00, 0.00,
+                                0.00])
+
+        # Generates the test values
+        test_mean, test_bound = bootstrap_power_curve(self.f,
+                                                      self.pop,
+                                                      self.num_samps,
+                                                      num_iter=100)
+
+        # Checks the function returned sanely
+        npt.assert_allclose(test_mean, known_mean, rtol=0.05, atol=0.05)
+        npt.assert_allclose(test_bound, known_bound, rtol=0.1, atol=0.01)
 
     def test_paired_subsamples_default(self):
         # Sets the known np.array set

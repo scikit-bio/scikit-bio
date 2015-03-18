@@ -144,6 +144,8 @@ from __future__ import absolute_import, division, print_function
 from future.utils import viewitems
 from future.builtins import range
 
+from warnings import warn
+
 import numpy as np
 import scipy.stats
 
@@ -612,6 +614,114 @@ def confidence_bound(vec, alpha=0.05, df=None, axis=None):
     return bound
 
 
+def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
+                          alpha=0.05, mode='ind', num_iter=500, num_runs=10):
+    r"""Repeatedly calculates the power curve for a specified alpha level
+
+    .. note:: Deprecated in scikit-bio 0.2.3-dev
+    ``bootstrap_power_curve`` will be removed in scikit-bio 0.3.1. It is
+    depreciated in favor of using ``subsample_power`` or
+    ``sample_paired_power`` to calculate a power array, and then using
+    ``confidence_bound`` to perform bootstrapping.
+
+    Parameters
+    ----------
+    test : function
+        The statistical test which accepts an array_like of sample ids
+        (list of lists or arrays) and returns a p-value.
+    samples : array_like
+        samples can be a list of lists or an array where each sublist or row in
+        the array corresponds to a sampled group.
+    sample_counts : 1-D array_like
+        A vector of the number of samples which should be sampled in each curve
+    ratio : 1-D array_like, optional
+        The fraction of the sample counts which should be
+        assigned to each
+        group. This must be a none-type object, or the same length as samples.
+        If Ratio is None, the same number of observations are drawn from
+        each sample.
+    alpha : float, optional
+        The default is 0.05. The critical value for calculating power.
+    mode : {"ind", "matched"}, optional
+        "matched" samples should be used when observations in
+        samples have corresponding observations in other groups. For instance,
+        this may be useful when working with regression data where
+        :math:`x_{1}, x_{2}, ..., x_{n}` maps to :math:`y_{1}, y_{2}, ... ,
+        y_{n}`.
+    num_iter : unsigned int, optional
+        The number of p-values to generate for each point on the curve.
+    num_runs : unsigned int, optional
+        The number of times to calculate each curve.
+
+    Returns
+    -------
+    power_mean : 1-D array
+        The mean p-values from the iterations.
+    power_bound : vector
+        The variance in the p-values.
+
+    Examples
+    --------
+    Suppose we have 100 samples randomly drawn from two normal distribitions,
+    the first with mean 0 and standard devation 1, and the second with mean 3
+    and standard deviation 1.5
+
+    >>> import numpy as np
+    >>> np.random.seed(20)
+    >>> samples_1 = np.random.randn(100)
+    >>> samples_2 = 1.5 * np.random.randn(100) + 1
+
+    We want to test the statistical power of a independent two sample t-test
+    comparing the two populations. We can define an anonymous function, `f`,
+    to wrap the scipy function for independent t tests,
+    `scipy.stats.ttest_ind`. The test function will take a list of value
+    vectors and return a p value.
+
+    >>> from scipy.stats import ttest_ind
+    >>> f = lambda x: ttest_ind(x[0], x[1])[1]
+
+    Now, we can determine the statistical power, or the probability that we do
+    not have a false negative given that we do not have a false positive, by
+    varying a number of subsamples.
+
+    >>> from skbio.stats.power import bootstrap_power_curve
+    >>> sample_counts = np.arange(5, 80, 5)
+    >>> power_mean, power_bound = bootstrap_power_curve(f,
+    ...                                                 [samples_1, samples_2],
+    ...                                                 sample_counts)
+    >>> sample_counts[power_mean - power_bound.round(3) > .80].min()
+    20
+
+    Based on this analysis, it looks like we need at least 20 observations
+    from each distribution to avoid committing a type II error more than 20%
+    of the time.
+
+    """
+
+    warn("skbio.stats.power.bootstrap_power_curve is deprecated. Please "
+         "use skbio.stats.power.subsample_power or "
+         "skbio.stats.power.subsample_paired_power followed by "
+         "confidence_bound.", DeprecationWarning)
+
+    # Corrects the alpha value into a matrix
+    alpha = np.ones((num_runs)) * alpha
+
+    # Boot straps the power curve
+    power = _calculate_power_curve(test=test,
+                                   samples=samples,
+                                   sample_counts=sample_counts,
+                                   ratio=ratio,
+                                   num_iter=num_iter,
+                                   alpha=alpha,
+                                   mode=mode)
+    # Calculates two summary statitics
+    power_mean = power.mean(0)
+    power_bound = confidence_bound(power, alpha=alpha[0], axis=0)
+
+    # Calculates summary statitics
+    return power_mean, power_bound
+
+
 def paired_subsamples(meta, cat, control_cats, order=None, strict_match=True):
     r"""Gets a set of samples to serve as controls
 
@@ -870,3 +980,79 @@ def _compare_distributions(test, samples, num_p, counts=5, mode="ind",
         p_values = np.hstack(p_values)
 
     return p_values
+
+
+def _calculate_power_curve(test, samples, sample_counts, ratio=None,
+                           mode='ind', num_iter=1000, alpha=0.05):
+    r"""Generates an empirical power curve for the samples.
+
+    Parameters
+    ----------
+    test : function
+        The statistical test which accepts an list of arrays of values and
+        returns a p value.
+    samples : array_like
+        `samples` can be a list of lists or an array where each sublist or row
+        in the array corresponds to a sampled group.
+    sample_counts : 1-D array
+        A vector of the number of samples which should be sampled in each
+        curve.
+    mode : {"ind", "matched"}, optional
+        "matched" samples should be used when observations in
+        samples have corresponding observations in other groups. For instance,
+        this may be useful when working with regression data where
+        :math:`x_{1}, x_{2}, ..., x_{n}` maps to :math:`y_{1}, y_{2}, ... ,
+        y_{n}`.
+    ratio : 1-D array, optional
+        The fraction of the sample counts which should be
+        assigned to each group. If this is a 1-D array, it must be the same
+        length as `samples`. If no value is supplied (`ratio` is None),
+        then an equal number of observations will be drawn for each sample.
+    num_iter : int
+        The default is 1000. The number of p-values to generate for each point
+        on the curve.
+    Returns
+    -------
+    p_values : array
+        The p-values associated with the input sample counts.
+    Raises
+    ------
+    ValueError
+        If ratio is an array and ratio is not the same length as samples
+    """
+    # Casts array-likes to arrays
+    sample_counts = np.asarray(sample_counts)
+    # Determines the number of groups
+    num_groups = len(samples)
+    num_samps = len(sample_counts)
+    if isinstance(alpha, float):
+        vec = True
+        pwr = np.zeros((num_samps))
+        alpha = np.array([alpha])
+    else:
+        vec = False
+        num_crit = alpha.shape[0]
+        pwr = np.zeros((num_crit, num_samps))
+    # Checks the ratio argument
+    if ratio is None:
+        ratio = np.ones((num_groups))
+    ratio = np.asarray(ratio)
+    if not ratio.shape == (num_groups,):
+        raise ValueError('There must be a ratio for each group.')
+
+    # Loops through the sample sizes
+    for id2, s in enumerate(sample_counts):
+        count = np.round(s * ratio, 0).astype(int)
+        for id1, a in enumerate(alpha):
+            ps = _compare_distributions(test=test,
+                                        samples=samples,
+                                        counts=count,
+                                        num_p=1,
+                                        num_iter=num_iter,
+                                        mode=mode)
+            if vec:
+                pwr[id2] = _calculate_power(ps, a)
+            else:
+                pwr[id1, id2] = _calculate_power(ps, a)
+
+    return pwr

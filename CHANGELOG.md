@@ -10,6 +10,7 @@
 ### Deprecated functionality
 * Deprecated `skbio.util.flatten`. This function will be removed in scikit-bio 0.3.1. Please use standard python library functionality
 described here [Making a flat list out of lists of lists](http://stackoverflow.com/a/952952/3639023), [Flattening a shallow list](http://stackoverflow.com/a/406199/3639023) ([#833](https://github.com/biocore/scikit-bio/issues/833))
+* Deprecated `skbio.stats.power.bootstrap_power_curve` will be removed in scikit-bio 0.3.1. It is depreciated in favor of using ``subsample_power`` or ``sample_paired_power`` to calculate a power matrix, and then the use of ``confidence_bounds`` to calculate the average and confidence intervals. 
 
 ### Backward-incompatible changes
 * Removed the following deprecated functionality:
