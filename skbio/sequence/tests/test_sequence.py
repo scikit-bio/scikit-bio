@@ -75,15 +75,6 @@ class BiologicalSequenceTests(TestCase):
         self.assertEqual(b.id, "")
         self.assertEqual(b.description, "")
 
-    def test_init_with_validation(self):
-        self.assertRaises(BiologicalSequenceError, BiologicalSequence, "ACC",
-                          validate=True)
-        try:
-            # no error raised when only allow characters are passed
-            BiologicalSequence("..--..", validate=True)
-        except BiologicalSequenceError:
-            self.assertTrue(False)
-
     def test_init_with_invalid_quality(self):
         # invalid dtype
         with self.assertRaises(TypeError):
@@ -136,7 +127,7 @@ class BiologicalSequenceTests(TestCase):
 
         # different type causes sequences to not be equal
         self.assertFalse(
-            BiologicalSequence('ACGT') == NucleotideSequence('ACGT'))
+            BiologicalSequence('ACGT') == DNASequence('ACGT'))
 
     def test_getitem(self):
         # use equals method to ensure that id, description, and sliced
@@ -413,11 +404,8 @@ class BiologicalSequenceTests(TestCase):
         self.assertEqual(str(self.b2), "ACCGGTACC")
         self.assertEqual(str(self.b3), "GREG")
 
-    def test_alphabet(self):
-        self.assertEqual(self.b1.alphabet, set())
-
-    def test_gap_alphabet(self):
-        self.assertEqual(self.b1.gap_alphabet, set('-.'))
+#    def test_gap_chars(self):
+#        self.assertEqual(self.b1.gap_chars, set('-.'))
 
     def test_sequence(self):
         self.assertEqual(self.b1.sequence, "GATTACA")
@@ -550,8 +538,8 @@ class BiologicalSequenceTests(TestCase):
 
         # specifying validate should raise an error when the copy is
         # instantiated
-        with self.assertRaises(BiologicalSequenceError):
-            a.copy(validate=True)
+#        with self.assertRaises(BiologicalSequenceError):
+#            a.copy(validate=True)
 
     def test_equals_true(self):
         # sequences match, all other attributes are not provided
@@ -602,8 +590,8 @@ class BiologicalSequenceTests(TestCase):
         # type mismatch
         a = BiologicalSequence('ACGT', id='foo', description='abc',
                                quality=[1, 2, 3, 4])
-        b = NucleotideSequence('ACGT', id='bar', description='def',
-                               quality=[5, 6, 7, 8])
+        b = DNASequence('ACGT', id='bar', description='def',
+                        quality=[5, 6, 7, 8])
         self.assertFalse(a.equals(b, ignore=['quality', 'description', 'id']))
 
         # id mismatch
@@ -636,24 +624,24 @@ class BiologicalSequenceTests(TestCase):
         self.assertEqual(self.b1.count('T'), 2)
         self.assertEqual(self.b1.count('TT'), 1)
 
-    def test_degap(self):
-        # use equals method to ensure that id, description, and filtered
-        # quality are correctly propagated to the resulting sequence
-
-        # no filtering, has quality
-        self.assertTrue(self.b1.degap().equals(self.b1))
-
-        # no filtering, doesn't have quality
-        self.assertTrue(self.b2.degap().equals(self.b2))
-
-        # everything is filtered, has quality
-        self.assertTrue(self.b7.degap().equals(
-            BiologicalSequence('', quality=[])))
-
-        # some filtering, has quality
-        self.assertTrue(self.b8.degap().equals(
-            BiologicalSequence('HELLO', id='hello', description='gapped hello',
-                               quality=[0, 1, 8, 9, 10])))
+#    def test_degap(self):
+#        # use equals method to ensure that id, description, and filtered
+#        # quality are correctly propagated to the resulting sequence
+#
+#        # no filtering, has quality
+#        self.assertTrue(self.b1.degap().equals(self.b1))
+#
+#        # no filtering, doesn't have quality
+#        self.assertTrue(self.b2.degap().equals(self.b2))
+#
+#        # everything is filtered, has quality
+#        self.assertTrue(self.b7.degap().equals(
+#            BiologicalSequence('', quality=[])))
+#
+#        # some filtering, has quality
+#        self.assertTrue(self.b8.degap().equals(
+#            BiologicalSequence('HELLO', id='hello', description='gapped hello',
+#                               quality=[0, 1, 8, 9, 10])))
 
     def test_distance(self):
         # note that test_hamming_distance covers default behavior more
@@ -698,41 +686,33 @@ class BiologicalSequenceTests(TestCase):
         self.assertAlmostEqual(
             self.b1.fraction_same(BiologicalSequence('GATTACC')), 6. / 7., 5)
 
-    def test_gap_maps(self):
-        # in sequence with no gaps, the gap_maps are identical
-        self.assertEqual(self.b1.gap_maps(),
-                         ([0, 1, 2, 3, 4, 5, 6], [0, 1, 2, 3, 4, 5, 6]))
-        # in sequence with all gaps, the map of degapped to gapped is the empty
-        # list (bc its length is 0), and the map of gapped to degapped is all
-        # None
-        self.assertEqual(self.b7.gap_maps(),
-                         ([], [None, None, None, None, None, None]))
+#    def test_gap_maps(self):
+#        # in sequence with no gaps, the gap_maps are identical
+#        self.assertEqual(self.b1.gap_maps(),
+#                         ([0, 1, 2, 3, 4, 5, 6], [0, 1, 2, 3, 4, 5, 6]))
+#        # in sequence with all gaps, the map of degapped to gapped is the empty
+#        # list (bc its length is 0), and the map of gapped to degapped is all
+#        # None
+#        self.assertEqual(self.b7.gap_maps(),
+#                         ([], [None, None, None, None, None, None]))
+#
+#        self.assertEqual(self.b8.gap_maps(),
+#                         ([0, 1, 8, 9, 10],
+#                          [0, 1, None, None, None, None, None, None, 2, 3, 4]))
+#
+#        # example from the gap_maps doc string
+#        self.assertEqual(BiologicalSequence('-ACCGA-TA-').gap_maps(),
+#                         ([1, 2, 3, 4, 5, 7, 8],
+#                          [None, 0, 1, 2, 3, 4, None, 5, 6, None]))
 
-        self.assertEqual(self.b8.gap_maps(),
-                         ([0, 1, 8, 9, 10],
-                          [0, 1, None, None, None, None, None, None, 2, 3, 4]))
-
-        # example from the gap_maps doc string
-        self.assertEqual(BiologicalSequence('-ACCGA-TA-').gap_maps(),
-                         ([1, 2, 3, 4, 5, 7, 8],
-                          [None, 0, 1, 2, 3, 4, None, 5, 6, None]))
-
-    def test_gap_vector(self):
-        self.assertEqual(self.b1.gap_vector(),
-                         [False] * len(self.b1))
-        self.assertEqual(self.b7.gap_vector(),
-                         [True] * len(self.b7))
-        self.assertEqual(self.b8.gap_vector(),
-                         [False, False, True, True, True, True,
-                          True, True, False, False, False])
-
-    def test_unsupported_characters(self):
-        self.assertEqual(self.b1.unsupported_characters(), set('GATC'))
-        self.assertEqual(self.b7.unsupported_characters(), set())
-
-    def test_has_unsupported_characters(self):
-        self.assertTrue(self.b1.has_unsupported_characters())
-        self.assertFalse(self.b7.has_unsupported_characters())
+#    def test_gap_vector(self):
+#        self.assertEqual(self.b1.gap_vector(),
+#                         [False] * len(self.b1))
+#        self.assertEqual(self.b7.gap_vector(),
+#                         [True] * len(self.b7))
+#        self.assertEqual(self.b8.gap_vector(),
+#                         [False, False, True, True, True, True,
+#                          True, True, False, False, False])
 
     def test_index(self):
         self.assertEqual(self.b1.index('G'), 0)
@@ -740,41 +720,19 @@ class BiologicalSequenceTests(TestCase):
         self.assertEqual(self.b1.index('AC'), 4)
         self.assertRaises(ValueError, self.b1.index, 'x')
 
-    def test_is_gap(self):
-        self.assertTrue(self.b1.is_gap('.'))
-        self.assertTrue(self.b1.is_gap('-'))
-        self.assertFalse(self.b1.is_gap('A'))
-        self.assertFalse(self.b1.is_gap('x'))
-        self.assertFalse(self.b1.is_gap(' '))
-        self.assertFalse(self.b1.is_gap(''))
+#    def test_is_gap(self):
+#        self.assertTrue(self.b1.is_gap('.'))
+#        self.assertTrue(self.b1.is_gap('-'))
+#        self.assertFalse(self.b1.is_gap('A'))
+#        self.assertFalse(self.b1.is_gap('x'))
+#        self.assertFalse(self.b1.is_gap(' '))
+#        self.assertFalse(self.b1.is_gap(''))
 
-    def test_is_gapped(self):
-        self.assertFalse(self.b1.is_gapped())
-        self.assertFalse(self.b2.is_gapped())
-        self.assertTrue(self.b7.is_gapped())
-        self.assertTrue(self.b8.is_gapped())
-
-    def test_is_valid(self):
-        self.assertFalse(self.b1.is_valid())
-        self.assertTrue(self.b7.is_valid())
-
-    def test_upper(self):
-        b = NucleotideSequence('GAt.ACa-', id='x', description='42',
-                               quality=range(8))
-        expected = NucleotideSequence('GAT.ACA-', id='x',
-                                      description='42', quality=range(8))
-        # use equals method to ensure that id, description, and quality are
-        # correctly propagated to the resulting sequence
-        self.assertTrue(b.upper().equals(expected))
-
-    def test_lower(self):
-        b = NucleotideSequence('GAt.ACa-', id='x', description='42',
-                               quality=range(8))
-        expected = NucleotideSequence('gat.aca-', id='x',
-                                      description='42', quality=range(8))
-        # use equals method to ensure that id, description, and quality are
-        # correctly propagated to the resulting sequence
-        self.assertTrue(b.lower().equals(expected))
+#    def test_is_gapped(self):
+#        self.assertFalse(self.b1.is_gapped())
+#        self.assertFalse(self.b2.is_gapped())
+#        self.assertTrue(self.b7.is_gapped())
+#        self.assertTrue(self.b8.is_gapped())
 
     def test_regex_iter(self):
         pat = re_compile('(T+A)(CA)')
@@ -788,204 +746,194 @@ class BiologicalSequenceTests(TestCase):
         self.assertEqual(obs, exp)
 
 
-class NucelotideSequenceTests(TestCase):
-
-    def setUp(self):
-        self.empty = NucleotideSequence('')
-        self.b1 = NucleotideSequence('GATTACA')
-        self.b2 = NucleotideSequence(
-            'ACCGGUACC', id="test-seq-2",
-            description="A test sequence")
-        self.b3 = NucleotideSequence('G-AT-TG.AT.T')
-
-    def test_alphabet(self):
-        exp = {
-            'A', 'C', 'B', 'D', 'G', 'H', 'K', 'M', 'N', 'S', 'R', 'U', 'T',
-            'W', 'V', 'Y', 'a', 'c', 'b', 'd', 'g', 'h', 'k', 'm', 'n', 's',
-            'r', 'u', 't', 'w', 'v', 'y'
-        }
-
-        # Test calling from an instance and purely static context.
-        self.assertEqual(self.b1.alphabet, exp)
-        self.assertEqual(NucleotideSequence.alphabet, exp)
-
-    def test_gap_alphabet(self):
-        self.assertEqual(self.b1.gap_alphabet, set('-.'))
-
-    def test_complement_map(self):
-        exp = {}
-        self.assertEqual(self.b1.complement_map, exp)
-        self.assertEqual(NucleotideSequence.complement_map, exp)
-
-    def test_iupac_standard_characters(self):
-        exp = set("ACGTUacgtu")
-        self.assertEqual(self.b1.iupac_standard_characters, exp)
-        self.assertEqual(NucleotideSequence.iupac_standard_characters, exp)
-
-    def test_iupac_degeneracies(self):
-        exp = {
-            # upper
-            'B': set(['C', 'U', 'T', 'G']), 'D': set(['A', 'U', 'T', 'G']),
-            'H': set(['A', 'C', 'U', 'T']), 'K': set(['U', 'T', 'G']),
-            'M': set(['A', 'C']), 'N': set(['A', 'C', 'U', 'T', 'G']),
-            'S': set(['C', 'G']), 'R': set(['A', 'G']),
-            'W': set(['A', 'U', 'T']), 'V': set(['A', 'C', 'G']),
-            'Y': set(['C', 'U', 'T']),
-            # lower
-            'b': set(['c', 'u', 't', 'g']), 'd': set(['a', 'u', 't', 'g']),
-            'h': set(['a', 'c', 'u', 't']), 'k': set(['u', 't', 'g']),
-            'm': set(['a', 'c']), 'n': set(['a', 'c', 'u', 't', 'g']),
-            's': set(['c', 'g']), 'r': set(['a', 'g']),
-            'w': set(['a', 'u', 't']), 'v': set(['a', 'c', 'g']),
-            'y': set(['c', 'u', 't'])
-        }
-        self.assertEqual(self.b1.iupac_degeneracies, exp)
-        self.assertEqual(NucleotideSequence.iupac_degeneracies, exp)
-
-        # Test that we can modify a copy of the mapping without altering the
-        # canonical representation.
-        degen = NucleotideSequence.iupac_degeneracies
-        degen.update({'V': set("BRO"), 'Z': set("ZORRO")})
-        self.assertNotEqual(degen, exp)
-        self.assertEqual(NucleotideSequence.iupac_degeneracies, exp)
-
-    def test_iupac_degenerate_characters(self):
-        exp = set(['B', 'D', 'H', 'K', 'M', 'N', 'S', 'R', 'W', 'V', 'Y',
-                   'b', 'd', 'h', 'k', 'm', 'n', 's', 'r', 'w', 'v', 'y'])
-        self.assertEqual(self.b1.iupac_degenerate_characters, exp)
-        self.assertEqual(NucleotideSequence.iupac_degenerate_characters, exp)
-
-    def test_iupac_characters(self):
-        exp = {
-            'A', 'C', 'B', 'D', 'G', 'H', 'K', 'M', 'N', 'S', 'R', 'U', 'T',
-            'W', 'V', 'Y', 'a', 'c', 'b', 'd', 'g', 'h', 'k', 'm', 'n', 's',
-            'r', 'u', 't', 'w', 'v', 'y'
-        }
-
-        self.assertEqual(self.b1.iupac_characters, exp)
-        self.assertEqual(NucleotideSequence.iupac_characters, exp)
-
-    def test_complement(self):
-        self.assertRaises(BiologicalSequenceError,
-                          self.b1.complement)
-
-    def test_reverse_complement(self):
-        self.assertRaises(BiologicalSequenceError,
-                          self.b1.reverse_complement)
-
-    def test_is_reverse_complement(self):
-        self.assertRaises(BiologicalSequenceError,
-                          self.b1.is_reverse_complement, self.b1)
-
-    def test_nondegenerates_invalid(self):
-        with self.assertRaises(BiologicalSequenceError):
-            list(NucleotideSequence('AZA').nondegenerates())
-
-    def test_nondegenerates_empty(self):
-        self.assertEqual(list(self.empty.nondegenerates()), [self.empty])
-
-    def test_nondegenerates_no_degens(self):
-        self.assertEqual(list(self.b1.nondegenerates()), [self.b1])
-
-    def test_nondegenerates_all_degens(self):
-        # Same chars.
-        exp = [NucleotideSequence('CC'), NucleotideSequence('CG'),
-               NucleotideSequence('GC'), NucleotideSequence('GG')]
-        # Sort based on sequence string, as order is not guaranteed.
-        obs = sorted(NucleotideSequence('SS').nondegenerates(), key=str)
-        self.assertEqual(obs, exp)
-
-        # Different chars.
-        exp = [NucleotideSequence('AC'), NucleotideSequence('AG'),
-               NucleotideSequence('GC'), NucleotideSequence('GG')]
-        obs = sorted(NucleotideSequence('RS').nondegenerates(), key=str)
-        self.assertEqual(obs, exp)
-
-        # Odd number of chars.
-        obs = list(NucleotideSequence('NNN').nondegenerates())
-        self.assertEqual(len(obs), 5**3)
-
-    def test_nondegenerates_mixed_degens(self):
-        exp = [NucleotideSequence('AGC'), NucleotideSequence('AGT'),
-               NucleotideSequence('AGU'), NucleotideSequence('GGC'),
-               NucleotideSequence('GGT'), NucleotideSequence('GGU')]
-        obs = sorted(NucleotideSequence('RGY').nondegenerates(), key=str)
-        self.assertEqual(obs, exp)
-
-    def test_nondegenerates_gap_mixed_case(self):
-        exp = [NucleotideSequence('-A.a'), NucleotideSequence('-A.c'),
-               NucleotideSequence('-C.a'), NucleotideSequence('-C.c')]
-        obs = sorted(NucleotideSequence('-M.m').nondegenerates(), key=str)
-        self.assertEqual(obs, exp)
-
-    def test_find_features(self):
-        exp = [(0, 2, 'GA'), (4, 5, 'A'), (6, 7, 'A')]
-        obs = list(self.b1.find_features('purine_run'))
-        self.assertEqual(obs, exp)
-
-        exp = [(2, 4, 'TT'), (5, 6, 'C')]
-        obs = list(self.b1.find_features('pyrimidine_run'))
-        self.assertEqual(obs, exp)
-
-        exp = [(0, 1, 'A'), (3, 5, 'GG'), (6, 7, 'A')]
-        obs = list(self.b2.find_features('purine_run'))
-        self.assertEqual(obs, exp)
-
-        exp = [(1, 3, 'CC'), (5, 6, 'U'), (7, 9, 'CC')]
-        obs = list(self.b2.find_features('pyrimidine_run'))
-        self.assertEqual(obs, exp)
-
-    def test_find_features_min_length(self):
-        exp = [(0, 2, 'GA')]
-        obs = list(self.b1.find_features('purine_run', 2))
-        self.assertEqual(obs, exp)
-
-        exp = [(2, 4, 'TT')]
-        obs = list(self.b1.find_features('pyrimidine_run', 2))
-        self.assertEqual(obs, exp)
-
-        exp = [(3, 5, 'GG')]
-        obs = list(self.b2.find_features('purine_run', 2))
-        self.assertEqual(obs, exp)
-
-        exp = [(1, 3, 'CC'), (7, 9, 'CC')]
-        obs = list(self.b2.find_features('pyrimidine_run', 2))
-        self.assertEqual(obs, exp)
-
-    def test_find_features_no_feature_type(self):
-        with self.assertRaises(ValueError):
-            list(self.b1.find_features('nonexistent_feature_type'))
-
-    def test_find_features_allow_gaps(self):
-        exp = [(0, 3, 'G-A'), (6, 9, 'G.A')]
-        obs = list(self.b3.find_features('purine_run', 2, True))
-        self.assertEqual(obs, exp)
-
-        exp = [(3, 6, 'T-T'), (9, 12, 'T.T')]
-        obs = list(self.b3.find_features('pyrimidine_run', 2, True))
-        self.assertEqual(obs, exp)
-
-    def test_nondegenerates_propagate_optional_properties(self):
-        seq = NucleotideSequence('RS', id='foo', description='bar',
-                                 quality=[42, 999])
-
-        exp = [
-            NucleotideSequence('AC', id='foo', description='bar',
-                               quality=[42, 999]),
-            NucleotideSequence('AG', id='foo', description='bar',
-                               quality=[42, 999]),
-            NucleotideSequence('GC', id='foo', description='bar',
-                               quality=[42, 999]),
-            NucleotideSequence('GG', id='foo', description='bar',
-                               quality=[42, 999])
-        ]
-
-        obs = sorted(seq.nondegenerates(), key=str)
-
-        for o, e in zip(obs, exp):
-            # use equals method to ensure that id, description, and quality are
-            # correctly propagated to the resulting sequence
-            self.assertTrue(o.equals(e))
+#class NucelotideSequenceTests(TestCase):
+#
+#    def setUp(self):
+#        self.empty = NucleotideSequence('')
+#        self.b1 = NucleotideSequence('GATTACA')
+#        self.b2 = NucleotideSequence(
+#            'ACCGGUACC', id="test-seq-2",
+#            description="A test sequence")
+#        self.b3 = NucleotideSequence('G-AT-TG.AT.T')
+#
+#    def test_alphabet(self):
+#        exp = {
+#            'A', 'C', 'B', 'D', 'G', 'H', 'K', 'M', 'N', 'S', 'R', 'U', 'T',
+#            'W', 'V', 'Y', 'a', 'c', 'b', 'd', 'g', 'h', 'k', 'm', 'n', 's',
+#            'r', 'u', 't', 'w', 'v', 'y'
+#        }
+#
+#        # Test calling from an instance and purely static context.
+#        self.assertEqual(self.b1.alphabet, exp)
+#        self.assertEqual(NucleotideSequence.alphabet, exp)
+#
+#    def test_gap_chars(self):
+#        self.assertEqual(self.b1.gap_chars, set('-.'))
+#
+#    def test_complement_map(self):
+#        exp = {}
+#        self.assertEqual(self.b1.complement_map, exp)
+#        self.assertEqual(NucleotideSequence.complement_map, exp)
+#
+#    def test_nondegenerate_chars(self):
+#        exp = set("ACGTUacgtu")
+#        self.assertEqual(self.b1.nondegenerate_chars, exp)
+#        self.assertEqual(NucleotideSequence.nondegenerate_chars, exp)
+#
+#    def test_degenerate_map(self):
+#        exp = {
+#            # upper
+#            'B': set(['C', 'U', 'T', 'G']), 'D': set(['A', 'U', 'T', 'G']),
+#            'H': set(['A', 'C', 'U', 'T']), 'K': set(['U', 'T', 'G']),
+#            'M': set(['A', 'C']), 'N': set(['A', 'C', 'U', 'T', 'G']),
+#            'S': set(['C', 'G']), 'R': set(['A', 'G']),
+#            'W': set(['A', 'U', 'T']), 'V': set(['A', 'C', 'G']),
+#            'Y': set(['C', 'U', 'T']),
+#            # lower
+#            'b': set(['c', 'u', 't', 'g']), 'd': set(['a', 'u', 't', 'g']),
+#            'h': set(['a', 'c', 'u', 't']), 'k': set(['u', 't', 'g']),
+#            'm': set(['a', 'c']), 'n': set(['a', 'c', 'u', 't', 'g']),
+#            's': set(['c', 'g']), 'r': set(['a', 'g']),
+#            'w': set(['a', 'u', 't']), 'v': set(['a', 'c', 'g']),
+#            'y': set(['c', 'u', 't'])
+#        }
+#        self.assertEqual(self.b1.degenerate_map, exp)
+#        self.assertEqual(NucleotideSequence.degenerate_map, exp)
+#
+#        # Test that we can modify a copy of the mapping without altering the
+#        # canonical representation.
+#        degen = NucleotideSequence.degenerate_map
+#        degen.update({'V': set("BRO"), 'Z': set("ZORRO")})
+#        self.assertNotEqual(degen, exp)
+#        self.assertEqual(NucleotideSequence.degenerate_map, exp)
+#
+#    def test_degenerate_chars(self):
+#        exp = set(['B', 'D', 'H', 'K', 'M', 'N', 'S', 'R', 'W', 'V', 'Y',
+#                   'b', 'd', 'h', 'k', 'm', 'n', 's', 'r', 'w', 'v', 'y'])
+#        self.assertEqual(self.b1.degenerate_chars, exp)
+#        self.assertEqual(NucleotideSequence.degenerate_chars, exp)
+#
+#    def test_complement(self):
+#        self.assertRaises(BiologicalSequenceError,
+#                          self.b1.complement)
+#
+#    def test_reverse_complement(self):
+#        self.assertRaises(BiologicalSequenceError,
+#                          self.b1.reverse_complement)
+#
+#    def test_is_reverse_complement(self):
+#        self.assertRaises(BiologicalSequenceError,
+#                          self.b1.is_reverse_complement, self.b1)
+#
+#    def test_nondegenerates_invalid(self):
+#        with self.assertRaises(BiologicalSequenceError):
+#            list(NucleotideSequence('AZA').nondegenerates())
+#
+#    def test_nondegenerates_empty(self):
+#        self.assertEqual(list(self.empty.nondegenerates()), [self.empty])
+#
+#    def test_nondegenerates_no_degens(self):
+#        self.assertEqual(list(self.b1.nondegenerates()), [self.b1])
+#
+#    def test_nondegenerates_all_degens(self):
+#        # Same chars.
+#        exp = [NucleotideSequence('CC'), NucleotideSequence('CG'),
+#               NucleotideSequence('GC'), NucleotideSequence('GG')]
+#        # Sort based on sequence string, as order is not guaranteed.
+#        obs = sorted(NucleotideSequence('SS').nondegenerates(), key=str)
+#        self.assertEqual(obs, exp)
+#
+#        # Different chars.
+#        exp = [NucleotideSequence('AC'), NucleotideSequence('AG'),
+#               NucleotideSequence('GC'), NucleotideSequence('GG')]
+#        obs = sorted(NucleotideSequence('RS').nondegenerates(), key=str)
+#        self.assertEqual(obs, exp)
+#
+#        # Odd number of chars.
+#        obs = list(NucleotideSequence('NNN').nondegenerates())
+#        self.assertEqual(len(obs), 5**3)
+#
+#    def test_nondegenerates_mixed_degens(self):
+#        exp = [NucleotideSequence('AGC'), NucleotideSequence('AGT'),
+#               NucleotideSequence('AGU'), NucleotideSequence('GGC'),
+#               NucleotideSequence('GGT'), NucleotideSequence('GGU')]
+#        obs = sorted(NucleotideSequence('RGY').nondegenerates(), key=str)
+#        self.assertEqual(obs, exp)
+#
+#    def test_nondegenerates_gap_mixed_case(self):
+#        exp = [NucleotideSequence('-A.a'), NucleotideSequence('-A.c'),
+#               NucleotideSequence('-C.a'), NucleotideSequence('-C.c')]
+#        obs = sorted(NucleotideSequence('-M.m').nondegenerates(), key=str)
+#        self.assertEqual(obs, exp)
+#
+#    def test_find_features(self):
+#        exp = [(0, 2, 'GA'), (4, 5, 'A'), (6, 7, 'A')]
+#        obs = list(self.b1.find_features('purine_run'))
+#        self.assertEqual(obs, exp)
+#
+#        exp = [(2, 4, 'TT'), (5, 6, 'C')]
+#        obs = list(self.b1.find_features('pyrimidine_run'))
+#        self.assertEqual(obs, exp)
+#
+#        exp = [(0, 1, 'A'), (3, 5, 'GG'), (6, 7, 'A')]
+#        obs = list(self.b2.find_features('purine_run'))
+#        self.assertEqual(obs, exp)
+#
+#        exp = [(1, 3, 'CC'), (5, 6, 'U'), (7, 9, 'CC')]
+#        obs = list(self.b2.find_features('pyrimidine_run'))
+#        self.assertEqual(obs, exp)
+#
+#    def test_find_features_min_length(self):
+#        exp = [(0, 2, 'GA')]
+#        obs = list(self.b1.find_features('purine_run', 2))
+#        self.assertEqual(obs, exp)
+#
+#        exp = [(2, 4, 'TT')]
+#        obs = list(self.b1.find_features('pyrimidine_run', 2))
+#        self.assertEqual(obs, exp)
+#
+#        exp = [(3, 5, 'GG')]
+#        obs = list(self.b2.find_features('purine_run', 2))
+#        self.assertEqual(obs, exp)
+#
+#        exp = [(1, 3, 'CC'), (7, 9, 'CC')]
+#        obs = list(self.b2.find_features('pyrimidine_run', 2))
+#        self.assertEqual(obs, exp)
+#
+#    def test_find_features_no_feature_type(self):
+#        with self.assertRaises(ValueError):
+#            list(self.b1.find_features('nonexistent_feature_type'))
+#
+#    def test_find_features_allow_gaps(self):
+#        exp = [(0, 3, 'G-A'), (6, 9, 'G.A')]
+#        obs = list(self.b3.find_features('purine_run', 2, True))
+#        self.assertEqual(obs, exp)
+#
+#        exp = [(3, 6, 'T-T'), (9, 12, 'T.T')]
+#        obs = list(self.b3.find_features('pyrimidine_run', 2, True))
+#        self.assertEqual(obs, exp)
+#
+#    def test_nondegenerates_propagate_optional_properties(self):
+#        seq = NucleotideSequence('RS', id='foo', description='bar',
+#                                 quality=[42, 999])
+#
+#        exp = [
+#            NucleotideSequence('AC', id='foo', description='bar',
+#                               quality=[42, 999]),
+#            NucleotideSequence('AG', id='foo', description='bar',
+#                               quality=[42, 999]),
+#            NucleotideSequence('GC', id='foo', description='bar',
+#                               quality=[42, 999]),
+#            NucleotideSequence('GG', id='foo', description='bar',
+#                               quality=[42, 999])
+#        ]
+#
+#        obs = sorted(seq.nondegenerates(), key=str)
+#
+#        for o, e in zip(obs, exp):
+#            # use equals method to ensure that id, description, and quality are
+#            # correctly propagated to the resulting sequence
+#            self.assertTrue(o.equals(e))
 
 
 class DNASequenceTests(TestCase):
@@ -1007,14 +955,14 @@ class DNASequenceTests(TestCase):
         exp = {
             'A', 'C', 'B', 'D', 'G', 'H', 'K', 'M', 'N', 'S', 'R', 'T', 'W',
             'V', 'Y', 'a', 'c', 'b', 'd', 'g', 'h', 'k', 'm', 'n', 's', 'r',
-            't', 'w', 'v', 'y'
+            't', 'w', 'v', 'y', '-', '.'
         }
 
         self.assertEqual(self.b1.alphabet, exp)
         self.assertEqual(DNASequence.alphabet, exp)
 
-    def test_gap_alphabet(self):
-        self.assertEqual(self.b1.gap_alphabet, set('-.'))
+    def test_gap_chars(self):
+        self.assertEqual(self.b1.gap_chars, set('-.'))
 
     def test_complement_map(self):
         exp = {
@@ -1028,12 +976,12 @@ class DNASequenceTests(TestCase):
         self.assertEqual(self.b1.complement_map, exp)
         self.assertEqual(DNASequence.complement_map, exp)
 
-    def test_iupac_standard_characters(self):
+    def test_nondegenerate_chars(self):
         exp = set("ACGTacgt")
-        self.assertEqual(self.b1.iupac_standard_characters, exp)
-        self.assertEqual(DNASequence.iupac_standard_characters, exp)
+        self.assertEqual(self.b1.nondegenerate_chars, exp)
+        self.assertEqual(DNASequence.nondegenerate_chars, exp)
 
-    def test_iupac_degeneracies(self):
+    def test_degenerate_map(self):
         exp = {
             'B': set(['C', 'T', 'G']), 'D': set(['A', 'T', 'G']),
             'H': set(['A', 'C', 'T']), 'K': set(['T', 'G']),
@@ -1046,23 +994,14 @@ class DNASequenceTests(TestCase):
             's': set(['c', 'g']), 'r': set(['a', 'g']), 'w': set(['a', 't']),
             'v': set(['a', 'c', 'g']), 'y': set(['c', 't'])
         }
-        self.assertEqual(self.b1.iupac_degeneracies, exp)
-        self.assertEqual(DNASequence.iupac_degeneracies, exp)
+        self.assertEqual(self.b1.degenerate_map, exp)
+        self.assertEqual(DNASequence.degenerate_map, exp)
 
-    def test_iupac_degenerate_characters(self):
+    def test_degenerate_chars(self):
         exp = set(['B', 'D', 'H', 'K', 'M', 'N', 'S', 'R', 'W', 'V', 'Y',
                    'b', 'd', 'h', 'k', 'm', 'n', 's', 'r', 'w', 'v', 'y'])
-        self.assertEqual(self.b1.iupac_degenerate_characters, exp)
-        self.assertEqual(DNASequence.iupac_degenerate_characters, exp)
-
-    def test_iupac_characters(self):
-        exp = {
-            'A', 'C', 'B', 'D', 'G', 'H', 'K', 'M', 'N', 'S', 'R', 'T', 'W',
-            'V', 'Y', 'a', 'c', 'b', 'd', 'g', 'h', 'k', 'm', 'n', 's', 'r',
-            't', 'w', 'v', 'y'
-        }
-        self.assertEqual(self.b1.iupac_characters, exp)
-        self.assertEqual(DNASequence.iupac_characters, exp)
+        self.assertEqual(self.b1.degenerate_chars, exp)
+        self.assertEqual(DNASequence.degenerate_chars, exp)
 
     def test_complement(self):
         # use equals method to ensure that id, description, and quality are
@@ -1098,18 +1037,6 @@ class DNASequenceTests(TestCase):
         self.assertTrue(self.b4.reverse_complement().equals(
             DNASequence("NVHDBMRSWYK", id="degen",
                         description="All of the degenerate bases")))
-
-    def test_unsupported_characters(self):
-        self.assertEqual(self.b1.unsupported_characters(), set())
-        self.assertEqual(self.b2.unsupported_characters(), set())
-        self.assertEqual(self.b3.unsupported_characters(), set('U'))
-        self.assertEqual(self.b4.unsupported_characters(), set())
-
-    def test_has_unsupported_characters(self):
-        self.assertFalse(self.b1.has_unsupported_characters())
-        self.assertFalse(self.b2.has_unsupported_characters())
-        self.assertTrue(self.b3.has_unsupported_characters())
-        self.assertFalse(self.b4.has_unsupported_characters())
 
     def test_is_reverse_complement(self):
         self.assertFalse(self.b1.is_reverse_complement(self.b1))
@@ -1182,14 +1109,14 @@ class RNASequenceTests(TestCase):
         exp = {
             'A', 'C', 'B', 'D', 'G', 'H', 'K', 'M', 'N', 'S', 'R', 'U', 'W',
             'V', 'Y', 'a', 'c', 'b', 'd', 'g', 'h', 'k', 'm', 'n', 's', 'r',
-            'u', 'w', 'v', 'y'
+            'u', 'w', 'v', 'y', '-', '.'
         }
 
         self.assertEqual(self.b1.alphabet, exp)
         self.assertEqual(RNASequence.alphabet, exp)
 
-    def test_gap_alphabet(self):
-        self.assertEqual(self.b1.gap_alphabet, set('-.'))
+    def test_gap_chars(self):
+        self.assertEqual(self.b1.gap_chars, set('-.'))
 
     def test_complement_map(self):
         exp = {
@@ -1203,12 +1130,12 @@ class RNASequenceTests(TestCase):
         self.assertEqual(self.b1.complement_map, exp)
         self.assertEqual(RNASequence.complement_map, exp)
 
-    def test_iupac_standard_characters(self):
+    def test_nondegenerate_chars(self):
         exp = set("ACGUacgu")
-        self.assertEqual(self.b1.iupac_standard_characters, exp)
-        self.assertEqual(RNASequence.iupac_standard_characters, exp)
+        self.assertEqual(self.b1.nondegenerate_chars, exp)
+        self.assertEqual(RNASequence.nondegenerate_chars, exp)
 
-    def test_iupac_degeneracies(self):
+    def test_degenerate_map(self):
         exp = {
             'B': set(['C', 'U', 'G']), 'D': set(['A', 'U', 'G']),
             'H': set(['A', 'C', 'U']), 'K': set(['U', 'G']),
@@ -1221,23 +1148,14 @@ class RNASequenceTests(TestCase):
             's': set(['c', 'g']), 'r': set(['a', 'g']), 'w': set(['a', 'u']),
             'v': set(['a', 'c', 'g']), 'y': set(['c', 'u'])
         }
-        self.assertEqual(self.b1.iupac_degeneracies, exp)
-        self.assertEqual(RNASequence.iupac_degeneracies, exp)
+        self.assertEqual(self.b1.degenerate_map, exp)
+        self.assertEqual(RNASequence.degenerate_map, exp)
 
-    def test_iupac_degenerate_characters(self):
+    def test_degenerate_chars(self):
         exp = set(['B', 'D', 'H', 'K', 'M', 'N', 'S', 'R', 'W', 'V', 'Y',
                    'b', 'd', 'h', 'k', 'm', 'n', 's', 'r', 'w', 'v', 'y'])
-        self.assertEqual(self.b1.iupac_degenerate_characters, exp)
-        self.assertEqual(RNASequence.iupac_degenerate_characters, exp)
-
-    def test_iupac_characters(self):
-        exp = {
-            'A', 'C', 'B', 'D', 'G', 'H', 'K', 'M', 'N', 'S', 'R', 'U', 'W',
-            'V', 'Y', 'a', 'c', 'b', 'd', 'g', 'h', 'k', 'm', 'n', 's', 'r',
-            'u', 'w', 'v', 'y'
-        }
-        self.assertEqual(self.b1.iupac_characters, exp)
-        self.assertEqual(RNASequence.iupac_characters, exp)
+        self.assertEqual(self.b1.degenerate_chars, exp)
+        self.assertEqual(RNASequence.degenerate_chars, exp)
 
     def test_complement(self):
         # use equals method to ensure that id, description, and quality are
@@ -1273,18 +1191,6 @@ class RNASequenceTests(TestCase):
         self.assertTrue(self.b4.reverse_complement().equals(
             RNASequence("NVHDBMRSWYK", id="degen",
                         description="All of the degenerate bases")))
-
-    def test_unsupported_characters(self):
-        self.assertEqual(self.b1.unsupported_characters(), set())
-        self.assertEqual(self.b2.unsupported_characters(), set())
-        self.assertEqual(self.b3.unsupported_characters(), set('T'))
-        self.assertEqual(self.b4.unsupported_characters(), set())
-
-    def test_has_unsupported_characters(self):
-        self.assertFalse(self.b1.has_unsupported_characters())
-        self.assertFalse(self.b2.has_unsupported_characters())
-        self.assertTrue(self.b3.has_unsupported_characters())
-        self.assertFalse(self.b4.has_unsupported_characters())
 
     def test_is_reverse_complement(self):
         self.assertFalse(self.b1.is_reverse_complement(self.b1))
@@ -1355,21 +1261,21 @@ class ProteinSequenceTests(TestCase):
             'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N',
             'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c',
             'd', 'e', 'f', 'g', 'h', 'i', 'k', 'l', 'm', 'n', 'p', 'q', 'r',
-            's', 't', 'v', 'w', 'x', 'y', 'z'
+            's', 't', 'v', 'w', 'x', 'y', 'z', '-', '.'
         }
 
         self.assertEqual(self.p1.alphabet, exp)
         self.assertEqual(ProteinSequence.alphabet, exp)
 
-    def test_gap_alphabet(self):
-        self.assertEqual(self.p1.gap_alphabet, set('-.'))
+    def test_gap_chars(self):
+        self.assertEqual(self.p1.gap_chars, set('-.'))
 
-    def test_iupac_standard_characters(self):
+    def test_nondegenerate_chars(self):
         exp = set("ACDEFGHIKLMNPQRSTVWYacdefghiklmnpqrstvwy")
-        self.assertEqual(self.p1.iupac_standard_characters, exp)
-        self.assertEqual(ProteinSequence.iupac_standard_characters, exp)
+        self.assertEqual(self.p1.nondegenerate_chars, exp)
+        self.assertEqual(ProteinSequence.nondegenerate_chars, exp)
 
-    def test_iupac_degeneracies(self):
+    def test_degenerate_map(self):
         exp = {
             'B': set(['D', 'N']), 'Z': set(['E', 'Q']),
             'X': set(['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M',
@@ -1378,23 +1284,13 @@ class ProteinSequenceTests(TestCase):
             'x': set(['a', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'k', 'l', 'm',
                       'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'y']),
         }
-        self.assertEqual(self.p1.iupac_degeneracies, exp)
-        self.assertEqual(ProteinSequence.iupac_degeneracies, exp)
+        self.assertEqual(self.p1.degenerate_map, exp)
+        self.assertEqual(ProteinSequence.degenerate_map, exp)
 
-    def test_iupac_degenerate_characters(self):
+    def test_degenerate_chars(self):
         exp = set(['B', 'X', 'Z', 'b', 'x', 'z'])
-        self.assertEqual(self.p1.iupac_degenerate_characters, exp)
-        self.assertEqual(ProteinSequence.iupac_degenerate_characters, exp)
-
-    def test_iupac_characters(self):
-        exp = {
-            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N',
-            'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b',
-            'c', 'd', 'e', 'f', 'g', 'h', 'i', 'k', 'l', 'm', 'n', 'p', 'q',
-            'r', 's', 't', 'v', 'w', 'x', 'y', 'z'
-        }
-        self.assertEqual(self.p1.iupac_characters, exp)
-        self.assertEqual(ProteinSequence.iupac_characters, exp)
+        self.assertEqual(self.p1.degenerate_chars, exp)
+        self.assertEqual(ProteinSequence.degenerate_chars, exp)
 
     def test_nondegenerates(self):
         exp = [ProteinSequence('AD'), ProteinSequence('AN')]

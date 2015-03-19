@@ -8,10 +8,11 @@
 
 from __future__ import absolute_import, division, print_function
 from future.builtins import range
-from future.utils import viewitems
+from future.utils import viewitems, with_metaclass
 from six import string_types
 
 import re
+from abc import ABCMeta, abstractmethod
 from collections import Sequence, Counter, defaultdict
 from itertools import product
 
@@ -43,9 +44,6 @@ class BiologicalSequence(Sequence, SkbioObject):
         copy will *not* be made if `quality` is already a 1-D ``numpy.ndarray``
         with an ``int`` ``dtype``. The array will be made read-only (i.e., its
         ``WRITEABLE`` flag will be set to ``False``).
-    validate : bool, optional
-        If True, runs the `is_valid` method after construction and raises
-        BiologicalSequenceError if ``is_valid == False``.
 
     Attributes
     ----------
@@ -57,8 +55,7 @@ class BiologicalSequence(Sequence, SkbioObject):
     Raises
     ------
     skbio.sequence.BiologicalSequenceError
-        If ``validate == True`` and ``is_valid == False``, or if `quality` is
-        not the correct shape.
+        If `quality` is not the correct shape.
 
     See Also
     --------
@@ -90,98 +87,7 @@ class BiologicalSequence(Sequence, SkbioObject):
     """
     default_write_format = 'fasta'
 
-    @classproperty
-    def alphabet(cls):
-        """Return the set of characters allowed in a `BiologicalSequence`.
-
-        Returns
-        -------
-        set
-            Characters that are allowed in a valid `BiologicalSequence`.
-
-        See Also
-        --------
-        is_valid
-        gap_alphabet
-        unsupported_characters
-        has_unsupported_characters
-
-        """
-        return cls.iupac_characters
-
-    @classproperty
-    def gap_alphabet(cls):
-        """Return the set of characters defined as gaps.
-
-        Returns
-        -------
-        set
-            Characters defined as gaps in a `BiologicalSequence`
-
-        See Also
-        --------
-        alphabet
-        unsupported_characters
-        has_unsupported_characters
-        degap
-        gap_maps
-        gap_vector
-
-        """
-        return set('-.')
-
-    @classproperty
-    def iupac_degenerate_characters(cls):
-        """Return the degenerate IUPAC characters.
-
-        Returns
-        -------
-        set
-            Degenerate IUPAC characters.
-
-        """
-        return set(cls.iupac_degeneracies)
-
-    @classproperty
-    def iupac_characters(cls):
-        """Return the non-degenerate and degenerate characters.
-
-        Returns
-        -------
-        set
-            Non-degenerate and degenerate characters.
-
-        """
-        return (cls.iupac_standard_characters |
-                cls.iupac_degenerate_characters)
-
-    @classproperty
-    def iupac_standard_characters(cls):
-        """Return the non-degenerate IUPAC characters.
-
-        Returns
-        -------
-        set
-            Non-degenerate IUPAC characters.
-
-        """
-        return set()
-
-    @classproperty
-    def iupac_degeneracies(cls):
-        """Return the mapping of degenerate to non-degenerate characters.
-
-        Returns
-        -------
-        dict of sets
-            Mapping of IUPAC degenerate character to the set of
-            non-degenerate IUPAC characters it represents.
-
-        """
-        return {}
-
-    def __init__(self, sequence, id="", description="", quality=None,
-                 validate=False):
+    def __init__(self, sequence, id="", description="", quality=None):
         if not isinstance(sequence, string_types):
             sequence = ''.join(sequence)
         self._sequence = sequence
@@ -189,12 +95,6 @@ class BiologicalSequence(Sequence, SkbioObject):
         self._id = id
         self._description = description
         self._set_quality(quality)
-
-        if validate and not self.is_valid():
-            unsupported_chars = self.unsupported_characters()
-            raise BiologicalSequenceError(
-                "Sequence contains unsupported characters: %s"
-                % (" ".join(unsupported_chars)))
 
     def __contains__(self, other):
         """The in operator.
@@ -812,39 +712,6 @@ class BiologicalSequence(Sequence, SkbioObject):
         """
         return self._sequence.count(subsequence)
 
-    def degap(self):
-        """Returns a new `BiologicalSequence` with gap characters removed.
-
-        Returns
-        -------
-        BiologicalSequence
-            A new `BiologicalSequence` with all characters from
-            `self.gap_alphabet` filtered from the sequence.
-
-        Notes
-        -----
-        The type, id, and description of the result will be the
-        same as `self`. If quality scores are present, they will be filtered in
-        the same manner as the sequence and included in the resulting
-        degapped biological sequence.
-
-        Examples
-        --------
-        >>> from skbio.sequence import BiologicalSequence
-        >>> s = BiologicalSequence('GGUC-C--ACGTT-C.', quality=range(16))
-        >>> t = s.degap()
-        >>> t
-        <BiologicalSequence: GGUCCACGTT... (length: 11)>
-        >>> print(t)
-        GGUCCACGTTC
-        >>> t.quality
-        array([ 0,  1,  2,  3,  5,  8,  9, 10, 11, 12, 14])
-
-        """
-        gaps = self.gap_alphabet
-        indices = [i for i, e in enumerate(self) if e not in gaps]
-        return self[indices]
-
     def distance(self, other, distance_fn=None):
         """Returns the distance to other
 
@@ -975,133 +842,6 @@ class BiologicalSequence(Sequence, SkbioObject):
         """
         return 1. - self.fraction_diff(other)
 
-    def gap_maps(self):
-        """Return tuples mapping b/w gapped and ungapped positions
-
-        Returns
-        -------
-        tuple containing two lists
-            The first list is the length of the ungapped sequence, and each
-            entry is the position of that base in the gapped sequence. The
-            second list is the length of the gapped sequence, and each entry is
-            either None (if that position represents a gap) or the position of
-            that base in the ungapped sequence.
-
-        See Also
-        --------
-        gap_vector
-
-        Notes
-        -----
-        Visual aid is useful here. Imagine we have
-        ``BiologicalSequence('-ACCGA-TA-')``. The position numbers in the
-        ungapped sequence and gapped sequence will be as follows::
-
-              0123456
-              ACCGATA
-              |||||\\
-             -ACCGA-TA-
-             0123456789
-
-        So, in the first list, position 0 maps to position 1, position 1
-        maps to position 2, position 5 maps to position 7, ... And, in the
-        second list, position 0 doesn't map to anything (so it's None),
-        position 1 maps to position 0, ...
-
-        Examples
-        --------
-        >>> from skbio.sequence import BiologicalSequence
-        >>> s = BiologicalSequence('-ACCGA-TA-')
-        >>> m = s.gap_maps()
-        >>> m[0]
-        [1, 2, 3, 4, 5, 7, 8]
-        >>> m[1]
-        [None, 0, 1, 2, 3, 4, None, 5, 6, None]
-
-        """
-        degapped_to_gapped = []
-        gapped_to_degapped = []
-        non_gap_count = 0
-        for i, e in enumerate(self):
-            if self.is_gap(e):
-                gapped_to_degapped.append(None)
-            else:
-                gapped_to_degapped.append(non_gap_count)
-                degapped_to_gapped.append(i)
-                non_gap_count += 1
-        return degapped_to_gapped, gapped_to_degapped
-
-    def gap_vector(self):
-        """Return list indicating positions containing gaps
-
-        Returns
-        -------
-        list of booleans
-            The list will be of length ``len(self)``, and a position will
-            contain ``True`` if the character at that position in the
-            `BiologicalSequence` is in `self.gap_alphabet`, and ``False``
-            otherwise.
-
-        See Also
-        --------
-        gap_maps
-
-        Examples
-        --------
-        >>> from skbio.sequence import BiologicalSequence
-        >>> s = BiologicalSequence('..ACG--TT-')
-        >>> s.gap_vector()
-        [True, True, False, False, False, True, True, False, False, True]
-
-        """
-        return [self.is_gap(c) for c in self._sequence]
-
-    def unsupported_characters(self):
-        """Return the set of unsupported characters in the `BiologicalSequence`
-
-        Returns
-        -------
-        set
-            Invalid characters in the `BiologicalSequence` (i.e., the
-            characters that are present in the `BiologicalSequence` but which
-            are not in `BiologicalSequence.alphabet` or
-            `BiologicalSequence.gap_alphabet`.
-
-        See Also
-        --------
-        is_valid
-        alphabet
-        gap_alphabet
-        has_unsupported_characters
-
-        """
-        return set(self) - self.alphabet - self.gap_alphabet
-
-    def has_unsupported_characters(self):
-        """Return bool indicating presence/absence of unsupported characters
-
-        Returns
-        -------
-        bool
-            ``True`` if invalid characters are present in the
-            `BiologicalSequence` (i.e., characters which are not in
-            `BiologicalSequence.alphabet` or
-            `BiologicalSequence.gap_alphabet`) and ``False`` otherwise.
-
-        See Also
-        --------
-        is_valid
-        alphabet
-        gap_alphabet
-        has_unsupported_characters
-
-        """
-        all_supported = self.alphabet | self.gap_alphabet
-        for e in self:
-            if e not in all_supported:
-                return True
-        return False
-
     def index(self, subsequence):
         """Return the position where subsequence first occurs
 
@@ -1124,81 +864,6 @@ class BiologicalSequence(Sequence, SkbioObject):
         except ValueError:
             raise ValueError(
                 "%s is not present in %r." % (subsequence, self))
-
-    @classmethod
-    def is_gap(cls, char):
-        """Return True if `char` is in the `gap_alphabet` set
-
-        Parameters
-        ----------
-        char : str
-            The string to check for presence in the `BiologicalSequence`
-            `gap_alphabet`.
-
-        Returns
-        -------
-        bool
-            Indicates whether `char` is in the `BiologicalSequence` attribute
-            `gap_alphabet`.
-
-        Notes
-        -----
-        This is a class method.
-
-        Examples
-        --------
-        >>> from skbio.sequence import BiologicalSequence
-        >>> BiologicalSequence.is_gap('.')
-        True
-        >>> BiologicalSequence.is_gap('P')
-        False
-        >>> s = BiologicalSequence('ACACGACGTT')
-        >>> s.is_gap('-')
-        True
-
-        """
-        return char in cls.gap_alphabet
-
-    def is_gapped(self):
-        """Return True if char(s) in `gap_alphabet` are present
-
-        Returns
-        -------
-        bool
-            Indicates whether there are one or more occurences of any character
-            in `self.gap_alphabet` in the `BiologicalSequence`.
-
-        Examples
-        --------
-        >>> from skbio.sequence import BiologicalSequence
-        >>> s = BiologicalSequence('ACACGACGTT')
-        >>> s.is_gapped()
-        False
-        >>> t = BiologicalSequence('A.CAC--GACGTT')
-        >>> t.is_gapped()
-        True
-
-        """
-        for e in self:
-            if self.is_gap(e):
-                return True
-        return False
-
-    def is_valid(self):
-        """Return True if the sequence is valid
-
-        Returns
-        -------
-        bool
-            ``True`` if `self` is valid, and ``False`` otherwise.
-
-        Notes
-        -----
-        Validity is defined as not containing any characters outside of
-        `self.alphabet` and `self.gap_alphabet`.
-
-        """
-        return not self.has_unsupported_characters()
 
     def k_words(self, k, overlapping=True):
         """Get the list of words of length k
@@ -1309,85 +974,6 @@ class BiologicalSequence(Sequence, SkbioObject):
             result[str(word)] = count / num_words
         return result
 
-    def lower(self):
-        """Convert the BiologicalSequence to lowercase
-
-        Returns
-        -------
-        BiologicalSequence
-            The `BiologicalSequence` with all characters converted to
-            lowercase.
-
-        """
-        return self.copy(sequence=self.sequence.lower())
-
-    def nondegenerates(self):
-        """Yield all nondegenerate versions of the sequence.
-
-        Returns
-        -------
-        generator
-            Generator yielding all possible nondegenerate versions of the
-            sequence. Each sequence will have the same type, id, description,
-            and quality scores as `self`.
-
-        Raises
-        ------
-        BiologicalSequenceError
-            If the sequence contains an invalid character (a character that
-            isn't an IUPAC character or a gap character).
-
-        See Also
-        --------
-        iupac_degeneracies
-
-        Notes
-        -----
-        There is no guaranteed ordering to the generated sequences.
-
-        Examples
-        --------
-        >>> from skbio.sequence import NucleotideSequence
-        >>> seq = NucleotideSequence('TRG')
-        >>> seq_generator = seq.nondegenerates()
-        >>> for s in sorted(seq_generator, key=str): print(s)
-        TAG
-        TGG
-
-        """
-        degen_chars = self.iupac_degeneracies
-        nonexpansion_chars = self.iupac_standard_characters.union(
-            self.gap_alphabet)
-
-        expansions = []
-        for char in self:
-            if char in nonexpansion_chars:
-                expansions.append(char)
-            else:
-                # Use a try/except instead of explicitly checking for set
-                # membership on the assumption that an exception is rarely
-                # thrown.
-                try:
-                    expansions.append(degen_chars[char])
-                except KeyError:
-                    raise BiologicalSequenceError(
-                        "Sequence contains an invalid character: %s" % char)
-
-        result = product(*expansions)
-        return (self.copy(sequence=nondegen_seq) for nondegen_seq in result)
-
-    def upper(self):
-        """Convert the BiologicalSequence to uppercase
-
-        Returns
-        -------
-        BiologicalSequence
-            The `BiologicalSequence` with all characters converted to
-            uppercase.
-
-        """
-        return self.copy(sequence=self.sequence.upper())
-
     def _set_quality(self, quality):
         if quality is not None:
             quality = np.asarray(quality)
@@ -1448,7 +1034,303 @@ class BiologicalSequence(Sequence, SkbioObject):
                 yield (match.start(g), match.end(g), match.group(g))
 
 
-class NucleotideSequence(BiologicalSequence):
+class IUPACSequence(with_metaclass(ABCMeta, BiologicalSequence)):
+    @classproperty
+    def alphabet(cls):
+        """Return the set of characters allowed in a `BiologicalSequence`.
+
+        Returns
+        -------
+        set
+            Characters that are allowed in a valid `BiologicalSequence`.
+
+        """
+        return cls.degenerate_chars | cls.nondegenerate_chars | cls.gap_chars
+
+    @classproperty
+    def gap_chars(cls):
+        """Return the set of characters defined as gaps.
+
+        Returns
+        -------
+        set
+            Characters defined as gaps.
+
+        """
+        return set('-.')
+
+    @classproperty
+    def degenerate_chars(cls):
+        """Return the degenerate IUPAC characters.
+
+        Returns
+        -------
+        set
+            Degenerate IUPAC characters.
+
+        """
+        return set(cls.degenerate_map)
+
+    @abstractmethod
+    @classproperty
+    def nondegenerate_chars(cls):
+        """Return the non-degenerate IUPAC characters.
+
+        Returns
+        -------
+        set
+            Non-degenerate IUPAC characters.
+
+        """
+        pass
+
+    @abstractmethod
+    @classproperty
+    def degenerate_map(cls):
+        """Return the mapping of degenerate to non-degenerate characters.
+
+        Returns
+        -------
+        dict of sets
+            Mapping of IUPAC degenerate character to the set of
+            non-degenerate IUPAC characters it represents.
+
+        """
+        pass
+
+    def degap(self):
+        """Return a new sequence with gap characters removed.
+
+        Returns
+        -------
+        IUPACSequence
+            A new sequence with all gap characters removed.
+
+        See Also
+        --------
+        gap_chars
+
+        Notes
+        -----
+        The type, id, and description of the result will be the
+        same as `self`. If quality scores are present, they will be filtered in
+        the same manner as the sequence and included in the resulting
+        degapped sequence.
+
+        Examples
+        --------
+        >>> from skbio.sequence import BiologicalSequence
+        >>> s = BiologicalSequence('GGUC-C--ACGTT-C.', quality=range(16))
+        >>> t = s.degap()
+        >>> t
+        <BiologicalSequence: GGUCCACGTT... (length: 11)>
+        >>> print(t)
+        GGUCCACGTTC
+        >>> t.quality
+        array([ 0,  1,  2,  3,  5,  8,  9, 10, 11, 12, 14])
+
+        """
+        gaps = self.gap_chars
+        indices = [i for i, e in enumerate(self) if e not in gaps]
+        return self[indices]
+
+    def gap_maps(self):
+        """Return tuples mapping b/w gapped and ungapped positions
+
+        Returns
+        -------
+        tuple containing two lists
+            The first list is the length of the ungapped sequence, and each
+            entry is the position of that base in the gapped sequence. The
+            second list is the length of the gapped sequence, and each entry is
+            either None (if that position represents a gap) or the position of
+            that base in the ungapped sequence.
+
+        See Also
+        --------
+        gap_vector
+
+        Notes
+        -----
+        Visual aid is useful here. Imagine we have
+        ``BiologicalSequence('-ACCGA-TA-')``. The position numbers in the
+        ungapped sequence and gapped sequence will be as follows::
+
+              0123456
+              ACCGATA
+              |||||\\
+             -ACCGA-TA-
+             0123456789
+
+        So, in the first list, position 0 maps to position 1, position 1
+        maps to position 2, position 5 maps to position 7, ... And, in the
+        second list, position 0 doesn't map to anything (so it's None),
+        position 1 maps to position 0, ...
+
+        Examples
+        --------
+        >>> from skbio.sequence import BiologicalSequence
+        >>> s = BiologicalSequence('-ACCGA-TA-')
+        >>> m = s.gap_maps()
+        >>> m[0]
+        [1, 2, 3, 4, 5, 7, 8]
+        >>> m[1]
+        [None, 0, 1, 2, 3, 4, None, 5, 6, None]
+
+        """
+        degapped_to_gapped = []
+        gapped_to_degapped = []
+        non_gap_count = 0
+        for i, e in enumerate(self):
+            if self.is_gap(e):
+                gapped_to_degapped.append(None)
+            else:
+                gapped_to_degapped.append(non_gap_count)
+                degapped_to_gapped.append(i)
+                non_gap_count += 1
+        return degapped_to_gapped, gapped_to_degapped
+
+    def gap_vector(self):
+        """Return list indicating positions containing gaps
+
+        Returns
+        -------
+        list of booleans
+            The list will be of length ``len(self)``, and a position will
+            contain ``True`` if the character at that position in the
+            `BiologicalSequence` is in `self.gap_chars`, and ``False``
+            otherwise.
+
+        See Also
+        --------
+        gap_maps
+
+        Examples
+        --------
+        >>> from skbio.sequence import BiologicalSequence
+        >>> s = BiologicalSequence('..ACG--TT-')
+        >>> s.gap_vector()
+        [True, True, False, False, False, True, True, False, False, True]
+
+        """
+        return [self.is_gap(c) for c in self._sequence]
+
+    @classmethod
+    def is_gap(cls, char):
+        """Return True if `char` is in the `gap_chars` set
+
+        Parameters
+        ----------
+        char : str
+            The string to check for presence in the `BiologicalSequence`
+            `gap_chars`.
+
+        Returns
+        -------
+        bool
+            Indicates whether `char` is in the `BiologicalSequence` attribute
+            `gap_chars`.
+
+        Notes
+        -----
+        This is a class method.
+
+        Examples
+        --------
+        >>> from skbio.sequence import BiologicalSequence
+        >>> BiologicalSequence.is_gap('.')
+        True
+        >>> BiologicalSequence.is_gap('P')
+        False
+        >>> s = BiologicalSequence('ACACGACGTT')
+        >>> s.is_gap('-')
+        True
+
+        """
+        return char in cls.gap_chars
+
+    def is_gapped(self):
+        """Return True if char(s) in `gap_chars` are present
+
+        Returns
+        -------
+        bool
+            Indicates whether there are one or more occurences of any character
+            in `self.gap_chars` in the `BiologicalSequence`.
+
+        Examples
+        --------
+        >>> from skbio.sequence import BiologicalSequence
+        >>> s = BiologicalSequence('ACACGACGTT')
+        >>> s.is_gapped()
+        False
+        >>> t = BiologicalSequence('A.CAC--GACGTT')
+        >>> t.is_gapped()
+        True
+
+        """
+        for e in self:
+            if self.is_gap(e):
+                return True
+        return False
+
+    def nondegenerates(self):
+        """Yield all nondegenerate versions of the sequence.
+
+        Returns
+        -------
+        generator
+            Generator yielding all possible nondegenerate versions of the
+            sequence. Each sequence will have the same type, id, description,
+            and quality scores as `self`.
+
+        Raises
+        ------
+        BiologicalSequenceError
+            If the sequence contains an invalid character (a character that
+            isn't an IUPAC character or a gap character).
+
+        See Also
+        --------
+        degenerate_map
+
+        Notes
+        -----
+        There is no guaranteed ordering to the generated sequences.
+
+        Examples
+        --------
+        >>> from skbio.sequence import NucleotideSequence
+        >>> seq = NucleotideSequence('TRG')
+        >>> seq_generator = seq.nondegenerates()
+        >>> for s in sorted(seq_generator, key=str): print(s)
+        TAG
+        TGG
+
+        """
+        degen_chars = self.degenerate_map
+        nonexpansion_chars = self.nondegenerate_chars.union(
+            self.gap_chars)
+
+        expansions = []
+        for char in self:
+            if char in nonexpansion_chars:
+                expansions.append(char)
+            else:
+                # Use a try/except instead of explicitly checking for set
+                # membership on the assumption that an exception is rarely
+                # thrown.
+                try:
+                    expansions.append(degen_chars[char])
+                except KeyError:
+                    raise BiologicalSequenceError(
+                        "Sequence contains an invalid character: %s" % char)
+
+        result = product(*expansions)
+        return (self.copy(sequence=nondegen_seq) for nondegen_seq in result)
+
+
+class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
     """Base class for nucleotide sequences.
 
     A `NucleotideSequence` is a `BiologicalSequence` with additional methods
@@ -1465,6 +1347,7 @@ class NucleotideSequence(BiologicalSequence):
 
     """
 
+    @abstractmethod
     @classproperty
     def complement_map(cls):
         """Return the mapping of characters to their complements.
@@ -1482,10 +1365,11 @@ class NucleotideSequence(BiologicalSequence):
         Thanks, nature...
 
         """
-        return {}
+        pass
 
+    @abstractmethod
     @classproperty
-    def iupac_standard_characters(cls):
+    def nondegenerate_chars(cls):
         """Return the non-degenerate IUPAC nucleotide characters.
 
         Returns
@@ -1494,10 +1378,11 @@ class NucleotideSequence(BiologicalSequence):
             Non-degenerate IUPAC nucleotide characters.
 
         """
-        return set("ACGTUacgtu")
+        pass
 
+    @abstractmethod
     @classproperty
-    def iupac_degeneracies(cls):
+    def degenerate_map(cls):
         """Return the mapping of degenerate to non-degenerate characters.
 
         Returns
@@ -1507,19 +1392,7 @@ class NucleotideSequence(BiologicalSequence):
             non-degenerate IUPAC nucleotide characters it represents.
 
         """
-        degen_map = {
-            "R": set("AG"), "Y": set("CTU"), "M": set("AC"), "K": set("TUG"),
-            "W": set("ATU"), "S": set("GC"), "B": set("CGTU"),
-            "D": set("AGTU"), "H": set("ACTU"), "V": set("ACG"),
-            "N": set("ACGTU")
-        }
-
-        for degen_char in list(degen_map.keys()):
-            nondegen_chars = degen_map[degen_char]
-            degen_map[degen_char.lower()] = set(
-                ''.join(nondegen_chars).lower())
-
-        return degen_map
+        pass
 
     def _complement(self, reverse=False):
         """Returns `NucleotideSequence` that is (reverse) complement of `self`.
@@ -1679,7 +1552,7 @@ class NucleotideSequence(BiologicalSequence):
         [(3, 6, 'T.T')]
 
         """
-        gaps = re.escape(''.join(self.gap_alphabet))
+        gaps = re.escape(''.join(self.gap_chars))
         acceptable = gaps if allow_gaps else ''
 
         if feature_type == 'purine_run':
@@ -1694,7 +1567,7 @@ class NucleotideSequence(BiologicalSequence):
         for hits in self.regex_iter(pat):
             if allow_gaps:
                 degapped = hits[2]
-                for gap_char in self.gap_alphabet:
+                for gap_char in self.gap_chars:
                     degapped = degapped.replace(gap_char, '')
                 if len(degapped) >= min_length:
                     yield hits
@@ -1739,11 +1612,11 @@ class DNASequence(NucleotideSequence):
             'm': 'k', 'b': 'v', 'd': 'h', 'h': 'd', 'v': 'b', 'n': 'n'
         }
 
-        comp_map.update({c: c for c in cls.gap_alphabet})
+        comp_map.update({c: c for c in cls.gap_chars})
         return comp_map
 
     @classproperty
-    def iupac_standard_characters(cls):
+    def nondegenerate_chars(cls):
         """Return the non-degenerate IUPAC DNA characters.
 
         Returns
@@ -1755,7 +1628,7 @@ class DNASequence(NucleotideSequence):
         return set("ACGTacgt")
 
     @classproperty
-    def iupac_degeneracies(cls):
+    def degenerate_map(cls):
         """Return the mapping of degenerate to non-degenerate characters.
 
         Returns
@@ -1815,11 +1688,11 @@ class RNASequence(NucleotideSequence):
             'm': 'k', 'b': 'v', 'd': 'h', 'h': 'd', 'v': 'b', 'n': 'n'
         }
 
-        comp_map.update({c: c for c in cls.gap_alphabet})
+        comp_map.update({c: c for c in cls.gap_chars})
         return comp_map
 
     @classproperty
-    def iupac_standard_characters(cls):
+    def nondegenerate_chars(cls):
         """Return the non-degenerate IUPAC RNA characters.
 
         Returns
@@ -1831,7 +1704,7 @@ class RNASequence(NucleotideSequence):
         return set("ACGUacgu")
 
     @classproperty
-    def iupac_degeneracies(cls):
+    def degenerate_map(cls):
         """Return the mapping of degenerate to non-degenerate characters.
 
         Returns
@@ -1858,7 +1731,7 @@ class RNASequence(NucleotideSequence):
 RNA = RNASequence
 
 
-class ProteinSequence(BiologicalSequence):
+class ProteinSequence(IUPACSequence):
     """Base class for protein sequences.
 
     A `ProteinSequence` is a `BiologicalSequence` containing only characters
@@ -1875,7 +1748,7 @@ class ProteinSequence(BiologicalSequence):
     """
 
     @classproperty
-    def iupac_standard_characters(cls):
+    def nondegenerate_chars(cls):
         """Return the non-degenerate IUPAC protein characters.
 
         Returns
@@ -1887,7 +1760,7 @@ class ProteinSequence(BiologicalSequence):
         return set("ACDEFGHIKLMNPQRSTVWYacdefghiklmnpqrstvwy")
 
     @classproperty
-    def iupac_degeneracies(cls):
+    def degenerate_map(cls):
         """Return the mapping of degenerate to non-degenerate characters.
 
         Returns
